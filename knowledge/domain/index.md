@@ -111,6 +111,18 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [soil](/domain/actuation/soil.md) - Climate's words for a subject's soil as believed: dry, moist or wet.
 * [air](/domain/actuation/air.md) - Climate's words for a subject's air as believed: cold, comfortable or hot.
 
+# Coordination — two agents, one resource
+
+* [coordinator](/domain/coordination/coordinator.md) - The role coordination serves, beneath the speaker: asks peers in range, answers them, and lays what it yields to.
+* [question](/domain/coordination/question.md) - Asked of a peer in range under a constraint: the asker's holdings and the constraint's name, never a query text.
+* [answer](/domain/coordination/answer.md) - Said only under a constraint both hold, carrying the answerer's holdings that meet the asked ones; empty is the cost of no conflict.
+* [holding](/domain/coordination/holding.md) - A thing's values on a constraint's key over a period, read off the walking intentions; the one thing of a plan that crosses.
+* [conflict](/domain/coordination/conflict.md) - Concluded by each agent from a non-empty answer, standing while the peer is in range; decided by a draw, yielded by laying.
+
+# Draw — a domain of documents
+
+* [draw](/domain/draw/draw.md) - Lots by commit and reveal: a hash, then the number once the peer's hash is heard; one winner both conclude alike.
+
 # Courier — a domain of documents
 
 * [driver](/domain/courier/driver.md) - A role an agent plays over the vans it drives, stated by the world: a search acts with a van only through it.

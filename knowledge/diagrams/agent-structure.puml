@@ -38,6 +38,12 @@ frame "speech" {
   folder "speech:StatementGraph\nwhat was said, heard or said\nhanded to no reader of the mind" as utt #FFFCF2
 }
 
+frame "coordination" {
+  component "ask · answer · conclude · lay" as CO
+  folder "coordination:QuestionGraph\nthe asker's holdings under a constraint" as que #FFFCF2
+  folder "coordination:AnswerGraph\nthe answerer's holdings that meet them" as ans #FFFCF2
+}
+
 frame "belief" {
   component "deliberator\nrevise · trigger" as DEL
   folder "belief:RevisionGraph\nwhat the rules concluded of a source,\nof the kind its runner hands" as rev
@@ -93,6 +99,9 @@ DEL --> rev
 DEL --> st : a transition
 SP  --> utt
 SP  --> st : what an extraction concludes
+CO  --> SP : a question · an answer
+SP  --> que
+SP  --> ans
 PRE --> pr
 PL  --> scope
 PL  --> want

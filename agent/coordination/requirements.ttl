@@ -1,0 +1,17 @@
+@prefix coordination: <http://example.org/orexis/coordination#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+
+<> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A WORLD MUST STATE OF coordination's WORDS, held by onboarding alone before anything is granted
+#  (knowledge/domain/onboarding/requirement.md). No agent loads this graph: its kind is onboarding's.
+
+#  A COORDINATOR'S DRAWS ARE DECIDED BY AN OUTCOME ITS WORLD'S RULES SHIP — the draw a world imports
+#  (knowledge/domain/draw/draw.md). With none, every conflict it concludes stands undecided until the peer is
+#  taken as silent, and each yields for ever as if it had lost.
+[] a sh:NodeShape ;
+    sh:targetClass coordination:Coordinator ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "a coordinator's world ships no outcome (coordination:Outcome): no draw it takes part in would ever be decided — import a draw" ;
+        sh:select """SELECT $this WHERE { FILTER NOT EXISTS { ?outcome a coordination:Outcome } }""" ] .

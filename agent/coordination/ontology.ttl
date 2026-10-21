@@ -1,0 +1,160 @@
+@prefix : <http://example.org/orexis/coordination#> .
+@prefix coordination: <http://example.org/orexis/coordination#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  OREXIS COORDINATION, AGENT 0.2.0.
+#  What two agents that want one resource say to each other, and what each concludes of it
+#  (two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it, #923). A RESOURCE is a value of
+#  the key of a constraint both agents hold, over a period: the courier's two vans at one position is one,
+#  and nothing here speaks a word of the courier's. An agent ASKS a peer it believes in range what its
+#  constraint reads, saying its own HOLDINGS; the peer ANSWERS only under a constraint it holds too, with
+#  its own holdings that match; each concludes a CONFLICT of its own from the answer it said or heard; a
+#  draw, a domain a world imports, decides who goes first, and concludes it in this package's word; and
+#  the loser lays what the winner holds. The package sits above planning, execution and speech, meets them
+#  at the store, and says through speech's part.
+
+#################  The role this package serves  #################
+
+:Coordinator a owl:Class ;
+    rdfs:subClassOf speech:Speaker ;
+    rdfs:label "Coordinator" ;
+    rdfs:comment """An agent that asks the peers it believes in range what its constraints read, answers
+    them under the constraints it holds too, and yields where a draw it lost says so: the role whose part
+    is this package's (knowledge/domain/coordination/coordinator.md). Beneath the speaker, since asking and
+    answering is saying and hearing, so the boot loads speech with it. Declared, never derived.""" .
+
+#################  What is said  #################
+
+:QuestionGraph a owl:Class ;
+    rdfs:subClassOf speech:StatementGraph ;
+    rdfs:label "Question graph" ;
+    rdfs:comment "A graph holding one question, as it was said: a statement, which no reader of the mind is handed (knowledge/domain/coordination/question.md). Said again under its name each time the asker's holdings change, so a peer holds the latest." .
+
+:AnswerGraph a owl:Class ;
+    rdfs:subClassOf speech:StatementGraph ;
+    rdfs:label "Answer graph" ;
+    rdfs:comment "A graph holding one answer, as it was said: a statement, said again under its name each time the question it answers is (knowledge/domain/coordination/answer.md)." .
+
+:Question a owl:Class ;
+    rdfs:label "Question" ;
+    rdfs:comment "What an agent asks a peer it believes in range: will a thing of yours hold the values my holdings name, over these periods, under this constraint? It names the constraint (`coordination:over`) and carries the asker's own holdings, and nothing else of its plan; it is never a query text, and the answerer runs nothing a peer wrote (knowledge/domain/coordination/question.md)." .
+
+:Answer a owl:Class ;
+    rdfs:label "Answer" ;
+    rdfs:comment "What a peer says back to a question under a constraint it holds too: the question it answers and the answerer's own holdings at the same values of the key over periods that overlap the asked ones, or none. A question over a constraint the peer does not hold gets no answer at all (knowledge/domain/coordination/answer.md)." .
+
+:Holding a owl:Class ;
+    rdfs:label "Holding" ;
+    rdfs:comment """What an agent says of its own future, and the one thing of its plan that crosses: a thing it
+    acts for (`coordination:of`), the values its untaken steps give that thing on a constraint's key — stated
+    with the key's own predicates on the holding — and the period they hold over (`coordination:from`,
+    `coordination:until`, none where they hold on). Read off the walking intentions: each step's change from
+    its earliest landing to the latest landing of the next step that changes the key
+    (knowledge/domain/coordination/holding.md).""" .
+
+:over a owl:ObjectProperty ; rdfs:range planning:Constraint ;
+    rdfs:label "over" ;
+    rdfs:comment "The constraint a question, an answer or a conflict is about: the one whose key the holdings state values of." .
+
+:asks a owl:ObjectProperty ; rdfs:domain :Question ; rdfs:range orexis:Agent ;
+    rdfs:label "asks" ;
+    rdfs:comment "Who asked: the agent whose holdings the question carries." .
+
+:answers a owl:ObjectProperty ; rdfs:domain :Answer ; rdfs:range :Question ;
+    rdfs:label "answers" ;
+    rdfs:comment "The question an answer answers." .
+
+:answeredBy a owl:ObjectProperty ; rdfs:domain :Answer ; rdfs:range orexis:Agent ;
+    rdfs:label "answered by" ;
+    rdfs:comment "Who answered: the agent whose holdings the answer carries." .
+
+:holding a owl:ObjectProperty ; rdfs:range :Holding ;
+    rdfs:label "holding" ;
+    rdfs:comment "One holding a question or an answer carries." .
+
+:of a owl:ObjectProperty ; rdfs:domain :Holding ;
+    rdfs:label "of" ;
+    rdfs:comment "The thing a holding is of: one the agent saying it acts for." .
+
+:from a owl:DatatypeProperty ; rdfs:domain :Holding ; rdfs:range xsd:dateTime ;
+    rdfs:label "from" ;
+    rdfs:comment "When the holding begins: the earliest its values can hold." .
+
+:until a owl:DatatypeProperty ; rdfs:domain :Holding ; rdfs:range xsd:dateTime ;
+    rdfs:label "until" ;
+    rdfs:comment "When the holding ends: the latest the next change of the key can land. Absent where nothing the plan says changes it again." .
+
+#################  What each agent concludes of it  #################
+
+:Conflict a owl:Class ;
+    rdfs:label "Conflict" ;
+    rdfs:comment """Two agents that want one resource, as one of them concludes it: an answer it said or heard
+    that was not empty, under a constraint both hold. Each agent concludes its own, from its own documents
+    and by the same rule, and nothing tells it there is one; two answers between the same pair over the same
+    constraint are one conflict, named for the pair and the constraint, so both agents name it alike
+    (knowledge/domain/coordination/conflict.md).""" .
+
+:with a owl:ObjectProperty ; rdfs:domain :Conflict ; rdfs:range orexis:Agent ;
+    rdfs:label "with" ;
+    rdfs:comment "The peer a conflict is with." .
+
+:round a owl:DatatypeProperty ; rdfs:domain :Conflict ; rdfs:range xsd:integer ;
+    rdfs:label "round" ;
+    rdfs:comment "Which draw of the conflict stands: nought at first, and one more each time a draw stood a patience undecided, or a later conflict between the same pair began." .
+
+:since a owl:DatatypeProperty ; rdfs:domain :Conflict ; rdfs:range xsd:dateTime ;
+    rdfs:label "since" ;
+    rdfs:comment "When the conflict's present round began: what its patience is counted from." .
+
+:draw a owl:ObjectProperty ; rdfs:domain :Conflict ;
+    rdfs:label "draw" ;
+    rdfs:comment "The draw of the conflict's present round, named for the conflict and the round, so both agents name it alike and nothing of another round or another pair can be said into it." .
+
+:standing a owl:DatatypeProperty ; rdfs:domain :Conflict ; rdfs:range xsd:boolean ;
+    rdfs:label "standing" ;
+    rdfs:comment "Whether the conflict stands: true from the answer that made it until the peer is believed nowhere any more. A draw is taken only for a standing conflict." .
+
+:drawnIn a owl:DatatypeProperty ; rdfs:domain :Conflict ; rdfs:range xsd:integer ;
+    rdfs:label "drawn in" ;
+    rdfs:comment "A round a conflict is being drawn in, as a commitment heard or said says it: concluded by the draw a world imports, in this package's word, so an agent whose round fell behind its peer's is brought to it." .
+
+:wonBy a owl:ObjectProperty ; rdfs:range orexis:Agent ;
+    rdfs:label "won by" ;
+    rdfs:comment "Which agent a draw decided goes first: concluded by an outcome the draw a world imports ships, in this package's word, so this package reads the outcome and names no domain. The loser lays what the winner holds; the winner lays only the loser's next holding, the step it may have in flight." .
+
+:Outcome a owl:Class ;
+    rdfs:subClassOf sh:Rule ;
+    rdfs:label "Outcome" ;
+    rdfs:comment """A rule that says who a draw was won by (knowledge/domain/coordination/conflict.md): an
+    `sh:construct` a domain ships in its rules graph, concluding `coordination:wonBy` of a draw, which
+    coordination asks every pass over everything the agent believes — its secret, its own commitments and the
+    peers' words extracted — and writes beside its conflicts. Asked by this package and not triggered, since a
+    peer's word arrives as a statement no reader of the mind is handed and what is extracted of it is the
+    agent's own, which triggers no transition. Beneath `sh:Rule` and not `sh:SPARQLRule`, so revision and the
+    planner's bridge reader pass over it, as they pass over an extraction.""" .
+
+:silent a owl:DatatypeProperty ; rdfs:domain :Conflict ; rdfs:range xsd:boolean ;
+    rdfs:label "silent" ;
+    rdfs:comment "Whether the peer has fallen silent in this conflict: its draw restarted past the bound the agent states of itself. This agent then yields as a loser does and takes the whole of the avoiding (knowledge/domain/coordination/conflict.md)." .
+
+:secret a owl:DatatypeProperty ; rdfs:domain orexis:Self ; rdfs:range xsd:string ;
+    rdfs:label "secret" ;
+    rdfs:comment "A random secret the agent mints the first time this package starts, kept in its own store and never said: what a draw derives the agent's number from, so nothing is kept per draw and a test can fix it." .
+
+#################  Stances  #################
+
+:patienceS a owl:DatatypeProperty ; rdfs:domain orexis:Self ; rdfs:range xsd:decimal ;
+    rdfs:label "patience" ;
+    rdfs:comment "How many seconds a draw may stand undecided before it is restarted in the next round. A stance: the agent states it of itself in its self graph; where it states none, sixty (knowledge/domain/kernel/stance.md)." .
+
+:rounds a owl:DatatypeProperty ; rdfs:domain orexis:Self ; rdfs:range xsd:integer ;
+    rdfs:label "rounds" ;
+    rdfs:comment "How many rounds a conflict's draw may restart before the peer is taken as silent. A stance; where the self states none, three." .

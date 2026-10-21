@@ -96,7 +96,9 @@ agent know, and what does it see?
   into what it could not see and is reopened when it sees it is the behaviour #921 built, and a map
   every agent is handed would never exercise it. The seam this leaves is a van that sees the hedge
   only one cell before it, a drive's band being forty-five seconds and the radar's range two cells: the
-  radar's range, not the planner, is what a world widens.
+  radar's range, not the planner, is what a world widens. *Revised 2026-10-21 (#923, #1016): a head is
+  now refused as it is taken where the world it lands in violates a held constraint, so a hedge seen one
+  cell before it is never driven, and the lane's radar sees one cell with two slots.*
 - **A sentinel or a silence for out of range**, refused a second time (a-boat-is-a-van-and-a-contact-becomes-a-belief-by-the-rules):
   with no far corner to report past, a radar with nothing in range had to say something. A sentinel
   is a number the rules read specially, and a silence is a sensor sensing doubts. A vector outside the

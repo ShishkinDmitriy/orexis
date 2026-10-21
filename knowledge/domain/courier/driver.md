@@ -62,8 +62,10 @@ agent's driver; what narrows is the precondition, asked in each possible world w
 # What a peer does with it
 
 It is public because a peer needs it to address the agent. A van sensed in range (#922) leads to the
-agent to ask (#923): the one that plays the driver aboard that van. What an agent runs is its own and
-no peer reads it; whom to ask is a role the world states, as `market:hosts` is for a bidder looking
+agent to ask: [coordination](/domain/coordination/question.md) asks whoever acts for that van,
+`orexis:actsFor`, the kernel's word, since a resource is any constraint's key and not a courier's; the
+driver is what a search acts with the van through. What an agent runs is its own and no peer reads it;
+whom to ask is what the world states, as `market:hosts` is for a bidder looking
 for the [host](/domain/market/host.md) of a venue
 ([a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md),
 §4, as amended).

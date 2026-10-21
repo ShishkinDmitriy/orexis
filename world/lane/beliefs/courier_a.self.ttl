@@ -3,6 +3,7 @@
 @prefix planning: <http://example.org/orexis/planning#> .
 @prefix execution: <http://example.org/orexis/execution#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix coordination: <http://example.org/orexis/coordination#> .
 
 <> a orexis:SelfGraph .    # this document is one graph, and this is what it is
 
@@ -13,6 +14,7 @@
 :courier_a a orexis:Self ;
     orexis:plays [ a planning:Planner ] ,
                  [ a execution:Executor ] ,
+                 [ a coordination:Coordinator ] ,    # asks the other courier in range, answers it, and draws lots with it
                  [ a sensing:Observer ; sensing:stuckAfter 100000 ;
-                   sensing:sensor :fix_a_column , :fix_a_row , :receiver_b_column , :receiver_b_row , :radar_1_column , :radar_1_row ] .
+                   sensing:sensor :fix_a_column , :fix_a_row , :receiver_b_column , :receiver_b_row , :radar_1_column , :radar_1_row , :radar_3_column , :radar_3_row ] .
 :courier_a planning:budget 256 .

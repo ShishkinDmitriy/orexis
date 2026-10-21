@@ -908,6 +908,13 @@ The range moves only where a peer standing off the route is first believed. On t
 route passes the hedges side-on and van B stands off it, so nothing is reopened at any range. On the
 passing-place run the range bounds nothing either: the one radar slot holds the nearest thing, and the
 hedge at (2, 0) ties with the one at (2, 2) until van A stands at (1, 2), at every range tried. What
-follows there is a defect, the drive onto (2, 2) taken in the pass the radar first shows it (#1016). Two
-stays the world's figure.
+follows there is a defect, the drive onto (2, 2) taken in the pass the radar first shows it (#1016).
+
+*Revised 2026-10-21 (#923, #1016).* The lane's receivers now hear four cells and its radars see one, with
+two slots each: two couriers meeting must ask, answer and draw before either reaches the cell between them,
+and at two the first sight was one drive from it; a radar needs to see only what the van could drive into,
+and no cell of the road has more than two hedges beside it. The drive onto a hedge the radar has shown is
+refused as it is taken, since the take-time check asks the held constraints of the world the head lands in
+([two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it](/decisions/two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it.md));
+the passing-place delivery stands on no hedge, held by `world/lane/tests/test_lane.py`.
 

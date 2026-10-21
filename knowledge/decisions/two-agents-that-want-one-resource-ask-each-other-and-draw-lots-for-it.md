@@ -10,12 +10,15 @@ description: >-
   constraint both agents hold, over a period; a package of its own, coordination, asks a peer believed
   in range what its constraint reads, answers a peer only under a constraint it holds too, and says
   each in the agent's holdings; each agent concludes a conflict of its own from the answer it said or
-  heard, and nothing tells it there is one; the draw is a domain of documents, a commitment and a
-  reveal, its numbers derived from a secret each agent mints at first boot; while a draw stands each
-  agent lays the peer's contested holdings, and once it is decided the loser lays every holding the
-  winner says and the winner none of the loser's. Refused - a number drawn at take time, a secret in
-  a deployment file, a conflict planning writes, the draw as code, a draw-free precedence, and laying
-  nothing until the draw ends.
+  heard, and nothing tells it there is one, and it stands while the peer is in range; the draw is a
+  domain of documents, a commitment, a reveal and an outcome coordination asks, its numbers derived
+  from a secret each agent mints at first boot; while a draw stands each agent lays everything the
+  peer may hold at each instant, and once it is decided the loser lays every holding the winner says
+  and the winner only the loser's step in flight; and a head is taken only into a world the agent
+  believes possible at the taking. Refused - a number drawn at take time, a secret in a deployment
+  file, a conflict planning writes, the draw as code, a draw-free precedence, laying nothing until the
+  draw ends, a transition concluding the winner, a conflict ended when the answers stop meeting, and
+  taking heads only after the pass has planned.
 ---
 
 # The question
@@ -74,9 +77,11 @@ conflict, the one of the lower name, so two agents that asked at once draw once.
 
 **The draw is a domain of documents, the draw domain.** A commitment and a reveal are steps whose
 sayings make documents, as the market's are; what a heard one means is extracted; whether a reveal
-matches its commitment, and who won, are rules; and the desires that drive both are a world's to hold.
-So the fair coin is a domain a world imports and could swap for another, and coordination reads only
-the outcome, which the draw's rules conclude in coordination's word, `coordination:wonBy`.
+matches its commitment, and who won, is an OUTCOME, a rule the draw ships and coordination asks every
+pass over everything the agent believes, `coordination:Outcome`, as speech asks an extraction; and the
+desires that drive both are a world's to hold. So the fair coin is a domain a world imports and could
+swap for another, and coordination reads only the outcome, concluded in its own word,
+`coordination:wonBy` ([draw](/domain/draw/draw.md)).
 
 **The number drawn is derived from a secret the agent mints at first boot.** Coordination mints one
 random secret into the agent's own store the first time it starts and never says it; the number for a
@@ -86,20 +91,42 @@ specified. Nothing is kept per draw, both agents compute the same winner from th
 test fixes the secret, and a draw's name binds the pair, the conflict and the round, so nothing from
 another draw can be replayed into it.
 
-**While a draw stands, each lays the peer's contested holdings; once decided, only the loser does.**
-Both lay the peer's holdings that the answer matched, as forecasts of the peer's thing, so each plans
-as if yielding and neither enters the contested values: safety never waits on the draw. Decided, the
-WINNER forgets them and lays none of the loser's from then on; the LOSER lays the winner's holdings,
-and every holding the winner says after, and its walking plan reopens where they make a world of it
-impossible (#921), so it waits (#920) or goes round. The precedence stands for the pair while either
-still says holdings that touch the other's, so only the loser ever adapts, and two minds cannot yield
-to each other in turn for ever.
+**While a draw stands, each lays the peer's holdings; once decided, the loser does, and the winner the
+step in flight.** Both lay the peer's holdings, as forecasts of the peer's thing, so each plans as if
+yielding and neither enters the contested values: safety never waits on the draw. What is laid at each
+instant a holding changes is every value any holding then gives: a step lands somewhere in its band, so
+between its earliest landing and its latest the thing may stand at either, and laid one after another
+the later took the earlier's key out where it began, so the band was the peer's earliest landing alone
+and a van planned into a cell its peer had not yet left - measured on the lane. Decided, the LOSER lays
+the winner's holdings, and every holding the winner says after, and its walking plan reopens where they
+make a world of it impossible (#921), so it waits (#920) or goes round. The WINNER lays only the loser's
+next holding: a drive the loser took before the draw reached it is a step in flight, which nothing the
+draw decides cancels ([commitment](/domain/execution/commitment.md)), and the winner that laid none drove
+into it. Only the loser ever adapts its plan, and two minds cannot yield to each other in turn for ever.
 
-**Silence is the absence of an answer, and sensing is the net.** A question unanswered within the
-agent's patience, refused, or a draw restarted past the bound the agent states of itself, leaves the
-peer SILENT: this agent lays the peer's contested holdings as a loser does and takes the whole of the
-avoiding, and what it sees of the peer is what keeps it off it. A withheld reveal restarts the draw
-in the next round and is a breach anyone holding both documents can compute.
+**A conflict stands while the peer is in range.** Not while the answers meet: two plans that no longer
+meet are what yielding made of them, and the conflict ended there stopped the laying that kept them
+apart, so the next pass's plans met again in a later round, undecided - measured as two vans in one cell
+on the lane. A peer believed nowhere ends it ([conflict](/domain/coordination/conflict.md)).
+
+**A head is taken only into a world the agent believes possible as it stands at the taking.** The
+take-time check (#916) asked the precondition alone, and the one-mind record kept "weighing constraints
+as a head is taken" refused, stating no reason. Two heads it let through decided otherwise. A van's
+radar sees a hedge first when the hedge is beside the van, and the walk that reading wakes takes the
+next drive before any pass has foreseen the hedge - the winner drove into one. And a peer's word heard
+between two passes - the cell its van will drive into - is in no ground until the next pass lays one,
+while the walk at the start of that pass takes the head - both vans drove into one cell in one tick. So
+`Planner.check` asks the held constraints of the world the head lands in: the present beside every
+forecast holding at some instant of the head's band, the head's own change applied by key, a violation
+the world before already held refusing nothing; and it refuses a head after which the last pass
+foresaw a world of its plan impossible, though the search that reopened the want has not yet found
+another ([commitment](/domain/execution/commitment.md)).
+
+**Silence is the absence of an answer, and sensing is the net.** A question unanswered, or refused,
+leaves no conflict and nothing of the peer's future to lay: the agent takes the whole of the avoiding,
+and what it sees of the peer is what keeps it off it. A draw restarted past the bound the agent states
+of itself leaves the peer SILENT: this agent lays the peer's holdings as a loser does. A withheld
+reveal restarts the draw in the next round and is a breach anyone holding both documents can compute.
 
 # Refused
 
@@ -123,11 +150,33 @@ stop being something a world can inspect, test as documents, or replace.
 refused a rank; a fixed order is a rank by another name, and the agent named first would win every
 conflict it ever meets.
 
-**Laying nothing until the draw ends.** Range is two cells on the lane, so the contested position is
-usually the next for both; with nothing laid, both drives into it could be taken while the documents
-are still on the bus.
+**Laying nothing until the draw ends.** A van first heard four cells off on the lane is two drives
+from the cell between, and the question, the answer, both commitments and both reveals take passes;
+with nothing laid, both drives into it could be taken while the documents are still on the bus. Four
+is the receiver's range for that reason: at two, the first sight was one drive from the contested cell,
+and the two vans met there before either had heard the other.
+
+**A transition concluding the winner on the reveal's arrival** - built first. A peer's word is a
+statement no reader of the mind is handed, and what is extracted of it is a belief of the agent's own,
+arrived `orexis:Derived`, which triggers no transition ([transition](/domain/belief/transition.md)): the
+rule waited for an arrival that never came, and no draw was ever decided. Making an extracted word
+testimony would give every peer's document a second, mind-facing arrival beside its statement. An
+outcome asked each pass reads what the transition would have, and needs no arrival.
+
+**Taking heads only after the pass has planned**, the walk a reading wakes taking none. It closes the
+same window, but moves when every step of every agent is taken, a holder of no constraint included,
+where the check at the taking costs a holder of none one query.
 
 # Seams left open
+
+**Two heads taken in one tick, each before its taker heard the other.** The check reads what the agent
+has heard, and two agents whose first sight of each other falls in one tick plan before either is
+asked. Range is what keeps that sight away from the contested cell; a world whose instruments cannot
+outreach one exchange has no answer here.
+
+**What the check refuses, it refuses for the whole band.** A forecast holding at any instant of the
+head's band is laid beside the present, so a cell a peer leaves early in the band refuses a head that
+would arrive late in it. Conservative, and a pass later the plan finds the wait.
 
 **The winner yields until it is decided.** Both agents plan as if yielding while the draw stands, so
 the winner's plan carries a wait or a detour the draw then makes needless, and nothing reopens a walking

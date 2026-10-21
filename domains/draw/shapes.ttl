@@ -1,0 +1,41 @@
+@prefix draw: <http://example.org/orexis/draw#> .
+@prefix coordination: <http://example.org/orexis/coordination#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+
+<> a planning:ShapesGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A WORLD'S AGENTS HOLD TO DRAW: a desire that every standing conflict's draw has its commitment, and one that
+#  every draw the peer has committed to has its reveal. A world states that its agents hold them.
+
+draw:committed a sh:NodeShape ;
+    rdfs:label "every standing conflict's draw has my commitment" ;
+    sh:targetClass coordination:Conflict ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "the conflict's draw has no commitment of mine" ;
+        planning:about sh:this ;
+        sh:select """PREFIX draw: <http://example.org/orexis/draw#>
+        SELECT $this WHERE {
+            $this coordination:standing true ; coordination:draw ?draw .
+            ?me a orexis:Self .
+            FILTER NOT EXISTS { $this coordination:silent true }
+            FILTER NOT EXISTS { ?draw coordination:wonBy ?winner }
+            FILTER NOT EXISTS { ?draw draw:committedBy ?me }
+        }""" ] .
+
+draw:revealed a sh:NodeShape ;
+    rdfs:label "every draw the peer has committed to has my reveal" ;
+    sh:targetClass coordination:Conflict ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "the peer has committed and I have not revealed" ;
+        planning:about sh:this ;
+        sh:select """PREFIX draw: <http://example.org/orexis/draw#>
+        SELECT $this WHERE {
+            $this coordination:standing true ; coordination:draw ?draw ; coordination:with ?peer .
+            ?me a orexis:Self .
+            ?draw draw:committedBy ?me , ?peer .
+            FILTER NOT EXISTS { ?draw coordination:wonBy ?winner }
+            FILTER NOT EXISTS { ?draw draw:revealedBy ?me }
+        }""" ] .

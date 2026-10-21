@@ -180,7 +180,7 @@ PREDICTION_PACKAGE = "prediction"
 #  answers the world — sensing's ask, prediction's answer to an observation — and speech, and the
 #  transports last. A package not named here is still found and loaded where a role calls for it,
 #  after these, by its name.
-PASS = ("belief", "planning", "execution", "sensing", "prediction", "speech", MQTT, HTTP)
+PASS = ("belief", "planning", "execution", "sensing", "prediction", "speech", "coordination", MQTT, HTTP)
 
 #  A SENSOR OF THE AGENT'S: one an observer role it plays reads (`sensing:sensor`), DECLARED, so
 #  nothing here walks where a sensor is mounted; onboarding holds the declaration to the world

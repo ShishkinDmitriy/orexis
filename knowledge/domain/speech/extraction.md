@@ -42,9 +42,10 @@ graph it reads does not already hold, and a statement it reads holds what it say
 
 # What it concludes, and what it leaves
 
-A belief, today. Where a peer says its van will be over the periods it was asked about, the
-extraction concludes a [forecast](/domain/kernel/forecast.md): a belief holding over the stretch it is
-about, which the planner lays into the ground of that period, built with the first world that asks one
-(#568, #923).
+A belief. What a peer says of its van's future is no extraction's: a [question](/domain/coordination/question.md)
+or an [answer](/domain/coordination/answer.md) is kept as said and read by coordination, which lays what
+the agent yields to as [forecasts](/domain/kernel/forecast.md) of its own
+([conflict](/domain/coordination/conflict.md)); the [draw](/domain/draw/draw.md)'s commitment and reveal
+are extracted as said, which is what its outcome reads.
 Nothing is believed of a statement no extraction concludes of: a peer saying the agent's bed is dry
 changes no met-test unless a rule the agent holds extracts it.

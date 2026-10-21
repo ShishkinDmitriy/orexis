@@ -3,11 +3,16 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix planning: <http://example.org/orexis/planning#> .
+@prefix draw: <http://example.org/orexis/draw#> .
 
 <> a planning:DesireGraph .    # this document is one graph, and this is what it is
 <> orexis:ownedBy :courier_a .    # and whose it is — said here, never by the file's name
 
-:courier_a planning:holds :every_parcel_delivered .
+:courier_a planning:holds :every_parcel_delivered , :every_draw_committed , :every_draw_revealed .
+#  AND TO DRAW LOTS with the other courier for a position both want (domains/draw/): commit in every standing
+#  conflict's draw, and reveal once the peer has committed.
+:every_draw_committed a planning:Desire ; rdfs:label "every standing conflict's draw has my commitment" ; planning:metWhen draw:committed .
+:every_draw_revealed a planning:Desire ; rdfs:label "every draw the peer committed to has my reveal" ; planning:metWhen draw:revealed .
 :every_parcel_delivered a planning:Desire ;
     rdfs:label "every parcel where it is owed" ;
     planning:metWhen courier:delivered ;

@@ -182,7 +182,11 @@ the draw's two documents each way once #923 lands. The figure is measured where 
   when #923 lands. *Measured 2026-10-21 on the lane, where it is the range each contact sensor declares,
   two cells: at one, two and three the walks are the same, and the range moves only where a peer standing
   off the route is first believed; what bounds sight on the road is the one radar slot, not the range
-  ([measure-the-search](/runbooks/measure-the-search.md)). The draw's cost is still #923's.*
+  ([measure-the-search](/runbooks/measure-the-search.md)). The draw's cost is still #923's.* *Revised
+  2026-10-21 by #923: the lane's receivers hear four cells, since the exchange and the draw must outreach
+  one drive, and its radars one cell with two slots; the draw's cost is a question and an answer each way
+  per change of holdings, and two documents each way a round
+  ([two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it](/decisions/two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it.md)).*
 - **The x and y of a cell are the cell's.** A boat's position is a cell's number, not coordinates; a
   world finer than its cells would need the position as two readings and a transition reading two
   states, which the order groups allow and nothing here needs yet.

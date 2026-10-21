@@ -14,7 +14,8 @@
     owl:imports <../../domains/road/ontology.ttl> ,            # the road this world is posed on, in the courier's words
                 <../../domains/courier/actions.answered.ttl> , # with its drives answered by the world, told to the van
                 <../../domains/courier/driver.ttl> ,           # and the boarding, since a van has a driver
-                <../../domains/sim/ontology.ttl> .             # the simulator plays the van and its fix
+                <../../domains/sim/ontology.ttl> ,             # the simulator plays the van and its fix
+                <../../domains/draw/ontology.ttl> .            # and the two couriers draw lots for a position both want
 
 #  THE LANE (a-boat-is-a-van-and-a-contact-becomes-a-belief-by-the-rules, parked onto vans; #1002, #1004).
 #  Two minds on one road: the road (domains/road/) is the hedges either side of a single-track lane with one
@@ -76,10 +77,15 @@
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ] .
 
 #  The contacts each van carries (knowledge/domain/courier/contact.md): a receiver standing for the other
-#  van, as AIS demultiplexes by vessel, and one radar slot standing for nothing named, an obstacle while
-#  something is in it. Each is two sensors, the contact's vector from the carrying van, seeing two cells;
-#  the simulator plays them from the true positions, inside the range each sensor declares, two cells either
-#  way on its axis: the area the courier sees (the-grid-is-infinite-and-a-position-is-two-coordinates).
+#  van, as AIS demultiplexes by vessel, and two radar slots standing for nothing named, each an obstacle while
+#  something is in it. Each is two sensors, the contact's vector from the carrying van; the simulator plays
+#  them from the true positions, inside the range each sensor declares on its axis: the area the courier sees
+#  (the-grid-is-infinite-and-a-position-is-two-coordinates). A receiver hears the other van four cells either
+#  way, since two vans meeting must ask, answer and draw before either drives into the cell between them, and
+#  a van first heard two cells off is one drive from it
+#  (two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it). A radar sees the cells about the
+#  van, one either way, its slots taking the nearest first: two, since no cell of the road has more than two
+#  hedges beside it, so a van sees every hedge it could drive into before it can.
 :contact_b a sosa:Sample ; sosa:isSampleOf :van_b ; sosa:isHostedBy :van_a ; rdfs:label "van B as van A's receiver has it" .
 :receiver_b_column a sosa:Sensor ;
     sim:simulatedBy [ a sim:Model ; sim:jitter 0 ] ;
@@ -88,7 +94,7 @@
     sensing:readingPointer "/van_a/van_b/x" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ,
-        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -2 ; schema:maxValue 2 ] ] .
+        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -4 ; schema:maxValue 4 ] ] .
 :receiver_b_row a sosa:Sensor ;
     sim:simulatedBy [ a sim:Model ; sim:jitter 0 ] ;
     sosa:isHostedBy :contact_b ;
@@ -96,9 +102,9 @@
     sensing:readingPointer "/van_a/van_b/y" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ,
-        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -2 ; schema:maxValue 2 ] ] .
+        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -4 ; schema:maxValue 4 ] ] .
 
-:contact_1 a sosa:Sample , courier:Obstacle ; sosa:isHostedBy :van_a ; rdfs:label "van A's one radar slot" .
+:contact_1 a sosa:Sample , courier:Obstacle ; sosa:isHostedBy :van_a ; rdfs:label "van A's first radar slot" .
 :radar_1_column a sosa:Sensor ;
     sim:simulatedBy [ a sim:Model ; sim:jitter 0 ] ;
     sosa:isHostedBy :contact_1 ;
@@ -106,7 +112,7 @@
     sensing:readingPointer "/van_a/contact_1/x" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ,
-        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -2 ; schema:maxValue 2 ] ] .
+        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -1 ; schema:maxValue 1 ] ] .
 :radar_1_row a sosa:Sensor ;
     sim:simulatedBy [ a sim:Model ; sim:jitter 0 ] ;
     sosa:isHostedBy :contact_1 ;
@@ -114,7 +120,24 @@
     sensing:readingPointer "/van_a/contact_1/y" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ,
-        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -2 ; schema:maxValue 2 ] ] .
+        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -1 ; schema:maxValue 1 ] ] .
+:contact_3 a sosa:Sample , courier:Obstacle ; sosa:isHostedBy :van_a ; rdfs:label "van A's second radar slot" .
+:radar_3_column a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:jitter 0 ] ;
+    sosa:isHostedBy :contact_3 ;
+    sosa:observes courier:RelativeColumn ;
+    sensing:readingPointer "/van_a/contact_3/x" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ,
+        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -1 ; schema:maxValue 1 ] ] .
+:radar_3_row a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:jitter 0 ] ;
+    sosa:isHostedBy :contact_3 ;
+    sosa:observes courier:RelativeRow ;
+    sensing:readingPointer "/van_a/contact_3/y" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ,
+        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -1 ; schema:maxValue 1 ] ] .
 
 #  Van B's fix and contacts, the mirror of van A's.
 :fix_b_column a sosa:Sensor ;
@@ -139,7 +162,7 @@
     sensing:readingPointer "/van_b/van_a/x" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ,
-        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -2 ; schema:maxValue 2 ] ] .
+        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -4 ; schema:maxValue 4 ] ] .
 :receiver_a_row a sosa:Sensor ;
     sim:simulatedBy [ a sim:Model ; sim:jitter 0 ] ;
     sosa:isHostedBy :contact_a ;
@@ -147,8 +170,8 @@
     sensing:readingPointer "/van_b/van_a/y" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ,
-        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -2 ; schema:maxValue 2 ] ] .
-:contact_2 a sosa:Sample , courier:Obstacle ; sosa:isHostedBy :van_b ; rdfs:label "van B's one radar slot" .
+        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -4 ; schema:maxValue 4 ] ] .
+:contact_2 a sosa:Sample , courier:Obstacle ; sosa:isHostedBy :van_b ; rdfs:label "van B's first radar slot" .
 :radar_2_column a sosa:Sensor ;
     sim:simulatedBy [ a sim:Model ; sim:jitter 0 ] ;
     sosa:isHostedBy :contact_2 ;
@@ -156,7 +179,7 @@
     sensing:readingPointer "/van_b/contact_2/x" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ,
-        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -2 ; schema:maxValue 2 ] ] .
+        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -1 ; schema:maxValue 1 ] ] .
 :radar_2_row a sosa:Sensor ;
     sim:simulatedBy [ a sim:Model ; sim:jitter 0 ] ;
     sosa:isHostedBy :contact_2 ;
@@ -164,4 +187,21 @@
     sensing:readingPointer "/van_b/contact_2/y" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ,
-        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -2 ; schema:maxValue 2 ] ] .
+        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -1 ; schema:maxValue 1 ] ] .
+:contact_4 a sosa:Sample , courier:Obstacle ; sosa:isHostedBy :van_b ; rdfs:label "van B's second radar slot" .
+:radar_4_column a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:jitter 0 ] ;
+    sosa:isHostedBy :contact_4 ;
+    sosa:observes courier:RelativeColumn ;
+    sensing:readingPointer "/van_b/contact_4/x" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ,
+        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -1 ; schema:maxValue 1 ] ] .
+:radar_4_row a sosa:Sensor ;
+    sim:simulatedBy [ a sim:Model ; sim:jitter 0 ] ;
+    sosa:isHostedBy :contact_4 ;
+    sosa:observes courier:RelativeRow ;
+    sensing:readingPointer "/van_b/contact_4/y" ;
+    ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
+        [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 10 ; schema:unitCode unit:SEC ] ,
+        [ a ssn-system:MeasurementRange , schema:PropertyValue ; schema:minValue -1 ; schema:maxValue 1 ] ] .

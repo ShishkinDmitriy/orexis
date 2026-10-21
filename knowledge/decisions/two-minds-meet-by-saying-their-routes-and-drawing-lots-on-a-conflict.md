@@ -25,6 +25,15 @@ status: accepted
 timestamp: 2026-10-07T20:00:00Z
 ---
 
+> **Built 2026-10-21** (#923), as
+> [two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it](/decisions/two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it.md)
+> settles it: the question and the answer are coordination's, a package above planning, execution and
+> speech, and a resource any constraint's key, so nothing of it is a courier's; whom to ask is whoever
+> acts for the thing in range, `orexis:actsFor`, not the driver role below; the draw is a domain a world
+> imports, its numbers from a secret each agent mints; and where this record lays the winner's route in
+> the loser's grounds, the loser lays every holding the winner says and the winner the loser's step in
+> flight.
+
 > **Amended 2026-10-18**
 > ([foresight-is-derived-where-the-model-is-the-agents-and-asked-for-where-it-is-anothers](/decisions/foresight-is-derived-where-the-model-is-the-agents-and-asked-for-where-it-is-anothers.md)):
 > a peer's answer is a forecast, as the weather's is — somebody else's word about a stretch ahead,

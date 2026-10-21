@@ -57,7 +57,7 @@ If it is unavailable, the rules are short enough to follow by hand:
 
 **`knowledge/domain/` is the shared dictionary, filed by the package that owns each word** —
 `kernel/`, `sensing/`, `transport/`, `belief/`, `prediction/`, `planning/`, `execution/`,
-`speech/`, `market/`, `actuation/`, `courier/`, `onboarding/` — and `tests/test_knowledge.py` holds a page to
+`speech/`, `coordination/`, `market/`, `actuation/`, `courier/`, `draw/`, `onboarding/` — and `tests/test_knowledge.py` holds a page to
 live terms in its folder's namespace, so retiring a term fails until its page follows. A record
 stays in `knowledge/decisions/` while something current cites it; 0.1.0's are filed under
 `decisions/0.1.0/`. **And a term is defined before it is used.** The
@@ -492,7 +492,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   executor says `taking`, planning asks the present and answers by `step_blocked`, and nothing asks
   once a pass; execution reading `planning:precondition` itself was refused, a lower layer speaking
   a higher one's word and a second reader of one text, and two heads each admitted alone but not
-  together are the constraint's to couple, not the check's (#916).
+  together are the constraint's to couple, not the check's (#916) — **and a head is taken only into a
+  world the agent believes possible at the taking**: the present beside the forecasts over its band,
+  its change applied, asked of the held constraints, and no head after which the last pass foresaw a
+  world impossible; a hedge first seen beside the van and a peer's word heard since the last pass were
+  taken unasked by the walk a reading wakes (#1016, two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it).
 - **Two intentions walked side by side keep no order between them**, so a joint plan leaves a walking
   intention standing only where it BEGINS with that intention's untaken steps — the same steps later
   in the plan were found safe in an order nothing would walk them in (#905).
@@ -509,6 +513,26 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   nought; only the walk a pass asks for marks the lap (measure-a-pass).
 - **An action is a point its taker contributes to**, and a taker missing at runtime looks exactly
   like an actor that is busy, so a gate holds a family to its actions.
+
+### Coordination: two agents, one resource
+
+- **Two agents that want one resource ask each other and draw lots for it, and each concludes the
+  conflict itself** — a resource is a value of the key of a constraint both hold; a question carries
+  the asker's holdings, an answer the answerer's that meet them, and an answer that is not empty is a
+  conflict to both (two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it).
+- **A conflict stands while the peer is in range, not while the answers meet** — plans that no longer
+  meet are what yielding made of them, and ended there the laying stopped and two vans met in one cell.
+- **Who won is asked, not triggered** — a peer's word is extracted into a belief of the agent's own,
+  which triggers no transition, so the draw ships a `coordination:Outcome` coordination asks each pass;
+  a transition on the reveal's arrival decided no draw.
+- **At each instant a peer's thing is laid at every value it may hold** — a step lands somewhere in its
+  band, and a forecast laid after another takes its key out where it begins, so laid one by one the
+  band was the peer's earliest landing and a van planned into a cell its peer had not left.
+- **The winner still yields to the loser's step in flight** — commitment is hard on it, and the drive
+  the loser took before the draw reached it is not undone by the draw.
+- **A receiver must outreach one exchange, and a radar need see only what the van could drive into** —
+  the lane's receivers hear four cells and its radars one, with two slots, no cell of the road having
+  more than two hedges beside it.
 
 ### Belief, sensing and prediction
 
@@ -840,7 +864,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
    is the one identifier a process is handed at boot: its own agent id. Everything else is
    discovered from the documents. See [capability-packages](knowledge/decisions/capability-packages.md).
 2. **A package is a directory of `agent/`, and a term lives in the namespace of the package that
-   owns the concept.** belief, sensing, prediction, planning, execution, speech and the MQTT
+   owns the concept.** belief, sensing, prediction, planning, execution, speech, coordination and the MQTT
    transport each declare their words in their own `ontology.ttl`, beside the code that reads
    them; the kernel's `orexis:` keeps only what packages meet at. A package imports what lies
    beneath it and never above — belief, planning and execution import nothing of prediction, and

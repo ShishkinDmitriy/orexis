@@ -1,0 +1,68 @@
+@prefix : <http://example.org/orexis/draw#> .
+@prefix draw: <http://example.org/orexis/draw#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix coordination: <http://example.org/orexis/coordination#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
+    owl:imports <actions.ttl> , <rules.ttl> , <shapes.ttl> .
+
+#  THE DRAW, A DOMAIN.
+#  A fair coin between two agents with no third party and no shared store, by commit and reveal (Blum): each
+#  COMMITS to a number by saying its hash, and once it has heard the peer's commitment REVEALS the number; each
+#  checks the peer's reveal against the peer's commitment, and both compute the winner from the two numbers.
+#  What it decides is a conflict of the coordination package's (agent/coordination/), and it says the outcome
+#  in that package's word, `coordination:wonBy`, so the package reads who goes first and names no domain; a
+#  world imports this to have its agents draw, and could import another way of deciding instead
+#  (two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it, knowledge/domain/draw/draw.md).
+#
+#  THE NUMBERS. An agent's number for a draw is the hash of the secret it minted (`coordination:secret`) and the
+#  draw's name; its commitment the hash of the draw's name and its number; the winner the first hex digit of the
+#  hash of the draw's name and both numbers, the lower-named agent's first: odd, the lower-named agent goes
+#  first, even the other. The draw's name binds the pair, the conflict and the round, so nothing from another
+#  draw can be replayed into this one; no arithmetic, since the engine's is a known trap.
+#  No Python: the protocol is the documents, the actions and the rules.
+
+#################  What is said  #################
+
+:CommitmentGraph a owl:Class ; rdfs:subClassOf speech:StatementGraph ; rdfs:label "Commitment graph" ;
+    rdfs:comment "A graph holding one commitment, as it was said: a statement." .
+
+:RevealGraph a owl:Class ; rdfs:subClassOf speech:StatementGraph ; rdfs:label "Reveal graph" ;
+    rdfs:comment "A graph holding one reveal, as it was said: a statement." .
+
+:Commitment a owl:Class ; rdfs:label "Commitment" ;
+    rdfs:comment "What an agent says first in a draw: the hash of the draw's name and its number, binding it to a number it has not shown (knowledge/domain/draw/draw.md)." .
+
+:Reveal a owl:Class ; rdfs:label "Reveal" ;
+    rdfs:comment "What an agent says once it has heard the peer's commitment: its number, which a reveal must hash, with the draw's name, to the commitment the same agent said, or it is refused (knowledge/domain/draw/draw.md)." .
+
+:of a owl:ObjectProperty ; rdfs:label "of" ;
+    rdfs:comment "The draw a commitment or a reveal is of: `coordination:draw` of a conflict's present round." .
+
+:by a owl:ObjectProperty ; rdfs:range orexis:Agent ; rdfs:label "by" ;
+    rdfs:comment "Who said the commitment or the reveal." .
+
+:about a owl:ObjectProperty ; rdfs:range coordination:Conflict ; rdfs:label "about" ;
+    rdfs:comment "The conflict the draw decides, said so the peer knows which conflict, and in which round, it is drawing." .
+
+:round a owl:DatatypeProperty ; rdfs:range xsd:integer ; rdfs:label "round" ;
+    rdfs:comment "The round of the conflict the draw is of, said so a peer behind it is brought to it." .
+
+:hash a owl:DatatypeProperty ; rdfs:domain :Commitment ; rdfs:range xsd:string ; rdfs:label "hash" ;
+    rdfs:comment "The hash a commitment binds its sayer to." .
+
+:number a owl:DatatypeProperty ; rdfs:domain :Reveal ; rdfs:range xsd:string ; rdfs:label "number" ;
+    rdfs:comment "The number a reveal shows." .
+
+:committedBy a owl:ObjectProperty ; rdfs:range orexis:Agent ; rdfs:label "committed by" ;
+    rdfs:comment "An agent whose commitment to a draw the agent believes it said: concluded of a commitment, the agent's own or a peer's." .
+
+:revealedBy a owl:ObjectProperty ; rdfs:range orexis:Agent ; rdfs:label "revealed by" ;
+    rdfs:comment "An agent whose reveal of a draw the agent believes it said." .
+
+:peer a owl:ObjectProperty ; rdfs:range orexis:Agent ; rdfs:label "peer" ;
+    rdfs:comment "Whom a commitment or a reveal is taken with: the peer every standing conflict it is taken over is with, the one parameter both actions take." .

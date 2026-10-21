@@ -10,6 +10,12 @@
 
 <> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
 
+:courier_a_inbox_filter a mqtt4ssn:TopicFilter ;
+    mqtt4ssn:hasFilterPattern "agents/courier_a/inbox" ;
+    mqtt4ssn:matchesTopic :courier_a_inbox .
+:courier_b_inbox_filter a mqtt4ssn:TopicFilter ;
+    mqtt4ssn:hasFilterPattern "agents/courier_b/inbox" ;
+    mqtt4ssn:matchesTopic :courier_b_inbox .
 :readings_filter a mqtt4ssn:TopicFilter ;
     mqtt4ssn:hasFilterPattern "sensors/simulation/reading" ;
     mqtt4ssn:matchesTopic :readings .

@@ -100,7 +100,7 @@ def test_every_package_but_a_transport_declares_a_role_and_every_role_is_found()
     serving = set(ROLES.values())
     assert set(every_package()) - serving == {MQTT, HTTP}, sorted(serving)
     local = {role.rsplit("#", 1)[-1] for role in ROLES}
-    assert local == {"Deliberator", "Observer", "Predictor", "Planner", "Executor", "Speaker"}, sorted(local)
+    assert local == {"Deliberator", "Observer", "Predictor", "Planner", "Executor", "Speaker", "Coordinator"}, sorted(local)
 
 
 @pytest.mark.parametrize("role", sorted(ROLES), ids=lambda r: r.rsplit("#", 1)[-1])
