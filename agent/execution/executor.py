@@ -56,7 +56,11 @@ and `tick` forgets what has ended (knowledge/domain/execution/committed-step.md)
 an intention early by three doors and none of them reaches a step handed to its taker and unanswered:
 `end_for` ends one none of whose steps was taken, `end_at` one whose head is due and untaken, and
 `supersede_after` — a reconsideration replaced the untaken steps — marks the intention to end after its
-step in flight, `execution:endsAfter`, which `_advance` reads when the world answers that step.
+step in flight, `execution:endsAfter`, which `_advance` reads when the world answers that step. And the
+plan that replaced them WAITS FOR IT, `execution:waitsFor`: it was searched from the ground in which that
+step has landed, and the world says when a step has landed, not the plan — a drive answered by the van
+is shown a fix or two after its earliest landing, and a replacement taken at that instant stood on a
+present its search never started from (a-ground-holds-the-change-of-a-step-landing-in-it).
 
 **THE PATIENCE IS STILL HERE**, unchanged from the keeper this was: a second plan for a want
 already standing is absorbed inside the patience and supersedes past it, which is the
@@ -116,6 +120,7 @@ ADOPTED_AT = EXECUTION + "adoptedAt"
 RESOLVED_AT = EXECUTION + "resolvedAt"
 OUTCOME = EXECUTION + "outcome"
 ENDS_AFTER = EXECUTION + "endsAfter"
+WAITS_FOR = EXECUTION + "waitsFor"
 _TAKES_Q = """SELECT ?takes WHERE { $action orexis:takes ?takes }"""
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
@@ -267,6 +272,11 @@ _IN_FLIGHT_Q = """SELECT ?act WHERE { GRAPH $intentions { ?act execution:of $ste
 #  WHETHER AN INTENTION HAS ENDED — asked of a head's intention once `taking` has been heard.
 _RESOLVED_Q = """SELECT ?at WHERE { GRAPH $intentions { $intention execution:resolvedAt ?at } } LIMIT 1"""
 
+#  WHETHER AN INTENTION WAITS FOR ONE STILL STANDING — the intention its plan replaced, ending after its
+#  step in flight (`supersede_after`).
+_WAITS_Q = """SELECT ?for WHERE { GRAPH $intentions { $intention execution:waitsFor ?for .
+  FILTER NOT EXISTS { ?for execution:resolvedAt ?done } } } LIMIT 1"""
+
 #  WHETHER AN INTENTION ENDS AFTER A STEP — planning reconsidered the want it pursues (#905).
 _ENDS_AFTER_Q = """SELECT ?i WHERE { GRAPH $intentions { $intention execution:endsAfter $step . BIND($intention AS ?i) } } LIMIT 1"""
 #  WHETHER AN INTENTION ENDS AFTER ANY STEP — given up but for its step in flight (#921).
@@ -352,6 +362,9 @@ class Executor:
         #  `on_write(graph)`, told of every graph the executor writes as the world, so what the rules
         #  conclude of it is concluded.
         self.on_write = on_write
+        #  THE INTENTIONS ENDING AFTER A STEP IN FLIGHT, by the want whose plan replaced their untaken
+        #  steps — heard before that plan is, and taken up when it is adopted (`execution:waitsFor`).
+        self._replaced: dict[str, list[str]] = {}
         #  WHAT THE EXECUTOR SAYS HAPPENED, its own words for whoever connects, each carrying an event
         #  of `events.py`: an intention ended, with the want it pursued and how; a head about to be
         #  taken; a step's command,
@@ -417,9 +430,10 @@ class Executor:
             self.resolve(intention, outcome)
         return [self.graph] if ended else []
 
-    def supersede_after(self, step: str) -> list[str]:
+    def supersede_after(self, step: str, by: str | None = None) -> list[str]:
         """End the standing intention that stands at `step` AFTER it, `superseded` — planning has
-        reconsidered the want it pursues and a joint plan replaces its untaken steps (#905).
+        reconsidered the want it pursues and the plan for `by`, a joint plan or the same want's again,
+        replaces its untaken steps (#905, #921); that plan, when it is adopted, waits for this one.
 
         COMMITMENT HAS TWO GRAINS, and this is where they part (knowledge/domain/execution/commitment.md).
         A step IN FLIGHT — handed to its taker, an act on record, and not yet answered — is never
@@ -438,6 +452,8 @@ class Executor:
                 self.resolve(held.uri, "superseded")
                 continue
             update(self.intentions, f"INSERT DATA {{ GRAPH <{self.graph}> {{ <{held.uri}> <{ENDS_AFTER}> <{step}> }} }}")
+            if by is not None:
+                self._replaced.setdefault(by, []).append(held.uri)
             now = clock.now()
             for r in rows(self.intentions, bind(_COMMITTED_Q, intentions=mine, intention=held.uri)):
                 if r["step"] != step and not rows(self.intentions, bind(_IN_FLIGHT_Q, intentions=mine, step=r["step"])):
@@ -464,7 +480,15 @@ class Executor:
             #  indistinguishable from one forgotten.
             self.resolve(held.uri, "superseded")
         intention = self._adopt(source, graph, want)
+        replaced = self._replaced.pop(want, [])
         if intention is not None:
+            #  THE PLAN THAT REPLACED AN INTENTION'S UNTAKEN STEPS WAITS FOR IT: no head of this one is taken
+            #  while that one stands, ending after its step in flight, since the plan begins in the ground in
+            #  which that step has landed and only the world can say it has.
+            waits = " ".join(f"<{intention}> <{WAITS_FOR}> <{ended}> ." for ended in replaced
+                             if not rows(self.intentions, bind(_RESOLVED_Q, intentions=Raw(f"<{self.graph}>"), intention=ended)))
+            if waits:
+                update(self.intentions, f"INSERT DATA {{ GRAPH <{self.graph}> {{ {waits} }} }}")
             self.wake()
         return intention
 
@@ -679,10 +703,15 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             nonlocal soonest
             if soonest is None or when < soonest:
                 soonest = when
-        for r in rows(self.intentions, bind(_HEADS_Q, intentions=Raw(f"<{self.graph}>"))):
+        #  THE HEADS TAKEN FIRST, then the heads due: a step answered here may end an intention another
+        #  waits for, and the one waiting is then taken in this tick rather than the next.
+        heads = sorted(rows(self.intentions, bind(_HEADS_Q, intentions=Raw(f"<{self.graph}>"))), key=lambda r: r.get("act") is None)
+        for r in heads:
             intention, step = r["intention"], r["step"]
             if step in self._inflight:
                 continue
+            if r.get("act") is None and rows(self.intentions, bind(_WAITS_Q, intentions=Raw(f"<{self.graph}>"), intention=intention)):
+                continue                        # waits for the intention its plan replaced, ending after its step in flight
             if r.get("act") is None:
                 when = datetime.fromisoformat(r["due"]) if r.get("due") else None
                 if (when is None or when <= now) and r.get("kept") and not self._kept_by(step):

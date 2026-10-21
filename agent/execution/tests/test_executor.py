@@ -511,3 +511,37 @@ def test_an_intention_that_ends_closes_every_window_it_opened():
     assert len(told) == 4, "written twice, closed twice"
     x.tick(NOW)
     assert _windows(beliefs) == []
+
+
+def test_a_plan_replacing_an_intentions_untaken_steps_waits_for_it_to_end_after_its_step_in_flight():
+    """A reconsideration (#905): the first plan's head is taken and in flight when planning says a plan for
+    another want replaces its untaken steps. The intention ends after its step in flight, never before;
+    the replacement, adopted at once, WAITS FOR IT, `execution:waitsFor` — its head due and not taken while
+    the world has not answered — and is taken in the very tick the world answers and the first intention
+    resolves `superseded`, since the heads already taken are answered first
+    (a-ground-holds-the-change-of-a-step-landing-in-it)."""
+    beliefs = _beliefs(PEG_A)
+    x = Executor(beliefs, AGENT, ox.Store())
+    first = x.commit(_predicting(2), PLAN, WANT)
+    assert x.tick(NOW) == [f"{PLAN}.0"] and x.drain() == 1
+    x.supersede_after(f"{PLAN}.0", by=WANT + "_joint")
+    second = x.commit(a_plan(1, PLAN + "_joint"), PLAN + "_joint", WANT + "_joint")
+    assert rows(x.intentions, f"SELECT ?f WHERE {{ GRAPH ?g {{ <{second}> execution:waitsFor ?f }} }}") == [{"f": first}]
+    assert x.tick(NOW) == [], "due, and waiting for the intention its plan replaced"
+    assert _resolved(x, first) == []
+    update(beliefs, f"DELETE DATA {{ GRAPH <{STATE}> {{ <{DISK}> <{ON}> <{PEG_A}> }} }} ; "
+                    f"INSERT DATA {{ GRAPH <{STATE}> {{ <{DISK}> <{ON}> <{PEG_B}> }} }}")
+    assert x.tick(NOW) == [f"{PLAN}_joint.0"], "the world answered the step in flight, and the replacement walks"
+    assert _resolved(x, first) == [{"o": "superseded"}]
+
+
+def test_a_plan_adopted_with_no_reconsideration_behind_it_waits_for_nothing():
+    """The wait is between an intention ending and the plan that replaced it, which planning named; a plan
+    for an unrelated want, adopted while that intention ends, is taken when due."""
+    x = Executor(_beliefs(PEG_A), AGENT, ox.Store())
+    x.commit(_predicting(2), PLAN, WANT)
+    x.tick(NOW)
+    x.drain()
+    x.supersede_after(f"{PLAN}.0", by=WANT + "_joint")
+    x.commit(a_plan(1, PLAN + "_other"), PLAN + "_other", WANT + "_other")
+    assert x.tick(NOW) == [f"{PLAN}_other.0"]

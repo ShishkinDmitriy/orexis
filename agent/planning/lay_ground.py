@@ -145,7 +145,7 @@ SELECT ?piece ?source ?start WHERE {
 ORDER BY ?start ?piece"""
 
 def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
-               landings=(), actions=None, foresight=None) -> list[str]:
+               landings=(), actions=None, foresight=None, landed=None) -> list[str]:
     """Build one ground world per period the agent can see, classified with its stretch.
 
     `within` is what a world of this imaginarium is identified by — the Planner's to say, from
@@ -158,11 +158,17 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
     intentions — and each ahead of `now` is a period of its own WHATEVER IT HOLDS: a want a
     reconsideration mints is searched from the ground in which the step in flight has landed, so
     the plan it finds begins after it, and a plan is placed at its root's instant (#905,
-    knowledge/domain/execution/commitment.md). What the ground holds is what the agent already
-    sees holding then, and the step's own prediction is not applied again: a fictive step wrote
-    it into the present when it was taken, and a step a flow reads as a committed step is in the
-    predictions already. So it is not collapsed into the ground before it by hash, which is the
-    one thing that makes it a boundary rather than a prediction.
+    knowledge/domain/execution/commitment.md). So it is not collapsed into the ground before it by
+    hash, which is the one thing that makes it a boundary rather than a prediction.
+
+    `landed` is what each of those steps changes where it lands — the Planner's to say, off the plan
+    it published: per instant, the triples a step retracts and the triples it adds — and the ground
+    laid there HOLDS IT, the retractions taken out and the additions superseding by key as a
+    prediction's do, whoever answers the step (a-ground-holds-the-change-of-a-step-landing-in-it).
+    A fictive step wrote the same change into the present when it was taken, so laid again it
+    changes nothing; an answered step changes the present only when the world shows it, and laid
+    nowhere ahead, a want reopened round it was searched from a ground where it had not happened
+    and planned it again.
 
     The present is the first, and is the agent's state as it stands — what can change of every
     belief that has begun. Each prediction that applies later, and the changeable part of each
@@ -217,9 +223,12 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
         return [*(g for g in graphs_of(store, *KNOWN, at=at, until=at) if g not in spoken and g not in made), here]
 
     def lay(at: datetime, added: list, arrival: list) -> None:
-        """One ground at `at`, forked from the one standing: `added` laid superseding by key, `arrival`
-        judged by the transitions — and kept only where it differs from the one before, or lands a step."""
+        """One ground at `at`, forked from the one standing: `added` laid superseding by key, with what
+        every step landing here changes, `arrival` judged by the transitions — and kept only where it
+        differs from the one before, or lands a step."""
         nonlocal here, marks
+        changes = (landed or {}).get(at, [])
+        added = [*added, *(t for _, adds in changes for t in adds)]
         #  EVERYTHING BEGINNING AT ONE INSTANT IS ONE WORLD CHANGE. A boundary is an instant,
         #  not a forecast: two flows that both start at one o'clock describe ONE world, and
         #  forking once per forecast made two grounds with the same name and a period from the
@@ -228,6 +237,11 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
         #  read against the ground standing BEFORE the instant, so they supersede in parallel
         #  rather than one seeing another's work.
         there = _fork(store, here, _name(at), added)
+        kept = set(added)
+        for retracts, _ in changes:
+            for t in retracts:
+                if t not in kept:
+                    store.remove(ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(there)))
         if rules and arrival:
             _arrived(store, there, arrival, rules, own, stated)
         mark = _marked(store, there, within)

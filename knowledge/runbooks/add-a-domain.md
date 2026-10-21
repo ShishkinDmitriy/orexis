@@ -50,8 +50,8 @@ A world's agents are then declared in the domain's word, and nobody lists what i
 `owl:imports <../../domains/<name>/ontology.ttl>` on the world's own `<>`. The boot follows imports
 transitively and loads only what a world asks for. An action only some of a domain's worlds have goes
 in a document the ontology does not import, and those worlds import it beside the ontology — the
-courier's boarding, `domains/courier/driver.ttl`, which `world/driver/` asks for and the dispatcher
-never loads, since an action admitting nothing still splits a world's scopes (#913). Nothing in `agent/` or `onboarding/` may name a
+courier's boarding, `domains/courier/driver.ttl`, which `world/driver/` asks for and the courier's
+own world never loads, since an action admitting nothing still splits a world's scopes (#913). Nothing in `agent/` or `onboarding/` may name a
 domain's IRI — `tests/test_layout.py` fails one that does — so the domain stays a plug-in.
 
 # How it is held

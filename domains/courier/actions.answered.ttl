@@ -39,7 +39,7 @@ courier:Drive a orexis:Action ;
     #  A VAN SOMEBODY DRIVES MOVES ONLY WITH THEM ABOARD (#903), AND ONLY BY THE AGENT THAT HAS THEM
     #  (#929): the last filter refuses a van a driver `drives` who is not `aboard` it or whom the
     #  agent does not `orexis:plays`, and asks nothing of a van the world names no driver for,
-    #  which is every van of the dispatcher's, the courier's and the tower's — so their drives are
+    #  which is every van of the courier's and the tower's — so their drives are
     #  the fillings they were. Where a world names one driver for two vans, one van at a time is
     #  where the driver is, and no plan can drive the other without a boarding first; where two
     #  agents each have a driver, neither's search drives the other's van. A driver no agent has is

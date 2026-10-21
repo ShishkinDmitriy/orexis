@@ -375,8 +375,8 @@ def _clusters(scopes: dict | None, witnesses: list, coupled=None) -> list[list]:
     plan — unless `coupled` says a constraint the holder holds can join them: then they are ONE
     group, one want about both and one search, which finds the plan optimal for both by
     construction and in which the constraint makes the colliding world impossible. The two-vans
-    constraint joins two parcels whose vans can meet on a cell and leaves two on disjoint grids
-    apart (`couplings`, one-mind-couples-the-wants-a-constraint-can-make-collide). A desire
+    constraint joins two parcels whose vans can meet at a position, which on a plane is any two
+    (`couplings`, one-mind-couples-the-wants-a-constraint-can-make-collide). A desire
     couples nothing: what it reads unmet is minted here, never held against a plan.
 
     THE SCOPES ARE READ, NEVER COMPUTED: `scope_actions` wrote them (scope-actions), read

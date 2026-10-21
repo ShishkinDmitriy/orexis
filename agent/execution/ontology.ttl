@@ -66,6 +66,10 @@ execution:endsAfter a owl:ObjectProperty ; rdfs:domain execution:Intention ; rdf
     rdfs:label "ends after" ;
     rdfs:comment "The step in flight this intention ends after: written by the executor when planning has reconsidered the want the intention pursues and replaced its untaken steps with a joint plan (knowledge/domain/execution/commitment.md, #905). The step is held to its prediction as any taken step is — never cancelled, the hard grain of commitment — and when the world answers it the intention resolves `superseded` rather than moving on; where the patience runs out on it first, it resolves `failed` as ever." .
 
+execution:waitsFor a owl:ObjectProperty ; rdfs:domain execution:Intention ; rdfs:range execution:Intention ;
+    rdfs:label "waits for" ;
+    rdfs:comment "The intention this one's plan replaced, ending after its step in flight (`execution:endsAfter`): written by the executor when it adopts the plan planning published for the want a reconsideration replaced the untaken steps with (#905, #921). No head of this intention is taken while that one stands, since the plan was searched from the ground in which the step in flight has landed and only the world says it has — a drive answered by the van lands when its fix shows it, inside its band and not at its earliest (knowledge/domain/execution/commitment.md)." .
+
 execution:Step a owl:Class ; rdfs:label "Step" ;
     rdfs:comment "One orexis:Action filled in and PLANNED — not yet done: the action it fills and a triple per parameter, when it may be taken (execution:notBefore), the earliest and the latest its change lands (execution:landsAt, execution:notAfter), what the search predicted taking it changes, as two graphs it names (execution:adds, execution:retracts), and what follows (execution:then). A plan is steps; an intention commits to them (execution:step) and stands at one (execution:by)." .
 

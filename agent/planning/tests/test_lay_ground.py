@@ -139,3 +139,28 @@ def test_a_belief_ahead_that_no_text_reads_lays_no_ground(monkeypatch, snapshots
     assert len(lay_ground(store, snapshots.NOW, frozenset({_T + "level"}))) == 1, "the warmth is read by nothing"
     assert not rows(store, "SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:ChangeableGraph } }"), \
         "and nothing of the forecast was cut"
+
+
+def test_the_ground_where_a_step_in_flight_lands_holds_the_steps_change(monkeypatch, snapshots):
+    """A step in flight landing at a quarter past, which says it retracts the temperature of twenty and adds
+    a level of fifteen and an open valve: the ground laid there holds its change — the retraction taken
+    out, the level superseding the reading's twenty by key, the valve added — and every ground after it
+    inherits it, the dip at half past superseding the level again; the present holds none of it, since
+    the world has not shown it yet (a-ground-holds-the-change-of-a-step-landing-in-it)."""
+    from datetime import timedelta
+
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    store = snapshots.stand_in(CASES_DIR / "two_stretches_in_one_scope_are_two_grounds.trig")
+    tank, landing = ox.NamedNode(_T + "tank1"), snapshots.NOW + timedelta(minutes=15)
+    retracts = [ox.Triple(tank, ox.NamedNode(_T + "temperature"), ox.Literal("20", datatype=ox.NamedNode("http://www.w3.org/2001/XMLSchema#integer")))]
+    adds = [ox.Triple(tank, ox.NamedNode(_T + "level"), ox.Literal("15", datatype=ox.NamedNode("http://www.w3.org/2001/XMLSchema#integer"))),
+            ox.Triple(tank, ox.NamedNode(_T + "valve"), ox.NamedNode(_T + "open"))]
+    present, landed, dipped, heated = lay_ground(store, snapshots.NOW, None, [landing], landed={landing: [(retracts, adds)]})
+
+    def facts(ground):
+        return {(t.predicate.value.rsplit("#", 1)[-1], t.object.value)
+                for t in (q.triple for q in store.quads_for_pattern(tank, None, None, ox.NamedNode(ground)))}
+    assert facts(present) == {("level", "20"), ("temperature", "20")}, "the present holds what the world has shown"
+    assert facts(landed) == {("level", "15"), ("valve", _T + "open")}, "where the step lands, its change"
+    assert facts(dipped) == {("level", "5"), ("valve", _T + "open")}, "inherited, and superseded again by key"
+    assert facts(heated) == {("level", "5"), ("valve", _T + "open"), ("temperature", "40")}

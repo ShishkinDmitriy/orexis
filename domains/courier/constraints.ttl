@@ -7,7 +7,7 @@
 <> a planning:ConstraintGraph .    # this document is one graph, and this is what it is
 
 #  WHAT NO VAN DOES - physics and not preferences (knowledge/domain/planning/constraint.md): no two vans stand
-#  at one position, the dispatcher's, and no van stands where an obstacle is - a thing a radar sees and nothing
+#  at one position, and no van stands where an obstacle is - a thing a radar sees and nothing
 #  identifies, believed at two coordinates while it is in range (#1003), a hedge or a fence among them. Authored
 #  as the avoided state, `planning:unmetWhen`, the honest polarity for a prohibition (#892). The search marks a
 #  world violating either `planning:impossible`, so a plan goes round an obstacle and a parked van, and a belief

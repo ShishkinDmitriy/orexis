@@ -78,7 +78,7 @@
     document every agent is given, since a peer finds the agent to ask as the one that plays the driver aboard
     the van in range (#923). The role carries what it is over, the vans it `drives`, as an observer carries its
     sensors; it loads no package, what the agent runs being its self graph's word. A world that names no driver
-    moves its vans by the agent's own hand, two at once if it likes, as the dispatcher's do; a world that names
+    moves its vans by the agent's own hand, two at once if it likes, as the courier's and the tower's do; a world that names
     one has made 'one van at a time' a fact about where the driver is, which every plan respects by construction
     (#903). A drive, a pick or a drop of a van somebody drives, and a boarding, are admitted only through a driver
     the agent plays, so of two agents in one world neither's search moves the other's van (#929, #1002,

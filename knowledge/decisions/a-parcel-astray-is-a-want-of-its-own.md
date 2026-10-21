@@ -30,8 +30,10 @@ Built in #900 and measured the same day, alternated against the tree before it: 
 the one want about both parcels finds the ten-step plan at 228 candidates and 148 weighings in 2.6 s
 where two wants apart cost 50, 23 and 23 and 0.21 s — the product's price with the estimate counting
 the pick and the drop, where it was 674 against 90 with the drives alone — and a budget of 128 cuts
-it short; two parcels whose vans stand on disjoint grids are still two wants at 50, 23 and 23
-([measure-the-search](/runbooks/measure-the-search.md), [constraint](/domain/planning/constraint.md)).
+it short; two parcels whose vans stood on disjoint grids were still two wants at 50, 23 and 23, until the
+grid became infinite and two vans could always meet
+([the-grid-is-infinite-and-a-position-is-two-coordinates](/decisions/the-grid-is-infinite-and-a-position-is-two-coordinates.md),
+[measure-the-search](/runbooks/measure-the-search.md), [constraint](/domain/planning/constraint.md)).
 Everything below stands for parcels no constraint can join.
 
 # The claim
@@ -43,7 +45,8 @@ by its `planning:about`, the block's or the desire's; a witness about nothing is
 joins every group, which with one scope is one group. That was the safe side for a desire about one
 thing, and it was wrong for a desire about every parcel: the courier's `delivered` shape targets the
 class and its one block, `at` equals `destination`, said nothing of what it was about, so the two
-parcels of `world/dispatcher/` in trouble were ONE want, about both, narrowed to neither.
+parcels of the dispatcher (the lane's one-mind yard since #1004) in trouble were ONE want, about both,
+narrowed to neither.
 
 The shape now says `planning:about sh:this` on that block — each constraint is about the parcel it
 failed on — which is the form the ledger's desire already took for its debts and
@@ -56,7 +59,7 @@ block is about is read by the derivation alone.
 # Measured
 
 One pass of the Planner at a budget of 128 over the booted dispatcher, both vans at the foot of
-their own columns and both parcels one cell up (`world/dispatcher/state.ttl`), on the development
+their own columns and both parcels one cell up (the dispatcher's state, the lane's yard since #1004), on the development
 container; the figures are in [measure-the-search](/runbooks/measure-the-search.md):
 
 | the delivery desire | wants | candidates | weighings per want | plan | pass |

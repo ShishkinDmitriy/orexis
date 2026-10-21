@@ -197,14 +197,15 @@ in all three imaginaria, placed it in the first, reported it unreachable and com
 > figure below was measured on authored cells - the dispatcher's 4x4, the driver's two grids a continent
 > apart - which no world has now: a position is two coordinates on the thing, a drive goes to any of four
 > neighbours, and two vans can always meet, so the disjoint-grid rows describe a world that cannot be posed
-> any more and the other figures are larger today (`world/dispatcher/tests/`, `world/driver/tests/` carry
-> the current ones). The method stands; the numbers are the day's.
+> any more and the other figures are larger today (`world/lane/tests/test_one_mind.py`, `world/driver/tests/`
+> carry the current ones). The method stands; the numbers are the day's. The dispatcher itself was retired
+> by #1004, its pins moved onto the lane as one-agent variants; what they measure there is the last section.
 
-The measurements #567 asked for, on `world/dispatcher/` — one agent, two vans, two parcels on the
+The measurements #567 asked for, on the dispatcher — one agent, two vans, two parcels on the
 courier's 4x4 grid, a desire that every parcel be delivered and an aversion to two vans on one cell —
 taken on the development container with the tree that added the world, one pass of the Planner at a
 budget of 128 over the booted world unless a budget is named, medians of five where a time is given.
-`world/dispatcher/tests/test_dispatcher.py` holds every claim below but the times.
+The dispatcher's own test held every claim below but the times.
 
 **The partition.** One scope: both vans, both parcels, every cell, `courier:at`, `courier:carriedBy`
 and the three actions. Nothing van A does reads a fact about van B, and the key cannot see it: a
@@ -314,7 +315,7 @@ so the order the frontier opens in is the same and the 45 candidates are the sam
 trees — the count does not drift — at 150 and 144 ms before against 155 and 159 after, which is
 inside one session's noise. The tower's estimate is hanoi's and is untouched.
 
-**The promise is a gate now.** `world/dispatcher/tests/test_dispatcher.py` and
+**The promise is a gate now.** `world/lane/tests/test_one_mind.py` and
 `world/courier/tests/test_courier.py` each hold the `planning:remaining` written at the present
 ground to at most what the plan spent, over the shipped dispatcher, its corridor, a van alone and
 the courier's delivery; broken by ten on purpose, every case went red at that line.
@@ -327,7 +328,7 @@ the desire was then weighed in no ground at all — `weigh` read a met-test thro
 `planning:metWhen` and nothing else, and the pass minted nothing from it. Since #892 the shipped
 aversion IS the `unmetWhen` form, the avoided state as one select, and the figures are the same:
 a witness per van offending with the cell, the one want carrying the same select, the one-step
-plan, 4 weighings (measured 2026-10-04, pinned in `world/dispatcher/tests/test_dispatcher.py`).
+plan, 4 weighings (measured 2026-10-04, pinned in the dispatcher's test).
 
 # The dispatcher: what a bound on worlds would cost, a parked van, and the coupled price (2026-10-04)
 
@@ -357,7 +358,7 @@ The derivation couples two instances a [constraint](/domain/planning/constraint.
 into one want, and the dispatcher's aversion — `at` on vans, joined on the cell — couples its two
 parcels wherever both vans can reach one cell. Measured on the development container, the tree before
 the change (`c8cd7ad1`) and the tree with it alternated per case in one session, five rounds, one pass
-of the Planner over the booted world as `world/dispatcher/tests/test_dispatcher.py` builds it, each
+of the Planner over the booted world as the dispatcher's test builds it, each
 tree at the budget its search needs; candidates are the possible worlds the pass made, weighings the
 worlds weighed per want. The counts did not move between rounds on either tree.
 
@@ -407,7 +408,7 @@ and a world whose weighing carries a violation row its parent's lacks is refused
 on the want's weighing in place of its verdict, `planning:open` and `planning:met` taken back, so the
 frontier's and the plan's reads pass it by unfiltered. Measured on the development container, `origin/main` at `3cd44687`
 exported to the scratchpad and the tree with the bound alternated per round in one session, five rounds,
-one pass of the Planner over the booted world as `world/dispatcher/tests/test_dispatcher.py` builds it;
+one pass of the Planner over the booted world as the dispatcher's test builds it;
 candidates and weighings as the sections above count them, refusals the weighings carrying
 `planning:refused`, two-van worlds every possible world holding two vans on a cell, whether or not the
 search ever opened it. The counts did not move between rounds on either tree.
@@ -470,14 +471,14 @@ the drive's, where the reach would have told it nothing collides — the record'
 
 The rework of the section above, decided with the sovereign: a [constraint](/domain/planning/constraint.md)
 is a check that a world is POSSIBLE and a met-test that it is DESIRED, so the dispatcher's two-vans
-rule is a `planning:Constraint` and no desire (`world/dispatcher/constraints.ttl`), `Planner.expand`
+rule is a `planning:Constraint` and no desire (the courier's now, `domains/courier/constraints.ttl`), `Planner.expand`
 weighs it in every possible world it weighs a want in, and a world where it yields a row is
 `planning:impossible` on its own row with the want's weighing of it bare — no parent compared, no
 repair — while a present that violates it is a contradiction the pass says and `orexis-onboard`
 refuses, and mints nothing. Measured on the development container, the tree before — `10f32c49`, the
 courier's band, which is the section above's code — exported to the scratchpad and this tree
 alternated per round in one session, five rounds, one pass of the Planner over the booted world as
-`world/dispatcher/tests/test_dispatcher.py` builds it; candidates, weighings and two-van worlds as the
+the dispatcher's test builds it; candidates, weighings and two-van worlds as the
 sections above count them, impossible the possible worlds marked. The counts did not move between
 rounds on either tree.
 
@@ -550,7 +551,7 @@ per instant; the times are inside the session's drift both ways. The hanoi cases
 (224 to 225, 474 to 475), which is the derivation's and not the band's: `_named` reads what stands
 under a desire once more, for the covering rule below.
 
-**What the plan carries now**, pinned in `world/dispatcher/tests/test_dispatcher.py`: each step
+**What the plan carries now**, pinned in the dispatcher's test: each step
 opens where the one before it lands, the six drives of the joint plan land at six distinct instants,
 the last step lands between three and six minutes after the root, every possible world holds over the
 period its step's two ends say, and each committed step is believed from its opening to its latest
@@ -648,7 +649,7 @@ above keeps its premise: with `o != holder` struck out, four allotment tests fai
 
 [Commitment](/domain/execution/commitment.md) is hard on the step in flight and soft on the plan, and
 its one trigger is a want a constraint couples to a walking one arriving. Measured on the development
-container by running the dispatcher as `world/dispatcher/tests/test_dispatcher.py` does — the runtime,
+container by running the dispatcher as the dispatcher's test does — the runtime,
 a drive's least landing between passes, until van A's plan has had two steps answered — then writing
 parcel B into the state, where the world named it a parcel and nothing else, and running the next pass
 at once, so van A's next drive is in flight when the arrival is planned for. The tree before
@@ -749,7 +750,7 @@ worlds weighed for the constraints. Measured on the development container, the t
 (`bb4b4a12`) exported to the scratchpad and this one alternated per run in one session, six runs of
 each case per tree, one process per run, budget 256, a drive's least landing between passes. *Shipped*
 is the dispatcher's joint walk with nothing arriving; *peer* and *aside* are the pose
-`world/dispatcher/tests/test_dispatcher.py` builds — van A and parcel A alone, owed at `c2_2` — with van
+the dispatcher's test builds — van A and parcel A alone, owed at `c2_2` — with van
 C, a peer's, predicted after two steps answered on the cell van A drives to next (`c1_2`), or on
 `c3_0`, which no step enters, and the next pass run at once. Medians; the asks and the worlds replayed
 did not move between runs, nor in two more rounds on the tree as committed, whose one difference is
@@ -867,3 +868,46 @@ whose intention failed with nothing else standing is searched again only on the 
 The 0.1.0 planner's tracked table, where its time went, and the criteria a Rust SHACL judge
 would have had to meet were measured on a different search over a different store and bind
 nothing here. They are in this runbook as it stood at `3e1ba134`.
+
+# The dispatcher's pins on the lane, and the contact range (2026-10-21)
+
+#1004 retired the dispatcher and moved its pins onto the lane as one-agent variants: the lane's own
+documents with courier A playing both drivers, every drive a command the simulator answers forty-five
+seconds on, every position reported by a fix every ten, in a yard eight columns west of the road where no
+radar has a hedge in range (`world/lane/tests/test_one_mind.py`). Each figure is one pass after the first
+fixes, or a walk ten seconds of the world's time a pass, on the development container.
+
+| case | the dispatcher's | the lane's |
+|---|---|---|
+| the yard, coupled: candidates and worlds | 328 and 248 | 328 and 248 |
+| a van alone: worlds | 20 and 20 | 20 and 20 |
+| the corridor: candidates, worlds, impossible | 318, 242, 13 | 318, 242, 13 |
+| parked, carrying: candidates and impossible | 62 and 7, 72 and 5 | the same |
+| both vans at one position, cut at 128: worlds | 82 | 83 |
+| parcel B arriving mid-walk, yard and corridor | 157 and 125; 127, 102, 7 | the same |
+| a peer seen ahead: candidates, worlds, impossible | 50, 34, 2 | 15, 12, 1 |
+| waiting for a peer crossing, and standing | 34 and 30, 39 and 31 | the same |
+
+The search sees the same declarations, so its figures are the dispatcher's. The peer case differs
+because the drive in flight is already a step further on when the re-search starts, and the route ties
+another way. Getting there took two kernel changes the fictive drives had hidden, both measured as a
+replacement ending `failed`: the ground where a step in flight lands now holds the step's change, and a
+replacement waits for the intention it replaced
+([a-ground-holds-the-change-of-a-step-landing-in-it](/decisions/a-ground-holds-the-change-of-a-step-landing-in-it.md)).
+One pin did not move: a pass between a reopening and its landing drops the replacement's cone (#1015).
+
+**The range the lane's contact sensors declare**, two cells either way on each axis, measured at one, two
+and three on two runs:
+
+| run | range | drives | the world's time | passes | van B first believed with van A at |
+|---|---|---|---|---|---|
+| the shipped lane, east to (6, 1) | 1, 2, 3 | 6 | 5 min | 31 | (5, 1), (4, 1), (3, 1) |
+| parcel A owed in the passing place, (3, 2) | 1, 2, 3 | 4 | 3 min 20 s | 21 | never |
+
+The range moves only where a peer standing off the route is first believed. On the lane's own run the
+route passes the hedges side-on and van B stands off it, so nothing is reopened at any range. On the
+passing-place run the range bounds nothing either: the one radar slot holds the nearest thing, and the
+hedge at (2, 0) ties with the one at (2, 2) until van A stands at (1, 2), at every range tried. What
+follows there is a defect, the drive onto (2, 2) taken in the pass the radar first shows it (#1016). Two
+stays the world's figure.
+

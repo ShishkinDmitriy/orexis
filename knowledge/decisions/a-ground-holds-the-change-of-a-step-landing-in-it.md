@@ -63,6 +63,16 @@ taken are answered first in a tick, so the replacement's first step goes in the 
 the step in flight. The plan was found in the ground in which that step has landed, and only the world
 says when it has.
 
+Both were seams of [one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md),
+each with its trigger: the joint plan waiting on no answer, until a world reconsiders a step that is not
+fictive; and the landing ground applying no prediction of the step in flight, refused while a flow can
+state the step's effect, since the two would count it twice. The lane is the first such world, and
+nothing is counted twice: a step's change supersedes by key, an assignment and not an increment, and an
+effect speaks the state a transition concludes (#944), never a number a flow moves, so laid where the
+step lands it agrees with what the flows bring there rather than adding to it. A ground after the
+landing still judges each crossing by the transitions, and where the integrated number disagrees with
+the step's claim, the crossing's judgment holds from its instant on.
+
 Ported so, the dispatcher's pins hold on the lane with the dispatcher's figures where the search is the
 same: a parcel arriving reopens van A's want at 157 candidates and 125 worlds in the yard, 127 and 102
 with seven impossible on the corridor. Where the step in flight changes what the search starts from,

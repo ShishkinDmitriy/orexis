@@ -49,7 +49,7 @@ whose pass needs more than planning's 32 candidates states the search's `plannin
 at the figure the world's own test measured; `state.ttl` for a world nothing senses; the desires or
 wants per agent; `deployment.ttl` only to pin a port; `hardware.ttl` only where a board is flashed.
 Every document of an agent's own says whose it is in what it states, never in its file's name. Model the nearest shipped world — `world/greenhouse/` with a bus and
-sensors, `world/dispatcher/` or `world/courier/` without, `world/tower/` for two levels — and
+sensors, `world/driver/` or `world/courier/` without, `world/tower/` for two levels — and
 copy its layout, not its words. A word the bundle does not have is written as a domain page in the
 same change, first (AGENTS.md).
 

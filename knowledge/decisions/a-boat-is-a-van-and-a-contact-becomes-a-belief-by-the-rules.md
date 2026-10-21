@@ -179,7 +179,10 @@ the draw's two documents each way once #923 lands. The figure is measured where 
   reputation.
 - **Three boats in one radius**, as the two-minds record leaves it: the draw is between two.
 - **The radius figure.** Stated by the world, measured by the canal's tests, and the draw's cost added
-  when #923 lands.
+  when #923 lands. *Measured 2026-10-21 on the lane, where it is the range each contact sensor declares,
+  two cells: at one, two and three the walks are the same, and the range moves only where a peer standing
+  off the route is first believed; what bounds sight on the road is the one radar slot, not the range
+  ([measure-the-search](/runbooks/measure-the-search.md)). The draw's cost is still #923's.*
 - **The x and y of a cell are the cell's.** A boat's position is a cell's number, not coordinates; a
   world finer than its cells would need the position as two readings and a transition reading two
   states, which the order groups allow and nothing here needs yet.

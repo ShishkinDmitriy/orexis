@@ -7,8 +7,8 @@
 # instance the walking want is about and more: it is minted under its own name, about both, saying it
 # `planning:reopens` the walking want, which is kept and not edited. The harness hands the derivation
 # what an executor over the case's store walks, each landing NOW, since no step of it is in flight
-# here; minted at the instant a step in flight lands is the dispatcher's to show, in
-# `world/dispatcher/tests/test_dispatcher.py`. Struck, the coupled want is minted beside the walking
+# here; minted at the instant a step in flight lands is the lane's to show, in
+# `world/lane/tests/test_one_mind.py`. Struck, the coupled want is minted beside the walking
 # one with no `planning:reopens`, and nothing tells the Planner the two are one van's.
 #
 # The clock stands at 2026-01-01T12:00:00Z when the derivation runs.

@@ -18,7 +18,8 @@ off the common graphs alone, every pattern optional, which is right for a partit
 while the agent runs. It is grid-blind: asked that way the aversion joins `van_a` to `van_b` with the
 cell unbound, on a shared grid and on two grids a continent apart alike, because which cells a van
 can stand on is the drive's precondition's FILTER over coordinates, and the half of a text those graphs
-answer is its patterns. Measured on the shipped dispatcher and on a variant with the vans on disjoint grids:
+answer is its patterns. Measured on the dispatcher, one mind and two vans on the courier's grid, and on a
+variant with the vans on disjoint grids:
 the same four rows. So the constraint is asked over the REACH — every fact some sequence of the
 actions could make true from the present ground with nothing taken away, the delete-free fixpoint
 of the effects' insert templates over their preconditions, which is the planning literature's relaxed
@@ -45,7 +46,8 @@ places are finite terms, hanoi's pegs (the-grid-is-infinite-and-a-position-is-tw
 
 PER PASS, IN THE DERIVATION, because the reach begins at the present: where the vans stand decides
 which grid each is on, and a scope is computed at boot from what the world alone binds. A holder
-that holds no constraint pays one query; the dispatcher pays the reach, measured in the runbook.
+that holds no constraint pays one query, one whose effects compute a value pays a parse of each, and
+the rest pay the reach, measured in the runbook.
 
 A READ, and a function over the store: it writes a working graph for the reach and takes it away
 before it answers, so nothing it does outlives the call and no catalogue row is written for it.
@@ -250,7 +252,7 @@ def _parts(store: ox.Store, selects: list[str], default: list) -> list[frozenset
     """The components of what the constraints' rows join over the reach: every IRI one row binds is
     joined to every other, across every row of every constraint. The select is asked with every
     variable projected, since the join key may be one the head left out — `?other`, in the
-    dispatcher's — and with its original head where that will not run. None where a select will not
+    dispatcher's aversion as it was first stated — and with its original head where that will not run. None where a select will not
     run either way, which is a constraint nobody can read."""
     parent: dict = {}
 

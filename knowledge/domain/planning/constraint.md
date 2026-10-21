@@ -18,18 +18,18 @@ the world itself allows. The three are checks of different kinds: a met-test ask
 is DESIRED, a precondition whether an action is available, and a constraint whether a world is
 POSSIBLE at all. That is a difference of modality and not of strength — desire is bouletic and
 possibility alethic — and it is why a constraint is a kind of its own, `planning:Constraint`, and
-not a reading of a desire. The dispatcher's is that no two vans stand at one position, which is physics and not
+not a reading of a desire. The courier's is that no two vans stand at one position, which is physics and not
 a preference: two vans cannot share a position, and a world where they do is not a bad world the agent
 should mend but a world that cannot be.
 
-A constraint is **stated by the world**, in a `planning:ConstraintGraph` (`world/dispatcher/constraints.ttl`),
+A constraint is **stated by the world**, in a `planning:ConstraintGraph` (`domains/courier/constraints.ttl`, held by `world/lane/constraints.ttl`),
 no belief, as a desire is none, and common to every agent of the world where the world names no owner for it ([common belief](/domain/kernel/common-belief.md)), since what is possible is no one agent's; the agent
 `planning:holds` it exactly as it holds a desire, and carries its test in the same two words — a
 [shape](/domain/planning/shape.md) under `planning:metWhen`, or the avoided state under
 `planning:unmetWhen`, one select whose rows are the instances in it. Either polarity, because the
 compiler judges either (`violation.select_of`) and what differs between a desire and a constraint is
 what a row MEANS, not how it is found; the prohibition reads most honestly as the avoided state, and
-that is the form the dispatcher uses. It is the world's to state and never the agent's to infer, as
+that is the form the courier's uses. It is the world's to state and never the agent's to infer, as
 every limit here is ([control-the-derivative-not-the-value](/decisions/control-the-derivative-not-the-value.md)).
 
 SHACL's own word is a second meaning and keeps the word: a shape's *constraint* is one of its
@@ -49,7 +49,7 @@ Nothing compares a child to its parent: possibility is a fact about the world, n
 that reached it, so a world that keeps a violation the present already has is as impossible as one
 that enters it. The cases are `agent/planning/tests/expand/a_fork_that_violates_a_constraint_is_impossible.trig`
 and `a_fork_that_keeps_the_presents_violation_is_impossible_too.trig`; what it does on the
-dispatcher's poses, and what it costs a world, is in [measure-the-search](/runbooks/measure-the-search.md).
+lane's one-mind poses, and what it costs a world, is in [measure-the-search](/runbooks/measure-the-search.md).
 
 # The present is validated, never repaired
 
@@ -61,8 +61,8 @@ rows to whoever asks, and `orexis-onboard` refuses a world posed that way before
 (`onboarding/reading.py`, `contradicted`). A prohibition the agent may break and then has to mend
 is not a constraint at all but the aversion [desire](/domain/planning/desire.md) describes, and the
 suite keeps one being mended in `agent/planning/tests/plans/an_aversions_want_is_repaired_by_a_step.trig`.
-The dispatcher's two-vans rule was authored as that until this page said which it was, and two vans
-posed on one cell minted a want a drive satisfied: physics mended as a preference.
+The courier's two-vans rule was authored as that, in a world since retired, until this page said which it
+was, and two vans posed on one cell minted a want a drive satisfied: physics mended as a preference.
 
 A limit on ACTS in flight — one driver drives one van at a time — is modelled as world state the
 constraint can read, a driver who must be aboard the van it drives, or not at all; an executor-held
@@ -79,26 +79,28 @@ variables its patterns share, the two coordinates both vans' patterns end in. Wh
 what it can make collide: two plans whose steps write a position on two vans that can stand at one.
 
 It is not read where a scope's atoms are. A scope asks each precondition over the common beliefs
-with every pattern optional, which is right for a partition fixed at boot, and asked that way the
-constraint is grid-blind: it joins `van_a` to `van_b` with the position unbound on the shipped
-dispatcher and on a variant whose vans stand on two grids a continent apart alike, four identical
-rows, because where a van can stand is the drive's arithmetic over coordinates and the
-half of a text the world's graphs answer is its patterns alone (measured, `agent/planning/tests/test_couplings.py`).
-So the select is asked over the **reach** - every fact some sequence of the actions could make
-true from the present ground with nothing taken away, the delete-free closure of the effects'
-constructs over their preconditions, which is the planning literature's relaxed reachability.
-Over the reach the constraint's rows are the collisions the plans could actually make: thirty-two
-on the shared 4x4, none on two grids, in seven rounds and twelve milliseconds. Each row's bound
-IRIs are joined into one part - the vans that can meet and the places they meet at - and an instance
-reaches a part through a FILLING the reach admits that binds both, the pick of this parcel into
-that van, exactly as a scope's key is what the world binds a subject by. Two instances are coupled
-where one part meets what each is, or is bound with. Over-approximation is the safe side
-throughout: a constraint whose select will not compile or run couples everything.
+with every pattern optional, which is right for a partition fixed at boot, and asked that way a
+constraint over places is blind to where each thing can go, since that is the actions' to say. So
+the select is asked over the **reach** - every fact some sequence of the actions could make true
+from the present ground with nothing taken away, the delete-free closure of the effects' constructs
+over their preconditions, which is the planning literature's relaxed reachability - and its rows are
+the collisions the plans could actually make. Each row's bound IRIs are joined into one part, and an
+instance reaches a part through a FILLING the reach admits that binds both, exactly as a scope's key
+is what the world binds a subject by. Two instances are coupled where one part meets what each is,
+or is bound with. Over-approximation is the safe side throughout: a constraint whose select will not
+compile or run couples everything.
 
-The reach begins at the present, since where the vans stand decides which grid each is on, so this
-is read PER PASS in the derivation and never at boot (`agent/planning/couplings.py`); a holder with
-no constraint pays one query and couples nothing, and the dispatcher pays the reach, measured in
-[measure-the-search](/runbooks/measure-the-search.md).
+**And a value an effect computes is reachable anywhere.** The reach is finite over the terms a store
+holds; an effect writing a number its precondition computed - the courier's drive, to a neighbour
+minted by arithmetic on an infinite grid - mints the next ring every round. So the effects are read
+before the reach is run, and where a template value is one an arithmetic expression binds, every
+instance is coupled and no reach is run: on a plane every two vans can meet. The reach stays for
+worlds whose places are finite terms
+([the-grid-is-infinite-and-a-position-is-two-coordinates](/decisions/the-grid-is-infinite-and-a-position-is-two-coordinates.md)).
+
+The reach begins at the present, so this is read PER PASS in the derivation and never at boot
+(`agent/planning/couplings.py`); a holder with no constraint pays one query and couples nothing,
+and what the rest pay is in [measure-the-search](/runbooks/measure-the-search.md).
 
 # What coupling does
 
@@ -114,7 +116,6 @@ left them. A coupled cluster that takes in an instance a walking want is about r
 the first trigger of soft [commitment](/domain/execution/commitment.md); the second is the
 constraint marking a world of the walking plan impossible once a belief has changed the grounds.
 `agent/planning/tests/derive_wants/two_parcels_a_constraint_joins_are_one_want.trig`
-and `two_parcels_on_disjoint_grids_are_two_wants.trig` hold the derivation to both;
-`world/dispatcher/tests/test_dispatcher.py` holds the world to the joint ten-step plan and to the
-product it costs. The argument, and what was refused in its place, is
+holds the derivation to it; `world/lane/tests/test_one_mind.py` holds a world to the joint ten-step
+plan and to the product it costs. The argument, and what was refused in its place, is
 [one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md).

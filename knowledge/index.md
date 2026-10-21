@@ -9,7 +9,7 @@ sensors on a Raspberry Pi. Each agent is Agent 0.2.0: one process, one store, on
 from its instruments become observations, rules revise them, the future is predicted, wants are
 derived from its desires and searched over possible worlds, and the plans are carried out and
 held to what they predicted. The domain is a plug-in: plant watering is the example — a grower
-buying water on a supplier's venue — and hanoi, a courier grid, a dispatcher's two vans on it, one
+buying water on a supplier's venue — and hanoi, a courier grid, one
 driver between two vans, a tower of the two and a road two worlds are posed on are the others. This bundle is the durable what and why; the live state is in each agent's store.
 
 # Domain
