@@ -1,45 +1,34 @@
 @prefix : <http://example.org/orexis/road#> .
 @prefix courier: <http://example.org/orexis/courier#> .
+@prefix sim: <http://example.org/orexis/sim#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
 <> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
-    owl:imports <../courier/ontology.ttl> ,    # the words the road is laid out in: a cell and its coordinates
-                <constraints.ttl> .            # and what no van on it does, which a world's agents hold
+    owl:imports <../courier/ontology.ttl> ,    # the words a road is laid out in: a position, two coordinates on a thing, and what no van does
+                <../sim/ontology.ttl> .        # the hedges stand where their model says, played by the simulator
 
 #  THE ROAD, A DOMAIN.
 #  One stretch of road, shared by every world posed on it: a single-track lane with a passing place, open
-#  road two cells wide at each end. The road is its cells, each its two coordinates and nothing else - a
-#  neighbour is a cell one away on one axis, which the drive's own precondition works out from the
-#  coordinates, so the road declares no edge (#1012, refused). What it is NOT is a world: it says nothing of
-#  who drives on it, where a van stands or what is owed where. `world/lane/` poses two couriers on it,
-#  `world/layby/` one courier and a van parked by a driver nobody plays, the same road under different
-#  initial states; a third world would import this document and author its vans.
+#  road two cells wide at each end. The grid is infinite and nothing authors it
+#  (the-grid-is-infinite-and-a-position-is-two-coordinates): the road is not cells but what STANDS on it,
+#  the hedges either side of the lane, each a thing at two coordinates with no instrument of its own, which
+#  a van's radar sees within its range and its courier then believes an obstacle at - and plans round,
+#  since no van stands where an obstacle is. No agent is told the hedges: a courier plans across the plane
+#  as if it were open, sees a hedge when it comes within range, and its plan is reopened where that makes
+#  the next step's world impossible (#921). The road is discovered, not known. What it is NOT is a world:
+#  it says nothing of who drives on it, where a van stands or what is owed where. `world/lane/` poses two
+#  couriers on it, `world/layby/` one courier and a van parked by a driver nobody plays, the same road under
+#  different initial states; a third world would import this document and author its vans.
 #
-#  THE SHAPE: columns 0 and 1 and columns 5 and 6 are open road, three rows deep; columns 2 to 4 are the
-#  lane, row 1 alone, and (3, 2) is the passing place. A cell is its two coordinates, which is what a van's
-#  fix reports and what a van is told: an instrument gives numbers, and the coordinates are the courier's
-#  own (knowledge/domain/courier/position.md). The grid is infinite, a cell being any pair of coordinates, and
-#  the road is the part of it these worlds' agents know: a plan is searched over the cells an agent knows,
-#  so a van is driven along the road because its courier knows no other cell, not because the world refuses.
+#  THE SHAPE: columns 0 and 1 and columns 5 and 6 are open, three rows deep; columns 2 to 4 are the lane,
+#  row 1, with the passing place at (3, 2); so the hedges stand at (2, 0), (3, 0), (4, 0), (2, 2) and
+#  (4, 2). A van told any neighbour drives there, hedge or not: the simulator refuses nothing but a cell
+#  two away, and what keeps a plan off a hedge is the constraint, weighed where the radar has shown one.
 
-#  Western road
-:c0_0 a courier:Cell ; courier:x 0 ; courier:y 0 .
-:c0_1 a courier:Cell ; courier:x 0 ; courier:y 1 .
-:c0_2 a courier:Cell ; courier:x 0 ; courier:y 2 .
-:c1_0 a courier:Cell ; courier:x 1 ; courier:y 0 .
-:c1_1 a courier:Cell ; courier:x 1 ; courier:y 1 .
-:c1_2 a courier:Cell ; courier:x 1 ; courier:y 2 .
-#  The lane, and its passing place
-:c2_1 a courier:Cell ; courier:x 2 ; courier:y 1 .
-:c3_1 a courier:Cell ; courier:x 3 ; courier:y 1 .
-:c3_2 a courier:Cell ; courier:x 3 ; courier:y 2 ; rdfs:label "the passing place" .
-:c4_1 a courier:Cell ; courier:x 4 ; courier:y 1 .
-#  Eastern road
-:c5_0 a courier:Cell ; courier:x 5 ; courier:y 0 .
-:c5_1 a courier:Cell ; courier:x 5 ; courier:y 1 .
-:c5_2 a courier:Cell ; courier:x 5 ; courier:y 2 .
-:c6_0 a courier:Cell ; courier:x 6 ; courier:y 0 .
-:c6_1 a courier:Cell ; courier:x 6 ; courier:y 1 .
-:c6_2 a courier:Cell ; courier:x 6 ; courier:y 2 .
+:hedge_2_0 sim:simulatedBy [ a sim:Model ; sim:x 2 ; sim:y 0 ] ; rdfs:label "the hedge north of the lane's first cell" .
+:hedge_3_0 sim:simulatedBy [ a sim:Model ; sim:x 3 ; sim:y 0 ] ; rdfs:label "the hedge north of the lane's second cell" .
+:hedge_4_0 sim:simulatedBy [ a sim:Model ; sim:x 4 ; sim:y 0 ] ; rdfs:label "the hedge north of the lane's third cell" .
+:hedge_2_2 sim:simulatedBy [ a sim:Model ; sim:x 2 ; sim:y 2 ] ; rdfs:label "the hedge south of the lane's first cell" .
+:hedge_4_2 sim:simulatedBy [ a sim:Model ; sim:x 4 ; sim:y 2 ] ; rdfs:label "the hedge south of the lane's third cell, east of the passing place" .

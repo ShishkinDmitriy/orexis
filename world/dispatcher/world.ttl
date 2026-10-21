@@ -27,24 +27,10 @@
 :van_a a courier:Van ; rdfs:label "van A" .
 :van_b a courier:Van ; rdfs:label "van B" .
 
-:parcel_a a courier:Parcel ; courier:destination :c0_3 ;
+:parcel_a a courier:Parcel ; courier:destination :door_a ;
     rdfs:label "the parcel owed at the top of the first column" .
-:parcel_b a courier:Parcel ; courier:destination :c3_3 ;
+:parcel_b a courier:Parcel ; courier:destination :door_b ;
     rdfs:label "the parcel owed at the top of the last column" .
+:door_a courier:x 0 ; courier:y 3 ; rdfs:label "the top of the first column, where parcel A is owed" .
+:door_b courier:x 3 ; courier:y 3 ; rdfs:label "the top of the last column, where parcel B is owed" .
 
-:c0_0 a courier:Cell ; courier:x 0 ; courier:y 0 .
-:c0_1 a courier:Cell ; courier:x 0 ; courier:y 1 .
-:c0_2 a courier:Cell ; courier:x 0 ; courier:y 2 .
-:c0_3 a courier:Cell ; courier:x 0 ; courier:y 3 .
-:c1_0 a courier:Cell ; courier:x 1 ; courier:y 0 .
-:c1_1 a courier:Cell ; courier:x 1 ; courier:y 1 .
-:c1_2 a courier:Cell ; courier:x 1 ; courier:y 2 .
-:c1_3 a courier:Cell ; courier:x 1 ; courier:y 3 .
-:c2_0 a courier:Cell ; courier:x 2 ; courier:y 0 .
-:c2_1 a courier:Cell ; courier:x 2 ; courier:y 1 .
-:c2_2 a courier:Cell ; courier:x 2 ; courier:y 2 .
-:c2_3 a courier:Cell ; courier:x 2 ; courier:y 3 .
-:c3_0 a courier:Cell ; courier:x 3 ; courier:y 0 .
-:c3_1 a courier:Cell ; courier:x 3 ; courier:y 1 .
-:c3_2 a courier:Cell ; courier:x 3 ; courier:y 2 .
-:c3_3 a courier:Cell ; courier:x 3 ; courier:y 3 .

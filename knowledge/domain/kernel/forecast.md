@@ -13,7 +13,7 @@ description: >-
 
 A forecast is a word about what will hold over a stretch the present has not reached, kept as a
 graph that holds during that stretch and carries what is said to hold then: a weather service's
-`sosa:Observation` of rain for one hour, a peer's `courier:at` for a cell, the step the executor is
+`sosa:Observation` of rain for one hour, a peer's position for a stretch, the step the executor is
 committed to over its landing window. A reader standing at an instant inside the stretch reads it and
 one standing before it does not
 ([a-graph-holds-during-a-stretch](/decisions/a-graph-holds-during-a-stretch.md)), and where a text of

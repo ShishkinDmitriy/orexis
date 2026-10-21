@@ -125,9 +125,13 @@ def admit(store, world: str, *, only=None, elsewhere=frozenset(), memo=None) -> 
         #  A precondition carrying a token nobody binds REFUSES rather than reaching the engine
         #  as a free variable (#500), and a precondition is offered none: it asks the self for the agent.
         params = {local_of(p): p for p in (action.get("takes_") or "").split()}
-        for row in bindings(query(store, bind(action["precondition"]), graphs)):
-            filling = sorted((iri, row[local]) for local, iri in params.items() if row.get(local))
-            if (action["action"], frozenset(filling)) in already or any(v in elsewhere for _, v in filling):
+        #  THE ROW'S TERMS, not their value strings: a parameter the precondition COMPUTES — the column a drive
+        #  drives to, a number the world never named — is a typed literal, and written as its value alone it
+        #  would come back a string no arithmetic reads (the-grid-is-infinite-and-a-position-is-two-coordinates).
+        for row in query(store, bind(action["precondition"]), graphs).get("results", {}).get("bindings", []):
+            filling = sorted((iri, row[local]["value"], _term(row[local])) for local, iri in params.items() if row.get(local))
+            if (action["action"], frozenset((p, v) for p, v, _ in filling)) in already \
+                    or any(v in elsewhere for _, v, _ in filling):
                 continue
             if (action["action"], filling) not in fillings:
                 fillings.append((action["action"], filling))
@@ -151,14 +155,20 @@ def admit(store, world: str, *, only=None, elsewhere=frozenset(), memo=None) -> 
         cand = f"{POSSIBLE}{minted}.by"
         edges.append(f"<{cand}> a planning:Candidate ; planning:from <{world}> ; "
                      f"planning:fills <{action}> ; planning:minted {minted} .\n"
-                     + "".join(f"<{cand}> <{p}> {_term(v)} .\n" for p, v in filling))
+                     + "".join(f"<{cand}> <{p}> {term} .\n" for p, _, term in filling))
     if memo is not None:
         memo.put(("minted",), minted)
     update(store, bind(_ADMIT_U, edges=Raw("".join(edges))))
 
 
-def _term(value: str) -> str:
-    """One binding's value as the text of the term it is — an IRI where it looks like one,
-    else a literal."""
+def _term(binding: dict) -> str:
+    """One SPARQL-JSON binding as the text of the term it is — an IRI, a typed literal with its
+    datatype, a plain literal — so what a precondition computed is written as what it computed."""
     import pyoxigraph as ox
-    return render(value) if "://" in value else render(ox.Literal(value))
+    if binding.get("type") == "uri":
+        return render(ox.NamedNode(binding["value"]))
+    if binding.get("datatype"):
+        return render(ox.Literal(binding["value"], datatype=ox.NamedNode(binding["datatype"])))
+    if binding.get("xml:lang"):
+        return render(ox.Literal(binding["value"], language=binding["xml:lang"]))
+    return render(ox.Literal(binding["value"]))

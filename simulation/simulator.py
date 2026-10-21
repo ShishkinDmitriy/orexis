@@ -38,14 +38,15 @@ A VAN IS PLAYED AS A BODY THAT MOVES ON COMMAND (#1002): a `courier:Van` marked 
 `{"to": {"x": <column>, "y": <row>}}` on the topic it listens to, is on that cell `sim:delayS` later, and
 the position fix it hosts — two sensors observing `courier:Column` and `courier:Row` — reports the
 coordinates from then on. The grid is infinite, and a van refuses only a cell that is no neighbour of the
-one it stands on; the cells the world's agents know are read off it for where out of range is pretended to
-be. So the pilot never writes its own van's cell, and there is a true position for a contact to be played from.
+one it stands on. So the pilot never writes its own van's position, and there is a true position for a
+contact to be played from.
 
 A CONTACT IS PLAYED FROM THE TRUE POSITIONS (#1003): a `sosa:Sample` a van carries, with two sensors
 observing `courier:RelativeColumn` and `courier:RelativeRow`, reports the vector from the carrying van
 to what it stands for - the peer it `isSampleOf`, or, standing for nothing named, the nearest thing no
-receiver of that van identifies - while that is within the sensors' model's `sim:radius`, |dx| + |dy|
-in cells; beyond it, a vector landing one cell past the far corner of the known cells, where no agent knows one.
+receiver of that van identifies - while that is within the `ssn-system:MeasurementRange` each of the two
+sensors declares, the area the agent sees; beyond it, a vector one past the most of each
+(the-grid-is-infinite-and-a-position-is-two-coordinates).
 A thing's true position is its fix's if it has one, else where its model says it stands (`sim:x`, `sim:y`).
 """
 
@@ -117,21 +118,19 @@ SELECT ?van ?column ?row ?delay WHERE {{
   ?row a sosa:Sensor ; sosa:isHostedBy ?van ; sosa:observes <{COURIER}Row> .
   OPTIONAL {{ ?model <{SIM}delayS> ?delay }} }}"""
 
-#  THE CELLS THE WORLD'S AGENTS KNOW: the grid is infinite and a cell any pair of coordinates, so a van is
-#  driven to any neighbour of the one it stands on, on the road or off it, and what keeps it on the road is
-#  its courier planning over the cells it knows; the cells are read only for where a contact out of range is
-#  pretended to be, past the far corner of them, where no agent knows a cell.
-_CELLS_Q = f"""SELECT ?x ?y WHERE {{ ?cell a <{COURIER}Cell> ; <{COURIER}x> ?x ; <{COURIER}y> ?y }}"""
-
 #  EVERY CONTACT PLAYED (#1003): the van carrying it, the peer it stands for where it stands for one, its two
-#  sensors and how far they see.
+#  sensors and how far each sees — the most of the `ssn-system:MeasurementRange` it declares, which is the
+#  instrument's own figure and the one the courier's transitions hold a reading to.
 _CONTACTS_Q = f"""
-SELECT ?contact ?van ?peer ?column ?row ?radius WHERE {{
+SELECT ?contact ?van ?peer ?column ?row ?columnMost ?rowMost WHERE {{
   ?contact a sosa:Sample ; sosa:isHostedBy ?van .
-  ?column a sosa:Sensor ; sosa:isHostedBy ?contact ; sosa:observes <{COURIER}RelativeColumn> ; <{SIM}simulatedBy> ?model .
+  ?column a sosa:Sensor ; sosa:isHostedBy ?contact ; sosa:observes <{COURIER}RelativeColumn> .
   ?row a sosa:Sensor ; sosa:isHostedBy ?contact ; sosa:observes <{COURIER}RelativeRow> .
   OPTIONAL {{ ?contact sosa:isSampleOf ?peer }}
-  OPTIONAL {{ ?model <{SIM}radius> ?radius }} }} ORDER BY ?contact"""
+  OPTIONAL {{ ?column ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?cr .
+             ?cr a ssn-system:MeasurementRange ; schema:maxValue ?columnMost }}
+  OPTIONAL {{ ?row ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?rr .
+             ?rr a ssn-system:MeasurementRange ; schema:maxValue ?rowMost }} }} ORDER BY ?contact"""
 
 #  WHERE A THING WITH NO INSTRUMENT STANDS, as its model says: a parked van, a fallen tree.
 _POSED_Q = f"""SELECT ?thing ?x ?y WHERE {{ ?thing <{SIM}simulatedBy> ?model . ?model <{SIM}x> ?x ; <{SIM}y> ?y }}"""
@@ -163,11 +162,11 @@ class Simulator:
         #  way, each the instant it shows and the cell it shows.
         self.vans = {r["van"]: (r["column"], r["row"], float(r["delay"]) if r.get("delay") is not None else 0.0)
                      for r in self._rows(_VANS_Q) if r["column"] in self.sensors and r["row"] in self.sensors}
-        self.cells = {(int(r["x"]), int(r["y"])) for r in self._rows(_CELLS_Q)}
         self.moving: dict[str, tuple[datetime, tuple[int, int]]] = {}
         #  THE CONTACTS each van carries, in the world's order, and where the things with no fix stand.
         self.contacts = {r["contact"]: (r["van"], r.get("peer"), r["column"], r["row"],
-                                        int(r["radius"]) if r.get("radius") is not None else None)
+                                        (int(float(r["columnMost"])) if r.get("columnMost") is not None else None,
+                                         int(float(r["rowMost"])) if r.get("rowMost") is not None else None))
                          for r in self._rows(_CONTACTS_Q) if r["column"] in self.sensors and r["row"] in self.sensors}
         self.posed = {r["thing"]: (int(r["x"]), int(r["y"])) for r in self._rows(_POSED_Q)}
 
@@ -247,12 +246,12 @@ class Simulator:
     def _sight(self) -> None:
         """Every contact's sensors set to the vector from the carrying van to what the contact stands for —
         its peer, or the nearest thing no receiver of that van identifies, slots taking the nearest first —
-        where that is within the radius, and to a vector landing past the far corner of the cells the world's
-        agents know where it is not, or where there is nothing to stand for."""
-        beyond = (max(x for x, _ in self.cells) + 1, max(y for _, y in self.cells) + 1) if self.cells else (1, 1)
+        where that is within the range each sensor declares, and to a vector one past the most of each
+        where it is not, or where there is nothing to stand for. A sensor declaring no range, which
+        onboarding refuses, sees everything and reports nothing in range as a thousand cells off."""
         identified = {(van, peer) for van, peer, *_ in self.contacts.values() if peer}
         taken: dict[str, set[str]] = {}
-        for contact, (van, peer, column, row, radius) in self.contacts.items():
+        for contact, (van, peer, column, row, (column_most, row_most)) in self.contacts.items():
             here = self.position(van)
             if here is None:
                 continue
@@ -268,10 +267,11 @@ class Simulator:
                 if things:
                     _, name, target = things[0]
                     taken.setdefault(van, set()).add(name)
-            if target is not None and (radius is None or abs(target[0] - here[0]) + abs(target[1] - here[1]) <= radius):
+            if target is not None and (column_most is None or abs(target[0] - here[0]) <= column_most) \
+                    and (row_most is None or abs(target[1] - here[1]) <= row_most):
                 vector = (target[0] - here[0], target[1] - here[1])
             else:
-                vector = (beyond[0] - here[0], beyond[1] - here[1])
+                vector = (column_most + 1 if column_most is not None else 1000, row_most + 1 if row_most is not None else 1000)
             self.sensors[column]["value"], self.sensors[row]["value"] = float(vector[0]), float(vector[1])
 
     def due_in(self, now: datetime) -> float:

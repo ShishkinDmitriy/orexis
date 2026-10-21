@@ -1,0 +1,10 @@
+@prefix : <http://example.org/orexis/world/tower#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+
+<> a planning:ConstraintGraph .    # this document is one graph, and this is what it is
+
+#  WHO HOLDS THE COURIER'S CONSTRAINT (domains/courier/constraints.ttl): the mover, so no plan drives the van
+#  into the fence round the yard, which bounds the search below a move where the authored cells once did.
+
+:mover planning:holds courier:no_van_on_an_obstacle .

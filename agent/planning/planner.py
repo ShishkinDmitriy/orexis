@@ -791,9 +791,9 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
     def _impossible_ahead(self, store: ox.Store, flights: dict, constraints: list[str], only, memo: Memo) -> set[str]:
         """The walking wants of this scope a world of whose plan is IMPOSSIBLE in the grounds as now
         laid — soft commitment's second trigger (#921). For each standing intention whose head's action
-        is this scope's, and whose want the derivation minted here: its UNTAKEN steps — those after the
-        step in flight, or from the head where nothing is — replayed in order, and each world they reach
-        weighed for every constraint among `constraints`, stopping at the first that yields a row.
+        is this scope's, and whose want the derivation minted here: its steps from the one in flight, or
+        from the head where nothing is, replayed in order, and each world they reach weighed for every
+        constraint among `constraints`, stopping at the first that yields a row.
 
         THE WORLDS ARE THE PLAN'S OWN CLAIM, LAID ON THE NEW GROUNDS. A step published says what its
         effect changes, `execution:adds` and `execution:retracts` (#919), and when it lands,
@@ -824,8 +824,14 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                 continue
             chain = [step for step, _ in self._chain(self.beliefs, flight["plan"])]
             at = chain.index(flight["head"]) if flight["head"] in chain else len(chain)
-            untaken = chain[at + (1 if flight["in_flight"] else 0):]
-            if not untaken:
+            #  FROM THE STEP IN FLIGHT, where there is one: the ground it lands in is a boundary and carries
+            #  no change of it, since a committed step lays no ground (`lay_ground`), so its change is the
+            #  first the plan's claim makes there. Replayed from the step after it, the first untaken drive's
+            #  new column stood beside the stale row and the van read as standing where a peer stood: a
+            #  position being two keys, a half-applied change is a crossing of positions
+            #  (the-grid-is-infinite-and-a-position-is-two-coordinates).
+            untaken = chain[at:]
+            if not untaken or (len(untaken) == 1 and flight["in_flight"]):
                 continue
             said = {r["step"]: r for r in rows(self.beliefs, _PREDICTS_Q, (), plan=Raw(f"<{flight['plan']}>"))}
             foreseen, changes, before, world = [], [], None, None
@@ -849,6 +855,15 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                     for retracts, adds in applying:
                         for q in retracts:
                             store.remove(ox.Quad(q.subject, q.predicate, q.object, target))
+                        #  AND BY KEY, as a prediction supersedes (#988): a step's retractions name the values it
+                        #  expected to find, and the ground has moved under it — the step in flight is not laid
+                        #  in it, so the first untaken drive's old coordinates are not there to retract, and its
+                        #  new ones would stand beside the ones the van holds, a van at four positions where its
+                        #  two keys cross; measured as a collision with a peer the plan never drives at
+                        #  (the-grid-is-infinite-and-a-position-is-two-coordinates).
+                        for subject, predicate in {(q.subject, q.predicate) for q in adds}:
+                            for held in list(store.quads_for_pattern(subject, predicate, None, target)):
+                                store.remove(held)
                         add_quads(store, (ox.Quad(q.subject, q.predicate, q.object, target) for q in adds))
                     update(store, bind(_FORESEEN_U, world=world, start=instant(lands)))
                     before = ground

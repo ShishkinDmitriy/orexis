@@ -34,46 +34,16 @@
 
 :driver a courier:Driver ; courier:drives :van_a , :van_b ; rdfs:label "the driver" .
 
-:van_a a courier:Van ; rdfs:label "van A, on the first grid" .
-:van_b a courier:Van ; rdfs:label "van B, on the second grid" .
+:van_a a courier:Van ; rdfs:label "van A, at the western columns" .
+:van_b a courier:Van ; rdfs:label "van B, ten columns east" .
 
-:parcel_a a courier:Parcel ; courier:destination :c0_3 ;
-    rdfs:label "the parcel owed at the top of the first grid's first column" .
-:parcel_b a courier:Parcel ; courier:destination :g10_3 ;
-    rdfs:label "the parcel owed at the top of the second grid's first column" .
+:parcel_a a courier:Parcel ; courier:destination :top_of_the_first_column ;
+    rdfs:label "the parcel owed at the top of the first column" .
+:top_of_the_first_column courier:x 0 ; courier:y 3 ; rdfs:label "where parcel A is owed" .
+:parcel_b a courier:Parcel ; courier:destination :top_of_the_tenth_column ;
+    rdfs:label "the parcel owed at the top of the tenth column, ten cells east" .
+:top_of_the_tenth_column courier:x 10 ; courier:y 3 ; rdfs:label "where parcel B is owed" .
 
 #  THE FIRST GRID
-:c0_0 a courier:Cell ; courier:x 0 ; courier:y 0 .
-:c0_1 a courier:Cell ; courier:x 0 ; courier:y 1 .
-:c0_2 a courier:Cell ; courier:x 0 ; courier:y 2 .
-:c0_3 a courier:Cell ; courier:x 0 ; courier:y 3 .
-:c1_0 a courier:Cell ; courier:x 1 ; courier:y 0 .
-:c1_1 a courier:Cell ; courier:x 1 ; courier:y 1 .
-:c1_2 a courier:Cell ; courier:x 1 ; courier:y 2 .
-:c1_3 a courier:Cell ; courier:x 1 ; courier:y 3 .
-:c2_0 a courier:Cell ; courier:x 2 ; courier:y 0 .
-:c2_1 a courier:Cell ; courier:x 2 ; courier:y 1 .
-:c2_2 a courier:Cell ; courier:x 2 ; courier:y 2 .
-:c2_3 a courier:Cell ; courier:x 2 ; courier:y 3 .
-:c3_0 a courier:Cell ; courier:x 3 ; courier:y 0 .
-:c3_1 a courier:Cell ; courier:x 3 ; courier:y 1 .
-:c3_2 a courier:Cell ; courier:x 3 ; courier:y 2 .
-:c3_3 a courier:Cell ; courier:x 3 ; courier:y 3 .
 
 #  THE SECOND GRID, seven columns east of the first
-:g10_0 a courier:Cell ; courier:x 10 ; courier:y 0 .
-:g10_1 a courier:Cell ; courier:x 10 ; courier:y 1 .
-:g10_2 a courier:Cell ; courier:x 10 ; courier:y 2 .
-:g10_3 a courier:Cell ; courier:x 10 ; courier:y 3 .
-:g11_0 a courier:Cell ; courier:x 11 ; courier:y 0 .
-:g11_1 a courier:Cell ; courier:x 11 ; courier:y 1 .
-:g11_2 a courier:Cell ; courier:x 11 ; courier:y 2 .
-:g11_3 a courier:Cell ; courier:x 11 ; courier:y 3 .
-:g12_0 a courier:Cell ; courier:x 12 ; courier:y 0 .
-:g12_1 a courier:Cell ; courier:x 12 ; courier:y 1 .
-:g12_2 a courier:Cell ; courier:x 12 ; courier:y 2 .
-:g12_3 a courier:Cell ; courier:x 12 ; courier:y 3 .
-:g13_0 a courier:Cell ; courier:x 13 ; courier:y 0 .
-:g13_1 a courier:Cell ; courier:x 13 ; courier:y 1 .
-:g13_2 a courier:Cell ; courier:x 13 ; courier:y 2 .
-:g13_3 a courier:Cell ; courier:x 13 ; courier:y 3 .

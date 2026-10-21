@@ -1,0 +1,28 @@
+@prefix : <http://example.org/orexis/courier#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+
+<> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A WORLD MUST STATE OF the courier's WORDS, held by onboarding alone before anything is granted
+#  (knowledge/domain/onboarding/requirement.md, #838). No agent loads this graph: its kind is onboarding's.
+#
+#  A CONTACT'S SENSOR DECLARES THE RANGE IT SEES. The area an agent sees is the `ssn-system:MeasurementRange`
+#  each sensor of a contact declares, a least and a most offset from the carrying van: the courier's
+#  transitions believe a coordinate inside it and delete one outside it, and the simulator reports a thing
+#  beyond it as a vector past the most. A sensor declaring none would have its contact believed nowhere for
+#  ever, in silence (the-grid-is-infinite-and-a-position-is-two-coordinates).
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf sosa:observes ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "observes {?relative} and declares no ssn-system:MeasurementRange: a contact's sensor says how far it sees" ;
+        sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
+PREFIX schema: <https://schema.org/>
+SELECT $this ?relative WHERE {
+  $this sosa:observes ?relative .
+  FILTER(?relative IN (courier:RelativeColumn, courier:RelativeRow))
+  FILTER NOT EXISTS { $this ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?range .
+                      ?range a ssn-system:MeasurementRange ; schema:minValue ?least ; schema:maxValue ?most } }""" ] .

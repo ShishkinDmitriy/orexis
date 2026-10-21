@@ -24,16 +24,28 @@
 :disk_2 a hanoi:Disk , courier:Parcel ; hanoi:size 2 ; rdfs:label "the middle disk" .
 :disk_3 a hanoi:Disk , courier:Parcel ; hanoi:size 3 ; rdfs:label "the large disk" .
 
-:c0_0 a courier:Cell ; courier:x 0 ; courier:y 0 .
-:c0_1 a courier:Cell ; courier:x 0 ; courier:y 1 .
-:c0_2 a courier:Cell ; courier:x 0 ; courier:y 2 .
-:c1_0 a courier:Cell ; courier:x 1 ; courier:y 0 .
-:c1_1 a courier:Cell ; courier:x 1 ; courier:y 1 .
-:c1_2 a courier:Cell ; courier:x 1 ; courier:y 2 .
-:c2_0 a courier:Cell ; courier:x 2 ; courier:y 0 .
-:c2_1 a courier:Cell ; courier:x 2 ; courier:y 1 .
-:c2_2 a courier:Cell ; courier:x 2 ; courier:y 2 .
 
-hanoi:PegA courier:at :c0_0 .
-hanoi:PegB courier:at :c2_0 .
-hanoi:PegC courier:at :c1_2 .
+#  THE YARD IS FENCED: the grid is infinite (the-grid-is-infinite-and-a-position-is-two-coordinates) and
+#  a move's want below carries no estimate, so its search is uniform-cost and would fork the plane in every
+#  direction; the fence, obstacles the mover knows, bounds it to the nine cells the pegs stand among, since no
+#  van stands where an obstacle is (`domains/courier/constraints.ttl`, held in constraints.ttl).
+:fence_-1_-1 a courier:Obstacle ; courier:x -1 ; courier:y -1 .
+:fence_-1_0 a courier:Obstacle ; courier:x -1 ; courier:y 0 .
+:fence_-1_1 a courier:Obstacle ; courier:x -1 ; courier:y 1 .
+:fence_-1_2 a courier:Obstacle ; courier:x -1 ; courier:y 2 .
+:fence_-1_3 a courier:Obstacle ; courier:x -1 ; courier:y 3 .
+:fence_0_-1 a courier:Obstacle ; courier:x 0 ; courier:y -1 .
+:fence_0_3 a courier:Obstacle ; courier:x 0 ; courier:y 3 .
+:fence_1_-1 a courier:Obstacle ; courier:x 1 ; courier:y -1 .
+:fence_1_3 a courier:Obstacle ; courier:x 1 ; courier:y 3 .
+:fence_2_-1 a courier:Obstacle ; courier:x 2 ; courier:y -1 .
+:fence_2_3 a courier:Obstacle ; courier:x 2 ; courier:y 3 .
+:fence_3_-1 a courier:Obstacle ; courier:x 3 ; courier:y -1 .
+:fence_3_0 a courier:Obstacle ; courier:x 3 ; courier:y 0 .
+:fence_3_1 a courier:Obstacle ; courier:x 3 ; courier:y 1 .
+:fence_3_2 a courier:Obstacle ; courier:x 3 ; courier:y 2 .
+:fence_3_3 a courier:Obstacle ; courier:x 3 ; courier:y 3 .
+
+hanoi:PegA courier:x 0 ; courier:y 0 .
+hanoi:PegB courier:x 2 ; courier:y 0 .
+hanoi:PegC courier:x 1 ; courier:y 2 .

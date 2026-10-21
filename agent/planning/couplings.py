@@ -8,8 +8,9 @@ and compiled by `violation.select_of` into the one select whose rows are its vio
 footprint is what a scope's is, one level up — the predicates it reads and the key it joins them on
 — and the derivation couples two instances into one want where the constraint can join an atom some
 plan for the one may write to an atom some plan for the other may write: the two-vans constraint
-reads `courier:at` on vans and joins on the cell, so two parcels whose vans can meet on a cell are
-one cluster, and two whose vans never can are two. A desire couples nothing, however it is
+reads a van's two coordinates and joins on them, so two parcels whose vans can meet are one cluster,
+and two whose vans never can are two — and since a drive goes to any neighbour on an infinite grid,
+every two vans can meet (below). A desire couples nothing, however it is
 authored: an aversion is a state the agent may enter and must leave, not one no plan may make.
 
 **READ OVER THE REACH, NOT OVER WHAT THE WORLD STATES.** `footprint.atoms_of` reads a scope's atoms
@@ -32,6 +33,15 @@ constraint's rows join meets what each is bound with. Over-approximation is the 
 throughout, as it is for a footprint: a row's every bound IRI is joined, a filling's every bound IRI
 counts, and a constraint whose select cannot be run couples everything, since what cannot be read
 cannot be proven not to collide.
+
+**AND A VALUE AN EFFECT COMPUTES IS REACHABLE ANYWHERE.** The reach is finite over the terms a store
+holds; an effect whose template writes a number its precondition computed — the courier's drive, to a
+neighbour minted by arithmetic on an infinite grid — mints the next ring of coordinates every round, and
+the fixpoint is the guard, measured in millions of rows at sixty-four rounds. So the effects are read
+before they are run: where a template value is one an arithmetic expression binds, the holder's
+constraints couple everything, the safe side a constraint that will not run already takes, and no reach
+is run. On a plane every two vans can meet, which is what that answers; the reach stays for worlds whose
+places are finite terms, hanoi's pegs (the-grid-is-infinite-and-a-position-is-two-coordinates).
 
 PER PASS, IN THE DERIVATION, because the reach begins at the present: where the vans stand decides
 which grid each is on, and a scope is computed at boot from what the world alone binds. A holder
@@ -145,6 +155,9 @@ def couplings(store: ox.Store, holder: str, present: str, now: datetime, *, memo
     except (ValueError, Unbound) as exc:
         log.warning("a construct could not be closed over its precondition; every instance is coupled: %s", exc)
         return Couplings([], {}, anything=True)
+    if any(_computed(text) for text in texts):
+        log.info("an effect writes a value its precondition computes, which is reachable anywhere; every instance is coupled")
+        return Couplings([], {}, anything=True)
     try:
         try:
             _reach(store, texts, default)
@@ -179,6 +192,36 @@ def _composed(construct: str, precondition: str) -> str:
     template = _TOKEN.sub(lambda mm: "?" + mm.group(1), m.group(1))
     own = _TOKEN.sub(lambda mm: "?" + mm.group(1), m.group(2))
     return f"{p1}\n{p2}\nCONSTRUCT {{ {template} }} WHERE {{ {{ {select} }} {own} }}"
+
+
+#  WHAT AN EXPRESSION COMPUTES RATHER THAN PICKS: arithmetic, a numeric builtin and a cast make a value no
+#  pattern binds; COALESCE and IF choose among terms the patterns bound, and are enumerable.
+_COMPUTING = {"AdditiveExpression", "MultiplicativeExpression", "UnaryMinus", "UnaryPlus", "Function",
+              "Builtin_ABS", "Builtin_ROUND", "Builtin_CEIL", "Builtin_FLOOR", "Builtin_RAND"}
+
+
+def _computed(composed: str) -> bool:
+    """Whether `composed`, a construct closed over its precondition, writes a template value an
+    expression computes — a variable some `BIND` makes by arithmetic, which no round of the reach can
+    exhaust. A text that will not parse computes nothing here; it fails later, where that is said."""
+    from rdflib import Variable
+    from rdflib.plugins.sparql.algebra import translateQuery, traverse
+    from rdflib.plugins.sparql.parser import parseQuery
+
+    from .footprint import PREFIXES, parseable
+    try:
+        alg = translateQuery(parseQuery(PREFIXES + parseable(composed))).algebra
+    except Exception as exc:                                # noqa: BLE001 — unreadable is found later
+        log.debug("a composed construct would not parse for its computed values: %s", exc)
+        return False
+    made: set = set()
+
+    def visit(n):
+        if getattr(n, "name", None) == "Extend" and getattr(n["expr"], "name", None) in _COMPUTING:
+            made.add(n["var"])
+        return n
+    traverse(alg, visitPost=visit)
+    return any(isinstance(term, Variable) and term in made for triple in alg.get("template") or () for term in triple)
 
 
 def _split(text: str) -> tuple[str, str]:

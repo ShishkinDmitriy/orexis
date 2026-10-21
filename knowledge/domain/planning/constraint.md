@@ -18,8 +18,8 @@ the world itself allows. The three are checks of different kinds: a met-test ask
 is DESIRED, a precondition whether an action is available, and a constraint whether a world is
 POSSIBLE at all. That is a difference of modality and not of strength — desire is bouletic and
 possibility alethic — and it is why a constraint is a kind of its own, `planning:Constraint`, and
-not a reading of a desire. The dispatcher's is that no cell holds two vans, which is physics and not
-a preference: two vans cannot share a cell, and a world where they do is not a bad world the agent
+not a reading of a desire. The dispatcher's is that no two vans stand at one position, which is physics and not
+a preference: two vans cannot share a position, and a world where they do is not a bad world the agent
 should mend but a world that cannot be.
 
 A constraint is **stated by the world**, in a `planning:ConstraintGraph` (`world/dispatcher/constraints.ttl`),
@@ -75,21 +75,21 @@ plan and held for its footprint alone, which the record's driver seam explains.
 
 A constraint's select has a [footprint](/domain/planning/footprint.md) as any text does, the
 predicates it reads; and, as a [scope](/domain/planning/scope.md)'s atoms do, it has a KEY - the
-variable its patterns share, the cell both `courier:at` patterns end in. What it joins there is
-what it can make collide: two plans whose steps write `at` on two vans that can stand on one cell.
+variables its patterns share, the two coordinates both vans' patterns end in. What it joins there is
+what it can make collide: two plans whose steps write a position on two vans that can stand at one.
 
 It is not read where a scope's atoms are. A scope asks each precondition over the common beliefs
 with every pattern optional, which is right for a partition fixed at boot, and asked that way the
-constraint is grid-blind: it joins `van_a` to `van_b` with the cell unbound on the shipped
+constraint is grid-blind: it joins `van_a` to `van_b` with the position unbound on the shipped
 dispatcher and on a variant whose vans stand on two grids a continent apart alike, four identical
-rows, because which cells a van can stand on is the drive's `FILTER` over coordinates and the
+rows, because where a van can stand is the drive's arithmetic over coordinates and the
 half of a text the world's graphs answer is its patterns alone (measured, `agent/planning/tests/test_couplings.py`).
 So the select is asked over the **reach** - every fact some sequence of the actions could make
 true from the present ground with nothing taken away, the delete-free closure of the effects'
 constructs over their preconditions, which is the planning literature's relaxed reachability.
 Over the reach the constraint's rows are the collisions the plans could actually make: thirty-two
 on the shared 4x4, none on two grids, in seven rounds and twelve milliseconds. Each row's bound
-IRIs are joined into one part - the vans that can meet and the cells they meet on - and an instance
+IRIs are joined into one part - the vans that can meet and the places they meet at - and an instance
 reaches a part through a FILLING the reach admits that binds both, the pick of this parcel into
 that van, exactly as a scope's key is what the world binds a subject by. Two instances are coupled
 where one part meets what each is, or is bound with. Over-approximation is the safe side

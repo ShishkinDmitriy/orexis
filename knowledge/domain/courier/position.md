@@ -3,38 +3,44 @@ type: Domain Concept
 title: Position
 term: http://example.org/orexis/courier#Column
 description: >-
-  Where a van stands as its instruments observe it - a position fix is two sensors hosted by the van,
-  one observing the column and one the row, each reporting a number; the courier's transitions
-  conclude the van's `courier:x` and `courier:y` of them and then the cell authored at those
-  coordinates. A position is a vector in the courier's own coordinates, a radar's relative vector is
-  added to it, and a cell an instrument reports is never posed.
+  Where a thing stands - two coordinates, `courier:x` and `courier:y`, on the thing itself. A van's
+  position fix is two sensors hosted by the van, one observing the column and one the row, each
+  reporting a number, and the courier's transitions conclude the van's coordinates of them; a parcel,
+  an obstacle, a peg and a place a parcel is owed at carry the same two. The grid is infinite and
+  nothing authors it; a cell is not a thing, and a position an instrument reports is never posed.
 ---
 
 # What it is
 
-`courier:Column` and `courier:Row` are observable properties: two `sosa:Sensor`s hosted by a van, one
-observing each, are the van's **position fix**, reporting the van's `courier:x` and `courier:y` as
-numbers, the coordinates every cell is authored in. An instrument gives numbers, so a position is the
-two numbers a cell already has, and no second name for a cell is needed: a cell's number was built
-and refused the same day (#1002), since a vector is what a fix gives and what a radar's relative
-vector adds to (#1003). Where the world answers a drive, the van is told the coordinates of the cell
-to reach ([driver](/domain/courier/driver.md), the two action documents).
+A position is two numbers on the thing that stands there: `courier:x`, its column, and `courier:y`, its
+row. `courier:Column` and `courier:Row` are observable properties: two `sosa:Sensor`s hosted by a van,
+one observing each, are the van's **position fix**, reporting the two numbers, and the courier's
+transitions write them on the van. A parcel standing somewhere, an obstacle a radar sees, hanoi's pegs
+on the tower's grid and the place a parcel is owed at (`courier:destination`) carry the same two
+numbers, authored or concluded; a carried parcel carries none.
+
+**The grid is infinite, and a cell is not a thing** (the-grid-is-infinite-and-a-position-is-two-coordinates).
+Two things are neighbours where |dx| + |dy| = 1, which the drive's precondition works out by
+arithmetic, minting the four neighbours of where the van stands; a parcel is where it is owed when its
+two numbers are its destination's two. A node per cell was a second name for a pair the fix already
+reports, and the authored set of them a map every agent was handed; the sovereign refused both, after
+refusing a cell's number (#1002) and a derived adjacency (#1012). The road a world is posed on is what
+STANDS on the grid, hedges a radar sees ([obstacle](/domain/courier/obstacle.md)), and an agent knows
+only what it has seen.
 
 # What the rules make of it
 
-The courier's three [transitions](/domain/belief/transition.md) in `rules.ttl` read a fix in two orders,
-because a transition is handed its one arrival and the agent's own derived state, and the two
-coordinates are two arrivals. In order 0, `columnRule` and `rowRule` replace the coordinate the van is
-held at with the one arriving. In order 1, `cellRule` replaces the cell the van is at with the cell
-authored at the two coordinates now held - the belief every drive's effect predicts, so a commanded
-drive lands when the fix has shown it. The first fix leaves the van nowhere until its second coordinate
-lands, a reading later; at coordinates no cell is authored at the van is believed nowhere, since a cell is
-where something IS. The same cell rule serves a [contact](/domain/courier/contact.md), whose offset the
-contact's own rules add to the carrying van's coordinates first, so a contact beyond range, reported past
-the grid, is believed nowhere by geometry alone (#1003).
+The courier's [transitions](/domain/belief/transition.md) in `rules.ttl` read a fix one coordinate at a
+time, because a transition is handed its one arrival and the agent's own derived state, and the two
+coordinates are two arrivals: `columnRule` and `rowRule` replace the coordinate the van is held at with
+the one arriving, and that is the position - the belief every drive's effect predicts, so a commanded
+drive lands when the fix has shown both numbers. The first fix leaves the van with one coordinate until
+its second lands, a reading later, and a thing with one coordinate stands nowhere a constraint or a
+met-test can read. A [contact](/domain/courier/contact.md)'s offset is added to the carrying van's
+coordinates by the contact's own rules, inside the range its sensors declare.
 
-**A cell a fix reports is never posed.** A transition changes the agent's DERIVED state alone, so a cell
-asserted in a world's `state.ttl` would stand beside the one the fix concludes, the van on two cells and
-its drive never answered (#1002, measured: every drive timed out). What comes from outside is stored when
-it arrives: the lane poses its parcel's cell and its driver's van, and the van's cell is its first fix's
-to say.
+**A position a fix reports is never posed.** A transition changes the agent's DERIVED state alone, so a
+position asserted in a world's `state.ttl` would stand beside the one the fix concludes, the van at two
+positions and its drive never answered (#1002, measured: every drive timed out). What comes from outside
+is stored when it arrives: the lane poses its parcel's coordinates and its driver's van, and the van's
+are its first fix's to say.

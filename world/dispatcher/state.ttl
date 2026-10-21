@@ -11,8 +11,8 @@
 #  boot on, where the vans and the parcels stand is the agent's belief, rewritten by its own
 #  actions.
 
-:van_a courier:at :c0_0 .
-:parcel_a courier:at :c0_1 .
+:van_a courier:x 0 ; courier:y 0 .
+:parcel_a courier:x 0 ; courier:y 1 .
 
-:van_b courier:at :c3_0 .
-:parcel_b courier:at :c3_1 .
+:van_b courier:x 3 ; courier:y 0 .
+:parcel_b courier:x 3 ; courier:y 1 .

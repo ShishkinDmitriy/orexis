@@ -49,7 +49,7 @@ minted for it **reopens** the walking want, `planning:reopens`, and is minted at
 walking want's step in flight lands.
 
 **A belief arrives that makes a world the walking plan's untaken steps reach impossible** (#921). No
-want arrives and nothing couples; what moved is the ground — a peer's van predicted on a cell the
+want arrives and nothing couples; what moved is the ground — a peer's van predicted at a position the
 plan enters, or seen standing there. A belief has ARRIVED where a ground the pass lays holds what no
 world the last pass left in the imaginarium held, by the hash each is written with: a step of the
 walking plan landing as the plan said lands in a world of the cone it was found in, and is no news.

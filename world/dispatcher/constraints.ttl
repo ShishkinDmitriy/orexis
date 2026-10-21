@@ -28,19 +28,4 @@
 #  made the world's physics something the agent wanted, which is the wrong modality
 #  (knowledge/domain/planning/constraint.md).
 
-:dispatcher planning:holds :no_cell_holds_two_vans .
-
-:no_cell_holds_two_vans a planning:Constraint ;
-    rdfs:label "no cell holds two vans" ;
-    planning:unmetWhen :two_vans_on_one_cell .
-
-:two_vans_on_one_cell
-    sh:message "two vans stand on one cell" ;
-    sh:select """PREFIX courier: <http://example.org/orexis/courier#>
-        SELECT $this ?value WHERE {
-            $this a courier:Van ;
-                courier:at ?value .
-            ?other a courier:Van ;
-                courier:at ?value .
-            FILTER(?other != $this)
-        }""" .
+:dispatcher planning:holds courier:no_two_vans_at_one_position .    # the courier's own physics (domains/courier/constraints.ttl)

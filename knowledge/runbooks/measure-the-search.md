@@ -193,6 +193,13 @@ in all three imaginaria, placed it in the first, reported it unreachable and com
 
 # The dispatcher: two vans in one scope (2026-10-04)
 
+> **The grid is infinite since the-grid-is-infinite-and-a-position-is-two-coordinates (2026-10-20).** Every
+> figure below was measured on authored cells - the dispatcher's 4x4, the driver's two grids a continent
+> apart - which no world has now: a position is two coordinates on the thing, a drive goes to any of four
+> neighbours, and two vans can always meet, so the disjoint-grid rows describe a world that cannot be posed
+> any more and the other figures are larger today (`world/dispatcher/tests/`, `world/driver/tests/` carry
+> the current ones). The method stands; the numbers are the day's.
+
 The measurements #567 asked for, on `world/dispatcher/` — one agent, two vans, two parcels on the
 courier's 4x4 grid, a desire that every parcel be delivered and an aversion to two vans on one cell —
 taken on the development container with the tree that added the world, one pass of the Planner at a

@@ -8,17 +8,18 @@
 
 #  WHERE A VAN STANDS, CONCLUDED OF WHAT ITS INSTRUMENTS GAVE (#1002). A position fix is two sensors hosted
 #  by the van, one observing `courier:Column` and one `courier:Row`, each reporting a number; a transition is
-#  handed its one arrival and the agent's own derived state (#947), so the fix is read in two orders:
-#  order 0, the arriving coordinate replaces the one held of the van, `courier:x` or `courier:y`; order 1,
-#  the cell authored at the two coordinates now held replaces the cell the van was at. The first fix
-#  leaves the van nowhere until its second coordinate lands, a reading later, and at coordinates no cell is
-#  authored at the van is believed nowhere, since a cell is where something IS. The feature of
-#  interest is the van the sensor is hosted by, or, where the sensor observes a contact standing for a van
-#  in range (#1003), what the contact `isSampleOf`, and the contact's own vector is RELATIVE: `relativeColumnRule`
-#  and `relativeRowRule` add it to the coordinates held of the van carrying the contact and write the sum on
-#  the peer the contact stands for, or on the contact itself where it stands for nothing named, an obstacle;
-#  the cell rule then serves a van, a peer and an obstacle alike, and a vector landing on no cell - a contact
-#  beyond range, reported past the grid - is believed nowhere, which is the retraction. Imported by
+#  handed its one arrival and the agent's own derived state (#947), so the arriving coordinate replaces the
+#  one held of the van, `courier:x` or `courier:y`, and that is the position: two numbers on the thing, and
+#  no cell found for them (the-grid-is-infinite-and-a-position-is-two-coordinates). The first fix leaves the
+#  van with one coordinate until its second lands, a reading later, and a thing with one coordinate stands
+#  nowhere a constraint or a met-test can read. The feature of interest is the van the sensor is hosted by,
+#  or, where the sensor observes a contact standing for a van in range (#1003), what the contact `isSampleOf`,
+#  and the contact's own vector is RELATIVE: `relativeColumnRule` and `relativeRowRule` add it to the
+#  coordinates held of the van carrying the contact and write the sum on the peer the contact stands for, or
+#  on the contact itself where it stands for nothing named, an obstacle - INSIDE THE RANGE THE SENSOR
+#  DECLARES, `ssn-system:MeasurementRange`, and outside it they delete the coordinate held and write none,
+#  which is how a contact beyond range comes to be believed nowhere: by the instrument's own range, never a
+#  sentinel and never a silence (the-grid-is-infinite-and-a-position-is-two-coordinates). Imported by
 #  `actions.answered.ttl`, the one document of the courier's whose drive a fix answers, so a world with the
 #  fictive drive and no belief package never loads a rules graph it has no reader for.
 
@@ -49,45 +50,35 @@
         }""" .
 
 :relativeColumnRule a belief:Transition ; sh:order 0 ;
-    rdfs:label "the column of what a contact stands for, its vector added to the carrying van's" ;
+    rdfs:label "the column of what a contact stands for, its vector added to the carrying van's, inside the sensor's range" ;
     belief:update """PREFIX courier: <http://example.org/orexis/courier#>
         DELETE { ?subject courier:x ?was }
         INSERT { ?subject courier:x ?x }
         WHERE {
             ?obs a sosa:Observation ; sosa:observedProperty courier:RelativeColumn ; sosa:hasSimpleResult ?d ;
-                 sosa:hasFeatureOfInterest ?contact .
+                 sosa:hasFeatureOfInterest ?contact ; sosa:madeBySensor ?sensor .
+            ?sensor ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?range .
+            ?range a ssn-system:MeasurementRange ; schema:minValue ?least ; schema:maxValue ?most .
             ?contact sosa:isHostedBy ?mine . ?mine courier:x ?mx .
             OPTIONAL { ?contact sosa:isSampleOf ?peer }
             BIND(COALESCE(?peer, ?contact) AS ?subject)
-            BIND(xsd:integer(?mx) + xsd:integer(?d) AS ?x)
+            BIND(IF(?d >= ?least && ?d <= ?most, xsd:integer(?mx) + xsd:integer(?d), ?beyond) AS ?x)
             OPTIONAL { ?subject courier:x ?was }
         }""" .
 
 :relativeRowRule a belief:Transition ; sh:order 0 ;
-    rdfs:label "the row of what a contact stands for, its vector added to the carrying van's" ;
+    rdfs:label "the row of what a contact stands for, its vector added to the carrying van's, inside the sensor's range" ;
     belief:update """PREFIX courier: <http://example.org/orexis/courier#>
         DELETE { ?subject courier:y ?was }
         INSERT { ?subject courier:y ?y }
         WHERE {
             ?obs a sosa:Observation ; sosa:observedProperty courier:RelativeRow ; sosa:hasSimpleResult ?d ;
-                 sosa:hasFeatureOfInterest ?contact .
+                 sosa:hasFeatureOfInterest ?contact ; sosa:madeBySensor ?sensor .
+            ?sensor ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?range .
+            ?range a ssn-system:MeasurementRange ; schema:minValue ?least ; schema:maxValue ?most .
             ?contact sosa:isHostedBy ?mine . ?mine courier:y ?my .
             OPTIONAL { ?contact sosa:isSampleOf ?peer }
             BIND(COALESCE(?peer, ?contact) AS ?subject)
-            BIND(xsd:integer(?my) + xsd:integer(?d) AS ?y)
+            BIND(IF(?d >= ?least && ?d <= ?most, xsd:integer(?my) + xsd:integer(?d), ?beyond) AS ?y)
             OPTIONAL { ?subject courier:y ?was }
-        }""" .
-
-:cellRule a belief:Transition ; sh:order 1 ;
-    rdfs:label "the cell a thing stands on, the one authored at the coordinates held, or nowhere" ;
-    belief:update """PREFIX courier: <http://example.org/orexis/courier#>
-        DELETE { ?subject courier:at ?before }
-        INSERT { ?subject courier:at ?cell }
-        WHERE {
-            ?obs a sosa:Observation ; sosa:observedProperty ?coordinate ;
-                 sosa:hasFeatureOfInterest/(sosa:isSampleOf)? ?subject .
-            VALUES ?coordinate { courier:Column courier:Row courier:RelativeColumn courier:RelativeRow }
-            ?subject courier:x ?x ; courier:y ?y .
-            OPTIONAL { ?cell a courier:Cell ; courier:x ?cx ; courier:y ?cy . FILTER(?cx = ?x && ?cy = ?y) }
-            OPTIONAL { ?subject courier:at ?before }
         }""" .

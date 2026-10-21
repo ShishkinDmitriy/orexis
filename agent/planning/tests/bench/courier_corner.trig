@@ -34,58 +34,12 @@ GRAPH :ontology {
 }
 
 GRAPH :world {
-  :c0_0 a courier:Cell .
-  :c0_0 courier:x 0 .
-  :c0_0 courier:y 0 .
-  :c0_1 a courier:Cell .
-  :c0_1 courier:x 0 .
-  :c0_1 courier:y 1 .
-  :c0_2 a courier:Cell .
-  :c0_2 courier:x 0 .
-  :c0_2 courier:y 2 .
-  :c0_3 a courier:Cell .
-  :c0_3 courier:x 0 .
-  :c0_3 courier:y 3 .
-  :c1_0 a courier:Cell .
-  :c1_0 courier:x 1 .
-  :c1_0 courier:y 0 .
-  :c1_1 a courier:Cell .
-  :c1_1 courier:x 1 .
-  :c1_1 courier:y 1 .
-  :c1_2 a courier:Cell .
-  :c1_2 courier:x 1 .
-  :c1_2 courier:y 2 .
-  :c1_3 a courier:Cell .
-  :c1_3 courier:x 1 .
-  :c1_3 courier:y 3 .
-  :c2_0 a courier:Cell .
-  :c2_0 courier:x 2 .
-  :c2_0 courier:y 0 .
-  :c2_1 a courier:Cell .
-  :c2_1 courier:x 2 .
-  :c2_1 courier:y 1 .
-  :c2_2 a courier:Cell .
-  :c2_2 courier:x 2 .
-  :c2_2 courier:y 2 .
-  :c2_3 a courier:Cell .
-  :c2_3 courier:x 2 .
-  :c2_3 courier:y 3 .
-  :c3_0 a courier:Cell .
-  :c3_0 courier:x 3 .
-  :c3_0 courier:y 0 .
-  :c3_1 a courier:Cell .
-  :c3_1 courier:x 3 .
-  :c3_1 courier:y 1 .
-  :c3_2 a courier:Cell .
-  :c3_2 courier:x 3 .
-  :c3_2 courier:y 2 .
-  :c3_3 a courier:Cell .
-  :c3_3 courier:x 3 .
-  :c3_3 courier:y 3 .
+  :door courier:x 3 .
+  :door courier:y 3 .
   :keeper a orexis:Agent .
   :keeper orexis:localId "keeper" .
   :parcel a courier:Parcel .
-  :parcel courier:destination :c3_3 .
+  :parcel courier:destination :door .
   :parcel rdfs:label "the parcel owed at the far corner" .
   :van a courier:Van .
   :van rdfs:label "the van" .
@@ -95,54 +49,51 @@ GRAPH :world {
 # out, not declared: |dx| + |dy| = 1 over the cells' own coordinates.
 GRAPH :actions {
   courier:Drive a orexis:Action .
-  courier:Drive orexis:takes courier:to .
-  courier:Drive orexis:takes courier:van .
+  courier:Drive orexis:takes courier:toX .
   courier:Drive planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
-  courier:Drive planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX courier: <http://example.org/orexis/courier#>
-      DELETE { $van courier:at ?old }
-      INSERT { $van courier:at $to }
-      WHERE  { $van courier:at ?old }""" ] ] .
   courier:Drive planning:landsAfter "SELECT ?least ?most WHERE { BIND(30 AS ?least) BIND(60 AS ?most) }" .
+  courier:Drive orexis:takes courier:toY .
+  courier:Drive orexis:takes courier:van .
+  courier:Drive planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX courier: <http://example.org/orexis/courier#>
+      DELETE { $van courier:x ?x ; courier:y ?y }
+      INSERT { $van courier:x $toX ; courier:y $toY }
+      WHERE  { $van courier:x ?x ; courier:y ?y }""" ] ] .
   courier:Drive planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
-      SELECT ?van ?to WHERE {
-          ?van courier:at ?here .
+      SELECT ?van ?toX ?toY WHERE {
+          ?van courier:x ?x ; courier:y ?y .
           ?van a courier:Van .
-          ?here courier:x ?hx ; courier:y ?hy .
-          ?to a courier:Cell ; courier:x ?ax ; courier:y ?ay .
-          FILTER(ABS(?ax - ?hx) + ABS(?ay - ?hy) = 1)
+          VALUES (?dx ?dy) { (1 0) (-1 0) (0 1) (0 -1) }
+          BIND(?x + ?dx AS ?toX)
+          BIND(?y + ?dy AS ?toY)
       }""" .
   courier:Drop a orexis:Action .
   courier:Drop orexis:takes courier:parcel .
-  courier:Drop orexis:takes courier:to .
   courier:Drop planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
+  courier:Drop planning:landsAfter "SELECT ?least ?most WHERE { BIND(0 AS ?least) BIND(0 AS ?most) }" .
   courier:Drop planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX courier: <http://example.org/orexis/courier#>
       DELETE { $parcel courier:carriedBy ?van }
-      INSERT { $parcel courier:at $to }
-      WHERE  { $parcel courier:carriedBy ?van }""" ] ] .
-  courier:Drop planning:landsAfter "SELECT ?least ?most WHERE { BIND(0 AS ?least) BIND(0 AS ?most) }" .
+      INSERT { $parcel courier:x ?x ; courier:y ?y }
+      WHERE  { $parcel courier:carriedBy ?van . ?van courier:x ?x ; courier:y ?y }""" ] ] .
   courier:Drop planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
-      SELECT ?parcel ?to WHERE {
-          ?parcel courier:carriedBy ?van . ?van courier:at ?to .
+      SELECT ?parcel WHERE {
+          ?parcel courier:carriedBy ?van .
           ?parcel a courier:Parcel .
       }""" .
   courier:Pick a orexis:Action .
   courier:Pick orexis:takes courier:parcel .
-  courier:Pick orexis:takes courier:van .
   courier:Pick planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
-  courier:Pick planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX courier: <http://example.org/orexis/courier#>
-      DELETE { $parcel courier:at ?cell }
-      INSERT { $parcel courier:carriedBy $van }
-      WHERE  { $parcel courier:at ?cell }""" ] ] .
   courier:Pick planning:landsAfter "SELECT ?least ?most WHERE { BIND(0 AS ?least) BIND(0 AS ?most) }" .
+  courier:Pick orexis:takes courier:van .
+  courier:Pick planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX courier: <http://example.org/orexis/courier#>
+      DELETE { $parcel courier:x ?x ; courier:y ?y }
+      INSERT { $parcel courier:carriedBy $van }
+      WHERE  { $parcel courier:x ?x ; courier:y ?y }""" ] ] .
   courier:Pick planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
       SELECT ?parcel ?van WHERE {
-          ?van courier:at ?cell . ?parcel courier:at ?cell .
+          ?van courier:x ?x ; courier:y ?y . ?parcel courier:x ?x ; courier:y ?y .
           ?parcel a courier:Parcel .
           ?van a courier:Van .
       }""" .
-  courier:parcel a orexis:Parameter .
-  courier:to a orexis:Parameter .
-  courier:van a orexis:Parameter .
 }
 
 # THE DESIRE, AND THE PACKAGE'S MEASURE OF IT: every parcel where it is owed, and how far
@@ -157,7 +108,12 @@ GRAPH :desires {
   :keeper.every_parcel_delivered planning:metWhen courier:delivered .
   :keeper.every_parcel_delivered rdfs:label "every parcel where it is owed" .
   courier:delivered a sh:NodeShape .
-  courier:delivered sh:property [ sh:equals courier:destination ; sh:path courier:at ] .
+  courier:delivered sh:sparql [ a sh:SPARQLConstraint ; sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+      SELECT $this WHERE {
+          $this courier:destination ?owed .
+          ?owed courier:x ?ox ; courier:y ?oy .
+          FILTER NOT EXISTS { $this courier:x ?ox ; courier:y ?oy }
+      }""" ] .
   courier:delivered sh:targetClass courier:Parcel .
   courier:drivesOwed rdfs:label "drives still owed, and each parcel's pick and drop" .
   courier:drivesOwed sh:select """PREFIX courier: <http://example.org/orexis/courier#>
@@ -166,17 +122,14 @@ GRAPH :desires {
               {
                   $this a courier:Parcel ; courier:destination ?owed .
                   ?owed courier:x ?ox ; courier:y ?oy .
-                  $this courier:carriedBy ?van . ?van courier:at ?vc .
-                  ?vc courier:x ?vx ; courier:y ?vy .
+                  $this courier:carriedBy ?van . ?van courier:x ?vx ; courier:y ?vy .
                   BIND($this AS ?p)
                   BIND(ABS(?vx - ?ox) + ABS(?vy - ?oy) + 1 AS ?dist)
               } UNION {
                   $this a courier:Parcel ; courier:destination ?owed .
                   ?owed courier:x ?ox ; courier:y ?oy .
-                  $this courier:at ?pc . ?v courier:at ?vc .
-                  ?v a courier:Van .
-                  ?pc courier:x ?px ; courier:y ?py .
-                  ?vc courier:x ?vx ; courier:y ?vy .
+                  $this courier:x ?px ; courier:y ?py .
+                  ?v a courier:Van ; courier:x ?vx ; courier:y ?vy .
                   FILTER(?px != ?ox || ?py != ?oy)
                   BIND($this AS ?p)
                   BIND(ABS(?vx - ?px) + ABS(?vy - ?py)
@@ -187,8 +140,10 @@ GRAPH :desires {
 }
 
 GRAPH :sensed {
-  :parcel courier:at :c1_2 .
-  :van courier:at :c0_0 .
+  :parcel courier:x 1 .
+  :parcel courier:y 2 .
+  :van courier:x 0 .
+  :van courier:y 0 .
 }
 
 GRAPH :scopes {
@@ -196,8 +151,9 @@ GRAPH :scopes {
   courier:Drive planning:inScope :keeper.scope.1 .
   courier:Drop planning:inScope :keeper.scope.1 .
   courier:Pick planning:inScope :keeper.scope.1 .
-  courier:at planning:inScope :keeper.scope.1 .
   courier:carriedBy planning:inScope :keeper.scope.1 .
+  courier:x planning:inScope :keeper.scope.1 .
+  courier:y planning:inScope :keeper.scope.1 .
 }
 
 GRAPH :catalogue {

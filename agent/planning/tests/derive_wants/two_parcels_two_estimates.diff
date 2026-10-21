@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -128,6 +128,101 @@
+@@ -107,6 +107,103 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:ownedBy :keeper .
@@ -16,10 +16,8 @@
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered a planning:Weighing .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:for :keeper.every_parcel_delivered .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:met false .
-+  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:violation [ planning:about :parcel_a ; planning:constraint 0 ; planning:instance :parcel_a ; planning:offending :c0_1 ] .
-+  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:violation [ planning:about :parcel_a ; planning:constraint 1 ; planning:instance :parcel_a ; planning:offending :c0_3 ] .
-+  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:violation [ planning:about :parcel_b ; planning:constraint 0 ; planning:instance :parcel_b ; planning:offending :c1_1 ] .
-+  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:violation [ planning:about :parcel_b ; planning:constraint 1 ; planning:instance :parcel_b ; planning:offending :c1_3 ] .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:violation [ planning:about :parcel_a ; planning:constraint 0 ; planning:instance :parcel_a ] .
++  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:violation [ planning:about :parcel_b ; planning:constraint 0 ; planning:instance :parcel_b ] .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:weighs ground:2026-01-01T120000p0000 .
 +  pursued:2026-01-01T120000p0000--open a orexis:Graph .
 +  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
@@ -46,17 +44,14 @@
 +              {
 +                  <http://example.org/test#parcel_a> a courier:Parcel ; courier:destination ?owed .
 +                  ?owed courier:x ?ox ; courier:y ?oy .
-+                  <http://example.org/test#parcel_a> courier:carriedBy ?van . ?van courier:at ?vc .
-+                  ?vc courier:x ?vx ; courier:y ?vy .
++                  <http://example.org/test#parcel_a> courier:carriedBy ?van . ?van courier:x ?vx ; courier:y ?vy .
 +                  BIND(<http://example.org/test#parcel_a> AS ?p)
 +                  BIND(ABS(?vx - ?ox) + ABS(?vy - ?oy) AS ?dist)
 +              } UNION {
 +                  <http://example.org/test#parcel_a> a courier:Parcel ; courier:destination ?owed .
 +                  ?owed courier:x ?ox ; courier:y ?oy .
-+                  <http://example.org/test#parcel_a> courier:at ?pc . ?v courier:at ?vc .
-+                  ?v a courier:Van .
-+                  ?pc courier:x ?px ; courier:y ?py .
-+                  ?vc courier:x ?vx ; courier:y ?vy .
++                  <http://example.org/test#parcel_a> courier:x ?px ; courier:y ?py .
++                  ?v a courier:Van ; courier:x ?vx ; courier:y ?vy .
 +                  FILTER(?px != ?ox || ?py != ?oy)
 +                  BIND(<http://example.org/test#parcel_a> AS ?p)
 +                  BIND(ABS(?vx - ?px) + ABS(?vy - ?py)
@@ -65,7 +60,12 @@
 +          } GROUP BY ?p
 +      }""" .
 +  :keeper.every_parcel_delivered.pursued.parcel_a.met a sh:NodeShape .
-+  :keeper.every_parcel_delivered.pursued.parcel_a.met sh:property [ planning:about sh:this ; sh:equals courier:destination ; sh:path courier:at ] .
++  :keeper.every_parcel_delivered.pursued.parcel_a.met sh:sparql [ a sh:SPARQLConstraint ; planning:about sh:this ; sh:select """PREFIX courier: <http://example.org/orexis/courier#>
++      SELECT $this WHERE {
++          $this courier:destination ?owed .
++          ?owed courier:x ?ox ; courier:y ?oy .
++          FILTER NOT EXISTS { $this courier:x ?ox ; courier:y ?oy }
++      }""" ] .
 +  :keeper.every_parcel_delivered.pursued.parcel_a.met sh:targetNode :parcel_a .
 +  :keeper.every_parcel_delivered.pursued.parcel_b a planning:Want .
 +  :keeper.every_parcel_delivered.pursued.parcel_b planning:estimates :keeper.every_parcel_delivered.pursued.parcel_b.estimate .
@@ -81,17 +81,14 @@
 +              {
 +                  <http://example.org/test#parcel_b> a courier:Parcel ; courier:destination ?owed .
 +                  ?owed courier:x ?ox ; courier:y ?oy .
-+                  <http://example.org/test#parcel_b> courier:carriedBy ?van . ?van courier:at ?vc .
-+                  ?vc courier:x ?vx ; courier:y ?vy .
++                  <http://example.org/test#parcel_b> courier:carriedBy ?van . ?van courier:x ?vx ; courier:y ?vy .
 +                  BIND(<http://example.org/test#parcel_b> AS ?p)
 +                  BIND(ABS(?vx - ?ox) + ABS(?vy - ?oy) AS ?dist)
 +              } UNION {
 +                  <http://example.org/test#parcel_b> a courier:Parcel ; courier:destination ?owed .
 +                  ?owed courier:x ?ox ; courier:y ?oy .
-+                  <http://example.org/test#parcel_b> courier:at ?pc . ?v courier:at ?vc .
-+                  ?v a courier:Van .
-+                  ?pc courier:x ?px ; courier:y ?py .
-+                  ?vc courier:x ?vx ; courier:y ?vy .
++                  <http://example.org/test#parcel_b> courier:x ?px ; courier:y ?py .
++                  ?v a courier:Van ; courier:x ?vx ; courier:y ?vy .
 +                  FILTER(?px != ?ox || ?py != ?oy)
 +                  BIND(<http://example.org/test#parcel_b> AS ?p)
 +                  BIND(ABS(?vx - ?px) + ABS(?vy - ?py)
@@ -100,6 +97,11 @@
 +          } GROUP BY ?p
 +      }""" .
 +  :keeper.every_parcel_delivered.pursued.parcel_b.met a sh:NodeShape .
-+  :keeper.every_parcel_delivered.pursued.parcel_b.met sh:property [ planning:about sh:this ; sh:equals courier:destination ; sh:path courier:at ] .
++  :keeper.every_parcel_delivered.pursued.parcel_b.met sh:sparql [ a sh:SPARQLConstraint ; planning:about sh:this ; sh:select """PREFIX courier: <http://example.org/orexis/courier#>
++      SELECT $this WHERE {
++          $this courier:destination ?owed .
++          ?owed courier:x ?ox ; courier:y ?oy .
++          FILTER NOT EXISTS { $this courier:x ?ox ; courier:y ?oy }
++      }""" ] .
 +  :keeper.every_parcel_delivered.pursued.parcel_b.met sh:targetNode :parcel_b .
 +}
