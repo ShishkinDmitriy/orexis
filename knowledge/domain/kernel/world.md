@@ -30,10 +30,11 @@ what it is with `<> a <a graph kind>` on its own IRI, or, in TriG, of each graph
 The file's NAME is for eyes; the kind in the document is what the loader reads, and so is whose a
 graph of an agent's own is — `<> orexis:ownedBy :fern_grower` beside its kind, or, in a self
 graph, the self it states — which is what the boot keeps its own by and `orexis-compose` mounts by
-([self](/domain/kernel/self.md)). Eight ship:
+([self](/domain/kernel/self.md)). Ten ship:
 `hanoi` plans and exits, its plan published and walked by nobody; `courier` and `tower` plan, walk
-and exit; `dispatcher` drives two vans for good; `greenhouse`
-doses and heats; `allotment` trades water on a market; `sensing` and `terrace` observe.
+and exit; `driver` drives two vans for good, through one driver; `lane` and `layby` drive vans the
+simulator plays on one road, two couriers and one; `greenhouse` doses and heats; `allotment` trades
+water on a market; `sensing` and `terrace` observe.
 
 # Who reads which kind
 
@@ -57,7 +58,7 @@ graph, onboarding's kind, which the agent's T-Box cannot name, so no agent's boo
 and no container mounts the document. A world may assert it there, and a world that does not is
 allocated a port by the installation, which alone sees which ports every world holds.
 
-A world with no bus — hanoi, courier, tower, dispatcher — has no society graph, and its one agent stays in the
+A world with no bus — hanoi, courier, tower, driver — has no society graph, and its one agent stays in the
 world graph beside what it acts on.
 
 # How it is used

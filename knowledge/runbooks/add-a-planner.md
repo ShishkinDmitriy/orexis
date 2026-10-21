@@ -85,8 +85,8 @@ subject's soil is believed dry: the belief comes from an [observer](/runbooks/ad
 (`orexis:BeliefGraph`), as the courier's van and parcel.
 
 **5. Constraints, if two plans could collide**, a `planning:ConstraintGraph` holding a
-`planning:Constraint` whose `planning:unmetWhen` finds the impossible world: two vans on one cell
-in `world/dispatcher/` ([constraint](/domain/planning/constraint.md)).
+`planning:Constraint` whose `planning:unmetWhen` finds the impossible world: two vans at one position,
+the courier's in `domains/courier/constraints.ttl`, held by `world/lane/constraints.ttl` ([constraint](/domain/planning/constraint.md)).
 
 **6. The roles, and the budget**, in the self graph. A search needing more than planning's 32
 candidates a pass states its own [budget](/domain/planning/budget.md), measured by the world's test:

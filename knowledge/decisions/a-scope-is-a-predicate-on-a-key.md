@@ -286,7 +286,7 @@ filling still, keyed by the frame, admitted in the frame's scope alone
 
 # Seams left open
 
-- **Two vans** (measured 2026-10-04, `world/dispatcher/`). One scope, and not for the reason this
+- **Two vans** (measured 2026-10-04 on the dispatcher, retired into `world/lane/tests/test_one_mind.py` by #1004). One scope, and not for the reason this
   seam first gave: before any witness is placed, the PARTITION joins the vans, since a Pick's
   filling binds a van and a parcel, either with either, so `(at, van_a)` and `(at, van_b)` meet at
   `(at, parcel_a)`; the key is what the world binds a subject by, and the world binds no parcel to

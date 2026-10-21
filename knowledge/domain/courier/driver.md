@@ -49,11 +49,11 @@ The agent asking is found as `?me a orexis:Self`, as every text finds the
 stands where nobody is, and a pick or a drop there is what a drive there already was, an act with
 nobody to take it. The boarding asks for no driver aboard the van it names, being the act that
 changes which van that is. A van no driver drives is driven, loaded and unloaded by the agent's own
-hand, as in the courier's, the dispatcher's and the tower's worlds, which state no driver. A driver no
+hand, as in the courier's and the tower's worlds, which state no driver. A driver no
 agent plays is nobody's to act through, the same refusal as a driver aboard another van.
 
 So in `world/driver/` the dispatcher reaches both vans because it plays the one driver, one van at a
-time; in `world/lane/` each courier plays the driver of its own van; and in a world of two agents with
+time; in `world/lane/` each courier plays the driver of its own van, or one courier plays both (`world/lane/tests/test_one_mind.py`); and in a world of two agents with
 a driver each, each search admits the drives, picks, drops and boardings of its own driver and none
 of the other's - held by `world/driver/tests/test_driver.py`. A
 [footprint](/domain/planning/footprint.md) reads the self as absent, so a scope still sees every

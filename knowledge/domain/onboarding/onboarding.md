@@ -37,7 +37,7 @@ granted it, and metrics are where the world says it is monitored. The **bus** is
 world's society names — a premise read off the world, an ASK over its common beliefs in `PREMISES`
 of `onboarding/reading.py`, onboarding's own and the one kind of premise left, since what an agent
 runs is declared and not derived. A world naming none — hanoi,
-the courier, the tower, the dispatcher — is onboarded without the MQTT step, which says in one line that it was
+the courier, the tower, the driver — is onboarded without the MQTT step, which says in one line that it was
 skipped, and its compose file holds its agents and nothing of a bus; `orexis-mqtt` run on it grants
 nothing and says so. `broker` still refuses an address such a world does not have, so the tools ask
 the premise and never it. Until they did, every tool asked `broker`, and a world with no bus could

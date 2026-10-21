@@ -565,6 +565,12 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             #  has landed is where a reconsideration's search starts, so the plan it finds begins
             #  after the step and never beside it.
             landings = [lands for f in flights.values() for action, lands in f["landings"] if only is None or action in only]
+            #  AND WHAT EACH OF THEM CHANGES THERE, its own published claim, so the ground it lands in holds it
+            #  whoever answers the step: a fictive step wrote its change into the present when it was taken,
+            #  a step a flow reads is integrated by the flows, and an answered step no flow reads — a drive
+            #  told to the van — changed nothing anyone laid, so a want reopened round it was searched from a
+            #  ground where it had not happened and planned the drive in flight again (#1004).
+            landed = self._landed(flights, only)
             #  WHETHER A BELIEF HAS ARRIVED THAT THE AGENT DID NOT FORESEE, which is the one sense in which
             #  a belief can touch a walking plan (#921): some ground laid now holds what no world the
             #  last pass left here held — no ground, and no possible world a search imagined — by the
@@ -580,7 +586,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             placed = None if _scope == UNSCOPED else (
                 lambda feature, prop: _scope in (scopes.meet({feature, prop}) or {_scope}))
             foresight = self.foresee(self.beliefs, at, placed=placed) if self.foresee is not None else None
-            present, *_ = lay_ground(store, at, within, landings, actions=only, foresight=foresight)
+            present, *_ = lay_ground(store, at, within, landings, actions=only, foresight=foresight, landed=landed)
             arrived = bool(flights) and bool(frozenset(
                 r["h"] for r in rows(store, _GROUND_HASHES_Q, (), cat=Raw(f"<{catalogue_of(store)}>"))) - foreseen)
             rerooting = reroot(store, present)
@@ -784,8 +790,25 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         for want, flights in held.items():
             flight = dict(next((f for f in flights if not f["ending"]), flights[0]))
             flight["landings"] = [(f["action"], f["landing"]) for f in flights if f["in_flight"]]
+            flight["in_flight_steps"] = [(f["action"], f["landing"], f["plan"], f["head"]) for f in flights if f["in_flight"]]
             flight["landing"] = max(f["landing"] for f in flights)
             out[want] = flight
+        return out
+
+    def _landed(self, flights: dict, only) -> dict[datetime, list[tuple[list, list]]]:
+        """What each step in flight of this scope changes, by the instant it lands: the triples its plan
+        says it retracts and adds (`execution:retracts`, `execution:adds`), read off the published plan —
+        the diff the search planned on and the executor holds the world to."""
+        out: dict[datetime, list[tuple[list, list]]] = {}
+        for flight in flights.values():
+            for action, lands, plan, step in flight.get("in_flight_steps", ()):
+                if only is not None and action not in only:
+                    continue
+                said = next((r for r in rows(self.beliefs, _PREDICTS_Q, (), plan=Raw(f"<{plan}>")) if r["step"] == step), {})
+                change = ([ox.Triple(q.subject, q.predicate, q.object) for q in _quads_of(self.beliefs, said.get("retracts"))],
+                          [ox.Triple(q.subject, q.predicate, q.object) for q in _quads_of(self.beliefs, said.get("adds"))])
+                if change[0] or change[1]:
+                    out.setdefault(lands, []).append(change)
         return out
 
     def _impossible_ahead(self, store: ox.Store, flights: dict, constraints: list[str], only, memo: Memo) -> set[str]:
@@ -824,12 +847,12 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                 continue
             chain = [step for step, _ in self._chain(self.beliefs, flight["plan"])]
             at = chain.index(flight["head"]) if flight["head"] in chain else len(chain)
-            #  FROM THE STEP IN FLIGHT, where there is one: the ground it lands in is a boundary and carries
-            #  no change of it, since a committed step lays no ground (`lay_ground`), so its change is the
-            #  first the plan's claim makes there. Replayed from the step after it, the first untaken drive's
-            #  new column stood beside the stale row and the van read as standing where a peer stood: a
-            #  position being two keys, a half-applied change is a crossing of positions
-            #  (the-grid-is-infinite-and-a-position-is-two-coordinates).
+            #  FROM THE STEP IN FLIGHT, where there is one: the ground it lands in holds its change where it
+            #  lands ahead (`_landed`), and replayed again there the change is the same and supersedes by key
+            #  to nothing; but a step answered late lands at no boundary ahead, so no ground holds its change,
+            #  and replayed from the step after it the first untaken drive's new column stood beside the stale
+            #  row and the van read as standing where a peer stood: a position being two keys, a half-applied
+            #  change is a crossing of positions (the-grid-is-infinite-and-a-position-is-two-coordinates).
             untaken = chain[at:]
             if not untaken or (len(untaken) == 1 and flight["in_flight"]):
                 continue

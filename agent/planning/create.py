@@ -69,7 +69,7 @@ class _Planning:
         self.planner.want_reached.connect(lambda reached: executor.end_for(reached.want, "reached"))
         self.planner.step_blocked.connect(lambda blocked: executor.end_at(blocked.step, "failed"))
         executor.taking.connect(lambda taking: self.planner.check(taking.step, taking.at))
-        self.planner.reconsidered.connect(lambda reconsidered: executor.supersede_after(reconsidered.step))
+        self.planner.reconsidered.connect(lambda reconsidered: executor.supersede_after(reconsidered.step, reconsidered.by))
         executor.intention_resolved.connect(lambda ended: self.runtime.again())
 
     def start(self, runtime) -> None:

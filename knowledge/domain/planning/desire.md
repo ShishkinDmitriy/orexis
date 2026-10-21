@@ -25,7 +25,7 @@ same term, held to its instances by a `sh:targetNode` each (the keeper's
 An aversion is a state the agent MAY enter and must then leave — repaired when entered, weighed in
 grounds and never in possible worlds. What the world says cannot be at all is a
 [constraint](/domain/planning/constraint.md), stated in the same words and of another modality, which
-is where the dispatcher's two-vans rule went once it was asked which it was.
+is where the courier's two-vans rule went once it was asked which it was.
 And, where its domain has one, `planning:estimates`, a select saying how far a world still is in
 the unit actions cost. It is about every instance at every instant, so it is never met once and
 for all and never handed to a search. A world authors it, in a `planning:DesireGraph`.

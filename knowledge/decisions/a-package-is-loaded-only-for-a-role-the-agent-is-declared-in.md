@@ -349,8 +349,8 @@ From memory; the years are approximate.
   plan crosses by speech, and #916's take-time check — the executor's `taking` answered by
   `Planner.check` in one store — becomes a question back to the planning agent. Until then an executor
   needs to be a planner. **The trigger: the first world in which one agent plans steps another
-  agent takes** — a dispatcher whose vans are other agents', which `world/dispatcher/` is not: its one
-  agent decides and acts.
+  agent takes** — a dispatcher whose vans are other agents', which the lane's one mind driving both vans is not: its
+  one agent decides and acts.
 - **A role declared after birth.** The stances document is the agent's own, and a volume lived in
   keeps the agent's own graphs as they were; so a role added or removed for a running agent reaches it
   only on a fresh volume, as every stance does under #876. A role is anti-rigid, and changing one

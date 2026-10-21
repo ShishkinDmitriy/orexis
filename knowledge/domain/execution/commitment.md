@@ -72,8 +72,10 @@ Either trigger is then followed by the one path below.
 1. **The search starts where the step in flight has landed.** A pass lays a ground boundary at each
    such landing — its `execution:landsAt`, shifted by how late it was taken, as the executor reads it
    — and the reopening want is searched from that ground, so the plan it finds begins after the step.
-   What that ground holds is what the agent already sees holding then: a fictive step wrote its
-   effect into the present when it was taken, and a step a flow reads is in the predictions.
+   That ground holds the step's own change, its `execution:retracts` and `execution:adds` applied
+   superseding by key, whoever answers it: a fictive step's is in the present already, and an answered
+   step's — a drive told to the van — is shown only when the world shows it
+   ([a-ground-holds-the-change-of-a-step-landing-in-it](/decisions/a-ground-holds-the-change-of-a-step-landing-in-it.md)).
 2. **The joint plan agrees where it begins with the walking intention's untaken steps**, compared by
    the action each fills and the values it is filled with, never by node. Then the intention stands
    untouched — adopted when it was, ended by nothing — and only the new part of the joint plan is
@@ -86,14 +88,17 @@ Either trigger is then followed by the one path below.
    back is a legitimate outcome, found by the search and decided by nobody. Where the plan is for the
    very want the intention walks, it is adopted BESIDE the intention that is ending, which absorbs no
    plan: `reconsidered` is said before the plan is published, so the executor has marked the intention
-   to end after its step in flight before the replacement reaches it.
+   to end after its step in flight before the replacement reaches it. The replacement **waits for it**,
+   `execution:waitsFor`: no head of it is taken while the intention ending stands, since its plan
+   begins where the step in flight has landed and the world says when that is, inside the step's band
+   and not at its earliest.
 
 Why this and not the alternatives — the elder plan as the younger's ground, conflicts reconciled
 afterwards — is [one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md);
 how planning and execution say these things to each other is
 [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md).
 The derivation's half of the first trigger is held by `agent/planning/tests/derive_wants/a_coupled_arrival_reopens_the_walking_want.trig`
-and of the second by `agent/planning/tests/test_derive_wants.py`; the dispatcher's arrivals — a
-parcel, and a peer's van predicted or seen — by `world/dispatcher/tests/test_dispatcher.py`; and what
+and of the second by `agent/planning/tests/test_derive_wants.py`; the arrivals on a world that
+answers its drives — a parcel, and a peer's van foreseen or seen — by `world/lane/tests/test_one_mind.py`; and what
 a reconsideration costs, and what asking the second trigger costs, is in
 [measure-the-search](/runbooks/measure-the-search.md).

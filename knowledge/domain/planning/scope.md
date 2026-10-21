@@ -35,7 +35,7 @@ two cases that look obvious are the reason:
   the soil. One action across both makes one scope.
 - Two vans in one courier vocabulary look like one until you notice nothing they do touches the
   same van — and ARE one, by key as by predicate, while a parcel either van could pick is a filling
-  value of both vans' Pick (`world/dispatcher/`, the two-vans seam of the record below). Whether
+  value of both vans' Pick (`world/lane/tests/test_one_mind.py`, the two-vans seam of the record below). Whether
   their two parcels are one want or two is not the scope's question but the
   [constraint](/domain/planning/constraint.md)'s.
 

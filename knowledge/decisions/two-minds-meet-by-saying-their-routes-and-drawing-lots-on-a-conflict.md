@@ -131,7 +131,7 @@ is built, and nothing here was run on a bench.
   rewritten. *Amended 2026-10-07: built by #920 — `planning:Wait`, the planning package's own
   [wait](/domain/planning/wait.md), in every scope, landing where the next ground the search can tell
   apart begins; with a peer's route laid as predictions, the crossing is waited out and the corridor
-  with the peer standing ahead is found (`world/dispatcher/tests/test_dispatcher.py`).*
+  with the peer standing ahead is found (the dispatcher's test then, `world/lane/tests/test_one_mind.py` since #1004).*
 - **Soft commitment has one trigger** — a want a constraint couples to the walking one arriving
   (`derive_wants`, `planning:reopens`; [commitment](/domain/execution/commitment.md)). A route laid as
   a prediction that makes a walking plan's next worlds impossible reopens nothing; that is #921.
@@ -141,8 +141,9 @@ is built, and nothing here was run on a bench.
   by `a_step_lands_across_a_prediction_it_does_not_touch` under `agent/planning/tests/plans/` and
   by `agent/planning/tests/test_wait.py`.
 - **The constraint is the dispatcher's, in the avoided state's form** — a `planning:unmetWhen` select
-  over `courier:at` whose rows are two vans on one cell (`world/dispatcher/constraints.ttl`). Both
-  agents of a two-van world would hold that same text.
+  over `courier:at` whose rows are two vans on one cell. Both agents of a two-van world would hold that
+  same text. *Amended 2026-10-21: it is the courier's own now, over a position's two coordinates
+  (`domains/courier/constraints.ttl`), and both couriers of the lane hold it (`world/lane/constraints.ttl`).*
 
 # The decision
 
@@ -301,6 +302,13 @@ that the world says what is possible and an agent does not argue with it. #568's
 two shapes it is held to: a crossing, where the loser waits, and a corridor with one passing place,
 where the loser pulls aside. Whether `orexis-onboard` should refuse a badly formed world, as it refuses
 a contradicted present, is a seam below.
+
+The world built for it is the lane (`world/lane/`, posed on `domains/road/`), which replaced both the
+canal this record was amended towards and the dispatcher (#1004): a single-track lane with one passing
+place and open road two cells wide at each end — the corridor with one passing place — on which two
+couriers each drive their own van and see the other within the range their contact sensors declare. The
+crossing, with a peer's route laid as forecasts, is pinned as a one-agent variant of it
+(`world/lane/tests/test_one_mind.py`); the exchange and the draw on the corridor are #923's.
 
 # It is generic
 

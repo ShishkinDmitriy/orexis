@@ -40,8 +40,8 @@ timestamp: 2026-10-05T09:00:00Z
 
 [#567](https://github.com/ShishkinDmitriy/orexis/issues/567) posed one agent, two vans, two parcels
 and an aversion — no cell holds two vans — and asked for a search that derives a want from a conflict
-between two plans. The world is built and measured (`world/dispatcher/`,
-[measure-the-search](/runbooks/measure-the-search.md)); the aversion is a standing desire in its
+between two plans. The world is built and measured (the dispatcher, its pins one-agent variants of the lane since #1004,
+`world/lane/tests/test_one_mind.py`, [measure-the-search](/runbooks/measure-the-search.md)); the aversion is a standing desire in its
 honest form, `planning:unmetWhen`, judged in every ground since #892, so two vans posed on one cell
 mint a want and a drive parts them. What nobody judges is the state two plans make BETWEEN acts: on
 the corridor each plan drives its van through `c2_1` at its third step, the two are walked in
@@ -53,7 +53,7 @@ it merged, for the reason given under *What was refused*. This is the version th
 # What the code does today, measured
 
 On the development container, one pass of the Planner at a budget of 128 over the booted world as
-`world/dispatcher/tests/test_dispatcher.py` builds it; not committed to the suite.
+the dispatcher's test built it; not committed to the suite.
 
 - **The corridor.** Two wants, two plans of five steps, 33 and 33 weighings over 68 possible
   worlds. **None of the 68 holds two vans on one cell**, because each plan moves its own van and the
@@ -207,7 +207,7 @@ want was searched from the present beside the walking want and both intentions d
 shipped pose van A's intention ended `failed`, a step of it blocked by the other's, and the corridor
 took twelve acts for ten; after, the walking intention ends `superseded` after its step in flight, or
 stands where the joint plan begins with its steps, and ten acts deliver both parcels with two vans on
-no cell (`world/dispatcher/tests/test_dispatcher.py`, [measure-the-search](/runbooks/measure-the-search.md)).*
+no cell (the dispatcher's test, `world/lane/tests/test_one_mind.py` since #1004, [measure-the-search](/runbooks/measure-the-search.md)).*
 
 *A second trigger, built 2026-10-07 (#921), decided in the discussion of #568, where a walking plan
 is made impossible by no want at all: a peer's route laid as a prediction, or a peer's van seen on a
@@ -387,7 +387,7 @@ plan down the same cells. A cluster a standing want is already about is that wan
   shipped pose nothing, since no world of it collides; neither fits the default 128 — and both vans
   posed on one cell with their parcels where they stand — a joint delivery of thirteen steps — is found
   by neither 128 nor 512, the latter in 32 seconds, so the trigger is already in the suite, pinned as
-  `Exhausted` in `world/dispatcher/tests/test_dispatcher.py`.
+  `Exhausted` in `world/lane/tests/test_one_mind.py`.
 - **A plan that must pass through an impossible world has no plan.** A world that violates a
   constraint is impossible whatever the want's verdict there, so a want every route to which crosses
   one ends `Exhausted`, and nothing relaxes a constraint for a want that cannot otherwise be met —
@@ -475,14 +475,17 @@ plan down the same cells. A cluster a standing want is already about is that wan
   it in its own intention and to nothing of another's, so a step in flight the world answers late —
   a real actuator, not a fictive drive, which answers exactly then — overlaps the joint plan's first
   step by as much. No shipped world reconsiders a step that is not fictive; the trigger is the first
-  that does.
+  that does. CLOSED by the lane, where a drive is told to the van: the replacement waits for the
+  intention it replaced, `execution:waitsFor`
+  ([a-ground-holds-the-change-of-a-step-landing-in-it](/decisions/a-ground-holds-the-change-of-a-step-landing-in-it.md)).
 - **The landing ground applies no prediction of the step in flight itself.** It holds what the agent
   already sees then, which is right for a fictive step, whose effect is in the present, and for one a
   flow reads as a committed step, whose effect is in the predictions; a step that reaches the world
   and that no flow reads lands in a ground that lacks its effect, and the joint search would plan as
   if it had not landed. Applying the step's own `execution:adds` there was refused while a flow can
   already state it, since the two would count it twice; the trigger is the first such world that
-  reconsiders.
+  reconsiders. CLOSED by the lane: the landing ground holds the step's change, superseding by key, which
+  counts nothing twice ([a-ground-holds-the-change-of-a-step-landing-in-it](/decisions/a-ground-holds-the-change-of-a-step-landing-in-it.md)).
 - **A joint plan with the walking steps later is reconsidered, not kept.** Agreement is read as the
   joint plan beginning with the untaken steps, so a plan that walks the same steps after a step of the
   arriving want's ends the intention and re-adopts them in the joint plan — the shipped arrival does,
@@ -519,5 +522,5 @@ plan down the same cells. A cluster a standing want is already about is that wan
 - Its own built second version (#902): the constraint as a reading of a desire and the bound as
   never-newly-enter are refused above; `planning:refused` is retired and `planning:Constraint`,
   `planning:ConstraintGraph` and `planning:impossible` declared; the dispatcher's aversion is its
-  constraint, in `world/dispatcher/constraints.ttl`.
+  constraint, the courier's own since, in `domains/courier/constraints.ttl`.
 - #903's resource, `execution:occupies` and the executor's hold, refused above and not merged.

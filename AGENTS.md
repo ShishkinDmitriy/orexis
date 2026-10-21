@@ -225,12 +225,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   prediction and calls `derive_wants`, so a claim arriving is a want arriving.
 - **A desire is met when a shape holds or unmet when a select binds, one of the two, and `weigh`
   judges either** — `planning:unmetWhen` was declared, carried onto wants and compiled since #468
-  and weighed by nothing, so the dispatcher's aversion shipped as a shape named for the good state
+  and weighed by nothing, so the two-vans aversion shipped as a shape named for the good state
   wrapping the select of the bad one (#892).
 - **A shape over instances says each block is about `sh:this`, and two instances are one want only
-  where a constraint can make their plans collide** — a witness about nothing joins every cluster; the
-  dispatcher's two parcels are one want on a shared grid, 228 candidates where two apart cost 50, and
-  two wants on disjoint grids (a-parcel-astray-is-a-want-of-its-own, constraint).
+  where a constraint can make their plans collide** — a witness about nothing joins every cluster; one
+  mind's two parcels on the lane are one want, 328 candidates where a van alone costs 20, since on a plane
+  two vans can always meet (a-parcel-astray-is-a-want-of-its-own, constraint).
 - **One mind couples the wants a constraint can make collide, and searches them as one** — a
   constraint's footprint, read over what the actions can REACH from the present (off the common
   beliefs alone, as a scope's is, it is grid-blind, measured), says which wants' plans may interfere; those are one
@@ -766,10 +766,14 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   the reach is not asked** — a drive's effect writes a number its precondition made by arithmetic, and the
   reach over it mints the next ring every round; so there are no disjoint grids, and the reach stays for
   worlds whose places are finite terms (couplings, the-grid-is-infinite-and-a-position-is-two-coordinates).
-- **A plan's claim is replayed from its step in flight, and a step's change supersedes by key** — the
-  ground a step in flight lands in carries no change of it, so replayed from the step after, a drive's new
-  column stood beside the stale row and the van read as standing where a peer stood; a position is two
-  keys, and a half-applied change is a crossing of positions (#921, the-grid-is-infinite-and-a-position-is-two-coordinates).
+- **A plan's claim is replayed from its step in flight, and a step's change supersedes by key** — a step
+  answered late lands at no ground ahead, so replayed from the step after, a drive's new column stood
+  beside the stale row and the van read as standing where a peer stood; a position is two keys, and a
+  half-applied change is a crossing of positions (#921, the-grid-is-infinite-and-a-position-is-two-coordinates).
+- **The ground where a step in flight lands holds the step's change, whoever answers it, and the plan that
+  replaced its intention waits for the world to show it** — `execution:waitsFor`; a drive told to the van is
+  shown a fix after its earliest landing, and a reopened want re-planned it and its replacement walked
+  early, each ending `failed` (a-ground-holds-the-change-of-a-step-landing-in-it).
 - **A filling is written as the terms the precondition bound, never their value strings** — a parameter
   the precondition computes is a typed literal, and written as its value alone it came back a string no
   arithmetic reads (`admit._term`).

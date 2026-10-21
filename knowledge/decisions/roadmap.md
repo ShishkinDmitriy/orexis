@@ -35,9 +35,11 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
 # When 0.2.0 is finished
 
 **0.2.0 is finished when several agents contend: #568 closed, which is #922 and #923 closed on top of
-#919 to #921, and #925 closed beside them.** #925 gates because the re-root dropping the cone a
-reopened plan hangs under is the path the loser of a draw walks (#921), so the release would
-otherwise stand on a plan it forgets. A two-agent society then delivers both parcels at a crossing and in a corridor with
+#919 to #921, and #925, #1015 and #1016 closed beside them.** #925 gates because the re-root dropping
+the cone a reopened plan hangs under is the path the loser of a draw walks (#921), so the release would
+otherwise stand on a plan it forgets; #1015 is that cone dropped again by a pass before the landing,
+at the lane's cadence; and #1016 is a van driven onto an obstacle its radar showed that pass, a
+collision the release says there is none of. A two-agent society then delivers both parcels at a crossing and in a corridor with
 one passing place, with no collision and no deadlock, and the shipped one-agent worlds are unchanged.
 That merge is tagged `v0.2.0` with release notes in the shape `v0.1.0` has (what the tree is, the
 commit it was cut at), and `pyproject.toml` moves to 0.3.0 in the next change. Everything not
@@ -81,7 +83,7 @@ resource with no overseer, is what 0.2.0 was built toward, so it is what finishe
    right-of-way as a market lot is refused there). Its pieces, in the order each unlocks the next:
    #919, a step predicts its own effect; #920, `planning:Wait`, landing at the next ground; #921, a
    belief that makes a walking plan's next worlds impossible reopens it; #922, attention, the vans
-   within a radius; and #923, the question, the answer and the draw, which depends on the other three.
+   within the range their contact sensors declare, built on the lane (#1002 to #1004); and #923, the question, the answer and the draw, which depends on the other three.
    Both need a public fact saying which agent has a driver, #929, filed from
    [a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md).
 5. **What an agent runs** — declared, not derived: an agent's roles in its self graph, where #876

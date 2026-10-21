@@ -69,6 +69,7 @@ What happens to a decision — committed as an intention, carried out by whoever
 * [the-action-is-the-kind](/decisions/the-action-is-the-kind.md) - `orexis:Means` read by nothing; the action node is what a row carries and an intention commits to, and the five means are gone.
 * [a-steps-prediction-is-two-graphs-it-names](/decisions/a-steps-prediction-is-two-graphs-it-names.md) - A step predicts in two graphs it names, stated and never asserted; a JSON literal, reification and RDF-star refused, the precondition retired.
 * [one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md) - SUPERSEDED IN PART — one mind couples the wants a constraint can make collide into one search; how two minds meet moved. Sequencing refused.
+* [a-ground-holds-the-change-of-a-step-landing-in-it](/decisions/a-ground-holds-the-change-of-a-step-landing-in-it.md) - Where a step in flight lands, the ground holds its change; a plan replacing its intention waits for the world to show it.
 * [two-minds-meet-by-saying-their-routes-and-drawing-lots-on-a-conflict](/decisions/two-minds-meet-by-saying-their-routes-and-drawing-lots-on-a-conflict.md) - Vans in range ask what their constraint reads, answered under a shared constraint, and draw lots on a conflict, since nobody owns a cell.
 
 # The mind — deliberation and the model
