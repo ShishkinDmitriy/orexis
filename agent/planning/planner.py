@@ -94,8 +94,8 @@ from agent.lifecycle import Signal
 from agent.metrics import Laps
 from agent.ontology import ACTION, BELIEF, RECORD, local_of
 from agent.stance import stance
-from agent.store import (Memo, Raw, add_quads, copy_graph, forget_graph, bind, bindings, catalogue_of, graphs_of, instant,
-                         query, rdflib_view, remember, rows, update)
+from agent.store import (NAMESPACES, Memo, Raw, add_quads, copy_graph, forget_graph, bind, bindings, catalogue_of, graphs_of,
+                         instant, query, rdflib_view, remember, rows, update)
 
 from . import footprint
 from .admit import admit
@@ -434,6 +434,10 @@ class Planner:
         self.reached: set[str] = set()
         self.blocked: list[str] = []
         self.superseded: list[Reconsidered] = []
+        #  THE STEP OF EACH WALKING WANT AFTER WHICH A WORLD OF ITS PLAN WAS LAST FORESEEN IMPOSSIBLE
+        #  (`_impossible_ahead`), kept until a belief arriving has it foreseen again: `check` takes no
+        #  such step, whatever the search that reopened its want has yet to find.
+        self.doomed: dict[str, str] = {}
         #  WHAT THE PLANNER SAYS HAPPENED, its own words for whoever connects, each carrying an event
         #  of `events.py`: a plan published; a want an intention walks that the present meets; a
         #  head about to be taken that the present no longer admits (`check`); an intention a
@@ -734,7 +738,19 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         just taken wrote, and the present is every reading as it stands (`world_at` with no world),
         which is what the present ground is laid from. Every scope's readings are there, so a step
         is judged by its own filling wherever it was admitted, and the scope that admitted it need
-        not be found again."""
+        not be found again.
+
+        AND NOT INTO A WORLD FORESEEN IMPOSSIBLE. A step after which a world of its plan was last
+        foreseen impossible (`doomed`, by `_impossible_ahead`) is blocked too, though the present admits
+        it: its want is reopened, and a search the budget cut short leaves the plan walking until the
+        passes after find another — but a head taken lands where the agent already believes it may not
+        be, and two vans each walking into the cell the other's word has said it will hold collided so,
+        between the pass that foresaw it and the one that replaced it
+        (two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it)."""
+        if step in self.doomed.values():
+            log.info("%s: %s is not taken — a world of its plan was foreseen impossible after it", self.id, local_of(step))
+            self.blocked.append(step)
+            return self.step_blocked.emit(StepBlocked(step))
         head = rows(self.beliefs, _HEAD_Q, (), step=step)
         if not head:
             return []
@@ -743,12 +759,54 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             return []
         takes = {r["takes"] for r in found if r.get("takes")}
         filling = {local_of(r["p"]): r["v"] for r in rows(self.beliefs, _FILLING_Q, (), step=step) if r["p"] in takes}
-        answers = bindings(query(self.beliefs, bind(found[0]["text"]), world_at(self.beliefs, None, now=at)))
-        if any(all(row.get(k) == v for k, v in filling.items()) for row in answers):
+        present = world_at(self.beliefs, None, now=at)
+        answers = bindings(query(self.beliefs, bind(found[0]["text"]), present))
+        if not any(all(row.get(k) == v for k, v in filling.items()) for row in answers):
+            log.info("%s: %s is not taken — the present admits it no more", self.id, local_of(step))
+        elif (broken := self._lands_impossible(step, present, at)):
+            log.info("%s: %s is not taken — the world it lands in violates %s", self.id, local_of(step), broken)
+        else:
             return []
-        log.info("%s: %s is not taken — the present admits it no more", self.id, local_of(step))
         self.blocked.append(step)
         return self.step_blocked.emit(StepBlocked(step))
+
+    def _lands_impossible(self, step: str, present: list[str], at: datetime) -> str | None:
+        """The constraint the world `step` lands in violates where the world before it does not, as the agent
+        believes them now — the present, beside every forecast holding at some instant of the step's band, which
+        a step taken at `at` lands somewhere in; and its change, `execution:retracts` and `execution:adds`, applied
+        by key as a prediction supersedes — or None. The question `_impossible_ahead` asks of the grounds, asked
+        of the beliefs as they stand: a reading that arrived since the last pass — a hedge first seen beside the
+        van — and a peer's word heard since — the cell its van will drive into — are in no ground yet, and the
+        walk a reading wakes takes the head before any pass foresees them. A forecast ahead is laid beside the
+        present, not over it, so a thing it moves stands at both: the step must be possible wherever in its band
+        the thing has got to. A violation the world before already holds is the contradiction the pass says, and
+        refuses no head. The agent's own committed steps are not read: they are its plan, which this step is."""
+        if not self._holds_a_constraint():
+            return None
+        change = next(iter(rows(self.beliefs, _CHANGE_Q, (), step=step)), {})
+        retracts, adds = _quads_of(self.beliefs, change.get("retracts")), _quads_of(self.beliefs, change.get("adds"))
+        if not retracts and not adds:
+            return None
+        band = next(iter(rows(self.beliefs, _BAND_Q, (), step=step)), {})
+        latest = at + (datetime.fromisoformat(band["after"]) - datetime.fromisoformat(band["due"])) \
+            if band.get("after") and band.get("due") else at
+        ahead = [r["g"] for r in rows(self.beliefs, _AHEAD_Q, (), cat=Raw(f"<{catalogue_of(self.beliefs)}>"))
+                 if r["g"] not in present and (not r.get("start") or datetime.fromisoformat(r["start"]) <= latest)
+                 and (not r.get("end") or datetime.fromisoformat(r["end"]) > at)]
+        world = ox.Store()
+        add_quads(world, (ox.Quad(q.subject, q.predicate, q.object, ox.DefaultGraph())
+                          for g in [*present, *ahead] for q in self.beliefs.quads_for_pattern(None, None, None, ox.NamedNode(g))))
+        texts = [(r["c"], r["text"]) for r in rows(self.beliefs, _CONSTRAINT_TEXTS_Q,
+                                                    [*graphs_of(self.beliefs, CONSTRAINT_GRAPH), *graphs_of(self.beliefs, BELIEF, common=True)],
+                                                    holder=self.uri)]
+        before = {c: _violations(world, text) for c, text in texts}
+        for q in retracts:
+            world.remove(ox.Quad(q.subject, q.predicate, q.object, ox.DefaultGraph()))
+        for subject, predicate in {(q.subject, q.predicate) for q in adds}:
+            for held in list(world.quads_for_pattern(subject, predicate, None, ox.DefaultGraph())):
+                world.remove(held)
+        add_quads(world, (ox.Quad(q.subject, q.predicate, q.object, ox.DefaultGraph()) for q in adds))
+        return next((local_of(c) for c, text in texts if _violations(world, text) - before[c]), None)
 
     # --- commitment: the step in flight, and the two triggers that reopen a walking want -------
 
@@ -895,8 +953,10 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                         log.info("%s: %s would be impossible after %s — it violates %s: %s, so it is reopened",
                                  self.id, local_of(want), local_of(step), local_of(broken[0]), _said(broken[1]))
                         out.add(want)
+                        self.doomed[want] = step
                         break
                 else:
+                    self.doomed.pop(want, None)
                     log.debug("%s: %d world(s) of %s's untaken steps foreseen, none impossible",
                               self.id, len(foreseen), local_of(want))
             finally:
@@ -921,7 +981,8 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         not be the order walked. ANYTHING ELSE disagrees, and each reopened intention is said to end
         after its step in flight — planning decides, execution ends, as for a step blocked — while
         the joint plan is published whole. A search that found no plan publishes nothing and
-        reconsiders nothing: the walking intentions walk on, and the passes after continue it."""
+        reconsiders nothing: the walking intentions walk on, and the passes after continue it — save the head
+        `check` refuses as foreseen impossible (`doomed`)."""
         reopened = [r["w"] for r in rows(store, _REOPENS_Q, (), want=want)]
         if not reopened:
             return
@@ -1321,6 +1382,30 @@ def _broken(store: ox.Store, constraint: str, world: str, memo: Memo) -> frozens
         return frozenset((r["i"], r.get("c"), r.get("a"), r.get("o"))
                          for r in rows(store, _ROWS_Q, (), x=Raw(f"<{node}>"), cat=cat))
     return remember(memo, ("broken", constraint, world), read)
+
+
+#  A STEP'S CHANGE, as its plan says it: the graphs naming what it retracts and adds.
+_CHANGE_Q = """SELECT ?retracts ?adds WHERE { GRAPH ?p { $step a execution:Step .
+  OPTIONAL { $step execution:retracts ?retracts } OPTIONAL { $step execution:adds ?adds } }
+  FILTER(BOUND(?retracts) || BOUND(?adds)) } LIMIT 1"""
+#  A STEP'S BAND, as its plan placed it: when it falls due and the latest it lands.
+_BAND_Q = """SELECT ?due ?after WHERE { GRAPH ?p { $step execution:notBefore ?due ; execution:notAfter ?after } } LIMIT 1"""
+#  EVERY FORECAST BUT THE AGENT'S OWN COMMITTED STEPS, with its period.
+_AHEAD_Q = """
+SELECT ?g ?start ?end WHERE { GRAPH $cat { ?g a orexis:ForecastGraph . FILTER NOT EXISTS { ?g a execution:CommittedStepGraph }
+  OPTIONAL { ?g dcterms:temporal ?p . OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }"""
+#  EVERY CONSTRAINT THE HOLDER HOLDS, with the select its violations are the rows of — the avoided state's, or the shape's.
+_CONSTRAINT_TEXTS_Q = """
+SELECT ?c ?text WHERE { $holder planning:holds ?c . ?c a planning:Constraint .
+  { ?c planning:unmetWhen ?s . ?s sh:select ?text } UNION { ?c planning:metWhen ?shape . ?shape sh:sparql/sh:select ?text } }"""
+
+
+def _violations(world: ox.Store, text: str) -> frozenset:
+    """The rows a constraint's select yields over `world`'s default graph — none where its text will not run."""
+    try:
+        return frozenset(tuple(str(term) for term in row) for row in world.query(text, prefixes=NAMESPACES))
+    except (SyntaxError, ValueError):
+        return frozenset()
 
 
 def _quads_of(store: ox.Store, graph: str | None) -> list:

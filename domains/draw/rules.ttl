@@ -1,0 +1,48 @@
+@prefix : <http://example.org/orexis/draw#> .
+@prefix draw: <http://example.org/orexis/draw#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix coordination: <http://example.org/orexis/coordination#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a sh:RulesGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A DRAW'S DOCUMENTS MEAN. A commitment heard or said is believed as said, with who committed to which draw,
+#  and that the conflict is being drawn in that round, in coordination's word, so a peer behind is brought to it.
+#  A reveal is believed as said too, number and all, since the outcome below reads it beside the commitment.
+
+:committed a speech:Extraction ;
+    rdfs:label "a commitment is believed as said, and who committed to which draw in which round" ;
+    sh:construct """PREFIX draw: <http://example.org/orexis/draw#>
+        CONSTRUCT { ?c a draw:Commitment ; draw:of ?draw ; draw:by ?by ; draw:hash ?hash .
+                    ?draw draw:committedBy ?by . ?conflict coordination:drawnIn ?round }
+        WHERE { ?c a draw:Commitment ; draw:of ?draw ; draw:by ?by ; draw:hash ?hash ; draw:about ?conflict ; draw:round ?round }""" .
+
+:revealed a speech:Extraction ;
+    rdfs:label "a reveal is believed as said, and who revealed which draw" ;
+    sh:construct """PREFIX draw: <http://example.org/orexis/draw#>
+        CONSTRUCT { ?r a draw:Reveal ; draw:of ?draw ; draw:by ?by ; draw:number ?number . ?draw draw:revealedBy ?by }
+        WHERE { ?r a draw:Reveal ; draw:of ?draw ; draw:by ?by ; draw:number ?number }""" .
+
+#  WHO GOES FIRST, the outcome coordination asks every pass over what the agent believes: a peer's reveal whose
+#  number hashes to the commitment the same peer said, and the agent's own commitment to the draw; the agent's own
+#  number is its secret's, so it need not have revealed yet, and the peer concludes the same once the agent's
+#  reveal reaches it. A reveal that does not hash to its commitment concludes nothing, and the draw restarts in
+#  the next round.
+:winner a coordination:Outcome ;
+    rdfs:label "a draw is won by whichever agent the two numbers name, once a peer's reveal matches its commitment" ;
+    sh:construct """PREFIX draw: <http://example.org/orexis/draw#>
+        CONSTRUCT { ?draw coordination:wonBy ?winner }
+        WHERE {
+            ?me a orexis:Self ; coordination:secret ?secret .
+            ?reveal a draw:Reveal ; draw:of ?draw ; draw:by ?peer ; draw:number ?theirs .
+            FILTER(?peer != ?me)
+            ?committed a draw:Commitment ; draw:of ?draw ; draw:by ?peer ; draw:hash ?hash .
+            ?mine a draw:Commitment ; draw:of ?draw ; draw:by ?me .
+            FILTER(SHA256(CONCAT(STR(?draw), "|", ?theirs)) = ?hash)
+            BIND(SHA256(CONCAT(?secret, "|", STR(?draw))) AS ?ours)
+            BIND(STR(?me) < STR(?peer) AS ?lower)
+            BIND(IF(?lower, CONCAT(?ours, "|", ?theirs), CONCAT(?theirs, "|", ?ours)) AS ?pair)
+            BIND(SUBSTR(SHA256(CONCAT(STR(?draw), "|", ?pair)), 1, 1) AS ?digit)
+            BIND(IF(CONTAINS("13579bdf", ?digit), IF(?lower, ?me, ?peer), IF(?lower, ?peer, ?me)) AS ?winner)
+        }""" .

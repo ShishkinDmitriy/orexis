@@ -45,4 +45,4 @@ instrument's own declaration, the one figure the simulator and the rules both re
 
 A contact is testimony about where a thing is, never about what it will do: a peer's position is a
 present fact the [constraint](/domain/planning/constraint.md) keeps a plan out of, and what the peer
-intends is asked of the agent that plays its [driver](/domain/courier/driver.md) (#923).
+intends is asked of the agent that acts for it, by [question](/domain/coordination/question.md).

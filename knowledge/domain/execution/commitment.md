@@ -62,8 +62,18 @@ wrote before goes, since it stood on grounds the belief has changed. A want the 
 not asked, since its instant is the world's and the derivation did not mint it. Replaying the plan's
 own claim, and not the effects' rules, is the point: the question is whether what the plan says will
 happen is possible given what is now believed, and a replayed step is what the executor holds the
-world to anyway. The take-time check stays the precondition's (#916); weighing constraints as a head
-is taken was considered and refused.
+world to anyway.
+
+**And a head is taken only into a world the agent believes possible as it stands at the taking.** The
+take-time check (#916) asks the precondition, and then asks the held constraints of the world the head
+lands in: the present beside every [forecast](/domain/kernel/forecast.md) holding at some instant of the
+head's band, with the head's own change applied; a head after which the last pass foresaw a world
+impossible is not taken either, whatever the search that reopened its want has yet to find
+(`Planner.check`). A reading that arrived since the last pass - a hedge first seen beside the van - and
+a peer's word heard since are in no ground yet, and the walk a reading wakes takes a head before any
+pass foresees them; refused as a weighing at the taking when #921 was built, with no reason given, it is
+what kept two vans out of one cell
+([two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it](/decisions/two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it.md)).
 
 Nothing else reopens a walking want: a cheaper plan found, a second want no constraint couples, a
 desire read again, or a belief that leaves every world of the plan possible leaves it walking.

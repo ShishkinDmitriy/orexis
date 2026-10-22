@@ -586,6 +586,8 @@ FOLDERS = {
     "actuation": (f"{_O}/actuation#", f"{_O}/climate#"),
     "courier": (f"{_O}/courier#",),
     "onboarding": (f"{_O}/onboarding#",),
+    "coordination": (f"{_O}/coordination#",),
+    "draw": (f"{_O}/draw#",),
 }
 
 

@@ -1,0 +1,72 @@
+@prefix draw: <http://example.org/orexis/draw#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+
+<> a orexis:ActionGraph .    # this document is one graph, and this is what it is
+
+#  THE DRAW'S TWO ACTIONS, each taken over a standing conflict's present draw. Each one's taking SAYS a document to
+#  the peer the conflict is with, made when the step is taken from the secret the agent minted; each one's effect
+#  is what the agent believes once it has said it, which is what answers the step. Each takes the PEER, which the
+#  world states, and is taken over every standing conflict with it: a conflict is the agent's own conclusion and no
+#  world states one, so an action taking it would have no filling at boot and no scope (#913), and a constraint
+#  is no belief a filling could be read from.
+
+draw:Committing a orexis:Action ;
+    rdfs:label "commit to my number in a standing conflict's draw" ;
+    orexis:takes draw:peer ;
+    planning:precondition """PREFIX draw: <http://example.org/orexis/draw#>
+        SELECT DISTINCT ?peer WHERE {
+            ?me a orexis:Self . ?peer a orexis:Agent .
+            ?conflict a coordination:Conflict ; coordination:with ?peer ; coordination:standing true ; coordination:draw ?draw .
+            FILTER NOT EXISTS { ?conflict coordination:silent true }
+            FILTER NOT EXISTS { ?draw coordination:wonBy ?winner }
+            FILTER NOT EXISTS { ?draw draw:committedBy ?me }
+        }""" ;
+    planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    planning:effect [ a planning:Effect ;
+        sh:rule [ a belief:Transition ; belief:update """PREFIX draw: <http://example.org/orexis/draw#>
+        INSERT { ?draw draw:committedBy ?me } WHERE { ?me a orexis:Self . ?conflict coordination:with $peer ; coordination:standing true ; coordination:draw ?draw .
+            FILTER NOT EXISTS { ?draw coordination:wonBy ?winner } }""" ] ] ;
+    execution:implementation [ a execution:Implementation ;
+        execution:operation [ a execution:Saying ; sh:construct """PREFIX draw: <http://example.org/orexis/draw#>
+        CONSTRUCT { ?said a draw:Commitment , draw:CommitmentGraph ; draw:of ?draw ; draw:by ?me ; draw:about ?conflict ;
+                          draw:round ?round ; draw:hash ?hash ; execution:to $peer }
+        WHERE { ?me a orexis:Self ; coordination:secret ?secret .
+                ?conflict coordination:with $peer ; coordination:standing true ; coordination:draw ?draw ; coordination:round ?round .
+                FILTER NOT EXISTS { ?conflict coordination:silent true }
+                FILTER NOT EXISTS { ?draw coordination:wonBy ?winner }
+                BIND(SHA256(CONCAT(?secret, "|", STR(?draw))) AS ?number)
+                BIND(SHA256(CONCAT(STR(?draw), "|", ?number)) AS ?hash)
+                BIND(IRI(CONCAT(STR(?draw), "/commitment/", REPLACE(STR(?me), "^.*[#/]", ""))) AS ?said) }""" ] ] .
+
+draw:Revealing a orexis:Action ;
+    rdfs:label "reveal my number in a draw the peer has committed to" ;
+    orexis:takes draw:peer ;
+    #  ONLY ONCE THE PEER'S COMMITMENT IS HEARD: a number shown first would let the peer choose its own after.
+    planning:precondition """PREFIX draw: <http://example.org/orexis/draw#>
+        SELECT DISTINCT ?peer WHERE {
+            ?me a orexis:Self . ?peer a orexis:Agent .
+            ?conflict a coordination:Conflict ; coordination:with ?peer ; coordination:standing true ; coordination:draw ?draw .
+            ?draw draw:committedBy ?me , ?peer .
+            FILTER NOT EXISTS { ?draw coordination:wonBy ?winner }
+            FILTER NOT EXISTS { ?draw draw:revealedBy ?me }
+        }""" ;
+    planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
+    planning:effect [ a planning:Effect ;
+        sh:rule [ a belief:Transition ; belief:update """PREFIX draw: <http://example.org/orexis/draw#>
+        INSERT { ?draw draw:revealedBy ?me } WHERE { ?me a orexis:Self . ?conflict coordination:with $peer ; coordination:standing true ; coordination:draw ?draw .
+            FILTER NOT EXISTS { ?draw coordination:wonBy ?winner } }""" ] ] ;
+    execution:implementation [ a execution:Implementation ;
+        execution:operation [ a execution:Saying ; sh:construct """PREFIX draw: <http://example.org/orexis/draw#>
+        CONSTRUCT { ?said a draw:Reveal , draw:RevealGraph ; draw:of ?draw ; draw:by ?me ; draw:about ?conflict ;
+                          draw:round ?round ; draw:number ?number ; execution:to $peer }
+        WHERE { ?me a orexis:Self ; coordination:secret ?secret .
+                ?conflict coordination:with $peer ; coordination:standing true ; coordination:draw ?draw ; coordination:round ?round .
+                FILTER NOT EXISTS { ?conflict coordination:silent true }
+                FILTER NOT EXISTS { ?draw coordination:wonBy ?winner }
+                BIND(SHA256(CONCAT(?secret, "|", STR(?draw))) AS ?number)
+                BIND(IRI(CONCAT(STR(?draw), "/reveal/", REPLACE(STR(?me), "^.*[#/]", ""))) AS ?said) }""" ] ] .

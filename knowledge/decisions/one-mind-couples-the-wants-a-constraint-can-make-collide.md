@@ -226,7 +226,10 @@ itself rather than being reopened by a new want: the cluster is the same, so a s
 would be a second plan down the same cells, the failure `_covering` was written for — so the
 replacement plan is for the very want the ending intention walks, which absorbs nothing
 (`commitment`). Weighing constraints as a head is taken stays refused; the take-time check is the
-precondition's (#916).*
+precondition's (#916). Reversed 2026-10-21: a head is taken only into a world the agent believes
+possible at the taking, since a hedge first seen beside the van and a peer's word heard since the last
+pass are in no ground before the walk takes the head
+([two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it](/decisions/two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it.md)).*
 
 **Two minds optimize alone and meet through prediction, the market and execution.** Two agents each
 hold their own desire and neither sees the other's plan. Their channels are what the other did

@@ -3,7 +3,8 @@
 the van on the cell forty-five seconds on, the fix reports it, the courier's transitions conclude the cell,
 and the step lands — the whole loop on one fake broker both agents and the simulator share, with the
 simulator reading the road's hedges off the domain the world imports. Each courier sees the other through a
-contact within two cells (#1003), and holds the courier's constraints, so neither plans onto the other's position.
+contact within four cells (#1003), and holds the courier's constraints, so neither plans onto the other's position;
+and where both want one position, they ask each other, draw lots for it and the loser gives way (#923).
 
 Held to `world/lane/`: two minds on one road, each optimizing alone and meeting by what it senses; the one
 mind with a van parked in its way is `world/layby/`, on the same road
@@ -33,7 +34,7 @@ CADENCE_S = 10
 _AT_Q = """PREFIX courier: <http://example.org/orexis/courier#>
 SELECT ?s ?x ?y WHERE { ?s courier:x ?x ; courier:y ?y . FILTER(isIRI(?s)) FILTER NOT EXISTS { ?p courier:destination ?s } }"""
 ROAD = "http://example.org/orexis/road#"
-#  THE HEDGES EITHER SIDE OF THE LANE, which a radar slot sees as it passes and nothing types: the road's own.
+#  THE HEDGES EITHER SIDE OF THE LANE, which a radar slot sees beside the van as it passes and nothing types: the road's own.
 HEDGES = {(2, 0), (3, 0), (4, 0), (2, 2), (4, 2)}
 
 
@@ -45,6 +46,7 @@ class Bus:
         self.runtimes: dict[str, Runtime] = {}
         self.simulator = None
         self.commands: list[tuple[str, dict]] = []
+        self.told: list[tuple[str, bytes]] = []
 
     @property
     def runtime(self) -> Runtime:
@@ -58,6 +60,11 @@ class Bus:
         if topic.startswith("sensors/"):
             for runtime in self.runtimes.values():
                 runtime.deliver(topic, payload, clock.now())
+        elif topic.startswith("agents/"):
+            self.told.append((topic, payload))
+            agent = topic.split("/")[1]
+            if agent in self.runtimes:
+                self.runtimes[agent].deliver(topic, payload, clock.now())
         else:
             self.commands.append((topic, json.loads(payload)))
             self.simulator.command(topic, payload)
@@ -107,10 +114,11 @@ def _walk(bus, time, limit: int, of: str = "courier_a") -> list[dict[str, str]]:
     return seen
 
 
-def test_two_couriers_each_drive_their_own_van_and_see_the_other_within_two_cells(monkeypatch):
+def test_two_couriers_each_drive_their_own_van_and_see_the_other_within_four_cells(monkeypatch):
     """A drives six cells east along the lane to its parcel's destination while B, with nothing to deliver,
     stands on the eastern road: each courier reads its own fix, commands its own van, and believes the other's
-    van only while its receiver has it within two cells."""
+    van only while its receiver has it within four cells. A asks B what its constraints read and B answers that
+    nothing of its meets: no conflict, and no draw."""
     bus, time = _lane(monkeypatch)
     assert bus.simulator.open() == ["actuators/van_a/command", "actuators/van_b/command"]
     assert len(bus.simulator.vans) == 2 and bus.simulator.position(ROAD + "hedge_2_0") == (2, 0), \
@@ -121,7 +129,7 @@ def test_two_couriers_each_drive_their_own_van_and_see_the_other_within_two_cell
     a, b = _at(bus.runtime.beliefs), _at(bus.runtimes["courier_b"].beliefs)
     assert a["van_a"] == (0, 1) and a["parcel_a"] == (1, 1) and "van_b" not in a and "parcel_b" not in a, \
         f"van B, six cells off, is believed nowhere; parcel B is B's own: {a}"
-    assert a["contact_1"] == (2, 0), f"the hedge two cells on is seen, and nothing knows it is a hedge: {a}"
+    assert "contact_1" not in a and "contact_3" not in a, f"no hedge is beside the van, so the radar sees nothing: {a}"
     assert b["van_b"] == (6, 0) and b["parcel_b"] == (6, 0) and "van_a" not in b, f"and B, with nothing to deliver, knows nothing of A yet: {b}"
     assert bus.runtimes["courier_b"].parts["execution"].executor.walking() == [], "B wants nothing: its parcel is where it is owed"
     assert len(bus.runtime.parts["execution"].executor.walking()) == 1, "a plan for the parcel is walked"
@@ -133,14 +141,16 @@ def test_two_couriers_each_drive_their_own_van_and_see_the_other_within_two_cell
     at = _at(bus.runtime.beliefs)
     assert (at["van_a"], at["parcel_a"], at["van_b"]) == ((6, 1), (6, 1), (6, 0)), at
     #  THE CONTACT (#1003): van B at (6, 0) is believed nowhere until van A comes within the receiver's range of
-    #  it, two cells either way, and at its coordinates from then on; the radar slot, with B identified by the
-    #  receiver, sees the hedges beside the lane as the van passes them, and nothing else.
+    #  it, four cells either way, and at its coordinates from then on; the radar slot, with B identified by the
+    #  receiver, sees the hedges beside the lane as the van passes them, and nothing else; the two slots see both
+    #  hedges a cell has beside it at once, the second slot only there.
     first = next(i for i, at in enumerate(seen) if "van_b" in at)
-    assert all("van_b" not in at for at in seen[:first]) and seen[first]["van_a"] == (4, 1), seen[first]
+    assert all("van_b" not in at for at in seen[:first]) and seen[first]["van_a"] == (2, 1), seen[first]
     assert all(at["van_b"] == (6, 0) for at in seen[first:]), "once seen, where it is"
-    assert {at.get("contact_1") for at in seen} <= {None, *HEDGES} and any(at.get("contact_1") in HEDGES for at in seen), \
-        "the radar saw the hedges beside the lane and nothing else"
-    #  THE OTHER MIND (#1004): B saw A only within two cells of (6, 0), from (5, 1) on, and holds it at its cell.
+    radar = {at.get(slot) for at in seen for slot in ("contact_1", "contact_3")}
+    assert radar <= {None, *HEDGES} and HEDGES <= radar, f"the radar saw every hedge beside the lane and nothing else: {radar}"
+    assert any(at.get("contact_1") in HEDGES and at.get("contact_3") in HEDGES for at in seen), "two at once, beside one cell"
+    #  THE OTHER MIND (#1004): B saw A only within four cells of (6, 0), from (2, 1) on, and holds it at its cell.
     b = _at(bus.runtimes["courier_b"].beliefs)
     assert (b["van_b"], b["parcel_b"], b["van_a"]) == ((6, 0), (6, 0), (6, 1)), b
     assert bus.commands and all(t == "actuators/van_a/command" for t, _ in bus.commands), "B commanded nothing"
@@ -150,6 +160,14 @@ def test_two_couriers_each_drive_their_own_van_and_see_the_other_within_two_cell
     assert all(abs(a[0] - b[0]) + abs(a[1] - b[1]) == 1 for a, b in zip([(0, 1), *told], told)), "each a neighbour of the last"
     assert bus.simulator.position(L + "van_a") == (6, 1), "the simulator's van is at the eastern end: nobody wrote it there"
     assert (time["at"] - NOW) <= timedelta(minutes=8), f"walked within eight minutes of the world's time: {time['at'] - NOW}"
+    #  THE COST OF NO CONFLICT (#923): A asked B each time its holdings changed while B was in range, B answered
+    #  each, and nothing B said carried a holding — B is going nowhere — so neither drew.
+    said = [(topic.split("/")[1], payload.decode()) for topic, payload in bus.told]
+    asked = [p for to, p in said if to == "courier_b" and "coordination#Question" in p]
+    answered = [p for to, p in said if to == "courier_a" and "coordination#Answer" in p]
+    assert asked and len(answered) == len(asked), f"every question answered: {len(asked)} asked, {len(answered)} answered"
+    assert not any("coordination#holding" in p for p in answered), "B's answers carried nothing"
+    assert not any("draw#" in p for _, p in said), "and no draw was committed to"
 
 
 #  Van A from the north-western corner with its parcel at the southern end of the western road.
@@ -197,3 +215,87 @@ def test_a_peer_seen_standing_on_a_cell_keeps_the_plan_out_of_it(monkeypatch, tm
     assert told[3] == (0, 2) and told[:3] in ([(1, 0), (1, 1), (1, 2)], [(-1, 0), (-1, 1), (-1, 2)]), f"round B to the parcel: {told}"
     assert all(t == "actuators/van_a/command" for t, _ in bus.commands), "B, with nothing to deliver, commanded nothing"
     assert seen_by_b[0] is not None and seen_by_b[-1] is None, "B saw A near and lost it down the lane"
+
+
+
+#  THE PASSING PLACE (#1016): parcel A owed at (3, 2), between the hedges at (2, 2) and (4, 2), so the way in is
+#  from (3, 1); a plan found before the hedges are seen goes round by (2, 2).
+_PASSING_PLACE = {"beliefs/courier_a.state.ttl": [(":east_end courier:x 6 ; courier:y 1 ;", ":east_end courier:x 3 ; courier:y 2 ;")]}
+
+
+def test_a_van_never_drives_onto_a_hedge_its_radar_has_shown(monkeypatch, tmp_path):
+    """Courier A delivers into the passing place without standing on a hedge: what the radar shows is taken
+    into account before a head is taken, the walk the reading wakes included, since the take-time check asks
+    the held constraints of the world the head lands in (#1016)."""
+    bus, time = _lane(monkeypatch, variant(tmp_path, "passing_place", _PASSING_PLACE))
+    bus.simulator.open()
+    bus.simulator.step(NOW)
+    for runtime in bus.runtimes.values():
+        runtime.run(passes=1, poll_s=0)
+    on_a_hedge = []
+    for _ in range(60):
+        time["at"] += timedelta(seconds=CADENCE_S)
+        bus.simulator.step(time["at"])
+        for runtime in bus.runtimes.values():
+            runtime.run(passes=1, poll_s=0)
+        if bus.simulator.position(L + "van_a") in HEDGES:
+            on_a_hedge.append((time["at"], bus.simulator.position(L + "van_a")))
+        if _at(bus.runtime.beliefs).get("parcel_a") == (3, 2) and not bus.runtime.parts["execution"].executor.walking():
+            break
+    assert not on_a_hedge, f"van A stood on a hedge: {on_a_hedge}"
+    assert _at(bus.runtime.beliefs)["parcel_a"] == (3, 2), "delivered into the passing place"
+    told = [(p["to"]["x"], p["to"]["y"]) for t, p in bus.commands if t == "actuators/van_a/command"]
+    assert not set(told) & HEDGES and told[-1] == (3, 2), f"no hedge was driven: {told}"
+
+#  HEAD ON (#923): van B starts on the lane at (6, 1) and its parcel is owed at the western end of the road, so
+#  the two vans drive at each other down row 1. Each courier's secret is stated in its self graph, so the draw is
+#  the same every run: with these two, B goes first.
+_HEAD_ON = {"world.ttl": [("sim:initialValue 0 ; sim:jitter 0 ] ;    # van B row 0", "sim:initialValue 1 ; sim:jitter 0 ] ;    # van B row 1")],
+            "beliefs/courier_b.state.ttl": [(":parcel_b courier:x 6 ; courier:y 0 .", ":parcel_b courier:x 5 ; courier:y 1 ."),
+                                            (":east_road courier:x 6 ; courier:y 0 ;", ":east_road courier:x 0 ; courier:y 0 ;")],
+            "beliefs/courier_a.self.ttl": [(":courier_a planning:budget 256 .", f':courier_a planning:budget 256 ; coordination:secret "{"1" * 64}" .')],
+            "beliefs/courier_b.self.ttl": [(":courier_b planning:budget 256 .", f':courier_b planning:budget 256 ; coordination:secret "{"2" * 64}" .')]}
+
+
+def test_two_couriers_meeting_head_on_draw_lots_and_the_loser_gives_way(monkeypatch, tmp_path):
+    """A drives east to (6, 1) and B west to (0, 0), each down the one row both stand on. Each sees the other
+    four cells off, asks what its constraints read, and is answered with the positions the other's plan will hold
+    that its own will too: each concludes the conflict itself, commits to its number and reveals it, and both
+    conclude alike that B goes first. B drives on; A lays B's holdings, gives way off the row, and goes round. No
+    two vans ever stand at one position, and both parcels are delivered."""
+    bus, time = _lane(monkeypatch, variant(tmp_path, "head_on", _HEAD_ON))
+    bus.simulator.open()
+    bus.simulator.step(NOW)
+    for runtime in bus.runtimes.values():
+        runtime.run(passes=1, poll_s=0)
+    together, positions = [], []
+    for _ in range(100):
+        time["at"] += timedelta(seconds=CADENCE_S)
+        bus.simulator.step(time["at"])
+        for runtime in bus.runtimes.values():
+            runtime.run(passes=1, poll_s=0)
+        a, b = bus.simulator.position(L + "van_a"), bus.simulator.position(L + "van_b")
+        positions.append((a, b))
+        if a == b:
+            together.append((time["at"], a))
+        if (a, b) == ((6, 1), (0, 0)) and not any(r.parts["execution"].executor.walking() for r in bus.runtimes.values()):
+            break                           # both delivered: an intention refused and not yet re-planned is no end
+    assert not together, f"two vans stood at one position: {together}"
+    assert positions[-1] == ((6, 1), (0, 0)), f"both vans where their parcels are owed: {positions[-1]}"
+    assert _at(bus.runtime.beliefs)["parcel_a"] == (6, 1) and _at(bus.runtimes["courier_b"].beliefs)["parcel_b"] == (0, 0)
+    #  EACH CONCLUDED THE SAME WINNER, from its own documents.
+    won = {name: {r["w"] for r in rows(rt.beliefs, _WON_Q, graphs_of(rt.beliefs, "http://example.org/orexis#BeliefGraph"))}
+           for name, rt in bus.runtimes.items()}
+    assert won == {"courier_a": {L + "courier_b"}, "courier_b": {L + "courier_b"}}, won
+    said = [payload.decode() for _, payload in bus.told]
+    assert any("draw#Commitment" in p for p in said) and any("draw#Reveal" in p for p in said), "the lots were drawn by saying"
+    #  THE LOSER GAVE WAY: off row 1 and round, while B, the winner, drove straight down it to its parcel's road.
+    told_a = [(p["to"]["x"], p["to"]["y"]) for t, p in bus.commands if t == "actuators/van_a/command"]
+    told_b = [(p["to"]["x"], p["to"]["y"]) for t, p in bus.commands if t == "actuators/van_b/command"]
+    assert any(y != 1 for _, y in told_a), f"A gave way off the row: {told_a}"
+    assert told_b == [(5, 1), (4, 1), (3, 1), (2, 1), (1, 1), (0, 1), (0, 0)], f"B drove straight down the row: {told_b}"
+    assert not (set(told_a) | set(told_b)) & HEDGES, f"no hedge was driven: {told_a}, {told_b}"
+
+
+_WON_Q = "SELECT ?w WHERE { ?draw <http://example.org/orexis/coordination#wonBy> ?w }"
+

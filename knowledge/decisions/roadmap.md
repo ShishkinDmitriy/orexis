@@ -83,7 +83,8 @@ resource with no overseer, is what 0.2.0 was built toward, so it is what finishe
    right-of-way as a market lot is refused there). Its pieces, in the order each unlocks the next:
    #919, a step predicts its own effect; #920, `planning:Wait`, landing at the next ground; #921, a
    belief that makes a walking plan's next worlds impossible reopens it; #922, attention, the vans
-   within the range their contact sensors declare, built on the lane (#1002 to #1004); and #923, the question, the answer and the draw, which depends on the other three.
+   within the range their contact sensors declare, built on the lane (#1002 to #1004); and #923, the question, the answer and the draw, which depends on the other three — built as the coordination package and the draw domain, with #1016's take-time weighing of a head's world
+   ([two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it](/decisions/two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it.md)).
    Both need a public fact saying which agent has a driver, #929, filed from
    [a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md).
 5. **What an agent runs** — declared, not derived: an agent's roles in its self graph, where #876

@@ -37,7 +37,7 @@ they were, since the search sees the same declarations:
 THE YARD. The dispatcher's four-by-four, posed eight columns west of the lane's mouth, where no radar ever
 has a hedge in range, so what the radars report is nothing and the figures are the search's alone; every
 place in these tests is said in the yard's coordinates, and `_road` and `_yard` turn one into the other.
-A van the agent does not drive is a peer's, believed only where van A's receiver has it within two cells.
+A van the agent does not drive is a peer's, believed only where van A's receiver has it within four cells.
 """
 
 from __future__ import annotations
@@ -66,7 +66,7 @@ L = "http://example.org/orexis/world/lane#"
 AGENT = "courier_a"
 CADENCE_S = 10
 #  WHERE THE YARD LIES on the road: its column 0 is the road's column -8, so the nearest hedge, at the road's
-#  (2, 0), is seven columns off the yard's east side, past every radar's two.
+#  (2, 0), is seven columns off the yard's east side, past every radar's one and every receiver's four.
 WEST = -8
 #  THE ONE WANT THE TWO PARCELS ARE where the constraint couples them, named for both.
 JOINT = "every_parcel_delivered.pursued.parcel_a.parcel_b"
@@ -172,12 +172,12 @@ _FIX = {("a", "x"): "sim:initialValue 0 ; sim:jitter 0 ] ;    # van A column 0",
         ("b", "y"): "sim:initialValue 0 ; sim:jitter 0 ] ;    # van B row 0"}
 _DRIVES_A = "    orexis:actsFor :van_a ;\n    orexis:plays :driver_a ;"
 _DRIVES_B = "    orexis:actsFor :van_b ;\n    orexis:plays :driver_b ;\n"
-_SENSORS_A = ":fix_a_column , :fix_a_row , :receiver_b_column , :receiver_b_row , :radar_1_column , :radar_1_row"
+_SENSORS_A = ":fix_a_column , :fix_a_row , :receiver_b_column , :receiver_b_row , :radar_1_column , :radar_1_row , :radar_3_column , :radar_3_row"
 _BUDGET_A = ":courier_a planning:budget 256 ."
 _PARCEL_A = (':parcel_a a courier:Parcel ; courier:destination :east_end ; rdfs:label "the parcel owed at the eastern end" .\n'
              ':parcel_a courier:x 1 ; courier:y 1 .\n'
              ':east_end courier:x 6 ; courier:y 1 ; rdfs:label "the eastern end of the lane, where parcel A is owed" .')
-_RADAR = {"a": "radar_1", "b": "radar_2"}
+_RADAR = {"a": ("radar_1", "radar_3"), "b": ("radar_2", "radar_4")}
 _OTHER = {"a": "b", "b": "a"}
 
 
@@ -219,7 +219,7 @@ def pose(tmp_path: Path, name: str, *, vans: dict, parcels: dict, drives: str = 
     if "b" in drives:
         pairs.append((_DRIVES_B, ""))
     edit("world.ttl", pairs)
-    sensors = [s for v in drives for s in (f":fix_{v}_column", f":fix_{v}_row", f":{_RADAR[v]}_column", f":{_RADAR[v]}_row")]
+    sensors = [s for v in drives for s in (f":fix_{v}_column", f":fix_{v}_row", *(f":{r}_{a}" for r in _RADAR[v] for a in ("column", "row")))]
     sensors += [s for v in drives if _OTHER[v] not in drives for s in (f":receiver_{_OTHER[v]}_column", f":receiver_{_OTHER[v]}_row")]
     edit("beliefs/courier_a.self.ttl", [(_SENSORS_A, " , ".join(sensors)),
                                         (_BUDGET_A, f":courier_a planning:budget {budget or (BOTH_BUDGET if len(drives) == 2 else 256)} .")])
@@ -312,6 +312,7 @@ class Bus:
         self.runtime = None
         self.simulator = None
         self.commands: list[tuple[str, dict]] = []
+        self.told: list[str] = []
 
     def subscribe(self, pattern):
         pass
@@ -320,6 +321,8 @@ class Bus:
         payload = payload if isinstance(payload, bytes) else payload.encode()
         if topic.startswith("sensors/"):
             self.runtime.deliver(topic, payload, clock.now())
+        elif topic.startswith("agents/"):
+            self.told.append(topic)                 # to the other courier, which no case here boots
         else:
             self.commands.append((topic, json.loads(payload)))
             self.simulator.command(topic, payload)
@@ -343,8 +346,10 @@ class Lane:
 
     @property
     def imaginarium(self):
-        (im,) = self.planner.imaginaria.values()
-        return im
+        """The courier's scope's imaginarium: the one its drives are in, beside the draw's, which the world
+        imports for two couriers and this one mind never takes."""
+        (scope,) = {r["s"] for r in rows(self.beliefs, _MEMBERS_Q, ()) if _local(r["m"]) == "Drive"}
+        return self.planner.imaginaria[scope]
 
     def tick(self) -> str:
         """The simulator reports what has fallen due at the world's instant, and courier A runs one pass."""
@@ -467,7 +472,7 @@ def test_two_vans_are_one_scope_and_where_each_stands_is_what_its_fix_says(tmp_p
     members: dict[str, set] = {}
     for r in rows(lane.beliefs, _MEMBERS_Q, ()):
         members.setdefault(_local(r["m"]), set()).add(r["s"])
-    scopes = {s for ss in members.values() for s in ss}
+    scopes = {s for m in ("van_a", "van_b", "Drive", "Pick", "Drop") for s in members[m]}
     assert len(scopes) == 1, f"two vans in one courier vocabulary are one scope: {scopes}"
     assert {"van_a", "van_b", "Parcel", "Drive", "Pick", "Drop", "x", "y", "carriedBy"} <= set(members), \
         "the vans the world states, and the parcels by their class, since they are courier A's own beliefs and a type pattern reads its class"
