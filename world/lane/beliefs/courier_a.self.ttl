@@ -1,7 +1,6 @@
 @prefix : <http://example.org/orexis/world/lane#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix planning: <http://example.org/orexis/planning#> .
-@prefix execution: <http://example.org/orexis/execution#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix coordination: <http://example.org/orexis/coordination#> .
 
@@ -12,9 +11,7 @@
 #  The fix repeats a cell for as long as the van stands still, which is a van standing still and no stuck
 #  instrument, so the observer lets it repeat far longer than sensing's six readings.
 :courier_a a orexis:Self ;
-    orexis:plays [ a planning:Planner ] ,
-                 [ a execution:Executor ] ,
-                 [ a coordination:Coordinator ] ,    # asks the other courier in range, answers it, and draws lots with it
+    orexis:plays [ a coordination:Coordinator ] ,    # plans, walks, asks the other courier in range, answers it, and draws lots with it
                  [ a sensing:Observer ; sensing:stuckAfter 100000 ;
                    sensing:sensor :fix_a_column , :fix_a_row , :receiver_b_column , :receiver_b_row , :radar_1_column , :radar_1_row , :radar_3_column , :radar_3_row ] .
 :courier_a planning:budget 256 .

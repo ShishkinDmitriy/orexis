@@ -520,8 +520,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   conflict itself** — a resource is a value of the key of a constraint both hold; a question carries
   the asker's holdings, an answer the answerer's that meet them, and an answer that is not empty is a
   conflict to both (two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it).
-- **A conflict stands while the peer is in range, not while the answers meet** — plans that no longer
-  meet are what yielding made of them, and ended there the laying stopped and two vans met in one cell.
+- **A conflict stands while the peer is in range or still asking, not while the answers meet** — plans
+  that no longer meet are what yielding made of them, and ended there the laying stopped and two vans met
+  in one cell; and a question holds over the asker's patience and is asked again, so an agent that does
+  not see its peer is drawn in by its word.
+- **A coordinator is a planner and an executor too** — a draw is joined only by committing and revealing,
+  actions planning plans and execution takes, so the role is beneath all three it needs.
 - **Who won is asked, not triggered** — a peer's word is extracted into a belief of the agent's own,
   which triggers no transition, so the draw ships a `coordination:Outcome` coordination asks each pass;
   a transition on the reveal's arrival decided no draw.

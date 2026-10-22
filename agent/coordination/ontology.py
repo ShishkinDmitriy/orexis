@@ -26,6 +26,10 @@ WON_BY = COORDINATION + "wonBy"
 SECRET = COORDINATION + "secret"
 PATIENCE_S = COORDINATION + "patienceS"
 ROUNDS = COORDINATION + "rounds"
+#  WHAT HOLDS WHERE THE SELF STATES NO STANCE: how many seconds a draw stands undecided, and a question holds,
+#  before it is said again; and how many rounds a draw restarts before the peer is taken as silent.
+PATIENCE = 60.0
+BOUND = 3
 
 #  THE WORDS OF THE PACKAGES BENEATH THAT THIS ONE READS AT THE STORE, spelled here since it imports no code
 #  of theirs: planning's constraints, execution's committed steps, speech's statements.

@@ -4,10 +4,10 @@ rules ship, restarted a round on past its patience, and the peer silent past the
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from agent.coordination.conclude import conclude
-from agent.coordination.ontology import conflict_of, conflicts_graph, draw_of
+from agent.coordination.ontology import conflict_of, conflicts_graph, draw_of, question_graph
 from agent.store import PREFIXES, rows
 
 L = "http://example.org/orexis/world/lane#"
@@ -71,9 +71,18 @@ def test_an_undecided_draw_restarts_a_round_on_past_the_patience_and_the_peer_is
     assert _conflicts(store, A)[c].get("silent") == "true", "three rounds, and B is taken as silent"
 
 
-def test_a_peer_believed_nowhere_ends_the_conflict(meeting, copied):
-    store = copied(meeting.store(A))
+def test_a_peer_unseen_stands_in_the_conflict_while_it_asks_and_leaves_it_when_it_stops(meeting, copied):
+    """B, believing van A nowhere, keeps the conflict while A's question holds: A's asking says A is there,
+    and an agent that does not see its peer is drawn in by the peer's word. Past the question, neither seen
+    nor asking, A is out of it."""
+    store = copied(meeting.store(B))
     for axis in ("x", "y"):
-        store.update(PREFIXES + f"DELETE WHERE {{ GRAPH ?g {{ <{VAN_B}> <http://example.org/orexis/courier#{axis}> ?v }} }}")
-    conclude(store, A, meeting.at)
-    assert _conflicts(store, A)[conflict_of(A, B, TWO_VANS)].get("standing") is None
+        store.update(PREFIXES + f"DELETE WHERE {{ GRAPH ?g {{ <{VAN_A}> <http://example.org/orexis/courier#{axis}> ?v }} }}")
+    (lapses,) = [r["end"] for r in rows(store, _PERIOD_Q, (), graph=question_graph(A, B, TWO_VANS))]
+    conclude(store, B, meeting.at)
+    assert _conflicts(store, B)[conflict_of(A, B, TWO_VANS)].get("standing") == "true", "A is still asking"
+    conclude(store, B, datetime.fromisoformat(lapses) + timedelta(seconds=1))
+    assert _conflicts(store, B)[conflict_of(A, B, TWO_VANS)].get("standing") is None, "and then it is not"
+
+
+_PERIOD_Q = """SELECT ?end WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph dcterms:temporal/orexis:end ?end } }"""
