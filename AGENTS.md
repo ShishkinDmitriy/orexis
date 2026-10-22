@@ -532,8 +532,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **At each instant a peer's thing is laid at every value it may hold** — a step lands somewhere in its
   band, and a forecast laid after another takes its key out where it begins, so laid one by one the
   band was the peer's earliest landing and a van planned into a cell its peer had not left.
-- **The winner still yields to the loser's step in flight** — commitment is hard on it, and the drive
-  the loser took before the draw reached it is not undone by the draw.
+- **The winner still yields to the loser's step in flight, and to nothing else of its plan** — commitment
+  is hard on a taken step, so the loser says which holding one gives (`coordination:taken`); yielding to
+  the loser's next holding whether taken or not, the winner yielded at every crossing.
 - **A receiver must outreach one exchange, and a radar need see only what the van could drive into** —
   the lane's receivers hear four cells and its radars one, with two slots, no cell of the road having
   more than two hedges beside it.

@@ -35,11 +35,13 @@ _TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
 class Holding(NamedTuple):
     """One thing's values on a constraint's key, over a period: `start` None where the thing holds them now,
-    since whenever it came to, and `end` None where nothing ends them."""
+    since whenever it came to, and `end` None where nothing ends them; `taken` where a step already taken —
+    in flight, which nothing cancels — is what gives the thing them."""
     thing: str
     values: tuple[tuple[str, ox.Term], ...]
     start: datetime | None
     end: datetime | None
+    taken: bool = False
 
     def overlaps(self, other: "Holding") -> bool:
         """Whether two holdings hold the same values of the key over periods that overlap."""
@@ -58,8 +60,9 @@ _THINGS_Q = "SELECT ?t WHERE { ?me a orexis:Self ; orexis:actsFor ?t } ORDER BY 
 _VALUES_Q = "SELECT ?p ?v WHERE { $thing ?p ?v }"
 #  EVERY STANDING INTENTION, the plan it adopts and the step it stands at; and whether it ends after it.
 _STANDING_Q = """
-SELECT ?plan ?step ?ending WHERE { GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
-  FILTER NOT EXISTS { ?i execution:resolvedAt ?done } OPTIONAL { ?i execution:endsAfter ?ending } } }"""
+SELECT ?plan ?step ?ending ?act WHERE { GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
+  FILTER NOT EXISTS { ?i execution:resolvedAt ?done } OPTIONAL { ?i execution:endsAfter ?ending }
+  OPTIONAL { ?act execution:of ?step ; execution:taken true } } }"""
 #  A PLAN'S STEPS: each, the one after it, the graph naming what it adds, and the two ends of its landing.
 _STEPS_Q = """
 SELECT ?step ?next ?adds ?lands ?latest WHERE { GRAPH $plan { ?step a execution:Step .
@@ -83,12 +86,12 @@ def holdings(store: ox.Store, constraint: str, at: datetime) -> list[Holding]:
         steps = changes.get(thing, [])
         if set(now) != key or not steps:
             continue
-        values, start = dict(now), None
-        for lands, latest, change in steps:
-            out.append(Holding(thing, _tuple(values), start, latest or lands))
+        values, start, taken = dict(now), None, False
+        for lands, latest, change, in_flight in steps:
+            out.append(Holding(thing, _tuple(values), start, latest or lands, taken))
             values.update(change)
-            start = lands
-        out.append(Holding(thing, _tuple(values), start, None))
+            start, taken = lands, in_flight
+        out.append(Holding(thing, _tuple(values), start, None, taken))
     return out
 
 
@@ -144,7 +147,7 @@ def _term(store: ox.Store, thing: str, predicate: str, graphs: list[str]) -> ox.
 
 def _changes(store: ox.Store, things: list[str], key: frozenset[str]) -> dict[str, list]:
     """Per thing, every change a walking plan's steps make to its values on the key, in the order they are
-    walked: (earliest landing, latest landing, {predicate: value})."""
+    walked: (earliest landing, latest landing, {predicate: value}, whether the step is in flight)."""
     out: dict[str, list] = {}
     for r in rows(store, _STANDING_Q, ()):
         chain = {s["step"]: s for s in rows(store, _STEPS_Q, (), plan=r["plan"])}
@@ -155,7 +158,8 @@ def _changes(store: ox.Store, things: list[str], key: frozenset[str]) -> dict[st
                 change = {q.predicate.value: q.object for q in store.quads_for_pattern(ox.NamedNode(thing), None, None, ox.NamedNode(s["adds"]))
                           if q.predicate.value in key} if s.get("adds") else {}
                 if change:
-                    out.setdefault(thing, []).append((_at(s.get("lands")), _at(s.get("latest")), change))
+                    out.setdefault(thing, []).append((_at(s.get("lands")), _at(s.get("latest")), change,
+                                                      step == r["step"] and bool(r.get("act"))))
             step = None if r.get("ending") else s.get("next")
     for changes in out.values():
         changes.sort(key=lambda c: c[0] or datetime.min)
@@ -174,12 +178,12 @@ def _tuple(values: dict) -> tuple:
 
 _COORDINATION = "http://example.org/orexis/coordination#"
 _XSD_DATETIME = ox.NamedNode("http://www.w3.org/2001/XMLSchema#dateTime")
-_OF, _FROM, _UNTIL, _HOLDING = (ox.NamedNode(_COORDINATION + w) for w in ("of", "from", "until", "holding"))
+_OF, _FROM, _UNTIL, _HOLDING, _TAKEN = (ox.NamedNode(_COORDINATION + w) for w in ("of", "from", "until", "holding", "taken"))
 _TEMPORAL = ox.NamedNode("http://purl.org/dc/terms/temporal")
 _START, _END = ox.NamedNode("http://example.org/orexis#start"), ox.NamedNode("http://example.org/orexis#end")
 _HOLDINGS_Q = """
-SELECT ?h ?t ?p ?v ?from ?until WHERE { GRAPH $graph { ?n coordination:holding ?h . ?h coordination:of ?t ; ?p ?v .
-  OPTIONAL { ?h coordination:from ?from } OPTIONAL { ?h coordination:until ?until } } }"""
+SELECT ?h ?t ?p ?v ?from ?until ?taken WHERE { GRAPH $graph { ?n coordination:holding ?h . ?h coordination:of ?t ; ?p ?v .
+  OPTIONAL { ?h coordination:from ?from } OPTIONAL { ?h coordination:until ?until } OPTIONAL { ?h coordination:taken ?taken } } }"""
 
 
 def _said(graph: str, kind: str, node: str, about: list[tuple[str, ox.Term]], held: list[Holding],
@@ -208,6 +212,8 @@ def _said(graph: str, kind: str, node: str, about: list[tuple[str, ox.Term]], he
             doc.add(ox.Quad(hn, _FROM, ox.Literal(h.start.isoformat(), datatype=_XSD_DATETIME), g))
         if h.end is not None:
             doc.add(ox.Quad(hn, _UNTIL, ox.Literal(h.end.isoformat(), datatype=_XSD_DATETIME), g))
+        if h.taken:
+            doc.add(ox.Quad(hn, _TAKEN, ox.Literal("true", datatype=ox.NamedNode("http://www.w3.org/2001/XMLSchema#boolean")), g))
     return doc
 
 
@@ -215,14 +221,15 @@ def _heard(store: ox.Store, graph: str) -> list[Holding]:
     """The holdings a question or an answer in `graph` carries, as the terms they were said in."""
     found: dict[str, dict] = {}
     for r in rows(store, _HOLDINGS_Q, (), graph=graph):
-        h = found.setdefault(r["h"], {"thing": r["t"], "from": r.get("from"), "until": r.get("until")})
-        if r["p"] not in (_TYPE, _OF.value, _FROM.value, _UNTIL.value):
+        h = found.setdefault(r["h"], {"thing": r["t"], "from": r.get("from"), "until": r.get("until"),
+                                      "taken": r.get("taken") == "true"})
+        if r["p"] not in (_TYPE, _OF.value, _FROM.value, _UNTIL.value, _TAKEN.value):
             h.setdefault("p", set()).add(r["p"])
     out = []
     for node, h in sorted(found.items()):
         values = tuple(sorted((p, next(q.object for q in store.quads_for_pattern(ox.NamedNode(node), ox.NamedNode(p), None, ox.NamedNode(graph))))
                               for p in h.get("p", ())))
-        out.append(Holding(h["thing"], values, _at(h.get("from")), _at(h.get("until"))))
+        out.append(Holding(h["thing"], values, _at(h.get("from")), _at(h.get("until")), h["taken"]))
     return out
 
 

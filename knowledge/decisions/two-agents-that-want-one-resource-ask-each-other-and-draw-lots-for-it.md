@@ -30,6 +30,15 @@ description: >-
 > and draws, where it had answered and left the asker to take the whole of the avoiding after three
 > rounds. The question says the asker is there; that is evidence of its own, and each agent still decides
 > from what it holds.
+>
+> **Amended 2026-10-22, again** (the crossing, #923's last done-when): **the winner yields to the loser's
+> step in flight as the loser says it**, `coordination:taken` on a holding a taken step gives, where it yielded
+> to the loser's next holding whether taken or not and so yielded every time the loser's next drive was the
+> contested cell. A holding is still said at the plan's own instants, not shifted by how late its
+> intention runs: shifted, every pass's holdings changed with the clock and the lane's search ran eight
+> times longer. The seam below, the winner yielding until it is decided, is what a crossing still shows
+> where the loser's plan is found first: a winner whose walking plan was found while the draw stood keeps
+> its wait, and the loser crosses first.
 
 # The question
 

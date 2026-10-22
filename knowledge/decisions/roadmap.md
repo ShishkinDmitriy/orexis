@@ -40,7 +40,8 @@ the cone a reopened plan hangs under is the path the loser of a draw walks (#921
 otherwise stand on a plan it forgets; #1015 is that cone dropped again by a pass before the landing,
 at the lane's cadence; and #1016 is a van driven onto an obstacle its radar showed that pass, a
 collision the release says there is none of. A two-agent society then delivers both parcels at a crossing and in a corridor with
-one passing place, with no collision and no deadlock, and the shipped one-agent worlds are unchanged.
+one passing place, with no collision and no deadlock, and the shipped one-agent worlds are unchanged —
+held since #923 by `world/lane/tests/test_lane.py`'s crossing and head-on cases.
 That merge is tagged `v0.2.0` with release notes in the shape `v0.1.0` has (what the tree is, the
 commit it was cut at), and `pyproject.toml` moves to 0.3.0 in the next change. Everything not
 listed above is 0.3.0.
