@@ -3,6 +3,7 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix speech: <http://example.org/orexis/speech#> .
 @prefix planning: <http://example.org/orexis/planning#> .
+@prefix execution: <http://example.org/orexis/execution#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -24,19 +25,21 @@
 #################  The role this package serves  #################
 
 :Coordinator a owl:Class ;
-    rdfs:subClassOf speech:Speaker ;
+    rdfs:subClassOf speech:Speaker , planning:Planner , execution:Executor ;
     rdfs:label "Coordinator" ;
     rdfs:comment """An agent that asks the peers it believes in range what its constraints read, answers
     them under the constraints it holds too, and yields where a draw it lost says so: the role whose part
     is this package's (knowledge/domain/coordination/coordinator.md). Beneath the speaker, since asking and
-    answering is saying and hearing, so the boot loads speech with it. Declared, never derived.""" .
+    answering is saying and hearing; and beneath the planner and the executor, since a draw is taken part in
+    only by committing and revealing, actions planning plans and execution takes. So the boot loads all three
+    with it. Declared, never derived.""" .
 
 #################  What is said  #################
 
 :QuestionGraph a owl:Class ;
     rdfs:subClassOf speech:StatementGraph ;
     rdfs:label "Question graph" ;
-    rdfs:comment "A graph holding one question, as it was said: a statement, which no reader of the mind is handed (knowledge/domain/coordination/question.md). Said again under its name each time the asker's holdings change, so a peer holds the latest." .
+    rdfs:comment "A graph holding one question, as it was said: a statement, which no reader of the mind is handed (knowledge/domain/coordination/question.md). It holds over the asker's patience from when it is asked, and is said again under its name each time the asker's holdings change or it has lapsed, so a peer holds the latest and knows the asker is still asking." .
 
 :AnswerGraph a owl:Class ;
     rdfs:subClassOf speech:StatementGraph ;
@@ -120,7 +123,7 @@
 
 :standing a owl:DatatypeProperty ; rdfs:domain :Conflict ; rdfs:range xsd:boolean ;
     rdfs:label "standing" ;
-    rdfs:comment "Whether the conflict stands: true from the answer that made it until the peer is believed nowhere any more. A draw is taken only for a standing conflict." .
+    rdfs:comment "Whether the conflict stands: true from the answer that made it until the peer is neither believed in range nor asking - no question of its holds. A draw is taken only for a standing conflict." .
 
 :drawnIn a owl:DatatypeProperty ; rdfs:domain :Conflict ; rdfs:range xsd:integer ;
     rdfs:label "drawn in" ;

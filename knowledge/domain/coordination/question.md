@@ -14,7 +14,8 @@ A question is one node in a graph of its own, `coordination:QuestionGraph`, bene
 [statement](/domain/speech/statement.md): who asks, `coordination:asks`; the constraint, `coordination:over`;
 and each of the asker's [holdings](/domain/coordination/holding.md) under it, `coordination:holding`. The
 graph is named for the asker, the peer and the constraint, so it is said again under one name and the peer
-holds the latest (`agent/coordination/ask.py`).
+holds the latest (`agent/coordination/ask.py`). It holds over the asker's patience
+(`coordination:patienceS`) from when it is asked, stated as the graph's own period.
 
 # Whom, and when
 
@@ -22,7 +23,10 @@ A peer is asked where it acts for a thing (`orexis:actsFor`) the asker believes 
 constraint's key - which on the lane is a van its receiver has within four cells, since what is out of range
 is believed nowhere ([contact](/domain/courier/contact.md)). Nothing is asked where the asker holds nothing
 under the constraint - its things are going nowhere - and nothing again while its holdings stand as they were
-last said: a question costs one document each time the asker's own future changes, not each pass.
+last said and the question still holds: a question costs one document each time the asker's own future
+changes or its question lapses, not each pass. Asked again while it lapses, a question says the asker is
+still there, and a peer that does not see the asker stands in the [conflict](/domain/coordination/conflict.md)
+on its word.
 
 # What it never carries
 

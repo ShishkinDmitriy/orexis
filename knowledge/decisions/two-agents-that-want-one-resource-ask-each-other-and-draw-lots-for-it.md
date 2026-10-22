@@ -21,6 +21,16 @@ description: >-
   taking heads only after the pass has planned.
 ---
 
+> **Amended 2026-10-22** (the sovereign, after #1018 merged): **a coordinator is a planner and an
+> executor too**, `coordination:Coordinator` beneath `planning:Planner` and `execution:Executor` beside
+> `speech:Speaker`, since a draw is taken part in only by committing and revealing, actions planning plans
+> and execution takes; a coordinator that was neither concluded its conflicts and never committed. And **a
+> conflict stands while the peer is in range OR STILL ASKING**: a question holds over the asker's patience
+> and is asked again as it lapses, so an agent that does not see its peer is drawn in by the peer's word
+> and draws, where it had answered and left the asker to take the whole of the avoiding after three
+> rounds. The question says the asker is there; that is evidence of its own, and each agent still decides
+> from what it holds.
+
 # The question
 
 #568 asks how two minds that cannot see each other's plans keep two vans off one position, and

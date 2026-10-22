@@ -8,21 +8,24 @@ constraint it holds, and only where its walking plans give its own things values
 going nowhere asks nothing.
 
 **WHAT.** The constraint, and the asker's holdings under it, said in the question's graph, which is named
-for the asker, the peer and the constraint and said again each time the holdings change — never when
-they have not, so a question costs one document per change and not one per pass.
+for the asker, the peer and the constraint and holds over the asker's patience from when it is asked. It is
+said again each time the holdings change, and once it has lapsed — never otherwise, so a question costs
+one document per change or per patience, and not one per pass; and a peer that hears it holding knows the
+asker is still asking, whether or not it sees the asker (knowledge/domain/coordination/conflict.md).
 """
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pyoxigraph as ox
 
 from agent.ontology import BELIEF, SELF_GRAPH
+from agent.stance import stance
 from agent.store import graphs_of, rows
 
 from .holdings import _heard, _key_of, _present, _said, holdings
-from .ontology import COORDINATION, CONSTRAINT_GRAPH, QUESTION, QUESTION_GRAPH, question_graph
+from .ontology import COORDINATION, CONSTRAINT_GRAPH, PATIENCE, PATIENCE_S, QUESTION, QUESTION_GRAPH, question_graph
 
 #  THE CONSTRAINTS THE AGENT HOLDS.
 _HELD_Q = "SELECT ?c WHERE { ?me a orexis:Self ; planning:holds ?c . ?c a planning:Constraint } ORDER BY ?c"
@@ -33,8 +36,11 @@ _HOLDS_Q = "SELECT ?v WHERE { $thing $p ?v } LIMIT 1"
 
 def ask(store: ox.Store, me: str, at: datetime) -> list[tuple[str, ox.Store]]:
     """Every question the self `me` of `store` has to say at `at`, with the peer it is to: one per peer in
-    range and constraint held, where the agent's holdings under it are not what it last asked."""
+    range and constraint held, where the agent's holdings under it are not what it last asked, or what it
+    last asked has lapsed."""
     held = [r["c"] for r in rows(store, _HELD_Q, [*graphs_of(store, CONSTRAINT_GRAPH), *graphs_of(store, SELF_GRAPH)])]
+    holding = set(graphs_of(store, QUESTION_GRAPH, at=at))
+    period = (at, at + timedelta(seconds=stance(store, PATIENCE_S, PATIENCE)))
     out = []
     for constraint in held:
         mine = holdings(store, constraint, at)
@@ -42,11 +48,11 @@ def ask(store: ox.Store, me: str, at: datetime) -> list[tuple[str, ox.Store]]:
             continue
         for peer in _in_range(store, me, _key_of(store, constraint), at):
             graph = question_graph(me, peer, constraint)
-            if set(_heard(store, graph)) == set(mine):
+            if graph in holding and set(_heard(store, graph)) == set(mine):
                 continue
             about = [("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", ox.NamedNode(QUESTION)),
                      (COORDINATION + "asks", ox.NamedNode(me)), (COORDINATION + "over", ox.NamedNode(constraint))]
-            out.append((peer, _said(graph, QUESTION_GRAPH, graph, about, mine)))
+            out.append((peer, _said(graph, QUESTION_GRAPH, graph, about, mine, period)))
     return out
 
 

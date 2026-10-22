@@ -5,15 +5,18 @@ term: http://example.org/orexis/coordination#Coordinator
 description: >-
   An agent that asks the peers it believes in range what its constraints read, answers them under the
   constraints it holds too, and lays what it yields to - the role whose part is coordination's. Beneath
-  the speaker, so declaring it loads speech as well; the draw it takes part in is a domain its world imports.
+  the speaker, the planner and the executor, so declaring it loads speech, planning and execution as well;
+  the draw it takes part in is a domain its world imports.
 ---
 
 # Who is one
 
 An agent whose self graph says it plays `coordination:Coordinator` - each courier on the lane. The class is
-beneath [speaker](/domain/speech/speaker.md), since asking and answering is saying and hearing, so the boot
-loads speech with the package and the speaker's need, a topic the agent listens to, holds of a coordinator
-too ([role](/domain/kernel/role.md)).
+beneath [speaker](/domain/speech/speaker.md), since asking and answering is saying and hearing, and beneath
+the [planner](/domain/planning/planner.md) and the [executor](/domain/execution/executor.md), since a draw is
+taken part in only by committing and revealing, actions planning plans and execution takes. So the boot loads
+speech, planning and execution with the package, every need of those roles holds of a coordinator too, and a
+world declares the one role where the lane's couriers once declared three ([role](/domain/kernel/role.md)).
 
 # What its part does
 

@@ -17,9 +17,12 @@ one constraint are one conflict, named for the pair and the constraint, so both 
 It is written into a belief of the agent's own, derived, which the [draw](/domain/draw/draw.md)'s actions
 read.
 
-**It stands while the peer is believed in range**, whatever the answers say after: two plans that no longer
-meet are what yielding made of them, and ended there the laying that keeps them apart would stop. A peer
-believed nowhere ends it, and a later answer that is not empty begins it again in a later round.
+**It stands while the peer is believed in range or is still asking** - a question of the peer's holds now -
+whatever the answers say after: two plans that no longer meet are what yielding made of them, and ended there
+the laying that keeps them apart would stop. So an agent that does not see its peer, whose sight is shorter,
+is drawn in by the peer's question and draws as the peer does, rather than leaving the peer to take the whole
+of the avoiding. A peer neither seen nor asking ends it, and a later answer that is not empty begins it again
+in a later round.
 
 # Rounds, and who won
 

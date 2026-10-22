@@ -4,10 +4,11 @@
 **EACH AGENT DECIDES ITSELF THAT THERE IS A CONFLICT.** An answer that is not empty — one the agent said, or
 one it heard — under a constraint both hold is a conflict with that peer, read by the same rule by both and
 told to neither. Two answers between one pair under one constraint are one conflict, named for the pair and
-the constraint (`conflict_of`), so both agents name it alike. It STANDS while the peer is believed in range,
-whatever the answers say after: two plans that no longer meet are what yielding made of them, and a conflict
-ended there would stop the laying that keeps them apart. A peer believed nowhere ends it, and a later answer
-that is not empty begins it again in a later round.
+the constraint (`conflict_of`), so both agents name it alike. It STANDS while the peer is believed in range
+or is still asking — a question of its holds now — whatever the answers say after: two plans that no longer
+meet are what yielding made of them, and a conflict ended there would stop the laying that keeps them apart.
+An agent that does not see its peer is drawn in by the peer's question, which says the peer is there; one
+neither seen nor asking ends it, and a later answer that is not empty begins it again in a later round.
 
 **ROUNDS.** A standing conflict's draw is the one of its present round (`draw_of`). Undecided for the
 agent's patience, it restarts in the next round; a peer heard drawing in a later round brings this agent to
@@ -38,12 +39,10 @@ from agent.store import Raw, catalogue_of, construct, entry, forget_graph, graph
 
 from .ask import _in_range
 from .holdings import _key_of
-from .ontology import CONFLICT, COORDINATION, PATIENCE_S, ROUNDS, WON_BY, conflict_of, conflicts_graph, draw_of
+from .ontology import (BOUND, CONFLICT, COORDINATION, PATIENCE, PATIENCE_S, QUESTION_GRAPH, ROUNDS, WON_BY, conflict_of,
+                       conflicts_graph, draw_of, question_graph)
 
 log = logging.getLogger("coordination")
-
-PATIENCE = 60.0
-BOUND = 3
 
 #  EVERY ANSWER BETWEEN THE AGENT AND A PEER, said or heard, with the constraint and whether it carries a holding.
 _ANSWERS_Q = """
@@ -86,6 +85,7 @@ def conclude(store: ox.Store, me: str, at: datetime) -> list[str]:
         peer = r["answerer"] if r["asker"] == me else r["asker"]
         met[(peer, r["constraint"])] = met.get((peer, r["constraint"]), False) or int(r["held"]) > 0
     beliefs = graphs_of(store, BELIEF)
+    asking = set(graphs_of(store, QUESTION_GRAPH, at=at))      # the questions holding now, heard or said
     concluded: dict[str, dict] = {}
     for c, r in prior.items():
         concluded[c] = {"peer": r["peer"], "constraint": r["constraint"], "round": int(r["round"]),
@@ -97,7 +97,7 @@ def conclude(store: ox.Store, me: str, at: datetime) -> list[str]:
                                        "standing": False, "silent": False, "winner": None})
         row["winner"] = row["winner"] or won.get(draw_of(c, row["round"]))
         decided = row["winner"] is not None
-        in_range = peer in _in_range(store, me, _key_of(store, constraint), at)
+        in_range = peer in _in_range(store, me, _key_of(store, constraint), at) or question_graph(peer, me, constraint) in asking
         if not in_range or not (meets or row["standing"]):
             row["standing"] = False         # ended by the peer going out of range, never by plans that now avoid
             continue                        # each other, which is what yielding made of them

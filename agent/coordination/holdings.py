@@ -175,17 +175,25 @@ def _tuple(values: dict) -> tuple:
 _COORDINATION = "http://example.org/orexis/coordination#"
 _XSD_DATETIME = ox.NamedNode("http://www.w3.org/2001/XMLSchema#dateTime")
 _OF, _FROM, _UNTIL, _HOLDING = (ox.NamedNode(_COORDINATION + w) for w in ("of", "from", "until", "holding"))
+_TEMPORAL = ox.NamedNode("http://purl.org/dc/terms/temporal")
+_START, _END = ox.NamedNode("http://example.org/orexis#start"), ox.NamedNode("http://example.org/orexis#end")
 _HOLDINGS_Q = """
 SELECT ?h ?t ?p ?v ?from ?until WHERE { GRAPH $graph { ?n coordination:holding ?h . ?h coordination:of ?t ; ?p ?v .
   OPTIONAL { ?h coordination:from ?from } OPTIONAL { ?h coordination:until ?until } } }"""
 
 
-def _said(graph: str, kind: str, node: str, about: list[tuple[str, ox.Term]], held: list[Holding]) -> ox.Store:
+def _said(graph: str, kind: str, node: str, about: list[tuple[str, ox.Term]], held: list[Holding],
+          period: tuple[datetime, datetime] | None = None) -> ox.Store:
     """A document of one graph, `graph`, of `kind`: the node `node` with what `about` says of it, and each
     holding of `held` hanging off it — the thing, the values on the key with the key's own predicates, and
-    the period."""
+    the period; and the graph's own period, where `period` gives one."""
     doc, g = ox.Store(), ox.NamedNode(graph)
     doc.add(ox.Quad(g, ox.NamedNode(_TYPE), ox.NamedNode(kind), ox.DefaultGraph()))
+    if period is not None:
+        p = ox.BlankNode()
+        doc.add(ox.Quad(g, _TEMPORAL, p, ox.DefaultGraph()))
+        doc.add(ox.Quad(p, _START, ox.Literal(period[0].isoformat(), datatype=_XSD_DATETIME), ox.DefaultGraph()))
+        doc.add(ox.Quad(p, _END, ox.Literal(period[1].isoformat(), datatype=_XSD_DATETIME), ox.DefaultGraph()))
     n = ox.NamedNode(node)
     for predicate, value in about:
         doc.add(ox.Quad(n, ox.NamedNode(predicate), value, g))
