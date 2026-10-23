@@ -96,14 +96,15 @@ def derive_wants(store: ox.Store, now: datetime, walking: dict[str, datetime] | 
     `walking` is the CALLER'S, as it is for `withdraw`: every want an intention or a plan
     published is walking, each with the instant its step in flight lands — the present where none
     is in flight. The intentions are another store's, and this reads none of them. It is read where
-    soft commitment's two triggers reopen a walking want, and nowhere else
+    soft commitment's triggers reopen a walking want, and nowhere else
     (knowledge/domain/execution/commitment.md). THE FIRST: a cluster a constraint COUPLED that is
     about every instance a walking want under the same desire is about, and more, REOPENS that
     want — it is minted saying so (`planning:reopens`) and at the instant the walking want's step
     in flight lands, so its search starts from the ground in which that step has landed and the
     plan it finds begins after it (#905). THE SECOND is `reopen`, the Planner's: the walking wants
     a belief arriving has made impossible ahead, a world their untaken steps reach violating a
-    constraint in the grounds as now laid (#921). Each is RE-MINTED under its own name at the
+    constraint in the grounds as now laid (#921), and those a role above planning asked it to reopen
+    (`Planner.reopen`), as a draw's winner does. Each is RE-MINTED under its own name at the
     instant its step in flight lands, saying it reopens itself — the same row and the same instant
     as the first, so the Planner holds what its search finds against its untaken steps by the one
     path — and one a cluster no longer names but is about every instance of (`_covering`) is
@@ -256,10 +257,10 @@ def _derive_under(store: ox.Store, shapes: rdflib.Graph, scopes: dict | None, ho
         #  second plan down the same cells; and one whose cluster no longer bears its name is
         #  reopened by that cluster's want. The Planner withdrew what its search wrote before.
         if child in standing:
-            reopened, why = [child], "a belief arriving made its untaken steps' worlds impossible"
+            reopened, why = [child], "the Planner reopened its untaken steps"
             _unhome(store, child)
         elif covering is not None:
-            reopened, why = [covering], "a belief arriving made its untaken steps' worlds impossible"
+            reopened, why = [covering], "the Planner reopened its untaken steps"
         else:
             reopened = _reopened(shapes, standing & set(walking or ()), instances, about) if coupled is not None else []
             why = "a want a constraint couples to it has arrived"

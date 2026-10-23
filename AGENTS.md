@@ -420,9 +420,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   its path collided once, needed escaping, grew with depth and was read back by nothing; the
   counter is the store's, so a cone kept across passes is never named over (#486).
 - **A walking want is neither searched nor handed down again until a want a constraint couples to it
-  arrives, or a belief arrives that makes a world its untaken steps reach impossible, and then only
-  its untaken steps are reopened** — commitment is hard on the step in flight, which nothing planning
-  decides cancels, and soft on the plan, which either trigger re-searches from the ground the step
+  arrives, a belief arrives that makes a world its untaken steps reach impossible, or a role above
+  planning asks (`Planner.reopen`), and then only its untaken steps are reopened** — commitment is hard
+  on the step in flight, which nothing planning decides cancels, and soft on the plan, which each
+  trigger re-searches from the ground the step
   lands in by the one path; a belief has arrived where a ground holds what no world the last pass
   left did, so a plan landing as it said asks nothing (#905, #921, commitment); and **a plan whose
   want is gone is nobody's**.
@@ -535,6 +536,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **The winner still yields to the loser's step in flight, and to nothing else of its plan** — commitment
   is hard on a taken step, so the loser says which holding one gives (`coordination:taken`); yielding to
   the loser's next holding whether taken or not, the winner yielded at every crossing.
+- **A draw won reopens the winner's walking plan** — found while the draw stood undecided it yields, and
+  winning makes no world of it impossible, only slower, so the winner kept its wait and the loser crossed
+  first; coordination asks the Planner through the part it is linked to, and imports none of it.
 - **A receiver must outreach one exchange, and a radar need see only what the van could drive into** —
   the lane's receivers hear four cells and its radars one, with two slots, no cell of the road having
   more than two hedges beside it.

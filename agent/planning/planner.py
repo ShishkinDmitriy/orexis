@@ -22,7 +22,8 @@ process is told:
    under the new ground and drops the rest;
 2. every desire is weighed in every ground (`weigh`, over what `unweighed` lists); where a belief
    has arrived, every walking plan of the scope is replayed on the grounds and a walking want one
-   of whose worlds a constraint makes impossible is reopened (`_impossible_ahead`, #921);
+   of whose worlds a constraint makes impossible is reopened (`_impossible_ahead`, #921), and so is a
+   walking want a role above asked to have reopened (`reopen`);
    `derive_wants` reads the weighings and mints a want per cluster of what they read unmet —
    one a constraint couples to a walking want reopening it, and a walking want a belief reopened
    minted again reopening itself, each where its step in flight lands — and `withdraw` takes
@@ -61,7 +62,8 @@ agent and everything goes. A want an intention is walking is not searched again 
 is not handed down again: the world has not answered yet, and re-deciding is what the
 executor's verdict on a step is for — until a want a constraint couples to it arrives, or a
 belief arrives that makes a world its untaken steps reach impossible, the two triggers that reopen
-it: the step in flight stays, the reopening want is searched from the ground in which that step has
+it — or a role above planning asks it to be (`reopen`), as a coordinator that has won a draw does: the
+step in flight stays, the reopening want is searched from the ground in which that step has
 landed, and its plan is held against the intention's untaken steps
 (`_reconsider`, knowledge/domain/execution/commitment.md).
 
@@ -218,7 +220,7 @@ WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                       ?x planning:weighs $world ; ?p ?o .
                       OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }"""
 
-#  WHETHER THE HOLDER HOLDS ANY CONSTRAINT — the one thing that can reopen a walking want, by either trigger.
+#  WHETHER THE HOLDER HOLDS ANY CONSTRAINT — the one thing that can reopen a walking want, by any trigger.
 _HOLDS_CONSTRAINT_Q = """SELECT ?c WHERE { $holder planning:holds ?c . ?c a planning:Constraint } LIMIT 1"""
 
 #  THE STEP EVERY STANDING INTENTION STANDS AT.
@@ -438,6 +440,8 @@ class Planner:
         #  (`_impossible_ahead`), kept until a belief arriving has it foreseen again: `check` takes no
         #  such step, whatever the search that reopened its want has yet to find.
         self.doomed: dict[str, str] = {}
+        #  THE WANTS A ROLE ABOVE PLANNING ASKED TO HAVE REOPENED (`reopen`), until the next pass reopens them.
+        self.asked: set[str] = set()
         #  WHAT THE PLANNER SAYS HAPPENED, its own words for whoever connects, each carrying an event
         #  of `events.py`: a plan published; a want an intention walks that the present meets; a
         #  head about to be taken that the present no longer admits (`check`); an intention a
@@ -624,6 +628,9 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             #  scope's actions walk.
             reopen = self._impossible_ahead(store, flights, constraints, only, memo) \
                 if arrived and flights and constraints else set()
+            #  AND A WALKING WANT ASKED TO BE REOPENED by a role above planning, as a draw's winner asks of the
+            #  plan it found yielding while the draw stood undecided, whatever any belief made impossible.
+            reopen |= self._asked(store, flights, only)
             if lap:
                 lap("weigh")
             #  A WANT MET IN THE PRESENT IS REACHED, and one-shot: it goes, from here and from the
@@ -690,6 +697,9 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
             if self.imagined.connected:
                 written += self.imagined.emit(self._imagined(store, _scope))
             walking = self.walking()        # a want published from one scope is walked in the next
+        #  WHAT WAS ASKED TO BE REOPENED AND NOTHING WALKS has nothing to reopen: asked between passes, it is
+        #  reopened by the pass after or by none.
+        self.asked.clear()
         #  A WANT NO LONGER SEARCHED — reached, withdrawn, or walked — takes its tally with it.
         self._searches = {w: s for w, s in self._searches.items() if w in searched}
         if lap:
@@ -808,7 +818,30 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         add_quads(world, (ox.Quad(q.subject, q.predicate, q.object, ox.DefaultGraph()) for q in adds))
         return next((local_of(c) for c, text in texts if _violations(world, text) - before[c]), None)
 
-    # --- commitment: the step in flight, and the two triggers that reopen a walking want -------
+    # --- commitment: the step in flight, and the triggers that reopen a walking want ----------
+
+    def reopen(self, wants) -> None:
+        """Ask that each of `wants` an intention walks be searched again in the next pass, from the ground in
+        which its step in flight lands, and its plan held against the intention's untaken steps as the other
+        triggers' are (`_reconsider`) — for a role above planning that has learnt something no belief reads as
+        impossible: a coordinator that has won a draw, whose plan was found yielding while the draw stood
+        undecided and whose way the loser now leaves clear (two-agents-that-want-one-resource-ask-each-other-
+        and-draw-lots-for-it). Nothing that walks no plan, ends after its step in flight, or was ratified by the
+        world rather than derived is reopened, as `_impossible_ahead` reopens none of them."""
+        self.asked |= set(wants)
+
+    def _asked(self, store: ox.Store, flights: dict, only) -> set[str]:
+        """The wants among those `reopen` was asked that a walking plan of this scope pursues, derived here and
+        not ending after its step in flight; each taken from what is asked."""
+        if not self.asked:
+            return set()
+        derived = {r["w"] for r in rows(store, _DERIVED_Q, ())}
+        out = {w for w in self.asked if w in flights and w in derived and not flights[w]["ending"]
+               and (only is None or flights[w]["action"] in only)}
+        for want in sorted(out):
+            log.info("%s: %s is reopened, as asked", self.id, local_of(want))
+        self.asked -= out
+        return out
 
     def _holds_a_constraint(self) -> bool:
         """Whether this agent holds any constraint — the one thing that can couple a want to a walking
@@ -967,9 +1000,9 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
 
     def _reconsider(self, store: ox.Store, want: str, flights: dict, kept: dict) -> None:
         """Hold the plan `want`'s search just wrote against the walking intentions it reopens, where
-        the derivation said it reopens any (`planning:reopens`) — either trigger of soft commitment,
+        the derivation said it reopens any (`planning:reopens`) — each trigger of soft commitment,
         which meet here: a want a constraint coupled reopening a walking want (#905), or a walking
-        want a belief reopened reopening itself (#921).
+        want a belief reopened, or a role above planning asked reopened (`reopen`), reopening itself (#921).
 
         THE JOINT PLAN AGREES WHERE IT BEGINS WITH THEIR UNTAKEN STEPS, compared by the action each
         fills and the values it is filled with, never by node: the steps after the one in flight, or

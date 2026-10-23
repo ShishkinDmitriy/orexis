@@ -116,6 +116,16 @@ def conclude(store: ox.Store, me: str, at: datetime) -> list[str]:
     return _written(store, me, graph, concluded, prior)
 
 
+#  EVERY DRAW THE AGENT CONCLUDED A WINNER OF, with the winner and the constraint its conflict is over.
+_WINS_Q = """SELECT ?draw ?constraint ?w WHERE { GRAPH $graph { ?c coordination:over ?constraint ; coordination:draw ?draw .
+                                                          ?draw coordination:wonBy ?w } }"""
+
+
+def _wins(store: ox.Store, me: str) -> dict[str, str]:
+    """Every draw the self `me` of `store` concluded it won, with the constraint its conflict is over."""
+    return {r["draw"]: r["constraint"] for r in rows(store, _WINS_Q, (), graph=Raw(f"<{conflicts_graph(me)}>")) if r["w"] == me}
+
+
 def _won(store: ox.Store) -> dict[str, str]:
     """Who won each draw, as every outcome the world's rules ship concludes it over what the agent believes."""
     beliefs = graphs_of(store, BELIEF)
