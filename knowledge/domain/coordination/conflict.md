@@ -45,9 +45,9 @@ agent's own and received, so the grounds take them in where each begins (`agent/
 
 - **undecided**, both lay all of the other's, so each plans as if yielding and safety never waits on the draw;
 - **lost, or silent**, the loser lays all of the winner's, for as long as the conflict stands;
-- **won**, the winner lays the loser's next holding alone: the change of a step the loser may have taken
-  before the draw reached it, which nothing the draw decides cancels - [commitment](/domain/execution/commitment.md)
-  is hard on the step in flight.
+- **won**, the winner lays only what a step the loser has taken gives its thing, as the loser says it
+  (`coordination:taken`): nothing the draw decides cancels a step in flight - [commitment](/domain/execution/commitment.md)
+  is hard on it - and a step not yet taken is the loser's to give up.
 
 At each instant a holding changes, what is laid is every value any holding then gives - between a step's
 earliest landing and its latest the thing may stand at either. One already begun is laid into the present

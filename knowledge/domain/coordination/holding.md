@@ -26,8 +26,9 @@ landing and the new from its earliest: two holdings in a row overlap by the band
 intention ending after its step in flight gives that step alone.
 
 As said, a holding is a node of `coordination:Holding`: the thing, `coordination:of`; the values, under the
-key's own predicates; and `coordination:from` and `coordination:until`, either absent where the holding began
-before anything was said or holds on.
+key's own predicates; `coordination:from` and `coordination:until`, either absent where the holding began
+before anything was said or holds on; and `coordination:taken` where a step already taken gives the values - a
+step in flight, which the winner of a draw still yields to.
 
 # What it is not
 

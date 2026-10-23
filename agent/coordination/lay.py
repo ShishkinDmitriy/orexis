@@ -5,9 +5,10 @@ period, which the grounds take in where each begins (knowledge/domain/coordinati
 standing conflict the agent lays the peer's holdings, from the peer's latest question or, where it has heard
 none, its answer: undecided, so each plans as if yielding and neither enters the contested values — safety
 never waits on the draw; lost, or with the peer silent, every holding the peer says, which keeps the precedence
-for as long as the conflict stands; won, only the peer's next holding, the change of a step the peer may have
-taken before the draw reached it, which nothing a draw decides cancels — commitment is hard on the step in
-flight. A conflict that does not stand lays nothing.
+for as long as the conflict stands; won, only what a step the peer has taken gives its thing, as the peer says
+it (`coordination:taken`), which nothing a draw decides cancels — commitment is hard on the step in flight.
+Yielding to the peer's next holding whether taken or not, the winner yielded every time the loser's next drive
+was the contested cell, and at a crossing the loser crossed first. A conflict that does not stand lays nothing.
 
 **ONLY WHAT THE AGENT'S OWN CONSTRAINTS ADMIT.** A peer's plan goes where the peer believes it can, and this
 agent may see what the peer has not — a hedge its radar shows and the peer's does not yet. Laid there, the
@@ -61,8 +62,7 @@ def lay(store: ox.Store, me: str, at: datetime) -> list[str]:
         peer, constraint = r["peer"], r["constraint"]
         theirs = _heard(store, question_graph(peer, me, constraint)) or _heard(store, answer_graph(peer, me, constraint))
         if won and won[0]["w"] == me:                   # the winner lays the loser's step in flight alone
-            theirs = [h for h in theirs if h.start is None or h.start == min(
-                (o.start for o in theirs if o.thing == h.thing and o.start is not None), default=None)]
+            theirs = [h for h in theirs if h.start is None or h.taken]
         theirs = [h for h in theirs if h.start is None or not _refused(store, h, at)]
         for n, h in enumerate(_timeline(theirs)):
             if h.end is None or h.end > at:

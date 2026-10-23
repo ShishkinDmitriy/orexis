@@ -95,6 +95,10 @@
     rdfs:label "until" ;
     rdfs:comment "When the holding ends: the latest the next change of the key can land. Absent where nothing the plan says changes it again." .
 
+:taken a owl:DatatypeProperty ; rdfs:domain :Holding ; rdfs:range xsd:boolean ;
+    rdfs:label "taken" ;
+    rdfs:comment "Whether a step already taken gives the thing the holding's values: a step in flight, which nothing a draw decides cancels, so the winner of a draw still yields to it. Absent where the step that gives them is not yet taken." .
+
 #################  What each agent concludes of it  #################
 
 :Conflict a owl:Class ;

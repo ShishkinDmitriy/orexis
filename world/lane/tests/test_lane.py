@@ -299,3 +299,47 @@ def test_two_couriers_meeting_head_on_draw_lots_and_the_loser_gives_way(monkeypa
 
 _WON_Q = "SELECT ?w WHERE { ?draw <http://example.org/orexis/coordination#wonBy> ?w }"
 
+
+#  A CROSSING (#923): van B down column 5 from (5, -4) to its parcel's road at (5, 4), across the lane van A
+#  drives east along; both are due at (5, 1) after five drives. With these two secrets A goes first.
+_CROSSING = {"world.ttl": [("sim:initialValue 6 ; sim:jitter 0 ] ;    # van B column 6", "sim:initialValue 5 ; sim:jitter 0 ] ;    # van B column 5"),
+                           ("sim:initialValue 0 ; sim:jitter 0 ] ;    # van B row 0", "sim:initialValue -4 ; sim:jitter 0 ] ;    # van B row -4")],
+             "beliefs/courier_b.state.ttl": [(":parcel_b courier:x 6 ; courier:y 0 .", ":parcel_b courier:x 5 ; courier:y -4 ."),
+                                             (":east_road courier:x 6 ; courier:y 0 ;", ":east_road courier:x 5 ; courier:y 4 ;")],
+             "beliefs/courier_a.self.ttl": [(":courier_a planning:budget 256 .", f':courier_a planning:budget 256 ; coordination:secret "{"5" * 64}" .')],
+             "beliefs/courier_b.self.ttl": [(":courier_b planning:budget 256 .", f':courier_b planning:budget 256 ; coordination:secret "{"6" * 64}" .')]}
+
+
+def test_two_couriers_at_a_crossing_draw_lots_and_the_loser_waits(monkeypatch, tmp_path):
+    """A drives east down row 1 and B south down column 5, each due at (5, 1). Each asks, answers and draws;
+    both conclude that A goes first. A drives straight across; B waits on its column until A has crossed, then
+    drives straight on. No two vans ever stand at one position, and both parcels are delivered."""
+    bus, time = _lane(monkeypatch, variant(tmp_path, "crossing", _CROSSING))
+    bus.simulator.open()
+    bus.simulator.step(NOW)
+    for runtime in bus.runtimes.values():
+        runtime.run(passes=1, poll_s=0)
+    together, positions = [], []
+    for _ in range(100):
+        time["at"] += timedelta(seconds=CADENCE_S)
+        bus.simulator.step(time["at"])
+        for runtime in bus.runtimes.values():
+            runtime.run(passes=1, poll_s=0)
+        a, b = bus.simulator.position(L + "van_a"), bus.simulator.position(L + "van_b")
+        positions.append((a, b))
+        if a == b:
+            together.append((time["at"], a))
+        if (a, b) == ((6, 1), (5, 4)) and not any(r.parts["execution"].executor.walking() for r in bus.runtimes.values()):
+            break
+    assert not together, f"two vans stood at one position: {together}"
+    assert positions[-1] == ((6, 1), (5, 4)), f"both vans where their parcels are owed: {positions[-1]}"
+    won = {name: {r["w"] for r in rows(rt.beliefs, _WON_Q, graphs_of(rt.beliefs, "http://example.org/orexis#BeliefGraph"))}
+           for name, rt in bus.runtimes.items()}
+    assert won == {"courier_a": {L + "courier_a"}, "courier_b": {L + "courier_a"}}, won
+    told_a = [(p["to"]["x"], p["to"]["y"]) for t, p in bus.commands if t == "actuators/van_a/command"]
+    told_b = [(p["to"]["x"], p["to"]["y"]) for t, p in bus.commands if t == "actuators/van_b/command"]
+    assert told_a == [(1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1)], f"A drove straight across: {told_a}"
+    assert told_b == [(5, y) for y in range(-3, 5)], f"B waited on its column and drove straight on: {told_b}"
+    crossed = next(i for i, (a, _) in enumerate(positions) if a == (6, 1))
+    assert all(b[1] < 1 for _, b in positions[:crossed]), "B entered the lane only once A had crossed it"
+
