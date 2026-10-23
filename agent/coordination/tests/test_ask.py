@@ -6,7 +6,8 @@ from __future__ import annotations
 from datetime import timedelta
 
 from agent.coordination.ask import ask
-from agent.coordination.holdings import _heard, holdings
+from agent.coordination.ask import _in_range
+from agent.coordination.holdings import _heard, _key_of, holdings
 from agent.coordination.ontology import question_graph
 from agent.speech.said import said
 from agent.store import PREFIXES, forget_graph
@@ -20,6 +21,17 @@ def test_nobody_out_of_range_is_asked(walker):
     lane = walker(lambda lane: True)
     assert holdings(lane.store(A), TWO_VANS, lane.at), "A has somewhere to go"
     assert ask(lane.store(A), A, lane.at) == [], "and B, six cells off, is believed nowhere"
+
+
+def test_a_walking_plan_that_changes_nothing_on_the_key_asks_nothing_though_the_peer_is_in_range(meeting, copied):
+    """A's plan with every change of its van's position struck out of its steps: B is in range, and nothing is
+    asked, since a plan whose untaken steps touch no value of the key has nothing a constraint could read."""
+    store = copied(meeting.store(A))
+    forget_graph(store, question_graph(A, B, TWO_VANS))
+    store.update(PREFIXES + f"""DELETE {{ GRAPH ?g {{ <{VAN_A}> ?p ?v }} }}
+                               WHERE {{ GRAPH ?pg {{ ?s execution:adds ?g }} GRAPH ?g {{ <{VAN_A}> ?p ?v }} }}""")
+    assert B in _in_range(store, A, _key_of(store, TWO_VANS), meeting.at), "B is in range"
+    assert holdings(store, TWO_VANS, meeting.at) == [] and ask(store, A, meeting.at) == []
 
 
 def test_a_peer_in_range_is_asked_with_the_askers_holdings_and_not_again_until_they_change(meeting, copied):

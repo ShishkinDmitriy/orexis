@@ -169,6 +169,8 @@ def test_two_couriers_each_drive_their_own_van_and_see_the_other_within_four_cel
     answered = [p for to, p in said if to == "courier_a" and "coordination#Answer" in p]
     assert asked and len(answered) == len(asked), f"every question answered: {len(asked)} asked, {len(answered)} answered"
     assert not any("coordination#holding" in p for p in answered), "B's answers carried nothing"
+    assert not any(to == "courier_a" and "coordination#Question" in p for to, p in said), \
+        "B, whose plan touches nothing of the constraint, asked nothing though A was in range"
     assert not any("draw#" in p for _, p in said), "and no draw was committed to"
 
 
@@ -289,8 +291,16 @@ def test_two_couriers_meeting_head_on_draw_lots_and_the_loser_gives_way(monkeypa
     won = {name: {r["w"] for r in rows(rt.beliefs, _WON_Q, graphs_of(rt.beliefs, "http://example.org/orexis#BeliefGraph"))}
            for name, rt in bus.runtimes.items()}
     assert won == {"courier_a": {L + "courier_b"}, "courier_b": {L + "courier_b"}}, won
-    said = [payload.decode() for _, payload in bus.told]
-    assert any("draw#Commitment" in p for p in said) and any("draw#Reveal" in p for p in said), "the lots were drawn by saying"
+    #  THE COST OF A CONFLICT (#923): every question each asked while the other was in range — one per change of
+    #  its holdings — was answered, and the draw, decided in its first round, cost each agent two documents, a
+    #  commitment and a reveal; measured 2026-10-23 at 16 questions from A and 12 from B over 61 ticks.
+    said = [(topic.split("/")[1], payload.decode()) for topic, payload in bus.told]
+    for asker, answerer in (("courier_a", "courier_b"), ("courier_b", "courier_a")):
+        asked = [p for to, p in said if to == answerer and "coordination#Question" in p]
+        answered = [p for to, p in said if to == asker and "coordination#Answer" in p]
+        assert asked and len(answered) == len(asked), f"{asker} asked {len(asked)} and was answered {len(answered)} times"
+        assert sum(1 for to, p in said if to == answerer and "draw#Commitment" in p) == 1, f"{asker} committed once"
+        assert sum(1 for to, p in said if to == answerer and "draw#Reveal" in p) == 1, f"{asker} revealed once"
     #  THE LOSER GAVE WAY: off row 1 and round, while B, the winner, drove straight down it to its parcel's road.
     told_a = [(p["to"]["x"], p["to"]["y"]) for t, p in bus.commands if t == "actuators/van_a/command"]
     told_b = [(p["to"]["x"], p["to"]["y"]) for t, p in bus.commands if t == "actuators/van_b/command"]
