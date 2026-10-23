@@ -4,6 +4,13 @@ answers every question heard as it arrives; concludes its conflicts and lays wha
 or answer arrives, so the next pass plans and takes its steps against the peer's latest word and not the one
 before it; and every pass asks the peers in range, concludes and lays again — after planning and execution, so
 what it says of its future is what the pass left walking.
+
+LINKED, it holds planning's part too, where the agent plays a planner — a coordinator always does. A draw the
+agent concludes it has WON asks the Planner to reopen the walking wants whose plans change a value on the key of
+the constraint the draw was over: each was found while the draw stood undecided, yielding as both agents yield,
+and nothing a belief makes impossible reopens a plan that has only been made slower than it need be — so without
+it the winner kept its wait and the loser crossed first. Searched again from where its step in flight lands, with
+the loser's untaken steps no longer laid, the winner's plan takes the way the draw gave it.
 """
 
 from __future__ import annotations
@@ -14,7 +21,8 @@ from agent.ontology import local_of
 
 from .answer import answer
 from .ask import ask
-from .conclude import conclude
+from .conclude import _wins, conclude
+from .holdings import _walking_over
 from .lay import lay
 from .mint import mint
 from .ontology import ANSWER_GRAPH, QUESTION_GRAPH
@@ -26,9 +34,11 @@ class _Coordination:
     def __init__(self, runtime):
         self.runtime = runtime
         self.speech = None
+        self.planning = None
 
     def link(self, parts) -> None:
         self.speech = parts.get("speech")
+        self.planning = parts.get("planning")
 
     def start(self, runtime) -> None:
         runtime.wrote(mint(runtime.beliefs, runtime.me))
@@ -49,7 +59,17 @@ class _Coordination:
 
     def _yield(self) -> list[str]:
         runtime = self.runtime
-        return conclude(runtime.beliefs, runtime.me, runtime.now) + lay(runtime.beliefs, runtime.me, runtime.now)
+        before = _wins(runtime.beliefs, runtime.me)
+        written = conclude(runtime.beliefs, runtime.me, runtime.now)
+        won = {draw: constraint for draw, constraint in _wins(runtime.beliefs, runtime.me).items() if draw not in before}
+        written += lay(runtime.beliefs, runtime.me, runtime.now)
+        wants = set().union(*(_walking_over(runtime.beliefs, constraint) for constraint in won.values()))
+        if wants and self.planning is not None:
+            log.info("%s: won a draw, so asks that %s be planned again", local_of(runtime.me),
+                     ", ".join(local_of(w) for w in sorted(wants)))
+            self.planning.planner.reopen(wants)
+            runtime.again()
+        return written
 
     def _pass(self) -> list[str]:
         runtime = self.runtime

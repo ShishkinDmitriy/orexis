@@ -39,7 +39,7 @@ stands, `execution:waitsFor` ([commitment](/domain/execution/commitment.md)).
 # What it holds the agent to
 
 Its [commitment](/domain/execution/commitment.md): the step in flight is never cancelled, and the plan
-is kept until one of commitment's two triggers reopens the want it pursues. When it ends, planning hears it and the
+is kept until one of commitment's three triggers reopens the want it pursues. When it ends, planning hears it and the
 want is the search's again at once, from wherever the world then stands.
 
 # Several at once

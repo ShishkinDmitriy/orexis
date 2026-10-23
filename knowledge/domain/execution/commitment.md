@@ -4,9 +4,10 @@ title: Commitment
 description: >-
   What an intention holds the agent to, in two grains. HARD on the step in flight - handed to its
   taker and not yet answered, it is never cancelled by planning. SOFT on the plan - a walking want is
-  neither searched again nor withdrawn, until one of its two triggers - a want a constraint couples
-  to it arriving, or a belief arriving that makes a world its untaken steps reach impossible - reopens
-  it, and the untaken steps are open to replacement.
+  neither searched again nor withdrawn, until one of its three triggers - a want a constraint couples
+  to it arriving, a belief arriving that makes a world its untaken steps reach impossible, or a role
+  above planning asking, as a draw's winner does - reopens it, and the untaken steps are open to
+  replacement.
 ---
 
 # Two grains
@@ -36,9 +37,9 @@ intention yet pursues it — read off execution's rows by `Planner.walking`. It 
 the soft grain: a walking want is not searched again, its plan is not handed down again, and its
 desire reading met or unmet does not withdraw it, since the world has not answered yet.
 
-# Two triggers, and what follows them
+# Three triggers, and what follows them
 
-Both are about a [constraint](/domain/planning/constraint.md), since only what the world says is
+All three are about a [constraint](/domain/planning/constraint.md), since only what the world says is
 possible can make a plan the agent is walking one it must not walk; a holder of none has no trigger
 and pays one query a pass.
 
@@ -64,6 +65,15 @@ own claim, and not the effects' rules, is the point: the question is whether wha
 happen is possible given what is now believed, and a replayed step is what the executor holds the
 world to anyway.
 
+**A role above planning asks for it** (`Planner.reopen`), and the one that does is a
+[coordinator](/domain/coordination/coordinator.md) that has concluded it won a draw. While the draw stood
+undecided both agents planned as if yielding, so the winner's walking plan waits for a peer that will
+now wait for it: no world of that plan is impossible, only slower than the draw lets it be, and with
+neither trigger above firing the winner kept its wait while the loser crossed first. Asked, the want
+reopens ITSELF as under the second trigger, and is searched from where its step in flight lands, beside
+what the coordinator now lays of the loser. A want the world ratified, and an intention ending after
+its step in flight, are not reopened, as the second trigger reopens neither.
+
 **And a head is taken only into a world the agent believes possible as it stands at the taking.** The
 take-time check (#916) asks the precondition, and then asks the held constraints of the world the head
 lands in: the present beside every [forecast](/domain/kernel/forecast.md) holding at some instant of the
@@ -75,9 +85,9 @@ pass foresees them; refused as a weighing at the taking when #921 was built, wit
 what kept two vans out of one cell
 ([two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it](/decisions/two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it.md)).
 
-Nothing else reopens a walking want: a cheaper plan found, a second want no constraint couples, a
-desire read again, or a belief that leaves every world of the plan possible leaves it walking.
-Either trigger is then followed by the one path below.
+Nothing else reopens a walking want: a cheaper plan nobody asked for, a second want no constraint
+couples, a desire read again, or a belief that leaves every world of the plan possible leaves it
+walking. Each trigger is then followed by the one path below.
 
 1. **The search starts where the step in flight has landed.** A pass lays a ground boundary at each
    such landing — its `execution:landsAt`, shifted by how late it was taken, as the executor reads it

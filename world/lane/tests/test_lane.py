@@ -18,6 +18,8 @@ import shutil
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import pytest
+
 from agent import clock
 from agent.runtime import Runtime, boot
 from agent.store import graphs_of, rows
@@ -301,20 +303,24 @@ _WON_Q = "SELECT ?w WHERE { ?draw <http://example.org/orexis/coordination#wonBy>
 
 
 #  A CROSSING (#923): van B down column 5 from (5, -4) to its parcel's road at (5, 4), across the lane van A
-#  drives east along; both are due at (5, 1) after five drives. With these two secrets A goes first.
-_CROSSING = {"world.ttl": [("sim:initialValue 6 ; sim:jitter 0 ] ;    # van B column 6", "sim:initialValue 5 ; sim:jitter 0 ] ;    # van B column 5"),
-                           ("sim:initialValue 0 ; sim:jitter 0 ] ;    # van B row 0", "sim:initialValue -4 ; sim:jitter 0 ] ;    # van B row -4")],
-             "beliefs/courier_b.state.ttl": [(":parcel_b courier:x 6 ; courier:y 0 .", ":parcel_b courier:x 5 ; courier:y -4 ."),
-                                             (":east_road courier:x 6 ; courier:y 0 ;", ":east_road courier:x 5 ; courier:y 4 ;")],
-             "beliefs/courier_a.self.ttl": [(":courier_a planning:budget 256 .", f':courier_a planning:budget 256 ; coordination:secret "{"5" * 64}" .')],
-             "beliefs/courier_b.self.ttl": [(":courier_b planning:budget 256 .", f':courier_b planning:budget 256 ; coordination:secret "{"6" * 64}" .')]}
+#  drives east along; both are due at (5, 1) after five drives. The two secrets decide the draw: with 5s and 6s A
+#  goes first, with 0s and 5s B does.
+def _crossing(a: str, b: str) -> dict:
+    return {"world.ttl": [("sim:initialValue 6 ; sim:jitter 0 ] ;    # van B column 6", "sim:initialValue 5 ; sim:jitter 0 ] ;    # van B column 5"),
+                          ("sim:initialValue 0 ; sim:jitter 0 ] ;    # van B row 0", "sim:initialValue -4 ; sim:jitter 0 ] ;    # van B row -4")],
+            "beliefs/courier_b.state.ttl": [(":parcel_b courier:x 6 ; courier:y 0 .", ":parcel_b courier:x 5 ; courier:y -4 ."),
+                                            (":east_road courier:x 6 ; courier:y 0 ;", ":east_road courier:x 5 ; courier:y 4 ;")],
+            "beliefs/courier_a.self.ttl": [(":courier_a planning:budget 256 .", f':courier_a planning:budget 256 ; coordination:secret "{a * 64}" .')],
+            "beliefs/courier_b.self.ttl": [(":courier_b planning:budget 256 .", f':courier_b planning:budget 256 ; coordination:secret "{b * 64}" .')]}
 
 
-def test_two_couriers_at_a_crossing_draw_lots_and_the_loser_waits(monkeypatch, tmp_path):
-    """A drives east down row 1 and B south down column 5, each due at (5, 1). Each asks, answers and draws;
-    both conclude that A goes first. A drives straight across; B waits on its column until A has crossed, then
-    drives straight on. No two vans ever stand at one position, and both parcels are delivered."""
-    bus, time = _lane(monkeypatch, variant(tmp_path, "crossing", _CROSSING))
+@pytest.mark.parametrize("secrets, first", [(("5", "6"), "courier_a"), (("0", "5"), "courier_b")], ids=["a_first", "b_first"])
+def test_two_couriers_at_a_crossing_draw_lots_and_the_winner_goes_first(monkeypatch, tmp_path, secrets, first):
+    """A drives east down row 1 and B north up column 5, each due at (5, 1). Each asks, answers and draws, and
+    both conclude alike who goes first. The winner drives straight across, its plan found again once it has won
+    where it was found yielding while the draw stood; the loser waits short of the crossing until the winner has
+    passed it, then drives straight on. No two vans ever stand at one position, and both parcels are delivered."""
+    bus, time = _lane(monkeypatch, variant(tmp_path, f"crossing_{first}", _crossing(*secrets)))
     bus.simulator.open()
     bus.simulator.step(NOW)
     for runtime in bus.runtimes.values():
@@ -335,11 +341,15 @@ def test_two_couriers_at_a_crossing_draw_lots_and_the_loser_waits(monkeypatch, t
     assert positions[-1] == ((6, 1), (5, 4)), f"both vans where their parcels are owed: {positions[-1]}"
     won = {name: {r["w"] for r in rows(rt.beliefs, _WON_Q, graphs_of(rt.beliefs, "http://example.org/orexis#BeliefGraph"))}
            for name, rt in bus.runtimes.items()}
-    assert won == {"courier_a": {L + "courier_a"}, "courier_b": {L + "courier_a"}}, won
+    assert won == {"courier_a": {L + first}, "courier_b": {L + first}}, won
     told_a = [(p["to"]["x"], p["to"]["y"]) for t, p in bus.commands if t == "actuators/van_a/command"]
     told_b = [(p["to"]["x"], p["to"]["y"]) for t, p in bus.commands if t == "actuators/van_b/command"]
-    assert told_a == [(1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1)], f"A drove straight across: {told_a}"
-    assert told_b == [(5, y) for y in range(-3, 5)], f"B waited on its column and drove straight on: {told_b}"
-    crossed = next(i for i, (a, _) in enumerate(positions) if a == (6, 1))
-    assert all(b[1] < 1 for _, b in positions[:crossed]), "B entered the lane only once A had crossed it"
-
+    assert told_a == [(1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1)], f"A drove straight along its row: {told_a}"
+    assert told_b == [(5, y) for y in range(-3, 5)], f"B drove straight up its column: {told_b}"
+    #  THE WINNER CROSSED FIRST, and the loser came to the crossing only once the winner had left it.
+    if first == "courier_a":
+        crossed = next(i for i, (a, _) in enumerate(positions) if a == (6, 1))
+        assert all(b[1] < 1 for _, b in positions[:crossed]), "B entered the lane only once A had crossed it"
+    else:
+        crossed = next(i for i, (_, b) in enumerate(positions) if b[1] > 1)
+        assert all(a[0] < 5 for a, _ in positions[:crossed]), "A came to the crossing only once B had crossed it"

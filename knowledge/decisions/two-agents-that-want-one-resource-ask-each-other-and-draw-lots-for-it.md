@@ -39,6 +39,17 @@ description: >-
 > times longer. The seam below, the winner yielding until it is decided, is what a crossing still shows
 > where the loser's plan is found first: a winner whose walking plan was found while the draw stood keeps
 > its wait, and the loser crosses first.
+>
+> **Amended 2026-10-23** (the sovereign): **a draw won reopens the winner's walking plan**, closing that
+> seam. Coordination asks the Planner, through the part it is linked to, to reopen the walking wants whose
+> plans change a value on the key of the constraint the draw was over (`Planner.reopen`), soft commitment's
+> third trigger; each reopens itself as a belief's reopening does and is searched from where its step in
+> flight lands, beside the loser's taken step alone. The crossing is held both ways, A first and B first.
+> Refused: a PATCH, the first plan kept and a deviation searched to rejoin it, re-planning only where the
+> van has left its track. It guarantees the return to the track the plan was found on and keeps each
+> search small, but asks for a want of a new kind, to rejoin a plan, where the re-search from the step in
+> flight already finds the old way plus the wait on every road a world here poses; the sovereign took the
+> re-plan.
 
 # The question
 
@@ -197,10 +208,11 @@ outreach one exchange has no answer here.
 head's band is laid beside the present, so a cell a peer leaves early in the band refuses a head that
 would arrive late in it. Conservative, and a pass later the plan finds the wait.
 
-**The winner yields until it is decided.** Both agents plan as if yielding while the draw stands, so
-the winner's plan carries a wait or a detour the draw then makes needless, and nothing reopens a walking
-plan for a holding that went: a forecast leaving a world possible reopens nothing (#921). The cost is
-the winner's wait, bounded by the draw. The trigger is a world where that wait is dear.
+**A conflict resolved is a plan replaced, not a plan patched.** The loser's plan, and the winner's once it
+has won, is searched again from where its step in flight lands for the cheapest way to its want, which on
+the lane's roads is the old way with a wait or a pull-aside in it. Where a detour is cheaper the van takes
+the detour and never rejoins the track its first plan was found on. The trigger is a world where it should:
+a road whose other users plan on the van keeping to it.
 
 **Backoff between two agents that cannot hear each other** is sensing's, and asked of the lane by #923
 as it stands; what each does there is not coordination's to say.

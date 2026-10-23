@@ -58,10 +58,10 @@ SELECT ?text WHERE {
 #  THE THINGS THE AGENT ACTS FOR.
 _THINGS_Q = "SELECT ?t WHERE { ?me a orexis:Self ; orexis:actsFor ?t } ORDER BY ?t"
 _VALUES_Q = "SELECT ?p ?v WHERE { $thing ?p ?v }"
-#  EVERY STANDING INTENTION, the plan it adopts and the step it stands at; and whether it ends after it.
+#  EVERY STANDING INTENTION, the plan it adopts, the step it stands at and the want it pursues; and whether it ends after it.
 _STANDING_Q = """
-SELECT ?plan ?step ?ending ?act WHERE { GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
-  FILTER NOT EXISTS { ?i execution:resolvedAt ?done } OPTIONAL { ?i execution:endsAfter ?ending }
+SELECT ?plan ?step ?ending ?act ?want WHERE { GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
+  FILTER NOT EXISTS { ?i execution:resolvedAt ?done } OPTIONAL { ?i execution:endsAfter ?ending } OPTIONAL { ?i execution:pursues ?want }
   OPTIONAL { ?act execution:of ?step ; execution:taken true } } }"""
 #  A PLAN'S STEPS: each, the one after it, the graph naming what it adds, and the two ends of its landing.
 _STEPS_Q = """
@@ -87,12 +87,22 @@ def holdings(store: ox.Store, constraint: str, at: datetime) -> list[Holding]:
         if set(now) != key or not steps:
             continue
         values, start, taken = dict(now), None, False
-        for lands, latest, change, in_flight in steps:
+        for lands, latest, change, in_flight, _ in steps:
             out.append(Holding(thing, _tuple(values), start, latest or lands, taken))
             values.update(change)
             start, taken = lands, in_flight
         out.append(Holding(thing, _tuple(values), start, None, taken))
     return out
+
+
+def _walking_over(store: ox.Store, constraint: str) -> set[str]:
+    """The wants of the standing intentions whose plans change a value on `constraint`'s key of a thing the self
+    of `store` acts for — the plans a draw over the constraint decides."""
+    key = _key_of(store, constraint)
+    if not key:
+        return set()
+    things = [r["t"] for r in rows(store, _THINGS_Q, [*graphs_of(store, BELIEF, common=True), *graphs_of(store, SELF_GRAPH)])]
+    return {c[4] for changes in _changes(store, things, key).values() for c in changes if c[4]}
 
 
 def _key_of(store: ox.Store, constraint: str) -> frozenset[str]:
@@ -147,7 +157,7 @@ def _term(store: ox.Store, thing: str, predicate: str, graphs: list[str]) -> ox.
 
 def _changes(store: ox.Store, things: list[str], key: frozenset[str]) -> dict[str, list]:
     """Per thing, every change a walking plan's steps make to its values on the key, in the order they are
-    walked: (earliest landing, latest landing, {predicate: value}, whether the step is in flight)."""
+    walked: (earliest landing, latest landing, {predicate: value}, whether the step is in flight, the want)."""
     out: dict[str, list] = {}
     for r in rows(store, _STANDING_Q, ()):
         chain = {s["step"]: s for s in rows(store, _STEPS_Q, (), plan=r["plan"])}
@@ -159,7 +169,7 @@ def _changes(store: ox.Store, things: list[str], key: frozenset[str]) -> dict[st
                           if q.predicate.value in key} if s.get("adds") else {}
                 if change:
                     out.setdefault(thing, []).append((_at(s.get("lands")), _at(s.get("latest")), change,
-                                                      step == r["step"] and bool(r.get("act"))))
+                                                      step == r["step"] and bool(r.get("act")), r.get("want")))
             step = None if r.get("ending") else s.get("next")
     for changes in out.values():
         changes.sort(key=lambda c: c[0] or datetime.min)
