@@ -257,5 +257,20 @@ conclusion is not taken back by a late answer, which costs it places foreseen fo
 And only a peer that has NEVER answered under a constraint is silent this way; one that answered and then fell
 deaf is the draw's restarts, as before.
 
+**A foreseen place is a thing of its own, and it holds from now on.** Each place a reach gives is laid as a node
+standing for the peer's thing there, so a constraint comparing two things' values - two vans at one position, one
+tool held by two robots (`agent/coordination/tests/lay/`) - keeps the agent off it; one counting or summing things
+would count every place as another thing, far too cautious, which is the resource with no key below. And no place
+says when the peer could reach it: every one holds from the sighting on until the next sighting moves it, a zone,
+cautious and crude for a slow resource. The trigger for either is a world whose resource is a count, or whose peer
+moves slowly enough that a zone costs more than a timed forecast would.
+
+**With nothing said at all, a tie is safe or broken, never both, and the stance says which.** Two agents that
+cannot hear each other cannot always both avoid colliding and always part; `coordination:stepsAhead` is where an
+agent says which it gives up. Two vans, whose collision harms both, foresee each other two drives on whoever won,
+and part only where the road has a way round; two robots whose second grab of one mop merely fails can state
+nought, so the lot's winner foresees nothing and takes the mop, the loser foresees one step and yields, and two
+winners both reach for it and the world gives it to one - CSMA's backoff.
+
 **A resource with no key.** A constraint whose footprint joins no key two things share, a sum or a
 count, is no resource here; a capacity of three is not a value two things hold.

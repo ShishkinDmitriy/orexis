@@ -60,7 +60,10 @@ agent's own and received, so the grounds take them in where each begins (`agent/
   standing or at a neighbour - and asked of where the agent believes the thing now, as many steps ahead as the
   agent's stance says (`coordination:stepsAhead`, two, one more where the lot was lost), it gives each place,
   laid as a forecast of a node of its own from now on. Laid one node per place, the keys are never crossed into
-  places the thing cannot stand, and the one constraint over the thing keeps the agent's plans out of every one;
+  places the thing cannot stand, and the one constraint over the thing keeps the agent's plans out of every one.
+  The reach is about `$this`, the thing, and asked over all the agent believes, so it may read the world - the
+  free tools a robot with free hands may pick up. Nought steps ahead is a stance too: where a collision only
+  fails, the lot's winner foresees nothing and goes;
 - **won**, the winner lays only what a step the loser has taken gives its thing, as the loser says it
   (`coordination:taken`): nothing the draw decides cancels a step in flight - [commitment](/domain/execution/commitment.md)
   is hard on it - and a step not yet taken is the loser's to give up.

@@ -94,9 +94,9 @@
     sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
         CONSTRUCT { ?at a courier:Van ; courier:x ?nx ; courier:y ?ny }
         WHERE {
-            ?van a courier:Van ; courier:x ?x ; courier:y ?y .
+            $this a courier:Van ; courier:x ?x ; courier:y ?y .
             VALUES (?dx ?dy) { (0 0) (1 0) (-1 0) (0 1) (0 -1) }
             BIND(xsd:integer(?x) + ?dx AS ?nx)
             BIND(xsd:integer(?y) + ?dy AS ?ny)
-            BIND(IRI(CONCAT(STR(?van), ".at.", STR(?nx), ".", STR(?ny))) AS ?at)
+            BIND(IRI(CONCAT(STR($this), ".at.", STR(?nx), ".", STR(?ny))) AS ?at)
         }""" .

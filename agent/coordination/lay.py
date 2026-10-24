@@ -46,7 +46,7 @@ import pyoxigraph as ox
 from agent.hash_named_graph import hash_named_graph
 from agent.ontology import BELIEF, FORECAST, RECEIVED, SELF_GRAPH
 from agent.stance import stance
-from agent.store import PREFIXES, Raw, catalogue_of, entry, forget_graph, graphs_of, rows, update
+from agent.store import PREFIXES, Raw, bind, catalogue_of, entry, forget_graph, graphs_of, rows, update
 
 from .holdings import _TEXTS_Q, Holding, _heard, _key_of, _present
 from .ontology import (AHEAD, CONSTRAINT_GRAPH, STEPS_AHEAD, answer_graph, conflicts_graph, laid_graph, laid_root,
@@ -100,7 +100,6 @@ def lay(store: ox.Store, me: str, at: datetime) -> list[str]:
 
 #  THE THINGS A PEER ACTS FOR; WHAT THE AGENT BELIEVES EACH IS; AND EVERY REACH A WORLD'S RULES SHIP.
 _ACTS_FOR_Q = "SELECT ?t WHERE { $peer orexis:actsFor ?t } ORDER BY ?t"
-_KINDS_Q = "SELECT ?k WHERE { $thing a ?k }"
 _REACH_Q = """SELECT ?text WHERE { ?rule a coordination:Reach ; sh:construct ?text .
                                    FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule"""
 _RULES_GRAPH = "http://www.w3.org/ns/shacl#RulesGraph"
@@ -109,41 +108,48 @@ _TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
 def _reach(store: ox.Store, peer: str, constraint: str, ahead: int, at: datetime) -> list[Holding]:
     """Every place a thing `peer` acts for may stand `ahead` of its steps on, as the world's reaches say: a holding
-    per place, of a node standing for the thing there, with the thing's kinds and its values on `constraint`'s key,
-    from `at` on — the places it stands at now left out, which are what sensing says."""
+    per place, of a node standing for the thing there, with the kinds and the values on `constraint`'s key the reach
+    gives it, from `at` on — the places it holds now left out, which are what sensing says. Each reach is asked over
+    everything the agent believes now, the thing's own values on the key replaced by the place it is foreseen from,
+    so a reach, about `$this`, the thing, may read the world — the free tools a robot may pick up — and a thing holding nothing on the key, a
+    robot with free hands, is foreseen too."""
     key = _key_of(store, constraint)
     texts = [r["text"] for r in rows(store, _REACH_Q, graphs_of(store, _RULES_GRAPH))]
     if not key or not texts:
         return []
     present = _present(store, at)
     common = graphs_of(store, BELIEF, common=True)
+    order = lambda pv: (pv[0], str(pv[1]))                      # noqa: E731
     out: list[Holding] = []
     for r in rows(store, _ACTS_FOR_Q, common, peer=peer):
         thing = ox.NamedNode(r["t"])
-        kinds = [ox.NamedNode(k["k"]) for k in rows(store, _KINDS_Q, common, thing=r["t"])]
-        now = tuple(sorted(((q.predicate.value, q.object) for g in present
-                            for q in store.quads_for_pattern(thing, None, None, ox.NamedNode(g)) if q.predicate.value in key),
-                           key=lambda pv: (pv[0], str(pv[1]))))
-        if {p for p, _ in now} != key:
-            continue                                    # believed nowhere: nothing to foresee it from
+        scratch, now = ox.Store(), set()
+        for graph in dict.fromkeys([*common, *present]):
+            for q in store.quads_for_pattern(None, None, None, ox.NamedNode(graph)):
+                if q.subject == thing and q.predicate.value in key:
+                    now.add((q.predicate.value, q.object))
+                else:
+                    scratch.add(ox.Quad(q.subject, q.predicate, q.object, ox.DefaultGraph()))
+        now = tuple(sorted(now, key=order))
         seen, frontier, places = {now}, [now], {}
         for _ in range(ahead):
             nxt = []
             for values in frontier:
-                scratch = ox.Store()
-                scratch.extend([*(ox.Quad(thing, ox.NamedNode(_TYPE), k, ox.DefaultGraph()) for k in kinds),
-                                *(ox.Quad(thing, ox.NamedNode(p), v, ox.DefaultGraph()) for p, v in values)])
+                held = [ox.Quad(thing, ox.NamedNode(p), v, ox.DefaultGraph()) for p, v in values]
+                scratch.extend(held)
                 for text in texts:
                     found: dict = {}
-                    for t in scratch.query(PREFIXES + text):
+                    for t in scratch.query(PREFIXES + bind(text, this=thing)):
                         found.setdefault(t.subject, []).append((t.predicate.value, t.object))
                     for node, pvs in found.items():
-                        place = tuple(sorted(((p, v) for p, v in pvs if p in key), key=lambda pv: (pv[0], str(pv[1]))))
-                        if place in seen or {p for p, _ in place} != key:
+                        place = tuple(sorted(((p, v) for p, v in pvs if p in key), key=order))
+                        if place in seen or not place:
                             continue
                         seen.add(place)
                         nxt.append(place)
-                        places[node.value] = tuple(sorted(pvs, key=lambda pv: (pv[0], str(pv[1]))))
+                        places[node.value] = tuple(sorted(pvs, key=order))
+                for q in held:
+                    scratch.remove(q)
             frontier = nxt
         out += [Holding(node, values, at, None) for node, values in sorted(places.items())]
     return out

@@ -156,8 +156,8 @@
     rdfs:subClassOf sh:Rule ;
     rdfs:label "Reach" ;
     rdfs:comment """A rule that says where a thing may be one step of its own ahead
-    (knowledge/domain/coordination/conflict.md): an `sh:construct` a domain ships in its rules graph, handed
-    the thing as the agent believes it now and constructing a node per value the thing may then hold - with
+    (knowledge/domain/coordination/conflict.md): an `sh:construct` a domain ships in its rules graph, about
+    `$this`, the thing, asked over everything the agent believes with the thing as the agent believes it now and constructing a node per value the thing may then hold - with
     the kinds and the key's predicates, so each node stands for the thing where it may stand. Coordination
     asks it of a silent peer's things, as many times as the agent's stance says, and lays each node as a
     forecast: the agent's own estimate of a peer that said nothing of where it is going, one belief of the
