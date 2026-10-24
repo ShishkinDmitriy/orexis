@@ -38,8 +38,10 @@ from agent.store import Raw, catalogue_of, remember, rows
 #  store once per pass (`catalogue_of`, remembered) and spliced as `$cat`: a reader asking
 #  the store for the catalogue's name is what the rule allows; spelling it is what it refuses.
 
+#  DISTINCT, since a world says of every agent that holds a thing that it holds it, and a store listing two
+#  holders listed the thing twice, weighed twice, and wrote each violation twice.
 _IN_GROUNDS_Q = """
-SELECT ?for ?about WHERE {
+SELECT DISTINCT ?for ?about WHERE {
   { GRAPH $cat { ?d a planning:DesireGraph } GRAPH ?d { ?holder planning:holds ?for . ?for a planning:Desire $narrow }
     GRAPH $cat { ?about a planning:GroundGraph } }
   UNION
@@ -68,7 +70,7 @@ ORDER BY ?for ?about"""
 #  THE CANDIDATES IN THE ORDER THEY WERE MINTED, off the row and not the name: a name is a
 #  number now (#486), and `possible/10.by` sorts before `possible/9.by` as text.
 _CANDIDATES_Q = """
-SELECT ?for ?about ?from ?child WHERE {
+SELECT DISTINCT ?for ?about ?from ?child WHERE {
   GRAPH $cat { ?d a planning:WantGraph }
   GRAPH ?d { ?holder planning:holds ?for . ?for a planning:Want $narrow }
   GRAPH $cat {
