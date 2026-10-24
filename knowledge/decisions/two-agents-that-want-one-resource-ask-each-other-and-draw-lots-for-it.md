@@ -50,6 +50,16 @@ description: >-
 > search small, but asks for a want of a new kind, to rejoin a plan, where the re-search from the step in
 > flight already finds the old way plus the wait on every road a world here poses; the sovereign took the
 > re-plan.
+>
+> **Amended 2026-10-23, again** (#923's lost documents, `test_a_draw_document_lost_restarts_the_draw_and_both_wait`):
+> **a draw document lost on the way restarts the draw, and two agents silent to each other still part.**
+> With every reveal of B's lost to A, A's draw restarts a round on past each patience, to the rounds A states
+> of itself, and B is silent to it; B, hearing everything, concludes each round and drives on, and A yields
+> and goes round. With every commitment of B's lost, B never hears A reveal either, so both conclude the other
+> silent and both yield — and still part: each lays the other's SAID holdings and plans round them, A's new
+> plan is said in its next question and leaves the row to B, and B drives straight down it while A takes the
+> row below. "Both wait" held for no more than a patience; a standoff needs a road with no way round, which
+> no world here poses, and what two agents that cannot hear each other at all do is the seam below.
 
 # The question
 
@@ -215,7 +225,9 @@ the detour and never rejoins the track its first plan was found on. The trigger 
 a road whose other users plan on the van keeping to it.
 
 **Backoff between two agents that cannot hear each other** is sensing's, and asked of the lane by #923
-as it stands; what each does there is not coordination's to say.
+as it stands; what each does there is not coordination's to say. Two agents that HEAR each other's
+questions and conclude each other silent need none: each plans round the holdings the other said, and
+the first to re-plan says new ones that leave the other's way clear.
 
 **A resource with no key.** A constraint whose footprint joins no key two things share, a sum or a
 count, is no resource here; a capacity of three is not a value two things hold.

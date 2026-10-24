@@ -36,7 +36,9 @@ extracted of it is the agent's own, which triggers no [transition](/domain/belie
 Undecided past the agent's patience, the draw restarts in the next round; a peer heard drawing in a later
 round brings the agent to it. Past the rounds the agent states of itself, the peer is **silent**,
 `coordination:silent`, and the agent yields to it as a loser does: it takes the whole of the avoiding, and
-what it sees of the peer is what keeps it off the peer.
+what it sees of the peer is what keeps it off the peer. Two agents silent to each other both yield, each
+laying what the other SAID, and part where the road has a way round, since the first to plan again says
+holdings that leave the other's way clear.
 
 # What each lays
 
