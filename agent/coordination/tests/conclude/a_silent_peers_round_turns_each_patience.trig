@@ -1,0 +1,96 @@
+# a_silent_peers_round_turns_each_patience
+#
+# The peer concluded silent at 11:58:59, round 0, and still unanswering, in range. A patience on, its round
+# turns: round 1, since now, its draw the round's own, so the lot is drawn afresh - the backoff between two
+# agents that cannot hear each other. Still silent, still standing.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix coordination: <http://example.org/orexis/coordination#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix coordinated: <http://example.org/orexis/graph/coordination/keeper/> .
+@prefix asked: <http://example.org/orexis/graph/coordination/keeper/question/peer/> .
+@prefix conflict: <http://example.org/orexis/graph/coordination/conflict/> .
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :constraints a orexis:Graph .
+  :constraints a planning:ConstraintGraph .
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :self a orexis:BeliefGraph .
+  :self a orexis:Graph .
+  :self a orexis:SelfGraph .
+  :state a orexis:BeliefGraph .
+  :state a orexis:Graph .
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  asked:no_two_vans a coordination:QuestionGraph .
+  asked:no_two_vans a orexis:Graph .
+  asked:no_two_vans a speech:StatementGraph .
+  asked:no_two_vans dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:30+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:58:00+00:00"^^xsd:dateTime ] .
+  asked:no_two_vans orexis:arrivedBy orexis:Recorded .
+  coordinated:conflicts a orexis:BeliefGraph .
+  coordinated:conflicts a orexis:Graph .
+  coordinated:conflicts orexis:arrivedBy orexis:Derived .
+  coordinated:conflicts orexis:ownedBy :keeper .
+}
+GRAPH :constraints {
+  :no_two_vans a planning:Constraint .
+  :no_two_vans planning:unmetWhen :no_two_vans.select .
+  :no_two_vans.select sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+SELECT $this ?value WHERE { $this a courier:Van ; courier:x ?x ; courier:y ?y .
+                            ?value a courier:Van ; courier:x ?x ; courier:y ?y . FILTER(?value != $this) }""" .
+}
+GRAPH :ontology {
+  coordination:AnswerGraph rdfs:subClassOf speech:StatementGraph .
+  coordination:QuestionGraph rdfs:subClassOf speech:StatementGraph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:CatalogueGraph rdfs:subClassOf orexis:Graph .
+  orexis:OntologyGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:SelfGraph rdfs:subClassOf orexis:BeliefGraph .
+  planning:ConstraintGraph rdfs:subClassOf orexis:Graph .
+  speech:StatementGraph rdfs:subClassOf orexis:Graph .
+}
+GRAPH asked:no_two_vans {
+  asked:no_two_vans a coordination:Question .
+  asked:no_two_vans coordination:asks :keeper .
+  asked:no_two_vans coordination:over :no_two_vans .
+}
+GRAPH :self {
+  :keeper a orexis:Self .
+  :keeper orexis:actsFor :van_k .
+  :keeper planning:holds :no_two_vans .
+}
+GRAPH :state {
+  :van_k courier:x 2 .
+  :van_k courier:y 1 .
+  :van_p courier:x 4 .
+  :van_p courier:y 1 .
+}
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:localId "keeper" .
+  :peer a orexis:Agent .
+  :peer orexis:actsFor :van_p .
+  :van_k a courier:Van .
+  :van_p a courier:Van .
+}
+GRAPH coordinated:conflicts {
+  conflict:2216b9a9c788124d a coordination:Conflict .
+  conflict:2216b9a9c788124d coordination:draw conflict:2216b9a9c788124d.round.0 .
+  conflict:2216b9a9c788124d coordination:over :no_two_vans .
+  conflict:2216b9a9c788124d coordination:round 0 .
+  conflict:2216b9a9c788124d coordination:silent true .
+  conflict:2216b9a9c788124d coordination:since "2026-01-01T11:58:59+00:00"^^xsd:dateTime .
+  conflict:2216b9a9c788124d coordination:standing true .
+  conflict:2216b9a9c788124d coordination:with :peer .
+}

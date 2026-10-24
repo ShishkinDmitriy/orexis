@@ -150,7 +150,7 @@
 
 :silent a owl:DatatypeProperty ; rdfs:domain :Conflict ; rdfs:range xsd:boolean ;
     rdfs:label "silent" ;
-    rdfs:comment "Whether the peer has fallen silent in this conflict: its draw restarted past the bound the agent states of itself. This agent then yields as a loser does and takes the whole of the avoiding (knowledge/domain/coordination/conflict.md)." .
+    rdfs:comment "Whether the peer has fallen silent in this conflict: its draw restarted past the bound the agent states of itself, or it answered no question the agent asked it under the constraint for a patience of the asking. The agent takes the whole of the avoiding, by what a world's constraints say of a silent peer; the conflict's round turns each patience, and its draw is a lot the agent draws alone (knowledge/domain/coordination/conflict.md)." .
 
 :secret a owl:DatatypeProperty ; rdfs:domain orexis:Self ; rdfs:range xsd:string ;
     rdfs:label "secret" ;

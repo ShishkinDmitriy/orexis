@@ -1,0 +1,30 @@
+--- case
++++ expected
+@@ -31,6 +31,11 @@
+   asked:no_two_vans a speech:StatementGraph .
+   asked:no_two_vans dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:30+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:59:00+00:00"^^xsd:dateTime ] .
+   asked:no_two_vans orexis:arrivedBy orexis:Recorded .
++  coordinated:conflicts a orexis:BeliefGraph .
++  coordinated:conflicts a orexis:Graph .
++  coordinated:conflicts orexis:arrivedBy orexis:Derived .
++  coordinated:conflicts orexis:hash "sha256:9d90ee3001034d4c33027ffbf3e4e6f3c91a45524b5d7e6285aaa21c63f045c0" .
++  coordinated:conflicts orexis:ownedBy :keeper .
+ }
+ GRAPH :constraints {
+   :no_two_vans a planning:Constraint .
+@@ -73,3 +78,15 @@
+   :van_k a courier:Van .
+   :van_p a courier:Van .
+ }
++
++
++GRAPH coordinated:conflicts {
++  conflict:2216b9a9c788124d a coordination:Conflict .
++  conflict:2216b9a9c788124d coordination:draw conflict:2216b9a9c788124d.round.0 .
++  conflict:2216b9a9c788124d coordination:over :no_two_vans .
++  conflict:2216b9a9c788124d coordination:round 0 .
++  conflict:2216b9a9c788124d coordination:silent true .
++  conflict:2216b9a9c788124d coordination:since "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  conflict:2216b9a9c788124d coordination:standing true .
++  conflict:2216b9a9c788124d coordination:with :peer .
++}

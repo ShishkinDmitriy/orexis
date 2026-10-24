@@ -543,6 +543,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   heard everything concludes and drives on while the other yields and goes round; and two that both take the
   other as silent each lay what the other said and plan round it, so the first to plan again leaves the
   other's way clear, where "both wait" held for a patience (`test_two_couriers_silent_to_each_other_both_yield_and_still_part`).
+- **A peer that answers nothing for a patience is silent, kept a cell clear of, and two that cannot hear each
+  other back off by a lot each draws alone** — a van moves a cell a drive, so two cells apart is safe whatever
+  the other does, and the lot's loser keeps three and drives away; the loser advancing instead was refused, two
+  that both draw "go" meeting in one cell (two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it).
 - **A receiver must outreach one exchange, and a radar need see only what the van could drive into** —
   the lane's receivers hear four cells and its radars one, with two slots, no cell of the road having
   more than two hedges beside it.

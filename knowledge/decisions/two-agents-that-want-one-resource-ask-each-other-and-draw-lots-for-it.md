@@ -60,6 +60,21 @@ description: >-
 > plan is said in its next question and leaves the row to B, and B drives straight down it while A takes the
 > row below. "Both wait" held for no more than a patience; a standoff needs a road with no way round, which
 > no world here poses, and what two agents that cannot hear each other at all do is the seam below.
+>
+> **Amended 2026-10-24** (the sovereign, #923's last two done-whens): **a peer that never answers is silent, the
+> courier keeps a cell clear of a silent peer's van, and two agents that cannot hear each other back off by a lot
+> each draws alone.** A question unanswered for the asker's patience since its asking began makes the peer silent,
+> in a conflict that stands while it is in range ([conflict](/domain/coordination/conflict.md)). The courier's
+> `no_van_beside_a_silent_peers_van` reads coordination's conclusion: two cells between the agent's van and a
+> silent peer's, since a van moves a cell a drive and two vans that keep that apart cannot meet whatever the other
+> does next. A silent conflict's round turns each patience, and its draw is a LOT the agent draws alone, the
+> draw domain's `draw:lot`, a hash of its own secret; the one that lost keeps three cells, its present then
+> violates the constraint, and only a world that drives away is possible, so it backs off, and the two part the
+> first round the lots differ. Refused: the loser of the lot ADVANCING instead, the winner holding still — the
+> faster parting, and the one CSMA uses, but two that both draw "go" can both drive into one empty cell, and the
+> sovereign chose the backing off, which never can. Refused too: laying a silent peer's van at every cell it
+> could reach as a forecast — coordination knows no courier word, and laid on two keys the reach is a box, whose
+> corners stand on hedges and make every world after it impossible.
 
 # The question
 
@@ -224,10 +239,10 @@ the lane's roads is the old way with a wait or a pull-aside in it. Where a detou
 the detour and never rejoins the track its first plan was found on. The trigger is a world where it should:
 a road whose other users plan on the van keeping to it.
 
-**Backoff between two agents that cannot hear each other** is sensing's, and asked of the lane by #923
-as it stands; what each does there is not coordination's to say. Two agents that HEAR each other's
-questions and conclude each other silent need none: each plans round the holdings the other said, and
-the first to re-plan says new ones that leave the other's way clear.
+**A peer that answers after it was taken as silent** stays silent until it is out of range and not asking: the
+conclusion is not taken back by a late answer, which costs it a cell kept clear for nothing and never a collision.
+And only a peer that has NEVER answered under a constraint is silent this way; one that answered and then fell
+deaf is the draw's restarts, as before.
 
 **A resource with no key.** A constraint whose footprint joins no key two things share, a sum or a
 count, is no resource here; a capacity of three is not a value two things hold.

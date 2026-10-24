@@ -35,10 +35,18 @@ extracted of it is the agent's own, which triggers no [transition](/domain/belie
 
 Undecided past the agent's patience, the draw restarts in the next round; a peer heard drawing in a later
 round brings the agent to it. Past the rounds the agent states of itself, the peer is **silent**,
-`coordination:silent`, and the agent yields to it as a loser does: it takes the whole of the avoiding, and
-what it sees of the peer is what keeps it off the peer. Two agents silent to each other both yield, each
-laying what the other SAID, and part where the road has a way round, since the first to plan again says
-holdings that leave the other's way clear.
+`coordination:silent`. So is a peer the agent has asked under a constraint and that has answered nothing under
+it for a patience of the asking: a conflict with it stands from then, silent from its first round, while the
+peer is in range or asking - nothing it said could meet, and nothing it said shows it will give way. A silent
+peer is avoided by what the agent sees of it: a world's constraints read `coordination:silent`, as the courier's
+keeps a cell clear of a silent peer's van, and the agent takes the whole of the avoiding.
+
+**A silent peer's draw is a lot drawn alone.** Nobody reveals to a peer that does not take part, so the round's
+draw is won as the agent's own secret alone says ([draw](/domain/draw/draw.md)), and a silent conflict's round
+turns each patience, a fresh lot each time. Two agents that cannot hear each other each draw their own, and need
+not agree: the one that lost keeps further off, and the two part the first round one keeps further off while
+the other goes. Two agents silent to each other that still HEARD each other's questions lay what the other SAID
+beside that, and the first to plan again says holdings that leave the other's way clear.
 
 # What each lays
 
@@ -46,7 +54,8 @@ Yielding is laying the peer's holdings as [forecasts](/domain/kernel/forecast.md
 agent's own and received, so the grounds take them in where each begins (`agent/coordination/lay.py`):
 
 - **undecided**, both lay all of the other's, so each plans as if yielding and safety never waits on the draw;
-- **lost, or silent**, the loser lays all of the winner's, for as long as the conflict stands;
+- **lost**, the loser lays all of the winner's, for as long as the conflict stands - and of a silent peer, the
+  agent lays all it said until a lot is won;
 - **won**, the winner lays only what a step the loser has taken gives its thing, as the loser says it
   (`coordination:taken`): nothing the draw decides cancels a step in flight - [commitment](/domain/execution/commitment.md)
   is hard on it - and a step not yet taken is the loser's to give up.

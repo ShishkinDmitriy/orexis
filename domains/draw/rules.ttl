@@ -46,3 +46,21 @@
             BIND(SUBSTR(SHA256(CONCAT(STR(?draw), "|", ?pair)), 1, 1) AS ?digit)
             BIND(IF(CONTAINS("13579bdf", ?digit), IF(?lower, ?me, ?peer), IF(?lower, ?peer, ?me)) AS ?winner)
         }""" .
+
+#  A LOT DRAWN ALONE, for a peer that is silent (knowledge/domain/coordination/conflict.md): nobody reveals to a
+#  peer that does not take part, so the draw of a silent conflict's round is won as the agent's own secret alone
+#  says, a digit of a hash of the secret and the draw's name, odd for the agent. The peer, if it draws, draws its
+#  own; the two need not agree, and nothing they do depends on agreeing: the world's constraints keep a van off a
+#  silent peer's either way, and further off where the lot was lost, so the loser backs off and the two part the
+#  first round one backs off while the other goes. The round turns each patience, so the lot is drawn afresh -
+#  random backoff, between two agents that cannot hear each other. Its digit is not the commitment's, so a lot is
+#  no number a commitment ever said.
+:lot a coordination:Outcome ;
+    rdfs:label "a silent peer's draw is won as a lot the agent draws alone says" ;
+    sh:construct """CONSTRUCT { ?draw coordination:wonBy ?winner }
+        WHERE {
+            ?me a orexis:Self ; coordination:secret ?secret .
+            ?conflict a coordination:Conflict ; coordination:with ?peer ; coordination:silent true ; coordination:draw ?draw .
+            BIND(SUBSTR(SHA256(CONCAT(?secret, "|lot|", STR(?draw))), 1, 1) AS ?digit)
+            BIND(IF(CONTAINS("13579bdf", ?digit), ?me, ?peer) AS ?winner)
+        }""" .

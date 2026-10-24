@@ -13,7 +13,18 @@ neither seen nor asking ends it, and a later answer that is not empty begins it 
 **ROUNDS.** A standing conflict's draw is the one of its present round (`draw_of`). Undecided for the
 agent's patience, it restarts in the next round; a peer heard drawing in a later round brings this agent to
 it, so two agents whose clocks parted meet in one draw again; and past the rounds the agent states of itself
-the peer is SILENT, and this agent yields to it as a loser does.
+the peer is SILENT.
+
+**A PEER THAT NEVER ANSWERS IS SILENT TOO.** A peer in range that the agent has asked under a constraint and
+that has said no answer under it for the agent's patience since the asking began is concluded silent from the
+first, in a conflict that stands while it is in range or asking: nothing it said can meet, but nothing it said
+shows it will give way either, so the agent takes the whole of the avoiding, as the world's own constraints say
+a silent peer is avoided (knowledge/domain/coordination/conflict.md).
+
+**A SILENT PEER'S DRAW IS A LOT DRAWN ALONE, AGAIN EACH PATIENCE.** Nobody reveals to a peer that is silent, so
+the outcome a world ships for a silent conflict reads the agent's own secret and nothing of the peer's; and the
+round turns each patience, so two agents that cannot hear each other draw a fresh lot each, and part the first
+time one backs off while the other goes (backoff).
 
 **WHO WON IS ASKED, NOT TRIGGERED.** Every outcome a world's rules ship (`coordination:Outcome`) is asked each
 pass over everything the agent believes, and what it concludes of the present round's draw is written beside the
@@ -33,14 +44,14 @@ from datetime import datetime, timedelta
 import pyoxigraph as ox
 
 from agent.hash_named_graph import hash_named_graph
-from agent.ontology import BELIEF, DERIVED, RECEIVED, RECORDED, local_of
+from agent.ontology import BELIEF, DERIVED, RECEIVED, RECORDED, SELF_GRAPH, local_of
 from agent.stance import stance
 from agent.store import Raw, catalogue_of, construct, entry, forget_graph, graphs_of, rows, update
 
-from .ask import _in_range
+from .ask import _HELD_Q, _in_range
 from .holdings import _key_of
-from .ontology import (BOUND, CONFLICT, COORDINATION, PATIENCE, PATIENCE_S, QUESTION_GRAPH, ROUNDS, WON_BY, conflict_of,
-                       conflicts_graph, draw_of, question_graph)
+from .ontology import (BOUND, CONFLICT, CONSTRAINT_GRAPH, COORDINATION, PATIENCE, PATIENCE_S, QUESTION_GRAPH, ROUNDS,
+                       WON_BY, answer_graph, conflict_of, conflicts_graph, draw_of, question_graph)
 
 log = logging.getLogger("coordination")
 
@@ -65,6 +76,10 @@ _OUTCOMES_Q = """
 SELECT ?rule ?text WHERE { ?rule a coordination:Outcome ; sh:construct ?text .
                            FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule"""
 _RULES_GRAPH = "http://www.w3.org/ns/shacl#RulesGraph"
+#  WHEN THE AGENT BEGAN ASKING, as the catalogue's row for a question it said gives the start of its period; and
+#  whether a peer's answer was heard at all.
+_ASKED_Q = """SELECT ?start WHERE { GRAPH $cat { $graph orexis:arrivedBy $recorded ; dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1"""
+_HEARD_ANSWER_Q = "SELECT ?g WHERE { GRAPH $cat { $graph orexis:arrivedBy $received . BIND($graph AS ?g) } } LIMIT 1"
 
 
 def conclude(store: ox.Store, me: str, at: datetime) -> list[str]:
@@ -113,7 +128,48 @@ def conclude(store: ox.Store, me: str, at: datetime) -> list[str]:
             row.update(round=row["round"] + 1, since=at, winner=None)
         if not decided and row["round"] >= bound:
             row["silent"] = True
+    for c, row in _unanswered(store, me, cat, at, patience, met, concluded, asking).items():
+        concluded[c] = row
+    for row in concluded.values():
+        if row["standing"] and row["silent"]:
+            row["winner"] = row["winner"] or won.get(draw_of(conflict_of(me, row["peer"], row["constraint"]), row["round"]))
+            if at - row["since"] >= patience:               # a fresh lot each patience
+                c = conflict_of(me, row["peer"], row["constraint"])
+                row.update(round=row["round"] + 1, since=at, winner=won.get(draw_of(c, row["round"] + 1)))
     return _written(store, me, graph, concluded, prior)
+
+
+def _unanswered(store: ox.Store, me: str, cat: str, at: datetime, patience: timedelta, met: dict, concluded: dict,
+                asking: set) -> dict[str, dict]:
+    """The conflicts with every peer that never answered: silent and standing where the agent has asked it under a
+    constraint it holds, a patience has passed since the asking began and no answer of its under it was heard,
+    while it is in range or asking; one that no longer is stands no more."""
+    out: dict[str, dict] = {}
+    held = [r["c"] for r in rows(store, _HELD_Q, [*graphs_of(store, CONSTRAINT_GRAPH), *graphs_of(store, SELF_GRAPH)])]
+    for constraint in held:
+        for peer in _in_range(store, me, _key_of(store, constraint), at):
+            if (peer, constraint) in met:
+                continue                            # it answered: whatever it said is the met loop's
+            asked = rows(store, _ASKED_Q, (), cat=Raw(f"<{cat}>"), graph=Raw(f"<{question_graph(me, peer, constraint)}>"),
+                         recorded=RECORDED)
+            heard = rows(store, _HEARD_ANSWER_Q, (), cat=Raw(f"<{cat}>"), graph=Raw(f"<{answer_graph(peer, me, constraint)}>"),
+                         received=RECEIVED)
+            if not asked or heard or at - datetime.fromisoformat(asked[0]["start"]) < patience:
+                continue
+            c = conflict_of(me, peer, constraint)
+            row = dict(concluded.get(c) or {"peer": peer, "constraint": constraint, "round": 0, "since": at,
+                                            "standing": False, "silent": False, "winner": None})
+            if not row["standing"]:
+                row.update(standing=True, since=at, winner=None, round=row["round"] + (1 if c in concluded else 0))
+            row["silent"] = True
+            out[c] = row
+    for c, row in concluded.items():
+        if c in out or not row["standing"] or (row["peer"], row["constraint"]) in met:
+            continue
+        key = _key_of(store, row["constraint"])
+        if row["peer"] not in _in_range(store, me, key, at) and question_graph(row["peer"], me, row["constraint"]) not in asking:
+            out[c] = {**row, "standing": False}
+    return out
 
 
 #  EVERY DRAW THE AGENT CONCLUDED A WINNER OF, with the winner and the constraint its conflict is over.
