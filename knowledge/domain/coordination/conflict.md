@@ -58,8 +58,10 @@ agent's own and received, so the grounds take them in where each begins (`agent/
 - **silent**, beside what the peer said, where its things may be: a **reach** (`coordination:Reach`), an
   `sh:construct` a world's rules ship, says where a thing may be a step of its own ahead - the courier's, a van
   standing or at a neighbour - and asked of where the agent believes the thing now, as many steps ahead as the
-  agent's stance says (`coordination:stepsAhead`, two, one more where the lot was lost), it gives each place,
-  laid as a forecast of a node of its own from now on. Laid one node per place, the keys are never crossed into
+  agent's lookahead says (`coordination:lookahead`, two, one more where the lot was lost), it gives each place,
+  laid as a forecast of a node of its own for that many of the longest step a reach says it takes
+  (`coordination:stepS`) - after which only the next sighting says, so a plan may wait the window out where it
+  would otherwise go round, and a sighting that moves the peer lays the places again. Laid one node per place, the keys are never crossed into
   places the thing cannot stand, and the one constraint over the thing keeps the agent's plans out of every one.
   The reach is about `$this`, the thing, and asked over all the agent believes, so it may read the world - the
   free tools a robot with free hands may pick up. Nought steps ahead is a stance too: where a collision only

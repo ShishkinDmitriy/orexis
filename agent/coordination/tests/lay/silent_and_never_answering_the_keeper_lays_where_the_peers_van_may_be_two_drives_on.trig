@@ -4,7 +4,7 @@
 # keeper's at (3, 1), and the world's rules ship a reach - a van a drive on stands where it stood or at a
 # neighbour. The keeper's stance states no steps ahead, so two: one for the drive the peer may take next, one
 # since what the keeper believes of it may be a drive behind. Every place within two drives of (5, 1), each a
-# node of its own typed a van, is laid as a forecast from now on - twelve places less the one the van stands at,
+# node of its own typed a van, is laid as a forecast for two drives of a minute at most, to 12:02 - twelve places less the one the van stands at,
 # which is sensing's, and less (3, 1), where the keeper's own van stands and which no possible world could then
 # hold: eleven. The one constraint, no two vans at one position, keeps the keeper's plans out of every one.
 #
@@ -64,6 +64,7 @@ GRAPH :ontology {
 }
 GRAPH :rules {
   :a_drive_ahead a coordination:Reach .
+  :a_drive_ahead coordination:stepS 60 .
   :a_drive_ahead sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
 CONSTRUCT { ?at a courier:Van ; courier:x ?nx ; courier:y ?ny }
 WHERE { $this a courier:Van ; courier:x ?x ; courier:y ?y .

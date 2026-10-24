@@ -436,9 +436,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   and the search (`world_at`), and refuses a world that says no period; the present, where no
   prediction has applied, it reads off a store with no ground as the readings themselves (#916).
 - **A belief the present has not reached is laid where it begins, whole, as a prediction is, and in no
-  ground before it; its end lays none** — a forecast of anyone's writes what it adds, so it is cut
-  whole and supersedes by key in the ground of its instant, where laid into the present a peer's cell
-  from ten seconds on stood under the van today, and a value stands until its key is assigned (#987).
+  ground before it; a forecast's end takes back what it added, and any other belief's end lays none** — a
+  forecast of anyone's writes what it adds, so it is cut whole and supersedes by key in the ground of its
+  instant, where laid into the present a peer's cell from ten seconds on stood under the van today, and a
+  value stands until its key is assigned (#987); a silent peer's foreseen places standing for ever sent every
+  pass round them, where ending they may be waited out (two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it).
 - **A forecast is one kernel kind, `orexis:ForecastGraph`, a belief, and who said it is provenance** —
   the predictor's stretch, sensing's hour and the executor's committed step held one shape under three
   kinds, told apart by one reader; each is laid where it begins if a text of the pass or a transition

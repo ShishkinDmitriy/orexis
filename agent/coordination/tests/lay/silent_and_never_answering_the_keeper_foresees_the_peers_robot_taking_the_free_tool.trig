@@ -5,7 +5,7 @@
 # nobody holds. The peer is silent, says nothing, and holds nothing; the keeper holds the brush. Its stance
 # states no steps ahead, so two: the first finds the peer may be holding the mop - not the brush, which the
 # keeper holds - and the second finds nothing more, a robot holding a tool picking up none. So one node, the
-# peer's robot holding the mop, is laid as a forecast from now on, and the one constraint keeps the keeper's
+# peer's robot holding the mop, is laid as a forecast from now on - the reach says no step's length, so for ever - and the one constraint keeps the keeper's
 # plans off the mop: the same `lay` as the vans', with a world's own words in it.
 #
 # The clock stands at 2026-01-01T12:00:00Z.

@@ -44,7 +44,7 @@
    :rules a orexis:Graph .
    :rules a sh:RulesGraph .
    :sensed a orexis:Graph .
-@@ -108,4 +112,48 @@
+@@ -108,4 +112,45 @@
    :sensed orexis:ownedBy :keeper .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
@@ -62,7 +62,7 @@
 +  ground:2026-01-01T150000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T150000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T15:00:00+00:00"^^xsd:dateTime ] .
 +  ground:2026-01-01T150000p0000 orexis:arrivedBy orexis:Derived .
-+  ground:2026-01-01T150000p0000 orexis:hash "sha256:9519906b164d0cdc8429982860c2bbdbfe8a5435eec819d8144c68e6d536a2f6" .
++  ground:2026-01-01T150000p0000 orexis:hash "sha256:3c6a619ed8a91c6e9913d9ec9072d11b73c0a511e6b8f6ec8defd054f32e2a12" .
  }
 +
 +
@@ -79,9 +79,6 @@
 +
 +GRAPH ground:2026-01-01T150000p0000 {
 +  :bed :soil :Moist .
-+  :rain a sosa:Observation .
-+  :rain sosa:hasSimpleResult 10.0 .
-+  :rain sosa:observedProperty :precipitation .
 +}
 +
 +GRAPH :believed.changeable {

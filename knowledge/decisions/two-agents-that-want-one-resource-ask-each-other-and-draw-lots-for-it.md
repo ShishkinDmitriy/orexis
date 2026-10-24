@@ -67,9 +67,14 @@ description: >-
 > silent, in a conflict that stands while it is in range ([conflict](/domain/coordination/conflict.md)). A
 > forecast is then the agent's own estimate where it is not the peer's word: a domain's `coordination:Reach`, the
 > courier's a van standing or at a neighbour a drive on, is asked of where the agent believes the peer's van now,
-> as many steps ahead as the agent's stance says (`coordination:stepsAhead`, two - one for the drive the peer may
+> as many steps ahead as the agent's stance says (`coordination:lookahead`, two - one for the drive the peer may
 > take next, one since the sighting may be a drive behind), and each place is laid as a forecast of a node of its
-> own, so "no two vans at one position" stays the one constraint and keeps the agent's plans out of every place.
+> own, so "no two vans at one position" stays the one constraint and keeps the agent's plans out of every place,
+> for as many of a step as the lookahead says (`coordination:stepS`, the courier's sixty seconds, the top of a
+> drive's band): a forecast's END now takes back what it added, so a plan may wait the window out where it once
+> had to go round a zone that stood for ever - measured, a pass searching its whole budget for the way round
+> took twenty to ninety seconds. That amends #987's "its end lays none" for forecasts alone: each stretch a
+> peer said is followed by the next where it ends, so what a peer said still stands until its key is assigned.
 > A sighting that moves the peer moves what is laid, and a walking plan it makes impossible is reopened (#921). A
 > silent conflict's round turns each patience, and its draw is a LOT the agent draws alone, the draw domain's
 > `draw:lot`; the one that lost foresees a step further, so goes round the wider. An observation that tells more
@@ -261,12 +266,13 @@ deaf is the draw's restarts, as before.
 standing for the peer's thing there, so a constraint comparing two things' values - two vans at one position, one
 tool held by two robots (`agent/coordination/tests/lay/`) - keeps the agent off it; one counting or summing things
 would count every place as another thing, far too cautious, which is the resource with no key below. And no place
-says when the peer could reach it: every one holds from the sighting on until the next sighting moves it, a zone,
-cautious and crude for a slow resource. The trigger for either is a world whose resource is a count, or whose peer
-moves slowly enough that a zone costs more than a timed forecast would.
+says when the peer could reach it: every one holds from the sighting for the lookahead's window, whichever
+the peer could reach first, which is cautious. The trigger for
+either is a world whose resource is a count, or whose peer moves slowly enough that a window costs more than
+a forecast timed per place would.
 
 **With nothing said at all, a tie is safe or broken, never both, and the stance says which.** Two agents that
-cannot hear each other cannot always both avoid colliding and always part; `coordination:stepsAhead` is where an
+cannot hear each other cannot always both avoid colliding and always part; `coordination:lookahead` is where an
 agent says which it gives up. Two vans, whose collision harms both, foresee each other two drives on whoever won,
 and part only where the road has a way round; two robots whose second grab of one mop merely fails can state
 nought, so the lot's winner foresees nothing and takes the mop, the loser foresees one step and yields, and two

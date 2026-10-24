@@ -20,8 +20,11 @@ begins — fork, keys out, forecast in — and in no ground before it: laid into
 everything changeable, it stood under the van today. Read beside every world instead, the butt it says
 will hold water at half past would stand beside the empty butt the present holds. One nothing reads is
 not where the search can be, and lays no ground: a committed step of the agent's own is such a belief,
-and laid, every later step of a plan was a boundary. An end lays no ground: a value stands until its
-key is assigned.
+and laid, every later step of a plan was a boundary. AND A FORECAST'S END TAKES BACK WHAT IT ADDED: a ground
+is laid where a forecast stops holding, and what it added and nothing at that instant adds again goes, so a
+peer's van foreseen at a place for the next two drives stands there for two drives and not for ever, and a
+plan may wait it out where it once had to go round it. Each of a peer's stretches said is followed by the
+next where it ends, the last saying no end, so what a peer said still stands until its key is assigned.
 
 WHY IT HAD TO BECOME A DIFF. A prediction used to be a STATE — a graph holding the reading it
 foretold — and a door handed a reader every graph holding at an instant, so a met-test asked at
@@ -119,9 +122,10 @@ def _foreseen(store: ox.Store, now: datetime) -> list[tuple[datetime, str, str]]
     A BELIEF HOLDING LATER IS LAID WHERE IT BEGINS (#987): a peer's cell from ten seconds on, a round said
     to open at one, a forecast hour received — each a graph the present has not reached, cut whole
     into its changeable part where some text of the pass or some transition reads what it adds, since it
-    then writes it (`_predicted`), and applied where its period begins, superseding by key. Its END is no
-    boundary: a value stands in a ground until something assigns its key, and what an ending MEANS stays
-    its owner's (#645); a flow reads such a graph by its period, beside the ground, and sees it end. One saying nothing the
+    then writes it (`_predicted`), and applied where its period begins, superseding by key. A FORECAST'S
+    END is a boundary too (`_ending`), where what it added goes; any other belief's end is none, a value
+    standing in a ground until something assigns its key, and what an ending MEANS stays its owner's
+    (#645); a flow reads such a graph by its period, beside the ground, and sees it end. One saying nothing the
     pass reads is cut only where another writer's pattern reaches it, and is otherwise read beside every
     world at the world's own period, as every remainder is.
 
@@ -133,6 +137,22 @@ def _foreseen(store: ox.Store, now: datetime) -> list[tuple[datetime, str, str]]
     """
     return sorted((datetime.fromisoformat(r["start"]), r["piece"], r["source"])
                   for r in rows(store, _PIECES_AHEAD_Q, (), now=instant(now)))
+
+
+def _ending(store: ox.Store, now: datetime) -> list[tuple[datetime, str]]:
+    """Every forecast's end ahead of `now` — the instant, and the changeable part cut from it, which goes
+    from the ground laid there — earliest first. A forecast beginning later ends after it begins, so its
+    end is a boundary after the one that laid it."""
+    return sorted((datetime.fromisoformat(r["end"]), r["piece"]) for r in rows(store, _PIECES_ENDING_Q, (), now=instant(now)))
+
+
+#  THE CHANGEABLE PART OF EVERY FORECAST THAT ENDS AFTER `$now`, and when.
+_PIECES_ENDING_Q = """
+SELECT ?piece ?end WHERE {
+  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+               ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source .
+               ?source a orexis:ForecastGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end > $now) } }
+ORDER BY ?end ?piece"""
 
 
 #  THE CHANGEABLE PART OF EVERY BELIEF THAT BEGINS AFTER `$now`, the graph it was cut from and when: laid
@@ -211,7 +231,10 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
     #  THE BOUNDARIES THE STORE KNOWS OF, earliest first — a boundary already reached is the present's, not
     #  ahead — and, where the flows are integrated, the end of what is foreseen, integrated to and laid at
     #  nothing: a crossing is a boundary too, and the predictor says where as the grounds are laid.
-    boundaries = [(at, group) for at, group in _by_instant(ahead, landing) if at > now]
+    ending: dict = {}
+    for at, piece in _ending(store, now):
+        ending.setdefault(at, []).append(piece)
+    boundaries = [(at, group) for at, group in _by_instant(ahead, landing, ending) if at > now]
     if foresight is not None:
         boundaries = sorted([*boundaries, (foresight.horizon, [])], key=lambda b: b[0])
     spoken = frozenset(graphs_of(store, CHANGEABLE_GRAPH, GROUND_GRAPH, POSSIBLE_GRAPH))
@@ -229,6 +252,8 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
         nonlocal here, marks
         changes = (landed or {}).get(at, [])
         added = [*added, *(t for _, adds in changes for t in adds)]
+        #  WHAT A FORECAST ENDING HERE ADDED, and nothing here adds again, goes with it.
+        changes = [*changes, *(([tr for piece in ending.get(at, ()) for tr in _triples(store, piece)], []),)]
         #  EVERYTHING BEGINNING AT ONE INSTANT IS ONE WORLD CHANGE. A boundary is an instant,
         #  not a forecast: two flows that both start at one o'clock describe ONE world, and
         #  forking once per forecast made two grounds with the same name and a period from the
@@ -276,7 +301,7 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
             stands = when
         added = [tr for piece, _ in group for tr in _triples(store, piece)]     # what can change of what begins here
         stands = at
-        if not added and not crossing and at not in landing:
+        if not added and not crossing and at not in landing and at not in ending:
             #  A boundary that changes nothing is not a period — an early-out, not a guard:
             #  the hash below reaches the same answer, having laid the graph first.
             continue
@@ -543,11 +568,11 @@ def _marked(store: ox.Store, ground: str, within: frozenset | None) -> str:
     return digest_of(store, ground)
 
 
-def _by_instant(ahead, landings=()) -> list[tuple[datetime, list[tuple[str, str]]]]:
+def _by_instant(ahead, landings=(), endings=()) -> list[tuple[datetime, list[tuple[str, str]]]]:
     """What is laid, grouped by the instant it applies, earliest first — one entry per BOUNDARY rather
-    than one per graph, each changeable part with the graph it was cut from — and every landing a
-    boundary too, with what applies there or nothing."""
-    out: dict = {at: [] for at in landings}
+    than one per graph, each changeable part with the graph it was cut from — and every landing and every
+    forecast's end a boundary too, with what applies there or nothing."""
+    out: dict = {at: [] for at in [*landings, *endings]}
     for at, piece, source in ahead:
         out.setdefault(at, []).append((piece, source))
     return sorted(out.items())

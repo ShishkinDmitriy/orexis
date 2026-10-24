@@ -13,8 +13,11 @@ was the contested cell, and at a crossing the loser crossed first. A conflict th
 **OF A SILENT PEER, WHERE ITS THINGS MAY BE.** A peer that says nothing says nothing of where it is going, so the
 agent estimates it: each `coordination:Reach` a world's rules ship says where a thing may be a step of its own
 ahead, and asked of where the agent believes the peer's thing now, and again of each answer, as many times as the
-agent's stance says (`coordination:stepsAhead`, two, and one more where the lot it drew alone this round was
-lost), it gives every place the thing may stand by then, each a node of its own, laid as a forecast from now on.
+agent's lookahead says (`coordination:lookahead`, two, and one more where the lot it drew alone this round was
+lost), it gives every place the thing may stand by then, each a node of its own, laid as a forecast from now for
+as many of the longest step a reach says it takes (`coordination:stepS`) — after which only the next sighting
+says, and a plan may wait the window out. A place laid stands while its window does, and is laid again where the
+places move or the window has passed.
 One for the step the peer may take next, one more since what the agent believes of the peer may be a step behind;
 and laid one node per place, so the thing's keys are never crossed into places it cannot stand. The one constraint
 over the thing, the world's own, keeps the agent's plans out of every place laid, and a sighting that moves the
@@ -39,7 +42,7 @@ when nothing lays it any more.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pyoxigraph as ox
 
@@ -49,7 +52,7 @@ from agent.stance import stance
 from agent.store import PREFIXES, Raw, bind, catalogue_of, entry, forget_graph, graphs_of, rows, update
 
 from .holdings import _TEXTS_Q, Holding, _heard, _key_of, _present
-from .ontology import (AHEAD, CONSTRAINT_GRAPH, STEPS_AHEAD, answer_graph, conflicts_graph, laid_graph, laid_root,
+from .ontology import (CONSTRAINT_GRAPH, LOOKAHEAD, LOOKING, answer_graph, conflicts_graph, laid_graph, laid_root,
                        question_graph)
 
 _STANDING_Q = """
@@ -69,6 +72,7 @@ def lay(store: ox.Store, me: str, at: datetime) -> list[str]:
         return []
     beliefs = graphs_of(store, BELIEF)
     wanted: dict[str, Holding] = {}
+    foreseen: set[str] = set()
     for r in rows(store, _STANDING_Q, (), graph=Raw(f"<{conflicts_graph(me)}>")):
         won = rows(store, _WON_Q, beliefs, draw=r["draw"])
         peer, constraint = r["peer"], r["constraint"]
@@ -76,8 +80,10 @@ def lay(store: ox.Store, me: str, at: datetime) -> list[str]:
         if won and won[0]["w"] == me:                   # the winner lays the loser's step in flight alone
             theirs = [h for h in theirs if h.start is None or h.taken]
         if r.get("silent") == "true":                   # and of a silent peer, where its things may be
-            ahead = int(stance(store, STEPS_AHEAD, AHEAD)) + (1 if won and won[0]["w"] != me else 0)
-            theirs += _reach(store, peer, constraint, ahead, at)
+            ahead = int(stance(store, LOOKAHEAD, LOOKING)) + (1 if won and won[0]["w"] != me else 0)
+            reached = _reach(store, peer, constraint, ahead, at)
+            foreseen |= {h.thing for h in reached}
+            theirs += reached
         theirs = [h for h in theirs if h.start is None or not _refused(store, h, at)]
         for n, h in enumerate(_timeline(theirs)):
             if h.end is None or h.end > at:
@@ -88,8 +94,10 @@ def lay(store: ox.Store, me: str, at: datetime) -> list[str]:
         forget_graph(store, graph)
         written.append(graph)
     for graph, h in sorted(wanted.items()):
-        if graph in laid and _holding_in(store, graph) == h:
-            continue
+        held = _holding_in(store, graph) if graph in laid else None
+        if held == h or (held is not None and h.thing in foreseen and held.thing == h.thing
+                         and held.values == h.values and held.end is not None and held.end > at):
+            continue                                # a place foreseen stands while its window does
         forget_graph(store, graph)
         facts = " ".join(f"<{h.thing}> <{p}> {_rendered(v)} ." for p, v in h.values)
         update(store, f"INSERT DATA {{ GRAPH <{graph}> {{ {facts} }} {entry(store, graph, FORECAST, RECEIVED, me, h.start, h.end)} }}")
@@ -100,8 +108,9 @@ def lay(store: ox.Store, me: str, at: datetime) -> list[str]:
 
 #  THE THINGS A PEER ACTS FOR; WHAT THE AGENT BELIEVES EACH IS; AND EVERY REACH A WORLD'S RULES SHIP.
 _ACTS_FOR_Q = "SELECT ?t WHERE { $peer orexis:actsFor ?t } ORDER BY ?t"
-_REACH_Q = """SELECT ?text WHERE { ?rule a coordination:Reach ; sh:construct ?text .
-                                   FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule"""
+_REACH_Q = """SELECT ?text ?step WHERE { ?rule a coordination:Reach ; sh:construct ?text .
+                                         OPTIONAL { ?rule coordination:stepS ?step }
+                                         FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule"""
 _RULES_GRAPH = "http://www.w3.org/ns/shacl#RulesGraph"
 _TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
@@ -109,14 +118,17 @@ _TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 def _reach(store: ox.Store, peer: str, constraint: str, ahead: int, at: datetime) -> list[Holding]:
     """Every place a thing `peer` acts for may stand `ahead` of its steps on, as the world's reaches say: a holding
     per place, of a node standing for the thing there, with the kinds and the values on `constraint`'s key the reach
-    gives it, from `at` on — the places it holds now left out, which are what sensing says. Each reach is asked over
+    gives it, from `at` for `ahead` of the longest step a reach says (`coordination:stepS`), for ever where one says none — the places it holds now left out, which are what sensing says. Each reach is asked over
     everything the agent believes now, the thing's own values on the key replaced by the place it is foreseen from,
     so a reach, about `$this`, the thing, may read the world — the free tools a robot may pick up — and a thing holding nothing on the key, a
     robot with free hands, is foreseen too."""
     key = _key_of(store, constraint)
-    texts = [r["text"] for r in rows(store, _REACH_Q, graphs_of(store, _RULES_GRAPH))]
+    reaches = rows(store, _REACH_Q, graphs_of(store, _RULES_GRAPH))
+    texts = [r["text"] for r in reaches]
     if not key or not texts:
         return []
+    steps = [float(r["step"]) for r in reaches if r.get("step") is not None]
+    until = at + timedelta(seconds=ahead * max(steps)) if len(steps) == len(reaches) else None
     present = _present(store, at)
     common = graphs_of(store, BELIEF, common=True)
     order = lambda pv: (pv[0], str(pv[1]))                      # noqa: E731
@@ -151,7 +163,7 @@ def _reach(store: ox.Store, peer: str, constraint: str, ahead: int, at: datetime
                 for q in held:
                     scratch.remove(q)
             frontier = nxt
-        out += [Holding(node, values, at, None) for node, values in sorted(places.items())]
+        out += [Holding(node, values, at, until) for node, values in sorted(places.items())]
     return out
 
 
