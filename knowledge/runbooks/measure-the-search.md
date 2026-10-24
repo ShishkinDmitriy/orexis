@@ -918,3 +918,40 @@ refused as it is taken, since the take-time check asks the held constraints of t
 ([two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it](/decisions/two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it.md));
 the passing-place delivery stands on no hedge, held by `world/lane/tests/test_lane.py`.
 
+# Two couriers: what an encounter costs (2026-10-24, #923)
+
+The lane with two couriers, each a [coordinator](/domain/coordination/coordinator.md) driving its own van
+and holding the courier's constraints, walked as `world/lane/tests/test_lane.py` walks it: a fix every ten
+seconds of the world's time, a drive answered forty-five seconds on, the receivers hearing four cells. Each
+figure is one walk on the development container, read off the test's own loop and the documents its bus
+carried; the counts of answers and draw documents are what the tests pin, the rest is the day's.
+
+| encounter | ticks | in range from | drives A, B | questions A, B | answers A, B | draw documents, each |
+|---|---|---|---|---|---|---|
+| head on, B first | 61 (10 min 10 s) | tick 5 | 12, 7 | 16, 12 | 12, 16 | 2 |
+| the crossing, A first | 62 (10 min 20 s) | tick 15 | 6, 8 | 12, 22 | 22, 12 | 2 |
+| the crossing, B first | 48 (8 min) | tick 15 | 6, 8 | 18, 16 | 16, 18 | 2 |
+| head on, B's reveals lost to A | both delivered | tick 5 | | | | 2 a round, 4 rounds |
+| head on, B's commitments lost to A | 67 (11 min 10 s) | tick 5 | | | | 2 a round, 4 rounds |
+
+**What the figures say.** A [question](/domain/coordination/question.md) is said once per change of the
+asker's holdings while the peer is in range, and once more each patience, so an encounter costs a question
+roughly per drive each side takes in range, not one per pass and not one per encounter; every question is
+answered, and an answer carries only the holdings that meet the asked ones. A draw decided in its first
+round costs each agent two documents, a commitment and a reveal; a round left undecided for the agent's
+patience, sixty seconds unless its self graph says otherwise, restarts in the next, two documents again,
+and past three rounds the peer is silent to it. The crossing A wins takes longer than the one B wins
+because B, the loser, waits a cell short of the lane; the winner's plan is found again once it has won
+([commitment](/domain/execution/commitment.md)). Head on costs A twelve drives against six: the loser gives
+way off the row, round the hedges, and comes back.
+
+**Where a document is lost** (`test_a_draw_document_lost_restarts_the_draw_and_both_wait`), A's draw
+restarts a round on each patience, to the three rounds it states of itself, and B is silent to it: with
+B's reveals lost B concludes each round itself and drives on while A yields; with B's commitments lost
+neither concludes, both yield, and they still part, each planning round what the other said, in sixty-seven
+ticks. No two vans stood at one position in any walk
+([two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it](/decisions/two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it.md)).
+
+**Real time.** The head-on walk took 271 s of the development container's time for its 61 ticks, the
+crossings 141 s and 110 s: about four seconds a tick for the two agents together, the planner's pass most of
+it, which is why the lane's suite runs for a quarter of an hour.
