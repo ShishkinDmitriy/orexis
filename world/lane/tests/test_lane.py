@@ -26,6 +26,9 @@ from agent.store import graphs_of, rows
 from agent.transport.mqtt.driver import Mqtt
 from simulation.simulator import Simulator
 
+#  EVERY TEST HERE WALKS THE LANE'S AGENTS through the world's time: run where CI runs, never in the local gate.
+pytestmark = pytest.mark.walk
+
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 L = "http://example.org/orexis/world/lane#"
@@ -263,8 +266,8 @@ def test_a_van_never_drives_onto_a_hedge_its_radar_has_shown(monkeypatch, tmp_pa
 _HEAD_ON = {"world.ttl": [("sim:initialValue 0 ; sim:jitter 0 ] ;    # van B row 0", "sim:initialValue 1 ; sim:jitter 0 ] ;    # van B row 1")],
             "beliefs/courier_b.state.ttl": [(":parcel_b courier:x 6 ; courier:y 0 .", ":parcel_b courier:x 5 ; courier:y 1 ."),
                                             (":east_road courier:x 6 ; courier:y 0 ;", ":east_road courier:x 0 ; courier:y 0 ;")],
-            "beliefs/courier_a.self.ttl": [(":courier_a planning:budget 256 .", f':courier_a planning:budget 256 ; coordination:secret "{"1" * 64}" .')],
-            "beliefs/courier_b.self.ttl": [(":courier_b planning:budget 256 .", f':courier_b planning:budget 256 ; coordination:secret "{"2" * 64}" .')]}
+            "beliefs/courier_a.self.ttl": [(":courier_a planning:budget 256 .", f':courier_a planning:budget 256 ; coordination:secret "{"0" * 64}" .')],
+            "beliefs/courier_b.self.ttl": [(":courier_b planning:budget 256 .", f':courier_b planning:budget 256 ; coordination:secret "{"3" * 64}" .')]}
 
 
 def test_two_couriers_meeting_head_on_draw_lots_and_the_loser_gives_way(monkeypatch, tmp_path):
@@ -330,14 +333,13 @@ def _conflict(runtime) -> dict:
     return found[0] if found else {}
 
 
-@pytest.mark.parametrize("lost", ["Reveal", "Commitment"])
-def test_a_draw_document_lost_restarts_the_draw_and_both_wait(monkeypatch, tmp_path, lost):
-    """Head on, with every one of B's reveals — or every one of its commitments — lost on the way to A. A's
-    draw never completes: it restarts a round on past A's patience, again past the next, and past the rounds A
-    states of itself B is taken as silent and yielded to as a loser is; A yields the whole while, and no two
-    vans ever stand at one position. Losing B's reveals alone, B hears everything, concludes each round's draw
-    and drives on. Losing B's commitments, B never hears A reveal either — A reveals only once it has heard B
-    commit — so B concludes A silent too, and both wait."""
+def test_two_couriers_silent_to_each_other_both_yield_and_still_part(monkeypatch, tmp_path, lost="Commitment"):
+    """Head on, with every one of B's commitments lost on the way to A. Neither draw completes: A never hears B
+    commit, and A reveals only once it has, so B never hears A reveal either. Each restarts a round on past its
+    patience, and past the rounds each states of itself takes the other as silent and yields as a loser does —
+    and still they part, each planning round what the other said, and no two vans ever stand at one position.
+    What each step of that does to the store is held by the cases of `conclude` and `lay`
+    (`agent/coordination/tests/conclude/`, `lay/`); this walk holds the two minds together to the road."""
     bus, time = _lane(monkeypatch, variant(tmp_path, f"lost_{lost}", _HEAD_ON))
     bus.dropping = lambda topic, payload: topic.startswith("agents/courier_a/") and f"draw#{lost}".encode() in payload
     bus.simulator.open()
@@ -358,25 +360,21 @@ def test_a_draw_document_lost_restarts_the_draw_and_both_wait(monkeypatch, tmp_p
             together.append((time["at"], a))
         if _at(bus.runtime.beliefs).get("parcel_a") == (6, 1) and _at(bus.runtimes["courier_b"].beliefs).get("parcel_b") == (0, 0):
             break                           # both delivered; a parcel aboard its van stands nowhere
-    print(f"{lost} lost: {len(positions)} ticks; rounds {rounds}; won {won}; positions {positions}")
     assert bus.dropped and all(f"draw#{lost}".encode() in p for _, p in bus.dropped), f"B's {lost}s were lost: {len(bus.dropped)}"
     assert not together, f"two vans stood at one position: {together}"
     assert [r for r, _ in rounds if r] == sorted(r for r, _ in rounds if r) and {r for r, _ in rounds if r} == {"0", "1", "2", "3"}, \
         f"A's draw restarted a round on past each patience, to the rounds A states: {rounds}"
     assert not any(w for w, _ in won), "A never concluded a winner"
     assert _conflict(bus.runtime).get("silent") == "true", "and past A's rounds, B is silent to it"
-    if lost == "Reveal":
-        assert any(w for _, w in won), "B, hearing everything, concluded a winner"
-    else:
-        assert _conflict(bus.runtimes["courier_b"]).get("silent") == "true", "B never heard A reveal: A is silent to B too"
+    assert _conflict(bus.runtimes["courier_b"]).get("silent") == "true", "B never heard A reveal: A is silent to B too"
     assert _at(bus.runtime.beliefs).get("parcel_a") == (6, 1) and _at(bus.runtimes["courier_b"].beliefs).get("parcel_b") == (0, 0), \
         f"and both parcels were delivered: {positions[-1]}"
 
 
 
 #  A CROSSING (#923): van B down column 5 from (5, -4) to its parcel's road at (5, 4), across the lane van A
-#  drives east along; both are due at (5, 1) after five drives. The two secrets decide the draw: with 5s and 6s A
-#  goes first, with 0s and 5s B does.
+#  drives east along; both are due at (5, 1) after five drives. The two secrets decide the draw: with 0s and 1s A
+#  goes first, with 0s and 3s B does.
 def _crossing(a: str, b: str) -> dict:
     return {"world.ttl": [("sim:initialValue 6 ; sim:jitter 0 ] ;    # van B column 6", "sim:initialValue 5 ; sim:jitter 0 ] ;    # van B column 5"),
                           ("sim:initialValue 0 ; sim:jitter 0 ] ;    # van B row 0", "sim:initialValue -4 ; sim:jitter 0 ] ;    # van B row -4")],
@@ -386,7 +384,7 @@ def _crossing(a: str, b: str) -> dict:
             "beliefs/courier_b.self.ttl": [(":courier_b planning:budget 256 .", f':courier_b planning:budget 256 ; coordination:secret "{b * 64}" .')]}
 
 
-@pytest.mark.parametrize("secrets, first", [(("5", "6"), "courier_a"), (("0", "5"), "courier_b")], ids=["a_first", "b_first"])
+@pytest.mark.parametrize("secrets, first", [(("0", "1"), "courier_a"), (("0", "3"), "courier_b")], ids=["a_first", "b_first"])
 def test_two_couriers_at_a_crossing_draw_lots_and_the_winner_goes_first(monkeypatch, tmp_path, secrets, first):
     """A drives east down row 1 and B north up column 5, each due at (5, 1). Each asks, answers and draws, and
     both conclude alike who goes first. The winner drives straight across, its plan found again once it has won

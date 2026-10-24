@@ -18,7 +18,7 @@ What the function must leave is `<case>.trig` with `<case>.diff` applied, compar
 it as one. The suites that use it today: `agent/planning/tests/` (`admit`, `derive_wants`,
 `expand`, `lay_ground`, `plans`, `prepare_ground`, `reroot`, `scope_actions`, `take`, `weigh`),
 `agent/sensing/tests/` (`received`, `missed`), `agent/prediction/tests/` (`predict`),
-`agent/belief/tests/` (`revise`). The machinery is `agent/conftest.py`, reached by the
+`agent/belief/tests/` (`revise`), `agent/coordination/tests/` (`conclude`, `lay`). The machinery is `agent/conftest.py`, reached by the
 `snapshots` fixture: `stand_in` loads a case, `held_to_diff` holds a store to its diff,
 `orphans_in` finds a diff whose case is gone. AGENTS.md's rule is the one that matters: **a case
 is held to the whole store it leaves, never to a reading of it** — a behaviour change is a diff

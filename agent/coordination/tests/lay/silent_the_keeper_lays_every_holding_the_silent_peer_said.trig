@@ -1,0 +1,116 @@
+# silent_the_keeper_lays_every_holding_the_silent_peer_said
+#
+# The undecided case with the peer taken as silent: the draw restarted past the rounds the keeper states of
+# itself, every reveal of the peer's lost on the way. The keeper yields to a silent peer as a loser yields to a
+# winner, so it lays every holding the peer said, the same four stretches the undecided case lays, and goes
+# on doing so for as long as the conflict stands.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix coordination: <http://example.org/orexis/coordination#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix coordinated: <http://example.org/orexis/graph/coordination/keeper/> .
+@prefix conflict: <http://example.org/orexis/graph/coordination/conflict/> .
+@prefix answered: <http://example.org/orexis/graph/coordination/peer/answer/keeper/> .
+@prefix laid: <http://example.org/orexis/graph/coordination/keeper/laid/peer/no_two_vans/> .
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :constraints a orexis:Graph .
+  :constraints a planning:ConstraintGraph .
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :self a orexis:BeliefGraph .
+  :self a orexis:Graph .
+  :self a orexis:SelfGraph .
+  :state a orexis:BeliefGraph .
+  :state a orexis:Graph .
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  answered:no_two_vans a coordination:AnswerGraph .
+  answered:no_two_vans a orexis:Graph .
+  answered:no_two_vans a speech:StatementGraph .
+  answered:no_two_vans orexis:arrivedBy orexis:Received .
+  coordinated:conflicts a orexis:BeliefGraph .
+  coordinated:conflicts a orexis:Graph .
+  coordinated:conflicts orexis:arrivedBy orexis:Derived .
+  coordinated:conflicts orexis:ownedBy :keeper .
+}
+GRAPH :constraints {
+  :no_two_vans a planning:Constraint .
+  :no_two_vans planning:unmetWhen :no_two_vans.select .
+  :no_two_vans.select sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+SELECT $this ?value WHERE { $this a courier:Van ; courier:x ?x ; courier:y ?y .
+                            ?value a courier:Van ; courier:x ?x ; courier:y ?y . FILTER(?value != $this) }""" .
+}
+GRAPH :ontology {
+  coordination:AnswerGraph rdfs:subClassOf speech:StatementGraph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:CatalogueGraph rdfs:subClassOf orexis:Graph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:OntologyGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:SelfGraph rdfs:subClassOf orexis:BeliefGraph .
+  planning:ConstraintGraph rdfs:subClassOf orexis:Graph .
+  speech:StatementGraph rdfs:subClassOf orexis:Graph .
+}
+GRAPH :self {
+  :keeper a orexis:Self .
+  :keeper orexis:actsFor :van_k .
+  :keeper planning:holds :no_two_vans .
+}
+GRAPH :state {
+  :van_k courier:x 0 .
+  :van_k courier:y 1 .
+  :van_p courier:x 4 .
+  :van_p courier:y 1 .
+}
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:localId "keeper" .
+  :peer a orexis:Agent .
+  :peer orexis:actsFor :van_p .
+  :van_k a courier:Van .
+  :van_p a courier:Van .
+}
+GRAPH answered:no_two_vans {
+  :answer a coordination:Answer .
+  :answer coordination:answeredBy :peer .
+  :answer coordination:holding :holding_0 .
+  :answer coordination:holding :holding_1 .
+  :answer coordination:holding :holding_2 .
+  :answer coordination:over :no_two_vans .
+  :holding_0 a coordination:Holding .
+  :holding_0 coordination:of :van_p .
+  :holding_0 coordination:until "2026-01-01T12:01:30+00:00"^^xsd:dateTime .
+  :holding_0 courier:x 4 .
+  :holding_0 courier:y 1 .
+  :holding_1 a coordination:Holding .
+  :holding_1 coordination:from "2026-01-01T12:01:00+00:00"^^xsd:dateTime .
+  :holding_1 coordination:of :van_p .
+  :holding_1 coordination:until "2026-01-01T12:02:30+00:00"^^xsd:dateTime .
+  :holding_1 courier:x 3 .
+  :holding_1 courier:y 1 .
+  :holding_2 a coordination:Holding .
+  :holding_2 coordination:from "2026-01-01T12:02:00+00:00"^^xsd:dateTime .
+  :holding_2 coordination:of :van_p .
+  :holding_2 courier:x 2 .
+  :holding_2 courier:y 1 .
+}
+GRAPH coordinated:conflicts {
+  conflict:2216b9a9c788124d a coordination:Conflict .
+  conflict:2216b9a9c788124d coordination:draw conflict:2216b9a9c788124d.round.0 .
+  conflict:2216b9a9c788124d coordination:over :no_two_vans .
+  conflict:2216b9a9c788124d coordination:round 0 .
+  conflict:2216b9a9c788124d coordination:silent true .
+  conflict:2216b9a9c788124d coordination:since "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  conflict:2216b9a9c788124d coordination:standing true .
+  conflict:2216b9a9c788124d coordination:with :peer .
+}

@@ -72,7 +72,11 @@ testpaths = ["agent", "simulation", "world"]
 
 # `importlib` is the mode pytest recommends and the one that does not derive a module name from
 # a path; it stops inserting directories into sys.path, which is why `pythonpath` is here.
-addopts = "-n auto --import-mode=importlib"
+#  `-m "not walk"`: a WALK boots a world's agents and drives them pass after pass through the world's time, minutes
+#  each, so the local gate leaves them out and CI runs them on every pull request (`-m ""`, .github/workflows/gates.yml).
+#  What a function does to the store is held by its snapshot cases, which walk nothing (.claude/skills/snapshot-tests).
+addopts = '-n auto --import-mode=importlib -m "not walk"'
+markers = ["walk: boots a world's agents and walks them through the world's time; run in CI, not in the local gate"]
 pythonpath = ["tests"]
 # rdflib's own `re.sub` call, once per REPLACE a requirement's select evaluates — onboarding's url
 # shapes run thousands — and nothing of ours to change.

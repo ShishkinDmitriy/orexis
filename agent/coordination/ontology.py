@@ -59,8 +59,9 @@ def conflict_of(one: str, other: str, constraint: str) -> str:
 
 def draw_of(conflict: str, round_: int) -> str:
     """The draw of one round of a conflict: so nothing of another round, conflict or pair can be said
-    into it."""
-    return f"{conflict}/round/{round_}"
+    into it. Dotted, as a name within a name is spelled here, so a case abbreviates it under the conflict's
+    prefix (`.claude/skills/snapshot-tests`)."""
+    return f"{conflict}.round.{round_}"
 
 
 def conflicts_graph(me: str) -> str:

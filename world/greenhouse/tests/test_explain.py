@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import os
 import time
+import pytest
+
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -151,6 +153,7 @@ class _Bus:
             self.simulator.command(topic, payload)
 
 
+@pytest.mark.walk
 def test_the_growers_season_is_reported_from_what_its_sinks_wrote(monkeypatch):
     """The greenhouse played by its simulator for `HOURS`, a reading every ten minutes, the grower
     dosing the bed as it dries, with a history and a metrics sink recording and a window a pass long:

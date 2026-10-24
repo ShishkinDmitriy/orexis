@@ -718,10 +718,13 @@ class Runtime:
             n += 1
             now = clock.now()
             #  THE PASS'S PARTS, in real seconds, kept where anybody hears the pass — by
-            #  `perf_counter`, never the clock.
+            #  `perf_counter`, never the clock. THE PASS BEGINS BEFORE ITS LAPS DO: made first, the laps
+            #  marked their start before the pass read its own, and the first part carried the gap between
+            #  the two reads, which on a loaded runner outgrew the figures' rounding and summed the parts to
+            #  more than the whole (the hanoi metrics test, red once on CI for it).
+            started = time.perf_counter()
             self._laps = Laps() if self.passed.connected else None
             self._again = False
-            started = time.perf_counter()
             self.drain(now)
             self._passed(time.perf_counter() - started)
             if not self._held:

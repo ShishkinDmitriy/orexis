@@ -163,6 +163,9 @@ _INTENTIONS_Q = "SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a execution:Inte
 #  WHAT A WANT'S MET-TEST TARGETS — one node per instance a coupled want is about.
 _TARGETS_Q = "SELECT ?t WHERE { GRAPH ?g { $w planning:metWhen ?m . ?m sh:targetNode ?t } }"
 
+#  EVERY TEST HERE WALKS A WORLD'S AGENT through the world's time: run where CI runs, never in the local gate.
+pytestmark = pytest.mark.walk
+
 
 #  THE LANE AS ONE MIND: how the shipped lane's documents are rewritten. Van A's fix and van B's, as the lane
 #  poses them, each line the place a pose puts its number.

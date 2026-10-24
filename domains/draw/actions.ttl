@@ -41,7 +41,7 @@ draw:Committing a orexis:Action ;
                 FILTER NOT EXISTS { ?draw coordination:wonBy ?winner }
                 BIND(SHA256(CONCAT(?secret, "|", STR(?draw))) AS ?number)
                 BIND(SHA256(CONCAT(STR(?draw), "|", ?number)) AS ?hash)
-                BIND(IRI(CONCAT(STR(?draw), "/commitment/", REPLACE(STR(?me), "^.*[#/]", ""))) AS ?said) }""" ] ] .
+                BIND(IRI(CONCAT(STR(?draw), ".commitment.", REPLACE(STR(?me), "^.*[#/]", ""))) AS ?said) }""" ] ] .
 
 draw:Revealing a orexis:Action ;
     rdfs:label "reveal my number in a draw the peer has committed to" ;
@@ -69,4 +69,4 @@ draw:Revealing a orexis:Action ;
                 FILTER NOT EXISTS { ?conflict coordination:silent true }
                 FILTER NOT EXISTS { ?draw coordination:wonBy ?winner }
                 BIND(SHA256(CONCAT(?secret, "|", STR(?draw))) AS ?number)
-                BIND(IRI(CONCAT(STR(?draw), "/reveal/", REPLACE(STR(?me), "^.*[#/]", ""))) AS ?said) }""" ] ] .
+                BIND(IRI(CONCAT(STR(?draw), ".reveal.", REPLACE(STR(?me), "^.*[#/]", ""))) AS ?said) }""" ] ] .

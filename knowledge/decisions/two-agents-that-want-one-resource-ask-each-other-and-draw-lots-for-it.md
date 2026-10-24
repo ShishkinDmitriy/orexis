@@ -51,7 +51,7 @@ description: >-
 > flight already finds the old way plus the wait on every road a world here poses; the sovereign took the
 > re-plan.
 >
-> **Amended 2026-10-23, again** (#923's lost documents, `test_a_draw_document_lost_restarts_the_draw_and_both_wait`):
+> **Amended 2026-10-23, again** (#923's lost documents, `test_two_couriers_silent_to_each_other_both_yield_and_still_part`):
 > **a draw document lost on the way restarts the draw, and two agents silent to each other still part.**
 > With every reveal of B's lost to A, A's draw restarts a round on past each patience, to the rounds A states
 > of itself, and B is silent to it; B, hearing everything, concludes each round and drives on, and A yields

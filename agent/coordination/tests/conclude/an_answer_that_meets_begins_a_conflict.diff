@@ -1,0 +1,29 @@
+--- case
++++ expected
+@@ -44,6 +44,11 @@
+   :state a orexis:Graph .
+   :world a orexis:BeliefGraph .
+   :world a orexis:Graph .
++  coordinated:conflicts a orexis:BeliefGraph .
++  coordinated:conflicts a orexis:Graph .
++  coordinated:conflicts orexis:arrivedBy orexis:Derived .
++  coordinated:conflicts orexis:hash "sha256:4eb4a86dcb30416eb3f09397bc13995988fb36ff1f045121a7a3253532b248db" .
++  coordinated:conflicts orexis:ownedBy :keeper .
+ }
+ GRAPH :constraints {
+   :no_two_vans a planning:Constraint .
+@@ -86,3 +91,14 @@
+   :van_k a courier:Van .
+   :van_p a courier:Van .
+ }
++
++
++GRAPH coordinated:conflicts {
++  conflict:2216b9a9c788124d a coordination:Conflict .
++  conflict:2216b9a9c788124d coordination:draw conflict:2216b9a9c788124d.round.0 .
++  conflict:2216b9a9c788124d coordination:over :no_two_vans .
++  conflict:2216b9a9c788124d coordination:round 0 .
++  conflict:2216b9a9c788124d coordination:since "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  conflict:2216b9a9c788124d coordination:standing true .
++  conflict:2216b9a9c788124d coordination:with :peer .
++}

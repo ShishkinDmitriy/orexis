@@ -18,11 +18,16 @@ import shutil
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import pytest
+
 from agent import clock
 from agent.runtime import Runtime, boot
 from agent.store import graphs_of, rows
 from agent.transport.mqtt.driver import Mqtt
 from simulation.simulator import Simulator
+
+#  EVERY TEST HERE WALKS THE LAYBY'S AGENT through the world's time: run where CI runs, never in the local gate.
+pytestmark = pytest.mark.walk
 
 WORLD = Path(__file__).resolve().parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)

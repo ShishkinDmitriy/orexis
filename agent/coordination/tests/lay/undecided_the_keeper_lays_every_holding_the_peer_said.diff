@@ -1,0 +1,60 @@
+--- case
++++ expected
+@@ -35,6 +35,30 @@
+   coordinated:conflicts a orexis:Graph .
+   coordinated:conflicts orexis:arrivedBy orexis:Derived .
+   coordinated:conflicts orexis:ownedBy :keeper .
++  laid:0 a orexis:BeliefGraph .
++  laid:0 a orexis:ForecastGraph .
++  laid:0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:01:30+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:01:00+00:00"^^xsd:dateTime ] .
++  laid:0 orexis:arrivedBy orexis:Received .
++  laid:0 orexis:hash "sha256:5f1db75da2ee0a6a97861c89e098c3d1f9d8517a77002326840648cde0319cb5" .
++  laid:0 orexis:ownedBy :keeper .
++  laid:1 a orexis:BeliefGraph .
++  laid:1 a orexis:ForecastGraph .
++  laid:1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:02:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:01:30+00:00"^^xsd:dateTime ] .
++  laid:1 orexis:arrivedBy orexis:Received .
++  laid:1 orexis:hash "sha256:8839407ac1faf8ab4849b1004b3cf0dd5f646cd726bf5ba65f0fd9195b7f9ad7" .
++  laid:1 orexis:ownedBy :keeper .
++  laid:2 a orexis:BeliefGraph .
++  laid:2 a orexis:ForecastGraph .
++  laid:2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:02:30+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:02:00+00:00"^^xsd:dateTime ] .
++  laid:2 orexis:arrivedBy orexis:Received .
++  laid:2 orexis:hash "sha256:0b552708a91d899ee0f92e78a20e064ef55692493b2692c54faff54fd7353eee" .
++  laid:2 orexis:ownedBy :keeper .
++  laid:3 a orexis:BeliefGraph .
++  laid:3 a orexis:ForecastGraph .
++  laid:3 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:02:30+00:00"^^xsd:dateTime ] .
++  laid:3 orexis:arrivedBy orexis:Received .
++  laid:3 orexis:hash "sha256:df36a1ea0e736a54ba84cb238348857b43db1c8353b23b93d2401e10418ac98f" .
++  laid:3 orexis:ownedBy :keeper .
+ }
+ GRAPH :constraints {
+   :no_two_vans a planning:Constraint .
+@@ -105,3 +129,26 @@
+   conflict:2216b9a9c788124d coordination:standing true .
+   conflict:2216b9a9c788124d coordination:with :peer .
+ }
++
++
++GRAPH laid:0 {
++  :van_p courier:x 3 .
++  :van_p courier:x 4 .
++  :van_p courier:y 1 .
++}
++
++GRAPH laid:1 {
++  :van_p courier:x 3 .
++  :van_p courier:y 1 .
++}
++
++GRAPH laid:2 {
++  :van_p courier:x 2 .
++  :van_p courier:x 3 .
++  :van_p courier:y 1 .
++}
++
++GRAPH laid:3 {
++  :van_p courier:x 2 .
++  :van_p courier:y 1 .
++}
