@@ -12,8 +12,9 @@ for the asker, the peer and the constraint and holds over the asker's patience f
 said again each time the holdings change, and once it has lapsed — never otherwise, so a question costs
 one document per change or per patience, and not one per pass; and a peer that hears it holding knows the
 asker is still asking, whether or not it sees the asker (knowledge/domain/coordination/conflict.md). Said
-again while the one before still holds, it keeps the start of the asking, so its period says how long the
-agent has been asking, which is what a peer that never answers is concluded silent by.
+again, lapsed or not, it keeps the start of the first asking, so its period says how long the agent has been
+asking, which is what a peer that never answers is concluded silent by: started again each time it lapsed, a
+question to a peer that heard nothing was half a patience old when the drive into the peer's way was taken.
 """
 
 from __future__ import annotations
@@ -54,7 +55,7 @@ def ask(store: ox.Store, me: str, at: datetime) -> list[tuple[str, ox.Store]]:
                 continue
             about = [("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", ox.NamedNode(QUESTION)),
                      (COORDINATION + "asks", ox.NamedNode(me)), (COORDINATION + "over", ox.NamedNode(constraint))]
-            began = _began(store, graph) if graph in holding else None
+            began = _began(store, graph)
             out.append((peer, _said(graph, QUESTION_GRAPH, graph, about, mine, (began or at, at + patience))))
     return out
 
@@ -63,7 +64,7 @@ _BEGAN_Q = """SELECT ?start WHERE { GRAPH $cat { $graph dcterms:temporal ?p . ?p
 
 
 def _began(store: ox.Store, graph: str) -> datetime | None:
-    """When the asking a question still holding began: the start of its period."""
+    """When the agent first asked a question it has said before: the start of its period, kept each time it is said."""
     found = rows(store, _BEGAN_Q, (), cat=Raw(f"<{catalogue_of(store)}>"), graph=Raw(f"<{graph}>"))
     return datetime.fromisoformat(found[0]["start"]) if found else None
 

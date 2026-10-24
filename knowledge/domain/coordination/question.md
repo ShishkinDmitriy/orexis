@@ -16,8 +16,8 @@ and each of the asker's [holdings](/domain/coordination/holding.md) under it, `c
 graph is named for the asker, the peer and the constraint, so it is said again under one name and the peer
 holds the latest (`agent/coordination/ask.py`). It holds until the asker's patience
 (`coordination:patienceS`) after it was last said, stated as the graph's own period, which starts where the
-asking began: said again before it lapsed, it keeps that start, so its period says how long the peer has been
-asked - and a peer that has answered nothing for a patience of it is silent.
+agent first asked it: said again, lapsed or not, it keeps that start, so its period says how long the peer has
+been asked - and a peer that has answered nothing for a patience of it is silent.
 
 # Whom, and when
 
