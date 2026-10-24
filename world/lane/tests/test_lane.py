@@ -49,6 +49,10 @@ class Bus:
         self.simulator = None
         self.commands: list[tuple[str, dict]] = []
         self.told: list[tuple[str, bytes]] = []
+        #  WHAT THE BUS LOSES: a test's predicate over (topic, payload) for a document that never arrives, and
+        #  the ones it lost.
+        self.dropping = lambda topic, payload: False
+        self.dropped: list[tuple[str, bytes]] = []
 
     @property
     def runtime(self) -> Runtime:
@@ -65,7 +69,9 @@ class Bus:
         elif topic.startswith("agents/"):
             self.told.append((topic, payload))
             agent = topic.split("/")[1]
-            if agent in self.runtimes:
+            if self.dropping(topic, payload):
+                self.dropped.append((topic, payload))
+            elif agent in self.runtimes:
                 self.runtimes[agent].deliver(topic, payload, clock.now())
         else:
             self.commands.append((topic, json.loads(payload)))
@@ -310,6 +316,62 @@ def test_two_couriers_meeting_head_on_draw_lots_and_the_loser_gives_way(monkeypa
 
 
 _WON_Q = "SELECT ?w WHERE { ?draw <http://example.org/orexis/coordination#wonBy> ?w }"
+#  THE CONFLICT OVER THE TWO-VANS CONSTRAINT, as the courier concluded it: its round, whether it stands, whether the
+#  peer is silent to it, and who won its present draw.
+_CONFLICT_Q = """SELECT ?round ?silent ?standing ?w WHERE { ?c a <http://example.org/orexis/coordination#Conflict> ;
+  <http://example.org/orexis/coordination#over> <http://example.org/orexis/courier#no_two_vans_at_one_position> ;
+  <http://example.org/orexis/coordination#round> ?round ; <http://example.org/orexis/coordination#draw> ?d .
+  OPTIONAL { ?c <http://example.org/orexis/coordination#silent> ?silent }
+  OPTIONAL { ?c <http://example.org/orexis/coordination#standing> ?standing } OPTIONAL { ?d <http://example.org/orexis/coordination#wonBy> ?w } }"""
+
+
+def _conflict(runtime) -> dict:
+    found = rows(runtime.beliefs, _CONFLICT_Q, graphs_of(runtime.beliefs, "http://example.org/orexis#BeliefGraph"))
+    return found[0] if found else {}
+
+
+@pytest.mark.parametrize("lost", ["Reveal", "Commitment"])
+def test_a_draw_document_lost_restarts_the_draw_and_both_wait(monkeypatch, tmp_path, lost):
+    """Head on, with every one of B's reveals — or every one of its commitments — lost on the way to A. A's
+    draw never completes: it restarts a round on past A's patience, again past the next, and past the rounds A
+    states of itself B is taken as silent and yielded to as a loser is; A yields the whole while, and no two
+    vans ever stand at one position. Losing B's reveals alone, B hears everything, concludes each round's draw
+    and drives on. Losing B's commitments, B never hears A reveal either — A reveals only once it has heard B
+    commit — so B concludes A silent too, and both wait."""
+    bus, time = _lane(monkeypatch, variant(tmp_path, f"lost_{lost}", _HEAD_ON))
+    bus.dropping = lambda topic, payload: topic.startswith("agents/courier_a/") and f"draw#{lost}".encode() in payload
+    bus.simulator.open()
+    bus.simulator.step(NOW)
+    for runtime in bus.runtimes.values():
+        runtime.run(passes=1, poll_s=0)
+    together, positions, rounds, won = [], [], [], []
+    for _ in range(120):
+        time["at"] += timedelta(seconds=CADENCE_S)
+        bus.simulator.step(time["at"])
+        for runtime in bus.runtimes.values():
+            runtime.run(passes=1, poll_s=0)
+        a, b = bus.simulator.position(L + "van_a"), bus.simulator.position(L + "van_b")
+        positions.append((a, b))
+        rounds.append((_conflict(bus.runtime).get("round"), _conflict(bus.runtimes["courier_b"]).get("round")))
+        won.append((_conflict(bus.runtime).get("w"), _conflict(bus.runtimes["courier_b"]).get("w")))
+        if a == b:
+            together.append((time["at"], a))
+        if _at(bus.runtime.beliefs).get("parcel_a") == (6, 1) and _at(bus.runtimes["courier_b"].beliefs).get("parcel_b") == (0, 0):
+            break                           # both delivered; a parcel aboard its van stands nowhere
+    print(f"{lost} lost: {len(positions)} ticks; rounds {rounds}; won {won}; positions {positions}")
+    assert bus.dropped and all(f"draw#{lost}".encode() in p for _, p in bus.dropped), f"B's {lost}s were lost: {len(bus.dropped)}"
+    assert not together, f"two vans stood at one position: {together}"
+    assert [r for r, _ in rounds if r] == sorted(r for r, _ in rounds if r) and {r for r, _ in rounds if r} == {"0", "1", "2", "3"}, \
+        f"A's draw restarted a round on past each patience, to the rounds A states: {rounds}"
+    assert not any(w for w, _ in won), "A never concluded a winner"
+    assert _conflict(bus.runtime).get("silent") == "true", "and past A's rounds, B is silent to it"
+    if lost == "Reveal":
+        assert any(w for _, w in won), "B, hearing everything, concluded a winner"
+    else:
+        assert _conflict(bus.runtimes["courier_b"]).get("silent") == "true", "B never heard A reveal: A is silent to B too"
+    assert _at(bus.runtime.beliefs).get("parcel_a") == (6, 1) and _at(bus.runtimes["courier_b"].beliefs).get("parcel_b") == (0, 0), \
+        f"and both parcels were delivered: {positions[-1]}"
+
 
 
 #  A CROSSING (#923): van B down column 5 from (5, -4) to its parcel's road at (5, 4), across the lane van A

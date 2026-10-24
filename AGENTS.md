@@ -539,6 +539,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A draw won reopens the winner's walking plan** — found while the draw stood undecided it yields, and
   winning makes no world of it impossible, only slower, so the winner kept its wait and the loser crossed
   first; coordination asks the Planner through the part it is linked to, and imports none of it.
+- **A draw document lost restarts the draw, and two agents silent to each other still part** — the one that
+  heard everything concludes and drives on while the other yields and goes round; and two that both take the
+  other as silent each lay what the other said and plan round it, so the first to plan again leaves the
+  other's way clear, where "both wait" held for a patience (`test_a_draw_document_lost_restarts_the_draw_and_both_wait`).
 - **A receiver must outreach one exchange, and a radar need see only what the van could drive into** —
   the lane's receivers hear four cells and its radars one, with two slots, no cell of the road having
   more than two hedges beside it.
