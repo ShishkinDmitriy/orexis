@@ -925,6 +925,8 @@ and holding the courier's constraints, walked as `world/lane/tests/test_lane.py`
 seconds of the world's time, a drive answered forty-five seconds on, the receivers hearing four cells. Each
 figure is one walk on the development container, read off the test's own loop and the documents its bus
 carried; the counts of answers and draw documents are what the tests pin, the rest is the day's.
+Since the same day a draw is named `<conflict>.round.<n>`, so each walk's secrets were chosen again to
+keep its winner; the ticks are the day's, the counts the tests'.
 
 | encounter | ticks | in range from | drives A, B | questions A, B | answers A, B | draw documents, each |
 |---|---|---|---|---|---|---|
@@ -945,7 +947,8 @@ because B, the loser, waits a cell short of the lane; the winner's plan is found
 ([commitment](/domain/execution/commitment.md)). Head on costs A twelve drives against six: the loser gives
 way off the row, round the hedges, and comes back.
 
-**Where a document is lost** (`test_a_draw_document_lost_restarts_the_draw_and_both_wait`), A's draw
+**Where a document is lost** (walked as `test_two_couriers_silent_to_each_other_both_yield_and_still_part` and the lost reveal
+once, the store each step leaves now held by the cases of `conclude` and `lay`), A's draw
 restarts a round on each patience, to the three rounds it states of itself, and B is silent to it: with
 B's reveals lost B concludes each round itself and drives on while A yields; with B's commitments lost
 neither concludes, both yield, and they still part, each planning round what the other said, in sixty-seven

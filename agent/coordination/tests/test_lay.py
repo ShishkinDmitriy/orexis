@@ -63,3 +63,4 @@ def test_a_holding_the_agents_own_constraints_refuse_is_not_laid(meeting):
     off = Holding(VAN_B, tuple((p, ox.Literal(str(int(v.value) - 3), datatype=_INT)) if p == X else (p, v) for p, v in mine.values),
                   meeting.at + timedelta(seconds=30), None)
     assert not _refused(store, off, meeting.at)
+

@@ -1,0 +1,152 @@
+# a_reveal_that_hashes_to_its_commitment_decides_the_draw
+#
+# The conflict standing in round 0 since 11:59:30, and both commitments and the peer's reveal believed as the
+# draw's extractions believe them, the peer's number hashing to the peer's commitment. The world's outcome, as
+# the draw domain ships it, names the winner from the two numbers, the keeper's from its secret: concluded
+# beside the conflict, `coordination:wonBy`, and the round stands.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix coordination: <http://example.org/orexis/coordination#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix coordinated: <http://example.org/orexis/graph/coordination/keeper/> .
+@prefix draw: <http://example.org/orexis/draw#> .
+@prefix conflict: <http://example.org/orexis/graph/coordination/conflict/> .
+GRAPH :answer {
+  :answer a coordination:Answer .
+  :answer coordination:answeredBy :peer .
+  :answer coordination:answers :question .
+  :answer coordination:holding :answer.holding .
+  :answer coordination:over :no_two_vans .
+  :answer.holding a coordination:Holding .
+  :answer.holding coordination:from "2026-01-01T12:01:00+00:00"^^xsd:dateTime .
+  :answer.holding coordination:of :van_p .
+  :answer.holding courier:x 3 .
+  :answer.holding courier:y 1 .
+}
+GRAPH :catalogue {
+  :answer a coordination:AnswerGraph .
+  :answer a orexis:Graph .
+  :answer a speech:StatementGraph .
+  :answer orexis:arrivedBy orexis:Received .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :constraints a orexis:Graph .
+  :constraints a planning:ConstraintGraph .
+  :draw a orexis:BeliefGraph .
+  :draw a orexis:Graph .
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :question a coordination:QuestionGraph .
+  :question a orexis:Graph .
+  :question a speech:StatementGraph .
+  :question orexis:arrivedBy orexis:Recorded .
+  :rules a orexis:Graph .
+  :rules a sh:RulesGraph .
+  :self a orexis:BeliefGraph .
+  :self a orexis:Graph .
+  :self a orexis:SelfGraph .
+  :state a orexis:BeliefGraph .
+  :state a orexis:Graph .
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  coordinated:conflicts a orexis:BeliefGraph .
+  coordinated:conflicts a orexis:Graph .
+  coordinated:conflicts orexis:arrivedBy orexis:Derived .
+  coordinated:conflicts orexis:ownedBy :keeper .
+}
+GRAPH :constraints {
+  :no_two_vans a planning:Constraint .
+  :no_two_vans planning:unmetWhen :no_two_vans.select .
+  :no_two_vans.select sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+SELECT $this ?value WHERE { $this a courier:Van ; courier:x ?x ; courier:y ?y .
+                            ?value a courier:Van ; courier:x ?x ; courier:y ?y . FILTER(?value != $this) }""" .
+}
+GRAPH :draw {
+  conflict:2216b9a9c788124d coordination:drawnIn 0 .
+  conflict:2216b9a9c788124d.round.0 draw:committedBy :keeper .
+  conflict:2216b9a9c788124d.round.0 draw:committedBy :peer .
+  conflict:2216b9a9c788124d.round.0 draw:revealedBy :peer .
+  conflict:2216b9a9c788124d.round.0.commitment.keeper a draw:Commitment .
+  conflict:2216b9a9c788124d.round.0.commitment.keeper draw:by :keeper .
+  conflict:2216b9a9c788124d.round.0.commitment.keeper draw:hash "977113989b87fb5626cfafce32a04b5b5323af744bd57f4306b99f7c7c2e3ab1" .
+  conflict:2216b9a9c788124d.round.0.commitment.keeper draw:of conflict:2216b9a9c788124d.round.0 .
+  conflict:2216b9a9c788124d.round.0.commitment.peer a draw:Commitment .
+  conflict:2216b9a9c788124d.round.0.commitment.peer draw:by :peer .
+  conflict:2216b9a9c788124d.round.0.commitment.peer draw:hash "e7552b22465334d9415a3d6f666d291dbcc4b15e5e2472ed206eb6fe1ec3a7a4" .
+  conflict:2216b9a9c788124d.round.0.commitment.peer draw:of conflict:2216b9a9c788124d.round.0 .
+  conflict:2216b9a9c788124d.round.0.reveal.peer a draw:Reveal .
+  conflict:2216b9a9c788124d.round.0.reveal.peer draw:by :peer .
+  conflict:2216b9a9c788124d.round.0.reveal.peer draw:number "b81324ca3d706e3c55f1bff6e6f79d3965a645b133ac265a34ae11a3ed951644" .
+  conflict:2216b9a9c788124d.round.0.reveal.peer draw:of conflict:2216b9a9c788124d.round.0 .
+}
+GRAPH :ontology {
+  coordination:AnswerGraph rdfs:subClassOf speech:StatementGraph .
+  coordination:QuestionGraph rdfs:subClassOf speech:StatementGraph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:CatalogueGraph rdfs:subClassOf orexis:Graph .
+  orexis:OntologyGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:SelfGraph rdfs:subClassOf orexis:BeliefGraph .
+  planning:ConstraintGraph rdfs:subClassOf orexis:Graph .
+  sh:RulesGraph rdfs:subClassOf orexis:Graph .
+  speech:StatementGraph rdfs:subClassOf orexis:Graph .
+}
+GRAPH :question {
+  :question a coordination:Question .
+  :question coordination:asks :keeper .
+  :question coordination:over :no_two_vans .
+}
+GRAPH :rules {
+  :winner a coordination:Outcome .
+  :winner sh:construct """PREFIX draw: <http://example.org/orexis/draw#>
+        CONSTRUCT { ?draw coordination:wonBy ?winner }
+        WHERE {
+            ?me a orexis:Self ; coordination:secret ?secret .
+            ?reveal a draw:Reveal ; draw:of ?draw ; draw:by ?peer ; draw:number ?theirs .
+            FILTER(?peer != ?me)
+            ?committed a draw:Commitment ; draw:of ?draw ; draw:by ?peer ; draw:hash ?hash .
+            ?mine a draw:Commitment ; draw:of ?draw ; draw:by ?me .
+            FILTER(SHA256(CONCAT(STR(?draw), "|", ?theirs)) = ?hash)
+            BIND(SHA256(CONCAT(?secret, "|", STR(?draw))) AS ?ours)
+            BIND(STR(?me) < STR(?peer) AS ?lower)
+            BIND(IF(?lower, CONCAT(?ours, "|", ?theirs), CONCAT(?theirs, "|", ?ours)) AS ?pair)
+            BIND(SUBSTR(SHA256(CONCAT(STR(?draw), "|", ?pair)), 1, 1) AS ?digit)
+            BIND(IF(CONTAINS("13579bdf", ?digit), IF(?lower, ?me, ?peer), IF(?lower, ?peer, ?me)) AS ?winner)
+        }""" .
+}
+GRAPH :self {
+  :keeper a orexis:Self .
+  :keeper coordination:secret "1111111111111111111111111111111111111111111111111111111111111111" .
+  :keeper orexis:actsFor :van_k .
+  :keeper planning:holds :no_two_vans .
+}
+GRAPH :state {
+  :van_k courier:x 2 .
+  :van_k courier:y 1 .
+  :van_p courier:x 4 .
+  :van_p courier:y 1 .
+}
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:localId "keeper" .
+  :peer a orexis:Agent .
+  :peer orexis:actsFor :van_p .
+  :van_k a courier:Van .
+  :van_p a courier:Van .
+}
+GRAPH coordinated:conflicts {
+  conflict:2216b9a9c788124d a coordination:Conflict .
+  conflict:2216b9a9c788124d coordination:draw conflict:2216b9a9c788124d.round.0 .
+  conflict:2216b9a9c788124d coordination:over :no_two_vans .
+  conflict:2216b9a9c788124d coordination:round 0 .
+  conflict:2216b9a9c788124d coordination:since "2026-01-01T11:59:30+00:00"^^xsd:dateTime .
+  conflict:2216b9a9c788124d coordination:standing true .
+  conflict:2216b9a9c788124d coordination:with :peer .
+}

@@ -1,0 +1,25 @@
+--- case
++++ expected
+@@ -35,6 +35,12 @@
+   coordinated:conflicts a orexis:Graph .
+   coordinated:conflicts orexis:arrivedBy orexis:Derived .
+   coordinated:conflicts orexis:ownedBy :keeper .
++  laid:0 a orexis:BeliefGraph .
++  laid:0 a orexis:ForecastGraph .
++  laid:0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:02:00+00:00"^^xsd:dateTime ] .
++  laid:0 orexis:arrivedBy orexis:Received .
++  laid:0 orexis:hash "sha256:df36a1ea0e736a54ba84cb238348857b43db1c8353b23b93d2401e10418ac98f" .
++  laid:0 orexis:ownedBy :keeper .
+ }
+ GRAPH :constraints {
+   :no_two_vans a planning:Constraint .
+@@ -105,3 +111,9 @@
+   conflict:2216b9a9c788124d coordination:standing true .
+   conflict:2216b9a9c788124d coordination:with :peer .
+ }
++
++
++GRAPH laid:0 {
++  :van_p courier:x 2 .
++  :van_p courier:y 1 .
++}

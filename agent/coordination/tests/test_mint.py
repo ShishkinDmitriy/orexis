@@ -32,5 +32,5 @@ def test_a_secret_is_minted_once_where_the_agent_states_none():
 
 def test_a_secret_the_self_graph_states_is_kept(meeting):
     store = meeting.store(A)
-    assert {r["s"] for r in rows(store, _SECRET_Q, graphs_of(store, BELIEF), me=A)} == {"1" * 64}, "the self graph's, and no other"
+    assert {r["s"] for r in rows(store, _SECRET_Q, graphs_of(store, BELIEF), me=A)} == {"0" * 64}, "the self graph's, and no other"
     assert not list(store.quads_for_pattern(None, None, None, ox.NamedNode(secret_graph(A)))), "nothing minted"

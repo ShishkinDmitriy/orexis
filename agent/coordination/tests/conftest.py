@@ -1,6 +1,6 @@
 """Two couriers driving at each other down the lane's one row, booted as the lane's agents boot and walked by
 its simulator ten seconds at a time (`world/lane/tests/test_lane.py`, whose head-on variant this is), each
-courier's secret stated in its self graph so every draw is the same: with these two, courier B goes first.
+courier's secret stated in its self graph so every draw is the same: with these two, 0s and 3s, courier B goes first.
 
 `meeting` is the lane at the moment the two have drawn and both know who won, walked once a module; `walker`
 walks a fresh one to any moment; a test that changes a store works on a copy (`copied`).
@@ -91,3 +91,12 @@ def _copied(store: ox.Store) -> ox.Store:
 def copied():
     """A store holding what a store holds, to change without changing it."""
     return _copied
+
+
+def pytest_collection_modifyitems(items):
+    """A test handed the lane's walk, `meeting` or `walker`, walks the lane's two agents through the world's time:
+    marked a walk, run where CI runs and never in the local gate. What each function does to the store is held by
+    its snapshot cases beside it (`conclude/`, `lay/`), which walk nothing."""
+    for item in items:
+        if {"meeting", "walker"} & set(getattr(item, "fixturenames", ())):
+            item.add_marker(pytest.mark.walk)

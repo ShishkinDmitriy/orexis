@@ -1,0 +1,93 @@
+# a_peer_neither_in_range_nor_asking_stands_in_no_conflict
+#
+# The first case, with the peer's van believed nowhere: out of the keeper's range, and no question of the
+# peer's holding. The answer met, so the conflict is concluded, and named; it does not stand, since a
+# conflict stands only while the peer is in range or still asking, and nothing is laid for it.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix coordination: <http://example.org/orexis/coordination#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix coordinated: <http://example.org/orexis/graph/coordination/keeper/> .
+@prefix conflict: <http://example.org/orexis/graph/coordination/conflict/> .
+GRAPH :answer {
+  :answer a coordination:Answer .
+  :answer coordination:answeredBy :peer .
+  :answer coordination:answers :question .
+  :answer coordination:holding :answer.holding .
+  :answer coordination:over :no_two_vans .
+  :answer.holding a coordination:Holding .
+  :answer.holding coordination:from "2026-01-01T12:01:00+00:00"^^xsd:dateTime .
+  :answer.holding coordination:of :van_p .
+  :answer.holding courier:x 3 .
+  :answer.holding courier:y 1 .
+}
+GRAPH :catalogue {
+  :answer a coordination:AnswerGraph .
+  :answer a orexis:Graph .
+  :answer a speech:StatementGraph .
+  :answer orexis:arrivedBy orexis:Received .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :constraints a orexis:Graph .
+  :constraints a planning:ConstraintGraph .
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :question a coordination:QuestionGraph .
+  :question a orexis:Graph .
+  :question a speech:StatementGraph .
+  :question orexis:arrivedBy orexis:Recorded .
+  :self a orexis:BeliefGraph .
+  :self a orexis:Graph .
+  :self a orexis:SelfGraph .
+  :state a orexis:BeliefGraph .
+  :state a orexis:Graph .
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+}
+GRAPH :constraints {
+  :no_two_vans a planning:Constraint .
+  :no_two_vans planning:unmetWhen :no_two_vans.select .
+  :no_two_vans.select sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+SELECT $this ?value WHERE { $this a courier:Van ; courier:x ?x ; courier:y ?y .
+                            ?value a courier:Van ; courier:x ?x ; courier:y ?y . FILTER(?value != $this) }""" .
+}
+GRAPH :ontology {
+  coordination:AnswerGraph rdfs:subClassOf speech:StatementGraph .
+  coordination:QuestionGraph rdfs:subClassOf speech:StatementGraph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:CatalogueGraph rdfs:subClassOf orexis:Graph .
+  orexis:OntologyGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:SelfGraph rdfs:subClassOf orexis:BeliefGraph .
+  planning:ConstraintGraph rdfs:subClassOf orexis:Graph .
+  speech:StatementGraph rdfs:subClassOf orexis:Graph .
+}
+GRAPH :question {
+  :question a coordination:Question .
+  :question coordination:asks :keeper .
+  :question coordination:over :no_two_vans .
+}
+GRAPH :self {
+  :keeper a orexis:Self .
+  :keeper orexis:actsFor :van_k .
+  :keeper planning:holds :no_two_vans .
+}
+GRAPH :state {
+  :van_k courier:x 2 .
+  :van_k courier:y 1 .
+}
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:localId "keeper" .
+  :peer a orexis:Agent .
+  :peer orexis:actsFor :van_p .
+  :van_k a courier:Van .
+  :van_p a courier:Van .
+}

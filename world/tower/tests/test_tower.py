@@ -10,6 +10,8 @@ the three-disk demonstration.
 
 from __future__ import annotations
 
+import pytest
+
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -65,6 +67,7 @@ def test_the_runtime_concludes_what_each_disk_is_on_from_where_it_stands(monkeyp
     assert on == {("disk_1", "disk_2"), ("disk_2", "disk_3"), ("disk_3", "PegA")}
 
 
+@pytest.mark.walk
 def test_the_puzzle_is_planned_above_and_carried_out_by_the_van_below(monkeypatch):
     """The clock moves on five seconds at every read: a drive lands half a minute after it is taken
     (#901, `domains/courier/actions.ttl`), so each of the van's drives below a move is a pass or two

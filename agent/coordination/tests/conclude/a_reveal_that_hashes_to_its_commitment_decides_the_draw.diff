@@ -1,0 +1,16 @@
+--- case
++++ expected
+@@ -52,6 +52,7 @@
+   coordinated:conflicts a orexis:BeliefGraph .
+   coordinated:conflicts a orexis:Graph .
+   coordinated:conflicts orexis:arrivedBy orexis:Derived .
++  coordinated:conflicts orexis:hash "sha256:6c050ff5ea1de412358c7c9989b589bd2f2596b1cb00920a1773cb1ebb14b95f" .
+   coordinated:conflicts orexis:ownedBy :keeper .
+ }
+ GRAPH :constraints {
+@@ -141,4 +142,5 @@
+   conflict:2216b9a9c788124d coordination:since "2026-01-01T11:59:30+00:00"^^xsd:dateTime .
+   conflict:2216b9a9c788124d coordination:standing true .
+   conflict:2216b9a9c788124d coordination:with :peer .
++  conflict:2216b9a9c788124d.round.0 coordination:wonBy :keeper .
+ }
