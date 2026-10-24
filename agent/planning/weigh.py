@@ -63,11 +63,15 @@ ORDER BY ?seen LIMIT 1"""
 
 #  WHOSE, AND WHETHER A WANT: who holds what is weighed for, off the graph it lives in — a
 #  desire and a want are both held — and whether it is a want, since only a want's world
-#  goes on the frontier.
+#  goes on the frontier. THE SELF FIRST: a world's constraint is held by every agent the world
+#  says holds it, so one store lists several holders, and weighed over another holder's graphs
+#  a constraint reading the agent's own conclusions read none of them — the lane's couriers both
+#  hold the courier's, and a silent peer was kept clear of by whichever the engine listed first.
 _HELD_Q = """
 SELECT ?holder ?want WHERE {
-  GRAPH ?g { ?holder planning:holds $for . OPTIONAL { $for a planning:Want . BIND(true AS ?want) } } }
-LIMIT 1"""
+  GRAPH ?g { ?holder planning:holds $for . OPTIONAL { $for a planning:Want . BIND(true AS ?want) } }
+  OPTIONAL { GRAPH ?s { ?holder a orexis:Self } BIND(true AS ?self) } }
+ORDER BY DESC(BOUND(?self)) ?holder LIMIT 1"""
 
 #  THE PRESENT: where the timeline begins — the earliest ground.
 _PRESENT_Q = """
