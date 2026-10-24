@@ -543,10 +543,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   heard everything concludes and drives on while the other yields and goes round; and two that both take the
   other as silent each lay what the other said and plan round it, so the first to plan again leaves the
   other's way clear, where "both wait" held for a patience (`test_two_couriers_silent_to_each_other_both_yield_and_still_part`).
-- **A peer that answers nothing for a patience is silent, kept two cells clear of, and two that cannot hear each
-  other back off by a lot each draws alone** — a van moves a cell a drive and is believed a drive behind at worst,
-  so one cell clear let the two meet; the lot's loser keeps three and drives away, and the loser advancing instead
-  was refused, two that both draw "go" meeting in one cell (two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it).
+- **A peer that answers nothing for a patience is silent, and a forecast is the agent's own estimate where it is
+  not the peer's word** — a domain's reach says where a van may be a drive on, laid one node per place as far ahead
+  as the agent's stance says, so "no two vans at one position" stays the one constraint; a second constraint keeping
+  cells clear made the present violate it and found no plan, and a desire restricted no other plan; two that cannot
+  hear each other back off by a lot each draws alone, the loser foreseeing a step further
+  (two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it).
 - **A receiver must outreach one exchange, and a radar need see only what the van could drive into** —
   the lane's receivers hear four cells and its radars one, with two slots, no cell of the road having
   more than two hedges beside it.

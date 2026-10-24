@@ -10,6 +10,16 @@ it (`coordination:taken`), which nothing a draw decides cancels — commitment i
 Yielding to the peer's next holding whether taken or not, the winner yielded every time the loser's next drive
 was the contested cell, and at a crossing the loser crossed first. A conflict that does not stand lays nothing.
 
+**OF A SILENT PEER, WHERE ITS THINGS MAY BE.** A peer that says nothing says nothing of where it is going, so the
+agent estimates it: each `coordination:Reach` a world's rules ship says where a thing may be a step of its own
+ahead, and asked of where the agent believes the peer's thing now, and again of each answer, as many times as the
+agent's stance says (`coordination:stepsAhead`, two, and one more where the lot it drew alone this round was
+lost), it gives every place the thing may stand by then, each a node of its own, laid as a forecast from now on.
+One for the step the peer may take next, one more since what the agent believes of the peer may be a step behind;
+and laid one node per place, so the thing's keys are never crossed into places it cannot stand. The one constraint
+over the thing, the world's own, keeps the agent's plans out of every place laid, and a sighting that moves the
+peer moves what is laid, which reopens a walking plan it makes impossible.
+
 **ONLY WHAT THE AGENT'S OWN CONSTRAINTS ADMIT.** A peer's plan goes where the peer believes it can, and this
 agent may see what the peer has not — a hedge its radar shows and the peer's does not yet. Laid there, the
 peer's thing would stand on it in every ground from then on, and every world forked from those grounds would be
@@ -35,10 +45,12 @@ import pyoxigraph as ox
 
 from agent.hash_named_graph import hash_named_graph
 from agent.ontology import BELIEF, FORECAST, RECEIVED, SELF_GRAPH
+from agent.stance import stance
 from agent.store import PREFIXES, Raw, catalogue_of, entry, forget_graph, graphs_of, rows, update
 
-from .holdings import _TEXTS_Q, Holding, _heard, _present
-from .ontology import CONSTRAINT_GRAPH, answer_graph, conflicts_graph, laid_graph, laid_root, question_graph
+from .holdings import _TEXTS_Q, Holding, _heard, _key_of, _present
+from .ontology import (AHEAD, CONSTRAINT_GRAPH, STEPS_AHEAD, answer_graph, conflicts_graph, laid_graph, laid_root,
+                       question_graph)
 
 _STANDING_Q = """
 SELECT ?c ?peer ?constraint ?draw ?silent WHERE { GRAPH $graph {
@@ -63,6 +75,9 @@ def lay(store: ox.Store, me: str, at: datetime) -> list[str]:
         theirs = _heard(store, question_graph(peer, me, constraint)) or _heard(store, answer_graph(peer, me, constraint))
         if won and won[0]["w"] == me:                   # the winner lays the loser's step in flight alone
             theirs = [h for h in theirs if h.start is None or h.taken]
+        if r.get("silent") == "true":                   # and of a silent peer, where its things may be
+            ahead = int(stance(store, STEPS_AHEAD, AHEAD)) + (1 if won and won[0]["w"] != me else 0)
+            theirs += _reach(store, peer, constraint, ahead, at)
         theirs = [h for h in theirs if h.start is None or not _refused(store, h, at)]
         for n, h in enumerate(_timeline(theirs)):
             if h.end is None or h.end > at:
@@ -81,6 +96,57 @@ def lay(store: ox.Store, me: str, at: datetime) -> list[str]:
         hash_named_graph(store, graph)
         written.append(graph)
     return written
+
+
+#  THE THINGS A PEER ACTS FOR; WHAT THE AGENT BELIEVES EACH IS; AND EVERY REACH A WORLD'S RULES SHIP.
+_ACTS_FOR_Q = "SELECT ?t WHERE { $peer orexis:actsFor ?t } ORDER BY ?t"
+_KINDS_Q = "SELECT ?k WHERE { $thing a ?k }"
+_REACH_Q = """SELECT ?text WHERE { ?rule a coordination:Reach ; sh:construct ?text .
+                                   FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule"""
+_RULES_GRAPH = "http://www.w3.org/ns/shacl#RulesGraph"
+_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+
+
+def _reach(store: ox.Store, peer: str, constraint: str, ahead: int, at: datetime) -> list[Holding]:
+    """Every place a thing `peer` acts for may stand `ahead` of its steps on, as the world's reaches say: a holding
+    per place, of a node standing for the thing there, with the thing's kinds and its values on `constraint`'s key,
+    from `at` on — the places it stands at now left out, which are what sensing says."""
+    key = _key_of(store, constraint)
+    texts = [r["text"] for r in rows(store, _REACH_Q, graphs_of(store, _RULES_GRAPH))]
+    if not key or not texts:
+        return []
+    present = _present(store, at)
+    common = graphs_of(store, BELIEF, common=True)
+    out: list[Holding] = []
+    for r in rows(store, _ACTS_FOR_Q, common, peer=peer):
+        thing = ox.NamedNode(r["t"])
+        kinds = [ox.NamedNode(k["k"]) for k in rows(store, _KINDS_Q, common, thing=r["t"])]
+        now = tuple(sorted(((q.predicate.value, q.object) for g in present
+                            for q in store.quads_for_pattern(thing, None, None, ox.NamedNode(g)) if q.predicate.value in key),
+                           key=lambda pv: (pv[0], str(pv[1]))))
+        if {p for p, _ in now} != key:
+            continue                                    # believed nowhere: nothing to foresee it from
+        seen, frontier, places = {now}, [now], {}
+        for _ in range(ahead):
+            nxt = []
+            for values in frontier:
+                scratch = ox.Store()
+                scratch.extend([*(ox.Quad(thing, ox.NamedNode(_TYPE), k, ox.DefaultGraph()) for k in kinds),
+                                *(ox.Quad(thing, ox.NamedNode(p), v, ox.DefaultGraph()) for p, v in values)])
+                for text in texts:
+                    found: dict = {}
+                    for t in scratch.query(PREFIXES + text):
+                        found.setdefault(t.subject, []).append((t.predicate.value, t.object))
+                    for node, pvs in found.items():
+                        place = tuple(sorted(((p, v) for p, v in pvs if p in key), key=lambda pv: (pv[0], str(pv[1]))))
+                        if place in seen or {p for p, _ in place} != key:
+                            continue
+                        seen.add(place)
+                        nxt.append(place)
+                        places[node.value] = tuple(sorted(pvs, key=lambda pv: (pv[0], str(pv[1]))))
+            frontier = nxt
+        out += [Holding(node, values, at, None) for node, values in sorted(places.items())]
+    return out
 
 
 def _timeline(held: list[Holding]) -> list[Holding]:

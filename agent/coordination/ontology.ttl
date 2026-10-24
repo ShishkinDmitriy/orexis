@@ -150,7 +150,19 @@
 
 :silent a owl:DatatypeProperty ; rdfs:domain :Conflict ; rdfs:range xsd:boolean ;
     rdfs:label "silent" ;
-    rdfs:comment "Whether the peer has fallen silent in this conflict: its draw restarted past the bound the agent states of itself, or it answered no question the agent asked it under the constraint for a patience of the asking. The agent takes the whole of the avoiding, by what a world's constraints say of a silent peer; the conflict's round turns each patience, and its draw is a lot the agent draws alone (knowledge/domain/coordination/conflict.md)." .
+    rdfs:comment "Whether the peer has fallen silent in this conflict: its draw restarted past the bound the agent states of itself, or it answered no question the agent asked it under the constraint for a patience of the asking. The agent takes the whole of the avoiding: it lays where the peer's things may be as far ahead as its stance says (`coordination:Reach`); the conflict's round turns each patience, and its draw is a lot the agent draws alone (knowledge/domain/coordination/conflict.md)." .
+
+:Reach a owl:Class ;
+    rdfs:subClassOf sh:Rule ;
+    rdfs:label "Reach" ;
+    rdfs:comment """A rule that says where a thing may be one step of its own ahead
+    (knowledge/domain/coordination/conflict.md): an `sh:construct` a domain ships in its rules graph, handed
+    the thing as the agent believes it now and constructing a node per value the thing may then hold - with
+    the kinds and the key's predicates, so each node stands for the thing where it may stand. Coordination
+    asks it of a silent peer's things, as many times as the agent's stance says, and lays each node as a
+    forecast: the agent's own estimate of a peer that said nothing of where it is going, one belief of the
+    one kind a forecast the peer said would be. Beneath `sh:Rule` and not `sh:SPARQLRule`, so revision and
+    the planner's bridge reader pass over it.""" .
 
 :secret a owl:DatatypeProperty ; rdfs:domain orexis:Self ; rdfs:range xsd:string ;
     rdfs:label "secret" ;
@@ -161,6 +173,10 @@
 :patienceS a owl:DatatypeProperty ; rdfs:domain orexis:Self ; rdfs:range xsd:decimal ;
     rdfs:label "patience" ;
     rdfs:comment "How many seconds a draw may stand undecided before it is restarted in the next round. A stance: the agent states it of itself in its self graph; where it states none, sixty (knowledge/domain/kernel/stance.md)." .
+
+:stepsAhead a owl:DatatypeProperty ; rdfs:domain orexis:Self ; rdfs:range xsd:integer ;
+    rdfs:label "steps ahead" ;
+    rdfs:comment "How many of a silent peer's steps ahead the agent foresees where its things may be - its risk appetite: one for the step the peer may take next, one more since what the agent believes of the peer may be a step behind. A stance; where the self states none, two, and one more where the lot the agent drew alone this round was lost." .
 
 :rounds a owl:DatatypeProperty ; rdfs:domain orexis:Self ; rdfs:range xsd:integer ;
     rdfs:label "rounds" ;

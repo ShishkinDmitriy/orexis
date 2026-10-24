@@ -1,0 +1,146 @@
+--- case
++++ expected
+@@ -33,6 +33,72 @@
+   coordinated:conflicts a orexis:Graph .
+   coordinated:conflicts orexis:arrivedBy orexis:Derived .
+   coordinated:conflicts orexis:ownedBy :keeper .
++  laid:0 a orexis:BeliefGraph .
++  laid:0 a orexis:ForecastGraph .
++  laid:0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  laid:0 orexis:arrivedBy orexis:Received .
++  laid:0 orexis:hash "sha256:ae4b4618565879fa8d36a5c9268e911b24a9d001e905c1867ed38ebcf930b76b" .
++  laid:0 orexis:ownedBy :keeper .
++  laid:1 a orexis:BeliefGraph .
++  laid:1 a orexis:ForecastGraph .
++  laid:1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  laid:1 orexis:arrivedBy orexis:Received .
++  laid:1 orexis:hash "sha256:709393f1829baf7406aebd4e87dc89f3c3de5d3a115fe65e4dee5afc6139bdf7" .
++  laid:1 orexis:ownedBy :keeper .
++  laid:10 a orexis:BeliefGraph .
++  laid:10 a orexis:ForecastGraph .
++  laid:10 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  laid:10 orexis:arrivedBy orexis:Received .
++  laid:10 orexis:hash "sha256:3359009b6ea753b22c111d090ca896a7cd8b304053daf44d0948a59a1723ca4b" .
++  laid:10 orexis:ownedBy :keeper .
++  laid:2 a orexis:BeliefGraph .
++  laid:2 a orexis:ForecastGraph .
++  laid:2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  laid:2 orexis:arrivedBy orexis:Received .
++  laid:2 orexis:hash "sha256:d808fa33958bc2b51f8e09e949d1df17f191f498adc75853f6bc72452b669425" .
++  laid:2 orexis:ownedBy :keeper .
++  laid:3 a orexis:BeliefGraph .
++  laid:3 a orexis:ForecastGraph .
++  laid:3 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  laid:3 orexis:arrivedBy orexis:Received .
++  laid:3 orexis:hash "sha256:13f71155ad0c4144fc14207d2f3979733983fef82c2d87867d229bd191b864ea" .
++  laid:3 orexis:ownedBy :keeper .
++  laid:4 a orexis:BeliefGraph .
++  laid:4 a orexis:ForecastGraph .
++  laid:4 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  laid:4 orexis:arrivedBy orexis:Received .
++  laid:4 orexis:hash "sha256:0f29a794b1b7d931b4d5526abac3ff3a6d6b271f7d48b72f84b5f863f7eeae25" .
++  laid:4 orexis:ownedBy :keeper .
++  laid:5 a orexis:BeliefGraph .
++  laid:5 a orexis:ForecastGraph .
++  laid:5 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  laid:5 orexis:arrivedBy orexis:Received .
++  laid:5 orexis:hash "sha256:0ac932f6310989b1a659f54ac72b15e6f7137cf6430faeb7f73a3986d778dc26" .
++  laid:5 orexis:ownedBy :keeper .
++  laid:6 a orexis:BeliefGraph .
++  laid:6 a orexis:ForecastGraph .
++  laid:6 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  laid:6 orexis:arrivedBy orexis:Received .
++  laid:6 orexis:hash "sha256:b67c8898bb77f3847823ffca0ae927d7ebc9f9a5c8fb230359acdaed14fbd612" .
++  laid:6 orexis:ownedBy :keeper .
++  laid:7 a orexis:BeliefGraph .
++  laid:7 a orexis:ForecastGraph .
++  laid:7 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  laid:7 orexis:arrivedBy orexis:Received .
++  laid:7 orexis:hash "sha256:5f243c653a227527d6c05582b1082efe7c067818b999b8ce20c2317d2bf47334" .
++  laid:7 orexis:ownedBy :keeper .
++  laid:8 a orexis:BeliefGraph .
++  laid:8 a orexis:ForecastGraph .
++  laid:8 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  laid:8 orexis:arrivedBy orexis:Received .
++  laid:8 orexis:hash "sha256:c6fe67e988716c677655aa2f3b0211e68d84d85f7c8608ce6d7f5654ec3162fa" .
++  laid:8 orexis:ownedBy :keeper .
++  laid:9 a orexis:BeliefGraph .
++  laid:9 a orexis:ForecastGraph .
++  laid:9 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  laid:9 orexis:arrivedBy orexis:Received .
++  laid:9 orexis:hash "sha256:b2587f74885e0145dc7fbd22dffc4696bf2f4d916a87239960d4d933537eca85" .
++  laid:9 orexis:ownedBy :keeper .
+ }
+ GRAPH :constraints {
+   :no_two_vans a planning:Constraint .
+@@ -89,3 +155,70 @@
+   conflict:2216b9a9c788124d coordination:standing true .
+   conflict:2216b9a9c788124d coordination:with :peer .
+ }
++
++
++GRAPH laid:0 {
++  :van_p.at.4.0 a courier:Van .
++  :van_p.at.4.0 courier:x 4 .
++  :van_p.at.4.0 courier:y 0 .
++}
++
++GRAPH laid:1 {
++  :van_p.at.4.1 a courier:Van .
++  :van_p.at.4.1 courier:x 4 .
++  :van_p.at.4.1 courier:y 1 .
++}
++
++GRAPH laid:10 {
++  :van_p.at.7.1 a courier:Van .
++  :van_p.at.7.1 courier:x 7 .
++  :van_p.at.7.1 courier:y 1 .
++}
++
++GRAPH laid:2 {
++  :van_p.at.4.2 a courier:Van .
++  :van_p.at.4.2 courier:x 4 .
++  :van_p.at.4.2 courier:y 2 .
++}
++
++GRAPH laid:3 {
++  :van_p.at.5.-1 a courier:Van .
++  :van_p.at.5.-1 courier:x 5 .
++  :van_p.at.5.-1 courier:y -1 .
++}
++
++GRAPH laid:4 {
++  :van_p.at.5.0 a courier:Van .
++  :van_p.at.5.0 courier:x 5 .
++  :van_p.at.5.0 courier:y 0 .
++}
++
++GRAPH laid:5 {
++  :van_p.at.5.2 a courier:Van .
++  :van_p.at.5.2 courier:x 5 .
++  :van_p.at.5.2 courier:y 2 .
++}
++
++GRAPH laid:6 {
++  :van_p.at.5.3 a courier:Van .
++  :van_p.at.5.3 courier:x 5 .
++  :van_p.at.5.3 courier:y 3 .
++}
++
++GRAPH laid:7 {
++  :van_p.at.6.0 a courier:Van .
++  :van_p.at.6.0 courier:x 6 .
++  :van_p.at.6.0 courier:y 0 .
++}
++
++GRAPH laid:8 {
++  :van_p.at.6.1 a courier:Van .
++  :van_p.at.6.1 courier:x 6 .
++  :van_p.at.6.1 courier:y 1 .
++}
++
++GRAPH laid:9 {
++  :van_p.at.6.2 a courier:Van .
++  :van_p.at.6.2 courier:x 6 .
++  :van_p.at.6.2 courier:y 2 .
++}

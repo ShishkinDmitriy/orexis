@@ -442,10 +442,10 @@ _SILENT_B = {**_crossing("0", "1"),
 
 def test_a_silent_peer_driving_across_the_path_is_passed_where_it_leaves_room(monkeypatch, tmp_path):
     """B drives up column 5 across the lane and answers nothing: it plays no coordinator. A asks it, hears nothing
-    for its patience, takes it as silent, and from then on keeps two cells between its van and B's — the courier's
-    constraint for a peer that says nothing of where it will be next, a van moving a cell a drive and believed a
-    drive behind at worst. A takes the whole of the avoiding: it crosses column 5 where B has left room, and no two
-    vans ever stand at one position."""
+    for its patience, takes it as silent, and from then on foresees B's van wherever the courier's reach says it may
+    be two drives on — one for the drive B may take next, one since what A believes of B may be a drive behind — so
+    the one constraint keeps A's plans out of every such place. A takes the whole of the avoiding: it crosses column
+    5 where B has left room, and no two vans ever stand at one position."""
     bus, time = _lane(monkeypatch, variant(tmp_path, "silent_b", _SILENT_B))
     bus.simulator.open()
     bus.simulator.step(NOW)
@@ -471,8 +471,8 @@ def test_a_silent_peer_driving_across_the_path_is_passed_where_it_leaves_room(mo
     assert any(to == "courier_b" and "coordination#Question" in p for to, p in said), "A asked B"
     assert not any(to == "courier_a" for to, _ in said), "B said nothing"
     assert any(silent), "and A took B as silent"
-    #  A KEPT CLEAR OF B once it took B as silent: every drive A took from then on went to a cell with two between
-    #  it and where A believed B's van stood. B, which keeps nothing clear of A, may drive beside A.
+    #  A FORESAW B once it took B as silent: every drive A took from then on went to a cell beyond the two drives
+    #  of where A believed B's van stood. B, which foresees nothing of A, may drive beside A.
     told_a = [to for to, _, _ in drives]
     assert told_a[-1] == (6, 1) and not set(told_a) & HEDGES, f"A's drives: {told_a}"
     assert all(_apart(to, b) >= 3 for to, b, was in drives if was and b), f"A drove near B: {drives}"
@@ -489,9 +489,9 @@ _DEAF = {**_HEAD_ON,
 
 def test_two_couriers_that_cannot_hear_each_other_back_off_by_lots_drawn_alone_and_part(monkeypatch, tmp_path):
     """Head on, and nothing either says reaches the other. Each asks, hears nothing for its patience, and takes the
-    other as silent: each keeps two cells between its van and the other's, so both stop short of each other. Each
-    then draws a lot alone each patience, and the one that loses keeps three, which the present already breaks, so
-    it backs off; the round the lots differ, one backs off while the other drives on, and they part. No two vans ever
+    other as silent: each foresees the other's van two drives on, so neither drives into the other's way. Each then
+    draws a lot alone each patience, and the one that loses foresees a drive further, so goes round the wider; the
+    round the lots differ, one goes round while the other drives on, and they part. No two vans ever
     stand at one position, and both parcels are delivered."""
     bus, time = _lane(monkeypatch, variant(tmp_path, "deaf", _DEAF))
     bus.dropping = lambda topic, payload: True

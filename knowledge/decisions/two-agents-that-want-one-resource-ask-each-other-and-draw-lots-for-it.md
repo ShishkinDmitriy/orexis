@@ -62,21 +62,32 @@ description: >-
 > no world here poses, and what two agents that cannot hear each other at all do is the seam below.
 >
 > **Amended 2026-10-24** (the sovereign, #923's last two done-whens): **a peer that never answers is silent, the
-> courier keeps two cells between its van and a silent peer's, and two agents that cannot hear each other back
-> off by a lot each draws alone.** A question unanswered for the asker's patience since its asking began makes the
-> peer silent, in a conflict that stands while it is in range ([conflict](/domain/coordination/conflict.md)). The
-> courier's `no_van_near_a_silent_peers_van` reads coordination's conclusion: a van moves a cell a drive, and
-> what the agent believes of the peer's van may be a drive behind, since a walk its own fix wakes takes the next
-> drive before the peer's reading is concluded, while the peer lands one more drive during the agent's; so two
-> cells between is what neither can close. One cell, the first figure, let the silent peer and the agent meet at
-> the lane's crossing, measured. A silent conflict's round turns each patience, and its draw is a LOT the agent
-> draws alone, the draw domain's `draw:lot`, a hash of its own secret; the one that lost keeps three cells, its
-> present then violates the constraint, and only a world that drives away is possible, so it backs off, and the
-> two part the first round the lots differ. Refused: the loser of the lot ADVANCING instead, the winner holding
-> still — the faster parting, and the one CSMA uses, but two that both draw "go" can both drive into one empty
-> cell, and the sovereign chose the backing off, which never can. Refused too: laying a silent peer's van at every
-> cell it could reach as a forecast — coordination knows no courier word, and laid on two keys the reach is a box,
-> whose corners stand on hedges and make every world after it impossible.
+> agent foresees where a silent peer's van may be, and two agents that cannot hear each other back off by a lot
+> each draws alone.** A question unanswered for the asker's patience since its first asking makes the peer
+> silent, in a conflict that stands while it is in range ([conflict](/domain/coordination/conflict.md)). A
+> forecast is then the agent's own estimate where it is not the peer's word: a domain's `coordination:Reach`, the
+> courier's a van standing or at a neighbour a drive on, is asked of where the agent believes the peer's van now,
+> as many steps ahead as the agent's stance says (`coordination:stepsAhead`, two - one for the drive the peer may
+> take next, one since the sighting may be a drive behind), and each place is laid as a forecast of a node of its
+> own, so "no two vans at one position" stays the one constraint and keeps the agent's plans out of every place.
+> A sighting that moves the peer moves what is laid, and a walking plan it makes impossible is reopened (#921). A
+> silent conflict's round turns each patience, and its draw is a LOT the agent draws alone, the draw domain's
+> `draw:lot`; the one that lost foresees a step further, so goes round the wider. An observation that tells more
+> - a turn signal, were there a sensor for it - narrows the estimate, a forecast made of an observation.
+>
+> Refused, each built or argued first:
+> - a SECOND CONSTRAINT keeping two cells between the agent's van and a silent peer's, three where the lot was
+>   lost. Built and walked: a peer driving up to the van made the present violate it, nothing repairs a present,
+>   and two cells cannot be regained in one drive, so every world was impossible, no plan was found, and the
+>   passes grew to minutes while the vans met at the lane's middle;
+> - a DESIRE to keep away from other vehicles, the distance the agent's risk appetite: a desire restricts no
+>   other plan, so the delivery would drive up to the peer and only then be pushed away, the two wants pulling
+>   the van to and fro; the risk appetite stands, as how far ahead the agent foresees;
+> - the loser of the lot ADVANCING, the winner holding still - CSMA's faster parting, but two that both draw "go"
+>   can both drive into one empty cell, and the sovereign chose the backing off.
+> - `weigh` taking a constraint's holder with `LIMIT 1` was a bug the second constraint found and is fixed: on
+>   the lane both couriers hold the courier's constraints, and weighed as the other courier a constraint read none
+>   of the agent's own graphs. The self is weighed for now.
 
 # The question
 
@@ -242,7 +253,7 @@ the detour and never rejoins the track its first plan was found on. The trigger 
 a road whose other users plan on the van keeping to it.
 
 **A peer that answers after it was taken as silent** stays silent until it is out of range and not asking: the
-conclusion is not taken back by a late answer, which costs it a cell kept clear for nothing and never a collision.
+conclusion is not taken back by a late answer, which costs it places foreseen for nothing and never a collision.
 And only a peer that has NEVER answered under a constraint is silent this way; one that answered and then fell
 deaf is the draw's restarts, as before.
 
