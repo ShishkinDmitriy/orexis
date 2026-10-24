@@ -39,7 +39,7 @@ round brings the agent to it. Past the rounds the agent states of itself, the pe
 it for a patience of the asking: a conflict with it stands from then, silent from its first round, while the
 peer is in range or asking - nothing it said could meet, and nothing it said shows it will give way. A silent
 peer is avoided by what the agent sees of it: a world's constraints read `coordination:silent`, as the courier's
-keeps a cell clear of a silent peer's van, and the agent takes the whole of the avoiding.
+keeps two cells between its van and a silent peer's, and the agent takes the whole of the avoiding.
 
 **A silent peer's draw is a lot drawn alone.** Nobody reveals to a peer that does not take part, so the round's
 draw is won as the agent's own secret alone says ([draw](/domain/draw/draw.md)), and a silent conflict's round

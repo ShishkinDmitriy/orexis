@@ -62,19 +62,21 @@ description: >-
 > no world here poses, and what two agents that cannot hear each other at all do is the seam below.
 >
 > **Amended 2026-10-24** (the sovereign, #923's last two done-whens): **a peer that never answers is silent, the
-> courier keeps a cell clear of a silent peer's van, and two agents that cannot hear each other back off by a lot
-> each draws alone.** A question unanswered for the asker's patience since its asking began makes the peer silent,
-> in a conflict that stands while it is in range ([conflict](/domain/coordination/conflict.md)). The courier's
-> `no_van_beside_a_silent_peers_van` reads coordination's conclusion: two cells between the agent's van and a
-> silent peer's, since a van moves a cell a drive and two vans that keep that apart cannot meet whatever the other
-> does next. A silent conflict's round turns each patience, and its draw is a LOT the agent draws alone, the
-> draw domain's `draw:lot`, a hash of its own secret; the one that lost keeps three cells, its present then
-> violates the constraint, and only a world that drives away is possible, so it backs off, and the two part the
-> first round the lots differ. Refused: the loser of the lot ADVANCING instead, the winner holding still — the
-> faster parting, and the one CSMA uses, but two that both draw "go" can both drive into one empty cell, and the
-> sovereign chose the backing off, which never can. Refused too: laying a silent peer's van at every cell it
-> could reach as a forecast — coordination knows no courier word, and laid on two keys the reach is a box, whose
-> corners stand on hedges and make every world after it impossible.
+> courier keeps two cells between its van and a silent peer's, and two agents that cannot hear each other back
+> off by a lot each draws alone.** A question unanswered for the asker's patience since its asking began makes the
+> peer silent, in a conflict that stands while it is in range ([conflict](/domain/coordination/conflict.md)). The
+> courier's `no_van_near_a_silent_peers_van` reads coordination's conclusion: a van moves a cell a drive, and
+> what the agent believes of the peer's van may be a drive behind, since a walk its own fix wakes takes the next
+> drive before the peer's reading is concluded, while the peer lands one more drive during the agent's; so two
+> cells between is what neither can close. One cell, the first figure, let the silent peer and the agent meet at
+> the lane's crossing, measured. A silent conflict's round turns each patience, and its draw is a LOT the agent
+> draws alone, the draw domain's `draw:lot`, a hash of its own secret; the one that lost keeps three cells, its
+> present then violates the constraint, and only a world that drives away is possible, so it backs off, and the
+> two part the first round the lots differ. Refused: the loser of the lot ADVANCING instead, the winner holding
+> still — the faster parting, and the one CSMA uses, but two that both draw "go" can both drive into one empty
+> cell, and the sovereign chose the backing off, which never can. Refused too: laying a silent peer's van at every
+> cell it could reach as a forecast — coordination knows no courier word, and laid on two keys the reach is a box,
+> whose corners stand on hedges and make every world after it impossible.
 
 # The question
 

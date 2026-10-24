@@ -13,14 +13,16 @@
 #  world violating either `planning:impossible`, so a plan goes round an obstacle and a parked van, and a belief
 #  that puts one on a walking plan's next position reopens the plan (#921).
 #
-#  AND NO VAN STANDS BESIDE A SILENT PEER'S VAN: a van moves a cell a drive, so two cells between where this agent's
-#  van will stand and where the peer's stands now is what leaves the two apart whatever the peer does next, and a
+#  AND NO VAN STANDS NEAR A SILENT PEER'S VAN: a van moves a cell a drive, and what the agent believes of a peer's
+#  van may be a drive behind - its walk woken by its own fix takes the next drive before the peer's reading is
+#  concluded - while the peer lands one more drive during this agent's; so two cells between where this agent's van
+#  will stand and where it believes the peer's stands is what leaves the two apart whatever the peer does, and a
 #  peer that is silent (knowledge/domain/coordination/conflict.md) says nothing of what it does next. Three cells
-#  where the lot the agent drew alone this round was lost: the present then violates it, nothing repairs a present,
-#  and every world but one that drives away is impossible - the loser backs off, the winner keeps two, and they
-#  part the first round the lots differ. A peer that answers is none of this: its holdings say where it will be.
-#  Read off the agent's own conclusions, which no other agent shares, its key is nothing two agents can both want,
-#  so nobody is ever asked about it.
+#  between where the lot the agent drew alone this round was lost: the present then violates it, nothing repairs a
+#  present, and every world but one that drives away is impossible - the loser backs off, the winner keeps two,
+#  and they part the first round the lots differ. A peer that answers is none of this: its holdings say where it
+#  will be. Read off the agent's own conclusions, which no other agent shares, its key is nothing two agents can
+#  both want, so nobody is ever asked about it.
 #
 #  The domain states the constraints and no holder: who holds them is each world's to say of its agents, in a
 #  constraint graph of its own (`world/lane/constraints.ttl`), since the domain knows no agent. Stated by the
@@ -55,11 +57,11 @@
                 courier:x ?x ; courier:y ?y .
         }""" .
 
-:no_van_beside_a_silent_peers_van a planning:Constraint ;
-    rdfs:label "no van stands beside the van of a peer silent to its agent, nor within two cells where its lot was lost" ;
-    planning:unmetWhen :a_van_beside_a_silent_peers_van .
+:no_van_near_a_silent_peers_van a planning:Constraint ;
+    rdfs:label "no van stands within two cells of the van of a peer silent to its agent, nor within three where its lot was lost" ;
+    planning:unmetWhen :a_van_near_a_silent_peers_van .
 
-:a_van_beside_a_silent_peers_van
+:a_van_near_a_silent_peers_van
     sh:message "a van stands too near the van of a peer that is silent to its agent" ;
     sh:select """PREFIX courier: <http://example.org/orexis/courier#>
         SELECT $this ?value WHERE {
@@ -69,6 +71,6 @@
             ?me a orexis:Self ; orexis:actsFor $this .
             $this a courier:Van ; courier:x ?x ; courier:y ?y .
             OPTIONAL { ?draw coordination:wonBy ?won }
-            BIND(IF(COALESCE(?won = ?peer, false), 3, 2) AS ?clear)
+            BIND(IF(COALESCE(?won = ?peer, false), 4, 3) AS ?clear)
             FILTER((ABS(?x - ?vx) + ABS(?y - ?vy)) < ?clear)
         }""" .

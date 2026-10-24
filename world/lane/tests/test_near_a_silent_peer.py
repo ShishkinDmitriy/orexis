@@ -1,7 +1,7 @@
-"""The courier's constraint that no van stands beside a silent peer's van, as shipped (`domains/courier/constraints.ttl`),
+"""The courier's constraint that no van stands near a silent peer's van, as shipped (`domains/courier/constraints.ttl`),
 asked of a store that holds only what it reads: two cells between the agent's van and the peer's, three while the
-lot the agent drew alone this round was lost, and nothing at all of a peer that is not silent or a van nobody
-acting for it drives. No walk: the text is read off the document, so a change to the domain is what this holds."""
+lot the agent drew alone this round was lost, and nothing at all of a peer that is not silent or a van nobody it is
+in a conflict with acts for. No walk: the text is read off the document, so a change to the domain is what this holds."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ def _select() -> str:
     store = ox.Store()
     store.load((DOMAIN / "constraints.ttl").read_bytes(), format=ox.RdfFormat.TURTLE, to_graph=ox.NamedNode(_TEXTS),
                base_iri=(DOMAIN / "constraints.ttl").as_uri())
-    (found,) = rows(store, f"SELECT ?t WHERE {{ GRAPH $graph {{ <{C}no_van_beside_a_silent_peers_van> planning:unmetWhen ?s . ?s sh:select ?t }} }}",
+    (found,) = rows(store, f"SELECT ?t WHERE {{ GRAPH $graph {{ <{C}no_van_near_a_silent_peers_van> planning:unmetWhen ?s . ?s sh:select ?t }} }}",
                     (), graph=_TEXTS)
     return found["t"]
 
@@ -44,19 +44,19 @@ def _too_near(mine: tuple[int, int], theirs: tuple[int, int], silent: bool = Tru
     return bool(rows(store, _select(), [_DATA]))
 
 
-@pytest.mark.parametrize("theirs, near", [((4, 1), True), ((3, 2), True), ((5, 1), False), ((4, 2), False)],
-                         ids=["beside", "beside_the_other_way", "a_cell_between", "a_cell_between_diagonally"])
-def test_a_van_beside_a_silent_peers_van_violates_and_one_with_a_cell_between_does_not(theirs, near):
-    """A van moves a cell a drive, so one cell between the two vans is all either can close: beside the peer's
-    van is too near, a cell between is not, whichever way."""
+@pytest.mark.parametrize("theirs, near", [((4, 1), True), ((5, 1), True), ((4, 2), True), ((6, 1), False), ((5, 2), False)],
+                         ids=["beside", "a_cell_between", "a_cell_between_diagonally", "two_cells_between", "two_cells_between_diagonally"])
+def test_a_van_with_less_than_two_cells_between_it_and_a_silent_peers_van_violates(theirs, near):
+    """A van moves a cell a drive, and what the agent believes of the peer's van may be a drive behind while the
+    peer lands another during the agent's own: two cells between are what neither can close."""
     assert _too_near((3, 1), theirs) == near
 
 
-def test_where_the_lot_was_lost_a_van_keeps_two_cells_between():
-    """The agent lost this round's lot: one cell between is not enough, so its present is a violation and only
-    a world that drives away is possible — it backs off. Two cells between is far enough."""
-    assert _too_near((3, 1), (5, 1), lost=True), "one cell between, the lot lost: too near"
-    assert not _too_near((2, 1), (5, 1), lost=True), "two cells between"
+def test_where_the_lot_was_lost_a_van_keeps_three_cells_between():
+    """The agent lost this round's lot: two cells between are not enough, so its present is a violation and only
+    a world that drives away is possible — it backs off. Three cells between is far enough."""
+    assert _too_near((3, 1), (6, 1), lost=True), "two cells between, the lot lost: too near"
+    assert not _too_near((2, 1), (6, 1), lost=True), "three cells between"
 
 
 def test_a_peer_that_is_not_silent_and_a_van_no_peer_acts_for_are_nothing_to_it():

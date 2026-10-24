@@ -343,7 +343,8 @@ reads. The courier is the first slice because its constraint is already stated.
 - **A peer that never speaks.** A van that says no route — an older agent, a broken bus, a human
   driver — is still seen, and the sighting keeps the cell it stands on out of the search. Nothing
   predicts where it will be next, and nothing needs to since 2026-10-24: once asked and silent for a
-  patience, it is kept a cell clear of, which is what a van moving a cell a drive can close
+  patience, it is kept two cells clear of, which a van moving a cell a drive and believed a drive behind
+  cannot close
   ([two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it](/decisions/two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it.md)).
   A peer the agent never asks — one acting for no thing a constraint's key reads — is still only seen.
 - **A withheld reveal is a free re-draw.** The agent that reveals second sees the outcome first and can
