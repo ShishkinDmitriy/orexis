@@ -55,7 +55,8 @@ agent's own and received, so the grounds take them in where each begins (`agent/
 - **undecided**, both lay all of the other's, so each plans as if yielding and safety never waits on the draw;
 - **lost**, the loser lays all of the winner's, for as long as the conflict stands - and of a silent peer, the
   agent lays all it said until a lot is won;
-- **silent**, beside what the peer said, where its things may be: a **reach** (`coordination:Reach`), an
+- **silent, having said nothing**, where its things may be - a peer silent by its draw's restarts said its
+  holdings, which are laid as a loser lays them, and is estimated nothing more: a **reach** (`coordination:Reach`), an
   `sh:construct` a world's rules ship, says where a thing may be a step of its own ahead - the courier's, a van
   standing or at a neighbour - and asked of where the agent believes the thing now, as many steps ahead as the
   agent's lookahead says (`coordination:lookahead`, two, one more where the lot was lost), it gives each place,

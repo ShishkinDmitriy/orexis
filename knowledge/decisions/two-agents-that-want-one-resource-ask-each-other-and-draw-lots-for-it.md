@@ -65,7 +65,9 @@ description: >-
 > agent foresees where a silent peer's van may be, and two agents that cannot hear each other back off by a lot
 > each draws alone.** A question unanswered for the asker's patience since its first asking makes the peer
 > silent, in a conflict that stands while it is in range ([conflict](/domain/coordination/conflict.md)). A
-> forecast is then the agent's own estimate where it is not the peer's word: a domain's `coordination:Reach`, the
+> forecast is then the agent's own estimate where it is not the peer's word - for a peer that has said nothing; one
+> silent by its draw's restarts said its holdings, and foreseen as well it slowed the lost-commitment walk past a
+> CI job's length - a domain's `coordination:Reach`, the
 > courier's a van standing or at a neighbour a drive on, is asked of where the agent believes the peer's van now,
 > as many steps ahead as the agent's stance says (`coordination:lookahead`, two - one for the drive the peer may
 > take next, one since the sighting may be a drive behind), and each place is laid as a forecast of a node of its

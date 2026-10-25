@@ -10,8 +10,9 @@ it (`coordination:taken`), which nothing a draw decides cancels — commitment i
 Yielding to the peer's next holding whether taken or not, the winner yielded every time the loser's next drive
 was the contested cell, and at a crossing the loser crossed first. A conflict that does not stand lays nothing.
 
-**OF A SILENT PEER, WHERE ITS THINGS MAY BE.** A peer that says nothing says nothing of where it is going, so the
-agent estimates it: each `coordination:Reach` a world's rules ship says where a thing may be a step of its own
+**OF A SILENT PEER THAT SAID NOTHING, WHERE ITS THINGS MAY BE.** A peer that says nothing says nothing of where it
+is going, so the agent estimates it — one silent by its draw's restarts said its holdings, which are laid, and is
+estimated nothing more: each `coordination:Reach` a world's rules ship says where a thing may be a step of its own
 ahead, and asked of where the agent believes the peer's thing now, and again of each answer, as many times as the
 agent's lookahead says (`coordination:lookahead`, two, and one more where the lot it drew alone this round was
 lost), it gives every place the thing may stand by then, each a node of its own, laid as a forecast from now for
@@ -78,9 +79,10 @@ def lay(store: ox.Store, me: str, at: datetime) -> list[str]:
         won = rows(store, _WON_Q, beliefs, draw=r["draw"])
         peer, constraint = r["peer"], r["constraint"]
         theirs = _heard(store, question_graph(peer, me, constraint)) or _heard(store, answer_graph(peer, me, constraint))
+        said = bool(theirs)
         if won and won[0]["w"] == me:                   # the winner lays the loser's step in flight alone
             theirs = [h for h in theirs if h.start is None or h.taken]
-        if r.get("silent") == "true":                   # and of a silent peer, where its things may be
+        if r.get("silent") == "true" and not said:      # and of a silent peer that said nothing, where its things may be
             ahead = int(stance(store, LOOKAHEAD, LOOKING)) + (1 if won and won[0]["w"] != me else 0)
             reached = _reach(store, peer, constraint, ahead, at)
             foreseen |= {h.thing: (h.end - at) / max(ahead, 1) for h in reached if h.end is not None}
