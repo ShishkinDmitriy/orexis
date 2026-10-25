@@ -20,8 +20,9 @@ begins — fork, keys out, forecast in — and in no ground before it: laid into
 everything changeable, it stood under the van today. Read beside every world instead, the butt it says
 will hold water at half past would stand beside the empty butt the present holds. One nothing reads is
 not where the search can be, and lays no ground: a committed step of the agent's own is such a belief,
-and laid, every later step of a plan was a boundary. AND A FORECAST'S END TAKES BACK WHAT IT ADDED: a ground
-is laid where a forecast stops holding, and what it added and nothing at that instant adds again goes, so a
+and laid, every later step of a plan was a boundary. AND A FORECAST'S END TAKES BACK WHAT IT ADDED of a thing
+nothing else is believed of: a ground is laid where a forecast stops holding, and what it said of such a thing
+and nothing at that instant adds again goes, so a
 peer's van foreseen at a place for the next two drives stands there for two drives and not for ever, and a
 plan may wait it out where it once had to go round it. Each of a peer's stretches said is followed by the
 next where it ends, the last saying no end, so what a peer said still stands until its key is assigned.
@@ -94,7 +95,7 @@ from datetime import datetime
 import pyoxigraph as ox
 
 from agent.belief.transition import run, transitions
-from agent.ontology import BELIEF, DERIVED, KNOWN, OREXIS
+from agent.ontology import BELIEF, DERIVED, FORECAST, KNOWN, OREXIS
 from agent.hash_named_graph import digest_of, hash_named_graph
 from agent.store import (fork, Raw, add_quads, bind, catalogue_of, classify, clear_graph, revisions_of, forget_graph,
                          graphs_of, instant, quads, rows, update)
@@ -144,6 +145,23 @@ def _ending(store: ox.Store, now: datetime) -> list[tuple[datetime, str]]:
     from the ground laid there — earliest first. A forecast beginning later ends after it begins, so its
     end is a boundary after the one that laid it."""
     return sorted((datetime.fromisoformat(r["end"]), r["piece"]) for r in rows(store, _PIECES_ENDING_Q, (), now=instant(now)))
+
+
+def _foreseen_alone(store: ox.Store) -> set:
+    """Every subject nothing but a forecast says anything of — a place foreseen of a peer's van, a rain hour's
+    observation — which a forecast's end may take back whole. A thing something else is believed of keeps what
+    a forecast said of it until its key is assigned: the end of a peer's stretch said would otherwise take its
+    van's position away, and leave it standing nowhere."""
+    forecasts = set(graphs_of(store, FORECAST)) | {r["piece"] for r in rows(store, _FORECAST_PIECES_Q, ())}
+    aside = forecasts | set(graphs_of(store, GROUND_GRAPH, POSSIBLE_GRAPH)) | {catalogue_of(store)}
+    told = {q.subject for g in forecasts for q in store.quads_for_pattern(None, None, None, ox.NamedNode(g))}
+    return {s for s in told if not any(q.graph_name.value not in aside for q in store.quads_for_pattern(s, None, None, None))}
+
+
+#  THE CHANGEABLE PART CUT FROM EVERY FORECAST.
+_FORECAST_PIECES_Q = """
+SELECT ?piece WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                                   ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source . ?source a orexis:ForecastGraph } }"""
 
 
 #  THE CHANGEABLE PART OF EVERY FORECAST THAT ENDS AFTER `$now`, and when.
@@ -234,6 +252,7 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
     ending: dict = {}
     for at, piece in _ending(store, now):
         ending.setdefault(at, []).append(piece)
+    alone = _foreseen_alone(store) if ending else set()
     boundaries = [(at, group) for at, group in _by_instant(ahead, landing, ending) if at > now]
     if foresight is not None:
         boundaries = sorted([*boundaries, (foresight.horizon, [])], key=lambda b: b[0])
@@ -253,7 +272,7 @@ def lay_ground(store: ox.Store, now: datetime, within: frozenset | None = None,
         changes = (landed or {}).get(at, [])
         added = [*added, *(t for _, adds in changes for t in adds)]
         #  WHAT A FORECAST ENDING HERE ADDED, and nothing here adds again, goes with it.
-        changes = [*changes, *(([tr for piece in ending.get(at, ()) for tr in _triples(store, piece)], []),)]
+        changes = [*changes, *(([tr for piece in ending.get(at, ()) for tr in _triples(store, piece) if tr.subject in alone], []),)]
         #  EVERYTHING BEGINNING AT ONE INSTANT IS ONE WORLD CHANGE. A boundary is an instant,
         #  not a forecast: two flows that both start at one o'clock describe ONE world, and
         #  forking once per forecast made two grounds with the same name and a period from the

@@ -108,7 +108,7 @@ the author is who replaces it, and the author's own provenance finds it.
 instant a forecast begins, and the forecast holds in the grounds from there — its end lays none, since
 a ground keeps a value until something assigns its key, as a prediction's last stretch stands past the
 horizon (#987 refined the "or stops holding" this first said; amended 2026-10-24, a forecast's end takes back
-what it added, since a silent peer's foreseen places standing for ever left no plan but the long way round,
+what it added of a thing nothing else is believed of, since a silent peer's foreseen places standing for ever left no plan but the long way round,
 [two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it](/decisions/two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it.md)). The planner needs one thing of it, that it holds later, and that is a fact about the
 timeline and not about a class of beings. Where the forecast is about the predicate the plan reads, as a
 peer's cells are, nothing is computed; where it is about something else, as rain is, the domain's flow

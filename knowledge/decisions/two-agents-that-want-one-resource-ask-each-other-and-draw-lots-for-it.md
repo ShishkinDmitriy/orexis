@@ -73,7 +73,9 @@ description: >-
 > take next, one since the sighting may be a drive behind), and each place is laid as a forecast of a node of its
 > own, so "no two vans at one position" stays the one constraint and keeps the agent's plans out of every place,
 > for as many of a step as the lookahead says (`coordination:stepS`, the courier's sixty seconds, the top of a
-> drive's band): a forecast's END now takes back what it added, so a plan may wait the window out where it once
+> drive's band): a forecast's END now takes back what it added of a thing nothing else is believed of - a place
+> foreseen, a rain hour's observation, never a peer's van, whose position its stretch's end would take away - so a
+> plan may wait the window out where it once
 > had to go round a zone that stood for ever - measured, a pass searching its whole budget for the way round
 > took twenty to ninety seconds. That amends #987's "its end lays none" for forecasts alone: each stretch a
 > peer said is followed by the next where it ends, so what a peer said still stands until its key is assigned.
