@@ -274,7 +274,8 @@ standing for the peer's thing there, so a constraint comparing two things' value
 tool held by two robots (`agent/coordination/tests/lay/`) - keeps the agent off it; one counting or summing things
 would count every place as another thing, far too cautious, which is the resource with no key below. And no place
 says when the peer could reach it: every one holds from the sighting for the lookahead's window, whichever
-the peer could reach first, which is cautious. The trigger for
+the peer could reach first, which is cautious - save where the agent's own step in flight lands, which is never
+cancelled, so a place foreseen there would leave no world possible and is not laid. The trigger for
 either is a world whose resource is a count, or whose peer moves slowly enough that a window costs more than
 a forecast timed per place would.
 
@@ -292,6 +293,9 @@ other's foreseen places, both wait, lot after lot (measured, twenty rounds). Mak
 weighed and left: a desire the loser holds to keep clear of the places foreseen would push it, and it needs those
 places under a word the one constraint does not read, the place on the loser's own position among them. The
 trigger is a world where two agents that cannot hear each other must pass on a road with no way round.
+A silent peer that never moves is the same seam with one agent: it is foreseen for as long as it is in sight,
+so a parcel owed beside a van whose courier is down is never delivered, and `world/lane/tests/test_one_mind.py`
+poses the van it observes with no courier, since what that test holds is the constraint and not the silence.
 
 **A resource with no key.** A constraint whose footprint joins no key two things share, a sum or a
 count, is no resource here; a capacity of three is not a value two things hold.

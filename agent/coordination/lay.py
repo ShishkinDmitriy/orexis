@@ -23,7 +23,8 @@ foreseen until the next pass, and a step taken then would have been taken blind.
 One for the step the peer may take next, one more since what the agent believes of the peer may be a step behind;
 and laid one node per place, so the thing's keys are never crossed into places it cannot stand. The one constraint
 over the thing, the world's own, keeps the agent's plans out of every place laid, and a sighting that moves the
-peer moves what is laid, which reopens a walking plan it makes impossible.
+peer moves what is laid, which reopens a walking plan it makes impossible. No place is laid where the agent's own
+step in flight lands: that step is never cancelled, so a peer foreseen there would make every world impossible.
 
 **ONLY WHAT THE AGENT'S OWN CONSTRAINTS ADMIT.** A peer's plan goes where the peer believes it can, and this
 agent may see what the peer has not — a hedge its radar shows and the peer's does not yet. Laid there, the
@@ -53,7 +54,7 @@ from agent.ontology import BELIEF, FORECAST, RECEIVED, SELF_GRAPH
 from agent.stance import stance
 from agent.store import PREFIXES, Raw, bind, catalogue_of, entry, forget_graph, graphs_of, rows, update
 
-from .holdings import _TEXTS_Q, Holding, _heard, _key_of, _present
+from .holdings import _TEXTS_Q, Holding, _heard, _key_of, _present, holdings
 from .ontology import (CONSTRAINT_GRAPH, LOOKAHEAD, LOOKING, answer_graph, conflicts_graph, laid_graph, laid_root,
                        question_graph)
 
@@ -84,7 +85,8 @@ def lay(store: ox.Store, me: str, at: datetime) -> list[str]:
             theirs = [h for h in theirs if h.start is None or h.taken]
         if r.get("silent") == "true" and not said:      # and of a silent peer that said nothing, where its things may be
             ahead = int(stance(store, LOOKAHEAD, LOOKING)) + (1 if won and won[0]["w"] != me else 0)
-            reached = _reach(store, peer, constraint, ahead, at)
+            landing = [h for h in holdings(store, constraint, at) if h.taken]   # never where its own step in flight lands
+            reached = [h for h in _reach(store, peer, constraint, ahead, at) if not _refused(store, h, at, landing)]
             foreseen |= {h.thing: (h.end - at) / max(ahead, 1) for h in reached if h.end is not None}
             theirs += reached
         theirs = [h for h in theirs if h.start is None or not _refused(store, h, at)]
@@ -216,26 +218,31 @@ def _rendered(term: ox.Term) -> str:
 _HELD_Q = "SELECT ?c WHERE { ?me a orexis:Self ; planning:holds ?c . ?c a planning:Constraint }"
 
 
-def _refused(store: ox.Store, held: Holding, at: datetime) -> bool:
+def _refused(store: ox.Store, held: Holding, at: datetime, landing: list[Holding] = ()) -> bool:
     """Whether a constraint the agent holds reads a violation of the peer's thing holding `held`'s values beside
     everything else the agent believes now: the present's facts, the thing's own values replaced by the holding's,
-    asked of each constraint's own select."""
+    asked of each constraint's own select — and again beside each of `landing`, a holding of the agent's own its
+    step in flight lands in, that overlaps `held` in time, the agent's thing's values replaced by that holding's."""
     present = _present(store, at)
     common = graphs_of(store, BELIEF, common=True)
-    scratch = ox.Store()
+    base = [q for graph in dict.fromkeys([*common, *present]) for q in store.quads_for_pattern(None, None, None, ox.NamedNode(graph))]
     thing = ox.NamedNode(held.thing)
-    keys = {p for p, _ in held.values}
-    for graph in dict.fromkeys([*common, *present]):
-        for q in store.quads_for_pattern(None, None, None, ox.NamedNode(graph)):
-            if q.subject == thing and q.predicate.value in keys:
-                continue
-            scratch.add(ox.Quad(q.subject, q.predicate, q.object, ox.DefaultGraph()))
-    for predicate, value in held.values:
-        scratch.add(ox.Quad(thing, ox.NamedNode(predicate), value, ox.DefaultGraph()))
-    for c in rows(store, _HELD_Q, [*graphs_of(store, CONSTRAINT_GRAPH), *graphs_of(store, SELF_GRAPH)]):
-        for r in rows(store, _TEXTS_Q, [*graphs_of(store, CONSTRAINT_GRAPH), *common], constraint=c["c"]):
+    texts = [r["text"] for c in rows(store, _HELD_Q, [*graphs_of(store, CONSTRAINT_GRAPH), *graphs_of(store, SELF_GRAPH)])
+             for r in rows(store, _TEXTS_Q, [*graphs_of(store, CONSTRAINT_GRAPH), *common], constraint=c["c"])]
+    beside = [held, *(m for m in landing if (held.end is None or m.start is None or m.start < held.end)
+                      and (m.end is None or held.start is None or held.start < m.end))]
+    for h in beside:
+        replaced = {(ox.NamedNode(x.thing), p) for x in {held, h} for p, _ in x.values}
+        scratch = ox.Store()
+        for q in base:
+            if (q.subject, q.predicate.value) not in replaced:
+                scratch.add(ox.Quad(q.subject, q.predicate, q.object, ox.DefaultGraph()))
+        for x in {held, h}:
+            for predicate, value in x.values:
+                scratch.add(ox.Quad(ox.NamedNode(x.thing), ox.NamedNode(predicate), value, ox.DefaultGraph()))
+        for text in texts:
             try:
-                for row in scratch.query(PREFIXES + r["text"]):
+                for row in scratch.query(PREFIXES + text):
                     if any(isinstance(term, ox.NamedNode) and term == thing for term in row):
                         return True
             except (SyntaxError, ValueError):

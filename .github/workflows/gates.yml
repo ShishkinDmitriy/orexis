@@ -90,9 +90,11 @@ jobs:
 
   agent:
     # The agent's own suites and every world's, the two trees `testpaths` names — the bench's
-    # asserted plans included. The jobs name the trees apart so that a red says which.
+    # asserted plans included. The jobs name the trees apart so that a red says which. Twenty-five
+    # minutes, since a pass beside a silent peer searches its whole budget and the lane's walks beside
+    # one ran fourteen of fifteen (#1026).
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
