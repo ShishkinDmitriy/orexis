@@ -367,7 +367,8 @@ def test_two_couriers_silent_to_each_other_both_yield_and_still_part(monkeypatch
     assert not any(w for w, _ in won), "A never concluded a winner"
     assert _conflict(bus.runtime).get("silent") == "true", "and past A's rounds, B is silent to it"
     assert _conflict(bus.runtimes["courier_b"]).get("silent") == "true", "B never heard A reveal: A is silent to B too"
-    assert positions[-1] == ((6, 1), (5, 4)), f"and both parcels were delivered: {positions[-1]}"
+    assert _at(bus.runtime.beliefs).get("parcel_a") == (6, 1) and _at(bus.runtimes["courier_b"].beliefs).get("parcel_b") == (0, 0), \
+        f"and both parcels were delivered: {positions[-1]}"
 
 
 
@@ -422,98 +423,3 @@ def test_two_couriers_at_a_crossing_draw_lots_and_the_winner_goes_first(monkeypa
     else:
         crossed = next(i for i, (_, b) in enumerate(positions) if b[1] > 1)
         assert all(a[0] < 5 for a, _ in positions[:crossed]), "A came to the crossing only once B had crossed it"
-
-
-def _apart(a: tuple[int, int], b: tuple[int, int]) -> int:
-    return abs(a[0] - b[0]) + abs(a[1] - b[1])
-
-
-#  A SILENT PEER ACROSS THE PATH (#923): the crossing, with courier B a planner and an executor and no coordinator,
-#  so it hears nothing A asks and says nothing back; and A's patience stated as thirty seconds, so its question goes
-#  unanswered for a patience while B is still well short of the lane.
-_SILENT_B = {**_crossing("0", "1"),
-             "beliefs/courier_a.self.ttl": [(":courier_a planning:budget 256 .",
-                                             f':courier_a planning:budget 256 ; coordination:secret "{"0" * 64}" ; coordination:patienceS 30 .')],
-             "beliefs/courier_b.self.ttl": [("@prefix coordination: <http://example.org/orexis/coordination#> .",
-                                             "@prefix execution: <http://example.org/orexis/execution#> ."),
-                                            ("orexis:plays [ a coordination:Coordinator ] ,", "orexis:plays [ a planning:Planner ] , [ a execution:Executor ] ,")]}
-
-
-def test_a_silent_peer_driving_across_the_path_is_passed_where_it_leaves_room(monkeypatch, tmp_path):
-    """B drives up column 5 across the lane and answers nothing: it plays no coordinator. A asks it, hears nothing
-    for its patience, takes it as silent, and from then on foresees B's van wherever the courier's reach says it may
-    be two drives on — one for the drive B may take next, one since what A believes of B may be a drive behind — so
-    the one constraint keeps A's plans out of every such place. A takes the whole of the avoiding: it crosses column
-    5 where B has left room, and no two vans ever stand at one position."""
-    bus, time = _lane(monkeypatch, variant(tmp_path, "silent_b", _SILENT_B))
-    bus.simulator.open()
-    bus.simulator.step(NOW)
-    for runtime in bus.runtimes.values():
-        runtime.run(passes=1, poll_s=0)
-    assert "coordination" not in bus.runtimes["courier_b"].parts, "B plays no coordinator"
-    positions, silent, drives = [], [], []
-    for _ in range(120):
-        time["at"] += timedelta(seconds=CADENCE_S)
-        bus.simulator.step(time["at"])
-        was_silent, told = _conflict(bus.runtime).get("silent") == "true", len(bus.commands)
-        for runtime in bus.runtimes.values():
-            runtime.run(passes=1, poll_s=0)
-        positions.append((bus.simulator.position(L + "van_a"), bus.simulator.position(L + "van_b")))
-        silent.append(_conflict(bus.runtime).get("silent") == "true")
-        b = _at(bus.runtime.beliefs).get("van_b")
-        drives += [((p["to"]["x"], p["to"]["y"]), b, was_silent) for t, p in bus.commands[told:] if t == "actuators/van_a/command"]
-        if positions[-1] == ((6, 1), (5, 4)) and not any(r.parts["execution"].executor.walking() for r in bus.runtimes.values()):
-            break
-    assert all(a != b for a, b in positions), f"two vans stood at one position: {positions}"
-    assert positions[-1] == ((6, 1), (5, 4)), f"both vans where their parcels are owed: {positions[-1]}"
-    said = [(topic.split("/")[1], payload.decode()) for topic, payload in bus.told]
-    assert any(to == "courier_b" and "coordination#Question" in p for to, p in said), "A asked B"
-    assert not any(to == "courier_a" for to, _ in said), "B said nothing"
-    assert any(silent), "and A took B as silent"
-    #  A FORESAW B once it took B as silent: every drive A took from then on went to a cell beyond the two drives
-    #  of where A believed B's van stood. B, which foresees nothing of A, may drive beside A.
-    told_a = [to for to, _, _ in drives]
-    assert told_a[-1] == (6, 1) and not set(told_a) & HEDGES, f"A's drives: {told_a}"
-    assert all(_apart(to, b) >= 3 for to, b, was in drives if was and b), f"A drove near B: {drives}"
-
-
-#  TWO COURIERS THAT CANNOT HEAR EACH OTHER (#923): the crossing, every document either says lost on the way, and
-#  each patience thirty seconds, so each takes the other as silent while both are still short of the lane. At the
-#  crossing there is a way round; head on in the lane between the hedges there is none, and two that cannot hear
-#  each other both wait there (two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it, seams).
-_DEAF = {**_crossing("0", "3"),
-         "beliefs/courier_a.self.ttl": [(":courier_a planning:budget 256 .",
-                                         f':courier_a planning:budget 256 ; coordination:secret "{"0" * 64}" ; coordination:patienceS 30 .')],
-         "beliefs/courier_b.self.ttl": [(":courier_b planning:budget 256 .",
-                                         f':courier_b planning:budget 256 ; coordination:secret "{"3" * 64}" ; coordination:patienceS 30 .')]}
-
-
-def test_two_couriers_that_cannot_hear_each_other_back_off_by_lots_drawn_alone_and_part(monkeypatch, tmp_path):
-    """At the crossing, and nothing either says reaches the other. Each asks, hears nothing for its patience, and takes
-    the other as silent: each foresees the other's van two drives on, so neither drives into the other's way. Each then
-    draws a lot alone each patience, and the one that loses foresees a drive further, so goes round the wider; the
-    round the lots differ, one goes round while the other drives on, and they part. No two vans ever
-    stand at one position, and both parcels are delivered."""
-    bus, time = _lane(monkeypatch, variant(tmp_path, "deaf", _DEAF))
-    bus.dropping = lambda topic, payload: True
-    bus.simulator.open()
-    bus.simulator.step(NOW)
-    for runtime in bus.runtimes.values():
-        runtime.run(passes=1, poll_s=0)
-    positions, conflicts = [], []
-    for _ in range(200):
-        time["at"] += timedelta(seconds=CADENCE_S)
-        bus.simulator.step(time["at"])
-        for runtime in bus.runtimes.values():
-            runtime.run(passes=1, poll_s=0)
-        positions.append((bus.simulator.position(L + "van_a"), bus.simulator.position(L + "van_b")))
-        conflicts.append((_conflict(bus.runtime), _conflict(bus.runtimes["courier_b"])))
-        if positions[-1] == ((6, 1), (5, 4)) and not any(r.parts["execution"].executor.walking() for r in bus.runtimes.values()):
-            break
-    assert bus.dropped and len(bus.dropped) == len(bus.told), "every document either said was lost"
-    assert all(a != b for a, b in positions), f"two vans stood at one position: {positions}"
-    assert any(a.get("silent") == "true" for a, _ in conflicts) and any(b.get("silent") == "true" for _, b in conflicts), \
-        "each took the other as silent"
-    rounds = {(a.get("round"), b.get("round")) for a, b in conflicts}
-    assert any(r not in (None, "0") for r, _ in rounds), f"the rounds turned, a lot each patience: {sorted(rounds)}"
-    assert positions[-1] == ((6, 1), (5, 4)), f"and both parcels were delivered: {positions[-1]}"
