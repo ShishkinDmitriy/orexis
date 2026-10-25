@@ -14,8 +14,10 @@ A question is one node in a graph of its own, `coordination:QuestionGraph`, bene
 [statement](/domain/speech/statement.md): who asks, `coordination:asks`; the constraint, `coordination:over`;
 and each of the asker's [holdings](/domain/coordination/holding.md) under it, `coordination:holding`. The
 graph is named for the asker, the peer and the constraint, so it is said again under one name and the peer
-holds the latest (`agent/coordination/ask.py`). It holds over the asker's patience
-(`coordination:patienceS`) from when it is asked, stated as the graph's own period.
+holds the latest (`agent/coordination/ask.py`). It holds until the asker's patience
+(`coordination:patienceS`) after it was last said, stated as the graph's own period, which starts where the
+agent first asked it: said again, lapsed or not, it keeps that start, so its period says how long the peer has
+been asked - and a peer that has answered nothing for a patience of it is silent.
 
 # Whom, and when
 

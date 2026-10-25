@@ -1,6 +1,7 @@
 @prefix : <http://example.org/orexis/courier#> .
 @prefix courier: <http://example.org/orexis/courier#> .
 @prefix belief: <http://example.org/orexis/belief#> .
+@prefix coordination: <http://example.org/orexis/coordination#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
@@ -81,4 +82,23 @@
             BIND(COALESCE(?peer, ?contact) AS ?subject)
             BIND(IF(?d >= ?least && ?d <= ?most, xsd:integer(?my) + xsd:integer(?d), ?beyond) AS ?y)
             OPTIONAL { ?subject courier:y ?was }
+        }""" .
+
+#  WHERE A VAN MAY BE A DRIVE AHEAD, the reach coordination asks of a peer that says nothing of where it is going
+#  (knowledge/domain/coordination/conflict.md): a van drives to a neighbour or stays, so a drive on it stands at
+#  one of five positions, each a node of its own, typed a van at its two coordinates - laid one per position, so
+#  the two keys are never crossed into a box whose corners stand on hedges. Named for the van and the position,
+#  dotted, so the same position is one node however it was reached; a drive is a minute at most, so what is
+#  foreseen holds for the lookahead's minutes and the next sighting says after.
+:a_drive_ahead a coordination:Reach ;
+    rdfs:label "a van stands, a drive on, where it stands or at a neighbour" ;
+    coordination:stepS 60 ;    # the top of a drive's band, thirty to sixty seconds (actions.answered.ttl)
+    sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+        CONSTRUCT { ?at a courier:Van ; courier:x ?nx ; courier:y ?ny }
+        WHERE {
+            $this a courier:Van ; courier:x ?x ; courier:y ?y .
+            VALUES (?dx ?dy) { (0 0) (1 0) (-1 0) (0 1) (0 -1) }
+            BIND(xsd:integer(?x) + ?dx AS ?nx)
+            BIND(xsd:integer(?y) + ?dy AS ?ny)
+            BIND(IRI(CONCAT(STR($this), ".at.", STR(?nx), ".", STR(?ny))) AS ?at)
         }""" .

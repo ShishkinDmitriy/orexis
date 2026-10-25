@@ -60,6 +60,46 @@ description: >-
 > plan is said in its next question and leaves the row to B, and B drives straight down it while A takes the
 > row below. "Both wait" held for no more than a patience; a standoff needs a road with no way round, which
 > no world here poses, and what two agents that cannot hear each other at all do is the seam below.
+>
+> **Amended 2026-10-24** (the sovereign, #923's last two done-whens): **a peer that never answers is silent, the
+> agent foresees where a silent peer's van may be, and two agents that cannot hear each other back off by a lot
+> each draws alone.** A question unanswered for the asker's patience since its first asking makes the peer
+> silent, in a conflict that stands while it is in range ([conflict](/domain/coordination/conflict.md)). A
+> forecast is then the agent's own estimate where it is not the peer's word - for a peer that has said nothing; one
+> silent by its draw's restarts said its holdings, and foreseen as well it slowed the lost-commitment walk past a
+> CI job's length - a domain's `coordination:Reach`, the
+> courier's a van standing or at a neighbour a drive on, is asked of where the agent believes the peer's van now,
+> as many steps ahead as the agent's stance says (`coordination:lookahead`, two - one for the drive the peer may
+> take next, one since the sighting may be a drive behind), and each place is laid as a forecast of a node of its
+> own, so "no two vans at one position" stays the one constraint and keeps the agent's plans out of every place,
+> for as many of a step as the lookahead says (`coordination:stepS`, the courier's sixty seconds, the top of a
+> drive's band): a forecast's END now takes back what it added of a thing nothing else is believed of - a place
+> foreseen, a rain hour's observation, never a peer's van, whose position its stretch's end would take away - so a
+> plan may wait the window out where it once
+> had to go round a zone that stood for ever - measured, a pass searching its whole budget for the way round
+> took twenty to ninety seconds. That amends #987's "its end lays none" for forecasts alone: each stretch a
+> peer said is followed by the next where it ends, so what a peer said still stands until its key is assigned.
+> A sighting that moves the peer moves what is laid, and a walking plan it makes impossible is reopened (#921). A
+> never-answering peer's silent conflict's round turns each patience, and its draw is a LOT the agent draws alone, the draw domain's
+> `draw:lot`; the one that lost foresees a step further, so goes round the wider. An observation that tells more
+> - a turn signal, were there a sensor for it - narrows the estimate, a forecast made of an observation.
+>
+> Refused, each built or argued first:
+> - a SECOND CONSTRAINT keeping two cells between the agent's van and a silent peer's, three where the lot was
+>   lost. Built and walked: a peer driving up to the van made the present violate it, nothing repairs a present,
+>   and two cells cannot be regained in one drive, so every world was impossible, no plan was found, and the
+>   passes grew to minutes while the vans met at the lane's middle;
+> - a DESIRE to keep away from other vehicles, the distance the agent's risk appetite: a desire restricts no
+>   other plan, so the delivery would drive up to the peer and only then be pushed away, the two wants pulling
+>   the van to and fro; the risk appetite stands, as how far ahead the agent foresees;
+> - the loser of the lot ADVANCING, the winner holding still - CSMA's faster parting, but two that both draw "go"
+>   can both drive into one empty cell, and the sovereign chose the backing off.
+> - `weigh` taking a constraint's holder with `LIMIT 1` was a bug the second constraint found and is fixed: on
+>   the lane both couriers hold the courier's constraints, and weighed as the other courier a constraint read none
+>   of the agent's own graphs. The self is weighed for now.
+>
+> The two walks are not yet in the tree: beside a silent peer a pass searched its whole budget, half a second
+> becoming twenty to two hundred and fifty, and a walk would take an hour (#1026).
 
 # The question
 
@@ -224,10 +264,38 @@ the lane's roads is the old way with a wait or a pull-aside in it. Where a detou
 the detour and never rejoins the track its first plan was found on. The trigger is a world where it should:
 a road whose other users plan on the van keeping to it.
 
-**Backoff between two agents that cannot hear each other** is sensing's, and asked of the lane by #923
-as it stands; what each does there is not coordination's to say. Two agents that HEAR each other's
-questions and conclude each other silent need none: each plans round the holdings the other said, and
-the first to re-plan says new ones that leave the other's way clear.
+**A peer that answers after it was taken as silent** stays silent until it is out of range and not asking: the
+conclusion is not taken back by a late answer, which costs it places foreseen for nothing and never a collision.
+And only a peer that has NEVER answered under a constraint is silent this way; one that answered and then fell
+deaf is the draw's restarts, as before.
+
+**A foreseen place is a thing of its own, and it holds from now on.** Each place a reach gives is laid as a node
+standing for the peer's thing there, so a constraint comparing two things' values - two vans at one position, one
+tool held by two robots (`agent/coordination/tests/lay/`) - keeps the agent off it; one counting or summing things
+would count every place as another thing, far too cautious, which is the resource with no key below. And no place
+says when the peer could reach it: every one holds from the sighting for the lookahead's window, whichever
+the peer could reach first, which is cautious - save where the agent's own step in flight lands, which is never
+cancelled, so a place foreseen there would leave no world possible and is not laid. The trigger for
+either is a world whose resource is a count, or whose peer moves slowly enough that a window costs more than
+a forecast timed per place would.
+
+**With nothing said at all, a tie is safe or broken, never both, and the stance says which.** Two agents that
+cannot hear each other cannot always both avoid colliding and always part; `coordination:lookahead` is where an
+agent says which it gives up. Two vans, whose collision harms both, foresee each other two drives on whoever won,
+and part only where the road has a way round; two robots whose second grab of one mop merely fails can state
+nought, so the lot's winner foresees nothing and takes the mop, the loser foresees one step and yields, and two
+winners both reach for it and the world gives it to one - CSMA's backoff.
+
+**Two agents that cannot hear each other part only where there is a way round.** Foreseeing a silent peer
+rules places out and never pushes the agent anywhere, so the lot's loser foresees further and goes round the
+wider - at the lane's crossing - but head on in the lane between the hedges, where neither has a way round the
+other's foreseen places, both wait, lot after lot (measured, twenty rounds). Making the loser drive away was
+weighed and left: a desire the loser holds to keep clear of the places foreseen would push it, and it needs those
+places under a word the one constraint does not read, the place on the loser's own position among them. The
+trigger is a world where two agents that cannot hear each other must pass on a road with no way round.
+A silent peer that never moves is the same seam with one agent: it is foreseen for as long as it is in sight,
+so a parcel owed beside a van whose courier is down is never delivered, and `world/lane/tests/test_one_mind.py`
+poses the van it observes with no courier, since what that test holds is the constraint and not the silence.
 
 **A resource with no key.** A constraint whose footprint joins no key two things share, a sum or a
 count, is no resource here; a capacity of three is not a value two things hold.

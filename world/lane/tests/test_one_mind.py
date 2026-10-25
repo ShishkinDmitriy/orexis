@@ -871,9 +871,14 @@ def test_a_belief_that_makes_the_walking_plans_next_world_impossible_reopens_it_
     ground its step in flight lands in; the intention ends AFTER that step, `superseded`, and the new plan
     opens where it lands and never drives onto van B's position. OBSERVED, van B is put there by the world
     and van A's receiver reports it, as #922 asked: the constraint alone keeps the plan out, whatever was or
-    was not said. Parcel A is delivered."""
+    was not said — a van no courier drives, since one whose courier never answered would be a silent peer,
+    foreseen at every place it may drive to (lay). Parcel A is delivered."""
     arrive = _van_b(observed=observed)
-    seen = _arrival(pose(tmp_path, "peer", **PEER), arrive)
+    world = pose(tmp_path, "peer", **PEER)
+    if observed:      # a van no courier drives, so nobody is asked and nobody is silent: what was said is no part of it
+        lane = world / "world.ttl"
+        lane.write_text(lane.read_text().replace(_DRIVES_B, ""))
+    seen = _arrival(world, arrive)
     arrived, beliefs, blocked = seen["arrived"], seen["beliefs"], arrive.place
     head, landing = _in_flight(seen)
     (reconsidered,) = _of(seen, "reconsidered")

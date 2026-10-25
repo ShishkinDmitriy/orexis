@@ -1,0 +1,14 @@
+--- case
++++ expected
+@@ -77,6 +77,11 @@
+   ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+   ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
+   ground:2026-01-01T120000p0000 orexis:hash "sha256:0000000000000000000000000000000000000000000000000000000000000000" .
++  ground:2026-01-01T120000p0000.for.keeper.apart a planning:Weighing .
++  ground:2026-01-01T120000p0000.for.keeper.apart planning:for :keeper.apart .
++  ground:2026-01-01T120000p0000.for.keeper.apart planning:met false .
++  ground:2026-01-01T120000p0000.for.keeper.apart planning:violation [ planning:about :tank1 ; planning:constraint 0 ; planning:instance :tank1 ; planning:offending :stand_a ] .
++  ground:2026-01-01T120000p0000.for.keeper.apart planning:weighs ground:2026-01-01T120000p0000 .
+ }
+ 
+ GRAPH ground:2026-01-01T120000p0000 {

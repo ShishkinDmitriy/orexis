@@ -1,0 +1,103 @@
+# silent_and_never_answering_the_keeper_lays_where_the_peers_van_may_be_two_drives_on
+#
+# The peer is silent and said nothing: no holding to lay. Its van is believed at (5, 1), two cells along from the
+# keeper's at (3, 1), and the world's rules ship a reach - a van a drive on stands where it stood or at a
+# neighbour. The keeper's stance states no steps ahead, so two: one for the drive the peer may take next, one
+# since what the keeper believes of it may be a drive behind. Every place within two drives of (5, 1), each a
+# node of its own typed a van, is laid as a forecast for two drives of a minute at most, to 12:02 - twelve places less the one the van stands at,
+# which is sensing's, and less (3, 1), where the keeper's own van stands and which no possible world could then
+# hold: eleven. The one constraint, no two vans at one position, keeps the keeper's plans out of every one.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix coordination: <http://example.org/orexis/coordination#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix coordinated: <http://example.org/orexis/graph/coordination/keeper/> .
+@prefix conflict: <http://example.org/orexis/graph/coordination/conflict/> .
+@prefix answered: <http://example.org/orexis/graph/coordination/peer/answer/keeper/> .
+@prefix laid: <http://example.org/orexis/graph/coordination/keeper/laid/peer/no_two_vans/> .
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :constraints a orexis:Graph .
+  :constraints a planning:ConstraintGraph .
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :rules a orexis:Graph .
+  :rules a sh:RulesGraph .
+  :self a orexis:BeliefGraph .
+  :self a orexis:Graph .
+  :self a orexis:SelfGraph .
+  :state a orexis:BeliefGraph .
+  :state a orexis:Graph .
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  coordinated:conflicts a orexis:BeliefGraph .
+  coordinated:conflicts a orexis:Graph .
+  coordinated:conflicts orexis:arrivedBy orexis:Derived .
+  coordinated:conflicts orexis:ownedBy :keeper .
+}
+GRAPH :constraints {
+  :no_two_vans a planning:Constraint .
+  :no_two_vans planning:unmetWhen :no_two_vans.select .
+  :no_two_vans.select sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+SELECT $this ?value WHERE { $this a courier:Van ; courier:x ?x ; courier:y ?y .
+                            ?value a courier:Van ; courier:x ?x ; courier:y ?y . FILTER(?value != $this) }""" .
+}
+GRAPH :ontology {
+  coordination:AnswerGraph rdfs:subClassOf speech:StatementGraph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:CatalogueGraph rdfs:subClassOf orexis:Graph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:OntologyGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:SelfGraph rdfs:subClassOf orexis:BeliefGraph .
+  planning:ConstraintGraph rdfs:subClassOf orexis:Graph .
+  speech:StatementGraph rdfs:subClassOf orexis:Graph .
+}
+GRAPH :rules {
+  :a_drive_ahead a coordination:Reach .
+  :a_drive_ahead coordination:stepS 60 .
+  :a_drive_ahead sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+CONSTRUCT { ?at a courier:Van ; courier:x ?nx ; courier:y ?ny }
+WHERE { $this a courier:Van ; courier:x ?x ; courier:y ?y .
+        VALUES (?dx ?dy) { (0 0) (1 0) (-1 0) (0 1) (0 -1) }
+        BIND(xsd:integer(?x) + ?dx AS ?nx) BIND(xsd:integer(?y) + ?dy AS ?ny)
+        BIND(IRI(CONCAT(STR($this), ".at.", STR(?nx), ".", STR(?ny))) AS ?at) }""" .
+}
+GRAPH :self {
+  :keeper a orexis:Self .
+  :keeper orexis:actsFor :van_k .
+  :keeper planning:holds :no_two_vans .
+}
+GRAPH :state {
+  :van_k courier:x 3 .
+  :van_k courier:y 1 .
+  :van_p courier:x 5 .
+  :van_p courier:y 1 .
+}
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:localId "keeper" .
+  :peer a orexis:Agent .
+  :peer orexis:actsFor :van_p .
+  :van_k a courier:Van .
+  :van_p a courier:Van .
+}
+GRAPH coordinated:conflicts {
+  conflict:2216b9a9c788124d a coordination:Conflict .
+  conflict:2216b9a9c788124d coordination:draw conflict:2216b9a9c788124d.round.0 .
+  conflict:2216b9a9c788124d coordination:over :no_two_vans .
+  conflict:2216b9a9c788124d coordination:round 0 .
+  conflict:2216b9a9c788124d coordination:silent true .
+  conflict:2216b9a9c788124d coordination:since "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  conflict:2216b9a9c788124d coordination:standing true .
+  conflict:2216b9a9c788124d coordination:with :peer .
+}

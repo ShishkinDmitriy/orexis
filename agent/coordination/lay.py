@@ -10,6 +10,22 @@ it (`coordination:taken`), which nothing a draw decides cancels — commitment i
 Yielding to the peer's next holding whether taken or not, the winner yielded every time the loser's next drive
 was the contested cell, and at a crossing the loser crossed first. A conflict that does not stand lays nothing.
 
+**OF A SILENT PEER THAT SAID NOTHING, WHERE ITS THINGS MAY BE.** A peer that says nothing says nothing of where it
+is going, so the agent estimates it — one silent by its draw's restarts said its holdings, which are laid, and is
+estimated nothing more: each `coordination:Reach` a world's rules ship says where a thing may be a step of its own
+ahead, and asked of where the agent believes the peer's thing now, and again of each answer, as many times as the
+agent's lookahead says (`coordination:lookahead`, two, and one more where the lot it drew alone this round was
+lost), it gives every place the thing may stand by then, each a node of its own, laid as a forecast from now for
+as many of the longest step a reach says it takes (`coordination:stepS`) — after which only the next sighting
+says, and a plan may wait the window out. A place laid stands while a step of its window is left, and is laid
+again where the places move or less is left: let lapse while the peer was still in sight, nothing of it would be
+foreseen until the next pass, and a step taken then would have been taken blind.
+One for the step the peer may take next, one more since what the agent believes of the peer may be a step behind;
+and laid one node per place, so the thing's keys are never crossed into places it cannot stand. The one constraint
+over the thing, the world's own, keeps the agent's plans out of every place laid, and a sighting that moves the
+peer moves what is laid, which reopens a walking plan it makes impossible. No place is laid where the agent's own
+step in flight lands: that step is never cancelled, so a peer foreseen there would make every world impossible.
+
 **ONLY WHAT THE AGENT'S OWN CONSTRAINTS ADMIT.** A peer's plan goes where the peer believes it can, and this
 agent may see what the peer has not — a hedge its radar shows and the peer's does not yet. Laid there, the
 peer's thing would stand on it in every ground from then on, and every world forked from those grounds would be
@@ -29,16 +45,18 @@ when nothing lays it any more.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pyoxigraph as ox
 
 from agent.hash_named_graph import hash_named_graph
 from agent.ontology import BELIEF, FORECAST, RECEIVED, SELF_GRAPH
-from agent.store import PREFIXES, Raw, catalogue_of, entry, forget_graph, graphs_of, rows, update
+from agent.stance import stance
+from agent.store import PREFIXES, Raw, bind, catalogue_of, entry, forget_graph, graphs_of, rows, update
 
-from .holdings import _TEXTS_Q, Holding, _heard, _present
-from .ontology import CONSTRAINT_GRAPH, answer_graph, conflicts_graph, laid_graph, laid_root, question_graph
+from .holdings import _TEXTS_Q, Holding, _heard, _key_of, _present, holdings
+from .ontology import (CONSTRAINT_GRAPH, LOOKAHEAD, LOOKING, answer_graph, conflicts_graph, laid_graph, laid_root,
+                       question_graph)
 
 _STANDING_Q = """
 SELECT ?c ?peer ?constraint ?draw ?silent WHERE { GRAPH $graph {
@@ -57,12 +75,20 @@ def lay(store: ox.Store, me: str, at: datetime) -> list[str]:
         return []
     beliefs = graphs_of(store, BELIEF)
     wanted: dict[str, Holding] = {}
+    foreseen: dict[str, timedelta] = {}            # each place foreseen, and one step of its window
     for r in rows(store, _STANDING_Q, (), graph=Raw(f"<{conflicts_graph(me)}>")):
         won = rows(store, _WON_Q, beliefs, draw=r["draw"])
         peer, constraint = r["peer"], r["constraint"]
         theirs = _heard(store, question_graph(peer, me, constraint)) or _heard(store, answer_graph(peer, me, constraint))
+        said = bool(theirs)
         if won and won[0]["w"] == me:                   # the winner lays the loser's step in flight alone
             theirs = [h for h in theirs if h.start is None or h.taken]
+        if r.get("silent") == "true" and not said:      # and of a silent peer that said nothing, where its things may be
+            ahead = int(stance(store, LOOKAHEAD, LOOKING)) + (1 if won and won[0]["w"] != me else 0)
+            landing = [h for h in holdings(store, constraint, at) if h.taken]   # never where its own step in flight lands
+            reached = [h for h in _reach(store, peer, constraint, ahead, at) if not _refused(store, h, at, landing)]
+            foreseen |= {h.thing: (h.end - at) / max(ahead, 1) for h in reached if h.end is not None}
+            theirs += reached
         theirs = [h for h in theirs if h.start is None or not _refused(store, h, at)]
         for n, h in enumerate(_timeline(theirs)):
             if h.end is None or h.end > at:
@@ -73,14 +99,77 @@ def lay(store: ox.Store, me: str, at: datetime) -> list[str]:
         forget_graph(store, graph)
         written.append(graph)
     for graph, h in sorted(wanted.items()):
-        if graph in laid and _holding_in(store, graph) == h:
-            continue
+        held = _holding_in(store, graph) if graph in laid else None
+        if held == h or (held is not None and h.thing in foreseen and held.thing == h.thing
+                         and held.values == h.values and held.end is not None and held.end - at > foreseen[h.thing]):
+            continue                                # a place foreseen stands while a step of its window is left
         forget_graph(store, graph)
         facts = " ".join(f"<{h.thing}> <{p}> {_rendered(v)} ." for p, v in h.values)
         update(store, f"INSERT DATA {{ GRAPH <{graph}> {{ {facts} }} {entry(store, graph, FORECAST, RECEIVED, me, h.start, h.end)} }}")
         hash_named_graph(store, graph)
         written.append(graph)
     return written
+
+
+#  THE THINGS A PEER ACTS FOR; WHAT THE AGENT BELIEVES EACH IS; AND EVERY REACH A WORLD'S RULES SHIP.
+_ACTS_FOR_Q = "SELECT ?t WHERE { $peer orexis:actsFor ?t } ORDER BY ?t"
+_REACH_Q = """SELECT ?text ?step WHERE { ?rule a coordination:Reach ; sh:construct ?text .
+                                         OPTIONAL { ?rule coordination:stepS ?step }
+                                         FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule"""
+_RULES_GRAPH = "http://www.w3.org/ns/shacl#RulesGraph"
+_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+
+
+def _reach(store: ox.Store, peer: str, constraint: str, ahead: int, at: datetime) -> list[Holding]:
+    """Every place a thing `peer` acts for may stand `ahead` of its steps on, as the world's reaches say: a holding
+    per place, of a node standing for the thing there, with the kinds and the values on `constraint`'s key the reach
+    gives it, from `at` for `ahead` of the longest step a reach says (`coordination:stepS`), for ever where one says none — the places it holds now left out, which are what sensing says. Each reach is asked over
+    everything the agent believes now, the thing's own values on the key replaced by the place it is foreseen from,
+    so a reach, about `$this`, the thing, may read the world — the free tools a robot may pick up — and a thing holding nothing on the key, a
+    robot with free hands, is foreseen too."""
+    key = _key_of(store, constraint)
+    reaches = rows(store, _REACH_Q, graphs_of(store, _RULES_GRAPH))
+    texts = [r["text"] for r in reaches]
+    if not key or not texts:
+        return []
+    steps = [float(r["step"]) for r in reaches if r.get("step") is not None]
+    until = at + timedelta(seconds=ahead * max(steps)) if len(steps) == len(reaches) else None
+    present = _present(store, at)
+    common = graphs_of(store, BELIEF, common=True)
+    order = lambda pv: (pv[0], str(pv[1]))                      # noqa: E731
+    out: list[Holding] = []
+    for r in rows(store, _ACTS_FOR_Q, common, peer=peer):
+        thing = ox.NamedNode(r["t"])
+        scratch, now = ox.Store(), set()
+        for graph in dict.fromkeys([*common, *present]):
+            for q in store.quads_for_pattern(None, None, None, ox.NamedNode(graph)):
+                if q.subject == thing and q.predicate.value in key:
+                    now.add((q.predicate.value, q.object))
+                else:
+                    scratch.add(ox.Quad(q.subject, q.predicate, q.object, ox.DefaultGraph()))
+        now = tuple(sorted(now, key=order))
+        seen, frontier, places = {now}, [now], {}
+        for _ in range(ahead):
+            nxt = []
+            for values in frontier:
+                held = [ox.Quad(thing, ox.NamedNode(p), v, ox.DefaultGraph()) for p, v in values]
+                scratch.extend(held)
+                for text in texts:
+                    found: dict = {}
+                    for t in scratch.query(PREFIXES + bind(text, this=thing)):
+                        found.setdefault(t.subject, []).append((t.predicate.value, t.object))
+                    for node, pvs in found.items():
+                        place = tuple(sorted(((p, v) for p, v in pvs if p in key), key=order))
+                        if place in seen or not place:
+                            continue
+                        seen.add(place)
+                        nxt.append(place)
+                        places[node.value] = tuple(sorted(pvs, key=order))
+                for q in held:
+                    scratch.remove(q)
+            frontier = nxt
+        out += [Holding(node, values, at, until) for node, values in sorted(places.items())]
+    return out
 
 
 def _timeline(held: list[Holding]) -> list[Holding]:
@@ -129,26 +218,31 @@ def _rendered(term: ox.Term) -> str:
 _HELD_Q = "SELECT ?c WHERE { ?me a orexis:Self ; planning:holds ?c . ?c a planning:Constraint }"
 
 
-def _refused(store: ox.Store, held: Holding, at: datetime) -> bool:
+def _refused(store: ox.Store, held: Holding, at: datetime, landing: list[Holding] = ()) -> bool:
     """Whether a constraint the agent holds reads a violation of the peer's thing holding `held`'s values beside
     everything else the agent believes now: the present's facts, the thing's own values replaced by the holding's,
-    asked of each constraint's own select."""
+    asked of each constraint's own select — and again beside each of `landing`, a holding of the agent's own its
+    step in flight lands in, that overlaps `held` in time, the agent's thing's values replaced by that holding's."""
     present = _present(store, at)
     common = graphs_of(store, BELIEF, common=True)
-    scratch = ox.Store()
+    base = [q for graph in dict.fromkeys([*common, *present]) for q in store.quads_for_pattern(None, None, None, ox.NamedNode(graph))]
     thing = ox.NamedNode(held.thing)
-    keys = {p for p, _ in held.values}
-    for graph in dict.fromkeys([*common, *present]):
-        for q in store.quads_for_pattern(None, None, None, ox.NamedNode(graph)):
-            if q.subject == thing and q.predicate.value in keys:
-                continue
-            scratch.add(ox.Quad(q.subject, q.predicate, q.object, ox.DefaultGraph()))
-    for predicate, value in held.values:
-        scratch.add(ox.Quad(thing, ox.NamedNode(predicate), value, ox.DefaultGraph()))
-    for c in rows(store, _HELD_Q, [*graphs_of(store, CONSTRAINT_GRAPH), *graphs_of(store, SELF_GRAPH)]):
-        for r in rows(store, _TEXTS_Q, [*graphs_of(store, CONSTRAINT_GRAPH), *common], constraint=c["c"]):
+    texts = [r["text"] for c in rows(store, _HELD_Q, [*graphs_of(store, CONSTRAINT_GRAPH), *graphs_of(store, SELF_GRAPH)])
+             for r in rows(store, _TEXTS_Q, [*graphs_of(store, CONSTRAINT_GRAPH), *common], constraint=c["c"])]
+    beside = [held, *(m for m in landing if (held.end is None or m.start is None or m.start < held.end)
+                      and (m.end is None or held.start is None or held.start < m.end))]
+    for h in beside:
+        replaced = {(ox.NamedNode(x.thing), p) for x in {held, h} for p, _ in x.values}
+        scratch = ox.Store()
+        for q in base:
+            if (q.subject, q.predicate.value) not in replaced:
+                scratch.add(ox.Quad(q.subject, q.predicate, q.object, ox.DefaultGraph()))
+        for x in {held, h}:
+            for predicate, value in x.values:
+                scratch.add(ox.Quad(ox.NamedNode(x.thing), ox.NamedNode(predicate), value, ox.DefaultGraph()))
+        for text in texts:
             try:
-                for row in scratch.query(PREFIXES + r["text"]):
+                for row in scratch.query(PREFIXES + text):
                     if any(isinstance(term, ox.NamedNode) and term == thing for term in row):
                         return True
             except (SyntaxError, ValueError):

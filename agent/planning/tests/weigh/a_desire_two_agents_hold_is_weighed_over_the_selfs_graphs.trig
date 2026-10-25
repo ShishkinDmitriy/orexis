@@ -1,0 +1,95 @@
+# a_desire_two_agents_hold_is_weighed_over_the_selfs_graphs
+#
+# The aversion of `an_aversions_want_in_the_ground`, held by the keeper and by another agent too - a world's
+# word, as a world says every courier holds the courier's constraints - and reading what only the keeper's own
+# graph says: which tank it watches. One store lists both holders, and a world is read with the holder's own
+# graphs and the common ones, so weighed as the other agent's the keeper's graph was out of it and the desire
+# read met. Weighed as the self, which the self graph names, tank1 is watched and shares a stand: unmet, one
+# witness, about tank1.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+
+GRAPH :ontology {
+  orexis:SelfGraph rdfs:subClassOf orexis:BeliefGraph .
+}
+
+GRAPH :world {
+  :stand_a a :Stand .
+  :stand_b a :Stand .
+  :tank1 a :Tank .
+  :tank2 a :Tank .
+}
+
+GRAPH :desires {
+  :another planning:holds :keeper.apart .
+  :keeper planning:holds :keeper.apart .
+  :keeper.apart a planning:Desire .
+  :keeper.apart planning:unmetWhen :sharing_a_stand .
+  :keeper.apart rdfs:label "no stand holds two tanks the holder watches" .
+  :sharing_a_stand planning:about sh:this .
+  :sharing_a_stand sh:select "PREFIX : <http://example.org/test#> SELECT $this ?value WHERE { $this :watched true . $this a :Tank ; :on ?value . ?other a :Tank ; :on ?value . FILTER(?other != $this) }" .
+}
+
+GRAPH :self {
+  :keeper a orexis:Self .
+}
+
+GRAPH :mine {
+  :tank1 :watched true .
+}
+
+GRAPH :sensed {
+  :tank1 :on :stand_a .
+  :tank2 :on :stand_a .
+}
+
+GRAPH :scopes {
+  :keeper.scope.1 a planning:Scope .
+  :move planning:inScope :keeper.scope.1 .
+  :on planning:inScope :keeper.scope.1 .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :mine a orexis:BeliefGraph .
+  :mine a orexis:Graph .
+  :mine orexis:ownedBy :keeper .
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :scopes a orexis:Graph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:ownedBy :keeper .
+  :self a orexis:BeliefGraph .
+  :self a orexis:Graph .
+  :self a orexis:SelfGraph .
+  :self orexis:ownedBy :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed orexis:ownedBy :keeper .
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  ground:2026-01-01T120000p0000 a planning:GroundGraph .
+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
+  ground:2026-01-01T120000p0000 orexis:hash "sha256:0000000000000000000000000000000000000000000000000000000000000000" .
+}
+
+GRAPH ground:2026-01-01T120000p0000 {
+  :tank1 :on :stand_a .
+  :tank2 :on :stand_a .
+}

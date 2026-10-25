@@ -1,7 +1,9 @@
 """The draw domain's texts, as shipped (`domains/draw/`), held to what #923 asks of a draw by commit and reveal:
 a reveal is not taken before the peer's commitment is heard; a reveal said for another draw — another round,
 another round's number, another pair — decides nothing for the standing one; and over thousands of draws the
-lower name wins about half, both agents concluding the same winner whichever is the self.
+lower name wins about half, both agents concluding the same winner whichever is the self. And a silent peer's
+draw is a lot drawn alone: won as the agent's own secret says, about half the time, and of no conflict that is
+not silent.
 
 The texts are read off the documents and not restated here, so a change to the domain is what these hold."""
 
@@ -40,8 +42,8 @@ def _precondition() -> str:
     return _text(f"SELECT ?t WHERE {{ GRAPH $graph {{ <{DRAW}Revealing> planning:precondition ?t }} }}")
 
 
-def _outcome() -> str:
-    return _text("SELECT ?t WHERE { GRAPH $graph { ?r a coordination:Outcome ; sh:construct ?t } }")
+def _outcome(name: str = "winner") -> str:
+    return _text(f"SELECT ?t WHERE {{ GRAPH $graph {{ <{DRAW}{name}> a coordination:Outcome ; sh:construct ?t }} }}")
 
 
 def _read(store: ox.Store):
@@ -121,3 +123,40 @@ def test_over_thousands_of_draws_the_lower_name_wins_about_half_and_both_selves_
     assert as_a == as_b, "the same winner from either side"
     share = sum(1 for w in as_a.values() if w == A) / len(draws)
     assert 0.46 < share < 0.54, f"the lower name won {share:.3f} of the draws"
+
+
+def _silent(me: str, secret: str, peer: str, draws: list[str], silent: bool = True) -> ox.Store:
+    """A store in which `me` holds `secret` and a conflict with `peer` per draw of `draws`, silent or not, and
+    nothing said by anybody."""
+    store = ox.Store()
+    facts = [f"<{me}> a orexis:Self ; coordination:secret \"{secret}\" ."]
+    for n, d in enumerate(draws):
+        facts.append(f"<{CONFLICT}/{n}> a coordination:Conflict ; coordination:with <{peer}> ; coordination:draw <{d}>"
+                     + (" ; coordination:silent true ." if silent else " ."))
+    store.update(PREFIXES + f"INSERT DATA {{ GRAPH <{_DATA}> {{ {' '.join(facts)} }} }}")
+    return store
+
+
+def _lot(store: ox.Store) -> dict[str, str]:
+    return {t.subject.value: t.object.value for t in construct(store, _outcome("lot"), [_DATA])}
+
+
+def test_a_silent_peers_draw_is_won_as_the_agents_own_secret_says_and_no_other_draw_is():
+    """Nobody reveals to a peer that is silent, so its draw is a lot the agent draws alone: the first digit of a
+    hash of its secret and the draw's name, odd for the agent. A conflict that is not silent is the commitments'
+    and reveals' to decide, and the lot says nothing of it."""
+    digit = hashlib.sha256(f"{SECRET_A}|lot|{D0}".encode()).hexdigest()[0]
+    assert _lot(_silent(A, SECRET_A, B, [D0])) == {D0: A if digit in "13579bdf" else B}
+    assert _lot(_silent(A, SECRET_A, B, [D0], silent=False)) == {}
+
+
+def test_over_thousands_of_rounds_a_lot_drawn_alone_backs_off_about_half_the_time():
+    """Four thousand rounds of one silent conflict, a lot drawn afresh each: the agent loses — and so backs off —
+    about half, whoever the peer is, since nothing of the peer's is in it."""
+    draws = [draw_of(CONFLICT, n) for n in range(4000)]
+    as_a = _lot(_silent(A, SECRET_A, B, draws))
+    assert len(as_a) == len(draws), "every round decided"
+    assert as_a == {d: (A if w == A else B) for d, w in _lot(_silent(A, SECRET_A, C, draws)).items()}, \
+        "the same lots against another peer"
+    share = sum(1 for w in as_a.values() if w == B) / len(draws)
+    assert 0.46 < share < 0.54, f"A backed off in {share:.3f} of the rounds"

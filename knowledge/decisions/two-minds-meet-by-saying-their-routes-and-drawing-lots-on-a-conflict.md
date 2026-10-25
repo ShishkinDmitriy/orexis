@@ -342,8 +342,10 @@ reads. The courier is the first slice because its constraint is already stated.
   that a route is a stretch over any constraint's key and not a list of cells.
 - **A peer that never speaks.** A van that says no route — an older agent, a broken bus, a human
   driver — is still seen, and the sighting keeps the cell it stands on out of the search. Nothing
-  predicts where it will be next; that is the price of refusing the reach-closure, and the trigger
-  for revisiting it is a world where silent peers are expected rather than faults.
+  predicts where it will be next until it is asked and silent for a patience; then, since 2026-10-24, the
+  agent foresees it, every place a domain's reach says it may be a step or two on
+  ([two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it](/decisions/two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it.md)).
+  A peer the agent never asks — one acting for no thing a constraint's key reads — is still only seen.
 - **A withheld reveal is a free re-draw.** The agent that reveals second sees the outcome first and can
   stay silent; the restart after a patience then gives it another draw, and a patient defector wins
   every meeting at the cost of delay. Two-party coin flipping that is fair against an aborting party

@@ -436,9 +436,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   and the search (`world_at`), and refuses a world that says no period; the present, where no
   prediction has applied, it reads off a store with no ground as the readings themselves (#916).
 - **A belief the present has not reached is laid where it begins, whole, as a prediction is, and in no
-  ground before it; its end lays none** — a forecast of anyone's writes what it adds, so it is cut
-  whole and supersedes by key in the ground of its instant, where laid into the present a peer's cell
-  from ten seconds on stood under the van today, and a value stands until its key is assigned (#987).
+  ground before it; a forecast's end takes back what it added of a thing nothing else is believed of, and any
+  other belief's end lays none** — a forecast of anyone's writes what it adds, so it is cut whole and
+  supersedes by key in the ground of its instant, where laid into the present a peer's cell from ten seconds on stood under the van today, and a
+  value stands until its key is assigned (#987); a silent peer's foreseen places standing for ever sent every
+  pass round them, where ending they may be waited out (two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it).
 - **A forecast is one kernel kind, `orexis:ForecastGraph`, a belief, and who said it is provenance** —
   the predictor's stretch, sensing's hour and the executor's committed step held one shape under three
   kinds, told apart by one reader; each is laid where it begins if a text of the pass or a transition
@@ -543,6 +545,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   heard everything concludes and drives on while the other yields and goes round; and two that both take the
   other as silent each lay what the other said and plan round it, so the first to plan again leaves the
   other's way clear, where "both wait" held for a patience (`test_two_couriers_silent_to_each_other_both_yield_and_still_part`).
+- **A peer that answers nothing for a patience is silent, and a forecast is the agent's own estimate where it is
+  not the peer's word** — a domain's reach says where a van may be a drive on, laid one node per place as far ahead
+  as the agent's stance says, so "no two vans at one position" stays the one constraint; a second constraint keeping
+  cells clear made the present violate it and found no plan, and a desire restricted no other plan; two that cannot
+  hear each other back off by a lot each draws alone, the loser foreseeing a step further, and part only where
+  there is a way round (two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it).
 - **A receiver must outreach one exchange, and a radar need see only what the van could drive into** —
   the lane's receivers hear four cells and its radars one, with two slots, no cell of the road having
   more than two hedges beside it.

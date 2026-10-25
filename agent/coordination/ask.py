@@ -11,7 +11,10 @@ going nowhere asks nothing.
 for the asker, the peer and the constraint and holds over the asker's patience from when it is asked. It is
 said again each time the holdings change, and once it has lapsed — never otherwise, so a question costs
 one document per change or per patience, and not one per pass; and a peer that hears it holding knows the
-asker is still asking, whether or not it sees the asker (knowledge/domain/coordination/conflict.md).
+asker is still asking, whether or not it sees the asker (knowledge/domain/coordination/conflict.md). Said
+again, lapsed or not, it keeps the start of the first asking, so its period says how long the agent has been
+asking, which is what a peer that never answers is concluded silent by: started again each time it lapsed, a
+question to a peer that heard nothing was half a patience old when the drive into the peer's way was taken.
 """
 
 from __future__ import annotations
@@ -22,7 +25,7 @@ import pyoxigraph as ox
 
 from agent.ontology import BELIEF, SELF_GRAPH
 from agent.stance import stance
-from agent.store import graphs_of, rows
+from agent.store import Raw, catalogue_of, graphs_of, rows
 
 from .holdings import _heard, _key_of, _present, _said, holdings
 from .ontology import COORDINATION, CONSTRAINT_GRAPH, PATIENCE, PATIENCE_S, QUESTION, QUESTION_GRAPH, question_graph
@@ -40,7 +43,7 @@ def ask(store: ox.Store, me: str, at: datetime) -> list[tuple[str, ox.Store]]:
     last asked has lapsed."""
     held = [r["c"] for r in rows(store, _HELD_Q, [*graphs_of(store, CONSTRAINT_GRAPH), *graphs_of(store, SELF_GRAPH)])]
     holding = set(graphs_of(store, QUESTION_GRAPH, at=at))
-    period = (at, at + timedelta(seconds=stance(store, PATIENCE_S, PATIENCE)))
+    patience = timedelta(seconds=stance(store, PATIENCE_S, PATIENCE))
     out = []
     for constraint in held:
         mine = holdings(store, constraint, at)
@@ -52,8 +55,18 @@ def ask(store: ox.Store, me: str, at: datetime) -> list[tuple[str, ox.Store]]:
                 continue
             about = [("http://www.w3.org/1999/02/22-rdf-syntax-ns#type", ox.NamedNode(QUESTION)),
                      (COORDINATION + "asks", ox.NamedNode(me)), (COORDINATION + "over", ox.NamedNode(constraint))]
-            out.append((peer, _said(graph, QUESTION_GRAPH, graph, about, mine, period)))
+            began = _began(store, graph)
+            out.append((peer, _said(graph, QUESTION_GRAPH, graph, about, mine, (began or at, at + patience))))
     return out
+
+
+_BEGAN_Q = """SELECT ?start WHERE { GRAPH $cat { $graph dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1"""
+
+
+def _began(store: ox.Store, graph: str) -> datetime | None:
+    """When the agent first asked a question it has said before: the start of its period, kept each time it is said."""
+    found = rows(store, _BEGAN_Q, (), cat=Raw(f"<{catalogue_of(store)}>"), graph=Raw(f"<{graph}>"))
+    return datetime.fromisoformat(found[0]["start"]) if found else None
 
 
 def _in_range(store: ox.Store, me: str, key: frozenset[str], at: datetime) -> list[str]:

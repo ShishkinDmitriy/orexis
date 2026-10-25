@@ -1,0 +1,99 @@
+# silent_and_never_answering_the_keeper_foresees_the_peers_robot_taking_the_free_tool
+#
+# Nothing of the courier's: two robots that want one tool, under the one constraint a world states - no tool
+# held by two robots at once - and a reach of the world's, that a robot with free hands may pick up any tool
+# nobody holds. The peer is silent, says nothing, and holds nothing; the keeper holds the brush. Its stance
+# states no steps ahead, so two: the first finds the peer may be holding the mop - not the brush, which the
+# keeper holds - and the second finds nothing more, a robot holding a tool picking up none. So one node, the
+# peer's robot holding the mop, is laid as a forecast from now on - the reach says no step's length, so for ever - and the one constraint keeps the keeper's
+# plans off the mop: the same `lay` as the vans', with a world's own words in it.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix coordination: <http://example.org/orexis/coordination#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix coordinated: <http://example.org/orexis/graph/coordination/keeper/> .
+@prefix conflict: <http://example.org/orexis/graph/coordination/conflict/> .
+@prefix answered: <http://example.org/orexis/graph/coordination/peer/answer/keeper/> .
+@prefix laid: <http://example.org/orexis/graph/coordination/keeper/laid/peer/no_tool_held_twice/> .
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :constraints a orexis:Graph .
+  :constraints a planning:ConstraintGraph .
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :rules a orexis:Graph .
+  :rules a sh:RulesGraph .
+  :self a orexis:BeliefGraph .
+  :self a orexis:Graph .
+  :self a orexis:SelfGraph .
+  :state a orexis:BeliefGraph .
+  :state a orexis:Graph .
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  coordinated:conflicts a orexis:BeliefGraph .
+  coordinated:conflicts a orexis:Graph .
+  coordinated:conflicts orexis:arrivedBy orexis:Derived .
+  coordinated:conflicts orexis:ownedBy :keeper .
+}
+GRAPH :constraints {
+  :no_tool_held_twice a planning:Constraint .
+  :no_tool_held_twice planning:unmetWhen :no_tool_held_twice.select .
+  :no_tool_held_twice.select sh:select """PREFIX : <http://example.org/test#>
+SELECT $this ?value WHERE { $this a :Robot ; :holds ?tool .
+                            ?value a :Robot ; :holds ?tool . FILTER(?value != $this) }""" .
+}
+GRAPH :ontology {
+  coordination:AnswerGraph rdfs:subClassOf speech:StatementGraph .
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:CatalogueGraph rdfs:subClassOf orexis:Graph .
+  orexis:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:OntologyGraph rdfs:subClassOf orexis:BeliefGraph .
+  orexis:SelfGraph rdfs:subClassOf orexis:BeliefGraph .
+  planning:ConstraintGraph rdfs:subClassOf orexis:Graph .
+  speech:StatementGraph rdfs:subClassOf orexis:Graph .
+}
+GRAPH :rules {
+  :a_tool_picked_up a coordination:Reach .
+  :a_tool_picked_up sh:construct """PREFIX : <http://example.org/test#>
+CONSTRUCT { ?at a :Robot ; :holds ?tool }
+WHERE { $this a :Robot . FILTER NOT EXISTS { $this :holds ?any }
+        ?tool a :Tool . FILTER NOT EXISTS { ?other :holds ?tool }
+        BIND(IRI(CONCAT(STR($this), ".holding.", REPLACE(STR(?tool), "^.*#", ""))) AS ?at) }""" .
+}
+GRAPH :self {
+  :keeper a orexis:Self .
+  :keeper orexis:actsFor :robot_k .
+  :keeper planning:holds :no_tool_held_twice .
+}
+GRAPH :state {
+  :robot_k :holds :brush .
+}
+GRAPH :world {
+  :brush a :Tool .
+  :keeper a orexis:Agent .
+  :keeper orexis:localId "keeper" .
+  :mop a :Tool .
+  :peer a orexis:Agent .
+  :peer orexis:actsFor :robot_p .
+  :robot_k a :Robot .
+  :robot_p a :Robot .
+}
+GRAPH coordinated:conflicts {
+  conflict:b0236418f63ada64 a coordination:Conflict .
+  conflict:b0236418f63ada64 coordination:draw conflict:b0236418f63ada64.round.0 .
+  conflict:b0236418f63ada64 coordination:over :no_tool_held_twice .
+  conflict:b0236418f63ada64 coordination:round 0 .
+  conflict:b0236418f63ada64 coordination:silent true .
+  conflict:b0236418f63ada64 coordination:since "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  conflict:b0236418f63ada64 coordination:standing true .
+  conflict:b0236418f63ada64 coordination:with :peer .
+}
