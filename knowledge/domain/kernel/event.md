@@ -25,7 +25,8 @@ An event costing a read is made only where the signal is heard: the emitter asks
   a `Tag`, a `Value`, a `Flag` or a [level](/domain/kernel/level.md) — which the metrics part tallies
   without knowing the package; an unmarked field is the event's alone
   ([series](/domain/kernel/series.md)).
-- **That it is history**, by answering `point()`, the series store's own dict, which the history
+- **That it is history**, by answering `point()`, the series store's own dict — or a list of them,
+  where one event is several points, as a plan published is a point per step — which the history
   part writes as it is heard.
 
 # What it is not

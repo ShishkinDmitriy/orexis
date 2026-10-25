@@ -15,8 +15,10 @@ which reads across worlds and agents; the log, and history, name the want.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 
 from agent.metrics import Flag, Level, Tag, Value
+from agent.ontology import local_of
 
 
 @dataclass(frozen=True)
@@ -24,7 +26,9 @@ class PlanPublished:
     """A plan published into the beliefs for `want`, from the imaginarium of `scope`: in how many
     passes its want was searched and what was weighed for it in all, the real seconds since it was
     first searched, the estimate at the present ground against what the plan spent — how honest the
-    estimate is — and whether an intention pursued the want before, a replan."""
+    estimate is — and whether an intention pursued the want before, a replan; at `at`, its `steps`
+    in the order they are walked, each the action it fills, the values it takes by the local name of
+    each parameter, and the two ends of its landing."""
     metric = "published"
     plan: str
     want: str
@@ -36,6 +40,30 @@ class PlanPublished:
     estimate: Value = None
     cost: Value = None
     replan: Flag = False
+    at: datetime | None = None
+    steps: tuple = ()
+
+    def point(self) -> list[dict]:
+        """A plan published is HISTORY as a point per step, measured `Plan` and tagged as execution tags a
+        step taken — `action`, `want` and one tag per parameter — beside `order`, the step's place in the
+        plan, so two steps filling one action alike are two points; its fields the landing's two ends."""
+        out = []
+        for order, step in enumerate(self.steps):
+            tags = dict(step.parameters)
+            tags.update(action=step.action, want=local_of(self.want), plan=local_of(self.plan), order=str(order))
+            fields = {"lands": step.lands or "", "latest": step.latest or step.lands or ""}
+            out.append({"measurement": "Plan", "tags": tags, "fields": fields, "time": self.at})
+        return out
+
+
+@dataclass(frozen=True)
+class PlannedStep:
+    """A step of a plan published: the local name of the action it fills, the values it takes by each
+    parameter's local name, and when it lands at the earliest and the latest, as the plan placed it."""
+    action: str
+    parameters: tuple = ()
+    lands: str | None = None
+    latest: str | None = None
 
 
 @dataclass(frozen=True)

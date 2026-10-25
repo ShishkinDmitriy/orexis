@@ -41,7 +41,7 @@ onboarding:SeriesPurpose a owl:Class ; rdfs:label "Series purpose" ;
     rdfs:comment "What a series is written for, which decides the bucket it goes to, the credential that opens it and how long it keeps a point. Two, and the agent's code names each (`agent.series`): history and metrics." .
 
 onboarding:History a onboarding:SeriesPurpose ; rdfs:label "history" ;
-    rdfs:comment "What happened: every observation and every step taken and how it ended, contributed by the package that decides each. The record, kept for good, in the bucket the one series had before purposes." .
+    rdfs:comment "What happened: every observation, every step taken and how it ended, every plan published, and what coordination asked with, laid and concluded, contributed by the package that decides each. The record, kept for good, in the bucket the one series had before purposes." .
 
 onboarding:Metrics a onboarding:SeriesPurpose ; rdfs:label "metrics" ;
     rdfs:comment "How the agent is doing, for whoever administers it: each loaded package's gauges and tallied events and the runtime's own, written once a window of `onboarding:intervalSeconds`. Written only by the agents of a world that is `onboarding:monitored`, to a bucket of their own opened for writing alone, and kept as long as `onboarding:retentionDays` says." .

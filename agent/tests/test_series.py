@@ -102,3 +102,18 @@ def test_the_runtime_loads_the_sinks_and_writes_through_neither():
              for a in n.names}
     assert not names, f"the runtime imports {sorted(names)} from the sink"
     assert PURPOSES == (HISTORY, METRICS), "a new purpose is a new case here"
+
+
+def test_a_sink_installed_for_one_agent_is_that_agents_and_the_rest_ask_the_processs():
+    """Two agents in one process, as a world's test walks them: each asks for its own sink first, and an agent with
+    none installed for it is answered the process's."""
+    mine, everyone = Sink(HISTORY, "a", lambda bucket, record: None), Sink(HISTORY, "all", lambda bucket, record: None)
+    install(HISTORY, mine, "courier_a")
+    try:
+        assert (sink(HISTORY, "courier_a"), sink(HISTORY, "courier_b"), sink(HISTORY)) == (mine, None, None)
+        install(HISTORY, everyone)
+        assert (sink(HISTORY, "courier_a"), sink(HISTORY, "courier_b"), sink(HISTORY)) == (mine, everyone, everyone)
+        assert load({}) == (), "loading from an environment naming nothing takes the process's sink away"
+        assert sink(HISTORY, "courier_a") == mine, "and leaves the one installed for an agent"
+    finally:
+        install(HISTORY, None, "courier_a")

@@ -1,0 +1,25 @@
+{
+  "//": "What `npm run check` holds every drawing to: the contract in core/index.ts, strictly. esbuild bundles; this only checks.",
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "lib": ["ES2022", "DOM"],
+    "types": [],
+    "baseUrl": "../..",
+    "typeRoots": ["../../node_modules/@types"],
+    "paths": {
+      "@orexis/replay": ["onboarding/replay/core/index.ts"],
+      "@orexis/replay/*": ["onboarding/replay/core/*"],
+      "preact": ["node_modules/preact"],
+      "preact/*": ["node_modules/preact/*"],
+      "preact-render-to-string": ["node_modules/preact-render-to-string"]
+    }
+  },
+  "include": ["core/**/*", "../../agent/*/replay.tsx", "../../domains/*/replay.tsx", "../../world/*/replay.tsx"]
+}
