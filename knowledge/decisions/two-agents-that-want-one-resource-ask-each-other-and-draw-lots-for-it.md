@@ -93,6 +93,9 @@ description: >-
 > - `weigh` taking a constraint's holder with `LIMIT 1` was a bug the second constraint found and is fixed: on
 >   the lane both couriers hold the courier's constraints, and weighed as the other courier a constraint read none
 >   of the agent's own graphs. The self is weighed for now.
+>
+> The two walks are not yet in the tree: beside a silent peer a pass searched its whole budget, half a second
+> becoming twenty to two hundred and fifty, and a walk would take an hour (#1026).
 
 # The question
 
