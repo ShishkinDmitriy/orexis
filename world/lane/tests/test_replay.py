@@ -1,13 +1,15 @@
 """A replay of the lane: the courier's road drawn by the courier's scene, and on it what coordination, planning and
 execution decided, each drawn by its own package (`onboarding/replay/`). Held on points written by hand, one of each
-kind, rendered by the page's own scripts under Node with no browser; and on one walk that records the head-on meeting
-and replays it, the two couriers seen by each other where each is fixed and agreeing who won."""
+kind, rendered by the page's own components under Node with no browser; and on one walk that records the head-on
+meeting and replays it, the two couriers seen by each other where each is fixed and agreeing who won. Every drawing is
+held to the contract by TypeScript's own check."""
 
 from __future__ import annotations
 
 import importlib.util
 import json
 import re
+import subprocess
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -16,7 +18,7 @@ import pytest
 
 from agent.series import HISTORY, install
 from onboarding import reading
-from onboarding.replay import data, drawings, headless, kept, page, recorder, recording, things
+from onboarding.replay import data, drawings, headless, kept, page, recorder, recording, thinned, things
 
 LANE = Path(__file__).resolve().parents[1]
 REPO = LANE.parents[1]
@@ -30,7 +32,14 @@ def world():
 
 def test_the_lane_is_drawn_by_the_courier_s_scene_and_by_each_package_s_own_layer():
     assert [p.relative_to(REPO).as_posix() for p in drawings(LANE)] == [
-        "domains/courier/replay.js", "agent/coordination/replay.js", "agent/execution/replay.js", "agent/planning/replay.js"]
+        "domains/courier/replay.tsx", "agent/coordination/replay.tsx", "agent/execution/replay.tsx", "agent/planning/replay.tsx"]
+
+
+def test_every_drawing_holds_to_the_contract_the_core_states():
+    """`npm run check`: TypeScript over the core and every scene and layer in the tree, strictly — a drawing that reads a
+    prop the core does not hand it, or hands back what the contract does not take, fails here and not in a page."""
+    checked = subprocess.run(["npx", "tsc", "--noEmit", "-p", "onboarding/replay/tsconfig.json"], cwd=REPO, capture_output=True, text=True)
+    assert checked.returncode == 0, checked.stdout + checked.stderr
 
 
 def _at(seconds: int) -> datetime:
@@ -86,8 +95,8 @@ def _drawn(world, history=None):
     return data("lane", history, things(world, history))
 
 
-def _pane(world, at: int, history=None, agent="courier_a") -> ET.Element:
-    return ET.fromstring(headless(_drawn(world, history), drawings(LANE), pane=("road", agent, at)))
+def _pane(world, at: int, history=None, agents=("courier_a",)) -> ET.Element:
+    return ET.fromstring(headless(_drawn(world, history), drawings(LANE), pane=("road", list(agents), at)))
 
 
 def _marks(svg: ET.Element, attribute: str) -> list[tuple]:
@@ -104,7 +113,7 @@ def test_a_pane_draws_each_kind_of_point_where_the_courier_s_scene_places_it(wor
         ("van_b.at.2.1", "true"), ("van_b.at.3.1", "true")], "coordination's foreseen places, while their window holds"
     assert sorted((e.get("data-origin"), e.get("data-thing")) for e in first.iter() if e.get("data-origin") in ("asked", "said")) == [
         ("asked", "van_a"), ("said", "van_b")], "what it asked with and what the peer said"
-    assert [e.get("data-conflict") for e in first.iter() if e.get("data-conflict")] == ["courier_b"]
+    assert [e.get("data-conflict") for e in first.iter() if e.get("data-conflict")] == ["courier_b"], "coordination's status"
     assert _marks(then, "data-fixed") == [("van_a", "1", "1")]
     assert _marks(then, "data-seen") == [], "an offset beyond the range its receiver declares sees nothing"
     assert [e.get("data-order") for e in then.iter() if e.get("data-order")] == ["1"], "the drive answered since is walked"
@@ -114,13 +123,37 @@ def test_a_pane_draws_each_kind_of_point_where_the_courier_s_scene_places_it(wor
 
 
 def test_the_log_says_each_thing_the_agent_did_in_the_words_of_the_package_that_did_it(world):
-    lines = headless(_drawn(world), drawings(LANE), log_of="courier_a")
+    lines = headless(_drawn(world), drawings(LANE), log_of=["courier_a"])
     assert not any(line.startswith(("Column", "RelativeColumn", "Holdings", "Conflicts")) for line in lines), lines
     assert "published a plan for w: Drive(toX=1, toY=1, van=van_a) → Drive(toX=2, toY=1, van=van_a)" in lines
     assert "took Drive(toX=1, toY=1, van=van_a) for w" in lines and "Drive(toX=1, toY=1, van=van_a) landed for w" in lines
     assert "foreseen of courier_b: van_b.at.2.1 type=Van x=2 y=1, van_b.at.3.1 type=Van x=3 y=1" in lines
     assert "foreseen nothing of courier_b" in lines
     assert "conflict with courier_b over c: standing, silent, round 0, won by courier_a" in lines
+
+
+def test_two_agents_shown_together_are_each_drawn_in_their_own_colour_on_one_scene(world):
+    """Courier B's history beside courier A's: its own van fixed at (3, 1). Shown together, one scene holds both vans and
+    each agent's layers, each mark in the colour of the agent whose history said it; shown alone, the other's are gone."""
+    b = [_observed("Column", "van_b", "fix_b_column", 3, 0), _observed("Row", "van_b", "fix_b_row", 1, 0),
+         {"measurement": "Holdings", "tags": {"origin": "asked", "peer": "courier_a", "constraint": "c"}, "fields": {"count": 1}, "time": _at(0)},
+         {"measurement": "Holding", "tags": {"origin": "asked", "peer": "courier_a", "constraint": "c", "thing": "van_b", "n": "0"},
+          "fields": {"x": 3.0, "y": 1.0, "from": "", "until": "", "taken": True}, "time": _at(0)}]
+    history = {"courier_a": _HISTORY, "courier_b": b}
+    together, alone = _pane(world, 0, history, ("courier_a", "courier_b")), _pane(world, 0, history, ("courier_b",))
+    fixed = {e.get("data-fixed"): e.get("data-by") for e in together.iter() if e.get("data-fixed")}
+    assert fixed == {"van_a": "courier_a", "van_b": "courier_b"}, "each van fixed by its own courier, on one scene"
+    tints = {e.get("data-agent"): {r.get("stroke") for r in e.iter() if r.get("data-origin") == "asked"} for e in together.iter()
+             if e.get("data-agent") and e.tag == "g" and any(r.get("data-origin") == "asked" for r in e.iter())}
+    assert len(tints) == 2 and all(len(t) == 1 for t in tints.values()) and tints["courier_a"] != tints["courier_b"], tints
+    assert {e.get("data-fixed") for e in alone.iter() if e.get("data-fixed")} == {"van_b"}, "shown alone, courier B's alone"
+
+
+def test_a_reading_the_same_as_the_one_before_on_its_series_is_left_out_and_nothing_else_is():
+    same = [_observed("Column", "van_a", "fix_a_column", 0, t) for t in (0, 10, 20)] + [_observed("Column", "van_a", "fix_a_column", 1, 30)]
+    steps = [{"measurement": "Step", "tags": {"action": "Wait"}, "fields": {"taken": True}, "time": _at(t)} for t in (0, 10)]
+    assert [(p["measurement"], p["time"]) for p in thinned(same + steps)] == [
+        ("Column", _at(0)), ("Column", _at(30)), ("Step", _at(0)), ("Step", _at(10))]
 
 
 def test_a_recording_keeps_each_agents_points_apart_and_replays_as_the_series_store_keeps_them(tmp_path):
@@ -135,7 +168,7 @@ def test_a_recording_keeps_each_agents_points_apart_and_replays_as_the_series_st
 
 def test_the_page_holds_everything_it_draws(world):
     html = page(_drawn(world), drawings(LANE))
-    assert "lane replay" in html and "replay.scene(\"road\"" in html and "replay.layer(\"coordination\"" in html
+    assert "lane replay" in html and '"road"' in html and '"coordination"' in html
     assert not re.search(r'<script[^>]+src=|<link[^>]+href=', html), "no script or style from elsewhere"
 
 
@@ -180,7 +213,7 @@ def test_the_head_on_meeting_is_recorded_and_replayed_with_each_courier_seeing_t
     assert len(set().union(*won().values())) == 1, f"both agree who won: {won()}"
     history = recording(path)
     last = len(data("lane", history, {})["instants"]) - 1
-    a, b = (_pane(world, last, history, agent) for agent in ("courier_a", "courier_b"))
+    a, b = (_pane(world, last, history, (agent,)) for agent in ("courier_a", "courier_b"))
     fixed = {name: (x, y) for name, x, y in [*_marks(a, "data-fixed"), *_marks(b, "data-fixed")]}
     assert set(fixed) == {"van_a", "van_b"}
     seen = {name: (x, y) for name, x, y in [*_marks(a, "data-seen"), *_marks(b, "data-seen")] if name in fixed}

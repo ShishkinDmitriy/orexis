@@ -874,9 +874,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   (#894, reflection-is-genesis-run-again-over-the-series).
 - **A replay is the history drawn, and the package that decides a thing draws it** — a figure a replay lacks is a
   point the package deciding it does not yet write, as a plan published and coordination's holdings and conflicts
-  were; a domain draws its world as a scene and a package what it decided as a layer, each a Preact component in a
-  `replay.js` beside it, and a catalogue of view kinds a domain picked from was built and refused; a replay opens no
-  volume (a-replay-is-the-history-drawn-by-the-package-that-decides-it).
+  were; a domain draws its world as a scene and a package what it decided as a layer, each Preact components in a
+  `replay.tsx` beside it, typed by the core's contract, and a catalogue of view kinds a domain picked from and
+  untyped template strings with no build were built and refused; a replay opens no volume
+  (a-replay-is-the-history-drawn-by-the-package-that-decides-it).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
   `crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming an
   absent file or a CRL past its `nextUpdate` refuses the whole society and not the one agent; and
@@ -903,7 +904,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
    says it plays, each of a class the package whose ontology declares it serves.
    `agent/runtime.py` is the container that assembles them all. **A domain is documents and no
    code an agent runs**: `domains/<name>/` holds a vocabulary, its actions and its rules, and a world imports it
-   with `owl:imports`; its one script, `replay.js`, is how it is drawn in a replay, which no agent loads
+   with `owl:imports`; its one module of code, `replay.tsx`, is how it is drawn in a replay, which no agent loads
    (a-replay-is-the-history-drawn-by-the-package-that-decides-it). Adding a way of acting is a node in a domain's `actions.ttl` — a
    precondition, an effect and an implementation — and nothing else.
 3. **Nothing in `infra/` is world-specific.** It holds the services and what is true of the
@@ -1035,6 +1036,7 @@ stops being theoretical.
 ```bash
 source .venv/bin/activate
 pip install -e ".[dev]"
+npm ci                 # the replay's toolchain — Preact, esbuild, TypeScript — for orexis-replay and its tests
 
 orexis-onboard <world>       # ONBOARDING: load the world as an agent boots it, derive what the documents
                              #   leave out (a broker's port, into infra/installation.derived.ttl),

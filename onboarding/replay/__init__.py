@@ -10,12 +10,16 @@ test made of a walk (`recorder`) — and opens no volume. What it shows is what 
 agents disagreeing about where a van stands is something a replay shows, not something it settles.
 
 THE PACKAGE THAT DECIDES A THING DRAWS IT (a-replay-is-the-history-drawn-by-the-package-that-decides-it). The core
-here is what every world shares and names no package's word: the instants, a pane per agent and the log
-(`core.js`). Everything drawn is a `replay.js` beside the code or the documents it draws — a domain's SCENE, the
-ground its world stands on (`domains/courier/replay.js`, the road and its vans), and a package's LAYER, what it
-decided drawn on whatever scene there is (`agent/coordination/replay.js`, the holdings and the conflicts). A page
-gathers the scene of every domain the world imports, the world's own where it has one, and every package's layer,
-as Preact components written with `htm`, vendored and inlined so the page needs no build and opens offline.
+here is what every world shares and names no package's word: the instants, the agents to show — together on one
+scene, or side by side — and the log (`core/`). Everything drawn is a `replay.tsx` beside the code or the documents it
+draws — a domain's SCENE, the ground its world stands on (`domains/courier/replay.tsx`, the road and its vans), and a
+package's LAYER, what it decided drawn on whatever scene there is (`agent/coordination/replay.tsx`, the holdings and the
+conflicts) — each Preact components in TSX, held by `npm run check` to the contract `core/index.ts` states. A page
+gathers the scene of every domain the world imports, the world's own where it has one, and every package's layer, and
+esbuild bundles them with Preact into the one page (`build.mjs`), which opens offline.
+
+A LONG RUN OF MANY AGENTS is thinned where nothing is lost: a sensor's reading the same as the one before it on the same
+series is left out, since what a scene draws of it is its latest; and `--since` and `--until` take a stretch.
 
 WHAT THE WORLD STATES of the things the history names is handed to the scenes as it is (`things`): every subject of
 the world's common beliefs whose local name a point carries as a tag, its predicates by local name, a blank node
@@ -28,7 +32,9 @@ import argparse
 import json
 import logging
 import re
+import functools
 import subprocess
+import tempfile
 import time
 from collections import defaultdict
 from datetime import datetime
@@ -52,8 +58,7 @@ log = logging.getLogger("replay")
 
 HERE = Path(__file__).parent
 PACKAGES = Path(runtime.__file__).parent
-VENDOR = [HERE / "vendor" / name for name in ("preact.umd.js", "hooks.umd.js", "htm.umd.js")]
-DRAWING = "replay.js"
+DRAWING = "replay.tsx"
 _NUMBERS = {"http://www.w3.org/2001/XMLSchema#" + t for t in ("integer", "decimal", "double", "float", "int", "long")}
 _DEPTH = 3
 
@@ -135,32 +140,85 @@ def kept(points: list[dict]) -> list[dict]:
 
 # ---------------------------------------------------------------- the page
 
-def data(world: str, history: dict[str, list[dict]], described: dict) -> dict:
-    """What the page is handed: the world, its agents, every instant the history holds, each agent's points as the
-    store keeps them, and what the world states of the things they name."""
-    points = {a: kept(ps) for a, ps in sorted(history.items())}
+def data(world: str, history: dict[str, list[dict]], described: dict, until: datetime | None = None) -> dict:
+    """What the page is handed: the world, its agents, every instant the history holds up to `until`, each agent's
+    points as the store keeps them and thinned, and what the world states of the things they name. Every distinct
+    measurement and tag set is a SERIES said once, and a point is its series, its milliseconds after the first instant
+    and its fields — a long run of many agents says its tags once rather than per point (`core/pane.tsx`, `Raw`)."""
+    points = {a: thinned([p for p in kept(ps) if until is None or p["time"] <= until]) for a, ps in sorted(history.items())}
     instants = sorted({p["time"] for ps in points.values() for p in ps})
-    return {"world": world, "agents": sorted(points), "instants": [t.isoformat() for t in instants],
-            "points": {a: [{**p, "time": p["time"].isoformat()} for p in ps] for a, ps in points.items()},
-            "things": described}
+    start = instants[0] if instants else datetime.fromtimestamp(0).astimezone()
+    series: dict[tuple, int] = {}
+
+    def ms(t: datetime) -> int:
+        return round((t - start).total_seconds() * 1000)
+
+    def of(p: dict) -> int:
+        return series.setdefault((p["measurement"], tuple(sorted(p["tags"].items()))), len(series))
+    written = {a: [[of(p), ms(p["time"]), p["fields"]] for p in ps] for a, ps in points.items()}
+    return {"world": world, "agents": sorted(points), "start": start.isoformat(), "instants": [ms(t) for t in instants],
+            "series": [[m, dict(tags)] for m, tags in series], "points": written, "things": described}
 
 
-def page(drawn: dict, scripts: list[Path]) -> str:
-    """The replay as one HTML document, holding everything it draws: the vendored Preact and htm, the core and every
-    drawing, inlined, and nothing from elsewhere."""
-    inlined = "\n".join(f"<script>/* {_shown(p)} */\n{_escaped(p.read_text())}\n</script>" for p in [*VENDOR, HERE / "core.js", *scripts])
+def thinned(points: list[dict]) -> list[dict]:
+    """The points less every reading a sensor gave that is the same as the one before it on its series — the same
+    measurement and tags, and the same fields — since a scene draws a reading's latest, which they do not change. Any
+    other point is kept: a step said twice alike is two steps, and a set's members are said with their set."""
+    last: dict[tuple, dict] = {}
+    out = []
+    for p in points:
+        if "sensor" in p["tags"]:
+            series = (p["measurement"], tuple(sorted(p["tags"].items())))
+            if series in last and last[series] == p["fields"]:
+                continue
+            last[series] = p["fields"]
+        out.append(p)
+    return out
+
+
+def page(drawn: dict, drawings_: list[Path]) -> str:
+    """The replay as one HTML document holding everything it draws: the core, every drawing and Preact, bundled."""
     return ((HERE / "page.html").read_text()
             .replace("__TITLE__", f"{drawn['world']} replay")
-            .replace("__SCRIPTS__", inlined)
+            .replace("__SCRIPT__", _escaped(_bundle(tuple(drawings_), "browser")))
             .replace("__DATA__", json.dumps(drawn, separators=(",", ":")).replace("</", "<\\/")))
 
 
-def headless(drawn: dict, scripts: list[Path], *, pane: tuple[str, str, int] | None = None, log_of: str | None = None):
-    """One pane's SVG — `(scene, agent, instant)` — or one agent's log lines, rendered by the page's own scripts with no
-    browser (`headless.js`, under Node): what the tests hold the drawings to."""
-    asked = {"scripts": [str(p) for p in scripts], "data": drawn, **({"pane": list(pane)} if pane else {"log": log_of})}
-    out = subprocess.run(["node", str(HERE / "headless.js")], input=json.dumps(asked), capture_output=True, text=True, check=True)
+def headless(drawn: dict, drawings_: list[Path], *, pane: tuple[str, list[str], int] | None = None, log_of: list[str] | None = None):
+    """One pane's SVG — `(scene, agents shown, instant)` — or the lines the agents' log holds, rendered by the page's own
+    components with no browser (`core/headless.tsx`, under Node): what the tests hold the drawings to."""
+    asked = {"data": drawn, **({"pane": {"scene": pane[0], "agents": pane[1], "at": pane[2]}} if pane else {"log": log_of})}
+    with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False) as script:
+        script.write(_bundle(tuple(drawings_), "node"))
+    try:
+        out = subprocess.run(["node", script.name], input=json.dumps(asked), capture_output=True, text=True)
+    finally:
+        Path(script.name).unlink()
+    if out.returncode:
+        raise RuntimeError(f"the headless replay failed: {out.stderr}")
     return out.stdout if pane else json.loads(out.stdout)
+
+
+@functools.lru_cache(maxsize=8)
+def _bundle(drawings_: tuple[Path, ...], platform: str) -> str:
+    """The core and `drawings_` bundled by esbuild for `platform`, `browser` or `node`: an entry naming each drawing,
+    written beside nothing, built by `build.mjs` from the toolchain `npm ci` installs."""
+    imports = "\n".join(f'import * as d{n} from {json.dumps(str(p.resolve()))};' for n, p in enumerate(drawings_))
+    every = "[" + ", ".join(f"d{n}" for n in range(len(drawings_))) + "]"
+    if platform == "browser":
+        entry = (f'import {{ mount }} from "@orexis/replay/app";\n{imports}\n'
+                 f'mount({every}, JSON.parse(document.getElementById("data")!.textContent!), document.getElementById("replay")!);\n')
+    else:
+        entry = (f'import {{ run }} from "@orexis/replay/headless";\nimport {{ readFileSync }} from "node:fs";\n{imports}\n'
+                 f'process.stdout.write(run({every}, JSON.parse(readFileSync(0, "utf8"))));\n')
+    with tempfile.TemporaryDirectory() as tmp:
+        (Path(tmp) / "entry.tsx").write_text(entry)
+        out = Path(tmp) / "out.js"
+        built = subprocess.run(["node", str(HERE / "build.mjs"), str(Path(tmp) / "entry.tsx"), str(out), platform],
+                               capture_output=True, text=True)
+        if built.returncode:
+            raise RuntimeError(f"the replay would not build — is the toolchain installed (`npm ci`)?\n{built.stderr}")
+        return out.read_text()
 
 
 def _escaped(script: str) -> str:
@@ -177,7 +235,8 @@ def _shown(path: Path) -> str:
 
 # ---------------------------------------------------------------- the command
 
-def replay(world: str, since: str | None = None, recordings: list[Path] | None = None) -> tuple[dict, list[Path]]:
+def replay(world: str, since: str | None = None, recordings: list[Path] | None = None,
+           until: datetime | None = None) -> tuple[dict, list[Path]]:
     """The replay of `world` and the drawings it gathers: from `recordings` where any are given, otherwise from every
     agent's history bucket."""
     here = world_dir(world)
@@ -189,7 +248,7 @@ def replay(world: str, since: str | None = None, recordings: list[Path] | None =
         started = time.perf_counter()
         history = {a: read(url, org, token, bucket_name(world, a, HISTORY), since) for a in roster(world)}
         log.info("read %d point(s) in %.2f s", sum(map(len, history.values())), time.perf_counter() - started)
-    return data(world, history, things(reading.world(here), history)), drawings(here)
+    return data(world, history, things(reading.world(here), history), until), drawings(here)
 
 
 def main() -> None:
@@ -200,6 +259,7 @@ def main() -> None:
                     "drawn by the package that decides it — read from the history buckets or a walk's recording, never a belief.")
     p.add_argument("world", help="which world. Available: " + ", ".join(worlds()))
     p.add_argument("--since", help="how far back: a Flux duration (1h, 30m) or an RFC 3339 instant; everything held where not given")
+    p.add_argument("--until", help="an RFC 3339 instant: nothing after it is drawn")
     p.add_argument("--recording", action="append", type=Path, help="a recording a world's test made of a walk, read instead of the buckets")
     p.add_argument("--out", type=Path, help="where the page goes; <world>.replay.html where not given")
     args = p.parse_args()
@@ -209,7 +269,8 @@ def main() -> None:
         except ValueError:
             raise SystemExit(f"orexis-replay: --since {args.since!r} is neither a Flux duration (1h) nor an RFC 3339 instant")
     out = args.out or Path(f"{args.world}.replay.html")
-    drawn, scripts = replay(args.world, args.since, args.recording)
+    until = datetime.fromisoformat(args.until.replace("Z", "+00:00")) if args.until else None
+    drawn, scripts = replay(args.world, args.since, args.recording, until)
     out.write_text(page(drawn, scripts))
     log.info("%s: %d instant(s) of %s, drawn by %s — %s", args.world, len(drawn["instants"]),
              ", ".join(drawn["agents"]) or "no agent", ", ".join(_shown(s) for s in scripts) or "the core alone", out)

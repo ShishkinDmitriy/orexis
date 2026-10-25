@@ -178,5 +178,5 @@ tree can never shadow a real dependency.
   reads is caught by nothing.
 - **`domain/` holds one plug-in and no code.** Whether a domain should ever provide behaviour
   is unanswered; today it does not, and the loader does not require it to. *Amended 2026-10-25:*
-  a domain ships how it is drawn in a replay, a script no agent loads
+  a domain ships how it is drawn in a replay, a module no agent loads
   ([a-replay-is-the-history-drawn-by-the-package-that-decides-it](/decisions/a-replay-is-the-history-drawn-by-the-package-that-decides-it.md)).
