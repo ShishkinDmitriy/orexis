@@ -135,4 +135,4 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [onboarding](/domain/onboarding/onboarding.md) - Buckets, credentials, the ACL, compose and dashboards, each read off the world; decides nothing, so re-running is safe.
 * [deployment](/domain/onboarding/deployment.md) - What must run and where it answers, a graph onboarding alone reads; an agent is told it as environment, and never a credential.
 * [requirement](/domain/onboarding/requirement.md) - What a world must state of a package's words, shapes the package ships and onboarding alone holds a world to.
-* [view](/domain/onboarding/view.md) - How a domain's history is drawn in a replay, a document of onboarding's kind; the grid places things by the domain's own words.
+* [replay](/domain/onboarding/replay.md) - A run drawn from every agent's history: a generic core, a scene each domain draws, a layer each package draws.

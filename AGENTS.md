@@ -872,10 +872,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   does not yet write** — the raw count rides beside every reading and `doubted` names the sensor
   where `silence` counted, and `orexis-explain` answers the fixed questions over the two buckets
   (#894, reflection-is-genesis-run-again-over-the-series).
-- **A replay is the history drawn, by a generic core and the views a domain states as documents** — a figure a
-  replay lacks is a point the package deciding it does not yet write, as a plan published and coordination's holdings
-  and conflicts were; a domain's picture is an `onboarding:ViewGraph`, never code, and a replay opens no volume
-  (a-replay-is-the-history-drawn-by-the-views-a-domain-states).
+- **A replay is the history drawn, and the package that decides a thing draws it** — a figure a replay lacks is a
+  point the package deciding it does not yet write, as a plan published and coordination's holdings and conflicts
+  were; a domain draws its world as a scene and a package what it decided as a layer, each a Preact component in a
+  `replay.js` beside it, and a catalogue of view kinds a domain picked from was built and refused; a replay opens no
+  volume (a-replay-is-the-history-drawn-by-the-package-that-decides-it).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
   `crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming an
   absent file or a CRL past its `nextUpdate` refuses the whole society and not the one agent; and
@@ -901,8 +902,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
    that. Which packages an agent runs is the [roles](knowledge/domain/kernel/role.md) its self graph
    says it plays, each of a class the package whose ontology declares it serves.
    `agent/runtime.py` is the container that assembles them all. **A domain is documents and no
-   code**: `domains/<name>/` holds a vocabulary, its actions and its rules, and a world imports it
-   with `owl:imports`. Adding a way of acting is a node in a domain's `actions.ttl` — a
+   code an agent runs**: `domains/<name>/` holds a vocabulary, its actions and its rules, and a world imports it
+   with `owl:imports`; its one script, `replay.js`, is how it is drawn in a replay, which no agent loads
+   (a-replay-is-the-history-drawn-by-the-package-that-decides-it). Adding a way of acting is a node in a domain's `actions.ttl` — a
    precondition, an effect and an implementation — and nothing else.
 3. **Nothing in `infra/` is world-specific.** It holds the services and what is true of the
    installation: the broker image, the installation CA, Grafana's material, the admin token. A
@@ -1045,7 +1047,7 @@ orexis-onboard <world>       # ONBOARDING: load the world as an agent boots it, 
 orexis-explain <world> <agent>  # REFLECTION, not onboarding: one agent's season from its two buckets, the fixed
                              #   questions answered in the world's words, read with the admin token and never a volume
 orexis-replay <world>        # REFLECTION too: a run drawn from every agent's history — the buckets, or a walk's
-                             #   --recording — a pane per agent and the views its domains state, never a belief
+                             #   --recording — a pane per agent, drawn by each domain's scene and each package's layer
 orexis-firmware <world>      # a board's config.h, from the world it belongs to
 orexis-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
 orexis-infra-compose         # INFRA — infra/compose.yaml, from infra/installation.ttl

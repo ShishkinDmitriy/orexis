@@ -1,0 +1,6 @@
+Vendored, unmodified, so a replay page opens offline as one file and needs no build step:
+  preact.umd.js            preact@10.24.3   dist/preact.umd.js
+  hooks.umd.js             preact@10.24.3   hooks/dist/hooks.umd.js
+  htm.umd.js               htm@3.1.1        dist/htm.umd.js
+  render-to-string.umd.js  preact-render-to-string@6.5.11 dist/index.umd.js  (the tests' headless render only)
+Each under the MIT licence beside it.

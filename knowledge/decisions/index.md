@@ -204,7 +204,7 @@ Authoring a world, ratifying it, and what an amendment may do to a running agent
 * [a-dead-session-is-resigned-not-endured](/decisions/a-dead-session-is-resigned-not-endured.md) - An agent cut off from its bus sends itself SIGTERM; the container's restart policy is the recovery.
 * [a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md) - SUPERSEDED IN PART — every reader, the boot included, loads only the kinds it reads; premise-loaded packages moved to declared roles.
 * [reflection-is-genesis-run-again-over-the-series](/decisions/reflection-is-genesis-run-again-over-the-series.md) - No model in a pass; reflection is the sovereign's slow process over the series, never the beliefs, and its output is a proposal to ratify.
-* [a-replay-is-the-history-drawn-by-the-views-a-domain-states](/decisions/a-replay-is-the-history-drawn-by-the-views-a-domain-states.md) - The flight recorder is the history; a generic core draws every agent, and a domain states its picture as documents.
+* [a-replay-is-the-history-drawn-by-the-package-that-decides-it](/decisions/a-replay-is-the-history-drawn-by-the-package-that-decides-it.md) - The flight recorder is the history; a domain draws its world and a package what it decided, as Preact components.
 
 # Gates and guards
 

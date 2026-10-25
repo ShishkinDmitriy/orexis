@@ -1,12 +1,14 @@
-"""A replay of the lane: the courier's grid as its view document states it, drawn from the history each courier's
-history part wrote (`onboarding/replay.py`). The frames are held on points written by hand, one of each kind; and one
-walk records the head-on meeting and replays it, the two couriers seen by each other and agreeing who won."""
+"""A replay of the lane: the courier's road drawn by the courier's scene, and on it what coordination, planning and
+execution decided, each drawn by its own package (`onboarding/replay/`). Held on points written by hand, one of each
+kind, rendered by the page's own scripts under Node with no browser; and on one walk that records the head-on meeting
+and replays it, the two couriers seen by each other where each is fixed and agreeing who won."""
 
 from __future__ import annotations
 
 import importlib.util
 import json
 import re
+import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -14,11 +16,11 @@ import pytest
 
 from agent.series import HISTORY, install
 from onboarding import reading
-from onboarding.replay import Axis, Grid, _kept, frames, page, recorder, recording, things, views
+from onboarding.replay import data, drawings, headless, kept, page, recorder, recording, things
 
 LANE = Path(__file__).resolve().parents[1]
+REPO = LANE.parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
-ROAD = Grid("the_road", "the road", Axis("x", "Column", "RelativeColumn", "toX"), Axis("y", "Row", "RelativeRow", "toY"))
 
 
 @pytest.fixture(scope="module")
@@ -26,14 +28,9 @@ def world():
     return reading.world(LANE)
 
 
-def test_the_courier_states_the_road_as_a_grid_in_its_own_words(world):
-    assert views(world) == [ROAD]
-
-
-def test_a_contact_is_drawn_from_the_van_carrying_it_as_the_thing_it_is_a_sample_of(world):
-    said = things(world)
-    assert (said.hosts["contact_b"], said.of["contact_b"], said.hosts["contact_1"], "contact_1" in said.of) == ("van_a", "van_b", "van_a", False)
-    assert said.ranges["receiver_b_column"] == (-4.0, 4.0)
+def test_the_lane_is_drawn_by_the_courier_s_scene_and_by_each_package_s_own_layer():
+    assert [p.relative_to(REPO).as_posix() for p in drawings(LANE)] == [
+        "domains/courier/replay.js", "agent/coordination/replay.js", "agent/execution/replay.js", "agent/planning/replay.js"]
 
 
 def _at(seconds: int) -> datetime:
@@ -45,8 +42,8 @@ def _observed(measurement, feature, sensor, value, t):
 
 
 #  ONE AGENT'S HISTORY, a point of each kind: its van fixed at (0, 1) and then (1, 1); van B heard two cells on, and then
-#  beyond the receiver's range; a plan of two drives, the first taken and answered; van B foreseen at two places, the
-#  second for a window ending at twenty seconds; and a conflict won.
+#  beyond the receiver's range; a plan of two drives, the first taken and answered; van A asked with at (1, 1), van B
+#  said at (2, 1) and foreseen at two places, each for a window ending at twenty seconds; and a conflict won.
 _HISTORY = [
     _observed("Column", "van_a", "fix_a_column", 0, 0), _observed("Row", "van_a", "fix_a_row", 1, 0),
     _observed("RelativeColumn", "contact_b", "receiver_b_column", 2, 0), _observed("RelativeRow", "contact_b", "receiver_b_row", 0, 0),
@@ -59,6 +56,12 @@ _HISTORY = [
     *({"measurement": "Holding", "tags": {"origin": "foreseen", "peer": "courier_b", "constraint": "c", "thing": f"van_b.at.{x}.1", "n": str(n)},
        "fields": {"x": float(x), "y": 1.0, "type": "Van", "from": _at(0).isoformat(), "until": _at(20).isoformat(), "taken": False},
        "time": _at(0)} for n, x in enumerate((2, 3))),
+    *({"measurement": "Holdings", "tags": {"origin": origin, "peer": "courier_b", "constraint": "c"}, "fields": {"count": 1}, "time": _at(0)}
+      for origin in ("asked", "said")),
+    {"measurement": "Holding", "tags": {"origin": "asked", "peer": "courier_b", "constraint": "c", "thing": "van_a", "n": "0"},
+     "fields": {"x": 1.0, "y": 1.0, "from": _at(0).isoformat(), "until": "", "taken": True}, "time": _at(0)},
+    {"measurement": "Holding", "tags": {"origin": "said", "peer": "courier_b", "constraint": "c", "thing": "van_b", "n": "0"},
+     "fields": {"x": 2.0, "y": 1.0, "from": "", "until": _at(20).isoformat(), "taken": False}, "time": _at(0)},
     {"measurement": "Conflicts", "tags": {}, "fields": {"count": 1}, "time": _at(0)},
     {"measurement": "Conflict", "tags": {"peer": "courier_b", "constraint": "c"},
      "fields": {"standing": True, "silent": True, "round": 0, "won_by": "courier_a"}, "time": _at(0)},
@@ -69,36 +72,55 @@ _HISTORY = [
 ]
 
 
-def test_a_frame_shows_what_each_kind_of_point_places_on_the_grid_at_its_instant(world):
-    replay = frames({"courier_a": _HISTORY}, [ROAD], things(world))
-    first, then = replay["grids"][0]["frames"]["courier_a"]
-    assert replay["instants"] == [_at(0).isoformat(), _at(30).isoformat()]
-    assert first["fixed"] == [{"x": 0.0, "y": 1.0, "name": "van_a"}]
-    assert first["seen"] == [{"x": 2.0, "y": 1.0, "name": "van_b", "sample": "contact_b"}], "van B two cells on from van A, as van B"
-    assert [(c["x"], c["order"]) for c in first["planned"]] == [(1.0, 0), (2.0, 1)]
-    assert first["flight"] == [{"x": 1.0, "y": 1.0, "action": "Drive"}]
-    assert [(c["x"], c["now"]) for c in first["foreseen"]] == [(2.0, True), (3.0, True)]
-    assert first["conflicts"] == [{"peer": "courier_b", "constraint": "c", "standing": True, "silent": True, "round": 0, "won_by": "courier_a"}]
-    assert then["fixed"] == [{"x": 1.0, "y": 1.0, "name": "van_a"}]
-    assert then["seen"] == [], "an offset beyond the range its receiver declares sees nothing"
-    assert [c["x"] for c in then["planned"]] == [2.0], "the drive answered since the plan was published is walked"
-    assert then["flight"] == [] and "foreseen" not in then, "the drive answered; the set said again, empty"
-    assert replay["grids"][0]["box"] == [0.0, 1.0, 3.0, 1.0]
+def test_what_the_world_states_of_a_thing_the_history_names_is_handed_to_the_scenes(world):
+    said = things(world, {"courier_a": _HISTORY})
+    assert (said["contact_b"]["isHostedBy"], said["contact_b"]["isSampleOf"]) == (["van_a"], ["van_b"])
+    (capability,) = said["receiver_b_column"]["hasSystemCapability"]
+    (span,) = [p for p in capability["hasSystemProperty"] if "MeasurementRange" in p["type"]]
+    assert (span["minValue"], span["maxValue"]) == ([-4.0], [4.0])
+    assert "hedge_2_0" not in said, "a thing no point names is not handed over"
 
 
-def test_the_log_says_each_thing_the_agent_did_once_and_leaves_what_a_view_draws_to_the_view(world):
-    replay = frames({"courier_a": _HISTORY}, [ROAD], things(world))
-    lines = [text for _, text in replay["log"]["courier_a"]]
-    assert not any(text.startswith(("Column", "RelativeColumn", "Holdings", "Conflicts")) for text in lines)
+def _drawn(world, history=None):
+    history = history or {"courier_a": _HISTORY}
+    return data("lane", history, things(world, history))
+
+
+def _pane(world, at: int, history=None, agent="courier_a") -> ET.Element:
+    return ET.fromstring(headless(_drawn(world, history), drawings(LANE), pane=("road", agent, at)))
+
+
+def _marks(svg: ET.Element, attribute: str) -> list[tuple]:
+    return sorted((e.get(attribute), e.get("data-x"), e.get("data-y")) for e in svg.iter() if e.get(attribute) is not None)
+
+
+def test_a_pane_draws_each_kind_of_point_where_the_courier_s_scene_places_it(world):
+    first, then = _pane(world, 0), _pane(world, 1)
+    assert _marks(first, "data-fixed") == [("van_a", "0", "1")]
+    assert _marks(first, "data-seen") == [("van_b", "2", "1")], "van B two cells on from van A, drawn as van B"
+    assert [e.get("data-order") for e in first.iter() if e.get("data-order")] == ["0", "1"], "planning's path"
+    assert [e.get("data-flight") for e in first.iter() if e.get("data-flight")] == ["Drive"], "execution's step in flight"
+    assert sorted((e.get("data-thing"), e.get("data-now")) for e in first.iter() if e.get("data-origin") == "foreseen") == [
+        ("van_b.at.2.1", "true"), ("van_b.at.3.1", "true")], "coordination's foreseen places, while their window holds"
+    assert sorted((e.get("data-origin"), e.get("data-thing")) for e in first.iter() if e.get("data-origin") in ("asked", "said")) == [
+        ("asked", "van_a"), ("said", "van_b")], "what it asked with and what the peer said"
+    assert [e.get("data-conflict") for e in first.iter() if e.get("data-conflict")] == ["courier_b"]
+    assert _marks(then, "data-fixed") == [("van_a", "1", "1")]
+    assert _marks(then, "data-seen") == [], "an offset beyond the range its receiver declares sees nothing"
+    assert [e.get("data-order") for e in then.iter() if e.get("data-order")] == ["1"], "the drive answered since is walked"
+    assert not [e for e in then.iter() if e.get("data-flight") or e.get("data-origin") == "foreseen"], "nothing in flight, nothing foreseen"
+    assert [(e.get("data-origin"), e.get("data-now")) for e in then.iter() if e.get("data-origin")] == [
+        ("asked", "true"), ("said", "false")], "the peer's word past its window, still laid, faint"
+
+
+def test_the_log_says_each_thing_the_agent_did_in_the_words_of_the_package_that_did_it(world):
+    lines = headless(_drawn(world), drawings(LANE), log_of="courier_a")
+    assert not any(line.startswith(("Column", "RelativeColumn", "Holdings", "Conflicts")) for line in lines), lines
     assert "published a plan for w: Drive(toX=1, toY=1, van=van_a) → Drive(toX=2, toY=1, van=van_a)" in lines
-    assert "foreseen: van_b.at.2.1 type=Van x=2 y=1, van_b.at.3.1 type=Van x=3 y=1" in lines
+    assert "took Drive(toX=1, toY=1, van=van_a) for w" in lines and "Drive(toX=1, toY=1, van=van_a) landed for w" in lines
+    assert "foreseen of courier_b: van_b.at.2.1 type=Van x=2 y=1, van_b.at.3.1 type=Van x=3 y=1" in lines
     assert "foreseen nothing of courier_b" in lines
     assert "conflict with courier_b over c: standing, silent, round 0, won by courier_a" in lines
-
-
-def test_a_world_whose_domains_state_no_view_is_drawn_by_the_core_alone():
-    replay = frames({"courier_a": _HISTORY}, [], things(reading.world(LANE)))
-    assert replay["grids"] == [] and replay["log"]["courier_a"]
 
 
 def test_a_recording_keeps_each_agents_points_apart_and_replays_as_the_series_store_keeps_them(tmp_path):
@@ -108,12 +130,12 @@ def test_a_recording_keeps_each_agents_points_apart_and_replays_as_the_series_st
     recorder(path, "courier_b").write([point])
     read = recording(path)
     assert {a: [p["fields"]["count"] for p in ps] for a, ps in read.items()} == {"courier_a": [1, 2], "courier_b": [1]}
-    assert [p["fields"]["count"] for p in _kept(read["courier_a"])] == [2], "one point per measurement, tag set and instant: the last"
+    assert [p["fields"]["count"] for p in kept(read["courier_a"])] == [2], "one point per measurement, tag set and instant: the last"
 
 
 def test_the_page_holds_everything_it_draws(world):
-    html = page("lane", frames({"courier_a": _HISTORY}, [ROAD], things(world)))
-    assert "lane replay" in html and '"instants":[' in html
+    html = page(_drawn(world), drawings(LANE))
+    assert "lane replay" in html and "replay.scene(\"road\"" in html and "replay.layer(\"coordination\"" in html
     assert not re.search(r'<script[^>]+src=|<link[^>]+href=', html), "no script or style from elsewhere"
 
 
@@ -128,11 +150,15 @@ _spec.loader.exec_module(_lane)
 def test_the_head_on_meeting_is_recorded_and_replayed_with_each_courier_seeing_the_other_and_both_agreeing_who_won(
         monkeypatch, tmp_path, world):
     """The lane's two couriers driving at each other, each with a recorder for its history, walked until both have
-    concluded who won their draw and a pass more; replayed, each pane holds its own van as fixed and the other as seen,
-    each courier's plan and the conflict, won by the same courier in both."""
+    concluded who won their draw; replayed at the last instant, each pane holds its own van as fixed and the other as
+    seen where the other is fixed, and the conflict won by the same courier in both."""
     path = tmp_path / "head_on.jsonl"
     for courier in ("courier_a", "courier_b"):
         install(HISTORY, recorder(path, courier), courier)
+
+    def won() -> dict[str, set]:
+        history = recording(path) if path.exists() else {}
+        return {a: {p["fields"]["won_by"] for p in ps if p["measurement"] == "Conflict" and p["fields"]["won_by"]} for a, ps in history.items()}
     try:
         bus, time = _lane._lane(monkeypatch, _lane.variant(tmp_path, "head_on", _lane._HEAD_ON))
         bus.simulator.open()
@@ -140,9 +166,7 @@ def test_the_head_on_meeting_is_recorded_and_replayed_with_each_courier_seeing_t
         for runtime in bus.runtimes.values():
             runtime.run(passes=1, poll_s=0)
         for _ in range(20):
-            replay = frames(recording(path), views(world), things(world))
-            last = {a: f[-1] for a, f in replay["grids"][0]["frames"].items()}
-            if all(any(c["won_by"] for c in f["conflicts"]) for f in last.values()):
+            if len(won()) == 2 and all(won().values()):
                 break
             time["at"] += timedelta(seconds=_lane.CADENCE_S)
             bus.simulator.step(time["at"])
@@ -153,15 +177,14 @@ def test_the_head_on_meeting_is_recorded_and_replayed_with_each_courier_seeing_t
     finally:
         for courier in ("courier_a", "courier_b"):
             install(HISTORY, None, courier)
-    assert replay["agents"] == ["courier_a", "courier_b"]
-    a, b = last["courier_a"], last["courier_b"]
-    assert [c["name"] for c in a["fixed"]] == ["van_a"] and [c["name"] for c in b["fixed"]] == ["van_b"]
-    assert "van_b" in {c["name"] for c in a["seen"]} and "van_a" in {c["name"] for c in b["seen"]}, "each sees the other"
-    seen = {f: next((c["x"], c["y"]) for c in other["seen"] if c["name"] == thing)
-            for f, other, thing in (("van_b", a, "van_b"), ("van_a", b, "van_a"))}
-    fixed = {c["name"]: (c["x"], c["y"]) for c in (*a["fixed"], *b["fixed"])}
-    assert seen == fixed, f"what each sees is where the other is fixed: {seen} against {fixed}"
-    won = {f["conflicts"][i]["won_by"] for f in (a, b) for i, c in enumerate(f["conflicts"]) if c["won_by"]}
-    assert len(won) == 1, f"both agree who won: {won}"
-    assert any(f["planned"] for f in (a, b)), "a plan is drawn"
-    assert json.loads(re.search(r'<script id="replay" type="application/json">(.*?)</script>', page("lane", replay), re.S).group(1)) == replay
+    assert len(set().union(*won().values())) == 1, f"both agree who won: {won()}"
+    history = recording(path)
+    last = len(data("lane", history, {})["instants"]) - 1
+    a, b = (_pane(world, last, history, agent) for agent in ("courier_a", "courier_b"))
+    fixed = {name: (x, y) for name, x, y in [*_marks(a, "data-fixed"), *_marks(b, "data-fixed")]}
+    assert set(fixed) == {"van_a", "van_b"}
+    seen = {name: (x, y) for name, x, y in [*_marks(a, "data-seen"), *_marks(b, "data-seen")] if name in fixed}
+    assert seen == fixed, f"each sees the other where the other is fixed: {seen} against {fixed}"
+    assert any(e.get("data-order") for pane in (a, b) for e in pane.iter()), "a plan is drawn"
+    assert json.loads(re.search(r'<script id="data" type="application/json">(.*?)</script>',
+                                page(data("lane", history, {}), drawings(LANE)), re.S).group(1))["agents"] == ["courier_a", "courier_b"]

@@ -8,8 +8,7 @@
 <> a orexis:OntologyGraph ;    # this document is one graph, and this is what it is
     owl:imports <shapes.ttl> ,          # the ACTIONS a world imports itself, actions.ttl or actions.answered.ttl, and the answered drive's document brings the rules (#1002)
                 <constraints.ttl> ,     # what no van does, which a world says who holds
-                <requirements.ttl> ,    # what a world must state of a contact's sensors, held by onboarding alone
-                <views.ttl> .           # how the courier's history is drawn in a replay, read by orexis-replay alone
+                <requirements.ttl> .    # what a world must state of a contact's sensors, held by onboarding alone
 
 #  THE COURIER, A DOMAIN.
 #  The courier's words, shared by every world that poses a delivery: a position, two coordinates on the
