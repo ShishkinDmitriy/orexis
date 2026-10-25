@@ -78,7 +78,7 @@ description: >-
 > took twenty to ninety seconds. That amends #987's "its end lays none" for forecasts alone: each stretch a
 > peer said is followed by the next where it ends, so what a peer said still stands until its key is assigned.
 > A sighting that moves the peer moves what is laid, and a walking plan it makes impossible is reopened (#921). A
-> silent conflict's round turns each patience, and its draw is a LOT the agent draws alone, the draw domain's
+> never-answering peer's silent conflict's round turns each patience, and its draw is a LOT the agent draws alone, the draw domain's
 > `draw:lot`; the one that lost foresees a step further, so goes round the wider. An observation that tells more
 > - a turn signal, were there a sensor for it - narrows the estimate, a forecast made of an observation.
 >

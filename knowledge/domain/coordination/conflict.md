@@ -40,7 +40,8 @@ it for a patience of the asking: a conflict with it stands from then, silent fro
 peer is in range or asking - nothing it said could meet, and nothing it said shows it will give way. The agent
 takes the whole of the avoiding, by estimating where the peer's things may be (below).
 
-**A silent peer's draw is a lot drawn alone.** Nobody reveals to a peer that does not take part, so the round's
+**A silent peer's draw is a lot drawn alone** - a peer that never answered; one silent by its draw's restarts
+said its holdings, which are laid, and draws none. Nobody reveals to a peer that does not take part, so the round's
 draw is won as the agent's own secret alone says ([draw](/domain/draw/draw.md)), and a silent conflict's round
 turns each patience, a fresh lot each time. Two agents that cannot hear each other each draw their own, and need
 not agree: the one that lost foresees the other a step further, so goes round the wider, and the two part the

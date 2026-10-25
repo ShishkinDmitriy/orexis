@@ -21,7 +21,8 @@ first, in a conflict that stands while it is in range or asking: nothing it said
 shows it will give way either, so the agent takes the whole of the avoiding, as the world's own constraints say
 a silent peer is avoided (knowledge/domain/coordination/conflict.md).
 
-**A SILENT PEER'S DRAW IS A LOT DRAWN ALONE, AGAIN EACH PATIENCE.** Nobody reveals to a peer that is silent, so
+**A SILENT PEER'S DRAW IS A LOT DRAWN ALONE, AGAIN EACH PATIENCE** — one that never answered; one that said its
+holdings and fell silent in its draw draws none, what it said being laid. Nobody reveals to a peer that is silent, so
 the outcome a world ships for a silent conflict reads the agent's own secret and nothing of the peer's; and the
 round turns each patience, so two agents that cannot hear each other draw a fresh lot each, and part the first
 time one backs off while the other goes (backoff).
@@ -110,7 +111,9 @@ def conclude(store: ox.Store, me: str, at: datetime) -> list[str]:
         c = conflict_of(me, peer, constraint)
         row = concluded.setdefault(c, {"peer": peer, "constraint": constraint, "round": 0, "since": at,
                                        "standing": False, "silent": False, "winner": None})
-        row["winner"] = row["winner"] or won.get(draw_of(c, row["round"]))
+        #  A PEER THAT SAID ITS HOLDINGS AND FELL SILENT IN THE DRAW draws no lot: what it said is laid as a loser
+        #  lays it, and a lot won or lost each patience would only turn what is laid and reopen the plan.
+        row["winner"] = row["winner"] or (None if row["silent"] else won.get(draw_of(c, row["round"])))
         decided = row["winner"] is not None
         in_range = peer in _in_range(store, me, _key_of(store, constraint), at) or question_graph(peer, me, constraint) in asking
         if not in_range or not (meets or row["standing"]):
@@ -131,7 +134,7 @@ def conclude(store: ox.Store, me: str, at: datetime) -> list[str]:
     for c, row in _unanswered(store, me, cat, at, patience, met, concluded, asking).items():
         concluded[c] = row
     for row in concluded.values():
-        if row["standing"] and row["silent"]:
+        if row["standing"] and row["silent"] and (row["peer"], row["constraint"]) not in met:
             row["winner"] = row["winner"] or won.get(draw_of(conflict_of(me, row["peer"], row["constraint"]), row["round"]))
             if at - row["since"] >= patience:               # a fresh lot each patience
                 c = conflict_of(me, row["peer"], row["constraint"])
