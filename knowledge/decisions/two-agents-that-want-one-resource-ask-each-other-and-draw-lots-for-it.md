@@ -278,5 +278,13 @@ and part only where the road has a way round; two robots whose second grab of on
 nought, so the lot's winner foresees nothing and takes the mop, the loser foresees one step and yields, and two
 winners both reach for it and the world gives it to one - CSMA's backoff.
 
+**Two agents that cannot hear each other part only where there is a way round.** Foreseeing a silent peer
+rules places out and never pushes the agent anywhere, so the lot's loser foresees further and goes round the
+wider - at the lane's crossing - but head on in the lane between the hedges, where neither has a way round the
+other's foreseen places, both wait, lot after lot (measured, twenty rounds). Making the loser drive away was
+weighed and left: a desire the loser holds to keep clear of the places foreseen would push it, and it needs those
+places under a word the one constraint does not read, the place on the loser's own position among them. The
+trigger is a world where two agents that cannot hear each other must pass on a road with no way round.
+
 **A resource with no key.** A constraint whose footprint joins no key two things share, a sum or a
 count, is no resource here; a capacity of three is not a value two things hold.

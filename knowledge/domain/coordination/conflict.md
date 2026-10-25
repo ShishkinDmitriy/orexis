@@ -44,7 +44,7 @@ takes the whole of the avoiding, by estimating where the peer's things may be (b
 draw is won as the agent's own secret alone says ([draw](/domain/draw/draw.md)), and a silent conflict's round
 turns each patience, a fresh lot each time. Two agents that cannot hear each other each draw their own, and need
 not agree: the one that lost foresees the other a step further, so goes round the wider, and the two part the
-first round one goes round while the other goes on. Two agents silent to each other that still HEARD each other's questions lay what the other SAID
+first round one goes round while the other goes on - where there is a way round; where there is none, both wait. Two agents silent to each other that still HEARD each other's questions lay what the other SAID
 beside that, and the first to plan again says holdings that leave the other's way clear.
 
 # What each lays

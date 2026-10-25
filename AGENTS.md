@@ -549,8 +549,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   not the peer's word** — a domain's reach says where a van may be a drive on, laid one node per place as far ahead
   as the agent's stance says, so "no two vans at one position" stays the one constraint; a second constraint keeping
   cells clear made the present violate it and found no plan, and a desire restricted no other plan; two that cannot
-  hear each other back off by a lot each draws alone, the loser foreseeing a step further
-  (two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it).
+  hear each other back off by a lot each draws alone, the loser foreseeing a step further, and part only where
+  there is a way round (two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it).
 - **A receiver must outreach one exchange, and a radar need see only what the van could drive into** —
   the lane's receivers hear four cells and its radars one, with two slots, no cell of the road having
   more than two hedges beside it.

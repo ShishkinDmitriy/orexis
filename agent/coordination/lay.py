@@ -16,8 +16,9 @@ ahead, and asked of where the agent believes the peer's thing now, and again of 
 agent's lookahead says (`coordination:lookahead`, two, and one more where the lot it drew alone this round was
 lost), it gives every place the thing may stand by then, each a node of its own, laid as a forecast from now for
 as many of the longest step a reach says it takes (`coordination:stepS`) — after which only the next sighting
-says, and a plan may wait the window out. A place laid stands while its window does, and is laid again where the
-places move or the window has passed.
+says, and a plan may wait the window out. A place laid stands while a step of its window is left, and is laid
+again where the places move or less is left: let lapse while the peer was still in sight, nothing of it would be
+foreseen until the next pass, and a step taken then would have been taken blind.
 One for the step the peer may take next, one more since what the agent believes of the peer may be a step behind;
 and laid one node per place, so the thing's keys are never crossed into places it cannot stand. The one constraint
 over the thing, the world's own, keeps the agent's plans out of every place laid, and a sighting that moves the
@@ -72,7 +73,7 @@ def lay(store: ox.Store, me: str, at: datetime) -> list[str]:
         return []
     beliefs = graphs_of(store, BELIEF)
     wanted: dict[str, Holding] = {}
-    foreseen: set[str] = set()
+    foreseen: dict[str, timedelta] = {}            # each place foreseen, and one step of its window
     for r in rows(store, _STANDING_Q, (), graph=Raw(f"<{conflicts_graph(me)}>")):
         won = rows(store, _WON_Q, beliefs, draw=r["draw"])
         peer, constraint = r["peer"], r["constraint"]
@@ -82,7 +83,7 @@ def lay(store: ox.Store, me: str, at: datetime) -> list[str]:
         if r.get("silent") == "true":                   # and of a silent peer, where its things may be
             ahead = int(stance(store, LOOKAHEAD, LOOKING)) + (1 if won and won[0]["w"] != me else 0)
             reached = _reach(store, peer, constraint, ahead, at)
-            foreseen |= {h.thing for h in reached}
+            foreseen |= {h.thing: (h.end - at) / max(ahead, 1) for h in reached if h.end is not None}
             theirs += reached
         theirs = [h for h in theirs if h.start is None or not _refused(store, h, at)]
         for n, h in enumerate(_timeline(theirs)):
@@ -96,8 +97,8 @@ def lay(store: ox.Store, me: str, at: datetime) -> list[str]:
     for graph, h in sorted(wanted.items()):
         held = _holding_in(store, graph) if graph in laid else None
         if held == h or (held is not None and h.thing in foreseen and held.thing == h.thing
-                         and held.values == h.values and held.end is not None and held.end > at):
-            continue                                # a place foreseen stands while its window does
+                         and held.values == h.values and held.end is not None and held.end - at > foreseen[h.thing]):
+            continue                                # a place foreseen stands while a step of its window is left
         forget_graph(store, graph)
         facts = " ".join(f"<{h.thing}> <{p}> {_rendered(v)} ." for p, v in h.values)
         update(store, f"INSERT DATA {{ GRAPH <{graph}> {{ {facts} }} {entry(store, graph, FORECAST, RECEIVED, me, h.start, h.end)} }}")

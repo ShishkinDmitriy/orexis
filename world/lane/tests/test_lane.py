@@ -367,8 +367,7 @@ def test_two_couriers_silent_to_each_other_both_yield_and_still_part(monkeypatch
     assert not any(w for w, _ in won), "A never concluded a winner"
     assert _conflict(bus.runtime).get("silent") == "true", "and past A's rounds, B is silent to it"
     assert _conflict(bus.runtimes["courier_b"]).get("silent") == "true", "B never heard A reveal: A is silent to B too"
-    assert _at(bus.runtime.beliefs).get("parcel_a") == (6, 1) and _at(bus.runtimes["courier_b"].beliefs).get("parcel_b") == (0, 0), \
-        f"and both parcels were delivered: {positions[-1]}"
+    assert positions[-1] == ((6, 1), (5, 4)), f"and both parcels were delivered: {positions[-1]}"
 
 
 
@@ -478,9 +477,11 @@ def test_a_silent_peer_driving_across_the_path_is_passed_where_it_leaves_room(mo
     assert all(_apart(to, b) >= 3 for to, b, was in drives if was and b), f"A drove near B: {drives}"
 
 
-#  TWO COURIERS THAT CANNOT HEAR EACH OTHER (#923): head on, every document either says lost on the way, and each
-#  patience thirty seconds, so each takes the other as silent while both are still on the road.
-_DEAF = {**_HEAD_ON,
+#  TWO COURIERS THAT CANNOT HEAR EACH OTHER (#923): the crossing, every document either says lost on the way, and
+#  each patience thirty seconds, so each takes the other as silent while both are still short of the lane. At the
+#  crossing there is a way round; head on in the lane between the hedges there is none, and two that cannot hear
+#  each other both wait there (two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it, seams).
+_DEAF = {**_crossing("0", "3"),
          "beliefs/courier_a.self.ttl": [(":courier_a planning:budget 256 .",
                                          f':courier_a planning:budget 256 ; coordination:secret "{"0" * 64}" ; coordination:patienceS 30 .')],
          "beliefs/courier_b.self.ttl": [(":courier_b planning:budget 256 .",
@@ -488,8 +489,8 @@ _DEAF = {**_HEAD_ON,
 
 
 def test_two_couriers_that_cannot_hear_each_other_back_off_by_lots_drawn_alone_and_part(monkeypatch, tmp_path):
-    """Head on, and nothing either says reaches the other. Each asks, hears nothing for its patience, and takes the
-    other as silent: each foresees the other's van two drives on, so neither drives into the other's way. Each then
+    """At the crossing, and nothing either says reaches the other. Each asks, hears nothing for its patience, and takes
+    the other as silent: each foresees the other's van two drives on, so neither drives into the other's way. Each then
     draws a lot alone each patience, and the one that loses foresees a drive further, so goes round the wider; the
     round the lots differ, one goes round while the other drives on, and they part. No two vans ever
     stand at one position, and both parcels are delivered."""
@@ -507,7 +508,7 @@ def test_two_couriers_that_cannot_hear_each_other_back_off_by_lots_drawn_alone_a
             runtime.run(passes=1, poll_s=0)
         positions.append((bus.simulator.position(L + "van_a"), bus.simulator.position(L + "van_b")))
         conflicts.append((_conflict(bus.runtime), _conflict(bus.runtimes["courier_b"])))
-        if _at(bus.runtime.beliefs).get("parcel_a") == (6, 1) and _at(bus.runtimes["courier_b"].beliefs).get("parcel_b") == (0, 0):
+        if positions[-1] == ((6, 1), (5, 4)) and not any(r.parts["execution"].executor.walking() for r in bus.runtimes.values()):
             break
     assert bus.dropped and len(bus.dropped) == len(bus.told), "every document either said was lost"
     assert all(a != b for a, b in positions), f"two vans stood at one position: {positions}"
@@ -515,5 +516,4 @@ def test_two_couriers_that_cannot_hear_each_other_back_off_by_lots_drawn_alone_a
         "each took the other as silent"
     rounds = {(a.get("round"), b.get("round")) for a, b in conflicts}
     assert any(r not in (None, "0") for r, _ in rounds), f"the rounds turned, a lot each patience: {sorted(rounds)}"
-    assert _at(bus.runtime.beliefs).get("parcel_a") == (6, 1) and _at(bus.runtimes["courier_b"].beliefs).get("parcel_b") == (0, 0), \
-        f"and both parcels were delivered: {positions[-1]}"
+    assert positions[-1] == ((6, 1), (5, 4)), f"and both parcels were delivered: {positions[-1]}"
