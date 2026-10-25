@@ -28,6 +28,11 @@ like any package's, so a sink handed down would be the runtime choosing, once mo
 the shape this has is logging's: whoever writes asks once where it goes, and whoever runs the
 process decided that when it loaded the sinks.
 
+A SINK MAY BE INSTALLED FOR ONE AGENT, where a process runs several — a world's test walking two
+couriers in one interpreter, recording each apart (`orexis-replay`). A deployed agent is one per
+process, its bucket its own, so a point names no agent; whoever writes asks for its agent's sink, and
+is answered the process's where none is installed for it.
+
 A STORE THAT REFUSES a point is said in the log and costs the agent nothing.
 """
 
@@ -45,7 +50,9 @@ PURPOSES = (HISTORY, METRICS)
 #  WHAT NAMES A STORE FOR A PURPOSE: all four, under `INFLUX_<PURPOSE>_`.
 _KEYS = ("URL", "ORG", "BUCKET", "TOKEN")
 
-_sinks: dict[str, "Sink"] = {}
+#  EVERY SINK, by purpose and the agent it is for — None for every agent the process runs, as a
+#  deployed one runs one.
+_sinks: dict[tuple[str, str | None], "Sink"] = {}
 
 
 class Sink:
@@ -89,18 +96,20 @@ def load(environ=None) -> tuple[str, ...]:
     """A sink for every purpose the environment names a store for; the purposes loaded."""
     for purpose in PURPOSES:
         install(purpose, Sink.from_environment(purpose, environ))
-    return tuple(purpose for purpose in PURPOSES if purpose in _sinks)
+    return tuple(purpose for purpose in PURPOSES if (purpose, None) in _sinks)
 
 
-def install(purpose: str, sink: "Sink | None") -> None:
-    """Make `sink` the one points of `purpose` go to — or none, where `sink` is None."""
+def install(purpose: str, sink: "Sink | None", agent: str | None = None) -> None:
+    """Make `sink` the one points of `purpose` go to — those of `agent` alone, where one is named —
+    or none, where `sink` is None."""
     if sink is None:
-        _sinks.pop(purpose, None)
+        _sinks.pop((purpose, agent), None)
     else:
-        _sinks[purpose] = sink
+        _sinks[(purpose, agent)] = sink
 
 
-def sink(purpose: str) -> "Sink | None":
-    """The sink points of `purpose` go to, or None where none is loaded — and then a contributor
-    builds no point at all."""
-    return _sinks.get(purpose)
+def sink(purpose: str, agent: str | None = None) -> "Sink | None":
+    """The sink points of `purpose` go to — `agent`'s own where one is installed for it, as a
+    logger named for a module is asked before the root — or None where none is loaded, and then a
+    contributor builds no point at all."""
+    return _sinks.get((purpose, agent)) if agent is not None and (purpose, agent) in _sinks else _sinks.get((purpose, None))

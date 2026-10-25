@@ -1,5 +1,6 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix onboarding: <http://example.org/orexis/onboarding#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 
@@ -22,6 +23,39 @@ onboarding:DeploymentGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:lab
 onboarding:RequirementGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Requirement graph" ;
     rdfs:comment "What a world must state of a package's or a domain's words: SHACL shapes the package or domain owning the words ships in a document of this kind beside its ontology, and `orexis-onboard` holds a world to before anything is granted. Read by onboarding alone, since what an agent holds is accepted and revised once it runs and a sovereign's document may be garbage only before it is believed; no agent loads one (knowledge/domain/onboarding/requirement.md, #838)." .
 
+onboarding:ViewGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "View graph" ;
+    rdfs:comment "How a domain's history is drawn in a replay: the views a domain ships beside its ontology, each of a kind `orexis-replay` renders, saying in the domain's own words which of the history's points place what on it. Read by `orexis-replay` alone, which draws what the history holds and never a belief; no agent loads one (knowledge/domain/onboarding/view.md)." .
+
+onboarding:Grid a owl:Class ; rdfs:label "Grid" ;
+    rdfs:comment "A view of a plane of whole numbers, two axes, a cell per position: each agent's things as fixed and as seen, the steps its plan drives to, what it asked with and what it laid of its peers - said and foreseen - and its conflicts, at every instant of a replay (knowledge/domain/onboarding/view.md)." .
+
+onboarding:across a owl:ObjectProperty ; rdfs:label "across" ;
+    rdfs:domain onboarding:Grid ; rdfs:range onboarding:Axis ;
+    rdfs:comment "A grid's axis drawn from left to right." .
+
+onboarding:down a owl:ObjectProperty ; rdfs:label "down" ;
+    rdfs:domain onboarding:Grid ; rdfs:range onboarding:Axis ;
+    rdfs:comment "A grid's axis drawn from top to bottom." .
+
+onboarding:Axis a owl:Class ; rdfs:label "Axis" ;
+    rdfs:comment "One axis of a view, said as what places a thing on it in each kind of point the history holds: `holds`, `fixes`, `offsets` and `moves`, each stated where the domain has one (knowledge/domain/onboarding/view.md)." .
+
+onboarding:holds a owl:ObjectProperty ; rdfs:label "holds" ;
+    rdfs:domain onboarding:Axis ; rdfs:range rdf:Property ;
+    rdfs:comment "The predicate of a constraint's key a holding's value on the axis is said under, as coordination writes a holding's point." .
+
+onboarding:fixes a owl:ObjectProperty ; rdfs:label "fixes" ;
+    rdfs:domain onboarding:Axis ; rdfs:range rdf:Property ;
+    rdfs:comment "The property an observation of a thing's own position on the axis observes: its feature is where the reading puts it." .
+
+onboarding:offsets a owl:ObjectProperty ; rdfs:label "offsets" ;
+    rdfs:domain onboarding:Axis ; rdfs:range rdf:Property ;
+    rdfs:comment "The property an observation of an offset on the axis observes: its feature, a sample, is where the reading puts it from the thing hosting the sample as that thing was fixed, and is drawn as the thing it is a sample of, where it is one; a reading outside the range its sensor declares sees nothing." .
+
+onboarding:moves a owl:ObjectProperty ; rdfs:label "moves" ;
+    rdfs:domain onboarding:Axis ; rdfs:range rdf:Property ;
+    rdfs:comment "The parameter an action takes that says where a step puts a thing on the axis, as a step's point is tagged with it." .
+
 onboarding:monitored a owl:DatatypeProperty ; rdfs:label "monitored" ;
     rdfs:domain onboarding:DeploymentGraph ;
     rdfs:comment "Said by a world's own deployment graph of itself, `<> onboarding:monitored true`: the world's agents write their metrics, so each is minted a metrics bucket and told of it, and the world gets a health dashboard. Absent is no - metrics are the admins' instrumentation and a world opts in - and a world saying it where the installation serves metrics from no store is refused at onboarding (knowledge/domain/onboarding/deployment.md)." .
@@ -41,7 +75,7 @@ onboarding:SeriesPurpose a owl:Class ; rdfs:label "Series purpose" ;
     rdfs:comment "What a series is written for, which decides the bucket it goes to, the credential that opens it and how long it keeps a point. Two, and the agent's code names each (`agent.series`): history and metrics." .
 
 onboarding:History a onboarding:SeriesPurpose ; rdfs:label "history" ;
-    rdfs:comment "What happened: every observation and every step taken and how it ended, contributed by the package that decides each. The record, kept for good, in the bucket the one series had before purposes." .
+    rdfs:comment "What happened: every observation, every step taken and how it ended, every plan published, and what coordination asked with, laid and concluded, contributed by the package that decides each. The record, kept for good, in the bucket the one series had before purposes." .
 
 onboarding:Metrics a onboarding:SeriesPurpose ; rdfs:label "metrics" ;
     rdfs:comment "How the agent is doing, for whoever administers it: each loaded package's gauges and tallied events and the runtime's own, written once a window of `onboarding:intervalSeconds`. Written only by the agents of a world that is `onboarding:monitored`, to a bucket of their own opened for writing alone, and kept as long as `onboarding:retentionDays` says." .

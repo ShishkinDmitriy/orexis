@@ -16,14 +16,18 @@ draw. It is watched and never believed: nothing written there reaches a plan. It
 of what reflection reads of an agent
 ([reflection-is-genesis-run-again-over-the-series](/decisions/reflection-is-genesis-run-again-over-the-series.md)),
 so a figure reflection lacks is a point missing here; `orexis-explain` is the reader
-([reflect](/runbooks/reflect.md)). It has two
+([reflect](/runbooks/reflect.md)), and `orexis-replay` draws a run from it
+([replay-a-run](/runbooks/replay-a-run.md)). It has two
 purposes, and the agent is told of a store for each apart, in environment keyed by the purpose —
 two purposes may name one instance, by coincidence and not by design:
 
 - **History** — what happened. Every observation, one point per property under that property's
   own name, and every step taken and how it ended, landed or failed, with its action, its want
-  and its values. Each is an [event](/domain/kernel/event.md) of the package that decides it, which
-  answers its point: sensing's observation, execution's act recorded and the world's answer.
+  and its values; every plan published, a point per step; and what coordination asked with, laid
+  of its peers and concluded of its conflicts, each set said whole. Each is an
+  [event](/domain/kernel/event.md) of the package that decides it, which answers its point — or its
+  points, where one event is several: sensing's observation, execution's act recorded and the world's
+  answer, planning's plan, coordination's holdings and conflicts.
 - **Metrics** — how the agent is doing, for whoever administers it: code watching code, not a
   description of anything, so it lives in code and nowhere in the model. An event says what
   happened and how long it took, which no row may hold, since no plan branches on it, and a
@@ -33,7 +37,9 @@ two purposes may name one instance, by coincidence and not by design:
   at the window's end.
 
 The **sink** sits beneath every contributor and knows nothing of what it writes. A store that
-refuses a point is said in the log and costs the agent nothing.
+refuses a point is said in the log and costs the agent nothing. A point names no agent, since a
+bucket is one agent's; where one process runs several, as a world's test walks two couriers, a sink
+may be installed for one agent, and the history part asks for its own agent's first.
 
 # Why it is told by purpose
 

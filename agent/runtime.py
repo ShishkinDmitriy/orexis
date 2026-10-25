@@ -747,7 +747,7 @@ class Runtime:
         #  WHAT WATCHES THE AGENT, where the environment names a store for it — last, so it is linked
         #  to every part and stopped first, writing the last window.
         watchers = [name for name, purpose in zip(WATCHERS, (series.HISTORY, series.METRICS))
-                    if series.sink(purpose) is not None]
+                    if series.sink(purpose, self.id) is not None]
         for package in [*self.packages, *watchers]:
             name = "agent." + package.replace("/", ".") + ".create"
             if package.startswith("transport/") and (transport is not None or not connect):

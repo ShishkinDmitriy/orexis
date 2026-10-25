@@ -50,6 +50,7 @@ from agent.stance import stance
 from agent.store import Raw, catalogue_of, construct, entry, forget_graph, graphs_of, rows, update
 
 from .ask import _HELD_Q, _in_range
+from .events import Conflict
 from .holdings import _key_of
 from .ontology import (BOUND, CONFLICT, CONSTRAINT_GRAPH, COORDINATION, PATIENCE, PATIENCE_S, QUESTION_GRAPH, ROUNDS,
                        WON_BY, answer_graph, conflict_of, conflicts_graph, draw_of, question_graph)
@@ -226,3 +227,10 @@ def _written(store: ox.Store, me: str, graph: str, concluded: dict, prior: dict)
     update(store, f"INSERT DATA {{ GRAPH <{graph}> {{ {' '.join(facts)} }} {entry(store, graph, BELIEF, DERIVED, me)} }}")
     hash_named_graph(store, graph)
     return [graph]
+
+
+def _conflicts(store: ox.Store, me: str) -> list[Conflict]:
+    """Every conflict the self `me` of `store` holds, as it last concluded them: what a replay is told."""
+    return [Conflict(r["peer"], r["constraint"], r.get("standing") == "true", r.get("silent") == "true", int(r["round"]),
+                     r.get("winner"))
+            for r in sorted(rows(store, _PRIOR_Q, (), graph=Raw(f"<{conflicts_graph(me)}>")), key=lambda r: r["c"])]

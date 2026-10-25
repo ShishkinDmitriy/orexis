@@ -195,7 +195,7 @@ def test_the_growers_season_is_reported_from_what_its_sinks_wrote(monkeypatch):
           f"points; report in {report_s * 1000:.1f} ms\n{season.text()}")
     doses = [t for t, _ in bus.commands if t == "actuators/pump/command"]
     assert doses and len(doses) == len([p for p in history if p["measurement"] == "Step" and p["fields"].get("taken")])
-    assert all("raw" in p["fields"] for p in history if p["measurement"] != "Step"), "the raw count rides on every reading"
+    assert all("raw" in p["fields"] for p in history if p["measurement"] not in ("Step", "Plan")), "the raw count rides on every reading"
     assert found["wants nothing reached"] == [] and found["desires never unmet"] == [] and found["searches exhausted"] == []
     (dosing,) = found["landings"]
     assert dosing.startswith(f"Dosing: {len(doses)} verdict(s), {len(doses)} landed, 0 timed out") and "STOOD OUT" not in dosing

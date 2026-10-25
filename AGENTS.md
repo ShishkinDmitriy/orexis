@@ -872,6 +872,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   does not yet write** — the raw count rides beside every reading and `doubted` names the sensor
   where `silence` counted, and `orexis-explain` answers the fixed questions over the two buckets
   (#894, reflection-is-genesis-run-again-over-the-series).
+- **A replay is the history drawn, by a generic core and the views a domain states as documents** — a figure a
+  replay lacks is a point the package deciding it does not yet write, as a plan published and coordination's holdings
+  and conflicts were; a domain's picture is an `onboarding:ViewGraph`, never code, and a replay opens no volume
+  (a-replay-is-the-history-drawn-by-the-views-a-domain-states).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
   `crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming an
   absent file or a CRL past its `nextUpdate` refuses the whole society and not the one agent; and
@@ -1040,6 +1044,8 @@ orexis-onboard <world>       # ONBOARDING: load the world as an agent boots it, 
   orexis-dashboards <world>  #   a Grafana folder per world: what its agents observe, and their health where monitored
 orexis-explain <world> <agent>  # REFLECTION, not onboarding: one agent's season from its two buckets, the fixed
                              #   questions answered in the world's words, read with the admin token and never a volume
+orexis-replay <world>        # REFLECTION too: a run drawn from every agent's history — the buckets, or a walk's
+                             #   --recording — a pane per agent and the views its domains state, never a belief
 orexis-firmware <world>      # a board's config.h, from the world it belongs to
 orexis-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
 orexis-infra-compose         # INFRA — infra/compose.yaml, from infra/installation.ttl

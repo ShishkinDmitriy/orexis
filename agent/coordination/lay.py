@@ -111,6 +111,31 @@ def lay(store: ox.Store, me: str, at: datetime) -> list[str]:
     return written
 
 
+def _laid(store: ox.Store, me: str) -> dict[tuple[str, str], tuple[list[Holding], list[Holding]]]:
+    """What the self `me` of `store` lays now, per peer and constraint of a conflict it holds: the holdings the
+    peer said, and those it foresaw of the peer — told apart by whether the peer acts for the thing. What a
+    replay is told; a conflict laying nothing answers two empty lists."""
+    cat = catalogue_of(store)
+    if cat is None:
+        return {}
+    present = {r["g"] for r in rows(store, _LAID_Q, (), cat=Raw(f"<{cat}>"), root=Raw(f'"{laid_root(me)}"'))}
+    out = {}
+    for r in rows(store, _ALL_Q, (), graph=Raw(f"<{conflicts_graph(me)}>")):
+        peer, constraint = r["peer"], r["constraint"]
+        acts = {a["t"] for a in rows(store, _ACTS_FOR_Q, graphs_of(store, BELIEF, common=True), peer=peer)}
+        said, foreseen = [], []
+        under = laid_graph(me, peer, constraint, 0)[:-1]
+        for graph in sorted((g for g in present if g.startswith(under)), key=lambda g: int(g[len(under):])):
+            if (h := _holding_in(store, graph)) is not None:
+                (said if h.thing in acts else foreseen).append(h)
+        out[(peer, constraint)] = (said, foreseen)
+    return out
+
+
+_ALL_Q = """SELECT DISTINCT ?peer ?constraint WHERE { GRAPH $graph { ?c a coordination:Conflict ; coordination:with ?peer ;
+                                                                   coordination:over ?constraint } } ORDER BY ?peer ?constraint"""
+
+
 #  THE THINGS A PEER ACTS FOR; WHAT THE AGENT BELIEVES EACH IS; AND EVERY REACH A WORLD'S RULES SHIP.
 _ACTS_FOR_Q = "SELECT ?t WHERE { $peer orexis:actsFor ?t } ORDER BY ?t"
 _REACH_Q = """SELECT ?text ?step WHERE { ?rule a coordination:Reach ; sh:construct ?text .

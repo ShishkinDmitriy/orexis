@@ -1,0 +1,17 @@
+@prefix : <http://example.org/orexis/courier#> .
+@prefix courier: <http://example.org/orexis/courier#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a onboarding:ViewGraph .    # this document is one graph, and this is what it is
+
+#  HOW THE COURIER'S HISTORY IS DRAWN IN A REPLAY, read by `orexis-replay` alone (knowledge/domain/onboarding/view.md).
+#  No agent loads this graph: its kind is onboarding's.
+#
+#  THE ROAD IS A GRID: a position is two whole numbers, a column across and a row down, and each kind of point the
+#  history holds says one in its own word - a holding by the constraint's key, `courier:x` and `courier:y`; a van's
+#  fix by the column and row it observes; a contact by its offset from the van carrying it; a drive by where it goes.
+:the_road a onboarding:Grid ;
+    rdfs:label "the road" ;
+    onboarding:across [ onboarding:holds :x ; onboarding:fixes :Column ; onboarding:offsets :RelativeColumn ; onboarding:moves :toX ] ;
+    onboarding:down [ onboarding:holds :y ; onboarding:fixes :Row ; onboarding:offsets :RelativeRow ; onboarding:moves :toY ] .

@@ -103,7 +103,7 @@ from . import footprint
 from .admit import admit
 from .bridge import keeps
 from .derive_wants import derive_wants
-from .events import (Imagined, Planned, PlanPublished, Reconsidered, Rerooted, SearchEnded, StepBlocked,
+from .events import (Imagined, Planned, PlannedStep, PlanPublished, Reconsidered, Rerooted, SearchEnded, StepBlocked,
                      WantReached, WantUnreachable)
 from .extract_plan import extract_plan
 from .find_scopes import find_scopes
@@ -312,6 +312,9 @@ SELECT ?outcome ?spent WHERE { GRAPH ?g { ?p a planning:Plan ; planning:for $wan
 _DESIRE_OF_Q = """SELECT ?d WHERE { GRAPH ?g { $want a planning:Want ; prov:wasDerivedFrom ?d } } LIMIT 1"""
 _ESTIMATE_Q = """
 SELECT ?remaining WHERE { GRAPH $cat { ?x planning:weighs $ground ; planning:for $want ; planning:remaining ?remaining } } LIMIT 1"""
+#  A PUBLISHED PLAN'S STEPS, each the one after it, the action it fills, every row it states and the two ends of its landing.
+_PLAN_STEPS_Q = """SELECT ?step ?next ?a ?p ?o ?lands ?latest WHERE { GRAPH $plan { ?step a execution:Step ; planning:fills ?a ; ?p ?o .
+  OPTIONAL { ?step execution:then ?next } OPTIONAL { ?step execution:landsAt ?lands } OPTIONAL { ?step execution:notAfter ?latest } } }"""
 _PURSUES_Q = """SELECT ?want WHERE { GRAPH ?g { $plan execution:pursues ?want } } LIMIT 1"""
 _PURSUERS_Q = """SELECT (COUNT(DISTINCT ?i) AS ?n) WHERE { GRAPH ?g { ?i a execution:Intention ; execution:pursues $want } }"""
 
@@ -688,7 +691,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                 written += self.reconsidered.emit(event)
             #  SAID BEFORE ANYTHING ADOPTS IT, since whether an intention pursued the want before is
             #  what makes a replan, and the executor adopts as it hears.
-            published = self._published(store, handed, present, _scope, memo)
+            published = self._published(store, handed, present, _scope, memo, at)
             if lap:
                 lap("publish")
             for event in published:
@@ -1180,11 +1183,11 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                 weighed=_spent(store, want, memo) - (ceiling - budget)))
 
     def _published(self, store: ox.Store, handed: list[str], present: str, scope: str,
-                   memo: Memo) -> list[PlanPublished]:
-        """What is said of each plan this pass published from `store`: the want it pursues, the tally
-        of the want's searches, which goes with it, what the want's estimate said was left at the
-        `present` ground against what the plan spent, and whether an intention pursued the want
-        before — a replan."""
+                   memo: Memo, at: datetime) -> list[PlanPublished]:
+        """What is said of each plan this pass published from `store` at `at`: the want it pursues, the
+        tally of the want's searches, which goes with it, what the want's estimate said was left at the
+        `present` ground against what the plan spent, whether an intention pursued the want before — a
+        replan — and its steps, read where anybody hears a plan published, which the executor does."""
         out = []
         for plan in handed:
             found = rows(self.beliefs, _PURSUES_Q, (), plan=plan)
@@ -1201,8 +1204,31 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
                 passes=passes, weighed=_spent(store, want, memo),
                 wall_s=round(time.perf_counter() - first, 6) if first is not None else None,
                 estimate=float(root["remaining"]) if root.get("remaining") is not None else None,
-                cost=float(spent) if spent is not None else None, replan=pursued > 0))
+                cost=float(spent) if spent is not None else None, replan=pursued > 0,
+                at=at, steps=self._steps(plan)))
         return out
+
+    def _steps(self, plan: str) -> tuple[PlannedStep, ...]:
+        """The steps of `plan` as published, in the order they are walked — the plan's own chain, since fictive
+        steps all land at one instant: each the action it fills, the values of the parameters the action
+        takes by each one's local name — an IRI's local name, a literal's text — and the two ends of its landing."""
+        said: dict[str, dict] = {}
+        for r in rows(self.beliefs, _PLAN_STEPS_Q, (), plan=plan):
+            said.setdefault(r["step"], {"a": r["a"], "next": r.get("next"), "lands": r.get("lands"), "latest": r.get("latest"),
+                                        "said": {}})["said"][r["p"]] = r["o"]
+        takes = {a: [r["takes"] for r in rows(self.beliefs, _TAKES_Q, graphs_of(self.beliefs, ACTION), action=a)]
+                 for a in {s["a"] for s in said.values()}}
+        after = {s["next"] for s in said.values() if s["next"]}
+        chain, step = [], next(iter(sorted(set(said) - after)), None)
+        while step in said and step not in chain:
+            chain.append(step)
+            step = said[step]["next"]
+        out = []
+        for step, s in ((step, said[step]) for step in chain):
+            parameters = tuple((local_of(p), local_of(s["said"][p]) if "://" in s["said"][p] else s["said"][p])
+                               for p in takes[s["a"]] if p in s["said"])
+            out.append(PlannedStep(local_of(s["a"]), parameters, s["lands"], s["latest"]))
+        return tuple(out)
 
     def _imagined(self, store: ox.Store, scope: str) -> Imagined:
         """What the imaginarium of `scope` holds now: the one store a plan, a world and a weighing
