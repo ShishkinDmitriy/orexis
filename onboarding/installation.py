@@ -89,7 +89,12 @@ _SERVICE_Q = f"""
 SELECT ?s ?url ?image ?organisation WHERE {{ ?s a <$kind> .
   OPTIONAL {{ ?s <{_SCHEMA_URL}> ?url }} OPTIONAL {{ ?s <{ONBOARDING}image> ?image }}
   OPTIONAL {{ ?s <{ONBOARDING}organisation> ?organisation }} }}"""
-_POOL_Q = f"SELECT ?s ?url WHERE {{ ?s <{ONBOARDING}allocatesFrom> ?url }}"
+_POOL_Q = f"SELECT ?s ?url WHERE {{ ?s <{ONBOARDING}allocatesFrom> ?url ; <{ONBOARDING}allocatesFor> <$kind> }}"
+BROKER = "https://www.w3id.org/MQTT4SSN-Ontology#Broker"
+AGENT = "http://example.org/orexis#Agent"
+_JOURNAL = ONBOARDING + "journal"
+_JOURNALS_Q = f"SELECT ?s ?url WHERE {{ ?s <{_JOURNAL}> ?url }}"
+_AGENTS_Q = "SELECT ?a WHERE { ?a a orexis:Agent ; orexis:localId ?id } ORDER BY ?a"
 
 #  WHICH STORE SERVES A PURPOSE, and how long the installation keeps the purpose's points. A purpose
 #  is a concept the code names (`agent.series`), so the word for each is onboarding's vocabulary's,
@@ -203,6 +208,25 @@ def monitored(world: str) -> bool:
     return bool(answer(store, _MONITORED_Q, (), cat=Raw(f"<{catalogue_of(store)}>"))["boolean"])
 
 
+#  WHAT A WORLD'S DEPLOYMENT COUNTS AS AN INCIDENT besides its vocabulary: from which level a line of an agent's log is
+#  one, and every further event class — said of the deployment graph itself, as `onboarding:monitored` is.
+_INCIDENT_LEVEL_Q = f"""SELECT ?level WHERE {{ GRAPH $cat {{ ?g a <{ONBOARDING}DeploymentGraph> ; <{ONBOARDING}incidentLevel> ?level }} }}"""
+_INCIDENT_Q = f"""SELECT ?c WHERE {{ GRAPH $cat {{ ?g a <{ONBOARDING}DeploymentGraph> ; <{ONBOARDING}incident> ?c }} }} ORDER BY ?c"""
+LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
+
+
+def incidents(world: str) -> tuple[str | None, list[str]]:
+    """What `world`'s own deployment graph counts as an incident in its agents' journals: the log level from which a
+    line is one, or None where it says none and the agent's WARNING holds; and every event class it adds to those
+    its vocabulary puts beneath `orexis:Incident`. Refused, naming it, where it says a level that is none or two."""
+    store = reading.world(world_dir(world))
+    cat = Raw(f"<{catalogue_of(store)}>")
+    levels = sorted({r["level"] for r in rows(store, _INCIDENT_LEVEL_Q, (), cat=cat)})
+    if len(levels) > 1 or (levels and levels[0].upper() not in LEVELS):
+        raise SystemExit(f"world {world!r} says its incidents begin at {', '.join(levels)}: one of {', '.join(LEVELS)}")
+    return (levels[0].upper() if levels else None), [r["c"] for r in rows(store, _INCIDENT_Q, (), cat=cat)]
+
+
 def purposes(world: str) -> tuple[str, ...]:
     """The purposes `world`'s agents are told a series store for, in the agent's spelling: history
     always, and metrics where the world is monitored. A monitored world is refused where the
@@ -285,14 +309,15 @@ def _shifted(url, by: int) -> str:
     return url._replace(netloc=f"{url.hostname}:{url.port + by}").geturl()
 
 
-def _pool(s: ox.Store, wanting: str | None = None) -> list:
-    """The urls the installation allocates from, parsed. That there is one pool, each url of it
-    stating a host and a port, is onboarding's requirement, judged as the document is read; that
-    there is a pool at all is asked here, since only a broker asserting nothing needs one."""
-    pool = [(r["s"], r["url"]) for r in _asserted(s, _POOL_Q)]
+def _pool(s: ox.Store, wanting: str | None = None, kind: str = BROKER) -> list:
+    """The urls the installation allocates a listener of `kind` from, parsed — a broker's, or an agent's journal's.
+    That there is one pool per kind, each url of it stating a host and a port, is the installation's requirement,
+    judged as the document is read; that there is a pool at all is asked here, since only a listener asserting
+    nothing needs one."""
+    pool = [(r["s"], r["url"]) for r in _asserted(s, _POOL_Q.replace("$kind", kind))]
     if not pool:
-        raise SystemExit(f"{wanting or 'a broker'} asserts no url and the installation states nothing to "
-                         "allocate from (onboarding:allocatesFrom)")
+        raise SystemExit(f"{wanting or 'a ' + local(kind)} asserts no url and the installation states nothing to "
+                         f"allocate a {local(kind)} from (onboarding:allocatesFrom, onboarding:allocatesFor)")
     return [urlparse(url) for _, url in pool]
 
 
@@ -358,26 +383,75 @@ def derive(remember: bool = True) -> dict[str, list[str]]:
     return {b: out[b] for b in sorted(out)}
 
 
+def journals(remember: bool = True, brokers: dict[str, list[str]] | None = None) -> dict[str, str]:
+    """{agent: url} — where every agent every world states serves its journal (`agent/journal.py`), on the host's
+    loopback, since an agent runs on the host's network and the journal is the operator's to read and nobody else's.
+    No world asserts one: each is ALLOCATED, as a broker no world asserts a url for is, the lowest port of the
+    journals' pool free of every service, every broker's url, asserted or allocated (`brokers`, or `derive`'s), and
+    every journal already allocated; and an allocation made is kept while its agent is stated, so an agent added
+    later moves no other's."""
+    s = _store(with_derivation=remember)
+    brokers = derive(remember) if brokers is None else brokers
+    services = [r["url"] for kind in (SERIES_STORE, SERIES_VIEW)
+                for r in _asserted(s, _SERVICE_Q.replace("$kind", kind)) if r.get("url")]
+    stated: list[str] = []
+    for w in worlds():
+        world_store = reading.world(world_dir(w))
+        stated += [r["a"] for r in rows(world_store, _AGENTS_Q, graphs_of(world_store, BELIEF, common=True))]
+        services += [u for b in brokers_of(world_store) for u in asserted_on(world_store, b)]
+    taken = {(u.hostname, _port(u)) for u in map(urlparse, [*services, *(u for urls in brokers.values() for u in urls)])}
+    out: dict[str, str] = {}
+    if remember:
+        for r in rows(s, _JOURNALS_Q, derived.graphs(s, DEPLOYMENT, derived.DERIVED)):
+            if r["s"] in stated and (urlparse(r["url"]).hostname, _port(urlparse(r["url"]))) not in taken:
+                out[r["s"]] = r["url"]
+                taken.add((urlparse(r["url"]).hostname, _port(urlparse(r["url"]))))
+    for agent in sorted(set(stated) - set(out)):
+        (first,) = _pool(s, agent, AGENT)
+        for n in range(_LAST_PORT - first.port + 1):
+            candidate = urlparse(_shifted(first, n))
+            if (candidate.hostname, _port(candidate)) not in taken:
+                out[agent] = candidate.geturl()
+                taken.add((candidate.hostname, _port(candidate)))
+                break
+        else:
+            raise SystemExit(f"no port is left to allocate {agent}'s journal")
+    return {a: out[a] for a in sorted(out)}
+
+
+def journal(agent: str) -> str | None:
+    """Where `agent` — by its IRI — serves its journal, as the derived deployment graph allocates it; None where it
+    allocates nothing, and the agent was deployed before its journal was served."""
+    s = _store()
+    return next((r["url"] for r in rows(s, _JOURNALS_Q, derived.graphs(s, DEPLOYMENT, derived.DERIVED)) if r["s"] == agent), None)
+
+
 _HEADER = """GENERATED by `orexis-onboard` from infra/installation.ttl and every world's own documents —
-do not edit. What the installation allocated: a url on each broker whose world asserts none, at
-the lowest slot of `onboarding:allocatesFrom` free of everything asserted and allocated before.
+do not edit. What the installation allocated: a url on each broker whose world asserts none, and
+where each agent serves its journal, at the lowest slot of each pool's `onboarding:allocatesFrom`
+free of everything asserted and allocated before.
 Kept across runs, so a world added later moves no other's port. An asserted url always wins: to
 pin a broker's port, assert it in the world's own deployment graph (knowledge/domain/onboarding/deployment.md)."""
 
 
-def derivation_text(allocation: dict[str, list[str]] | None = None) -> str:
-    """The derived deployment graph's document for `allocation`, or as `derive` would write it now."""
+def derivation_text(allocation: dict[str, list[str]] | None = None, kept: dict[str, str] | None = None) -> str:
+    """The derived deployment graph's document for the brokers' `allocation` and the journals `kept`, or as `derive`
+    and `journals` would write them now."""
     allocation = derive() if allocation is None else allocation
+    kept = journals(brokers=allocation) if kept is None else kept
     statements = [(b, _SCHEMA_URL, ox.Literal(url)) for b, urls in allocation.items() for url in urls]
+    statements += [(a, _JOURNAL, ox.Literal(url)) for a, url in kept.items()]
     return derived.text(DEPLOYMENT, statements, {"onboarding": ONBOARDING, "schema": "https://schema.org/"}, _HEADER)
 
 
 def write_derivation() -> None:
     """Allocate, and write what was allocated beside the installation."""
     allocation = derive()
-    DERIVATION.write_text(derivation_text(allocation))
+    kept = journals(brokers=allocation)
+    DERIVATION.write_text(derivation_text(allocation, kept))
     for broker, urls in allocation.items():
         log.info("  allocated %s  %s", broker, " ".join(urls))
+    log.info("  allocated %d journal(s)", len(kept))
     log.info("wrote %s", _where(DERIVATION))
 
 

@@ -1,13 +1,16 @@
 """orexis-explain — one agent's season from its series: a report answering reflection's fixed
 questions, model-less, in the world's own words as the series tags them.
 
-  orexis-explain <world> <agent> [--since 30d]
+  orexis-explain <world> <agent> [--since 30d] [--journal DIR]
 
-REFLECTION READS THE SERIES AND NEVER THE BELIEFS (reflection-is-genesis-run-again-over-the-series).
-This tool opens no agent's volume and imports nothing that reads one: it asks the agent's two buckets
-— its history, every observation and every step, and its metrics, what each pass searched, reached,
-exhausted and failed — with the admin-side token the installation holds, which is why it lives beside
-the onboarding commands and outside `agent/`. It answers the SEASON and never the present: what an
+REFLECTION READS THE SERIES AND THE JOURNAL, AND NEVER THE BELIEFS (reflection-is-genesis-run-again-over-the-series,
+the-journal-is-the-agents-flight-recorder). This tool opens no belief volume and imports nothing that reads one: it
+asks the agent's two buckets — its history, every observation, and its metrics, what each pass searched, reached,
+exhausted and failed — with the admin-side token the installation holds, which is why it lives beside the onboarding
+commands and outside `agent/`; and the agent's journal for every step taken and answered, at the endpoint the
+installation allocated it (`installation.journal`), or, for an agent that has stopped, its journal's store opened
+read-only (`--journal`), which is safe once nothing writes it. A step read from the journal is handed to the
+questions as the point it was before the journal kept it, measured `Step`, so the questions read one shape. It answers the SEASON and never the present: what an
 agent observes, wants and does now is its account, over chat; what a month of its series says is this.
 It names and writes nothing: a probe by its `sensor` tag, an action by its `action` tag, a desire by its
 `desire` tag, each the local name of the world's own IRI, so a proposal that follows is an edit to the
@@ -48,9 +51,11 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import pyoxigraph as ox
 
+from agent.journal import ask
 from agent.runtime import boot
 from agent.series import HISTORY, METRICS
 from agent.store import graphs_of, rows
@@ -147,6 +152,75 @@ def read(url: str, org: str, token: str, bucket: str, since: str | None = None) 
         return points_of(client.query_api().query(flux(bucket, since), org=org))
 
 
+# ---------------------------------------------------------------- the journal
+
+#  EVERY STEP TAKEN AND ANSWERED, as the journal keeps it: within each event's own graph, since a step's triples are
+#  copied into every event about it.
+_STEPS_Q = """
+PREFIX execution: <http://example.org/orexis/execution#> PREFIX planning: <http://example.org/orexis/planning#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+SELECT ?kind ?at ?action ?taken ?landed WHERE { GRAPH ?e {
+  ?e a ?kind ; prov:atTime ?at ; execution:act ?act . ?act execution:of ?step ; execution:taken ?taken .
+  ?step planning:fills ?action . OPTIONAL { ?e execution:landed ?landed }
+  FILTER(?kind IN (execution:StepTaken, execution:StepAnswered)) } } ORDER BY ?at"""
+
+
+def steps(solutions, since: datetime | None = None) -> list[dict]:
+    """The steps a journal answered `_STEPS_Q` with, as the points the questions read: measured `Step`, tagged by
+    the action's local name, a taking's field `taken` and a verdict's `landed` — since `since` where it is given."""
+    out = []
+    for r in solutions:
+        at = datetime.fromisoformat(r["at"].value)
+        if since is not None and at < since:
+            continue
+        field = ("landed", r["landed"].value) if r["kind"].value.endswith("StepAnswered") else ("taken", r["taken"].value)
+        out.append({"measurement": STEP, "tags": {"action": _local(r["action"].value)},
+                    "fields": {field[0]: field[1] == "true"}, "time": at})
+    return out
+
+
+def journal_steps(world: str, agent: str, since: str | None = None, journal: Path | None = None) -> list[dict]:
+    """Every step `agent` of `world` took and had answered, from its journal: the store at `journal`, opened
+    read-only, where one is given — an agent stopped — otherwise the endpoint the installation allocated it. An agent
+    whose journal answers nothing is said in the log, and its steps are none."""
+    started = _since(since)
+    if journal is not None:
+        return steps(ox.Store.read_only(str(journal)).query(_STEPS_Q), started)
+    url = journal_of(world, agent)
+    if url is None:
+        log.warning("%s is allocated no journal — run `orexis-onboard %s` — so no step is read", agent, world)
+        return []
+    try:
+        return steps(ask(url + "/sparql", _STEPS_Q), started)
+    except OSError as exc:
+        log.warning("%s's journal at %s answers nothing (%s): is the agent running? Its stopped journal is read with "
+                    "--journal", agent, url, exc)
+        return []
+
+
+_IRI_Q = "SELECT ?a WHERE { ?a a orexis:Agent ; orexis:localId $id }"
+
+
+def journal_of(world: str, agent: str) -> str | None:
+    """Where `agent` of `world` serves its journal, by the IRI its world states it by, as the installation allocated
+    it — or None where nothing is allocated it."""
+    store = reading.world(world_dir(world))
+    iri = next((r["a"] for r in rows(store, _IRI_Q, graphs_of(store, BELIEF, common=True), id=ox.Literal(agent))), None)
+    return installation.journal(iri) if iri else None
+
+
+def _since(since: str | None) -> datetime | None:
+    """`since` as an instant: a Flux duration back from now, or an RFC 3339 instant."""
+    if since is None:
+        return None
+    found = re.fullmatch(r"(\d+)(ms|s|m|h|d|w|mo|y)", since)
+    if not found:
+        return datetime.fromisoformat(since.replace("Z", "+00:00"))
+    n, unit = int(found[1]), found[2]
+    seconds = {"ms": 0.001, "s": 1, "m": 60, "h": 3600, "d": 86400, "w": 604800, "mo": 2592000, "y": 31536000}[unit]
+    return datetime.now(timezone.utc) - timedelta(seconds=n * seconds)
+
+
 # ---------------------------------------------------------------- the questions
 
 def _of(points: list[dict], measurement: str) -> list[dict]:
@@ -206,7 +280,7 @@ def landings(history: list[dict], metrics: list[dict], stated: Stated) -> list[s
         if action in steps:
             taken = sum(1 for p in steps[action] if p["fields"].get("taken") is True)
             answered = sum(1 for p in steps[action] if p["fields"].get("landed") is True)
-            line += f"; history: {taken} step(s) taken, {answered} landed"
+            line += f"; journal: {taken} step(s) taken, {answered} landed"
         out.append(line + (" — STOOD OUT" if timed_out or landed < count else ""))
     return out
 
@@ -320,15 +394,16 @@ def report(world: str, agent: str, history: list[dict], metrics: list[dict], sta
 
 # ---------------------------------------------------------------- the command
 
-def explain(world: str, agent: str, since: str | None = None) -> Report:
-    """The report for `agent` of `world`, read from the buckets the installation's store holds for it."""
+def explain(world: str, agent: str, since: str | None = None, journal: Path | None = None) -> Report:
+    """The report for `agent` of `world`, read from the buckets the installation's store holds for it and from its
+    journal."""
     if agent not in roster(world):
         raise SystemExit(f"orexis-explain: world {world!r} states no agent {agent!r} — it states {', '.join(roster(world)) or 'none'}")
     told = installation.purposes(world)
     token = _admin_token()
     started = time.perf_counter()
     url, org = installation.series(HISTORY)
-    history = read(url, org, token, bucket_name(world, agent, HISTORY), since)
+    history = read(url, org, token, bucket_name(world, agent, HISTORY), since) + journal_steps(world, agent, since, journal)
     metrics: list[dict] = []
     if METRICS in told:
         url, org = installation.series(METRICS)
@@ -346,15 +421,16 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     p = argparse.ArgumentParser(
         prog="orexis-explain",
-        description="One agent's season from its series: a report answering reflection's fixed questions, "
-                    "read from its history and metrics buckets and never from its beliefs.")
+        description="One agent's season from its series and its journal: a report answering reflection's fixed questions, "
+                    "read from its history and metrics buckets and its journal, and never from its beliefs.")
     p.add_argument("world", help="which world. Available: " + ", ".join(worlds()))
     p.add_argument("agent", help="which of its agents, by id")
     p.add_argument("--since", help="how far back: a Flux duration (30d, 12h) or an RFC 3339 instant; everything held where not given")
+    p.add_argument("--journal", type=Path, help="a stopped agent's journal store, opened read-only, instead of its endpoint")
     args = p.parse_args()
     if args.since and not (re.fullmatch(r"\d+(ms|s|m|h|d|w|mo|y)", args.since) or _instant(args.since)):
         raise SystemExit(f"orexis-explain: --since {args.since!r} is neither a Flux duration (30d) nor an RFC 3339 instant")
-    print(explain(args.world, args.agent, args.since).text(), end="")
+    print(explain(args.world, args.agent, args.since, args.journal).text(), end="")
 
 
 def _instant(text: str) -> bool:

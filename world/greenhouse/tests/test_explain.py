@@ -23,7 +23,8 @@ from agent.metrics import window as metrics
 from agent.runtime import Runtime, boot, world_name
 from agent.series import HISTORY, METRICS, Sink, install
 from agent.transport.mqtt.driver import Mqtt
-from onboarding.explain import QUESTIONS, Stated, points_of, report, stated
+from agent.journal import Journal, install as keep, mint
+from onboarding.explain import _STEPS_Q, QUESTIONS, Stated, points_of, report, stated, steps
 from simulation.simulator import Simulator
 
 WORLD = Path(__file__).resolve().parents[1]
@@ -80,7 +81,7 @@ def test_every_question_names_what_it_found_in_the_series_own_words():
     assert found["wants nothing reached"] == ["the_bed_is_lit: unreachable in 5 pass(es) over 2 window(s), from 2026-01-01T12:00Z to 2026-01-01T13:00Z (1h 0m)"]
     assert found["landings"] == [
         "Dosing: 2 verdict(s), 1 landed, 1 timed out, 0 ended undone; late_s mean 600 s, max 900 s; "
-        "from 2026-01-01T12:10Z to 2026-01-01T12:10Z (0m); history: 1 step(s) taken, 0 landed — STOOD OUT",
+        "from 2026-01-01T12:10Z to 2026-01-01T12:10Z (0m); journal: 1 step(s) taken, 0 landed — STOOD OUT",
         "Heating: 1 verdict(s), 1 landed, 0 timed out, 0 ended undone; late_s mean 300 s, max 300 s; from 2026-01-01T12:20Z to 2026-01-01T12:20Z (0m)"]
     assert found["desires never unmet"] == ["the_bed_is_lit: no search over the window"]
     assert found["searches exhausted"] == [
@@ -107,6 +108,27 @@ def test_a_quiet_season_says_nothing_stood_out_and_a_mixed_one_is_not_exhausted(
     history = [_reading("moisture_probe", T(i * 10), 0.3 + i * 0.001, 300 + i) for i in range(5)]
     found = _sections(history, mixed, Stated(desires=frozenset({"d"}), fractions=frozenset({"moisture_probe"})))
     assert found["searches exhausted"] == [] and found["desires never unmet"] == [] and found["probes"] == []
+
+
+def test_the_steps_a_journal_keeps_are_the_points_the_questions_read():
+    """A dose taken and answered undone, as the executor's events state them: read back from the journal by its
+    action, a taking and a verdict, at their instants — and nothing before `since`."""
+    from agent.execution.events import StepAnswered, StepTaken
+    import pyoxigraph as ox
+
+    act, step = ox.NamedNode(GH + "plan.0.act"), ox.NamedNode(GH + "plan.0")
+    said = (ox.Triple(act, ox.NamedNode("http://example.org/orexis/execution#of"), step),
+            ox.Triple(act, ox.NamedNode("http://example.org/orexis/execution#taken"),
+                      ox.Literal("true", datatype=ox.NamedNode("http://www.w3.org/2001/XMLSchema#boolean"))),
+            ox.Triple(step, ox.NamedNode("http://example.org/orexis/planning#fills"), ox.NamedNode("http://example.org/orexis/climate#Dosing")))
+    journal = Journal()
+    for event in (StepTaken(step.value, T(5), act=act.value, said=said),
+                  StepAnswered(step.value, T(15), landed=False, act=act.value, said=said)):
+        journal.record(node := mint(), event.statements(node), event.at)
+    assert steps(journal.store.query(_STEPS_Q)) == [
+        {"measurement": "Step", "tags": {"action": "Dosing"}, "fields": {"taken": True}, "time": T(5)},
+        {"measurement": "Step", "tags": {"action": "Dosing"}, "fields": {"landed": False}, "time": T(15)}]
+    assert [p["time"] for p in steps(journal.store.query(_STEPS_Q), since=T(10))] == [T(15)]
 
 
 class _Record:
@@ -166,6 +188,8 @@ def test_the_growers_season_is_reported_from_what_its_sinks_wrote(monkeypatch):
     history, windows = [], []
     install(HISTORY, Sink(HISTORY, "greenhouse-grower", lambda bucket, record: history.extend(record)))
     install(METRICS, Sink(METRICS, "greenhouse-grower-metrics", lambda bucket, record: windows.extend(record)))
+    kept = Journal(now=lambda: time_["at"])
+    keep(kept)
     metrics.configure(interval_s=0)
     metrics.identify(world=world_name(WORLD), agent="grower")
     try:
@@ -184,18 +208,21 @@ def test_the_growers_season_is_reported_from_what_its_sinks_wrote(monkeypatch):
     finally:
         install(HISTORY, None)
         install(METRICS, None)
+        keep(None)
         metrics.reset()
         metrics.identify()
+    readings = len(history)
+    history += steps(kept.store.query(_STEPS_Q))
     held = stated("greenhouse", "grower")
     started = time.perf_counter()
     season = report("greenhouse", "grower", history, windows, held)
     report_s = time.perf_counter() - started
     found = {title: lines for title, _, lines in season.sections}
-    print(f"\n{passes} passes over {HOURS:g} simulated hours in {ran_s:.1f} s; {len(history)} history and {len(windows)} metrics "
-          f"points; report in {report_s * 1000:.1f} ms\n{season.text()}")
+    print(f"\n{passes} passes over {HOURS:g} simulated hours in {ran_s:.1f} s; {readings} readings, {len(history) - readings} steps from the journal and "
+          f"{len(windows)} metrics points; report in {report_s * 1000:.1f} ms\n{season.text()}")
     doses = [t for t, _ in bus.commands if t == "actuators/pump/command"]
     assert doses and len(doses) == len([p for p in history if p["measurement"] == "Step" and p["fields"].get("taken")])
-    assert all("raw" in p["fields"] for p in history if p["measurement"] not in ("Step", "Plan")), "the raw count rides on every reading"
+    assert all("raw" in p["fields"] for p in history[:readings]), "the raw count rides on every reading"
     assert found["wants nothing reached"] == [] and found["desires never unmet"] == [] and found["searches exhausted"] == []
     (dosing,) = found["landings"]
     assert dosing.startswith(f"Dosing: {len(doses)} verdict(s), {len(doses)} landed, 0 timed out") and "STOOD OUT" not in dosing

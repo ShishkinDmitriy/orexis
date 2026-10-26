@@ -17,12 +17,14 @@ services:
 
   agent-hanoi:
     image: orexis:local
-    command: ["orexis-agent", "/app/world/hanoi", "hanoi", "--volume", "/app/state"]
+    command: ["orexis-agent", "/app/world/hanoi", "hanoi", "--volume", "/app/state", "--journal", "/app/journal"]
     environment:
       # where each series it writes goes, and the org — the store the installation says serves each
       # purpose, its metrics only where the world is monitored — safe for every agent to hold
       INFLUX_HISTORY_URL: "http://localhost:8086"
       INFLUX_HISTORY_ORG: "orexis"
+      # where it serves its journal, on the host's loopback, allocated by the installation
+      JOURNAL_PORT: "7884"
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx hanoi`;
       # mounted into THIS container alone — the world has no bus, so no broker credential
@@ -38,6 +40,8 @@ services:
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-hanoi-hanoi:/app/state
+      # its journal, a store of its own beside the beliefs and apart from them
+      - orexis-hanoi-hanoi-journal:/app/journal
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./state.ttl:/app/world/hanoi/state.ttl:ro
       - ./wants.ttl:/app/world/hanoi/wants.ttl:ro
@@ -51,3 +55,4 @@ services:
 
 volumes:
   orexis-hanoi-hanoi:
+  orexis-hanoi-hanoi-journal:

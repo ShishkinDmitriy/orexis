@@ -62,7 +62,7 @@ services:
 
   agent-courier_a:
     image: orexis:local
-    command: ["orexis-agent", "/app/world/lane", "courier_a", "--volume", "/app/state"]
+    command: ["orexis-agent", "/app/world/lane", "courier_a", "--volume", "/app/state", "--journal", "/app/journal"]
     environment:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
       # never read off the world by the agent
@@ -74,6 +74,8 @@ services:
       # purpose, its metrics only where the world is monitored — safe for every agent to hold
       INFLUX_HISTORY_URL: "http://localhost:8086"
       INFLUX_HISTORY_ORG: "orexis"
+      # where it serves its journal, on the host's loopback, allocated by the installation
+      JOURNAL_PORT: "7885"
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx lane`, and
       # its own broker credential, minted by `orexis-mqtt lane`; mounted into THIS container alone
@@ -87,6 +89,8 @@ services:
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-lane-courier_a:/app/state
+      # its journal, a store of its own beside the beliefs and apart from them
+      - orexis-lane-courier_a-journal:/app/journal
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./constraints.ttl:/app/world/lane/constraints.ttl:ro
       - ./society.derived.ttl:/app/world/lane/society.derived.ttl:ro
@@ -106,7 +110,7 @@ services:
 
   agent-courier_b:
     image: orexis:local
-    command: ["orexis-agent", "/app/world/lane", "courier_b", "--volume", "/app/state"]
+    command: ["orexis-agent", "/app/world/lane", "courier_b", "--volume", "/app/state", "--journal", "/app/journal"]
     environment:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
       # never read off the world by the agent
@@ -118,6 +122,8 @@ services:
       # purpose, its metrics only where the world is monitored — safe for every agent to hold
       INFLUX_HISTORY_URL: "http://localhost:8086"
       INFLUX_HISTORY_ORG: "orexis"
+      # where it serves its journal, on the host's loopback, allocated by the installation
+      JOURNAL_PORT: "7886"
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx lane`, and
       # its own broker credential, minted by `orexis-mqtt lane`; mounted into THIS container alone
@@ -131,6 +137,8 @@ services:
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-lane-courier_b:/app/state
+      # its journal, a store of its own beside the beliefs and apart from them
+      - orexis-lane-courier_b-journal:/app/journal
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./constraints.ttl:/app/world/lane/constraints.ttl:ro
       - ./society.derived.ttl:/app/world/lane/society.derived.ttl:ro
@@ -151,4 +159,6 @@ services:
 volumes:
   orexis-lane-mosquitto-broker:
   orexis-lane-courier_a:
+  orexis-lane-courier_a-journal:
   orexis-lane-courier_b:
+  orexis-lane-courier_b-journal:

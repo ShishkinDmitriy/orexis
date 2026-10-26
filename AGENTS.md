@@ -868,16 +868,28 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   model** (#826); **metrics and history are what events say, and no package imports either**
   (metrics-and-history-are-what-events-say); **a metric is optional at every level and aggregated
   where it happens**.
-- **Reflection reads the series and never the beliefs, so a figure it lacks is a point the agent
-  does not yet write** — the raw count rides beside every reading and `doubted` names the sensor
-  where `silence` counted, and `orexis-explain` answers the fixed questions over the two buckets
+- **Reflection reads the series and the journal and never the beliefs, so a figure it lacks is a point or an event
+  the agent does not yet write** — the raw count rides beside every reading and `doubted` names the sensor where
+  `silence` counted, and `orexis-explain` answers the fixed questions over the two buckets and the journal's steps
   (#894, reflection-is-genesis-run-again-over-the-series).
-- **A replay is the history drawn, and the package that decides a thing draws it** — a figure a replay lacks is a
-  point the package deciding it does not yet write, as a plan published and coordination's holdings and conflicts
-  were; a domain draws its world as a scene and a package what it decided as a layer, each Preact components in a
-  `replay.tsx` beside it, typed by the core's contract, and a catalogue of view kinds a domain picked from and
-  untyped template strings with no build were built and refused; a replay opens no volume
-  (a-replay-is-the-history-drawn-by-the-package-that-decides-it).
+- **What happened is the agent's journal, a triplestore of its own beside its beliefs: every event in its package's
+  words kept for good, and its log for a window unless an incident keeps the minutes before it** — an event's
+  identities are IRIs, which a series store's tags cannot hold, so InfluxDB keeps the observations and the metrics;
+  the journal is served read-only on the host's loopback, and a central store, journal files, every event under
+  words of its own and a reader opening a live journal were refused (the-journal-is-the-agents-flight-recorder).
+- **What an incident is, is the vocabulary's, and which count, the deployment's** — a class beneath `orexis:Incident`
+  in its package's ontology, read off the agent's T-Box, and what a world's deployment graph adds or sets the log's
+  level to, told as environment; an incident typed by code and a logger role were refused, since keeping a journal
+  changes no plan (the-journal-is-the-agents-flight-recorder).
+- **A pattern over a node several journal entries copy is asked within one entry** — every event copies the step or
+  the plan it is about, and over the union of the entries each copy answered once more, 294 rows for three events.
+- **The history view is what the agents kept, drawn, and the package that decides a thing draws it** — a domain draws its
+  world as a scene and a package what it decided as a layer, each Preact components in a `ui/index.tsx` beside it with
+  the selects it reads, `ui/<Query>.rq`, run per agent over its journal, its observations and the world, typed by
+  the core's contract; a catalogue of view kinds a domain picked from and untyped template strings with no build were
+  built and refused; a layer that is no place draws nothing on the scene and says itself in its status and the log, as
+  speech says what was said and heard; it opens no belief volume (a-replay-is-the-history-drawn-by-the-package-that-decides-it,
+  the-journal-is-the-agents-flight-recorder).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
   `crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming an
   absent file or a CRL past its `nextUpdate` refuses the whole society and not the one agent; and
@@ -904,7 +916,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
    says it plays, each of a class the package whose ontology declares it serves.
    `agent/runtime.py` is the container that assembles them all. **A domain is documents and no
    code an agent runs**: `domains/<name>/` holds a vocabulary, its actions and its rules, and a world imports it
-   with `owl:imports`; its one module of code, `replay.tsx`, is how it is drawn in a replay, which no agent loads
+   with `owl:imports`; its one module of code, `ui/index.tsx` with the selects beside it, is how it is drawn in the history view, which no agent loads
    (a-replay-is-the-history-drawn-by-the-package-that-decides-it). Adding a way of acting is a node in a domain's `actions.ttl` — a
    precondition, an effect and an implementation — and nothing else.
 3. **Nothing in `infra/` is world-specific.** It holds the services and what is true of the
@@ -1036,20 +1048,20 @@ stops being theoretical.
 ```bash
 source .venv/bin/activate
 pip install -e ".[dev]"
-npm ci                 # the replay's toolchain — Preact, esbuild, TypeScript — for orexis-replay and its tests
+npm ci                 # the history view's toolchain — Preact, esbuild, TypeScript — for orexis-history and its tests
 
 orexis-onboard <world>       # ONBOARDING: load the world as an agent boots it, derive what the documents
-                             #   leave out (a broker's port, into infra/installation.derived.ttl),
+                             #   leave out (a broker's port, each agent's journal's, into infra/installation.derived.ttl),
                              #   then grant everything below the world has something for.
   orexis-topics <world>      #   each topic's filter, by one convention, into world/<world>/society.derived.ttl — needs nothing up
   orexis-influx <world>      #   a history bucket per agent, a metrics one where the world is monitored, each with a token that opens only it
   orexis-mqtt <world>        #   a credential per principal, and the broker ACL, derived — where its society names a broker
   orexis-compose <world>     #   generate world/<world>/compose.yaml from that world's roster, the broker only with a bus
   orexis-dashboards <world>  #   a Grafana folder per world: what its agents observe, and their health where monitored
-orexis-explain <world> <agent>  # REFLECTION, not onboarding: one agent's season from its two buckets, the fixed
-                             #   questions answered in the world's words, read with the admin token and never a volume
-orexis-replay <world>        # REFLECTION too: a run drawn from every agent's history — the buckets, or a walk's
-                             #   --recording — a pane per agent, drawn by each domain's scene and each package's layer
+orexis-explain <world> <agent>  # REFLECTION, not onboarding: one agent's season from its two buckets and its journal,
+                             #   the fixed questions answered in the world's words, never a belief volume
+orexis-history <world>        # REFLECTION too: a run drawn from every agent's journal and observations, by each domain's
+                             #   scene and each package's layer — after the run, or --live on the loopback
 orexis-firmware <world>      # a board's config.h, from the world it belongs to
 orexis-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
 orexis-infra-compose         # INFRA — infra/compose.yaml, from infra/installation.ttl

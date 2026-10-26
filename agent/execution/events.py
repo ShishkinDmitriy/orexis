@@ -7,20 +7,21 @@ class marks (`agent.metrics`), and the history part writes what an event answers
 (`agent.history`); an event only they hear is made only where its signal is heard, so nothing is read
 for it where no series store is loaded.
 
-A STEP IS HISTORY TWICE, both points measured `Step` — execution's word for what they are about:
-TAKEN, when the executor records the `execution:Act`, field `taken`, true, or false where the taker
-raised, at the act's `execution:takenAt`; and ANSWERED at the landing verdict, field `landed`, true
-where the present came to hold what the step predicted, false where the patience ran out on it or the
-want it was kept below as ended undone, at the instant the verdict was reached. A step that predicts
-nothing moves on as it is taken and has no verdict, so its taken point is the whole of it; so has a
-step not taken, whose `taken` is false.
+A STEP IS HISTORY TWICE, each an event in the journal (`agent/journal.py`) in execution's words: `execution:StepTaken`
+when the executor records the `execution:Act`, `execution:taken` true, or false where the taker raised, at the act's
+`execution:takenAt`; and `execution:StepAnswered` at the landing verdict, `execution:landed` true where the present came
+to hold what the step predicted, false where the patience ran out on it or the want it was kept below as ended undone
+— and then an `execution:StepFailed` too, a class beneath `orexis:Incident`, which keeps the minutes of log before it. A step that predicts nothing moves on as it
+is taken and has no verdict, so its taking is the whole of it; so has a step not taken. AN INTENTION ENDED is history
+too, `execution:IntentionResolved` with its `execution:outcome`, and an `execution:IntentionFailed`, an incident,
+where it failed.
 
-Each is tagged `action` — the local name of the action the step fills — `want`, the local name of
-the want its intention pursues, and one tag per parameter the action takes, keyed by the parameter's
-local name, which is the predicate the step is written under (an-action-takes-parameters): an IRI's
-local name, a literal's text. Every one of those names is read off the step and its action, so this
-module spells no domain word; a parameter named `action` or `want` is shadowed by execution's own
-tag. On the metrics, a want's name is on no point — the desire it was derived under is.
+A step's event names the act recorded of it (`execution:act`), an intention's ended the intention
+(`execution:intention`), and each carries what the agent holds of them as it stands — the act's triples, the step's
+own as its plan states them, the action it fills and every value it takes in the domain's words, and the intention's,
+the want it pursues and how it ended — so the journal is read without the beliefs.
+Nothing here spells a domain word: the triples are copied, not named. On the metrics, a want's name is on no point —
+the desire it was derived under is.
 """
 
 from __future__ import annotations
@@ -28,12 +29,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 
+import pyoxigraph as ox
+
+from agent.journal import literal
 from agent.metrics import Flag, Level, Tag, Value
-from agent.ontology import local_of
 
 from .ontology import EXECUTION
 
-MEASUREMENT = local_of(EXECUTION + "Step")
+_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+_ACT, _INTENTION = ox.NamedNode(EXECUTION + "act"), ox.NamedNode(EXECUTION + "intention")
 
 
 @dataclass(frozen=True)
@@ -45,6 +49,17 @@ class IntentionResolved:
     want: str | None
     outcome: Tag
     desire: Tag = None
+    at: datetime | None = None
+    said: tuple = ()
+
+    def statements(self, node: ox.NamedNode) -> list[ox.Triple]:
+        """In the journal: the intention as it ended, the want it pursued and how — an `execution:IntentionFailed`
+        too where it failed."""
+        out = [ox.Triple(node, _TYPE, ox.NamedNode(EXECUTION + "IntentionResolved")),
+               ox.Triple(node, _INTENTION, ox.NamedNode(self.intention)), *self.said]
+        if self.outcome == "failed":
+            out.append(ox.Triple(node, _TYPE, ox.NamedNode(EXECUTION + "IntentionFailed")))
+        return out
 
 
 @dataclass(frozen=True)
@@ -76,13 +91,15 @@ class StepTaken:
     step: str
     at: datetime
     want: str | None = None
-    parameters: tuple = ()
     action: Tag = None
     desire: Tag = None
     taken: Flag = True
+    act: str | None = None
+    said: tuple = ()
 
-    def point(self) -> dict:
-        return _point(self, {"taken": self.taken})
+    def statements(self, node: ox.NamedNode) -> list[ox.Triple]:
+        """In the journal: the act recorded — taken, or not — with what the agent holds of its step and intention."""
+        return [ox.Triple(node, _TYPE, ox.NamedNode(EXECUTION + "StepTaken")), *_about(node, self)]
 
 
 @dataclass(frozen=True)
@@ -94,15 +111,22 @@ class StepAnswered:
     step: str
     at: datetime
     want: str | None = None
-    parameters: tuple = ()
     action: Tag = None
     desire: Tag = None
     landed: Flag = False
     late_s: Value = None
     timed_out: Flag = False
+    act: str | None = None
+    said: tuple = ()
 
-    def point(self) -> dict:
-        return _point(self, {"landed": self.landed})
+    def statements(self, node: ox.NamedNode) -> list[ox.Triple]:
+        """In the journal: the verdict on the act, with what the agent holds of it — an `execution:StepFailed` too
+        where it did not land."""
+        out = [ox.Triple(node, _TYPE, ox.NamedNode(EXECUTION + "StepAnswered")),
+               ox.Triple(node, ox.NamedNode(EXECUTION + "landed"), literal(bool(self.landed))), *_about(node, self)]
+        if not self.landed:
+            out.append(ox.Triple(node, _TYPE, ox.NamedNode(EXECUTION + "StepFailed")))
+        return out
 
 
 @dataclass(frozen=True)
@@ -112,10 +136,5 @@ class Walked:
     standing: Level = None
 
 
-def _point(event, fields: dict) -> dict:
-    tags = dict(event.parameters)
-    if event.action:
-        tags["action"] = event.action
-    if event.want:
-        tags["want"] = local_of(event.want)
-    return {"measurement": MEASUREMENT, "tags": tags, "fields": fields, "time": event.at}
+def _about(node: ox.NamedNode, event) -> list[ox.Triple]:
+    return ([ox.Triple(node, _ACT, ox.NamedNode(event.act))] if event.act else []) + list(event.said)

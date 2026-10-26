@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from agent import clock
+from agent.journal import Journal, mint
 from agent.metrics import measurement, reported
 from agent.planning import events
 from agent.runtime import Runtime, boot
@@ -59,24 +60,45 @@ def test_every_event_that_reports_names_its_measurement_once():
     assert {events.PlanPublished, events.SearchEnded, events.Imagined} <= set(reported(events))
 
 
-def test_a_plan_published_is_said_with_its_steps_and_written_as_a_point_per_step(monkeypatch):
-    """Hanoi's three disks at a budget that finds the seven moves: the plan is said with its steps in the order they are
-    walked, each the action it fills and the values it takes, and its history is a point per step, tagged as a step
-    taken is and by its place in the plan."""
+def test_a_plan_published_is_kept_in_the_journal_with_its_steps_in_the_words_of_the_domain(monkeypatch):
+    """Hanoi's three disks at a budget that finds the seven moves: the plan published is an event carrying the plan
+    graph as the beliefs held it, so its steps are read back in the order they are walked, by the chain, each the
+    action it fills and the values it takes — in the journal alone."""
     ticks = iter(range(1, 10_000))
     monkeypatch.setattr(clock, "now", lambda: NOW + timedelta(seconds=next(ticks)))
     runtime = Runtime(boot(HANOI, "hanoi"), "hanoi", budget=400)
-    heard = []
-    runtime.parts["planning"].planner.plan_published.connect(heard.append)
+    journal = Journal()
+    runtime.parts["planning"].planner.plan_published.connect(
+        lambda e: journal.record(node := mint(), e.statements(node), e.at))
     runtime.run(passes=1, poll_s=0)
-    (published,) = heard
-    assert [(s.action, dict(s.parameters)) for s in published.steps] == [
-        ("Move", {"disk": "disk_1", "onto": "PegC"}), ("Move", {"disk": "disk_2", "onto": "PegB"}),
-        ("Move", {"disk": "disk_1", "onto": "PegB"}), ("Move", {"disk": "disk_3", "onto": "PegC"}),
-        ("Move", {"disk": "disk_1", "onto": "PegA"}), ("Move", {"disk": "disk_2", "onto": "PegC"}),
-        ("Move", {"disk": "disk_1", "onto": "PegC"})], "the seven moves, in the order they are walked"
-    points = published.point()
-    assert [p["tags"]["order"] for p in points] == [str(n) for n in range(7)]
-    assert all(p["measurement"] == "Plan" and p["time"] == published.at and p["tags"]["action"] == "Move" for p in points)
-    assert points[0]["tags"] == {"disk": "disk_1", "onto": "PegC", "action": "Move", "want": points[0]["tags"]["want"],
-                                 "plan": points[0]["tags"]["plan"], "order": "0"}
+    moves = [(r["disk"].value.rsplit("#", 1)[-1], r["onto"].value.rsplit("#", 1)[-1]) for r in journal.store.query("""
+PREFIX planning: <http://example.org/orexis/planning#> PREFIX execution: <http://example.org/orexis/execution#>
+PREFIX hanoi: <http://example.org/orexis/hanoi#>
+SELECT ?step ?disk ?onto (COUNT(?before) AS ?order) WHERE {
+  ?e a planning:PlanPublished ; planning:published ?plan . ?step execution:partOf ?plan ; planning:fills hanoi:Move ;
+  hanoi:disk ?disk ; hanoi:onto ?onto . OPTIONAL { ?before execution:then+ ?step } }
+GROUP BY ?step ?disk ?onto ORDER BY ?order""", use_default_graph_as_union=True)]
+    assert moves == [("disk_1", "PegC"), ("disk_2", "PegB"), ("disk_1", "PegB"), ("disk_3", "PegC"),
+                     ("disk_1", "PegA"), ("disk_2", "PegC"), ("disk_1", "PegC")], "the seven moves, in the order they are walked"
+
+
+def test_the_history_part_marks_an_event_of_a_class_beneath_incident_and_no_other(monkeypatch):
+    """Off the agent's own T-Box: Hanoi's mover told of a want nothing reaches, and a plan published, said by its
+    planner's signals — the first an incident by its class, `planning:WantUnreachable`, the second not."""
+    from agent.journal import install
+    from agent.planning.events import PlanPublished, WantUnreachable
+
+    monkeypatch.setattr(clock, "now", lambda: NOW)
+    kept = Journal(now=lambda: NOW)
+    install(kept, "hanoi")
+    try:
+        runtime = Runtime(boot(HANOI, "hanoi"), "hanoi", budget=1)
+        planner = runtime.parts["planning"].planner
+        planner.want_unreachable.emit(WantUnreachable("http://example.org/test#want"))
+        planner.plan_published.emit(PlanPublished("http://example.org/test#plan", "http://example.org/test#want", at=NOW))
+    finally:
+        install(None, "hanoi")
+    marked = {r["k"].value.rsplit("#", 1)[-1] for r in kept.store.query(
+        "SELECT ?k WHERE { ?e a <http://example.org/orexis#Incident>, ?k FILTER(?k != <http://example.org/orexis#Incident>) }",
+        use_default_graph_as_union=True)}
+    assert marked == {"WantUnreachable"}

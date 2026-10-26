@@ -16,6 +16,11 @@ description: >-
   series holds today, and the two things the fixed questions need that it does not yet carry.
 ---
 
+> **Amended 2026-10-26: reflection reads the journal too.** Every step taken and answered is in the agent's journal and
+> no longer its history bucket ([the-journal-is-the-agents-flight-recorder](/decisions/the-journal-is-the-agents-flight-recorder.md)),
+> so `orexis-explain` asks the journal at the endpoint the installation allocated, or a stopped agent's journal opened
+> read-only. It still never opens the belief volume, and the journal holds nothing a plan reads.
+
 # What was true
 
 Agent 0.1.0 had a place for a model in three records, each superseded whole by

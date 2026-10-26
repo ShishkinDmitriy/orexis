@@ -15,8 +15,8 @@
 #  store, one organisation; the store answers over http and the view over https, which is how the
 #  template serves them; history is served by a store, since every agent writes it, where metrics may
 #  be served by none; a purpose is kept one number of days and a window of it is one number of
-#  seconds; and there is one pool to allocate from, each url of it stating the host and the port a slot
-#  is counted from. `installation.py` refused each of these by hand once, and formats what it reads.
+#  seconds; and there is one pool to allocate each kind of listener from — a broker, an agent's journal —
+#  saying which it allocates for, each url of it stating the host and the port a slot is counted from. `installation.py` refused each of these by hand once, and formats what it reads.
 [] a sh:NodeShape ;
     sh:targetClass onboarding:SeriesStore ;
     sh:property [ sh:path schema:url ; sh:minCount 1 ; sh:maxCount 1 ; sh:pattern "^http://" ;
@@ -57,9 +57,12 @@
 
 [] a sh:NodeShape ;
     sh:targetSubjectsOf onboarding:allocatesFrom ;
+    sh:property [ sh:path onboarding:allocatesFor ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "a pool allocates for one kind of listener, and says which" ] ;
     sh:sparql [
-        sh:message "is a pool beside {?other}: a broker is allocated a slot of one pool" ;
-        sh:select """SELECT $this ?other WHERE { ?other onboarding:allocatesFrom ?url . FILTER (STR(?other) < STR($this)) }""" ] ,
+        sh:message "is a pool beside {?other}: a listener is allocated a slot of one pool" ;
+        sh:select """SELECT $this ?other WHERE { ?other onboarding:allocatesFrom ?url ; onboarding:allocatesFor ?kind .
+                                                $this onboarding:allocatesFor ?kind . FILTER (STR(?other) < STR($this)) }""" ] ,
     [
         sh:message "allocates from {?url}, which states no host or no port: a slot is the port raised, on the host" ;
         sh:select """SELECT $this ?url WHERE { $this onboarding:allocatesFrom ?url . FILTER (!REGEX(STR(?url), "^[a-z]+://[^/:@]+:[0-9]+")) }""" ] .

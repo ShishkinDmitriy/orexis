@@ -43,6 +43,12 @@ as from what it hears — and hands it, for each agent it is to, to the
 [transport](/domain/transport/transport.md) reaching the peer, which publishes it on the topic the peer
 listens to.
 
+Each statement said and each heard is an [event](/domain/kernel/event.md) of speech's, `speech:Said` with every
+agent it was told to and `speech:Heard`, carrying the statement whole, which the agent's
+[journal](/domain/kernel/journal.md) keeps: the exchange between two agents is read there, in the words they spoke it
+in, and drawn in the [history view](/domain/onboarding/history-view.md) as a status and lines of the log. Which peer a
+statement heard came from is not said, for the reason below.
+
 # What it does not do
 
 It concludes nothing past the extraction. What a document means — a venue open, a call answered, a

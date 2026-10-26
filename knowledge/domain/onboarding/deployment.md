@@ -23,7 +23,12 @@ The **installation** is the deployment graph of what every world on a host share
 purposes it serves (`onboarding:serves` — history by exactly one store, metrics by one or none),
 how many days a purpose is kept where not for ever, and how many seconds one window of metrics is
 (`onboarding:intervalSeconds`); the **series view**, where a person draws the series — Grafana,
-with its url and image; and the pool a broker's ports are allocated from.
+with its url and image; and a pool per kind of listener it allocates ports to — a broker's, and an
+agent's [journal](/domain/kernel/journal.md)'s, each saying which (`onboarding:allocatesFor`).
+
+A world says of its deployment graph, too, what its agents' [journals](/domain/kernel/journal.md) count as an
+incident beside their vocabulary: from which level a log line is one, `<> onboarding:incidentLevel "ERROR"`, and an
+event class more, `<> onboarding:incident coordination:Concluded`, each told to every agent of it as environment.
 
 A world is **monitored** where its own deployment graph says so of itself, in one statement:
 `<> onboarding:monitored true`. Its agents then write their metrics — the admins' instrumentation
@@ -46,6 +51,9 @@ one host and port, asserted or allocated, or a broker on a service's — by onbo
 judged over everything the installation holds. Every address is a
 `schema:url`, so the host is stated where the port is. The installation may name worlds; a world
 names nothing of the installation, and onboarding asks it about one world's broker at a time.
+Every agent's journal is allocated the same way and never asserted, on the host's loopback, a
+port of the journals' pool free of every service, broker and journal before it, written
+`onboarding:journal` on the agent and told to its container as `JOURNAL_PORT`.
 
 # How it reaches an agent
 
@@ -64,7 +72,8 @@ into `world/<name>/secrets/` and mounted into one container.
 
 `onboarding:DeploymentGraph` is declared in onboarding's vocabulary (`onboarding/ontology.ttl`)
 beside the installation's words — `onboarding:SeriesStore`, `onboarding:SeriesView`,
-`onboarding:organisation`, `onboarding:image`, `onboarding:allocatesFrom`, `onboarding:serves`,
+`onboarding:organisation`, `onboarding:image`, `onboarding:allocatesFrom`, `onboarding:allocatesFor`,
+`onboarding:journal`, `onboarding:incidentLevel`, `onboarding:incident`, `onboarding:serves`,
 `onboarding:retentionDays` and `onboarding:intervalSeconds`, the two `onboarding:SeriesPurpose`s,
 and `onboarding:monitored`, which a world says of its own deployment graph and the loader keeps in
 the catalogue beside the graph's kind — so an agent's boot passes over a graph of it. The terrace,

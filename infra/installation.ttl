@@ -51,4 +51,12 @@ onboarding:Metrics onboarding:retentionDays 30 ;
 #  the services above. What is allocated is written to `installation.derived.ttl` beside this
 #  file, and an allocation made there is kept, so a world added later never moves another's port.
 #  A collision is refused: two brokers on one port, or a broker on a service's.
-:brokers onboarding:allocatesFrom "mqtt://localhost:1884" , "mqtts://localhost:8884" .
+:brokers onboarding:allocatesFrom "mqtt://localhost:1884" , "mqtts://localhost:8884" ;
+    onboarding:allocatesFor <https://www.w3id.org/MQTT4SSN-Ontology#Broker> .
+
+#  WHERE AN AGENT SERVES ITS JOURNAL: on the host's loopback, where the operator's tools — `orexis-history`,
+#  `orexis-explain` — ask it, and nothing off the host can. No world asserts one; each agent is allocated the
+#  lowest port of this pool free of every service, every broker and every journal allocated before, kept in
+#  `installation.derived.ttl` as a broker's is (knowledge/domain/kernel/journal.md).
+:journals onboarding:allocatesFrom "http://localhost:7878" ;
+    onboarding:allocatesFor <http://example.org/orexis#Agent> .

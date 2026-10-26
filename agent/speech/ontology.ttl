@@ -50,3 +50,22 @@
     derived from it, the agent's own, holding over the statement's period and going when it is said again.
     Beneath `sh:Rule` and not `sh:SPARQLRule`, so revision and the planner's bridge reader pass over it, as
     they pass over a transition: it is run once per statement, never to a fixpoint.""" .
+
+#  WHAT SPEECH SAYS HAPPENED, as the journal keeps it (`events.py`): each statement said and heard, an `orexis:Event`
+#  carrying the statement whole, so the exchange between two agents is read in the words they spoke it in.
+
+:Said a owl:Class ; rdfs:subClassOf orexis:Event ;
+    rdfs:label "Said" ;
+    rdfs:comment "A statement the agent said: a graph of a document it told to the agents it names by `speech:to`, carried whole." .
+
+:Heard a owl:Class ; rdfs:subClassOf orexis:Event ;
+    rdfs:label "Heard" ;
+    rdfs:comment "A statement a peer said to the agent, carried whole as it was heard." .
+
+:statement a owl:ObjectProperty ; rdfs:range :StatementGraph ;
+    rdfs:label "statement" ;
+    rdfs:comment "The statement a `speech:Said` or a `speech:Heard` is of: the graph, which the event carries beside it, its kinds and its triples." .
+
+:to a owl:ObjectProperty ; rdfs:domain :Said ; rdfs:range orexis:Agent ;
+    rdfs:label "to" ;
+    rdfs:comment "An agent a statement was told to." .

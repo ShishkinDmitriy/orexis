@@ -1,0 +1,7 @@
+# EVERY STATEMENT THE AGENT SAID AND HEARD: the event's kind, the statement, every kind it says it is, and each agent a
+# statement said was told to.
+PREFIX speech: <http://example.org/orexis/speech#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+SELECT ?e ?at ?kind ?statement ?type ?to WHERE { GRAPH ?e {
+  ?e a ?kind ; prov:atTime ?at ; speech:statement ?statement . FILTER(?kind IN (speech:Said, speech:Heard))
+  OPTIONAL { ?statement a ?type } OPTIONAL { ?e speech:to ?to } } }

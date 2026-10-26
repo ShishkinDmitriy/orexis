@@ -14,12 +14,12 @@
     "baseUrl": "../..",
     "typeRoots": ["../../node_modules/@types"],
     "paths": {
-      "@orexis/replay": ["onboarding/replay/core/index.ts"],
-      "@orexis/replay/*": ["onboarding/replay/core/*"],
+      "@orexis/ui": ["onboarding/history/core/index.ts"],
+      "@orexis/ui/*": ["onboarding/history/core/*"],
       "preact": ["node_modules/preact"],
       "preact/*": ["node_modules/preact/*"],
       "preact-render-to-string": ["node_modules/preact-render-to-string"]
     }
   },
-  "include": ["core/**/*", "../../agent/*/replay.tsx", "../../domains/*/replay.tsx", "../../world/*/replay.tsx"]
+  "include": ["core/**/*", "../../agent/*/ui/index.tsx", "../../domains/*/ui/index.tsx", "../../world/*/ui/index.tsx"]
 }

@@ -1,0 +1,12 @@
+# WHAT THE AGENT HELD OF EACH ORIGIN — asked, said, foreseen — with each peer under each constraint: every set it said,
+# a row per value of each holding on the constraint's key, and one row binding no holding for a set said empty. Read
+# within each event's own graph, since a thing's triples are copied into every event about it.
+PREFIX coordination: <http://example.org/orexis/coordination#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+SELECT ?e ?at ?origin ?peer ?constraint ?h ?thing ?from ?until ?taken ?key ?value WHERE { GRAPH ?e {
+  ?e a ?origin ; prov:atTime ?at ; coordination:peer ?peer ; coordination:over ?constraint .
+  FILTER(?origin IN (coordination:Asked, coordination:Said, coordination:Foreseen))
+  OPTIONAL { ?e coordination:holding ?h . ?h coordination:of ?thing ; coordination:taken ?taken ; ?key ?value .
+             FILTER(?key NOT IN (rdf:type, coordination:of, coordination:taken, coordination:from, coordination:until))
+             OPTIONAL { ?h coordination:from ?from } OPTIONAL { ?h coordination:until ?until } } } }

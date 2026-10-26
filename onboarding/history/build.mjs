@@ -1,4 +1,4 @@
-/*  The one build a replay has: esbuild bundling an entry `orexis-replay` writes — the core and every drawing the
+/*  The one build a history view has: esbuild bundling an entry `orexis-history` writes — the core and every drawing the
  *  world uses — into one script, for the page (`browser`, an IIFE) or for the tests' headless render (`node`).
  *
  *    node build.mjs <entry.tsx> <out.js> <browser|node>
@@ -18,7 +18,7 @@ await esbuild.build({
   format: platform === "node" ? "cjs" : "iife",
   jsx: "automatic",
   jsxImportSource: "preact",
-  alias: { "@orexis/replay": path.join(here, "core") },
+  alias: { "@orexis/ui": path.join(here, "core") },
   nodePaths: [path.join(root, "node_modules")],
   minify: platform !== "node",
   legalComments: "none",

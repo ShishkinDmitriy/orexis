@@ -54,5 +54,5 @@ infra/grafana/dashboards/
 # what a case's store actually held when its snapshot disagreed — for `diff`, never committed
 *.actual.trig
 
-# the replay's toolchain, installed by `npm ci` from package-lock.json — never committed
+# the history view's toolchain, installed by `npm ci` from package-lock.json — never committed
 node_modules/

@@ -1,0 +1,7 @@
+# WHERE THE AGENT FIXED A VAN: every observation of a column or a row, the van it is of and the number.
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX courier: <http://example.org/orexis/courier#>
+SELECT ?at ?van ?axis ?value WHERE {
+  ?o a sosa:Observation ; sosa:observedProperty ?axis ; sosa:hasFeatureOfInterest ?van ;
+     sosa:hasSimpleResult ?value ; sosa:resultTime ?at .
+  FILTER(?axis IN (courier:Column, courier:Row)) }

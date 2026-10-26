@@ -1,17 +1,26 @@
 ---
 type: Decision
 title: A replay is the history drawn, and the package that decides a thing draws it
-status: accepted
+status: superseded-in-part
+superseded-by: the-journal-is-the-agents-flight-recorder
 timestamp: 2026-10-25T20:00:00Z
 description: >-
   The sovereign's ruling of 2026-10-25, after two couriers meeting head on became hard to follow from logs. The
   flight recorder is the history part, planning and coordination now say what they decided as points, and
-  orexis-replay draws every agent's history - a core naming no package's word, a scene each domain draws of its world
+  orexis-history draws every agent's history - a core naming no package's word, a scene each domain draws of its world
   and a layer each package draws of what it decided, Preact components in TSX beside their code, typed by the core's
   contract and bundled by esbuild. Refused - a catalogue of view kinds a domain picks from, untyped htm with no build,
   recording the belief base, and a replay reading a volume. Amends rule 2 - a domain ships how it is drawn, which no
   agent runs.
 ---
+
+> **Superseded in part, 2026-10-26: a replay reads what the agents kept, by SPARQL.** That the package which decides a
+> thing draws it, as Preact components in TSX against the core's contract, stands. What a drawing reads does not:
+> [the-journal-is-the-agents-flight-recorder](/decisions/the-journal-is-the-agents-flight-recorder.md) keeps every event
+> but an observation in the agent's journal, in RDF, and a drawing ships the selects it reads beside it, run per agent
+> over the journal, the observations and the world; the points, the `things` handed beside them, and planning's and
+> coordination's events answering points, below, are retired there. The replay reads a journal and still never a
+> belief volume.
 
 # What was true
 
@@ -32,17 +41,17 @@ of a silent one — and every conflict, each set said whole and again only where
 since a bucket is one agent's; a process walking several installs a sink per agent, and the history part asks for
 its own.
 
-**`orexis-replay` draws it, and never opens a volume.** It reads every agent's history bucket as `orexis-explain`
+**`orexis-history` draws it, and never opens a volume.** It reads every agent's history bucket as `orexis-explain`
 does, or a recording a world's test made of a walk, and writes one page.
 
-**The package that decides a thing draws it** ([replay](/domain/onboarding/replay.md)). The page's core names no
-package's word: the instants, the agents shown, the log. Everything drawn is a `replay.tsx` beside the code or the
+**The package that decides a thing draws it** ([replay](/domain/onboarding/history-view.md)). The page's core names no
+package's word: the instants, the agents shown, the log. Everything drawn is a `ui/index.tsx` beside the code or the
 documents it draws: a domain's **scene**, the ground its world stands on — the courier's road, a grid with its vans
 fixed and its contacts seen — and a package's **layer**, what it decided drawn on whatever scene there is —
 coordination's holdings and conflicts, planning's path, execution's step in flight. A layer asks the scene one
 thing, where the values a point carries put it, so coordination draws a holding on the courier's road and would
 draw one on a terrace without a word of either. Each is a module of Preact components in TSX, exporting what the
-core's contract (`onboarding/replay/core/index.ts`) says, which TypeScript holds it to; esbuild bundles the core and
+core's contract (`onboarding/history/core/index.ts`) says, which TypeScript holds it to; esbuild bundles the core and
 every drawing a world uses into one page that opens offline. The toolchain is `npm ci` at the root, the operator's and
 the tests', and no agent's.
 
