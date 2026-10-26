@@ -1,7 +1,8 @@
 ---
 type: Decision
 title: A replay is the history drawn, and the package that decides a thing draws it
-status: accepted
+status: superseded-in-part
+superseded-by: the-journal-is-the-agents-flight-recorder
 timestamp: 2026-10-25T20:00:00Z
 description: >-
   The sovereign's ruling of 2026-10-25, after two couriers meeting head on became hard to follow from logs. The
@@ -12,6 +13,14 @@ description: >-
   recording the belief base, and a replay reading a volume. Amends rule 2 - a domain ships how it is drawn, which no
   agent runs.
 ---
+
+> **Superseded in part, 2026-10-26: a replay reads what the agents kept, by SPARQL.** That the package which decides a
+> thing draws it, as Preact components in TSX against the core's contract, stands. What a drawing reads does not:
+> [the-journal-is-the-agents-flight-recorder](/decisions/the-journal-is-the-agents-flight-recorder.md) keeps every event
+> but an observation in the agent's journal, in RDF, and a drawing ships the selects it reads beside it, run per agent
+> over the journal, the observations and the world; the points, the `things` handed beside them, and planning's and
+> coordination's events answering points, below, are retired there. The replay reads a journal and still never a
+> belief volume.
 
 # What was true
 

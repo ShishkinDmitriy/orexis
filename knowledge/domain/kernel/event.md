@@ -1,10 +1,12 @@
 ---
 type: Domain Concept
 title: Event
+term: http://example.org/orexis#Event
 description: >-
   What a signal carries - an instance of a class the package declares in its events.py, saying
   whole what happened, so a handler asks nobody. Its class may name a metric and mark which fields
-  are reported; it may answer a point, which is history. Made only where somebody hears.
+  are reported; it may be history, as a point or as triples in the package's words. Made only where
+  somebody hears.
 ---
 
 # What it is
@@ -25,12 +27,15 @@ An event costing a read is made only where the signal is heard: the emitter asks
   a `Tag`, a `Value`, a `Flag` or a [level](/domain/kernel/level.md) — which the metrics part tallies
   without knowing the package; an unmarked field is the event's alone
   ([series](/domain/kernel/series.md)).
-- **That it is history**, by answering `point()`, the series store's own dict — or a list of them,
-  where one event is several points, as a plan published is a point per step — which the history
-  part writes as it is heard.
+- **That it is history**, by answering `point()`, the series store's own dict, which the history part
+  writes to the [series](/domain/kernel/series.md) — an observation alone does — or `statements(node)`,
+  its triples in its package's words, which the history part keeps in the agent's
+  [journal](/domain/kernel/journal.md) as an entry named by `node`. Such an event is then a term too: its
+  class is declared beneath `orexis:Event` in the package's ontology, its words beside it, and
+  `agent/tests/test_journal.py` holds every word an event writes to a declaration.
 
 # What it is not
 
-**A belief.** It is not stored, and no plan branches on it; what it reports of the store was read
+**A belief.** It is not stored where any plan reads, and no plan branches on it; what it reports of the store was read
 from the store and is still there
 ([metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md)).

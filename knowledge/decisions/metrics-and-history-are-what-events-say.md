@@ -1,7 +1,8 @@
 ---
 type: Decision
 title: Metrics and history are what events say, and no package imports either
-status: accepted
+status: superseded-in-part
+superseded-by: the-journal-is-the-agents-flight-recorder
 timestamp: 2026-09-29T20:00:00Z
 description: >-
   The sovereign's ruling of 2026-09-29, after the parts learnt to signal each other. Every signal
@@ -12,6 +13,13 @@ description: >-
   history, gauges pulled once a window, deltas totalled by metrics, and the metrics package mapping
   each event.
 ---
+
+> **Superseded in part, 2026-10-26: history is two stores.** That an event says what is reported and what is history,
+> and a part hearing every signal writes it, stands. Where history goes does not: an observation is still a point in
+> the agent's history bucket, and every other event that is history answers `statements(node)`, its triples in its
+> package's words, which the history part keeps in the agent's journal
+> ([the-journal-is-the-agents-flight-recorder](/decisions/the-journal-is-the-agents-flight-recorder.md)). A step taken
+> and answered, below, is no point any more.
 
 # What was true (on main at f05a205d)
 

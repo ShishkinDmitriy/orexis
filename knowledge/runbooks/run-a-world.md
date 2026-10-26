@@ -194,7 +194,11 @@ runs it are one directory. There is no separate deploy tree to keep in step.
 boot after that logs `booted from … (a volume lived in: its own graphs kept)`, reads the common documents
 again and leaves the agent's own graphs alone, so a restart cannot reset what it
 believes. The store lives in a named volume per agent and survives `up`, `down` and `restart`
-alike — see [belief-base](/domain/belief/belief-base.md).
+alike — see [belief-base](/domain/belief/belief-base.md). Its [journal](/domain/kernel/journal.md)
+lives in a second, `orexis-<world>-<agent>-journal`, which no belief reads: what it did, kept for
+good, and its log for the last ten minutes, kept past them where something went wrong. It answers at
+`onboarding:journal` in `infra/installation.derived.ttl`, on the loopback; `orexis-replay <world>
+--live` follows it ([replay-a-run](/runbooks/replay-a-run.md)).
 
 `down` removes only what *this* file declares. It is not a way to stop everything; for that see
 [tear-down](/runbooks/tear-down.md).

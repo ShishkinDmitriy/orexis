@@ -157,12 +157,35 @@ def history():
     install(HISTORY, None)
 
 
-def test_history_holds_every_reading_and_the_dose_taken_and_landed(monkeypatch, history):
-    """Every kind of point, each from the package that decided it (#825): sensing's three readings,
-    measured under their properties; planning's dose, published as a point per step; and execution's
-    dose — taken when the command went out, and landed when the next reading made the bed moist —
-    tagged with the action, the want it was for and the values the action takes, the valve and the bed
-    (#944: the reading, until the dose took the subject)."""
+@pytest.fixture
+def kept():
+    """The grower's journal, in memory, for every agent the process runs."""
+    from agent.journal import Journal, install as keep
+
+    journal = Journal(now=lambda: NOW)
+    keep(journal)
+    yield journal
+    keep(None)
+
+
+#  WHAT THE JOURNAL HOLDS OF THE DOSE: the plan published and each step's taking and verdict, the action each step
+#  fills and the values it takes in the domain's words, each at its instant.
+_DOSE_Q = """
+PREFIX planning: <http://example.org/orexis/planning#> PREFIX execution: <http://example.org/orexis/execution#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+SELECT ?kind ?at ?action ?valve ?subject ?taken ?landed WHERE { GRAPH ?e {
+  { ?e a planning:PlanPublished ; planning:published ?plan . ?step execution:partOf ?plan BIND(planning:PlanPublished AS ?kind) }
+  UNION { ?e a ?kind ; execution:act ?act . ?act execution:of ?step ; execution:taken ?taken
+          FILTER(?kind IN (execution:StepTaken, execution:StepAnswered)) OPTIONAL { ?e execution:landed ?landed } }
+  ?e prov:atTime ?at . ?step planning:fills ?action ; ?v ?valve ; ?s ?subject .
+  FILTER(STRENDS(STR(?v), "#valve") && STRENDS(STR(?s), "#subject")) } } ORDER BY ?at ?kind"""
+
+
+def test_history_holds_every_reading_and_the_journal_the_dose_published_taken_and_landed(monkeypatch, history, kept):
+    """Every kind of history, each from the package that decided it (#825): sensing's three readings, points in the
+    series measured under their properties; planning's dose, published, and execution's — taken when the command went
+    out, and landed when the next reading made the bed moist — events in the journal, the step's action and the values
+    it takes, the valve and the bed (#944: the reading, until the dose took the subject), in the domain's words."""
     runtime, broker = _grower(monkeypatch)
     runtime.deliver("sensors/bed_board/reading", b'{"temperature": 21.0}', NOW)
     runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.2}', NOW)
@@ -171,27 +194,24 @@ def test_history_holds_every_reading_and_the_dose_taken_and_landed(monkeypatch, 
     runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.45}', runtime.time.at)
     runtime.run(passes=2, poll_s=0)
     assert runtime.parts["execution"].executor.walking() == [], "the dose landed"
-    observed = [(p["measurement"], p["fields"]["value"], p["time"]) for p in history if p["measurement"] not in ("Step", "Plan")]
+    observed = [(p["measurement"], p["fields"]["value"], p["time"]) for p in history]
     assert observed == [("AirTemperature", 21.0, NOW), ("SoilMoisture", 0.2, NOW),
-                        ("SoilMoisture", 0.45, NOW + timedelta(minutes=11))]
+                        ("SoilMoisture", 0.45, NOW + timedelta(minutes=11))], "the series holds the readings, and nothing else"
     #  THE RAW COUNT BESIDE THE READING (#894): this world scales no sensor, so the number the sensor
     #  gave is the reading, and the point says so twice rather than leaving the second field off.
-    assert all(p["fields"] == {"value": p["fields"]["value"], "raw": p["fields"]["value"]}
-               for p in history if p["measurement"] not in ("Step", "Plan"))
+    assert all(p["fields"] == {"value": p["fields"]["value"], "raw": p["fields"]["value"]} for p in history)
     #  TAGGED BY THE LOCAL NAME OF THE IRI, since this world states no `orexis:localId` of a sensor or
     #  of the bed; tagged by a stated id, these points carried none and no panel could filter for them (#885).
     #  The bed is tagged `feature`, for its SOSA role, and no longer `plant` (#834).
-    assert [(p["tags"]["sensor"], p["tags"]["feature"]) for p in history if p["measurement"] not in ("Step", "Plan")] == \
+    assert [(p["tags"]["sensor"], p["tags"]["feature"]) for p in history] == \
         [("thermometer", "bed"), ("moisture_probe", "bed"), ("moisture_probe", "bed")]
-    (planned,) = [p for p in history if p["measurement"] == "Plan"]
-    assert (planned["tags"]["action"], planned["tags"]["order"]) == ("Dosing", "0"), "the dose, published"
-    steps = [p for p in history if p["measurement"] == "Step"]
-    assert [p["fields"] for p in steps] == [{"taken": True}, {"landed": True}]
-    (taken, landed) = steps
-    assert taken["tags"] == landed["tags"], "one step, said twice"
-    assert taken["tags"]["action"] == "Dosing" and set(taken["tags"]) == {"action", "want", "valve", "subject"}
-    assert (taken["tags"]["valve"], taken["tags"]["subject"]) == ("pump", "bed"), "the dose takes the bed, not a reading (#944)"
-    assert planned["time"] <= taken["time"] < landed["time"], "published, taken, then answered"
+    dose = [{k: (r[k].value.rsplit("#", 1)[-1] if r[k] is not None else None) for k in ("kind", "action", "valve", "subject", "taken", "landed")}
+            | {"at": datetime.fromisoformat(r["at"].value)} for r in kept.store.query(_DOSE_Q)]
+    assert [(d["kind"], d["action"], d["valve"], d["subject"], d["taken"], d["landed"]) for d in dose] == [
+        ("PlanPublished", "Dosing", "pump", "bed", None, None),
+        ("StepTaken", "Dosing", "pump", "bed", "true", None),
+        ("StepAnswered", "Dosing", "pump", "bed", "true", "true")], "the dose takes the bed, not a reading (#944)"
+    assert dose[0]["at"] <= dose[1]["at"] < dose[2]["at"], "published, taken, then answered"
     assert len(broker.published) == 1
 
 
@@ -211,7 +231,7 @@ def test_every_reading_the_grower_writes_is_drawn_by_one_greenhouse_panel(monkey
     queries = [t["query"] for panel in panels for t in panel["targets"]]
     drawn = {(p["measurement"], p["tags"]["sensor"]):
              [q for q in queries if f'r._measurement == "{p["measurement"]}"' in q
-              and f'r.sensor == "{p["tags"]["sensor"]}"' in q] for p in history if p["measurement"] not in ("Step", "Plan")}
+              and f'r.sensor == "{p["tags"]["sensor"]}"' in q] for p in history}
     assert len(drawn) == 2 and all(len(found) == 1 for found in drawn.values()), drawn
 
 

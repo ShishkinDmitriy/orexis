@@ -2,7 +2,7 @@
 type: Runbook
 title: Reflect
 description: >-
-  How to ask one agent's series what a season says - orexis-explain over its history and metrics
+  How to ask one agent's series what a season says - orexis-explain over its history and metrics, and its journal
   buckets with the admin-side token, or over the points a run's sinks recorded, never its beliefs -
   what each of the five fixed questions reads and names, what the world's documents are read for,
   and the first figures from the greenhouse played in-process. The measurement the issue asks for,
@@ -34,11 +34,19 @@ agent image, as `onboarding/influx.py` does ([onboarding](/domain/onboarding/onb
 world that is not `onboarding:monitored` writes no metrics, and the report says so: four of the five
 questions then have nothing to read, and the fifth answers from the history alone.
 
+Every step taken and answered is read from the agent's [journal](/domain/kernel/journal.md), at the
+endpoint the installation allocated it, and handed to the questions as a `Step` point; an agent that is
+not running answers nothing there, and its stopped journal is read off its volume, opened read-only:
+
+```bash
+orexis-explain greenhouse grower --journal "$(podman volume inspect orexis-greenhouse-grower-journal --format '{{.Mountpoint}}')"
+```
+
 The world's documents are read for two things the series cannot say, and nothing else: which desires
 the agent holds — a desire never read unmet leaves no trace on the series, so the agent is booted from
 its documents in memory, as `reading.lasts` boots one, and asked — and which sensors read a fraction of
 one, a `unit:UNITLESS` on the sensor or on the range its host states for the property, so that "past
-1.0" is asked of a probe and never of a thermometer. No volume is opened.
+1.0" is asked of a probe and never of a thermometer. No belief volume is opened.
 
 # Over a run's points
 
@@ -59,7 +67,7 @@ OREXIS_EXPLAIN_HOURS=120 pytest world/greenhouse/tests/test_explain.py -n0 -s -k
 | section | reads | names |
 |---|---|---|
 | wants nothing reached | `unreachable` by `desire`: passes, windows, span | an action the world lacks, or a scope that cannot reach the want |
-| landings | `landing` by `action`: verdicts, landed, timed out, `late_s` mean and max; the history's `Step` points taken and landed | a landing band declared wrong, or an instrument past its calibration; a line that timed out or did not land says STOOD OUT |
+| landings | `landing` by `action`: verdicts, landed, timed out, `late_s` mean and max; the journal's steps taken and landed | a landing band declared wrong, or an instrument past its calibration; a line that timed out or did not land says STOOD OUT |
 | desires never unmet | the desires held, less those any `search` is tagged with | dead weight, a desire to retire |
 | searches exhausted | `search` by `desire` where every `outcome` is `Exhausted`: searches, `budget`, `weighed` | a budget too small or an estimate too weak |
 | probes | per `sensor` and measurement: stretches past 1.0 or below 0.0 where the reading is a fraction; the longest run of an unchanged `raw`; the windows `doubted` said it `silent` or `stuck` | a recalibration to schedule |

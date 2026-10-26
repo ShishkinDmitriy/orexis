@@ -13,9 +13,9 @@ export function run(drawings: Drawing[], asked: any): string {
   if (asked.pane) {
     const scene = scenes.find(s => s.name === asked.pane.scene);
     if (!scene) throw new Error(`no scene ${asked.pane.scene} among ${scenes.map(s => s.name).join(", ")}`);
-    const frame = scene.frame(every(replay), replay.things);
+    const frame = scene.frame(every(replay));
     return renderToString(<Pane replay={replay} scene={scene} frame={frame} layers={layers} agents={asked.pane.agents}
                                 at={replay.instants[asked.pane.at]} />);
   }
-  return JSON.stringify((asked.log as string[]).flatMap(a => log(drawings, replay.points[a] ?? [], replay.things)).map(l => l.text));
+  return JSON.stringify((asked.log as string[]).flatMap(a => log(drawings, replay.rows[a] ?? [])).map(l => l.text));
 }

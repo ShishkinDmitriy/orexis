@@ -1,0 +1,14 @@
+# WHERE THE AGENT SAW A CONTACT: every observation of a relative column or row, the contact it is of, the van the
+# contact is hosted by, what it is a sample of, and the range its sensor declares, outside which it sees nothing.
+PREFIX sosa: <http://www.w3.org/ns/sosa/>
+PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
+PREFIX schema: <https://schema.org/>
+PREFIX courier: <http://example.org/orexis/courier#>
+SELECT ?at ?contact ?axis ?value ?host ?stands ?least ?most WHERE {
+  ?o a sosa:Observation ; sosa:observedProperty ?axis ; sosa:hasFeatureOfInterest ?contact ; sosa:madeBySensor ?sensor ;
+     sosa:hasSimpleResult ?value ; sosa:resultTime ?at .
+  FILTER(?axis IN (courier:RelativeColumn, courier:RelativeRow))
+  OPTIONAL { ?contact sosa:isHostedBy ?host }
+  OPTIONAL { ?contact sosa:isSampleOf ?stands }
+  OPTIONAL { ?sensor ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?range .
+             ?range a ssn-system:MeasurementRange ; schema:minValue ?least ; schema:maxValue ?most } }

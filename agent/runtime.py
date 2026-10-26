@@ -101,6 +101,7 @@ import dataclasses
 import importlib
 import importlib.util
 import logging
+import os
 import queue
 import signal
 import sys
@@ -113,6 +114,7 @@ from urllib.parse import unquote, urlparse
 import pyoxigraph as ox
 
 from agent import clock
+from agent import journal
 from agent import series
 from agent.lifecycle import MET, PLANNED, UNFINISHED, UNREACHABLE, Signal  # noqa: F401 — the outcomes, re-exported
 from agent.metrics import Laps, Level, Value, window
@@ -205,8 +207,8 @@ TRANSPORTS = {
            SPEAKER: "?me mqtt4ssn:listensToTopic ?topic"},
     HTTP: {OBSERVER: f"{MINE} ?sensor td:hasForm ?form"},
 }
-#  WHAT WATCHES THE AGENT: a package created where the environment names a store for it, which is a
-#  fact of deployment and not of the world, so no role decides it (`agent.series`).
+#  WHAT WATCHES THE AGENT: a package created where the environment names a store for it, or a journal is kept,
+#  each a fact of deployment and not of the world, so no role decides it (`agent.series`, `agent.journal`).
 WATCHERS = ("history", "metrics")
 
 #  WHO THIS PROCESS IS: the AGENT with the id it was told. The id alone is not enough — the
@@ -746,8 +748,10 @@ class Runtime:
         every part starts, and its stop is kept for the end."""
         #  WHAT WATCHES THE AGENT, where the environment names a store for it — last, so it is linked
         #  to every part and stopped first, writing the last window.
-        watchers = [name for name, purpose in zip(WATCHERS, (series.HISTORY, series.METRICS))
-                    if series.sink(purpose, self.id) is not None]
+        #  History is written where a history store or a journal is, since an event is a point or triples.
+        watched = {"history": series.sink(series.HISTORY, self.id) is not None or journal.journal(self.id) is not None,
+                   "metrics": series.sink(series.METRICS, self.id) is not None}
+        watchers = [name for name in WATCHERS if watched[name]]
         for package in [*self.packages, *watchers]:
             name = "agent." + package.replace("/", ".") + ".create"
             if package.startswith("transport/") and (transport is not None or not connect):
@@ -789,9 +793,32 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("world", type=Path, help="the world's directory")
     parser.add_argument("agent", help="this agent's id — the one identifier a process is told")
     parser.add_argument("--volume", type=Path, help="where the store persists; in memory when absent")
+    parser.add_argument("--journal", type=Path, help="where the journal persists, a store of its own beside the beliefs; in memory when absent")
     parser.add_argument("--passes", type=int, help="stop after this many passes whatever stands")
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
+    #  THE JOURNAL FIRST, so the log of the boot is in it: a store of its own, its log kept for the window the
+    #  environment says, served read-only where the environment names a port (`agent.journal`).
+    kept = journal.Journal(ox.Store(str(args.journal)) if args.journal else None, journal.window_s(), now=clock.now)
+    journal.install(kept)
+    said = journal.Handler(kept)
+    logging.getLogger().addHandler(said)
+    served = journal.serve(kept, port=int(os.environ["JOURNAL_PORT"])) if os.environ.get("JOURNAL_PORT") else None
+    try:
+        outcome = _run(args)
+    finally:
+        kept.flush()
+        if served is not None:
+            served.shutdown()
+        logging.getLogger().removeHandler(said)
+        journal.install(None)
+    #  `planned` IS AN EXIT OF NOUGHT: an agent declared a planner and no executor has done all it
+    #  was declared for once a plan is published for every want, as one that walks them has once met.
+    return {MET: 0, PLANNED: 0, UNREACHABLE: 1, UNFINISHED: 2}[outcome]
+
+
+def _run(args) -> str:
+    """Boot the agent `args` names and run it to its end: its outcome."""
     store = ox.Store(str(args.volume)) if args.volume else None
     beliefs = boot(args.world, args.agent, store)
     #  A SINK PER PURPOSE THE ENVIRONMENT NAMES A STORE FOR, and the part that writes it created with
@@ -813,11 +840,13 @@ def main(argv: list[str] | None = None) -> int:
     signal.signal(signal.SIGTERM, _stopped)
     try:
         outcome = runtime.run(passes=args.passes)
+    except Exception:
+        #  AN EXCEPTION ESCAPING A PASS is an incident: said at ERROR, it keeps the journal's window before it.
+        log.exception("%s: a pass raised, and the agent stops", args.agent)
+        raise
     finally:
         runtime.stop()
-    #  `planned` IS AN EXIT OF NOUGHT: an agent declared a planner and no executor has done all it
-    #  was declared for once a plan is published for every want, as one that walks them has once met.
-    return {MET: 0, PLANNED: 0, UNREACHABLE: 1, UNFINISHED: 2}[outcome]
+    return outcome
 
 
 def _stopped(signum, frame) -> None:

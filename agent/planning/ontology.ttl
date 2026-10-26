@@ -389,3 +389,19 @@ WHEN THE WORLD CAN SHOW IT is what this answers, since the executor holds the st
 planning:refines a owl:ObjectProperty ; rdfs:domain planning:Want ;
     rdfs:label "refines" ;
     rdfs:comment "The step a want keeps one level down: minted by `refine` when a rule the store holds concludes the facts the step predicts, whose met-test is that rule's WHERE with the step's facts bound. The executor waits on the step while a plan for this want stands, and the Planner withdraws the want once no intention stands at the step it refines." .
+
+#  WHAT THE PLANNER SAYS HAPPENED, as the journal keeps it (`events.py`): each an `orexis:Event`.
+
+planning:PlanPublished a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Plan published" ;
+    rdfs:comment "A plan handed down for execution, carrying the plan graph as the beliefs held it: the want it is for, its steps chained by `execution:then`, the action each fills and every value it takes." .
+
+planning:WantUnreachable a owl:Class ; rdfs:subClassOf orexis:Incident ; rdfs:label "Want unreachable" ;
+    rdfs:comment "A want standing that nothing the agent holds reaches, no search cut short and nothing walking it." .
+
+planning:published a owl:ObjectProperty ; rdfs:domain planning:PlanPublished ; rdfs:range planning:Plan ;
+    rdfs:label "published" ;
+    rdfs:comment "The plan handed down." .
+
+planning:want a owl:ObjectProperty ; rdfs:domain planning:WantUnreachable ; rdfs:range planning:Want ;
+    rdfs:label "want" ;
+    rdfs:comment "The want nothing reaches." .

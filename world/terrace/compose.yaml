@@ -41,7 +41,7 @@ services:
 
   agent-terrace:
     image: orexis:local
-    command: ["orexis-agent", "/app/world/terrace", "terrace", "--volume", "/app/state"]
+    command: ["orexis-agent", "/app/world/terrace", "terrace", "--volume", "/app/state", "--journal", "/app/journal"]
     environment:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
       # never read off the world by the agent
@@ -56,6 +56,8 @@ services:
       INFLUX_METRICS_URL: "http://localhost:8086"
       INFLUX_METRICS_ORG: "orexis"
       METRICS_INTERVAL_S: "60"
+      # where it serves its journal, on the host's loopback, allocated by the installation
+      JOURNAL_PORT: "7889"
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx terrace`, and
       # its own broker credential, minted by `orexis-mqtt terrace`; mounted into THIS container alone
@@ -70,6 +72,8 @@ services:
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-terrace-terrace:/app/state
+      # its journal, a store of its own beside the beliefs and apart from them
+      - orexis-terrace-terrace-journal:/app/journal
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./society.derived.ttl:/app/world/terrace/society.derived.ttl:ro
       - ./society.ttl:/app/world/terrace/society.ttl:ro
@@ -87,3 +91,4 @@ services:
 volumes:
   orexis-terrace-mosquitto-broker:
   orexis-terrace-terrace:
+  orexis-terrace-terrace-journal:

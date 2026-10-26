@@ -15,7 +15,7 @@ How to actually operate a society: bring one into existence, run it, and take it
 * [measure-the-search](/runbooks/measure-the-search.md) - Time the planner on its bench, record a row in the ledger, and alternate A/B in one session.
 * [measure-a-pass](/runbooks/measure-a-pass.md) - Time a whole agent's pass on the greenhouse by its own laps, held to what the pass did, and record it in the pass ledger.
 * [reflect](/runbooks/reflect.md) - Ask one agent's series what a season says: `orexis-explain` over its two buckets, or over a run's points, never its beliefs.
-* [replay-a-run](/runbooks/replay-a-run.md) - Draw a world's run from its agents' history: `orexis-replay` over the buckets or a walk's recording, a pane per agent.
+* [replay-a-run](/runbooks/replay-a-run.md) - Draw a world's run from its agents' journals and observations: `orexis-replay`, after the run or live.
 * [move-a-world-to-agent-0-2-0](/runbooks/move-a-world-to-agent-0-2-0.md) - Take a running 0.1.0 world onto the 0.2.0 image: rebuild, clear 0.1.0's leftovers, replace the belief volume. The board is untouched.
 * [calibrate-a-probe](/runbooks/calibrate-a-probe.md) - Move the probe off the battery pin, flash raw counts, then tell the agent what it reads dry and wet; no reflash again.
 * [tear-down](/runbooks/tear-down.md) - Stopping a society is not one command. What survives `down`, why each survives on purpose, and how to remove it.

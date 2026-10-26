@@ -185,3 +185,34 @@
 :rounds a owl:DatatypeProperty ; rdfs:domain orexis:Self ; rdfs:range xsd:integer ;
     rdfs:label "rounds" ;
     rdfs:comment "How many rounds a conflict's draw may restart before the peer is taken as silent. A stance; where the self states none, three." .
+
+#################  What the coordinator says happened, as the journal keeps it  #################
+#  (`events.py`): each an `orexis:Event`, a set said whole and replacing the one said before it.
+
+:Held a owl:Class ; rdfs:subClassOf orexis:Event ;
+    rdfs:label "Held" ;
+    rdfs:comment "The holdings of one origin under one constraint with one peer, as the coordinator said or laid them: all of them, each a `coordination:holding`." .
+
+:Asked a owl:Class ; rdfs:subClassOf :Held ;
+    rdfs:label "Asked" ;
+    rdfs:comment "The agent's own holdings, as a question it asked the peer carried them." .
+
+:Said a owl:Class ; rdfs:subClassOf :Held ;
+    rdfs:label "Said" ;
+    rdfs:comment "What the agent laid of a peer as the peer said it: the peer acts for each thing held." .
+
+:Foreseen a owl:Class ; rdfs:subClassOf :Held ;
+    rdfs:label "Foreseen" ;
+    rdfs:comment "What the agent laid of a silent peer as it foresaw it: its own estimate, where the peer's word is missing." .
+
+:Concluded a owl:Class ; rdfs:subClassOf orexis:Event ;
+    rdfs:label "Concluded" ;
+    rdfs:comment "Every conflict the agent holds, as it concluded them: each a `coordination:conflict`, under its own name." .
+
+:peer a owl:ObjectProperty ; rdfs:domain :Held ; rdfs:range orexis:Agent ;
+    rdfs:label "peer" ;
+    rdfs:comment "The agent the holdings were asked of, said by or foreseen of." .
+
+:conflict a owl:ObjectProperty ; rdfs:domain :Concluded ; rdfs:range :Conflict ;
+    rdfs:label "conflict" ;
+    rdfs:comment "One conflict concluded." .

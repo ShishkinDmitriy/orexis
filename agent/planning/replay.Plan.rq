@@ -1,0 +1,13 @@
+# EVERY PLAN PUBLISHED, a row per value each step takes: the want it is for, each step, the step after it, the action
+# it fills and when it lands at the earliest and the latest, and the parameter and its value — only what the action
+# says it takes (`orexis:takes`, stated by the world's actions), so a figure the search wrote of a step is no value.
+PREFIX planning: <http://example.org/orexis/planning#>
+PREFIX execution: <http://example.org/orexis/execution#>
+PREFIX orexis: <http://example.org/orexis#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+SELECT ?e ?at ?plan ?want ?step ?next ?action ?lands ?latest ?key ?value WHERE {
+  GRAPH ?e { ?e a planning:PlanPublished ; prov:atTime ?at ; planning:published ?plan .
+             ?plan planning:for ?want . ?step execution:partOf ?plan ; planning:fills ?action .
+             OPTIONAL { ?step execution:then ?next } OPTIONAL { ?step execution:landsAt ?lands }
+             OPTIONAL { ?step execution:notAfter ?latest } }
+  OPTIONAL { ?action orexis:takes ?key . GRAPH ?e { ?step ?key ?value } } }

@@ -810,10 +810,12 @@ def test_history_is_served_by_one_store_and_metrics_by_one_or_by_none(tmp_path, 
     (lambda text: text.replace("onboarding:retentionDays 30", 'onboarding:retentionDays "a month"'), "Metrics: a purpose is kept one whole number of days"),
     (lambda text: text.replace("onboarding:intervalSeconds 60", 'onboarding:intervalSeconds "a minute"'),
      "Metrics: a window of a minute, which is no number of seconds"),
-    (lambda text: text + '\n:more onboarding:allocatesFrom "mqtt://localhost:2884" .\n', "more: is a pool beside http://example.org/orexis/installation#brokers"),
+    (lambda text: text + '\n:more onboarding:allocatesFrom "mqtt://localhost:2884" ; onboarding:allocatesFor <https://www.w3id.org/MQTT4SSN-Ontology#Broker> .\n',
+     "more: is a pool beside http://example.org/orexis/installation#brokers"),
+    (lambda text: text + '\n:more onboarding:allocatesFrom "mqtt://localhost:2884" .\n', "more: a pool allocates for one kind of listener, and says which"),
     (lambda text: text.replace('"mqtt://localhost:1884"', '"mqtt://localhost"'), "brokers: allocates from mqtt://localhost, which states no host or no port"),
 ], ids=["two-stores", "no-organisation", "two-images", "a-view-in-the-clear", "a-store-over-tls", "two-retentions",
-        "a-retention-in-words", "a-window-in-words", "two-pools", "a-pool-url-with-no-port"])
+        "a-retention-in-words", "a-window-in-words", "two-pools", "a-pool-for-nothing", "a-pool-url-with-no-port"])
 def test_what_the_installation_states_is_held_to_its_requirements(tmp_path, monkeypatch, edit, said):
     """`installation.py` refused each of these by hand, in a reader of its own for each; each is a
     shape of onboarding's own now, judged once as the document is read, so every tool reading the
@@ -1064,15 +1066,16 @@ def test_a_credential_in_a_url_is_refused(tmp_path, monkeypatch, where):
 _RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 _ONBOARDING = "http://example.org/orexis/onboarding#"
 _INSTALLATION_SAYS = {_RDF_TYPE, "https://schema.org/url", _ONBOARDING + "organisation", _ONBOARDING + "image",
-                      _ONBOARDING + "allocatesFrom", _ONBOARDING + "serves", _ONBOARDING + "retentionDays",
-                      _ONBOARDING + "intervalSeconds"}
+                      _ONBOARDING + "allocatesFrom", _ONBOARDING + "allocatesFor", _ONBOARDING + "serves",
+                      _ONBOARDING + "retentionDays", _ONBOARDING + "intervalSeconds"}
 
 
 def test_the_installation_and_its_derivation_say_where_and_nothing_else():
     """The installation states its services, the purposes each store serves, how long a purpose is
-    kept and how long a window of metrics is, and its pool, in eight words, and what was derived from
-    it states urls alone, each on a broker some world's society names and whose world asserts none —
-    so an allocation left behind by a world that has gone, or made under a misspelled IRI, is caught."""
+    kept and how long a window of metrics is, and its pools, in nine words, and what was derived from
+    it states urls alone, each on a broker some world's society names and whose world asserts none, and
+    where each agent a world states serves its journal, one apiece, on a port no two share — so an
+    allocation left behind by a world that has gone, or made under a misspelled IRI, is caught."""
     import pyoxigraph as ox
 
     from agent.store import document
@@ -1082,13 +1085,18 @@ def test_the_installation_and_its_derivation_say_where_and_nothing_else():
     said = {q.predicate.value for q in document(REPO_ROOT / "infra" / "installation.ttl") if not isinstance(q.graph_name, ox.DefaultGraph)}
     assert said and said <= _INSTALLATION_SAYS, f"the installation says {sorted(said - _INSTALLATION_SAYS)}"
     derivation = [q for q in document(REPO_ROOT / "infra" / "installation.derived.ttl") if not isinstance(q.graph_name, ox.DefaultGraph)]
-    assert derivation and {q.predicate.value for q in derivation} == {_URL}
-    unasserted = set()
+    assert derivation and {q.predicate.value for q in derivation} == {_URL, _ONBOARDING + "journal"}
+    unasserted, agents = set(), set()
     for w in _worlds():
         store = read(REPO_ROOT / "world" / w)
         unasserted |= {b for b in installation.brokers_of(store) if not installation.asserted_on(store, b)}
+        agents |= {r["a"] for r in installation.rows(store, installation._AGENTS_Q,
+                                                      installation.graphs_of(store, installation.BELIEF, common=True))}
     assert unasserted, "no world leaves its broker's url to the installation — the allocation checks nothing"
-    assert {q.subject.value for q in derivation} == unasserted
+    assert {q.subject.value for q in derivation if q.predicate.value == _URL} == unasserted
+    journals = [q for q in derivation if q.predicate.value == _ONBOARDING + "journal"]
+    assert {q.subject.value for q in journals} == agents and len(journals) == len(agents), "one journal per agent stated"
+    assert len({q.object.value for q in journals}) == len(journals), "no two journals on one port"
 
 
 def test_the_committed_infra_compose_is_what_the_installation_renders():
@@ -1269,7 +1277,7 @@ def test_a_world_with_no_bus_is_onboarded_without_one(tmp_path, monkeypatch, cap
     assert written == (REPO_ROOT / "world" / world / "compose.yaml").read_text(), "not the committed compose file"
     composed = yaml.safe_load(written)
     assert set(composed["services"]) == {f"agent-{a}" for a in agents}, "a service that is not an agent"
-    assert set(composed["volumes"]) == {f"orexis-{world}-{a}" for a in agents}
+    assert set(composed["volumes"]) == {f"orexis-{world}-{a}{kept}" for a in agents for kept in ("", "-journal")}
     for name, service in composed["services"].items():
         assert not [k for k in service["environment"] if k.startswith("MQTT_")], name
         assert service["env_file"] == [f"./secrets/influx-history-{name.removeprefix('agent-')}.env"], name

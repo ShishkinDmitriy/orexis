@@ -17,12 +17,14 @@ services:
 
   agent-dispatcher:
     image: orexis:local
-    command: ["orexis-agent", "/app/world/driver", "dispatcher", "--volume", "/app/state"]
+    command: ["orexis-agent", "/app/world/driver", "dispatcher", "--volume", "/app/state", "--journal", "/app/journal"]
     environment:
       # where each series it writes goes, and the org — the store the installation says serves each
       # purpose, its metrics only where the world is monitored — safe for every agent to hold
       INFLUX_HISTORY_URL: "http://localhost:8086"
       INFLUX_HISTORY_ORG: "orexis"
+      # where it serves its journal, on the host's loopback, allocated by the installation
+      JOURNAL_PORT: "7882"
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx driver`;
       # mounted into THIS container alone — the world has no bus, so no broker credential
@@ -35,6 +37,8 @@ services:
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-driver-dispatcher:/app/state
+      # its journal, a store of its own beside the beliefs and apart from them
+      - orexis-driver-dispatcher-journal:/app/journal
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./constraints.ttl:/app/world/driver/constraints.ttl:ro
       - ./desires.ttl:/app/world/driver/desires.ttl:ro
@@ -49,3 +53,4 @@ services:
 
 volumes:
   orexis-driver-dispatcher:
+  orexis-driver-dispatcher-journal:

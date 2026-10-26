@@ -93,7 +93,7 @@ import pyoxigraph as ox
 from agent import clock
 from agent.lifecycle import Signal
 from agent.hash_named_graph import hash_named_graph
-from agent.ontology import ACTION, BELIEF, OREXIS, RECORDED, local_of
+from agent.ontology import BELIEF, OREXIS, RECORDED, local_of
 from agent.stance import stance
 from agent.store import (NAMESPACES, Raw, add_quads, bind, catalogue_of, entry, forget_graph, graphs_of, instant,
                          quads, quads_for_pattern, revisions_of, rows, update)
@@ -121,7 +121,6 @@ RESOLVED_AT = EXECUTION + "resolvedAt"
 OUTCOME = EXECUTION + "outcome"
 ENDS_AFTER = EXECUTION + "endsAfter"
 WAITS_FOR = EXECUTION + "waitsFor"
-_TAKES_Q = """SELECT ?takes WHERE { $action orexis:takes ?takes }"""
 _RDF_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
 #  HOW OFTEN THE TIMEKEEPER LOOKS WHEN NOTHING IS DUE, in the agent's seconds: a plan another
@@ -230,6 +229,9 @@ _KEPT_BY_Q = """SELECT ?want WHERE { GRAPH ?g { $step execution:keptBy ?want } }
 _ME_Q = """SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id } LIMIT 1"""
 
 _PURSUES_Q = """SELECT ?want WHERE { GRAPH $intentions { $intention execution:pursues ?want } }"""
+#  THE LATEST ACT RECORDED OF A STEP: what a verdict is on.
+_LAST_ACT_Q = """
+SELECT ?act WHERE { GRAPH $intentions { ?act a execution:Act ; execution:of $step ; execution:takenAt ?t } } ORDER BY DESC(?t) LIMIT 1"""
 
 #  WHAT A STEP KEPT BELOW WAITS ON: the intentions walking the want it was refined into — standing,
 #  or ended and how.
@@ -672,8 +674,10 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
         for r in rows(self.intentions, bind(_COMMITTED_Q, intentions=Raw(f"<{self.graph}>"), intention=intention)):
             self._close_window(r["step"], now)
         want = next(iter(rows(self.intentions, bind(_PURSUES_Q, intentions=Raw(f"<{self.graph}>"), intention=intention))), {})
-        self.intention_resolved.emit(IntentionResolved(intention, want.get("want"), outcome,
-                                                       desire=self._desires.get(want.get("want"))))
+        if self.intention_resolved.connected:
+            self.intention_resolved.emit(IntentionResolved(intention, want.get("want"), outcome,
+                                                           desire=self._desires.get(want.get("want")), at=now,
+                                                           said=tuple(ox.Triple(*t) for t in sorted(self._described(intention), key=str))))
         if outcome not in ("done", "reached"):
             #  NOTHING HANGS BELOW WHAT ENDED UNDONE: an intention walking the want one of this
             #  intention's steps is kept below by is abandoned with it.
@@ -881,7 +885,7 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             #  KEPT BELOW: the act says which want, and the step waits on it and not on the clock.
             update(self.intentions, f"INSERT DATA {{ GRAPH <{self.graph}> {{ <{act}> <{EXECUTION}refinedBy> <{refined}> }} }}")
         if self.step_taken.connected:
-            self.step_taken.emit(StepTaken(step, taken_at, taken=taken, **self._about(intention, step)))
+            self.step_taken.emit(StepTaken(step, taken_at, taken=taken, **self._about(intention, step, act)))
         #  THE INTENTION MOVES BEFORE THE STEP LEAVES FLIGHT: a tick between the two would
         #  find the old head and hand it over twice. A step that predicts something does not
         #  move here at all — the act on record is what the next tick reads, and the world's
@@ -916,22 +920,26 @@ INSERT DATA {{ GRAPH <{self.graph}> {{
             said[local_of(r["p"])] = r["o"]
         return said
 
-    def _about(self, intention: str, step: str) -> dict:
-        """What an event about `step` of `intention` carries: the want the intention pursues, the
-        desire it was derived under, the action the step fills and the values it takes, by the local
-        name of each parameter — an IRI's local name, a literal's text."""
+    def _about(self, intention: str, step: str, act: str | None = None) -> dict:
+        """What an event about `step` of `intention` carries: the want the intention pursues, the desire it was
+        derived under, the local name of the action the step fills, the act recorded of it — `act`, or the latest —
+        and what the journal keeps: the act's own triples, the step's as its plan states them, the action and every
+        value it takes in the domain's words, and the want the intention pursues."""
         pursued = rows(self.intentions, bind(_PURSUES_Q, intentions=Raw(f"<{self.graph}>"), intention=intention))
         want = pursued[0]["want"] if pursued else None
-        said = self.step_of(step)
-        action, parameters = said.get("fills"), []
-        if action:
-            for r in rows(self.beliefs, _TAKES_Q, graphs_of(self.beliefs, ACTION), action=action):
-                parameter = local_of(r["takes"])
-                if parameter in said:
-                    value = said[parameter]
-                    parameters.append((parameter, local_of(value) if "://" in value else value))
+        if act is None:
+            act = next(iter(rows(self.intentions, bind(_LAST_ACT_Q, intentions=Raw(f"<{self.graph}>"), step=step))), {}).get("act")
+        said = self._described(step, act)
+        if want:
+            said.add((ox.NamedNode(intention), ox.NamedNode(EXECUTION + "pursues"), ox.NamedNode(want)))
+        action = next((o.value for s, p, o in said if s.value == step and local_of(p.value) == "fills"), None)
         return {"want": want, "desire": self._desires.get(want), "action": local_of(action) if action else None,
-                "parameters": tuple(parameters)}
+                "act": act, "said": tuple(ox.Triple(*t) for t in sorted(said, key=str))}
+
+    def _described(self, *nodes: str | None) -> set[tuple]:
+        """Every triple the intentions and the plans hold of `nodes`, in whichever graph."""
+        return {(q.subject, q.predicate, q.object) for n in nodes if n
+                for q in self.intentions.quads_for_pattern(ox.NamedNode(n), None, None)}
 
     def _verdict(self, intention: str, step: str, head: dict, now: datetime, *, landed: bool,
                  timed_out: bool = False) -> None:

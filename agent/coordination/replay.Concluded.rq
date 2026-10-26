@@ -1,0 +1,9 @@
+# EVERY CONFLICT THE AGENT HELD, as it concluded them each time: a row per conflict, and one row binding none where it
+# concluded none.
+PREFIX coordination: <http://example.org/orexis/coordination#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+SELECT ?e ?at ?c ?peer ?constraint ?standing ?silent ?round ?wonBy WHERE { GRAPH ?e {
+  ?e a coordination:Concluded ; prov:atTime ?at .
+  OPTIONAL { ?e coordination:conflict ?c . ?c coordination:with ?peer ; coordination:over ?constraint ;
+               coordination:standing ?standing ; coordination:silent ?silent ; coordination:round ?round .
+             OPTIONAL { ?c coordination:wonBy ?wonBy } } } }

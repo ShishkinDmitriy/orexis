@@ -13,13 +13,13 @@ instant what the agent stood on:
 - its CONFLICTS, each with its peer, its constraint, whether it stands, whether the peer is silent, the
   round and who won it.
 
-Each is a SET, replacing the one before: a point per member, measured `Holding` or `Conflict`, and one
-point measured `Holdings` or `Conflicts` saying how many there are, so an empty set is said too. A
-member's tags are coordination's words for it — the origin, the peer, the constraint and the thing, each
-an IRI's local name, and `n`, its place in the set, since the series store keeps one point per tag set
-and instant — and its fields the values on the constraint's key, by each predicate's local name: a
-number where the value is one, the text of anything else. Every name is read off what was said, so
-this module spells no domain word.
+Each is a SET, replacing the one before, and an event in the journal (`agent/journal.py`) in coordination's own
+words — the words a question carries its holdings in: `coordination:Asked`, `coordination:Said` or
+`coordination:Foreseen`, each a `coordination:Held`, with the peer (`coordination:peer`), the constraint
+(`coordination:over`) and each holding (`coordination:holding`) — the thing it is `coordination:of`, its values on the
+constraint's key under their own predicates, `coordination:from`, `coordination:until`, `coordination:taken`; and
+`coordination:Concluded`, with each `coordination:conflict` as the agent concluded it, under the conflict's own name. A set said empty is an event
+with no member. Every name is read off what was said, so this module spells no domain word.
 """
 
 from __future__ import annotations
@@ -29,12 +29,18 @@ from datetime import datetime
 
 import pyoxigraph as ox
 
-from agent.ontology import local_of
+from agent.journal import instant, literal, mint
 
 from .holdings import Holding
 
 ASKED, SAID, FORESEEN = "asked", "said", "foreseen"
-_NUMBERS = {"http://www.w3.org/2001/XMLSchema#" + t for t in ("integer", "decimal", "double", "float", "int", "long")}
+COORDINATION = "http://example.org/orexis/coordination#"
+_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+_KIND = {ASKED: "Asked", SAID: "Said", FORESEEN: "Foreseen"}
+
+
+def _term(name: str) -> ox.NamedNode:
+    return ox.NamedNode(COORDINATION + name)
 
 
 @dataclass(frozen=True)
@@ -47,23 +53,30 @@ class Held:
     constraint: str
     holdings: tuple[Holding, ...] = ()
 
-    def point(self) -> list[dict]:
-        tags = {"origin": self.origin, "peer": local_of(self.peer), "constraint": local_of(self.constraint)}
-        out = [{"measurement": "Holdings", "tags": dict(tags), "fields": {"count": len(self.holdings)}, "time": self.at}]
-        for n, h in enumerate(self.holdings):
-            fields = {local_of(p): _value(v) for p, v in h.values}
-            fields["from"] = h.start.isoformat() if h.start else ""
-            fields["until"] = h.end.isoformat() if h.end else ""
-            fields["taken"] = h.taken
-            out.append({"measurement": "Holding", "tags": {**tags, "thing": local_of(h.thing), "n": str(n)},
-                        "fields": fields, "time": self.at})
+    def statements(self, node: ox.NamedNode) -> list[ox.Triple]:
+        """In the journal: the set, each holding a node of its own."""
+        out = [ox.Triple(node, _TYPE, _term(_KIND[self.origin])), ox.Triple(node, _term("peer"), ox.NamedNode(self.peer)),
+               ox.Triple(node, _term("over"), ox.NamedNode(self.constraint))]
+        for h in self.holdings:
+            held = mint()
+            out += [ox.Triple(node, _term("holding"), held), ox.Triple(held, _TYPE, _term("Holding")),
+                    ox.Triple(held, _term("of"), ox.NamedNode(h.thing)), ox.Triple(held, _term("taken"), literal(h.taken))]
+            #  WHAT THE THING IS stays the thing's: a key's type is said of it, and the holding holds the rest.
+            out += [ox.Triple(ox.NamedNode(h.thing), _TYPE, v) if p == _TYPE.value else ox.Triple(held, ox.NamedNode(p), v)
+                    for p, v in h.values]
+            if h.start:
+                out.append(ox.Triple(held, _term("from"), instant(h.start)))
+            if h.end:
+                out.append(ox.Triple(held, _term("until"), instant(h.end)))
         return out
 
 
 @dataclass(frozen=True)
 class Conflict:
     """One conflict as the agent concluded it: with `peer` over `constraint`, whether it `standing`, whether the
-    peer is `silent`, the `round` its draw is in and who won that draw, where anybody has."""
+    peer is `silent`, the `round` its draw is in and who won that draw, where anybody has; named `conflict`, as both
+    agents name it."""
+    conflict: str
     peer: str
     constraint: str
     standing: bool
@@ -78,17 +91,15 @@ class Concluded:
     at: datetime
     conflicts: tuple[Conflict, ...] = ()
 
-    def point(self) -> list[dict]:
-        out = [{"measurement": "Conflicts", "tags": {}, "fields": {"count": len(self.conflicts)}, "time": self.at}]
+    def statements(self, node: ox.NamedNode) -> list[ox.Triple]:
+        """In the journal: every conflict, each a node of its own."""
+        out = [ox.Triple(node, _TYPE, _term("Concluded"))]
         for c in self.conflicts:
-            out.append({"measurement": "Conflict", "tags": {"peer": local_of(c.peer), "constraint": local_of(c.constraint)},
-                        "fields": {"standing": c.standing, "silent": c.silent, "round": c.round,
-                                   "won_by": local_of(c.won_by) if c.won_by else ""},
-                        "time": self.at})
+            conflict = ox.NamedNode(c.conflict)
+            out += [ox.Triple(node, _term("conflict"), conflict), ox.Triple(conflict, _TYPE, _term("Conflict")),
+                    ox.Triple(conflict, _term("with"), ox.NamedNode(c.peer)), ox.Triple(conflict, _term("over"), ox.NamedNode(c.constraint)),
+                    ox.Triple(conflict, _term("standing"), literal(c.standing)), ox.Triple(conflict, _term("silent"), literal(c.silent)),
+                    ox.Triple(conflict, _term("round"), literal(int(c.round)))]
+            if c.won_by:
+                out.append(ox.Triple(conflict, _term("wonBy"), ox.NamedNode(c.won_by)))
         return out
-
-
-def _value(term: ox.Term):
-    if isinstance(term, ox.Literal) and term.datatype.value in _NUMBERS:
-        return float(term.value)
-    return local_of(term.value) if isinstance(term, ox.NamedNode) else str(term.value)

@@ -17,8 +17,8 @@ function clock(t: number | undefined) {
 
 function App({ replay, drawings }: { replay: Replay; drawings: Drawing[] }) {
   const { scenes, layers } = useMemo(() => gather(drawings), [drawings]);
-  const frames = useMemo(() => { const all = every(replay); return scenes.map(s => s.frame(all, replay.things)); }, [replay, scenes]);
-  const lines = useMemo(() => Object.values(replay.points).flatMap(ps => log(drawings, ps, replay.things)).sort((a, b) => a.t - b.t),
+  const frames = useMemo(() => { const all = every(replay); return scenes.map(s => s.frame(all)); }, [replay, scenes]);
+  const lines = useMemo(() => Object.values(replay.rows).flatMap(rs => log(drawings, rs)).sort((a, b) => a.t - b.t),
                         [replay, drawings]);
   const colour = colours(replay.agents);
   const [i, setI] = useState(0);
@@ -27,7 +27,10 @@ function App({ replay, drawings }: { replay: Replay; drawings: Drawing[] }) {
   const [apart, setApart] = useState(false);
   const [who, setWho] = useState("");
   const [grep, setGrep] = useState("");
-  const last = replay.instants.length - 1, at = replay.instants[i];
+  const last = replay.instants.length - 1, at = replay.instants[Math.min(i, last)];
+  //  LIVE, THE LAST INSTANT IS FOLLOWED: a page standing at the end moves on as the run does.
+  const [following, setFollowing] = useState(replay.live);
+  useEffect(() => { if (following) setI(Math.max(0, last)); }, [following, last]);
 
   useEffect(() => {
     if (!playing) return;
@@ -44,7 +47,7 @@ function App({ replay, drawings }: { replay: Replay; drawings: Drawing[] }) {
     return () => removeEventListener("keydown", key);
   }, [last]);
 
-  if (!replay.instants.length) return <main><p class="empty">This history holds nothing to replay.</p></main>;
+  if (!replay.instants.length) return <main><p class="empty">{replay.live ? "Nothing yet — waiting for the agents." : "This history holds nothing to replay."}</p></main>;
   const toggle = (a: string) => setShown(s => (s.includes(a) ? s.filter(x => x !== a) : replay.agents.filter(x => x === a || s.includes(x))));
   const listed = replay.agents.filter(a => a.includes(who));
   return (
@@ -55,8 +58,10 @@ function App({ replay, drawings }: { replay: Replay; drawings: Drawing[] }) {
           <button type="button" onClick={() => { if (i >= last) setI(0); setPlaying(!playing); }}>{playing ? "Pause" : "Play"}</button>
           <button type="button" aria-label="previous instant" onClick={() => setI(Math.max(0, i - 1))}>◀</button>
           <button type="button" aria-label="next instant" onClick={() => setI(Math.min(last, i + 1))}>▶</button>
-          <input type="range" min="0" max={last} value={i} aria-label="instant" onInput={e => setI(+(e.target as HTMLInputElement).value)} />
-          <span class="instant">{clock(at)} ({i + 1} of {last + 1})</span>
+          <input type="range" min="0" max={last} value={i} aria-label="instant"
+                 onInput={e => { const n = +(e.target as HTMLInputElement).value; setI(n); setFollowing(replay.live && n >= last); }} />
+          <span class="instant">{clock(at)} ({Math.min(i, last) + 1} of {last + 1})</span>
+          {replay.live && <label><input type="checkbox" checked={following} onChange={() => setFollowing(!following)} /> live</label>}
         </div>
         <div class="bar agents">
           <input type="text" placeholder={`${replay.agents.length} agents — filter`} value={who} onInput={e => setWho((e.target as HTMLInputElement).value)} />
@@ -109,6 +114,19 @@ function Log({ lines, shown, at, grep, colour }: { lines: Line[]; shown: string[
   );
 }
 
+/** Every few seconds, a live page asks its server for the run as it now stands. */
+const POLL_MS = 3000;
+
+function Live({ first, drawings }: { first: Raw; drawings: Drawing[] }) {
+  const [raw, setRaw] = useState(first);
+  useEffect(() => {
+    const id = setInterval(() => fetch("data.json").then(r => r.json()).then(setRaw).catch(() => {}), POLL_MS);
+    return () => clearInterval(id);
+  }, []);
+  const replay = useMemo(() => prepare(raw), [raw]);
+  return <App replay={replay} drawings={drawings} />;
+}
+
 export function mount(drawings: Drawing[], raw: Raw, root: HTMLElement) {
-  render(<App replay={prepare(raw)} drawings={drawings} />, root);
+  render(raw.live ? <Live first={raw} drawings={drawings} /> : <App replay={prepare(raw)} drawings={drawings} />, root);
 }

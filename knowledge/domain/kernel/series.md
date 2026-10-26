@@ -15,19 +15,19 @@ A **series** is time-stamped points in an InfluxDB bucket of the agent's own, fo
 draw. It is watched and never believed: nothing written there reaches a plan. It is also the whole
 of what reflection reads of an agent
 ([reflection-is-genesis-run-again-over-the-series](/decisions/reflection-is-genesis-run-again-over-the-series.md)),
-so a figure reflection lacks is a point missing here; `orexis-explain` is the reader
+with the journal, so a figure reflection lacks is a point or an entry missing; `orexis-explain` is the reader
 ([reflect](/runbooks/reflect.md)), and `orexis-replay` draws a run from it
 ([replay-a-run](/runbooks/replay-a-run.md)). It has two
 purposes, and the agent is told of a store for each apart, in environment keyed by the purpose —
 two purposes may name one instance, by coincidence and not by design:
 
-- **History** — what happened. Every observation, one point per property under that property's
-  own name, and every step taken and how it ended, landed or failed, with its action, its want
-  and its values; every plan published, a point per step; and what coordination asked with, laid
-  of its peers and concluded of its conflicts, each set said whole. Each is an
-  [event](/domain/kernel/event.md) of the package that decides it, which answers its point — or its
-  points, where one event is several: sensing's observation, execution's act recorded and the world's
-  answer, planning's plan, coordination's holdings and conflicts.
+- **History** — what happened that is a number at an instant: every observation, one point per
+  property under that property's own name, an [event](/domain/kernel/event.md) of sensing's that
+  answers its point. Every other event that is history — a plan published, a step taken and
+  answered, what coordination held and concluded — is triples in the agent's
+  [journal](/domain/kernel/journal.md), since a series store indexes its tags and those events'
+  identities are IRIs of unbounded values
+  ([the-journal-is-the-agents-flight-recorder](/decisions/the-journal-is-the-agents-flight-recorder.md)).
 - **Metrics** — how the agent is doing, for whoever administers it: code watching code, not a
   description of anything, so it lives in code and nowhere in the model. An event says what
   happened and how long it took, which no row may hold, since no plan branches on it, and a
@@ -75,12 +75,8 @@ for a sink and none imports `agent.series`
   was in the measurement; points written before either rename stay as they were written, under
   `soil_moisture` or tagged `plant`, and a panel, filtering on `sensor` and the measurement alone,
   draws a point tagged either way.
-- **Execution's** points, measured `Step`: field `taken` on the `StepTaken` said when the executor
-  records the [act](/domain/execution/act.md), and field `landed` on the `StepAnswered` said at the
-  verdict — true where the present came to hold what the step predicted, false where the patience
-  ran out or the want it was kept below as ended undone. A step predicting nothing has no verdict,
-  nor has one not taken. Tagged `action`, `want` and one tag per parameter the action takes, all
-  read off the step, so the executor spells no domain word. No panel draws steps yet.
+- **Execution's** step taken and answered were points measured `Step` until 2026-10-26, and are
+  the journal's now; a bucket written before keeps them as they were written.
 
 Metrics, written by the metrics part (`agent/metrics/`), created where a metrics sink is loaded and
 linked to every signal. Its metamodel is the one thing a package imports of it: an event's class

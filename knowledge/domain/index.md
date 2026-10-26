@@ -25,7 +25,8 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [inference](/domain/kernel/inference.md) - The boot materialises the subclass closure, so a reader asks what a thing is and walks no path.
 * [package](/domain/kernel/package.md) - A directory of `agent/` owning a concern and its words, importing only what lies beneath it.
 * [sovereign](/domain/kernel/sovereign.md) - Whoever writes a world's documents: picks the ranges and values, never an act. Outside the society.
-* [series](/domain/kernel/series.md) - What a person watches and the agent never reads: history and metrics, both what the packages' events say, written by a part hearing every signal.
+* [series](/domain/kernel/series.md) - What a person watches and the agent never reads: observations and metrics, both what the packages' events say, written by a part hearing every signal.
+* [journal](/domain/kernel/journal.md) - An agent's own triplestore of what happened: its events in RDF kept for good, its log kept for a window unless an incident keeps it.
 
 # Sensing — bytes become observations, and observations subject beliefs
 
@@ -135,4 +136,4 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [onboarding](/domain/onboarding/onboarding.md) - Buckets, credentials, the ACL, compose and dashboards, each read off the world; decides nothing, so re-running is safe.
 * [deployment](/domain/onboarding/deployment.md) - What must run and where it answers, a graph onboarding alone reads; an agent is told it as environment, and never a credential.
 * [requirement](/domain/onboarding/requirement.md) - What a world must state of a package's words, shapes the package ships and onboarding alone holds a world to.
-* [replay](/domain/onboarding/replay.md) - A run drawn from every agent's history: a generic core, a scene each domain draws, a layer each package draws.
+* [replay](/domain/onboarding/replay.md) - A run drawn from what the agents kept, by SPARQL: a generic core, a scene each domain draws, a layer each package draws.

@@ -19,6 +19,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix planning: <http://example.org/orexis/planning#> .
 @prefix execution: <http://example.org/orexis/execution#> .
 
@@ -104,7 +105,54 @@ orexis:WorldGraph
     rdfs:label "World graph" ;
     rdfs:comment "The world agents act in: the subjects and their ranges, the sensors, devices and systems, the venues — and, in a world with no society graph beside it, the agents and what each acts for. Sovereign-authored and common, importing the domains the world speaks (knowledge/domain/kernel/world.md)." .
 
+#  WHAT HAPPENED, as the journal keeps it (knowledge/domain/kernel/journal.md): an event a package says, an entry
+#  of the agent's journal — a store of its own beside the beliefs, which no part reads — and never a belief.
+
+orexis:Event
+    a owl:Class ;
+    rdfs:subClassOf prov:InstantaneousEvent ;
+    rdfs:label "Event" ;
+    rdfs:comment "Something a part of an agent says happened, at its `prov:atTime`: an entry of the agent's journal, a named graph holding the event and what the agent held of what it is about, in the words of the package that says it — a plan published, a step taken, a conflict concluded — or a line of its log. Watched and never believed: the journal is a store of its own, and nothing an agent reads is handed it. Packages meet at this word, so the kernel keeps it; each package's events are classes beneath it in its own ontology." .
+
+orexis:Incident
+    a owl:Class ;
+    rdfs:subClassOf orexis:Event ;
+    rdfs:label "Incident" ;
+    rdfs:comment "An event after which the journal keeps the log before it: the window's records, which it would sweep, are kept for good beside it (`orexis:keptBy`). A step that did not land, an intention failed, a want nothing reaches; and a line of the log at WARNING or above." .
+
+orexis:LogRecord
+    a owl:Class ;
+    rdfs:subClassOf orexis:Event ;
+    rdfs:label "Log record" ;
+    rdfs:comment "One line of the agent's log, as the code said it: its logger, its level and its message. Kept for the journal's window and swept after, unless an incident keeps it." .
+
 #################  Properties  #################
+
+orexis:keptBy
+    a owl:ObjectProperty ;
+    rdfs:domain orexis:LogRecord ;
+    rdfs:range orexis:Incident ;
+    rdfs:label "kept by" ;
+    rdfs:comment "The incident a log record is kept for, past the window: it came in the minutes before it." .
+
+orexis:logger
+    a owl:DatatypeProperty ;
+    rdfs:domain orexis:LogRecord ;
+    rdfs:label "logger" ;
+    rdfs:comment "The name of the logger that said it — the package or module of the code." .
+
+orexis:level
+    a owl:DatatypeProperty ;
+    rdfs:domain orexis:LogRecord ;
+    rdfs:label "level" ;
+    rdfs:comment "How loud it was said: DEBUG, INFO, WARNING, ERROR or CRITICAL." .
+
+orexis:message
+    a owl:DatatypeProperty ;
+    rdfs:domain orexis:LogRecord ;
+    rdfs:label "message" ;
+    rdfs:comment "What it said, its traceback after it where an exception was logged." .
+
 
 orexis:actsFor
     a owl:ObjectProperty ;

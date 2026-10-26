@@ -1,0 +1,12 @@
+# EVERY STEP THE AGENT TOOK AND HAD ANSWERED, a row per value the step takes: the event's kind, the act, the step it is
+# of, the action the step fills, the want its intention pursues, whether it was taken and whether it landed, and the
+# parameter and its value — only what the action says it takes.
+PREFIX execution: <http://example.org/orexis/execution#>
+PREFIX planning: <http://example.org/orexis/planning#>
+PREFIX orexis: <http://example.org/orexis#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+SELECT ?e ?at ?kind ?act ?step ?action ?want ?taken ?landed ?key ?value WHERE {
+  GRAPH ?e { ?e a ?kind ; prov:atTime ?at ; execution:act ?act . ?act execution:of ?step ; execution:taken ?taken .
+             ?step planning:fills ?action . FILTER(?kind IN (execution:StepTaken, execution:StepAnswered))
+             OPTIONAL { ?e execution:landed ?landed } OPTIONAL { ?intention execution:pursues ?want } }
+  OPTIONAL { ?action orexis:takes ?key . GRAPH ?e { ?step ?key ?value } } }
