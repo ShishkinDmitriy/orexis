@@ -49,7 +49,7 @@ SELECT ?kind ?at ?taken ?landed ?action ?disk ?to ?want ?incident WHERE {{ GRAPH
   ?e a ?kind ; prov:atTime ?at ; execution:act ?act . ?act execution:of ?step ; execution:taken ?taken .
   ?step <{FILLS}> ?action ; <{T}disk> ?disk ; <{T}to> ?to . ?i execution:pursues ?want
   OPTIONAL {{ ?e execution:landed ?landed }}
-  BIND(EXISTS {{ ?e a <http://example.org/orexis#Incident> }} AS ?incident)
+  BIND(EXISTS {{ ?e a execution:StepFailed }} AS ?incident)
   FILTER(?kind IN (execution:StepTaken, execution:StepAnswered)) }} }} ORDER BY ?at ?kind"""):
             out.append({k: (r[k].value if r[k] is not None else None) for k in
                         ("kind", "at", "taken", "landed", "action", "disk", "to", "want", "incident")})
@@ -156,9 +156,9 @@ def test_a_step_that_could_not_be_taken_says_so_and_has_no_verdict():
     assert [_said(r) for r in heard.rows()] == [("StepTaken", "false", None, "false")]
     failed = list(heard.journal.store.query("""
 PREFIX execution: <http://example.org/orexis/execution#>
-SELECT ?outcome WHERE { ?e a execution:IntentionResolved, <http://example.org/orexis#Incident> ; execution:intention ?i .
+SELECT ?outcome WHERE { ?e a execution:IntentionResolved, execution:IntentionFailed ; execution:intention ?i .
                         ?i execution:outcome ?outcome }""", use_default_graph_as_union=True))
-    assert [r["outcome"].value for r in failed] == ["failed"], "the intention it failed is an incident"
+    assert [r["outcome"].value for r in failed] == ["failed"], "the intention it failed is an IntentionFailed, a class beneath orexis:Incident"
 
 
 def test_nobody_hearing_is_no_event_made(monkeypatch):

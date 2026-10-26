@@ -190,7 +190,8 @@ def _restart(lasting: bool) -> str:
 
 
 def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, str]] | None,
-             series: dict[str, tuple[str, str]], window: float | None, lasting: bool, journal: str | None = None) -> str:
+             series: dict[str, tuple[str, str]], window: float | None, lasting: bool, journal: str | None = None,
+             incidents: tuple[str | None, list[str]] = (None, [])) -> str:
     """An agent's service. `bus` is each broker the agent is connected to, by its IRI, with the url
     it reaches it at — TLS where the broker listens so, since an agent of a world with a bus holds a
     certificate — or None where the world has none, and then nothing of a bus is written: no
@@ -203,6 +204,13 @@ def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, st
     if journal is not None:
         stores += ("\n      # where it serves its journal, on the host's loopback, allocated by the installation"
                    f'\n      JOURNAL_PORT: "{urlparse(journal).port}"')
+    level, classes = incidents
+    if level is not None or classes:
+        stores += "\n      # what the world's deployment counts as an incident in its journal, beside its vocabulary"
+    if level is not None:
+        stores += f'\n      JOURNAL_INCIDENT_LEVEL: "{level}"'
+    if classes:
+        stores += f'\n      JOURNAL_INCIDENTS: "{" ".join(classes)}"'
     credentials = "".join(f"\n      - ./secrets/{series_credential(agent_id, purpose)}" for purpose in series)
     if bus is not None:
         told = " ".join(f"{iri} {url}" for iri, url in bus)
@@ -318,10 +326,11 @@ def render(world: str) -> str:
     read = read_by_an_agent(world)
     store = reading.world(world_dir(world))
     iris = {r["id"]: r["a"] for r in rows(store, _IDS_Q, graphs_of(store, BELIEF, common=True))}
+    counted = installation.incidents(world)
     services = ("".join(_broker(world, b, *bus[b][1:]) for b in sorted(bus))
                 + (_simulator(world, read, client, *broker_of(world, client)[:2]) if client else "")
                 + "".join(_service(a, world, read, reached.get(a, []) if bus else None, series, window,
-                                   reading.lasts(world_dir(world), a), installation.journal(iris[a]))
+                                   reading.lasts(world_dir(world), a), installation.journal(iris[a]), counted)
                           for a in who))
     volumes = ("".join(f"  orexis-{world}-{service_of(b)}:\n" for b in sorted(bus))
                + "".join(f"  orexis-{world}-{a}:\n  orexis-{world}-{a}-journal:\n" for a in who))

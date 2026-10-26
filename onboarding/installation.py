@@ -208,6 +208,25 @@ def monitored(world: str) -> bool:
     return bool(answer(store, _MONITORED_Q, (), cat=Raw(f"<{catalogue_of(store)}>"))["boolean"])
 
 
+#  WHAT A WORLD'S DEPLOYMENT COUNTS AS AN INCIDENT besides its vocabulary: from which level a line of an agent's log is
+#  one, and every further event class — said of the deployment graph itself, as `onboarding:monitored` is.
+_INCIDENT_LEVEL_Q = f"""SELECT ?level WHERE {{ GRAPH $cat {{ ?g a <{ONBOARDING}DeploymentGraph> ; <{ONBOARDING}incidentLevel> ?level }} }}"""
+_INCIDENT_Q = f"""SELECT ?c WHERE {{ GRAPH $cat {{ ?g a <{ONBOARDING}DeploymentGraph> ; <{ONBOARDING}incident> ?c }} }} ORDER BY ?c"""
+LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
+
+
+def incidents(world: str) -> tuple[str | None, list[str]]:
+    """What `world`'s own deployment graph counts as an incident in its agents' journals: the log level from which a
+    line is one, or None where it says none and the agent's WARNING holds; and every event class it adds to those
+    its vocabulary puts beneath `orexis:Incident`. Refused, naming it, where it says a level that is none or two."""
+    store = reading.world(world_dir(world))
+    cat = Raw(f"<{catalogue_of(store)}>")
+    levels = sorted({r["level"] for r in rows(store, _INCIDENT_LEVEL_Q, (), cat=cat)})
+    if len(levels) > 1 or (levels and levels[0].upper() not in LEVELS):
+        raise SystemExit(f"world {world!r} says its incidents begin at {', '.join(levels)}: one of {', '.join(LEVELS)}")
+    return (levels[0].upper() if levels else None), [r["c"] for r in rows(store, _INCIDENT_Q, (), cat=cat)]
+
+
 def purposes(world: str) -> tuple[str, ...]:
     """The purposes `world`'s agents are told a series store for, in the agent's spelling: history
     always, and metrics where the world is monitored. A monitored world is refused where the

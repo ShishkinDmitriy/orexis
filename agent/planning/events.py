@@ -10,7 +10,7 @@ where no metrics sink is loaded.
 WHAT IS HISTORY goes to the journal (`agent/journal.py`) in planning's words, answered by `statements`: a plan
 published, `planning:PlanPublished`, carrying the plan graph whole as the beliefs hold it — its want, its steps in
 their chain, the action each fills and every value it takes, in the domain's words — and a want nothing reaches,
-`planning:WantUnreachable`, an `orexis:Incident`.
+`planning:WantUnreachable`, a class beneath `orexis:Incident`.
 
 A want's name is on no metric: a want is minted per instance and a tag of unbounded values breaks
 the series store's index, so what a want reports is tagged by the DESIRE it was derived under,
@@ -24,7 +24,6 @@ from datetime import datetime
 
 import pyoxigraph as ox
 
-from agent.journal import INCIDENT
 from agent.metrics import Flag, Level, Tag, Value
 
 PLANNING = "http://example.org/orexis/planning#"
@@ -90,8 +89,8 @@ class WantUnreachable:
     at: datetime | None = None
 
     def statements(self, node: ox.NamedNode) -> list[ox.Triple]:
-        """In the journal: the want nothing reaches — an incident."""
-        return [ox.Triple(node, _TYPE, ox.NamedNode(PLANNING + "WantUnreachable")), ox.Triple(node, _TYPE, INCIDENT),
+        """In the journal: the want nothing reaches — a class beneath `orexis:Incident`."""
+        return [ox.Triple(node, _TYPE, ox.NamedNode(PLANNING + "WantUnreachable")),
                 ox.Triple(node, ox.NamedNode(PLANNING + "want"), ox.NamedNode(self.want))]
 
 

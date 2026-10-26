@@ -877,6 +877,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   identities are IRIs, which a series store's tags cannot hold, so InfluxDB keeps the observations and the metrics;
   the journal is served read-only on the host's loopback, and a central store, journal files, every event under
   words of its own and a reader opening a live journal were refused (the-journal-is-the-agents-flight-recorder).
+- **What an incident is, is the vocabulary's, and which count, the deployment's** — a class beneath `orexis:Incident`
+  in its package's ontology, read off the agent's T-Box, and what a world's deployment graph adds or sets the log's
+  level to, told as environment; an incident typed by code and a logger role were refused, since keeping a journal
+  changes no plan (the-journal-is-the-agents-flight-recorder).
 - **A pattern over a node several journal entries copy is asked within one entry** — every event copies the step or
   the plan it is about, and over the union of the entries each copy answered once more, 294 rows for three events.
 - **The history view is what the agents kept, drawn, and the package that decides a thing draws it** — a domain draws its

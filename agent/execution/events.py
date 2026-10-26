@@ -11,9 +11,10 @@ A STEP IS HISTORY TWICE, each an event in the journal (`agent/journal.py`) in ex
 when the executor records the `execution:Act`, `execution:taken` true, or false where the taker raised, at the act's
 `execution:takenAt`; and `execution:StepAnswered` at the landing verdict, `execution:landed` true where the present came
 to hold what the step predicted, false where the patience ran out on it or the want it was kept below as ended undone
-— and then an `orexis:Incident`, which keeps the minutes of log before it. A step that predicts nothing moves on as it
+— and then an `execution:StepFailed` too, a class beneath `orexis:Incident`, which keeps the minutes of log before it. A step that predicts nothing moves on as it
 is taken and has no verdict, so its taking is the whole of it; so has a step not taken. AN INTENTION ENDED is history
-too, `execution:IntentionResolved` with its `execution:outcome`, an incident where it failed.
+too, `execution:IntentionResolved` with its `execution:outcome`, and an `execution:IntentionFailed`, an incident,
+where it failed.
 
 A step's event names the act recorded of it (`execution:act`), an intention's ended the intention
 (`execution:intention`), and each carries what the agent holds of them as it stands — the act's triples, the step's
@@ -30,7 +31,7 @@ from datetime import datetime
 
 import pyoxigraph as ox
 
-from agent.journal import INCIDENT, literal
+from agent.journal import literal
 from agent.metrics import Flag, Level, Tag, Value
 
 from .ontology import EXECUTION
@@ -52,11 +53,12 @@ class IntentionResolved:
     said: tuple = ()
 
     def statements(self, node: ox.NamedNode) -> list[ox.Triple]:
-        """In the journal: the intention as it ended, the want it pursued and how — an incident where it failed."""
+        """In the journal: the intention as it ended, the want it pursued and how — an `execution:IntentionFailed`
+        too where it failed."""
         out = [ox.Triple(node, _TYPE, ox.NamedNode(EXECUTION + "IntentionResolved")),
                ox.Triple(node, _INTENTION, ox.NamedNode(self.intention)), *self.said]
         if self.outcome == "failed":
-            out.append(ox.Triple(node, _TYPE, INCIDENT))
+            out.append(ox.Triple(node, _TYPE, ox.NamedNode(EXECUTION + "IntentionFailed")))
         return out
 
 
@@ -118,11 +120,12 @@ class StepAnswered:
     said: tuple = ()
 
     def statements(self, node: ox.NamedNode) -> list[ox.Triple]:
-        """In the journal: the verdict on the act, with what the agent holds of it — an incident where it did not land."""
+        """In the journal: the verdict on the act, with what the agent holds of it — an `execution:StepFailed` too
+        where it did not land."""
         out = [ox.Triple(node, _TYPE, ox.NamedNode(EXECUTION + "StepAnswered")),
                ox.Triple(node, ox.NamedNode(EXECUTION + "landed"), literal(bool(self.landed))), *_about(node, self)]
         if not self.landed:
-            out.append(ox.Triple(node, _TYPE, INCIDENT))
+            out.append(ox.Triple(node, _TYPE, ox.NamedNode(EXECUTION + "StepFailed")))
         return out
 
 

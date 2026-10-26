@@ -211,10 +211,16 @@ execution:StepTaken a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Ste
     rdfs:comment "The executor recorded an act: a step handed to its taker, taken or not (`execution:taken` on the act). Carries the act, the step as its plan states it — the action it fills and every value it takes — and the want its intention pursues." .
 
 execution:StepAnswered a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Step answered" ;
-    rdfs:comment "The verdict on an act: the present came to hold what its step predicted (`execution:landed` true), or the patience ran out on it, or the want it was kept below ended undone — and then an `orexis:Incident`." .
+    rdfs:comment "The verdict on an act: the present came to hold what its step predicted (`execution:landed` true), or the patience ran out on it, or the want it was kept below ended undone — and then an `execution:StepFailed` too." .
 
 execution:IntentionResolved a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Intention resolved" ;
-    rdfs:comment "An intention ended, carrying it as it ended — the want it pursued, its `execution:outcome` — an `orexis:Incident` where it failed." .
+    rdfs:comment "An intention ended, carrying it as it ended — the want it pursued, its `execution:outcome`." .
+
+execution:IntentionFailed a owl:Class ; rdfs:subClassOf execution:IntentionResolved , orexis:Incident ; rdfs:label "Intention failed" ;
+    rdfs:comment "An intention that ended `failed`: an incident, keeping the log before it." .
+
+execution:StepFailed a owl:Class ; rdfs:subClassOf execution:StepAnswered , orexis:Incident ; rdfs:label "Step failed" ;
+    rdfs:comment "A verdict that the step did not land — the patience ran out on it, or the want it was kept below ended undone: an incident, keeping the log before it." .
 
 execution:act a owl:ObjectProperty ; rdfs:range execution:Act ;
     rdfs:label "act" ;

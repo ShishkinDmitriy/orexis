@@ -1822,3 +1822,29 @@ def test_no_generated_credential_is_tracked():
 
 
 
+
+
+def test_what_a_world_counts_as_an_incident_reaches_its_agents_and_what_is_no_level_is_refused(tmp_path, monkeypatch):
+    """The lane's deployment graph saying its agents' incidents begin at ERROR, and that a conflict concluded is one:
+    `orexis-compose` tells every agent both, as environment its journal reads (`agent.journal.incident_level`,
+    `incidents`); a world saying nothing tells nothing; and a level that is none is refused before anything is
+    written."""
+    import logging
+
+    import yaml
+
+    from agent.journal import incident_level, incidents
+    from onboarding import compose, installation
+
+    said = ('\n<> onboarding:incidentLevel "error" ;\n    onboarding:incident <http://example.org/orexis/coordination#Concluded> .\n')
+    _installed(tmp_path, monkeypatch, {("lane", "deployment.ttl"): lambda text: text + said}, derivation=True)
+    assert installation.incidents("lane") == ("ERROR", ["http://example.org/orexis/coordination#Concluded"])
+    composed = yaml.safe_load(compose.render("lane"))
+    for name, service in composed["services"].items():
+        env = {k: str(v) for k, v in (service.get("environment") or {}).items()}
+        if name.startswith("agent-"):
+            assert incident_level(env) == logging.ERROR and incidents(env) == {"http://example.org/orexis/coordination#Concluded"}
+    assert installation.incidents("greenhouse") == (None, []) and "JOURNAL_INCIDENT" not in compose.render("greenhouse")
+    _installed(tmp_path / "loud", monkeypatch, {("lane", "deployment.ttl"): lambda text: text + said.replace('"error"', '"loud"')}, derivation=True)
+    with pytest.raises(SystemExit, match="one of DEBUG, INFO, WARNING, ERROR, CRITICAL"):
+        installation.incidents("lane")

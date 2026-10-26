@@ -118,7 +118,7 @@ orexis:Incident
     a owl:Class ;
     rdfs:subClassOf orexis:Event ;
     rdfs:label "Incident" ;
-    rdfs:comment "An event after which the journal keeps the log before it: the window's records, which it would sweep, are kept for good beside it (`orexis:keptBy`). A step that did not land, an intention failed, a want nothing reaches; and a line of the log at WARNING or above." .
+    rdfs:comment "An event after which the journal keeps the log before it: the window's records, which it would sweep, are kept for good beside it (`orexis:keptBy`). A package says which of its events are incidents by putting their classes beneath this one — a step that did not land, an intention failed, a want nothing reaches; a world's deployment may count more classes, and says from which level a line of the log is one, WARNING where it says nothing (`onboarding:incident`, `onboarding:incidentLevel`)." .
 
 orexis:LogRecord
     a owl:Class ;

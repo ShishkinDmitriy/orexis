@@ -64,6 +64,12 @@ onboarding:organisation a owl:DatatypeProperty ; rdfs:label "organisation" ;
 onboarding:image a owl:DatatypeProperty ; rdfs:label "image" ;
     rdfs:comment "The container image a shared service runs, pinned where a newer one would change what the service guarantees - read by `orexis-infra-compose`." .
 
+onboarding:incidentLevel a owl:DatatypeProperty ; rdfs:label "incident level" ;
+    rdfs:comment "Said by a world's own deployment graph of itself, `<> onboarding:incidentLevel \"ERROR\"`: from which level a line of its agents' logs is an incident in their journals, keeping the window before it. One of DEBUG, INFO, WARNING, ERROR, CRITICAL; absent, WARNING holds. Told to each agent as `JOURNAL_INCIDENT_LEVEL` (knowledge/domain/kernel/journal.md)." .
+
+onboarding:incident a owl:ObjectProperty ; rdfs:label "incident" ;
+    rdfs:comment "Said by a world's own deployment graph of itself: an event class its agents' journals count as an incident beside those the vocabulary puts beneath `orexis:Incident` - `coordination:Concluded`, say, while coordination is watched. It adds and never takes away. Told to each agent as `JOURNAL_INCIDENTS` (knowledge/domain/kernel/journal.md)." .
+
 onboarding:allocatesFor a owl:ObjectProperty ; rdfs:label "allocates for" ;
     rdfs:comment "The kind of listener a pool allocates ports to: a broker, or an agent, whose journal is served at the url allocated it. One pool per kind." .
 

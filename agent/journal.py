@@ -12,9 +12,16 @@ TWO KINDS OF ENTRY, each a named graph holding one node, named by it:
   `coordination:Concluded` — beneath `orexis:Event`, at its `prov:atTime`. Kept for good: it is the history.
 - a LOG RECORD, `orexis:LogRecord`, what the code said in the log as it ran, its logger, level and message. Kept for
   the WINDOW, the last so many seconds (`JOURNAL_WINDOW_S`, ten minutes where nothing says), and swept after, unless
-  an INCIDENT kept it: the minutes before an event typed `orexis:Incident`, or a record at WARNING or above, are kept
-  for good beside it (`orexis:keptBy`), so what led up to a failure is there to read and what led up to nothing goes.
-  That is the dash cam: the history is the flight data, the log the cockpit's voice.
+  an INCIDENT kept it: the minutes before one are kept for good beside it (`orexis:keptBy`), so what led up to a
+  failure is there to read and what led up to nothing goes. That is the dash cam: the history is the flight data, the
+  log the cockpit's voice.
+
+WHAT AN INCIDENT IS, IS THE VOCABULARY'S, AND WHICH ONES COUNT, THE DEPLOYMENT'S. An event is one where its class is
+beneath `orexis:Incident` in its package's ontology — a step that did not land is an `execution:StepFailed` — which the
+history part reads off the agent's T-Box and hands the entry as `incident`; and a world's deployment may add a class
+of its own (`JOURNAL_INCIDENTS`, IRIs) and say from which level a log record is one (`JOURNAL_INCIDENT_LEVEL`,
+WARNING where nothing says), told to the agent as environment and never believed. An incident's entry says so,
+`a orexis:Incident`, so a reader needs no T-Box to find it.
 
 THIS MODULE SITS BENEATH EVERY PACKAGE AND IMPORTS NOTHING OF `agent`, as `agent/series.py` does: an event's
 triples are its package's words, which the package writes (`statements`), and the journal stamps the instant and
@@ -101,24 +108,32 @@ class Journal:
     """One agent's journal over `store` — a pyoxigraph store of its own, on disk or in memory — keeping its log for
     `window_s` of the agent's seconds, read off `now`."""
 
-    def __init__(self, store: ox.Store | None = None, window_s: float = WINDOW_S, now=None):
+    def __init__(self, store: ox.Store | None = None, window_s: float = WINDOW_S, now=None,
+                 incident_level: int = logging.WARNING, incidents=frozenset()):
         self.store = store if store is not None else ox.Store()
         self.window = timedelta(seconds=window_s)
         self._now = now or (lambda: datetime.now(timezone.utc))
         self._swept: datetime | None = None
+        #  WHAT THE DEPLOYMENT COUNTS AS AN INCIDENT besides the vocabulary: a log record from this level, and an
+        #  event of any of these classes.
+        self.incident_level, self.incidents = incident_level, frozenset(incidents)
 
-    def record(self, node: ox.NamedNode, triples, at: datetime | None = None) -> None:
+    def record(self, node: ox.NamedNode, triples, at: datetime | None = None, incident: bool = False) -> None:
         """Keep the entry `node` — its `triples`, which say what it is — at `at`, or now: a graph named by it, its
-        instant stamped. An entry typed `orexis:Incident` keeps the window of log before it."""
+        instant stamped. An `incident`, or an entry of a class the deployment counts as one, says so and keeps the
+        window of log before it."""
         at = at or self._now()
         triples = [*triples, ox.Triple(node, AT, instant(at))]
+        if incident or any(t.subject == node and t.predicate == _TYPE and t.object.value in self.incidents for t in triples):
+            triples.append(ox.Triple(node, _TYPE, INCIDENT))
+            incident = True
         self.store.extend([ox.Quad(t.subject, t.predicate, t.object, node) for t in triples])
-        if any(t.subject == node and t.predicate == _TYPE and t.object == INCIDENT for t in triples):
+        if incident:
             self.keep(node, at)
         self._sweep(at)
 
     def remark(self, record: logging.LogRecord, at: datetime | None = None) -> ox.NamedNode:
-        """Keep a log record — at WARNING or above an incident, keeping the window before it."""
+        """Keep a log record — at the incident level or above an incident, keeping the window before it."""
         node = mint()
         message = record.getMessage()
         if record.exc_info:
@@ -126,9 +141,7 @@ class Journal:
         triples = [ox.Triple(node, _TYPE, LOG_RECORD), ox.Triple(node, _TYPE, EVENT),
                    ox.Triple(node, LOGGER, ox.Literal(record.name)), ox.Triple(node, LEVEL, ox.Literal(record.levelname)),
                    ox.Triple(node, MESSAGE, ox.Literal(message))]
-        if record.levelno >= logging.WARNING:
-            triples.append(ox.Triple(node, _TYPE, INCIDENT))
-        self.record(node, triples, at)
+        self.record(node, triples, at, incident=record.levelno >= self.incident_level)
         return node
 
     def keep(self, incident: ox.NamedNode, at: datetime) -> None:
@@ -192,6 +205,24 @@ def window_s(environ=None) -> float:
     """How long the log is kept, in the agent's seconds: `JOURNAL_WINDOW_S`, or ten minutes."""
     env = os.environ if environ is None else environ
     return float(env.get("JOURNAL_WINDOW_S") or WINDOW_S)
+
+
+def incident_level(environ=None) -> int:
+    """From which level a log record is an incident: `JOURNAL_INCIDENT_LEVEL`, a level's name, or WARNING. A name
+    that is no level is said in the log, and WARNING holds."""
+    env = os.environ if environ is None else environ
+    said = (env.get("JOURNAL_INCIDENT_LEVEL") or "WARNING").upper()
+    level = logging.getLevelName(said)
+    if not isinstance(level, int):
+        log.warning("JOURNAL_INCIDENT_LEVEL %r is no level — WARNING holds", said)
+        return logging.WARNING
+    return level
+
+
+def incidents(environ=None) -> frozenset[str]:
+    """The classes the deployment counts as incidents beside the vocabulary's: `JOURNAL_INCIDENTS`, IRIs apart."""
+    env = os.environ if environ is None else environ
+    return frozenset((env.get("JOURNAL_INCIDENTS") or "").split())
 
 
 # ---------------------------------------------------------------- the endpoint

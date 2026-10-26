@@ -57,13 +57,14 @@ def test_an_incident_keeps_the_window_before_it_and_nothing_older():
         "what came in the minute before the incident, and the incident, are kept; what came before that is not"
 
 
-def test_an_event_typed_an_incident_keeps_the_window_and_an_event_is_kept_for_good():
+def test_an_incident_keeps_the_window_says_so_and_an_event_is_kept_for_good():
     at = [NOW]
     j = Journal(window_s=60, now=lambda: at[0])
     j.remark(_record("before"))
     event = mint()
     at[0] = NOW + timedelta(seconds=10)
-    j.record(event, [ox.Triple(event, _TYPE, INCIDENT)])
+    j.record(event, [], incident=True)
+    assert ox.Quad(event, _TYPE, INCIDENT, event) in j.store, "an incident's entry says it is one"
     j.sweep(NOW + timedelta(days=1))
     assert _messages(j) == ["before"]
     assert ox.NamedNode(event.value) in set(j.store.named_graphs()), "an event is its own graph, and never swept"
@@ -83,6 +84,23 @@ def test_a_warning_is_an_incident_and_a_traceback_is_kept_with_its_record():
     assert "RuntimeError: a pass raised" in stopping and silent == "probe silent"
     assert len(list(j.store.query("SELECT ?r WHERE { ?r a <http://example.org/orexis#Incident> }",
                                   use_default_graph_as_union=True))) == 2
+
+
+def test_the_deployment_says_which_classes_and_from_which_level_a_record_is_an_incident():
+    """`JOURNAL_INCIDENTS` adds a class the vocabulary does not count, and `JOURNAL_INCIDENT_LEVEL` raises the level: a
+    warning is then a line kept for its window and no more, and an error still an incident."""
+    from agent.journal import incident_level, incidents
+
+    env = {"JOURNAL_INCIDENT_LEVEL": "error", "JOURNAL_INCIDENTS": "http://example.org/test#Concluded http://example.org/test#Other"}
+    assert (incident_level(env), incidents(env)) == (logging.ERROR, {"http://example.org/test#Concluded", "http://example.org/test#Other"})
+    assert (incident_level({}), incidents({})) == (logging.WARNING, frozenset())
+    assert incident_level({"JOURNAL_INCIDENT_LEVEL": "loud"}) == logging.WARNING, "a name that is no level is said, and WARNING holds"
+    j = Journal(window_s=60, now=lambda: NOW, incident_level=incident_level(env), incidents=incidents(env))
+    warned, failed = j.remark(_record("store refused", logging.WARNING)), j.remark(_record("pass raised", logging.ERROR))
+    concluded = mint()
+    j.record(concluded, [ox.Triple(concluded, _TYPE, ox.NamedNode("http://example.org/test#Concluded"))])
+    marked = {q.subject for q in j.store.quads_for_pattern(None, _TYPE, INCIDENT, None)}
+    assert marked == {failed, concluded} and warned not in marked
 
 
 def test_the_endpoint_answers_queries_and_refuses_an_update():

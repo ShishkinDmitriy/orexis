@@ -799,7 +799,8 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
     #  THE JOURNAL FIRST, so the log of the boot is in it: a store of its own, its log kept for the window the
     #  environment says, served read-only where the environment names a port (`agent.journal`).
-    kept = journal.Journal(ox.Store(str(args.journal)) if args.journal else None, journal.window_s(), now=clock.now)
+    kept = journal.Journal(ox.Store(str(args.journal)) if args.journal else None, journal.window_s(), now=clock.now,
+                           incident_level=journal.incident_level(), incidents=journal.incidents())
     journal.install(kept)
     said = journal.Handler(kept)
     logging.getLogger().addHandler(said)
