@@ -54,7 +54,7 @@ onboarding:Metrics onboarding:retentionDays 30 ;
 :brokers onboarding:allocatesFrom "mqtt://localhost:1884" , "mqtts://localhost:8884" ;
     onboarding:allocatesFor <https://www.w3id.org/MQTT4SSN-Ontology#Broker> .
 
-#  WHERE AN AGENT SERVES ITS JOURNAL: on the host's loopback, where the operator's tools — `orexis-replay`,
+#  WHERE AN AGENT SERVES ITS JOURNAL: on the host's loopback, where the operator's tools — `orexis-history`,
 #  `orexis-explain` — ask it, and nothing off the host can. No world asserts one; each agent is allocated the
 #  lowest port of this pool free of every service, every broker and every journal allocated before, kept in
 #  `installation.derived.ttl` as a broker's is (knowledge/domain/kernel/journal.md).

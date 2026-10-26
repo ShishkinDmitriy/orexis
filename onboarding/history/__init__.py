@@ -1,29 +1,29 @@
-"""orexis-replay — a world's run drawn from its agents' journals and observations: every agent side by side, at every
+"""orexis-history — a world's run drawn from its agents' journals and observations: every agent side by side, at every
 instant they hold, each thing drawn by the package that decides it.
 
-  orexis-replay <world> [--since 1h] [--until T] [--journal AGENT=DIR ...] [--recording FILE ...] [--out FILE]
-  orexis-replay <world> --live [--window 10m] [--port 8765]
+  orexis-history <world> [--since 1h] [--until T] [--journal AGENT=DIR ...] [--recording FILE ...] [--out FILE]
+  orexis-history <world> --live [--window 10m] [--port 8765]
 
-A REPLAY IS WHAT THE AGENTS KEPT, DRAWN, AND NEVER A BELIEF (the-journal-is-the-agents-flight-recorder). It reads each
+A HISTORY VIEW IS WHAT THE AGENTS KEPT, DRAWN, AND NEVER A BELIEF (the-journal-is-the-agents-flight-recorder). It reads each
 agent's journal — what it planned, asked, laid, concluded and took, as events in its packages' words — at the endpoint
 the installation allocated it, or, for an agent that has stopped, its journal's store opened read-only (`--journal`);
 and what it observed, from its history bucket with the installation's admin token as `orexis-explain` reads it, or
 from a recording a world's test made of a walk (`recorder`). It opens no belief volume. What it shows is what each
-agent believed and did, so two agents disagreeing about where a van stands is something a replay shows, not something
+agent believed and did, so two agents disagreeing about where a van stands is something a history view shows, not something
 it settles.
 
 EVERYTHING DRAWN IS A QUERY'S ROWS. The journals, the observations — each point made a `sosa:Observation` again, its
 sensor, its feature and its property found by local name in the world's documents — and the world's documents
-themselves are loaded into one store in memory, and every drawing's selects (`replay.<Query>.rq`, beside its
-`replay.tsx`) are run once per agent: that agent's observations and the world's documents as the default graph, and
+themselves are loaded into one store in memory, and every drawing's selects (`ui/<Query>.rq`, beside its
+`ui/index.tsx`) are run once per agent: that agent's observations and the world's documents as the default graph, and
 its journal's entries as the named graphs, so a select reads an event within its own graph (`GRAPH ?e`) and what the
 world states around it. The rows go into the page.
 
 THE PACKAGE THAT DECIDES A THING DRAWS IT (a-replay-is-the-history-drawn-by-the-package-that-decides-it). The core here
 is what every world shares and names no package's word: the instants, the agents to show — together on one scene, or
-side by side — and the log (`core/`). Everything drawn is a `replay.tsx` beside the code or the documents it draws, its
-queries beside it — a domain's SCENE, the ground its world stands on (`domains/courier/replay.tsx`, the road and its
-vans), and a package's LAYER, what it decided drawn on whatever scene there is (`agent/coordination/replay.tsx`, the
+side by side — and the log (`core/`). Everything drawn is a `ui/index.tsx` beside the code or the documents it draws, its
+queries beside it — a domain's SCENE, the ground its world stands on (`domains/courier/ui/index.tsx`, the road and its
+vans), and a package's LAYER, what it decided drawn on whatever scene there is (`agent/coordination/ui/index.tsx`, the
 holdings and the conflicts) — each Preact components in TSX, held by `npm run check` to the contract `core/index.ts`
 states. esbuild bundles them with Preact into the one page (`build.mjs`), which opens offline.
 
@@ -60,11 +60,11 @@ from ..explain import _since, journal_of, read
 from ..influx import _admin_token, bucket_name
 from ..worlds import world_dir, worlds
 
-log = logging.getLogger("replay")
+log = logging.getLogger("history")
 
 HERE = Path(__file__).parent
 PACKAGES = Path(runtime.__file__).parent
-DRAWING = "replay.tsx"
+DRAWING = "ui/index.tsx"
 _XSD = "http://www.w3.org/2001/XMLSchema#"
 _NUMBERS = {_XSD + t for t in ("integer", "decimal", "double", "float", "int", "long")}
 _SOSA = "http://www.w3.org/ns/sosa/"
@@ -75,7 +75,7 @@ _RAW = ox.NamedNode("http://example.org/orexis/sensing#rawResult")
 # ---------------------------------------------------------------- what draws a world
 
 def drawings(here: Path) -> list[Path]:
-    """Every drawing a replay of the world in `here` gathers: the scene of each domain it imports, the world's own, and
+    """Every drawing a history view of the world in `here` gathers: the scene of each domain it imports, the world's own, and
     each package's layer — in that order, so a layer stands on the scenes."""
     here = Path(here).resolve()
     read_ = {p.parent for p, _ in read_with_imports(documents(here))}
@@ -86,12 +86,12 @@ def drawings(here: Path) -> list[Path]:
 
 
 def queries(drawings_: list[Path]) -> dict[str, str]:
-    """Every select the drawings read, by name: `replay.<Query>.rq` beside each `replay.tsx`. Two drawings naming one
+    """Every select the drawings read, by name: `ui/<Query>.rq` beside each `ui/index.tsx`. Two drawings naming one
     query is refused, since `of(name)` would read both."""
     out: dict[str, str] = {}
     for drawing in drawings_:
-        for path in sorted(drawing.parent.glob("replay.*.rq")):
-            name = path.name[len("replay."):-len(".rq")]
+        for path in sorted(drawing.parent.glob("*.rq")):
+            name = path.stem
             if name in out:
                 raise SystemExit(f"two drawings read a query named {name!r}; {_shown(path)} is the second")
             out[name] = path.read_text()
@@ -114,7 +114,7 @@ def entries(journal, since: datetime | None = None) -> list[ox.Quad]:
 
 
 class Run:
-    """One store in memory holding everything a replay reads: the world's documents, and each agent's observations and
+    """One store in memory holding everything a history view reads: the world's documents, and each agent's observations and
     journal entries, kept apart by graph — the dataset each agent's queries are asked over."""
 
     def __init__(self, world: ox.Store):
@@ -133,7 +133,7 @@ class Run:
 
     def observe(self, agent: str, points: list[dict]) -> None:
         """An agent's observations, each point made a `sosa:Observation` again, in a graph of the agent's."""
-        graph = self.observed.setdefault(agent, ox.NamedNode(f"urn:orexis:replay:observed:{agent}"))
+        graph = self.observed.setdefault(agent, ox.NamedNode(f"urn:orexis:history:observed:{agent}"))
         triples = [t for p in points for t in _observation(p, self._named)]
         self.store.extend([ox.Quad(t.subject, t.predicate, t.object, graph) for t in triples])
 
@@ -284,9 +284,9 @@ def data(world: str, run: Run, asked: dict[str, str], until: datetime | None = N
 
 
 def page(drawn: dict, drawings_: list[Path]) -> str:
-    """The replay as one HTML document holding everything it draws: the core, every drawing and Preact, bundled."""
+    """The history as one HTML document holding everything it draws: the core, every drawing and Preact, bundled."""
     return ((HERE / "page.html").read_text()
-            .replace("__TITLE__", f"{drawn['world']} replay")
+            .replace("__TITLE__", f"{drawn['world']} history")
             .replace("__SCRIPT__", _escaped(_bundle(tuple(drawings_), "browser")))
             .replace("__DATA__", json.dumps(drawn, separators=(",", ":")).replace("</", "<\\/")))
 
@@ -302,7 +302,7 @@ def headless(drawn: dict, drawings_: list[Path], *, pane: tuple[str, list[str], 
     finally:
         Path(script.name).unlink()
     if out.returncode:
-        raise RuntimeError(f"the headless replay failed: {out.stderr}")
+        raise RuntimeError(f"the headless history view failed: {out.stderr}")
     return out.stdout if pane else json.loads(out.stdout)
 
 
@@ -313,10 +313,10 @@ def _bundle(drawings_: tuple[Path, ...], platform: str) -> str:
     imports = "\n".join(f'import * as d{n} from {json.dumps(str(p.resolve()))};' for n, p in enumerate(drawings_))
     every = "[" + ", ".join(f"d{n}" for n in range(len(drawings_))) + "]"
     if platform == "browser":
-        entry = (f'import {{ mount }} from "@orexis/replay/app";\n{imports}\n'
-                 f'mount({every}, JSON.parse(document.getElementById("data")!.textContent!), document.getElementById("replay")!);\n')
+        entry = (f'import {{ mount }} from "@orexis/ui/app";\n{imports}\n'
+                 f'mount({every}, JSON.parse(document.getElementById("data")!.textContent!), document.getElementById("history")!);\n')
     else:
-        entry = (f'import {{ run }} from "@orexis/replay/headless";\nimport {{ readFileSync }} from "node:fs";\n{imports}\n'
+        entry = (f'import {{ run }} from "@orexis/ui/headless";\nimport {{ readFileSync }} from "node:fs";\n{imports}\n'
                  f'process.stdout.write(run({every}, JSON.parse(readFileSync(0, "utf8"))));\n')
     with tempfile.TemporaryDirectory() as tmp:
         (Path(tmp) / "entry.tsx").write_text(entry)
@@ -324,7 +324,7 @@ def _bundle(drawings_: tuple[Path, ...], platform: str) -> str:
         built = subprocess.run(["node", str(HERE / "build.mjs"), str(Path(tmp) / "entry.tsx"), str(out), platform],
                                capture_output=True, text=True)
         if built.returncode:
-            raise RuntimeError(f"the replay would not build — is the toolchain installed (`npm ci`)?\n{built.stderr}")
+            raise RuntimeError(f"the history view would not build — is the toolchain installed (`npm ci`)?\n{built.stderr}")
         return out.read_text()
 
 
@@ -373,9 +373,9 @@ def _reachable(journals: dict[str, object], since: datetime | None) -> dict[str,
     return out
 
 
-def replay(world: str, since: str | None = None, recordings: list[Path] | None = None, until: datetime | None = None,
+def history(world: str, since: str | None = None, recordings: list[Path] | None = None, until: datetime | None = None,
            stopped: dict[str, Path] | None = None, live: bool = False) -> tuple[dict, list[Path]]:
-    """The replay of `world` and the drawings it gathers: every agent's journal and its observations — from
+    """The history of `world` and the drawings it gathers: every agent's journal and its observations — from
     `recordings` where any are given, otherwise from its history bucket."""
     here = world_dir(world)
     drawn = drawings(here)
@@ -397,7 +397,7 @@ def server(world: str, window: str, port: int) -> ThreadingHTTPServer:
 
     def now() -> bytes:
         if "data" not in cache or time.monotonic() - cache["data"][0] > 2:
-            cache["data"] = (time.monotonic(), json.dumps(replay(world, window, live=True)[0], separators=(",", ":")).encode())
+            cache["data"] = (time.monotonic(), json.dumps(history(world, window, live=True)[0], separators=(",", ":")).encode())
         return cache["data"][1]
 
     class Asked(BaseHTTPRequestHandler):
@@ -432,14 +432,14 @@ def _duration(text: str) -> str:
         try:
             datetime.fromisoformat(text.replace("Z", "+00:00"))
         except ValueError:
-            raise SystemExit(f"orexis-replay: {text!r} is neither a Flux duration (1h) nor an RFC 3339 instant")
+            raise SystemExit(f"orexis-history: {text!r} is neither a Flux duration (1h) nor an RFC 3339 instant")
     return text
 
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     p = argparse.ArgumentParser(
-        prog="orexis-replay",
+        prog="orexis-history",
         description="A world's run drawn from its agents' journals and observations — every agent side by side at every "
                     "instant, each thing drawn by the package that decides it — never a belief.")
     p.add_argument("world", help="which world. Available: " + ", ".join(worlds()))
@@ -448,7 +448,7 @@ def main() -> None:
     p.add_argument("--journal", action="append", default=[], metavar="AGENT=DIR",
                    help="a stopped agent's journal store, opened read-only, instead of its endpoint")
     p.add_argument("--recording", action="append", type=Path, help="a recording a world's test made of a walk, read instead of the buckets")
-    p.add_argument("--out", type=Path, help="where the page goes; <world>.replay.html where not given")
+    p.add_argument("--out", type=Path, help="where the page goes; <world>.history.html where not given")
     p.add_argument("--live", action="store_true", help="serve the page on the host's loopback, following the run as it goes")
     p.add_argument("--window", type=_duration, default="10m", help="live, how much of the run the page holds: a Flux duration")
     p.add_argument("--port", type=int, default=8765, help="live, the port the page is served at")
@@ -457,9 +457,9 @@ def main() -> None:
         serve(args.world, args.window, args.port)
         return
     stopped = dict(j.split("=", 1) for j in args.journal)
-    out = args.out or Path(f"{args.world}.replay.html")
+    out = args.out or Path(f"{args.world}.history.html")
     until = datetime.fromisoformat(args.until.replace("Z", "+00:00")) if args.until else None
-    drawn, scripts = replay(args.world, args.since, args.recording, until, {a: Path(d) for a, d in stopped.items()})
+    drawn, scripts = history(args.world, args.since, args.recording, until, {a: Path(d) for a, d in stopped.items()})
     out.write_text(page(drawn, scripts))
     log.info("%s: %d instant(s) of %s, drawn by %s — %s", args.world, len(drawn["instants"]),
              ", ".join(drawn["agents"]) or "no agent", ", ".join(_shown(s) for s in scripts) or "the core alone", out)

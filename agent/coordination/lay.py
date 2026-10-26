@@ -114,7 +114,7 @@ def lay(store: ox.Store, me: str, at: datetime) -> list[str]:
 def _laid(store: ox.Store, me: str) -> dict[tuple[str, str], tuple[list[Holding], list[Holding]]]:
     """What the self `me` of `store` lays now, per peer and constraint of a conflict it holds: the holdings the
     peer said, and those it foresaw of the peer — told apart by whether the peer acts for the thing. What a
-    replay is told; a conflict laying nothing answers two empty lists."""
+    history view is told; a conflict laying nothing answers two empty lists."""
     cat = catalogue_of(store)
     if cat is None:
         return {}

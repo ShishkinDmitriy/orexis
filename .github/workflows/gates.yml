@@ -105,13 +105,13 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
-      #  The replay's toolchain — Preact, esbuild, TypeScript — which its tests bundle, render and check the drawings
-      #  with (`world/lane/tests/test_replay.py`). No agent loads any of it.
+      #  The history view's toolchain — Preact, esbuild, TypeScript — which its tests bundle, render and check the drawings
+      #  with (`world/lane/tests/test_history.py`). No agent loads any of it.
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
-      - name: the replay's toolchain
+      - name: the history view's toolchain
         run: npm ci
       #  `-m ""` runs the walks too, which the local gate's `-m "not walk"` leaves out (pyproject.toml).
       - name: pytest, the agent and the worlds, walks included

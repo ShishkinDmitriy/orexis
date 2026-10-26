@@ -1,5 +1,5 @@
-"""A replay of the lane: the courier's road drawn by the courier's scene, and on it what coordination, planning and
-execution decided, each drawn by its own package (`onboarding/replay/`) from the rows its queries answer over a journal
+"""The history of the lane, viewed: the courier's road drawn by the courier's scene, and on it what coordination, planning and
+execution decided, each drawn by its own package (`onboarding/history/`) from the rows its queries answer over a journal
 and observations. Held on a journal written by the packages' own event classes and points written by hand, one of each
 kind, rendered by the page's own components under Node with no browser; and on one walk that keeps each courier's
 journal and records its observations through the head-on meeting, and replays it, the two couriers seen by each other
@@ -23,9 +23,10 @@ from agent.coordination.holdings import Holding
 from agent.execution.events import StepAnswered, StepTaken
 from agent.journal import Journal, install as keep, literal, mint
 from agent.planning.events import PlanPublished
+from agent.speech.events import Heard, Said
 from agent.series import HISTORY, install
 from onboarding import reading
-from onboarding.replay import (data, drawings, entries, headless, kept, page, queries, recorder, recording, run_of,
+from onboarding.history import (data, drawings, entries, headless, kept, page, queries, recorder, recording, run_of,
                                thinned)
 
 LANE = Path(__file__).resolve().parents[1]
@@ -33,6 +34,7 @@ REPO = LANE.parents[1]
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
 L, COURIER = "http://example.org/orexis/world/lane#", "http://example.org/orexis/courier#"
 PLANNING, EXECUTION = "http://example.org/orexis/planning#", "http://example.org/orexis/execution#"
+COORDINATION = "http://example.org/orexis/coordination#"
 _TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
 
@@ -43,13 +45,14 @@ def world():
 
 def test_the_lane_is_drawn_by_the_courier_s_scene_and_by_each_package_s_own_layer():
     assert [p.relative_to(REPO).as_posix() for p in drawings(LANE)] == [
-        "domains/courier/replay.tsx", "agent/coordination/replay.tsx", "agent/execution/replay.tsx", "agent/planning/replay.tsx"]
+        "domains/courier/ui/index.tsx", "agent/coordination/ui/index.tsx", "agent/execution/ui/index.tsx", "agent/planning/ui/index.tsx",
+        "agent/speech/ui/index.tsx"]
 
 
 def test_every_drawing_holds_to_the_contract_the_core_states():
     """`npm run check`: TypeScript over the core and every scene and layer in the tree, strictly — a drawing that reads a
     prop the core does not hand it, or hands back what the contract does not take, fails here and not in a page."""
-    checked = subprocess.run(["npx", "tsc", "--noEmit", "-p", "onboarding/replay/tsconfig.json"], cwd=REPO, capture_output=True, text=True)
+    checked = subprocess.run(["npx", "tsc", "--noEmit", "-p", "onboarding/history/tsconfig.json"], cwd=REPO, capture_output=True, text=True)
     assert checked.returncode == 0, checked.stdout + checked.stderr
 
 
@@ -112,6 +115,8 @@ _EVENTS = [
     Concluded(_at(0), (Conflict(L + "courier_a.courier_b.c", L + "courier_b", L + "c", True, True, 0, L + "courier_a"),)),
     StepAnswered(L + "p.0", _at(30), landed=True, act=_ACT[0], said=_ACT[1]),
     Held(_at(30), FORESEEN, L + "courier_b", L + "c"),
+    Said(L + "q", (L + "courier_b",), _at(0), (COORDINATION + "QuestionGraph",), (_t(_n("q"), ox.NamedNode(COORDINATION + "asks"), _n("courier_a")),)),
+    Heard(L + "a", _at(10), (COORDINATION + "AnswerGraph",)),
 ]
 
 
@@ -137,11 +142,11 @@ def _marks(svg: ET.Element, attribute: str) -> list[tuple]:
 
 
 def test_every_drawing_reads_its_own_queries_and_no_two_share_a_name():
-    assert sorted(queries(drawings(LANE))) == ["Concluded", "Fixed", "Held", "Plan", "Seen", "Step"]
+    assert sorted(queries(drawings(LANE))) == ["Concluded", "Fixed", "Held", "Plan", "Seen", "Statements", "Step"]
 
 
 def test_a_pane_draws_each_kind_of_row_where_the_courier_s_scene_places_it(world):
-    first, then = _pane(world, 0), _pane(world, 1)
+    first, then = _pane(world, 0), _pane(world, 2)          # at nought, and at thirty seconds
     assert _marks(first, "data-fixed") == [("van_a", "0", "1")]
     assert _marks(first, "data-seen") == [("van_b", "2", "1")], "van B two cells on from van A, drawn as van B"
     assert [e.get("data-order") for e in first.iter() if e.get("data-order")] == ["0"], \
@@ -152,6 +157,7 @@ def test_a_pane_draws_each_kind_of_row_where_the_courier_s_scene_places_it(world
     assert sorted((e.get("data-origin"), e.get("data-thing")) for e in first.iter() if e.get("data-origin") in ("asked", "said")) == [
         ("asked", "van_a"), ("said", "van_b")], "what it asked with and what the peer said"
     assert [e.get("data-conflict") for e in first.iter() if e.get("data-conflict")] == ["courier_b"], "coordination's status"
+    assert [e.get("data-exchange") for e in first.iter() if e.get("data-exchange")] == ["courier_a"], "speech's status"
     assert _marks(then, "data-fixed") == [("van_a", "1", "1")]
     assert _marks(then, "data-seen") == [], "an offset beyond the range its receiver declares sees nothing"
     assert [e.get("data-order") for e in then.iter() if e.get("data-order")] == ["0"], "the drive left is still the path"
@@ -169,6 +175,7 @@ def test_the_log_says_each_thing_the_agent_did_in_the_words_of_the_package_that_
     assert "foreseen of courier_b: van_b.at.2.1 x=2 y=1, van_b.at.3.1 x=3 y=1" in lines
     assert "foreseen nothing of courier_b" in lines
     assert "conflict with courier_b over c: standing, silent, round 0, won by courier_a" in lines
+    assert "said QuestionGraph to courier_b" in lines and "heard AnswerGraph" in lines, "speech's exchange, by the kind each says"
 
 
 def test_two_agents_shown_together_are_each_drawn_in_their_own_colour_on_one_scene(world):
@@ -192,7 +199,7 @@ def test_a_journal_is_read_since_an_instant_entry_by_entry():
     journal = _journal(_EVENTS)
     assert {q.graph_name for q in entries(journal.store)} == set(journal.store.named_graphs())
     later = {q.graph_name for q in entries(journal.store, _at(10))}
-    assert len(later) == 2, "the verdict and the empty set, said at thirty seconds"
+    assert len(later) == 3, "the answer heard at ten seconds; the verdict and the empty set, said at thirty"
 
 
 def test_a_reading_the_same_as_the_one_before_on_its_series_is_left_out_and_nothing_else_is():
@@ -202,7 +209,7 @@ def test_a_reading_the_same_as_the_one_before_on_its_series_is_left_out_and_noth
         ("Column", _at(0)), ("Column", _at(30)), ("Step", _at(0)), ("Step", _at(10))]
 
 
-def test_a_recording_keeps_each_agents_points_apart_and_replays_as_the_series_store_keeps_them(tmp_path):
+def test_a_recording_keeps_each_agents_points_apart_and_reads_as_the_series_store_keeps_them(tmp_path):
     path = tmp_path / "walk.jsonl"
     point = {"measurement": "Column", "tags": {}, "fields": {"count": 1}, "time": NOW}
     recorder(path, "courier_a").write([point, {**point, "fields": {"count": 2}}])
@@ -214,27 +221,27 @@ def test_a_recording_keeps_each_agents_points_apart_and_replays_as_the_series_st
 
 def test_the_page_holds_everything_it_draws(world):
     html = page(_drawn(world), drawings(LANE))
-    assert "lane replay" in html and '"road"' in html and '"coordination"' in html
+    assert "lane history" in html and '"road"' in html and '"coordination"' in html
     assert not re.search(r'<script[^>]+src=|<link[^>]+href=', html), "no script or style from elsewhere"
 
 
 def test_live_the_page_and_its_data_are_served_on_the_loopback_and_say_they_are_live(world, monkeypatch):
-    """`orexis-replay lane --live`: the page and `data.json`, each the run as the replay reads it now — here the journal
+    """`orexis-history lane --live`: the page and `data.json`, each the run as the history view reads it now — here the journal
     of the run above, standing in for the agents' endpoints — and marked live, so the page asks again and follows."""
     import threading
     from urllib.request import urlopen
 
-    import onboarding.replay as replay_module
+    import onboarding.history as history_module
 
     asked = []
-    monkeypatch.setattr(replay_module, "replay", lambda w, since=None, *a, live=False, **k: (
+    monkeypatch.setattr(history_module, "history", lambda w, since=None, *a, live=False, **k: (
         asked.append((w, since, live)) or {**_drawn(world), "live": live}, drawings(LANE)))
-    live = replay_module.server("lane", "10m", 0)
+    live = history_module.server("lane", "10m", 0)
     threading.Thread(target=live.serve_forever, daemon=True).start()
     try:
         at = f"http://127.0.0.1:{live.server_address[1]}"
         said = json.loads(urlopen(at + "/data.json").read())
-        assert said["live"] is True and said["agents"] == ["courier_a"] and len(said["instants"]) == 2
+        assert said["live"] is True and said["agents"] == ["courier_a"] and len(said["instants"]) == 3
         assert b"lane live" in urlopen(at + "/").read()
         assert asked[0] == ("lane", "10m", True), "asked for the window, live"
     finally:
@@ -284,6 +291,11 @@ def test_the_head_on_meeting_is_recorded_and_replayed_with_each_courier_seeing_t
             install(HISTORY, None, courier)
             keep(None, courier)
     assert len(set().union(*won().values())) == 1, f"both agree who won: {won()}"
+    spoken = {(r["k"].value.rsplit("#", 1)[-1], r["t"].value.rsplit("#", 1)[-1]) for j in journals.values() for r in j.store.query(
+        "SELECT ?k ?t WHERE { ?e a ?k ; <http://example.org/orexis/speech#statement> ?g . ?g a ?t }",
+        use_default_graph_as_union=True)}
+    assert {(k, t) for k in ("Said", "Heard") for t in ("QuestionGraph", "AnswerGraph", "CommitmentGraph", "RevealGraph")} <= spoken, \
+        f"the exchange, said by one and heard by the other, each kind of it: {sorted(spoken)}"
     stores, points = {a: j.store for a, j in journals.items()}, recording(path)
     last = len(_drawn(world, stores, points)["instants"]) - 1
     a, b = (_pane(world, last, stores, points, (agent,)) for agent in ("courier_a", "courier_b"))

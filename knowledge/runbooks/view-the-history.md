@@ -1,8 +1,8 @@
 ---
 type: Runbook
-title: Replay a run
+title: View the history
 description: >-
-  How to draw a world's run from what its agents kept - orexis-replay over their journals and their observations,
+  How to draw a world's history from what its agents kept - orexis-history over their journals and observations,
   into one page with a scrubber, or live on the host's loopback, following the run as it goes - a pane per agent drawn
   by each domain's scene and each package's layer from the rows their SPARQL selects answer. What it shows is what
   each agent believed and did, never the world's truth.
@@ -10,16 +10,16 @@ description: >-
 
 # What this is
 
-`orexis-replay` reads every agent's journal and observations and writes one HTML page: the instants they hold on a
+`orexis-history` reads every agent's journal and observations and writes one HTML page, the history view: the instants they hold on a
 scrubber, a scene with every agent shown on it, or a pane per agent, and beside it what each agent did
-([replay](/domain/onboarding/replay.md)). It is what the agents kept, drawn, and never a belief
+([history view](/domain/onboarding/history-view.md)). It is what the agents kept, drawn, and never a belief
 ([the-journal-is-the-agents-flight-recorder](/decisions/the-journal-is-the-agents-flight-recorder.md)), so nothing runs
 it inside an agent and nothing it shows reaches a plan.
 
 # Against a running world
 
 ```bash
-orexis-replay lane --since 1h --out lane.replay.html
+orexis-history lane --since 1h --out lane.history.html
 ```
 
 Each agent's journal is asked at the endpoint the installation allocated it, `onboarding:journal` in
@@ -31,7 +31,7 @@ said in the log and left out.
 # Live
 
 ```bash
-orexis-replay lane --live --window 10m
+orexis-history lane --live --window 10m
 ```
 
 serves the page at `http://127.0.0.1:8765/`, holding the last ten minutes, and asks the agents again every few seconds;
@@ -43,7 +43,7 @@ A stopped agent's journal is read off its volume, opened read-only — safe, sin
 
 ```bash
 podman volume inspect orexis-lane-courier_a-journal --format '{{.Mountpoint}}'
-orexis-replay lane --journal courier_a=<that mountpoint> --out lane.replay.html
+orexis-history lane --journal courier_a=<that mountpoint> --out lane.history.html
 ```
 
 What came before an incident is there whatever the window: the log records of the window before a step that did not
@@ -58,12 +58,12 @@ curl -s http://127.0.0.1:7885/sparql --data-urlencode 'query=
 
 # Over a walk
 
-A world's test installs a journal and a recorder for each agent before it boots them, and replays the two:
+A world's test installs a journal and a recorder for each agent before it boots them, and draws the two:
 
 ```python
 from agent.journal import Journal, install as keep
 from agent.series import HISTORY, install
-from onboarding.replay import data, drawings, queries, recorder, recording, run_of
+from onboarding.history import data, drawings, queries, recorder, recording, run_of
 
 for agent in ("courier_a", "courier_b"):
     keep(journals[agent], agent)                     # each agent's events, in a store in memory
@@ -73,27 +73,27 @@ drawn = data("lane", run_of(reading.world(LANE), {a: j.store for a, j in journal
              queries(drawings(LANE)))
 ```
 
-`world/lane/tests/test_replay.py` walks the head-on meeting that way and holds the replay to it, rendering a pane with
-the page's own components under Node (`onboarding.replay.headless`): each courier sees the other where the other is
+`world/lane/tests/test_history.py` walks the head-on meeting that way and holds the history view to it, rendering a pane with
+the page's own components under Node (`onboarding.history.headless`): each courier sees the other where the other is
 fixed, and both agree who won the draw.
 
 # Drawing a domain or a package
 
-A domain draws its world in a `replay.tsx` beside its documents, a package what it decided in one beside its
-`events.py`, each with the selects it reads beside it, `replay.<Query>.rq`. The page gathers the scene of every domain
+A domain draws its world in a `ui/` folder beside its documents, a package what it decided in one beside its
+`events.py`: `ui/index.tsx`, its components, and beside them the selects they read, `ui/<Query>.rq`. The page gathers the scene of every domain
 the world imports, the world's own, and every package's layer. Each is a module of Preact components in TSX,
-exporting what the contract in `onboarding/replay/core/index.ts` says, imported as `@orexis/replay`:
+exporting what the contract in `onboarding/history/core/index.ts` says, imported as `@orexis/ui`:
 
 ```sparql
-# agent/coordination/replay.Concluded.rq
+# agent/coordination/ui/Concluded.rq
 SELECT ?e ?at ?c ?peer ?standing WHERE { GRAPH ?e {
   ?e a coordination:Concluded ; prov:atTime ?at .
   OPTIONAL { ?e coordination:conflict ?c . ?c coordination:with ?peer ; coordination:standing ?standing } } }
 ```
 
 ```tsx
-import type { StatusProps } from "@orexis/replay";
-import { latest, local } from "@orexis/replay";
+import type { StatusProps } from "@orexis/ui";
+import { latest, local } from "@orexis/ui";
 
 function Conflicts({ agent, of }: StatusProps) {
   const last = latest(of("Concluded"), () => "all").get("all");

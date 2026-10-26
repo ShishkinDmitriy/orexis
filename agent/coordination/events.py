@@ -5,7 +5,7 @@ yields to is laid as forecasts the planner reads. Its events are for whoever wat
 is made only where its signal is heard (`agent.lifecycle`), and nothing is read for one where no history
 store is loaded.
 
-THREE THINGS ARE HISTORY, each said whole at the instant the part did it, so a replay knows at any
+THREE THINGS ARE HISTORY, each said whole at the instant the part did it, so a history view knows at any
 instant what the agent stood on:
 - the HOLDINGS it asked with, its own, as the question carried them (`asked`);
 - the holdings it LAID of a peer, as the peer said them (`said`) or as it foresaw them of a silent peer

@@ -20,8 +20,8 @@ kind on `<>`; the file's name is for eyes.
 | `rules.ttl` | `<> a sh:RulesGraph` | rules the deliberator runs over the beliefs — the market's revisions of its documents, the tower's [bridges](/domain/planning/bridge.md) |
 | `flows.ttl` | `<> a orexis:FlowGraph` | what a value does by itself, `prediction:Flow`s |
 | `requirements.ttl` | `<> a onboarding:RequirementGraph` | what a world using its words must state, held by `orexis-onboard` alone ([requirement](/domain/onboarding/requirement.md)) |
-| `replay.tsx` | `export const scene: Scene` | how its world is drawn in a replay, the one module of code a domain ships and no agent loads ([replay](/domain/onboarding/replay.md)) |
-| `replay.<Query>.rq` | a SPARQL select binding `?at` | what its scene reads: an agent's observations, journal and the world, asked per agent, in the domain's words |
+| `ui/index.tsx` | `export const scene: Scene` | how its world is drawn in the history view, the one module of code a domain ships and no agent loads ([history view](/domain/onboarding/history-view.md)) |
+| `ui/<Query>.rq` | a SPARQL select binding `?at` | what its scene reads: an agent's observations, journal and the world, asked per agent, in the domain's words |
 
 A domain that combines others imports them: the tower's ontology imports `<../hanoi/ontology.ttl>`
 and `<../courier/ontology.ttl>` beside its own rules.

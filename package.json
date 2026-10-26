@@ -1,10 +1,10 @@
 {
-  "name": "orexis-replay",
+  "name": "orexis-history",
   "private": true,
-  "description": "What orexis-replay builds a replay page with: Preact, the TSX every scene and layer is written in, esbuild to bundle them and TypeScript to check them. No agent loads any of it.",
+  "description": "What orexis-history builds a history page with: Preact, the TSX every scene and layer is written in, esbuild to bundle them and TypeScript to check them. No agent loads any of it.",
   "license": "UNLICENSED",
   "scripts": {
-    "check": "tsc --noEmit -p onboarding/replay/tsconfig.json"
+    "check": "tsc --noEmit -p onboarding/history/tsconfig.json"
   },
   "devDependencies": {
     "esbuild": "0.24.0",

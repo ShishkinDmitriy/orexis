@@ -230,7 +230,7 @@ def _written(store: ox.Store, me: str, graph: str, concluded: dict, prior: dict)
 
 
 def _conflicts(store: ox.Store, me: str) -> list[Conflict]:
-    """Every conflict the self `me` of `store` holds, as it last concluded them: what a replay is told."""
+    """Every conflict the self `me` of `store` holds, as it last concluded them: what the history view is told."""
     return [Conflict(r["c"], r["peer"], r["constraint"], r.get("standing") == "true", r.get("silent") == "true", int(r["round"]),
                      r.get("winner"))
             for r in sorted(rows(store, _PRIOR_Q, (), graph=Raw(f"<{conflicts_graph(me)}>")), key=lambda r: r["c"])]

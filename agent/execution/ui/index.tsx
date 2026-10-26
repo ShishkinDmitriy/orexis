@@ -1,12 +1,12 @@
 /*  EXECUTION, DRAWN — each step in flight: taken and not yet answered, as the events execution keeps in the journal say
  *  it (`events.py`: `execution:StepTaken` when a step is taken and `execution:StepAnswered` when the world answers it),
- *  read by `replay.Step.rq` beside this.
+ *  read by `ui/Step.rq` beside this.
  *
  *  A layer, on whatever scene the world's domain draws: a step in flight is outlined, in the agent's colour, where the
  *  scene places the values it takes. The log says each step as it was taken and as it was answered.
  */
-import type { Describe, Layer, LayerProps, Row, Value } from "@orexis/replay";
-import { call, latest, local, pivot } from "@orexis/replay";
+import type { Describe, Layer, LayerProps, Row, Value } from "@orexis/ui";
+import { call, latest, local, pivot } from "@orexis/ui";
 
 /** Every act whose latest event is its taking: taken, and not yet answered — with the values its step takes. */
 export function inFlight(rows: Row[]): { row: Row; values: Record<string, Value> }[] {

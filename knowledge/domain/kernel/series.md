@@ -16,8 +16,8 @@ draw. It is watched and never believed: nothing written there reaches a plan. It
 of what reflection reads of an agent
 ([reflection-is-genesis-run-again-over-the-series](/decisions/reflection-is-genesis-run-again-over-the-series.md)),
 with the journal, so a figure reflection lacks is a point or an entry missing; `orexis-explain` is the reader
-([reflect](/runbooks/reflect.md)), and `orexis-replay` draws a run from it
-([replay-a-run](/runbooks/replay-a-run.md)). It has two
+([reflect](/runbooks/reflect.md)), and `orexis-history` draws a run from it
+([view-the-history](/runbooks/view-the-history.md)). It has two
 purposes, and the agent is told of a store for each apart, in environment keyed by the purpose —
 two purposes may name one instance, by coincidence and not by design:
 

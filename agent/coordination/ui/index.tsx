@@ -1,14 +1,14 @@
 /*  COORDINATION, DRAWN — what the agent asked with, what it laid of its peers as they said it and as it foresaw them,
  *  and its conflicts, from the events coordination keeps in the journal (`events.py`), read by the two selects beside
- *  this: `replay.Held.rq` and `replay.Concluded.rq`. Each set is said whole, so what stands at an instant is the latest
+ *  this: `ui/Held.rq` and `ui/Concluded.rq`. Each set is said whole, so what stands at an instant is the latest
  *  set said of each origin, peer and constraint.
  *
  *  A layer, on whatever scene the world's domain draws: a holding is put where the scene places the values it holds
  *  on the constraint's key, in the agent's colour — solid where it asked, dashed where a peer said, dotted where it
  *  foresaw — bright while its period holds and faint before it. Its conflicts are a status, a line under the scene.
  */
-import type { Describe, Layer, LayerProps, Place, Row, StatusProps, Value } from "@orexis/replay";
-import { latest, local, pivot, sets, shown } from "@orexis/replay";
+import type { Describe, Layer, LayerProps, Place, Row, StatusProps, Value } from "@orexis/ui";
+import { latest, local, pivot, sets, shown } from "@orexis/ui";
 
 const DASH: Record<string, string | undefined> = { Asked: undefined, Said: "4 2", Foreseen: "1.5 2" };
 const key = (r: Row) => `${r.v.origin}|${r.v.peer}|${r.v.constraint}`;

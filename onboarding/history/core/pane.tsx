@@ -5,7 +5,7 @@ import type { Drawing, Frame, Layer, Of, Row, Scene, Value } from "./index";
 import { line, upto } from "./index";
 
 /** What a page is handed, prepared: each agent's rows in time order, whole and by query. */
-export interface Replay {
+export interface History {
   world: string;
   agents: string[];
   instants: number[];
@@ -14,7 +14,7 @@ export interface Replay {
   live: boolean;
 }
 
-/** What `orexis-replay` writes into a page: every query's name and the variables it projects, said once, and each row
+/** What `orexis-history` writes into a page: every query's name and the variables it projects, said once, and each row
  *  as its query, its milliseconds after `start` — or null where it binds no `?at` — and its values in that order, null
  *  where one is unbound. */
 export interface Raw {
@@ -27,8 +27,8 @@ export interface Raw {
   live?: boolean;
 }
 
-export function prepare(raw: Raw): Replay {
-  const start = Date.parse(raw.start), rows: Replay["rows"] = {}, by: Replay["by"] = {};
+export function prepare(raw: Raw): History {
+  const start = Date.parse(raw.start), rows: History["rows"] = {}, by: History["by"] = {};
   for (const [agent, rs] of Object.entries(raw.rows)) {
     rows[agent] = rs.map(([q, ms, values]) => {
       const [query, vars] = raw.queries[q], v: Record<string, Value> = {};
@@ -42,8 +42,8 @@ export function prepare(raw: Raw): Replay {
 }
 
 /** Every agent's rows of every query over the whole run, in time order: what a scene's frame measures. */
-export function every(replay: Replay): Row[] {
-  return Object.values(replay.rows).flat().sort((a, b) => a.t - b.t);
+export function every(history: History): Row[] {
+  return Object.values(history.rows).flat().sort((a, b) => a.t - b.t);
 }
 
 /** The scenes and the layers the drawings export, the layers in their order. */
@@ -62,23 +62,23 @@ export function colours(agents: string[]): (agent: string) => string {
 }
 
 /** An agent's rows of a query up to `at`; or, for several agents, each one's after the one before's. */
-function reader(replay: Replay, agents: string[], at: number): Of {
-  return q => agents.flatMap(a => upto(replay.by[a]?.[q] ?? [], at));
+function reader(history: History, agents: string[], at: number): Of {
+  return q => agents.flatMap(a => upto(history.by[a]?.[q] ?? [], at));
 }
 
-export function Pane({ replay, scene, frame, layers, agents, at }:
-    { replay: Replay; scene: Scene; frame: Frame; layers: Layer[]; agents: string[]; at: number }) {
-  const colour = colours(replay.agents);
-  const of = agents.map(a => reader(replay, [a], at));
+export function Pane({ history, scene, frame, layers, agents, at }:
+    { history: History; scene: Scene; frame: Frame; layers: Layer[]; agents: string[]; at: number }) {
+  const colour = colours(history.agents);
+  const of = agents.map(a => reader(history, [a], at));
   return (
     <div class="scene">
       <svg viewBox={`0 0 ${frame.width} ${frame.height}`} role="img" aria-label={`${scene.label} as ${agents.join(", ")} have it`}>
-        <scene.Scene of={reader(replay, agents, at)} agents={agents} at={at} frame={frame} colour={colour} />
-        {layers.map(l => (
-          <g data-layer={l.name} key={l.name}>
+        <scene.Scene of={reader(history, agents, at)} agents={agents} at={at} frame={frame} colour={colour} />
+        {layers.map(({ name, Layer }) => Layer && (
+          <g data-layer={name} key={name}>
             {agents.map((a, n) => (
               <g data-agent={a} key={a}>
-                <l.Layer agent={a} of={of[n]} at={at} frame={frame} place={frame.place} tint={colour(a)} />
+                <Layer agent={a} of={of[n]} at={at} frame={frame} place={frame.place} tint={colour(a)} />
               </g>
             ))}
           </g>

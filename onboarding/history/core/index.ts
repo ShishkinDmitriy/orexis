@@ -1,12 +1,12 @@
-/*  THE REPLAY'S CONTRACT — what a domain's scene and a package's layer are handed and export, and the few readings of
- *  the rows every drawing shares. A drawing imports this as `@orexis/replay`; it names no package's word.
+/*  THE HISTORY VIEW'S CONTRACT — what a domain's scene and a package's layer are handed and export, and the few readings of
+ *  the rows every drawing shares. A drawing imports this as `@orexis/ui`; it names no package's word.
  *
- *  A drawing is a `replay.tsx` beside the code or the documents it draws, with the SPARQL selects it reads beside it,
- *  each `replay.<Query>.rq`, exporting one of:
+ *  A drawing is a `ui/index.tsx` beside the code or the documents it draws, with the SPARQL selects it reads beside it,
+ *  each `ui/<Query>.rq`, exporting one of:
  *    export const scene: Scene = { name, label, frame, Scene, describe }   a domain's picture: the ground the rest stands on
  *    export const layer: Layer = { name, order, Layer, describe }          a package's own drawing of what it decided
- *  `orexis-replay` runs every query over each agent's journal, its observations and what the world states, and bundles
- *  the drawings with the rows into one page (knowledge/domain/onboarding/replay.md).
+ *  `orexis-history` runs every query over each agent's journal, its observations and what the world states, and bundles
+ *  the drawings with the rows into one page (knowledge/domain/onboarding/history-view.md).
  */
 import type { ComponentType } from "preact";
 
@@ -16,7 +16,7 @@ export type Value = string | number | boolean;
 /** One row a query answered over one agent's journal and observations, and whose it is. */
 export interface Row {
   agent: string;
-  /** The query's name: `replay.<Query>.rq`. */
+  /** The query's name: `ui/<Query>.rq`. */
   query: string;
   /** The row's instant, `?at`, in milliseconds; minus infinity for a row that binds no `?at`, which holds throughout. */
   t: number;
@@ -30,7 +30,7 @@ export type Of = (query: string) => Row[];
 /** Where values put something on a scene: a box in the scene's own units. */
 export interface Place { x: number; y: number; w: number; h: number }
 
-/** A scene's measure of a whole replay, asked once with every agent's rows of every query: how big it is, and where
+/** A scene's measure of a whole history, asked once with every agent's rows of every query: how big it is, and where
  *  values in the world's own words — by local name — put a thing. */
 export interface Frame {
   width: number;
@@ -78,7 +78,8 @@ export interface Layer {
   name: string;
   /** Drawn in order, lowest first. */
   order: number;
-  Layer: ComponentType<LayerProps>;
+  /** What it draws on the scene; none for a layer that is no place, which says itself in its status and the log. */
+  Layer?: ComponentType<LayerProps>;
   Status?: ComponentType<StatusProps>;
   describe?: Describe;
 }

@@ -2,9 +2,9 @@
 apart from them — the events its packages say, kept for good, and its log, kept for the last minutes.
 
 A JOURNAL IS WATCHED AND NEVER BELIEVED (knowledge/domain/kernel/journal.md). Nothing in it reaches a plan, and no
-part reads it: the history part writes it (`agent/history/`), and a person reads it — `orexis-replay` draws it,
+part reads it: the history part writes it (`agent/history/`), and a person reads it — `orexis-history` draws it,
 `orexis-explain` asks it — over the SPARQL endpoint the agent serves (`serve`). It is a second store and never a
-graph of the belief base, so a reader of the journal is handed no belief, and the replay that reads it still opens
+graph of the belief base, so a reader of the journal is handed no belief, and the history view that reads it still opens
 no belief volume (the-journal-is-the-agents-flight-recorder).
 
 TWO KINDS OF ENTRY, each a named graph holding one node, named by it:
@@ -92,7 +92,7 @@ def literal(value) -> ox.Literal:
 
 
 def mint() -> ox.NamedNode:
-    """A name for an entry: a UUID's URN, unique across every agent's journal, so a replay reading several keeps them
+    """A name for an entry: a UUID's URN, unique across every agent's journal, so a history view reading several keeps them
     apart without renaming any."""
     return ox.NamedNode(f"urn:uuid:{uuid.uuid4()}")
 

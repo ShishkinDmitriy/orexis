@@ -9,7 +9,8 @@ description: >-
   agent keeps a journal, a pyoxigraph store in a volume of its own beside its beliefs - every event its packages say,
   in their words, kept for good, and its log, kept for a window unless an incident keeps the minutes before it - and
   serves it read-only over the SPARQL protocol on the host's loopback. InfluxDB keeps the observations and the
-  metrics. The replay runs each drawing's selects over the journals, the observations and the world. Refused - events
+  metrics. The history view runs each drawing's selects over the journals, the observations and the world, after a
+  run or live, and speech journals every statement said and heard. Refused - events
   in InfluxDB, a central store, journal files, every event journaled under words of its own, and a reader opening a
   live journal.
 ---
@@ -41,6 +42,12 @@ holdings in the words a question carries them in, a conflict under its own name.
 journal stamps its `prov:atTime`. So a plan's steps are read back in their chain and a step by its own IRI, which is
 what planning and execution meet at.
 
+**What two agents said to each other is history too.** Speech journals each statement the agent said, with every
+agent it was told to (`speech:Said`), and each a peer said to it (`speech:Heard`), the statement carried whole and the
+kind it says it is beside it — a question, an answer, a commitment, in the words of whoever spoke it. Coordination
+journals what it held and concluded, and what it asked and answered is speech's to say; a commitment and a reveal are
+steps, which execution journals.
+
 **The log is the dash cam.** Every record the agent's process logs is an `orexis:LogRecord` in the journal, kept for
 the window (`JOURNAL_WINDOW_S`, ten minutes where nothing says) and swept after — unless an INCIDENT keeps it: an
 event typed `orexis:Incident` — a step that did not land, an intention failed, a want nothing reaches — or a record
@@ -57,10 +64,10 @@ agent's journal is read off its volume, opened read-only, which is safe once not
 **InfluxDB keeps what it is built for**: the observations, a number at an instant on a few tags, which the dashboards
 draw, and the metrics.
 
-**The replay is SPARQL** ([replay](/domain/onboarding/replay.md)). `orexis-replay` loads the journals, the
+**The history view is SPARQL** ([history view](/domain/onboarding/history-view.md)). `orexis-history` loads the journals, the
 observations — each point made a `sosa:Observation` again, its sensor, feature and property found by local name in the
-world — and the world's documents into one store in memory, and runs every drawing's selects (`replay.<Query>.rq`
-beside its `replay.tsx`) once per agent: its observations and the world as the default graph, its journal's entries
+world — and the world's documents into one store in memory, and runs every drawing's selects (`ui/<Query>.rq`
+beside its `ui/index.tsx`) once per agent: its observations and the world as the default graph, its journal's entries
 named, so a select reads an event within its own graph. The rows go into the page; a drawing reads them by query.
 What the world states of a thing is joined in the select, so the scenes are handed nothing else. `--live` serves the
 page on the loopback and asks the endpoints again every few seconds for the last `--window`, following the latest
@@ -76,7 +83,7 @@ instant. `orexis-explain` reads its steps from the journal the same way.
   ([where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md)), and a journal is the same.
 - **Journal files**, TriG segments in a bind-mounted directory, an hour's history a file and a minute's log another,
   the dash cam copying segments aside. Proposed and refused by the sovereign for a triplestore: a file is not queried,
-  and the replay would have loaded every segment to ask one question.
+  and the history view would have loaded every segment to ask one question.
 - **Every event journaled under words of its own**, the metrics' events — a search ended, a pass, a re-root — each a
   class and every field a property: some hundred terms nobody would read but the dash cam, which the log already says
   at the grain a person reads it. What only metrics hear stays theirs, aggregated.
@@ -94,7 +101,9 @@ instant. `orexis-explain` reads its steps from the journal the same way.
   the journal is the agent's word about what it did, watched as the series is.
 - **History is two stores** ([metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md)):
   an observation is a point, and every other event that is history is triples.
-- **A replay reads rows and not points**
+- **The history view reads rows and not points**, and is named for what it shows: the sovereign's *replay is a side
+  effect, if we have history* renamed `orexis-replay` to `orexis-history` and put each drawing in a `ui/` folder of its
+  package, its components and its selects together
   ([a-replay-is-the-history-drawn-by-the-package-that-decides-it](/decisions/a-replay-is-the-history-drawn-by-the-package-that-decides-it.md)):
   a drawing ships its selects, and `things` is gone into them.
 

@@ -879,11 +879,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   words of its own and a reader opening a live journal were refused (the-journal-is-the-agents-flight-recorder).
 - **A pattern over a node several journal entries copy is asked within one entry** — every event copies the step or
   the plan it is about, and over the union of the entries each copy answered once more, 294 rows for three events.
-- **A replay is what the agents kept, drawn, and the package that decides a thing draws it** — a domain draws its
-  world as a scene and a package what it decided as a layer, each Preact components in a `replay.tsx` beside it with
-  the selects it reads, `replay.<Query>.rq`, run per agent over its journal, its observations and the world, typed by
+- **The history view is what the agents kept, drawn, and the package that decides a thing draws it** — a domain draws its
+  world as a scene and a package what it decided as a layer, each Preact components in a `ui/index.tsx` beside it with
+  the selects it reads, `ui/<Query>.rq`, run per agent over its journal, its observations and the world, typed by
   the core's contract; a catalogue of view kinds a domain picked from and untyped template strings with no build were
-  built and refused; a replay opens no belief volume (a-replay-is-the-history-drawn-by-the-package-that-decides-it,
+  built and refused; a layer that is no place draws nothing on the scene and says itself in its status and the log, as
+  speech says what was said and heard; it opens no belief volume (a-replay-is-the-history-drawn-by-the-package-that-decides-it,
   the-journal-is-the-agents-flight-recorder).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
   `crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming an
@@ -911,7 +912,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
    says it plays, each of a class the package whose ontology declares it serves.
    `agent/runtime.py` is the container that assembles them all. **A domain is documents and no
    code an agent runs**: `domains/<name>/` holds a vocabulary, its actions and its rules, and a world imports it
-   with `owl:imports`; its one module of code, `replay.tsx` with the selects beside it, is how it is drawn in a replay, which no agent loads
+   with `owl:imports`; its one module of code, `ui/index.tsx` with the selects beside it, is how it is drawn in the history view, which no agent loads
    (a-replay-is-the-history-drawn-by-the-package-that-decides-it). Adding a way of acting is a node in a domain's `actions.ttl` — a
    precondition, an effect and an implementation — and nothing else.
 3. **Nothing in `infra/` is world-specific.** It holds the services and what is true of the
@@ -1043,7 +1044,7 @@ stops being theoretical.
 ```bash
 source .venv/bin/activate
 pip install -e ".[dev]"
-npm ci                 # the replay's toolchain — Preact, esbuild, TypeScript — for orexis-replay and its tests
+npm ci                 # the history view's toolchain — Preact, esbuild, TypeScript — for orexis-history and its tests
 
 orexis-onboard <world>       # ONBOARDING: load the world as an agent boots it, derive what the documents
                              #   leave out (a broker's port, each agent's journal's, into infra/installation.derived.ttl),
@@ -1055,7 +1056,7 @@ orexis-onboard <world>       # ONBOARDING: load the world as an agent boots it, 
   orexis-dashboards <world>  #   a Grafana folder per world: what its agents observe, and their health where monitored
 orexis-explain <world> <agent>  # REFLECTION, not onboarding: one agent's season from its two buckets and its journal,
                              #   the fixed questions answered in the world's words, never a belief volume
-orexis-replay <world>        # REFLECTION too: a run drawn from every agent's journal and observations, by each domain's
+orexis-history <world>        # REFLECTION too: a run drawn from every agent's journal and observations, by each domain's
                              #   scene and each package's layer — after the run, or --live on the loopback
 orexis-firmware <world>      # a board's config.h, from the world it belongs to
 orexis-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust

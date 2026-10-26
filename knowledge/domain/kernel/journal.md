@@ -29,7 +29,7 @@ is there to read, and what led up to nothing goes.
 The agent serves it at `http://127.0.0.1:<port>/sparql`, the SPARQL protocol's query alone: an update is refused. The
 port is the installation's to allocate and the container's to be told, `JOURNAL_PORT`. Every entry is the default
 graph of a query asked there, and a pattern over a node several entries copy — a step, an act — is asked within one
-entry, `GRAPH ?e { … }`, or each copy answers it once more. `orexis-replay` and `orexis-explain` are its readers; a
+entry, `GRAPH ?e { … }`, or each copy answers it once more. `orexis-history` and `orexis-explain` are its readers; a
 stopped agent's journal is opened read-only off its volume, which nothing then writes.
 
 It is the agent's own word about what it did, as the series is, so no reader of the mind is handed it and nothing in

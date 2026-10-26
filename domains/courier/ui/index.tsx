@@ -1,15 +1,15 @@
 /*  THE COURIER, DRAWN — the road as a grid of whole numbers, each van where its fix puts it and each contact where its
- *  offsets put it from the van carrying it (knowledge/domain/onboarding/replay.md).
+ *  offsets put it from the van carrying it (knowledge/domain/onboarding/history-view.md).
  *
  *  A scene, the ground every package's layer stands on. It reads two selects beside it, in the courier's own words:
- *  `replay.Fixed.rq`, a van's `Column` and `Row` as the agent observed them, and `replay.Seen.rq`, a contact's
+ *  `ui/Fixed.rq`, a van's `Column` and `Row` as the agent observed them, and `ui/Seen.rq`, a contact's
  *  `RelativeColumn` and `RelativeRow`, with the van it is hosted by, what it is a sample of and the range its sensor
  *  declares, outside which a reading sees nothing. `place` puts on a cell whatever names a column and a row in the
  *  courier's words: a holding's `x` and `y`, a drive's `toX` and `toY`. Everything is drawn in the colour of the agent
  *  that observed it.
  */
-import type { Frame, Row, Scene, SceneProps, Value } from "@orexis/replay";
-import { local } from "@orexis/replay";
+import type { Frame, Row, Scene, SceneProps, Value } from "@orexis/ui";
+import { local } from "@orexis/ui";
 
 const CELL = 28, PAD = 1;
 

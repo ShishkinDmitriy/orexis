@@ -4,7 +4,7 @@
 import { render } from "preact";
 import { useEffect, useMemo, useState } from "preact/hooks";
 import type { Drawing } from "./index";
-import { colours, every, gather, log, Pane, prepare, type Line, type Raw, type Replay } from "./pane";
+import { colours, every, gather, log, Pane, prepare, type Line, type Raw, type History } from "./pane";
 
 /** How many agents are shown at first: every one of a small world, and the first few of a large one. */
 const AT_FIRST = 4;
@@ -15,21 +15,21 @@ function clock(t: number | undefined) {
   return t === undefined ? "" : new Date(t).toISOString().replace("T", " ").replace(".000Z", "Z");
 }
 
-function App({ replay, drawings }: { replay: Replay; drawings: Drawing[] }) {
+function App({ history, drawings }: { history: History; drawings: Drawing[] }) {
   const { scenes, layers } = useMemo(() => gather(drawings), [drawings]);
-  const frames = useMemo(() => { const all = every(replay); return scenes.map(s => s.frame(all)); }, [replay, scenes]);
-  const lines = useMemo(() => Object.values(replay.rows).flatMap(rs => log(drawings, rs)).sort((a, b) => a.t - b.t),
-                        [replay, drawings]);
-  const colour = colours(replay.agents);
+  const frames = useMemo(() => { const all = every(history); return scenes.map(s => s.frame(all)); }, [history, scenes]);
+  const lines = useMemo(() => Object.values(history.rows).flatMap(rs => log(drawings, rs)).sort((a, b) => a.t - b.t),
+                        [history, drawings]);
+  const colour = colours(history.agents);
   const [i, setI] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [shown, setShown] = useState<string[]>(replay.agents.slice(0, AT_FIRST));
+  const [shown, setShown] = useState<string[]>(history.agents.slice(0, AT_FIRST));
   const [apart, setApart] = useState(false);
   const [who, setWho] = useState("");
   const [grep, setGrep] = useState("");
-  const last = replay.instants.length - 1, at = replay.instants[Math.min(i, last)];
+  const last = history.instants.length - 1, at = history.instants[Math.min(i, last)];
   //  LIVE, THE LAST INSTANT IS FOLLOWED: a page standing at the end moves on as the run does.
-  const [following, setFollowing] = useState(replay.live);
+  const [following, setFollowing] = useState(history.live);
   useEffect(() => { if (following) setI(Math.max(0, last)); }, [following, last]);
 
   useEffect(() => {
@@ -47,24 +47,24 @@ function App({ replay, drawings }: { replay: Replay; drawings: Drawing[] }) {
     return () => removeEventListener("keydown", key);
   }, [last]);
 
-  if (!replay.instants.length) return <main><p class="empty">{replay.live ? "Nothing yet — waiting for the agents." : "This history holds nothing to replay."}</p></main>;
-  const toggle = (a: string) => setShown(s => (s.includes(a) ? s.filter(x => x !== a) : replay.agents.filter(x => x === a || s.includes(x))));
-  const listed = replay.agents.filter(a => a.includes(who));
+  if (!history.instants.length) return <main><p class="empty">{history.live ? "Nothing yet — waiting for the agents." : "This history holds nothing yet."}</p></main>;
+  const toggle = (a: string) => setShown(s => (s.includes(a) ? s.filter(x => x !== a) : history.agents.filter(x => x === a || s.includes(x))));
+  const listed = history.agents.filter(a => a.includes(who));
   return (
     <>
       <header>
-        <h1>{replay.world} replay</h1>
+        <h1>{history.world} history</h1>
         <div class="bar">
           <button type="button" onClick={() => { if (i >= last) setI(0); setPlaying(!playing); }}>{playing ? "Pause" : "Play"}</button>
           <button type="button" aria-label="previous instant" onClick={() => setI(Math.max(0, i - 1))}>◀</button>
           <button type="button" aria-label="next instant" onClick={() => setI(Math.min(last, i + 1))}>▶</button>
           <input type="range" min="0" max={last} value={i} aria-label="instant"
-                 onInput={e => { const n = +(e.target as HTMLInputElement).value; setI(n); setFollowing(replay.live && n >= last); }} />
+                 onInput={e => { const n = +(e.target as HTMLInputElement).value; setI(n); setFollowing(history.live && n >= last); }} />
           <span class="instant">{clock(at)} ({Math.min(i, last) + 1} of {last + 1})</span>
-          {replay.live && <label><input type="checkbox" checked={following} onChange={() => setFollowing(!following)} /> live</label>}
+          {history.live && <label><input type="checkbox" checked={following} onChange={() => setFollowing(!following)} /> live</label>}
         </div>
         <div class="bar agents">
-          <input type="text" placeholder={`${replay.agents.length} agents — filter`} value={who} onInput={e => setWho((e.target as HTMLInputElement).value)} />
+          <input type="text" placeholder={`${history.agents.length} agents — filter`} value={who} onInput={e => setWho((e.target as HTMLInputElement).value)} />
           <button type="button" onClick={() => setShown(listed)}>all</button>
           <button type="button" onClick={() => setShown([])}>none</button>
           <label><input type="checkbox" checked={apart} onChange={() => setApart(!apart)} /> side by side</label>
@@ -86,8 +86,8 @@ function App({ replay, drawings }: { replay: Replay; drawings: Drawing[] }) {
             {apart
               ? <div class="row">{shown.map(a => (
                   <div class="pane" key={a}><h3><i style={{ background: colour(a) }} />{a}</h3>
-                    <Pane replay={replay} scene={s} frame={frames[n]} layers={layers} agents={[a]} at={at} /></div>))}</div>
-              : <div class="pane wide"><Pane replay={replay} scene={s} frame={frames[n]} layers={layers} agents={shown} at={at} /></div>}
+                    <Pane history={history} scene={s} frame={frames[n]} layers={layers} agents={[a]} at={at} /></div>))}</div>
+              : <div class="pane wide"><Pane history={history} scene={s} frame={frames[n]} layers={layers} agents={shown} at={at} /></div>}
           </section>
         ))}
         <section class="pane">
@@ -123,10 +123,10 @@ function Live({ first, drawings }: { first: Raw; drawings: Drawing[] }) {
     const id = setInterval(() => fetch("data.json").then(r => r.json()).then(setRaw).catch(() => {}), POLL_MS);
     return () => clearInterval(id);
   }, []);
-  const replay = useMemo(() => prepare(raw), [raw]);
-  return <App replay={replay} drawings={drawings} />;
+  const history = useMemo(() => prepare(raw), [raw]);
+  return <App history={history} drawings={drawings} />;
 }
 
 export function mount(drawings: Drawing[], raw: Raw, root: HTMLElement) {
-  render(raw.live ? <Live first={raw} drawings={drawings} /> : <App replay={prepare(raw)} drawings={drawings} />, root);
+  render(raw.live ? <Live first={raw} drawings={drawings} /> : <App history={prepare(raw)} drawings={drawings} />, root);
 }

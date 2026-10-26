@@ -22,7 +22,7 @@ driver between two vans, a tower of the two and a road two worlds are posed on a
 
 # Runbooks
 
-* [runbooks/](runbooks/) - Author a world, add a domain, run it, measure the search and a pass, reflect on a season, replay a run, and take it apart.
+* [runbooks/](runbooks/) - Author a world, add a domain, run it, measure the search and a pass, reflect on a season, view the history, and take it apart.
 
 # How to use this bundle
 

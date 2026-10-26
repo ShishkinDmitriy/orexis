@@ -29,7 +29,7 @@ the shape this has is logging's: whoever writes asks once where it goes, and who
 process decided that when it loaded the sinks.
 
 A SINK MAY BE INSTALLED FOR ONE AGENT, where a process runs several — a world's test walking two
-couriers in one interpreter, recording each apart (`orexis-replay`). A deployed agent is one per
+couriers in one interpreter, recording each apart (`orexis-history`). A deployed agent is one per
 process, its bucket its own, so a point names no agent; whoever writes asks for its agent's sink, and
 is answered the process's where none is installed for it.
 

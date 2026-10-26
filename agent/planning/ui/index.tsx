@@ -1,13 +1,13 @@
 /*  PLANNING, DRAWN — the latest plan published for each want, as a path through the places its steps put things, from
- *  the events planning keeps in the journal (`events.py`), read by `replay.Plan.rq` beside this. A step is walked once
+ *  the events planning keeps in the journal (`events.py`), read by `ui/Plan.rq` beside this. A step is walked once
  *  the agent has taken it, and is left off the path: read off execution's `Step`, by the step's own name, which is the
  *  word planning hands its steps down in.
  *
  *  A layer, on whatever scene the world's domain draws: a step is put where the scene places the values it takes, in
  *  the agent's colour; a step taking nothing the scene places is left off the path and said in the log.
  */
-import type { Describe, Layer, LayerProps, Row, Value } from "@orexis/replay";
-import { call, latest, local, pivot } from "@orexis/replay";
+import type { Describe, Layer, LayerProps, Row, Value } from "@orexis/ui";
+import { call, latest, local, pivot } from "@orexis/ui";
 
 interface Planned { step: Value; row: Row; values: Record<string, Value> }
 
