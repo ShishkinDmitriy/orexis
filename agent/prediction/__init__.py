@@ -1,15 +1,15 @@
 """The prediction package of Agent 0.2.0: when a reading changes range, and nothing else.
 
-**A PREDICTION IS THE CALCULATION OF WHEN THE READING CHANGES RANGE.** `predict` takes the
-observation a sensor last made — found by sensing's kind, `sensing:ObservationGraph`, and SOSA's
-`sosa:madeBySensor`, so nothing of the sensing layer is imported or spoken — sums the rates of
-every flow moving what it observes, accumulates the sum between the happenings at which what a
-flow reads may change, places every crossing of a bound of the ranges that apply to what the
-sensor observes (SSN-System's, `ranges_of`) exactly, and writes one `orexis:ForecastGraph` per
-stretch between crossings, holding a predicted `sosa:Observation` with its number. A rate known
-as a range gives a corridor, and a stretch is its worst side. Which side a stretch is on is not
-said here: it is a revision the sensing layer's rules conclude of the predicted observation as of
-the real one.
+**A PREDICTION IS THE CALCULATION OF WHEN THE READING CHANGES RANGE.** `foresee` hands the
+planner the flows' integration, which it advances as it lays the grounds: from each ground, every
+key of the agent together, the rates of every flow moving a key's property summed and accumulated
+between the happenings at which what a flow reads may change, and every crossing of a bound of the
+ranges that apply to what a sensor observes (SSN-System's, `ranges_of`) placed exactly — the place
+the next ground is laid, with a predicted `sosa:Observation` arriving there. No forecast graph is
+written: the predictor's foresight is the grounds (a-flow-is-integrated-where-the-ground-is-laid,
+#1000). A rate known as a range gives a corridor, and a stretch is its worst side. Which side a
+stretch is on is not said here: it is what the domain's transitions conclude of the predicted
+observation in the ground it arrives in.
 
 **ITS OWN WORDS**, `prediction:Flow` — one thing that moves a value while nobody acts, which no
 `sosa:Procedure` is — the property it `prediction:moves` and its `prediction:rate`, a select
