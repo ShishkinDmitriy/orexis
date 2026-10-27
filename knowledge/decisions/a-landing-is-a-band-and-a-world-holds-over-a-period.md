@@ -120,7 +120,8 @@ So, since 2026-10-03:
   times within the session's own drift. What stays: **a landing that straddles a boundary is
   judged in the ground at its earliest alone** — one child per ground overlapped, siblings under one
   step, with the re-root picking the one the present matches, is the strong-controllability half of
-  the STNU reading (Morris, Muscettola and Vidal, 2001) and the next slice of #596. ~~**What a step
+  the STNU reading (Morris, Muscettola and Vidal, 2001), left when #596 closed (2026-10-27) as this
+  seam, whose trigger is a world whose landing straddles a boundary and is planned wrong for it. ~~**What a step
   predicts is still the diff against the world it leaves**, so a step landing in a later ground is
   held to the prediction's changes beside its own, which is right while the prediction is and the
   executor's verdict otherwise~~ — struck 2026-10-07 (#919): it was not right while the prediction
