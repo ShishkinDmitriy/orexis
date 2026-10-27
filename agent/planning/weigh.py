@@ -52,6 +52,7 @@ _SELECT = rdflib.URIRef("http://www.w3.org/ns/shacl#select")
 #  that world. Two reads before, at a tenth of a search on the two-disk bench. AND WHETHER THE
 #  WORLD REACHED IS IMPOSSIBLE — a constraint another want's search found violated there, on the
 #  world's own row — since a want weighed in a world that cannot be is asked nothing.
+#  EVERY SUCH WORLD, since a world reached sooner than one already weighed is no repeat of it (#596).
 _ABOUT_Q = """
 SELECT ?from ?child ?seen ?impossible WHERE {
   GRAPH $cat { OPTIONAL { $about planning:from ?from }
@@ -59,7 +60,7 @@ SELECT ?from ?child ?seen ?impossible WHERE {
                OPTIONAL { ?child planning:impossible ?impossible }
                OPTIONAL { ?x a planning:Weighing ; planning:for $for ; planning:weighs ?seen .
                           ?seen orexis:hash ?hash } } } }
-ORDER BY ?seen LIMIT 1"""
+ORDER BY ?seen"""
 
 #  WHOSE, AND WHETHER A WANT: who holds what is weighed for, off the graph it lives in — a
 #  desire and a want are both held — and whether it is a want, since only a want's world
@@ -77,6 +78,26 @@ ORDER BY DESC(BOUND(?self)) ?holder LIMIT 1"""
 _PRESENT_Q = """
 SELECT (MIN(?start) AS ?now) WHERE {
   GRAPH $cat { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start } }"""
+
+#  WHEN A WANT IS IN TROUBLE — its graph's period, the instant it begins at and the one it lifts by, where
+#  one is stated; whether it REOPENS a walking want, whose instant is then where its search starts, the
+#  step in flight's landing, and no deadline; and whether it is OWED — the want, or the desire it was
+#  derived from, in a graph that arrived as another party's word, `orexis:Received`, which is all an
+#  obligation is: someone else's desire, told by provenance. And WHEN A WORLD LANDS: its period, the
+#  earliest its path can have landed and the latest.
+_PERIOD_Q = """
+SELECT ?start ?end ?reopens ?owed WHERE {
+  GRAPH $cat { ?d a planning:WantGraph ; dcterms:temporal ?p .
+               OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } }
+  GRAPH ?d { $for a planning:Want OPTIONAL { $for planning:reopens ?reopens } }
+  OPTIONAL { { GRAPH $cat { ?d orexis:arrivedBy orexis:Received } }
+             UNION
+             { GRAPH ?d { $for prov:wasDerivedFrom ?desire } GRAPH ?dg { ?desire a planning:Desire }
+               GRAPH $cat { ?dg orexis:arrivedBy orexis:Received } }
+             BIND(true AS ?owed) } } LIMIT 1"""
+_LANDS_Q = """
+SELECT ?start ?end WHERE { GRAPH $cat { $world dcterms:temporal ?p . ?p orexis:start ?start OPTIONAL { ?p orexis:end ?end } } }
+LIMIT 1"""
 
 _WEIGH_U = """
 INSERT { GRAPH ?cat { $weighing a planning:Weighing ; planning:for $for ;
@@ -103,18 +124,39 @@ def weigh(store, for_, about: str, *, memo=None) -> str:
     Planner, in the present ground to say it and in each possible world to mark it — and its
     weighing is never open either; what its rows mean there is the Planner's to say.
 
+    WHEN THE WORLD LANDS, AGAINST WHEN THE WANT IS IN TROUBLE (#596). A world a want's search reaches
+    is LATE where the want's instant lies ahead of the present and the world lands after it — at its
+    EARLIEST for a want of the agent's own, which is late only where it must miss, and at its LATEST
+    for an obligation, where a plan that may miss is already a breach. `planning:late` says the
+    instant it was judged by, which the frontier and the plan rank on before cost, since a plan that
+    misses the instant is worth less than one that makes it, however cheap. And a world whose
+    earliest landing is past the instant the want LIFTS by is REFUSED, its weighing bare: the trouble
+    has gone by then, and a world past it repairs nothing. A want in trouble now has no instant ahead,
+    so nothing it reaches is late, and soonest against cheapest is its cost select's to say.
+
     IN A WORLD MARKED IMPOSSIBLE the weighing is BARE — `planning:for` and `planning:weighs`, no
     verdict, no estimate — since the question is moot, and a bare weighing is what the Planner
     leaves of a want's weighing when a constraint marks the world after it was judged; so a
     reader sees one shape for one thing whichever way it got there.
     """
     cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
-    found = next(iter(rows(store, _ABOUT_Q, (), about=about, cat=cat, **{"for": for_})), {})
+    answers = rows(store, _ABOUT_Q, (), about=about, cat=cat, **{"for": for_})
+    found = next(iter(answers), {})
     held = remember(memo, ("held", for_), lambda: next(iter(rows(store, _HELD_Q, (), **{"for": for_})), {}))
     verdict, violations = "", ""
+    late, past = None, False
     if found.get("from"):
         world = found.get("child")
-        repeats = found["from"] if world is None else found.get("seen")
+        if world is not None and held.get("want"):
+            late, past = _when(store, for_, world, cat, memo)
+        #  A REPEAT IS A WORLD REACHED NO SOONER: the same facts landing on time where the world weighed
+        #  before them landed late, or late but sooner, are a better world for the want, and weighed as
+        #  one — a world's identity is its facts, and when it is reached is the want's to rank (#596).
+        seen = [a["seen"] for a in answers if a.get("seen")]
+        if world is not None and held.get("want") and seen:
+            ours = _rank(late, past)
+            seen = [s for s in seen if _rank(*_when(store, for_, s, cat, memo)) <= ours]
+        repeats = found["from"] if world is None else next(iter(seen), None)
         if repeats is not None:
             verdict = f" ; planning:repeats <{repeats}>"
             world = None
@@ -125,7 +167,7 @@ def weigh(store, for_, about: str, *, memo=None) -> str:
     #  because the rows hang off the name.
     about = about if world is None else world
     node = f"{about}.for.{local_of(for_)}"
-    if world is not None and not found.get("impossible"):
+    if world is not None and not found.get("impossible") and not past:
         report = _report(store, for_, world, held, memo)
         if report is not None:
             verdict = f" ; planning:met {'true' if not report else 'false'}"
@@ -136,9 +178,43 @@ def weigh(store, for_, about: str, *, memo=None) -> str:
             left = _remaining(store, for_, world, held, memo)
             if left is not None:
                 verdict += f" ; planning:remaining {left}"
+            if late is not None:
+                verdict += f' ; planning:late "{late.isoformat()}"^^xsd:dateTime'
     update(store, bind(_WEIGH_U, weighing=Raw(f"<{node}>"), about=about,
                        verdict=Raw(verdict), violations=Raw(violations), **{"for": for_}))
     return node
+
+
+def _when(store, for_, world: str, cat: Raw, memo) -> tuple[datetime | None, bool]:
+    """The instant `world` lands late at for the want `for_`, or None where it is on time — after the want's
+    instant, where that instant is still ahead of the present and is when the trouble begins rather than
+    where a reopened search starts — and whether it lands past the instant the want lifts by. MUST MISS for
+    a want of the agent's own: a world is late where its EARLIEST landing is after the instant, so a band
+    that may yet make it is on time. MAY MISS for an obligation, a want someone else's word sourced: late
+    where its LATEST landing is (#596). Past the lifting is read off the earliest either way, since a world
+    that may land before the trouble goes may still repair it."""
+    period = remember(memo, ("period", for_), lambda: next(iter(rows(store, _PERIOD_Q, (), cat=cat, **{"for": for_})), {}))
+    if not period.get("start") and not period.get("end"):
+        return None, False
+    lands = next(iter(rows(store, _LANDS_Q, (), world=world, cat=cat)), {})
+    if not lands.get("start"):
+        return None, False
+    earliest = datetime.fromisoformat(lands["start"])
+    latest = datetime.fromisoformat(lands["end"]) if lands.get("end") else earliest
+    now = remember(memo, ("present",), lambda: next(iter(rows(store, _PRESENT_Q, (), cat=cat)), {}).get("now"))
+    instant = datetime.fromisoformat(period["start"]) if period.get("start") and not period.get("reopens") else None
+    lifts = datetime.fromisoformat(period["end"]) if period.get("end") else None
+    judged = latest if period.get("owed") else earliest
+    ahead = instant is not None and now is not None and instant > datetime.fromisoformat(now)
+    return (judged if ahead and judged > instant else None), lifts is not None and earliest > lifts
+
+
+def _rank(late: datetime | None, past: bool) -> tuple:
+    """Where a world stands in the order a want's achievers are ranked by in time: on time first, a late
+    world by the instant it lands late at, and a world past the want's lifting last."""
+    if past:
+        return (2,)
+    return (0,) if late is None else (1, late)
 
 
 def _report(store, for_, world: str, held: dict, memo) -> list[dict] | None:

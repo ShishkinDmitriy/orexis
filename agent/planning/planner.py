@@ -340,19 +340,30 @@ WHERE { GRAPH ?plan { ?p a planning:Plan ; planning:outcome ?outcome } }"""
 #  rows. The alternative was a `FILTER NOT EXISTS` on the world's mark inside the `MIN` subselect,
 #  and that shape cost a quarter of every pass on the search bench — hanoi, the courier, holders with
 #  no constraint at all — measured alternated against the tree before (#902).
+#
+#  ON TIME BEFORE CHEAP (#596). A weighing saying `planning:late` is of a world landing after the want's
+#  instant, and says the instant it lands late at; lateness only grows down a path, a child landing no
+#  sooner than its parent: so every on-time world is opened before any late one, a late world is opened soonest first
+#  and then by its key, and the achiever bounding them is the best by the same order — on time and
+#  cheapest, or, where none is on time, soonest and then cheapest. A late dose beats none.
 _FRONTIER_Q = """
-SELECT ?w ?spent ?remaining ?minted ?weighing ?best ?used WHERE {
+SELECT ?w ?spent ?remaining ?minted ?weighing ?late ?lands ?best ?bestLate ?bestLands ?used WHERE {
   GRAPH $cat { ?weighing a planning:Weighing ; planning:for $want ; planning:open true ; planning:weighs ?w .
     OPTIONAL { ?w planning:spent ?s } OPTIONAL { ?w planning:minted ?m }
-    OPTIONAL { ?weighing planning:remaining ?r } }
-  OPTIONAL { SELECT (MIN(?bs) AS ?best) WHERE {
+    OPTIONAL { ?weighing planning:remaining ?r }
+    OPTIONAL { ?weighing planning:late ?lands } }
+  OPTIONAL { SELECT ?best ?bestLate ?bestLands WHERE {
     GRAPH $cat { ?y a planning:Weighing ; planning:for $want ; planning:met true ; planning:weighs ?bw .
-      ?bw planning:spent ?bs } } }
+      ?bw planning:spent ?best
+      OPTIONAL { ?y planning:late ?bestLands } }
+    BIND(IF(BOUND(?bestLands), 1, 0) AS ?bestLate) }
+    ORDER BY ?bestLate ?bestLands ?best LIMIT 1 }
   { SELECT (COUNT(?x) AS ?used) WHERE {
     GRAPH $cat { ?x a planning:Weighing ; planning:for $want ; planning:weighs ?u .
       FILTER NOT EXISTS { ?u a planning:GroundGraph } } } }
-  BIND(COALESCE(?s, 0.0) AS ?spent) BIND(COALESCE(?m, 0) AS ?minted) BIND(COALESCE(?r, 0.0) AS ?remaining) }
-ORDER BY (?spent + ?remaining) ?minted LIMIT 1"""
+  BIND(COALESCE(?s, 0.0) AS ?spent) BIND(COALESCE(?m, 0) AS ?minted) BIND(COALESCE(?r, 0.0) AS ?remaining)
+  BIND(IF(BOUND(?lands), 1, 0) AS ?late) }
+ORDER BY ?late ?lands (?spent + ?remaining) ?minted LIMIT 1"""
 
 #  A WORLD OPENED: off the frontier, and said to have been expanded.
 _CLOSE_U = """
@@ -391,11 +402,11 @@ ORDER BY ?i ?c ?o"""
 #  constraint's own weighing stands beside with its rows, saying what the world violates.
 _MARK_U = """
 DELETE { GRAPH ?cat { $weighing planning:open ?o . $weighing planning:met ?m . $weighing planning:remaining ?r .
-                      $weighing planning:violation ?v . ?v ?p ?x } }
+                      $weighing planning:late ?l . $weighing planning:violation ?v . ?v ?p ?x } }
 INSERT { GRAPH ?cat { $world planning:impossible $by } }
 WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                       OPTIONAL { $weighing planning:open ?o } OPTIONAL { $weighing planning:met ?m }
-                      OPTIONAL { $weighing planning:remaining ?r }
+                      OPTIONAL { $weighing planning:remaining ?r } OPTIONAL { $weighing planning:late ?l }
                       OPTIONAL { $weighing planning:violation ?v . ?v ?p ?x } } }"""
 
 
@@ -1265,8 +1276,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         memo = Memo() if memo is None else memo
         cat = Raw(f"<{remember(memo, ('catalogue',), lambda: catalogue_of(store))}>")
         top = next(iter(rows(store, _FRONTIER_Q, (), want=want, cat=cat)), None)
-        if top is None or (top.get("best") is not None
-                           and float(top["spent"]) + float(top["remaining"]) >= float(top["best"])):
+        if top is None or _beaten(top):
             return None
         world = top["w"]
         constraints = remember(memo, ("constraints",),
@@ -1326,6 +1336,22 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
 
 
 #  WHAT A WANT'S SEARCH HAS SPENT — every weighing for it but a ground's — before this call.
+def _beaten(top: dict) -> bool:
+    """Whether the cheapest achiever found refuses the top of the frontier: nothing down from the top can
+    beat it, by the order the frontier keeps — on time before late, a late world soonest first, and then
+    spent plus remaining, which never overstates. On time, the top is beaten by an on-time achiever it
+    cannot undercut; late, by any on-time achiever, and by a late one landing sooner, or as soon and no
+    dearer than the top can come to, since nothing down a path lands sooner than where it stands."""
+    if top.get("best") is None:
+        return False
+    late, best_late = int(top["late"]), int(top["bestLate"])
+    if late != best_late:
+        return late > best_late
+    if late and top["lands"] != top["bestLands"]:
+        return datetime.fromisoformat(top["lands"]) > datetime.fromisoformat(top["bestLands"])
+    return float(top["spent"]) + float(top["remaining"]) >= float(top["best"])
+
+
 def _desire_of(store: ox.Store, want: str) -> str | None:
     """The local name of the desire `want` was derived under in `store`, or None — for a want the
     world authored, or a step kept below."""

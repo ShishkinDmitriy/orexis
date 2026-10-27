@@ -162,18 +162,21 @@ WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:Ontolo
 #  THE GRAPHS A PLAN'S STEPS NAME — what goes when the plan is replaced.
 _STEP_GRAPHS_Q = """SELECT ?g WHERE { GRAPH $plan { ?step execution:adds|execution:retracts ?g } }"""
 
-#  THE CHEAPEST WORLD WHERE THE WANT IS MET — the plan, where there is one. A world a constraint
+#  THE BEST WORLD WHERE THE WANT IS MET — the plan, where there is one: on time and cheapest, or,
+#  where every achiever lands after the want's instant (`planning:late`), the soonest and then the
+#  cheapest, by the order the frontier opened them in (#596). A world a constraint
 #  marked `planning:impossible` is not among them by its rows: the want's weighing of it is bare,
 #  no `planning:met`, so a want met only in a world that cannot be has no plan here and its
-#  search ends `Exhausted`.
+#  search ends `Exhausted`; and so is a world landing past the instant the want lifts by.
 
 _BEST_Q = """
 SELECT ?w ?spent WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph .
     ?x a planning:Weighing ; planning:for $want ; planning:met true ; planning:weighs ?w .
-    OPTIONAL { ?w planning:spent ?s } OPTIONAL { ?w planning:minted ?m } }
-  BIND(COALESCE(?s, 0.0) AS ?spent) BIND(COALESCE(?m, 0) AS ?minted) }
-ORDER BY ?spent ?minted LIMIT 1"""
+    OPTIONAL { ?w planning:spent ?s } OPTIONAL { ?w planning:minted ?m }
+    OPTIONAL { ?x planning:late ?lands } }
+  BIND(COALESCE(?s, 0.0) AS ?spent) BIND(COALESCE(?m, 0) AS ?minted) BIND(IF(BOUND(?lands), 1, 0) AS ?late) }
+ORDER BY ?late ?lands ?spent ?minted LIMIT 1"""
 
 #  THE GROUND THE SEARCH STOOD IN, and what the search spent — every weighing but the
 #  ground's — which is what tells the two silences apart where nothing was met.

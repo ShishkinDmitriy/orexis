@@ -44,8 +44,12 @@ allow, among the scope's actions only; `take` forks each into a world and runs i
 `planning:met`, `planning:open`, `planning:spent` and `planning:remaining`, and weighs each
 [constraint](/domain/planning/constraint.md) of the holder the scope's actions can write there, so a
 world that violates one is `planning:impossible` and the want's weighing of it bare — off the frontier,
-never an achiever. The frontier is a query over those rows — A\* by reading them — so a search called
-again takes up where it stopped. `extract_plan` then writes the [plan](/domain/planning/plan.md).
+never an achiever. Where the want's instant is ahead, a world landing after it — at its earliest, or at its
+latest for an obligation, a desire another party's word sourced — is `planning:late`, and one landing past the instant the want lifts by is refused, its weighing bare. The
+frontier is a query over those rows — on time before late, a late world soonest first, then A\* by
+reading them — so a search called again takes up where it stopped, and the plan is the cheapest
+on-time achiever or, where none is, the soonest late one
+([a-landing-is-a-band-and-a-world-holds-over-a-period](/decisions/a-landing-is-a-band-and-a-world-holds-over-a-period.md)). `extract_plan` then writes the [plan](/domain/planning/plan.md).
 Before any search, the pass weighs the same constraints in the present ground and says, with its
 rows, any the present violates; it mints nothing from them.
 

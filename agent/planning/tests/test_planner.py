@@ -569,3 +569,23 @@ def test_a_world_the_re_root_drops_takes_what_its_step_changed_with_it(monkeypat
     assert rows(im, _CHANGES_Q, ()) == [], "no graph of what a step changed outlives its world"
     for g in first:
         assert not list(im.quads_for_pattern(None, None, None, ox.NamedNode(g))), g
+
+
+def test_the_bound_ranks_on_time_before_late_and_a_late_world_soonest_first():
+    """`_beaten`, the frontier's bound (#596): an on-time achiever refuses every late world and an on-time
+    one it cannot undercut; a late achiever refuses a late world landing after it, and one landing as
+    soon that cannot undercut it — and refuses nothing on time, nor a late world landing sooner."""
+    from agent.planning.planner import _beaten
+
+    def top(late, lands, spent, best=None, best_late=0, best_lands=None):
+        return {"late": late, "lands": lands, "spent": spent, "remaining": "0", "best": best,
+                "bestLate": best_late, "bestLands": best_lands}
+
+    at, sooner = "2026-01-01T12:40:00+00:00", "2026-01-01T12:35:00+00:00"
+    assert not _beaten(top(0, None, "1")), "no achiever yet refuses nothing"
+    assert _beaten(top(1, at, "0", best="5")), "an on-time achiever refuses a late world, however cheap"
+    assert _beaten(top(0, None, "5", best="5")) and not _beaten(top(0, None, "4", best="5"))
+    assert not _beaten(top(0, None, "9", best="1", best_late=1, best_lands=at)), "a late achiever refuses nothing on time"
+    assert not _beaten(top(1, sooner, "9", best="1", best_late=1, best_lands=at)), "nor a late world landing sooner"
+    assert _beaten(top(1, at, "0", best="1", best_late=1, best_lands=sooner))
+    assert _beaten(top(1, at, "1", best="1", best_late=1, best_lands=at)) and not _beaten(top(1, at, "0", best="1", best_late=1, best_lands=at))
