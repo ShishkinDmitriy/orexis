@@ -7,8 +7,8 @@ description: >-
   ends, the executor looks for the answer from the earliest and gives up a patience past the latest,
   and the dose declares the band it always was. A point, an expected value and a second term were
   refused. The first half of #596; the second, a world forked from the ground holding at its
-  landing with the path replayed there, followed a day later, and the landing that straddles a
-  boundary is what stays open.
+  landing with the path replayed there, followed a day later, the ranking of achievers on time
+  before cheap three weeks after, and the landing that straddles a boundary is what stays open.
 status: accepted
 timestamp: 2026-10-03T22:00:00Z
 ---
@@ -25,6 +25,11 @@ timestamp: 2026-10-03T22:00:00Z
 > apart begins, and whose world holds from that instant to the later of it and its parent's latest.
 > A band a stretch long was what the courier's own wait declared, and a van could not wait out a
 > stretch longer than it.
+
+> **Amended 2026-10-27, the ranking:** an achiever landing by the want's instant is preferred to a
+> cheaper one landing after it, a late one soonest first, and a world landing past the want's lifting
+> is refused — must-miss, read off the earliest landing; see the seam below, which it closes, and the
+> one it leaves for an obligation.
 
 # The claim
 
@@ -123,9 +128,21 @@ So, since 2026-10-03:
   arrival nobody it commanded would make. What a step predicts is its effect's change in the
   world it was applied to, written by `take` before the replayed ground goes
   ([a-steps-prediction-is-two-graphs-it-names](/decisions/a-steps-prediction-is-two-graphs-it-names.md)).
-- **Ranking by lateness.** Achievers rank by cost; a want with an instant is weighed at it (#858),
-  and nothing yet prefers the achiever landing by the instant, nor refuses a world past the want's
-  lifting. Both are #596's, stated there.
+- **~~Ranking by lateness~~** — closed 2026-10-27. A world a want's search reaches is LATE where the
+  want's instant is ahead of the present and the world's EARLIEST landing is after it
+  (`planning:late`, written by `weigh` as the estimate is); every on-time world is opened before a late
+  one, a late one soonest first, and the plan is the cheapest on-time achiever or, where none is, the
+  soonest late one — a late dose beats none. A world whose earliest landing is past the instant the
+  want LIFTS by is refused, its weighing bare. And a candidate reaching a world already weighed is a
+  repeat only where it reaches it no sooner by that order, since a world's identity is its facts and
+  a pour landing at the instant reaches the very world an order landing ten minutes late does. A want
+  in trouble now has no instant ahead, so nothing it reaches is late and cost alone ranks its plans.
+  What stays: **may-miss for an obligation.** The sovereign's ruling was *must miss* for a want and
+  *can miss* — late where the LATEST landing is after the instant — for an obligation, where a plan
+  that may be late is already a breach; but nothing in the vocabulary says a want is owed rather than
+  wanted (the 0.1.0 obligation retired with its tree, and the market's claims are desires like any
+  other), so every want reads its earliest. The trigger is the first world whose desire is an
+  obligation with an instant ahead; the read is `weigh._when`'s, one comparison.
 - **A plan is a chain, not a partial order.** `execution:then` orders every step after the one
   before it, and nothing shipped has two levers that must run at once, so no step occupies its actor
   for a stretch and no two steps overlap. The day a world has two, a step's occupancy is a term and

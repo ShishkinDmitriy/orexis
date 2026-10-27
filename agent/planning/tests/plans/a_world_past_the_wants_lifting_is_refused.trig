@@ -1,0 +1,123 @@
+# a_world_past_the_wants_lifting_is_refused
+#
+# One tank in range now, at twelve; a prediction that it drains to four at half past and is refilled
+# to twelve at one: a want foreseen for 12:30 that lifts by 13:00 on its own. The one lever, an order,
+# shows an hour after the turn at the least, at 13:30, when the trouble has gone by: its world is met,
+# and repairs nothing. It is refused, its weighing bare, and the search ends `Exhausted` where it used
+# to plan an order that would land half an hour after the tank was full again (#596).
+#
+# WHAT THE DIFF SHOWS: three grounds; the order's world, its weighing for the want with no verdict
+# and not on the frontier; and an empty plan, Exhausted.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix pursued: <http://example.org/orexis/graph/pursued/keeper/> .
+@prefix ground: <http://example.org/orexis/graph/ground/> .
+@prefix possible: <http://example.org/orexis/graph/possible/> .
+@prefix plan: <http://example.org/orexis/graph/plan/> .
+
+GRAPH :ontology {
+  :level a rdf:Property .
+  planning:WantGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent .
+  :keeper orexis:localId "keeper" .
+  :tank1 a :Tank .
+}
+
+# THE LEVERS, each raising the level by ten: what differs is what each costs and when it shows.
+GRAPH :actions {
+  #  AN ORDER SHOWS AN HOUR AFTER THE TURN, five minutes more at the most, and costs one.
+  :order a orexis:Action .
+  :order orexis:takes :tank .
+  :order planning:costs """PREFIX : <http://example.org/test#>
+      SELECT (1 AS ?cost) WHERE { }""" .
+  :order planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
+      DELETE { $tank :level ?l }
+      INSERT { ?tank :level ?next } WHERE {
+      $tank :level ?l .
+      BIND($tank AS ?tank) BIND(?l + 10 AS ?next) }""" ] ] .
+  :order planning:landsAfter "SELECT ?least ?most WHERE { BIND(3600 AS ?least) BIND(3900 AS ?most) }" .
+  :order planning:precondition """PREFIX : <http://example.org/test#>
+      SELECT ?tank WHERE {
+      ?tank a :Tank ; :level ?l .
+      FILTER(?l < 10) }""" .
+  :tank a orexis:Parameter .
+}
+
+GRAPH :desires {
+  :in_range a sh:NodeShape .
+  :in_range sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
+  :in_range sh:targetClass :Tank .
+  :keeper planning:holds :keeper.in_range .
+  :keeper.in_range a planning:Desire .
+  :keeper.in_range planning:about :level .
+  :keeper.in_range planning:metWhen :in_range .
+  :keeper.in_range rdfs:label "every tank in range" .
+}
+
+GRAPH :sensed {
+  :tank1 :level 12 .
+}
+
+# WHAT THE TANK WILL READ from half past: the drain the prediction foresees.
+GRAPH :predicted-0 {
+  :tank1 :level 4 .
+}
+
+# AND FROM ONE: the refill the prediction foresees, which lifts the trouble.
+GRAPH :predicted-1 {
+  :tank1 :level 12 .
+}
+
+GRAPH :scopes {
+  :keeper.scope.1 a planning:Scope .
+  :level planning:inScope :keeper.scope.1 .
+  :order planning:inScope :keeper.scope.1 .
+}
+
+GRAPH :catalogue {
+  :actions a orexis:ActionGraph .
+  :actions a orexis:Graph .
+  :catalogue a orexis:CatalogueGraph .
+  :catalogue a orexis:Graph .
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :predicted-0 a orexis:BeliefGraph .
+  :predicted-0 a orexis:ForecastGraph .
+  :predicted-0 a orexis:Graph .
+  :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+  :predicted-0 orexis:arrivedBy orexis:Recorded .
+  :predicted-0 orexis:ownedBy :keeper .
+  :predicted-1 a orexis:BeliefGraph .
+  :predicted-1 a orexis:ForecastGraph .
+  :predicted-1 a orexis:Graph .
+  :predicted-1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+  :predicted-1 orexis:arrivedBy orexis:Recorded .
+  :predicted-1 orexis:ownedBy :keeper .
+  :scopes a orexis:Graph .
+  :scopes a planning:ScopeGraph .
+  :scopes orexis:arrivedBy orexis:Derived .
+  :scopes orexis:ownedBy :keeper .
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed orexis:ownedBy :keeper .
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+}
