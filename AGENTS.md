@@ -382,10 +382,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   wrote it fictively and was held to it (#919).
 - **A step lands as long after it is taken as its plan placed it after its opening.**
 - **An achiever landing by the want's instant beats a cheaper one landing after it, and a world past the
-  want's lifting is refused** — late is the EARLIEST landing after an instant still ahead, so a band that
-  may make it is on time; a late one is ranked soonest first, a late dose beating none; a candidate
-  reaching a known world sooner by that order is no repeat; and may-miss for an obligation waits on the
-  vocabulary saying a want is owed (#596, a-landing-is-a-band-and-a-world-holds-over-a-period).
+  want's lifting is refused** — late is the EARLIEST landing after an instant still ahead where the want
+  is the agent's own, the LATEST where it is an obligation, someone else's desire told by provenance
+  (`orexis:Received`); a late one is ranked soonest first, a late dose beating none; a candidate reaching a
+  known world sooner by that order is no repeat; and a reopened want's instant is where its search starts,
+  no deadline (#596, a-landing-is-a-band-and-a-world-holds-over-a-period).
 - **A plan lets time pass only by `planning:Wait`, the planning package's one action, in every scope**
   — it lands at the next ground whose identity differs from its own — a ground being the present with the predictions applied over its period, and its identity its hash within what is read, so the wait coins no concept — and is a move though no effect
   ran, while any other effect that comes to nothing stays no move; the courier's own wait was built

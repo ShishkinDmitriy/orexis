@@ -341,9 +341,9 @@ WHERE { GRAPH ?plan { ?p a planning:Plan ; planning:outcome ?outcome } }"""
 #  and that shape cost a quarter of every pass on the search bench — hanoi, the courier, holders with
 #  no constraint at all — measured alternated against the tree before (#902).
 #
-#  ON TIME BEFORE CHEAP (#596). A weighing saying `planning:late` is of a world landing, at its earliest,
-#  after the want's instant, and lateness only grows down a path, a child landing no sooner than its
-#  parent: so every on-time world is opened before any late one, a late world is opened soonest first
+#  ON TIME BEFORE CHEAP (#596). A weighing saying `planning:late` is of a world landing after the want's
+#  instant, and says the instant it lands late at; lateness only grows down a path, a child landing no
+#  sooner than its parent: so every on-time world is opened before any late one, a late world is opened soonest first
 #  and then by its key, and the achiever bounding them is the best by the same order — on time and
 #  cheapest, or, where none is on time, soonest and then cheapest. A late dose beats none.
 _FRONTIER_Q = """
@@ -351,11 +351,11 @@ SELECT ?w ?spent ?remaining ?minted ?weighing ?late ?lands ?best ?bestLate ?best
   GRAPH $cat { ?weighing a planning:Weighing ; planning:for $want ; planning:open true ; planning:weighs ?w .
     OPTIONAL { ?w planning:spent ?s } OPTIONAL { ?w planning:minted ?m }
     OPTIONAL { ?weighing planning:remaining ?r }
-    OPTIONAL { ?weighing planning:late true . ?w dcterms:temporal/orexis:start ?lands } }
+    OPTIONAL { ?weighing planning:late ?lands } }
   OPTIONAL { SELECT ?best ?bestLate ?bestLands WHERE {
     GRAPH $cat { ?y a planning:Weighing ; planning:for $want ; planning:met true ; planning:weighs ?bw .
       ?bw planning:spent ?best
-      OPTIONAL { ?y planning:late true . ?bw dcterms:temporal/orexis:start ?bestLands } }
+      OPTIONAL { ?y planning:late ?bestLands } }
     BIND(IF(BOUND(?bestLands), 1, 0) AS ?bestLate) }
     ORDER BY ?bestLate ?bestLands ?best LIMIT 1 }
   { SELECT (COUNT(?x) AS ?used) WHERE {

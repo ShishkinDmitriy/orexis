@@ -40,7 +40,9 @@ and never names a graph instance.
 Not strengths of one thing but different modal logics, in von Wright's grouping: a desire is
 **bouletic**, an obligation **deontic**, what a world admits **alethic**, what is known and how
 freshly **epistemic**. It earns its keep at one place — an unmet want is a gap and an unpaid debt
-is a breach, so a debt is not a stronger desire even where both are searched alike.
+is a breach, so a debt is not a stronger desire even where both are searched alike. Which is which is
+provenance and no class: what someone else's word sourced, arrived `orexis:Received`, is owed; and the
+search reads it once, judging an owed plan late where it MAY miss its instant (#596).
 
 # Not its neighbour
 

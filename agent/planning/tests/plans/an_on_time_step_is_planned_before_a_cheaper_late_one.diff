@@ -79,7 +79,7 @@
 +  possible:1.by planning:minted 1 .
 +  possible:1.for.keeper.in_range.pursued.tank1 a planning:Weighing .
 +  possible:1.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
-+  possible:1.for.keeper.in_range.pursued.tank1 planning:late true .
++  possible:1.for.keeper.in_range.pursued.tank1 planning:late "2026-01-01T12:40:00+00:00"^^xsd:dateTime .
 +  possible:1.for.keeper.in_range.pursued.tank1 planning:met true .
 +  possible:1.for.keeper.in_range.pursued.tank1 planning:weighs possible:1 .
 +  possible:2 a planning:PossibleGraph .

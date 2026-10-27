@@ -174,7 +174,7 @@ SELECT ?w ?spent WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph .
     ?x a planning:Weighing ; planning:for $want ; planning:met true ; planning:weighs ?w .
     OPTIONAL { ?w planning:spent ?s } OPTIONAL { ?w planning:minted ?m }
-    OPTIONAL { ?x planning:late true . ?w dcterms:temporal/orexis:start ?lands } }
+    OPTIONAL { ?x planning:late ?lands } }
   BIND(COALESCE(?s, 0.0) AS ?spent) BIND(COALESCE(?m, 0) AS ?minted) BIND(IF(BOUND(?lands), 1, 0) AS ?late) }
 ORDER BY ?late ?lands ?spent ?minted LIMIT 1"""
 

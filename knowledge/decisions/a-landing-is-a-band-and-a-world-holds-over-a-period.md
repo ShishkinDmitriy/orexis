@@ -28,8 +28,9 @@ timestamp: 2026-10-03T22:00:00Z
 
 > **Amended 2026-10-27, the ranking:** an achiever landing by the want's instant is preferred to a
 > cheaper one landing after it, a late one soonest first, and a world landing past the want's lifting
-> is refused — must-miss, read off the earliest landing; see the seam below, which it closes, and the
-> one it leaves for an obligation.
+> is refused — must-miss for a want, read off the earliest landing, and may-miss for an obligation,
+> read off the latest, an obligation being a desire another party's word sourced; see the seam below,
+> which it closes.
 
 # The claim
 
@@ -128,21 +129,25 @@ So, since 2026-10-03:
   arrival nobody it commanded would make. What a step predicts is its effect's change in the
   world it was applied to, written by `take` before the replayed ground goes
   ([a-steps-prediction-is-two-graphs-it-names](/decisions/a-steps-prediction-is-two-graphs-it-names.md)).
-- **~~Ranking by lateness~~** — closed 2026-10-27. A world a want's search reaches is LATE where the
-  want's instant is ahead of the present and the world's EARLIEST landing is after it
-  (`planning:late`, written by `weigh` as the estimate is); every on-time world is opened before a late
-  one, a late one soonest first, and the plan is the cheapest on-time achiever or, where none is, the
-  soonest late one — a late dose beats none. A world whose earliest landing is past the instant the
-  want LIFTS by is refused, its weighing bare. And a candidate reaching a world already weighed is a
-  repeat only where it reaches it no sooner by that order, since a world's identity is its facts and
-  a pour landing at the instant reaches the very world an order landing ten minutes late does. A want
-  in trouble now has no instant ahead, so nothing it reaches is late and cost alone ranks its plans.
-  What stays: **may-miss for an obligation.** The sovereign's ruling was *must miss* for a want and
-  *can miss* — late where the LATEST landing is after the instant — for an obligation, where a plan
-  that may be late is already a breach; but nothing in the vocabulary says a want is owed rather than
-  wanted (the 0.1.0 obligation retired with its tree, and the market's claims are desires like any
-  other), so every want reads its earliest. The trigger is the first world whose desire is an
-  obligation with an instant ahead; the read is `weigh._when`'s, one comparison.
+- **~~Ranking by lateness~~** — closed 2026-10-27, the sovereign ruling *must miss* for a want and
+  *may miss* for an obligation. A world a want's search reaches is LATE where the want's instant is
+  ahead of the present and the world lands after it — at its EARLIEST landing for a want of the
+  agent's own, so a band that may yet make the instant is on time, and at its LATEST for an
+  obligation, where a plan that may miss is already a breach. An obligation is no kind: it is
+  someone else's desire, told by provenance — the want, or the desire it was derived from, in a graph
+  that arrived as another party's word, `orexis:Received`. `planning:late` says the instant a world
+  lands late at, written by `weigh` as the estimate is; every on-time world is opened before a late
+  one, a late one by that instant, and the plan is the cheapest on-time achiever or, where none is,
+  the soonest late one — a late dose beats none. A world whose earliest landing is past the instant
+  the want LIFTS by is refused, its weighing bare. A candidate reaching a world already weighed is a
+  repeat only where it reaches it no sooner by that order, since a world's identity is its facts and a
+  pour landing at the instant reaches the very world an order landing ten minutes late does. And the
+  instant is a deadline only where it is when the trouble BEGINS: a want in trouble now has none
+  ahead, and a want that reopens a walking one is minted at the instant the step in flight lands,
+  which is where its search starts — read as a deadline, every drive of the lane's reopened plans was
+  late, the search went soonest-first, and five lane walks failed or ran out of time. What that
+  leaves: a reopening want whose own trouble begins after the step in flight lands keeps that later
+  instant and is read as no deadline either; the trigger is a world where such a plan is late.
 - **A plan is a chain, not a partial order.** `execution:then` orders every step after the one
   before it, and nothing shipped has two levers that must run at once, so no step occupies its actor
   for a stretch and no two steps overlap. The day a world has two, a step's occupancy is a term and
