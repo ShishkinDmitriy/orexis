@@ -108,7 +108,7 @@ CATALOGUE_GRAPH = _GRAPH + "catalogue"
 #  behalf. Each kind is a kernel term a package may put its own graph under, which is how a
 #  package's record reaches every rule without the kernel learning the package's name.
 BELIEF = OREXIS + "BeliefGraph"          # what IS: the world, its vocabulary and actions, the agent's own state
-FORECAST = OREXIS + "ForecastGraph"      # a forecast: anyone's word about a stretch ahead — the predictor's own, a committed step, a received hour — holding during it (#992)
+FORECAST = OREXIS + "ForecastGraph"      # a forecast: anyone's word about a stretch ahead — a committed step, a received hour, a peer's word — holding during it (#992, #1000)
 PLAN = OREXIS + "PlanGraph"              # a plan published, adopted by reference
 RECORD = OREXIS + "RecordGraph"          # an agent's own record, worth believing during its period
 ACTION = OREXIS + "ActionGraph"          # actions
