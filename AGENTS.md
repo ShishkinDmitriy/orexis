@@ -374,8 +374,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   (a-landing-is-a-band-and-a-world-holds-over-a-period).
 - **A world is forked from the ground holding at its earliest landing, with the path replayed
   there** — forked from its parent, a fill landing after a predicted drain read eleven where the
-  world would read nine; a landing straddling a boundary is judged at its earliest alone, which is
-  what #596 still asks.
+  world would read nine; a landing straddling a boundary is judged at its earliest alone, a seam
+  until a world is planned wrong for it.
 - **A step predicts its effect's change alone, never what the ground moved between its parent's
   period and its own** — a world forked in a later ground says what its effect changed there before
   that ground goes, since diffed against its parent every drive carried the other van's next cell,
