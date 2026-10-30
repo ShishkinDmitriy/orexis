@@ -87,9 +87,16 @@ def test_the_mounted_trees_are_the_copied_trees():
     mounts = set(re.findall(r"\.\./\.\./([a-z_]+):/app/", compose))
     copied = {p.split("/")[0].strip("./") for p in copied_paths() if "/" in p}
     assert mounts, "no source trees mounted — the pattern stopped matching"
-    assert mounts == copied, (
+    #  THE ONE TREE MOUNTED AND NOT COPIED is the translator's, into the translator's container alone:
+    #  kept out of the image as onboarding is, so that no agent's container carries the code that reads
+    #  the model's key, it arrives by the mount and nothing else (knowledge/domain/speech/translator.md).
+    assert mounts == copied | {"translation"}, (
         f"compose mounts {sorted(mounts)} and the image copies {sorted(copied)}. A tree in one "
         "and not the other is a container that starts today and refuses at its next restart.")
+    an_agent = compose[compose.index("def _service("):compose.index("def _broker(")]
+    assert set(re.findall(r"\.\./\.\./([a-z_]+):/app/", an_agent)) == copied, "an agent's container mounts the copied trees alone"
+    a_translator = compose[compose.index("def _translator("):compose.index("def _simulator(")]
+    assert "../../translation:/app/translation:ro" in a_translator and "../../onboarding" not in compose
 
 
 # --- what an AGENT is given, which is less than the world -------------------------------------
@@ -815,8 +822,12 @@ def test_history_is_served_by_one_store_and_metrics_by_one_or_by_none(tmp_path, 
      "more: is a pool beside http://example.org/orexis/installation#brokers"),
     (lambda text: text + '\n:more onboarding:allocatesFrom "mqtt://localhost:2884" .\n', "more: a pool allocates for one kind of listener, and says which"),
     (lambda text: text.replace('"mqtt://localhost:1884"', '"mqtt://localhost"'), "brokers: allocates from mqtt://localhost, which states no host or no port"),
+    (lambda text: text + '\n:second a onboarding:Model ; schema:url "https://elsewhere" .\n',
+     "second: is a model beside http://example.org/orexis/installation#model"),
+    (lambda text: text.replace('"https://api.anthropic.com"', '"http://api.anthropic.com"'), "model: a model answers at one https:// url"),
 ], ids=["two-stores", "no-organisation", "two-images", "a-view-in-the-clear", "a-store-over-tls", "two-retentions",
-        "a-retention-in-words", "a-window-in-words", "two-pools", "a-pool-for-nothing", "a-pool-url-with-no-port"])
+        "a-retention-in-words", "a-window-in-words", "two-pools", "a-pool-for-nothing", "a-pool-url-with-no-port",
+        "two-models", "a-model-in-the-clear"])
 def test_what_the_installation_states_is_held_to_its_requirements(tmp_path, monkeypatch, edit, said):
     """`installation.py` refused each of these by hand, in a reader of its own for each; each is a
     shape of onboarding's own now, judged once as the document is read, so every tool reading the
@@ -1849,3 +1860,96 @@ def test_what_a_world_counts_as_an_incident_reaches_its_agents_and_what_is_no_le
     _installed(tmp_path / "loud", monkeypatch, {("lane", "deployment.ttl"): lambda text: text + said.replace('"error"', '"loud"')}, derivation=True)
     with pytest.raises(SystemExit, match="one of DEBUG, INFO, WARNING, ERROR, CRITICAL"):
         installation.incidents("lane")
+
+
+# --- a PERSON, spoken for by the translator -------------------------------------------------------
+
+_VIEWING = REPO_ROOT / "translation" / "tests" / "world"
+
+
+def _viewing(society=lambda text: text) -> dict:
+    """The translator's test world as `_installed` lays a world out: its documents, the filters its society
+    asserts struck out so the rule names its topics, `society` applied to what is left, and its broker's
+    url asserted in a deployment graph of its own, since nothing allocates a copy one."""
+    def unasserted(text: str) -> str:
+        return "\n".join(line for line in text.splitlines() if "a mqtt4ssn:TopicFilter" not in line) + "\n"
+    return {("viewing", "world.ttl"): lambda _: (_VIEWING / "world.ttl").read_text(),
+            ("viewing", "rules.ttl"): lambda _: (_VIEWING / "rules.ttl").read_text(),
+            ("viewing", "beliefs/seeker.self.ttl"): lambda _: (_VIEWING / "beliefs" / "seeker.self.ttl").read_text(),
+            ("viewing", "society.ttl"): lambda _: society(unasserted((_VIEWING / "society.ttl").read_text())),
+            ("viewing", "deployment.ttl"): lambda _: _asserting("mqtt://localhost:1999", world="viewing")}
+
+
+def test_a_person_is_onboarded_as_the_translators_client(tmp_path, monkeypatch):
+    """A person the society names, speaking to an agent, is onboarded as a device is, by the client hosting
+    them: the rule names their inbox `people/<person>/inbox`, the agent they speak to may write it and
+    the translator read it, the translator may write the agent's inbox, and the world's compose file runs
+    the translator as that client — told where the model answers, handed its key and the mailbox, and
+    mounted the translator's tree, none of which reaches the agent's container."""
+    import yaml
+
+    from onboarding import compose, mqtt, reading, topics
+
+    root = _installed(tmp_path, monkeypatch, _viewing())
+    monkeypatch.setattr(topics, "world_dir", lambda name: root / name)
+    topics.write("viewing")
+    derived = (root / "viewing" / "society.derived.ttl").read_text()
+    assert '"people/anna/inbox"' in derived and '"agents/seeker/inbox"' in derived, derived
+    assert "actuators/anna" not in derived, "a person is no device"
+    assert reading.invalid(root / "viewing") == [] and reading.refused(root / "viewing") == []
+    agents, devices = mqtt.grants("viewing")
+    assert agents["seeker"].grants == {("read", "agents/seeker/inbox"), ("write", "people/anna/inbox")}
+    assert devices["translator"].grants == {("read", "people/anna/inbox"), ("write", "agents/seeker/inbox")}
+    services = yaml.safe_load(compose.render("viewing"))["services"]
+    translator = services["translation"]
+    assert translator["command"] == ["python", "-m", "translation", "/app/world/viewing"]
+    assert translator["environment"] == {"MQTT_HOST": "localhost", "MQTT_PORT": "1999", "MODEL_URL": "https://api.anthropic.com"}
+    assert translator["env_file"] == ["./secrets/mqtt-translator.env", "../../infra/secrets/model.env", "./secrets/mail-translator.env"]
+    assert "../../translation:/app/translation:ro" in translator["volumes"]
+    assert "./rules.ttl:/app/world/viewing/rules.ttl:ro" in translator["volumes"], "the sayables are the world's, which it reads"
+    assert not any("seeker.self" in v for v in translator["volumes"]), "an agent's own documents are the agent's"
+    seeker = services["agent-seeker"]
+    assert "MODEL_URL" not in seeker["environment"]
+    assert not any("translation" in v or "model.env" in v or "mail-" in v for v in seeker["volumes"] + seeker["env_file"])
+
+
+@pytest.mark.parametrize("edit, said", [
+    (lambda text: text.replace(" ;\n    mqtt4ssn:hosts :anna .", " ."),
+     "anna: hosted by no client: the translator connects as the client hosting the people it speaks for"),
+    (lambda text: text + '\n:second a mqtt4ssn:Client ; mqtt4ssn:hasClientID "second" ; mqtt4ssn:isConnectedToBroker :broker ; mqtt4ssn:hosts :anna .\n',
+     "anna: hosted by second, as anna is by translator: one translator speaks for every person of a world, as one client"),
+    (lambda text: text.replace('    schema:email "anna@example.org" ;\n', ""),
+     "anna: speaks to an agent and has no one address: the translator reaches a person at schema:email"),
+    (lambda text: text.replace(" ;\n    mqtt4ssn:listensToTopic :anna_inbox .", " ."),
+     "anna: speaks to an agent and listens to no topic: what the agent says to them arrives nowhere"),
+    (lambda text: text.replace(" ;\n    mqtt4ssn:listensToTopic :seeker_inbox .", " ."),
+     "anna: speaks to http://example.org/orexis/world/viewing#seeker, which listens to no topic: what they say arrives nowhere"),
+], ids=["hosted-by-nobody", "hosted-twice", "no-address", "no-inbox", "an-agent-with-no-inbox"])
+def test_a_person_who_speaks_to_an_agent_is_held_to_what_the_translator_needs(tmp_path, monkeypatch, edit, said):
+    """What `orexis-compose` would otherwise pass over in silence or pick from by chance is the MQTT
+    transport's requirement: a person speaking to an agent is hosted by one client, has one address,
+    listens to a topic, and speaks to an agent that does."""
+    from onboarding import reading, topics
+
+    root = _installed(tmp_path, monkeypatch, _viewing(edit))
+    monkeypatch.setattr(topics, "world_dir", lambda name: root / name)
+    topics.write("viewing")
+    found = reading.invalid(root / "viewing")
+    assert any(line.startswith(said) for line in found), found
+
+
+def test_a_world_naming_a_person_is_refused_where_the_installation_names_no_model(tmp_path, monkeypatch):
+    """The installation says whether this host runs a translator by naming where the model answers, as it
+    says whether it monitors a world by serving metrics; a world with no person is told nothing of it."""
+    import yaml
+
+    from onboarding import compose, installation, topics
+
+    root = _installed(tmp_path, monkeypatch, _viewing(),
+                      installation=lambda text: re.sub(r":model a onboarding:Model ;\n    schema:url \"[^\"]*\" \.\n", "", text))
+    monkeypatch.setattr(topics, "world_dir", lambda name: root / name)
+    topics.write("viewing")
+    assert installation.model() is None
+    with pytest.raises(SystemExit, match="names a person, spoken for by translator, and the installation names no onboarding:Model"):
+        compose.render("viewing")
+    assert "translation" not in yaml.safe_load(compose.render("sensing"))["services"]

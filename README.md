@@ -56,7 +56,7 @@ for this step; its one client is for the run-time edges below.
 
 | edge | what the model does | what it never does |
 |---|---|---|
-| translation | turns a person's prose into a statement of a shape the domain declares, and a statement into prose | author a belief, name a step |
+| translation | turns a person's prose into a statement of a shape the domain declares, and a statement into prose; runs as a process of the world, with the key in `infra/secrets/model.env` and never in an agent's container | author a belief, name a step |
 | the account | phrases what an agent said of itself, for a person asking over chat | run a query, reach the agent |
 | reflection | when a search ends with nothing or an incident is journaled, proposes a change to the world's documents | edit the agent, take effect unratified |
 

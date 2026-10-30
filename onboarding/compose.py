@@ -46,6 +46,15 @@ world with no bus reaches its series store the same way.
 **A world's simulated systems are played by its simulator**, one more service: `python -m
 simulation <world>`, connected as the one client that hosts every system the world marks
 `sim:simulatedBy`, reading the world as an agent does. See knowledge/domain/kernel/world.md.
+
+**A world's people are spoken for by its translator**, the same way: `python -m translation
+<world>`, connected as the one client that `mqtt4ssn:hosts` every `schema:Person` the society names,
+told where the language model answers (`MODEL_URL`, the installation's `onboarding:Model`) and handed
+which model and its key (`infra/secrets/model.env`) and the mailbox it reads and writes
+(`secrets/mail-<client>.env`, written by hand, since nothing can mint a mailbox) — each mounted into
+this container alone, and the translator's tree with them, which the image does not carry. A world
+naming a person where the installation names no model is refused, as a monitored world is where
+metrics are served by no store (knowledge/domain/speech/translator.md).
 """
 
 from __future__ import annotations
@@ -78,6 +87,13 @@ _IDS_Q = "SELECT ?a ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id }"
 _CONNECTED_Q = f"""
 SELECT ?id ?broker WHERE {{ ?a a orexis:Agent ; orexis:localId ?id ; <{MQTT4SSN}isConnectedToBroker> ?broker }}
 ORDER BY ?id ?broker"""
+
+#  THE CLIENT THE TRANSLATOR CONNECTS AS: whichever hosts the people the world names.
+_PEOPLE_Q = """
+SELECT DISTINCT ?id WHERE {
+  ?client <https://www.w3id.org/MQTT4SSN-Ontology#hasClientID> ?id ;
+          <https://www.w3id.org/MQTT4SSN-Ontology#hosts> ?person .
+  ?person a <https://schema.org/Person> } ORDER BY ?id"""
 
 #  THE CLIENT THE SIMULATOR CONNECTS AS: whichever hosts the systems no one built.
 _SIMULATED_Q = """
@@ -143,6 +159,45 @@ def simulated_client(world: str) -> str | None:
     store = reading.world(world_dir(world))
     found = {r["id"] for r in rows(store, _SIMULATED_Q, graphs_of(store, BELIEF, common=True))}
     return found.pop() if found else None
+
+
+def translation_client(world: str) -> str | None:
+    """The client the world's translator connects as, or None where the world names no person. One
+    translator speaks for every person of a world, so one client hosts them all, connected to a broker:
+    the MQTT transport's requirement (`agent/transport/mqtt/requirements.ttl`), held by `reading.check`
+    before any tool asking here runs. This formats and judges nothing."""
+    store = reading.world(world_dir(world))
+    found = {r["id"] for r in rows(store, _PEOPLE_Q, graphs_of(store, BELIEF, common=True))}
+    return found.pop() if found else None
+
+
+def _translator(world: str, read: set[Path], client: str, host: str, plain: int, model: str) -> str:
+    return f"""
+  translation:
+    image: {IMAGE}
+    command: ["python", "-m", "translation", "/app/world/{world}"]
+    environment:
+      MQTT_HOST: "{host}"
+      MQTT_PORT: "{plain}"
+      # where the language model answers — the installation's `onboarding:Model`; which model, and the
+      # key, arrive in the installation's secret below
+      MODEL_URL: "{model}"
+    env_file:
+      # the credential of `{client}`, the client that hosts the people the world names
+      - ./secrets/mqtt-{client}.env
+      # the model's name and key — `infra/model.env.example` says how — mounted into THIS container alone
+      - ../../infra/secrets/model.env
+      # the mailbox the people are reached at, written by hand: nothing can mint one
+      - ./secrets/mail-{client}.env
+    network_mode: host
+    userns_mode: "keep-id:uid=10001,gid=10001"
+    restart: unless-stopped
+    volumes:{_documents(world, read)}
+      - ../../agent:/app/agent:ro
+      - ../../domains:/app/domains:ro
+      # the translator's own tree, which the image does not carry, so that no agent's does either
+      - ../../translation:/app/translation:ro
+"""
 
 
 def _simulator(world: str, read: set[Path], client: str, host: str, plain: int) -> str:
@@ -323,12 +378,19 @@ def render(world: str) -> str:
     series = {purpose: installation.series(purpose) for purpose in installation.purposes(world)}
     window = installation.interval(METRICS) if METRICS in series else None
     client = simulated_client(world)
+    speaker = translation_client(world)
+    model = installation.model() if speaker else None
+    if speaker and model is None:
+        raise SystemExit(f"world {world!r} names a person, spoken for by {speaker}, and the installation names no "
+                         f"onboarding:Model — state where one answers in {installation._where(installation.INSTALLATION)}, "
+                         "or take the person out of the world")
     read = read_by_an_agent(world)
     store = reading.world(world_dir(world))
     iris = {r["id"]: r["a"] for r in rows(store, _IDS_Q, graphs_of(store, BELIEF, common=True))}
     counted = installation.incidents(world)
     services = ("".join(_broker(world, b, *bus[b][1:]) for b in sorted(bus))
                 + (_simulator(world, read, client, *broker_of(world, client)[:2]) if client else "")
+                + (_translator(world, read, speaker, *broker_of(world, speaker)[:2], model) if speaker else "")
                 + "".join(_service(a, world, read, reached.get(a, []) if bus else None, series, window,
                                    reading.lasts(world_dir(world), a), installation.journal(iris[a]), counted)
                           for a in who))
@@ -362,6 +424,12 @@ def generate(world: str) -> Path:
     log.info("wrote %s", out.relative_to(REPO_ROOT))
     for agent_id in roster(world):
         log.info("  agent-%s", agent_id)
+    speaker = translation_client(world)
+    if speaker:
+        mail = world_dir(world) / "secrets" / f"mail-{speaker}.env"
+        log.info("  translation — as %s; its mailbox is %s%s", speaker,
+                 mail.relative_to(REPO_ROOT) if mail.is_relative_to(REPO_ROOT) else mail,
+                 "" if mail.exists() else ", which is not there: write it by hand (knowledge/runbooks/run-a-world.md)")
     return out
 
 
