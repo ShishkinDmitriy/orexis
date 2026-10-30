@@ -6,10 +6,11 @@ status: accepted
 timestamp: 2026-08-02T00:00:00Z
 ---
 
-> **Amended 2026-10-30:** the draft step is reachable at run time, through the chat the gateway gives the
-> sovereign, and not only through a skill a developer runs; the four steps stand, and a drafted world is
-> still ratified by the sovereign's merge before anything boots it
-> ([the-model-compiles-a-routine-and-is-called-back-at-its-edges](/decisions/the-model-compiles-a-routine-and-is-called-back-at-its-edges.md), #1033).
+> **Amended 2026-10-30:** the draft step is how a ROUTINE is spawned — one conversation with the
+> sovereign's own assistant, running the `author-a-world` skill, ends in a world — and the repository
+> holds no model client for it, the client being for the run-time edges alone; the four steps stand,
+> and a drafted world is still ratified by the sovereign's merge before anything boots it
+> ([the-model-compiles-a-routine-and-is-called-back-at-its-edges](/decisions/the-model-compiles-a-routine-and-is-called-back-at-its-edges.md)).
 
 # Context
 

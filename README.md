@@ -46,9 +46,11 @@ believes only what it was told and knows who told it, and its journal says after
 what it did.
 
 **The model is at compile time.** A one-time task is the model's: you describe a routine once,
-in a conversation, and the model drafts the world the agent will run — its desires as shapes, the
-actors, the actions, the deadlines — as documents under `world/<name>/`. Onboarding refuses what
-will not load, a test holds it, and you ratify by merging. Then the agent runs the routine alone.
+to whatever assistant you are already talking to, and it drafts the world the agent will run — its
+desires as shapes, the actors, the actions, the deadlines — as documents under `world/<name>/`,
+following the `author-a-world` skill. Onboarding refuses what will not load, a test holds it, and
+you ratify by merging. Then the agent runs the routine alone. The repository holds no model client
+for this step; its one client is for the run-time edges below.
 
 **At run time the model may stand at three edges, and nowhere else:**
 
