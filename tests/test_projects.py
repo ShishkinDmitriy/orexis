@@ -32,7 +32,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 #  The trees this repository's own distribution ships. An import of one is an import of
 #  `orexis` itself and not a dependency on anything third-party.
-OWN_TREES = {"agent", "onboarding", "simulation"}
+OWN_TREES = {"agent", "onboarding", "simulation", "translation"}
 
 
 def normalise(name: str) -> str:
@@ -89,7 +89,7 @@ def test_the_root_declares_exactly_what_its_own_trees_import():
     want = set().union(*(needed(REPO_ROOT / tree) for tree in sorted(OWN_TREES)))
     have = declared(REPO_ROOT / "pyproject.toml") | onboarding_extra(REPO_ROOT / "pyproject.toml")
     assert have == want, (
-        "pyproject.toml is out of step with what agent/, onboarding/ and simulation/ import.\n"
+        "pyproject.toml is out of step with what agent/, onboarding/, simulation/ and translation/ import.\n"
         f"  missing: {sorted(want - have) or 'none'}\n"
         f"  unused:  {sorted(have - want) or 'none'}")
 

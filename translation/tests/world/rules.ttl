@@ -1,0 +1,33 @@
+@prefix : <http://example.org/orexis/world/viewing#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<> a sh:RulesGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A PERSON MAY SAY TO THE SEEKER, and what it may say to them: each a sayable, a shape the
+#  translator offers the model and makes a statement of. And what is believed of such a statement:
+#  the extraction, as the market's.
+
+:viewing_offer a speech:Sayable , sh:NodeShape ;
+    sh:targetClass :ViewingOffer ;
+    sh:description "a viewing of a listing, offered at an instant" ;
+    sh:property [ sh:path :listing ; sh:class :Listing ; sh:minCount 1 ; sh:description "which listing is offered to be shown" ] ,
+                [ sh:path :at ; sh:datatype xsd:dateTime ; sh:minCount 1 ; sh:description "when the viewing is" ] .
+
+:refusal a speech:Sayable , sh:NodeShape ;
+    sh:targetClass :Refusal ;
+    sh:description "an application for a listing, refused" ;
+    sh:property [ sh:path :listing ; sh:class :Listing ; sh:minCount 1 ; sh:description "which listing was applied for" ] .
+
+:viewing_request a speech:Sayable , sh:NodeShape ;
+    sh:targetClass :ViewingRequest ;
+    sh:description "a request to view a listing, with the hours the seeker can come" ;
+    sh:property [ sh:path :listing ; sh:class :Listing ; sh:minCount 1 ; sh:description "which listing" ] ,
+                [ sh:path :hours ; sh:datatype xsd:string ; sh:description "when the seeker can come" ] .
+
+:believed a speech:Extraction ;
+    sh:construct """PREFIX : <http://example.org/orexis/world/viewing#>
+        CONSTRUCT { ?s ?p ?o } WHERE {
+            ?s a ?class ; ?p ?o .
+            VALUES ?class { :ViewingOffer :Refusal :ViewingRequest } }""" .

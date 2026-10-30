@@ -1,0 +1,22 @@
+@prefix : <http://example.org/orexis/world/viewing#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a orexis:WorldGraph .    # this document is one graph, and this is what it is
+
+#  THE TRANSLATOR'S WORLD: a seeker after a flat, and two listings a realtor may offer to show. The
+#  words are the world's own, as a test world's may be: a viewing offer, a refusal, and a request to
+#  view, each a kind of statement a person may say or be told (rules.ttl says which are sayable).
+
+:Listing a owl:Class ; rdfs:label "a flat on offer" .
+:ViewingOffer a owl:Class ; rdfs:label "a viewing offered" .
+:Refusal a owl:Class ; rdfs:label "an application refused" .
+:ViewingRequest a owl:Class ; rdfs:label "a viewing asked for" .
+
+:listing a owl:ObjectProperty ; rdfs:range :Listing .
+:at a owl:DatatypeProperty .
+:hours a owl:DatatypeProperty .
+
+:flat_12 a :Listing ; rdfs:label "the two-room flat on Kastanienallee" .
+:flat_7 a :Listing ; rdfs:label "the studio on Rigaer Straße" .

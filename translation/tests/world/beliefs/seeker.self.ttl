@@ -1,0 +1,13 @@
+@prefix : <http://example.org/orexis/world/viewing#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+
+<> a orexis:SelfGraph .    # this document is one graph, and this is what it is
+
+#  WHO THIS AGENT IS: the seeker, a speaker, and a deliberator since the world's rules graph holds the
+#  extraction that believes what it hears — and nothing else, since what this world tests is what it
+#  hears of a person and nothing it plans.
+
+:seeker a orexis:Self ;
+    orexis:plays [ a speech:Speaker ] , [ a belief:Deliberator ] .

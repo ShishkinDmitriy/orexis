@@ -61,15 +61,15 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-# The three roots at the repo top, and nothing else: the agent, the operator's tools and the
-# simulator. A domain and a world are documents, read from where they are and never installed.
+# The four roots at the repo top, and nothing else: the agent, the operator's tools, the
+# simulator and the translator. A domain and a world are documents, read from where they are and never installed.
 where = ["."]
-include = ["agent*", "onboarding*", "simulation*"]
+include = ["agent*", "onboarding*", "simulation*", "translation*"]
 
 [tool.pytest.ini_options]
 # The agent's own suites, the simulator's and each world's, which live beside what they test.
 # `tests/` holds the four files that read the whole tree, run by the gates by name.
-testpaths = ["agent", "simulation", "world"]
+testpaths = ["agent", "simulation", "translation", "world"]
 
 # `importlib` is the mode pytest recommends and the one that does not derive a module name from
 # a path; it stops inserting directories into sys.path, which is why `pythonpath` is here.
@@ -128,10 +128,10 @@ filterwarnings = ["ignore:'count' is passed as positional argument:DeprecationWa
 # holds the series store's admin token must be absent from what an agent can import.
 #
 #   .venv/bin/lint-imports
-root_packages = ["onboarding", "agent", "simulation"]
+root_packages = ["onboarding", "agent", "simulation", "translation"]
 
 [[tool.importlinter.contracts]]
-name = "The agent never reaches for the operator's tools"
+name = "The agent never reaches for the operator's tools, nor for the translator that holds the model's key"
 type = "forbidden"
 source_modules = ["agent", "simulation"]
-forbidden_modules = ["onboarding"]
+forbidden_modules = ["onboarding", "translation"]

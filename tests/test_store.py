@@ -43,6 +43,7 @@ _GROUPS = {
     "agent": _shipped("agent", ".py", ".ttl"),
     "onboarding": _shipped("onboarding", ".py"),
     "simulation": _shipped("simulation", ".py"),
+    "translation": _shipped("translation", ".py"),
     "domains": _shipped("domains", ".ttl"),
     "worlds": _shipped("world", ".ttl", ".trig"),
 }
