@@ -39,9 +39,8 @@ its own agent id. See [`world-graph`](knowledge/decisions/world-graph.md).
 
 ## Where the language model stands
 
-Newcomers ask where the LLM is. **Not in the agent.** No pass asks a model: a reading arrives, the
-rules conclude, the search plans and the executor acts, in milliseconds and for nothing, on every
-reading, for months. A model is expensive, slow, forgets across calls and cannot be audited, which
+**Not in the agent.** No pass asks a model: a reading arrives, the rules conclude, the search plans
+and the executor acts, in milliseconds and for nothing, on every reading, for months. A model is expensive, slow, forgets across calls and cannot be audited, which
 is exactly what a routine must not be. The agent is cheap, deterministic, keeps its commitments,
 believes only what it was told and knows who told it, and its journal says afterwards why it did
 what it did.
