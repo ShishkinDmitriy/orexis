@@ -37,6 +37,33 @@ Nothing above is a name in the code. Every topic, every device and every limit i
 world's documents, in MQTT4SSN's and SOSA's words; the one instance identifier a process gets is
 its own agent id. See [`world-graph`](knowledge/decisions/world-graph.md).
 
+## Where the language model stands
+
+**Not in the agent.** No pass asks a model: a reading arrives, the rules conclude, the search plans
+and the executor acts, in milliseconds and for nothing, on every reading, for months. A model is expensive, slow, forgets across calls and cannot be audited, which
+is exactly what a routine must not be. The agent is cheap, deterministic, keeps its commitments,
+believes only what it was told and knows who told it, and its journal says afterwards why it did
+what it did.
+
+**The model is at compile time.** A one-time task is the model's: you describe a routine once,
+in a conversation, and the model drafts the world the agent will run — its desires as shapes, the
+actors, the actions, the deadlines — as documents under `world/<name>/`. Onboarding refuses what
+will not load, a test holds it, and you ratify by merging. Then the agent runs the routine alone.
+
+**At run time the model may stand at three edges, and nowhere else:**
+
+| edge | what the model does | what it never does |
+|---|---|---|
+| translation | turns a person's prose into a statement of a shape the domain declares, and a statement into prose | author a belief, name a step |
+| the account | phrases what an agent said of itself, for a person asking over chat | run a query, reach the agent |
+| reflection | when a search ends with nothing or an incident is journaled, proposes a change to the world's documents | edit the agent, take effect unratified |
+
+The argument and the refusals are in
+[`the-model-compiles-a-routine-and-is-called-back-at-its-edges`](knowledge/decisions/the-model-compiles-a-routine-and-is-called-back-at-its-edges.md);
+the three seats were decided one by one in [`genesis`](knowledge/decisions/genesis.md),
+[`an-agent-gives-an-account-of-itself-and-the-model-only-reads-it`](knowledge/decisions/an-agent-gives-an-account-of-itself-and-the-model-only-reads-it.md)
+and [`reflection-is-genesis-run-again-over-the-series`](knowledge/decisions/reflection-is-genesis-run-again-over-the-series.md).
+
 ## Layout
 
 ```

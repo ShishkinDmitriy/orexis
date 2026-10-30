@@ -6,6 +6,11 @@ status: accepted
 timestamp: 2026-08-02T00:00:00Z
 ---
 
+> **Amended 2026-10-30:** the draft step is reachable at run time, through the chat the gateway gives the
+> sovereign, and not only through a skill a developer runs; the four steps stand, and a drafted world is
+> still ratified by the sovereign's merge before anything boots it
+> ([the-model-compiles-a-routine-and-is-called-back-at-its-edges](/decisions/the-model-compiles-a-routine-and-is-called-back-at-its-edges.md), #1033).
+
 # Context
 
 The belief base holds two kinds of belief that arise differently. **State** (current

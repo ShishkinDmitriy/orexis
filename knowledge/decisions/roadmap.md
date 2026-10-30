@@ -114,7 +114,9 @@ resource with no overseer, is what 0.2.0 was built toward, so it is what finishe
 - **An open society** — naturalize and endow, currency minted rather than seized, reputation on
   identity.
 - **A world drafted from narration** — the sovereign narrates, a draft is ratified, onboarding
-  writes the rest; opened by [genesis](/decisions/genesis.md).
+  writes the rest; opened by [genesis](/decisions/genesis.md), and decided as the model's compile-time
+  seat by [the-model-compiles-a-routine-and-is-called-back-at-its-edges](/decisions/the-model-compiles-a-routine-and-is-called-back-at-its-edges.md),
+  whose four issues (#1033 to #1036) are the spawn path, the translator, the call-back and the first routine.
 - **Reflection** — the agent's season read back from its series and offered to the sovereign as a
   proposal; opened by
   [reflection-is-genesis-run-again-over-the-series](/decisions/reflection-is-genesis-run-again-over-the-series.md),
