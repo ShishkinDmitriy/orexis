@@ -16,6 +16,12 @@ description: >-
   agent, a gateway spanning worlds.
 ---
 
+> **Amended 2026-10-30:** the model gains a second seat beside the account, the TRANSLATOR at a
+> human-speech transport's edge, so "it reaches no agent" below reads: nothing it writes reaches an
+> agent but a statement of a shape the domain declares, marked another party's word, which the domain's
+> extraction believes as it believes any document
+> ([the-model-compiles-a-routine-and-is-called-back-at-its-edges](/decisions/the-model-compiles-a-routine-and-is-called-back-at-its-edges.md), #1034).
+
 # The question
 
 The sovereign writes a world's documents and runs the operator's tools, and then the society runs

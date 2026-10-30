@@ -896,6 +896,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   built and refused; a layer that is no place draws nothing on the scene and says itself in its status and the log, as
   speech says what was said and heard; it opens no belief volume (a-replay-is-the-history-drawn-by-the-package-that-decides-it,
   the-journal-is-the-agents-flight-recorder).
+- **A one-time task is the model's and a routine is an agent's; the model compiles a routine into a world
+  and stands at run time at three edges only** — translating a person's prose into a statement of a declared
+  shape, phrasing the account, and proposing a document change when a search ends with nothing or an
+  incident is journaled; it is in no pass, authors no belief, picks no step and ratifies nothing, and a
+  looping model as the routine, a world spawned unratified and an agent amending its own documents were
+  refused (the-model-compiles-a-routine-and-is-called-back-at-its-edges, #1033 to #1036).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
   `crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming an
   absent file or a CRL past its `nextUpdate` refuses the whole society and not the one agent; and

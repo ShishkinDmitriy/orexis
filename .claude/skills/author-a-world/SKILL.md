@@ -5,9 +5,10 @@ description: Genesis as a procedure — the sovereign narrates a world, the docu
 
 # Author a world
 
-Genesis is the one place a model belongs in this project: the sovereign narrates, a draft is made,
+Genesis is where a model compiles a routine into a world: the sovereign narrates, a draft is made,
 the sovereign ratifies, the ratified draft is Turtle under `world/<name>/`
-(`knowledge/decisions/genesis.md`). This skill is the procedure; the knowledge is in the runbook
+(`knowledge/decisions/genesis.md`; where else a model may stand is
+`knowledge/decisions/the-model-compiles-a-routine-and-is-called-back-at-its-edges.md`). This skill is the procedure; the knowledge is in the runbook
 `knowledge/runbooks/author-a-world.md` and the pages it links, and this file points at them
 rather than repeating them. Where the two disagree, the runbook wins and this file is wrong.
 

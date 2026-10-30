@@ -21,6 +21,12 @@ description: >-
 > so `orexis-explain` asks the journal at the endpoint the installation allocated, or a stopped agent's journal opened
 > read-only. It still never opens the belief volume, and the journal holds nothing a plan reads.
 
+> **Amended 2026-10-30:** reflection gains a trigger of the agent's own beside the sovereign's season — a
+> search ending `NoCandidate` or `Exhausted`, or an incident journaled — on which the journal and the
+> world's documents are handed to a model and a proposal is opened; still never a pass, never a belief,
+> never adopted unratified
+> ([the-model-compiles-a-routine-and-is-called-back-at-its-edges](/decisions/the-model-compiles-a-routine-and-is-called-back-at-its-edges.md), #1035).
+
 # What was true
 
 Agent 0.1.0 had a place for a model in three records, each superseded whole by
