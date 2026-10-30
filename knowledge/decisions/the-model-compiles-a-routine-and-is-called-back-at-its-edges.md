@@ -63,13 +63,17 @@ what a BDI agent is for:
 A model polling every minute has none of that: a cost per poll, a behaviour that is a prompt plus a
 mood, a memory that is a window, and no account of itself anyone can audit.
 
-**The model is at compile time.** One conversation with the sovereign ends in a world: the desires
-as shapes, the actors and what each controls, the actions with their preconditions, effects and
-implementations, the extractions for what the actors say, the deadline as a want's instant. That is
-genesis as its record states it — narrate, draft, ratify, write — reached through the chat the
-gateway already gives the sovereign rather than through a skill a developer runs. The model's
-output is documents, `orexis-onboard` refuses what will not load, a test beside the world holds it,
-and the sovereign ratifies by merging. The agent then runs the routine with no model in any pass.
+**The model is at compile time, and at compile time it is the sovereign's own assistant.** One
+conversation with the sovereign ends in a world: the desires as shapes, the actors and what each
+controls, the actions with their preconditions, effects and implementations, the extractions for
+what the actors say, the deadline as a want's instant. That is genesis as its record states it —
+narrate, draft, ratify, write — and the model doing it is whatever assistant the sovereign is
+already talking to, running the `author-a-world` skill, which IS the spawn path. No API key, no
+client and no tool of the repository's own stands at compile time: the sovereign's ruling (2026-10-30)
+is that the repository holds a model client for the run-time edges alone, and the skill produces the
+world as it does today. The model's output is documents, `orexis-onboard` refuses what will not load,
+a test beside the world holds it, and the sovereign ratifies by merging. The agent then runs the
+routine with no model in any pass.
 
 **The model may stand at run time, at three edges and nowhere else.**
 
@@ -124,8 +128,9 @@ sovereign ratifies; the routine continues.
 
 # What it amends
 
-- [genesis](/decisions/genesis.md): its draft step is reachable at run time, through the chat, and
-  not only through a skill a developer runs; the four steps stand.
+- [genesis](/decisions/genesis.md): its draft step is the spawn path of a routine, run by the
+  sovereign's assistant through the `author-a-world` skill, and no client of the repository's; the
+  four steps stand.
 - [an-agent-gives-an-account-of-itself-and-the-model-only-reads-it](/decisions/an-agent-gives-an-account-of-itself-and-the-model-only-reads-it.md):
   the model gains a second seat, the translator, so "it reaches no agent" is amended to "nothing it
   writes reaches an agent but a statement of a shape the domain declares, as another party's word".
@@ -157,9 +162,12 @@ sovereign ratifies; the routine continues.
 
 Four issues, in this order, each with its definition of done:
 
-1. *Spawn a routine's world from a chat* — a conversation through the gateway that ends in
-   `world/<name>/` drafted, held by `orexis-onboard` and a test, and opened for the sovereign to
-   ratify. Filed as [#1033](https://github.com/ShishkinDmitriy/orexis/issues/1033).
+1. *Spawn a routine's world from a chat* — filed as
+   [#1033](https://github.com/ShishkinDmitriy/orexis/issues/1033) for a gateway command, and closed
+   the same day by the ruling above: the spawn path is the `author-a-world` skill, run by the
+   sovereign's assistant, which already drafts, holds and opens the pull request. What the skill
+   gained from it is the routine's words — the deadline as a want's instant, the actors and what
+   each controls.
 2. *A human-speech transport with a model as its translator* — prose in, a statement of a declared
    shape out, provenance kept; a statement out, prose in. Filed as
    [#1034](https://github.com/ShishkinDmitriy/orexis/issues/1034).

@@ -14,8 +14,11 @@ rather than repeating them. Where the two disagree, the runbook wins and this fi
 
 ## 1. Narrate
 
+This is also how a ROUTINE is spawned: a task the sovereign would otherwise do by hand every day,
+told once (`knowledge/decisions/the-model-compiles-a-routine-and-is-called-back-at-its-edges.md`).
 Take the sovereign's words down as they stand: the subjects, what observes them, what acts on
-them, who acts for whom, what each agent is for. Keep them; the world's header comment and the
+them, who acts for whom, what each agent is for — and, for a routine, the deadline, which is a
+want's instant, and the people in it, each an actor who controls something and can be asked. Keep them; the world's header comment and the
 commit message carry them, so a reader of the documents can see the narration they came from.
 Ask only what the documents need and the words leave out — a range a subject states, a cadence a
 sensor reports at, a cap a device has. **Never a step, a dose, a price or an aim**: those are the
