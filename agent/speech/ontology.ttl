@@ -4,6 +4,7 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
@@ -69,3 +70,33 @@
 :to a owl:ObjectProperty ; rdfs:domain :Said ; rdfs:range orexis:Agent ;
     rdfs:label "to" ;
     rdfs:comment "An agent a statement was told to." .
+
+#  WHAT A PERSON MAY SAY, AND THE WORDS A STATEMENT WAS MADE FROM (#1034). A person who is not an agent
+#  speaks prose, and a language model at a transport's edge — the translator, a process of the world —
+#  turns it into a statement of a shape the domain declares, and a statement the agent says to them into
+#  prose (knowledge/domain/speech/translator.md). The model fills a shape's fields and nothing else: it
+#  authors no belief, the extraction does, and a sayable has no field an action could be read from
+#  (knowledge/decisions/the-model-compiles-a-routine-and-is-called-back-at-its-edges.md).
+
+:Sayable a owl:Class ;
+    rdfs:subClassOf sh:NodeShape ;
+    rdfs:label "Sayable" ;
+    rdfs:comment """A shape a person's prose may become, and a statement of which is rendered into prose
+    (knowledge/domain/speech/sayable.md): `sh:targetClass` the kind of statement, and `sh:property` for
+    each thing it may carry — `sh:path`, a `sh:datatype` for a literal or a `sh:class` for a thing of the
+    world chosen by its label, `sh:minCount` for what it must carry, `sh:description` for what the model is
+    told. A domain ships them in its rules graph beside the extraction that believes them. The translator
+    offers the model every sayable the world declares and makes a statement of the one it fills, dropping
+    a field the shape does not declare and refusing one that lacks a field it requires.""" .
+
+:prose a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    rdfs:label "prose" ;
+    rdfs:comment "The words a statement was translated from, kept beside it in the statement's own graph, so the agent's journal keeps what the person wrote with what was made of it." .
+
+:saidBy a owl:ObjectProperty ;
+    rdfs:label "said by" ;
+    rdfs:comment "The person a translated statement was heard from — the carrier's word about an address, unsigned, kept in the statement's own graph. Which peer spoke is otherwise not told apart in speech; signing is the seam." .
+
+:speaksTo a owl:ObjectProperty ; rdfs:range orexis:Agent ;
+    rdfs:label "speaks to" ;
+    rdfs:comment "The agent a person's statements are for: stated of a `schema:Person` in the society beside the address the carrier reaches them at and the topic they listen on, so the translator publishes what they say on that agent's inbox." .

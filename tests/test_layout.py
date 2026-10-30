@@ -27,8 +27,9 @@ ALLOWED_TREES = {"agent", "domains", "simulation"}
 
 #  Never in an agent image. `orexis-influx` reads the admin token, which opens every bucket in the
 #  store and which no agent may ever hold; the surest guarantee is that the code using it is
-#  absent. See knowledge/domain/onboarding/onboarding.md.
-FORBIDDEN_TREES = {"onboarding"}
+#  absent. See knowledge/domain/onboarding/onboarding.md. And the translator holds the model's key,
+#  which no agent holds either (knowledge/domain/speech/translator.md).
+FORBIDDEN_TREES = {"onboarding", "translation"}
 
 
 def copied_paths() -> list[str]:
@@ -52,8 +53,8 @@ def test_the_image_copies_something():
 def test_the_agent_image_carries_no_operator_code(forbidden):
     offenders = [p for p in copied_paths() if p.split("/")[0].strip("./") == forbidden]
     assert not offenders, (
-        f"the Containerfile copies {offenders} into the agent image. {forbidden}/ mints "
-        "credentials and reads the admin token; an agent must not hold that code at all. "
+        f"the Containerfile copies {offenders} into the agent image. {forbidden}/ holds a secret "
+        "no agent may — the admin token, the model's key; an agent must not hold that code at all. "
         "If this is deliberate, knowledge/decisions/series-and-bus-isolation.md is what needs "
         "changing first.")
 

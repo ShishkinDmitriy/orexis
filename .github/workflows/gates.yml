@@ -114,5 +114,5 @@ jobs:
       - name: the history view's toolchain
         run: npm ci
       #  `-m ""` runs the walks too, which the local gate's `-m "not walk"` leaves out (pyproject.toml).
-      - name: pytest, the agent and the worlds, walks included
-        run: pytest -q -n auto -m "" agent world
+      - name: pytest, the agent, the translator and the worlds, walks included
+        run: pytest -q -n auto -m "" agent translation world

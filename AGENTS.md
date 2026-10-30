@@ -902,6 +902,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   incident is journaled; it is in no pass, authors no belief, picks no step and ratifies nothing, and a
   looping model as the routine, a world spawned unratified and an agent amending its own documents were
   refused (the-model-compiles-a-routine-and-is-called-back-at-its-edges, #1033 to #1036).
+- **A person's prose becomes a statement only through a sayable, and the translator holding the model's key
+  is a process of the world** — the model fills a declared shape's fields or says none fits, a field the shape
+  does not declare is dropped, the extraction still makes the belief, the agent hears the statement as any
+  peer's document and is unchanged, and no agent image carries the key (#1034, sayable, translator).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
   `crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming an
   absent file or a CRL past its `nextUpdate` refuses the whole society and not the one agent; and
