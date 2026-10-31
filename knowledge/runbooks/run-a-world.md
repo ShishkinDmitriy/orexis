@@ -160,12 +160,15 @@ files nothing can mint. Once per machine, where the language model is paid for:
 cp infra/model.env.example infra/secrets/model.env    # which model, and the key. Never committed
 ```
 
-and per world, the mailbox the translator reads the person's messages from and sends the agent's in,
-as `world/<name>/secrets/mail-<client>.env` for the client the society says translates the chats —
-`MAIL_ADDRESS`, `MAIL_PASSWORD`, `MAIL_IMAP_HOST`, `MAIL_SMTP_HOST`, and the ports where not 993 and 587
-(`translation/carrier.py`). `orexis-compose` says when it is not there. Where the model answers is
-`infra/installation.ttl`'s to state; with no `onboarding:Model` there, a world naming a chat is
-refused.
+and per world, a secret for each carrier some chat goes through, for the client the society says
+translates the chats: the mailbox the translator reads and sends from where a chat goes by email,
+`world/<name>/secrets/mail-<client>.env` with `MAIL_ADDRESS`, `MAIL_PASSWORD`, `MAIL_IMAP_HOST`,
+`MAIL_SMTP_HOST` and the ports where not 993 and 465; and the bot's token where one goes through
+Telegram, `world/<name>/secrets/telegram-<client>.env` with `TELEGRAM_BOT_TOKEN` from `@BotFather`
+(`translation/carrier.py`). A person on Telegram writes to the bot once, their chat id appears in the
+bot's `getUpdates`, and the world states it as the chat's `telegram:id`. `orexis-compose` says which
+file is not there. Where the model answers is `infra/installation.ttl`'s to state; with no
+`onboarding:Model` there, a world naming a chat is refused.
 
 # Monitor a world, or stop
 

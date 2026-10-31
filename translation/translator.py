@@ -4,7 +4,7 @@ statement said made prose — with the model at it.
 **WHO SPEAKS WITH WHOM, THROUGH WHAT, IS THE WORLD'S TO SAY.** A chat is a `speech:Chat` the society
 names, with its `speech:participant`s — an agent and a person — and its `speech:channel`, the thing
 their prose goes through; the channel's type is the carrier, and nothing here is a name in the code:
-a `mqtt4ssn:Topic` is the bus, a thing with a `schema:email` the mail carrier. A person in a chat
+a `mqtt4ssn:Topic` is the bus, a thing with a `schema:email` the mail carrier, a `telegram:Chat` the bot. A person in a chat
 `mqtt4ssn:listensToTopic` an inbox, where the agent's MQTT member publishes its statements to them as it
 publishes to any peer, and where this process reads them; the client that `translation:translates` the
 chats is the one this process connects as (knowledge/domain/speech/chat.md).
@@ -18,8 +18,8 @@ it asking for anything is at most a field of a shape with no such field.
 
 **SAID: THE PERSON'S INBOX → PROSE → THE CHANNEL.** `say` is handed what arrived on a person's inbox —
 the TriG an `execution:Saying` made — finds the sayable it is a statement of, hands the model the fields
-as they stand and asks for the words, and tells them through the chat's channel: the carrier for an
-email, a publish on the topic for the bus. A document of no sayable's class is not rendered: the agent
+as they stand and asks for the words, and tells them through the chat's channel: the mail carrier for an
+email, the bot for a Telegram chat, a publish on the topic for the bus. A document of no sayable's class is not rendered: the agent
 said something the world gave no words for, which is said in the log.
 
 **ONE DOOR FOR THE BUS.** `receive` is handed every message the client is subscribed to: on a chat's
@@ -60,15 +60,18 @@ SAY_SYSTEM = (
     "invent no detail, make no promise the statement does not make, and sign as the agent.")
 
 #  EVERY CHAT, as one row per agent and person in it: the person's inbox, and the channel as the kind it
-#  is — the pattern of its topic where it is one, the email where it has one.
+#  is — the pattern of its topic where it is one, the email where it has one, the Telegram chat id where
+#  it is one, and the url its bot answers at. Telegram's words are the translator's own, so spelled whole.
 _CHATS_Q = """
-SELECT ?chat ?agent ?person ?name ?inbox ?topic ?email WHERE {
+SELECT ?chat ?agent ?person ?name ?inbox ?topic ?email ?telegram ?bot WHERE {
   ?chat a speech:Chat ; speech:participant ?agent , ?person ; speech:channel ?channel .
   ?agent a orexis:Agent . ?person a schema:Person ; mqtt4ssn:listensToTopic ?in .
   ?f mqtt4ssn:matchesTopic ?in ; mqtt4ssn:hasFilterPattern ?inbox .
   OPTIONAL { ?person schema:name ?name }
   OPTIONAL { ?channel a mqtt4ssn:Topic . ?g mqtt4ssn:matchesTopic ?channel ; mqtt4ssn:hasFilterPattern ?topic }
-  OPTIONAL { ?channel schema:email ?email } } ORDER BY ?chat ?agent ?person"""
+  OPTIONAL { ?channel schema:email ?email }
+  OPTIONAL { ?channel a <http://example.org/orexis/telegram#Chat> ; <http://example.org/orexis/telegram#id> ?telegram .
+             OPTIONAL { ?channel <http://example.org/orexis/telegram#bot> ?b . ?b schema:url ?bot } } } ORDER BY ?chat ?agent ?person"""
 _INBOX_Q = """
 SELECT ?pattern WHERE { $agent mqtt4ssn:listensToTopic ?topic .
   ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern } ORDER BY ?pattern"""
@@ -83,23 +86,26 @@ class Chat:
     inbox: str                  # the pattern of the topic the person listens on, where the agent's statements arrive
     topic: str | None = None    # the pattern of the channel, where it is a topic of the bus
     email: str | None = None    # the address of the channel, where it is an email
+    telegram: str | None = None  # the chat id of the channel, where it is a Telegram chat
+    bot: str | None = None      # where that chat's bot answers
 
     @property
     def channel(self) -> str | None:
-        return self.topic or self.email
+        return self.topic or self.email or self.telegram
 
 
 class Translator:
     """One world's edge: its chats, read off the world; a `client` with paho's `subscribe` and `publish`
-    for the bus; a `model` with `ask`; and a `carrier` with `send` for the chats that go by email."""
+    for the bus; a `model` with `ask`; `mail` with `send` for the chats that go by email, and `telegram`
+    with `send` for those that go through the bot."""
 
-    def __init__(self, world: Path | ox.Store, client, model, carrier=None, now=None):
+    def __init__(self, world: Path | ox.Store, client, model, mail=None, telegram=None, now=None):
         self.store = world_of(world) if isinstance(world, (str, Path)) else world
-        self.client, self.model, self.carrier = client, model, carrier
+        self.client, self.model, self.mail, self.telegram = client, model, mail, telegram
         self.now = now or clock.now
         stated = graphs_of(self.store, BELIEF, common=True)
         self.chats = [Chat(r["chat"], r["agent"], r["person"], r.get("name") or local_of(r["person"]), r["inbox"],
-                           r.get("topic"), r.get("email"))
+                           r.get("topic"), r.get("email"), r.get("telegram"), r.get("bot"))
                       for r in rows(self.store, _CHATS_Q, stated)]
         self.inboxes = {c.agent: [r["pattern"] for r in rows(self.store, _INBOX_Q, stated, agent=c.agent)
                                   if "+" not in r["pattern"] and "#" not in r["pattern"]]
@@ -121,9 +127,14 @@ class Translator:
         return patterns
 
     def chat_at(self, address: str) -> Chat | None:
-        """The chat whose channel is the email `address`."""
+        """The chat whose channel a carrier reports as `address`: an email, or a Telegram chat id."""
         address = address.strip().lower()
-        return next((c for c in self.chats if c.email and c.email.lower() == address), None)
+        return next((c for c in self.chats if (c.email and c.email.lower() == address) or c.telegram == address), None)
+
+    @property
+    def bots(self) -> list[str]:
+        """Where the bots of the Telegram chats answer, one url each."""
+        return sorted({c.bot for c in self.chats if c.bot})
 
     def chat_told_on(self, inbox: str) -> Chat | None:
         """The chat whose person listens on `inbox`."""
@@ -151,7 +162,7 @@ class Translator:
     def hear(self, who: Chat | str, prose: str) -> bytes | None:
         """A person's words made a statement and published on their agent's inbox; the document sent, or
         None where no chat is theirs, the model is none, or nothing sayable was said. `who` is the chat,
-        or an email address that names one."""
+        or the address a carrier reported — an email or a Telegram chat id — which names one."""
         chat = who if isinstance(who, Chat) else self.chat_at(who)
         if chat is None:
             log.warning("a message from %s, whom the world names in no chat: dropped unread", who)
@@ -183,10 +194,10 @@ class Translator:
         return document
 
     def say(self, inbox: str, payload: bytes) -> tuple[str, str] | None:
-        """What arrived on a person's inbox, rendered and told through the chat's channel — the carrier for
-        an email, a publish on the topic for the bus, each message saying who said it: the channel and the
-        words, or None where the topic is nobody's inbox, the document is none, no sayable it is of, or the
-        channel is of no kind carried."""
+        """What arrived on a person's inbox, rendered and told through the chat's channel — the mail carrier
+        for an email, the bot for a Telegram chat, a publish on the topic for the bus, each message saying
+        who said it: the channel and the words, or None where the topic is nobody's inbox, the document is
+        none, no sayable it is of, or the channel is of no kind carried."""
         chat = self.chat_told_on(inbox)
         if chat is None:
             return None
@@ -212,8 +223,10 @@ class Translator:
             return None
         if chat.topic:
             self.client.publish(chat.topic, json.dumps({"from": chat.agent, "text": words}).encode(), retain=False)
-        elif chat.email and self.carrier is not None:
-            self.carrier.send(chat.email, words)
+        elif chat.email and self.mail is not None:
+            self.mail.send(chat.email, words)
+        elif chat.telegram and self.telegram is not None:
+            self.telegram.send(chat.telegram, words)
         else:
             log.warning("%s was told a %s, and the chat goes through no channel this translator carries", chat.name, sayable.name)
             return None

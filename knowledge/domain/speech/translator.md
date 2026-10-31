@@ -24,16 +24,19 @@ the translator reads them. Nothing here is a name in the code.
 
 # A channel is what a chat goes through
 
-The channel's type picks the carrier, and the translator knows none by name. Two kinds today:
+The channel's type picks the carrier, and the translator knows none by name. Three kinds:
 
 - **a topic of the bus**, `mqtt4ssn:Topic` — the person's user agent and the translator both publish
   prose on it; a message carries its speaker, so the translator drops what it said itself. The bus
   needs no service outside the world, so it is the channel a test walks end to end on the bench;
 - **an email**, a `schema:ContactPoint` with a `schema:email` — polled and sent to over the standard
-  library (`translation/carrier.py`), the mailbox being the translator's own.
+  library (`translation/carrier.py`), the mailbox being the translator's own;
+- **a Telegram chat**, a `telegram:Chat` with the id the Bot API names it by and the bot it goes
+  through — polled by `getUpdates` and sent to by `sendMessage` over the standard library, the bot's
+  url read off the world and its token the one secret, `TELEGRAM_BOT_TOKEN`. A person opens the chat by
+  writing to the bot once; the id is then in `getUpdates`, and the sovereign states it in the world.
 
-A chat of a messaging service such as Telegram is the same shape — its own vocabulary for the channel,
-a carrier that polls and sends, a secret for the bot — and is not built.
+Each carrier's secret reaches the translator's container only where some chat goes through it.
 
 # The two directions
 
@@ -46,8 +49,8 @@ a carrier that polls and sends, a secret for the bot — and is not built.
   who said it inside it.
 - **Said.** What arrives on the person's inbox is the TriG an `execution:Saying` made. The translator
   finds the sayable it is a statement of, hands the model its fields and who it is for, and tells the
-  words the model renders through the chat's channel — the carrier for an email, a publish on the
-  topic for the bus. A statement of no sayable's class is not rendered: the agent said something the
+  words the model renders through the chat's channel — the mail carrier for an email, the bot for a
+  Telegram chat, a publish on the topic for the bus. A statement of no sayable's class is not rendered: the agent said something the
   world gave no words for, said in the log.
 
 # What the model may and may not do
@@ -68,7 +71,9 @@ user agent the topics of whom it acts for, and grants the agent to write the inb
 chats with; `orexis-compose` writes one `translation` service connected as the client, which mounts
 this tree, the only one the image does not carry. Where the model answers is the installation's word
 ([deployment](/domain/onboarding/deployment.md)); which model and its key are a secret of the
-installation's, the mailbox one of the world's, `secrets/mail-<client>.env`, written by hand. What a
+installation's, each carrier's — the mailbox, `secrets/mail-<client>.env`, the bot's token,
+`secrets/telegram-<client>.env` — one of the world's, written by hand and mounted only where a chat goes
+through that carrier. What a
 chat must state for all of that to be derived is the translator's own
 [requirement](/domain/onboarding/requirement.md), `translation/requirements.ttl`.
 

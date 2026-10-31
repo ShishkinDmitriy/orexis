@@ -4,6 +4,7 @@
 @prefix translation: <http://example.org/orexis/translation#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix schema: <https://schema.org/> .
+@prefix telegram: <http://example.org/orexis/telegram#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix onboarding: <http://example.org/orexis/onboarding#> .
 
@@ -28,9 +29,11 @@
         sh:message "has no agent in it: a chat is between a person and an agent of the society" ;
         sh:select """SELECT $this WHERE { FILTER NOT EXISTS { $this speech:participant ?a . ?a a orexis:Agent } }""" ] ,
       [ a sh:SPARQLConstraint ;
-        sh:message "goes through {?channel}, which is of no kind the translator carries: a topic of the bus, or a contact point with an email" ;
-        sh:select """SELECT $this ?channel WHERE { $this speech:channel ?channel .
-  FILTER NOT EXISTS { ?channel a mqtt4ssn:Topic } FILTER NOT EXISTS { ?channel schema:email ?email } }""" ] ,
+        sh:message "goes through {?channel}, which is of no kind the translator carries: a topic of the bus, a contact point with an email, or a Telegram chat" ;
+        sh:select """PREFIX telegram: <http://example.org/orexis/telegram#>
+SELECT $this ?channel WHERE { $this speech:channel ?channel .
+  FILTER NOT EXISTS { ?channel a mqtt4ssn:Topic } FILTER NOT EXISTS { ?channel schema:email ?email }
+  FILTER NOT EXISTS { ?channel a telegram:Chat } }""" ] ,
       [ a sh:SPARQLConstraint ;
         sh:message "is translated by no client: the translator connects as the client that translates the chats it stands in" ;
         sh:select """PREFIX translation: <http://example.org/orexis/translation#>
@@ -59,3 +62,17 @@ SELECT $this ?one ?other ?two WHERE {
     sh:targetSubjectsOf prov:actedOnBehalfOf ;
     sh:property [ sh:path mqtt4ssn:hasClientID ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:message "acts on someone's behalf and has no one client id: it connects as itself, with a credential of its own" ] .
+
+#  A TELEGRAM CHAT is named by one id and reached through one bot, which answers at one https url, since
+#  the token goes over the wire with every call (translation/telegram.ttl).
+[] a sh:NodeShape ;
+    sh:targetClass telegram:Chat ;
+    sh:property [ sh:path telegram:id ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "a Telegram chat has one id, which the Bot API names it by" ] ,
+                [ sh:path telegram:bot ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "a Telegram chat is reached through one bot" ] .
+
+[] a sh:NodeShape ;
+    sh:targetClass telegram:Bot ;
+    sh:property [ sh:path schema:url ; sh:minCount 1 ; sh:maxCount 1 ; sh:pattern "^https://" ;
+                  sh:message "a Telegram bot answers at one https:// url: the token goes over the wire with every call" ] .

@@ -30,6 +30,7 @@ V = "http://example.org/orexis/world/viewing#"
 NOW = datetime(2026, 11, 1, 9, 0, tzinfo=timezone.utc)
 ANNA, SEEKER = "anna@example.org", V + "seeker"
 BORIS_TOPIC = "chats/seeker_and_boris"
+CLARA_TELEGRAM = "4815162342"
 
 
 @dataclass
@@ -59,19 +60,21 @@ class StandIn:
 @pytest.fixture
 def world():
     client, carrier = Client(), Memory()
-    return client, carrier, lambda model: Translator(WORLD, client, model, carrier, now=lambda: NOW)
+    return client, carrier, lambda model, telegram=None: Translator(WORLD, client, model, mail=carrier, telegram=telegram, now=lambda: NOW)
 
 
 def test_the_translator_reads_its_chats_off_the_world_and_listens_on_the_inboxes_and_the_topics(world):
-    """Two chats, two kinds of channel: the seeker with Anna by email, with Boris over a topic of the bus. The
-    translator listens on each person's inbox, where the seeker's statements arrive, and on the topic."""
+    """Three chats, three kinds of channel: the seeker with Anna by email, with Boris over a topic of the bus,
+    with Clara in a Telegram chat through the bot. The translator listens on each person's inbox, where the
+    seeker's statements arrive, and on the topic; the bot's url is read off the world."""
     client, _, make = world
     translator = make(StandIn())
-    assert [(p.iri, p.agent, p.name, p.inbox, p.topic, p.email) for p in translator.chats] == [
-        (V + "seeker_and_anna", SEEKER, "Anna", "people/anna/inbox", None, ANNA),
-        (V + "seeker_and_boris", SEEKER, "Boris", "people/boris/inbox", BORIS_TOPIC, None)]
-    assert translator.inboxes == {SEEKER: ["agents/seeker/inbox"]}
-    assert translator.open() == [BORIS_TOPIC, "people/anna/inbox", "people/boris/inbox"] == client.subscribed
+    assert [(p.iri, p.agent, p.name, p.inbox, p.topic, p.email, p.telegram, p.bot) for p in translator.chats] == [
+        (V + "seeker_and_anna", SEEKER, "Anna", "people/anna/inbox", None, ANNA, None, None),
+        (V + "seeker_and_boris", SEEKER, "Boris", "people/boris/inbox", BORIS_TOPIC, None, None, None),
+        (V + "seeker_and_clara", SEEKER, "Clara", "people/clara/inbox", None, None, CLARA_TELEGRAM, "https://api.telegram.org")]
+    assert translator.inboxes == {SEEKER: ["agents/seeker/inbox"]} and translator.bots == ["https://api.telegram.org"]
+    assert translator.open() == [BORIS_TOPIC, "people/anna/inbox", "people/boris/inbox", "people/clara/inbox"] == client.subscribed
 
 
 def test_a_persons_prose_becomes_a_statement_on_her_agents_inbox_which_the_agent_hears_and_believes(world):
@@ -159,6 +162,29 @@ def test_a_chat_over_the_bus_is_heard_and_told_on_its_one_topic_and_the_translat
     assert translator.receive("people/boris/inbox", statement) == (BORIS_TOPIC, told.text)
     assert client.published == [(BORIS_TOPIC, json.dumps({"from": SEEKER, "text": told.text}).encode(), False)] and carrier.sent == []
     assert translator.receive("chats/nobody", b"hello") is None, "a topic of no chat is dropped"
+
+
+def test_a_chat_on_telegram_is_heard_by_its_chat_id_and_told_through_the_bot(world):
+    """Telegram as a channel: the bot's poll reports Clara's words under her chat id, which names the chat as
+    an email names Anna's; a statement to Clara goes to the bot, and neither the mailbox nor the bus."""
+    client, carrier, make = world
+    bot = Memory()
+    heard = StandIn(call=("Refusal", {"listing": "the two-room flat on Kastanienallee"}))
+    translator = make(heard, telegram=bot)
+    payload = translator.hear(CLARA_TELEGRAM, "Sorry, the Kastanienallee flat went to another applicant.")
+    assert payload is not None and client.published == [("agents/seeker/inbox", payload, False)]
+    (_, text, _), = heard.asked
+    assert text.startswith("From Clara:\n"), text
+    doc = ox.Store(); doc.load(payload, format=ox.RdfFormat.TRIG)
+    assert any(q.predicate.value.endswith("saidBy") and q.object == ox.NamedNode(V + "clara") for q in doc)
+    client.published.clear()
+    told = StandIn(text="Dear Clara, could I view the studio on Rigaer Straße? Weekday evenings suit me. — seeker")
+    translator = make(told, telegram=bot)
+    request = next(s for s in sayables(translator.store) if s.name == "ViewingRequest")
+    statement = document_of(request, {"listing": "the studio on Rigaer Straße", "hours": "weekday evenings"}, by=SEEKER, prose="", at=NOW)
+    assert translator.receive("people/clara/inbox", statement) == (CLARA_TELEGRAM, told.text)
+    assert bot.sent == [(CLARA_TELEGRAM, told.text)] and carrier.sent == [] and client.published == []
+    assert make(told).say("people/clara/inbox", statement) is None, "with no bot, a Telegram chat goes nowhere"
 
 
 def test_what_arrives_on_no_persons_inbox_or_is_of_no_sayable_is_not_rendered(world, caplog):
