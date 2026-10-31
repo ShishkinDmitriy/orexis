@@ -4,7 +4,7 @@ The broker's address and this client's credential arrive as environment, as the 
 `MQTT_HOST`, `MQTT_PORT`, `MQTT_USERNAME`, `MQTT_PASSWORD` — and paho is imported here and nowhere
 else in the translator. The model is `MODEL_API_KEY`, `MODEL_NAME` and `MODEL_URL` (`model.py`), the
 mailbox `MAIL_*` (`carrier.py`) asked every `MAIL_POLL_S` real seconds, the Telegram bot `TELEGRAM_BOT_TOKEN`
-asked every `TELEGRAM_POLL_S`, at the url the world states for it. The
+asked every `TELEGRAM_POLL_S`, at `TELEGRAM_URL`. The
 bus is the other carrier and needs nothing of its own: every message the translator is subscribed to
 goes through `Translator.receive`, prose on a chat's topic and statements on a person's inbox alike."""
 
@@ -36,11 +36,7 @@ def main(argv=None) -> int:
     client.connect(os.environ["MQTT_HOST"], int(os.environ.get("MQTT_PORT", "1883")))
     client.loop_start()
     mail = Email.from_environ()
-    translator = Translator(args.world, client, Model.from_environ(), mail)
-    bots = translator.bots
-    if len(bots) > 1:
-        raise SystemExit(f"the world's Telegram chats go through bots at {bots}: one translator holds one token")
-    translator.telegram = Telegram.from_environ(url=bots[0]) if bots else None
+    translator = Translator(args.world, client, Model.from_environ(), mail, Telegram.from_environ())
     translator.open()
     carriers = [(mail, float(os.environ.get("MAIL_POLL_S", "30")), [0.0], "the mailbox"),
                 (translator.telegram, float(os.environ.get("TELEGRAM_POLL_S", "3")), [0.0], "the bot")]

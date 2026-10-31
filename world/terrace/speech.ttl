@@ -1,0 +1,17 @@
+@prefix : <http://example.org/orexis/world/terrace#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix telegram: <http://example.org/orexis/telegram#> .
+
+<> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
+
+#  WHO SPEAKS WITH WHOM, THROUGH WHAT: the terrace's agent with its sovereign, in a Telegram chat
+#  through the translator's bot (society.ttl). The agent wants nothing and says nothing of its own;
+#  what the chat carries is the account it gives of itself — what it observes, and when the next
+#  reading is due — relayed on `/account` and answered from on a question (knowledge/domain/account/account.md).
+#  The chat's id is the sovereign's and sits in secrets/chat.ttl, not here.
+
+:terrace_and_dmitrii a speech:Chat ;
+    speech:participant :terrace_agent , :dmitrii ;
+    speech:channel :sovereign_telegram .
+:sovereign_telegram a telegram:Chat ; telegram:bot :bot .

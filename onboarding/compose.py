@@ -180,6 +180,19 @@ def translation_client(world: str) -> str | None:
     return found.pop() if found else None
 
 
+#  WHERE THE TRANSLATOR'S BOT ANSWERS: the `schema:url` a world's deployment graph states on its telegram bot.
+_BOT_Q = """
+SELECT ?url WHERE { ?bot a <http://example.org/orexis/telegram#Bot> ; <https://schema.org/url> ?url } ORDER BY ?url"""
+
+
+def bot_url(world: str) -> str | None:
+    """Where the world's Telegram bot answers, as its deployment graph asserts, or None where it names no bot
+    — one bot with one https url is the translator's requirement, held before any tool asking here runs."""
+    store = reading.world(world_dir(world))
+    found = [r["url"] for r in rows(store, _BOT_Q, graphs_of(store, BELIEF, reading.DEPLOYMENT, common=True))]
+    return found[0] if found else None
+
+
 def carriers(world: str) -> list[str]:
     """The carriers the world's chats go through beside the bus — `mail`, `telegram` — each a secret the
     translator's container is handed, written by hand."""
@@ -187,7 +200,9 @@ def carriers(world: str) -> list[str]:
     return [r["carrier"] for r in rows(store, _CARRIERS_Q, graphs_of(store, BELIEF, common=True))]
 
 
-def _translator(world: str, read: set[Path], client: str, host: str, plain: int, model: str, carried: list[str]) -> str:
+def _translator(world: str, read: set[Path], client: str, host: str, plain: int, model: str, carried: list[str],
+                bot: str | None = None) -> str:
+    where = f'\n      # where its Telegram bot answers, as the world\'s deployment graph states\n      TELEGRAM_URL: "{bot}"' if bot else ""
     secrets = "".join(f"\n      # the {'mailbox the chats by email are reached through' if c == 'mail' else 'token of the bot the chats on Telegram go through'}, written by hand: nothing can mint one"
                       f"\n      - ./secrets/{c}-{client}.env" for c in carried)
     return f"""
@@ -199,7 +214,7 @@ def _translator(world: str, read: set[Path], client: str, host: str, plain: int,
       MQTT_PORT: "{plain}"
       # where the language model answers — the installation's `onboarding:Model`; which model, and the
       # key, arrive in the installation's secret below
-      MODEL_URL: "{model}"
+      MODEL_URL: "{model}"{where}
     env_file:
       # the credential of `{client}`, the client that translates the world's chats
       - ./secrets/mqtt-{client}.env
@@ -406,7 +421,7 @@ def render(world: str) -> str:
     counted = installation.incidents(world)
     services = ("".join(_broker(world, b, *bus[b][1:]) for b in sorted(bus))
                 + (_simulator(world, read, client, *broker_of(world, client)[:2]) if client else "")
-                + (_translator(world, read, speaker, *broker_of(world, speaker)[:2], model, carriers(world)) if speaker else "")
+                + (_translator(world, read, speaker, *broker_of(world, speaker)[:2], model, carriers(world), bot_url(world)) if speaker else "")
                 + "".join(_service(a, world, read, reached.get(a, []) if bus else None, series, window,
                                    reading.lasts(world_dir(world), a), installation.journal(iris[a]), counted)
                           for a in who))

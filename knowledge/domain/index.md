@@ -87,6 +87,11 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [implementation](/domain/execution/implementation.md) - How an action is carried out when a step is taken: operations grouped by order, sized from the present, never read by a search.
 * [operation](/domain/execution/operation.md) - One thing taking a step does — a command, a saying, or the fictive write. Not an act, which is the record.
 
+# Account — what an agent says of itself
+
+* [account](/domain/account/account.md) - What an agent says of itself for a person, each part its section, published retained when it changes; telemetry, never a belief.
+* [reporter](/domain/account/reporter.md) - An agent that gives an account of itself, declared in its self graph; the bus is loaded for the topic it accounts on.
+
 # Speech — what peers say
 
 * [speech](/domain/speech/speech.md) - A peer's word is a document, kept as a statement; what the agent said is kept the same way, and extraction makes beliefs of both.

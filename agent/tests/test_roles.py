@@ -100,7 +100,7 @@ def test_every_package_but_a_transport_declares_a_role_and_every_role_is_found()
     serving = set(ROLES.values())
     assert set(every_package()) - serving == {MQTT, HTTP}, sorted(serving)
     local = {role.rsplit("#", 1)[-1] for role in ROLES}
-    assert local == {"Deliberator", "Observer", "Predictor", "Planner", "Executor", "Speaker", "Coordinator"}, sorted(local)
+    assert local == {"Deliberator", "Observer", "Predictor", "Planner", "Executor", "Speaker", "Coordinator", "Reporter"}, sorted(local)
 
 
 @pytest.mark.parametrize("role", sorted(ROLES), ids=lambda r: r.rsplit("#", 1)[-1])
@@ -263,7 +263,7 @@ _MACHINES = {"belief": {"transition"}}
 @pytest.mark.parametrize("world, agent, passes, loaded, outcome", [
     ("hanoi", "hanoi", 20, {"planning"}, "planned"),
     (None, "hanoi", 20, {"planning", "execution"}, "met"),
-    ("terrace", "terrace", 0, {"belief", "sensing", "prediction", MQTT, HTTP}, None),
+    ("terrace", "terrace", 0, {"belief", "sensing", "prediction", "speech", "account", MQTT, HTTP}, None),
     ("allotment", "fern_grower", 0, {"belief", "planning", "execution", "sensing", "prediction", "speech", MQTT}, None),
 ], ids=["hanoi's planner, run to planned", "hanoi's planner made an executor too, run to met",
         "the terrace's observer and predictor", "the allotment's fern grower, everything"])

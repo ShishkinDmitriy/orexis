@@ -5,6 +5,7 @@
 @prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix schema: <https://schema.org/> .
 @prefix speech: <http://example.org/orexis/speech#> .
+@prefix account: <http://example.org/orexis/account#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
@@ -123,6 +124,7 @@
 #                                    local name: where the agent's statements to them arrive.
 #    chats/<chat>                    the topic a chat goes through, by the chat's local name: the prose
 #                                    of the person's user agent and the translator's, both ways.
+#    agents/<id>/account             what an agent gives an account of itself on, retained.
 #
 #  `orexis-onboard` runs the rule over the world's asserted documents and writes what it made beside
 #  the society, `society.derived.ttl`, a society graph the agents, the simulator and every tool read
@@ -155,6 +157,9 @@
               UNION
               { ?chat a speech:Chat ; speech:channel $this .
                 BIND (CONCAT("chats/", REPLACE(STR(?chat), "^.*[#/]", "")) AS ?pattern) }
+              UNION
+              { ?agent a orexis:Agent ; orexis:localId ?id ; account:accountsOn $this .
+                BIND (CONCAT("agents/", ?id, "/account") AS ?pattern) }
               BIND (IRI(CONCAT(STR($this), "_filter")) AS ?filter) }""" ] ;
     sh:sparql [
         sh:message "named by no filter: nothing publishes on it or listens to it, or `orexis-onboard` has not derived its name" ;

@@ -39,13 +39,15 @@ MESSAGE = json.dumps({"moisture_raw": [{"value": 710, "age_s": 0}], "temperature
 
 class Broker:
     def __init__(self):
-        self.subscribed, self.published = [], []
+        self.subscribed, self.published, self.retained = [], [], {}
 
     def subscribe(self, pattern):
         self.subscribed.append(pattern)
 
     def publish(self, topic, payload, retain=False):
         self.published.append(topic)
+        if retain:
+            self.retained[topic] = json.loads(payload)
 
 
 @pytest.fixture
@@ -75,9 +77,10 @@ def test_booted_from_its_directory_the_agent_holds_no_hardware():
     assert (held, rowed) == (0, 0), f"the terrace agent holds {held} hardware quads and {rowed} rows about the graph"
 
 
-def test_the_agent_listens_on_the_boards_one_topic(monkeypatch):
+def test_the_agent_listens_on_the_boards_one_topic_and_its_own_inbox(monkeypatch):
     _, broker = _terrace(monkeypatch)
-    assert broker.subscribed == ["sensors/moisture_sensor_terrace/reading"]
+    assert broker.subscribed == ["agents/terrace/inbox", "sensors/moisture_sensor_terrace/reading"], \
+        "the board's readings, and the inbox the chat's statements to it would arrive on"
 
 
 def test_one_message_is_five_observations_and_the_soil_is_below_the_beds_range(monkeypatch):
@@ -96,7 +99,24 @@ def test_one_message_is_five_observations_and_the_soil_is_below_the_beds_range(m
     held = rows(runtime.beliefs, "SELECT ?s ?p ?o WHERE { ?s ?p ?o }", present)
     assert [(r["s"].rsplit("#", 1)[-1], r["p"].rsplit("#", 1)[-1], r["o"].rsplit("#", 1)[-1]) for r in held] == \
         [("terrace_bed", "soil", "Dry")], "under the bed's floor, and nothing of the readings themselves"
-    assert broker.published == [], "nothing is wanted, so nothing is sent"
+    assert broker.published == ["agents/terrace/account"], "nothing is wanted, so nothing is sent but its account of itself"
+
+
+def test_the_agent_gives_an_account_of_itself_when_what_it_observes_changes(monkeypatch):
+    """A reporter: the one message read, the agent publishes what it observes, retained, on its account topic —
+    each reading, of what, by which sensor, when, and when the next is due — and publishes nothing more while
+    nothing it says of itself changes."""
+    runtime, broker = _terrace(monkeypatch)
+    runtime.deliver("sensors/moisture_sensor_terrace/reading", MESSAGE, NOW)
+    runtime.run(passes=2, poll_s=0)
+    account = broker.retained["agents/terrace/account"]["account"]
+    lines = account.split("\n")
+    assert lines[0] == "terrace_agent at 2026-01-01T12:00+00:00" and lines[1] == "observes:", lines
+    assert " - SoilMoisture of terrace_bed: 0.2, read by moisture_sensor_terrace at 2026-01-01T12:00+00:00, next due 2026-01-01T12:20+00:00" in lines[2:]
+    assert sum(1 for line in lines if line.startswith(" - ")) == 5, "one line per sensor read"
+    assert broker.published.count("agents/terrace/account") == 1
+    runtime.run(passes=2, poll_s=0)
+    assert broker.published.count("agents/terrace/account") == 1, "nothing changed, nothing published"
 
 
 def test_a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving(monkeypatch, caplog):
@@ -116,7 +136,7 @@ def test_a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving(monke
     assert sorted(m.split(": ", 1)[1].split(" ", 1)[0] for m in said) == [
         "air_humidity_terrace", "air_pressure_terrace", "air_temp_terrace", "battery_sensor_terrace",
         "moisture_sensor_terrace"]
-    assert broker.published == []
+    assert [t for t in broker.published if t != "agents/terrace/account"] == [], "nothing but its account of itself"
 
 
 def test_each_reading_reaches_the_series_under_its_own_property(monkeypatch, history):

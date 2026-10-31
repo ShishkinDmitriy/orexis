@@ -104,6 +104,10 @@ SELECT DISTINCT ?broker WHERE {
   UNION { ?client mqtt4ssn:hosts ?system ; mqtt4ssn:isConnectedToBroker ?broker . ?system ssn:hasSubSystem* $thing } }
 ORDER BY ?broker"""
 
+#  THE PATTERN NAMING ONE TOPIC NODE, for a publish on a topic of the agent's own.
+_PATTERN_Q = """
+SELECT ?pattern WHERE { ?filter mqtt4ssn:matchesTopic $topic ; mqtt4ssn:hasFilterPattern ?pattern } ORDER BY ?pattern"""
+
 #  WHERE AN AGENT IS TOLD THINGS: the topic it listens to itself, as a board listens for
 #  commands. Its own is what it subscribes to; a peer's is where a document to it is published.
 _LISTENS_Q = """
@@ -314,6 +318,20 @@ class Mqtt(Transport):
         for sensor in mine:
             written += [(sensor, graph) for graph in received(store, self.me, sensor, payload, at, memo=memo)]
         return written
+
+    def publish_on(self, store, topic: str, payload: dict, retain: bool) -> bool:
+        """`payload` out on the topic node `topic` of the agent's own — its account, say — by the one pattern
+        naming it, over the first broker this member reaches for the agent; False, said once, where the
+        topic is named by no pattern without a wildcard or the agent is on no broker of this member's."""
+        names = [p for p in (r["pattern"] for r in rows(store, _PATTERN_Q, graphs_of(store, BELIEF, common=True), topic=topic))
+                 if "+" not in p and "#" not in p]
+        if not names:
+            return self._unreached(topic, "nothing is published on it")
+        over = self._over(store, self.me)
+        if not over:
+            return self._unshared(self.me, "nothing is published on its own topic")
+        over[0].publish(names[0], json.dumps(payload).encode(), retain=retain)
+        return True
 
     def publish(self, store, device: str, topic: str, payload: dict, retain: bool) -> bool:
         """A command to `device` out, as the JSON document the firmware reads, over the first broker

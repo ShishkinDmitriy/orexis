@@ -11,8 +11,9 @@ plain text; one that carries no plain text is dropped, said in the log.
 **TELEGRAM, OVER THE BOT API.** `Telegram` is the translator's bot: `poll` asks `getUpdates` from the
 offset after the last update it saw and answers each text message as its chat's id and its text, `send`
 posts `sendMessage` to a chat. The token is `TELEGRAM_BOT_TOKEN`, the one secret, and where the API
-answers is the bot's `schema:url` in the world (`translation/telegram.ttl`); the HTTP call is injected
-as the model's is, so a test hands a stand-in.
+answers is `TELEGRAM_URL`, the bot's `schema:url` in the world's deployment graph as `orexis-compose`
+tells it (`translation/telegram.ttl`); the HTTP call is injected as the model's is, so a test hands a
+stand-in.
 
 **A MEMORY CARRIER FOR A TEST**: what it was handed is what it polls, and what it sent is kept.
 """
@@ -128,12 +129,14 @@ class Telegram:
         self.offset: int | None = None
 
     @classmethod
-    def from_environ(cls, environ=None, url: str = TELEGRAM_URL) -> "Telegram | None":
+    def from_environ(cls, environ=None) -> "Telegram | None":
+        """The bot the environment names: its token, and where the API answers — `TELEGRAM_URL`, the world's
+        deployment fact as `orexis-compose` tells it, or Telegram's own where none is told."""
         env = os.environ if environ is None else environ
         if not env.get("TELEGRAM_BOT_TOKEN"):
             log.warning("no telegram bot: TELEGRAM_BOT_TOKEN is not set")
             return None
-        return cls(env["TELEGRAM_BOT_TOKEN"], url)
+        return cls(env["TELEGRAM_BOT_TOKEN"], env.get("TELEGRAM_URL") or TELEGRAM_URL)
 
     def _method(self, name: str) -> str:
         return f"{self.url}/bot{self.token}/{name}"

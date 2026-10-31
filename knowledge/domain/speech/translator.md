@@ -32,8 +32,8 @@ The channel's type picks the carrier, and the translator knows none by name. Thr
 - **an email**, a `schema:ContactPoint` with a `schema:email` — polled and sent to over the standard
   library (`translation/carrier.py`), the mailbox being the translator's own;
 - **a Telegram chat**, a `telegram:Chat` with the id the Bot API names it by and the bot it goes
-  through — polled by `getUpdates` and sent to by `sendMessage` over the standard library, the bot's
-  url read off the world and its token the one secret, `TELEGRAM_BOT_TOKEN`. A person opens the chat by
+  through — polled by `getUpdates` and sent to by `sendMessage` over the standard library, where the
+  bot answers a deployment fact told as `TELEGRAM_URL` and its token the one secret, `TELEGRAM_BOT_TOKEN`. A person opens the chat by
   writing to the bot once; the id is then in `getUpdates`, and the sovereign states it in the world.
 
 Each carrier's secret reaches the translator's container only where some chat goes through it.
@@ -53,9 +53,17 @@ Each carrier's secret reaches the translator's container only where some chat go
   Telegram chat, a publish on the topic for the bus. A statement of no sayable's class is not rendered: the agent said something the
   world gave no words for, said in the log.
 
+# A question is answered from the account
+
+Where the agent in a chat is a [reporter](/domain/account/reporter.md), the translator keeps its
+latest [account](/domain/account/account.md) off the bus, and treats words that fill no sayable as
+a question: the account page says what is relayed for nothing and what costs one model call. A
+world that declares no sayable, the terrace, makes every message a question.
+
 # What the model may and may not do
 
-It fills a sayable's fields, or says none fits; it writes the words a statement is sent as. It authors
+It fills a sayable's fields, or says none fits; it writes the words a statement is sent as; it
+answers a question from an account it is handed. It authors
 no belief, names no step, runs no query and reaches no agent but by a statement of a declared shape
 marked another party's word. Which model and where is environment (`MODEL_NAME`, `MODEL_API_KEY`,
 `MODEL_URL`), the key the installation's secret reaching this process alone; `tests/test_layout.py`

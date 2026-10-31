@@ -3,6 +3,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix speech: <http://example.org/orexis/speech#> .
+@prefix account: <http://example.org/orexis/account#> .
 @prefix onboarding: <http://example.org/orexis/onboarding#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
@@ -21,3 +22,10 @@
         sh:message "a speaker connected to no broker: what is said to it is carried by none" ;
         sh:select """SELECT $this WHERE { ?me orexis:plays $this FILTER NOT EXISTS { ?me mqtt4ssn:isConnectedToBroker ?broker } }""" ] .
 
+#  A REPORTER'S NEED: the topic it gives its account of itself on, stated in the society as a speaker's inbox
+#  is, named `agents/<id>/account` by onboarding's rule (knowledge/domain/account/reporter.md).
+[] a sh:NodeShape ;
+    sh:targetClass account:Reporter ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "a reporter accounts on no topic: its account of itself goes nowhere" ;
+        sh:select """SELECT $this WHERE { ?me orexis:plays $this FILTER NOT EXISTS { ?me account:accountsOn ?topic } }""" ] .

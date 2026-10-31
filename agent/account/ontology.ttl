@@ -1,0 +1,20 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix account: <http://example.org/orexis/account#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  THE ACCOUNT PACKAGE'S WORDS: the role, and where the account goes (knowledge/domain/account/account.md).
+
+account:Reporter a owl:Class ;
+    rdfs:subClassOf orexis:Role ;
+    rdfs:label "Reporter" ;
+    rdfs:comment """An agent that gives an account of itself: every pass the account changes, the part asks each
+    part what it says of itself and publishes the text retained on the topic the agent `account:accountsOn`,
+    for the translator standing in a chat with it to relay and to answer a person's question from
+    (knowledge/domain/account/reporter.md). Declared, never derived; the boot loads this package for it.""" .
+
+account:accountsOn a owl:ObjectProperty ;
+    rdfs:label "accounts on" ;
+    rdfs:comment "The topic an agent publishes its account on, retained, so whoever asks after a restart finds the latest without asking anybody: stated of the agent in the society, named `agents/<id>/account` by onboarding's rule, granted to the agent to write and to the translator of its chats to read." .

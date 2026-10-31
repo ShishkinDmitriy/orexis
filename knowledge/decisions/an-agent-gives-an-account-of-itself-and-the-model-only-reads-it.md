@@ -16,6 +16,13 @@ description: >-
   agent, a gateway spanning worlds.
 ---
 
+> **Amended 2026-10-31:** the gateway is the [translator](/domain/speech/translator.md), and the
+> chat is a [chat](/domain/speech/chat.md) the world states; `orexis-chat` was never built. The
+> account is as decided — the `account` package, `agent/account/`, each part its section, published
+> retained on the agent's account topic on change, a command relayed for nothing and a free question
+> one model call — and the role that gives one is `account:Reporter`, declared in the self graph as
+> every role is since #927. The chat ids live in the world's `secrets/` as decided; the bot's token too.
+
 > **Amended 2026-10-30:** the model gains a second seat beside the account, the TRANSLATOR at a
 > human-speech transport's edge, so "it reaches no agent" below reads: nothing it writes reaches an
 > agent but a statement of a shape the domain declares, marked another party's word, which the domain's

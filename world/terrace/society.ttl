@@ -3,6 +3,10 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix td: <https://www.w3.org/2019/wot/td#> .
 @prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
+@prefix schema: <https://schema.org/> .
+@prefix account: <http://example.org/orexis/account#> .
+@prefix telegram: <http://example.org/orexis/telegram#> .
+@prefix translation: <http://example.org/orexis/translation#> .
 
 <> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
 
@@ -10,7 +14,9 @@
 #  the board's one topic, named by a filter `orexis-onboard` derives into society.derived.ttl beside
 #  this file, by one convention (onboarding/requirements.ttl). The broker is here as what the
 #  clients are connected to; where it listens is deployment.ttl's, which onboarding reads and no
-#  agent does.
+#  agent does. And the sovereign, who chats with the agent over Telegram (speech.ttl): the person,
+#  the inbox the agent's statements to them arrive on, the topic the agent gives its account of
+#  itself on, the translator's bot, and the translator, the client that stands in the chat.
 
 :broker a mqtt4ssn:Broker .
 
@@ -18,7 +24,26 @@
     orexis:localId "terrace" ;
     mqtt4ssn:hasClientID "terrace" ;
     mqtt4ssn:isConnectedToBroker :broker ;
-    orexis:actsFor :terrace_bed , :terrace_battery .
+    orexis:actsFor :terrace_bed , :terrace_battery ;
+    mqtt4ssn:listensToTopic :terrace_inbox ;
+    account:accountsOn :terrace_account .
+:terrace_inbox a mqtt4ssn:Topic .
+:terrace_account a mqtt4ssn:Topic .
+
+#  THE SOVEREIGN, reached in a Telegram chat through the translator's bot. The chat's id is theirs, so it
+#  is stated in secrets/chat.ttl, which git does not hold, as the terrace's place is: a society graph
+#  saying `:sovereign_telegram telegram:id "<the id getUpdates shows>"`.
+:dmitrii a schema:Person ;
+    schema:name "Dmitrii" ;
+    mqtt4ssn:listensToTopic :dmitrii_inbox .
+:dmitrii_inbox a mqtt4ssn:Topic .
+
+:bot a telegram:Bot .            # where it answers is deployment.ttl's
+
+:translator a mqtt4ssn:Client ;
+    mqtt4ssn:hasClientID "translator" ;
+    mqtt4ssn:isConnectedToBroker :broker ;
+    translation:translates :terrace_and_dmitrii .
 
 #  THE BOARD, as the bus knows it: one client, one credential — flashed as `moisture_sensor_terrace`
 #  and kept, so the board needs no reflash — hosting the probe and the BME280.

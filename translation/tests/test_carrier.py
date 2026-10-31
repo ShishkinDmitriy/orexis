@@ -45,5 +45,6 @@ def test_a_message_is_sent_to_the_chat_by_its_id():
 
 def test_no_token_is_no_bot(caplog):
     assert Telegram.from_environ({}) is None and "TELEGRAM_BOT_TOKEN" in caplog.text
-    bot = Telegram.from_environ({"TELEGRAM_BOT_TOKEN": "123:abc"}, url="https://tg.example/")
-    assert bot is not None and bot.url == "https://tg.example"
+    bot = Telegram.from_environ({"TELEGRAM_BOT_TOKEN": "123:abc", "TELEGRAM_URL": "https://tg.example/"})
+    assert bot is not None and bot.url == "https://tg.example", "where the API answers is told as environment"
+    assert Telegram.from_environ({"TELEGRAM_BOT_TOKEN": "123:abc"}).url == "https://api.telegram.org"
