@@ -1,0 +1,61 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix translation: <http://example.org/orexis/translation#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+
+<> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A WORLD MUST STATE OF ITS CHATS FOR A TRANSLATOR TO STAND IN THEM, held by onboarding alone,
+#  before anything is granted (knowledge/domain/onboarding/requirement.md). The translator's need,
+#  shipped by the translator: a chat has a person and an agent in it, one channel of a kind the
+#  translator carries, and one client translating it; each person in a chat listens on an inbox, where
+#  the agent's statements to them arrive for the translator to render, and each agent on one, where
+#  what the person says arrives as a statement; and a client acting on behalf of a person connects as
+#  itself, with a credential of its own. No agent loads this graph: its kind is onboarding's, and
+#  onboarding reads it beside its own (onboarding/reading.py).
+[] a sh:NodeShape ;
+    sh:targetClass speech:Chat ;
+    sh:property [ sh:path speech:channel ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "a chat goes through one channel" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "has no person in it: a chat is between an agent and someone the translator speaks for" ;
+        sh:select """SELECT $this WHERE { FILTER NOT EXISTS { $this speech:participant ?p . ?p a schema:Person } }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "has no agent in it: a chat is between a person and an agent of the society" ;
+        sh:select """SELECT $this WHERE { FILTER NOT EXISTS { $this speech:participant ?a . ?a a orexis:Agent } }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "goes through {?channel}, which is of no kind the translator carries: a topic of the bus, or a contact point with an email" ;
+        sh:select """SELECT $this ?channel WHERE { $this speech:channel ?channel .
+  FILTER NOT EXISTS { ?channel a mqtt4ssn:Topic } FILTER NOT EXISTS { ?channel schema:email ?email } }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "is translated by no client: the translator connects as the client that translates the chats it stands in" ;
+        sh:select """PREFIX translation: <http://example.org/orexis/translation#>
+SELECT $this WHERE { FILTER NOT EXISTS { ?client translation:translates $this ; mqtt4ssn:hasClientID ?id } }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "is translated by {?one}, as {?other} is by {?two}: one translator stands in every chat of a world, as one client" ;
+        sh:select """PREFIX translation: <http://example.org/orexis/translation#>
+SELECT $this ?one ?other ?two WHERE {
+  ?a translation:translates $this ; mqtt4ssn:hasClientID ?one .
+  ?b translation:translates ?chat ; mqtt4ssn:hasClientID ?two .
+  FILTER (?one < ?two)
+  BIND (REPLACE(STR(?chat), "^.*[#/]", "") AS ?other) }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "has {?person} in it, who listens to no topic: the agent's statements to them arrive nowhere" ;
+        sh:select """SELECT $this ?person WHERE { $this speech:participant ?person . ?person a schema:Person .
+  FILTER NOT EXISTS { ?person mqtt4ssn:listensToTopic ?topic } }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "has {?agent} in it, which listens to no topic: what the person says arrives nowhere" ;
+        sh:select """SELECT $this ?agent WHERE { $this speech:participant ?agent . ?agent a orexis:Agent .
+  FILTER NOT EXISTS { ?agent mqtt4ssn:listensToTopic ?topic } }""" ] .
+
+#  A PERSON'S USER AGENT - a phone, a terminal, an app - is a client of the society that acts on their
+#  behalf on the bus (`prov:actedOnBehalfOf`), connected to one broker by onboarding's own requirement,
+#  and granted the channel of every chat the person is in. It connects as itself.
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf prov:actedOnBehalfOf ;
+    sh:property [ sh:path mqtt4ssn:hasClientID ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "acts on someone's behalf and has no one client id: it connects as itself, with a credential of its own" ] .

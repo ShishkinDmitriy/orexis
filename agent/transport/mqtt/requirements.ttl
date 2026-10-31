@@ -5,7 +5,6 @@
 @prefix speech: <http://example.org/orexis/speech#> .
 @prefix onboarding: <http://example.org/orexis/onboarding#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix schema: <https://schema.org/> .
 
 <> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
 
@@ -22,27 +21,3 @@
         sh:message "a speaker connected to no broker: what is said to it is carried by none" ;
         sh:select """SELECT $this WHERE { ?me orexis:plays $this FILTER NOT EXISTS { ?me mqtt4ssn:isConnectedToBroker ?broker } }""" ] .
 
-#  A PERSON WHO SPEAKS TO AN AGENT IS SPOKEN FOR BY THE TRANSLATOR, which connects as the client hosting
-#  them — one translator for every person of a world, as one simulator plays every simulated system —
-#  reaches them at their address, hears what the agent says to them on the inbox they listen to, and
-#  publishes what they say on the inbox of the agent they speak to. Speech's word, `speech:speaksTo`,
-#  stated in the transport's, so the shape is here (knowledge/domain/speech/translator.md).
-[] a sh:NodeShape ;
-    sh:targetSubjectsOf speech:speaksTo ;
-    sh:property [ sh:path schema:email ; sh:minCount 1 ; sh:maxCount 1 ;
-                  sh:message "speaks to an agent and has no one address: the translator reaches a person at schema:email" ] ,
-                [ sh:path mqtt4ssn:listensToTopic ; sh:minCount 1 ;
-                  sh:message "speaks to an agent and listens to no topic: what the agent says to them arrives nowhere" ] ;
-    sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "hosted by no client: the translator connects as the client hosting the people it speaks for" ;
-        sh:select """SELECT $this WHERE { FILTER NOT EXISTS { ?client mqtt4ssn:hosts $this ; mqtt4ssn:hasClientID ?id } }""" ] ,
-      [ a sh:SPARQLConstraint ;
-        sh:message "hosted by {?one}, as {?other} is by {?two}: one translator speaks for every person of a world, as one client" ;
-        sh:select """SELECT $this ?one ?other ?two WHERE {
-  ?a mqtt4ssn:hosts $this ; mqtt4ssn:hasClientID ?one .
-  ?person speech:speaksTo ?agent . ?b mqtt4ssn:hosts ?person ; mqtt4ssn:hasClientID ?two .
-  FILTER (?one < ?two)
-  BIND (REPLACE(STR(?person), "^.*[#/]", "") AS ?other) }""" ] ,
-      [ a sh:SPARQLConstraint ;
-        sh:message "speaks to {?agent}, which listens to no topic: what they say arrives nowhere" ;
-        sh:select """SELECT $this ?agent WHERE { $this speech:speaksTo ?agent . FILTER NOT EXISTS { ?agent mqtt4ssn:listensToTopic ?topic } }""" ] .

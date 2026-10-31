@@ -1,0 +1,14 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix translation: <http://example.org/orexis/translation#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  THE TRANSLATOR'S WORDS: what onboarding needs of a world to run a translator, and no agent reads -
+#  the tree is kept out of the agent image, so this graph is loaded by onboarding's reader alone, as
+#  onboarding's own vocabulary is (knowledge/domain/speech/translator.md).
+
+translation:translates a owl:ObjectProperty ;
+    rdfs:label "translates" ;
+    rdfs:comment "The chats a client of the society stands in for their people: the translator connects as this client, reads each chat's channel and the inbox of each person in it, and writes the inbox of each agent in it. `orexis-compose` runs the translator as the one client that translates, `orexis-mqtt` grants it as the chats imply, and a world is refused where a chat is translated by none or by two (translation/requirements.ttl)." .

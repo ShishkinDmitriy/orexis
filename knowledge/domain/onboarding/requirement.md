@@ -34,8 +34,9 @@ two points apart, which the generator read to size a wake window and sensing's r
 quantity. What a renderer passed over in silence became a
 requirement the same way — a simulated system hosted by no client, which a simulator was started for
 and never played; and a person who speaks to an agent is held the same way by the transport's, before
-`orexis-compose` picks the client the translator connects as: hosted by one client, with one address,
-listening on an inbox, speaking to an agent that listens on one. The installation's reader refused its document by hand in the same way, a check per
+`orexis-compose` picks the client the translator connects as, by the translator's own requirement,
+`translation/requirements.ttl`, which onboarding loads itself, the translator's words being no agent's: an
+agent and a person with inboxes, one channel the translator can carry, one translating client. The installation's reader refused its document by hand in the same way, a check per
 reading — two stores, a store with no organisation, a view over no TLS — and each is a shape now,
 judged once as the document is read. What stays in a renderer is what no document can answer: a
 credential not yet minted, a port the installation has not allocated, a monitored world where the
@@ -94,8 +95,9 @@ nobody and that both ends agree matters to everyone. Onboarding's rule names eac
 its purpose: `sensors/<client>/reading` for what a board publishes, one topic however many sensors it
 carries, each reading its own value of the one document by pointer; `sensors/<client>/command` for
 what the board listens to; `actuators/<device>/command` for a device a client hosts;
-`agents/<id>/inbox`; and `people/<person>/inbox` for a person the
-[translator](/domain/speech/translator.md) speaks for. It writes them to `society.derived.ttl` beside the society, a society graph every
+`agents/<id>/inbox`; `people/<person>/inbox` for a person the
+[translator](/domain/speech/translator.md) speaks for; and `chats/<chat>` for the topic a
+[chat](/domain/speech/chat.md) goes through. It writes them to `society.derived.ttl` beside the society, a society graph every
 reader reads as the society — the [transport](/domain/transport/transport.md), the simulator, the
 ACL, a board's `config.h` — and nothing computes a name. A filter a world asserts is kept and the rule
 writes none for it; what the derived document leaves unnamed, a topic nothing publishes on or listens

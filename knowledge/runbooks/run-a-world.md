@@ -147,13 +147,13 @@ board before it can connect.
 
 The compose file is **generated, never hand-edited**: one service per agent, named for its id,
 plus a `simulation` service where the world marks systems `sim:simulatedBy`, and a `translation`
-service where its society names a `schema:Person`. Adding an agent is
+service where its society names a `speech:Chat`. Adding an agent is
 adding it to the world and regenerating; a hand-edit is a second roster waiting to drift from the
 documents. Each container mounts exactly one store credential per purpose — its own — and of the
 world's documents the common ones and those that say they are its agent's; the simulator's and the
 translator's, the common ones alone.
 
-A world with a **person** in it runs a [translator](/domain/speech/translator.md), and that needs two
+A world with a **chat** in it runs a [translator](/domain/speech/translator.md), and that needs two
 files nothing can mint. Once per machine, where the language model is paid for:
 
 ```bash
@@ -161,10 +161,10 @@ cp infra/model.env.example infra/secrets/model.env    # which model, and the key
 ```
 
 and per world, the mailbox the translator reads the person's messages from and sends the agent's in,
-as `world/<name>/secrets/mail-<client>.env` for the client the society says hosts the person —
+as `world/<name>/secrets/mail-<client>.env` for the client the society says translates the chats —
 `MAIL_ADDRESS`, `MAIL_PASSWORD`, `MAIL_IMAP_HOST`, `MAIL_SMTP_HOST`, and the ports where not 993 and 587
 (`translation/carrier.py`). `orexis-compose` says when it is not there. Where the model answers is
-`infra/installation.ttl`'s to state; with no `onboarding:Model` there, a world naming a person is
+`infra/installation.ttl`'s to state; with no `onboarding:Model` there, a world naming a chat is
 refused.
 
 # Monitor a world, or stop

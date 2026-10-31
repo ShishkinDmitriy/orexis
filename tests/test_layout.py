@@ -1875,17 +1875,19 @@ def _viewing(society=lambda text: text) -> dict:
         return "\n".join(line for line in text.splitlines() if "a mqtt4ssn:TopicFilter" not in line) + "\n"
     return {("viewing", "world.ttl"): lambda _: (_VIEWING / "world.ttl").read_text(),
             ("viewing", "rules.ttl"): lambda _: (_VIEWING / "rules.ttl").read_text(),
+            ("viewing", "speech.ttl"): lambda _: (_VIEWING / "speech.ttl").read_text(),
             ("viewing", "beliefs/seeker.self.ttl"): lambda _: (_VIEWING / "beliefs" / "seeker.self.ttl").read_text(),
             ("viewing", "society.ttl"): lambda _: society(unasserted((_VIEWING / "society.ttl").read_text())),
             ("viewing", "deployment.ttl"): lambda _: _asserting("mqtt://localhost:1999", world="viewing")}
 
 
-def test_a_person_is_onboarded_as_the_translators_client(tmp_path, monkeypatch):
-    """A person the society names, speaking to an agent, is onboarded as a device is, by the client hosting
-    them: the rule names their inbox `people/<person>/inbox`, the agent they speak to may write it and
-    the translator read it, the translator may write the agent's inbox, and the world's compose file runs
-    the translator as that client — told where the model answers, handed its key and the mailbox, and
-    mounted the translator's tree, none of which reaches the agent's container."""
+def test_a_chat_is_onboarded_through_the_client_that_translates_it(tmp_path, monkeypatch):
+    """A chat the society names is onboarded like a device: the rule names each person's inbox and the
+    topic the chat goes through, the agent in it may write the inboxes, the translator reads them and
+    writes the agent's and reads and writes the topic, as does the client acting on the person's behalf;
+    and the world's compose file runs the translator as the client that translates — told where the model
+    answers, handed its key and the mailbox, and mounted the translator's tree, none of which reaches the
+    agent's container."""
     import yaml
 
     from onboarding import compose, mqtt, reading, topics
@@ -1894,12 +1896,16 @@ def test_a_person_is_onboarded_as_the_translators_client(tmp_path, monkeypatch):
     monkeypatch.setattr(topics, "world_dir", lambda name: root / name)
     topics.write("viewing")
     derived = (root / "viewing" / "society.derived.ttl").read_text()
-    assert '"people/anna/inbox"' in derived and '"agents/seeker/inbox"' in derived, derived
-    assert "actuators/anna" not in derived, "a person is no device"
+    assert '"people/anna/inbox"' in derived and '"people/boris/inbox"' in derived and '"agents/seeker/inbox"' in derived, derived
+    assert '"chats/seeker_and_boris"' in derived and '"actuators/' not in derived and '"sensors/boris_phone' not in derived, \
+        "a person is no device, and a user agent no board"
     assert reading.invalid(root / "viewing") == [] and reading.refused(root / "viewing") == []
     agents, devices = mqtt.grants("viewing")
-    assert agents["seeker"].grants == {("read", "agents/seeker/inbox"), ("write", "people/anna/inbox")}
-    assert devices["translator"].grants == {("read", "people/anna/inbox"), ("write", "agents/seeker/inbox")}
+    assert agents["seeker"].grants == {("read", "agents/seeker/inbox"), ("write", "people/anna/inbox"), ("write", "people/boris/inbox")}
+    assert devices["translator"].grants == {("read", "people/anna/inbox"), ("read", "people/boris/inbox"), ("write", "agents/seeker/inbox"),
+                                            ("read", "chats/seeker_and_boris"), ("write", "chats/seeker_and_boris")}
+    assert devices["boris_phone"].grants == {("read", "chats/seeker_and_boris"), ("write", "chats/seeker_and_boris")}, \
+        "a user agent reads and writes the chats of whom it acts for, and no inbox"
     services = yaml.safe_load(compose.render("viewing"))["services"]
     translator = services["translation"]
     assert translator["command"] == ["python", "-m", "translation", "/app/world/viewing"]
@@ -1907,40 +1913,57 @@ def test_a_person_is_onboarded_as_the_translators_client(tmp_path, monkeypatch):
     assert translator["env_file"] == ["./secrets/mqtt-translator.env", "../../infra/secrets/model.env", "./secrets/mail-translator.env"]
     assert "../../translation:/app/translation:ro" in translator["volumes"]
     assert "./rules.ttl:/app/world/viewing/rules.ttl:ro" in translator["volumes"], "the sayables are the world's, which it reads"
+    assert "./speech.ttl:/app/world/viewing/speech.ttl:ro" in translator["volumes"], "and so are the chats"
     assert not any("seeker.self" in v for v in translator["volumes"]), "an agent's own documents are the agent's"
     seeker = services["agent-seeker"]
     assert "MODEL_URL" not in seeker["environment"]
     assert not any("translation" in v or "model.env" in v or "mail-" in v for v in seeker["volumes"] + seeker["env_file"])
 
 
-@pytest.mark.parametrize("edit, said", [
-    (lambda text: text.replace(" ;\n    mqtt4ssn:hosts :anna .", " ."),
-     "anna: hosted by no client: the translator connects as the client hosting the people it speaks for"),
-    (lambda text: text + '\n:second a mqtt4ssn:Client ; mqtt4ssn:hasClientID "second" ; mqtt4ssn:isConnectedToBroker :broker ; mqtt4ssn:hosts :anna .\n',
-     "anna: hosted by second, as anna is by translator: one translator speaks for every person of a world, as one client"),
-    (lambda text: text.replace('    schema:email "anna@example.org" ;\n', ""),
-     "anna: speaks to an agent and has no one address: the translator reaches a person at schema:email"),
-    (lambda text: text.replace(" ;\n    mqtt4ssn:listensToTopic :anna_inbox .", " ."),
-     "anna: speaks to an agent and listens to no topic: what the agent says to them arrives nowhere"),
-    (lambda text: text.replace(" ;\n    mqtt4ssn:listensToTopic :seeker_inbox .", " ."),
-     "anna: speaks to http://example.org/orexis/world/viewing#seeker, which listens to no topic: what they say arrives nowhere"),
-], ids=["hosted-by-nobody", "hosted-twice", "no-address", "no-inbox", "an-agent-with-no-inbox"])
-def test_a_person_who_speaks_to_an_agent_is_held_to_what_the_translator_needs(tmp_path, monkeypatch, edit, said):
-    """What `orexis-compose` would otherwise pass over in silence or pick from by chance is the MQTT
-    transport's requirement: a person speaking to an agent is hosted by one client, has one address,
-    listens to a topic, and speaks to an agent that does."""
+def _speech(edit):
+    """`_viewing` with `edit` applied to the chats' document instead of the society."""
+    world = _viewing()
+    world[("viewing", "speech.ttl")] = lambda _: edit((_VIEWING / "speech.ttl").read_text())
+    return world
+
+
+@pytest.mark.parametrize("world, said", [
+    (_viewing(lambda text: text.replace("    translation:translates :seeker_and_anna , :seeker_and_boris .", "    translation:translates :seeker_and_boris .")),
+     "seeker_and_anna: is translated by no client: the translator connects as the client that translates the chats it stands in"),
+    (_viewing(lambda text: text + '\n:second a mqtt4ssn:Client ; mqtt4ssn:hasClientID "second" ; mqtt4ssn:isConnectedToBroker :broker ; translation:translates :seeker_and_anna .\n'),
+     "seeker_and_anna: is translated by second, as seeker_and_anna is by translator: one translator stands in every chat of a world, as one client"),
+    (_speech(lambda text: text.replace("    speech:channel :anna_mail .", "    speech:channel :anna_mail , :boris_topic .")),
+     "seeker_and_anna: a chat goes through one channel"),
+    (_speech(lambda text: text.replace(':anna_mail a schema:ContactPoint ; schema:email "anna@example.org" .', ":anna_mail a schema:ContactPoint .")),
+     "seeker_and_anna: goes through http://example.org/orexis/world/viewing#anna_mail, which is of no kind the translator carries"),
+    (_speech(lambda text: text.replace("    speech:participant :seeker , :anna ;", "    speech:participant :seeker ;")),
+     "seeker_and_anna: has no person in it: a chat is between an agent and someone the translator speaks for"),
+    (_speech(lambda text: text.replace("    speech:participant :seeker , :anna ;", "    speech:participant :anna ;")),
+     "seeker_and_anna: has no agent in it: a chat is between a person and an agent of the society"),
+    (_viewing(lambda text: text.replace(" ;\n    mqtt4ssn:listensToTopic :anna_inbox .", " .")),
+     "seeker_and_anna: has http://example.org/orexis/world/viewing#anna in it, who listens to no topic: the agent's statements to them arrive nowhere"),
+    (_viewing(lambda text: text.replace(" ;\n    mqtt4ssn:listensToTopic :seeker_inbox .", " .")),
+     "seeker_and_anna: has http://example.org/orexis/world/viewing#seeker in it, which listens to no topic: what the person says arrives nowhere"),
+    (_viewing(lambda text: text.replace('    mqtt4ssn:hasClientID "boris_phone" ;\n', "")),
+     "boris_phone: acts on someone's behalf and has no one client id: it connects as itself, with a credential of its own"),
+], ids=["translated-by-nobody", "translated-twice", "two-channels", "a-channel-of-no-kind", "no-person", "no-agent",
+        "a-person-with-no-inbox", "an-agent-with-no-inbox", "a-user-agent-with-no-id"])
+def test_a_chat_is_held_to_what_the_translator_needs(tmp_path, monkeypatch, world, said):
+    """What `orexis-compose` would otherwise pass over in silence or pick from by chance is the translator's
+    requirement: a chat has a person and an agent in it, one channel of a kind the translator carries and
+    one client translating it, each participant listens on an inbox, and a user agent has a client id."""
     from onboarding import reading, topics
 
-    root = _installed(tmp_path, monkeypatch, _viewing(edit))
+    root = _installed(tmp_path, monkeypatch, world)
     monkeypatch.setattr(topics, "world_dir", lambda name: root / name)
     topics.write("viewing")
     found = reading.invalid(root / "viewing")
     assert any(line.startswith(said) for line in found), found
 
 
-def test_a_world_naming_a_person_is_refused_where_the_installation_names_no_model(tmp_path, monkeypatch):
+def test_a_world_naming_a_chat_is_refused_where_the_installation_names_no_model(tmp_path, monkeypatch):
     """The installation says whether this host runs a translator by naming where the model answers, as it
-    says whether it monitors a world by serving metrics; a world with no person is told nothing of it."""
+    says whether it monitors a world by serving metrics; a world with no chat is told nothing of it."""
     import yaml
 
     from onboarding import compose, installation, topics
@@ -1950,6 +1973,6 @@ def test_a_world_naming_a_person_is_refused_where_the_installation_names_no_mode
     monkeypatch.setattr(topics, "world_dir", lambda name: root / name)
     topics.write("viewing")
     assert installation.model() is None
-    with pytest.raises(SystemExit, match="names a person, spoken for by translator, and the installation names no onboarding:Model"):
+    with pytest.raises(SystemExit, match="names a chat, translated by translator, and the installation names no onboarding:Model"):
         compose.render("viewing")
     assert "translation" not in yaml.safe_load(compose.render("sensing"))["services"]

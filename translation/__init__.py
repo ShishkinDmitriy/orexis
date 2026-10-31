@@ -24,7 +24,7 @@ does not declare is dropped. Which person spoke is the carrier's word, unsigned,
 
 **A PROCESS OF THE WORLD, AS THE SIMULATOR IS.** It reads the world as an agent boots it
 (`agent.runtime.world_of`), connects to the world's broker as the client the society names — the one
-that hosts the people it speaks for — and holds the model's key, which no agent image carries: the
+that translates the chats it stands in — and holds the model's key, which no agent image carries: the
 key is the installation's secret, reaching this process as environment, and `tests/test_layout.py`
 keeps this tree out of the agent image as it keeps onboarding out.
 

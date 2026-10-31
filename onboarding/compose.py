@@ -47,9 +47,9 @@ world with no bus reaches its series store the same way.
 simulation <world>`, connected as the one client that hosts every system the world marks
 `sim:simulatedBy`, reading the world as an agent does. See knowledge/domain/kernel/world.md.
 
-**A world's people are spoken for by its translator**, the same way: `python -m translation
-<world>`, connected as the one client that `mqtt4ssn:hosts` every `schema:Person` the society names,
-told where the language model answers (`MODEL_URL`, the installation's `onboarding:Model`) and handed
+**A world's chats are stood in by its translator**, the same way: `python -m translation
+<world>`, connected as the one client that `translation:translates` every `speech:Chat` the society
+names, told where the language model answers (`MODEL_URL`, the installation's `onboarding:Model`) and handed
 which model and its key (`infra/secrets/model.env`) and the mailbox it reads and writes
 (`secrets/mail-<client>.env`, written by hand, since nothing can mint a mailbox) — each mounted into
 this container alone, and the translator's tree with them, which the image does not carry. A world
@@ -88,12 +88,11 @@ _CONNECTED_Q = f"""
 SELECT ?id ?broker WHERE {{ ?a a orexis:Agent ; orexis:localId ?id ; <{MQTT4SSN}isConnectedToBroker> ?broker }}
 ORDER BY ?id ?broker"""
 
-#  THE CLIENT THE TRANSLATOR CONNECTS AS: whichever hosts the people the world names.
-_PEOPLE_Q = """
+#  THE CLIENT THE TRANSLATOR CONNECTS AS: whichever translates the chats the world names.
+_TRANSLATES_Q = """
 SELECT DISTINCT ?id WHERE {
   ?client <https://www.w3id.org/MQTT4SSN-Ontology#hasClientID> ?id ;
-          <https://www.w3id.org/MQTT4SSN-Ontology#hosts> ?person .
-  ?person a <https://schema.org/Person> } ORDER BY ?id"""
+          <http://example.org/orexis/translation#translates> ?chat } ORDER BY ?id"""
 
 #  THE CLIENT THE SIMULATOR CONNECTS AS: whichever hosts the systems no one built.
 _SIMULATED_Q = """
@@ -162,12 +161,12 @@ def simulated_client(world: str) -> str | None:
 
 
 def translation_client(world: str) -> str | None:
-    """The client the world's translator connects as, or None where the world names no person. One
-    translator speaks for every person of a world, so one client hosts them all, connected to a broker:
-    the MQTT transport's requirement (`agent/transport/mqtt/requirements.ttl`), held by `reading.check`
+    """The client the world's translator connects as, or None where the world names no chat. One
+    translator stands in every chat of a world, so one client translates them all, connected to a
+    broker: the translator's requirement (`translation/requirements.ttl`), held by `reading.check`
     before any tool asking here runs. This formats and judges nothing."""
     store = reading.world(world_dir(world))
-    found = {r["id"] for r in rows(store, _PEOPLE_Q, graphs_of(store, BELIEF, common=True))}
+    found = {r["id"] for r in rows(store, _TRANSLATES_Q, graphs_of(store, BELIEF, common=True))}
     return found.pop() if found else None
 
 
@@ -183,7 +182,7 @@ def _translator(world: str, read: set[Path], client: str, host: str, plain: int,
       # key, arrive in the installation's secret below
       MODEL_URL: "{model}"
     env_file:
-      # the credential of `{client}`, the client that hosts the people the world names
+      # the credential of `{client}`, the client that translates the world's chats
       - ./secrets/mqtt-{client}.env
       # the model's name and key — `infra/model.env.example` says how — mounted into THIS container alone
       - ../../infra/secrets/model.env
@@ -381,9 +380,9 @@ def render(world: str) -> str:
     speaker = translation_client(world)
     model = installation.model() if speaker else None
     if speaker and model is None:
-        raise SystemExit(f"world {world!r} names a person, spoken for by {speaker}, and the installation names no "
+        raise SystemExit(f"world {world!r} names a chat, translated by {speaker}, and the installation names no "
                          f"onboarding:Model — state where one answers in {installation._where(installation.INSTALLATION)}, "
-                         "or take the person out of the world")
+                         "or take the chat out of the world")
     read = read_by_an_agent(world)
     store = reading.world(world_dir(world))
     iris = {r["id"]: r["a"] for r in rows(store, _IDS_Q, graphs_of(store, BELIEF, common=True))}
