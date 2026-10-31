@@ -3,7 +3,8 @@
 The broker's address and this client's credential arrive as environment, as the simulator's do —
 `MQTT_HOST`, `MQTT_PORT`, `MQTT_USERNAME`, `MQTT_PASSWORD` — and paho is imported here and nowhere
 else in the translator. The model is `MODEL_API_KEY`, `MODEL_NAME` and `MODEL_URL` (`model.py`), the
-mailbox `MAIL_*` (`carrier.py`), and how often the mailbox is asked `MAIL_POLL_S`, in real seconds. The
+mailbox `MAIL_*` (`carrier.py`) asked every `MAIL_POLL_S` real seconds, the Telegram bot `TELEGRAM_BOT_TOKEN`
+asked every `TELEGRAM_POLL_S`, at the url the world states for it. The
 bus is the other carrier and needs nothing of its own: every message the translator is subscribed to
 goes through `Translator.receive`, prose on a chat's topic and statements on a person's inbox alike."""
 
@@ -16,7 +17,7 @@ import queue
 import time
 from pathlib import Path
 
-from .carrier import Email
+from .carrier import Email, Telegram
 from .model import Model
 from .translator import Translator
 
@@ -34,21 +35,26 @@ def main(argv=None) -> int:
     client.on_message = lambda c, u, m: inbox.put((m.topic, m.payload))
     client.connect(os.environ["MQTT_HOST"], int(os.environ.get("MQTT_PORT", "1883")))
     client.loop_start()
-    carrier = Email.from_environ()
-    translator = Translator(args.world, client, Model.from_environ(), carrier)
+    mail = Email.from_environ()
+    translator = Translator(args.world, client, Model.from_environ(), mail)
+    bots = translator.bots
+    if len(bots) > 1:
+        raise SystemExit(f"the world's Telegram chats go through bots at {bots}: one translator holds one token")
+    translator.telegram = Telegram.from_environ(url=bots[0]) if bots else None
     translator.open()
-    every = float(os.environ.get("MAIL_POLL_S", "30"))
-    polled = 0.0
+    carriers = [(mail, float(os.environ.get("MAIL_POLL_S", "30")), [0.0], "the mailbox"),
+                (translator.telegram, float(os.environ.get("TELEGRAM_POLL_S", "3")), [0.0], "the bot")]
     while True:
         while not inbox.empty():
             translator.receive(*inbox.get_nowait())
-        if carrier is not None and time.monotonic() - polled >= every:
-            polled = time.monotonic()
-            try:
-                for address, prose in carrier.poll():
-                    translator.hear(address, prose)
-            except Exception as exc:                                    # noqa: BLE001 — the mailbox fails
-                logging.getLogger("carrier").warning("the mailbox would not answer: %s", exc)
+        for carrier, every, polled, name in carriers:
+            if carrier is not None and time.monotonic() - polled[0] >= every:
+                polled[0] = time.monotonic()
+                try:
+                    for address, prose in carrier.poll():
+                        translator.hear(address, prose)
+                except Exception as exc:                                # noqa: BLE001 — a carrier fails
+                    logging.getLogger("carrier").warning("%s would not answer: %s", name, exc)
         time.sleep(1.0)
 
 

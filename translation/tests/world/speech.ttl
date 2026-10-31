@@ -2,12 +2,14 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix schema: <https://schema.org/> .
 @prefix speech: <http://example.org/orexis/speech#> .
+@prefix telegram: <http://example.org/orexis/telegram#> .
 
 <> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
 
-#  WHO SPEAKS WITH WHOM, THROUGH WHAT: the seeker with Anna, a realtor, by email; and with Boris, its
-#  principal, over a topic of the bus his phone and the translator both publish on. The channel's type
-#  is the carrier, and speech names none.
+#  WHO SPEAKS WITH WHOM, THROUGH WHAT: the seeker with Anna, a realtor, by email; with Boris, its
+#  principal, over a topic of the bus his phone and the translator both publish on; and with Clara, a
+#  landlord, in a Telegram chat through the translator's bot. The channel's type is the carrier, and
+#  speech names none.
 
 :seeker_and_anna a speech:Chat ;
     speech:participant :seeker , :anna ;
@@ -17,3 +19,8 @@
 :seeker_and_boris a speech:Chat ;
     speech:participant :seeker , :boris ;
     speech:channel :boris_topic .
+
+:seeker_and_clara a speech:Chat ;
+    speech:participant :seeker , :clara ;
+    speech:channel :clara_telegram .
+:clara_telegram a telegram:Chat ; telegram:id "4815162342" ; telegram:bot :bot .

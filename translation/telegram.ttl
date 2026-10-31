@@ -1,0 +1,23 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix telegram: <http://example.org/orexis/telegram#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  A CHAT'S CHANNEL ON TELEGRAM, the translator's own words as `translation:translates` is: a world states a
+#  `speech:Chat` whose `speech:channel` is a `telegram:Chat`, and the translator's Telegram carrier
+#  (translation/carrier.py) polls and sends through its bot. Read by onboarding and the translator, loaded by
+#  no agent, since the tree is kept out of the agent image (knowledge/domain/speech/chat.md).
+
+telegram:Chat a owl:Class ; rdfs:label "Telegram chat" ;
+    rdfs:comment "A chat on Telegram as a speech chat's channel: the person's words arrive through it and the agent's statements are rendered into it. It has one `telegram:id`, the chat id the Bot API names it by, and one `telegram:bot`, the bot it is reached through." .
+
+telegram:id a owl:DatatypeProperty ; rdfs:domain telegram:Chat ; rdfs:label "chat id" ;
+    rdfs:comment "The id the Bot API names a chat by, a number, which a person learns by writing to the bot once and the operator by `getUpdates`; the translator matches a message to a speech chat by it." .
+
+telegram:bot a owl:ObjectProperty ; rdfs:domain telegram:Chat ; rdfs:range telegram:Bot ; rdfs:label "bot" ;
+    rdfs:comment "The bot a Telegram chat is reached through - the other triple: how the channel is connected, as a client is connected to a broker." .
+
+telegram:Bot a owl:Class ; rdfs:label "Telegram bot" ;
+    rdfs:comment "The translator's user agent on Telegram, with the `schema:url` the Bot API answers at; its token is the one secret, `TELEGRAM_BOT_TOKEN` in `secrets/telegram-<client>.env`, mounted into the translator's container alone and never a graph." .

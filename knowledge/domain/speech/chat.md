@@ -22,7 +22,8 @@ A **chat** is the standing fact that an agent and a person speak with each other
 has **participants**, `speech:participant`: an agent of the society and a person it speaks with. It has
 one **channel**, `speech:channel`: a thing of the carrier's own vocabulary, whose type says the carrier
 and which speech does not name — a `mqtt4ssn:Topic` is the bus, a `schema:ContactPoint` with a
-`schema:email` is mail, and a chat of a messaging service would be its own vocabulary's. A conversation
+`schema:email` is mail, a `telegram:Chat` with its id and its bot is Telegram, in the translator's own
+words (`translation/telegram.ttl`). A conversation
 is one exchange inside a chat; the chat stands for as long as the world states it, as a sensor's topic
 does.
 
@@ -37,7 +38,9 @@ A person does not connect to the bus; a **user agent** does, a client of the soc
 `prov:actedOnBehalfOf` them — a phone, a terminal, an app — with a client id and a credential of its own,
 as a board has. The translator connects as the client that `translation:translates` the chats it stands
 in. Both publish prose on a chat's topic, each message saying who said it, and the translator skips its
-own when the broker hands it back.
+own when the broker hands it back. On Telegram the translator's user agent is its **bot**, `telegram:Bot`,
+the thing a `telegram:Chat` is reached through, as a client is connected to a broker: its `schema:url` is
+in the world, its token a secret of the world's.
 
 # What is derived from it
 

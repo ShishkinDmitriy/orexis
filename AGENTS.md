@@ -913,6 +913,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   tree arrives by its mount, the one the image does not carry, and its need is its own requirement, read by
   onboarding beside its own; a person as a client, a channel as a kind of address and the words in speech's
   namespace were built and refused in turn (#1034, chat, translator).
+- **A carrier's secret reaches the translator only where a chat goes through it** — the bot's token for a
+  Telegram chat, the mailbox for an email, each an `env_file` compose refuses to start without, so a
+  carrier nothing goes through is mounted nothing; Telegram's words are the translator's own, and the bot is
+  its user agent there as a client is on the bus (#1034, chat).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
   `crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming an
   absent file or a CRL past its `nextUpdate` refuses the whole society and not the one agent; and

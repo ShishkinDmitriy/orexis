@@ -4,14 +4,15 @@
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix schema: <https://schema.org/> .
 @prefix translation: <http://example.org/orexis/translation#> .
+@prefix telegram: <http://example.org/orexis/telegram#> .
 
 <> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
 
-#  THE SOCIETY'S WIRING: the seeker, a client listening on an inbox of its own; two people, each
+#  THE SOCIETY'S WIRING: the seeker, a client listening on an inbox of its own; three people, each
 #  listening on the inbox the seeker's statements to them arrive on; Boris's phone, the client that
-#  acts on his behalf on the bus; and the translator, the client that translates the chats
-#  (speech.ttl). The filters are asserted here, as a test world's are, where `orexis-onboard` would
-#  derive them.
+#  acts on his behalf on the bus; the translator's bot on Telegram; and the translator, the client that
+#  translates the chats (speech.ttl). The filters are asserted here, as a test world's are, where
+#  `orexis-onboard` would derive them.
 
 :broker a mqtt4ssn:Broker .
 
@@ -35,6 +36,14 @@
 :boris_inbox a mqtt4ssn:Topic .
 :boris_inbox_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:matchesTopic :boris_inbox ; mqtt4ssn:hasFilterPattern "people/boris/inbox" .
 
+:clara a schema:Person ;
+    schema:name "Clara" ;
+    mqtt4ssn:listensToTopic :clara_inbox .
+:clara_inbox a mqtt4ssn:Topic .
+:clara_inbox_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:matchesTopic :clara_inbox ; mqtt4ssn:hasFilterPattern "people/clara/inbox" .
+
+:bot a telegram:Bot ; schema:url "https://api.telegram.org" .
+
 :boris_phone a mqtt4ssn:Client ;
     mqtt4ssn:hasClientID "boris_phone" ;
     mqtt4ssn:isConnectedToBroker :broker ;
@@ -45,4 +54,4 @@
 :translator a mqtt4ssn:Client ;
     mqtt4ssn:hasClientID "translator" ;
     mqtt4ssn:isConnectedToBroker :broker ;
-    translation:translates :seeker_and_anna , :seeker_and_boris .
+    translation:translates :seeker_and_anna , :seeker_and_boris , :seeker_and_clara .
