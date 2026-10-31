@@ -13,7 +13,8 @@
 #  (onboarding/ontology.ttl) and the limits are the installation's template's: `infra/compose.yaml` runs one
 #  series store and one series view, so there is one of each, with one url, one image and, for the
 #  store, one organisation; the store answers over http and the view over https, which is how the
-#  template serves them; history is served by a store, since every agent writes it, where metrics may
+#  template serves them; a model, where the installation names one, answers at one https url; history is
+#  served by a store, since every agent writes it, where metrics may
 #  be served by none; a purpose is kept one number of days and a window of it is one number of
 #  seconds; and there is one pool to allocate each kind of listener from — a broker, an agent's journal —
 #  saying which it allocates for, each url of it stating the host and the port a slot is counted from. `installation.py` refused each of these by hand once, and formats what it reads.
@@ -38,6 +39,14 @@
     sh:sparql [
         sh:message "is a series view beside {?other}: `infra/compose.yaml` runs one" ;
         sh:select """SELECT $this ?other WHERE { ?other a onboarding:SeriesView . FILTER (STR(?other) < STR($this)) }""" ] .
+
+[] a sh:NodeShape ;
+    sh:targetClass onboarding:Model ;
+    sh:property [ sh:path schema:url ; sh:minCount 1 ; sh:maxCount 1 ; sh:pattern "^https://" ;
+                  sh:message "a model answers at one https:// url: the key goes over the wire with every call" ] ;
+    sh:sparql [
+        sh:message "is a model beside {?other}: a translator is told one" ;
+        sh:select """SELECT $this ?other WHERE { ?other a onboarding:Model . FILTER (STR(?other) < STR($this)) }""" ] .
 
 [] a sh:NodeShape ;
     sh:targetNode onboarding:History ;

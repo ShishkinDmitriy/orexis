@@ -906,6 +906,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   is a process of the world** — the model fills a declared shape's fields or says none fits, a field the shape
   does not declare is dropped, the extraction still makes the belief, the agent hears the statement as any
   peer's document and is unchanged, and no agent image carries the key (#1034, sayable, translator).
+- **A person is onboarded by the client hosting them, as a simulated system is, and the one tree the image
+  does not carry arrives by its mount** — the rule names `people/<person>/inbox`, the grants follow
+  `speech:speaksTo` both ways, the translator's service is told where the model answers by the installation's
+  `onboarding:Model` and handed which and the key by a secret of the installation's; a mailbox is written by
+  hand, and a person named where no model is, is refused as a monitored world is with no metrics store (#1034).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
   `crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming an
   absent file or a CRL past its `nextUpdate` refuses the whole society and not the one agent; and

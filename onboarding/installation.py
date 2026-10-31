@@ -77,6 +77,7 @@ COMPOSE = REPO_ROOT / "infra" / "compose.yaml"
 
 SERIES_STORE = ONBOARDING + "SeriesStore"
 SERIES_VIEW = ONBOARDING + "SeriesView"
+MODEL = ONBOARDING + "Model"
 BELIEF = "http://example.org/orexis#BeliefGraph"
 MQTT4SSN = "https://www.w3id.org/MQTT4SSN-Ontology#"
 _SCHEMA_URL = "https://schema.org/url"
@@ -258,6 +259,14 @@ def retention(purpose: str) -> int | None:
 def view() -> dict:
     """The series view: its url and its image."""
     return _service(SERIES_VIEW)
+
+
+def model() -> str | None:
+    """Where the language model a world's translator asks answers — the url of the installation's one
+    `onboarding:Model` — or None where it names none, and this host runs no translator. One at most,
+    with one https url, is the installation's requirement, judged as the document is read."""
+    found = _asserted(_store(with_derivation=False), _SERVICE_Q.replace("$kind", MODEL))
+    return found[0]["url"] if found else None
 
 
 # ---------------------------------------------------------------- a world's broker

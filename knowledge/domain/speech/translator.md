@@ -43,10 +43,20 @@ marked another party's word. Which model and where is environment (`MODEL_NAME`,
 keeps the tree out of the agent image as it keeps onboarding out, and the import linter keeps the
 agent from reaching for it.
 
+# How it is onboarded
+
+By the client hosting its people, and nothing listed by hand. Onboarding's topic rule names a
+person's inbox `people/<person>/inbox`; `orexis-mqtt` grants that client, off the wiring, to read each
+person's inbox and to write the inbox of the agent each `speech:speaksTo`, and grants the agent to
+write the inbox of whoever speaks to it; `orexis-compose` writes one `translation` service connected
+as the client, which mounts this tree, the only one the image does not carry. Where the model answers
+is the installation's word ([deployment](/domain/onboarding/deployment.md)); which model and its key
+are a secret of the installation's, the mailbox one of the world's, `secrets/mail-<client>.env`,
+written by hand. What a person must state for all of that to be derived is the transport's
+[requirement](/domain/onboarding/requirement.md).
+
 # What stays open
 
 Which person spoke is the carrier's word about an address, `speech:saidBy`, unsigned; signing is
 speech's seam. The words the agent's statement was sent as are in this process's log and not in the
-agent's journal. And how the translator is onboarded — its credential, its grants on the agents'
-inboxes, its service in the world's compose file, a person's inbox named by `orexis-topics` — follows
-the simulator's path and is not yet derived.
+agent's journal.

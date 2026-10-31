@@ -44,6 +44,14 @@ onboarding:Metrics onboarding:retentionDays 30 ;
     schema:url "https://localhost:3000" ;
     onboarding:image "docker.io/grafana/grafana:11.2.0" .
 
+#  WHERE THE LANGUAGE MODEL ANSWERS, for a world's translator — the process standing between the people
+#  a world names and its agents (knowledge/domain/speech/translator.md). The url and nothing else: which
+#  model and the key are `infra/secrets/model.env`, template `model.env.example`, mounted into the
+#  translator's container alone. Take this line out and the host runs no translator: a world naming a
+#  person is refused at onboarding, as a monitored world is where metrics are served by no store.
+:model a onboarding:Model ;
+    schema:url "https://api.anthropic.com" .
+
 #  WHERE A WORLD'S BROKER LISTENS WHEN THE WORLD DOES NOT SAY. A world may assert its broker's urls
 #  in a deployment graph of its own, and an asserted url wins. A broker no world asserts a url for
 #  is allocated one here: the lowest slot n at which every url below, its port raised by n, is

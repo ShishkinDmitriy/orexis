@@ -57,6 +57,9 @@ onboarding:retentionDays a owl:DatatypeProperty ; rdfs:label "retention days" ;
 onboarding:SeriesView a owl:Class ; rdfs:label "Series view" ;
     rdfs:comment "Where the series is drawn for a person - the operator's view of every world at once, Grafana today. `orexis-infra-compose` runs it on the port its url states." .
 
+onboarding:Model a owl:Class ; rdfs:label "Model" ;
+    rdfs:comment "Where the language model a world's translator asks answers - the url of its API, `schema:url` - stated by the installation, one or none, and told to the translator's container as `MODEL_URL`. Which model, and the key, are no deployment fact: `infra/secrets/model.env`, mounted into the translator's container alone and never an agent's. An installation stating none runs no translator, and a world naming a person is refused at onboarding, as a monitored world is where metrics are served by no store (knowledge/domain/speech/translator.md)." .
+
 onboarding:organisation a owl:DatatypeProperty ; rdfs:label "organisation" ;
     rdfs:domain onboarding:SeriesStore ;
     rdfs:comment "The organisation on a series store that every bucket is minted in and every agent is told of. Where, not what may be done there: the token is a credential and is in no graph." .
