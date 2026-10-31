@@ -3,7 +3,9 @@
 The broker's address and this client's credential arrive as environment, as the simulator's do —
 `MQTT_HOST`, `MQTT_PORT`, `MQTT_USERNAME`, `MQTT_PASSWORD` — and paho is imported here and nowhere
 else in the translator. The model is `MODEL_API_KEY`, `MODEL_NAME` and `MODEL_URL` (`model.py`), the
-mailbox `MAIL_*` (`carrier.py`), and how often the mailbox is asked `MAIL_POLL_S`, in real seconds."""
+mailbox `MAIL_*` (`carrier.py`), and how often the mailbox is asked `MAIL_POLL_S`, in real seconds. The
+bus is the other carrier and needs nothing of its own: every message the translator is subscribed to
+goes through `Translator.receive`, prose from a person's client and statements from the agents alike."""
 
 from __future__ import annotations
 
@@ -39,7 +41,7 @@ def main(argv=None) -> int:
     polled = 0.0
     while True:
         while not inbox.empty():
-            translator.say(*inbox.get_nowait())
+            translator.receive(*inbox.get_nowait())
         if carrier is not None and time.monotonic() - polled >= every:
             polled = time.monotonic()
             try:

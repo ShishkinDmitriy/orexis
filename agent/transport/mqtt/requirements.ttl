@@ -24,16 +24,21 @@
 
 #  A PERSON WHO SPEAKS TO AN AGENT IS SPOKEN FOR BY THE TRANSLATOR, which connects as the client hosting
 #  them — one translator for every person of a world, as one simulator plays every simulated system —
-#  reaches them at their address, hears what the agent says to them on the inbox they listen to, and
-#  publishes what they say on the inbox of the agent they speak to. Speech's word, `speech:speaksTo`,
-#  stated in the transport's, so the shape is here (knowledge/domain/speech/translator.md).
+#  reaches them at an address of a kind it carries, hears what the agent says to them on the inbox they
+#  listen to, and publishes what they say on the inbox of the agent they speak to. An address is one
+#  `schema:email`, or a client of their own they `speech:speaksThrough`, which says their prose on one
+#  topic and hears the translator's on another; a person states the kinds they have, and one at least.
+#  Speech's words, stated in the transport's, so the shape is here (knowledge/domain/speech/translator.md).
 [] a sh:NodeShape ;
     sh:targetSubjectsOf speech:speaksTo ;
-    sh:property [ sh:path schema:email ; sh:minCount 1 ; sh:maxCount 1 ;
-                  sh:message "speaks to an agent and has no one address: the translator reaches a person at schema:email" ] ,
+    sh:property [ sh:path schema:email ; sh:maxCount 1 ;
+                  sh:message "speaks to an agent and has two addresses of one kind: the translator reaches a person at one schema:email" ] ,
                 [ sh:path mqtt4ssn:listensToTopic ; sh:minCount 1 ;
                   sh:message "speaks to an agent and listens to no topic: what the agent says to them arrives nowhere" ] ;
     sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "speaks to an agent and has no address: no schema:email, and no client it speaks through" ;
+        sh:select """SELECT $this WHERE { FILTER NOT EXISTS { $this schema:email ?email } FILTER NOT EXISTS { $this speech:speaksThrough ?client } }""" ] ,
+      [ a sh:SPARQLConstraint ;
         sh:message "hosted by no client: the translator connects as the client hosting the people it speaks for" ;
         sh:select """SELECT $this WHERE { FILTER NOT EXISTS { ?client mqtt4ssn:hosts $this ; mqtt4ssn:hasClientID ?id } }""" ] ,
       [ a sh:SPARQLConstraint ;
@@ -46,3 +51,15 @@
       [ a sh:SPARQLConstraint ;
         sh:message "speaks to {?agent}, which listens to no topic: what they say arrives nowhere" ;
         sh:select """SELECT $this ?agent WHERE { $this speech:speaksTo ?agent . FILTER NOT EXISTS { ?agent mqtt4ssn:listensToTopic ?topic } }""" ] .
+
+#  THE CLIENT A PERSON SPEAKS THROUGH is a client of the society like a board, connected to one broker by
+#  onboarding's own requirement, and carries prose both ways: it listens to the topic the translator says
+#  on and says on one of its own, each named by onboarding's rule.
+[] a sh:NodeShape ;
+    sh:targetObjectsOf speech:speaksThrough ;
+    sh:property [ sh:path mqtt4ssn:hasClientID ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "is spoken through and has no one client id: it connects as itself, with a credential of its own" ] ,
+                [ sh:path mqtt4ssn:listensToTopic ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "is spoken through and listens to no one topic: what the translator says to the person arrives nowhere" ] ,
+                [ sh:path speech:saysOn ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "is spoken through and says on no one topic: what the person says reaches no translator" ] .

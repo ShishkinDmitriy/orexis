@@ -2,23 +2,31 @@
 statement said made prose — with the model at it.
 
 **WHO IT SPEAKS FOR IS THE WORLD'S TO SAY.** A person is a `schema:Person` the society names, with the
-`schema:email` the carrier reaches them at, the agent they `speech:speaksTo`, and the topic they
-`mqtt4ssn:listensToTopic` — their inbox, where the agent's MQTT member publishes what the agent says to
-them, as it publishes to any peer; the client that hosts them is the one this process connects as.
-Nothing here is a name in the code.
+agent they `speech:speaksTo`, the topic they `mqtt4ssn:listensToTopic` — their inbox, where the agent's
+MQTT member publishes what the agent says to them, as it publishes to any peer — and their ADDRESSES,
+of whichever kinds they have: a `schema:email` the carrier reaches, and a client of their own they
+`speech:speaksThrough` on the bus, which `speech:saysOn` one topic and `listensToTopic` another, the
+person's prose coming and going as MQTT messages. A channel is a kind of address and nothing of its
+own; the client that hosts the people is the one this process connects as. Nothing here is a name in
+the code.
 
-**HEARD: PROSE → STATEMENT → THE AGENT'S INBOX.** `hear` is handed a person's address and words, offers
-the model every sayable the world declares as a tool beside `nothing_sayable`, and makes a statement of
-the one it filled (`sayable.document_of`), published on the inbox of the agent the person speaks to;
-the agent's own MQTT member hears it there and speech keeps it as any peer's document, the domain's
-extraction making the belief. The model is told the message is data: a line in it asking for anything
-is at most a field of a shape with no such field.
+**HEARD: PROSE → STATEMENT → THE AGENT'S INBOX.** `hear` is handed a person — or an address, which
+names one — and words, offers the model every sayable the world declares as a tool beside
+`nothing_sayable`, and makes a statement of the one it filled (`sayable.document_of`), published on the
+inbox of the agent the person speaks to; the agent's own MQTT member hears it there and speech keeps it
+as any peer's document, the domain's extraction making the belief. The model is told the message is
+data: a line in it asking for anything is at most a field of a shape with no such field.
 
-**SAID: THE PERSON'S INBOX → PROSE → THE CARRIER.** `say` is handed what arrived on a person's inbox —
+**SAID: THE PERSON'S INBOX → PROSE → EACH ADDRESS.** `say` is handed what arrived on a person's inbox —
 the TriG an `execution:Saying` made — finds the sayable it is a statement of, hands the model the
-fields as they stand and asks for the words, and sends them to the person's address. A document of no
-sayable's class is not rendered: the agent said something the world gave no words for, which is said
-in the log.
+fields as they stand and asks for the words, and tells them to the person at every address they
+state: the carrier for an email, a publish on the topic their client hears for the bus. A document of
+no sayable's class is not rendered: the agent said something the world gave no words for, which is
+said in the log.
+
+**ONE DOOR FOR THE BUS.** `receive` is handed every message the client is subscribed to: on a topic a
+person's client says on it is prose to hear, on a person's inbox a statement to say, and anything else
+is nobody's.
 """
 
 from __future__ import annotations
@@ -52,11 +60,18 @@ SAY_SYSTEM = (
     "courteous message in the person's language, saying exactly what the fields say and nothing more: "
     "invent no detail, make no promise the statement does not make, and sign as the agent.")
 
+#  EVERY PERSON, with the inbox they listen on and each address they state: an email, and the two topics
+#  of the client they speak through — what it says on, and what it listens to, which is what they hear.
 _PERSONS_Q = """
-SELECT ?person ?email ?name ?agent ?pattern WHERE {
-  ?person a schema:Person ; schema:email ?email ; speech:speaksTo ?agent ; mqtt4ssn:listensToTopic ?topic .
+SELECT ?person ?name ?agent ?pattern ?email ?says ?hears WHERE {
+  ?person a schema:Person ; speech:speaksTo ?agent ; mqtt4ssn:listensToTopic ?topic .
   ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern .
-  OPTIONAL { ?person schema:name ?name } } ORDER BY ?person"""
+  OPTIONAL { ?person schema:name ?name }
+  OPTIONAL { ?person schema:email ?email }
+  OPTIONAL { ?person speech:speaksThrough ?client . ?client speech:saysOn ?said .
+             ?f mqtt4ssn:matchesTopic ?said ; mqtt4ssn:hasFilterPattern ?says }
+  OPTIONAL { ?person speech:speaksThrough ?client . ?client mqtt4ssn:listensToTopic ?heard .
+             ?g mqtt4ssn:matchesTopic ?heard ; mqtt4ssn:hasFilterPattern ?hears } } ORDER BY ?person"""
 _INBOX_Q = """
 SELECT ?pattern WHERE { $agent mqtt4ssn:listensToTopic ?topic .
   ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern } ORDER BY ?pattern"""
@@ -65,10 +80,16 @@ SELECT ?pattern WHERE { $agent mqtt4ssn:listensToTopic ?topic .
 @dataclass(frozen=True)
 class Person:
     iri: str
-    email: str
     name: str
     agent: str
-    inbox: str          # the pattern of the topic the person listens on, where the agent's word arrives
+    inbox: str                  # the pattern of the topic the person listens on, where the agent's word arrives
+    email: str | None = None    # an address the carrier reaches
+    says: str | None = None     # the pattern of the topic their own client publishes their prose on
+    hears: str | None = None    # the pattern of the topic their own client listens to, where prose to them goes
+
+    @property
+    def addresses(self) -> list[str]:
+        return [a for a in (self.email, self.hears) if a]
 
 
 class Translator:
@@ -80,8 +101,12 @@ class Translator:
         self.client, self.model, self.carrier = client, model, carrier
         self.now = now or clock.now
         stated = graphs_of(self.store, BELIEF, common=True)
-        self.persons = [Person(r["person"], r["email"], r.get("name") or local_of(r["person"]), r["agent"], r["pattern"])
+        self.persons = [Person(r["person"], r.get("name") or local_of(r["person"]), r["agent"], r["pattern"],
+                               r.get("email"), r.get("says"), r.get("hears"))
                         for r in rows(self.store, _PERSONS_Q, stated)]
+        for person in self.persons:
+            if not person.addresses:
+                log.warning("%s states no address the translator reaches: what is said to them goes nowhere", person.name)
         self.inboxes = {p.agent: [r["pattern"] for r in rows(self.store, _INBOX_Q, stated, agent=p.agent)
                                   if "+" not in r["pattern"] and "#" not in r["pattern"]]
                         for p in self.persons}
@@ -90,32 +115,49 @@ class Translator:
                  [s.name for s in self.sayables] or "no sayable")
 
     def open(self) -> list[str]:
-        """Listen on every person's inbox, where what an agent says to them arrives; the patterns."""
-        patterns = sorted({p.inbox for p in self.persons})
+        """Listen on every person's inbox, where what an agent says to them arrives, and on every topic a
+        person's own client says their prose on; the patterns."""
+        patterns = sorted({p.inbox for p in self.persons} | {p.says for p in self.persons if p.says})
         for pattern in patterns:
             self.client.subscribe(pattern)
         return patterns
 
     def person_at(self, address: str) -> Person | None:
         address = address.strip().lower()
-        return next((p for p in self.persons if p.email.lower() == address), None)
+        return next((p for p in self.persons if p.email and p.email.lower() == address), None)
 
     def person_on(self, topic: str) -> Person | None:
         return next((p for p in self.persons if p.inbox == topic), None)
 
-    def hear(self, address: str, prose: str) -> bytes | None:
+    def person_saying_on(self, topic: str) -> Person | None:
+        return next((p for p in self.persons if p.says == topic), None)
+
+    def receive(self, topic: str, payload: bytes):
+        """A message off the bus: prose on the topic a person's client says on is heard, a statement on a
+        person's inbox is said, and anything else is nobody's — what `hear` or `say` answered, or None."""
+        person = self.person_saying_on(topic)
+        if person is not None:
+            return self.hear(person, payload.decode("utf-8", errors="replace"))
+        if self.person_on(topic) is not None:
+            return self.say(topic, payload)
+        log.warning("a message on %s, which is nobody's inbox and no person says on: dropped unread", topic)
+        return None
+
+    def hear(self, who: Person | str, prose: str) -> bytes | None:
         """A person's words made a statement and published on their agent's inbox; the document sent,
-        or None where the person is nobody the world names, the model is none, or nothing sayable was said."""
-        person = self.person_at(address)
+        or None where the person is nobody the world names, the model is none, or nothing sayable was said.
+        `who` is the person, or an address that names one."""
+        person = who if isinstance(who, Person) else self.person_at(who)
         if person is None:
-            log.warning("a message from %s, whom the world does not name: dropped unread", address)
+            log.warning("a message from %s, whom the world does not name: dropped unread", who)
             return None
         if self.model is None or not self.sayables:
             log.warning("%s wrote, and there is %s to hear it with", person.name,
                         "no model" if self.model is None else "no sayable")
             return None
         tools = [tool_of(s) for s in self.sayables] + [nothing_tool()]
-        answer = self.model.ask(HEAR_SYSTEM, f"From {person.name} <{person.email}>:\n\n{prose}", tools)
+        sender = f"{person.name} <{person.email}>" if person.email else person.name
+        answer = self.model.ask(HEAR_SYSTEM, f"From {sender}:\n\n{prose}", tools)
         call = next(iter(answer.calls), None)
         if call is None or call[0] == NOTHING:
             log.info("%s wrote nothing sayable: %s", person.name, (call or ("", {}))[1].get("why", answer.text))
@@ -135,8 +177,9 @@ class Translator:
         log.info("%s said a %s to %s", person.name, sayable.name, local_of(person.agent))
         return document
 
-    def say(self, topic: str, payload: bytes) -> tuple[str, str] | None:
-        """What arrived on a person's inbox, rendered and sent to the person: the address and the words,
+    def say(self, topic: str, payload: bytes) -> tuple[list[str], str] | None:
+        """What arrived on a person's inbox, rendered and told to the person at every address they state —
+        the carrier for an email, a publish on the topic their client hears: the addresses and the words,
         or None where the topic is nobody's inbox, the document is none, or no sayable it is of."""
         person = self.person_on(topic)
         if person is None:
@@ -161,7 +204,14 @@ class Translator:
         if not words:
             log.warning("the model rendered nothing of the %s for %s", sayable.name, person.name)
             return None
-        if self.carrier is not None:
+        told = []
+        if person.email and self.carrier is not None:
             self.carrier.send(person.email, words)
-        log.info("told %s a %s", person.name, sayable.name)
-        return person.email, words
+            told.append(person.email)
+        if person.hears:
+            self.client.publish(person.hears, words.encode(), retain=False)
+            told.append(person.hears)
+        if not told:
+            log.warning("%s was told a %s, and there is no address to tell it at", person.name, sayable.name)
+        log.info("told %s a %s at %s", person.name, sayable.name, ", ".join(told) or "nowhere")
+        return told, words

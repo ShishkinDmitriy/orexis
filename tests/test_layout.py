@@ -1896,10 +1896,15 @@ def test_a_person_is_onboarded_as_the_translators_client(tmp_path, monkeypatch):
     derived = (root / "viewing" / "society.derived.ttl").read_text()
     assert '"people/anna/inbox"' in derived and '"agents/seeker/inbox"' in derived, derived
     assert "actuators/anna" not in derived, "a person is no device"
+    assert '"people/boris/says"' in derived and '"people/boris/hears"' in derived and "sensors/boris_phone" not in derived, \
+        "the client a person speaks through is no board"
     assert reading.invalid(root / "viewing") == [] and reading.refused(root / "viewing") == []
     agents, devices = mqtt.grants("viewing")
-    assert agents["seeker"].grants == {("read", "agents/seeker/inbox"), ("write", "people/anna/inbox")}
-    assert devices["translator"].grants == {("read", "people/anna/inbox"), ("write", "agents/seeker/inbox")}
+    assert agents["seeker"].grants == {("read", "agents/seeker/inbox"), ("write", "people/anna/inbox"), ("write", "people/boris/inbox")}
+    assert devices["translator"].grants == {("read", "people/anna/inbox"), ("read", "people/boris/inbox"), ("write", "agents/seeker/inbox"),
+                                            ("read", "people/boris/says"), ("write", "people/boris/hears")}
+    assert devices["boris_phone"].grants == {("write", "people/boris/says"), ("read", "people/boris/hears")}, \
+        "a person's own client says and hears, and reads no inbox"
     services = yaml.safe_load(compose.render("viewing"))["services"]
     translator = services["translation"]
     assert translator["command"] == ["python", "-m", "translation", "/app/world/viewing"]
@@ -1914,21 +1919,29 @@ def test_a_person_is_onboarded_as_the_translators_client(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize("edit, said", [
-    (lambda text: text.replace(" ;\n    mqtt4ssn:hosts :anna .", " ."),
+    (lambda text: text.replace("    mqtt4ssn:hosts :anna , :boris .", "    mqtt4ssn:hosts :boris ."),
      "anna: hosted by no client: the translator connects as the client hosting the people it speaks for"),
     (lambda text: text + '\n:second a mqtt4ssn:Client ; mqtt4ssn:hasClientID "second" ; mqtt4ssn:isConnectedToBroker :broker ; mqtt4ssn:hosts :anna .\n',
      "anna: hosted by second, as anna is by translator: one translator speaks for every person of a world, as one client"),
     (lambda text: text.replace('    schema:email "anna@example.org" ;\n', ""),
-     "anna: speaks to an agent and has no one address: the translator reaches a person at schema:email"),
+     "anna: speaks to an agent and has no address: no schema:email, and no client it speaks through"),
+    (lambda text: text.replace('    schema:email "anna@example.org" ;\n', '    schema:email "anna@example.org" , "a@example.org" ;\n'),
+     "anna: speaks to an agent and has two addresses of one kind"),
+    (lambda text: text.replace(" ;\n    speech:saysOn :boris_says .", " ."),
+     "boris_phone: is spoken through and says on no one topic: what the person says reaches no translator"),
+    (lambda text: text.replace(" ;\n    mqtt4ssn:listensToTopic :boris_hears ;\n    speech:saysOn", " ;\n    speech:saysOn"),
+     "boris_phone: is spoken through and listens to no one topic: what the translator says to the person arrives nowhere"),
     (lambda text: text.replace(" ;\n    mqtt4ssn:listensToTopic :anna_inbox .", " ."),
      "anna: speaks to an agent and listens to no topic: what the agent says to them arrives nowhere"),
     (lambda text: text.replace(" ;\n    mqtt4ssn:listensToTopic :seeker_inbox .", " ."),
      "anna: speaks to http://example.org/orexis/world/viewing#seeker, which listens to no topic: what they say arrives nowhere"),
-], ids=["hosted-by-nobody", "hosted-twice", "no-address", "no-inbox", "an-agent-with-no-inbox"])
+], ids=["hosted-by-nobody", "hosted-twice", "no-address", "two-emails", "a-client-that-says-nowhere", "a-client-that-hears-nothing",
+        "no-inbox", "an-agent-with-no-inbox"])
 def test_a_person_who_speaks_to_an_agent_is_held_to_what_the_translator_needs(tmp_path, monkeypatch, edit, said):
     """What `orexis-compose` would otherwise pass over in silence or pick from by chance is the MQTT
-    transport's requirement: a person speaking to an agent is hosted by one client, has one address,
-    listens to a topic, and speaks to an agent that does."""
+    transport's requirement: a person speaking to an agent is hosted by one client, has an address of some
+    kind and one of each, listens to a topic, and speaks to an agent that does; and a client they speak
+    through says on one topic and hears on one."""
     from onboarding import reading, topics
 
     root = _installed(tmp_path, monkeypatch, _viewing(edit))

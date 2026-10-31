@@ -4,6 +4,7 @@
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix schema: <https://schema.org/> .
+@prefix speech: <http://example.org/orexis/speech#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
@@ -120,6 +121,9 @@
 #    agents/<id>/inbox               what an agent listens to.
 #    people/<person>/inbox           what a person the translator speaks for listens to, by their
 #                                    local name: where the agent's word to them arrives.
+#    people/<person>/hears           what the client a person speaks through listens to: the prose the
+#                                    translator says to them.
+#    people/<person>/says            what that client publishes: the person's prose, for the translator.
 #
 #  `orexis-onboard` runs the rule over the world's asserted documents and writes what it made beside
 #  the society, `society.derived.ttl`, a society graph the agents, the simulator and every tool read
@@ -139,6 +143,7 @@
                 BIND (CONCAT("sensors/", ?id, "/reading") AS ?pattern) }
               UNION
               { ?client mqtt4ssn:hasClientID ?id ; mqtt4ssn:listensToTopic $this . FILTER NOT EXISTS { ?client a orexis:Agent }
+                FILTER NOT EXISTS { ?someone speech:speaksThrough ?client }
                 BIND (CONCAT("sensors/", ?id, "/command") AS ?pattern) }
               UNION
               { ?device mqtt4ssn:listensToTopic $this . FILTER NOT EXISTS { ?device a mqtt4ssn:Client } FILTER NOT EXISTS { ?device a schema:Person }
@@ -149,6 +154,12 @@
               UNION
               { ?person a schema:Person ; mqtt4ssn:listensToTopic $this .
                 BIND (CONCAT("people/", REPLACE(STR(?person), "^.*[#/]", ""), "/inbox") AS ?pattern) }
+              UNION
+              { ?person speech:speaksThrough ?client . ?client mqtt4ssn:listensToTopic $this .
+                BIND (CONCAT("people/", REPLACE(STR(?person), "^.*[#/]", ""), "/hears") AS ?pattern) }
+              UNION
+              { ?person speech:speaksThrough ?client . ?client speech:saysOn $this .
+                BIND (CONCAT("people/", REPLACE(STR(?person), "^.*[#/]", ""), "/says") AS ?pattern) }
               BIND (IRI(CONCAT(STR($this), "_filter")) AS ?filter) }""" ] ;
     sh:sparql [
         sh:message "named by no filter: nothing publishes on it or listens to it, or `orexis-onboard` has not derived its name" ;

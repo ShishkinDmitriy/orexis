@@ -6,10 +6,11 @@
 
 <> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
 
-#  THE SOCIETY: the seeker, a client listening on an inbox of its own; a realtor, a person the
-#  translator speaks for, with the address she is reached at and the inbox what the seeker says to
-#  her arrives on; and the translator, the client hosting her. The filters are asserted here, as a
-#  test world's are, where `orexis-onboard` would derive them.
+#  THE SOCIETY: the seeker, a client listening on an inbox of its own; two people the translator
+#  speaks for, each with the inbox what the seeker says to them arrives on — a realtor reached by
+#  email, and the seeker's principal, reached through a client of his own on the bus, which says his
+#  prose on one topic and hears the translator's on another; and the translator, the client hosting
+#  both. The filters are asserted here, as a test world's are, where `orexis-onboard` would derive them.
 
 :broker a mqtt4ssn:Broker .
 
@@ -29,7 +30,25 @@
 :anna_inbox a mqtt4ssn:Topic .
 :anna_inbox_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:matchesTopic :anna_inbox ; mqtt4ssn:hasFilterPattern "people/anna/inbox" .
 
+:boris a schema:Person ;
+    schema:name "Boris" ;
+    speech:speaksTo :seeker ;
+    speech:speaksThrough :boris_phone ;
+    mqtt4ssn:listensToTopic :boris_inbox .
+:boris_inbox a mqtt4ssn:Topic .
+:boris_inbox_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:matchesTopic :boris_inbox ; mqtt4ssn:hasFilterPattern "people/boris/inbox" .
+
+:boris_phone a mqtt4ssn:Client ;
+    mqtt4ssn:hasClientID "boris_phone" ;
+    mqtt4ssn:isConnectedToBroker :broker ;
+    mqtt4ssn:listensToTopic :boris_hears ;
+    speech:saysOn :boris_says .
+:boris_hears a mqtt4ssn:Topic .
+:boris_hears_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:matchesTopic :boris_hears ; mqtt4ssn:hasFilterPattern "people/boris/hears" .
+:boris_says a mqtt4ssn:Topic .
+:boris_says_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:matchesTopic :boris_says ; mqtt4ssn:hasFilterPattern "people/boris/says" .
+
 :translator a mqtt4ssn:Client ;
     mqtt4ssn:hasClientID "translator" ;
     mqtt4ssn:isConnectedToBroker :broker ;
-    mqtt4ssn:hosts :anna .
+    mqtt4ssn:hosts :anna , :boris .

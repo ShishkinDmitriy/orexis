@@ -27,6 +27,7 @@ WORLD = Path(__file__).parent / "world"
 V = "http://example.org/orexis/world/viewing#"
 NOW = datetime(2026, 11, 1, 9, 0, tzinfo=timezone.utc)
 ANNA, SEEKER = "anna@example.org", V + "seeker"
+BORIS_SAYS, BORIS_HEARS = "people/boris/says", "people/boris/hears"
 
 
 @dataclass
@@ -60,11 +61,17 @@ def world():
 
 
 def test_the_translator_reads_its_people_off_the_world_and_listens_on_their_inboxes(world):
+    """Two people, two kinds of address: Anna an email, Boris a client of his own on the bus, which says
+    his prose on one topic and hears the translator's on another. The translator listens on each inbox,
+    where the agent's statements arrive, and on what Boris's client says."""
     client, _, make = world
     translator = make(StandIn())
-    assert [(p.name, p.email, p.agent, p.inbox) for p in translator.persons] == [("Anna", ANNA, SEEKER, "people/anna/inbox")]
+    assert [(p.name, p.agent, p.inbox, p.email, p.says, p.hears) for p in translator.persons] == [
+        ("Anna", SEEKER, "people/anna/inbox", ANNA, None, None),
+        ("Boris", SEEKER, "people/boris/inbox", None, BORIS_SAYS, BORIS_HEARS)]
+    assert [p.addresses for p in translator.persons] == [[ANNA], [BORIS_HEARS]]
     assert translator.inboxes == {SEEKER: ["agents/seeker/inbox"]}
-    assert translator.open() == ["people/anna/inbox"] == client.subscribed
+    assert translator.open() == ["people/anna/inbox", "people/boris/inbox", BORIS_SAYS] == client.subscribed
 
 
 def test_a_persons_prose_becomes_a_statement_on_her_agents_inbox_which_the_agent_hears_and_believes(world):
@@ -118,11 +125,35 @@ def test_a_statement_the_agent_says_to_a_person_is_rendered_and_sent_to_her_addr
     request = next(s for s in sayables(translator.store) if s.name == "ViewingRequest")
     payload = document_of(request, {"listing": "the two-room flat on Kastanienallee", "hours": "weekdays after 17:00"},
                           by=SEEKER, prose="", at=NOW)
-    assert translator.say("people/anna/inbox", payload) == (ANNA, model.text)
-    assert carrier.sent == [(ANNA, model.text)]
+    assert translator.say("people/anna/inbox", payload) == ([ANNA], model.text)
+    assert carrier.sent == [(ANNA, model.text)] and client.published == [], "an email is the carrier's, and nothing is published"
     (system, text, offered), = model.asked
     assert system == SAY_SYSTEM and offered == [] and "listing: the two-room flat on Kastanienallee" in text \
         and "hours: weekdays after 17:00" in text and "To: Anna" in text
+
+
+def test_a_person_on_the_bus_is_heard_from_the_topic_his_client_says_on_and_told_on_the_one_it_hears(world):
+    """The bus as a channel: Boris's prose arrives as a message on `people/boris/says`, through the one door
+    every message takes, and becomes a statement on the seeker's inbox; a statement to Boris is rendered
+    and published on `people/boris/hears`, and the carrier is not asked, since he states no email."""
+    client, carrier, make = world
+    heard = StandIn(call=("ViewingRequest", {"listing": "the studio on Rigaer Straße", "hours": "any evening"}))
+    translator = make(heard)
+    payload = translator.receive(BORIS_SAYS, "Ask about the studio on Rigaer Straße, I can come any evening".encode())
+    assert payload is not None and client.published == [("agents/seeker/inbox", payload, False)]
+    (_, text, _), = heard.asked
+    assert text.startswith("From Boris:\n"), text
+    doc = ox.Store(); doc.load(payload, format=ox.RdfFormat.TRIG)
+    assert any(q.predicate.value.endswith("saidBy") and q.object == ox.NamedNode(V + "boris") for q in doc)
+    client.published.clear()
+    told = StandIn(text="Boris, Anna offers to show the two-room flat on Kastanienallee on Tuesday the 2nd at 18:00. — seeker")
+    translator = make(told)
+    offer = next(s for s in sayables(translator.store) if s.name == "ViewingOffer")
+    statement = document_of(offer, {"listing": "the two-room flat on Kastanienallee", "at": "2026-11-02T18:00:00+00:00"},
+                            by=SEEKER, prose="", at=NOW)
+    assert translator.receive("people/boris/inbox", statement) == ([BORIS_HEARS], told.text)
+    assert client.published == [(BORIS_HEARS, told.text.encode(), False)] and carrier.sent == []
+    assert translator.receive("people/nobody/says", b"hello") is None, "a topic nobody says on is dropped"
 
 
 def test_what_arrives_on_no_persons_inbox_or_is_of_no_sayable_is_not_rendered(world, caplog):

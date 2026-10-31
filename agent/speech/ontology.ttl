@@ -99,4 +99,12 @@
 
 :speaksTo a owl:ObjectProperty ; rdfs:range orexis:Agent ;
     rdfs:label "speaks to" ;
-    rdfs:comment "The agent a person's statements are for: stated of a `schema:Person` in the society beside the address the carrier reaches them at and the topic they listen on, so the translator publishes what they say on that agent's inbox." .
+    rdfs:comment "The agent a person's statements are for: stated of a `schema:Person` in the society beside the addresses the translator reaches them at and the topic they listen on, so the translator publishes what they say on that agent's inbox." .
+
+:speaksThrough a owl:ObjectProperty ; rdfs:range <https://www.w3id.org/MQTT4SSN-Ontology#Client> ;
+    rdfs:label "speaks through" ;
+    rdfs:comment "A person's address on the bus: the MQTT client - a phone, a terminal - their prose comes from and goes to, which `mqtt4ssn:listensToTopic` the topic the translator publishes prose to them on and `speech:saysOn` the topic it publishes their prose on. One kind of address beside `schema:email`; a person states the kinds they have, and the translator reaches them by each (knowledge/domain/speech/translator.md)." .
+
+:saysOn a owl:ObjectProperty ; rdfs:range <https://www.w3id.org/MQTT4SSN-Ontology#Topic> ;
+    rdfs:label "says on" ;
+    rdfs:comment "The topic a client a person speaks through publishes their prose on, where the translator hears it - MQTT4SSN's publishing word is a sensor's, `observesTopic`, and prose is no observation. Named `people/<person>/says` by onboarding's rule; the topic the client listens to, `people/<person>/hears`, carries what the translator says to them." .

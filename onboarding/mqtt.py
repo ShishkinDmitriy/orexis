@@ -18,7 +18,9 @@ what; each agent's self graph says which sensors the observer roles it plays rea
     a client hosts sensor X     write the topics X publishes on
     a client hosts actuator A   read the topics A listens to, and the client's own
     a client hosts person P     read the topic P listens to, and write the inbox of the agent P
-                                speaks to — the translator, connected as that client
+                                speaks to — the translator, connected as that client — and read what
+                                the client P speaks through says, and write what it hears
+    P speaks through client C   C writes the topic it says on, and reads the one it listens to
 
 Read that list against `agent/transport/mqtt/driver.py` and it is the same set of topics the agent
 subscribes to and publishes on. If it ever stops being, an agent fails to connect — which is the
@@ -175,6 +177,21 @@ SELECT ?id ?pattern WHERE {{
   ?client <{MQTT4SSN}hasClientID> ?id ; <{MQTT4SSN}hosts> ?person . ?person a schema:Person ; speech:speaksTo ?a .
   ?a <{MQTT4SSN}listensToTopic> ?topic . ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
 
+#  A PERSON'S OWN CLIENT — a phone, a terminal — says their prose on one topic and hears the translator's
+#  on another (`speech:speaksThrough`, `speech:saysOn`); the translator, hosting the person, reads the
+#  one and writes the other, and the client the reverse, its listening already granted by `_LISTENS_Q`.
+_RELAYS_Q = f"""
+SELECT ?id ?access ?pattern WHERE {{
+  ?client <{MQTT4SSN}hasClientID> ?id ; <{MQTT4SSN}hosts> ?person . ?person speech:speaksThrough ?device .
+  {{ ?device speech:saysOn ?topic . BIND ("{READ}" AS ?access) }}
+  UNION {{ ?device <{MQTT4SSN}listensToTopic> ?topic . BIND ("{WRITE}" AS ?access) }}
+  ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
+
+_SAYS_Q = f"""
+SELECT ?id ?pattern WHERE {{
+  ?device <{MQTT4SSN}hasClientID> ?id ; speech:saysOn ?topic .
+  ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
+
 _CLIENTS_Q = f"""
 SELECT ?client ?id WHERE {{ ?client a <{MQTT4SSN}Client> ; <{MQTT4SSN}hasClientID> ?id .
   FILTER NOT EXISTS {{ ?client a orexis:Agent }} }}"""
@@ -314,6 +331,12 @@ def grants(world: str) -> tuple[dict[str, Principal], dict[str, Principal]]:
         if row["id"] in devices:
             devices[row["id"]].may(READ, row["pattern"])
     for row in _rows(store, _SPEAKS_FOR_Q):
+        if row["id"] in devices:
+            devices[row["id"]].may(WRITE, row["pattern"])
+    for row in _rows(store, _RELAYS_Q):
+        if row["id"] in devices:
+            devices[row["id"]].may(row["access"], row["pattern"])
+    for row in _rows(store, _SAYS_Q):
         if row["id"] in devices:
             devices[row["id"]].may(WRITE, row["pattern"])
     return agents, devices

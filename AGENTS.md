@@ -911,6 +911,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   `speech:speaksTo` both ways, the translator's service is told where the model answers by the installation's
   `onboarding:Model` and handed which and the key by a secret of the installation's; a mailbox is written by
   hand, and a person named where no model is, is refused as a monitored world is with no metrics store (#1034).
+- **A channel is a kind of address, and a person states the kinds they have** — an email the carrier polls,
+  or a client of their own on the bus that says their prose on one topic and hears the translator's on
+  another, a principal of the society granted like a board; the bus needs no service outside the world,
+  so it is the channel a test walks, and a chat service is the same shape, unbuilt (#1034, translator).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
   `crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming an
   absent file or a CRL past its `nextUpdate` refuses the whole society and not the one agent; and
