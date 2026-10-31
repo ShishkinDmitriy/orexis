@@ -27,9 +27,8 @@ ALLOWED_TREES = {"agent", "domains", "simulation"}
 
 #  Never in an agent image. `orexis-influx` reads the admin token, which opens every bucket in the
 #  store and which no agent may ever hold; the surest guarantee is that the code using it is
-#  absent. See knowledge/domain/onboarding/onboarding.md. And the translator holds the model's key,
-#  which no agent holds either (knowledge/domain/speech/translator.md).
-FORBIDDEN_TREES = {"onboarding", "translation"}
+#  absent. See knowledge/domain/onboarding/onboarding.md.
+FORBIDDEN_TREES = {"onboarding"}
 
 
 def copied_paths() -> list[str]:
@@ -87,16 +86,9 @@ def test_the_mounted_trees_are_the_copied_trees():
     mounts = set(re.findall(r"\.\./\.\./([a-z_]+):/app/", compose))
     copied = {p.split("/")[0].strip("./") for p in copied_paths() if "/" in p}
     assert mounts, "no source trees mounted — the pattern stopped matching"
-    #  THE ONE TREE MOUNTED AND NOT COPIED is the translator's, into the translator's container alone:
-    #  kept out of the image as onboarding is, so that no agent's container carries the code that reads
-    #  the model's key, it arrives by the mount and nothing else (knowledge/domain/speech/translator.md).
-    assert mounts == copied | {"translation"}, (
+    assert mounts == copied, (
         f"compose mounts {sorted(mounts)} and the image copies {sorted(copied)}. A tree in one "
         "and not the other is a container that starts today and refuses at its next restart.")
-    an_agent = compose[compose.index("def _service("):compose.index("def _broker(")]
-    assert set(re.findall(r"\.\./\.\./([a-z_]+):/app/", an_agent)) == copied, "an agent's container mounts the copied trees alone"
-    a_translator = compose[compose.index("def _translator("):compose.index("def _simulator(")]
-    assert "../../translation:/app/translation:ro" in a_translator and "../../onboarding" not in compose
 
 
 # --- what an AGENT is given, which is less than the world -------------------------------------
@@ -1862,33 +1854,34 @@ def test_what_a_world_counts_as_an_incident_reaches_its_agents_and_what_is_no_le
         installation.incidents("lane")
 
 
-# --- a PERSON, spoken for by the translator -------------------------------------------------------
+# --- a PERSON, in a chat with an agent that translates ----------------------------------------------
 
-_VIEWING = REPO_ROOT / "translation" / "tests" / "world"
+_VIEWING = REPO_ROOT / "agent" / "translation" / "tests" / "world"
 
 
 def _viewing(society=lambda text: text, deployment=lambda text: text) -> dict:
-    """The translator's test world as `_installed` lays a world out: its documents, the filters its society
-    asserts struck out so the rule names its topics, `society` applied to what is left, and its broker's
-    url asserted in its deployment graph beside the bot's, since nothing allocates a copy one."""
+    """Translation's test world as `_installed` lays a world out: its documents, the filters its society asserts
+    struck out so the rule names its topics, `society` applied to what is left, and its broker's url asserted in its
+    deployment graph beside the bots', since nothing allocates a copy one."""
     def unasserted(text: str) -> str:
         return "\n".join(line for line in text.splitlines() if "a mqtt4ssn:TopicFilter" not in line) + "\n"
+    bots = "\n".join(line for line in (_VIEWING / "deployment.ttl").read_text().splitlines() if "_bot schema:url" in line)
     return {("viewing", "world.ttl"): lambda _: (_VIEWING / "world.ttl").read_text(),
             ("viewing", "rules.ttl"): lambda _: (_VIEWING / "rules.ttl").read_text(),
             ("viewing", "speech.ttl"): lambda _: (_VIEWING / "speech.ttl").read_text(),
             ("viewing", "beliefs/seeker.self.ttl"): lambda _: (_VIEWING / "beliefs" / "seeker.self.ttl").read_text(),
+            ("viewing", "beliefs/keeper.self.ttl"): lambda _: (_VIEWING / "beliefs" / "keeper.self.ttl").read_text(),
             ("viewing", "society.ttl"): lambda _: society(unasserted((_VIEWING / "society.ttl").read_text())),
             ("viewing", "deployment.ttl"): lambda _: deployment(_asserting("mqtt://localhost:1999", world="viewing")
-                                                               + ':bot schema:url "https://api.telegram.org" .\n')}
+                                                               + bots + "\n")}
 
 
-def test_a_chat_is_onboarded_through_the_client_that_translates_it(tmp_path, monkeypatch):
-    """A chat the society names is onboarded like a device: the rule names each person's inbox and the
-    topic the chat goes through, the agent in it may write the inboxes, the translator reads them and
-    writes the agent's and reads and writes the topic, as does the client acting on the person's behalf;
-    and the world's compose file runs the translator as the client that translates — told where the model
-    answers, handed its key and the mailbox, and mounted the translator's tree, none of which reaches the
-    agent's container."""
+def test_a_chat_is_onboarded_as_the_agents_in_it_translate_it(tmp_path, monkeypatch):
+    """A chat the society names is onboarded with the agents in it, each its own translator: the rule names the
+    topic a chat over the bus goes through, the agent in it and the client acting on the person's behalf each read
+    and write it, and no inbox is named for a person; and each translating agent's own container is told where the
+    model answers and its bot does, and handed the model's key and each carrier's secret its chats go through — the
+    seeker its bot's and its mailbox's, the keeper, in the household group alone, its bot's."""
     import yaml
 
     from onboarding import compose, mqtt, reading, topics
@@ -1897,53 +1890,24 @@ def test_a_chat_is_onboarded_through_the_client_that_translates_it(tmp_path, mon
     monkeypatch.setattr(topics, "world_dir", lambda name: root / name)
     topics.write("viewing")
     derived = (root / "viewing" / "society.derived.ttl").read_text()
-    assert all(f'"people/{p}/inbox"' in derived for p in ("anna", "boris", "clara")) and '"agents/seeker/inbox"' in derived, derived
-    assert '"agents/seeker/account"' in derived, "and the topic the seeker accounts on"
-    assert '"chats/seeker_and_boris"' in derived and '"actuators/' not in derived and '"sensors/boris_phone' not in derived, \
+    assert '"chats/seeker_and_boris"' in derived and "people/" not in derived and '"sensors/boris_phone' not in derived, \
         "a person is no device, and a user agent no board"
     assert reading.invalid(root / "viewing") == [] and reading.refused(root / "viewing") == []
     agents, devices = mqtt.grants("viewing")
-    inboxes = {f"people/{p}/inbox" for p in ("anna", "boris", "clara")}
-    assert agents["seeker"].grants == {("read", "agents/seeker/inbox"), ("write", "agents/seeker/account"), *(("write", i) for i in inboxes)}
-    assert devices["translator"].grants == {*(("read", i) for i in inboxes), ("write", "agents/seeker/inbox"), ("read", "agents/seeker/account"),
-                                            ("read", "chats/seeker_and_boris"), ("write", "chats/seeker_and_boris")}
+    assert agents["seeker"].grants == {("read", "chats/seeker_and_boris"), ("write", "chats/seeker_and_boris")}
+    assert not agents["keeper"].grants, "the keeper is in no chat over the bus"
     assert devices["boris_phone"].grants == {("read", "chats/seeker_and_boris"), ("write", "chats/seeker_and_boris")}, \
-        "a user agent reads and writes the chats of whom it acts for, and no inbox"
+        "a user agent reads and writes the chats of whom it acts for"
     services = yaml.safe_load(compose.render("viewing"))["services"]
-    translator = services["translation"]
-    assert translator["command"] == ["python", "-m", "translation", "/app/world/viewing"]
-    assert translator["environment"] == {"MQTT_HOST": "localhost", "MQTT_PORT": "1999", "MODEL_URL": "https://api.anthropic.com",
-                                         "TELEGRAM_URL": "https://api.telegram.org"}, "and where the bot answers, off the deployment graph"
-    assert translator["env_file"] == ["./secrets/mqtt-translator.env", "../../infra/secrets/model.env",
-                                      "./secrets/mail-translator.env", "./secrets/telegram-translator.env"], \
-        "a carrier's secret for each carrier some chat goes through"
-    assert "../../translation:/app/translation:ro" in translator["volumes"]
-    assert "./rules.ttl:/app/world/viewing/rules.ttl:ro" in translator["volumes"], "the sayables are the world's, which it reads"
-    assert "./speech.ttl:/app/world/viewing/speech.ttl:ro" in translator["volumes"], "and so are the chats"
-    assert not any("seeker.self" in v for v in translator["volumes"]), "an agent's own documents are the agent's"
-    seeker = services["agent-seeker"]
-    assert "MODEL_URL" not in seeker["environment"]
-    assert not any("translation" in v or "model.env" in v or "mail-" in v or "telegram-" in v for v in seeker["volumes"] + seeker["env_file"])
-
-
-def test_a_world_whose_chats_go_over_the_bus_alone_is_handed_no_carriers_secret(tmp_path, monkeypatch):
-    """The bus needs nothing but the client's credential, so a world with only a topic chat mounts neither a
-    mailbox nor a bot token — a secret for a carrier nothing goes through would refuse to start for nothing."""
-    import yaml
-
-    from onboarding import compose, topics
-
-    def bus_alone(text):
-        keep = text.index(":seeker_and_boris a speech:Chat")
-        end = text.index(":seeker_and_clara a speech:Chat")
-        return text[:text.index(":seeker_and_anna a speech:Chat")] + text[keep:end]
-
-    root = _installed(tmp_path, monkeypatch, _speech(bus_alone))
-    monkeypatch.setattr(topics, "world_dir", lambda name: root / name)
-    topics.write("viewing")
-    assert compose.carriers("viewing") == []
-    translator = yaml.safe_load(compose.render("viewing"))["services"]["translation"]
-    assert translator["env_file"] == ["./secrets/mqtt-translator.env", "../../infra/secrets/model.env"]
+    assert "translation" not in services, "the world runs no process of its own: the agents translate"
+    seeker, keeper = services["agent-seeker"], services["agent-keeper"]
+    assert seeker["environment"]["MODEL_URL"] == "https://api.anthropic.com"
+    assert seeker["environment"]["TELEGRAM_URL"] == "https://api.telegram.org", "where its bot answers, off the deployment graph"
+    assert seeker["env_file"][-4:-1] == ["../../infra/secrets/model.env", "./secrets/telegram-seeker.env",
+                                         "./secrets/mail-seeker.env"], seeker["env_file"]
+    assert [f for f in keeper["env_file"] if "model" in f or "telegram" in f or "mail" in f] == \
+        ["../../infra/secrets/model.env", "./secrets/telegram-keeper.env"], keeper["env_file"]
+    assert not any("seeker" in f for f in keeper["env_file"]), "an agent's secrets are its own"
 
 
 def _speech(edit):
@@ -1953,39 +1917,36 @@ def _speech(edit):
     return world
 
 
+def _keeper_self(edit):
+    """`_viewing` with `edit` applied to the keeper's self graph."""
+    world = _viewing()
+    world[("viewing", "beliefs/keeper.self.ttl")] = lambda _: edit((_VIEWING / "beliefs" / "keeper.self.ttl").read_text())
+    return world
+
+
 @pytest.mark.parametrize("world, said", [
-    (_viewing(lambda text: text.replace("    translation:translates :seeker_and_anna , :seeker_and_boris , :seeker_and_clara .",
-                                        "    translation:translates :seeker_and_boris , :seeker_and_clara .")),
-     "seeker_and_anna: is translated by no client: the translator connects as the client that translates the chats it stands in"),
-    (_viewing(lambda text: text + '\n:second a mqtt4ssn:Client ; mqtt4ssn:hasClientID "second" ; mqtt4ssn:isConnectedToBroker :broker ; translation:translates :seeker_and_anna .\n'),
-     "seeker_and_anna: is translated by second, as seeker_and_anna is by translator: one translator stands in every chat of a world, as one client"),
-    (_speech(lambda text: text.replace("    speech:channel :anna_mail .", "    speech:channel :anna_mail , :boris_topic .")),
+    (_speech(lambda text: text.replace("speech:channel :anna_mail .", "speech:channel :anna_mail , :boris_topic .")),
      "seeker_and_anna: a chat goes through one channel"),
     (_speech(lambda text: text.replace(':anna_mail a schema:ContactPoint ; schema:email "anna@example.org" .', ":anna_mail a schema:ContactPoint .")),
-     "seeker_and_anna: goes through http://example.org/orexis/world/viewing#anna_mail, which is of no kind the translator carries"),
-    (_speech(lambda text: text.replace("    speech:participant :seeker , :anna ;", "    speech:participant :seeker ;")),
-     "seeker_and_anna: has no person in it: a chat is between an agent and someone the translator speaks for"),
-    (_speech(lambda text: text.replace("    speech:participant :seeker , :anna ;", "    speech:participant :anna ;")),
+     "anna_mail: is a chat's channel of no kind a transport carries"),
+    (_speech(lambda text: text.replace("speech:participant :seeker , :anna ;", "speech:participant :seeker ;")),
+     "seeker_and_anna: has no person in it: a chat is between an agent and someone it speaks with"),
+    (_speech(lambda text: text.replace("speech:participant :seeker , :anna ;", "speech:participant :anna ;")),
      "seeker_and_anna: has no agent in it: a chat is between a person and an agent of the society"),
-    (_viewing(lambda text: text.replace(" ;\n    mqtt4ssn:listensToTopic :anna_inbox .", " .")),
-     "seeker_and_anna: has http://example.org/orexis/world/viewing#anna in it, who listens to no topic: the agent's statements to them arrive nowhere"),
-    (_viewing(lambda text: text.replace("    mqtt4ssn:listensToTopic :seeker_inbox ;\n", "")),
-     "seeker_and_anna: has http://example.org/orexis/world/viewing#seeker in it, which listens to no topic: what the person says arrives nowhere"),
     (_viewing(lambda text: text.replace('    mqtt4ssn:hasClientID "boris_phone" ;\n', "")),
      "boris_phone: acts on someone's behalf and has no one client id: it connects as itself, with a credential of its own"),
-    (_speech(lambda text: text.replace(' telegram:id "4815162342" ;', ' telegram:id "4815162342" , "1" ;')),
+    (_speech(lambda text: text.replace(' telegram:id "4815162342" .', ' telegram:id "4815162342" , "1" .')),
      "clara_telegram: a Telegram chat has one id, which the Bot API names it by"),
-    (_speech(lambda text: text.replace(" ; telegram:bot :bot .", " .")),
-     "clara_telegram: a Telegram chat is reached through one bot"),
-    (_viewing(deployment=lambda text: text.replace('schema:url "https://api.telegram.org"', 'schema:url "http://api.telegram.org"')),
-     "bot: a Telegram bot answers at one https:// url"),
-], ids=["translated-by-nobody", "translated-twice", "two-channels", "a-channel-of-no-kind", "no-person", "no-agent",
-        "a-person-with-no-inbox", "an-agent-with-no-inbox", "a-user-agent-with-no-id", "a-telegram-chat-with-two-ids",
-        "a-telegram-chat-with-no-bot", "a-bot-in-the-clear"])
-def test_a_chat_is_held_to_what_the_translator_needs(tmp_path, monkeypatch, world, said):
-    """What `orexis-compose` would otherwise pass over in silence or pick from by chance is the translator's
-    requirement: a chat has a person and an agent in it, one channel of a kind the translator carries and
-    one client translating it, each participant listens on an inbox, and a user agent has a client id."""
+    (_viewing(lambda text: text.replace("    orexis:localId \"keeper\" ;\n    telegram:bot :keeper_bot .", "    orexis:localId \"keeper\" .")),
+     "household: has http://example.org/orexis/world/viewing#keeper in it on Telegram, which speaks through no bot of its own"),
+    (_viewing(deployment=lambda text: text.replace(':seeker_bot schema:url "https://api.telegram.org"', ':seeker_bot schema:url "http://api.telegram.org"')),
+     "seeker_bot: a Telegram bot answers at one https:// url"),
+], ids=["two-channels", "a-channel-of-no-kind", "no-person", "no-agent", "a-user-agent-with-no-id",
+        "a-telegram-chat-with-two-ids", "an-agent-on-telegram-with-no-bot", "a-bot-in-the-clear"])
+def test_a_chat_is_held_to_what_its_agents_need_to_speak_in_it(tmp_path, monkeypatch, world, said):
+    """What `orexis-compose` would otherwise pass over in silence or pick from by chance is a requirement: a chat
+    has a person and an agent in it and one channel of a kind a transport carries, a user agent has a client id,
+    a Telegram chat one id, and an agent in a chat on Telegram a bot of its own, which answers over TLS."""
     from onboarding import reading, topics
 
     root = _installed(tmp_path, monkeypatch, world)
@@ -1995,9 +1956,22 @@ def test_a_chat_is_held_to_what_the_translator_needs(tmp_path, monkeypatch, worl
     assert any(line.startswith(said) for line in found), found
 
 
-def test_a_world_naming_a_chat_is_refused_where_the_installation_names_no_model(tmp_path, monkeypatch):
-    """The installation says whether this host runs a translator by naming where the model answers, as it
-    says whether it monitors a world by serving metrics; a world with no chat is told nothing of it."""
+def test_an_agent_in_a_chat_that_plays_no_translator_is_refused(tmp_path, monkeypatch):
+    """Which roles an agent plays is its self graph's to say, so a chat with an agent in it that translates nothing
+    is refused of that agent's boot: nothing it runs would hear what is written there."""
+    from onboarding import reading, topics
+
+    root = _installed(tmp_path, monkeypatch, _keeper_self(lambda text: text.replace("[ a translation:Translator ] , ", "")))
+    monkeypatch.setattr(topics, "world_dir", lambda name: root / name)
+    topics.write("viewing")
+    found = reading.refused(root / "viewing")
+    assert any("household: has http://example.org/orexis/world/viewing#keeper in it, which plays no translator" in line
+               for line in found), found
+
+
+def test_an_agent_that_translates_is_refused_where_the_installation_names_no_model(tmp_path, monkeypatch):
+    """The installation says whether an agent of this host may translate by naming where the model answers, as it
+    says whether it monitors a world by serving metrics; a world with no translating agent is told nothing of it."""
     import yaml
 
     from onboarding import compose, installation, topics
@@ -2007,6 +1981,6 @@ def test_a_world_naming_a_chat_is_refused_where_the_installation_names_no_model(
     monkeypatch.setattr(topics, "world_dir", lambda name: root / name)
     topics.write("viewing")
     assert installation.model() is None
-    with pytest.raises(SystemExit, match="names a chat, translated by translator, and the installation names no onboarding:Model"):
+    with pytest.raises(SystemExit, match="of world 'viewing' translates, and the installation names no onboarding:Model"):
         compose.render("viewing")
-    assert "translation" not in yaml.safe_load(compose.render("sensing"))["services"]
+    assert "MODEL_URL" not in yaml.safe_load(compose.render("sensing"))["services"]["agent-fern"]["environment"]

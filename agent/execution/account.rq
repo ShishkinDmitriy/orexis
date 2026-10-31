@@ -1,0 +1,9 @@
+# does
+# reads: execution:IntentionGraph
+#  WHAT EXECUTION SAYS OF ITSELF FOR A PERSON: every intention standing — the want it pursues, when it was adopted,
+#  and the step it is at where it is at one (agent/translation/account.py).
+SELECT ?pursues ?since ?at WHERE {
+  ?intention a execution:Intention ; execution:pursues ?pursues ; execution:adoptedAt ?since .
+  OPTIONAL { ?intention execution:by ?at }
+  FILTER NOT EXISTS { ?intention execution:resolvedAt ?done } }
+ORDER BY ?since

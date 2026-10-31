@@ -86,7 +86,8 @@ The search itself, and the two places a language model is allowed near it.
 * [the-judge-speaks-rust](/decisions/the-judge-speaks-rust.md) - The SHACL judge is rudof behind one door, its two gaps closed on our side; pySHACL stays only as a gate.
 * [the-domain-is-a-plug-in-and-hanoi-is-the-proof](/decisions/the-domain-is-a-plug-in-and-hanoi-is-the-proof.md) - Tower of Hanoi: an ontology, one move action, no Python — the optimal solution is the cheapest achiever.
 * [deliberation-is-on-triples-and-a-number-is-not-special](/decisions/deliberation-is-on-triples-and-a-number-is-not-special.md) - The core compares triples and interprets no literal; numbers, ranges or classes are the domain's choice; progression sizes the act.
-* [an-agent-gives-an-account-of-itself-and-the-model-only-reads-it](/decisions/an-agent-gives-an-account-of-itself-and-the-model-only-reads-it.md) - The sovereign asks over chat; an agent publishes an account of itself, retained; a model outside the mind phrases it and decides nothing.
+* [an-agent-gives-an-account-of-itself-and-the-model-only-reads-it](/decisions/an-agent-gives-an-account-of-itself-and-the-model-only-reads-it.md) - SUPERSEDED IN PART — the sovereign asks over chat; a model phrases an agent's account of itself and decides nothing.
+* [an-agent-translates-for-itself](/decisions/an-agent-translates-for-itself.md) - A world runs no process; each agent translates its own chats through transports of its own, a bot each, and its account is selects.
 
 # The mind — time and prediction
 

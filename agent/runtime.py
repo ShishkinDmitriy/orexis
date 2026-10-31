@@ -169,7 +169,7 @@ BELIEFS = "beliefs"
 #  looking and never listed: the roles it serves are declared there, and so is every word it owns.
 #  It is named by its directory, which is what `packages_of` answers and `parts` is keyed by.
 VOCABULARY = "ontology.ttl"
-MQTT, HTTP = "transport/mqtt", "transport/http"
+MQTT, HTTP, TELEGRAM, EMAIL = "transport/mqtt", "transport/http", "transport/telegram", "transport/email"
 #  THE ONE PACKAGE THE BOOT ITSELF CALLS INTO, where it is loaded: the planner writes the scopes.
 PLANNING = "planning"
 #  AND THE ONE ONBOARDING ASKS AFTER, for the agents that read flows: a cycle among them is refused (#996).
@@ -182,7 +182,8 @@ PREDICTION_PACKAGE = "prediction"
 #  answers the world — sensing's ask, prediction's answer to an observation — and speech, and the
 #  transports last. A package not named here is still found and loaded where a role calls for it,
 #  after these, by its name.
-PASS = ("belief", "planning", "execution", "sensing", "prediction", "speech", "coordination", MQTT, HTTP)
+PASS = ("belief", "planning", "execution", "sensing", "prediction", "speech", "translation", "coordination", MQTT, HTTP,
+        TELEGRAM, EMAIL)
 
 #  A SENSOR OF THE AGENT'S: one an observer role it plays reads (`sensing:sensor`), DECLARED, so
 #  nothing here walks where a sensor is mounted; onboarding holds the declaration to the world
@@ -202,12 +203,16 @@ MINE = "?me orexis:plays/sensing:sensor ?sensor ."
 #  Every word here is a T-Box term and the world's things are variables, so nothing here names an
 #  instance (rule 1).
 OBSERVER, SPEAKER = NAMESPACES["sensing"] + "Observer", NAMESPACES["speech"] + "Speaker"
-REPORTER = NAMESPACES["account"] + "Reporter"
+TRANSLATOR = NAMESPACES["translation"] + "Translator"
+#  A CHAT THE AGENT IS IN, through a channel of the kind a member carries (`speech:Chat`).
+_IN_A_CHAT = "?chat speech:participant ?me ; speech:channel ?channel . "
 TRANSPORTS = {
     MQTT: {OBSERVER: f"{MINE} ?sensor mqtt4ssn:observesTopic ?topic",
            SPEAKER: "?me mqtt4ssn:listensToTopic ?topic",
-           REPORTER: "?me account:accountsOn ?topic"},
+           TRANSLATOR: _IN_A_CHAT + "?channel a mqtt4ssn:Topic"},
     HTTP: {OBSERVER: f"{MINE} ?sensor td:hasForm ?form"},
+    TELEGRAM: {TRANSLATOR: "?me telegram:bot ?bot"},
+    EMAIL: {TRANSLATOR: _IN_A_CHAT + "?channel schema:email ?address"},
 }
 #  WHAT WATCHES THE AGENT: a package created where the environment names a store for it, or a journal is kept,
 #  each a fact of deployment and not of the world, so no role decides it (`agent.series`, `agent.journal`).

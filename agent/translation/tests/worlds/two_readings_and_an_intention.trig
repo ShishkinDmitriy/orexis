@@ -1,0 +1,47 @@
+# two_readings_and_an_intention
+#
+# WHAT AN ACCOUNT IS READ OFF: the probe's two percepts, the later naming the earlier as its previous, the
+# thermometer's one, and an intention standing beside one resolved.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+GRAPH :ontology {
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
+  execution:IntentionGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :probe_earlier {
+  :o1 sosa:madeBySensor :probe ; sosa:resultTime "2026-01-01T11:40:00Z"^^xsd:dateTime ;
+      sosa:observedProperty :SoilMoisture ; sosa:hasFeatureOfInterest :bed ; sosa:hasSimpleResult 0.3 .
+}
+GRAPH :probe_latest {
+  :o2 sosa:madeBySensor :probe ; sosa:resultTime "2026-01-01T12:00:00Z"^^xsd:dateTime ; sensing:previous :o1 ;
+      sosa:observedProperty :SoilMoisture ; sosa:hasFeatureOfInterest :bed ; sosa:hasSimpleResult 0.2 .
+}
+GRAPH :thermo_latest {
+  :o3 sosa:madeBySensor :thermo ; sosa:resultTime "2026-01-01T11:59:30+00:00"^^xsd:dateTime ; sosa:hasSimpleResult 14.5 .
+}
+GRAPH :intentions {
+  :i1 a execution:Intention ; execution:pursues :water_the_bed ; execution:adoptedAt "2026-01-01T11:00:00Z"^^xsd:dateTime ;
+      execution:by :dose .
+  :i0 a execution:Intention ; execution:pursues :water_the_bed ; execution:adoptedAt "2026-01-01T09:00:00Z"^^xsd:dateTime ;
+      execution:resolvedAt "2026-01-01T10:00:00Z"^^xsd:dateTime .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph , orexis:Graph .
+  :ontology a orexis:BeliefGraph , orexis:Graph , orexis:OntologyGraph .
+  :probe_earlier a sensing:ObservationGraph , orexis:Graph .
+  :probe_latest a sensing:ObservationGraph , orexis:Graph .
+  :thermo_latest a sensing:ObservationGraph , orexis:Graph .
+  :intentions a execution:IntentionGraph , orexis:Graph .
+}

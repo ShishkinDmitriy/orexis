@@ -25,8 +25,8 @@ from pathlib import Path
 import pyoxigraph as ox
 import pytest
 
-from agent.runtime import (HTTP, KERNEL, MQTT, OBSERVER, SPEAKER, VOCABULARY, WATCHERS, Runtime, _documents_of,
-                           _vocabularies, boot, every_package, packages_of, roles_of)
+from agent.runtime import (EMAIL, HTTP, KERNEL, MQTT, OBSERVER, SPEAKER, TELEGRAM, TRANSLATOR, VOCABULARY, WATCHERS,
+                           Runtime, _documents_of, _vocabularies, boot, every_package, packages_of, roles_of)
 from agent.store import document, kinds_in
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -40,6 +40,8 @@ _HEAD = """@prefix : <http://example.org/test#> .
 @prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
 @prefix td: <https://www.w3.org/2019/wot/td#> .
 @prefix schema: <https://schema.org/> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix telegram: <http://example.org/orexis/telegram#> .
 """
 _AGENT = ':me a orexis:Agent ; orexis:localId "me" ; orexis:actsFor :pot .\n'
 _PROBE = ":probe a sosa:Sensor ; sosa:isHostedBy :pot .\n"
@@ -98,9 +100,9 @@ def test_every_package_but_a_transport_declares_a_role_and_every_role_is_found()
     silently; a transport is the one exception, loaded where a role needs bytes. And the roles found
     are the ones the dictionary names."""
     serving = set(ROLES.values())
-    assert set(every_package()) - serving == {MQTT, HTTP}, sorted(serving)
+    assert set(every_package()) - serving == {MQTT, HTTP, TELEGRAM, EMAIL}, sorted(serving)
     local = {role.rsplit("#", 1)[-1] for role in ROLES}
-    assert local == {"Deliberator", "Observer", "Predictor", "Planner", "Executor", "Speaker", "Coordinator", "Reporter"}, sorted(local)
+    assert local == {"Deliberator", "Observer", "Predictor", "Planner", "Executor", "Speaker", "Coordinator", "Translator"}, sorted(local)
 
 
 @pytest.mark.parametrize("role", sorted(ROLES), ids=lambda r: r.rsplit("#", 1)[-1])
@@ -148,6 +150,9 @@ def test_an_agent_declaring_no_role_loads_nothing_and_runs_nothing(tmp_path, cap
 _ON_A_TOPIC = _PROBE + ":probe mqtt4ssn:observesTopic :readings .\n"
 _LISTENS = ":me mqtt4ssn:listensToTopic :inbox .\n"
 _A_FORM = ":pot schema:containedInPlace :balcony . :weather a sosa:Sensor ; sosa:isHostedBy :balcony ; td:hasForm [] .\n"
+_A_BOT = ":me telegram:bot :bot . :bot a telegram:Bot .\n"
+_BY_EMAIL = ":chat a speech:Chat ; speech:participant :me , :anna ; speech:channel :mail . :mail schema:email \"anna@example.org\" .\n"
+_OVER_A_TOPIC = ":chat a speech:Chat ; speech:participant :me , :anna ; speech:channel :topic . :topic a mqtt4ssn:Topic .\n"
 TRANSPORTS = {
     "an observer's sensor on a topic": ([OBSERVER], _ON_A_TOPIC, ["probe"], {MQTT}),
     "a speaker listening to a topic": ([SPEAKER], _LISTENS, [], {MQTT}),
@@ -157,20 +162,25 @@ TRANSPORTS = {
     "a sensor on a topic no observer reads": ([OBSERVER], _ON_A_TOPIC, [], set()),
     "a topic listened to, and no speaker": ([OBSERVER], _PROBE + _LISTENS, ["probe"], set()),
     "a sensor with a form, and no observer": ([SPEAKER], _A_FORM, [], set()),
+    "a translator speaking through a bot": ([TRANSLATOR], _A_BOT, [], {TELEGRAM}),
+    "a translator in a chat by email": ([TRANSLATOR], _BY_EMAIL, [], {EMAIL}),
+    "a translator in a chat over a topic": ([TRANSLATOR], _OVER_A_TOPIC, [], {MQTT}),
+    "a bot, and no translator": ([SPEAKER], _A_BOT + _BY_EMAIL, [], set()),
 }
+FAMILY = (MQTT, HTTP, TELEGRAM, EMAIL)
 
 
 @pytest.mark.parametrize("case", TRANSPORTS, ids=str)
 def test_a_transport_is_loaded_where_a_loaded_role_needs_bytes_and_the_society_wires_a_bus(tmp_path, case):
     roles, facts, sensors, expected = TRANSPORTS[case]
     store = boot(_world(tmp_path, roles, facts, sensors), "me")
-    assert set(packages_of(store)) & {MQTT, HTTP} == expected
-    for transport in (MQTT, HTTP):
+    assert set(packages_of(store)) & set(FAMILY) == expected
+    for transport in FAMILY:
         assert all(_held(store, transport)) if transport in expected else not any(_held(store, transport))
     for transport in expected:
         assert _creates(transport), f"{transport} is loaded and has no create module to make its member"
     #  A TRANSPORT'S PART IS MADE ONLY WHERE THE RUNTIME IS TOLD TO CONNECT, which `main` is.
-    assert not set(Runtime(store, "me").parts) & {MQTT, HTTP}
+    assert not set(Runtime(store, "me").parts) & set(FAMILY)
 
 
 @pytest.mark.parametrize("roles, read", [([OBSERVER], True), ([SPEAKER], False)], ids=["an observer", "no observer"])
@@ -263,7 +273,7 @@ _MACHINES = {"belief": {"transition"}}
 @pytest.mark.parametrize("world, agent, passes, loaded, outcome", [
     ("hanoi", "hanoi", 20, {"planning"}, "planned"),
     (None, "hanoi", 20, {"planning", "execution"}, "met"),
-    ("terrace", "terrace", 0, {"belief", "sensing", "prediction", "speech", "account", MQTT, HTTP}, None),
+    ("terrace", "terrace", 0, {"belief", "sensing", "prediction", "speech", "translation", MQTT, HTTP, TELEGRAM}, None),
     ("allotment", "fern_grower", 0, {"belief", "planning", "execution", "sensing", "prediction", "speech", MQTT}, None),
 ], ids=["hanoi's planner, run to planned", "hanoi's planner made an executor too, run to met",
         "the terrace's observer and predictor", "the allotment's fern grower, everything"])

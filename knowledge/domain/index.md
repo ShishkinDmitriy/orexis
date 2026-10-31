@@ -87,20 +87,19 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [implementation](/domain/execution/implementation.md) - How an action is carried out when a step is taken: operations grouped by order, sized from the present, never read by a search.
 * [operation](/domain/execution/operation.md) - One thing taking a step does — a command, a saying, or the fictive write. Not an act, which is the record.
 
-# Account — what an agent says of itself
+# Translation — what a person says
 
-* [account](/domain/account/account.md) - What an agent says of itself for a person, each part its section, published retained when it changes; telemetry, never a belief.
-* [reporter](/domain/account/reporter.md) - An agent that gives an account of itself, declared in its self graph; the bus is loaded for the topic it accounts on.
+* [translator](/domain/translation/translator.md) - An agent speaking with its chats' people itself: prose heard through a transport member, a statement rendered back through it.
+* [account](/domain/translation/account.md) - What an agent says of itself for a person: each loaded package's select, asked when asked; telemetry, never a belief.
 
 # Speech — what peers say
 
 * [speech](/domain/speech/speech.md) - A peer's word is a document, kept as a statement; what the agent said is kept the same way, and extraction makes beliefs of both.
 * [statement](/domain/speech/statement.md) - What was said, heard or said, kept as said and handed to no reader of the mind.
 * [extraction](/domain/speech/extraction.md) - A domain's construct speech runs over one statement alone; what it concludes is the belief made of what was said.
-* [speaker](/domain/speech/speaker.md) - The role speech serves; needs a topic the agent listens to, a shape the MQTT transport ships.
+* [speaker](/domain/speech/speaker.md) - The role speech serves; needs a topic the agent listens to or a chat it is in, a shape the MQTT transport ships.
 * [sayable](/domain/speech/sayable.md) - A shape a person's prose may become, all the model is handed and may fill; no field an action could be read from.
 * [chat](/domain/speech/chat.md) - Who speaks with whom, through what; participants and a channel whose type is the carrier, which speech does not name.
-* [translator](/domain/speech/translator.md) - A process of the world with the model at the edge, making a statement of a person's prose and prose of an agent's statement.
 
 # Market — a domain of documents
 

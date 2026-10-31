@@ -1,0 +1,12 @@
+# observes
+# reads: sensing:ObservationGraph
+#  WHAT SENSING SAYS OF ITSELF FOR A PERSON: the latest reading of every sensor kept — the one no later percept names
+#  as its previous — what it observed, of what, the reading and when (agent/translation/account.py). Read over every
+#  observation graph as one, since what was concluded of a percept lives in its revision graph beside it.
+SELECT ?observed ?of ?reading ?sensor ?at WHERE {
+  ?o sosa:madeBySensor ?sensor ; sosa:resultTime ?at .
+  OPTIONAL { ?o sosa:observedProperty ?observed }
+  OPTIONAL { ?o sosa:hasFeatureOfInterest ?of }
+  OPTIONAL { ?o sosa:hasSimpleResult ?reading }
+  FILTER NOT EXISTS { ?later sensing:previous ?o } }
+ORDER BY ?sensor

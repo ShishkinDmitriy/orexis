@@ -1,0 +1,35 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix translation: <http://example.org/orexis/translation#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+
+<> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A WORLD MUST STATE OF ITS CHATS FOR ITS AGENTS TO SPEAK IN THEM, held by onboarding alone before anything is
+#  granted (knowledge/domain/onboarding/requirement.md): a chat goes through one channel, and has a person and an
+#  agent in it; and the agent a boot is of, in a chat, translates — judged of each agent's own boot, since which
+#  roles an agent plays is its self graph's to say.
+[] a sh:NodeShape ;
+    sh:targetClass speech:Chat ;
+    sh:property [ sh:path speech:channel ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "a chat goes through one channel" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "has no person in it: a chat is between an agent and someone it speaks with" ;
+        sh:select """SELECT $this WHERE { FILTER NOT EXISTS { $this speech:participant ?p . ?p a schema:Person } }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "has no agent in it: a chat is between a person and an agent of the society" ;
+        sh:select """SELECT $this WHERE { FILTER NOT EXISTS { $this speech:participant ?a . ?a a orexis:Agent } }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "has {?agent} in it, which plays no translator: nothing it runs would hear what is written there" ;
+        sh:select """PREFIX translation: <http://example.org/orexis/translation#>
+SELECT $this ?agent WHERE { $this speech:participant ?agent . ?agent a orexis:Self .
+  FILTER NOT EXISTS { ?agent orexis:plays ?role . ?role a translation:Translator } }""" ] .
+
+#  A TRANSLATOR'S NEED: a chat it is in, or no person's words would reach it and nothing it says would reach anyone.
+[] a sh:NodeShape ;
+    sh:targetClass translation:Translator ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "a translator in no chat: no person's words would reach it" ;
+        sh:select """SELECT $this WHERE { ?me orexis:plays $this FILTER NOT EXISTS { ?chat speech:participant ?me } }""" ] .

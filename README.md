@@ -56,14 +56,15 @@ for this step; its one client is for the run-time edges below.
 
 | edge | what the model does | what it never does |
 |---|---|---|
-| translation | turns a person's prose into a statement of a shape the domain declares, and a statement into prose; runs as a process of the world, with the key in `infra/secrets/model.env` and never in an agent's container | author a belief, name a step |
-| the account | phrases what an agent said of itself, for a person asking over chat | run a query, reach the agent |
+| translation | turns a person's prose into a statement of a shape the domain declares, and a statement into prose; runs in the agent the person chats with, off its pass, with the key in `infra/secrets/model.env` mounted into that agent's container alone | author a belief, name a step |
+| the account | phrases the rows the agent's own selects answer of it, for a person asking in a chat | write a query, decide anything |
 | reflection | when a search ends with nothing or an incident is journaled, proposes a change to the world's documents | edit the agent, take effect unratified |
 
 The argument and the refusals are in
 [`the-model-compiles-a-routine-and-is-called-back-at-its-edges`](knowledge/decisions/the-model-compiles-a-routine-and-is-called-back-at-its-edges.md);
 the three seats were decided one by one in [`genesis`](knowledge/decisions/genesis.md),
-[`an-agent-gives-an-account-of-itself-and-the-model-only-reads-it`](knowledge/decisions/an-agent-gives-an-account-of-itself-and-the-model-only-reads-it.md)
+[`an-agent-gives-an-account-of-itself-and-the-model-only-reads-it`](knowledge/decisions/an-agent-gives-an-account-of-itself-and-the-model-only-reads-it.md) (amended by
+[`an-agent-translates-for-itself`](knowledge/decisions/an-agent-translates-for-itself.md))
 and [`reflection-is-genesis-run-again-over-the-series`](knowledge/decisions/reflection-is-genesis-run-again-over-the-series.md).
 
 ## Layout

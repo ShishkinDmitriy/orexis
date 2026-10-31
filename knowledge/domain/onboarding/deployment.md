@@ -26,13 +26,14 @@ how many days a purpose is kept where not for ever, and how many seconds one win
 with its url and image; and a pool per kind of listener it allocates ports to — a broker's, and an
 agent's [journal](/domain/kernel/journal.md)'s, each saying which (`onboarding:allocatesFor`).
 
-The installation also says **where the language model answers**, where this host runs a
-[translator](/domain/speech/translator.md): one `onboarding:Model` with the `schema:url` of its API,
-told to a world's `translation` service as `MODEL_URL`. Which model and the key are no deployment
-fact: they are `infra/secrets/model.env`, template `infra/model.env.example`, mounted into the
-translator's container alone, as the admin token is mounted into no agent's. An installation naming
-no model runs no translator, and a world naming a chat is refused, as a monitored world is where
-metrics are served by no store.
+The installation also says **where the language model answers**, where an agent of this host may be
+a [translator](/domain/translation/translator.md): one `onboarding:Model` with the `schema:url` of its
+API, told to each translating agent as `MODEL_URL`. Which model and the key are no deployment fact:
+they are `infra/secrets/model.env`, template `infra/model.env.example`, mounted into each translating
+agent's container and no other, as the admin token is mounted into no agent's. An installation naming
+no model has no agent translate, and a world with one that does is refused, as a monitored world is
+where metrics are served by no store. Where an agent's Telegram bot answers is the world's deployment
+graph's, `<bot> schema:url`, told to the agent as `TELEGRAM_URL`.
 
 A world says of its deployment graph, too, what its agents' [journals](/domain/kernel/journal.md) count as an
 incident beside their vocabulary: from which level a log line is one, `<> onboarding:incidentLevel "ERROR"`, and an

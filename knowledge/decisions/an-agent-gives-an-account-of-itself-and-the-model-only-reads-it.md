@@ -1,7 +1,8 @@
 ---
 type: Decision
 title: An agent gives an account of itself, and the model only reads it
-status: accepted
+status: superseded-in-part
+superseded-by: an-agent-translates-for-itself
 timestamp: 2026-10-04T12:00:00Z
 description: >-
   The sovereign reaches a running society over chat — a Telegram bot, one per world, run by a
@@ -16,9 +17,15 @@ description: >-
   agent, a gateway spanning worlds.
 ---
 
-> **Amended 2026-10-31:** the gateway is the [translator](/domain/speech/translator.md), and the
+> **Superseded in part 2026-10-31** by [an-agent-translates-for-itself](/decisions/an-agent-translates-for-itself.md):
+> a world runs no process, so the gateway is each agent's own translation part, a bot per agent; the
+> question reaches the agent as a person's words in its chat; and the account is a select each package
+> ships, asked when a person asks and published nowhere. Its limits on the model stand. The amendment
+> below records the shape #1043 first shipped, which that record refused.
+
+> **Amended 2026-10-31:** the gateway is the [translator](/domain/translation/translator.md), and the
 > chat is a [chat](/domain/speech/chat.md) the world states; `orexis-chat` was never built. The
-> account is as decided — the `account` package, `agent/account/`, each part its section, published
+> account is as decided — an `account` package of the agent, each part its section, published
 > retained on the agent's account topic on change, a command relayed for nothing and a free question
 > one model call — and the role that gives one is `account:Reporter`, declared in the self graph as
 > every role is since #927. The chat ids live in the world's `secrets/` as decided; the bot's token too.

@@ -29,9 +29,9 @@ halves of one thing, what may be said and what it means.
 
 # How it is used
 
-The [translator](/domain/speech/translator.md) offers the model every sayable the world declares as a
+The [translator](/domain/translation/translator.md) offers the model every sayable the world declares as a
 tool whose input is the shape's fields and nothing else, beside one tool for *nothing sayable*
-(`translation/sayable.py`). A field with a class is filled from the instances the world states of it,
+(`agent/translation/sayable.py`). A field with a class is filled from the instances the world states of it,
 chosen by `rdfs:label`, and written back as the IRI; a label the world does not state is no value. Of
 what the model filled, a statement is made — one graph, typed `speech:StatementGraph`, the node of the
 sayable's class with its fields, the words it was made from as `speech:prose` and who said it as

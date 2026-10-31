@@ -1,0 +1,37 @@
+# a_chat_on_telegram
+#
+# THE WORLD THE TELEGRAM TRANSPORT IS HELD TO: the keeper, speaking through a bot of its own, in a chat with Anna that
+# the Bot API names 4242 and in a group, -100, with her and a peer; Anna writing as Telegram user 111.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix telegram: <http://example.org/orexis/telegram#> .
+@prefix schema: <https://schema.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+GRAPH :ontology {
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:SelfGraph rdfs:subClassOf orexis:BeliefGraph , orexis:Graph .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent ; orexis:localId "keeper" ; telegram:bot :keeper_bot .
+  :peer a orexis:Agent ; orexis:localId "peer" ; telegram:bot :peer_bot .
+  :keeper_bot a telegram:Bot .
+  :peer_bot a telegram:Bot .
+  :anna a schema:Person ; schema:name "Anna" ; telegram:user "111" .
+  :keeper_and_anna a speech:Chat ; speech:participant :keeper , :anna ; speech:channel :anna_telegram .
+  :anna_telegram a telegram:Chat ; telegram:id "4242" .
+  :household a speech:Chat ; speech:participant :keeper , :peer , :anna ; speech:channel :household_telegram .
+  :household_telegram a telegram:Chat ; telegram:id "-100" .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph , orexis:Graph .
+  :ontology a orexis:BeliefGraph , orexis:Graph , orexis:OntologyGraph .
+  :self a orexis:BeliefGraph , orexis:Graph , orexis:SelfGraph ; orexis:arrivedBy orexis:Asserted ; orexis:ownedBy :keeper .
+  :world a orexis:BeliefGraph , orexis:Graph .
+}

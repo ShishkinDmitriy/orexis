@@ -10,10 +10,10 @@ import pytest
 from agent.transport.transport import Transport, Transports
 
 
-def test_the_contract_is_connect_open_handle_cadence_nudge_and_tell_and_nothing_about_bytes():
+def test_the_contract_is_connect_open_handle_cadence_nudge_tell_and_say_and_nothing_about_bytes():
     names = {n for n, v in vars(Transport).items() if not n.startswith("_") and (callable(v) or isinstance(v, classmethod))}
     assert names == {"connect", "start", "stop", "open", "handle", "reaches", "set_cadence", "sense_now", "actuate", "tell",
-                     "command", "tell_to"}
+                     "command", "tell_to", "say_to"}
     assert "parse" not in names, "bytes to number is sensing's pipeline"
     assert "claims" not in names, "whether a member is loaded is the runtime's to read, before it is imported"
     with pytest.raises(NotImplementedError):
@@ -24,6 +24,7 @@ def test_the_contract_is_connect_open_handle_cadence_nudge_and_tell_and_nothing_
     assert t.set_cadence(None, None, 60) is False and t.sense_now(None, None) is None
     assert t.actuate(None, "urn:pump", {"dose_ml": 100}) is False, "a member that reaches nothing sends nothing"
     assert t.tell(None, "urn:peer", b"") is False, "nor tells anybody anything"
+    assert t.say_to(None, "urn:chat", "hello") is False, "nor says anything in a chat"
     assert t.reaches(None, "urn:probe") is False
 
 
@@ -79,3 +80,12 @@ def test_several_members_are_one_transport_and_a_nudge_goes_to_the_member_reachi
     held.sense_now(None, "urn:nobody")
     assert web.asked[-1] == ("sense_now", "urn:weather") and not any(a[0] == "sense_now" for a in bus.asked)
     assert held.reaches(None, "urn:probe") and not held.reaches(None, "urn:nobody")
+
+
+def test_prose_is_said_by_the_first_member_that_carries_the_channel():
+    said = []
+    bus, bot = _Member("bus", set()), _Member("bot", set())
+    bus.say_to = lambda store, channel, text: False
+    bot.say_to = lambda store, channel, text: said.append((channel, text)) or True
+    assert Transports([bus, bot]).say_to(None, "urn:chat", "hello") is True and said == [("urn:chat", "hello")]
+    assert Transports([bus]).say_to(None, "urn:chat", "hello") is False, "a channel nobody carries goes nowhere"

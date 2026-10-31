@@ -58,9 +58,10 @@ import os
 from datetime import datetime
 
 from agent import clock
+from agent.lifecycle import Signal
 from agent.ontology import BELIEF, local_of
 from agent.store import Raw, answer, graphs_of, rows
-from agent.transport.transport import Transport
+from agent.transport.transport import Prose, Transport
 
 log = logging.getLogger("mqtt")
 
@@ -104,9 +105,13 @@ SELECT DISTINCT ?broker WHERE {
   UNION { ?client mqtt4ssn:hosts ?system ; mqtt4ssn:isConnectedToBroker ?broker . ?system ssn:hasSubSystem* $thing } }
 ORDER BY ?broker"""
 
-#  THE PATTERN NAMING ONE TOPIC NODE, for a publish on a topic of the agent's own.
-_PATTERN_Q = """
-SELECT ?pattern WHERE { ?filter mqtt4ssn:matchesTopic $topic ; mqtt4ssn:hasFilterPattern ?pattern } ORDER BY ?pattern"""
+#  THE TOPICS OF THE CHATS THE AGENT IS IN, a person's prose both ways on each (`speech:Chat`), by every pattern
+#  naming them; and whether whom a document is told to is an agent, since a person's is not the bus's.
+_CHAT_TOPICS_Q = """
+SELECT ?topic ?pattern WHERE {
+  ?chat a speech:Chat ; speech:participant $agent ; speech:channel ?topic . ?topic a mqtt4ssn:Topic .
+  ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern } ORDER BY ?topic ?pattern"""
+_AGENT_Q = "ASK { $who a orexis:Agent }"
 
 #  WHERE AN AGENT IS TOLD THINGS: the topic it listens to itself, as a board listens for
 #  commands. Its own is what it subscribes to; a peer's is where a document to it is published.
@@ -140,7 +145,23 @@ class Mqtt(Transport):
         """`clients` by the IRI of the broker each is connected to, or one client standing for them all."""
         self.me, self.clients = me, clients if isinstance(clients, dict) else {None: clients}
         self.deliver = deliver or (lambda *message: None)
+        #  A PERSON'S PROSE ON A CHAT'S TOPIC, said for translation to hear (`transport.Prose`).
+        self.prose = Signal("prose")
         self._unreachable: set[str] = set()     # said to listen on no topic name, so said once
+
+    def _prose(self, channel: str, payload: bytes, at) -> list[str]:
+        """A message on a chat's topic: `{"from": …, "text": …}` or bare text, said as `prose` unless the agent itself
+        said it; the graphs whoever heard it wrote."""
+        try:
+            said = json.loads(payload.decode("utf-8"))
+        except (UnicodeDecodeError, ValueError):
+            said = None
+        if not isinstance(said, dict):
+            said = {"text": payload.decode("utf-8", errors="replace")}
+        if said.get("from") == self.me or not str(said.get("text", "")).strip():
+            return []
+        sender = said.get("from") if isinstance(said.get("from"), str) and said["from"].startswith("http") else None
+        return self.prose.emit(Prose(channel, sender, str(said["text"]).strip(), at))
 
     def _unreached(self, who: str, what: str) -> bool:
         """Say once that `who` listens on no topic name — a step whose actuator does is not taken
@@ -266,7 +287,10 @@ class Mqtt(Transport):
 
     def tell(self, store, to: str, document: bytes) -> bool:
         """Publish a document on the topic the agent `to` listens to, by a pattern with no
-        wildcard; not retained, since what was said is said once."""
+        wildcard; not retained, since what was said is said once. A document to a person is not the bus's: it is
+        translation's, which renders it in the person's chat, so it is passed over in silence here."""
+        if not answer(store, _AGENT_Q, graphs_of(store, BELIEF, common=True), who=to)["boolean"]:
+            return False
         names = [p for p in (r["pattern"] for r in rows(store, _LISTENS_Q, graphs_of(store, BELIEF, common=True), agent=to))
                  if "+" not in p and "#" not in p]
         if not names:
@@ -283,6 +307,7 @@ class Mqtt(Transport):
         """Subscribe to every pattern the world implies for the agent's sensors, and to the topic
         it listens to itself; the patterns."""
         own = {r["pattern"] for r in rows(store, _LISTENS_Q, graphs_of(store, BELIEF, common=True), agent=self.me)}
+        own |= {r["pattern"] for r in rows(store, _CHAT_TOPICS_Q, graphs_of(store, BELIEF, common=True), agent=self.me)}
         on = {id(c): (c, set(own)) for c in self.clients.values()}
         for r in self._topics(store):
             for client in self._over(store, r["sensor"]):
@@ -309,6 +334,10 @@ class Mqtt(Transport):
         if any(matches(r["pattern"], topic) for r in rows(store, _LISTENS_Q, graphs_of(store, BELIEF, common=True), agent=self.me)):
             from agent.speech.heard import heard
             return [(None, graph) for graph in heard(store, self.me, payload)]
+        chats = [r["topic"] for r in rows(store, _CHAT_TOPICS_Q, graphs_of(store, BELIEF, common=True), agent=self.me)
+                 if matches(r["pattern"], topic)]
+        if chats:
+            return [(None, graph) for graph in self._prose(chats[0], payload, at)]
         mine = list(dict.fromkeys(r["sensor"] for r in self._topics(store) if matches(r["pattern"], topic)))
         if not mine:
             log.debug("%s: a message on %s is nobody's of mine", local_of(self.me), topic)
@@ -319,18 +348,18 @@ class Mqtt(Transport):
             written += [(sensor, graph) for graph in received(store, self.me, sensor, payload, at, memo=memo)]
         return written
 
-    def publish_on(self, store, topic: str, payload: dict, retain: bool) -> bool:
-        """`payload` out on the topic node `topic` of the agent's own — its account, say — by the one pattern
-        naming it, over the first broker this member reaches for the agent; False, said once, where the
-        topic is named by no pattern without a wildcard or the agent is on no broker of this member's."""
-        names = [p for p in (r["pattern"] for r in rows(store, _PATTERN_Q, graphs_of(store, BELIEF, common=True), topic=topic))
-                 if "+" not in p and "#" not in p]
+    def say_to(self, store, channel: str, text: str) -> bool:
+        """Prose out on the topic node `channel`, a chat's topic, by the one pattern naming it with no wildcard, as
+        `{"from": the agent, "text": …}` so the agent knows its own when the broker hands it back; False where the
+        channel is no topic of a chat this agent is in, or it is on no broker of this member's."""
+        names = [r["pattern"] for r in rows(store, _CHAT_TOPICS_Q, graphs_of(store, BELIEF, common=True), agent=self.me)
+                 if r["topic"] == channel and "+" not in r["pattern"] and "#" not in r["pattern"]]
         if not names:
-            return self._unreached(topic, "nothing is published on it")
+            return False
         over = self._over(store, self.me)
         if not over:
-            return self._unshared(self.me, "nothing is published on its own topic")
-        over[0].publish(names[0], json.dumps(payload).encode(), retain=retain)
+            return self._unshared(self.me, "nothing is said on a chat's topic")
+        over[0].publish(names[0], json.dumps({"from": self.me, "text": text}).encode(), retain=False)
         return True
 
     def publish(self, store, device: str, topic: str, payload: dict, retain: bool) -> bool:

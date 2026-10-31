@@ -1,0 +1,31 @@
+# a_chat_by_email
+#
+# THE WORLD THE EMAIL TRANSPORT IS HELD TO: the keeper in a chat with Anna that goes through her mailbox,
+# anna@example.org.
+#
+# The clock stands at 2026-01-01T12:00:00Z.
+
+@prefix : <http://example.org/test#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix schema: <https://schema.org/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+GRAPH :ontology {
+  orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
+  orexis:SelfGraph rdfs:subClassOf orexis:BeliefGraph , orexis:Graph .
+}
+
+GRAPH :world {
+  :keeper a orexis:Agent ; orexis:localId "keeper" .
+  :anna a schema:Person ; schema:name "Anna" .
+  :keeper_and_anna a speech:Chat ; speech:participant :keeper , :anna ; speech:channel :anna_mail .
+  :anna_mail a schema:ContactPoint ; schema:email "anna@example.org" .
+}
+
+GRAPH :catalogue {
+  :catalogue a orexis:CatalogueGraph , orexis:Graph .
+  :ontology a orexis:BeliefGraph , orexis:Graph , orexis:OntologyGraph .
+  :self a orexis:BeliefGraph , orexis:Graph , orexis:SelfGraph ; orexis:arrivedBy orexis:Asserted ; orexis:ownedBy :keeper .
+  :world a orexis:BeliefGraph , orexis:Graph .
+}

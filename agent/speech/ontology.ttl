@@ -72,9 +72,9 @@
     rdfs:comment "An agent a statement was told to." .
 
 #  WHAT A PERSON MAY SAY, AND THE WORDS A STATEMENT WAS MADE FROM (#1034). A person who is not an agent
-#  speaks prose, and a language model at a transport's edge — the translator, a process of the world —
+#  speaks prose, and a language model at a transport's edge — the agent's own translation part —
 #  turns it into a statement of a shape the domain declares, and a statement the agent says to them into
-#  prose (knowledge/domain/speech/translator.md). The model fills a shape's fields and nothing else: it
+#  prose (knowledge/domain/translation/translator.md). The model fills a shape's fields and nothing else: it
 #  authors no belief, the extraction does, and a sayable has no field an action could be read from
 #  (knowledge/decisions/the-model-compiles-a-routine-and-is-called-back-at-its-edges.md).
 

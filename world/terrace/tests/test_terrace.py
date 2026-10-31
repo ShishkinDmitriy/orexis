@@ -77,10 +77,10 @@ def test_booted_from_its_directory_the_agent_holds_no_hardware():
     assert (held, rowed) == (0, 0), f"the terrace agent holds {held} hardware quads and {rowed} rows about the graph"
 
 
-def test_the_agent_listens_on_the_boards_one_topic_and_its_own_inbox(monkeypatch):
+def test_the_agent_listens_on_the_boards_one_topic_alone(monkeypatch):
     _, broker = _terrace(monkeypatch)
-    assert broker.subscribed == ["agents/terrace/inbox", "sensors/moisture_sensor_terrace/reading"], \
-        "the board's readings, and the inbox the chat's statements to it would arrive on"
+    assert broker.subscribed == ["sensors/moisture_sensor_terrace/reading"], \
+        "the board's readings; its chat is on Telegram, through its own bot, and asks nothing of the bus"
 
 
 def test_one_message_is_five_observations_and_the_soil_is_below_the_beds_range(monkeypatch):
@@ -99,24 +99,51 @@ def test_one_message_is_five_observations_and_the_soil_is_below_the_beds_range(m
     held = rows(runtime.beliefs, "SELECT ?s ?p ?o WHERE { ?s ?p ?o }", present)
     assert [(r["s"].rsplit("#", 1)[-1], r["p"].rsplit("#", 1)[-1], r["o"].rsplit("#", 1)[-1]) for r in held] == \
         [("terrace_bed", "soil", "Dry")], "under the bed's floor, and nothing of the readings themselves"
-    assert broker.published == ["agents/terrace/account"], "nothing is wanted, so nothing is sent but its account of itself"
+    assert broker.published == [], "nothing is wanted, so nothing is sent"
 
 
-def test_the_agent_gives_an_account_of_itself_when_what_it_observes_changes(monkeypatch):
-    """A reporter: the one message read, the agent publishes what it observes, retained, on its account topic —
-    each reading, of what, by which sensor, when, and when the next is due — and publishes nothing more while
-    nothing it says of itself changes."""
-    runtime, broker = _terrace(monkeypatch)
-    runtime.deliver("sensors/moisture_sensor_terrace/reading", MESSAGE, NOW)
-    runtime.run(passes=2, poll_s=0)
-    account = broker.retained["agents/terrace/account"]["account"]
-    lines = account.split("\n")
-    assert lines[0] == "terrace_agent at 2026-01-01T12:00+00:00" and lines[1] == "observes:", lines
-    assert " - SoilMoisture of terrace_bed: 0.2, read by moisture_sensor_terrace at 2026-01-01T12:00+00:00, next due 2026-01-01T12:20+00:00" in lines[2:]
+#  THE SOVEREIGN'S CHAT, as its secrets/chat.ttl states it — a made-up id, since the real one is not committed.
+CHAT = """@prefix : <http://example.org/orexis/world/terrace#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix telegram: <http://example.org/orexis/telegram#> .
+<> a orexis:SocietyGraph .
+:sovereign_telegram telegram:id "4242" .
+"""
+
+
+def test_the_sovereign_asks_the_agent_through_its_own_bot_and_is_answered_with_what_it_observes(monkeypatch, tmp_path):
+    """A translator: `/account` written in the sovereign's chat reaches the agent through its own bot, and the agent
+    sends back what it observes — each sensor's latest reading, of what and when — read off its store by sensing's
+    select, with no model asked."""
+    from agent.transport.mqtt.driver import Mqtt
+    from agent.transport.telegram.driver import Telegram
+    from agent.transport.transport import Transports
+
+    monkeypatch.setattr(clock, "now", lambda: NOW)
+    world = _with_a_place(tmp_path)
+    (world / "secrets" / "chat.ttl").write_text(CHAT)
+    sent, updates = [], [{"update_id": 7, "message": {"chat": {"id": 4242}, "from": {"id": 1}, "text": "/account"}}]
+
+    def api(url, body):
+        if url.endswith("/getUpdates"):
+            found, updates[:] = list(updates), []
+            return {"ok": True, "result": found}
+        sent.append(body)
+        return {"ok": True}
+
+    bot = Telegram(AGENT, "token", call=api, spawn=lambda work: work())
+    runtime = Runtime(boot(world, "terrace"), "terrace", transport=Transports([Mqtt(AGENT, Broker()), bot]))
+    runtime.deliver((0, "sensors/moisture_sensor_terrace/reading"), MESSAGE, NOW)
+    runtime.run(passes=1, poll_s=0)
+    for channel, payload in bot.updates():
+        runtime.deliver((1, channel), payload, NOW)
+    runtime.run(passes=1, poll_s=0)
+    (said,) = sent
+    lines = said["text"].split("\n")
+    assert said["chat_id"] == "4242" and lines[:2] == ["terrace_agent at 2026-01-01 12:00 UTC", "observes:"], lines
+    assert (" - observed: SoilMoisture, of: terrace_bed, reading: 0.2, sensor: moisture_sensor_terrace, "
+            "at: 2026-01-01 12:00 UTC") in lines
     assert sum(1 for line in lines if line.startswith(" - ")) == 5, "one line per sensor read"
-    assert broker.published.count("agents/terrace/account") == 1
-    runtime.run(passes=2, poll_s=0)
-    assert broker.published.count("agents/terrace/account") == 1, "nothing changed, nothing published"
 
 
 def test_a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving(monkeypatch, caplog):
@@ -136,7 +163,7 @@ def test_a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving(monke
     assert sorted(m.split(": ", 1)[1].split(" ", 1)[0] for m in said) == [
         "air_humidity_terrace", "air_pressure_terrace", "air_temp_terrace", "battery_sensor_terrace",
         "moisture_sensor_terrace"]
-    assert [t for t in broker.published if t != "agents/terrace/account"] == [], "nothing but its account of itself"
+    assert broker.published == [], "nothing is sent"
 
 
 def test_each_reading_reaches_the_series_under_its_own_property(monkeypatch, history):
