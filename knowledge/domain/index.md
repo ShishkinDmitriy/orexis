@@ -94,6 +94,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [extraction](/domain/speech/extraction.md) - A domain's construct speech runs over one statement alone; what it concludes is the belief made of what was said.
 * [speaker](/domain/speech/speaker.md) - The role speech serves; needs a topic the agent listens to, a shape the MQTT transport ships.
 * [sayable](/domain/speech/sayable.md) - A shape a person's prose may become, all the model is handed and may fill; no field an action could be read from.
+* [chat](/domain/speech/chat.md) - Who speaks with whom, through what; participants and a channel whose type is the carrier, which speech does not name.
 * [translator](/domain/speech/translator.md) - A process of the world with the model at the edge, making a statement of a person's prose and prose of an agent's statement.
 
 # Market — a domain of documents

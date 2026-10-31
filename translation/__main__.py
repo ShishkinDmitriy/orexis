@@ -5,7 +5,7 @@ The broker's address and this client's credential arrive as environment, as the 
 else in the translator. The model is `MODEL_API_KEY`, `MODEL_NAME` and `MODEL_URL` (`model.py`), the
 mailbox `MAIL_*` (`carrier.py`), and how often the mailbox is asked `MAIL_POLL_S`, in real seconds. The
 bus is the other carrier and needs nothing of its own: every message the translator is subscribed to
-goes through `Translator.receive`, prose from a person's client and statements from the agents alike."""
+goes through `Translator.receive`, prose on a chat's topic and statements on a person's inbox alike."""
 
 from __future__ import annotations
 

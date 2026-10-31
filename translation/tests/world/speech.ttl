@@ -1,0 +1,19 @@
+@prefix : <http://example.org/orexis/world/viewing#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix schema: <https://schema.org/> .
+@prefix speech: <http://example.org/orexis/speech#> .
+
+<> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
+
+#  WHO SPEAKS WITH WHOM, THROUGH WHAT: the seeker with Anna, a realtor, by email; and with Boris, its
+#  principal, over a topic of the bus his phone and the translator both publish on. The channel's type
+#  is the carrier, and speech names none.
+
+:seeker_and_anna a speech:Chat ;
+    speech:participant :seeker , :anna ;
+    speech:channel :anna_mail .
+:anna_mail a schema:ContactPoint ; schema:email "anna@example.org" .
+
+:seeker_and_boris a speech:Chat ;
+    speech:participant :seeker , :boris ;
+    speech:channel :boris_topic .

@@ -97,14 +97,15 @@
     rdfs:label "said by" ;
     rdfs:comment "The person a translated statement was heard from — the carrier's word about an address, unsigned, kept in the statement's own graph. Which peer spoke is otherwise not told apart in speech; signing is the seam." .
 
-:speaksTo a owl:ObjectProperty ; rdfs:range orexis:Agent ;
-    rdfs:label "speaks to" ;
-    rdfs:comment "The agent a person's statements are for: stated of a `schema:Person` in the society beside the addresses the translator reaches them at and the topic they listen on, so the translator publishes what they say on that agent's inbox." .
+:Chat a owl:Class ;
+    rdfs:label "chat" ;
+    rdfs:comment "Who speaks with whom, through what: a standing thing of the society, with its `speech:participant`s - an agent and a person, or several - and its `speech:channel`, the thing their prose goes through. A conversation is one exchange inside a chat; the chat stands for as long as the world states it. The agent in it says statements and hears them as with any peer; the translator stands in the chat for the person, rendering the agent's statements into prose on the channel and the person's prose into statements on the agent's inbox (knowledge/domain/speech/chat.md)." .
 
-:speaksThrough a owl:ObjectProperty ;
-    rdfs:label "speaks through" ;
-    rdfs:comment "A person's address on the bus: the client of the society - a phone, a terminal - their prose comes from and goes to, which listens to the topic the translator publishes prose to them on and `speech:saysOn` the topic it publishes their prose on. One kind of address beside `schema:email`; a person states the kinds they have, and the translator reaches them by each. What such a client must state is the transport's words and the transport's requirement, not this package's (knowledge/domain/speech/translator.md)." .
+:participant a owl:ObjectProperty ; rdfs:domain :Chat ;
+    rdfs:label "participant" ;
+    rdfs:comment "Who is in a chat: an agent of the society, or a person it speaks with. The translator reads the agent's statements to a person off the inbox the person listens on, and publishes what the person says on the agent's inbox." .
 
-:saysOn a owl:ObjectProperty ;
-    rdfs:label "says on" ;
-    rdfs:comment "The topic a client a person speaks through publishes their prose on, where the translator hears it - the transport's publishing word is a sensor's, and prose is no observation. Named `people/<person>/says` by onboarding's rule; the topic the client listens to, `people/<person>/hears`, carries what the translator says to them." .
+:channel a owl:ObjectProperty ; rdfs:domain :Chat ;
+    rdfs:label "channel" ;
+    rdfs:comment "What a chat's prose goes through: a thing of the carrier's own vocabulary, whose type is the carrier - a topic of the bus, a contact point with an email, later a chat of a messaging service. Speech names no carrier; the translator picks one by the channel's type, and onboarding names a topic `chats/<chat>` and grants it to the translator and to every client acting on behalf of a participant." .
+

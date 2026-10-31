@@ -74,6 +74,10 @@ _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 
 VOCABULARY = Path(__file__).resolve().parent / "ontology.ttl"
 REQUIREMENTS = Path(__file__).resolve().parent / "requirements.ttl"
+#  THE TRANSLATOR'S REQUIREMENT, read here as onboarding's own is: the translator is a process of the
+#  world outside `agent/`, which the image does not carry, so no world imports its words and no agent
+#  loads them (knowledge/domain/speech/translator.md).
+TRANSLATION_REQUIREMENTS = Path(__file__).resolve().parent.parent / "translation" / "requirements.ttl"
 INSTALLATION_REQUIREMENTS = Path(__file__).resolve().parent.parent / "infra" / "requirements.ttl"
 ONBOARDING = "http://example.org/orexis/onboarding#"
 HARDWARE = ONBOARDING + "HardwareGraph"
@@ -119,6 +123,7 @@ def world(here: Path) -> ox.Store:
     store = world_of(here, others=ours())
     put_document(store, document(VOCABULARY))
     put_document(store, document(REQUIREMENTS))
+    put_document(store, document(TRANSLATION_REQUIREMENTS))
     for _, doc in read_with_imports(documents(here)):
         graphs = {g for g, kinds in kinds_in(doc).items() if any(ours() & set(closed(store, k)) for k in kinds)}
         if graphs:

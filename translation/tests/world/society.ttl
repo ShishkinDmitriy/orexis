@@ -1,16 +1,17 @@
 @prefix : <http://example.org/orexis/world/viewing#> .
 @prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix schema: <https://schema.org/> .
-@prefix speech: <http://example.org/orexis/speech#> .
+@prefix translation: <http://example.org/orexis/translation#> .
 
 <> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
 
-#  THE SOCIETY: the seeker, a client listening on an inbox of its own; two people the translator
-#  speaks for, each with the inbox what the seeker says to them arrives on — a realtor reached by
-#  email, and the seeker's principal, reached through a client of his own on the bus, which says his
-#  prose on one topic and hears the translator's on another; and the translator, the client hosting
-#  both. The filters are asserted here, as a test world's are, where `orexis-onboard` would derive them.
+#  THE SOCIETY'S WIRING: the seeker, a client listening on an inbox of its own; two people, each
+#  listening on the inbox the seeker's statements to them arrive on; Boris's phone, the client that
+#  acts on his behalf on the bus; and the translator, the client that translates the chats
+#  (speech.ttl). The filters are asserted here, as a test world's are, where `orexis-onboard` would
+#  derive them.
 
 :broker a mqtt4ssn:Broker .
 
@@ -24,16 +25,12 @@
 
 :anna a schema:Person ;
     schema:name "Anna" ;
-    schema:email "anna@example.org" ;
-    speech:speaksTo :seeker ;
     mqtt4ssn:listensToTopic :anna_inbox .
 :anna_inbox a mqtt4ssn:Topic .
 :anna_inbox_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:matchesTopic :anna_inbox ; mqtt4ssn:hasFilterPattern "people/anna/inbox" .
 
 :boris a schema:Person ;
     schema:name "Boris" ;
-    speech:speaksTo :seeker ;
-    speech:speaksThrough :boris_phone ;
     mqtt4ssn:listensToTopic :boris_inbox .
 :boris_inbox a mqtt4ssn:Topic .
 :boris_inbox_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:matchesTopic :boris_inbox ; mqtt4ssn:hasFilterPattern "people/boris/inbox" .
@@ -41,14 +38,11 @@
 :boris_phone a mqtt4ssn:Client ;
     mqtt4ssn:hasClientID "boris_phone" ;
     mqtt4ssn:isConnectedToBroker :broker ;
-    mqtt4ssn:listensToTopic :boris_hears ;
-    speech:saysOn :boris_says .
-:boris_hears a mqtt4ssn:Topic .
-:boris_hears_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:matchesTopic :boris_hears ; mqtt4ssn:hasFilterPattern "people/boris/hears" .
-:boris_says a mqtt4ssn:Topic .
-:boris_says_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:matchesTopic :boris_says ; mqtt4ssn:hasFilterPattern "people/boris/says" .
+    prov:actedOnBehalfOf :boris .
+:boris_topic a mqtt4ssn:Topic .
+:boris_topic_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:matchesTopic :boris_topic ; mqtt4ssn:hasFilterPattern "chats/seeker_and_boris" .
 
 :translator a mqtt4ssn:Client ;
     mqtt4ssn:hasClientID "translator" ;
     mqtt4ssn:isConnectedToBroker :broker ;
-    mqtt4ssn:hosts :anna , :boris .
+    translation:translates :seeker_and_anna , :seeker_and_boris .

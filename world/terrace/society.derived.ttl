@@ -2,8 +2,8 @@
 #  named by, where the society states none: by the rule in onboarding/requirements.ttl, one convention
 #  for every world — sensors/<client>/reading for what a board publishes, sensors/<client>/command for
 #  what it listens to, actuators/<device>/command, agents/<agent>/inbox, people/<person>/inbox, and
-#  people/<person>/says and /hears for a client a person speaks through. A filter the society asserts
-#  itself is kept, and wins (knowledge/domain/onboarding/requirement.md).
+#  chats/<chat> for the topic a chat goes through. A filter the society asserts itself is kept, and
+#  wins (knowledge/domain/onboarding/requirement.md).
 
 @prefix : <http://example.org/orexis/world/terrace#> .
 @prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .

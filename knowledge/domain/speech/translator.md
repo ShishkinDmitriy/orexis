@@ -16,43 +16,39 @@ the world as an agent boots it, connects to the world's broker as the client the
 one that `mqtt4ssn:hosts` the people it speaks for — and stands at the one run-time edge where a
 model translates ([the-model-compiles-a-routine-and-is-called-back-at-its-edges](/decisions/the-model-compiles-a-routine-and-is-called-back-at-its-edges.md)).
 
-**Who it speaks for is the world's to say.** A person is a `schema:Person` in the society with the
-agent they `speech:speaksTo`, the topic they `mqtt4ssn:listensToTopic` — their inbox, where the agent's
-MQTT member publishes what the agent says to them as it publishes to any peer — and their addresses.
-Nothing here is a name in the code.
+**Who speaks with whom, through what, is the world's to say.** A [chat](/domain/speech/chat.md) names
+an agent, a person and the channel their prose goes through; the translator stands in every chat the
+client it connects as `translation:translates`. A person in a chat `mqtt4ssn:listensToTopic` an inbox,
+where the agent's MQTT member publishes its statements to them as it publishes to any peer, and where
+the translator reads them. Nothing here is a name in the code.
 
-# A channel is a kind of address
+# A channel is what a chat goes through
 
-A person states the addresses they have, and the translator reaches them by each; nothing names a
-channel as a thing of its own. Two kinds today:
+The channel's type picks the carrier, and the translator knows none by name. Two kinds today:
 
-- **an email**, `schema:email`, which the carrier polls and sends to over the standard library
-  (`translation/carrier.py`), the mailbox being the translator's own;
-- **a client of their own on the bus**, `speech:speaksThrough` — a phone, a terminal, an app — which
-  `speech:saysOn` the topic their prose is published on and `mqtt4ssn:listensToTopic` the one the
-  translator's prose to them goes on, named `people/<person>/says` and `people/<person>/hears`. The
-  bus is the carrier, so the client is a principal of the society like a board: a credential of its
-  own, and grants derived from the two topics. It is the one channel a test can walk end to end on
-  the bench, with no service outside the world.
+- **a topic of the bus**, `mqtt4ssn:Topic` — the person's user agent and the translator both publish
+  prose on it; a message carries its speaker, so the translator drops what it said itself. The bus
+  needs no service outside the world, so it is the channel a test walks end to end on the bench;
+- **an email**, a `schema:ContactPoint` with a `schema:email` — polled and sent to over the standard
+  library (`translation/carrier.py`), the mailbox being the translator's own.
 
-A third, a chat service such as Telegram, is the same shape — a word for the address, a carrier that
-polls and sends, a secret for the bot — and is not built.
+A chat of a messaging service such as Telegram is the same shape — its own vocabulary for the channel,
+a carrier that polls and sends, a secret for the bot — and is not built.
 
 # The two directions
 
-- **Heard.** A person's words arrive — polled from their address, or as a message on the topic their
-  client says on, through the one door every message off the bus takes (`Translator.receive`); they
-  go to the model with every [sayable](/domain/speech/sayable.md) the world declares as a tool, and
-  the translator makes a statement of the one it filled and publishes it on the inbox of the agent the
-  person speaks to. There the agent's own transport hears it, [speech](/domain/speech/speech.md) keeps
+- **Heard.** A person's words arrive — polled from their address, or as a message on the chat's
+  topic, through the one door every message off the bus takes (`Translator.receive`); they go to the
+  model with every [sayable](/domain/speech/sayable.md) the world declares as a tool, and the
+  translator makes a statement of the one it filled and publishes it on the inbox of the chat's agent. There the agent's own transport hears it, [speech](/domain/speech/speech.md) keeps
   it as any peer's document, and the domain's [extraction](/domain/speech/extraction.md) makes the
   belief. The agent's [journal](/domain/kernel/journal.md) keeps the statement whole, the prose and
   who said it inside it.
 - **Said.** What arrives on the person's inbox is the TriG an `execution:Saying` made. The translator
   finds the sayable it is a statement of, hands the model its fields and who it is for, and tells the
-  words the model renders at every address the person states — the carrier for an email, a publish on
-  the topic their client hears. A statement of no sayable's class is not rendered: the agent said
-  something the world gave no words for, said in the log.
+  words the model renders through the chat's channel — the carrier for an email, a publish on the
+  topic for the bus. A statement of no sayable's class is not rendered: the agent said something the
+  world gave no words for, said in the log.
 
 # What the model may and may not do
 
@@ -65,16 +61,16 @@ agent from reaching for it.
 
 # How it is onboarded
 
-By the client hosting its people, and nothing listed by hand. Onboarding's topic rule names a
-person's inbox `people/<person>/inbox`; `orexis-mqtt` grants that client, off the wiring, to read each
-person's inbox and to write the inbox of the agent each `speech:speaksTo`, and grants the agent to
-write the inbox of whoever speaks to it; `orexis-compose` writes one `translation` service connected
-as the client, which mounts this tree, the only one the image does not carry. Where the model answers
-is the installation's word ([deployment](/domain/onboarding/deployment.md)); which model and its key
-are a secret of the installation's, the mailbox one of the world's, `secrets/mail-<client>.env`,
-written by hand; a client a person speaks through is granted to say on its topic and hear on the
-other, and the translator the reverse. What a person must state for all of that to be derived is the
-transport's [requirement](/domain/onboarding/requirement.md).
+By the chats, and nothing listed by hand. Onboarding's topic rule names a person's inbox
+`people/<person>/inbox` and a chat's topic `chats/<chat>`; `orexis-mqtt` grants the translating client,
+off the chats, to read each person's inbox, write each agent's and read and write each topic, grants a
+user agent the topics of whom it acts for, and grants the agent to write the inboxes of the people it
+chats with; `orexis-compose` writes one `translation` service connected as the client, which mounts
+this tree, the only one the image does not carry. Where the model answers is the installation's word
+([deployment](/domain/onboarding/deployment.md)); which model and its key are a secret of the
+installation's, the mailbox one of the world's, `secrets/mail-<client>.env`, written by hand. What a
+chat must state for all of that to be derived is the translator's own
+[requirement](/domain/onboarding/requirement.md), `translation/requirements.ttl`.
 
 # What stays open
 
