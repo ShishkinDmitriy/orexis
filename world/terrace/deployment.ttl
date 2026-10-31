@@ -13,3 +13,7 @@
 #  AND THE TERRACE IS MONITORED: its agent writes its metrics to a bucket of its own, and the world
 #  gets a health dashboard. Opted into; a world saying nothing writes none.
 <> onboarding:monitored true .
+
+#  WHERE THE TRANSLATOR'S BOT ANSWERS: Telegram's Bot API, told to the translator as `TELEGRAM_URL`. The
+#  token is `secrets/telegram-translator.env`, the chat id `secrets/chat.ttl`, neither here.
+:bot schema:url "https://api.telegram.org" .

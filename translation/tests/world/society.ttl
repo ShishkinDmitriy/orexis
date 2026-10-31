@@ -46,7 +46,7 @@
 :clara_inbox a mqtt4ssn:Topic .
 :clara_inbox_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:matchesTopic :clara_inbox ; mqtt4ssn:hasFilterPattern "people/clara/inbox" .
 
-:bot a telegram:Bot ; schema:url "https://api.telegram.org" .
+:bot a telegram:Bot .
 
 :boris_phone a mqtt4ssn:Client ;
     mqtt4ssn:hasClientID "boris_phone" ;

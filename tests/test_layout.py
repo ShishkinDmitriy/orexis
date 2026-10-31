@@ -1867,10 +1867,10 @@ def test_what_a_world_counts_as_an_incident_reaches_its_agents_and_what_is_no_le
 _VIEWING = REPO_ROOT / "translation" / "tests" / "world"
 
 
-def _viewing(society=lambda text: text) -> dict:
+def _viewing(society=lambda text: text, deployment=lambda text: text) -> dict:
     """The translator's test world as `_installed` lays a world out: its documents, the filters its society
     asserts struck out so the rule names its topics, `society` applied to what is left, and its broker's
-    url asserted in a deployment graph of its own, since nothing allocates a copy one."""
+    url asserted in its deployment graph beside the bot's, since nothing allocates a copy one."""
     def unasserted(text: str) -> str:
         return "\n".join(line for line in text.splitlines() if "a mqtt4ssn:TopicFilter" not in line) + "\n"
     return {("viewing", "world.ttl"): lambda _: (_VIEWING / "world.ttl").read_text(),
@@ -1878,7 +1878,8 @@ def _viewing(society=lambda text: text) -> dict:
             ("viewing", "speech.ttl"): lambda _: (_VIEWING / "speech.ttl").read_text(),
             ("viewing", "beliefs/seeker.self.ttl"): lambda _: (_VIEWING / "beliefs" / "seeker.self.ttl").read_text(),
             ("viewing", "society.ttl"): lambda _: society(unasserted((_VIEWING / "society.ttl").read_text())),
-            ("viewing", "deployment.ttl"): lambda _: _asserting("mqtt://localhost:1999", world="viewing")}
+            ("viewing", "deployment.ttl"): lambda _: deployment(_asserting("mqtt://localhost:1999", world="viewing")
+                                                               + ':bot schema:url "https://api.telegram.org" .\n')}
 
 
 def test_a_chat_is_onboarded_through_the_client_that_translates_it(tmp_path, monkeypatch):
@@ -1911,7 +1912,8 @@ def test_a_chat_is_onboarded_through_the_client_that_translates_it(tmp_path, mon
     services = yaml.safe_load(compose.render("viewing"))["services"]
     translator = services["translation"]
     assert translator["command"] == ["python", "-m", "translation", "/app/world/viewing"]
-    assert translator["environment"] == {"MQTT_HOST": "localhost", "MQTT_PORT": "1999", "MODEL_URL": "https://api.anthropic.com"}
+    assert translator["environment"] == {"MQTT_HOST": "localhost", "MQTT_PORT": "1999", "MODEL_URL": "https://api.anthropic.com",
+                                         "TELEGRAM_URL": "https://api.telegram.org"}, "and where the bot answers, off the deployment graph"
     assert translator["env_file"] == ["./secrets/mqtt-translator.env", "../../infra/secrets/model.env",
                                       "./secrets/mail-translator.env", "./secrets/telegram-translator.env"], \
         "a carrier's secret for each carrier some chat goes through"
@@ -1975,7 +1977,7 @@ def _speech(edit):
      "clara_telegram: a Telegram chat has one id, which the Bot API names it by"),
     (_speech(lambda text: text.replace(" ; telegram:bot :bot .", " .")),
      "clara_telegram: a Telegram chat is reached through one bot"),
-    (_viewing(lambda text: text.replace('schema:url "https://api.telegram.org"', 'schema:url "http://api.telegram.org"')),
+    (_viewing(deployment=lambda text: text.replace('schema:url "https://api.telegram.org"', 'schema:url "http://api.telegram.org"')),
      "bot: a Telegram bot answers at one https:// url"),
 ], ids=["translated-by-nobody", "translated-twice", "two-channels", "a-channel-of-no-kind", "no-person", "no-agent",
         "a-person-with-no-inbox", "an-agent-with-no-inbox", "a-user-agent-with-no-id", "a-telegram-chat-with-two-ids",

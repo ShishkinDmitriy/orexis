@@ -20,4 +20,4 @@ telegram:bot a owl:ObjectProperty ; rdfs:domain telegram:Chat ; rdfs:range teleg
     rdfs:comment "The bot a Telegram chat is reached through - the other triple: how the channel is connected, as a client is connected to a broker." .
 
 telegram:Bot a owl:Class ; rdfs:label "Telegram bot" ;
-    rdfs:comment "The translator's user agent on Telegram, with the `schema:url` the Bot API answers at; its token is the one secret, `TELEGRAM_BOT_TOKEN` in `secrets/telegram-<client>.env`, mounted into the translator's container alone and never a graph." .
+    rdfs:comment "The translator's user agent on Telegram. Where the Bot API answers is its `schema:url`, a deployment fact stated in the world's deployment graph and told to the translator as `TELEGRAM_URL`; its token is the one secret, `TELEGRAM_BOT_TOKEN` in `secrets/telegram-<client>.env`, mounted into the translator's container alone and never a graph." .

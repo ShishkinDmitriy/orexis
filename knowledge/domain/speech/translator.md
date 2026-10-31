@@ -32,8 +32,8 @@ The channel's type picks the carrier, and the translator knows none by name. Thr
 - **an email**, a `schema:ContactPoint` with a `schema:email` — polled and sent to over the standard
   library (`translation/carrier.py`), the mailbox being the translator's own;
 - **a Telegram chat**, a `telegram:Chat` with the id the Bot API names it by and the bot it goes
-  through — polled by `getUpdates` and sent to by `sendMessage` over the standard library, the bot's
-  url read off the world and its token the one secret, `TELEGRAM_BOT_TOKEN`. A person opens the chat by
+  through — polled by `getUpdates` and sent to by `sendMessage` over the standard library, where the
+  bot answers a deployment fact told as `TELEGRAM_URL` and its token the one secret, `TELEGRAM_BOT_TOKEN`. A person opens the chat by
   writing to the bot once; the id is then in `getUpdates`, and the sovereign states it in the world.
 
 Each carrier's secret reaches the translator's container only where some chat goes through it.

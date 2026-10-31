@@ -38,7 +38,7 @@
     mqtt4ssn:listensToTopic :dmitrii_inbox .
 :dmitrii_inbox a mqtt4ssn:Topic .
 
-:bot a telegram:Bot ; schema:url "https://api.telegram.org" .
+:bot a telegram:Bot .            # where it answers is deployment.ttl's
 
 :translator a mqtt4ssn:Client ;
     mqtt4ssn:hasClientID "translator" ;

@@ -73,9 +73,10 @@ SAY_SYSTEM = (
 
 #  EVERY CHAT, as one row per agent and person in it: the person's inbox, and the channel as the kind it
 #  is — the pattern of its topic where it is one, the email where it has one, the Telegram chat id where
-#  it is one, and the url its bot answers at. Telegram's words are the translator's own, so spelled whole.
+#  it is one. Telegram's words are the translator's own, so spelled whole; where the bot answers is a
+#  deployment fact, told as environment and never read here.
 _CHATS_Q = """
-SELECT ?chat ?agent ?person ?name ?inbox ?topic ?email ?telegram ?bot ?account WHERE {
+SELECT ?chat ?agent ?person ?name ?inbox ?topic ?email ?telegram ?telegram_chat ?account WHERE {
   ?chat a speech:Chat ; speech:participant ?agent , ?person ; speech:channel ?channel .
   ?agent a orexis:Agent . ?person a schema:Person ; mqtt4ssn:listensToTopic ?in .
   ?f mqtt4ssn:matchesTopic ?in ; mqtt4ssn:hasFilterPattern ?inbox .
@@ -83,7 +84,7 @@ SELECT ?chat ?agent ?person ?name ?inbox ?topic ?email ?telegram ?bot ?account W
   OPTIONAL { ?agent account:accountsOn ?acc . ?h mqtt4ssn:matchesTopic ?acc ; mqtt4ssn:hasFilterPattern ?account }
   OPTIONAL { ?channel a mqtt4ssn:Topic . ?g mqtt4ssn:matchesTopic ?channel ; mqtt4ssn:hasFilterPattern ?topic }
   OPTIONAL { ?channel schema:email ?email }
-  OPTIONAL { ?channel a <http://example.org/orexis/telegram#Chat> ; <http://example.org/orexis/telegram#bot> ?b . ?b schema:url ?bot
+  OPTIONAL { ?channel a <http://example.org/orexis/telegram#Chat> . BIND (?channel AS ?telegram_chat)
              OPTIONAL { ?channel <http://example.org/orexis/telegram#id> ?telegram } } } ORDER BY ?chat ?agent ?person"""
 _INBOX_Q = """
 SELECT ?pattern WHERE { $agent mqtt4ssn:listensToTopic ?topic .
@@ -100,7 +101,7 @@ class Chat:
     topic: str | None = None    # the pattern of the channel, where it is a topic of the bus
     email: str | None = None    # the address of the channel, where it is an email
     telegram: str | None = None  # the chat id of the channel, where it is a Telegram chat
-    bot: str | None = None      # where that chat's bot answers
+    on_telegram: bool = False   # whether the channel is a Telegram chat, id or none
     account: str | None = None  # the pattern of the topic the agent accounts on, where it does
 
     @property
@@ -119,7 +120,7 @@ class Translator:
         self.now = now or clock.now
         stated = graphs_of(self.store, BELIEF, common=True)
         self.chats = [Chat(r["chat"], r["agent"], r["person"], r.get("name") or local_of(r["person"]), r["inbox"],
-                           r.get("topic"), r.get("email"), r.get("telegram"), r.get("bot"), r.get("account"))
+                           r.get("topic"), r.get("email"), r.get("telegram"), bool(r.get("telegram_chat")), r.get("account"))
                       for r in rows(self.store, _CHATS_Q, stated)]
         self.accounts: dict[str, str] = {}             # each agent's latest account of itself, by its IRI
         self.inboxes = {c.agent: [r["pattern"] for r in rows(self.store, _INBOX_Q, stated, agent=c.agent)
@@ -127,7 +128,7 @@ class Translator:
                         for c in self.chats}
         self.sayables: list[Sayable] = sayables(self.store)
         for chat in self.chats:
-            if chat.bot and not chat.telegram:
+            if chat.on_telegram and not chat.telegram:
                 log.warning("%s goes through a Telegram chat with no id: state it as `telegram:id`, in a document under "
                             "secrets/ where it is the person's, once they have written to the bot", local_of(chat.iri))
             elif chat.channel is None:
@@ -149,11 +150,6 @@ class Translator:
         """The chat whose channel a carrier reports as `address`: an email, or a Telegram chat id."""
         address = address.strip().lower()
         return next((c for c in self.chats if (c.email and c.email.lower() == address) or c.telegram == address), None)
-
-    @property
-    def bots(self) -> list[str]:
-        """Where the bots of the Telegram chats answer, one url each."""
-        return sorted({c.bot for c in self.chats if c.bot})
 
     def chat_told_on(self, inbox: str) -> Chat | None:
         """The chat whose person listens on `inbox`."""

@@ -66,14 +66,14 @@ def world():
 def test_the_translator_reads_its_chats_off_the_world_and_listens_on_the_inboxes_and_the_topics(world):
     """Three chats, three kinds of channel: the seeker with Anna by email, with Boris over a topic of the bus,
     with Clara in a Telegram chat through the bot. The translator listens on each person's inbox, where the
-    seeker's statements arrive, and on the topic; the bot's url is read off the world."""
+    seeker's statements arrive, and on the topic."""
     client, _, make = world
     translator = make(StandIn())
-    assert [(p.iri, p.agent, p.name, p.inbox, p.topic, p.email, p.telegram, p.bot) for p in translator.chats] == [
-        (V + "seeker_and_anna", SEEKER, "Anna", "people/anna/inbox", None, ANNA, None, None),
-        (V + "seeker_and_boris", SEEKER, "Boris", "people/boris/inbox", BORIS_TOPIC, None, None, None),
-        (V + "seeker_and_clara", SEEKER, "Clara", "people/clara/inbox", None, None, CLARA_TELEGRAM, "https://api.telegram.org")]
-    assert translator.inboxes == {SEEKER: ["agents/seeker/inbox"]} and translator.bots == ["https://api.telegram.org"]
+    assert [(p.iri, p.agent, p.name, p.inbox, p.topic, p.email, p.telegram, p.on_telegram) for p in translator.chats] == [
+        (V + "seeker_and_anna", SEEKER, "Anna", "people/anna/inbox", None, ANNA, None, False),
+        (V + "seeker_and_boris", SEEKER, "Boris", "people/boris/inbox", BORIS_TOPIC, None, None, False),
+        (V + "seeker_and_clara", SEEKER, "Clara", "people/clara/inbox", None, None, CLARA_TELEGRAM, True)]
+    assert translator.inboxes == {SEEKER: ["agents/seeker/inbox"]}
     assert {c.account for c in translator.chats} == {"agents/seeker/account"}, "and the seeker's account topic"
     assert translator.open() == ["agents/seeker/account", BORIS_TOPIC, "people/anna/inbox", "people/boris/inbox", "people/clara/inbox"] \
         == client.subscribed

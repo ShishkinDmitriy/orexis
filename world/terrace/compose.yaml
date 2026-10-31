@@ -48,6 +48,8 @@ services:
       # where the language model answers — the installation's `onboarding:Model`; which model, and the
       # key, arrive in the installation's secret below
       MODEL_URL: "https://api.anthropic.com"
+      # where its Telegram bot answers, as the world's deployment graph states
+      TELEGRAM_URL: "https://api.telegram.org"
     env_file:
       # the credential of `translator`, the client that translates the world's chats
       - ./secrets/mqtt-translator.env
