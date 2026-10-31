@@ -63,11 +63,13 @@ SELECT $this ?one ?other ?two WHERE {
     sh:property [ sh:path mqtt4ssn:hasClientID ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:message "acts on someone's behalf and has no one client id: it connects as itself, with a credential of its own" ] .
 
-#  A TELEGRAM CHAT is named by one id and reached through one bot, which answers at one https url, since
-#  the token goes over the wire with every call (translation/telegram.ttl).
+#  A TELEGRAM CHAT is named by one id at most — the id is the person's, so a world may keep it in a document under
+#  `secrets/`, which git does not hold and a fresh clone lacks; the translator says so where it finds none — and is
+#  reached through one bot, which answers at one https url, since the token goes over the wire with every call
+#  (translation/telegram.ttl).
 [] a sh:NodeShape ;
     sh:targetClass telegram:Chat ;
-    sh:property [ sh:path telegram:id ; sh:minCount 1 ; sh:maxCount 1 ;
+    sh:property [ sh:path telegram:id ; sh:maxCount 1 ;
                   sh:message "a Telegram chat has one id, which the Bot API names it by" ] ,
                 [ sh:path telegram:bot ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:message "a Telegram chat is reached through one bot" ] .

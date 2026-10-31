@@ -15,10 +15,12 @@ what; each agent's self graph says which sensors the observer roles it plays rea
                                 listens to (cadence and sense-now)
     an agent holds actuator A   write the topic A listens to, or its board's (a step's command)
     it is in a chat with P      write the topic P listens to (its statements to the person)
+    it accounts on a topic      write it (its account of itself, retained)
     a client hosts sensor X     write the topics X publishes on
     a client hosts actuator A   read the topics A listens to, and the client's own
-    a client translates chat C  read the inbox of each person in C and write each agent's, and read
-                                and write the topic C goes through — the translator, as that client
+    a client translates chat C  read the inbox of each person in C and write each agent's, read each
+                                agent's account topic, and read and write the topic C goes through —
+                                the translator, as that client
     a client acts for person P  read and write the topic of each chat P is in — P's user agent
 
 Read that list against `agent/transport/mqtt/driver.py` and it is the same set of topics the agent
@@ -179,7 +181,14 @@ SELECT ?id ?access ?pattern WHERE {{
   ?client <{MQTT4SSN}hasClientID> ?id ; <{_TRANSLATES}> ?chat . ?chat a speech:Chat .
   {{ ?chat speech:participant ?p . ?p a schema:Person ; <{MQTT4SSN}listensToTopic> ?topic . BIND ("{READ}" AS ?access) }}
   UNION {{ ?chat speech:participant ?a . ?a a orexis:Agent ; <{MQTT4SSN}listensToTopic> ?topic . BIND ("{WRITE}" AS ?access) }}
+  UNION {{ ?chat speech:participant ?a . ?a a orexis:Agent ; account:accountsOn ?topic . BIND ("{READ}" AS ?access) }}
   UNION {{ ?chat speech:channel ?topic . VALUES ?access {{ "{READ}" "{WRITE}" }} }}
+  ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
+
+#  AN AGENT'S ACCOUNT OF ITSELF goes out retained on the topic it accounts on (account:accountsOn).
+_ACCOUNTS_Q = f"""
+SELECT ?id ?pattern WHERE {{
+  ?a a orexis:Agent ; orexis:localId ?id ; account:accountsOn ?topic .
   ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
 
 _ACTS_FOR_Q = f"""
@@ -314,6 +323,8 @@ def grants(world: str) -> tuple[dict[str, Principal], dict[str, Principal]]:
             if other != row["id"]:
                 agent(other).may(WRITE, row["pattern"])
     for row in _rows(store, _TELLS_Q):
+        agent(row["id"]).may(WRITE, row["pattern"])
+    for row in _rows(store, _ACCOUNTS_Q):
         agent(row["id"]).may(WRITE, row["pattern"])
 
     for row in _rows(store, _CLIENTS_Q):

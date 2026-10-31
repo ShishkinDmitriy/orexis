@@ -202,9 +202,11 @@ MINE = "?me orexis:plays/sensing:sensor ?sensor ."
 #  Every word here is a T-Box term and the world's things are variables, so nothing here names an
 #  instance (rule 1).
 OBSERVER, SPEAKER = NAMESPACES["sensing"] + "Observer", NAMESPACES["speech"] + "Speaker"
+REPORTER = NAMESPACES["account"] + "Reporter"
 TRANSPORTS = {
     MQTT: {OBSERVER: f"{MINE} ?sensor mqtt4ssn:observesTopic ?topic",
-           SPEAKER: "?me mqtt4ssn:listensToTopic ?topic"},
+           SPEAKER: "?me mqtt4ssn:listensToTopic ?topic",
+           REPORTER: "?me account:accountsOn ?topic"},
     HTTP: {OBSERVER: f"{MINE} ?sensor td:hasForm ?form"},
 }
 #  WHAT WATCHES THE AGENT: a package created where the environment names a store for it, or a journal is kept,

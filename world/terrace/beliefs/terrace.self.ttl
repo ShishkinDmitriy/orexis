@@ -2,6 +2,8 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix prediction: <http://example.org/orexis/prediction#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix account: <http://example.org/orexis/account#> .
 
 <> a orexis:SelfGraph .    # this document is one graph, and this is what it is
 
@@ -10,6 +12,8 @@
 #
 #  WHAT IT RUNS: it observes the bed's probe and the forecast and foresees them, and wants nothing,
 #  so it is no planner and no executor; an observer is a deliberator too, so what its percepts are of is concluded.
+#  It is in a chat with its sovereign (speech.ttl), so it is a speaker, listening on its inbox, and a reporter,
+#  giving an account of itself on its account topic every time what it observes changes.
 
 :terrace_agent a orexis:Self ;
     orexis:plays [ a sensing:Observer ;
@@ -19,4 +23,6 @@
                                   :battery_sensor_terrace ,
                                   :forecast_terrace ,
                                   :moisture_sensor_terrace ] ,
-                 [ a prediction:Predictor ] .
+                 [ a prediction:Predictor ] ,
+                 [ a speech:Speaker ] ,
+                 [ a account:Reporter ] .

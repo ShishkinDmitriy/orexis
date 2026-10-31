@@ -5,6 +5,7 @@
 @prefix schema: <https://schema.org/> .
 @prefix translation: <http://example.org/orexis/translation#> .
 @prefix telegram: <http://example.org/orexis/telegram#> .
+@prefix account: <http://example.org/orexis/account#> .
 
 <> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
 
@@ -20,9 +21,12 @@
     orexis:localId "seeker" ;
     mqtt4ssn:hasClientID "seeker" ;
     mqtt4ssn:isConnectedToBroker :broker ;
-    mqtt4ssn:listensToTopic :seeker_inbox .
+    mqtt4ssn:listensToTopic :seeker_inbox ;
+    account:accountsOn :seeker_account .
 :seeker_inbox a mqtt4ssn:Topic .
 :seeker_inbox_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:matchesTopic :seeker_inbox ; mqtt4ssn:hasFilterPattern "agents/seeker/inbox" .
+:seeker_account a mqtt4ssn:Topic .
+:seeker_account_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:matchesTopic :seeker_account ; mqtt4ssn:hasFilterPattern "agents/seeker/account" .
 
 :anna a schema:Person ;
     schema:name "Anna" ;

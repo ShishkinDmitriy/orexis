@@ -29,7 +29,7 @@ what sensing's rule concluded of the latest percept, read where that percept hol
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from agent.lifecycle import Signal
 from agent.ontology import local_of
@@ -60,6 +60,17 @@ _MADE_Q = "SELECT ?t WHERE { $percept sosa:resultTime ?t } LIMIT 1"
 
 #  THE SENSORS STUCK NOW: what sensing's rule concluded of the percept holding now.
 _STUCK_Q = "SELECT DISTINCT ?sensor WHERE { ?sensor sensing:stuckOn ?number }"
+
+#  THE LATEST OBSERVATION OF EVERY SENSOR KEPT — the one no later percept names as its previous — with what it
+#  observed, of what, its reading and when: what sensing says of itself for a person (`account`). Read over every
+#  observation graph as one, since what was concluded of a percept lives in its revision graph beside it.
+_LATEST_Q = """
+SELECT ?sensor ?property ?feature ?value ?t WHERE {
+  ?o sosa:madeBySensor ?sensor ; sosa:resultTime ?t .
+  OPTIONAL { ?o sosa:observedProperty ?property } OPTIONAL { ?o sosa:hasSimpleResult ?value }
+  OPTIONAL { ?o sosa:hasFeatureOfInterest ?feature }
+  FILTER NOT EXISTS { ?later sensing:previous ?o } }
+ORDER BY ?sensor"""
 
 #  EVERY OBSERVATION RECEIVED THAT NOTHING WAS CONCLUDED OF, oldest first: what a pass cut short of
 #  being handed to belief left — its revision is of this layer's kind, so it is asked for by it.
@@ -101,6 +112,27 @@ class _Sensing:
             runtime.on(OBSERVATION_GRAPH, lambda graph: self._revise([graph]))
         if self.observed.connected:
             runtime.on(OBSERVATION_GRAPH, self._observation)
+
+    def account(self) -> list[str]:
+        """What sensing says of itself for a person: the latest reading of every sensor, of what and when, when
+        the next is due by the cadence the world states, and whether the sensor is silent or said stuck."""
+        beliefs = self.runtime.beliefs
+        stuck = {r["sensor"] for r in rows(beliefs, _STUCK_Q, graphs_of(beliefs, OBSERVATION_GRAPH, at=self.runtime.now, now=self.runtime.now))}
+        out = []
+        for r in rows(beliefs, _LATEST_Q, graphs_of(beliefs, OBSERVATION_GRAPH)):
+            at = datetime.fromisoformat(r["t"])
+            what = local_of(r["property"]) if r.get("property") else "a reading"
+            line = f"{what} of {local_of(r['feature']) if r.get('feature') else 'something'}: {r.get('value', 'nothing concluded')}"
+            line += f", read by {local_of(r['sensor'])} at {at.isoformat(timespec='minutes')}"
+            cadence = cadence_of(beliefs, r["sensor"])
+            if cadence is not None:
+                line += f", next due {(at + timedelta(seconds=cadence)).isoformat(timespec='minutes')}"
+            if r["sensor"] in self._silent:
+                line += " — silent"
+            if r["sensor"] in stuck:
+                line += " — stuck"
+            out.append(line)
+        return out
 
     def _revise(self, graphs) -> list[str]:
         """Hand `graphs` to belief's part, which revises them by this layer's rules and applies the

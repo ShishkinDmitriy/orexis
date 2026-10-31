@@ -156,6 +156,11 @@ class Transports(Transport):
     def tell(self, store, to: str, document: bytes) -> bool:
         return any(member.tell(store, to, document) for member in self.members)
 
+    def publish_on(self, store, topic: str, payload: dict, retain: bool) -> bool:
+        """On a topic of the agent's own, by the first member that publishes on topics at all."""
+        return any(member.publish_on(store, topic, payload, retain)
+                   for member in self.members if callable(getattr(member, "publish_on", None)))
+
     def set_cadence(self, store, sensor: str, sleep_s: int) -> bool:
         member = self._reaching(store, sensor)
         return member is not None and member.set_cadence(store, sensor, sleep_s)

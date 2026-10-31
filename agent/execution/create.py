@@ -112,6 +112,16 @@ class _Execution:
                 runtime.wrote(executor.said.emit(Said(document, tuple(agents))))
 
 
+def _account(self) -> list[str]:
+    """What execution says of itself for a person: each intention standing, the want it pursues, the step it
+    stands at and since when."""
+    return [f"walking {local_of(s.want)} since {s.adopted.isoformat(timespec='minutes')}"
+            + (f", at {local_of(s.at)}" if s.at else "") for s in self.executor.standing()]
+
+
+_Execution.account = _account
+
+
 def create(runtime) -> _Execution:
     """The execution package's part: its executor, to adopt and walk once linked and started."""
     return _Execution(runtime)

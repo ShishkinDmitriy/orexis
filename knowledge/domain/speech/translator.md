@@ -53,9 +53,17 @@ Each carrier's secret reaches the translator's container only where some chat go
   Telegram chat, a publish on the topic for the bus. A statement of no sayable's class is not rendered: the agent said something the
   world gave no words for, said in the log.
 
+# A question is answered from the account
+
+Where the agent in a chat is a [reporter](/domain/account/reporter.md), the translator keeps its
+latest [account](/domain/account/account.md) off the bus, and treats words that fill no sayable as
+a question: the account page says what is relayed for nothing and what costs one model call. A
+world that declares no sayable, the terrace, makes every message a question.
+
 # What the model may and may not do
 
-It fills a sayable's fields, or says none fits; it writes the words a statement is sent as. It authors
+It fills a sayable's fields, or says none fits; it writes the words a statement is sent as; it
+answers a question from an account it is handed. It authors
 no belief, names no step, runs no query and reaches no agent but by a statement of a declared shape
 marked another party's word. Which model and where is environment (`MODEL_NAME`, `MODEL_API_KEY`,
 `MODEL_URL`), the key the installation's secret reaching this process alone; `tests/test_layout.py`

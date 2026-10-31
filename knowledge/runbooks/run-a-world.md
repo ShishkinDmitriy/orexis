@@ -166,8 +166,12 @@ translates the chats: the mailbox the translator reads and sends from where a ch
 `MAIL_SMTP_HOST` and the ports where not 993 and 465; and the bot's token where one goes through
 Telegram, `world/<name>/secrets/telegram-<client>.env` with `TELEGRAM_BOT_TOKEN` from `@BotFather`
 (`translation/carrier.py`). A person on Telegram writes to the bot once, their chat id appears in the
-bot's `getUpdates`, and the world states it as the chat's `telegram:id`. `orexis-compose` says which
-file is not there. Where the model answers is `infra/installation.ttl`'s to state; with no
+bot's `getUpdates`, and the world states it as the chat's `telegram:id` — in a document under `secrets/`
+where the id is a person's own, as the terrace does in `world/terrace/secrets/chat.ttl`, a society graph
+saying `:sovereign_telegram telegram:id "<id>"`. `orexis-compose` says which file is not there. To ask
+the terrace how it is: write the token and the chat id, `orexis-onboard terrace`, `podman compose up -d`,
+and send `/account` to the bot for the agent's account as published, or a question in words for the
+model's answer from it ([account](/domain/account/account.md)). Where the model answers is `infra/installation.ttl`'s to state; with no
 `onboarding:Model` there, a world naming a chat is refused.
 
 # Monitor a world, or stop

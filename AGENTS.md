@@ -913,6 +913,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   tree arrives by its mount, the one the image does not carry, and its need is its own requirement, read by
   onboarding beside its own; a person as a client, a channel as a kind of address and the words in speech's
   namespace were built and refused in turn (#1034, chat, translator).
+- **An agent gives an account of itself as a reporter, and a question is answered from it** — `account:Reporter`
+  in the self graph loads `agent/account/`, whose part asks each part its section and publishes the text
+  retained on the topic the agent `account:accountsOn` when it changes; the translator keeps the latest,
+  relays it on `/account` for nothing and hands the model the account and the question for the rest, so the
+  model phrases and decides nothing; the terrace is the first world that chats (account, reporter,
+  an-agent-gives-an-account-of-itself-and-the-model-only-reads-it).
 - **A carrier's secret reaches the translator only where a chat goes through it** — the bot's token for a
   Telegram chat, the mailbox for an email, each an `env_file` compose refuses to start without, so a
   carrier nothing goes through is mounted nothing; Telegram's words are the translator's own, and the bot is

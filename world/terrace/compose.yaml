@@ -39,6 +39,35 @@ services:
       # its agent set before the broker bounced
       - orexis-terrace-mosquitto-broker:/var/lib/mosquitto
 
+  translation:
+    image: orexis:local
+    command: ["python", "-m", "translation", "/app/world/terrace"]
+    environment:
+      MQTT_HOST: "localhost"
+      MQTT_PORT: "1888"
+      # where the language model answers — the installation's `onboarding:Model`; which model, and the
+      # key, arrive in the installation's secret below
+      MODEL_URL: "https://api.anthropic.com"
+    env_file:
+      # the credential of `translator`, the client that translates the world's chats
+      - ./secrets/mqtt-translator.env
+      # the model's name and key — `infra/model.env.example` says how — mounted into THIS container alone
+      - ../../infra/secrets/model.env
+      # the token of the bot the chats on Telegram go through, written by hand: nothing can mint one
+      - ./secrets/telegram-translator.env
+    network_mode: host
+    userns_mode: "keep-id:uid=10001,gid=10001"
+    restart: unless-stopped
+    volumes:
+      - ./society.derived.ttl:/app/world/terrace/society.derived.ttl:ro
+      - ./society.ttl:/app/world/terrace/society.ttl:ro
+      - ./speech.ttl:/app/world/terrace/speech.ttl:ro
+      - ./world.ttl:/app/world/terrace/world.ttl:ro
+      - ../../agent:/app/agent:ro
+      - ../../domains:/app/domains:ro
+      # the translator's own tree, which the image does not carry, so that no agent's does either
+      - ../../translation:/app/translation:ro
+
   agent-terrace:
     image: orexis:local
     command: ["orexis-agent", "/app/world/terrace", "terrace", "--volume", "/app/state", "--journal", "/app/journal"]
@@ -77,6 +106,7 @@ services:
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./society.derived.ttl:/app/world/terrace/society.derived.ttl:ro
       - ./society.ttl:/app/world/terrace/society.ttl:ro
+      - ./speech.ttl:/app/world/terrace/speech.ttl:ro
       - ./world.ttl:/app/world/terrace/world.ttl:ro
       - ./beliefs/terrace.self.ttl:/app/world/terrace/beliefs/terrace.self.ttl:ro
       - ./secrets/terrace.crt:/app/secrets/agent.crt:ro
