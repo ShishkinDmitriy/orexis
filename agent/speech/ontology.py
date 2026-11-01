@@ -15,6 +15,7 @@ SPEECH = "http://example.org/orexis/speech#"
 
 STATEMENT_GRAPH = SPEECH + "StatementGraph"
 EXTRACTION = SPEECH + "Extraction"
+ASKABLE_GRAPH = SPEECH + "AskableGraph"   # the questions a person may ask, read by translation
 
 
 def believed_graph(statement: str) -> str:

@@ -65,14 +65,18 @@ def _world(tmp_path: Path, roles=(), facts: str = "", sensors=()) -> Path:
 
 def _held(store: ox.Store, package: str) -> list[bool]:
     """For each document of `package` of a kind an agent reads, whether its graph is in the store — a
-    package's requirements are onboarding's kind, which no agent loads (requirement.md)."""
+    package's requirements are onboarding's kind, which no agent loads (requirement.md), and its askables
+    speech's, which an agent that speaks with nobody does not load (askable.md)."""
+    unread = _ONBOARDINGS | (set() if "speech" in packages_of(store) else _SPEECHS)
     return [bool(list(store.quads_for_pattern(ox.NamedNode(path.as_uri()), None, None)))
             for path in _documents_of([package])
-            if not set().union(*kinds_in(document(path)).values()) & _ONBOARDINGS]
+            if not set().union(*kinds_in(document(path)).values()) & unread]
 
 
 #  THE KINDS ONLY ONBOARDING READS, by its vocabulary's own word: a test of the agent may name a term.
 _ONBOARDINGS = {"http://example.org/orexis/onboarding#RequirementGraph"}
+#  AND THE KIND ONLY SPEECH DECLARES that other packages ship: their askables, held where speech is.
+_SPEECHS = {"http://example.org/orexis/speech#AskableGraph"}
 
 
 def _creates(package: str) -> bool:

@@ -8,7 +8,7 @@
 #  WHO SPEAKS WITH WHOM, THROUGH WHAT: the terrace's agent with its sovereign, in a Telegram chat
 #  through the agent's own bot (society.ttl). The agent wants nothing and says nothing of its own;
 #  what the chat carries is what it observes, sensing's askable: sent on `/status`, and answered from
-#  when a question asks it (knowledge/domain/kernel/askable.md).
+#  when a question asks it (knowledge/domain/speech/askable.md).
 #  The chat's id is the sovereign's and sits in secrets/chat.ttl, not here.
 
 :terrace_and_dmitrii a speech:Chat ;

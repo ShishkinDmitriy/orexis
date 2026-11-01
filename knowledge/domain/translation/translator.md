@@ -31,7 +31,7 @@ A person's words arrive as `prose` from the member carrying the chat's channel â
 mailbox, the chat's topic â€” with the sender where the channel tells one. In the chat whose channel
 they came on, the part:
 
-- answers `/status` with the rows of every [askable](/domain/kernel/askable.md) that takes no field,
+- answers `/status` with the rows of every [askable](/domain/speech/askable.md) that takes no field,
   and asks no model;
 - passes over words that name another agent of the chat and not this one;
 - offers any other words to the model once, with every [sayable](/domain/speech/sayable.md) the world

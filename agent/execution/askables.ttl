@@ -1,16 +1,16 @@
 @prefix : <http://example.org/orexis/execution#> .
-@prefix orexis: <http://example.org/orexis#> .
+@prefix speech: <http://example.org/orexis/speech#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 
-<> a orexis:AskableGraph .    # this document is one graph, and this is what it is
+<> a speech:AskableGraph .    # this document is one graph, and this is what it is
 
 #  WHAT A PERSON MAY ASK OF WHAT EXECUTION IS DOING, answered from the agent's own intentions and writing
-#  nothing (knowledge/domain/kernel/askable.md). Execution's words, which only execution may speak.
+#  nothing (knowledge/domain/speech/askable.md). Execution's words, which only execution may speak.
 
-:does a orexis:Askable , sh:NodeShape ;
+:does a speech:Askable , sh:NodeShape ;
     sh:description "what the agent is doing: each intention standing, the want it pursues, when it was adopted and the step it is at" ;
-    orexis:reads :IntentionGraph ;
-    orexis:select """SELECT ?pursues ?since ?at WHERE {
+    speech:reads :IntentionGraph ;
+    speech:select """SELECT ?pursues ?since ?at WHERE {
   ?intention a execution:Intention ; execution:pursues ?pursues ; execution:adoptedAt ?since .
   OPTIONAL { ?intention execution:by ?at }
   FILTER NOT EXISTS { ?intention execution:resolvedAt ?done } }

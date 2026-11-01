@@ -65,17 +65,17 @@ def test_every_package_that_answers_a_question_ships_its_askables_reading_kinds_
     found = sorted((ROOT / "agent").glob("*/askables.ttl"))
     assert {p.parent.name for p in found} >= {"sensing", "execution"}, found
     assert not list((ROOT / "agent").glob("*/account.rq")), "an account found by its file name"
-    O = rdflib.Namespace("http://example.org/orexis#")
+    S = rdflib.Namespace("http://example.org/orexis/speech#")
     for path in found:
         package = path.parent.name
         doc = rdflib.Graph().parse(path, format="turtle")
-        assert (rdflib.URIRef(path.as_uri()), rdflib.RDF.type, O.AskableGraph) in doc, path
+        assert (rdflib.URIRef(path.as_uri()), rdflib.RDF.type, S.AskableGraph) in doc, path
         declared = set(rdflib.Graph().parse(path.parent / "ontology.ttl", format="turtle").subjects(rdflib.RDF.type, rdflib.OWL.Class))
-        asked = list(doc.subjects(rdflib.RDF.type, O.Askable))
+        asked = list(doc.subjects(rdflib.RDF.type, S.Askable))
         assert asked, f"{path} declares no askable"
         for askable in asked:
-            reads = list(doc.objects(askable, O.reads))
+            reads = list(doc.objects(askable, S.reads))
             assert reads and all(kind in declared for kind in reads), (askable, reads)
-            (text,) = doc.objects(askable, O.select)
+            (text,) = doc.objects(askable, S.select)
             spoken = set(re.findall(r"\b([a-z][\w-]*):\w", str(text)))
-            assert spoken <= {package, "sosa", "ssn", "orexis", "rdf", "rdfs", "xsd"} and spoken <= set(NAMESPACES), (askable, spoken)
+            assert spoken <= {package, "speech", "sosa", "ssn", "orexis", "rdf", "rdfs", "xsd"} and spoken <= set(NAMESPACES), (askable, spoken)

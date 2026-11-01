@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pyoxigraph as ox
 
-from agent.ontology import ASKABLE_GRAPH, OREXIS
+from agent.ontology import OREXIS
+from agent.speech.ontology import ASKABLE_GRAPH
 from agent.store import catalogue_of
 from agent.translation.askable import answered, askables, lines, said, status, tool_of
 

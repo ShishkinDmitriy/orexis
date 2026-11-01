@@ -27,7 +27,6 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [sovereign](/domain/kernel/sovereign.md) - Whoever writes a world's documents: picks the ranges and values, never an act. Outside the society.
 * [series](/domain/kernel/series.md) - What a person watches and the agent never reads: observations and metrics, both what the packages' events say, written by a part hearing every signal.
 * [journal](/domain/kernel/journal.md) - An agent's own triplestore of what happened: its events in RDF kept for good, its log kept for a window unless an incident keeps it.
-* [askable](/domain/kernel/askable.md) - A question a person may ask an agent, declared by whoever owns its words, answered from the store by its own select, writing nothing.
 
 # Sensing — bytes become observations, and observations subject beliefs
 
@@ -99,6 +98,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [extraction](/domain/speech/extraction.md) - A domain's construct speech runs over one statement alone; what it concludes is the belief made of what was said.
 * [speaker](/domain/speech/speaker.md) - The role speech serves; needs a topic the agent listens to or a chat it is in, a shape the MQTT transport ships.
 * [sayable](/domain/speech/sayable.md) - A shape a person's prose may become, all the model is handed and may fill; no field an action could be read from.
+* [askable](/domain/speech/askable.md) - A question a person may ask an agent, declared by whoever owns its words, answered from the store by its own select, writing nothing.
 * [chat](/domain/speech/chat.md) - Who speaks with whom, through what; participants and a channel whose type is the carrier, which speech does not name.
 
 # Market — a domain of documents

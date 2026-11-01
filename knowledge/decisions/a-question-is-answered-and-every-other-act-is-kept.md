@@ -9,7 +9,8 @@ description: >-
   QUERY-REF and an auction could be held between people. Decided - one distinction is mechanised, the
   one a reader branches on. A question, an askable, is answered from the asked agent's store by a select
   that agent's own package ships and writes nothing; every other act is a statement, kept, and believed
-  by the extraction. The askable is the kernel's, orexis:Askable, since sensing and execution ship one.
+  by the extraction. The askable is speech's, speech:Askable, beside the sayable; sensing and execution
+  ship one each in its words.
   The acts are named as FIPA names them, in an alignment kept in this record, and the market's round is
   read against Contract Net. Refused - a performative term on every statement kind, which nothing would
   read; FIPA's semantics, which reason about the sender's mind; an envelope beside the content; and a
@@ -54,18 +55,23 @@ between acts that changes what the code does.
 # What was decided
 
 **A question is answered, and every other act is kept.** The askable is the one act mechanised apart:
-`orexis:Askable`, a `sh:NodeShape` whose `sh:property` entries are what the asker may fill — declared as
-a sayable's fields are, so translation offers both as tools the same way — whose `orexis:reads` names
-the kinds of graph it is handed and whose `orexis:select` is the text the asked agent runs, each filled
+`speech:Askable`, a `sh:NodeShape` whose `sh:property` entries are what the asker may fill — declared as
+a sayable's fields are, so translation offers both as tools the same way — whose `speech:reads` names
+the kinds of graph it is handed and whose `speech:select` is the text the asked agent runs, each filled
 field bound into it by `store.bind`. The asker never writes the text and never sees it; it picks a
 question the asked agent's own package declares, as it picks a sayable. Nothing is written. Every other
 act — telling, proposing, requesting, refusing — is a statement, kept whole and believed by the
 extraction, whichever it is.
 
-**The askable is the kernel's.** Sensing ships one, the latest reading of each sensor, and execution
-one, the intentions standing; neither may speak speech's words, so the class goes where the packages
-that ship and the package that asks meet. Each ships its askables in a document of its own beside its
-ontology, and translation finds them in the store by kind. The `account.rq` files, found by their file
+**The askable is speech's, beside the sayable.** Both are an act a person may make, and speech owns
+what is said. Sensing ships one, the latest reading of each sensor, and execution one, the intentions
+standing, each in an `askables.ttl` beside its ontology — the one document of either that speaks
+speech's words, since a question about what sensing observes can only be asked in sensing's. An agent
+that speaks with nobody holds no speech vocabulary and passes the document over, as every agent passes
+over a package's requirements; translation finds the rest in the store by kind. The kernel was weighed
+first, since sensing and execution may otherwise not speak speech's words, and refused by the sovereign:
+the askable is an act of speech, and a kernel word for it would be a second home for speech's
+vocabulary. The `account.rq` files, found by their file
 name, go, and so does the account as a word: `/account` becomes `/status`, the rows of every askable that
 takes no field, answered for nothing.
 
@@ -139,7 +145,7 @@ bids beside its agents'. Nothing in the mechanism changes; what a world must dec
 # What it amends
 
 - [an-agent-translates-for-itself](/decisions/an-agent-translates-for-itself.md): the account is
-  askables, of the kernel's kind and found in the store; the model is offered sayables and askables in
+  askables, of speech's kind and found in the store; the model is offered sayables and askables in
   one call.
 - [settlement-speaks-rea](/decisions/settlement-speaks-rea.md): FIPA's interaction protocols are read,
   and the round is Contract Net, sealed and multi-award.
@@ -160,7 +166,7 @@ bids beside its agents'. Nothing in the mechanism changes; what a world must dec
 
 # What it emits
 
-The askable, built on #1043: `orexis:Askable`, `orexis:reads` and `orexis:select` in the kernel; sensing's
+The askable, built on #1043: `speech:Askable`, `speech:reads` and `speech:select` in speech's ontology; sensing's
 and execution's askables in documents of their own in place of the two `account.rq`; the account module
 asking the store; one model call offering both kinds; `/status`; and the translation pages and AGENTS
 lines that say so.

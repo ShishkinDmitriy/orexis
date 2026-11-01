@@ -6,7 +6,7 @@ the thing of the world it is chosen from, `sh:minCount` whether it must be fille
 model is told. A field of a class is offered as the labels of the instances the world states of it, by
 `rdfs:label` where there is one and by local name where not, and taken back as the IRI; a label the world does
 not state is no value. A sayable's fields are what a statement carries; an askable's are what its select is
-asked with (knowledge/domain/speech/sayable.md, knowledge/domain/kernel/askable.md).
+asked with (knowledge/domain/speech/sayable.md, knowledge/domain/speech/askable.md).
 """
 
 from __future__ import annotations

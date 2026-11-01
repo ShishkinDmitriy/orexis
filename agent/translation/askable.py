@@ -1,11 +1,11 @@
 """`askable`: the questions a person may ask an agent about itself, read off its store — and each answered from it.
 
 **AN ASKABLE IS A QUESTION A PACKAGE DECLARES.** A package with something to say of itself ships an
-`orexis:AskableGraph` beside its ontology — sensing what each sensor last read, execution what the agent is
-doing — and a domain or a world may ship one too. Each `orexis:Askable` is a node shape: `sh:description` what
-the model is told it answers, `sh:property` each field the asker may fill (`shape`), `orexis:reads` the kinds of
-graph its select is handed as the default graph, and `orexis:select` the text, each filled field bound into it
-as the `$` token of its local name (knowledge/domain/kernel/askable.md).
+`speech:AskableGraph` beside its ontology — sensing what each sensor last read, execution what the agent is
+doing — and a domain or a world may ship one too. Each `speech:Askable` is a node shape: `sh:description` what
+the model is told it answers, `sh:property` each field the asker may fill (`shape`), `speech:reads` the kinds of
+graph its select is handed as the default graph, and `speech:select` the text, each filled field bound into it
+as the `$` token of its local name (knowledge/domain/speech/askable.md).
 
 **IT IS ANSWERED, AND IT WRITES NOTHING.** `answered` runs the askable's own select over every store the agent
 holds that has graphs of a kind it reads, with what the asker filled, and hands back the rows; the asker never
@@ -23,7 +23,8 @@ from datetime import datetime
 
 import pyoxigraph as ox
 
-from agent.ontology import ASKABLE_GRAPH, local_of
+from agent.ontology import local_of
+from agent.speech.ontology import ASKABLE_GRAPH
 from agent.store import Unbound, graphs_of, rows
 
 from .shape import Field, fields_of, term_of, tool
@@ -32,9 +33,9 @@ log = logging.getLogger("translation")
 
 _ASKABLES_Q = """
 SELECT ?shape ?description ?select WHERE {
-  ?shape a orexis:Askable ; orexis:select ?select .
+  ?shape a speech:Askable ; speech:select ?select .
   OPTIONAL { ?shape sh:description ?description } } ORDER BY ?shape"""
-_READS_Q = "SELECT ?kind WHERE { $shape orexis:reads ?kind } ORDER BY ?kind"
+_READS_Q = "SELECT ?kind WHERE { $shape speech:reads ?kind } ORDER BY ?kind"
 _INSTANT = re.compile(r"^(\d{4}-\d\d-\d\dT\d\d:\d\d)(:\d\d(\.\d+)?)?(Z|[+-]\d\d:\d\d)?$")
 
 

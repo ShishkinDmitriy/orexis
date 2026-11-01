@@ -36,6 +36,7 @@ frame "sensing" {
 frame "speech" {
   component "heard · said · extract" as SP
   folder "speech:StatementGraph\nwhat was said, heard or said\nhanded to no reader of the mind" as utt #FFFCF2
+  folder "speech:AskableGraph\nthe questions a person may ask, no belief" as askg
 }
 
 frame "translation" {
@@ -60,7 +61,6 @@ frame "kernel" {
   folder "orexis:OntologyGraph · orexis:WorldGraph\norexis:SocietyGraph · common beliefs,\nthe world's documents" as pub
   folder "orexis:ActionGraph · orexis:FlowGraph\nwhat the agent reads to act, no belief" as acts
   folder "orexis:SelfGraph\nwho I am · my roles · my stances" as self
-  folder "orexis:AskableGraph\nthe questions a person may ask, no belief" as askg
   folder "orexis:BeliefGraph\nthe agent's own state · the subject beliefs\na silence · what is extracted of a statement" as st
   folder "orexis:ForecastGraph\na diff over a period" as pr
   folder "orexis:PlanGraph\na plan published, adopted by reference" as plan

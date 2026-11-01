@@ -287,6 +287,15 @@ def every_package() -> tuple[str, ...]:
 
 
 @cache
+def _declared_kinds() -> frozenset[str]:
+    """Every class a package's ontology declares, read apart, as `_vocabularies` reads the roles."""
+    return frozenset(q.subject.value for package in every_package()
+                     for q in document(KERNEL / package / VOCABULARY).quads_for_pattern(
+                         None, ox.NamedNode(_TYPE), ox.NamedNode(_CLASS), None)
+                     if isinstance(q.subject, ox.NamedNode))
+
+
+@cache
 def _vocabularies() -> tuple[dict[str, str], dict[str, frozenset[str]]]:
     """What every package's ontology says of roles, READ APART — never put into an agent's store,
     since which packages' documents go in is what this decides: each role a package declares, with
@@ -438,8 +447,11 @@ def _put_documents(store: ox.Store, world: Path, agent_id: str | None = None,
         else:
             log.warning("%s plays no role, so it loads no package and runs nothing: its self graph "
                         "says what it runs, `<agent> orexis:plays [ a <role> ]`", agent_id)
-    for _path, _doc, graph, kinds in passed:
-        log.log(logging.DEBUG if others & set(kinds) else logging.INFO,
+    #  A PACKAGE'S DOCUMENT FOR A READER THIS AGENT DOES NOT LOAD is expected, and said quietly: sensing's
+    #  askables are speech's kind, and an agent that speaks with nobody holds no speech.
+    for path, _doc, graph, kinds in passed:
+        expected = others & set(kinds) or (KERNEL in Path(path).resolve().parents and set(kinds) & _declared_kinds())
+        log.log(logging.DEBUG if expected else logging.INFO,
                 "passed over %s: %s is no kind this agent reads", graph, ", ".join(sorted(kinds)))
     if not agent_id:
         return []

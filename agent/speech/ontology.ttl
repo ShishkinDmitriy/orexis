@@ -89,6 +89,32 @@
     offers the model every sayable the world declares and makes a statement of the one it fills, dropping
     a field the shape does not declare and refusing one that lacks a field it requires.""" .
 
+:AskableGraph a owl:Class ;
+    rdfs:subClassOf orexis:Graph ;
+    rdfs:label "Askable graph" ;
+    rdfs:comment "A graph of askables — the questions a person may ask an agent about itself, each answered from its store — named for what it holds. A package ships one beside its ontology (`agent/<package>/askables.ttl`), in its own words and speech's, and a domain or a world may ship one too. No belief: a question is what the agent can be asked, read by translation alone. Held where speech's vocabulary is, so a package's askables are passed over by an agent that speaks with nobody (knowledge/decisions/a-question-is-answered-and-every-other-act-is-kept.md)." .
+
+:Askable a owl:Class ;
+    rdfs:subClassOf sh:NodeShape ;
+    rdfs:label "Askable" ;
+    rdfs:comment """A question a person may ask an agent, answered from the agent's own store and writing nothing
+    — FIPA's query-ref, beside the sayable, which is every other act (knowledge/domain/speech/askable.md). A node
+    shape: `sh:description` what the model is told it answers, `sh:property` each thing the asker may fill,
+    declared as a sayable's fields are, `speech:reads` the kinds of graph it is handed and `speech:select` the
+    text the agent runs, each filled field bound into it as a `$` token of its local name. The asker picks it
+    and fills it, and never writes the text nor sees it.""" .
+
+:reads a owl:ObjectProperty ;
+    rdfs:domain :Askable ;
+    rdfs:label "reads" ;
+    rdfs:comment "A kind of graph an askable's select is handed as its default graph, as every reader states the kinds it reads; several where it reads several." .
+
+:select a owl:DatatypeProperty ;
+    rdfs:domain :Askable ;
+    rdfs:range xsd:string ;
+    rdfs:label "select" ;
+    rdfs:comment "The SELECT an askable is answered by, a row per line of the answer, each column a value the model phrases. A field the asker filled is bound as `$` and its local name; a token no field binds refuses the text." .
+
 :prose a owl:DatatypeProperty ; rdfs:range xsd:string ;
     rdfs:label "prose" ;
     rdfs:comment "The words a statement was translated from, kept beside it in the statement's own graph, so the agent's journal keeps what the person wrote with what was made of it." .

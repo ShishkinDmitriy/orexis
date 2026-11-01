@@ -16,7 +16,7 @@ description: >-
   a method of every part rendered by templates and published retained.
 ---
 
-> **Amended 2026-11-01:** the account is askables — `orexis:Askable`, a question a package declares and
+> **Amended 2026-11-01:** the account is askables — `speech:Askable`, a question a package declares and
 > the agent answers from its store — found in the store by kind, and the model is offered sayables and
 > askables in one call; `/account` becomes `/status` ([a-question-is-answered-and-every-other-act-is-kept](/decisions/a-question-is-answered-and-every-other-act-is-kept.md)).
 
@@ -77,7 +77,7 @@ ontology: its first comment line the section's title, its `# reads:` line the ki
 to it as the default graph. Sensing's says the latest reading of each sensor, execution's each
 intention standing. Translation asks each loaded package's select when a person asks — `/account`
 answered with the rows for nothing, a question in words answered by the model from them — and stores
-nothing (now the [askable](/domain/kernel/askable.md)). The account is still telemetry and never a
+nothing (now the [askable](/domain/speech/askable.md)). The account is still telemetry and never a
 belief.
 
 # What was refused
