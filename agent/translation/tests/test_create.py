@@ -64,7 +64,7 @@ class StandIn:
     text: str = ""
     asked: list = field(default_factory=list)
 
-    def ask(self, system, text, tools=(), tool_choice=None):
+    def ask(self, system, text, tools=()):
         self.asked.append((system, text, [t["name"] for t in tools]))
         return Answer("" if tools else self.text, [self.call] if self.call and tools else [])
 
@@ -193,9 +193,9 @@ def test_the_person_sees_the_agent_writing_from_the_words_heard_to_the_answer_sa
     shown = []
 
     class Slow(StandIn):
-        def ask(self, system, text, tools=(), tool_choice=None):
+        def ask(self, system, text, tools=()):
             shown.append((list(bot.writing), dict(part.writing)))
-            return super().ask(system, text, tools, tool_choice)
+            return super().ask(system, text, tools)
     part.model = Slow(call=(NOTHING, {"why": "a question"}), text="The seeker has nothing to say yet.")
     _write(runtime, V + "clara_telegram", "what are you doing?")
     assert [w for w, _ in shown] == [[V + "clara_telegram"]] * 2, "shown before the model is asked"
@@ -219,7 +219,7 @@ def test_a_model_that_fails_says_so_in_the_chat_where_the_agent_was_addressed(se
     runtime, part, bot = seeker
 
     class Refusing(StandIn):
-        def ask(self, system, text, tools=(), tool_choice=None):
+        def ask(self, system, text, tools=()):
             raise OSError("HTTP Error 401: Unauthorized")
     part.model = Refusing()
     _write(runtime, V + "clara_telegram", "what are you doing?")

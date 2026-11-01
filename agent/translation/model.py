@@ -1,4 +1,4 @@
-"""The model client: the one place this repository asks a language model, over its own HTTP, and only
+"""The model client: the one place this repository asks a language model, through Anthropic's SDK, and only
 from an agent's translation part, off its pass, at a run-time edge.
 
 **ONE CALL, TWO SHAPES OF ANSWER.** `ask` sends a system prompt and one message to the Messages API
@@ -6,9 +6,11 @@ and reads the content back: text, where the model was asked to write prose, and 
 was handed tools — each a name and the input it filled. The translator hands it the sayables and the
 askables as tools and reads the one it chose; an answer or a rendering is asked with no tool and read as text.
 
-**NO LIBRARY.** The request is `urllib`, as the HTTP transport's is: a JSON body, three headers, one
-endpoint. A library would be a dependency the image never carries for one POST; and a test hands
-`post` of its own and sees exactly what would be sent.
+**THE SDK, FOR WHAT ONE POST DOES NOT DO.** It was one `urllib` POST, and a person in a chat met every
+overloaded or rate-limited moment of the API as "could not answer". The client retries those and a
+dropped connection with backoff, `RETRIES` times, and names each failure by its class, which `why_not`
+says in the chat in the person's terms; the library is translation's own extra, so only a translating
+agent's image carries it. A test hands a `client` of its own and sees exactly what would be sent.
 
 **WHICH MODEL AND WHERE IS ENVIRONMENT**, a deployment fact and no belief anyone holds (rule 5):
 `MODEL_API_KEY`, `MODEL_NAME`, and `MODEL_URL` where the endpoint is not the default. The key lives
@@ -17,18 +19,19 @@ in `infra/secrets/`, beside the admin token, and reaches each translating agent'
 
 from __future__ import annotations
 
-import json
 import logging
 import os
-import urllib.request
 from dataclasses import dataclass, field
+
+import anthropic
 
 log = logging.getLogger("model")
 
 DEFAULT_URL = "https://api.anthropic.com"
-VERSION = "2023-06-01"
-#  HOW LONG ONE CALL MAY TAKE, in real seconds.
+#  HOW LONG ONE CALL MAY TAKE, in real seconds, and how often an overloaded, rate-limited or unreachable API is
+#  asked again, with the SDK's backoff between.
 TIMEOUT_S = 60.0
+RETRIES = 3
 
 
 @dataclass
@@ -38,18 +41,12 @@ class Answer:
     calls: list[tuple[str, dict]] = field(default_factory=list)
 
 
-def _post(url: str, headers: dict, body: bytes) -> dict:
-    request = urllib.request.Request(url, data=body, headers=headers, method="POST")
-    with urllib.request.urlopen(request, timeout=TIMEOUT_S) as response:          # noqa: S310 — the installation's endpoint
-        return json.loads(response.read())
-
-
 class Model:
     """A language model reached over the Messages API: which, where, and with what key."""
 
-    def __init__(self, name: str, key: str, url: str = DEFAULT_URL, post=None, max_tokens: int = 1024):
+    def __init__(self, name: str, key: str, url: str = DEFAULT_URL, client=None, max_tokens: int = 1024):
         self.name, self.key, self.url = name, key, url.rstrip("/")
-        self.post = post or _post
+        self.client = client or anthropic.Anthropic(api_key=key, base_url=self.url, timeout=TIMEOUT_S, max_retries=RETRIES)
         self.max_tokens = max_tokens
 
     @classmethod
@@ -63,21 +60,33 @@ class Model:
             return None
         return cls(name, key, env.get("MODEL_URL", DEFAULT_URL))
 
-    def ask(self, system: str, text: str, tools=(), tool_choice: str | None = None) -> Answer:
+    def ask(self, system: str, text: str, tools=()) -> Answer:
         """One call: `system` as the system prompt, `text` as the one user message, `tools` offered
-        where given — the model then MUST call one (`tool_choice` names which, or any) — and the
-        answer read as text and calls."""
+        where given — the model chooses whether to call one, since a model that thinks refuses to be
+        made to, and the system prompt asks it to — and the answer read as text and calls."""
         body: dict = {"model": self.name, "max_tokens": self.max_tokens, "system": system,
                       "messages": [{"role": "user", "content": text}]}
         if tools:
             body["tools"] = list(tools)
-            body["tool_choice"] = {"type": "any"} if tool_choice is None else {"type": "tool", "name": tool_choice}
-        headers = {"x-api-key": self.key, "anthropic-version": VERSION, "content-type": "application/json"}
-        reply = self.post(self.url + "/v1/messages", headers, json.dumps(body).encode())
+            body["tool_choice"] = {"type": "auto"}
+        reply = self.client.messages.create(**body)
         answer = Answer()
-        for block in reply.get("content", []):
-            if block.get("type") == "text":
-                answer.text += block.get("text", "")
-            elif block.get("type") == "tool_use":
-                answer.calls.append((block.get("name", ""), dict(block.get("input") or {})))
+        for block in reply.content:
+            if block.type == "text":
+                answer.text += block.text
+            elif block.type == "tool_use":
+                answer.calls.append((block.name, dict(block.input or {})))
         return answer
+
+
+def why_not(exc: Exception) -> str:
+    """Why the model would not answer, in a person's terms: by the SDK's class of the failure, its retries spent."""
+    if isinstance(exc, anthropic.AuthenticationError | anthropic.PermissionDeniedError):
+        return "its model refused its key"
+    if isinstance(exc, anthropic.RateLimitError):
+        return "its model is asked too often just now; try again in a minute"
+    if isinstance(exc, anthropic.InternalServerError):
+        return "its model is overloaded just now; try again in a minute"
+    if isinstance(exc, anthropic.APIConnectionError):
+        return "its model could not be reached"
+    return f"its model would not answer ({exc})"

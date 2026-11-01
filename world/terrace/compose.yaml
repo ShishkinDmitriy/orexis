@@ -47,7 +47,7 @@ services:
       args:
         # the packages it runs and what they bring beyond the core, and nothing else's
         PACKAGES: "belief,prediction,sensing,speech,translation,transport/http,transport/mqtt,transport/telegram"
-        EXTRAS: "belief,series,transport-mqtt"
+        EXTRAS: "belief,series,translation,transport-mqtt"
         SIMULATOR: "no"
     command: ["orexis-agent", "/app/world/terrace", "terrace", "--volume", "/app/state", "--journal", "/app/journal"]
     environment:
