@@ -23,7 +23,9 @@ another world, declare the same three things first (the translator page shows th
 cp infra/model.env.example infra/secrets/model.env    # then set MODEL_NAME and MODEL_API_KEY; never committed
 ```
 
-Where the model answers is `infra/installation.ttl`'s `onboarding:Model`; with none there, onboarding
+A changed key reaches a running agent only by recreating its container,
+`podman compose up -d --force-recreate agent-<id>`: `podman compose restart` keeps the environment the
+container was created with. Where the model answers is `infra/installation.ttl`'s `onboarding:Model`; with none there, onboarding
 refuses a world with a translating agent. Without a key the agent still answers `/status`, and says in
 its log that it has no model for anything else.
 
@@ -93,8 +95,10 @@ podman compose logs -f agent-terrace
 At boot it says what it loads, and the list ends with `transport/telegram`:
 `terrace loads belief, sensing, prediction, speech, translation, transport/mqtt, transport/http, transport/telegram`.
 Then send `/status` to the bot: it answers within a few seconds (`TELEGRAM_POLL_S`, three by default)
-with each sensor's latest reading, and asks no model. A question in words — "is the bed dry?" — goes to
-the model with the agent's askables, and the answer comes from the rows the agent read.
+with each sensor's latest reading, and asks no model. `/status` is a shortcut, not the way in: any
+other words — "is the bed dry?", with or without the bot's @name — go to the model with the agent's
+askables, the chat shows the bot typing while it thinks, and the answer comes from the rows the agent
+read.
 
 # A group with several agents
 
@@ -133,6 +137,7 @@ by every agent in it; Telegram may send it as `/status@<bot>`, which is the same
 | `no TELEGRAM_BOT_TOKEN in the environment`, and the agent exits | the token file is missing or empty, or the compose file was rendered before it existed: write it and run `orexis-onboard` again |
 | `a message in Telegram chat <id>, which the world names in no chat: dropped` | `chat.ttl` is missing, holds another id, or is not mounted: check the id against `getUpdates` and re-run `orexis-onboard` |
 | `words in <chat> from someone the chat names not: dropped` | in a group, the writer's `telegram:userId` is not stated, or names someone not in the chat |
+| `<agent> could not answer: its model would not answer (HTTP Error 401: Unauthorized)`, in the chat too | the key in `infra/secrets/model.env` is refused: replace it, then recreate the container (`up -d --force-recreate`), since a restart keeps the old one |
 | `<person> wrote to <agent>, and there is no model to hear it with` | `infra/secrets/model.env` lacks `MODEL_NAME` or `MODEL_API_KEY`; `/status` still works |
 | `the bot would not answer: …` | the token is wrong (HTTP 401) or the API is unreachable from the host |
 | nothing at all, in a group | privacy mode is still on for that bot, or no askable of the agent's speaks to an unnamed question |

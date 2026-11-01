@@ -42,6 +42,11 @@ they came on, the part:
   askables alone and told to say nothing where the rows do not answer, so the agent that knows is the
   one heard.
 
+From the words heard to the answer said, every member carrying the chat's channel is asked to show the
+agent writing (`writing_in`, Telegram's `typing`), and again every few seconds while the model thinks;
+unaddressed in a group, where the agent may well keep silent, it shows nothing. A model that fails is
+said in the chat where the agent was addressed, so the person is not left waiting on nothing.
+
 # Said
 
 A document the agent says to a person — the TriG an `execution:Saying` made — reaches the part by

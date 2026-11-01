@@ -9,7 +9,8 @@ the last update seen, on a thread of its own; every text message is handed to th
 chat's id. `handle` finds the `telegram:Chat` the world names by that id, the person by the user id they wrote as
 where the world states it, and says `prose`; a chat the world names none of is nobody's, dropped and said once.
 
-**IT SENDS.** `say_to` posts `sendMessage` to a chat the world names by its id, and is False for any other channel.
+**IT SENDS.** `say_to` posts `sendMessage` to a chat the world names by its id, and is False for any other channel;
+`writing_in` posts `sendChatAction` with `typing` there, which Telegram shows for five seconds or until the message.
 """
 
 from __future__ import annotations
@@ -126,11 +127,23 @@ class Telegram(Transport):
         return [(None, graph) for graph in self.prose.emit(prose)]
 
     def say_to(self, store, channel: str, text: str) -> bool:
+        return self._post(store, channel, "sendMessage", {"text": text})
+
+    def writing_in(self, store, channel: str) -> bool:
+        return self._post(store, channel, "sendChatAction", {"action": "typing"})
+
+    def _post(self, store, channel: str, method: str, body: dict) -> bool:
+        """`method` posted to the chat the world names `channel` by its id; False where it names none, or the API
+        refuses or fails."""
         found = rows(store, _ID_Q, graphs_of(store, BELIEF, common=True), chat=channel)
         if not found:
             return False
-        reply = self.call(self._method("sendMessage"), {"chat_id": found[0]["id"], "text": text})
+        try:
+            reply = self.call(self._method(method), {"chat_id": found[0]["id"], **body})
+        except Exception as exc:                                         # noqa: BLE001 — the api fails
+            log.warning("%s: the bot would not answer %s: %s", local_of(self.me), method, exc)
+            return False
         if not reply.get("ok", True):
-            log.warning("telegram would not take a message for %s: %s", local_of(channel), reply.get("description", reply))
+            log.warning("telegram would not take a %s for %s: %s", method, local_of(channel), reply.get("description", reply))
             return False
         return True

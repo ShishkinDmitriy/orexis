@@ -15,6 +15,11 @@ the model; and where nothing fits, the agent answers from its status. Where the 
 was named, the model is offered the askables alone and told to say nothing where the rows do not speak to the
 question, so the agent that knows answers.
 
+THE PERSON SEES THE AGENT WRITING WHILE IT THINKS, AND HEARS WHY WHERE IT CANNOT ANSWER. From the words heard to the
+answer said, every member carrying the chat's channel is asked to show it (`writing_in`) once and again every
+`WRITING_S`; unaddressed in a group, where the agent may well keep silent, it shows nothing. A model that fails says
+so in the chat, where the agent was addressed, rather than leaving the person waiting on nothing.
+
 THE MODEL IS CALLED OFF THE RUNTIME'S THREAD, AND THE STORE IS READ ON IT. What the model needs is read first, the
 call runs on a thread of its own, and what comes of it — the statement kept, the askable answered, the words sent —
 is submitted back as a job, so a pass never waits on a model and nothing reads the store but the runtime's thread.
@@ -56,12 +61,18 @@ SAY_SYSTEM = (
     "courteous message in the person's language, saying exactly what the fields say and nothing more: "
     "invent no detail, make no promise the statement does not make, and sign as the agent.")
 
+#  HOW OFTEN THE AGENT IS SHOWN WRITING AGAIN, in seconds of the one timeline: Telegram shows a chat action for five
+#  seconds, or until a message is sent.
+WRITING_S = 4.0
+
+
 class _Translation:
     def __init__(self, runtime):
         self.runtime = runtime
         self.model = Model.from_environ()
         self.carriers: list = []
         self.spawn = lambda work: threading.Thread(target=work, daemon=True).start()
+        self.writing: dict[str, list] = {}                       # chat IRI -> [the chat, answers being thought]
 
     def link(self, parts) -> None:
         members = []
@@ -76,6 +87,9 @@ class _Translation:
         speech = parts.get("speech")
         if speech is not None:
             speech.told.connect(self.told)
+
+    def start(self, runtime) -> None:
+        runtime.every(WRITING_S, self._still_writing)
 
     # ── heard ─────────────────────────────────────────────────────────────────────────────────
 
@@ -102,35 +116,43 @@ class _Translation:
             return []
         offered = ([] if unaddressed else sayables(store)), known
         told = None if unaddressed else status(stores, known, me, self.runtime.now)
+        if self.model is None:
+            log.warning("%s wrote to %s, and there is no model to hear it with", person[1], local_of(me))
+            return []
+        if not unaddressed:
+            self._begin(chat)
         self.spawn(lambda: self._think(chat, person, prose.text, offered, told, unaddressed))
         return []
 
     def _think(self, chat: Chat, person, text: str, offered, told: str | None, unaddressed: bool) -> None:
         """The model's first part, off the runtime's thread: the one tool the words make — a sayable, kept; an
         askable, answered on the runtime's thread; or nothing, answered from the status, or silence unaddressed."""
-        if self.model is None:
-            log.warning("%s wrote to %s, and there is no model to hear it with", person[1], local_of(self.runtime.me))
-            return
         saying, asking_of = offered
         tools = [tool_of(s) for s in saying] + [asking(a) for a in asking_of] + [nothing_tool()]
-        call = next(iter(self.model.ask(HEAR_SYSTEM, f"From {person[1]}:\n\n{text}", tools).calls), None)
+        try:
+            call = next(iter(self.model.ask(HEAR_SYSTEM, f"From {person[1]}:\n\n{text}", tools).calls), None)
+        except Exception as exc:                                 # noqa: BLE001 — the model fails
+            return self._failed(chat, person, exc, unaddressed)
         sayable = next((s for s in saying if call and s.name == call[0]), None)
         askable = next((a for a in asking_of if call and a.name == call[0]), None)
+        if askable is not None:
+            self.runtime.submit(lambda: self._asked(chat, person, text, askable, call[1], unaddressed))
+            return
         if sayable is not None:
             payload = statement_of(sayable, call[1], by=person[0], prose=text, at=self.runtime.now)
             if payload is not None:
                 self.runtime.submit(lambda: self._keep(payload))
-        elif askable is not None:
-            self.runtime.submit(lambda: self._asked(chat, person, text, askable, call[1], unaddressed))
         elif call is not None and call[0] != NOTHING:
             log.warning("the model called %r, which is neither a sayable nor an askable — dropped", call[0])
         elif told is not None:
-            self._phrase(chat, person, text, f"What {local_of(self.runtime.me)} says of itself:\n\n{told}", False)
+            return self._phrase(chat, person, text, f"What {local_of(self.runtime.me)} says of itself:\n\n{told}", False)
+        self._ended(chat, unaddressed)
 
     def _asked(self, chat: Chat, person, text: str, askable, inputs: dict, unaddressed: bool) -> list[str]:
         """A job: the askable the model called, answered from the store, and its rows phrased off the thread."""
         found = answered([self.runtime.beliefs, self.runtime.intentions], askable, inputs)
         if found is None:
+            self._ended(chat, unaddressed)
             return []
         rows = "\n".join(f" - {line}" for line in lines(found)) or " (no rows)"
         self.spawn(lambda: self._phrase(chat, person, text, f"{askable.description or askable.name}:\n{rows}", unaddressed))
@@ -138,10 +160,55 @@ class _Translation:
 
     def _phrase(self, chat: Chat, person, text: str, rows: str, unaddressed: bool) -> None:
         """The model's second part, off the runtime's thread: the rows phrased as the answer, or silence."""
-        words = self.model.ask(ANSWER_SYSTEM + (UNADDRESSED if unaddressed else ""),
-                               f"{rows}\n\nThe question, from {person[1]}:\n\n{text}").text.strip()
+        try:
+            words = self.model.ask(ANSWER_SYSTEM + (UNADDRESSED if unaddressed else ""),
+                                   f"{rows}\n\nThe question, from {person[1]}:\n\n{text}").text.strip()
+        except Exception as exc:                                 # noqa: BLE001 — the model fails
+            return self._failed(chat, person, exc, unaddressed)
         if words and words != SILENT:
             self.runtime.submit(lambda: self._said(chat, words))
+        self._ended(chat, unaddressed)
+
+    def _failed(self, chat: Chat, person, exc: Exception, unaddressed: bool) -> None:
+        """The model would not answer: said in the log, and in the chat where the agent was addressed."""
+        me = local_of(self.runtime.me)
+        log.warning("%s could not answer %s: the model would not answer: %s", me, person[1], exc)
+        if not unaddressed:
+            words = f"{me} could not answer: its model would not answer ({exc})."
+            self.runtime.submit(lambda: self._said(chat, words))
+        self._ended(chat, unaddressed)
+
+    # ── writing ───────────────────────────────────────────────────────────────────────────────
+
+    def _begin(self, chat: Chat) -> None:
+        """On the runtime's thread: one more answer thought in `chat`, and the agent shown writing there."""
+        self.writing.setdefault(chat.iri, [chat, 0])[1] += 1
+        self._show(chat)
+
+    def _ended(self, chat: Chat, unaddressed: bool) -> None:
+        """Off the runtime's thread: an answer thought in `chat` is done with, said or not."""
+        if not unaddressed:
+            self.runtime.submit(lambda: self._end(chat))
+
+    def _end(self, chat: Chat) -> list[str]:
+        """A job: one answer fewer thought in `chat`, and the chat shown no more where none is left."""
+        entry = self.writing.get(chat.iri)
+        if entry is not None:
+            entry[1] -= 1
+            if entry[1] <= 0:
+                del self.writing[chat.iri]
+        return []
+
+    def _still_writing(self) -> list[str]:
+        """The timer: every chat with an answer still being thought, shown again."""
+        for chat, _ in list(self.writing.values()):
+            self._show(chat)
+        return []
+
+    def _show(self, chat: Chat) -> None:
+        for member in self.carriers:
+            if callable(getattr(member, "writing_in", None)) and member.writing_in(self.runtime.beliefs, chat.channel):
+                return
 
     def _keep(self, payload: bytes) -> list[str]:
         """A person's statement, kept as any peer's document: speech's `heard`, its extraction believing it."""

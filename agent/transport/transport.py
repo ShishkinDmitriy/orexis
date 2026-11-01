@@ -105,6 +105,11 @@ class Transport:
         Whether anything was SENT: a member that does not carry the channel sends nothing."""
         return False
 
+    def writing_in(self, store, channel: str) -> bool:
+        """Show on `channel`, a chat's channel this member carries, that the agent is writing, where the channel can
+        show it. Whether it was SHOWN: a member that does not carry the channel, or cannot show it, shows nothing."""
+        return False
+
     def open(self, store) -> list[str]:
         """Listen on every channel the world implies for the agent's sensors, and on the one
         its peers tell it things on; the channels."""
@@ -181,6 +186,9 @@ class Transports(Transport):
 
     def say_to(self, store, channel: str, text: str) -> bool:
         return any(member.say_to(store, channel, text) for member in self.members)
+
+    def writing_in(self, store, channel: str) -> bool:
+        return any(member.writing_in(store, channel) for member in self.members)
 
     def set_cadence(self, store, sensor: str, sleep_s: int) -> bool:
         member = self._reaching(store, sensor)
