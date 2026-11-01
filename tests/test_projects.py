@@ -1,4 +1,7 @@
-"""The root distribution declares exactly what its own trees import.
+"""The root distribution declares exactly what its own trees import, and each unit its own: the core is the
+kernel's, and a package that needs a library brings it as an extra named for its directory
+(knowledge/decisions/a-package-brings-its-own-dependencies.md), in a `dependencies.txt` beside it, which
+the pyproject reads; a package with none is the core's.
 
 `orexis` is one distribution: the agent, the operator's tools and the simulator. What keeps its
 dependency list worth reading is something holding it to the imports. Nothing did once, and two
@@ -67,49 +70,100 @@ def sources(root: Path) -> list[Path]:
                   and not p.name.startswith("test_") and p.name != "conftest.py")
 
 
-def needed(root: Path) -> set[str]:
-    """The third-party distributions the Python under `root` actually requires."""
+def needed(root: Path | list[Path]) -> set[str]:
+    """The third-party distributions the Python under `root`, or in the files listed, actually requires."""
     out: set[str] = set()
     by_module = packages_distributions()
-    for module in sorted(imported(sources(root))):
+    for module in sorted(imported(sources(root) if isinstance(root, Path) else root)):
         if module in sys.stdlib_module_names or module in OWN_TREES:
             continue
         dists = by_module.get(module)
-        assert dists, (f"{root.relative_to(REPO_ROOT)} imports `{module}`, which no installed "
-                       f"distribution provides. Install the environment before trusting this test.")
+        assert dists, (f"`{module}` is imported and no installed distribution provides it. Install the "
+                       f"environment, `pip install -e '.[dev]'`, before trusting this test.")
         out.add(normalise(dists[0]))
     return out
 
 
-def test_the_root_declares_exactly_what_its_own_trees_import():
-    """The direction that catches most is `unused`: a dependency stops being needed when the
-    last import of it goes, and nothing about deleting a line of Python makes anyone open the
-    pyproject."""
-    assert all((REPO_ROOT / tree).is_dir() for tree in OWN_TREES), "a shipped tree moved"
-    want = set().union(*(needed(REPO_ROOT / tree) for tree in sorted(OWN_TREES)))
-    have = declared(REPO_ROOT / "pyproject.toml") | onboarding_extra(REPO_ROOT / "pyproject.toml")
-    assert have == want, (
-        "pyproject.toml is out of step with what agent/, onboarding/ and simulation/ import.\n"
-        f"  missing: {sorted(want - have) or 'none'}\n"
-        f"  unused:  {sorted(have - want) or 'none'}")
+def _specs(specs) -> set[str]:
+    """Distribution names off requirement specs, versions stripped, the distribution's own extras apart."""
+    return {normalise(re.split(r"[<>=!~\[;\s]", spec, maxsplit=1)[0]) for spec in specs
+            if not normalise(spec).startswith("orexis[")}
 
 
-def onboarding_extra(pyproject: Path) -> set[str]:
-    """The `onboarding` extra's distributions: what onboarding alone imports, which the agent image,
-    installing the distribution bare, never carries."""
-    config = tomllib.loads(pyproject.read_text())
-    return {normalise(re.split(r"[<>=!~\[;\s]", spec, maxsplit=1)[0])
-            for spec in config["project"]["optional-dependencies"]["onboarding"]}
+def extras(pyproject: Path) -> dict[str, set[str]]:
+    """Each extra the distribution declares and what it brings, read off its unit's own file."""
+    from agent.tree import dependency_files
+
+    out = {}
+    for name, path in dependency_files(pyproject).items():
+        lines = [line.split("#", 1)[0].strip() for line in (REPO_ROOT / path).read_text().splitlines()]
+        out[name] = _specs([line for line in lines if line])
+    return out
 
 
-def test_what_the_onboarding_extra_carries_no_agent_or_simulator_imports():
-    """The image installs the distribution with no extra, so an import of the extra's under `agent/`
-    or `simulation/` is a ModuleNotFoundError in every container and in no test."""
-    extra = onboarding_extra(REPO_ROOT / "pyproject.toml")
-    assert extra, "the onboarding extra declares nothing — the guard would check nothing"
-    leaked = {tree: needed(REPO_ROOT / tree) & extra for tree in ("agent", "simulation")}
-    assert not any(leaked.values()), leaked
-    assert extra <= needed(REPO_ROOT / "onboarding"), "the onboarding extra declares what onboarding does not import"
+#  THE KERNEL: `agent/*.py`, beside the packages. Its series writer is a unit of its own, since it imports
+#  its client only where a store is named, and the root conftest is the runner's.
+KERNEL = REPO_ROOT / "agent"
+SERIES = KERNEL / "series.py"
+
+
+def units() -> dict[str, tuple[list[Path], str]]:
+    """Every unit that may bring a library of its own, by the extra it would bring it as, with its sources and
+    where its dependency file is: each package of `agent/`, its directory with `/` read as `-` and the file
+    beside its ontology; the series writer, beside `series.py`; the simulator and onboarding, at their roots."""
+    from agent.runtime import every_package, extra_of
+    from agent.tree import DEPENDENCIES
+
+    out = {extra_of(package): (sources(KERNEL / package), f"agent/{package}/{DEPENDENCIES}") for package in every_package()}
+    out["series"] = ([SERIES], "agent/series.dependencies.txt")
+    for tree in ("simulation", "onboarding"):
+        out[tree] = (sources(REPO_ROOT / tree), f"{tree}/{DEPENDENCIES}")
+    return out
+
+
+def test_the_core_declares_exactly_what_the_kernel_imports():
+    """The direction that catches most is `unused`: a dependency stops being needed when the last import
+    of it goes, and nothing about deleting a line of Python makes anyone open the pyproject. The core is
+    the kernel's alone, so an agent loading no package that brings a library installs nothing else."""
+    kernel = [p for p in KERNEL.glob("*.py") if p != SERIES and p.name != "conftest.py"]
+    assert kernel, "the kernel's glob stopped matching"
+    want, have = needed(kernel), declared(REPO_ROOT / "pyproject.toml")
+    assert have == want, ("the core is out of step with what the kernel, agent/*.py, imports.\n"
+                          f"  missing: {sorted(want - have) or 'none'}\n  unused:  {sorted(have - want) or 'none'}")
+
+
+def test_every_unit_brings_exactly_what_it_imports_beyond_the_core_as_its_own_extra():
+    """A package that needs a library declares it as its extra, and only it does: an extra holds what its
+    unit imports beyond the core, both ways, and a unit that needs nothing beyond the core has none."""
+    core, declared_extras, found = declared(REPO_ROOT / "pyproject.toml"), extras(REPO_ROOT / "pyproject.toml"), units()
+    assert {"transport-mqtt", "series", "belief", "simulation", "onboarding"} <= set(found), sorted(found)
+    from agent.tree import dependency_files
+
+    files = dependency_files(REPO_ROOT / "pyproject.toml")
+    wrong = {}
+    for name, (sources_of, beside) in sorted(found.items()):
+        want, have = needed(sources_of) - core, declared_extras.get(name, set())
+        if want != have:
+            wrong[name] = {"missing": sorted(want - have), "unused": sorted(have - want)}
+        if name in files and files[name] != beside:
+            wrong[name] = {"file": f"{files[name]}, where it belongs beside its unit: {beside}"}
+        if (REPO_ROOT / beside).exists() != (name in files):
+            wrong[name] = {"file": f"{beside} {'is' if (REPO_ROOT / beside).exists() else 'is not'} there, and the "
+                                   f"pyproject {'does not read' if name not in files else 'reads'} it"}
+    assert not wrong, f"an extra is out of step with what its unit imports beyond the core: {wrong}"
+    assert set(declared_extras) - {"dev"} <= set(found), f"an extra names no unit: {sorted(set(declared_extras) - {'dev'} - set(found))}"
+
+
+def test_a_developers_install_carries_every_units_extra():
+    """`dev` installs every unit's extra, so a developer's environment and CI run every test of every
+    package; the image installs only the extras of the packages its agent loads."""
+    from agent.tree import dependency_files
+
+    files = dependency_files(REPO_ROOT / "pyproject.toml")
+    dev = [line.split("#", 1)[0].strip() for line in (REPO_ROOT / files["dev"]).read_text().splitlines()]
+    carried = {name for spec in dev if normalise(spec).startswith("orexis[")
+               for name in spec[spec.index("[") + 1:spec.index("]")].split(",")}
+    assert carried == set(files) - {"dev"}, sorted(carried)
 
 
 def test_the_distribution_ships_exactly_its_own_trees():

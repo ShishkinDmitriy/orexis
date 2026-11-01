@@ -928,6 +928,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   package declares is answered from the store by its own select and writes nothing, a statement of any other
   act is kept and extracted; a performative term on every statement kind, FIPA's semantics, an envelope and a
   protocol engine were refused, a protocol being what the actions' preconditions allow (a-question-is-answered-and-every-other-act-is-kept).
+- **The core is the kernel's dependencies, a package brings its own in a `dependencies.txt` beside its ontology,
+  and each agent's image holds only what it runs** — the file is the package's extra, named for its directory,
+  and a package with none is the core's; `orexis-compose` builds `orexis-<world>-<agent>:local` with the agent's
+  packages, those their code imports and what they bring, and mounts the same entries (`agent.tree.kept`); a
+  distribution per package and one image carrying everything were refused (a-package-brings-its-own-dependencies).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
   `crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming an
   absent file or a CRL past its `nextUpdate` refuses the whole society and not the one agent; and
@@ -1104,7 +1109,7 @@ orexis-firmware <world>      # a board's config.h, from the world it belongs to
 orexis-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
 orexis-infra-compose         # INFRA — infra/compose.yaml, from infra/installation.ttl
 cd world/<world> && podman compose up -d      # one container per agent
-podman build -t orexis:local .                 # only when a dependency changes
+podman compose build                           # only when a dependency changes: each agent's image, by its packages' extras
 pytest -q              # what testpaths names, walks left out: a few minutes. No infra needed.
 pytest -q -m ""        # the walks too, as CI runs them on every pull request.
 pytest -q tests        # the four files that read the whole tree: knowledge, layout, store, projects

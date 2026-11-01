@@ -1,0 +1,2 @@
+#  what the simulator brings beyond the core: the bus client it plays its systems over
+paho-mqtt>=2.0

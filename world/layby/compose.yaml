@@ -40,7 +40,15 @@ services:
       - orexis-layby-mosquitto-broker:/var/lib/mosquitto
 
   simulation:
-    image: orexis:local
+    image: orexis-layby-simulation:local
+    build:
+      context: ../..
+      dockerfile: Containerfile
+      args:
+        # the packages it runs and what they bring beyond the core, and nothing else's
+        PACKAGES: "sensing"
+        EXTRAS: "simulation"
+        SIMULATOR: "yes"
     command: ["python", "-m", "simulation", "/app/world/layby"]
     environment:
       MQTT_HOST: "localhost"
@@ -56,12 +64,35 @@ services:
       - ./society.derived.ttl:/app/world/layby/society.derived.ttl:ro
       - ./society.ttl:/app/world/layby/society.ttl:ro
       - ./world.ttl:/app/world/layby/world.ttl:ro
-      - ../../agent:/app/agent:ro
+      - ../../agent/clock.py:/app/agent/clock.py:ro
+      - ../../agent/hash_named_graph.py:/app/agent/hash_named_graph.py:ro
+      - ../../agent/history:/app/agent/history:ro
+      - ../../agent/journal.py:/app/agent/journal.py:ro
+      - ../../agent/lifecycle.py:/app/agent/lifecycle.py:ro
+      - ../../agent/metrics:/app/agent/metrics:ro
+      - ../../agent/ontology.py:/app/agent/ontology.py:ro
+      - ../../agent/ontology.ttl:/app/agent/ontology.ttl:ro
+      - ../../agent/runtime.py:/app/agent/runtime.py:ro
+      - ../../agent/sensing:/app/agent/sensing:ro
+      - ../../agent/series.dependencies.txt:/app/agent/series.dependencies.txt:ro
+      - ../../agent/series.py:/app/agent/series.py:ro
+      - ../../agent/stance.py:/app/agent/stance.py:ro
+      - ../../agent/store.py:/app/agent/store.py:ro
+      - ../../agent/transport/transport.py:/app/agent/transport/transport.py:ro
+      - ../../agent/tree.py:/app/agent/tree.py:ro
       - ../../domains:/app/domains:ro
       - ../../simulation:/app/simulation:ro
 
   agent-courier_a:
-    image: orexis:local
+    image: orexis-layby-courier_a:local
+    build:
+      context: ../..
+      dockerfile: Containerfile
+      args:
+        # the packages it runs and what they bring beyond the core, and nothing else's
+        PACKAGES: "belief,execution,planning,sensing,speech,transport/mqtt"
+        EXTRAS: "belief,series,transport-mqtt"
+        SIMULATOR: "no"
     command: ["orexis-agent", "/app/world/layby", "courier_a", "--volume", "/app/state", "--journal", "/app/journal"]
     environment:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
@@ -102,11 +133,31 @@ services:
       - ./secrets/courier_a.crt:/app/secrets/agent.crt:ro
       - ./secrets/courier_a.key:/app/secrets/agent.key:ro
       - ./secrets/ca.crt:/app/secrets/ca.crt:ro
-      # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME ones
-      # the Containerfile copies, which `tests/test_layout.py` holds the two lists to.
-      - ../../agent:/app/agent:ro
+      # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME entries its
+      # image keeps, the kernel and its own packages and no other's, which `tests/test_layout.py` holds
+      # to `agent.tree.kept`.
+      - ../../agent/belief:/app/agent/belief:ro
+      - ../../agent/clock.py:/app/agent/clock.py:ro
+      - ../../agent/execution:/app/agent/execution:ro
+      - ../../agent/hash_named_graph.py:/app/agent/hash_named_graph.py:ro
+      - ../../agent/history:/app/agent/history:ro
+      - ../../agent/journal.py:/app/agent/journal.py:ro
+      - ../../agent/lifecycle.py:/app/agent/lifecycle.py:ro
+      - ../../agent/metrics:/app/agent/metrics:ro
+      - ../../agent/ontology.py:/app/agent/ontology.py:ro
+      - ../../agent/ontology.ttl:/app/agent/ontology.ttl:ro
+      - ../../agent/planning:/app/agent/planning:ro
+      - ../../agent/runtime.py:/app/agent/runtime.py:ro
+      - ../../agent/sensing:/app/agent/sensing:ro
+      - ../../agent/series.dependencies.txt:/app/agent/series.dependencies.txt:ro
+      - ../../agent/series.py:/app/agent/series.py:ro
+      - ../../agent/speech:/app/agent/speech:ro
+      - ../../agent/stance.py:/app/agent/stance.py:ro
+      - ../../agent/store.py:/app/agent/store.py:ro
+      - ../../agent/transport/mqtt:/app/agent/transport/mqtt:ro
+      - ../../agent/transport/transport.py:/app/agent/transport/transport.py:ro
+      - ../../agent/tree.py:/app/agent/tree.py:ro
       - ../../domains:/app/domains:ro
-      - ../../simulation:/app/simulation:ro
 
 volumes:
   orexis-layby-mosquitto-broker:

@@ -1,0 +1,2 @@
+#  what the MQTT transport brings beyond the core: the client
+paho-mqtt>=2.0

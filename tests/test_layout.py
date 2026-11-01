@@ -32,11 +32,12 @@ FORBIDDEN_TREES = {"onboarding"}
 
 
 def copied_paths() -> list[str]:
-    """Every source path the image copies, as written."""
+    """Every source path the image copies out of the build context, as written — a copy from an earlier stage
+    copies what that stage laid out of these, and nothing else."""
     out: list[str] = []
     for line in CONTAINERFILE.read_text().splitlines():
         line = line.strip()
-        if line.upper().startswith("COPY "):
+        if line.upper().startswith("COPY ") and "--from=" not in line:
             parts = re.split(r"\s+", line)[1:]
             out.extend(p for p in parts[:-1] if not p.startswith("--"))
     return out
@@ -83,7 +84,7 @@ def test_the_mounted_trees_are_the_copied_trees():
     being mounted silently; the third time it failed, but only at the next restart, because a
     bind resolves when a container is CREATED and a stale one runs until the day it cannot."""
     compose = (REPO_ROOT / "onboarding" / "compose.py").read_text()
-    mounts = set(re.findall(r"\.\./\.\./([a-z_]+):/app/", compose))
+    mounts = set(re.findall(r"\.\./\.\./([a-z_]+)[^:\s\"]*:/app/", compose))
     copied = {p.split("/")[0].strip("./") for p in copied_paths() if "/" in p}
     assert mounts, "no source trees mounted — the pattern stopped matching"
     assert mounts == copied, (
@@ -1174,6 +1175,45 @@ def test_a_world_graph_states_no_wiring_and_only_a_deployment_graph_an_address()
                     wrong.append(f"{world}/{path.name} states a schema:url in a graph of {sorted(kinds)}")
     assert seen["society"] >= 4 and seen["deployment"] >= 3, f"the guard found {seen} — it would check nothing"
     assert not wrong, "\n".join(wrong)
+
+
+def test_an_agents_image_holds_the_packages_it_loads_and_those_they_import_and_what_they_bring():
+    """Each agent has an image of its own: the kernel, every package it loads and every package their code
+    imports, and the extras those bring — the terrace's observer on the bus carries the MQTT client and no
+    planning, hanoi's planner belief's code and no transport — and the simulator the packages its code imports."""
+    from onboarding import compose
+
+    terrace = compose.image_of("terrace", "terrace", series=True)
+    assert terrace.tag == "orexis-terrace-terrace:local" and "planning" not in terrace.packages
+    assert {"sensing", "transport/mqtt", "translation", "belief"} <= set(terrace.packages)
+    assert terrace.extras == ("belief", "series", "transport-mqtt")
+    hanoi = compose.image_of("hanoi", "hanoi", series=False)
+    assert hanoi.packages == ("belief", "execution", "planning") and hanoi.extras == ("belief",), "planning imports belief"
+    simulator = compose.simulator_image("greenhouse")
+    assert simulator.packages == ("sensing",) and simulator.extras == ("simulation",) and simulator.simulator
+
+
+def test_every_committed_service_mounts_what_its_image_keeps_and_builds_what_its_agent_loads():
+    """What a container is handed of the agent tree is what its image keeps of it, entry by entry, so a code
+    change needs a restart and the container holds no package its agent does not run; and the packages its
+    build is handed are its agent's, as onboarding reads them."""
+    import yaml
+
+    from agent.tree import kept
+
+    checked = 0
+    for path in sorted((REPO_ROOT / "world").glob("*/compose.yaml")):
+        for name, service in yaml.safe_load(path.read_text())["services"].items():
+            build = service.get("build")
+            if not build or "PACKAGES" not in build.get("args", {}):
+                continue
+            named = [p for p in build["args"]["PACKAGES"].split(",") if p]
+            mounted = sorted(v.split(":")[0].removeprefix("../../agent/") for v in service["volumes"]
+                             if v.startswith("../../agent/"))
+            assert mounted == sorted(kept(named)), (path.parent.name, name)
+            assert service["image"].startswith(f"orexis-{path.parent.name}-"), (path.parent.name, name, service["image"])
+            checked += 1
+    assert checked > 10, "the committed compose files hold almost no built service — the guard checks nothing"
 
 
 def test_a_committed_compose_file_is_what_onboarding_renders():

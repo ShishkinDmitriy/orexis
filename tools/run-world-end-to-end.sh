@@ -71,7 +71,6 @@ wait_for() {
 }
 
 say "images"
-podman build -q -t orexis:local . >/dev/null
 podman build -q -t orexis-mosquitto:local infra/mosquitto >/dev/null
 
 say "the series store"
@@ -97,10 +96,12 @@ import sys, yaml
 source, target, pace, epoch = sys.argv[1:]
 services = yaml.safe_load(open(source))["services"]
 clocked = {name: {"environment": {"OREXIS_TIME_PACE": pace, "OREXIS_TIME_EPOCH": epoch}}
-           for name, service in services.items() if service.get("image") == "orexis:local"}
+           for name, service in services.items() if "PACKAGES" in (service.get("build") or {}).get("args", {})}
 yaml.safe_dump({"services": clocked}, open(target, "w"))
 EOF
 agents=$(python3 -c "import sys,yaml; print(' '.join(n for n in yaml.safe_load(open(sys.argv[1]))['services'] if n.startswith('agent-')))" "$dir/compose.yaml")
+#  EACH AGENT'S IMAGE, built as its service says, with the extras of the packages it loads.
+(cd "$dir" && podman-compose -f compose.yaml build >/dev/null)
 (cd "$dir" && podman-compose -f compose.yaml -f "$override" up -d >/dev/null)
 
 say "every agent connected"

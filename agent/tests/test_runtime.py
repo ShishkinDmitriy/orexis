@@ -128,3 +128,15 @@ def test_the_boot_reads_every_document_of_the_world_and_asks_none_by_its_name(tm
         (tmp_path / name).write_text("")
     read = [p.relative_to(tmp_path).as_posix() for p in documents(tmp_path) if tmp_path in p.parents]
     assert read == ["world.ttl", "secrets/place.ttl", "beliefs/fern.trig", "beliefs/rose.ttl"]
+
+
+def test_a_loaded_package_whose_library_is_not_installed_is_refused_with_the_extra_that_brings_it():
+    """A package brings its own libraries as an extra named for its directory, so an install that lacks one
+    says which extra to install rather than raising a bare ModuleNotFoundError from deep in a member."""
+    from agent.runtime import _unprovided, extra_of
+
+    assert extra_of("transport/mqtt") == "transport-mqtt" and extra_of("belief") == "belief"
+    refused = _unprovided("transport/mqtt", ModuleNotFoundError("No module named 'paho'", name="paho"))
+    assert isinstance(refused, RuntimeError) and "pip install 'orexis[transport-mqtt]'" in str(refused)
+    own = ModuleNotFoundError("No module named 'agent.nowhere'", name="agent.nowhere")
+    assert _unprovided("planning", own) is own, "a module of the tree's own is no install's fault"

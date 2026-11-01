@@ -35,7 +35,8 @@ cd ~/projects/orexis && git pull
 source .venv/bin/activate && pip install -e ".[dev]"
 
 # 1. The image: `orexis-agent` is the 0.2.0 runtime now, and the image carries agent/ and domains/.
-podman build -t orexis:local .
+#    Each agent's compose service builds its own, with the extras its packages bring.
+cd world/terrace && podman compose build && cd ../..
 
 # 2. What 0.1.0 generated and 0.2.0 refuses or no longer draws.
 rm world/terrace/keys.ttl                               # a 0.2.0 boot refuses a document stating no kind

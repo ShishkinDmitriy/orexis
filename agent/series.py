@@ -74,8 +74,12 @@ class Sink:
         if missing := [f"INFLUX_{purpose}_{key}" for key, value in named.items() if not value]:
             log.warning("a %s store is named without %s — nothing is written for it", purpose.lower(), ", ".join(missing))
             return None
-        from influxdb_client import InfluxDBClient
-        from influxdb_client.client.write_api import SYNCHRONOUS
+        try:
+            from influxdb_client import InfluxDBClient
+            from influxdb_client.client.write_api import SYNCHRONOUS
+        except ModuleNotFoundError as exc:
+            raise RuntimeError(f"a {purpose.lower()} store is named and this install lacks `{exc.name}`, the series' "
+                               "own: `pip install 'orexis[series]'`, or regenerate the compose file") from exc
 
         client = InfluxDBClient(url=named["URL"], token=named["TOKEN"], org=named["ORG"])
         return cls(purpose, named["BUCKET"], client.write_api(write_options=SYNCHRONOUS).write)

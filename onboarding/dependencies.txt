@@ -1,0 +1,6 @@
+#  what onboarding brings beyond the core, and belief's, since it runs planning's code
+pyshacl>=0.30
+cryptography>=42
+python-dotenv>=1.0
+influxdb-client>=1.40
+orexis[belief]
