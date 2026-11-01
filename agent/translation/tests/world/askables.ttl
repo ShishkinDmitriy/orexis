@@ -1,0 +1,15 @@
+@prefix : <http://example.org/orexis/world/viewing#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+<> a orexis:AskableGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A PERSON MAY ASK THE SEEKER, answered from what it believes: the viewings it has been offered for a listing,
+#  which a person's statement of the ViewingOffer sayable makes it believe (rules.ttl). It writes nothing.
+
+:viewings_offered a orexis:Askable , sh:NodeShape ;
+    sh:description "the viewings offered for a listing, when, and by whom" ;
+    sh:property [ sh:path :listing ; sh:class :Listing ; sh:minCount 1 ; sh:description "which listing" ] ;
+    orexis:reads orexis:BeliefGraph ;
+    orexis:select """PREFIX : <http://example.org/orexis/world/viewing#>
+SELECT ?at ?by WHERE { ?o a :ViewingOffer ; :listing $listing ; :at ?at ; speech:saidBy ?by } ORDER BY ?at""" .

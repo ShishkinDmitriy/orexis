@@ -21,8 +21,8 @@ TRANSLATION = ROOT / "agent" / "translation"
 FILES = sorted(TRANSLATION.glob("*.py"))
 VOCABULARY = sorted(TRANSLATION.glob("*.ttl"))
 ABOVE = ("planning", "execution", "belief", "sensing", "prediction", "coordination", "transport")
-#  THINGS, NOT ACTS: the chats, the model, a sayable, and the part.
-NOUNS = {"chat", "model", "sayable", "create"}
+#  THINGS, NOT ACTS: the chats, the model, a sayable, an askable, a shape's fields, and the part.
+NOUNS = {"askable", "chat", "model", "sayable", "shape", "create"}
 
 
 def test_the_package_imports_nothing_above_it_and_no_transport():
@@ -45,7 +45,7 @@ def test_no_file_of_this_package_speaks_a_higher_layers_or_a_transports_words(pa
 
 def test_a_module_named_for_an_act_exports_that_act_and_every_module_has_a_test_named_for_it():
     modules = [p for p in FILES if p.stem not in ("__init__",)]
-    assert {p.stem for p in modules} >= NOUNS | {"account"}, "a listed module is gone"
+    assert {p.stem for p in modules} >= NOUNS, "a listed module is gone"
     for path in modules:
         if path.stem not in NOUNS:
             tree = ast.parse(path.read_text())
@@ -54,20 +54,28 @@ def test_a_module_named_for_an_act_exports_that_act_and_every_module_has_a_test_
         assert (TRANSLATION / "tests" / f"test_{path.stem}.py").exists(), f"{path.name} has no test named for it"
 
 
-def test_every_package_that_gives_an_account_ships_one_select_titled_and_reading_kinds_it_declares():
-    """An `account.rq` is beside the ontology of the package whose words it speaks, says its title and the kinds it
-    reads, and speaks only that package's words and the vocabularies everyone shares."""
+def test_every_package_that_answers_a_question_ships_its_askables_reading_kinds_it_declares_in_its_own_words():
+    """An `askables.ttl` sits beside the ontology of the package whose words it speaks, says it is an askable graph,
+    and each askable in it reads kinds that package declares and speaks only that package's words and the
+    vocabularies everyone shares; no `account.rq` is left to be found by its name."""
+    import rdflib
+
     from agent.store import NAMESPACES
 
-    found = sorted((ROOT / "agent").glob("*/account.rq"))
+    found = sorted((ROOT / "agent").glob("*/askables.ttl"))
     assert {p.parent.name for p in found} >= {"sensing", "execution"}, found
+    assert not list((ROOT / "agent").glob("*/account.rq")), "an account found by its file name"
+    O = rdflib.Namespace("http://example.org/orexis#")
     for path in found:
-        text, package = path.read_text(), path.parent.name
-        lines = text.splitlines()
-        assert lines[0].startswith("# ") and lines[1].startswith("# reads: "), f"{path}: a title, then the kinds it reads"
-        for kind in lines[1].removeprefix("# reads: ").split(","):
-            prefix, _, name = kind.strip().partition(":")
-            ontology = (path.parent / "ontology.ttl").read_text()
-            assert prefix == package and re.search(rf"^(?:{prefix})?:{name} a owl:Class", ontology, re.M), kind
-        spoken = set(re.findall(r"\b([a-z][\w-]*):\w", re.sub(r"^#.*$", "", text, flags=re.M)))
-        assert spoken <= {package, "sosa", "ssn", "orexis", "rdf", "rdfs", "xsd"} and spoken <= set(NAMESPACES), (path, spoken)
+        package = path.parent.name
+        doc = rdflib.Graph().parse(path, format="turtle")
+        assert (rdflib.URIRef(path.as_uri()), rdflib.RDF.type, O.AskableGraph) in doc, path
+        declared = set(rdflib.Graph().parse(path.parent / "ontology.ttl", format="turtle").subjects(rdflib.RDF.type, rdflib.OWL.Class))
+        asked = list(doc.subjects(rdflib.RDF.type, O.Askable))
+        assert asked, f"{path} declares no askable"
+        for askable in asked:
+            reads = list(doc.objects(askable, O.reads))
+            assert reads and all(kind in declared for kind in reads), (askable, reads)
+            (text,) = doc.objects(askable, O.select)
+            spoken = set(re.findall(r"\b([a-z][\w-]*):\w", str(text)))
+            assert spoken <= {package, "sosa", "ssn", "orexis", "rdf", "rdfs", "xsd"} and spoken <= set(NAMESPACES), (askable, spoken)

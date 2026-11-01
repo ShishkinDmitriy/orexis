@@ -11,7 +11,7 @@ import pytest
 
 from agent.runtime import world_of
 from agent.store import document_of as read_document, kinds_in
-from agent.translation.sayable import NOTHING, document_of, nothing_tool, said_in, sayables, tool_of
+from agent.translation.sayable import document_of, said_in, sayables, tool_of
 
 WORLD = Path(__file__).parent / "world"
 V = "http://example.org/orexis/world/viewing#"
@@ -44,7 +44,6 @@ def test_a_sayable_is_a_tool_whose_input_is_its_fields_and_no_other(known):
     assert schema["additionalProperties"] is False and sorted(schema["required"]) == ["at", "listing"]
     assert schema["properties"]["listing"]["enum"] == ["the two-room flat on Kastanienallee", "the studio on Rigaer Straße"]
     assert "ISO 8601" in schema["properties"]["at"]["description"]
-    assert nothing_tool()["name"] == NOTHING
 
 
 def test_a_statement_is_made_of_what_the_model_filled_as_a_peers_document(known):

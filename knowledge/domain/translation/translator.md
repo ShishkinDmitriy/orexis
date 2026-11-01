@@ -5,7 +5,7 @@ term: http://example.org/orexis/translation#Translator
 description: >-
   An agent that speaks with the people of its chats itself - the role beneath the speaker whose part
   is the translation package's. A person's words reach it through a transport member as prose and
-  become a statement of a sayable or a question answered from the agent's account; a statement the
+  become a statement of a sayable or the question of an askable, answered from its store; a statement the
   agent says to a person is rendered by the model and sent back on the chat's channel.
 ---
 
@@ -31,14 +31,16 @@ A person's words arrive as `prose` from the member carrying the chat's channel â
 mailbox, the chat's topic â€” with the sender where the channel tells one. In the chat whose channel
 they came on, the part:
 
-- answers `/account` with the agent's [account](/domain/translation/account.md), and asks no model;
+- answers `/status` with the rows of every [askable](/domain/kernel/askable.md) that takes no field,
+  and asks no model;
 - passes over words that name another agent of the chat and not this one;
-- offers any other words to the model with every [sayable](/domain/speech/sayable.md) the world
-  declares as a tool, where they are addressed to this agent or it is the chat's only agent; a
-  statement of the one filled is handed to speech's `heard`, and the domain's
-  [extraction](/domain/speech/extraction.md) makes the belief;
-- and, filling none, asks the model to answer from the account. Unaddressed in a group, the model is
-  told to say nothing where the account does not answer, so the agent that knows is the one heard.
+- offers any other words to the model once, with every [sayable](/domain/speech/sayable.md) the world
+  declares and every askable the agent holds as tools: a statement of the sayable filled is handed to
+  speech's `heard`, and the domain's [extraction](/domain/speech/extraction.md) makes the belief; the
+  askable called is answered from the store on the runtime's thread, and its rows phrased by the model;
+- and, where nothing fits, answers from the status. Unaddressed in a group, the model is offered the
+  askables alone and told to say nothing where the rows do not answer, so the agent that knows is the
+  one heard.
 
 # Said
 

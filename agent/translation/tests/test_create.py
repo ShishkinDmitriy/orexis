@@ -19,9 +19,10 @@ from agent.runtime import Runtime, boot
 from agent.speech.events import Told
 from agent.speech.ontology import STATEMENT_GRAPH
 from agent.store import graphs_of, rows
-from agent.translation.create import ACCOUNT_SYSTEM, HEAR_SYSTEM, SAY_SYSTEM, SILENT, UNADDRESSED
+from agent.translation.create import ANSWER_SYSTEM, HEAR_SYSTEM, SAY_SYSTEM, SILENT, UNADDRESSED
 from agent.translation.model import Answer
-from agent.translation.sayable import NOTHING, document_of, sayables
+from agent.translation.sayable import document_of, sayables
+from agent.translation.shape import NOTHING
 from agent.transport.transport import Prose, Transport
 
 WORLD = Path(__file__).parent / "world"
@@ -79,7 +80,8 @@ def test_a_persons_prose_becomes_a_statement_the_agent_hears_and_believes(seeker
     part.model = StandIn(call=("ViewingOffer", {"listing": "the two-room flat on Kastanienallee", "at": "2026-11-02T18:00:00+00:00"}))
     _write(runtime, V + "clara_telegram", "I can show you Kastanienallee on Tuesday the 2nd at 6pm. Clara")
     (system, text, offered), = part.model.asked
-    assert system == HEAR_SYSTEM and text.startswith("From Clara:") and NOTHING in offered and "ViewingOffer" in offered
+    assert system == HEAR_SYSTEM and text.startswith("From Clara:")
+    assert {"ViewingOffer", "viewings_offered", NOTHING} <= set(offered), "every sayable and every askable, in one call"
     beliefs = runtime.beliefs
     assert graphs_of(beliefs, STATEMENT_GRAPH), "kept as a peer's document"
     found = rows(beliefs, "PREFIX : <http://example.org/orexis/world/viewing#>\n"
@@ -88,18 +90,37 @@ def test_a_persons_prose_becomes_a_statement_the_agent_hears_and_believes(seeker
     assert bot.said == [], "a statement is answered by nothing"
 
 
-def test_account_is_answered_for_nothing_and_a_question_from_the_account_by_the_model(seeker):
+def test_status_is_answered_for_nothing_and_words_that_fit_nothing_from_the_status_by_the_model(seeker):
     runtime, part, bot = seeker
-    part.model = StandIn(call=(NOTHING, {"why": "a question"}), text="The seeker observes nothing yet.")
-    _write(runtime, V + "clara_telegram", "/account")
+    part.model = StandIn(call=(NOTHING, {"why": "a question"}), text="The seeker has nothing to say yet.")
+    _write(runtime, V + "clara_telegram", "/status")
     assert part.model.asked == [], "a command costs nothing"
     (channel, said), = bot.said
-    assert channel == V + "clara_telegram" and said.startswith("seeker at 2026-11-01 09:00 UTC") and "nothing to say yet" in said
+    assert channel == V + "clara_telegram" and said == "seeker at 2026-11-01 09:00 UTC\nnothing to say yet", \
+        "the one askable takes a field, so no section"
     bot.said.clear()
     _write(runtime, V + "clara_telegram", "what are you doing?")
-    assert [a[0] for a in part.model.asked] == [HEAR_SYSTEM, ACCOUNT_SYSTEM], "no sayable filled, so a question"
+    assert [a[0] for a in part.model.asked] == [HEAR_SYSTEM, ANSWER_SYSTEM], "nothing fits, so the status answers"
     assert "nothing to say yet" in part.model.asked[1][1] and "what are you doing?" in part.model.asked[1][1]
-    assert bot.said == [(V + "clara_telegram", "The seeker observes nothing yet.")]
+    assert bot.said == [(V + "clara_telegram", "The seeker has nothing to say yet.")]
+
+
+def test_a_question_an_askable_fits_is_answered_by_its_select_and_the_rows_phrased(seeker):
+    """Clara offers a viewing, which the seeker comes to believe; Anna asks when she can see the flat, the model
+    calls the domain's askable with the listing, the seeker answers it from its store, and the model phrases the
+    rows. Nothing is written by the question."""
+    runtime, part, bot = seeker
+    part.model = StandIn(call=("ViewingOffer", {"listing": "the two-room flat on Kastanienallee", "at": "2026-11-02T18:00:00+00:00"}))
+    _write(runtime, V + "clara_telegram", "I can show you Kastanienallee on Tuesday the 2nd at 6pm.")
+    before = len(runtime.beliefs)
+    part.model = StandIn(call=("viewings_offered", {"listing": "the two-room flat on Kastanienallee"}),
+                         text="Clara offered a viewing on Tuesday 2 November at 18:00.")
+    _write(runtime, V + "clara_telegram", "when can I see Kastanienallee?")
+    (hear, _, offered), (answer, rows, tools) = part.model.asked
+    assert (hear, answer, tools) == (HEAR_SYSTEM, ANSWER_SYSTEM, []) and "viewings_offered" in offered
+    assert "at: 2026-11-02 18:00 UTC, by: clara" in rows and "when can I see Kastanienallee?" in rows, rows
+    assert bot.said == [(V + "clara_telegram", "Clara offered a viewing on Tuesday 2 November at 18:00.")]
+    assert len(runtime.beliefs) == before, "a question writes nothing"
 
 
 def test_in_a_group_an_agent_answers_when_named_keeps_silent_when_another_is_and_says_nothing_it_does_not_know(seeker):
@@ -108,16 +129,20 @@ def test_in_a_group_an_agent_answers_when_named_keeps_silent_when_another_is_and
     _write(runtime, V + "household_telegram", "keeper, is the door locked?", V + "anna")
     assert part.model.asked == [] and bot.said == [], "words to another agent of the chat"
     _write(runtime, V + "household_telegram", "seeker, how is the search going?", V + "anna")
-    assert [a[0] for a in part.model.asked] == [HEAR_SYSTEM, ACCOUNT_SYSTEM], "named: a sayable first, then the account, nobody else's"
+    assert [a[0] for a in part.model.asked] == [HEAR_SYSTEM, ANSWER_SYSTEM], "named: one call, and nothing fits, so the status"
     assert bot.said == [(V + "household_telegram", "I am looking at two flats.")]
     bot.said.clear()
     part.model = StandIn(text=SILENT)
     _write(runtime, V + "household_telegram", "is anyone watching the plants?", V + "clara")
     (system, text, offered), = part.model.asked
-    assert system == ACCOUNT_SYSTEM + UNADDRESSED and offered == [], "unnamed in a group: no sayable, the account alone"
-    assert bot.said == [], "its account does not speak to it, so it keeps silent"
+    assert system == HEAR_SYSTEM and offered == ["viewings_offered", NOTHING], "unnamed in a group: the askables alone"
+    assert bot.said == [], "no askable fits, so it keeps silent"
+    part.model = StandIn(call=("viewings_offered", {"listing": "the studio on Rigaer Straße"}), text=SILENT)
+    _write(runtime, V + "household_telegram", "is the studio still free?", V + "clara")
+    assert [a[0] for a in part.model.asked] == [HEAR_SYSTEM, ANSWER_SYSTEM + UNADDRESSED] and bot.said == [], \
+        "its rows do not answer it, so it keeps silent"
     _write(runtime, V + "household_telegram", "hello?", V + "nobody")
-    assert len(part.model.asked) == 1, "someone the chat names not is not heard"
+    assert len(part.model.asked) == 2, "someone the chat names not is not heard"
 
 
 def test_what_the_agent_says_to_a_person_is_rendered_and_sent_through_their_chat(seeker):

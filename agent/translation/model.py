@@ -1,10 +1,10 @@
 """The model client: the one place this repository asks a language model, over its own HTTP, and only
-from a process of the world at a run-time edge — never from an agent.
+from an agent's translation part, off its pass, at a run-time edge.
 
 **ONE CALL, TWO SHAPES OF ANSWER.** `ask` sends a system prompt and one message to the Messages API
 and reads the content back: text, where the model was asked to write prose, and tool calls, where it
-was handed tools — each a name and the input it filled. The translator hands it the sayables as tools
-and reads the one it chose; a rendering is asked with no tool and read as text.
+was handed tools — each a name and the input it filled. The translator hands it the sayables and the
+askables as tools and reads the one it chose; an answer or a rendering is asked with no tool and read as text.
 
 **NO LIBRARY.** The request is `urllib`, as the HTTP transport's is: a JSON body, three headers, one
 endpoint. A library would be a dependency the image never carries for one POST; and a test hands
@@ -12,7 +12,7 @@ endpoint. A library would be a dependency the image never carries for one POST; 
 
 **WHICH MODEL AND WHERE IS ENVIRONMENT**, a deployment fact and no belief anyone holds (rule 5):
 `MODEL_API_KEY`, `MODEL_NAME`, and `MODEL_URL` where the endpoint is not the default. The key lives
-in `infra/secrets/`, beside the admin token, and reaches the translator alone.
+in `infra/secrets/`, beside the admin token, and reaches each translating agent's container alone.
 """
 
 from __future__ import annotations

@@ -170,7 +170,7 @@ the id is a person's own: the terrace's is `world/terrace/secrets/chat.ttl`, a s
 `:sovereign_telegram telegram:chatId "<id>"`. In a group, each person writing states their `telegram:userId`
 id too, so the agent knows who spoke. `orexis-compose` says which file is not there. To ask the terrace
 how it is: write the token and the chat id, `orexis-onboard terrace`, `podman compose up -d`, and send
-`/account` to its bot for its [account](/domain/translation/account.md) as it stands, or a question in
+`/status` to its bot for what it observes, its [askables](/domain/kernel/askable.md)' rows as they stand, or a question in
 words for the model's answer from it; in a group, name the agent you ask, or ask nobody and the one
 whose account answers replies. Where the model answers is `infra/installation.ttl`'s to state; with no
 `onboarding:Model` there, a world with a translating agent is refused.

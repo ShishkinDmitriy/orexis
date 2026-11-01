@@ -27,6 +27,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [sovereign](/domain/kernel/sovereign.md) - Whoever writes a world's documents: picks the ranges and values, never an act. Outside the society.
 * [series](/domain/kernel/series.md) - What a person watches and the agent never reads: observations and metrics, both what the packages' events say, written by a part hearing every signal.
 * [journal](/domain/kernel/journal.md) - An agent's own triplestore of what happened: its events in RDF kept for good, its log kept for a window unless an incident keeps it.
+* [askable](/domain/kernel/askable.md) - A question a person may ask an agent, declared by whoever owns its words, answered from the store by its own select, writing nothing.
 
 # Sensing — bytes become observations, and observations subject beliefs
 
@@ -90,7 +91,6 @@ future is predicted, wants are derived and searched, and the plans are carried o
 # Translation — what a person says
 
 * [translator](/domain/translation/translator.md) - An agent speaking with its chats' people itself: prose heard through a transport member, a statement rendered back through it.
-* [account](/domain/translation/account.md) - What an agent says of itself for a person: each loaded package's select, asked when asked; telemetry, never a belief.
 
 # Speech — what peers say
 

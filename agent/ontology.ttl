@@ -70,6 +70,31 @@ orexis:ActionGraph
     rdfs:label "Action graph" ;
     rdfs:comment "A graph of `orexis:Action` rows — what an agent can do, each with what it takes, when it is available, what it costs and what it adds and retracts — named for what it holds, as every graph class is. A domain ships one (`domains/<name>/actions.ttl`), and the planner reads its actions from these graphs alone rather than from every graph, the vocabularies and the world included. No belief: an action is what the agent can do, read by planning and execution to act, and no possible world is made of it; common, since what can be done is everyone's to read. The 0.1.0 kind of this spelling was also a menu graph; 0.2.0 has no menu." .
 
+orexis:AskableGraph
+    a owl:Class ;
+    rdfs:subClassOf orexis:Graph ;
+    rdfs:label "Askable graph" ;
+    rdfs:comment "A graph of `orexis:Askable` rows — the questions a person may ask an agent about itself, each answered from its store — named for what it holds, as every graph class is. A package ships one beside its ontology (`agent/<package>/askables.ttl`), held only where the package is loaded, and a domain or a world may ship one too. No belief: a question is what the agent can be asked, read by translation alone. The KERNEL'S because the packages that ship one, sensing and execution, may not speak the words of translation, the package that asks (knowledge/decisions/a-question-is-answered-and-every-other-act-is-kept.md)." .
+
+orexis:Askable
+    a owl:Class ;
+    rdfs:subClassOf sh:NodeShape ;
+    rdfs:label "Askable" ;
+    rdfs:comment "A question a person may ask an agent, answered from the agent's own store and writing nothing — FIPA's query-ref, beside the sayable, which is every other act (knowledge/domain/kernel/askable.md). A node shape: `sh:description` what the model is told it answers, `sh:property` each thing the asker may fill, declared as a sayable's fields are, `orexis:reads` the kinds of graph it is handed and `orexis:select` the text the agent runs, each filled field bound into it as a `$` token of its local name. The asker picks it and fills it, and never writes the text nor sees it." .
+
+orexis:reads
+    a owl:ObjectProperty ;
+    rdfs:domain orexis:Askable ;
+    rdfs:label "reads" ;
+    rdfs:comment "A kind of graph an askable's select is handed as its default graph, as every reader states the kinds it reads; several where it reads several." .
+
+orexis:select
+    a owl:DatatypeProperty ;
+    rdfs:domain orexis:Askable ;
+    rdfs:range xsd:string ;
+    rdfs:label "select" ;
+    rdfs:comment "The SELECT an askable is answered by, a row per line of the answer, each column a value the model phrases. A field the asker filled is bound as `$` and its local name; a token no field binds refuses the text." .
+
 orexis:RecordGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;

@@ -112,7 +112,7 @@ CHAT = """@prefix : <http://example.org/orexis/world/terrace#> .
 
 
 def test_the_sovereign_asks_the_agent_through_its_own_bot_and_is_answered_with_what_it_observes(monkeypatch, tmp_path):
-    """A translator: `/account` written in the sovereign's chat reaches the agent through its own bot, and the agent
+    """A translator: `/status` written in the sovereign's chat reaches the agent through its own bot, and the agent
     sends back what it observes — each sensor's latest reading, of what and when — read off its store by sensing's
     select, with no model asked."""
     from agent.transport.mqtt.driver import Mqtt
@@ -122,7 +122,7 @@ def test_the_sovereign_asks_the_agent_through_its_own_bot_and_is_answered_with_w
     monkeypatch.setattr(clock, "now", lambda: NOW)
     world = _with_a_place(tmp_path)
     (world / "secrets" / "chat.ttl").write_text(CHAT)
-    sent, updates = [], [{"update_id": 7, "message": {"chat": {"id": 4242}, "from": {"id": 1}, "text": "/account"}}]
+    sent, updates = [], [{"update_id": 7, "message": {"chat": {"id": 4242}, "from": {"id": 1}, "text": "/status"}}]
 
     def api(url, body):
         if url.endswith("/getUpdates"):

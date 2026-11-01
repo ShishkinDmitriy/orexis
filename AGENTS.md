@@ -919,10 +919,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   no carrier; a person connects by a user agent that `prov:actedOnBehalfOf` them, each agent speaks through a
   `telegram:Bot` of its own (`telegram:hasBot`), and in a group an agent answers when named, keeps silent when another is, and
   answers an unnamed question only where its account speaks to it (chat, translator).
-- **An agent's account is the selects its packages ship, asked when a person asks** — `account.rq` beside a
-  package's ontology, its title and the kinds it reads in its head comments; `/account` is the rows for
-  nothing and a question the model's answer from them; stored nowhere, published nowhere, and a method per
-  part rendered by templates was built and refused (account, an-agent-translates-for-itself).
+- **What an agent says of itself is its askables, answered when a person asks** — an `orexis:Askable` in an
+  `orexis:AskableGraph` beside a package's ontology, its fields filled by the model and its select the
+  package's own; `/status` is the rows of every one that takes no field, for nothing; stored nowhere, published
+  nowhere, and a method per part rendered by templates and selects found by file name were built and refused
+  (askable, a-question-is-answered-and-every-other-act-is-kept).
 - **A question is answered and every other act is kept, and FIPA names the acts** — an askable a
   package declares is answered from the store by its own select and writes nothing, a statement of any other
   act is kept and extracted; a performative term on every statement kind, FIPA's semantics, an envelope and a

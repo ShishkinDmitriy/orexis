@@ -1,7 +1,8 @@
 # two_readings_and_an_intention
 #
-# WHAT AN ACCOUNT IS READ OFF: the probe's two percepts, the later naming the earlier as its previous, the
-# thermometer's one, and an intention standing beside one resolved.
+# WHAT THE ASKABLES ARE ANSWERED FROM: the probe's two percepts, the later naming the earlier as its previous, the
+# thermometer's one, and an intention standing beside one resolved; the two sensors as the world states them, the
+# probe by its label; and one question of the case's own, which takes a field — which sensor's reading.
 #
 # The clock stands at 2026-01-01T12:00:00Z.
 
@@ -12,11 +13,27 @@
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
 
 GRAPH :ontology {
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
   sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
   execution:IntentionGraph rdfs:subClassOf orexis:Graph .
+  orexis:AskableGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :world {
+  :probe a sosa:Sensor ; rdfs:label "the probe" .
+  :thermo a sosa:Sensor .
+}
+
+GRAPH :questions {
+  :reading_of a orexis:Askable , sh:NodeShape ;
+      sh:description "what one sensor last read" ;
+      sh:property [ sh:path :sensor ; sh:class sosa:Sensor ; sh:minCount 1 ; sh:description "which sensor" ] ;
+      orexis:reads sensing:ObservationGraph ;
+      orexis:select """SELECT ?reading ?at WHERE { ?o sosa:madeBySensor $sensor ; sosa:resultTime ?at ;
+          sosa:hasSimpleResult ?reading . FILTER NOT EXISTS { ?later sensing:previous ?o } }""" .
 }
 
 GRAPH :probe_earlier {
@@ -44,4 +61,6 @@ GRAPH :catalogue {
   :probe_latest a sensing:ObservationGraph , orexis:Graph .
   :thermo_latest a sensing:ObservationGraph , orexis:Graph .
   :intentions a execution:IntentionGraph , orexis:Graph .
+  :world a orexis:BeliefGraph , orexis:Graph .
+  :questions a orexis:AskableGraph , orexis:Graph .
 }

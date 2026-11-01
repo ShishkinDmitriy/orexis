@@ -1,0 +1,21 @@
+@prefix : <http://example.org/orexis/sensing#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+<> a orexis:AskableGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A PERSON MAY ASK OF WHAT SENSING OBSERVES, answered from the agent's own percepts and writing nothing
+#  (knowledge/domain/kernel/askable.md). Sensing's words, which only sensing may speak; translation asks.
+
+:observes a orexis:Askable , sh:NodeShape ;
+    sh:description "what each sensor last read: what it observed, of what, the reading and when" ;
+    orexis:reads :ObservationGraph ;
+    #  THE LATEST PERCEPT OF EACH SENSOR, the one no later percept names as its previous, read over every
+    #  observation graph as one, since what was concluded of a percept lives in its revision graph beside it.
+    orexis:select """SELECT ?observed ?of ?reading ?sensor ?at WHERE {
+  ?o sosa:madeBySensor ?sensor ; sosa:resultTime ?at .
+  OPTIONAL { ?o sosa:observedProperty ?observed }
+  OPTIONAL { ?o sosa:hasFeatureOfInterest ?of }
+  OPTIONAL { ?o sosa:hasSimpleResult ?reading }
+  FILTER NOT EXISTS { ?later sensing:previous ?o } }
+ORDER BY ?sensor""" .
