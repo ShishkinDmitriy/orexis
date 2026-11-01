@@ -61,14 +61,13 @@ metrics are served by no store (knowledge/domain/translation/translator.md).
 from __future__ import annotations
 
 import argparse
-import ast
 import logging
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
 
-from agent.runtime import EMAIL, KERNEL, TELEGRAM, documents, every_package, extra_of, known, packages_of, world_of
+from agent.runtime import EMAIL, KERNEL, TELEGRAM, documents, extra_of, known, packages_of, world_of
+from agent.tree import closed, dependency_files, imported, kept, packages as tree_packages, sources as tree_sources
 from agent.metrics.window import INTERVAL_KEY
 from agent.series import HISTORY, METRICS
 from agent.store import document, graphs_of, kinds_in, rows, whose
@@ -91,51 +90,6 @@ SERIES, SIMULATION = "series", "simulation"
 _PYPROJECT = Path(__file__).resolve().parents[1] / "pyproject.toml"
 
 
-def declared_extras() -> frozenset[str]:
-    """Every extra the distribution declares: the units that bring a library of their own."""
-    config = tomllib.loads(_PYPROJECT.read_text())
-    return frozenset(config["project"].get("optional-dependencies", {}))
-
-
-def _imported(package: str) -> set[str]:
-    """The packages whose code `package`'s code imports — planning runs belief's transition machine — by
-    the `agent.<package>` modules its files name, its tests apart."""
-    every = set(every_package())
-    out = set()
-    for path in sorted((KERNEL / package).rglob("*.py")):
-        if "tests" in path.relative_to(KERNEL / package).parts:
-            continue
-        for node in ast.walk(ast.parse(path.read_text())):
-            names = ([a.name for a in node.names] if isinstance(node, ast.Import)
-                     else [node.module] if isinstance(node, ast.ImportFrom) and node.module and not node.level else [])
-            for name in names:
-                parts = name.split(".")
-                if parts[0] == "agent":
-                    out |= {"/".join(parts[1:n]) for n in range(2, len(parts) + 1)} & every
-    return out - {package}
-
-
-def extras_of(world: str, agent_id: str, series: bool) -> tuple[str, ...]:
-    """The extras `agent_id`'s image is built with: each package it loads, and each whose code those import,
-    that brings a library, by the package's extra; and the series writer's where the installation serves a
-    store it writes to."""
-    loaded, seen = list(packages_of(reading.boot(world_dir(world), agent_id, others=reading.ours()))), set()
-    while loaded:
-        package = loaded.pop()
-        if package not in seen:
-            seen.add(package)
-            loaded += sorted(_imported(package))
-    declared = declared_extras()
-    return tuple(sorted({extra_of(p) for p in seen if extra_of(p) in declared} | ({SERIES} if series else set())))
-
-
-def _image(extras) -> str:
-    """The image and the build that makes it: tagged by its extras, so two agents loading the same
-    packages share one, and an agent loading none that bring a library runs the core alone."""
-    tag = IMAGE + ("-" + ".".join(extras) if extras else "")
-    return (f"image: {tag}\n    build:\n      context: ../..\n      dockerfile: Containerfile\n      args:\n"
-            f"        # the extras of the packages it loads, and nothing else's (pyproject.toml)\n"
-            f'        EXTRAS: "{",".join(extras)}"')
 TRANSLATION = "translation"
 BELIEF = "http://example.org/orexis#BeliefGraph"
 
@@ -150,6 +104,58 @@ ORDER BY ?id ?broker"""
 #  through on Telegram.
 _BOT_Q = """
 SELECT ?url WHERE { $agent <http://example.org/orexis/telegram#hasBot> ?bot . ?bot <https://schema.org/url> ?url } ORDER BY ?url"""
+
+
+def declared_extras() -> frozenset[str]:
+    """Every extra the distribution declares: the units that bring a library of their own, each from its file."""
+    return frozenset(dependency_files(_PYPROJECT))
+
+
+@dataclass(frozen=True)
+class Image:
+    """What one container is built from: the packages of `agent/` it holds, and the extras those bring."""
+    tag: str
+    packages: tuple[str, ...]
+    extras: tuple[str, ...]
+    simulator: bool = False
+
+    def build(self) -> str:
+        """The service's image and the build that makes it, its own: the Containerfile handed the packages to
+        keep and the extras to install (knowledge/decisions/a-package-brings-its-own-dependencies.md)."""
+        return (f"image: {self.tag}\n    build:\n      context: ../..\n      dockerfile: Containerfile\n      args:\n"
+                f"        # the packages it runs and what they bring beyond the core, and nothing else's\n"
+                f'        PACKAGES: "{",".join(self.packages)}"\n'
+                f'        EXTRAS: "{",".join(self.extras)}"\n'
+                f'        SIMULATOR: "{"yes" if self.simulator else "no"}"')
+
+    def mounts(self) -> str:
+        """The trees mounted over what the image copies, so a code change needs a restart and no rebuild — the
+        agent tree entry by entry as the image keeps it (`agent.tree.kept`), the domains, the simulator's own."""
+        lines = [f"\n      - ../../agent/{rel}:/app/agent/{rel}:ro" for rel in kept(self.packages, KERNEL)]
+        lines.append("\n      - ../../domains:/app/domains:ro")
+        if self.simulator:
+            lines.append("\n      - ../../simulation:/app/simulation:ro")
+        return "".join(lines)
+
+
+def _extras(packages, series: bool, *also: str) -> tuple[str, ...]:
+    declared = declared_extras()
+    return tuple(sorted({extra_of(p) for p in packages if extra_of(p) in declared} | ({SERIES} if series else set())
+                        | set(also)))
+
+
+def image_of(world: str, agent_id: str, series: bool) -> Image:
+    """`agent_id`'s own image: every package it loads and every package whose code those import, by
+    `agent.tree.closed`, and the extras they bring — the series writer's where the installation serves a store."""
+    packages = tuple(closed(packages_of(reading.boot(world_dir(world), agent_id, others=reading.ours()))))
+    return Image(f"orexis-{world}-{agent_id}:local", packages, _extras(packages, series))
+
+
+def simulator_image(world: str) -> Image:
+    """The simulator's own image: the packages of the agent tree its code imports, and its extra."""
+    packages = tuple(closed(sorted(imported(tree_sources(REPO_ROOT / "simulation"), set(tree_packages(KERNEL))))))
+    return Image(f"orexis-{world}-simulation:local", packages, _extras(packages, False, SIMULATION), simulator=True)
+
 
 #  THE CLIENT THE SIMULATOR CONNECTS AS: whichever hosts the systems no one built.
 _SIMULATED_Q = """
@@ -246,9 +252,10 @@ def translating(world: str, agent_id: str) -> Translating | None:
 
 
 def _simulator(world: str, read: set[Path], client: str, host: str, plain: int) -> str:
+    image = simulator_image(world)
     return f"""
   simulation:
-    {_image((SIMULATION,))}
+    {image.build()}
     command: ["python", "-m", "simulation", "/app/world/{world}"]
     environment:
       MQTT_HOST: "{host}"
@@ -259,10 +266,7 @@ def _simulator(world: str, read: set[Path], client: str, host: str, plain: int) 
     network_mode: host
     userns_mode: "keep-id:uid=10001,gid=10001"
     restart: unless-stopped
-    volumes:{_documents(world, read)}
-      - ../../agent:/app/agent:ro
-      - ../../domains:/app/domains:ro
-      - ../../simulation:/app/simulation:ro
+    volumes:{_documents(world, read)}{image.mounts()}
 """
 
 
@@ -292,7 +296,7 @@ def _restart(lasting: bool) -> str:
 def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, str]] | None,
              series: dict[str, tuple[str, str]], window: float | None, lasting: bool, journal: str | None = None,
              incidents: tuple[str | None, list[str]] = (None, []), translates: Translating | None = None,
-             extras: tuple[str, ...] = ()) -> str:
+             image: Image | None = None) -> str:
     """An agent's service. `bus` is each broker the agent is connected to, by its IRI, with the url
     it reaches it at — TLS where the broker listens so, since an agent of a world with a bus holds a
     certificate — or None where the world has none, and then nothing of a bus is written: no
@@ -344,7 +348,7 @@ def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, st
                   f"      # mounted into THIS container alone — the world has no bus, so no broker credential{credentials}")
     return f"""
   agent-{agent_id}:
-    {_image(extras)}
+    {image.build()}
     command: ["orexis-agent", "/app/world/{world}", "{agent_id}", "--volume", "/app/state", "--journal", "/app/journal"]
     environment:{where}
       # where each series it writes goes, and the org — the store the installation says serves each
@@ -362,11 +366,9 @@ def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, st
       # its journal, a store of its own beside the beliefs and apart from them
       - orexis-{world}-{agent_id}-journal:/app/journal
       # the world's documents, file by file, at the path its imports of the domains resolve from{_documents(world, read, agent_id)}{certificates}
-      # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME ones
-      # the Containerfile copies, which `tests/test_layout.py` holds the two lists to.
-      - ../../agent:/app/agent:ro
-      - ../../domains:/app/domains:ro
-      - ../../simulation:/app/simulation:ro
+      # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME entries its
+      # image keeps, the kernel and its own packages and no other's, which `tests/test_layout.py` holds
+      # to `agent.tree.kept`.{image.mounts()}
 """
 
 
@@ -442,7 +444,7 @@ def render(world: str) -> str:
                 + (_simulator(world, read, client, *broker_of(world, client)[:2]) if client else "")
                 + "".join(_service(a, world, read, reached.get(a, []) if bus else None, series, window,
                                    reading.lasts(world_dir(world), a), installation.journal(iris[a]), counted,
-                                   translating(world, a), extras_of(world, a, bool(series)))
+                                   translating(world, a), image_of(world, a, bool(series)))
                           for a in who))
     volumes = ("".join(f"  orexis-{world}-{service_of(b)}:\n" for b in sorted(bus))
                + "".join(f"  orexis-{world}-{a}:\n  orexis-{world}-{a}-journal:\n" for a in who))

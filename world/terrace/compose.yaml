@@ -40,13 +40,15 @@ services:
       - orexis-terrace-mosquitto-broker:/var/lib/mosquitto
 
   agent-terrace:
-    image: orexis:local-belief.series.transport-mqtt
+    image: orexis-terrace-terrace:local
     build:
       context: ../..
       dockerfile: Containerfile
       args:
-        # the extras of the packages it loads, and nothing else's (pyproject.toml)
+        # the packages it runs and what they bring beyond the core, and nothing else's
+        PACKAGES: "belief,prediction,sensing,speech,translation,transport/http,transport/mqtt,transport/telegram"
         EXTRAS: "belief,series,transport-mqtt"
+        SIMULATOR: "no"
     command: ["orexis-agent", "/app/world/terrace", "terrace", "--volume", "/app/state", "--journal", "/app/journal"]
     environment:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
@@ -98,11 +100,33 @@ services:
       - ./secrets/terrace.crt:/app/secrets/agent.crt:ro
       - ./secrets/terrace.key:/app/secrets/agent.key:ro
       - ./secrets/ca.crt:/app/secrets/ca.crt:ro
-      # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME ones
-      # the Containerfile copies, which `tests/test_layout.py` holds the two lists to.
-      - ../../agent:/app/agent:ro
+      # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME entries its
+      # image keeps, the kernel and its own packages and no other's, which `tests/test_layout.py` holds
+      # to `agent.tree.kept`.
+      - ../../agent/belief:/app/agent/belief:ro
+      - ../../agent/clock.py:/app/agent/clock.py:ro
+      - ../../agent/hash_named_graph.py:/app/agent/hash_named_graph.py:ro
+      - ../../agent/history:/app/agent/history:ro
+      - ../../agent/journal.py:/app/agent/journal.py:ro
+      - ../../agent/lifecycle.py:/app/agent/lifecycle.py:ro
+      - ../../agent/metrics:/app/agent/metrics:ro
+      - ../../agent/ontology.py:/app/agent/ontology.py:ro
+      - ../../agent/ontology.ttl:/app/agent/ontology.ttl:ro
+      - ../../agent/prediction:/app/agent/prediction:ro
+      - ../../agent/runtime.py:/app/agent/runtime.py:ro
+      - ../../agent/sensing:/app/agent/sensing:ro
+      - ../../agent/series.dependencies.txt:/app/agent/series.dependencies.txt:ro
+      - ../../agent/series.py:/app/agent/series.py:ro
+      - ../../agent/speech:/app/agent/speech:ro
+      - ../../agent/stance.py:/app/agent/stance.py:ro
+      - ../../agent/store.py:/app/agent/store.py:ro
+      - ../../agent/translation:/app/agent/translation:ro
+      - ../../agent/transport/http:/app/agent/transport/http:ro
+      - ../../agent/transport/mqtt:/app/agent/transport/mqtt:ro
+      - ../../agent/transport/telegram:/app/agent/transport/telegram:ro
+      - ../../agent/transport/transport.py:/app/agent/transport/transport.py:ro
+      - ../../agent/tree.py:/app/agent/tree.py:ro
       - ../../domains:/app/domains:ro
-      - ../../simulation:/app/simulation:ro
 
 volumes:
   orexis-terrace-mosquitto-broker:

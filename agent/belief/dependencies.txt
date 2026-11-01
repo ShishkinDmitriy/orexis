@@ -1,0 +1,2 @@
+#  what belief brings beyond the core: rdflib's own grammar library, where a transition's update is read by rdflib's productions
+pyparsing>=3.1

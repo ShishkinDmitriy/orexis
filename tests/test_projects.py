@@ -1,6 +1,7 @@
 """The root distribution declares exactly what its own trees import, and each unit its own: the core is the
 kernel's, and a package that needs a library brings it as an extra named for its directory
-(knowledge/decisions/a-package-brings-its-own-dependencies.md).
+(knowledge/decisions/a-package-brings-its-own-dependencies.md), in a `dependencies.txt` beside it, which
+the pyproject reads; a package with none is the core's.
 
 `orexis` is one distribution: the agent, the operator's tools and the simulator. What keeps its
 dependency list worth reading is something holding it to the imports. Nothing did once, and two
@@ -90,8 +91,14 @@ def _specs(specs) -> set[str]:
 
 
 def extras(pyproject: Path) -> dict[str, set[str]]:
-    config = tomllib.loads(pyproject.read_text())
-    return {name: _specs(specs) for name, specs in config["project"].get("optional-dependencies", {}).items()}
+    """Each extra the distribution declares and what it brings, read off its unit's own file."""
+    from agent.tree import dependency_files
+
+    out = {}
+    for name, path in dependency_files(pyproject).items():
+        lines = [line.split("#", 1)[0].strip() for line in (REPO_ROOT / path).read_text().splitlines()]
+        out[name] = _specs([line for line in lines if line])
+    return out
 
 
 #  THE KERNEL: `agent/*.py`, beside the packages. Its series writer is a unit of its own, since it imports
@@ -100,15 +107,17 @@ KERNEL = REPO_ROOT / "agent"
 SERIES = KERNEL / "series.py"
 
 
-def units() -> dict[str, list[Path]]:
-    """Every unit that may bring a library of its own, by the extra it would bring it as: each package of
-    `agent/`, its directory with `/` read as `-`, the series writer, the simulator and onboarding."""
+def units() -> dict[str, tuple[list[Path], str]]:
+    """Every unit that may bring a library of its own, by the extra it would bring it as, with its sources and
+    where its dependency file is: each package of `agent/`, its directory with `/` read as `-` and the file
+    beside its ontology; the series writer, beside `series.py`; the simulator and onboarding, at their roots."""
     from agent.runtime import every_package, extra_of
+    from agent.tree import DEPENDENCIES
 
-    out = {extra_of(package): sources(KERNEL / package) for package in every_package()}
-    out["series"] = [SERIES]
+    out = {extra_of(package): (sources(KERNEL / package), f"agent/{package}/{DEPENDENCIES}") for package in every_package()}
+    out["series"] = ([SERIES], "agent/series.dependencies.txt")
     for tree in ("simulation", "onboarding"):
-        out[tree] = sources(REPO_ROOT / tree)
+        out[tree] = (sources(REPO_ROOT / tree), f"{tree}/{DEPENDENCIES}")
     return out
 
 
@@ -128,11 +137,19 @@ def test_every_unit_brings_exactly_what_it_imports_beyond_the_core_as_its_own_ex
     unit imports beyond the core, both ways, and a unit that needs nothing beyond the core has none."""
     core, declared_extras, found = declared(REPO_ROOT / "pyproject.toml"), extras(REPO_ROOT / "pyproject.toml"), units()
     assert {"transport-mqtt", "series", "belief", "simulation", "onboarding"} <= set(found), sorted(found)
+    from agent.tree import dependency_files
+
+    files = dependency_files(REPO_ROOT / "pyproject.toml")
     wrong = {}
-    for name, files in sorted(found.items()):
-        want, have = needed(files) - core, declared_extras.get(name, set())
+    for name, (sources_of, beside) in sorted(found.items()):
+        want, have = needed(sources_of) - core, declared_extras.get(name, set())
         if want != have:
             wrong[name] = {"missing": sorted(want - have), "unused": sorted(have - want)}
+        if name in files and files[name] != beside:
+            wrong[name] = {"file": f"{files[name]}, where it belongs beside its unit: {beside}"}
+        if (REPO_ROOT / beside).exists() != (name in files):
+            wrong[name] = {"file": f"{beside} {'is' if (REPO_ROOT / beside).exists() else 'is not'} there, and the "
+                                   f"pyproject {'does not read' if name not in files else 'reads'} it"}
     assert not wrong, f"an extra is out of step with what its unit imports beyond the core: {wrong}"
     assert set(declared_extras) - {"dev"} <= set(found), f"an extra names no unit: {sorted(set(declared_extras) - {'dev'} - set(found))}"
 
@@ -140,11 +157,13 @@ def test_every_unit_brings_exactly_what_it_imports_beyond_the_core_as_its_own_ex
 def test_a_developers_install_carries_every_units_extra():
     """`dev` installs every unit's extra, so a developer's environment and CI run every test of every
     package; the image installs only the extras of the packages its agent loads."""
-    config = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text())
-    dev = config["project"]["optional-dependencies"]["dev"]
+    from agent.tree import dependency_files
+
+    files = dependency_files(REPO_ROOT / "pyproject.toml")
+    dev = [line.split("#", 1)[0].strip() for line in (REPO_ROOT / files["dev"]).read_text().splitlines()]
     carried = {name for spec in dev if normalise(spec).startswith("orexis[")
                for name in spec[spec.index("[") + 1:spec.index("]")].split(",")}
-    assert carried == set(config["project"]["optional-dependencies"]) - {"dev"}, sorted(carried)
+    assert carried == set(files) - {"dev"}, sorted(carried)
 
 
 def test_the_distribution_ships_exactly_its_own_trees():

@@ -209,7 +209,7 @@ Authoring a world, ratifying it, and what an amendment may do to a running agent
 * [a-replay-is-the-history-drawn-by-the-package-that-decides-it](/decisions/a-replay-is-the-history-drawn-by-the-package-that-decides-it.md) - A domain draws its world and a package what it decided, as Preact components; superseded in part by the journal.
 * [the-journal-is-the-agents-flight-recorder](/decisions/the-journal-is-the-agents-flight-recorder.md) - Each agent keeps its events in RDF and its log for the last minutes, in a store of its own served over SPARQL.
 * [the-model-compiles-a-routine-and-is-called-back-at-its-edges](/decisions/the-model-compiles-a-routine-and-is-called-back-at-its-edges.md) - A one-time task is the model's and a routine an agent's; the model drafts the world and stands at run time only at three edges.
-* [a-package-brings-its-own-dependencies](/decisions/a-package-brings-its-own-dependencies.md) - The core is the kernel's two libraries; a package brings its own as an extra, and an agent's image installs its packages' extras alone.
+* [a-package-brings-its-own-dependencies](/decisions/a-package-brings-its-own-dependencies.md) - The core is the kernel's two libraries; a package brings its own in a file beside it; each agent's image holds only what it runs.
 
 # Gates and guards
 

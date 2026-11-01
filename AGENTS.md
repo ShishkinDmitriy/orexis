@@ -928,10 +928,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   package declares is answered from the store by its own select and writes nothing, a statement of any other
   act is kept and extracted; a performative term on every statement kind, FIPA's semantics, an envelope and a
   protocol engine were refused, a protocol being what the actions' preconditions allow (a-question-is-answered-and-every-other-act-is-kept).
-- **The core is the kernel's dependencies, and a package brings its own as an extra named for its directory** —
-  `orexis[transport-mqtt]` for paho, `orexis[belief]` for pyparsing; `tests/test_projects.py` holds each both
-  ways, and an agent's image is built with the extras of the packages it loads and those they import; a
-  distribution per package and one image carrying every library were refused (a-package-brings-its-own-dependencies).
+- **The core is the kernel's dependencies, a package brings its own in a `dependencies.txt` beside its ontology,
+  and each agent's image holds only what it runs** — the file is the package's extra, named for its directory,
+  and a package with none is the core's; `orexis-compose` builds `orexis-<world>-<agent>:local` with the agent's
+  packages, those their code imports and what they bring, and mounts the same entries (`agent.tree.kept`); a
+  distribution per package and one image carrying everything were refused (a-package-brings-its-own-dependencies).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
   `crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming an
   absent file or a CRL past its `nextUpdate` refuses the whole society and not the one agent; and

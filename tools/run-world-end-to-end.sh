@@ -96,7 +96,7 @@ import sys, yaml
 source, target, pace, epoch = sys.argv[1:]
 services = yaml.safe_load(open(source))["services"]
 clocked = {name: {"environment": {"OREXIS_TIME_PACE": pace, "OREXIS_TIME_EPOCH": epoch}}
-           for name, service in services.items() if str(service.get("image", "")).startswith("orexis:local")}
+           for name, service in services.items() if "PACKAGES" in (service.get("build") or {}).get("args", {})}
 yaml.safe_dump({"services": clocked}, open(target, "w"))
 EOF
 agents=$(python3 -c "import sys,yaml; print(' '.join(n for n in yaml.safe_load(open(sys.argv[1]))['services'] if n.startswith('agent-')))" "$dir/compose.yaml")

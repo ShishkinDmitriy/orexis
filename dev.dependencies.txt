@@ -1,0 +1,6 @@
+#  a developer's install: the runner and its plugins, the gate's yaml, and every unit's extra, so every test runs
+pytest>=8
+import-linter>=2
+pytest-xdist>=3
+pyyaml>=6
+orexis[belief,transport-mqtt,series,simulation,onboarding]

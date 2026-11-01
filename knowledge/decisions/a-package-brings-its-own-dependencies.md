@@ -1,65 +1,79 @@
 ---
 type: Decision
-title: A package brings its own dependencies as an extra, and an agent's image installs the extras of the packages it loads
+title: A package brings its own dependencies in a file beside it, and each agent's image holds only what it runs
 status: accepted
 timestamp: 2026-11-01T14:00:00Z
 description: >-
-  The sovereign's ruling of 2026-11-01 - the core has a minimal set of dependencies, and a package may
-  bring its own. The distribution's dependencies are the kernel's alone, pyoxigraph and rdflib; a package
-  of agent/ that imports a library declares it as an extra named for its directory, transport-mqtt for
-  paho, belief for pyparsing, as do the series writer, the simulator and onboarding. tests/test_projects.py
-  holds the core to the kernel's imports and each extra to its unit's, both ways. orexis-compose builds
-  each agent's image with the extras of every package it loads and every package those import, tagged by
-  them, and the runtime refuses a loaded package whose library is missing by naming the extra. Refused - a
-  distribution per package, one image carrying every library, and the standard library alone as a rule.
+  The sovereign's ruling of 2026-11-01 - the core has a minimal set of dependencies, a package may bring
+  its own, and each agent has its own image. The distribution's dependencies are the kernel's alone,
+  pyoxigraph and rdflib; a package that imports a library says so in a dependencies.txt beside its
+  ontology, which the pyproject reads as the package's extra, named for its directory, and a package with
+  none is the core's. tests/test_projects.py holds the core to the kernel's imports and each file to its
+  unit's, both ways. orexis-compose gives each agent an image of its own, holding the kernel, the packages
+  it loads and those their code imports, and the libraries those bring, and mounts the same entries, so a
+  container holds no code its agent does not run. Refused - a pyproject and a distribution per package,
+  one image carrying every library and every package, and the standard library alone as a rule.
 ---
 
 # The question
 
 Every agent's image installed one list: `pyoxigraph`, `rdflib`, `pyparsing`, `paho-mqtt`,
-`influxdb-client`, `cryptography` and `python-dotenv`. The MQTT client was in the container of an agent
-on no bus, and `cryptography` and `python-dotenv`, imported by onboarding alone, in every agent's. Telegram,
-email, HTTP and the model client had been written on the standard library so as to add nothing, which was a
-habit and no rule. The sovereign asked for something structural: a core with a minimal set, and a package
-allowed to bring its own.
+`influxdb-client`, `cryptography` and `python-dotenv` — the MQTT client in an agent on no bus, and onboarding's
+own libraries in every agent — and copied the whole of `agent/`, so an observer's container held the planner.
+Telegram, email, HTTP and the model client had been written on the standard library so as to add nothing, which
+was a habit and no rule. The sovereign asked for a core with a minimal set, a package allowed to bring its own,
+and then an image of its own for each agent.
 
 # What was decided
 
-**The core is the kernel's.** The distribution's `dependencies` are what `agent/*.py` imports — the
-store's engine and rdflib — and nothing else.
+**The core is the kernel's.** The distribution's `dependencies` are what `agent/*.py` imports — the store's
+engine and rdflib — and nothing else.
 
-**A package brings a library as an extra named for its directory**: `transport/mqtt` is
-`orexis[transport-mqtt]`, `belief` is `orexis[belief]`. Three units beside the packages do the same: the
-kernel's series writer, `series`, which imports its client only where a store is named; the simulator; and
-onboarding, which runs every package's code and so carries belief's. `dev` carries every extra, so a
-developer's environment and CI run every test. `tests/test_projects.py` holds the core to the kernel's
-imports and each extra to what its unit imports beyond the core, both ways, so an extra cannot outlive its
-last import or a package import what it does not declare.
+**A package says what it brings in a file beside it**, `dependencies.txt` next to its ontology, and the root
+pyproject reads each such file as the package's extra, named for its directory: `agent/transport/mqtt/` is
+`orexis[transport-mqtt]`, `agent/belief/` is `orexis[belief]`. A package with no file is the core's and brings
+nothing. Three units beside the packages do the same: the kernel's series writer, `series.dependencies.txt`
+beside `series.py`, whose client is imported only where a store is named; the simulator; and onboarding, which
+runs every package's code and so carries belief's. `dev.dependencies.txt` carries every extra, so a developer's
+environment and CI run every test. `tests/test_projects.py` holds the core to the kernel's imports, each file to
+what its unit imports beyond the core, both ways, and a file to the place beside its unit.
 
-**An agent's image installs what its packages bring, and nothing else.** `orexis-compose` reads which
-packages an agent loads, closes them over the packages their code imports — planning runs belief's
-transition machine, so a planner carries belief's extra — adds the series writer's where the installation
-serves a store, and writes the service's build with those extras, its image tagged by them. Two agents
-loading the same packages share an image; the terrace runs `orexis:local-belief.series.transport-mqtt`,
-hanoi `orexis:local-belief.series`. The `Containerfile` takes them as `EXTRAS`.
+**Each agent has an image of its own, holding only what it runs.** `orexis-compose` reads which packages an
+agent loads, closes them over the packages their code imports (`agent.tree.closed`: planning runs belief's
+transition machine, so a planner holds belief), and writes the agent's service a build of its own,
+`orexis-<world>-<agent>:local`, handed those packages and the extras they bring, the series writer's where the
+installation serves a store. The `Containerfile` builds in two stages: the first runs `python -m agent.tree`,
+the standard library alone, to lay out the kernel, the packages named and the domains, with the dependency
+files of what the image holds; the second installs those extras and copies that layout. An observer's
+container holds no planning code and an agent on no bus no MQTT client. The simulator has an image of its own
+the same way, holding the packages its code imports.
 
-**A library missing is refused by name.** A loaded package whose library the install lacks stops the boot
-saying which extra brings it, rather than a `ModuleNotFoundError` from inside a member's `connect`.
+**A code change still needs only a restart.** A service mounts what its image keeps, entry by entry
+(`agent.tree.kept`) — the kernel's modules, `history/`, `metrics/`, a family's own files and the agent's
+packages — and `tests/test_layout.py` holds every committed service's mounts to it.
+
+**What is missing is refused by name.** A role whose package the image does not hold stops the boot saying so,
+and a loaded package whose library the install lacks names the extra that brings it, rather than a
+`ModuleNotFoundError` from inside a member's `connect`. The kernel spells the roles it names, since the
+prefixes it finds are only the packages present.
 
 # What was refused
 
-- **A distribution per package**, each directory its own `pyproject.toml`. It is the most separate, and it
-  would turn one tree into twenty-odd projects to version and install together, which is what 0.1.0 had
-  and retired ([one-tree-and-one-mechanic](/decisions/one-tree-and-one-mechanic.md)). An extra is the
-  packaging standard's own way for one distribution to carry optional parts.
-- **One image carrying every library.** It was the arrangement, and it is what the ruling refuses: each
-  agent holding code its roles never run, and the image growing with every package anyone adds.
-- **The standard library alone, as a rule.** It keeps a thin HTTP member to one `urllib` call, and it stays
-  the habit for those; as a rule it would forbid a wire, a serial line or a vision library, which need
-  what the standard library has not.
+- **A pyproject and a distribution per package.** The sovereign weighed it, a package with its own
+  `pyproject.toml` installable alone, and took the file beside the package instead: the tree stays one
+  distribution, one version and one install, and 0.1.0's twenty-five distributions are what that alternative
+  was before it was retired ([one-tree-and-one-mechanic](/decisions/one-tree-and-one-mechanic.md)). The trigger
+  for revisiting is a package wanted outside this tree, installed into someone else's agent.
+- **One image carrying every library and every package.** It was the arrangement, and it is what the ruling
+  refuses: each agent holding code its roles never run, and every image growing with every package anyone adds.
+- **An image per set of extras, shared.** Built first in #1045 and replaced the same day: agents loading the
+  same packages share the build cache all the same, so a tag of its own costs a step and names the container's
+  image for what it is.
+- **The standard library alone, as a rule.** It keeps a thin HTTP member to one `urllib` call, and stays the
+  habit for those; as a rule it would forbid a wire, a serial line or a vision library.
 
 # Seams left open
 
-- **System packages.** An extra carries Python distributions; a transport over a serial line or I2C may
-  need a device node or a system library, which no extra installs.
-- **Versions.** Extras pin lower bounds as the core does; no lock file holds an image to one resolution.
+- **System packages.** A dependency file carries Python distributions; a transport over a serial line or I2C
+  may need a device node or a system library, which no extra installs.
+- **Versions.** The files pin lower bounds as the core does; no lock file holds an image to one resolution.

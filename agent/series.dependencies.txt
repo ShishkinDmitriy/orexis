@@ -1,0 +1,2 @@
+#  what the kernel's series writer brings beyond the core, imported only where a store is named
+influxdb-client>=1.40

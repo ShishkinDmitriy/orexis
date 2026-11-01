@@ -202,8 +202,11 @@ MINE = "?me orexis:plays/sensing:sensor ?sensor ."
 #    `td:hasForm`) — a service it fetches, a forecast.
 #  Every word here is a T-Box term and the world's things are variables, so nothing here names an
 #  instance (rule 1).
-OBSERVER, SPEAKER = NAMESPACES["sensing"] + "Observer", NAMESPACES["speech"] + "Speaker"
-TRANSLATOR = NAMESPACES["translation"] + "Translator"
+#  SPELLED, NOT LOOKED UP: `NAMESPACES` holds the prefixes of the packages present, and an image holds only its
+#  agent's (`agent.tree.kept`), so a role of a package an image lacks is still a term the kernel can name.
+_PACKAGE_TERMS = "http://example.org/orexis/"
+OBSERVER, SPEAKER = _PACKAGE_TERMS + "sensing#Observer", _PACKAGE_TERMS + "speech#Speaker"
+TRANSLATOR = _PACKAGE_TERMS + "translation#Translator"
 #  A CHAT THE AGENT IS IN, through a channel of the kind a member carries (`speech:Chat`).
 _IN_A_CHAT = "?chat speech:participant ?me ; speech:channel ?channel . "
 TRANSPORTS = {
@@ -442,6 +445,12 @@ def _put_documents(store: ox.Store, world: Path, agent_id: str | None = None,
         if more:
             also, passed = _put(store, world, more, passed)
             own += _owned(store, also)
+        #  A PACKAGE AN IMAGE DOES NOT HOLD is refused, not passed over: an image holds its agent's packages alone
+        #  (`agent.tree.kept`), and a role it plays whose package is absent would run nothing for it, silently.
+        absent = [package for package in loaded if not (KERNEL / package).is_dir()]
+        if absent:
+            raise RuntimeError(f"{agent_id} plays a role whose package this tree does not hold: {', '.join(absent)} — "
+                               "the image was built for other roles; regenerate the compose file and build again")
         if loaded:
             log.info("%s loads %s", agent_id, ", ".join(loaded))
         else:

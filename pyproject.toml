@@ -5,6 +5,7 @@ license = "MIT"
 license-files = ["LICENSE"]
 description = "Orexis — a market society of agents that bid for a scarce resource"
 requires-python = ">=3.10"
+dynamic = ["optional-dependencies"]
 
 # `orexis` is the agent, the operator's tools and the simulator — the three trees at the repo
 # root — and one distribution. Every name below is imported by one of them, and
@@ -18,24 +19,20 @@ dependencies = [
     "rdflib>=7",
 ]
 
-[project.optional-dependencies]
-#  ONE EXTRA PER UNIT THAT BRINGS A LIBRARY OF ITS OWN: a package of `agent/` by its directory, `/` read as
-#  `-`; `series`, the kernel's writer of history and metrics, whose client is imported only where a store
-#  is named; the simulator; and onboarding, the operator's tools. tests/test_projects.py holds each to
-#  exactly what its unit imports beyond the core, and `orexis-compose` builds each agent's image with the
-#  extras of the packages it loads.
-#  belief: rdflib's own grammar library, where a transition's update is read by rdflib's productions.
-belief = ["pyparsing>=3.1"]
-transport-mqtt = ["paho-mqtt>=2.0"]
-series = ["influxdb-client>=1.40"]
-simulation = ["paho-mqtt>=2.0"]
-#  pyshacl: onboarding holds a world to its vocabularies' shapes (#838), and nothing in an agent does.
-#  and it runs every package's code beside its own, planning's and belief's among them.
-onboarding = ["pyshacl>=0.30", "cryptography>=42", "python-dotenv>=1.0", "influxdb-client>=1.40", "orexis[belief]"]
-#  pyyaml: the bundle's gate parses every document's frontmatter with it. And every unit's own, so a
-#  developer's install runs every test.
-dev = ["pytest>=8", "import-linter>=2", "pytest-xdist>=3", "pyyaml>=6",
-       "orexis[belief,transport-mqtt,series,simulation,onboarding]"]
+#  ONE EXTRA PER UNIT THAT BRINGS A LIBRARY OF ITS OWN, read from the unit's own file: a package of `agent/`
+#  says what it brings in a `dependencies.txt` beside its ontology, and is the core's where it has none; its
+#  extra is its directory, `/` read as `-`. Beside the packages: `series`, the kernel's writer of history and
+#  metrics, whose client is imported only where a store is named; the simulator; onboarding, the operator's
+#  tools; and `dev`. tests/test_projects.py holds each file to exactly what its unit imports beyond the core,
+#  and every unit with something beyond the core to a file, and `orexis-compose` builds each agent's image
+#  with the extras of the packages it loads (knowledge/decisions/a-package-brings-its-own-dependencies.md).
+[tool.setuptools.dynamic.optional-dependencies]
+belief = { file = ["agent/belief/dependencies.txt"] }
+transport-mqtt = { file = ["agent/transport/mqtt/dependencies.txt"] }
+series = { file = ["agent/series.dependencies.txt"] }
+simulation = { file = ["simulation/dependencies.txt"] }
+onboarding = { file = ["onboarding/dependencies.txt"] }
+dev = { file = ["dev.dependencies.txt"] }
 
 [project.scripts]
 # The agent. One process, one agent, told only its own id.
