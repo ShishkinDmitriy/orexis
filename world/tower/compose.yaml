@@ -16,7 +16,13 @@ x-podman:
 services:
 
   agent-mover:
-    image: orexis:local
+    image: orexis:local-belief.series
+    build:
+      context: ../..
+      dockerfile: Containerfile
+      args:
+        # the extras of the packages it loads, and nothing else's (pyproject.toml)
+        EXTRAS: "belief,series"
     command: ["orexis-agent", "/app/world/tower", "mover", "--volume", "/app/state", "--journal", "/app/journal"]
     environment:
       # where each series it writes goes, and the org — the store the installation says serves each

@@ -40,7 +40,13 @@ services:
       - orexis-greenhouse-mosquitto-broker:/var/lib/mosquitto
 
   simulation:
-    image: orexis:local
+    image: orexis:local-simulation
+    build:
+      context: ../..
+      dockerfile: Containerfile
+      args:
+        # the extras of the packages it loads, and nothing else's (pyproject.toml)
+        EXTRAS: "simulation"
     command: ["python", "-m", "simulation", "/app/world/greenhouse"]
     environment:
       MQTT_HOST: "localhost"
@@ -60,7 +66,13 @@ services:
       - ../../simulation:/app/simulation:ro
 
   agent-grower:
-    image: orexis:local
+    image: orexis:local-belief.series.transport-mqtt
+    build:
+      context: ../..
+      dockerfile: Containerfile
+      args:
+        # the extras of the packages it loads, and nothing else's (pyproject.toml)
+        EXTRAS: "belief,series,transport-mqtt"
     command: ["orexis-agent", "/app/world/greenhouse", "grower", "--volume", "/app/state", "--journal", "/app/journal"]
     environment:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,

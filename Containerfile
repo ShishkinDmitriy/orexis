@@ -1,7 +1,11 @@
-# One image, every agent. Which agent a container IS comes from the id its command is given —
-# the single identifier a process has always been told. Nothing is baked in per agent.
+# One Containerfile, an image per set of extras. Which agent a container IS comes from the id its
+# command is given — the single identifier a process has always been told. What is baked in is the
+# libraries its packages bring: `EXTRAS` names the extras of every package the agent loads, and
+# `orexis-compose` writes each service's build with them, so an agent on no bus carries no MQTT
+# client (knowledge/decisions/a-package-brings-its-own-dependencies.md).
 #
-#   podman build -t orexis:local .
+#   podman build -t orexis:local .                                            # the core alone
+#   podman build -t orexis:local-transport-mqtt --build-arg EXTRAS=transport-mqtt .
 #
 # THE COPY LIST IS THE BOUNDARY. There is one distribution, so nothing about pip keeps the
 # operator's tools out of an agent: `onboarding/` is absent because it is not named below, and
@@ -17,10 +21,11 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /app
 
 # Dependencies first, so editing the agent does not reinstall the world. This layer holds the
-# THIRD-PARTY set — pyoxigraph, rdflib, paho and the rest — and changes only when the root's
-# dependency list does.
+# THIRD-PARTY set — the core's, pyoxigraph and rdflib, and the extras named — and changes only when
+# the root's dependency lists or the extras do.
+ARG EXTRAS=""
 COPY pyproject.toml pyproject.toml
-RUN pip install "setuptools>=68" && pip install -e .
+RUN pip install "setuptools>=68" && pip install -e ".${EXTRAS:+[$EXTRAS]}"
 
 # Everything an agent runs, and nothing else: the runtime, the domains its worlds import — a world
 # is mounted at /app/world/<name>, so its `owl:imports <../../domains/...>` resolve to

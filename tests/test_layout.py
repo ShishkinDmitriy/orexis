@@ -1176,6 +1176,21 @@ def test_a_world_graph_states_no_wiring_and_only_a_deployment_graph_an_address()
     assert not wrong, "\n".join(wrong)
 
 
+def test_an_agents_image_carries_the_extras_of_the_packages_it_loads_and_of_those_they_import():
+    """The core is the kernel's alone, so an agent's image is built with the extras its packages bring: the
+    terrace's observer on the bus carries the MQTT client, hanoi's planner none — and belief's, since
+    planning runs belief's transition machine — and two agents loading the same packages share one image."""
+    from onboarding import compose
+
+    assert compose.extras_of("terrace", "terrace", series=True) == ("belief", "series", "transport-mqtt")
+    assert compose.extras_of("hanoi", "hanoi", series=False) == ("belief",), "planning imports belief's code"
+    image = compose._image(("belief", "series"))
+    assert image.startswith("image: orexis:local-belief.series\n    build:") and 'EXTRAS: "belief,series"' in image
+    assert compose._image(()).startswith("image: orexis:local\n"), "no extra, the core alone"
+    rendered = (REPO_ROOT / "world" / "terrace" / "compose.yaml").read_text()
+    assert "image: orexis:local-belief.series.transport-mqtt" in rendered and "image: orexis:local-simulation" not in rendered
+
+
 def test_a_committed_compose_file_is_what_onboarding_renders():
     """A compose file says GENERATED — do not edit, and nothing held it to that. It is what hands a
     container its documents, so one left behind by a change to the documents boots an agent that

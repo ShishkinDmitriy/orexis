@@ -10,24 +10,32 @@ requires-python = ">=3.10"
 # root — and one distribution. Every name below is imported by one of them, and
 # tests/test_projects.py holds this list to exactly what those trees import, both ways.
 dependencies = [
-    #  the store's engine, and rdflib where a shape is compiled or a graph compared
+    #  THE CORE'S, AND NOTHING ELSE: the store's engine, and rdflib where a shape is compiled or a graph
+    #  compared — what `agent/*.py`, the kernel, imports. A package that needs a library of its own brings
+    #  it as an extra below, named for its directory, so an agent that loads no such package installs none
+    #  of it (knowledge/decisions/a-package-brings-its-own-dependencies.md).
     "pyoxigraph",
     "rdflib>=7",
-    #  rdflib's own grammar library, where a transition's update is read by rdflib's productions
-    "pyparsing>=3.1",
-    "python-dotenv>=1.0",
-    "cryptography>=42",
-    #  the series store and the bus, reached by the runtime and the operator's tools
-    "influxdb-client>=1.40",
-    "paho-mqtt>=2.0",
 ]
 
 [project.optional-dependencies]
-# pyyaml: the bundle's gate parses every document's frontmatter with it.
-# pyshacl: onboarding holds a world to its vocabularies' shapes (#838), and nothing in an agent does,
-# so it is an extra the image never installs.
-onboarding = ["pyshacl>=0.30"]
-dev = ["pytest>=8", "import-linter>=2", "pytest-xdist>=3", "pyshacl>=0.30", "pyyaml>=6"]
+#  ONE EXTRA PER UNIT THAT BRINGS A LIBRARY OF ITS OWN: a package of `agent/` by its directory, `/` read as
+#  `-`; `series`, the kernel's writer of history and metrics, whose client is imported only where a store
+#  is named; the simulator; and onboarding, the operator's tools. tests/test_projects.py holds each to
+#  exactly what its unit imports beyond the core, and `orexis-compose` builds each agent's image with the
+#  extras of the packages it loads.
+#  belief: rdflib's own grammar library, where a transition's update is read by rdflib's productions.
+belief = ["pyparsing>=3.1"]
+transport-mqtt = ["paho-mqtt>=2.0"]
+series = ["influxdb-client>=1.40"]
+simulation = ["paho-mqtt>=2.0"]
+#  pyshacl: onboarding holds a world to its vocabularies' shapes (#838), and nothing in an agent does.
+#  and it runs every package's code beside its own, planning's and belief's among them.
+onboarding = ["pyshacl>=0.30", "cryptography>=42", "python-dotenv>=1.0", "influxdb-client>=1.40", "orexis[belief]"]
+#  pyyaml: the bundle's gate parses every document's frontmatter with it. And every unit's own, so a
+#  developer's install runs every test.
+dev = ["pytest>=8", "import-linter>=2", "pytest-xdist>=3", "pyyaml>=6",
+       "orexis[belief,transport-mqtt,series,simulation,onboarding]"]
 
 [project.scripts]
 # The agent. One process, one agent, told only its own id.

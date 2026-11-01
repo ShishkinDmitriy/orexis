@@ -223,10 +223,13 @@ podman compose restart
 ```
 
 Rebuild only when a **dependency** changes (`pyproject.toml`) or you added a file the
-image copies rather than mounts:
+image copies rather than mounts. Each agent's service says how its image is built — tagged by the
+extras of the packages it loads, `orexis:local-belief.series.transport-mqtt` for the terrace, and built
+with them ([a-package-brings-its-own-dependencies](/decisions/a-package-brings-its-own-dependencies.md)) —
+so compose builds what is missing and rebuilds on asking:
 
 ```bash
-podman build -t orexis:local .
+podman compose build
 podman compose up -d --force-recreate
 ```
 

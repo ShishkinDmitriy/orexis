@@ -777,7 +777,10 @@ class Runtime:
                 continue
             if importlib.util.find_spec(name) is None:
                 continue
-            self.parts[package] = importlib.import_module(name).create(self)
+            try:
+                self.parts[package] = importlib.import_module(name).create(self)
+            except ModuleNotFoundError as exc:
+                raise _unprovided(package, exc) from exc
         if transport is not None:
             self.parts["transport"] = transport
         for part in self.parts.values():
@@ -800,6 +803,22 @@ class Runtime:
             return
         self.passed.emit(Passed(duration_s=round(took, 6), **self._laps.spent, quads=len(self.beliefs),
                                 uptime_s=round(time.perf_counter() - _STARTED, 3)))
+
+
+def extra_of(package: str) -> str:
+    """The extra a package brings its own libraries as, named for its directory: `transport/mqtt` is
+    `orexis[transport-mqtt]` (knowledge/decisions/a-package-brings-its-own-dependencies.md)."""
+    return package.replace("/", "-")
+
+
+def _unprovided(package: str, exc: ModuleNotFoundError) -> Exception:
+    """A loaded package whose library this install lacks, said with the extra that brings it; a module of
+    the tree's own that is missing is no install's fault, and is raised as it is."""
+    if exc.name and exc.name.split(".")[0] in ("agent", "onboarding", "simulation"):
+        return exc
+    return RuntimeError(f"{package} is loaded for a role this agent plays and needs `{exc.name}`, which this "
+                        f"install lacks: it is the package's own, `pip install 'orexis[{extra_of(package)}]'`, "
+                        f"or regenerate the compose file, whose build carries every loaded package's extras")
 
 
 def world_name(world: Path) -> str:
