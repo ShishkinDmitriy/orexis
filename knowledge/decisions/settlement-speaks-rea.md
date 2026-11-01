@@ -104,7 +104,8 @@ against the **supplier**, not a command naming a valve. Only the noun changes.
 - **Nothing imports `vf:`, so nothing is interoperable.** An outside tool reading a world learns
   nothing from this record. If external legibility is ever wanted, importing is a separate decision
   with the closure cost attached, and the mapping above is what it would implement.
-- **FIPA's interaction protocols are unread.** Whether our round matches an established
+- ~~**FIPA's interaction protocols are unread.**~~ Read in [a-question-is-answered-and-every-other-act-is-kept](/decisions/a-question-is-answered-and-every-other-act-is-kept.md): the round is
+  Contract Net, sealed and multi-award, and FIPA names its acts. Whether our round matches an established
   choreography — and what it should call its messages — is open, and it is the cheapest remaining
   reuse.
 - **`vf:Process` has no counterpart here.** Watering is arguably a conversion of a resource, and

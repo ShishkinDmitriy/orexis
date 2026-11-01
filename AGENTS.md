@@ -923,6 +923,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   package's ontology, its title and the kinds it reads in its head comments; `/account` is the rows for
   nothing and a question the model's answer from them; stored nowhere, published nowhere, and a method per
   part rendered by templates was built and refused (account, an-agent-translates-for-itself).
+- **A question is answered and every other act is kept, and FIPA names the acts** — an askable a
+  package declares is answered from the store by its own select and writes nothing, a statement of any other
+  act is kept and extracted; a performative term on every statement kind, FIPA's semantics, an envelope and a
+  protocol engine were refused, a protocol being what the actions' preconditions allow (a-question-is-answered-and-every-other-act-is-kept).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
   `crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming an
   absent file or a CRL past its `nextUpdate` refuses the whole society and not the one agent; and

@@ -16,6 +16,10 @@ description: >-
   a method of every part rendered by templates and published retained.
 ---
 
+> **Amended 2026-11-01:** the account is askables — `orexis:Askable`, a question a package declares and
+> the agent answers from its store — found in the store by kind, and the model is offered sayables and
+> askables in one call; `/account` becomes `/status` ([a-question-is-answered-and-every-other-act-is-kept](/decisions/a-question-is-answered-and-every-other-act-is-kept.md)).
+
 # The question
 
 #1043 first shipped the translator as the account record left it: a process of the world beside the
