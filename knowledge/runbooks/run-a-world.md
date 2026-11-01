@@ -152,28 +152,9 @@ documents. Each container mounts exactly one store credential per purpose — it
 world's documents the common ones and those that say they are its agent's; the simulator's, the
 common ones alone.
 
-An agent in a **chat** is a [translator](/domain/translation/translator.md), and that needs files
-nothing can mint. Once per machine, where the language model is paid for:
-
-```bash
-cp infra/model.env.example infra/secrets/model.env    # which model, and the key. Never committed
-```
-
-and per translating agent, a secret for each carrier its chats go through: its bot's token where one
-goes through Telegram, `world/<name>/secrets/telegram-<agent>.env` with `TELEGRAM_BOT_TOKEN` from
-`@BotFather`, one bot per agent; and its mailbox where one goes by email,
-`world/<name>/secrets/mail-<agent>.env` with `MAIL_ADDRESS`, `MAIL_PASSWORD`, `MAIL_IMAP_HOST`,
-`MAIL_SMTP_HOST` and the ports where not 993 and 465. A person on Telegram writes to the agent's bot
-once — or adds the bots of several agents to one group — their chat id appears in the bot's
-`getUpdates`, and the world states it as the chat's `telegram:chatId`, in a document under `secrets/` where
-the id is a person's own: the terrace's is `world/terrace/secrets/chat.ttl`, a society graph saying
-`:sovereign_telegram telegram:chatId "<id>"`. In a group, each person writing states their `telegram:userId`
-id too, so the agent knows who spoke. `orexis-compose` says which file is not there. To ask the terrace
-how it is: write the token and the chat id, `orexis-onboard terrace`, `podman compose up -d`, and send
-`/status` to its bot for what it observes, its [askables](/domain/speech/askable.md)' rows as they stand, or a question in
-words for the model's answer from it; in a group, name the agent you ask, or ask nobody and the one
-whose account answers replies. Where the model answers is `infra/installation.ttl`'s to state; with no
-`onboarding:Model` there, a world with a translating agent is refused.
+An agent in a **chat** is a [translator](/domain/translation/translator.md), and needs a model's key,
+a bot's token and the chat's id that nothing can mint: [chat-with-an-agent](/runbooks/chat-with-an-agent.md)
+says what to write where, and how to ask the terrace how it is.
 
 # Monitor a world, or stop
 

@@ -11,6 +11,7 @@ How to actually operate a society: bring one into existence, run it, and take it
 * [add-a-planner](/runbooks/add-a-planner.md) - Something to pursue: a desire or a want with its met-test, the domain's actions, the devices commanded, and the budget.
 * [add-a-market](/runbooks/add-a-market.md) - A venue, the host holding its good and the bidders buying it, their inbox topics, and the desires that make them trade.
 * [run-a-world](/runbooks/run-a-world.md) - Deploy, up, down, logs, and what to do after a code change. One container per agent, generated from the world.
+* [chat-with-an-agent](/runbooks/chat-with-an-agent.md) - A bot's token, the model's key and the chat's id in the world's secrets, then `/status` or a question; and a group of several agents' bots.
 * [add-a-domain](/runbooks/add-a-domain.md) - A directory of documents under `domains/`: its words, actions, shapes and rules, each text declaring its prefixes.
 * [measure-the-search](/runbooks/measure-the-search.md) - Time the planner on its bench, record a row in the ledger, and alternate A/B in one session.
 * [measure-a-pass](/runbooks/measure-a-pass.md) - Time a whole agent's pass on the greenhouse by its own laps, held to what the pass did, and record it in the pass ledger.
