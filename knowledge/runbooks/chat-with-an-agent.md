@@ -74,13 +74,15 @@ its log that it has no model for anything else.
 
 ```bash
 orexis-onboard terrace          # the ACL, the compose file — now mounting secrets/chat.ttl — and the rest
-cd world/terrace && podman compose up -d
+cd world/terrace && podman compose build && podman compose up -d
 ```
 
 The compose file mounts a document under `secrets/` only where it exists when it is rendered, so run
 `orexis-onboard` after writing `chat.ttl`; the committed `compose.yaml` then differs from yours, which
-is #860. The agent's code is mounted from the tree and Telegram and email use the standard library, so
-no image is rebuilt for this.
+is #860. Each agent runs an image holding only its own packages and what they bring
+([a-package-brings-its-own-dependencies](/decisions/a-package-brings-its-own-dependencies.md)), so
+build the terrace's once before its first start, and again only when a package it runs changes what it
+brings; a change to the code alone is mounted from the tree and needs a restart.
 
 # Check it is listening
 
