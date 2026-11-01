@@ -19,7 +19,8 @@ from agent.runtime import Runtime, boot
 from agent.speech.events import Told
 from agent.speech.ontology import STATEMENT_GRAPH
 from agent.store import graphs_of, rows
-from agent.translation.create import ANSWER_SYSTEM, HEAR_SYSTEM, SAY_SYSTEM, SILENT, UNADDRESSED
+from agent.translation.chat import chats_of
+from agent.translation.create import ANSWER_SYSTEM, HEAR_SYSTEM, SAY_SYSTEM, SILENT, UNADDRESSED, WRITING_S
 from agent.translation.model import Answer
 from agent.translation.sayable import document_of, sayables
 from agent.translation.shape import NOTHING
@@ -38,6 +39,7 @@ class Bot(Transport):
     def __init__(self):
         self.prose = Signal("prose")
         self.said: list[tuple[str, str]] = []
+        self.writing: list[str] = []
         self.replies: list[str | None] = []
 
     def handle(self, store, channel, payload, at, *, memo=None):
@@ -48,6 +50,10 @@ class Bot(Transport):
     def say_to(self, store, channel, text, *, reply=None):
         self.said.append((channel, text))
         self.replies.append(reply)
+        return True
+
+    def writing_in(self, store, channel):
+        self.writing.append(channel)
         return True
 
 
@@ -180,3 +186,48 @@ def test_what_the_agent_says_to_a_person_is_rendered_and_sent_through_their_chat
     assert bot.said == [(V + "clara_telegram", part.model.text)], "her own chat, not the household's group she is in too"
     part.told(Told(V + "keeper", statement))
     assert len(part.model.asked) == 1, "a document to an agent is the bus's, not translation's"
+
+
+def test_the_person_sees_the_agent_writing_from_the_words_heard_to_the_answer_said(seeker):
+    runtime, part, bot = seeker
+    shown = []
+
+    class Slow(StandIn):
+        def ask(self, system, text, tools=(), tool_choice=None):
+            shown.append((list(bot.writing), dict(part.writing)))
+            return super().ask(system, text, tools, tool_choice)
+    part.model = Slow(call=(NOTHING, {"why": "a question"}), text="The seeker has nothing to say yet.")
+    _write(runtime, V + "clara_telegram", "what are you doing?")
+    assert [w for w, _ in shown] == [[V + "clara_telegram"]] * 2, "shown before the model is asked"
+    assert all(len(p) == 1 for _, p in shown), "and still while the model answers"
+    assert bot.said == [(V + "clara_telegram", "The seeker has nothing to say yet.")] and part.writing == {}, \
+        "and shown no more once the answer is said"
+    part.model = StandIn(text=SILENT)
+    _write(runtime, V + "household_telegram", "is anyone watching the plants?", V + "clara")
+    assert bot.writing == [V + "clara_telegram"], "unaddressed in a group the agent may keep silent, so it shows nothing"
+
+
+def test_an_answer_still_thought_is_shown_again_every_while(seeker):
+    runtime, part, bot = seeker
+    chat = next(c for c in chats_of(runtime.beliefs) if c.channel == V + "clara_telegram")
+    part.writing[chat.iri] = [chat, 1]
+    part._still_writing()
+    assert bot.writing == [V + "clara_telegram"] and WRITING_S < 5, "within the five seconds Telegram shows it for"
+
+
+def test_a_model_that_fails_says_so_in_the_chat_where_the_agent_was_addressed(seeker, caplog):
+    runtime, part, bot = seeker
+
+    class Refusing(StandIn):
+        def ask(self, system, text, tools=(), tool_choice=None):
+            raise OSError("HTTP Error 401: Unauthorized")
+    part.model = Refusing()
+    _write(runtime, V + "clara_telegram", "what are you doing?")
+    runtime.run(passes=1, poll_s=0)
+    assert bot.said == [(V + "clara_telegram", "seeker could not answer: its model would not answer "
+                                               "(HTTP Error 401: Unauthorized).")]
+    assert part.writing == {} and "could not answer Clara" in caplog.text
+    bot.said.clear()
+    _write(runtime, V + "household_telegram", "is anyone watching the plants?", V + "clara")
+    runtime.run(passes=1, poll_s=0)
+    assert bot.said == [], "unaddressed in a group, a failure is the log's alone"

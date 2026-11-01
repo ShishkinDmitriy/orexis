@@ -16,7 +16,8 @@ reply to someone else and not the bot are addressed to them. Which account is th
 one person every word is the agent's, and nothing is said.
 
 **IT SENDS.** `say_to` posts `sendMessage` to a chat the world names by its id, as a reply to the message it names
-where it names one, and is False for any other channel.
+where it names one, and is False for any other channel; `writing_in` posts `sendChatAction` with
+`typing` there, which Telegram shows for five seconds or until the message.
 """
 
 from __future__ import annotations
@@ -174,14 +175,26 @@ class Telegram(Transport):
         return [(None, graph) for graph in self.prose.emit(prose)]
 
     def say_to(self, store, channel: str, text: str, *, reply: str | None = None) -> bool:
+        body = {"text": text}
+        if reply is not None:
+            body["reply_parameters"] = {"message_id": int(reply), "allow_sending_without_reply": True}
+        return self._post(store, channel, "sendMessage", body)
+
+    def writing_in(self, store, channel: str) -> bool:
+        return self._post(store, channel, "sendChatAction", {"action": "typing"})
+
+    def _post(self, store, channel: str, method: str, body: dict) -> bool:
+        """`method` posted to the chat the world names `channel` by its id; False where it names none, or the API
+        refuses or fails."""
         found = rows(store, _ID_Q, graphs_of(store, BELIEF, common=True), chat=channel)
         if not found:
             return False
-        body = {"chat_id": found[0]["id"], "text": text}
-        if reply is not None:
-            body["reply_parameters"] = {"message_id": int(reply), "allow_sending_without_reply": True}
-        answer = self.call(self._method("sendMessage"), body)
+        try:
+            answer = self.call(self._method(method), {"chat_id": found[0]["id"], **body})
+        except Exception as exc:                                         # noqa: BLE001 — the api fails
+            log.warning("%s: the bot would not answer %s: %s", local_of(self.me), method, exc)
+            return False
         if not answer.get("ok", True):
-            log.warning("telegram would not take a message for %s: %s", local_of(channel), answer.get("description", answer))
+            log.warning("telegram would not take a %s for %s: %s", method, local_of(channel), answer.get("description", answer))
             return False
         return True

@@ -149,6 +149,22 @@ def test_what_the_agent_says_goes_to_send_message_with_the_chats_id(bot):
     assert driver.say_to(store, TEST + "anna_mail", "x") is False, "a channel that is no Telegram chat is not this member's"
 
 
+def test_the_agent_is_shown_writing_by_a_chat_action_with_the_chats_id(bot):
+    store, driver, api, _ = bot
+    assert driver.writing_in(store, TEST + "anna_telegram") is True
+    assert api.calls == [("sendChatAction", {"chat_id": "4242", "action": "typing"})]
+    assert driver.writing_in(store, TEST + "anna_mail") is False
+
+
+def test_an_api_that_fails_sends_nothing_and_raises_nothing(bot, caplog):
+    store, _, _, _ = bot
+
+    def failing(url, body):
+        raise OSError("unreachable")
+    driver = Telegram(TEST + "keeper", "123:abc", call=failing)
+    assert driver.say_to(store, TEST + "anna_telegram", "x") is False and "unreachable" in caplog.text
+
+
 def test_connect_refuses_an_agent_with_no_token():
     with pytest.raises(RuntimeError, match="no TELEGRAM_BOT_TOKEN"):
         Telegram.connect(TEST + "keeper", environ={})

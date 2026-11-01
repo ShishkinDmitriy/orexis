@@ -13,7 +13,7 @@ from agent.transport.transport import Transport, Transports
 def test_the_contract_is_connect_open_handle_cadence_nudge_tell_and_say_and_nothing_about_bytes():
     names = {n for n, v in vars(Transport).items() if not n.startswith("_") and (callable(v) or isinstance(v, classmethod))}
     assert names == {"connect", "start", "stop", "open", "handle", "reaches", "set_cadence", "sense_now", "actuate", "tell",
-                     "command", "tell_to", "say_to"}
+                     "command", "tell_to", "say_to", "writing_in"}
     assert "parse" not in names, "bytes to number is sensing's pipeline"
     assert "claims" not in names, "whether a member is loaded is the runtime's to read, before it is imported"
     with pytest.raises(NotImplementedError):
