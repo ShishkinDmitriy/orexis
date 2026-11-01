@@ -1,6 +1,6 @@
 """The Telegram driver: an agent's own bot, answering the transport family's contract over the Bot API.
 
-**THE BOT IS THE AGENT'S.** It is the account the agent speaks through on Telegram (`telegram:bot`), its token
+**THE BOT IS THE AGENT'S.** It is the account the agent speaks through on Telegram (`telegram:hasBot`), its token
 `TELEGRAM_BOT_TOKEN` and where the API answers `TELEGRAM_URL`, both environment, the standard library alone between
 them. A group with several agents holds several bots, each its agent's, so each speaks in its own name.
 
@@ -35,9 +35,9 @@ POLL_S = 3.0
 TIMEOUT_S = 30.0
 
 #  WHICH CHAT A MESSAGE IS ON, and which person wrote it: the chat by the id the API names it, the person by theirs.
-_CHAT_Q = "SELECT ?chat WHERE { ?chat a telegram:Chat ; telegram:id ?id FILTER (STR(?id) = $id) }"
-_USER_Q = "SELECT ?person WHERE { ?person telegram:user ?id FILTER (STR(?id) = $id) }"
-_ID_Q = "SELECT ?id WHERE { $chat a telegram:Chat ; telegram:id ?id }"
+_CHAT_Q = "SELECT ?chat WHERE { ?chat a telegram:Chat ; telegram:chatId ?id FILTER (STR(?id) = $id) }"
+_USER_Q = "SELECT ?person WHERE { ?person telegram:userId ?id FILTER (STR(?id) = $id) }"
+_ID_Q = "SELECT ?id WHERE { $chat a telegram:Chat ; telegram:chatId ?id }"
 
 
 def _call(url: str, body: dict) -> dict:

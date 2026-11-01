@@ -211,7 +211,7 @@ TRANSPORTS = {
            SPEAKER: "?me mqtt4ssn:listensToTopic ?topic",
            TRANSLATOR: _IN_A_CHAT + "?channel a mqtt4ssn:Topic"},
     HTTP: {OBSERVER: f"{MINE} ?sensor td:hasForm ?form"},
-    TELEGRAM: {TRANSLATOR: "?me telegram:bot ?bot"},
+    TELEGRAM: {TRANSLATOR: "?me telegram:hasBot ?bot"},
     EMAIL: {TRANSLATOR: _IN_A_CHAT + "?channel schema:email ?address"},
 }
 #  WHAT WATCHES THE AGENT: a package created where the environment names a store for it, or a journal is kept,

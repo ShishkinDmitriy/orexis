@@ -22,12 +22,12 @@
     mqtt4ssn:hasClientID "terrace" ;
     mqtt4ssn:isConnectedToBroker :broker ;
     orexis:actsFor :terrace_bed , :terrace_battery ;
-    telegram:bot :terrace_bot .
+    telegram:hasBot :terrace_bot .
 :terrace_bot a telegram:Bot .            # where it answers is deployment.ttl's, its token secrets/telegram-terrace.env
 
 #  THE SOVEREIGN, reached in a Telegram chat through the agent's bot. The chat's id is theirs, so it is
 #  stated in secrets/chat.ttl, which git does not hold, as the terrace's place is: a society graph saying
-#  `:sovereign_telegram telegram:id "<the id getUpdates shows>"`.
+#  `:sovereign_telegram telegram:chatId "<the id getUpdates shows>"`.
 :dmitrii a schema:Person ;
     schema:name "Dmitrii" .
 

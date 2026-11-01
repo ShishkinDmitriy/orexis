@@ -42,7 +42,7 @@ def test_every_module_has_a_test_named_for_it():
 
 def test_every_telegram_word_spoken_anywhere_is_one_the_ontology_declares():
     declared = set(re.findall(r"^telegram:(\w+) a ", (HERE / "ontology.ttl").read_text(), re.M))
-    assert declared >= {"Chat", "Bot", "id", "bot", "user"}, declared
+    assert declared >= {"Chat", "Bot", "chatId", "hasBot", "userId"}, declared
     spoken = {}
     for path in [*(ROOT / "agent").rglob("*"), *(ROOT / "onboarding").rglob("*"), *(ROOT / "world").rglob("*")]:
         if path.suffix in (".py", ".ttl", ".trig", ".rq") and ".venv" not in path.parts:

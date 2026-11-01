@@ -82,11 +82,11 @@ address is public and is read off the world, not told
 
 # The member that ships: Telegram
 
-The agent's own bot, `telegram:bot`, its token `TELEGRAM_BOT_TOKEN` and where the API answers
+The agent's own bot, the `telegram:Bot` it `telegram:hasBot`, its token `TELEGRAM_BOT_TOKEN` and where the API answers
 `TELEGRAM_URL`, over the standard library. Started, it asks `getUpdates` every few seconds from the
 offset past the last update seen, on a thread of its own; a text message's channel is its chat's id,
-which the world states as a `telegram:Chat`'s `telegram:id`, and who wrote is the person the world
-says writes as that `telegram:user`. A message in a chat the world names none of is dropped and said
+which the world states as a `telegram:Chat`'s `telegram:chatId`, and who wrote is the person the world
+states under that `telegram:userId`. A message in a chat the world names none of is dropped and said
 once. `say_to` posts `sendMessage` with the chat's id. Its words are its own ontology's
 (`agent/transport/telegram/ontology.ttl`).
 

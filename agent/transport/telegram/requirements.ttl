@@ -13,11 +13,11 @@
 #  Telegram reaches it through a bot of its own.
 [] a sh:NodeShape ;
     sh:targetClass telegram:Chat ;
-    sh:property [ sh:path telegram:id ; sh:maxCount 1 ; sh:message "a Telegram chat has one id, which the Bot API names it by" ] .
+    sh:property [ sh:path telegram:chatId ; sh:maxCount 1 ; sh:message "a Telegram chat has one id, which the Bot API names it by" ] .
 
 [] a sh:NodeShape ;
-    sh:targetSubjectsOf telegram:user ;
-    sh:property [ sh:path telegram:user ; sh:maxCount 1 ; sh:message "a person writes as one Telegram user" ] .
+    sh:targetSubjectsOf telegram:userId ;
+    sh:property [ sh:path telegram:userId ; sh:maxCount 1 ; sh:message "a person writes as one Telegram user" ] .
 
 [] a sh:NodeShape ;
     sh:targetClass telegram:Bot ;
@@ -30,4 +30,4 @@
         sh:message "has {?agent} in it on Telegram, which speaks through no bot of its own" ;
         sh:select """PREFIX telegram: <http://example.org/orexis/telegram#>
 SELECT $this ?agent WHERE { $this speech:channel ?c ; speech:participant ?agent . ?c a telegram:Chat . ?agent a orexis:Agent .
-  FILTER NOT EXISTS { ?agent telegram:bot ?bot } }""" ] .
+  FILTER NOT EXISTS { ?agent telegram:hasBot ?bot } }""" ] .

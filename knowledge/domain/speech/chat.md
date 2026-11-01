@@ -39,8 +39,9 @@ A person does not connect to the bus; a **user agent** does, a client of the soc
 `prov:actedOnBehalfOf` them — a phone, a terminal, an app — with a client id and a credential of its own,
 as a board has. The agent in the chat publishes on its topic too, each message saying who said it, and
 skips its own when the broker hands it back. On Telegram each agent speaks through a **bot** of its own,
-`telegram:bot`, as a client is connected to a broker: where the bot answers is the deployment's, its token
-a secret of the agent's; a person writes as a `telegram:user`, which tells who spoke in a group.
+`<agent> telegram:hasBot <bot>`, as a client is connected to a broker: where the bot answers is the
+deployment's, its token a secret of the agent's; a person writes under a `telegram:userId`, which tells
+who spoke in a group.
 
 # What is derived from it
 

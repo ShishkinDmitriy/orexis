@@ -917,7 +917,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A chat is who speaks with whom through what, and the channel's type is the carrier** — `speech:Chat` with
   its participants and one channel, a topic, a contact point with an email or a `telegram:Chat`, speech naming
   no carrier; a person connects by a user agent that `prov:actedOnBehalfOf` them, each agent speaks through a
-  `telegram:bot` of its own, and in a group an agent answers when named, keeps silent when another is, and
+  `telegram:Bot` of its own (`telegram:hasBot`), and in a group an agent answers when named, keeps silent when another is, and
   answers an unnamed question only where its account speaks to it (chat, translator).
 - **An agent's account is the selects its packages ship, asked when a person asks** — `account.rq` beside a
   package's ontology, its title and the kinds it reads in its head comments; `/account` is the rows for

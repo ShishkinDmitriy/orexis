@@ -107,7 +107,7 @@ CHAT = """@prefix : <http://example.org/orexis/world/terrace#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix telegram: <http://example.org/orexis/telegram#> .
 <> a orexis:SocietyGraph .
-:sovereign_telegram telegram:id "4242" .
+:sovereign_telegram telegram:chatId "4242" .
 """
 
 

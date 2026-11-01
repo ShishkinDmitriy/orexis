@@ -16,7 +16,7 @@
 :seeker_and_boris a speech:Chat ; speech:participant :seeker , :boris ; speech:channel :boris_topic .
 
 :seeker_and_clara a speech:Chat ; speech:participant :seeker , :clara ; speech:channel :clara_telegram .
-:clara_telegram a telegram:Chat ; telegram:id "4815162342" .
+:clara_telegram a telegram:Chat ; telegram:chatId "4815162342" .
 
 :household a speech:Chat ; speech:participant :seeker , :keeper , :anna , :clara ; speech:channel :household_telegram .
-:household_telegram a telegram:Chat ; telegram:id "-1001" .
+:household_telegram a telegram:Chat ; telegram:chatId "-1001" .

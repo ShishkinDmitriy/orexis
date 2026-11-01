@@ -165,9 +165,9 @@ goes through Telegram, `world/<name>/secrets/telegram-<agent>.env` with `TELEGRA
 `world/<name>/secrets/mail-<agent>.env` with `MAIL_ADDRESS`, `MAIL_PASSWORD`, `MAIL_IMAP_HOST`,
 `MAIL_SMTP_HOST` and the ports where not 993 and 465. A person on Telegram writes to the agent's bot
 once — or adds the bots of several agents to one group — their chat id appears in the bot's
-`getUpdates`, and the world states it as the chat's `telegram:id`, in a document under `secrets/` where
+`getUpdates`, and the world states it as the chat's `telegram:chatId`, in a document under `secrets/` where
 the id is a person's own: the terrace's is `world/terrace/secrets/chat.ttl`, a society graph saying
-`:sovereign_telegram telegram:id "<id>"`. In a group, each person writing states their `telegram:user`
+`:sovereign_telegram telegram:chatId "<id>"`. In a group, each person writing states their `telegram:userId`
 id too, so the agent knows who spoke. `orexis-compose` says which file is not there. To ask the terrace
 how it is: write the token and the chat id, `orexis-onboard terrace`, `podman compose up -d`, and send
 `/account` to its bot for its [account](/domain/translation/account.md) as it stands, or a question in

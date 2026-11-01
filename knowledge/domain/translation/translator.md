@@ -14,7 +14,7 @@ description: >-
 ```turtle
 :seeker a orexis:Self ;
     orexis:plays [ a translation:Translator ] , [ a belief:Deliberator ] .
-:seeker telegram:bot :seeker_bot .
+:seeker telegram:hasBot :seeker_bot .
 ```
 
 A **translator** is an agent that stands in its own [chats](/domain/speech/chat.md), declared in its

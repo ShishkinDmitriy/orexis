@@ -94,7 +94,7 @@ ORDER BY ?id ?broker"""
 #  WHERE AN AGENT'S BOT ANSWERS: the `schema:url` the world's deployment graph states on the bot the agent speaks
 #  through on Telegram.
 _BOT_Q = """
-SELECT ?url WHERE { $agent <http://example.org/orexis/telegram#bot> ?bot . ?bot <https://schema.org/url> ?url } ORDER BY ?url"""
+SELECT ?url WHERE { $agent <http://example.org/orexis/telegram#hasBot> ?bot . ?bot <https://schema.org/url> ?url } ORDER BY ?url"""
 
 #  THE CLIENT THE SIMULATOR CONNECTS AS: whichever hosts the systems no one built.
 _SIMULATED_Q = """

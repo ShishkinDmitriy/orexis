@@ -150,7 +150,7 @@ def test_an_agent_declaring_no_role_loads_nothing_and_runs_nothing(tmp_path, cap
 _ON_A_TOPIC = _PROBE + ":probe mqtt4ssn:observesTopic :readings .\n"
 _LISTENS = ":me mqtt4ssn:listensToTopic :inbox .\n"
 _A_FORM = ":pot schema:containedInPlace :balcony . :weather a sosa:Sensor ; sosa:isHostedBy :balcony ; td:hasForm [] .\n"
-_A_BOT = ":me telegram:bot :bot . :bot a telegram:Bot .\n"
+_A_BOT = ":me telegram:hasBot :bot . :bot a telegram:Bot .\n"
 _BY_EMAIL = ":chat a speech:Chat ; speech:participant :me , :anna ; speech:channel :mail . :mail schema:email \"anna@example.org\" .\n"
 _OVER_A_TOPIC = ":chat a speech:Chat ; speech:participant :me , :anna ; speech:channel :topic . :topic a mqtt4ssn:Topic .\n"
 TRANSPORTS = {

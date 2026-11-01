@@ -18,15 +18,15 @@ GRAPH :ontology {
 }
 
 GRAPH :world {
-  :keeper a orexis:Agent ; orexis:localId "keeper" ; telegram:bot :keeper_bot .
-  :peer a orexis:Agent ; orexis:localId "peer" ; telegram:bot :peer_bot .
+  :keeper a orexis:Agent ; orexis:localId "keeper" ; telegram:hasBot :keeper_bot .
+  :peer a orexis:Agent ; orexis:localId "peer" ; telegram:hasBot :peer_bot .
   :keeper_bot a telegram:Bot .
   :peer_bot a telegram:Bot .
-  :anna a schema:Person ; schema:name "Anna" ; telegram:user "111" .
+  :anna a schema:Person ; schema:name "Anna" ; telegram:userId "111" .
   :keeper_and_anna a speech:Chat ; speech:participant :keeper , :anna ; speech:channel :anna_telegram .
-  :anna_telegram a telegram:Chat ; telegram:id "4242" .
+  :anna_telegram a telegram:Chat ; telegram:chatId "4242" .
   :household a speech:Chat ; speech:participant :keeper , :peer , :anna ; speech:channel :household_telegram .
-  :household_telegram a telegram:Chat ; telegram:id "-100" .
+  :household_telegram a telegram:Chat ; telegram:chatId "-100" .
 }
 
 GRAPH :catalogue {
