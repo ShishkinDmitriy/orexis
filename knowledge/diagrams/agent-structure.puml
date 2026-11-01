@@ -24,7 +24,7 @@ skinparam frame {
 }
 
 frame "transport" {
-  component "MQTT · HTTP member" as TR
+  component "MQTT · HTTP · Telegram · email member" as TR
 }
 
 frame "sensing" {
@@ -36,6 +36,11 @@ frame "sensing" {
 frame "speech" {
   component "heard · said · extract" as SP
   folder "speech:StatementGraph\nwhat was said, heard or said\nhanded to no reader of the mind" as utt #FFFCF2
+  folder "speech:AskableGraph\nthe questions a person may ask, no belief" as askg
+}
+
+frame "translation" {
+  component "heard · told\na person's prose, the model at the edge" as TRL
 }
 
 frame "coordination" {
@@ -90,6 +95,9 @@ RT  --> acts
 RT  --> self
 RT  --> des
 RT  --> rules
+RT  --> askg
+TR  --> TRL : prose
+TRL --> SP : a statement
 TR  --> SEN : bytes
 TR  --> SP : a document
 SEN --> obs
@@ -125,6 +133,7 @@ plan ..> EX
 rules ..> DEL
 acts ..> PL
 acts ..> PRE : flows
+askg ..> TRL : a question, answered from the store
 
 note as N1
   **The mind reads only beliefs.** An observation is sensing's:

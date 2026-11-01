@@ -31,6 +31,13 @@ every message the member's thread receives is submitted to it as a job that `han
 opens what it listens on and schedules what it does of its own accord — MQTT asks after a board's
 missing reading, HTTP polls — and holds the agent running. `stop` ends it.
 
+A CHANNEL IS THE TRANSPORT'S, AND WHICH ROW READS IT IS WHAT POINTS AT IT. A member carries bytes on a channel
+— a topic, a Telegram chat, a mailbox, a url — and knows nothing of what they mean: a channel a sensor observes is
+sensing's, one an agent listens on is speech's, and the channel of a `speech:Chat` the agent is in is translation's,
+a person's prose. For the last a member says `prose`, a signal carrying `Prose` — the channel, who said it where
+the channel tells, the words — which translation hears when the parts are linked, and it sends prose back by
+`say_to`, so no member imports translation and translation imports no member.
+
 SEVERAL MEMBERS ARE ONE TRANSPORT TO THE CONTAINER. A world may reach its board over MQTT and a
 forecast service over HTTP; the runtime holds every member it attached behind `Transports`, which
 sends a nudge, a cadence or a command to the member that `reaches` the device — a question only a
@@ -42,7 +49,18 @@ sensing is called and never calling, and a contract nothing in sensing reads is 
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
+
+
+@dataclass(frozen=True)
+class Prose:
+    """A person's words on a channel at `at`: the channel's node in the world, the person who said them where the
+    channel tells — a Telegram user, a mailbox's sender — or None where it does not, and the text."""
+    channel: str
+    sender: str | None
+    text: str
+    at: datetime | None = None
 
 
 class Transport:
@@ -81,6 +99,11 @@ class Transport:
 
     def stop(self) -> None:
         """End: whatever the member holds open, closed."""
+
+    def say_to(self, store, channel: str, text: str) -> bool:
+        """Prose out on `channel`, a chat's channel this member carries — a Telegram chat, a mailbox, a topic.
+        Whether anything was SENT: a member that does not carry the channel sends nothing."""
+        return False
 
     def open(self, store) -> list[str]:
         """Listen on every channel the world implies for the agent's sensors, and on the one
@@ -155,6 +178,9 @@ class Transports(Transport):
 
     def tell(self, store, to: str, document: bytes) -> bool:
         return any(member.tell(store, to, document) for member in self.members)
+
+    def say_to(self, store, channel: str, text: str) -> bool:
+        return any(member.say_to(store, channel, text) for member in self.members)
 
     def set_cadence(self, store, sensor: str, sleep_s: int) -> bool:
         member = self._reaching(store, sensor)

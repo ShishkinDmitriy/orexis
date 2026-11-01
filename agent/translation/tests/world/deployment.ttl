@@ -1,0 +1,9 @@
+@prefix : <http://example.org/orexis/world/viewing#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+@prefix schema: <https://schema.org/> .
+
+<> a onboarding:DeploymentGraph .    # this document is one graph, and this is what it is
+
+#  WHERE EACH AGENT'S BOT ANSWERS: a deployment fact, told to the agent as `TELEGRAM_URL`.
+:seeker_bot schema:url "https://api.telegram.org" .
+:keeper_bot schema:url "https://api.telegram.org" .

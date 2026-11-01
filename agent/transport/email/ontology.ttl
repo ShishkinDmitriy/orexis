@@ -1,0 +1,9 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  OREXIS EMAIL TRANSPORT. It declares no word of its own: a mailbox it reaches is a `schema:ContactPoint` with a
+#  `schema:email`, schema.org's words, and which row reads it is what points at it — the channel of a `speech:Chat`
+#  is a person's prose, translation's. The agent's own mailbox — its address, its credential, its servers — is
+#  `secrets/mail-<agent>.env`, environment and never a graph.

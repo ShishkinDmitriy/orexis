@@ -39,13 +39,15 @@ MESSAGE = json.dumps({"moisture_raw": [{"value": 710, "age_s": 0}], "temperature
 
 class Broker:
     def __init__(self):
-        self.subscribed, self.published = [], []
+        self.subscribed, self.published, self.retained = [], [], {}
 
     def subscribe(self, pattern):
         self.subscribed.append(pattern)
 
     def publish(self, topic, payload, retain=False):
         self.published.append(topic)
+        if retain:
+            self.retained[topic] = json.loads(payload)
 
 
 @pytest.fixture
@@ -75,9 +77,10 @@ def test_booted_from_its_directory_the_agent_holds_no_hardware():
     assert (held, rowed) == (0, 0), f"the terrace agent holds {held} hardware quads and {rowed} rows about the graph"
 
 
-def test_the_agent_listens_on_the_boards_one_topic(monkeypatch):
+def test_the_agent_listens_on_the_boards_one_topic_alone(monkeypatch):
     _, broker = _terrace(monkeypatch)
-    assert broker.subscribed == ["sensors/moisture_sensor_terrace/reading"]
+    assert broker.subscribed == ["sensors/moisture_sensor_terrace/reading"], \
+        "the board's readings; its chat is on Telegram, through its own bot, and asks nothing of the bus"
 
 
 def test_one_message_is_five_observations_and_the_soil_is_below_the_beds_range(monkeypatch):
@@ -99,6 +102,50 @@ def test_one_message_is_five_observations_and_the_soil_is_below_the_beds_range(m
     assert broker.published == [], "nothing is wanted, so nothing is sent"
 
 
+#  THE SOVEREIGN'S CHAT, as its secrets/chat.ttl states it — a made-up id, since the real one is not committed.
+CHAT = """@prefix : <http://example.org/orexis/world/terrace#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix telegram: <http://example.org/orexis/telegram#> .
+<> a orexis:SocietyGraph .
+:sovereign_telegram telegram:chatId "4242" .
+"""
+
+
+def test_the_sovereign_asks_the_agent_through_its_own_bot_and_is_answered_with_what_it_observes(monkeypatch, tmp_path):
+    """A translator: `/status` written in the sovereign's chat reaches the agent through its own bot, and the agent
+    sends back what it observes — each sensor's latest reading, of what and when — read off its store by sensing's
+    select, with no model asked."""
+    from agent.transport.mqtt.driver import Mqtt
+    from agent.transport.telegram.driver import Telegram
+    from agent.transport.transport import Transports
+
+    monkeypatch.setattr(clock, "now", lambda: NOW)
+    world = _with_a_place(tmp_path)
+    (world / "secrets" / "chat.ttl").write_text(CHAT)
+    sent, updates = [], [{"update_id": 7, "message": {"chat": {"id": 4242}, "from": {"id": 1}, "text": "/status"}}]
+
+    def api(url, body):
+        if url.endswith("/getUpdates"):
+            found, updates[:] = list(updates), []
+            return {"ok": True, "result": found}
+        sent.append(body)
+        return {"ok": True}
+
+    bot = Telegram(AGENT, "token", call=api, spawn=lambda work: work())
+    runtime = Runtime(boot(world, "terrace"), "terrace", transport=Transports([Mqtt(AGENT, Broker()), bot]))
+    runtime.deliver((0, "sensors/moisture_sensor_terrace/reading"), MESSAGE, NOW)
+    runtime.run(passes=1, poll_s=0)
+    for channel, payload in bot.updates():
+        runtime.deliver((1, channel), payload, NOW)
+    runtime.run(passes=1, poll_s=0)
+    (said,) = sent
+    lines = said["text"].split("\n")
+    assert said["chat_id"] == "4242" and lines[:2] == ["terrace_agent at 2026-01-01 12:00 UTC", "observes:"], lines
+    assert (" - observed: SoilMoisture, of: terrace_bed, reading: 0.2, sensor: moisture_sensor_terrace, "
+            "at: 2026-01-01 12:00 UTC") in lines
+    assert sum(1 for line in lines if line.startswith(" - ")) == 5, "one line per sensor read"
+
+
 def test_a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving(monkeypatch, caplog):
     """The terrace's one board reports once and then dies. Nothing arrives after, so no pass has
     a message to take; the passes still ask what has gone missing, and once three cadences are gone
@@ -116,7 +163,7 @@ def test_a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving(monke
     assert sorted(m.split(": ", 1)[1].split(" ", 1)[0] for m in said) == [
         "air_humidity_terrace", "air_pressure_terrace", "air_temp_terrace", "battery_sensor_terrace",
         "moisture_sensor_terrace"]
-    assert broker.published == []
+    assert broker.published == [], "nothing is sent"
 
 
 def test_each_reading_reaches_the_series_under_its_own_property(monkeypatch, history):

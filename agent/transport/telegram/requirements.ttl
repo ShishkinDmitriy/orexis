@@ -1,0 +1,33 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix telegram: <http://example.org/orexis/telegram#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix schema: <https://schema.org/> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+
+<> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A WORLD MUST STATE OF THE TELEGRAM TRANSPORT'S WORDS, held by onboarding alone. A chat has one id at most —
+#  the id is a person's, so a world may keep it under `secrets/`, which a fresh clone lacks — a person one user id
+#  at most, and a bot one https url, since the token goes over the wire with every call; and an agent in a chat on
+#  Telegram reaches it through a bot of its own.
+[] a sh:NodeShape ;
+    sh:targetClass telegram:Chat ;
+    sh:property [ sh:path telegram:chatId ; sh:maxCount 1 ; sh:message "a Telegram chat has one id, which the Bot API names it by" ] .
+
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf telegram:userId ;
+    sh:property [ sh:path telegram:userId ; sh:maxCount 1 ; sh:message "a person writes as one Telegram user" ] .
+
+[] a sh:NodeShape ;
+    sh:targetClass telegram:Bot ;
+    sh:property [ sh:path schema:url ; sh:minCount 1 ; sh:maxCount 1 ; sh:pattern "^https://" ;
+                  sh:message "a Telegram bot answers at one https:// url: the token goes over the wire with every call" ] .
+
+[] a sh:NodeShape ;
+    sh:targetClass speech:Chat ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "has {?agent} in it on Telegram, which speaks through no bot of its own" ;
+        sh:select """PREFIX telegram: <http://example.org/orexis/telegram#>
+SELECT $this ?agent WHERE { $this speech:channel ?c ; speech:participant ?agent . ?c a telegram:Chat . ?agent a orexis:Agent .
+  FILTER NOT EXISTS { ?agent telegram:hasBot ?bot } }""" ] .

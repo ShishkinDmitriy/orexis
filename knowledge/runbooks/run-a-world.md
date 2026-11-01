@@ -146,29 +146,34 @@ A world with a **new device** in it does still mint a credential that has to be 
 board before it can connect.
 
 The compose file is **generated, never hand-edited**: one service per agent, named for its id,
-plus a `simulation` service where the world marks systems `sim:simulatedBy`, and a `translation`
-service where its society names a `speech:Chat`. Adding an agent is
+plus a `simulation` service where the world marks systems `sim:simulatedBy`. Adding an agent is
 adding it to the world and regenerating; a hand-edit is a second roster waiting to drift from the
 documents. Each container mounts exactly one store credential per purpose — its own — and of the
-world's documents the common ones and those that say they are its agent's; the simulator's and the
-translator's, the common ones alone.
+world's documents the common ones and those that say they are its agent's; the simulator's, the
+common ones alone.
 
-A world with a **chat** in it runs a [translator](/domain/speech/translator.md), and that needs two
-files nothing can mint. Once per machine, where the language model is paid for:
+An agent in a **chat** is a [translator](/domain/translation/translator.md), and that needs files
+nothing can mint. Once per machine, where the language model is paid for:
 
 ```bash
 cp infra/model.env.example infra/secrets/model.env    # which model, and the key. Never committed
 ```
 
-and per world, a secret for each carrier some chat goes through, for the client the society says
-translates the chats: the mailbox the translator reads and sends from where a chat goes by email,
-`world/<name>/secrets/mail-<client>.env` with `MAIL_ADDRESS`, `MAIL_PASSWORD`, `MAIL_IMAP_HOST`,
-`MAIL_SMTP_HOST` and the ports where not 993 and 465; and the bot's token where one goes through
-Telegram, `world/<name>/secrets/telegram-<client>.env` with `TELEGRAM_BOT_TOKEN` from `@BotFather`
-(`translation/carrier.py`). A person on Telegram writes to the bot once, their chat id appears in the
-bot's `getUpdates`, and the world states it as the chat's `telegram:id`. `orexis-compose` says which
-file is not there. Where the model answers is `infra/installation.ttl`'s to state; with no
-`onboarding:Model` there, a world naming a chat is refused.
+and per translating agent, a secret for each carrier its chats go through: its bot's token where one
+goes through Telegram, `world/<name>/secrets/telegram-<agent>.env` with `TELEGRAM_BOT_TOKEN` from
+`@BotFather`, one bot per agent; and its mailbox where one goes by email,
+`world/<name>/secrets/mail-<agent>.env` with `MAIL_ADDRESS`, `MAIL_PASSWORD`, `MAIL_IMAP_HOST`,
+`MAIL_SMTP_HOST` and the ports where not 993 and 465. A person on Telegram writes to the agent's bot
+once — or adds the bots of several agents to one group — their chat id appears in the bot's
+`getUpdates`, and the world states it as the chat's `telegram:chatId`, in a document under `secrets/` where
+the id is a person's own: the terrace's is `world/terrace/secrets/chat.ttl`, a society graph saying
+`:sovereign_telegram telegram:chatId "<id>"`. In a group, each person writing states their `telegram:userId`
+id too, so the agent knows who spoke. `orexis-compose` says which file is not there. To ask the terrace
+how it is: write the token and the chat id, `orexis-onboard terrace`, `podman compose up -d`, and send
+`/status` to its bot for what it observes, its [askables](/domain/speech/askable.md)' rows as they stand, or a question in
+words for the model's answer from it; in a group, name the agent you ask, or ask nobody and the one
+whose account answers replies. Where the model answers is `infra/installation.ttl`'s to state; with no
+`onboarding:Model` there, a world with a translating agent is refused.
 
 # Monitor a world, or stop
 

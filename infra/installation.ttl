@@ -44,11 +44,11 @@ onboarding:Metrics onboarding:retentionDays 30 ;
     schema:url "https://localhost:3000" ;
     onboarding:image "docker.io/grafana/grafana:11.2.0" .
 
-#  WHERE THE LANGUAGE MODEL ANSWERS, for a world's translator — the process standing between the people
-#  a world names and its agents (knowledge/domain/speech/translator.md). The url and nothing else: which
-#  model and the key are `infra/secrets/model.env`, template `model.env.example`, mounted into the
-#  translator's container alone. Take this line out and the host runs no translator: a world naming a
-#  person is refused at onboarding, as a monitored world is where metrics are served by no store.
+#  WHERE THE LANGUAGE MODEL ANSWERS, for an agent that translates — one that speaks with the people of
+#  its chats itself (knowledge/domain/translation/translator.md). The url and nothing else: which model
+#  and the key are `infra/secrets/model.env`, template `model.env.example`, mounted into each translating
+#  agent's container alone. Take this line out and no agent here translates: a world with one that does
+#  is refused at onboarding, as a monitored world is where metrics are served by no store.
 :model a onboarding:Model ;
     schema:url "https://api.anthropic.com" .
 

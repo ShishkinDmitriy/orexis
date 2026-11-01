@@ -62,7 +62,7 @@ import rdflib
 
 from agent.planning.planner import Planner
 from agent.ontology import local_of
-from agent.runtime import (MQTT, ONTOLOGY, PLANNING, SPEAKER, boot, documents, known, packages_of, read_with_imports,
+from agent.runtime import (EMAIL, KERNEL, MQTT, ONTOLOGY, PLANNING, SPEAKER, TELEGRAM, boot, documents, known, packages_of, read_with_imports,
                            roles_of, selves, world_of)
 from agent.store import (NAMESPACES, DocumentRefused, answer, catalogue_of, close_catalogue, closed, document, graphs_of, kinds_in, put_document,
                          rdflib_view, rows, whose)
@@ -74,10 +74,6 @@ _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
 
 VOCABULARY = Path(__file__).resolve().parent / "ontology.ttl"
 REQUIREMENTS = Path(__file__).resolve().parent / "requirements.ttl"
-#  THE TRANSLATOR'S REQUIREMENT, read here as onboarding's own is: the translator is a process of the
-#  world outside `agent/`, which the image does not carry, so no world imports its words and no agent
-#  loads them (knowledge/domain/speech/translator.md).
-TRANSLATION_REQUIREMENTS = Path(__file__).resolve().parent.parent / "translation" / "requirements.ttl"
 INSTALLATION_REQUIREMENTS = Path(__file__).resolve().parent.parent / "infra" / "requirements.ttl"
 ONBOARDING = "http://example.org/orexis/onboarding#"
 HARDWARE = ONBOARDING + "HardwareGraph"
@@ -123,7 +119,6 @@ def world(here: Path) -> ox.Store:
     store = world_of(here, others=ours())
     put_document(store, document(VOCABULARY))
     put_document(store, document(REQUIREMENTS))
-    put_document(store, document(TRANSLATION_REQUIREMENTS))
     for _, doc in read_with_imports(documents(here)):
         graphs = {g for g, kinds in kinds_in(doc).items() if any(ours() & set(closed(store, k)) for k in kinds)}
         if graphs:
@@ -142,12 +137,12 @@ def premises(here: Path) -> frozenset[str]:
 def lasts(here: Path, agent_id: str) -> bool:
     """Whether the agent `agent_id` of the world in `here` runs for as long as its process does —
     booted from the documents as its container boots it, into a store of its own in memory: it
-    holds a desire, or the MQTT transport is among the packages it loads, which is what brings a
-    transport up (`_transport_of`). False for an agent holding wants alone and reached by no
-    transport, which the runtime lets finish."""
+    holds a desire, or a transport that listens is among the packages it loads — the bus, a bot, a
+    mailbox — which is what brings a transport up (`_transport_of`). False for an agent holding wants
+    alone and reached by no transport, which the runtime lets finish."""
     beliefs = boot(Path(here).resolve(), agent_id, others=ours())
     loaded = packages_of(beliefs)
-    return (PLANNING in loaded and Planner(beliefs, agent_id).holds_a_desire()) or MQTT in loaded
+    return (PLANNING in loaded and Planner(beliefs, agent_id).holds_a_desire()) or bool({MQTT, TELEGRAM, EMAIL} & set(loaded))
 
 
 def check(here: Path) -> None:
@@ -356,10 +351,18 @@ def _refusals(here: Path, beliefs: ox.Store, broken: list[str]) -> list[str]:
     if SPEAKER not in roles and answer(beliefs, _LISTENS_Q, stated)["boolean"]:
         out.append("it listens to a topic, and it is no speaker: no package it loads would hear what arrives there")
     (me,) = selves(beliefs)
+    everyone = None
     for path, doc in read_with_imports(documents(here, packages_of(beliefs))):
         for graph, kinds in sorted(kinds_in(doc).items()):
             if known(beliefs, kinds) or ours() & kinds or whose(doc, graph) not in (None, me):
                 continue
+            #  A PACKAGE'S DOCUMENT FOR A READER THE AGENT DOES NOT LOAD is passed over, as its requirements are:
+            #  sensing's askables are speech's kind, and an agent that speaks with nobody holds no speech. A world's
+            #  document is held to its loaded packages still.
+            if KERNEL in Path(path).resolve().parents:
+                everyone = everyone if everyone is not None else world(here)
+                if known(everyone, kinds):
+                    continue
             out.append(f"{path.name}: {graph} is of a kind none of the packages it loads declares "
                        f"({', '.join(sorted(kinds))})")
     return out

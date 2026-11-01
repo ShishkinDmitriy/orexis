@@ -47,26 +47,26 @@ world with no bus reaches its series store the same way.
 simulation <world>`, connected as the one client that hosts every system the world marks
 `sim:simulatedBy`, reading the world as an agent does. See knowledge/domain/kernel/world.md.
 
-**A world's chats are stood in by its translator**, the same way: `python -m translation
-<world>`, connected as the one client that `translation:translates` every `speech:Chat` the society
-names, told where the language model answers (`MODEL_URL`, the installation's `onboarding:Model`) and handed
-which model and its key (`infra/secrets/model.env`), and, for each carrier some chat goes through, its
-secret — the mailbox it reads and writes (`secrets/mail-<client>.env`) where a chat goes by email, the
-bot's token (`secrets/telegram-<client>.env`) where one goes through Telegram, each written by hand,
-since nothing can mint a mailbox or a bot — each mounted into this container alone, and the
-translator's tree with them, which the image does not carry. A world
-naming a person where the installation names no model is refused, as a monitored world is where
-metrics are served by no store (knowledge/domain/speech/translator.md).
+**An agent that translates is handed the model and its carriers' secrets**, and nothing else is: an
+agent playing `translation:Translator` speaks with the people of its chats itself, so its own container is
+told where the language model answers (`MODEL_URL`, the installation's `onboarding:Model`) and handed which
+model and its key (`infra/secrets/model.env`), and, for each transport it speaks through beside the bus,
+its secret — its bot's token (`secrets/telegram-<agent>.env`) and where its bot answers (`TELEGRAM_URL`,
+off the world's deployment graph), its mailbox (`secrets/mail-<agent>.env`) — each written by hand, since
+nothing can mint a bot or a mailbox. An agent that translates nothing is handed none of it, and a world
+with a translator where the installation names no model is refused, as a monitored world is where
+metrics are served by no store (knowledge/domain/translation/translator.md).
 """
 
 from __future__ import annotations
 
 import argparse
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
 
-from agent.runtime import documents, known, world_of
+from agent.runtime import EMAIL, TELEGRAM, documents, known, packages_of, world_of
 from agent.metrics.window import INTERVAL_KEY
 from agent.series import HISTORY, METRICS
 from agent.store import document, graphs_of, kinds_in, rows, whose
@@ -81,6 +81,7 @@ from .reading import MQTT4SSN
 log = logging.getLogger("compose")
 
 IMAGE = "orexis:local"
+TRANSLATION = "translation"
 BELIEF = "http://example.org/orexis#BeliefGraph"
 
 _IDS_Q = "SELECT ?a ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id }"
@@ -90,19 +91,10 @@ _CONNECTED_Q = f"""
 SELECT ?id ?broker WHERE {{ ?a a orexis:Agent ; orexis:localId ?id ; <{MQTT4SSN}isConnectedToBroker> ?broker }}
 ORDER BY ?id ?broker"""
 
-#  THE CLIENT THE TRANSLATOR CONNECTS AS: whichever translates the chats the world names.
-_TRANSLATES_Q = """
-SELECT DISTINCT ?id WHERE {
-  ?client <https://www.w3id.org/MQTT4SSN-Ontology#hasClientID> ?id ;
-          <http://example.org/orexis/translation#translates> ?chat } ORDER BY ?id"""
-
-#  WHICH CARRIERS THE WORLD'S CHATS GO THROUGH, by the channels' kinds: a chat by email needs the mailbox's
-#  secret, one on Telegram the bot's; the bus needs nothing but the client's credential.
-_CARRIERS_Q = """
-SELECT DISTINCT ?carrier WHERE {
-  ?chat a speech:Chat ; speech:channel ?channel .
-  { ?channel <https://schema.org/email> ?email . BIND ("mail" AS ?carrier) }
-  UNION { ?channel a <http://example.org/orexis/telegram#Chat> . BIND ("telegram" AS ?carrier) } } ORDER BY ?carrier"""
+#  WHERE AN AGENT'S BOT ANSWERS: the `schema:url` the world's deployment graph states on the bot the agent speaks
+#  through on Telegram.
+_BOT_Q = """
+SELECT ?url WHERE { $agent <http://example.org/orexis/telegram#hasBot> ?bot . ?bot <https://schema.org/url> ?url } ORDER BY ?url"""
 
 #  THE CLIENT THE SIMULATOR CONNECTS AS: whichever hosts the systems no one built.
 _SIMULATED_Q = """
@@ -170,50 +162,32 @@ def simulated_client(world: str) -> str | None:
     return found.pop() if found else None
 
 
-def translation_client(world: str) -> str | None:
-    """The client the world's translator connects as, or None where the world names no chat. One
-    translator stands in every chat of a world, so one client translates them all, connected to a
-    broker: the translator's requirement (`translation/requirements.ttl`), held by `reading.check`
-    before any tool asking here runs. This formats and judges nothing."""
+@dataclass(frozen=True)
+class Translating:
+    """What an agent that translates is handed: where the model answers, where its bot answers where it has one,
+    and the carriers beside the bus it speaks through — `telegram`, `mail` — each a secret written by hand."""
+    model: str
+    bot: str | None
+    carriers: tuple[str, ...]
+
+
+def translating(world: str, agent_id: str) -> Translating | None:
+    """What `agent_id` of `world` is handed for translating, booted as its container boots it — or None where it plays
+    no translator. A translator where the installation names no model is refused."""
+    beliefs = reading.boot(world_dir(world), agent_id, others=reading.ours())
+    loaded = set(packages_of(beliefs))
+    if TRANSLATION not in loaded:
+        return None
+    model = installation.model()
+    if model is None:
+        raise SystemExit(f"{agent_id} of world {world!r} translates, and the installation names no onboarding:Model — "
+                         f"state where one answers in {installation._where(installation.INSTALLATION)}, or take the "
+                         "translator out of its self graph")
     store = reading.world(world_dir(world))
-    found = {r["id"] for r in rows(store, _TRANSLATES_Q, graphs_of(store, BELIEF, common=True))}
-    return found.pop() if found else None
-
-
-def carriers(world: str) -> list[str]:
-    """The carriers the world's chats go through beside the bus — `mail`, `telegram` — each a secret the
-    translator's container is handed, written by hand."""
-    store = reading.world(world_dir(world))
-    return [r["carrier"] for r in rows(store, _CARRIERS_Q, graphs_of(store, BELIEF, common=True))]
-
-
-def _translator(world: str, read: set[Path], client: str, host: str, plain: int, model: str, carried: list[str]) -> str:
-    secrets = "".join(f"\n      # the {'mailbox the chats by email are reached through' if c == 'mail' else 'token of the bot the chats on Telegram go through'}, written by hand: nothing can mint one"
-                      f"\n      - ./secrets/{c}-{client}.env" for c in carried)
-    return f"""
-  translation:
-    image: {IMAGE}
-    command: ["python", "-m", "translation", "/app/world/{world}"]
-    environment:
-      MQTT_HOST: "{host}"
-      MQTT_PORT: "{plain}"
-      # where the language model answers — the installation's `onboarding:Model`; which model, and the
-      # key, arrive in the installation's secret below
-      MODEL_URL: "{model}"
-    env_file:
-      # the credential of `{client}`, the client that translates the world's chats
-      - ./secrets/mqtt-{client}.env
-      # the model's name and key — `infra/model.env.example` says how — mounted into THIS container alone
-      - ../../infra/secrets/model.env{secrets}
-    network_mode: host
-    userns_mode: "keep-id:uid=10001,gid=10001"
-    restart: unless-stopped
-    volumes:{_documents(world, read)}
-      - ../../agent:/app/agent:ro
-      - ../../domains:/app/domains:ro
-      # the translator's own tree, which the image does not carry, so that no agent's does either
-      - ../../translation:/app/translation:ro
-"""
+    iri = next(r["a"] for r in rows(store, _IDS_Q, graphs_of(store, BELIEF, common=True)) if r["id"] == agent_id)
+    bot = next((r["url"] for r in rows(store, _BOT_Q, graphs_of(store, BELIEF, reading.DEPLOYMENT, common=True), agent=iri)), None)
+    carriers = tuple(name for name, package in (("telegram", TELEGRAM), ("mail", EMAIL)) if package in loaded)
+    return Translating(model, bot, carriers)
 
 
 def _simulator(world: str, read: set[Path], client: str, host: str, plain: int) -> str:
@@ -262,7 +236,7 @@ def _restart(lasting: bool) -> str:
 
 def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, str]] | None,
              series: dict[str, tuple[str, str]], window: float | None, lasting: bool, journal: str | None = None,
-             incidents: tuple[str | None, list[str]] = (None, [])) -> str:
+             incidents: tuple[str | None, list[str]] = (None, []), translates: Translating | None = None) -> str:
     """An agent's service. `bus` is each broker the agent is connected to, by its IRI, with the url
     it reaches it at — TLS where the broker listens so, since an agent of a world with a bus holds a
     certificate — or None where the world has none, and then nothing of a bus is written: no
@@ -283,6 +257,16 @@ def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, st
     if classes:
         stores += f'\n      JOURNAL_INCIDENTS: "{" ".join(classes)}"'
     credentials = "".join(f"\n      - ./secrets/{series_credential(agent_id, purpose)}" for purpose in series)
+    if translates is not None:
+        stores += ("\n      # where the language model answers — the installation's `onboarding:Model`; which model, and the"
+                   f'\n      # key, arrive in the installation\'s secret below\n      MODEL_URL: "{translates.model}"')
+        if translates.bot:
+            stores += f'\n      # where its Telegram bot answers, as the world\'s deployment graph states\n      TELEGRAM_URL: "{translates.bot}"'
+        credentials += ("\n      # the model's name and key — `infra/model.env.example` says how — since it translates"
+                        "\n      - ../../infra/secrets/model.env")
+        for carrier in translates.carriers:
+            credentials += (f"\n      # its {'bot' if carrier == 'telegram' else 'mailbox'}'s secret, written by hand: nothing can mint one"
+                            f"\n      - ./secrets/{carrier}-{agent_id}.env")
     if bus is not None:
         told = " ".join(f"{iri} {url}" for iri, url in bus)
         where = f"""
@@ -394,21 +378,15 @@ def render(world: str) -> str:
     series = {purpose: installation.series(purpose) for purpose in installation.purposes(world)}
     window = installation.interval(METRICS) if METRICS in series else None
     client = simulated_client(world)
-    speaker = translation_client(world)
-    model = installation.model() if speaker else None
-    if speaker and model is None:
-        raise SystemExit(f"world {world!r} names a chat, translated by {speaker}, and the installation names no "
-                         f"onboarding:Model — state where one answers in {installation._where(installation.INSTALLATION)}, "
-                         "or take the chat out of the world")
     read = read_by_an_agent(world)
     store = reading.world(world_dir(world))
     iris = {r["id"]: r["a"] for r in rows(store, _IDS_Q, graphs_of(store, BELIEF, common=True))}
     counted = installation.incidents(world)
     services = ("".join(_broker(world, b, *bus[b][1:]) for b in sorted(bus))
                 + (_simulator(world, read, client, *broker_of(world, client)[:2]) if client else "")
-                + (_translator(world, read, speaker, *broker_of(world, speaker)[:2], model, carriers(world)) if speaker else "")
                 + "".join(_service(a, world, read, reached.get(a, []) if bus else None, series, window,
-                                   reading.lasts(world_dir(world), a), installation.journal(iris[a]), counted)
+                                   reading.lasts(world_dir(world), a), installation.journal(iris[a]), counted,
+                                   translating(world, a))
                           for a in who))
     volumes = ("".join(f"  orexis-{world}-{service_of(b)}:\n" for b in sorted(bus))
                + "".join(f"  orexis-{world}-{a}:\n  orexis-{world}-{a}-journal:\n" for a in who))
@@ -440,11 +418,9 @@ def generate(world: str) -> Path:
     log.info("wrote %s", out.relative_to(REPO_ROOT))
     for agent_id in roster(world):
         log.info("  agent-%s", agent_id)
-    speaker = translation_client(world)
-    if speaker:
-        log.info("  translation — as %s", speaker)
-        for carrier in carriers(world):
-            secret = world_dir(world) / "secrets" / f"{carrier}-{speaker}.env"
+        translates = translating(world, agent_id)
+        for carrier in translates.carriers if translates else ():
+            secret = world_dir(world) / "secrets" / f"{carrier}-{agent_id}.env"
             log.info("    its %s is %s%s", "mailbox" if carrier == "mail" else "bot's token",
                      secret.relative_to(REPO_ROOT) if secret.is_relative_to(REPO_ROOT) else secret,
                      "" if secret.exists() else ", which is not there: write it by hand (knowledge/runbooks/run-a-world.md)")

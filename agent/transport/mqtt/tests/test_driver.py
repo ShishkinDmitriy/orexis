@@ -283,3 +283,58 @@ def test_a_document_on_the_agents_own_topic_is_heard_and_answered_with_no_sensor
     store, mqtt, client = peers
     document = f"<{TEST}note> {{ <{TEST}note> <{TEST}says> \"hello\" }}\n<{TEST}note> a <{TEST}NoteGraph> .".encode()
     assert mqtt.handle(store, "agents/keeper/inbox", document, snapshots.NOW) == [(None, TEST + "note")]
+
+
+#  THE KEEPER IN A CHAT WITH ANNA over a topic of the bus, which her phone writes to as she types.
+_CHAT = """
+@prefix speech: <http://example.org/orexis/speech#> .
+GRAPH :world {
+  :anna a schema:Person .
+  :keeper_and_anna a speech:Chat ; speech:participant :keeper , :anna ; speech:channel :anna_topic .
+  :anna_topic a mqtt4ssn:Topic .
+  :anna_filter a mqtt4ssn:TopicFilter ; mqtt4ssn:hasFilterPattern "chats/keeper_and_anna" ; mqtt4ssn:matchesTopic :anna_topic .
+}
+"""
+
+
+@pytest.fixture
+def chat(monkeypatch, snapshots):
+    monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
+    client = Client()
+    mqtt = Mqtt(snapshots.ME, client)
+    heard = []
+    mqtt.prose.connect(lambda prose: heard.append(prose) or [])
+    return snapshots.stand_in(WORLD, WORLD.read_text() + _CHAT), mqtt, client, heard
+
+
+def test_the_driver_listens_on_the_topic_of_a_chat_the_agent_is_in(chat):
+    store, mqtt, client, _ = chat
+    assert "chats/keeper_and_anna" in mqtt.open(store)
+
+
+def test_words_on_a_chats_topic_are_prose_and_nobodys_reading(chat, snapshots):
+    """A person's words are said as `prose`, the channel the chat's topic node and the sender where the document names
+    one; bare text is words with no sender; what the agent itself said, handed back by the broker, is not heard."""
+    store, mqtt, client, heard = chat
+    before = len(store)
+    assert mqtt.handle(store, "chats/keeper_and_anna", json.dumps({"from": TEST + "anna", "text": " hello "}).encode(),
+                       snapshots.NOW) == []
+    assert mqtt.handle(store, "chats/keeper_and_anna", b"how is the fern?", snapshots.NOW) == []
+    assert mqtt.handle(store, "chats/keeper_and_anna", json.dumps({"from": snapshots.ME, "text": "mine"}).encode(),
+                       snapshots.NOW) == []
+    assert [(p.channel, p.sender, p.text) for p in heard] == [(TEST + "anna_topic", TEST + "anna", "hello"),
+                                                              (TEST + "anna_topic", None, "how is the fern?")]
+    assert len(store) == before, "no sensor's, so sensing is handed nothing"
+
+
+def test_prose_is_said_on_a_chats_topic_as_the_agents_and_not_retained(chat):
+    store, mqtt, client, _ = chat
+    assert mqtt.say_to(store, TEST + "anna_topic", "the fern is dry") is True
+    assert client.published == [("chats/keeper_and_anna", json.dumps({"from": TEST + "keeper", "text": "the fern is dry"}).encode(), False)]
+    assert mqtt.say_to(store, TEST + "board_readings", "x") is False, "a topic of no chat of the agent's is not said on"
+
+
+def test_a_document_to_a_person_is_not_the_buses_and_is_passed_over_in_silence(chat, caplog):
+    store, mqtt, client, _ = chat
+    assert mqtt.tell(store, TEST + "anna", b"<urn:g> { }") is False
+    assert client.published == [] and "listens on no topic" not in caplog.text

@@ -93,7 +93,9 @@ infrastructure rather than with the code.
 
 - **The speech-act path has no vocabulary.** A message's performative and sender are implicit —
   the topic it arrived on, the signature it carries — and nothing refuses an observation minted
-  from a peer's message. Filed as [#394](https://github.com/ShishkinDmitriy/orexis/issues/394).
+  from a peer's message. Filed as [#394](https://github.com/ShishkinDmitriy/orexis/issues/394); the
+  vocabulary is the statement for every act and the askable for a question, FIPA naming the acts
+  ([a-question-is-answered-and-every-other-act-is-kept](/decisions/a-question-is-answered-and-every-other-act-is-kept.md)).
 - ~~**The BRF is implicit.**~~ In 0.1.0, `packages/orexis-agent-deliberation/reviser.py` is the row: every reactive path marks a
   want there and the pass runs on the mind's own thread (#392). What it DECIDES is still thin —
   dedupe by want, and nothing else — but where it decides is one place now. In Agent 0.2.0 the

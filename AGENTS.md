@@ -902,21 +902,32 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   incident is journaled; it is in no pass, authors no belief, picks no step and ratifies nothing, and a
   looping model as the routine, a world spawned unratified and an agent amending its own documents were
   refused (the-model-compiles-a-routine-and-is-called-back-at-its-edges, #1033 to #1036).
-- **A person's prose becomes a statement only through a sayable, and the translator holding the model's key
-  is a process of the world** — the model fills a declared shape's fields or says none fits, a field the shape
-  does not declare is dropped, the extraction still makes the belief, the agent hears the statement as any
-  peer's document and is unchanged, and no agent image carries the key (#1034, sayable, translator).
+- **A world runs no process, so an agent translates its own chats** — `translation:Translator`, beneath the
+  speaker, loads `agent/translation/`, the model's key and each carrier's secret mounted into that agent's
+  container alone, the call off the pass and submitted back as a job; a translator as a process of the world
+  and a manager agent speaking for the others were refused, and a bot per agent lifted the account record's
+  refusal of one (an-agent-translates-for-itself, translator).
+- **A person's prose becomes a statement only through a sayable** — the model fills a declared shape's fields
+  or says none fits, a field the shape does not declare is dropped, speech's `heard` keeps the statement as any
+  peer's document and the extraction makes the belief (#1034, sayable, translator).
+- **A channel is the transport's, and what points at it says which row reads it** — a sensor's is sensing's,
+  a listened topic speech's, a chat's translation's; a member says `prose` and answers `say_to`, so translation
+  imports no member and no member translation, and Telegram and email are members beside MQTT and HTTP
+  (an-agent-translates-for-itself, transport).
 - **A chat is who speaks with whom through what, and the channel's type is the carrier** — `speech:Chat` with
-  its participants and one channel, a topic of the bus or a contact point with an email, speech naming no
-  carrier; a person connects by a user agent that `prov:actedOnBehalfOf` them and the translator as the
-  client that `translation:translates` the chats, each a principal granted off the chats; the translator's
-  tree arrives by its mount, the one the image does not carry, and its need is its own requirement, read by
-  onboarding beside its own; a person as a client, a channel as a kind of address and the words in speech's
-  namespace were built and refused in turn (#1034, chat, translator).
-- **A carrier's secret reaches the translator only where a chat goes through it** — the bot's token for a
-  Telegram chat, the mailbox for an email, each an `env_file` compose refuses to start without, so a
-  carrier nothing goes through is mounted nothing; Telegram's words are the translator's own, and the bot is
-  its user agent there as a client is on the bus (#1034, chat).
+  its participants and one channel, a topic, a contact point with an email or a `telegram:Chat`, speech naming
+  no carrier; a person connects by a user agent that `prov:actedOnBehalfOf` them, each agent speaks through a
+  `telegram:Bot` of its own (`telegram:hasBot`), and in a group an agent answers when named, keeps silent when another is, and
+  answers an unnamed question only where its account speaks to it (chat, translator).
+- **What an agent says of itself is its askables, answered when a person asks** — an `speech:Askable` in an
+  `speech:AskableGraph` beside a package's ontology, its fields filled by the model and its select the
+  package's own; `/status` is the rows of every one that takes no field, for nothing; stored nowhere, published
+  nowhere, and a method per part rendered by templates and selects found by file name were built and refused
+  (askable, a-question-is-answered-and-every-other-act-is-kept).
+- **A question is answered and every other act is kept, and FIPA names the acts** — an askable a
+  package declares is answered from the store by its own select and writes nothing, a statement of any other
+  act is kept and extracted; a performative term on every statement kind, FIPA's semantics, an envelope and a
+  protocol engine were refused, a protocol being what the actions' preconditions allow (a-question-is-answered-and-every-other-act-is-kept).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
   `crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming an
   absent file or a CRL past its `nextUpdate` refuses the whole society and not the one agent; and

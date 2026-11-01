@@ -1,0 +1,11 @@
+@prefix : <http://example.org/orexis/world/viewing#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix translation: <http://example.org/orexis/translation#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+
+<> a orexis:SelfGraph .    # this document is one graph, and this is what it is
+
+#  WHO THIS AGENT IS: the keeper, the household's second agent, a translator in the household's group.
+
+:keeper a orexis:Self ;
+    orexis:plays [ a translation:Translator ] , [ a belief:Deliberator ] .

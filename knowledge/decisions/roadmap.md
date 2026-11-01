@@ -16,9 +16,9 @@ retired whole. What the previous roadmap listed as ahead and is now behind:
 - **BDI, with no model in the loop.** Desires derive wants, a budgeted search finds plans over
   possible worlds, and the executor walks intentions and holds each step to what it predicted. The
   LLM member 0.1.0 declared was never built, and the 0.2.0 tree has no seam reserved for one
-  inside the mind; a model stands outside it, in two places that read and never write: the present,
-  what an agent accounts of itself for its sovereign over chat
-  ([an-agent-gives-an-account-of-itself-and-the-model-only-reads-it](/decisions/an-agent-gives-an-account-of-itself-and-the-model-only-reads-it.md)),
+  inside the mind; a model stands outside it, in places that author no belief: the present, what an
+  agent accounts of itself and translates for a person over chat, in the agent's own process but in no
+  pass ([an-agent-translates-for-itself](/decisions/an-agent-translates-for-itself.md)),
   and the season, the agent's series read back as reflection and offered as a proposal
   ([reflection-is-genesis-run-again-over-the-series](/decisions/reflection-is-genesis-run-again-over-the-series.md)).
 - **The domain is a plug-in.** Hanoi, the courier, the tower, climate, actuation and the market are
@@ -94,9 +94,9 @@ resource with no overseer, is what 0.2.0 was built toward, so it is what finishe
    planning only, with an ending of its own, `planned` (#928, built). The record carries the argument
    ([a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md)).
 6. **Operating it** — #839, #836, #860 and #838, what a world states about its installation and
-   its wiring; and the sovereign over chat — an agent's account of itself, the gateway that relays
-   it and the model that phrases a free question, then #862's recalibration walked with a person
-   ([an-agent-gives-an-account-of-itself-and-the-model-only-reads-it](/decisions/an-agent-gives-an-account-of-itself-and-the-model-only-reads-it.md)).
+   its wiring; and the sovereign over chat — each agent translating its own chats, its account the
+   selects its packages ship, then #862's recalibration walked with a person
+   ([an-agent-translates-for-itself](/decisions/an-agent-translates-for-itself.md)).
 7. **The edge** — #865, #868, #322, #323, #461, #328 and #25, the boards and their firmware.
 
 # Parked, with the seam that unlocks each

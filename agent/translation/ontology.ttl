@@ -1,0 +1,20 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix translation: <http://example.org/orexis/translation#> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  OREXIS TRANSLATION: the row that turns a person's prose into a statement and an agent's statement into prose,
+#  with a language model at the edge (knowledge/domain/translation/translator.md).
+
+translation:Translator a owl:Class ;
+    rdfs:subClassOf speech:Speaker ;
+    rdfs:label "Translator" ;
+    rdfs:comment """An agent that speaks with people in the chats it is in: what a person writes on a chat's channel
+    becomes a statement of a sayable, believed by speech's extraction, or a question answered from the agent's
+    account; what the agent says to a person is rendered and sent back on the channel. Beneath the speaker, since a
+    person's statement is a peer's document to speech. Declared, never derived; the boot loads this package for it,
+    and the agent's container is handed the model's key for it and for nothing else
+    (knowledge/domain/translation/translator.md).""" .

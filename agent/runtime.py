@@ -169,7 +169,7 @@ BELIEFS = "beliefs"
 #  looking and never listed: the roles it serves are declared there, and so is every word it owns.
 #  It is named by its directory, which is what `packages_of` answers and `parts` is keyed by.
 VOCABULARY = "ontology.ttl"
-MQTT, HTTP = "transport/mqtt", "transport/http"
+MQTT, HTTP, TELEGRAM, EMAIL = "transport/mqtt", "transport/http", "transport/telegram", "transport/email"
 #  THE ONE PACKAGE THE BOOT ITSELF CALLS INTO, where it is loaded: the planner writes the scopes.
 PLANNING = "planning"
 #  AND THE ONE ONBOARDING ASKS AFTER, for the agents that read flows: a cycle among them is refused (#996).
@@ -182,7 +182,8 @@ PREDICTION_PACKAGE = "prediction"
 #  answers the world — sensing's ask, prediction's answer to an observation — and speech, and the
 #  transports last. A package not named here is still found and loaded where a role calls for it,
 #  after these, by its name.
-PASS = ("belief", "planning", "execution", "sensing", "prediction", "speech", "coordination", MQTT, HTTP)
+PASS = ("belief", "planning", "execution", "sensing", "prediction", "speech", "translation", "coordination", MQTT, HTTP,
+        TELEGRAM, EMAIL)
 
 #  A SENSOR OF THE AGENT'S: one an observer role it plays reads (`sensing:sensor`), DECLARED, so
 #  nothing here walks where a sensor is mounted; onboarding holds the declaration to the world
@@ -202,10 +203,16 @@ MINE = "?me orexis:plays/sensing:sensor ?sensor ."
 #  Every word here is a T-Box term and the world's things are variables, so nothing here names an
 #  instance (rule 1).
 OBSERVER, SPEAKER = NAMESPACES["sensing"] + "Observer", NAMESPACES["speech"] + "Speaker"
+TRANSLATOR = NAMESPACES["translation"] + "Translator"
+#  A CHAT THE AGENT IS IN, through a channel of the kind a member carries (`speech:Chat`).
+_IN_A_CHAT = "?chat speech:participant ?me ; speech:channel ?channel . "
 TRANSPORTS = {
     MQTT: {OBSERVER: f"{MINE} ?sensor mqtt4ssn:observesTopic ?topic",
-           SPEAKER: "?me mqtt4ssn:listensToTopic ?topic"},
+           SPEAKER: "?me mqtt4ssn:listensToTopic ?topic",
+           TRANSLATOR: _IN_A_CHAT + "?channel a mqtt4ssn:Topic"},
     HTTP: {OBSERVER: f"{MINE} ?sensor td:hasForm ?form"},
+    TELEGRAM: {TRANSLATOR: "?me telegram:hasBot ?bot"},
+    EMAIL: {TRANSLATOR: _IN_A_CHAT + "?channel schema:email ?address"},
 }
 #  WHAT WATCHES THE AGENT: a package created where the environment names a store for it, or a journal is kept,
 #  each a fact of deployment and not of the world, so no role decides it (`agent.series`, `agent.journal`).
@@ -277,6 +284,15 @@ def every_package() -> tuple[str, ...]:
     found = {p.parent.relative_to(KERNEL).as_posix() for p in KERNEL.rglob(VOCABULARY)
              if p.parent != KERNEL and "tests" not in p.relative_to(KERNEL).parts}
     return tuple(sorted(found, key=lambda package: (PASS.index(package) if package in PASS else len(PASS), package)))
+
+
+@cache
+def _declared_kinds() -> frozenset[str]:
+    """Every class a package's ontology declares, read apart, as `_vocabularies` reads the roles."""
+    return frozenset(q.subject.value for package in every_package()
+                     for q in document(KERNEL / package / VOCABULARY).quads_for_pattern(
+                         None, ox.NamedNode(_TYPE), ox.NamedNode(_CLASS), None)
+                     if isinstance(q.subject, ox.NamedNode))
 
 
 @cache
@@ -431,8 +447,11 @@ def _put_documents(store: ox.Store, world: Path, agent_id: str | None = None,
         else:
             log.warning("%s plays no role, so it loads no package and runs nothing: its self graph "
                         "says what it runs, `<agent> orexis:plays [ a <role> ]`", agent_id)
-    for _path, _doc, graph, kinds in passed:
-        log.log(logging.DEBUG if others & set(kinds) else logging.INFO,
+    #  A PACKAGE'S DOCUMENT FOR A READER THIS AGENT DOES NOT LOAD is expected, and said quietly: sensing's
+    #  askables are speech's kind, and an agent that speaks with nobody holds no speech.
+    for path, _doc, graph, kinds in passed:
+        expected = others & set(kinds) or (KERNEL in Path(path).resolve().parents and set(kinds) & _declared_kinds())
+        log.log(logging.DEBUG if expected else logging.INFO,
                 "passed over %s: %s is no kind this agent reads", graph, ", ".join(sorted(kinds)))
     if not agent_id:
         return []

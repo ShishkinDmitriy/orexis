@@ -1,0 +1,25 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix telegram: <http://example.org/orexis/telegram#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  OREXIS TELEGRAM TRANSPORT. Its words are the channel and how it is reached: a chat, the bot an agent reaches it
+#  through, and the user a person writes as. Which row reads a chat is what points at it — the channel of a
+#  `speech:Chat` is a person's prose, translation's — and the member knows nothing of what the words mean.
+
+telegram:Chat a owl:Class ; rdfs:label "Telegram chat" ;
+    rdfs:comment "A chat on Telegram - one with a person, or a group - named by the `telegram:chatId` the Bot API gives it. One chat may be reached through several bots, one per agent in it." .
+
+telegram:chatId a owl:DatatypeProperty ; rdfs:domain telegram:Chat ; rdfs:label "chat id" ;
+    rdfs:comment "The id the Bot API names a chat by, a number, negative for a group: read from `getUpdates` once someone has written in it. A person's own, so a world states it in a document under `secrets/` where it is." .
+
+telegram:Bot a owl:Class ; rdfs:label "Telegram bot" ;
+    rdfs:comment "An agent's account on Telegram, the user agent it speaks through there. Where the Bot API answers is its `schema:url`, a deployment fact told to the agent as `TELEGRAM_URL`; its token is the one secret, `TELEGRAM_BOT_TOKEN` in `secrets/telegram-<agent>.env`, never a graph." .
+
+telegram:hasBot a owl:ObjectProperty ; rdfs:range telegram:Bot ; rdfs:label "has bot" ;
+    rdfs:comment "The bot an agent speaks through on Telegram: the agent's own, so in a group with several agents each speaks in its own name." .
+
+telegram:userId a owl:DatatypeProperty ; rdfs:label "user id" ;
+    rdfs:comment "The id the Bot API gives a person who writes, which tells two people in one group apart; a person's own, stated under `secrets/` where it is. A chat with one person needs none." .

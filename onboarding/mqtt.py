@@ -14,11 +14,9 @@ what; each agent's self graph says which sensors the observer roles it plays rea
     an agent reads sensor S     read the topics S publishes on, and write the topic its board
                                 listens to (cadence and sense-now)
     an agent holds actuator A   write the topic A listens to, or its board's (a step's command)
-    it is in a chat with P      write the topic P listens to (its statements to the person)
+    it is in a chat over topic T  read and write T (a person's prose, and its own, both ways)
     a client hosts sensor X     write the topics X publishes on
     a client hosts actuator A   read the topics A listens to, and the client's own
-    a client translates chat C  read the inbox of each person in C and write each agent's, and read
-                                and write the topic C goes through — the translator, as that client
     a client acts for person P  read and write the topic of each chat P is in — P's user agent
 
 Read that list against `agent/transport/mqtt/driver.py` and it is the same set of topics the agent
@@ -162,24 +160,12 @@ SELECT ?id ?pattern WHERE {{
   ?a a orexis:Agent ; orexis:localId ?id ; <{MQTT4SSN}listensToTopic> ?topic .
   ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
 
-#  A CHAT IS WHO SPEAKS WITH WHOM THROUGH WHAT (speech:Chat): an agent in a chat writes the inbox of each
-#  person in it, where its statements to them arrive for the translator; the client that translates the
-#  chat reads those inboxes, writes each agent's inbox with what the person said, and reads and writes the
-#  topic the chat goes through; and a client acting on a person's behalf — their phone, their terminal —
-#  reads and writes that topic too (knowledge/domain/speech/chat.md).
-_TRANSLATES = "http://example.org/orexis/translation#translates"
-_TELLS_Q = f"""
+#  A CHAT IS WHO SPEAKS WITH WHOM THROUGH WHAT (speech:Chat): where it goes through a topic of the bus, every agent
+#  in it and every client acting on behalf of a person in it — their phone, their terminal — reads and writes the
+#  topic (knowledge/domain/speech/chat.md).
+_CHATS_Q = f"""
 SELECT ?id ?pattern WHERE {{
-  ?chat a speech:Chat ; speech:participant ?a , ?person . ?a a orexis:Agent ; orexis:localId ?id .
-  ?person a schema:Person ; <{MQTT4SSN}listensToTopic> ?topic .
-  ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
-
-_TRANSLATES_Q = f"""
-SELECT ?id ?access ?pattern WHERE {{
-  ?client <{MQTT4SSN}hasClientID> ?id ; <{_TRANSLATES}> ?chat . ?chat a speech:Chat .
-  {{ ?chat speech:participant ?p . ?p a schema:Person ; <{MQTT4SSN}listensToTopic> ?topic . BIND ("{READ}" AS ?access) }}
-  UNION {{ ?chat speech:participant ?a . ?a a orexis:Agent ; <{MQTT4SSN}listensToTopic> ?topic . BIND ("{WRITE}" AS ?access) }}
-  UNION {{ ?chat speech:channel ?topic . VALUES ?access {{ "{READ}" "{WRITE}" }} }}
+  ?chat a speech:Chat ; speech:participant ?a ; speech:channel ?topic . ?a a orexis:Agent ; orexis:localId ?id .
   ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
 
 _ACTS_FOR_Q = f"""
@@ -313,7 +299,8 @@ def grants(world: str) -> tuple[dict[str, Principal], dict[str, Principal]]:
         for other in list(agents):
             if other != row["id"]:
                 agent(other).may(WRITE, row["pattern"])
-    for row in _rows(store, _TELLS_Q):
+    for row in _rows(store, _CHATS_Q):
+        agent(row["id"]).may(READ, row["pattern"])
         agent(row["id"]).may(WRITE, row["pattern"])
 
     for row in _rows(store, _CLIENTS_Q):
@@ -326,9 +313,6 @@ def grants(world: str) -> tuple[dict[str, Principal], dict[str, Principal]]:
     for row in _rows(store, _LISTENS_Q):
         if row["id"] in devices:
             devices[row["id"]].may(READ, row["pattern"])
-    for row in _rows(store, _TRANSLATES_Q):
-        if row["id"] in devices:
-            devices[row["id"]].may(row["access"], row["pattern"])
     for row in _rows(store, _ACTS_FOR_Q):
         if row["id"] in devices:
             devices[row["id"]].may(READ, row["pattern"])

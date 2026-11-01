@@ -15,6 +15,11 @@ description: >-
   from prose, a world spawned without ratification, and an agent amending its own documents.
 ---
 
+> **Amended 2026-10-31:** the translator at the first edge is a package of the agent the person chats
+> with, not a process of the world, its key mounted into that agent's container
+> ([an-agent-translates-for-itself](/decisions/an-agent-translates-for-itself.md)); the model is in the
+> agent's process and still in no pass.
+
 # The question
 
 Three records already seat a model, each at one place: [genesis](/decisions/genesis.md) has it

@@ -58,11 +58,20 @@ services:
       METRICS_INTERVAL_S: "60"
       # where it serves its journal, on the host's loopback, allocated by the installation
       JOURNAL_PORT: "7889"
+      # where the language model answers — the installation's `onboarding:Model`; which model, and the
+      # key, arrive in the installation's secret below
+      MODEL_URL: "https://api.anthropic.com"
+      # where its Telegram bot answers, as the world's deployment graph states
+      TELEGRAM_URL: "https://api.telegram.org"
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx terrace`, and
       # its own broker credential, minted by `orexis-mqtt terrace`; mounted into THIS container alone
       - ./secrets/influx-history-terrace.env
       - ./secrets/influx-metrics-terrace.env
+      # the model's name and key — `infra/model.env.example` says how — since it translates
+      - ../../infra/secrets/model.env
+      # its bot's secret, written by hand: nothing can mint one
+      - ./secrets/telegram-terrace.env
       - ./secrets/mqtt-terrace.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent
@@ -77,6 +86,7 @@ services:
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./society.derived.ttl:/app/world/terrace/society.derived.ttl:ro
       - ./society.ttl:/app/world/terrace/society.ttl:ro
+      - ./speech.ttl:/app/world/terrace/speech.ttl:ro
       - ./world.ttl:/app/world/terrace/world.ttl:ro
       - ./beliefs/terrace.self.ttl:/app/world/terrace/beliefs/terrace.self.ttl:ro
       - ./secrets/terrace.crt:/app/secrets/agent.crt:ro
