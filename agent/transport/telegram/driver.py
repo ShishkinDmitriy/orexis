@@ -9,7 +9,14 @@ the last update seen, on a thread of its own; every text message is handed to th
 chat's id. `handle` finds the `telegram:Chat` the world names by that id, the person by the user id they wrote as
 where the world states it, and says `prose`; a chat the world names none of is nobody's, dropped and said once.
 
-**IT SENDS.** `say_to` posts `sendMessage` to a chat the world names by its id, and is False for any other channel.
+**IT SAYS WHOM A GROUP'S WORDS WERE FOR**, as Telegram tells it: words that tag the bot (`@its_username`, or a
+command sent `/status@its_username`) or reply to one of its messages are addressed to this agent; words that tag or
+reply to someone else and not the bot are addressed to them. Which account is the bot's own is asked of the API
+(`getMe`) before the first poll, since the interpreter can know it and no document need say it. In a chat with
+one person every word is the agent's, and nothing is said.
+
+**IT SENDS.** `say_to` posts `sendMessage` to a chat the world names by its id, as a reply to the message it names
+where it names one, and is False for any other channel.
 """
 
 from __future__ import annotations
@@ -61,6 +68,7 @@ class Telegram(Transport):
         self.prose = Signal("prose")
         self._unknown: set[str] = set()
         self._polling = threading.Lock()
+        self.bot: tuple[str, str] | None = None                # the bot's own user id and username, by `getMe`
 
     @classmethod
     def connect(cls, me: str, deliver=None, *, environ=None, client=None) -> "Telegram":
@@ -94,9 +102,21 @@ class Telegram(Transport):
         self.spawn(ask)
         return []
 
+    def whoami(self) -> tuple[str, str]:
+        """The bot's own user id and username, asked of the API once."""
+        if self.bot is None:
+            reply = self.call(self._method("getMe"), {})
+            found = (reply.get("result") or {}) if reply.get("ok", True) else {}
+            if "id" not in found:
+                raise RuntimeError(f"getMe told nothing of the bot: {reply.get('description', reply)}")
+            self.bot = (str(found["id"]), str(found.get("username") or "").lower())
+        return self.bot
+
     def updates(self) -> list[tuple[str, bytes]]:
-        """Every text message since the last poll, as its chat's id and `{"from": user id, "text": …}`; an update that
-        is no text message is passed over, and every update seen is confirmed by the next poll's offset."""
+        """Every text message since the last poll, as its chat's id and `{"from": user id, "text": …, "addressed": …,
+        "message": its id}`; an update that is no text message is passed over, and every update seen is confirmed by
+        the next poll's offset."""
+        self.whoami()
         body = {"timeout": 0, "allowed_updates": ["message"]}
         if self.offset is not None:
             body["offset"] = self.offset
@@ -105,12 +125,39 @@ class Telegram(Transport):
         for update in reply.get("result", []) if reply.get("ok", True) else []:
             self.offset = max(self.offset or 0, int(update.get("update_id", 0)) + 1)
             message = update.get("message") or {}
-            text, chat = message.get("text"), (message.get("chat") or {}).get("id")
-            if text and chat is not None:
-                sender = (message.get("from") or {}).get("id")
-                out.append((str(chat), json.dumps({"from": str(sender) if sender is not None else None,
-                                                   "text": text.strip()}).encode()))
+            text, chat = message.get("text"), message.get("chat") or {}
+            if text and chat.get("id") is not None:
+                sender, number = (message.get("from") or {}).get("id"), message.get("message_id")
+                out.append((str(chat["id"]), json.dumps({
+                    "from": str(sender) if sender is not None else None, "text": text.strip(),
+                    "addressed": None if chat.get("type") == "private" else self.addressed(message),
+                    "message": str(number) if number is not None else None}).encode()))
         return out
+
+    def addressed(self, message: dict) -> bool | None:
+        """Whom a group's message was for: True where it tags the bot or replies to it, False where it tags or replies
+        to someone else and not the bot, None where it does neither. An entity's offset and length are in UTF-16 code
+        units, as the Bot API counts them."""
+        me, username = self.whoami()
+        units = (message.get("text") or "").encode("utf-16-le")
+        mine = other = False
+        for entity in message.get("entities") or []:
+            start, length = int(entity.get("offset", 0)), int(entity.get("length", 0))
+            piece = units[2 * start:2 * (start + length)].decode("utf-16-le", errors="replace")
+            if entity.get("type") == "text_mention":
+                tagged = str((entity.get("user") or {}).get("id")) == me
+            elif entity.get("type") == "mention":
+                tagged = piece.lstrip("@").lower() == username
+            elif entity.get("type") == "bot_command" and "@" in piece:
+                tagged = piece.split("@", 1)[1].lower() == username
+            else:
+                continue
+            mine, other = mine or tagged, other or not tagged
+        replied = (message.get("reply_to_message") or {}).get("from") or {}
+        if "id" in replied:
+            to_me = str(replied["id"]) == me
+            mine, other = mine or to_me, other or not to_me
+        return True if mine else False if other else None
 
     def handle(self, store, channel: str, payload: bytes, at, *, memo=None) -> list[tuple[str | None, str]]:
         stated = graphs_of(store, BELIEF, common=True)
@@ -122,15 +169,19 @@ class Telegram(Transport):
             return []
         said = json.loads(payload)
         people = [r["person"] for r in rows(store, _USER_Q, stated, id=ox.Literal(said["from"]))] if said.get("from") else []
-        prose = Prose(chats[0], people[0] if people else None, said.get("text") or "", at)
+        prose = Prose(chats[0], people[0] if people else None, said.get("text") or "", at,
+                      addressed=said.get("addressed"), message=said.get("message"))
         return [(None, graph) for graph in self.prose.emit(prose)]
 
-    def say_to(self, store, channel: str, text: str) -> bool:
+    def say_to(self, store, channel: str, text: str, *, reply: str | None = None) -> bool:
         found = rows(store, _ID_Q, graphs_of(store, BELIEF, common=True), chat=channel)
         if not found:
             return False
-        reply = self.call(self._method("sendMessage"), {"chat_id": found[0]["id"], "text": text})
-        if not reply.get("ok", True):
-            log.warning("telegram would not take a message for %s: %s", local_of(channel), reply.get("description", reply))
+        body = {"chat_id": found[0]["id"], "text": text}
+        if reply is not None:
+            body["reply_parameters"] = {"message_id": int(reply), "allow_sending_without_reply": True}
+        answer = self.call(self._method("sendMessage"), body)
+        if not answer.get("ok", True):
+            log.warning("telegram would not take a message for %s: %s", local_of(channel), answer.get("description", answer))
             return False
         return True

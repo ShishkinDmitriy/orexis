@@ -18,7 +18,8 @@ def test_the_agent_reads_its_chats_off_the_world_each_with_its_channel_and_who_i
     assert chats["seeker_and_clara"].channel == V + "clara_telegram" and chats["seeker_and_clara"].people == ((V + "clara", "Clara"),)
     household = chats["household"]
     assert household.people == ((V + "anna", "Anna"), (V + "clara", "Clara"))
-    assert household.agents == ((V + "keeper", ("keeper",)), (SEEKER, ("seeker",)))
+    assert household.agents == ((V + "keeper", ("keeper", "Kim")), (SEEKER, ("seeker",))), \
+        "an agent answers to its local id, its IRI's local name and the name it goes by"
     assert chats["seeker_and_clara"].person(None) == (V + "clara", "Clara"), "a chat's one person writes where the channel tells none"
     assert household.person(None) is None and household.person(V + "boris") is None, "and in a group nobody unnamed, nor a stranger"
 
