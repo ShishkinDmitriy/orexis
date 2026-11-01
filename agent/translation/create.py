@@ -5,8 +5,10 @@ topic — and keeps every member that can `say_to` one; and it hears speech's `t
 person is rendered and sent through the person's chat rather than over the bus.
 
 A PERSON'S WORDS ARE HEARD IN THE CHAT THEY ARRIVE IN. The chat is the one whose channel they came on; the person is
-the sender the channel told, or the chat's one person where it told none. In a chat with several agents, an agent
-hears words that name another agent and not it as not its own, and passes over them in silence. `/status` is
+the sender the channel told, or the chat's one person where it told none. Words are addressed to the agent where they
+name it as a word of their own, or where the carrier says they tagged its account or replied to it; they are
+another's where they name another agent of the chat, or the carrier says they were for someone else, and do not
+name it — and those it passes over in silence. An answer replies to the words it answers, where the carrier threads. `/status` is
 answered with the rows of every askable that takes no field, for nothing. Any other words go to the model once,
 with every sayable the world declares and every askable the agent's packages, domains and world declare as tools
 (knowledge/decisions/a-question-is-answered-and-every-other-act-is-kept.md): a statement of the sayable it fills is
@@ -105,14 +107,15 @@ class _Translation:
             return []
         others = [names for agent, names in chat.agents if agent != me]
         mine = dict(chat.agents).get(me, (local_of(me),))
-        addressed = named(prose.text, mine)
-        if others and not addressed and any(named(prose.text, names) for names in others):
-            return []                                            # words to another agent of the chat
+        addressed = prose.addressed is True or named(prose.text, mine)
+        if not addressed and (prose.addressed is False or any(named(prose.text, names) for names in others)):
+            return []                                            # words to someone else of the chat
         unaddressed = bool(others) and not addressed
         stores = [store, self.runtime.intentions]
         known = askables(store)
+        reply = prose.message
         if prose.text.strip().lower().startswith("/status"):
-            self.say(chat, status(stores, known, me, self.runtime.now))
+            self.say(chat, status(stores, known, me, self.runtime.now), reply=reply)
             return []
         offered = ([] if unaddressed else sayables(store)), known
         told = None if unaddressed else status(stores, known, me, self.runtime.now)
@@ -121,10 +124,11 @@ class _Translation:
             return []
         if not unaddressed:
             self._begin(chat)
-        self.spawn(lambda: self._think(chat, person, prose.text, offered, told, unaddressed))
+        self.spawn(lambda: self._think(chat, person, prose.text, offered, told, unaddressed, reply))
         return []
 
-    def _think(self, chat: Chat, person, text: str, offered, told: str | None, unaddressed: bool) -> None:
+    def _think(self, chat: Chat, person, text: str, offered, told: str | None, unaddressed: bool,
+               reply: str | None = None) -> None:
         """The model's first part, off the runtime's thread: the one tool the words make — a sayable, kept; an
         askable, answered on the runtime's thread; or nothing, answered from the status, or silence unaddressed."""
         saying, asking_of = offered
@@ -132,11 +136,11 @@ class _Translation:
         try:
             call = next(iter(self.model.ask(HEAR_SYSTEM, f"From {person[1]}:\n\n{text}", tools).calls), None)
         except Exception as exc:                                 # noqa: BLE001 — the model fails
-            return self._failed(chat, person, exc, unaddressed)
+            return self._failed(chat, person, exc, unaddressed, reply)
         sayable = next((s for s in saying if call and s.name == call[0]), None)
         askable = next((a for a in asking_of if call and a.name == call[0]), None)
         if askable is not None:
-            self.runtime.submit(lambda: self._asked(chat, person, text, askable, call[1], unaddressed))
+            self.runtime.submit(lambda: self._asked(chat, person, text, askable, call[1], unaddressed, reply))
             return
         if sayable is not None:
             payload = statement_of(sayable, call[1], by=person[0], prose=text, at=self.runtime.now)
@@ -145,37 +149,40 @@ class _Translation:
         elif call is not None and call[0] != NOTHING:
             log.warning("the model called %r, which is neither a sayable nor an askable — dropped", call[0])
         elif told is not None:
-            return self._phrase(chat, person, text, f"What {local_of(self.runtime.me)} says of itself:\n\n{told}", False)
+            return self._phrase(chat, person, text, f"What {local_of(self.runtime.me)} says of itself:\n\n{told}", False,
+                                reply)
         self._ended(chat, unaddressed)
 
-    def _asked(self, chat: Chat, person, text: str, askable, inputs: dict, unaddressed: bool) -> list[str]:
+    def _asked(self, chat: Chat, person, text: str, askable, inputs: dict, unaddressed: bool,
+               reply: str | None = None) -> list[str]:
         """A job: the askable the model called, answered from the store, and its rows phrased off the thread."""
         found = answered([self.runtime.beliefs, self.runtime.intentions], askable, inputs)
         if found is None:
             self._ended(chat, unaddressed)
             return []
         rows = "\n".join(f" - {line}" for line in lines(found)) or " (no rows)"
-        self.spawn(lambda: self._phrase(chat, person, text, f"{askable.description or askable.name}:\n{rows}", unaddressed))
+        self.spawn(lambda: self._phrase(chat, person, text, f"{askable.description or askable.name}:\n{rows}", unaddressed,
+                                        reply))
         return []
 
-    def _phrase(self, chat: Chat, person, text: str, rows: str, unaddressed: bool) -> None:
+    def _phrase(self, chat: Chat, person, text: str, rows: str, unaddressed: bool, reply: str | None = None) -> None:
         """The model's second part, off the runtime's thread: the rows phrased as the answer, or silence."""
         try:
             words = self.model.ask(ANSWER_SYSTEM + (UNADDRESSED if unaddressed else ""),
                                    f"{rows}\n\nThe question, from {person[1]}:\n\n{text}").text.strip()
         except Exception as exc:                                 # noqa: BLE001 — the model fails
-            return self._failed(chat, person, exc, unaddressed)
+            return self._failed(chat, person, exc, unaddressed, reply)
         if words and words != SILENT:
-            self.runtime.submit(lambda: self._said(chat, words))
+            self.runtime.submit(lambda: self._said(chat, words, reply))
         self._ended(chat, unaddressed)
 
-    def _failed(self, chat: Chat, person, exc: Exception, unaddressed: bool) -> None:
+    def _failed(self, chat: Chat, person, exc: Exception, unaddressed: bool, reply: str | None = None) -> None:
         """The model would not answer: said in the log, and in the chat where the agent was addressed."""
         me = local_of(self.runtime.me)
         log.warning("%s could not answer %s: the model would not answer: %s", me, person[1], exc)
         if not unaddressed:
             words = f"{me} could not answer: its model would not answer ({exc})."
-            self.runtime.submit(lambda: self._said(chat, words))
+            self.runtime.submit(lambda: self._said(chat, words, reply))
         self._ended(chat, unaddressed)
 
     # ── writing ───────────────────────────────────────────────────────────────────────────────
@@ -254,14 +261,15 @@ class _Translation:
         self.spawn(render)
         return []
 
-    def _said(self, chat: Chat, words: str) -> list[str]:
+    def _said(self, chat: Chat, words: str, reply: str | None = None) -> list[str]:
         """A job: `words` said in the chat, and nothing written."""
-        self.say(chat, words)
+        self.say(chat, words, reply=reply)
         return []
 
-    def say(self, chat: Chat, words: str) -> bool:
-        """`words` through the chat's channel, by the first member that carries it."""
-        if any(member.say_to(self.runtime.beliefs, chat.channel, words) for member in self.carriers):
+    def say(self, chat: Chat, words: str, *, reply: str | None = None) -> bool:
+        """`words` through the chat's channel, by the first member that carries it, as a reply to the message `reply`
+        names where there is one."""
+        if any(member.say_to(self.runtime.beliefs, chat.channel, words, reply=reply) for member in self.carriers):
             return True
         log.warning("%s: nothing carries %s's channel, so what was said there goes nowhere",
                     local_of(self.runtime.me), local_of(chat.iri))

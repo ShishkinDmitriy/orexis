@@ -85,7 +85,8 @@ def test_several_members_are_one_transport_and_a_nudge_goes_to_the_member_reachi
 def test_prose_is_said_by_the_first_member_that_carries_the_channel():
     said = []
     bus, bot = _Member("bus", set()), _Member("bot", set())
-    bus.say_to = lambda store, channel, text: False
-    bot.say_to = lambda store, channel, text: said.append((channel, text)) or True
-    assert Transports([bus, bot]).say_to(None, "urn:chat", "hello") is True and said == [("urn:chat", "hello")]
+    bus.say_to = lambda store, channel, text, reply=None: False
+    bot.say_to = lambda store, channel, text, reply=None: said.append((channel, text, reply)) or True
+    assert Transports([bus, bot]).say_to(None, "urn:chat", "hello", reply="7") is True and said == [("urn:chat", "hello", "7")], \
+        "the message replied to goes through to the member"
     assert Transports([bus]).say_to(None, "urn:chat", "hello") is False, "a channel nobody carries goes nowhere"

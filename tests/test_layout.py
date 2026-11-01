@@ -1977,7 +1977,7 @@ def _keeper_self(edit):
      "boris_phone: acts on someone's behalf and has no one client id: it connects as itself, with a credential of its own"),
     (_speech(lambda text: text.replace(' telegram:chatId "4815162342" .', ' telegram:chatId "4815162342" , "1" .')),
      "clara_telegram: a Telegram chat has one id, which the Bot API names it by"),
-    (_viewing(lambda text: text.replace("    orexis:localId \"keeper\" ;\n    telegram:hasBot :keeper_bot .", "    orexis:localId \"keeper\" .")),
+    (_viewing(lambda text: text.replace("    schema:name \"Kim\" ;\n    telegram:hasBot :keeper_bot .", "    schema:name \"Kim\" .")),
      "household: has http://example.org/orexis/world/viewing#keeper in it on Telegram, which speaks through no bot of its own"),
     (_viewing(deployment=lambda text: text.replace(':seeker_bot schema:url "https://api.telegram.org"', ':seeker_bot schema:url "http://api.telegram.org"')),
      "seeker_bot: a Telegram bot answers at one https:// url"),

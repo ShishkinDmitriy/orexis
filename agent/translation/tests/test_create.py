@@ -40,13 +40,16 @@ class Bot(Transport):
         self.prose = Signal("prose")
         self.said: list[tuple[str, str]] = []
         self.writing: list[str] = []
+        self.replies: list[str | None] = []
 
     def handle(self, store, channel, payload, at, *, memo=None):
         said = json.loads(payload)
-        return [(None, g) for g in self.prose.emit(Prose(channel, said.get("from"), said["text"], at))]
+        return [(None, g) for g in self.prose.emit(Prose(channel, said.get("from"), said["text"], at,
+                                                         addressed=said.get("addressed"), message=said.get("message")))]
 
-    def say_to(self, store, channel, text):
+    def say_to(self, store, channel, text, *, reply=None):
         self.said.append((channel, text))
+        self.replies.append(reply)
         return True
 
     def writing_in(self, store, channel):
@@ -76,8 +79,8 @@ def seeker(monkeypatch):
     return runtime, part, bot
 
 
-def _write(runtime, channel: str, text: str, sender: str | None = None):
-    runtime.deliver(channel, json.dumps({"from": sender, "text": text}).encode(), NOW)
+def _write(runtime, channel: str, text: str, sender: str | None = None, **carried):
+    runtime.deliver(channel, json.dumps({"from": sender, "text": text, **carried}).encode(), NOW)
     runtime.run(passes=1, poll_s=0)
 
 
@@ -133,7 +136,8 @@ def test_in_a_group_an_agent_answers_when_named_keeps_silent_when_another_is_and
     runtime, part, bot = seeker
     part.model = StandIn(text="I am looking at two flats.")
     _write(runtime, V + "household_telegram", "keeper, is the door locked?", V + "anna")
-    assert part.model.asked == [] and bot.said == [], "words to another agent of the chat"
+    _write(runtime, V + "household_telegram", "Kim, is the door locked?", V + "anna")
+    assert part.model.asked == [] and bot.said == [], "words to another agent of the chat, by its id or its name"
     _write(runtime, V + "household_telegram", "seeker, how is the search going?", V + "anna")
     assert [a[0] for a in part.model.asked] == [HEAR_SYSTEM, ANSWER_SYSTEM], "named: one call, and nothing fits, so the status"
     assert bot.said == [(V + "household_telegram", "I am looking at two flats.")]
@@ -149,6 +153,25 @@ def test_in_a_group_an_agent_answers_when_named_keeps_silent_when_another_is_and
         "its rows do not answer it, so it keeps silent"
     _write(runtime, V + "household_telegram", "hello?", V + "nobody")
     assert len(part.model.asked) == 2, "someone the chat names not is not heard"
+
+
+def test_in_a_group_words_that_tag_or_reply_to_the_agent_are_its_own_and_its_answer_replies_to_them(seeker):
+    """The carrier says whom the words were for: tagged or replied to, the seeker hears them as if named — every
+    sayable offered, and the status answering where nothing fits — and its answer replies to them; tagging or
+    replying to someone else, it keeps silent, unless it is named too."""
+    runtime, part, bot = seeker
+    part.model = StandIn(text="I am looking at two flats.")
+    _write(runtime, V + "household_telegram", "how is the search going?", V + "anna", addressed=False, message="41")
+    assert part.model.asked == [] and bot.said == [], "words that tag or reply to someone else"
+    _write(runtime, V + "household_telegram", "how is the search going?", V + "anna", addressed=True, message="42")
+    (hear, _, offered), (answer, _, _) = part.model.asked
+    assert (hear, answer) == (HEAR_SYSTEM, ANSWER_SYSTEM) and "ViewingOffer" in offered, \
+        "tagged, it is addressed: the sayables are offered and the status answers, with no silence asked of it"
+    assert bot.said == [(V + "household_telegram", "I am looking at two flats.")] and bot.replies == ["42"]
+    _write(runtime, V + "household_telegram", "seeker, and you?", V + "anna", addressed=False, message="43")
+    assert len(part.model.asked) == 4 and bot.replies == ["42", "43"], "named in words, it answers whoever was tagged"
+    _write(runtime, V + "household_telegram", "/status", V + "anna", addressed=True, message="44")
+    assert len(part.model.asked) == 4 and bot.replies[-1] == "44", "a command replies to itself, for nothing"
 
 
 def test_what_the_agent_says_to_a_person_is_rendered_and_sent_through_their_chat(seeker):

@@ -917,8 +917,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A chat is who speaks with whom through what, and the channel's type is the carrier** — `speech:Chat` with
   its participants and one channel, a topic, a contact point with an email or a `telegram:Chat`, speech naming
   no carrier; a person connects by a user agent that `prov:actedOnBehalfOf` them, each agent speaks through a
-  `telegram:Bot` of its own (`telegram:hasBot`), and in a group an agent answers when named, keeps silent when another is, and
-  answers an unnamed question only where its account speaks to it (chat, translator).
+  `telegram:Bot` of its own (`telegram:hasBot`), and in a group an agent answers when named, tagged or replied to, keeps
+  silent when another is, and answers an unnamed question only where its account speaks to it (chat, translator).
 - **What an agent says of itself is its askables, answered when a person asks** — an `speech:Askable` in an
   `speech:AskableGraph` beside a package's ontology, its fields filled by the model and its select the
   package's own; `/status` is the rows of every one that takes no field, for nothing; stored nowhere, published

@@ -128,6 +128,8 @@ def test_the_sovereign_asks_the_agent_through_its_own_bot_and_is_answered_with_w
         if url.endswith("/getUpdates"):
             found, updates[:] = list(updates), []
             return {"ok": True, "result": found}
+        if url.endswith("/getMe"):
+            return {"ok": True, "result": {"id": 900, "is_bot": True, "username": "terrace_bot"}}
         sent.append(body)
         return {"ok": True}
 

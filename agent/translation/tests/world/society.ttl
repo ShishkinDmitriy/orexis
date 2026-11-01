@@ -7,7 +7,8 @@
 
 <> a orexis:SocietyGraph .    # this document is one graph, and this is what it is
 
-#  THE SOCIETY'S WIRING: two agents, the seeker and the keeper, each speaking on Telegram through a bot of its own;
+#  THE SOCIETY'S WIRING: two agents, the seeker and the keeper — who goes by Kim — each speaking on Telegram through a
+#  bot of its own;
 #  the seeker on the bus as well, where it chats with Boris through his phone; and the people, by the names they go
 #  by and, where they write in a group, the Telegram user they write as. The filters are asserted here, as a test
 #  world's are, where `orexis-onboard` would derive them.
@@ -21,6 +22,7 @@
     telegram:hasBot :seeker_bot .
 :keeper a orexis:Agent ;
     orexis:localId "keeper" ;
+    schema:name "Kim" ;
     telegram:hasBot :keeper_bot .
 :seeker_bot a telegram:Bot .
 :keeper_bot a telegram:Bot .

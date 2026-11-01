@@ -348,7 +348,7 @@ class Mqtt(Transport):
             written += [(sensor, graph) for graph in received(store, self.me, sensor, payload, at, memo=memo)]
         return written
 
-    def say_to(self, store, channel: str, text: str) -> bool:
+    def say_to(self, store, channel: str, text: str, *, reply: str | None = None) -> bool:
         """Prose out on the topic node `channel`, a chat's topic, by the one pattern naming it with no wildcard, as
         `{"from": the agent, "text": …}` so the agent knows its own when the broker hands it back; False where the
         channel is no topic of a chat this agent is in, or it is on no broker of this member's."""
