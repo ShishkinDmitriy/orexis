@@ -56,11 +56,16 @@ from datetime import datetime
 @dataclass(frozen=True)
 class Prose:
     """A person's words on a channel at `at`: the channel's node in the world, the person who said them where the
-    channel tells — a Telegram user, a mailbox's sender — or None where it does not, and the text."""
+    channel tells — a Telegram user, a mailbox's sender — or None where it does not, and the text. Where the carrier
+    tells whom the words were for, `addressed` says so — True where they tagged or replied to this agent's own
+    account, False where they tagged or replied to someone else and not it, None where the carrier tells nothing —
+    and `message` is the carrier's id of the words, which an answer may reply to."""
     channel: str
     sender: str | None
     text: str
     at: datetime | None = None
+    addressed: bool | None = None
+    message: str | None = None
 
 
 class Transport:
@@ -100,9 +105,10 @@ class Transport:
     def stop(self) -> None:
         """End: whatever the member holds open, closed."""
 
-    def say_to(self, store, channel: str, text: str) -> bool:
-        """Prose out on `channel`, a chat's channel this member carries — a Telegram chat, a mailbox, a topic.
-        Whether anything was SENT: a member that does not carry the channel sends nothing."""
+    def say_to(self, store, channel: str, text: str, *, reply: str | None = None) -> bool:
+        """Prose out on `channel`, a chat's channel this member carries — a Telegram chat, a mailbox, a topic — as a
+        reply to the message `reply` names where the carrier threads one. Whether anything was SENT: a member that
+        does not carry the channel sends nothing."""
         return False
 
     def open(self, store) -> list[str]:
@@ -179,8 +185,8 @@ class Transports(Transport):
     def tell(self, store, to: str, document: bytes) -> bool:
         return any(member.tell(store, to, document) for member in self.members)
 
-    def say_to(self, store, channel: str, text: str) -> bool:
-        return any(member.say_to(store, channel, text) for member in self.members)
+    def say_to(self, store, channel: str, text: str, *, reply: str | None = None) -> bool:
+        return any(member.say_to(store, channel, text, reply=reply) for member in self.members)
 
     def set_cadence(self, store, sensor: str, sleep_s: int) -> bool:
         member = self._reaching(store, sensor)

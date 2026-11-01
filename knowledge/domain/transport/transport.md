@@ -87,8 +87,11 @@ The agent's own bot, the `telegram:Bot` it `telegram:hasBot`, its token `TELEGRA
 offset past the last update seen, on a thread of its own; a text message's channel is its chat's id,
 which the world states as a `telegram:Chat`'s `telegram:chatId`, and who wrote is the person the world
 states under that `telegram:userId`. A message in a chat the world names none of is dropped and said
-once. `say_to` posts `sendMessage` with the chat's id. Its words are its own ontology's
-(`agent/transport/telegram/ontology.ttl`).
+once. In a group it says whom the words were for, as Telegram tells it: words tagging the bot or
+replying to one of its messages are addressed to the agent, words tagging or replying to someone else
+and not it are not, and which account is the bot's own it asks the API (`getMe`) rather than any
+document. `say_to` posts `sendMessage` with the chat's id, as a reply to the message the agent answers.
+Its words are its own ontology's (`agent/transport/telegram/ontology.ttl`).
 
 # The member that ships: email
 

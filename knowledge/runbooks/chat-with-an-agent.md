@@ -122,9 +122,13 @@ the model with the agent's askables, and the answer comes from the rows the agen
 
 5. `orexis-onboard <world>` and `podman compose up -d` again.
 
-In the group, name the agent you ask ("terrace, is the bed dry?") and the others keep silent; ask
-nobody, and only an agent whose askables answer the question replies. `/status` in a group is answered
-by every agent in it; Telegram may send it as `/status@<bot>`, which is the same command.
+In the group, ask one agent as you would ask a person: tag its bot (`@<its bot's username>`), reply to
+one of its messages, or name it — its id or the name the world gives it, `schema:name` ("terrace, is
+the bed dry?"). The agent answers as a reply to your message, and the others keep silent; tag or reply
+to someone else and every agent keeps silent unless you name it too. Ask nobody, and only an agent whose
+askables answer the question replies. `/status` in a group is answered by every agent in it, and
+`/status@<bot>` by that bot's agent alone. The bot's username is asked of Telegram, so no document
+states it.
 
 # When it does not answer
 

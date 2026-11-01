@@ -2,8 +2,8 @@
 they go by, and the agents in it by the names they answer to — and whether words name an agent.
 
 A CHAT IS WHO SPEAKS WITH WHOM THROUGH WHAT (knowledge/domain/speech/chat.md): `speech:Chat`, its participants and
-its one channel, of whatever kind a transport carries. An agent answers to its local id and its IRI's local name, so
-a person in a group asks one by either, as a word of its own.
+its one channel, of whatever kind a transport carries. An agent answers to its local id, its IRI's local name and the
+name it goes by, `schema:name`, so a person in a group asks one by any of them, as a word of its own.
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ def chats_of(store) -> list[Chat]:
         if r["kind"].endswith("Person"):
             chat["people"][r["who"]] = r.get("name") or local_of(r["who"])
         else:
-            chat["agents"][r["who"]] = tuple(dict.fromkeys(n for n in (r.get("id"), local_of(r["who"])) if n))
+            chat["agents"][r["who"]] = tuple(dict.fromkeys(n for n in (r.get("id"), local_of(r["who"]), r.get("name")) if n))
     return [Chat(iri, c["channel"], tuple(sorted(c["people"].items())), tuple(sorted(c["agents"].items())))
             for iri, c in sorted(found.items())]
 

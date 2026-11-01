@@ -124,7 +124,7 @@ class Email(Transport):
         prose = Prose(found[0], None, payload.decode("utf-8", errors="replace"), at)
         return [(None, graph) for graph in self.prose.emit(prose)]
 
-    def say_to(self, store, channel: str, text: str) -> bool:
+    def say_to(self, store, channel: str, text: str, *, reply: str | None = None) -> bool:
         found = rows(store, _ADDRESS_Q, graphs_of(store, BELIEF, common=True), contact=channel)
         if not found:
             return False
