@@ -102,7 +102,7 @@ class Model:
         blocks = [{"type": "text", "text": text} for text in system if text]
         if len(blocks) > 1:
             blocks[-2]["cache_control"] = {"type": "ephemeral"}
-        body: dict = {"model": self.name, "max_tokens": self.max_tokens, "system": blocks, "messages": messages}
+        body: dict = {"model": self.name, "max_tokens": self.max_tokens, "system": blocks, "messages": _cached(messages)}
         if tools:
             body["tools"] = list(tools)
             body["tool_choice"] = {"type": "none" if last else "auto"}
@@ -118,6 +118,18 @@ class Model:
                 turn.calls.append((block.id, block.name, dict(block.input or {})))
                 turn.content.append({"type": "tool_use", "id": block.id, "name": block.name, "input": dict(block.input or {})})
         return turn
+
+
+def _cached(messages: list[dict]) -> list[dict]:
+    """The conversation with its last block marked for the cache, so the next turn reads all of it from there and
+    pays in full only for what it adds — a copy, since a mark left behind on every turn would pass the API's four."""
+    if not messages:
+        return messages
+    last = dict(messages[-1])
+    content = last["content"]
+    blocks = [{"type": "text", "text": content}] if isinstance(content, str) else [dict(b) for b in content]
+    blocks[-1]["cache_control"] = {"type": "ephemeral"}
+    return [*messages[:-1], {**last, "content": blocks}]
 
 
 def why_not(exc: Exception) -> str:
