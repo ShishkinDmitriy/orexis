@@ -45,12 +45,15 @@ refused the model writing SPARQL on three premises, each answered here:
 
 - **Free text to action.** A SELECT or an ASK is no action. A text is parsed first, and anything else - an
   update, a CONSTRUCT - is refused before it runs; nothing the model reads becomes a belief.
-- **The `GRAPH` trap.** The model never chooses what it reads: the copy holds the chat's graphs and nothing
-  else, read as one default graph, their union, so an ordinary pattern reads all of them; a `SERVICE` or a
-  `FROM` anywhere in the text is refused with the reason, so the model may write it again. A `GRAPH ?g` is
-  admitted since the copy keeps each graph's name and the catalogue's rows about it, and it chooses nothing
-  past the wall: it says where a belief came from, its document, its kind, how it arrived, whose it is
-  (amended when a person asked the terrace how it knew their name, and it could not say).
+- **The `GRAPH` trap.** The model never reaches past the chat: the copy holds the chat's graphs and nothing
+  else, each under its name, and a `SERVICE` or a `FROM` is refused with the reason, so the model may write it
+  again. Within the copy a query states the kinds it reads, as every reader of the store does: their graphs are
+  its default graph and its `GRAPH` range, and the catalogue is named beside them, never merged in, since
+  statements about graphs merged into the data answer open patterns that mean something else. Where a belief
+  came from is then a `GRAPH` away: its document, its kinds, how it arrived, whose it is (amended when a person
+  asked the terrace how it knew their name, and it could not say). Merging every graph into one, as first
+  built, was the union-by-default the store refused, and a tool per purpose - observations, provenance - a
+  fixed list of questions again.
 - **An unbounded cost.** The query runs on the model's thread over the copy, so a slow one never stalls a
   pass; its rows are capped at fifty; a conversation is `TURNS` turns at most.
 

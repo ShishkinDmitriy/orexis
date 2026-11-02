@@ -5,10 +5,13 @@ their names for the model's queries — and the two tools that read it, `vocabul
 **THE CHAT SAYS WHAT IT READS, AND THE MODEL NEVER CHOOSES A GRAPH.** A chat stating no kind reads nothing here, and
 its model has the askables alone. One stating kinds — a sovereign's chat every graph, a broker's the market's — is
 read as the graphs of those kinds in every store the agent holds, COPIED on the runtime's thread, each under its own
-name with the catalogue's rows about it, and read as one default graph, their union, so a query runs over what the
-chat admits and nothing else, whatever the model writes, and a slow one stalls the model's thread and never a pass.
-Where a belief came from is a `GRAPH` away: the graph's name is its document's, and the catalogue says its kind, how
-it arrived, whose it is and when it holds.
+name with the catalogue's rows about it, so a query runs over what the chat admits and nothing else, whatever the
+model writes, and a slow one stalls the model's thread and never a pass.
+
+**A QUERY STATES THE KINDS IT READS, AS EVERY READER DOES.** Their graphs are its default graph and its `GRAPH`
+range, and the catalogue is named beside them and never merged into them, since statements ABOUT graphs merged into
+the data would answer open patterns that mean something else. Where a belief came from is a `GRAPH` away: the
+graph's name is its document's, and the catalogue says its kinds, how it arrived, whose it is and when it holds.
 
 **A QUERY IS READ, AND REFUSED BEFORE IT RUNS WHERE IT COULD DO ANYTHING BUT READ.** It is parsed with the store's
 prefixes declared; anything but a SELECT or an ASK, and a `SERVICE` or a `FROM` anywhere in it, is refused
@@ -36,6 +39,7 @@ VOCABULARY, QUERY = "vocabulary", "query"
 #  WHAT A QUERY MAY NOT HOLD: a graph of its own choosing, a service elsewhere, a dataset named.
 _REFUSED = {"ServiceGraphPattern": "a SERVICE clause", "datasetClause": "a FROM"}
 _KINDS = ("SelectQuery", "AskQuery")
+_TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 #  WHAT A NAME MAY BE AFTER A PREFIX, written plainly: where an IRI's tail is not one, it is written whole.
 _LOCAL = re.compile(r"[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?")
 
@@ -47,6 +51,8 @@ class Readable:
     def __init__(self, stores, kinds, me: str | None = None):
         self.store = ox.Store()
         self.prefixes: dict[str, str] = dict(NAMESPACES)
+        self.kinds: dict[str, set[ox.NamedNode]] = {}           # each kind a copied graph is, and the graphs it is
+        self.catalogues: set[ox.NamedNode] = set()
         read: dict[str, list] = {}
         for store in {id(s): s for s in stores if s is not None}.values():
             ontologies = set(graphs_of(store, ONTOLOGY)) - {CLOSURE_GRAPH}      # derived, and no vocabulary
@@ -55,7 +61,12 @@ class Readable:
                 quads = list(store.quads_for_pattern(None, None, None, ox.NamedNode(graph)))
                 self.store.extend(quads)                         # under its own name, so GRAPH says where a row is
                 if catalogue is not None:
-                    self.store.extend(_described(store, ox.NamedNode(graph), ox.NamedNode(catalogue)))
+                    described = _described(store, ox.NamedNode(graph), ox.NamedNode(catalogue))
+                    self.store.extend(described)
+                    self.catalogues.add(ox.NamedNode(catalogue))
+                    for q in described:
+                        if q.subject == ox.NamedNode(graph) and q.predicate == _TYPE:
+                            self.kinds.setdefault(q.object.value, set()).add(q.subject)
                 if graph in ontologies and quads:
                     name, ns = _prefix_of(quads) or (local_of(graph), None)
                     while name in read:
@@ -79,26 +90,36 @@ class Readable:
              "sentence of what it means. Load the ones a question needs before querying their terms; a term's whole "
              "rdfs:comment, and anything else the vocabulary states, is read with the query tool.", "input_schema": {"type": "object", "properties": {"name": {
                  "type": "string", "description": "the vocabulary's name, as the briefing lists it"}}, "required": ["name"]}},
-            {"name": QUERY, "description": "A SPARQL SELECT or ASK over every graph this chat lets you read, their "
-             "union the default graph. Each keeps its name, so GRAPH ?g says which graph a triple is in, and where it "
-             "came from is what the catalogue says of ?g: its kinds, orexis:arrivedBy, orexis:ownedBy, its period "
-             f"(dcterms:temporal), and the name is its document's. These prefixes are declared for you: {prefixes}" + (f", {self.world}: naming the "
-             "agent's own world" if self.world else "") + "; declare any other with PREFIX. The rows "
-             f"write a name with them, as the vocabularies do. Write no SERVICE or FROM. At most {ROWS} rows "
-             "come back.",
-             "input_schema": {"type": "object", "properties": {"sparql": {"type": "string"}}, "required": ["sparql"]}}]
+            {"name": QUERY, "description": "A SPARQL SELECT or ASK over the graphs of the kinds you name, of those the "
+             "briefing lists: their union is the default graph, so name the kinds the question is about — "
+             "observations, forecasts, the world's documents — and not more. GRAPH ?g ranges over those graphs, "
+             "each named for its document, and over the catalogue, whose rows say of each graph its kinds (a), how it "
+             "arrived (orexis:arrivedBy), whose it is (orexis:ownedBy) and when it holds (dcterms:temporal): where a "
+             "belief came from is `GRAPH ?g { …the belief… } GRAPH ?c { ?g orexis:arrivedBy ?how }`. These prefixes "
+             f"are declared for you: {prefixes}" + (f", {self.world}: naming the agent's own world" if self.world else "")
+             + "; declare any other with PREFIX. The rows write a name with them, as the vocabularies do. Write no "
+             f"SERVICE or FROM. At most {ROWS} rows come back.",
+             "input_schema": {"type": "object", "properties": {
+                 "kinds": {"type": "array", "items": {"type": "string"}, "minItems": 1,
+                           "description": "the kinds of graph the query reads, as the briefing names them"},
+                 "sparql": {"type": "string"}}, "required": ["kinds", "sparql"]}}]
 
     def call(self, name: str, inputs: dict) -> str | None:
         """What one of the two tools answers, or None where `name` is neither."""
         if name == VOCABULARY:
             return self.vocabulary(str(inputs.get("name") or ""))
         if name == QUERY:
-            return self.query(str(inputs.get("sparql") or ""))
+            return self.query(str(inputs.get("sparql") or ""), list(inputs.get("kinds") or []))
         return None
 
     def listing(self) -> str:
-        """Each vocabulary the chat may read, by its prefix, with how many terms it has: what the model chooses from."""
-        return "\n".join(f" - {name} ({len(text.splitlines())} terms)" for name, text in sorted(self.vocabularies.items()))
+        """What the model chooses from: each vocabulary the chat may read, by its prefix, with how many terms it has,
+        then each kind of graph a query may name, with how many graphs are of it."""
+        vocabularies = "\n".join(f" - {name} ({len(text.splitlines())} terms)"
+                                 for name, text in sorted(self.vocabularies.items()))
+        kinds = "\n".join(f" - {self.written({'type': 'uri', 'value': kind})} ({len(graphs)} graphs)"
+                          for kind, graphs in sorted(self.kinds.items()))
+        return f"Vocabularies, loaded by name:\n{vocabularies}\nKinds of graph, named by a query:\n{kinds}"
 
     def vocabulary(self, name: str) -> str:
         """One vocabulary the chat may read, as its glossary; told so where it reads none of that name."""
@@ -107,14 +128,25 @@ class Readable:
             return f"no vocabulary {name!r} in this chat; these are: {', '.join(sorted(self.vocabularies))}"
         return found
 
-    def query(self, text: str) -> str:
-        """The model's SELECT or ASK over what the chat reads, its rows as lines; the reason, where it is refused."""
+    def query(self, text: str, kinds: list[str]) -> str:
+        """The model's SELECT or ASK over the graphs of `kinds`, the catalogue named beside them, its rows as lines;
+        the reason, where it is refused."""
         refused = _refusal(text, self.prefixes)
         if refused:
             return f"refused: {refused}"
+        graphs: set[ox.NamedNode] = set()
+        for kind in kinds:
+            found = self.kinds.get(self.expanded(kind))
+            if found is None:
+                listed = ", ".join(self.written({"type": "uri", "value": k}) for k in sorted(self.kinds))
+                return f"refused: no graph of kind {kind} in this chat; these are: {listed}"
+            graphs |= found
+        if not graphs:
+            return "refused: name the kinds of graph the query reads"
         out = io.BytesIO()
         try:
-            self.store.query(text, prefixes=self.prefixes, use_default_graph_as_union=True).serialize(
+            self.store.query(text, prefixes=self.prefixes, default_graph=sorted(graphs, key=str),
+                             named_graphs=sorted(graphs | self.catalogues, key=str)).serialize(
                 output=out, format=ox.QueryResultsFormat.JSON)
         except (SyntaxError, OSError, ValueError) as exc:
             return f"the engine would not run it: {exc}"
@@ -127,11 +159,19 @@ class Readable:
         return ("\n".join(shown) or "(no rows)") + more
 
 
+    def expanded(self, name: str) -> str:
+        """A name the model wrote — `prefix:local`, `<iri>` or an IRI — as the IRI it is."""
+        name = name.strip()
+        if name.startswith("<") and name.endswith(">"):
+            return name[1:-1]
+        prefix, _, local = name.partition(":")
+        return self.prefixes[prefix] + local if prefix in self.prefixes and not local.startswith("//") else name
+
     def written(self, value: dict) -> str:
         """One value of a row as the model reads it: an IRI by the longest prefix it is under, whole where none
-        fits; a literal by its text."""
+        fits; a literal by its text on one line, so a row stays one."""
         if value.get("type") != "uri":
-            return value.get("value", "")
+            return " ".join(value.get("value", "").split())
         iri = value["value"]
         for prefix, ns in sorted(self.prefixes.items(), key=lambda p: -len(p[1])):
             if iri.startswith(ns) and _LOCAL.fullmatch(iri[len(ns):]):

@@ -41,7 +41,8 @@ def briefing(store: ox.Store, me: str, reads, listing: str, status: str,
                 f" - {r['label']}: {' '.join((r.get('comment') or '').split())}" for r in roles)
     if reads:
         who += ("\n\nWHAT THIS CHAT LETS YOU READ: every graph of " + ", ".join(local_of(k) for k in reads) +
-                ". Load a vocabulary to learn its terms before you query them:\n" + listing)
+                ". Load a vocabulary to learn its terms before you query them, and name the kinds of graph a query "
+                "reads.\n" + listing)
     else:
         who += "\n\nThis chat lets you read nothing of the agent's store beyond the questions offered as tools."
     return who, "WHAT IT HOLDS NOW:\n\n" + status
