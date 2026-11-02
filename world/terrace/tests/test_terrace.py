@@ -243,7 +243,7 @@ def test_every_field_the_agent_writes_is_drawn_by_one_health_panel(monkeypatch):
         metrics.reset()
     health = render_health("terrace")
     files = [name for name, _ in health]
-    assert files[0] == "runtime.json" and set(files) == {"runtime.json", "sensing.json", "belief.json"}, files
+    assert files[0] == "runtime.json" and set(files) == {"runtime.json", "sensing.json", "belief.json", "translation.json"}, files
     for name, dashboard in health:
         (variable,) = dashboard["templating"]["list"]
         assert variable["name"] == AGENT_VARIABLE and variable["query"] == "terrace"
