@@ -37,12 +37,15 @@ they came on, the part:
   the chat, by its id or the name it goes by, or that the carrier says tagged or replied to someone
   else; words the carrier says tagged or replied to this agent's own account are this agent's, as if
   they named it;
-- offers any other words to the model once, with every [sayable](/domain/speech/sayable.md) the world
-  declares and every askable the agent holds as tools: a statement of the sayable filled is handed to
-  speech's `heard`, and the domain's [extraction](/domain/speech/extraction.md) makes the belief; the
-  askable called is answered from the store on the runtime's thread, and its rows phrased by the model;
-- and, where nothing fits, answers from the status. Unaddressed in a group, the model is offered the
-  askables alone and told to say nothing where the rows do not answer, so the agent that knows is the
+- opens a conversation with the model on any other words, briefed first with a
+  [briefing](/domain/translation/briefing.md) - who the agent is, what the chat lets it read, and its
+  status - and offered every [sayable](/domain/speech/sayable.md) the world declares, every askable the
+  chat admits, and, where the chat reads anything, a vocabulary to load and a query to run over what it
+  reads: a statement of the sayable filled is handed to speech's `heard`, and the domain's
+  [extraction](/domain/speech/extraction.md) makes the belief; each askable called is answered from the
+  store on the runtime's thread; each query runs over the chat's copy; the model calls as many as the
+  message needs, then answers in words. Unaddressed in a group, the model is offered no sayable and told to
+  say nothing where what the agent holds does not answer, so the agent that knows is the
   one heard. An answer replies to the words it answers, where the carrier threads.
 
 From the words heard to the answer said, every member carrying the chat's channel is asked to show the

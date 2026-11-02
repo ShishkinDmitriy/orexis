@@ -1,5 +1,6 @@
 """Translation's part over its test world: a person's prose on a chat's channel becomes a statement the agent hears
-and believes, or a question answered from its account; what the agent says to a person is rendered and sent back on
+and believes, or a question answered in a conversation the model is briefed for, calling as many askables as it
+needs; what the agent says to a person is rendered and sent back on
 the chat's channel; and in a group with several agents, an agent answers when it is named or when its account speaks
 to an unnamed question, and keeps silent otherwise."""
 
@@ -20,10 +21,9 @@ from agent.speech.events import Told
 from agent.speech.ontology import STATEMENT_GRAPH
 from agent.store import graphs_of, rows
 from agent.translation.chat import chats_of
-from agent.translation.create import ANSWER_SYSTEM, HEAR_SYSTEM, SAY_SYSTEM, SILENT, UNADDRESSED, WRITING_S
-from agent.translation.model import Answer
+from agent.translation.create import CONVERSE_SYSTEM, SAY_SYSTEM, SILENT, TURNS, UNADDRESSED, WRITING_S
+from agent.translation.model import Answer, Turn
 from agent.translation.sayable import document_of, sayables
-from agent.translation.shape import NOTHING
 from agent.transport.transport import Prose, Transport
 
 WORLD = Path(__file__).parent / "world"
@@ -59,14 +59,29 @@ class Bot(Transport):
 
 @dataclass
 class StandIn:
-    """A model that answers what the test says: a tool call where tools are offered, text otherwise."""
-    call: tuple | None = None
+    """A model that answers what the test says: a turn calling each of `calls` in order, while tools are offered and
+    the turn is not the last, then `text`; and `text` to a rendering asked in one call."""
+    calls: list = field(default_factory=list)
     text: str = ""
     asked: list = field(default_factory=list)
 
+    def converse(self, system, messages, tools=(), *, last=False):
+        self.asked.append((list(system), list(messages), [t["name"] for t in tools]))
+        n = sum(1 for m in messages if m["role"] == "assistant")
+        if n < len(self.calls) and tools and not last:
+            name, inputs = self.calls[n]
+            return Turn("", [(f"call{n}", name, inputs)], [{"type": "tool_use", "id": f"call{n}", "name": name, "input": inputs}])
+        return Turn(self.text, [], [{"type": "text", "text": self.text}])
+
     def ask(self, system, text, tools=()):
-        self.asked.append((system, text, [t["name"] for t in tools]))
-        return Answer("" if tools else self.text, [self.call] if self.call and tools else [])
+        self.asked.append((system, text, []))
+        return Answer(self.text)
+
+
+def _results(messages) -> list[str]:
+    """What each tool call was answered with, in the order the conversation handed them back."""
+    return [block["content"] for m in messages if m["role"] == "user" and isinstance(m["content"], list)
+            for block in m["content"]]
 
 
 @pytest.fixture
@@ -86,92 +101,125 @@ def _write(runtime, channel: str, text: str, sender: str | None = None, **carrie
 
 def test_a_persons_prose_becomes_a_statement_the_agent_hears_and_believes(seeker):
     runtime, part, bot = seeker
-    part.model = StandIn(call=("ViewingOffer", {"listing": "the two-room flat on Kastanienallee", "at": "2026-11-02T18:00:00+00:00"}))
+    part.model = StandIn(calls=[("ViewingOffer", {"listing": "the two-room flat on Kastanienallee", "at": "2026-11-02T18:00:00+00:00"})],
+                         text="Thank you, Clara: Tuesday at six.")
     _write(runtime, V + "clara_telegram", "I can show you Kastanienallee on Tuesday the 2nd at 6pm. Clara")
-    (system, text, offered), = part.model.asked
-    assert system == HEAR_SYSTEM and text.startswith("From Clara:")
-    assert {"ViewingOffer", "viewings_offered", NOTHING} <= set(offered), "every sayable and every askable, in one call"
+    (system, messages, offered), (_, after, _) = part.model.asked
+    assert system[0] == CONVERSE_SYSTEM and messages[0]["content"].startswith("From Clara:")
+    assert {"ViewingOffer", "viewings_offered"} <= set(offered), "every sayable and every askable, in one conversation"
     beliefs = runtime.beliefs
     assert graphs_of(beliefs, STATEMENT_GRAPH), "kept as a peer's document"
     found = rows(beliefs, "PREFIX : <http://example.org/orexis/world/viewing#>\n"
                           "SELECT ?l ?by WHERE { ?o a :ViewingOffer ; :listing ?l ; speech:saidBy ?by }", graphs_of(beliefs, BELIEF))
     assert found == [{"l": V + "flat_12", "by": V + "clara"}], "and believed of it by the extraction"
-    assert bot.said == [], "a statement is answered by nothing"
+    assert _results(after) == ["kept: the agent believes it now"]
+    assert bot.said == [(V + "clara_telegram", "Thank you, Clara: Tuesday at six.")], "and the model says so"
 
 
-def test_status_is_answered_for_nothing_and_words_that_fit_nothing_from_the_status_by_the_model(seeker):
+def test_the_model_is_briefed_with_who_the_agent_is_what_the_chat_reads_and_what_it_holds_now(seeker):
     runtime, part, bot = seeker
-    part.model = StandIn(call=(NOTHING, {"why": "a question"}), text="The seeker has nothing to say yet.")
+    part.model = StandIn(text="I am the seeker; I look for a flat.")
+    _write(runtime, V + "clara_telegram", "who are you?")
+    ((instructions, who, now), messages, offered), = part.model.asked
+    assert instructions == CONVERSE_SYSTEM and who.startswith("YOU SPEAK FOR seeker.")
+    assert "WHAT THIS CHAT LETS YOU READ" in who and " - speech (" in who, "the vocabularies by name, loaded on asking"
+    assert now.startswith("WHAT IT HOLDS NOW") and "nothing to say yet" in now, "and its status, apart"
+    assert {"vocabulary", "query"} <= set(offered), "Clara's chat reads the beliefs, so the model may too"
+    assert bot.said == [(V + "clara_telegram", "I am the seeker; I look for a flat.")], "answered with no tool called"
+
+
+def test_the_model_loads_a_vocabulary_and_queries_what_the_chat_reads(seeker):
+    runtime, part, bot = seeker
+    part.model = StandIn(calls=[("vocabulary", {"name": "speech"}),
+                                ("query", {"sparql": "SELECT ?c WHERE { ?c a speech:Chat }"}),
+                                ("query", {"sparql": "SELECT * WHERE { GRAPH ?g { ?s ?p ?o } }"})],
+                         text="We speak here, and in three other chats.")
+    _write(runtime, V + "clara_telegram", "in which chats are you?")
+    vocabulary, chats, refused = _results(part.model.asked[-1][1])
+    assert "speech:Chat" in vocabulary and "seeker_and_clara" in chats and "household" in chats
+    assert refused.startswith("refused: it holds a GRAPH clause")
+    assert bot.said == [(V + "clara_telegram", "We speak here, and in three other chats.")]
+
+
+def test_a_chat_reading_nothing_offers_no_query(seeker):
+    runtime, part, bot = seeker
+    part.model = StandIn(text="I am looking at two flats.")
+    _write(runtime, V + "household_telegram", "seeker, how is the search going?", V + "anna")
+    (_, who, _), _, offered = part.model.asked[0]
+    assert "vocabulary" not in offered and "query" not in offered and "beyond the questions offered as tools" in who
+
+
+def test_status_is_answered_for_nothing(seeker):
+    runtime, part, bot = seeker
+    part.model = StandIn(text="unused")
     _write(runtime, V + "clara_telegram", "/status")
     assert part.model.asked == [], "a command costs nothing"
     (channel, said), = bot.said
     assert channel == V + "clara_telegram" and said == "seeker at 2026-11-01 09:00 UTC\nnothing to say yet", \
         "the one askable takes a field, so no section"
-    bot.said.clear()
-    _write(runtime, V + "clara_telegram", "what are you doing?")
-    assert [a[0] for a in part.model.asked] == [HEAR_SYSTEM, ANSWER_SYSTEM], "nothing fits, so the status answers"
-    assert "nothing to say yet" in part.model.asked[1][1] and "what are you doing?" in part.model.asked[1][1]
-    assert bot.said == [(V + "clara_telegram", "The seeker has nothing to say yet.")]
 
 
-def test_a_question_an_askable_fits_is_answered_by_its_select_and_the_rows_phrased(seeker):
-    """Clara offers a viewing, which the seeker comes to believe; Anna asks when she can see the flat, the model
-    calls the domain's askable with the listing, the seeker answers it from its store, and the model phrases the
-    rows. Nothing is written by the question."""
+def test_a_question_is_answered_by_as_many_askables_as_it_needs_and_their_rows_handed_back(seeker):
+    """Clara offers a viewing, which the seeker comes to believe; Anna asks about two flats, and the model calls the
+    domain's askable for each, over two turns, the seeker answering each from its store, then answers in words.
+    Nothing is written by the questions."""
     runtime, part, bot = seeker
-    part.model = StandIn(call=("ViewingOffer", {"listing": "the two-room flat on Kastanienallee", "at": "2026-11-02T18:00:00+00:00"}))
+    part.model = StandIn(calls=[("ViewingOffer", {"listing": "the two-room flat on Kastanienallee", "at": "2026-11-02T18:00:00+00:00"})])
     _write(runtime, V + "clara_telegram", "I can show you Kastanienallee on Tuesday the 2nd at 6pm.")
     before = len(runtime.beliefs)
-    part.model = StandIn(call=("viewings_offered", {"listing": "the two-room flat on Kastanienallee"}),
-                         text="Clara offered a viewing on Tuesday 2 November at 18:00.")
-    _write(runtime, V + "clara_telegram", "when can I see Kastanienallee?")
-    (hear, _, offered), (answer, rows, tools) = part.model.asked
-    assert (hear, answer, tools) == (HEAR_SYSTEM, ANSWER_SYSTEM, []) and "viewings_offered" in offered
-    assert "at: 2026-11-02 18:00 UTC, by: clara" in rows and "when can I see Kastanienallee?" in rows, rows
-    assert bot.said == [(V + "clara_telegram", "Clara offered a viewing on Tuesday 2 November at 18:00.")]
+    part.model = StandIn(calls=[("viewings_offered", {"listing": "the two-room flat on Kastanienallee"}),
+                                ("viewings_offered", {"listing": "the studio on Rigaer Straße"})],
+                         text="Kastanienallee on Tuesday at 18:00; nothing yet for the studio.")
+    _write(runtime, V + "clara_telegram", "when can I see Kastanienallee, and the studio?")
+    assert len(part.model.asked) == 3, "a turn for each call, then the words"
+    found, none = _results(part.model.asked[-1][1])
+    assert "at: 2026-11-02 18:00 UTC, by: clara" in found and none == "(no rows)", (found, none)
+    assert bot.said[-1] == (V + "clara_telegram", "Kastanienallee on Tuesday at 18:00; nothing yet for the studio.")
     assert len(runtime.beliefs) == before, "a question writes nothing"
+
+
+def test_a_conversation_ends_in_words_by_its_last_turn(seeker):
+    runtime, part, bot = seeker
+    part.model = StandIn(calls=[("viewings_offered", {"listing": "the studio on Rigaer Straße"})] * 10, text="I could not find out.")
+    _write(runtime, V + "clara_telegram", "ask until you know")
+    assert len(part.model.asked) == TURNS and bot.said == [(V + "clara_telegram", "I could not find out.")]
 
 
 def test_in_a_group_an_agent_answers_when_named_keeps_silent_when_another_is_and_says_nothing_it_does_not_know(seeker):
     runtime, part, bot = seeker
     part.model = StandIn(text="I am looking at two flats.")
     _write(runtime, V + "household_telegram", "keeper, is the door locked?", V + "anna")
-    _write(runtime, V + "household_telegram", "Kim, is the door locked?", V + "anna")
-    assert part.model.asked == [] and bot.said == [], "words to another agent of the chat, by its id or its name"
+    assert part.model.asked == [] and bot.said == [], "words to another agent of the chat"
     _write(runtime, V + "household_telegram", "seeker, how is the search going?", V + "anna")
-    assert [a[0] for a in part.model.asked] == [HEAR_SYSTEM, ANSWER_SYSTEM], "named: one call, and nothing fits, so the status"
+    (system, _, offered), = part.model.asked
+    assert system[0] == CONVERSE_SYSTEM and "ViewingOffer" in offered, "named: briefed, and every act offered"
     assert bot.said == [(V + "household_telegram", "I am looking at two flats.")]
     bot.said.clear()
     part.model = StandIn(text=SILENT)
     _write(runtime, V + "household_telegram", "is anyone watching the plants?", V + "clara")
-    (system, text, offered), = part.model.asked
-    assert system == HEAR_SYSTEM and offered == ["viewings_offered", NOTHING], "unnamed in a group: the askables alone"
-    assert bot.said == [], "no askable fits, so it keeps silent"
-    part.model = StandIn(call=("viewings_offered", {"listing": "the studio on Rigaer Straße"}), text=SILENT)
-    _write(runtime, V + "household_telegram", "is the studio still free?", V + "clara")
-    assert [a[0] for a in part.model.asked] == [HEAR_SYSTEM, ANSWER_SYSTEM + UNADDRESSED] and bot.said == [], \
-        "its rows do not answer it, so it keeps silent"
+    (system, _, offered), = part.model.asked
+    assert system[0] == CONVERSE_SYSTEM + UNADDRESSED and offered == ["viewings_offered"], "unnamed in a group: the askables alone"
+    assert bot.said == [], "what it holds does not answer it, so it keeps silent"
     _write(runtime, V + "household_telegram", "hello?", V + "nobody")
-    assert len(part.model.asked) == 2, "someone the chat names not is not heard"
+    assert len(part.model.asked) == 1, "someone the chat names not is not heard"
 
 
 def test_in_a_group_words_that_tag_or_reply_to_the_agent_are_its_own_and_its_answer_replies_to_them(seeker):
     """The carrier says whom the words were for: tagged or replied to, the seeker hears them as if named — every
-    sayable offered, and the status answering where nothing fits — and its answer replies to them; tagging or
-    replying to someone else, it keeps silent, unless it is named too."""
+    sayable offered — and its answer replies to them; tagging or replying to someone else, it keeps silent, unless it
+    is named too."""
     runtime, part, bot = seeker
     part.model = StandIn(text="I am looking at two flats.")
     _write(runtime, V + "household_telegram", "how is the search going?", V + "anna", addressed=False, message="41")
     assert part.model.asked == [] and bot.said == [], "words that tag or reply to someone else"
     _write(runtime, V + "household_telegram", "how is the search going?", V + "anna", addressed=True, message="42")
-    (hear, _, offered), (answer, _, _) = part.model.asked
-    assert (hear, answer) == (HEAR_SYSTEM, ANSWER_SYSTEM) and "ViewingOffer" in offered, \
-        "tagged, it is addressed: the sayables are offered and the status answers, with no silence asked of it"
+    (system, _, offered), = part.model.asked
+    assert system[0] == CONVERSE_SYSTEM and "ViewingOffer" in offered, "tagged, it is addressed, with no silence asked of it"
     assert bot.said == [(V + "household_telegram", "I am looking at two flats.")] and bot.replies == ["42"]
     _write(runtime, V + "household_telegram", "seeker, and you?", V + "anna", addressed=False, message="43")
-    assert len(part.model.asked) == 4 and bot.replies == ["42", "43"], "named in words, it answers whoever was tagged"
+    assert len(part.model.asked) == 2 and bot.replies == ["42", "43"], "named in words, it answers whoever was tagged"
     _write(runtime, V + "household_telegram", "/status", V + "anna", addressed=True, message="44")
-    assert len(part.model.asked) == 4 and bot.replies[-1] == "44", "a command replies to itself, for nothing"
+    assert len(part.model.asked) == 2 and bot.replies[-1] == "44", "a command replies to itself, for nothing"
 
 
 def test_what_the_agent_says_to_a_person_is_rendered_and_sent_through_their_chat(seeker):
@@ -193,10 +241,11 @@ def test_the_person_sees_the_agent_writing_from_the_words_heard_to_the_answer_sa
     shown = []
 
     class Slow(StandIn):
-        def ask(self, system, text, tools=()):
+        def converse(self, system, messages, tools=(), *, last=False):
             shown.append((list(bot.writing), dict(part.writing)))
-            return super().ask(system, text, tools)
-    part.model = Slow(call=(NOTHING, {"why": "a question"}), text="The seeker has nothing to say yet.")
+            return super().converse(system, messages, tools, last=last)
+    part.model = Slow(calls=[("viewings_offered", {"listing": "the studio on Rigaer Straße"})],
+                      text="The seeker has nothing to say yet.")
     _write(runtime, V + "clara_telegram", "what are you doing?")
     assert [w for w, _ in shown] == [[V + "clara_telegram"]] * 2, "shown before the model is asked"
     assert all(len(p) == 1 for _, p in shown), "and still while the model answers"
@@ -219,7 +268,7 @@ def test_a_model_that_fails_says_so_in_the_chat_where_the_agent_was_addressed(se
     runtime, part, bot = seeker
 
     class Refusing(StandIn):
-        def ask(self, system, text, tools=()):
+        def converse(self, system, messages, tools=(), *, last=False):
             raise OSError("HTTP Error 401: Unauthorized")
     part.model = Refusing()
     _write(runtime, V + "clara_telegram", "what are you doing?")

@@ -49,3 +49,22 @@ Onboarding names a chat's topic `chats/<chat>` and grants it to each agent in it
 acting on behalf of a participant. [Requirements](/domain/onboarding/requirement.md) hold a chat to one
 channel of a kind some transport carries, to a person and an agent in it, an agent in it to playing a
 translator, and an agent in a chat on Telegram to a bot of its own.
+
+# What its model may read
+
+A chat says which kinds of graph the model speaking in it may read, `speech:reads`, the word an askable
+states its own reads with:
+
+```turtle
+:terrace_and_dmitrii a speech:Chat ;
+    speech:participant :terrace_agent , :dmitrii ;
+    speech:channel :sovereign_telegram ;
+    speech:reads orexis:Graph .
+```
+
+The sovereign's chat reads everything; a broker's would read the market's kinds and no sensor. The
+translator copies the graphs of those kinds into one graph when words arrive, and the model's queries run
+over that copy and nothing else, whatever they say; it is offered only the askables reading within them.
+A chat stating no kind reads nothing, and its model has the askables alone
+([the-model-queries-what-its-chat-may-read](/decisions/the-model-queries-what-its-chat-may-read.md)).
+

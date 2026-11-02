@@ -697,6 +697,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   and the language being the triples believed is the market's coincidence (#958,
   a-peers-word-is-testimony-and-a-rule-makes-it-a-belief); **the market is files** —
   six actions whose `execution:Saying` operations make the documents at take time (`domains/market/`).
+- **A chat says what its model may read, and the model loads vocabularies and queries a copy of those graphs** —
+  SELECT and ASK alone, no GRAPH, SERVICE or FROM, the rows capped; an askable per question and a briefing of
+  every belief were both built and refused (the-model-queries-what-its-chat-may-read).
 - **A client earns a library by what one POST does not do** — the model's SDK retries an overloaded API and
   names each failure, which a person in a chat otherwise met as "could not answer"; a thinking model refuses
   a forced tool choice, so the hearing call offers its tools and the model chooses.
@@ -922,7 +925,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   no carrier; a person connects by a user agent that `prov:actedOnBehalfOf` them, each agent speaks through a
   `telegram:Bot` of its own (`telegram:hasBot`), and in a group an agent answers when named, tagged or replied to, keeps
   silent when another is, and answers an unnamed question only where its account speaks to it (chat, translator).
-- **What an agent says of itself is its askables, answered when a person asks** — an `speech:Askable` in an
+- **What an agent says of itself is its askables and what its chat lets the model query** — an `speech:Askable` in an
   `speech:AskableGraph` beside a package's ontology, its fields filled by the model and its select the
   package's own; `/status` is the rows of every one that takes no field, for nothing; stored nowhere, published
   nowhere, and a method per part rendered by templates and selects found by file name were built and refused

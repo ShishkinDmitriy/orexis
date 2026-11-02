@@ -20,8 +20,6 @@ from agent.ontology import BELIEF, local_of
 from agent.store import graphs_of, rows
 
 XSD = "http://www.w3.org/2001/XMLSchema#"
-#  THE TOOL THE MODEL CALLS WHERE NOTHING FITS, beside the sayables and the askables.
-NOTHING = "nothing_fits"
 
 _FIELDS_Q = """
 SELECT ?path ?datatype ?class ?min ?description WHERE {
@@ -77,13 +75,6 @@ def schema_of(field: Field) -> dict:
     elif field.description:
         out["description"] = field.description
     return out
-
-
-def nothing_tool() -> dict:
-    """The tool the model calls where the words state no sayable's shape and ask no askable's question."""
-    return {"name": NOTHING, "description": "The message states none of the shapes above and asks none of the "
-                                            "questions. Say why in one line.",
-            "input_schema": {"type": "object", "properties": {"why": {"type": "string"}}, "required": ["why"]}}
 
 
 def tool(name: str, description: str, fields) -> dict:

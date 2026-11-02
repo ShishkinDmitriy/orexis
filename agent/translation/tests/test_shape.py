@@ -3,7 +3,7 @@ term a filled value is taken as, and the tool the model calls where nothing fits
 
 from __future__ import annotations
 
-from agent.translation.shape import NOTHING, Field, nothing_tool, schema_of, term_of, tool
+from agent.translation.shape import Field, schema_of, term_of, tool
 
 XSD = "http://www.w3.org/2001/XMLSchema#"
 LISTING = Field("http://example.org/v#listing", None, "http://example.org/v#Listing", True, "which listing",
@@ -24,8 +24,3 @@ def test_a_filled_value_is_the_term_its_field_takes_or_none():
     assert term_of(LISTING, "a flat nobody states") is None, "a label the world does not state is no value"
     assert term_of(AT, "2026-11-02T18:00:00+00:00").datatype.value == XSD + "dateTime"
     assert term_of(LITRES, "many") is None and term_of(LITRES, "3").value == "3"
-
-
-def test_the_tool_where_nothing_fits_says_why():
-    assert nothing_tool()["name"] == NOTHING == "nothing_fits"
-    assert nothing_tool()["input_schema"]["required"] == ["why"]

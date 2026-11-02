@@ -1,10 +1,11 @@
 """The model client: the one place this repository asks a language model, through Anthropic's SDK, and only
 from an agent's translation part, off its pass, at a run-time edge.
 
-**ONE CALL, TWO SHAPES OF ANSWER.** `ask` sends a system prompt and one message to the Messages API
-and reads the content back: text, where the model was asked to write prose, and tool calls, where it
-was handed tools — each a name and the input it filled. The translator hands it the sayables and the
-askables as tools and reads the one it chose; an answer or a rendering is asked with no tool and read as text.
+**A CONVERSATION, AND ONE CALL.** `converse` sends a system prompt in blocks, all but the last cached, and the
+messages so far, with tools the model may call: the translator answers a person's words over as many turns
+as the model's tool calls need, handing back each call's result, until it answers in text
+(knowledge/domain/translation/briefing.md). `ask` is one call of one message, read as text — a statement
+rendered for a person.
 
 **THE SDK, FOR WHAT ONE POST DOES NOT DO.** It was one `urllib` POST, and a person in a chat met every
 overloaded or rate-limited moment of the API as "could not answer". The client retries those and a
@@ -39,6 +40,15 @@ class Answer:
     """What the model answered: the text it wrote, and each tool it called with the input it filled."""
     text: str = ""
     calls: list[tuple[str, dict]] = field(default_factory=list)
+
+
+@dataclass
+class Turn:
+    """One turn of a conversation: the text the model wrote, each tool it called as its id, name and input, and
+    the content to hand back as the assistant's message when the calls are answered."""
+    text: str = ""
+    calls: list[tuple[str, str, dict]] = field(default_factory=list)
+    content: list[dict] = field(default_factory=list)
 
 
 class Model:
@@ -77,6 +87,29 @@ class Model:
             elif block.type == "tool_use":
                 answer.calls.append((block.name, dict(block.input or {})))
         return answer
+
+
+    def converse(self, system: list[str], messages: list[dict], tools=(), *, last: bool = False) -> Turn:
+        """One turn: `system` as blocks, every one but the last cached — the instructions and the briefing's world
+        change when a document does, its status with every reading — `messages` so far, and `tools` the model may
+        call, none where this is the `last` turn, so it answers in text."""
+        blocks = [{"type": "text", "text": text} for text in system if text]
+        if len(blocks) > 1:
+            blocks[-2]["cache_control"] = {"type": "ephemeral"}
+        body: dict = {"model": self.name, "max_tokens": self.max_tokens, "system": blocks, "messages": messages}
+        if tools:
+            body["tools"] = list(tools)
+            body["tool_choice"] = {"type": "none" if last else "auto"}
+        reply = self.client.messages.create(**body)
+        turn = Turn()
+        for block in reply.content:
+            if block.type == "text":
+                turn.text += block.text
+                turn.content.append({"type": "text", "text": block.text})
+            elif block.type == "tool_use":
+                turn.calls.append((block.id, block.name, dict(block.input or {})))
+                turn.content.append({"type": "tool_use", "id": block.id, "name": block.name, "input": dict(block.input or {})})
+        return turn
 
 
 def why_not(exc: Exception) -> str:
