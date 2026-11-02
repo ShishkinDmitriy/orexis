@@ -69,7 +69,7 @@ SILENT = "NOTHING"
 UNADDRESSED = (f" Several agents are in this chat and the message names none. Where what this agent holds says "
                f"nothing that answers it, reply with exactly {SILENT} and nothing else.")
 #  HOW MANY TURNS A CONVERSATION MAY TAKE: the last offers no tool, so the model answers in words.
-TURNS = 5
+TURNS = 8
 #  HOW LONG THE MODEL'S THREAD WAITS FOR AN ASKABLE ANSWERED ON THE RUNTIME'S, in real seconds.
 ANSWER_S = 60.0
 SAY_SYSTEM = (
@@ -168,6 +168,11 @@ class _Translation:
         except Exception as exc:                                 # noqa: BLE001 — the model fails
             return self._failed(chat, person, exc, unaddressed, reply)
         words = turn.text.strip()
+        if not words:                                            # no words is a failure, said where it was addressed
+            me = local_of(self.runtime.me)
+            log.warning("%s could not answer %s: the model wrote no words (%s)", me, person[1], turn.stop or "no reason")
+            if not unaddressed:
+                words = f"{me} could not answer: its model wrote no words ({turn.stop or 'no reason given'})."
         if words and words != SILENT:
             self.runtime.submit(lambda: self._said(chat, words, reply))
         self._ended(chat, unaddressed)

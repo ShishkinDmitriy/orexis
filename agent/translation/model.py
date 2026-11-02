@@ -45,10 +45,11 @@ class Answer:
 @dataclass
 class Turn:
     """One turn of a conversation: the text the model wrote, each tool it called as its id, name and input, and
-    the content to hand back as the assistant's message when the calls are answered."""
+    the content to hand back as the assistant's message when the calls are answered, and why the model stopped."""
     text: str = ""
     calls: list[tuple[str, str, dict]] = field(default_factory=list)
     content: list[dict] = field(default_factory=list)
+    stop: str = ""
 
 
 class Model:
@@ -101,7 +102,7 @@ class Model:
             body["tools"] = list(tools)
             body["tool_choice"] = {"type": "none" if last else "auto"}
         reply = self.client.messages.create(**body)
-        turn = Turn()
+        turn = Turn(stop=str(getattr(reply, "stop_reason", "") or ""))
         for block in reply.content:
             if block.type == "text":
                 turn.text += block.text
