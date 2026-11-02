@@ -64,7 +64,7 @@ from . import certs, installation, reading
 from agent.ontology import local_of
 from agent.store import graphs_of, rows
 from .worlds import REPO_ROOT
-from .worlds import shown, world_dir, worlds
+from .worlds import agent_secrets, shown, world_dir, worlds
 
 log = logging.getLogger("mqtt")
 
@@ -358,7 +358,8 @@ def _credential(path: Path, username: str, note: str, rotate: bool) -> str:
 
 
 def agent_credential_file(world: str, agent_id: str) -> Path:
-    return world_dir(world) / "secrets" / f"mqtt-{agent_id}.env"
+    """In the agent's own directory, mounted into its container alone."""
+    return agent_secrets(world_dir(world), agent_id) / "mqtt.env"
 
 
 def device_credential_file(world: str, device_id: str) -> Path:
@@ -550,9 +551,9 @@ def revoke(world: str, principal: str) -> None:
     session — with a username the ACL grants nothing, which is a foothold and not a voice.
     """
     agents, devices = grants(world)
-    credential = agent_credential_file(world, principal)   # a device's is at the same path
     cert_path, key_path = certs.agent_cert_files(world, principal)
-    held = [p for p in (credential, cert_path, key_path) if p.exists()]
+    held = [p for p in (agent_credential_file(world, principal), device_credential_file(world, principal),
+                        cert_path, key_path) if p.exists()]
     if not held:
         raise SystemExit(f"orexis-mqtt: nothing to revoke — world {world!r} holds no credential or certificate "
                          f"for {principal!r} under secrets/")
@@ -586,24 +587,25 @@ def stale(world: str) -> list[str]:
     if not secrets.is_dir():
         return []
     found = []
-    for path in sorted(secrets.iterdir()):
-        name = path.name
-        if name.startswith("mqtt-") and name.endswith(".env"):
-            who = name[len("mqtt-"):-len(".env")]
-            if who not in agents and who not in devices:
-                found.append(f"secrets/{name} — no agent or device {who!r} in the society; "
-                             f"`orexis-mqtt {world} --revoke {who}` takes it back")
-        elif name.endswith((".crt", ".key")) and name.rsplit(".", 1)[0] not in ("ca", "broker"):
-            who = name.rsplit(".", 1)[0]
-            if who not in agents:
-                how = ""
-                if name.endswith(".crt"):
-                    cert = x509.load_pem_x509_certificate(path.read_bytes())
-                    how = (" — on the CRL already" if cert.serial_number in certs.revoked(world) else
-                           f" — valid until {cert.not_valid_after_utc:%Y-%m-%d} and NOT on the CRL, so it still "
-                           "opens a session")
-                found.append(f"secrets/{name} — no agent {who!r} in the society{how}; "
-                             f"`orexis-mqtt {world} --revoke {who}` revokes it")
+    for path in sorted(secrets.glob("mqtt-*.env")):
+        who = path.name[len("mqtt-"):-len(".env")]
+        if who not in devices:
+            found.append(f"secrets/{path.name} — no device {who!r} in the society; "
+                         f"`orexis-mqtt {world} --revoke {who}` takes it back")
+    for mine in sorted(p for p in secrets.iterdir() if p.is_dir()):
+        who = mine.name
+        if who in agents:
+            continue
+        if (mine / "mqtt.env").exists():
+            found.append(f"secrets/{who}/mqtt.env — no agent {who!r} in the society; "
+                         f"`orexis-mqtt {world} --revoke {who}` takes it back")
+        cert_path, _ = certs.agent_cert_files(world, who)
+        if cert_path.exists():
+            cert = x509.load_pem_x509_certificate(cert_path.read_bytes())
+            how = (" — on the CRL already" if cert.serial_number in certs.revoked(world) else
+                   f" — valid until {cert.not_valid_after_utc:%Y-%m-%d} and NOT on the CRL, so it still opens a session")
+            found.append(f"secrets/{who}/{cert_path.name} — no agent {who!r} in the society{how}; "
+                         f"`orexis-mqtt {world} --revoke {who}` revokes it")
     return found
 
 

@@ -151,10 +151,10 @@ def test_a_compose_file_mounts_a_document_because_an_agent_reads_its_kind():
     for world in composed:
         here = (REPO_ROOT / "world" / world).resolve()
         compose = (here / "compose.yaml").read_text()
-        #  A document under `secrets/` is not committed, so a clone cannot say what it is: its mount is
-        #  held to its kind only where the checkout has it.
+        #  AN AGENT'S OWN DIRECTORY under `secrets/` is mounted whole and is no document: what is in it is not
+        #  committed, and its kinds are the boot's to read (#860).
         mounted = {(here / m).resolve() for m in re.findall(rf"- \./([^:]+):/app/world/{world}/", compose)
-                   if not m.startswith("secrets/") or (here / m).exists()}
+                   if not m.startswith("secrets/")}
         assert mounted, f"{world}/compose.yaml mounts no document — the pattern stopped matching"
         read = set(read_by_an_agent(world))
         assert mounted <= read, (f"{world}/compose.yaml mounts {sorted(p.name for p in mounted - read)}, of a "
@@ -750,8 +750,8 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
     environment = dict(service["environment"])
     for purpose in PURPOSES:
         minted = influx.credential_file("terrace", "terrace", purpose)
-        assert minted.name == f"influx-{purpose.lower()}-terrace.env"
-        assert f"./secrets/{minted.name}" in service["env_file"], "compose mounts what influx mints"
+        assert minted.name == f"influx-{purpose.lower()}.env" and minted.parent.name == "terrace"
+        assert f"./secrets/terrace/{minted.name}" in service["env_file"], "compose mounts what influx mints"
         credential = tmp_path / minted.name
         influx._write_credential(credential, "terrace", purpose, influx.bucket_name("terrace", "terrace", purpose), "a-token")
         environment.update(dotenv_values(credential))
@@ -772,7 +772,7 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
         text = path.read_text()
         assert "INFLUX_HISTORY_URL" in text, path
         monitored = METRICS in told[path.parent.name]
-        assert ("INFLUX_METRICS_URL" in text) == ("influx-metrics-" in text) == (metrics.INTERVAL_KEY in text) == monitored, path
+        assert ("INFLUX_METRICS_URL" in text) == ("influx-metrics.env" in text) == (metrics.INTERVAL_KEY in text) == monitored, path
         assert not re.search(r"\bINFLUX_(URL|ORG|BUCKET|TOKEN)\b", text), path
 
 
@@ -1226,12 +1226,10 @@ def test_a_committed_compose_file_is_what_onboarding_renders():
 
     composed = sorted(p.parent.name for p in (REPO_ROOT / "world").glob("*/compose.yaml"))
     assert composed == _worlds(), f"a world with no committed compose file: {sorted(set(_worlds()) - set(composed))}"
-    #  A MOUNT OF A SECRET DOCUMENT is set aside on both sides: it is rendered where this checkout holds
-    #  the document and not where it does not, so it cannot be committed either way (#860).
-    private = lambda text: "\n".join(line for line in text.splitlines()
-                                     if not (line.strip().startswith("- ./secrets/") and ".ttl:" in line))
+    #  THE WHOLE FILE: a secret document lies in its agent's own directory, mounted whole, so what a checkout holds
+    #  changes nothing rendered (#860).
     for world in composed:
-        assert private((REPO_ROOT / "world" / world / "compose.yaml").read_text()) == private(compose.render(world)), \
+        assert (REPO_ROOT / "world" / world / "compose.yaml").read_text() == compose.render(world), \
             f"world/{world}/compose.yaml is not what `orexis-compose {world}` renders — regenerate it"
 
 
@@ -1324,8 +1322,10 @@ def test_a_world_with_no_bus_is_onboarded_without_one(tmp_path, monkeypatch, cap
     assert set(composed["volumes"]) == {f"orexis-{world}-{a}{kept}" for a in agents for kept in ("", "-journal")}
     for name, service in composed["services"].items():
         assert not [k for k in service["environment"] if k.startswith("MQTT_")], name
-        assert service["env_file"] == [f"./secrets/influx-history-{name.removeprefix('agent-')}.env"], name
+        agent = name.removeprefix("agent-")
+        assert service["env_file"] == [f"./secrets/{agent}/influx-history.env"], name
         assert not [v for v in service["volumes"] if "/app/secrets/" in v], name
+        assert f"./secrets/{agent}:/app/world/{world}/secrets/{agent}:ro" in service["volumes"], "its own directory, whole"
 
 
 def test_a_world_with_a_bus_is_onboarded_with_everything(tmp_path, monkeypatch, caplog):
@@ -1345,8 +1345,8 @@ def test_a_world_with_a_bus_is_onboarded_with_everything(tmp_path, monkeypatch, 
                      ("stale", "sensing")]
     assert reloaded == ["sensing"]
     for agent in agents:
-        for minted in (f"mqtt-{agent}.env", f"{agent}.crt", f"{agent}.key"):
-            assert (here / "secrets" / minted).exists(), minted
+        for minted in ("mqtt.env", "agent.crt", "agent.key"):
+            assert (here / "secrets" / agent / minted).exists(), f"{agent}/{minted}"
     for minted in ("secrets/ca.crt", "secrets/broker.crt", "mosquitto/broker/acl.conf", "mosquitto/broker/orexis.conf", "mosquitto/crl.pem"):
         assert (here / minted).exists(), minted
     assert [r for r in caplog.records if "nothing stale" in r.getMessage()], "a fresh onboarding reports nothing stale"
@@ -1489,7 +1489,7 @@ def test_revoking_an_agent_puts_its_serial_on_the_crl_and_takes_its_credential(t
 
     here, _asked, _reloaded = _onboarded(tmp_path, monkeypatch, "sensing", caplog)
     secrets = here / "secrets"
-    old = x509.load_pem_x509_certificate((secrets / "fern.crt").read_bytes())
+    old = x509.load_pem_x509_certificate((secrets / "fern" / "agent.crt").read_bytes())
     assert "sensing-fern" in (here / "mosquitto" / "broker" / "passwd").read_text()
     caplog.clear()
     with caplog.at_level(logging.INFO):
@@ -1497,7 +1497,7 @@ def test_revoking_an_agent_puts_its_serial_on_the_crl_and_takes_its_credential(t
     said = [r.getMessage() for r in caplog.records]
     assert [r.serial_number for r in _crl_of(here)] == [old.serial_number]
     assert _crl_of(here).extensions.get_extension_for_class(x509.CRLNumber).value.crl_number == 2
-    for gone in ("fern.crt", "fern.key", "mqtt-fern.env"):
+    for gone in ("fern/agent.crt", "fern/agent.key", "fern/mqtt.env"):
         assert not (secrets / gone).exists(), gone
     assert "sensing-fern" not in (here / "mosquitto" / "broker" / "passwd").read_text()
     assert "user sensing-fern" not in (here / "mosquitto" / "broker" / "acl.conf").read_text()
@@ -1513,7 +1513,7 @@ def test_revoking_an_agent_puts_its_serial_on_the_crl_and_takes_its_credential(t
         mqtt.main(["sensing", "--revoke", "nobody", "--no-reload"])
 
     mqtt.provision("sensing")
-    new = x509.load_pem_x509_certificate((secrets / "fern.crt").read_bytes())
+    new = x509.load_pem_x509_certificate((secrets / "fern" / "agent.crt").read_bytes())
     assert new.serial_number != old.serial_number
     assert [r.serial_number for r in _crl_of(here)] == [old.serial_number], "carried forward, not re-made"
     assert (secrets / f"mqtt-{device}.env").exists(), "the wiring still implies the device, so it is granted again"
@@ -1543,18 +1543,16 @@ def test_the_report_names_a_stale_credential_and_takes_nothing(tmp_path, monkeyp
     asks_the_store = influx.stale_grants
     here, _asked, _reloaded = _onboarded(tmp_path, monkeypatch, "sensing", caplog)
     secrets = here / "secrets"
-    planted = ["mqtt-ghost.env", "ghost.crt", "ghost.key", "influx-history-ghost.env"]
-    shutil.copy(secrets / "mqtt-fern.env", secrets / "mqtt-ghost.env")
-    shutil.copy(secrets / "fern.crt", secrets / "ghost.crt")
-    shutil.copy(secrets / "fern.key", secrets / "ghost.key")
-    (secrets / "influx-history-ghost.env").write_text("INFLUX_HISTORY_BUCKET=sensing-ghost\nINFLUX_HISTORY_TOKEN=x\n")
+    planted = ["ghost/mqtt.env", "ghost/agent.crt", "ghost/agent.key", "ghost/influx-history.env"]
+    shutil.copytree(secrets / "fern", secrets / "ghost")
+    (secrets / "ghost" / "influx-history.env").write_text("INFLUX_HISTORY_BUCKET=sensing-ghost\nINFLUX_HISTORY_TOKEN=x\n")
     caplog.clear()
     with caplog.at_level(logging.INFO):
         found = onboard.report("sensing")
-    assert len(found) == 4 and all("ghost" in line for line in found), found
-    assert [line for line in found if "ghost.crt" in line and "NOT on the CRL" in line], found
-    assert [line for line in found if "mqtt-ghost.env" in line and "orexis-mqtt sensing --revoke ghost" in line], found
-    assert [line for line in found if "influx-history-ghost.env" in line and "orexis-influx sensing --revoke ghost" in line
+    assert len(found) == 3 and all("ghost" in line for line in found), found
+    assert [line for line in found if "ghost/agent.crt" in line and "NOT on the CRL" in line], found
+    assert [line for line in found if "ghost/mqtt.env" in line and "orexis-mqtt sensing --revoke ghost" in line], found
+    assert [line for line in found if "ghost/influx-history.env" in line and "orexis-influx sensing --revoke ghost" in line
             and "keeps the bucket" in line], found
     assert not [line for line in found if "fern" in line], "a principal the wiring implies is not stale"
     assert all((secrets / name).exists() for name in planted), "the report took something"
@@ -1617,15 +1615,15 @@ def test_influx_revoke_deletes_the_tokens_and_keeps_the_bucket(tmp_path, monkeyp
     monkeypatch.setattr(influx, "world_dir", lambda name: root / name)
     monkeypatch.setattr(influx.installation, "served", lambda purpose: None)
     secrets = root / "sensing" / "secrets"
-    secrets.mkdir()
-    for name in ("influx-history-ghost.env", "influx-metrics-ghost.env", "influx-ghost.env", "influx-history-fern.env"):
+    for name in ("ghost/influx-history.env", "ghost/influx-metrics.env", "ghost/influx.env", "fern/influx-history.env"):
+        (secrets / name).parent.mkdir(parents=True, exist_ok=True)
         (secrets / name).write_text("INFLUX_HISTORY_TOKEN=x\n")
     with caplog.at_level(logging.INFO):
         influx.revoke("sensing", "ghost")
-    assert sorted(p.name for p in secrets.iterdir()) == ["influx-history-fern.env"]
+    assert sorted(p.relative_to(secrets).as_posix() for p in secrets.rglob("*.env")) == ["fern/influx-history.env"]
     assert [r for r in caplog.records if "bucket sensing-ghost kept" in r.getMessage()]
     assert influx.stale_files("sensing") == []
-    (secrets / "influx-metrics-ghost.env").write_text("x\n")
+    (secrets / "ghost" / "influx-metrics.env").write_text("x\n")
     assert len(influx.stale_files("sensing")) == 1 and "'ghost'" in influx.stale_files("sensing")[0]
     with pytest.raises(SystemExit, match="nothing to revoke"):
         influx.revoke("sensing", "nobody")
@@ -1943,10 +1941,11 @@ def test_a_chat_is_onboarded_as_the_agents_in_it_translate_it(tmp_path, monkeypa
     seeker, keeper = services["agent-seeker"], services["agent-keeper"]
     assert seeker["environment"]["MODEL_URL"] == "https://api.anthropic.com"
     assert seeker["environment"]["TELEGRAM_URL"] == "https://api.telegram.org", "where its bot answers, off the deployment graph"
-    assert seeker["env_file"][-4:-1] == ["../../infra/secrets/model.env", "./secrets/telegram-seeker.env",
-                                         "./secrets/mail-seeker.env"], seeker["env_file"]
+    assert seeker["env_file"][-4:-1] == ["../../infra/secrets/model.env", "./secrets/seeker/telegram.env",
+                                         "./secrets/seeker/mail.env"], seeker["env_file"]
     assert [f for f in keeper["env_file"] if "model" in f or "telegram" in f or "mail" in f] == \
-        ["../../infra/secrets/model.env", "./secrets/telegram-keeper.env"], keeper["env_file"]
+        ["../../infra/secrets/model.env", "./secrets/keeper/telegram.env"], keeper["env_file"]
+    assert seeker["volumes"].count("./secrets/seeker:/app/world/viewing/secrets/seeker:ro") == 1, "its own directory, whole"
     assert not any("seeker" in f for f in keeper["env_file"]), "an agent's secrets are its own"
 
 

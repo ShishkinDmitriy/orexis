@@ -33,6 +33,16 @@ def shown(path: Path) -> Path:
     return path.relative_to(REPO_ROOT) if path.is_relative_to(REPO_ROOT) else path
 
 
+def agent_secrets(here: Path, agent_id: str) -> Path:
+    """Where one agent's secrets are kept: a directory of its own under the world's `secrets/`, named by the one
+    short string the agent goes by, and mounted whole into its container and no other — its credentials, its
+    certificate, its carriers' secrets and every document only it is handed, under the world directory `here`
+    its caller found. Nothing an agent holds is shared
+    with another; what is no agent's — the authority, the broker, the boards — stays in `secrets/` itself
+    (knowledge/decisions/an-agent-keeps-its-secrets-in-a-directory-of-its-own.md)."""
+    return Path(here) / "secrets" / agent_id
+
+
 def world_dir(name: str) -> Path:
     """One world's directory, or a refusal that names the ones there are."""
     path = WORLDS_ROOT / name

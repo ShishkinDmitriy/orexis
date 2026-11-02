@@ -9,7 +9,7 @@
 #  through the agent's own bot (society.ttl). The agent wants nothing and says nothing of its own;
 #  what the chat carries is what it observes, sensing's askable: sent on `/status`, and answered from
 #  when a question asks it (knowledge/domain/speech/askable.md).
-#  The chat's id is the sovereign's and sits in secrets/chat.ttl, not here.
+#  The chat's id is the sovereign's and sits in secrets/terrace/chat.ttl, not here.
 
 #  WHAT THE MODEL MAY READ IN IT: everything the agent holds, since the chat is with its sovereign
 #  (knowledge/domain/speech/chat.md).

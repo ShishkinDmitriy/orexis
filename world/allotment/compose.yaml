@@ -97,8 +97,8 @@ services:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
       # never read off the world by the agent
       MQTT_BROKERS: "http://example.org/orexis/world/allotment#broker mqtts://localhost:8890"
-      MQTT_CERT: "/app/secrets/agent.crt"
-      MQTT_KEY: "/app/secrets/agent.key"
+      MQTT_CERT: "/app/world/allotment/secrets/fern_grower/agent.crt"
+      MQTT_KEY: "/app/world/allotment/secrets/fern_grower/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
       # where each series it writes goes, and the org — the store the installation says serves each
       # purpose, its metrics only where the world is monitored — safe for every agent to hold
@@ -109,8 +109,8 @@ services:
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx allotment`, and
       # its own broker credential, minted by `orexis-mqtt allotment`; mounted into THIS container alone
-      - ./secrets/influx-history-fern_grower.env
-      - ./secrets/mqtt-fern_grower.env
+      - ./secrets/fern_grower/influx-history.env
+      - ./secrets/fern_grower/mqtt.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent
     # can write its own belief-base volume.
@@ -127,8 +127,10 @@ services:
       - ./world.ttl:/app/world/allotment/world.ttl:ro
       - ./beliefs/fern_grower.self.ttl:/app/world/allotment/beliefs/fern_grower.self.ttl:ro
       - ./beliefs/fern_grower.ttl:/app/world/allotment/beliefs/fern_grower.ttl:ro
-      - ./secrets/fern_grower.crt:/app/secrets/agent.crt:ro
-      - ./secrets/fern_grower.key:/app/secrets/agent.key:ro
+      # its own secrets, whole: its credentials, its certificate, and every document only it is handed — written
+      # by onboarding and by hand, never committed, and mounted into THIS container alone
+      - ./secrets/fern_grower:/app/world/allotment/secrets/fern_grower:ro
+      # the world's authority, which every client of its brokers trusts
       - ./secrets/ca.crt:/app/secrets/ca.crt:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME entries its
       # image keeps, the kernel and its own packages and no other's, which `tests/test_layout.py` holds
@@ -172,8 +174,8 @@ services:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
       # never read off the world by the agent
       MQTT_BROKERS: "http://example.org/orexis/world/allotment#broker mqtts://localhost:8890"
-      MQTT_CERT: "/app/secrets/agent.crt"
-      MQTT_KEY: "/app/secrets/agent.key"
+      MQTT_CERT: "/app/world/allotment/secrets/rose_grower/agent.crt"
+      MQTT_KEY: "/app/world/allotment/secrets/rose_grower/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
       # where each series it writes goes, and the org — the store the installation says serves each
       # purpose, its metrics only where the world is monitored — safe for every agent to hold
@@ -184,8 +186,8 @@ services:
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx allotment`, and
       # its own broker credential, minted by `orexis-mqtt allotment`; mounted into THIS container alone
-      - ./secrets/influx-history-rose_grower.env
-      - ./secrets/mqtt-rose_grower.env
+      - ./secrets/rose_grower/influx-history.env
+      - ./secrets/rose_grower/mqtt.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent
     # can write its own belief-base volume.
@@ -202,8 +204,10 @@ services:
       - ./world.ttl:/app/world/allotment/world.ttl:ro
       - ./beliefs/rose_grower.self.ttl:/app/world/allotment/beliefs/rose_grower.self.ttl:ro
       - ./beliefs/rose_grower.ttl:/app/world/allotment/beliefs/rose_grower.ttl:ro
-      - ./secrets/rose_grower.crt:/app/secrets/agent.crt:ro
-      - ./secrets/rose_grower.key:/app/secrets/agent.key:ro
+      # its own secrets, whole: its credentials, its certificate, and every document only it is handed — written
+      # by onboarding and by hand, never committed, and mounted into THIS container alone
+      - ./secrets/rose_grower:/app/world/allotment/secrets/rose_grower:ro
+      # the world's authority, which every client of its brokers trusts
       - ./secrets/ca.crt:/app/secrets/ca.crt:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME entries its
       # image keeps, the kernel and its own packages and no other's, which `tests/test_layout.py` holds
@@ -247,8 +251,8 @@ services:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
       # never read off the world by the agent
       MQTT_BROKERS: "http://example.org/orexis/world/allotment#broker mqtts://localhost:8890"
-      MQTT_CERT: "/app/secrets/agent.crt"
-      MQTT_KEY: "/app/secrets/agent.key"
+      MQTT_CERT: "/app/world/allotment/secrets/supplier/agent.crt"
+      MQTT_KEY: "/app/world/allotment/secrets/supplier/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
       # where each series it writes goes, and the org — the store the installation says serves each
       # purpose, its metrics only where the world is monitored — safe for every agent to hold
@@ -259,8 +263,8 @@ services:
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx allotment`, and
       # its own broker credential, minted by `orexis-mqtt allotment`; mounted into THIS container alone
-      - ./secrets/influx-history-supplier.env
-      - ./secrets/mqtt-supplier.env
+      - ./secrets/supplier/influx-history.env
+      - ./secrets/supplier/mqtt.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent
     # can write its own belief-base volume.
@@ -277,8 +281,10 @@ services:
       - ./world.ttl:/app/world/allotment/world.ttl:ro
       - ./beliefs/supplier.self.ttl:/app/world/allotment/beliefs/supplier.self.ttl:ro
       - ./beliefs/supplier.ttl:/app/world/allotment/beliefs/supplier.ttl:ro
-      - ./secrets/supplier.crt:/app/secrets/agent.crt:ro
-      - ./secrets/supplier.key:/app/secrets/agent.key:ro
+      # its own secrets, whole: its credentials, its certificate, and every document only it is handed — written
+      # by onboarding and by hand, never committed, and mounted into THIS container alone
+      - ./secrets/supplier:/app/world/allotment/secrets/supplier:ro
+      # the world's authority, which every client of its brokers trusts
       - ./secrets/ca.crt:/app/secrets/ca.crt:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME entries its
       # image keeps, the kernel and its own packages and no other's, which `tests/test_layout.py` holds

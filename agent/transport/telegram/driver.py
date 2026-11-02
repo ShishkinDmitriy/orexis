@@ -77,7 +77,7 @@ class Telegram(Transport):
         token = env.get("TELEGRAM_BOT_TOKEN")
         if not token:
             raise RuntimeError("no TELEGRAM_BOT_TOKEN in the environment — this agent speaks through a bot and holds "
-                               "no token for it; write secrets/telegram-<agent>.env and regenerate the compose file")
+                               "no token for it; write secrets/<agent>/telegram.env and regenerate the compose file")
         return cls(me, token, env.get("TELEGRAM_URL") or TELEGRAM_URL, call=client, deliver=deliver,
                    every=float(env.get("TELEGRAM_POLL_S") or POLL_S))
 

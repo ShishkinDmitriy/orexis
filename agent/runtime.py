@@ -23,7 +23,7 @@ graphs that say they are this agent's, owned by it. The catalogue is closed and 
 says whose it is is that agent's own — `<> orexis:ownedBy :rose_grower` beside its kind, or, for a
 self graph, the self it states (`store.whose`) — and one that names nobody is common to every agent
 of the world, a belief, a desire or a constraint alike (#953). The boot reads every document of the
-world — beside it, under `secrets/` and under `beliefs/` — and keeps as its own exactly those
+world — beside it, in its own directory under `secrets/` and under `beliefs/` — and keeps as its own exactly those
 graphs whose content names the agent it was told to be; another agent's are passed over, never
 refused, since a world read from a checkout holds every agent's and a container is mounted only
 its own, and which files are present is not for the boot to rely on. A graph of an agent's own
@@ -161,7 +161,9 @@ class Passed:
 
 DOCUMENTS = (".ttl", ".trig")
 
-#  WHERE A WORLD KEEPS WHAT IS NOT COMMITTED — credentials, and a document such as where its place is.
+#  WHERE A WORLD KEEPS WHAT IS NOT COMMITTED: a directory per agent, named by its id, holding the agent's
+#  credentials and every document only it is handed — where its place is, which chat is its; and beside them what
+#  is no agent's, the authority and the boards (an-agent-keeps-its-secrets-in-a-directory-of-its-own).
 SECRETS = "secrets"
 BELIEFS = "beliefs"
 
@@ -252,14 +254,16 @@ INSERT {{ GRAPH <{closure}> {{ ?a rdfs:subClassOf ?c }} }}
 WHERE  {{ ?a rdfs:subClassOf+ ?c FILTER(isIRI(?a) && isIRI(?c) && ?a != ?c) }}"""
 
 
-def documents(world: Path, packages=None) -> list[Path]:
+def documents(world: Path, packages=None, agent: str | None = None) -> list[Path]:
     """What a boot reads: the kernel's T-Box first, then the documents of `packages` — every
     package of the tree where none are named, which is what the operator's tools read — then every document in the
-    world's directory, under its `secrets/` and under its `beliefs/`. Found by looking, never
-    listed, and never a test's.
+    world's directory, in `agent`'s own directory under its `secrets/` — every agent's, where none is named, as
+    the operator's tools read the whole world — and under its `beliefs/`. Found by looking, never listed, and never
+    a test's.
 
-    A DOCUMENT IN THE WORLD'S `secrets/` IS READ LIKE ONE BESIDE IT: what the world keeps out of
-    the repository — where its place is — is still the world's, and a world without it boots.
+    A DOCUMENT IN AN AGENT'S OWN `secrets/<agent>/` IS READ LIKE ONE BESIDE THE WORLD, by that agent alone: what
+    the world keeps out of the repository — where its place is, a chat's id — is still the world's, an agent
+    without it boots, and no agent reads another's.
 
     `beliefs/` IS WHERE A WORLD KEEPS ITS AGENTS' OWN DOCUMENTS, and the name is for eyes: every
     document there is read, and whose each graph is, is what the graph says (`store.whose`). A
@@ -270,7 +274,11 @@ def documents(world: Path, packages=None) -> list[Path]:
         return sorted(p for p in directory.glob("*") if p.is_file() and p.suffix in DOCUMENTS)
     world = Path(world)
     packages = every_package() if packages is None else packages
-    return [KERNEL / "ontology.ttl", *_documents_of(packages), *under(world), *under(world / SECRETS), *under(world / BELIEFS)]
+    secrets = world / SECRETS
+    private = ([secrets / agent] if agent else
+               sorted(d for d in secrets.iterdir() if d.is_dir()) if secrets.is_dir() else [])
+    return [KERNEL / "ontology.ttl", *_documents_of(packages), *under(world),
+            *(p for d in private for p in under(d)), *under(world / BELIEFS)]
 
 
 def _documents_of(packages) -> list[Path]:
@@ -432,7 +440,7 @@ def _put_documents(store: ox.Store, world: Path, agent_id: str | None = None,
     declares itself and reads next, onboarding's for a world it reads as the first half of its
     own read. Anything else is a kind no reader declares, or one this reader cannot tell from
     it, and that is logged where it is seen."""
-    read = read_with_imports(documents(world, () if agent_id else None))
+    read = read_with_imports(documents(world, () if agent_id else None, agent=agent_id))
     own, passed = _put(store, world, read, [])
     own = _owned(store, own)
     if agent_id:

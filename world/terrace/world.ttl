@@ -34,7 +34,7 @@
 #  history the agent already keeps; the rain flow reads a forecast hour for the terrace, and until
 #  one arrives the bed only dries.
 :terrace a schema:Place ;
-    rdfs:comment "The terrace: outdoors, open to the rain. Where it is — its schema:geo — is in secrets/place.ttl, which is not committed." .
+    rdfs:comment "The terrace: outdoors, open to the rain. Where it is — its schema:geo — is in secrets/terrace/place.ttl, which is not committed." .
 
 :terrace_bed a sosa:FeatureOfInterest ;
     orexis:localId "terrace_bed" ;
@@ -50,7 +50,7 @@
 #  THE FORECAST: a weather service's hourly rain on the terrace, a sensor that reads a SERIES — software,
 #  which SOSA admits as a sensor. Each amount is what falls in the hour up to its time, so its instants
 #  END their stretches. It is asked for hourly; where it is read is society.ttl, filled from the
-#  terrace's location in secrets/place.ttl.
+#  terrace's location in secrets/terrace/place.ttl.
 :forecast_terrace a sosa:Sensor ;
     orexis:localId "forecast_terrace" ;
     schema:unitCode unit:MilliM-PER-HR ;

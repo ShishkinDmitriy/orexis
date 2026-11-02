@@ -117,17 +117,23 @@ def test_a_graph_of_a_kind_the_agent_does_not_declare_is_passed_over(tmp_path):
 
 
 def test_the_boot_reads_every_document_of_the_world_and_asks_none_by_its_name(tmp_path):
-    """Every document beside the world, under `secrets/` and under `beliefs/` is read, whatever it is
-    called and whoever it is for: whose a graph is, is what it says (agent/tests/test_self.py), so
-    no reader picks a file by an agent's id."""
+    """Every document beside the world and under `beliefs/` is read, whatever it is called and whoever it is for:
+    whose a graph is, is what it says (agent/tests/test_self.py). Under `secrets/` an agent reads its own directory
+    and no other's; the operator's tools, naming no agent, read every agent's."""
     from agent.runtime import documents
     (tmp_path / "world.ttl").write_text("")
-    (tmp_path / "beliefs").mkdir()
-    (tmp_path / "secrets").mkdir()
-    for name in ("beliefs/rose.ttl", "beliefs/fern.trig", "beliefs/rose.txt", "secrets/place.ttl"):
+    for d in ("beliefs", "secrets/rose", "secrets/fern"):
+        (tmp_path / d).mkdir(parents=True)
+    for name in ("beliefs/rose.ttl", "beliefs/fern.trig", "beliefs/rose.txt", "secrets/rose/place.ttl",
+                 "secrets/rose/mqtt.env", "secrets/fern/chat.ttl", "secrets/ca.ttl"):
         (tmp_path / name).write_text("")
-    read = [p.relative_to(tmp_path).as_posix() for p in documents(tmp_path) if tmp_path in p.parents]
-    assert read == ["world.ttl", "secrets/place.ttl", "beliefs/fern.trig", "beliefs/rose.ttl"]
+
+    def read(agent=None):
+        return [p.relative_to(tmp_path).as_posix() for p in documents(tmp_path, agent=agent) if tmp_path in p.parents]
+    assert read("rose") == ["world.ttl", "secrets/rose/place.ttl", "beliefs/fern.trig", "beliefs/rose.ttl"]
+    assert read("fern") == ["world.ttl", "secrets/fern/chat.ttl", "beliefs/fern.trig", "beliefs/rose.ttl"]
+    assert read() == ["world.ttl", "secrets/fern/chat.ttl", "secrets/rose/place.ttl", "beliefs/fern.trig", "beliefs/rose.ttl"], \
+        "the world whole, every agent's own, and nothing loose in secrets/, which is no agent's"
 
 
 def test_a_loaded_package_whose_library_is_not_installed_is_refused_with_the_extra_that_brings_it():

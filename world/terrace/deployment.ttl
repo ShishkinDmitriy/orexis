@@ -15,5 +15,5 @@
 <> onboarding:monitored true .
 
 #  WHERE THE AGENT'S BOT ANSWERS: Telegram's Bot API, told to the agent as `TELEGRAM_URL`. The token is
-#  `secrets/telegram-terrace.env`, the chat id `secrets/chat.ttl`, neither here.
+#  `secrets/terrace/telegram.env`, the chat id `secrets/terrace/chat.ttl`, neither here.
 :terrace_bot schema:url "https://api.telegram.org" .

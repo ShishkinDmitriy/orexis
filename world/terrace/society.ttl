@@ -23,10 +23,10 @@
     mqtt4ssn:isConnectedToBroker :broker ;
     orexis:actsFor :terrace_bed , :terrace_battery ;
     telegram:hasBot :terrace_bot .
-:terrace_bot a telegram:Bot .            # where it answers is deployment.ttl's, its token secrets/telegram-terrace.env
+:terrace_bot a telegram:Bot .            # where it answers is deployment.ttl's, its token secrets/terrace/telegram.env
 
 #  THE SOVEREIGN, reached in a Telegram chat through the agent's bot. The chat's id is theirs, so it is
-#  stated in secrets/chat.ttl, which git does not hold, as the terrace's place is: a society graph saying
+#  stated in secrets/terrace/chat.ttl, which git does not hold, as the terrace's place is: a society graph saying
 #  `:sovereign_telegram telegram:chatId "<the id getUpdates shows>"`.
 :dmitrii a schema:Person ;
     schema:name "Dmitrii" .
@@ -48,7 +48,7 @@
 :battery_sensor_terrace mqtt4ssn:observesTopic :terrace_readings .
 
 #  THE FORECAST SERVICE, read over HTTP: a Thing whose form's target is a URI template, its latitude and
-#  longitude filled from the terrace's schema:geo, which secrets/place.ttl states and git does not hold.
+#  longitude filled from the terrace's schema:geo, which secrets/terrace/place.ttl states and git does not hold.
 #  Open-Meteo asks no key; GMT keeps the instants it answers in UTC.
 :forecast_terrace a td:Thing ;
     td:hasForm [ a hctl:Form ;

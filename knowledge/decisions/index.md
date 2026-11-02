@@ -44,6 +44,7 @@ Who may author what, and why isolation here is structural rather than enforced.
 * [trusted-agent-mode](/decisions/trusted-agent-mode.md) - The v1 posture: no gateway, each agent asserts its own current state as opinion, sensor access capability-gated.
 * [authn-authz-capabilities](/decisions/authn-authz-capabilities.md) - Cert is who you are and is durable; a signed grant is what you may do now and is ephemeral.
 * [where-the-belief-base-lives](/decisions/where-the-belief-base-lives.md) - The world is TTL files and each agent holds its own store, so isolation is structural rather than enforced.
+* [an-agent-keeps-its-secrets-in-a-directory-of-its-own](/decisions/an-agent-keeps-its-secrets-in-a-directory-of-its-own.md) - Each agent's credentials and private documents lie in a directory of its own, mounted whole; no agent shares one.
 * [series-and-bus-isolation](/decisions/series-and-bus-isolation.md) - A bucket and scoped token per agent; broker credentials and ACL derived from the same wiring that derives capability.
 * [the-self-is-a-class-held-to-one-instance](/decisions/the-self-is-a-class-held-to-one-instance.md) - The world authors who an agent is in its self graph and the boot checks it; a document says whose it is, never its file's name.
 * [a-belief-is-crisp-and-an-estimator-may-reason-with-probability](/decisions/a-belief-is-crisp-and-an-estimator-may-reason-with-probability.md) - SUPERSEDED IN PART — a belief is a crisp triple, and an estimator may reason with probability inside; the hysteresis moved to belief revision.
