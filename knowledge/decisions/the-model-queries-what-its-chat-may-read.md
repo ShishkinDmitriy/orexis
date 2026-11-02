@@ -45,9 +45,12 @@ refused the model writing SPARQL on three premises, each answered here:
 
 - **Free text to action.** A SELECT or an ASK is no action. A text is parsed first, and anything else - an
   update, a CONSTRUCT - is refused before it runs; nothing the model reads becomes a belief.
-- **The `GRAPH` trap.** The model never chooses a graph: the chat's graphs are merged into the copy's one
-  default graph, and a `GRAPH`, `SERVICE` or `FROM` anywhere in the text is refused with the reason, so the
-  model may write it again.
+- **The `GRAPH` trap.** The model never chooses what it reads: the copy holds the chat's graphs and nothing
+  else, read as one default graph, their union, so an ordinary pattern reads all of them; a `SERVICE` or a
+  `FROM` anywhere in the text is refused with the reason, so the model may write it again. A `GRAPH ?g` is
+  admitted since the copy keeps each graph's name and the catalogue's rows about it, and it chooses nothing
+  past the wall: it says where a belief came from, its document, its kind, how it arrived, whose it is
+  (amended when a person asked the terrace how it knew their name, and it could not say).
 - **An unbounded cost.** The query runs on the model's thread over the copy, so a slow one never stalls a
   pass; its rows are capped at fifty; a conversation is `TURNS` turns at most.
 
@@ -60,8 +63,8 @@ it reads nothing the chat does not.
   select per sentence of the world, and an agent that answers only what was foreseen.
 - **A briefing of every common belief.** Built first, the same day: correct, and paid for by every message
   whether the question needed the climate vocabulary or not.
-- **The model choosing graphs.** A `GRAPH` clause or a list of graphs to read would make the chat's reads a
-  suggestion; merged into one copy, they are a wall.
+- **The model choosing graphs.** A list of graphs to read, handed by the model, would make the chat's reads a
+  suggestion; copied, they are a wall, and a `GRAPH` inside the copy only tells them apart.
 
 # Seams left open
 

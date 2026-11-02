@@ -47,7 +47,6 @@ def test_a_query_reads_the_chats_graphs_as_one(readable):
 
 
 @pytest.mark.parametrize(("text", "why"), [
-    ("SELECT * WHERE { GRAPH ?g { ?s ?p ?o } }", "it holds a GRAPH clause"),
     ("SELECT * WHERE { SERVICE <http://elsewhere.example/> { ?s ?p ?o } }", "it holds a SERVICE clause"),
     ("SELECT * FROM <http://elsewhere.example/> WHERE { ?s ?p ?o }", "it holds a FROM"),
     ("CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o }", "only a SELECT or an ASK is run"),
@@ -63,6 +62,14 @@ def test_a_row_writes_a_name_with_its_prefix_and_the_agents_world_with_one_named
     assert named.startswith("c: viewing:") and "http://" not in named, named
     assert readable.query("ASK { ?c a speech:Chat ; speech:participant viewing:seeker }") == "true", "declared"
     assert "viewing: naming the agent's own world" in readable.tools()[1]["description"]
+
+
+def test_a_graph_keeps_its_name_and_the_catalogue_says_where_it_came_from(readable):
+    found = readable.query("SELECT DISTINCT ?g ?how WHERE { GRAPH ?g { ?c a speech:Chat } ?g orexis:arrivedBy ?how }")
+    assert "g: <file://" in found and "how: orexis:" in found, found
+    assert readable.query("SELECT (COUNT(*) AS ?n) WHERE { ?c a speech:Chat }") == \
+           readable.query("SELECT (COUNT(*) AS ?n) WHERE { SELECT DISTINCT ?c WHERE { ?c a speech:Chat } }"), \
+           "the union reads a triple once"
 
 
 def test_a_word_in_a_literal_is_no_clause(readable):

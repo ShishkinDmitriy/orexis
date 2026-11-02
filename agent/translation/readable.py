@@ -1,15 +1,17 @@
-"""`readable`: what a chat may read of the agent — the graphs of every kind the chat `speech:reads`, copied into one
-graph for the model's queries — and the two tools that read it, `vocabulary` and `query`
+"""`readable`: what a chat may read of the agent — the graphs of every kind the chat `speech:reads`, copied under
+their names for the model's queries — and the two tools that read it, `vocabulary` and `query`
 (knowledge/domain/speech/chat.md, knowledge/decisions/the-model-queries-what-its-chat-may-read.md).
 
 **THE CHAT SAYS WHAT IT READS, AND THE MODEL NEVER CHOOSES A GRAPH.** A chat stating no kind reads nothing here, and
 its model has the askables alone. One stating kinds — a sovereign's chat every graph, a broker's the market's — is
-read as the graphs of those kinds in every store the agent holds, COPIED on the runtime's thread into one default
-graph, so a query runs over what the chat admits and nothing else, whatever the model writes, and a slow one stalls
-the model's thread and never a pass.
+read as the graphs of those kinds in every store the agent holds, COPIED on the runtime's thread, each under its own
+name with the catalogue's rows about it, and read as one default graph, their union, so a query runs over what the
+chat admits and nothing else, whatever the model writes, and a slow one stalls the model's thread and never a pass.
+Where a belief came from is a `GRAPH` away: the graph's name is its document's, and the catalogue says its kind, how
+it arrived, whose it is and when it holds.
 
 **A QUERY IS READ, AND REFUSED BEFORE IT RUNS WHERE IT COULD DO ANYTHING BUT READ.** It is parsed with the store's
-prefixes declared; anything but a SELECT or an ASK, and a `GRAPH`, `SERVICE` or `FROM` anywhere in it, is refused
+prefixes declared; anything but a SELECT or an ASK, and a `SERVICE` or a `FROM` anywhere in it, is refused
 with the reason, as is a text the parser will not take, so the model may write it again. Its rows are capped at
 `ROWS`.
 """
@@ -25,14 +27,14 @@ from rdflib.plugins.sparql.parser import parseQuery
 from rdflib.plugins.sparql.parserutils import CompValue
 
 from agent.ontology import CLOSURE_GRAPH, OREXIS, local_of
-from agent.store import NAMESPACES, graphs_of
+from agent.store import NAMESPACES, catalogue_of, graphs_of
 
 #  HOW MANY ROWS A QUERY HANDS THE MODEL: past these it is told how many there were, and asks again more narrowly.
 ROWS = 50
 ONTOLOGY = OREXIS + "OntologyGraph"
 VOCABULARY, QUERY = "vocabulary", "query"
 #  WHAT A QUERY MAY NOT HOLD: a graph of its own choosing, a service elsewhere, a dataset named.
-_REFUSED = {"GraphGraphPattern": "a GRAPH clause", "ServiceGraphPattern": "a SERVICE clause", "datasetClause": "a FROM"}
+_REFUSED = {"ServiceGraphPattern": "a SERVICE clause", "datasetClause": "a FROM"}
 _KINDS = ("SelectQuery", "AskQuery")
 #  WHAT A NAME MAY BE AFTER A PREFIX, written plainly: where an IRI's tail is not one, it is written whole.
 _LOCAL = re.compile(r"[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?")
@@ -48,9 +50,12 @@ class Readable:
         read: dict[str, list] = {}
         for store in {id(s): s for s in stores if s is not None}.values():
             ontologies = set(graphs_of(store, ONTOLOGY)) - {CLOSURE_GRAPH}      # derived, and no vocabulary
+            catalogue = catalogue_of(store)
             for graph in graphs_of(store, *kinds):
                 quads = list(store.quads_for_pattern(None, None, None, ox.NamedNode(graph)))
-                self.store.extend(ox.Quad(q.subject, q.predicate, q.object) for q in quads)
+                self.store.extend(quads)                         # under its own name, so GRAPH says where a row is
+                if catalogue is not None:
+                    self.store.extend(_described(store, ox.NamedNode(graph), ox.NamedNode(catalogue)))
                 if graph in ontologies and quads:
                     name, ns = _prefix_of(quads) or (local_of(graph), None)
                     while name in read:
@@ -74,10 +79,12 @@ class Readable:
              "sentence of what it means. Load the ones a question needs before querying their terms; a term's whole "
              "rdfs:comment, and anything else the vocabulary states, is read with the query tool.", "input_schema": {"type": "object", "properties": {"name": {
                  "type": "string", "description": "the vocabulary's name, as the briefing lists it"}}, "required": ["name"]}},
-            {"name": QUERY, "description": "A SPARQL SELECT or ASK over every graph this chat lets you read, merged into "
-             f"one default graph. These prefixes are declared for you: {prefixes}" + (f", {self.world}: naming the "
+            {"name": QUERY, "description": "A SPARQL SELECT or ASK over every graph this chat lets you read, their "
+             "union the default graph. Each keeps its name, so GRAPH ?g says which graph a triple is in, and where it "
+             "came from is what the catalogue says of ?g: its kinds, orexis:arrivedBy, orexis:ownedBy, its period "
+             f"(dcterms:temporal), and the name is its document's. These prefixes are declared for you: {prefixes}" + (f", {self.world}: naming the "
              "agent's own world" if self.world else "") + "; declare any other with PREFIX. The rows "
-             f"write a name with them, as the vocabularies do. Write no GRAPH, SERVICE or FROM. At most {ROWS} rows "
+             f"write a name with them, as the vocabularies do. Write no SERVICE or FROM. At most {ROWS} rows "
              "come back.",
              "input_schema": {"type": "object", "properties": {"sparql": {"type": "string"}}, "required": ["sparql"]}}]
 
@@ -107,7 +114,8 @@ class Readable:
             return f"refused: {refused}"
         out = io.BytesIO()
         try:
-            self.store.query(text, prefixes=self.prefixes).serialize(output=out, format=ox.QueryResultsFormat.JSON)
+            self.store.query(text, prefixes=self.prefixes, use_default_graph_as_union=True).serialize(
+                output=out, format=ox.QueryResultsFormat.JSON)
         except (SyntaxError, OSError, ValueError) as exc:
             return f"the engine would not run it: {exc}"
         answer = json.loads(out.getvalue())
@@ -129,6 +137,22 @@ class Readable:
             if iri.startswith(ns) and _LOCAL.fullmatch(iri[len(ns):]):
                 return f"{prefix}:{iri[len(ns):]}"
         return f"<{iri}>"
+
+
+def _described(store, graph: ox.NamedNode, catalogue: ox.NamedNode) -> list:
+    """What the catalogue says of one graph the chat reads — its kinds, how it arrived, whose it is, when it holds,
+    the load that made it — and of each blank node it says that through, kept in the catalogue's name."""
+    found, todo, seen = [], [graph], set()
+    while todo:
+        node = todo.pop()
+        if node in seen:
+            continue
+        seen.add(node)
+        for q in store.quads_for_pattern(node, None, None, catalogue):
+            found.append(q)
+            if isinstance(q.object, ox.BlankNode):
+                todo.append(q.object)
+    return found
 
 
 def _refusal(text: str, prefixes: dict[str, str]) -> str | None:

@@ -701,7 +701,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   a-peers-word-is-testimony-and-a-rule-makes-it-a-belief); **the market is files** —
   six actions whose `execution:Saying` operations make the documents at take time (`domains/market/`).
 - **A chat says what its model may read, and the model loads vocabularies and queries a copy of those graphs** —
-  SELECT and ASK alone, no GRAPH, SERVICE or FROM, the rows capped; an askable per question and a briefing of
+  SELECT and ASK alone, no SERVICE or FROM, each graph under its name with the catalogue's rows so where a belief
+  came from is a GRAPH away, the rows capped; an askable per question and a briefing of
   every belief were both built and refused (the-model-queries-what-its-chat-may-read).
 - **A client earns a library by what one POST does not do** — the model's SDK retries an overloaded API and
   names each failure, which a person in a chat otherwise met as "could not answer"; a thinking model refuses
