@@ -14,6 +14,7 @@ from __future__ import annotations
 from datetime import timedelta
 from pathlib import Path
 
+import pyoxigraph as ox
 import pytest
 
 from agent import clock
@@ -31,6 +32,7 @@ BOARD = Path(__file__).parent / "worlds" / "a_board_and_its_peripherals.trig"
 RULES = Path(__file__).parents[1] / "rules.ttl"
 ONTOLOGY = Path(__file__).parents[1] / "ontology.ttl"     # the observer shape, whose default the stuck rule reads
 TEST = "http://example.org/test#"
+SENSING = "http://example.org/orexis/sensing#"
 PROBE = TEST + "probe"
 CADENCE = timedelta(seconds=900)
 
@@ -177,3 +179,15 @@ def test_the_stuck_limit_is_the_observer_roles_where_it_states_one(monkeypatch, 
     assert _stuck(store, first) == [], "one reading is short of two"
     second = _every_cadence(store, snapshots, [0.25], first + CADENCE)
     assert _stuck(store, second) == [("probe", 0.25)]
+
+
+def test_a_defective_sensors_percept_keeps_its_number_carries_why_and_is_no_reading(world, snapshots):
+    """The world states the probe defective: its percept keeps what it gave and its quantity, says why, and gets no
+    reading, so nothing that reads a reading believes it (knowledge/domain/sensing/defect.md)."""
+    (where,) = {q.graph_name for q in world.quads_for_pattern(ox.NamedNode(PROBE), None, None) if q.graph_name.value}
+    world.add(ox.Quad(ox.NamedNode(PROBE), ox.NamedNode(SENSING + "defect"), ox.Literal("its channel reads another's charge"), where))
+    [graph] = _read(world, PROBE, 0.05, snapshots.NOW, snapshots.ME)
+    percept = [graph, *revisions_of(world, graph, kind=OBSERVATION_GRAPH)]
+    (found,) = rows(world, "SELECT ?given ?why WHERE { ?o sensing:scaledResult ?given ; sensing:defect ?why }", percept)
+    assert found == {"given": "0.05", "why": "its channel reads another's charge"}
+    assert rows(world, "SELECT ?v WHERE { ?o sosa:hasSimpleResult ?v }", percept) == [], "no reading of it"

@@ -8,14 +8,15 @@
 #  (knowledge/domain/speech/askable.md). Sensing's words, which only sensing may speak; translation asks.
 
 :observes a speech:Askable , sh:NodeShape ;
-    sh:description "what each sensor last read: what it observed, of what, the reading and when" ;
+    sh:description "what each sensor last read: what it observed, of what, the reading and when; of a defective sensor, why, and the number it gave, which is no reading" ;
     speech:reads :ObservationGraph ;
     #  THE LATEST PERCEPT OF EACH SENSOR, the one no later percept names as its previous, read over every
     #  observation graph as one, since what was concluded of a percept lives in its revision graph beside it.
-    speech:select """SELECT ?observed ?of ?reading ?sensor ?at WHERE {
+    speech:select """SELECT ?observed ?of ?reading ?sensor ?at ?defect ?given WHERE {
   ?o sosa:madeBySensor ?sensor ; sosa:resultTime ?at .
   OPTIONAL { ?o sosa:observedProperty ?observed }
   OPTIONAL { ?o sosa:hasFeatureOfInterest ?of }
   OPTIONAL { ?o sosa:hasSimpleResult ?reading }
+  OPTIONAL { ?o sensing:defect ?defect ; sensing:scaledResult ?given }
   FILTER NOT EXISTS { ?later sensing:previous ?o } }
 ORDER BY ?sensor""" .

@@ -262,6 +262,17 @@
     not for the reading that tipped it. The second doubt the agent holds about a reading, beside its
     age: a silent sensor has no present, a stuck one has a present not to be believed (#462).""" .
 
+:defect a owl:DatatypeProperty ;
+    rdfs:range xsd:string ;
+    rdfs:label "defect" ;
+    rdfs:comment """Why a sensor's numbers are not what it says it observes - a miswired channel, a divider the ADC
+    cannot read through - stated by the world of the sensor, as testimony about the device, since no rule can
+    tell a number that is fresh and varies from a true one. Its percepts are kept, and sensing concludes no
+    reading of them, so nothing that reads a reading believes one; and each observation the sensor makes is
+    said to carry it, in its revision, so a reader of percepts sees why beside the number. The third doubt
+    the agent holds about a reading, beside its age and a stuck sensor, and the one stated rather than
+    concluded (knowledge/domain/sensing/defect.md).""" .
+
 #  THE MARGIN (knowledge/domain/sensing/margin.md, #944): how far past a bound of an operating range a
 #  reading must go to leave a state held. The world states it on a range's condition, beside the
 #  bounds it widens, sized from the instrument's noise; a domain's transition, judging its subject's
