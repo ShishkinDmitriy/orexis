@@ -51,8 +51,8 @@ simulation <world>`, connected as the one client that hosts every system the wor
 agent playing `translation:Translator` speaks with the people of its chats itself, so its own container is
 told where the language model answers (`MODEL_URL`, the installation's `onboarding:Model`) and handed which
 model and its key (`infra/secrets/model.env`), and, for each transport it speaks through beside the bus,
-its secret — its bot's token (`secrets/telegram-<agent>.env`) and where its bot answers (`TELEGRAM_URL`,
-off the world's deployment graph), its mailbox (`secrets/mail-<agent>.env`) — each written by hand, since
+its secret — its bot's token (`secrets/<agent>/telegram.env`) and where its bot answers (`TELEGRAM_URL`,
+off the world's deployment graph), its mailbox (`secrets/<agent>/mail.env`) — each written by hand, since
 nothing can mint a bot or a mailbox. An agent that translates nothing is handed none of it, and a world
 with a translator where the installation names no model is refused, as a monitored world is where
 metrics are served by no store (knowledge/domain/translation/translator.md).
@@ -66,14 +66,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
 
-from agent.runtime import EMAIL, KERNEL, TELEGRAM, documents, extra_of, known, packages_of, world_of
+from agent.runtime import EMAIL, KERNEL, SECRETS, TELEGRAM, documents, extra_of, known, packages_of, world_of
 from agent.tree import closed, dependency_files, imported, kept, packages as tree_packages, sources as tree_sources
 from agent.metrics.window import INTERVAL_KEY
 from agent.series import HISTORY, METRICS
 from agent.store import document, graphs_of, kinds_in, rows, whose
 from . import installation, reading
 from .worlds import REPO_ROOT
-from .worlds import world_dir, worlds
+from .worlds import agent_secrets, world_dir, worlds
 
 from .mqtt import addresses, broker_of, service_of
 from agent.ontology import local_of
@@ -206,10 +206,10 @@ def agent_ids(world: str) -> list[str]:
     return roster(world)
 
 
-def series_credential(agent_id: str, purpose: str = HISTORY) -> str:
-    """The name of the file under a world's `secrets/` holding the agent's credential for the series
-    store it is told of for `purpose` — minted there by `orexis-influx`, mounted here."""
-    return f"influx-{purpose.lower()}-{agent_id}.env"
+def series_credential(purpose: str = HISTORY) -> str:
+    """The name of the file in an agent's own directory holding its credential for the series store it is told of
+    for `purpose` — minted there by `orexis-influx`, mounted here."""
+    return f"influx-{purpose.lower()}.env"
 
 
 def simulated_client(world: str) -> str | None:
@@ -275,10 +275,13 @@ def _documents(world: str, read: dict[Path, frozenset[str] | None], agent_id: st
     which are not committed — each public one, and each holding a graph that says it is this
     agent's own, never another agent's: whose a document is, is what it says (`read_by_an_agent`),
     so a document is mounted where its owner boots whatever its file is called. The simulator,
-    `agent_id` None, is no agent and is handed the public documents alone."""
+    `agent_id` None, is no agent and is handed the public documents alone. A document under `secrets/` is never
+    mounted by name: it lies in its agent's own directory, mounted whole (`_service`), so the file says nothing of
+    which secrets a checkout happens to hold (#860)."""
     here = world_dir(world).resolve()
     return "".join(f"\n      - ./{p.relative_to(here)}:/app/world/{world}/{p.relative_to(here)}:ro"
-                   for p, owners in read.items() if owners is None or agent_id in owners)
+                   for p, owners in read.items() if (owners is None or agent_id in owners)
+                   and SECRETS not in p.relative_to(here).parts)
 
 
 def _restart(lasting: bool) -> str:
@@ -316,7 +319,8 @@ def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, st
         stores += f'\n      JOURNAL_INCIDENT_LEVEL: "{level}"'
     if classes:
         stores += f'\n      JOURNAL_INCIDENTS: "{" ".join(classes)}"'
-    credentials = "".join(f"\n      - ./secrets/{series_credential(agent_id, purpose)}" for purpose in series)
+    mine = f"./{SECRETS}/{agent_id}"
+    credentials = "".join(f"\n      - {mine}/{series_credential(purpose)}" for purpose in series)
     if translates is not None:
         stores += ("\n      # where the language model answers — the installation's `onboarding:Model`; which model, and the"
                    f'\n      # key, arrive in the installation\'s secret below\n      MODEL_URL: "{translates.model}"')
@@ -326,22 +330,20 @@ def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, st
                         "\n      - ../../infra/secrets/model.env")
         for carrier in translates.carriers:
             credentials += (f"\n      # its {'bot' if carrier == 'telegram' else 'mailbox'}'s secret, written by hand: nothing can mint one"
-                            f"\n      - ./secrets/{carrier}-{agent_id}.env")
+                            f"\n      - {mine}/{carrier}.env")
     if bus is not None:
         told = " ".join(f"{iri} {url}" for iri, url in bus)
         where = f"""
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
       # never read off the world by the agent
       MQTT_BROKERS: "{told}"
-      MQTT_CERT: "/app/secrets/agent.crt"
-      MQTT_KEY: "/app/secrets/agent.key"
+      MQTT_CERT: "/app/world/{world}/{SECRETS}/{agent_id}/agent.crt"
+      MQTT_KEY: "/app/world/{world}/{SECRETS}/{agent_id}/agent.key"
       MQTT_CA: "/app/secrets/ca.crt\""""
         minted = (f"its own bucket per purpose and a token that opens only it, minted by `orexis-influx {world}`, and\n"
                   f"      # its own broker credential, minted by `orexis-mqtt {world}`; mounted into THIS container alone"
-                  f"{credentials}\n      - ./secrets/mqtt-{agent_id}.env")
-        certificates = (f"\n      - ./secrets/{agent_id}.crt:/app/secrets/agent.crt:ro"
-                        f"\n      - ./secrets/{agent_id}.key:/app/secrets/agent.key:ro"
-                        "\n      - ./secrets/ca.crt:/app/secrets/ca.crt:ro")
+                  f"{credentials}\n      - {mine}/mqtt.env")
+        certificates = "\n      # the world's authority, which every client of its brokers trusts\n      - ./secrets/ca.crt:/app/secrets/ca.crt:ro"
     else:
         where, certificates = "", ""
         minted = (f"its own bucket per purpose and a token that opens only it, minted by `orexis-influx {world}`;\n"
@@ -365,7 +367,10 @@ def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, st
       - orexis-{world}-{agent_id}:/app/state
       # its journal, a store of its own beside the beliefs and apart from them
       - orexis-{world}-{agent_id}-journal:/app/journal
-      # the world's documents, file by file, at the path its imports of the domains resolve from{_documents(world, read, agent_id)}{certificates}
+      # the world's documents, file by file, at the path its imports of the domains resolve from{_documents(world, read, agent_id)}
+      # its own secrets, whole: its credentials, its certificate, and every document only it is handed — written
+      # by onboarding and by hand, never committed, and mounted into THIS container alone
+      - {mine}:/app/world/{world}/{SECRETS}/{agent_id}:ro{certificates}
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME entries its
       # image keeps, the kernel and its own packages and no other's, which `tests/test_layout.py` holds
       # to `agent.tree.kept`.{image.mounts()}
@@ -473,12 +478,14 @@ volumes:
 def generate(world: str) -> Path:
     out = world_dir(world) / "compose.yaml"
     out.write_text(render(world))
+    for agent_id in roster(world):
+        agent_secrets(world_dir(world), agent_id).mkdir(parents=True, exist_ok=True)     # mounted whole, so it must be there
     log.info("wrote %s", out.relative_to(REPO_ROOT))
     for agent_id in roster(world):
         log.info("  agent-%s", agent_id)
         translates = translating(world, agent_id)
         for carrier in translates.carriers if translates else ():
-            secret = world_dir(world) / "secrets" / f"{carrier}-{agent_id}.env"
+            secret = agent_secrets(world_dir(world), agent_id) / f"{carrier}.env"
             log.info("    its %s is %s%s", "mailbox" if carrier == "mail" else "bot's token",
                      secret.relative_to(REPO_ROOT) if secret.is_relative_to(REPO_ROOT) else secret,
                      "" if secret.exists() else ", which is not there: write it by hand (knowledge/runbooks/run-a-world.md)")

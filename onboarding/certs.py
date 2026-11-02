@@ -63,7 +63,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.x509.oid import NameOID
 
 from .worlds import REPO_ROOT
-from .worlds import world_dir
+from .worlds import agent_secrets, world_dir
 
 log = logging.getLogger("certs")
 
@@ -190,8 +190,9 @@ def _leaf(dir_: Path, stem: str, common_name: str, ca: tuple[Path, Path],
 
 
 def agent_cert_files(world: str, agent_id: str) -> tuple[Path, Path]:
-    d = world_dir(world) / "secrets"
-    return d / f"{agent_id}.crt", d / f"{agent_id}.key"
+    """In the agent's own directory, as `agent.crt` and `agent.key`, mounted into its container alone."""
+    d = agent_secrets(world_dir(world), agent_id)
+    return d / "agent.crt", d / "agent.key"
 
 
 def world_ca(world: str) -> Path:
@@ -293,7 +294,7 @@ def issue_for_world(world: str, agent_ids, rotate: bool = False,
         # authority that vouches for the agent — one trust root per society, both directions.
         log.info("  cert   broker         CN=%s", ", ".join(broker_hosts))
     for agent_id in sorted(agent_ids):
-        if _leaf(secrets, agent_id, agent_username(world, agent_id), ca,
+        if _leaf(agent_secrets(world_dir(world), agent_id), "agent", agent_username(world, agent_id), ca,
                  server=False, rotate=rotate):
             log.info("  cert   %-14s CN=%s", agent_id, agent_username(world, agent_id))
     #  THE CRL, EVERY RUN: the config names it unconditionally, so it must exist before the broker

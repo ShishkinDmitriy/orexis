@@ -98,8 +98,8 @@ services:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
       # never read off the world by the agent
       MQTT_BROKERS: "http://example.org/orexis/world/lane#broker mqtts://localhost:8891"
-      MQTT_CERT: "/app/secrets/agent.crt"
-      MQTT_KEY: "/app/secrets/agent.key"
+      MQTT_CERT: "/app/world/lane/secrets/courier_a/agent.crt"
+      MQTT_KEY: "/app/world/lane/secrets/courier_a/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
       # where each series it writes goes, and the org — the store the installation says serves each
       # purpose, its metrics only where the world is monitored — safe for every agent to hold
@@ -110,8 +110,8 @@ services:
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx lane`, and
       # its own broker credential, minted by `orexis-mqtt lane`; mounted into THIS container alone
-      - ./secrets/influx-history-courier_a.env
-      - ./secrets/mqtt-courier_a.env
+      - ./secrets/courier_a/influx-history.env
+      - ./secrets/courier_a/mqtt.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent
     # can write its own belief-base volume.
@@ -130,8 +130,10 @@ services:
       - ./beliefs/courier_a.desires.ttl:/app/world/lane/beliefs/courier_a.desires.ttl:ro
       - ./beliefs/courier_a.self.ttl:/app/world/lane/beliefs/courier_a.self.ttl:ro
       - ./beliefs/courier_a.state.ttl:/app/world/lane/beliefs/courier_a.state.ttl:ro
-      - ./secrets/courier_a.crt:/app/secrets/agent.crt:ro
-      - ./secrets/courier_a.key:/app/secrets/agent.key:ro
+      # its own secrets, whole: its credentials, its certificate, and every document only it is handed — written
+      # by onboarding and by hand, never committed, and mounted into THIS container alone
+      - ./secrets/courier_a:/app/world/lane/secrets/courier_a:ro
+      # the world's authority, which every client of its brokers trusts
       - ./secrets/ca.crt:/app/secrets/ca.crt:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME entries its
       # image keeps, the kernel and its own packages and no other's, which `tests/test_layout.py` holds
@@ -175,8 +177,8 @@ services:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
       # never read off the world by the agent
       MQTT_BROKERS: "http://example.org/orexis/world/lane#broker mqtts://localhost:8891"
-      MQTT_CERT: "/app/secrets/agent.crt"
-      MQTT_KEY: "/app/secrets/agent.key"
+      MQTT_CERT: "/app/world/lane/secrets/courier_b/agent.crt"
+      MQTT_KEY: "/app/world/lane/secrets/courier_b/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
       # where each series it writes goes, and the org — the store the installation says serves each
       # purpose, its metrics only where the world is monitored — safe for every agent to hold
@@ -187,8 +189,8 @@ services:
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx lane`, and
       # its own broker credential, minted by `orexis-mqtt lane`; mounted into THIS container alone
-      - ./secrets/influx-history-courier_b.env
-      - ./secrets/mqtt-courier_b.env
+      - ./secrets/courier_b/influx-history.env
+      - ./secrets/courier_b/mqtt.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent
     # can write its own belief-base volume.
@@ -207,8 +209,10 @@ services:
       - ./beliefs/courier_b.desires.ttl:/app/world/lane/beliefs/courier_b.desires.ttl:ro
       - ./beliefs/courier_b.self.ttl:/app/world/lane/beliefs/courier_b.self.ttl:ro
       - ./beliefs/courier_b.state.ttl:/app/world/lane/beliefs/courier_b.state.ttl:ro
-      - ./secrets/courier_b.crt:/app/secrets/agent.crt:ro
-      - ./secrets/courier_b.key:/app/secrets/agent.key:ro
+      # its own secrets, whole: its credentials, its certificate, and every document only it is handed — written
+      # by onboarding and by hand, never committed, and mounted into THIS container alone
+      - ./secrets/courier_b:/app/world/lane/secrets/courier_b:ro
+      # the world's authority, which every client of its brokers trusts
       - ./secrets/ca.crt:/app/secrets/ca.crt:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME entries its
       # image keeps, the kernel and its own packages and no other's, which `tests/test_layout.py` holds

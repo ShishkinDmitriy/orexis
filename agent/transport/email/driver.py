@@ -94,7 +94,7 @@ class Email(Transport):
         env = os.environ if environ is None else environ
         needed = ("MAIL_ADDRESS", "MAIL_PASSWORD", "MAIL_IMAP_HOST", "MAIL_SMTP_HOST")
         if client is None and not all(env.get(k) for k in needed):
-            raise RuntimeError(f"no mailbox in the environment: {', '.join(needed)} — write secrets/mail-<agent>.env "
+            raise RuntimeError(f"no mailbox in the environment: {', '.join(needed)} — write secrets/<agent>/mail.env "
                                "and regenerate the compose file")
         box = client or Mailbox(env["MAIL_ADDRESS"], env["MAIL_PASSWORD"], env["MAIL_IMAP_HOST"], env["MAIL_SMTP_HOST"],
                                 int(env.get("MAIL_IMAP_PORT") or 993), int(env.get("MAIL_SMTP_PORT") or 465))

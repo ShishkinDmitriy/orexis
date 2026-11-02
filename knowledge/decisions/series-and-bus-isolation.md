@@ -99,8 +99,8 @@ at a fixed path in the container, so the agent reads a path and never constructs
 | | where | why |
 |---|---|---|
 | admin token | `infra/secrets/admin.env` | opens every bucket; no agent may hold it |
-| agent's bucket + token, per purpose | `world/<w>/secrets/influx-<purpose>-<agent>.env` — history's, and metrics' where the world is monitored | mounted into that one container |
-| agent's broker credential | `world/<w>/secrets/mqtt-<agent>.env` | same |
+| agent's bucket + token, per purpose | `world/<w>/secrets/<agent>/influx-<purpose>.env` — history's, and metrics' where the world is monitored | mounted into that one container |
+| agent's broker credential | `world/<w>/secrets/<agent>/mqtt.env` | same |
 | device's broker credential | `world/<w>/secrets/mqtt-<id>.env` | world-scoped, since a broker is — see below |
 | `infra/installation.ttl` | committed document | where the series store is and its org, and where a broker's ports are allocated from — no credential; `infra/.env` went with #827 |
 

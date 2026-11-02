@@ -36,7 +36,7 @@ services:
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx hanoi`;
       # mounted into THIS container alone — the world has no bus, so no broker credential
-      - ./secrets/influx-history-hanoi.env
+      - ./secrets/hanoi/influx-history.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent
     # can write its own belief-base volume.
@@ -55,6 +55,9 @@ services:
       - ./wants.ttl:/app/world/hanoi/wants.ttl:ro
       - ./world.ttl:/app/world/hanoi/world.ttl:ro
       - ./beliefs/hanoi.self.ttl:/app/world/hanoi/beliefs/hanoi.self.ttl:ro
+      # its own secrets, whole: its credentials, its certificate, and every document only it is handed — written
+      # by onboarding and by hand, never committed, and mounted into THIS container alone
+      - ./secrets/hanoi:/app/world/hanoi/secrets/hanoi:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME entries its
       # image keeps, the kernel and its own packages and no other's, which `tests/test_layout.py` holds
       # to `agent.tree.kept`.

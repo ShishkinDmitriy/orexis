@@ -684,7 +684,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **The claims a host issued are its demand** — a debt with a window is an occurrence about the
   window (#626).
 - **A forecast is a series a sensor reads, and a public service's address is wiring** — one graph per
-  stretch, the HTTP member polls, the location lives in `secrets/` (a-forecast-is-a-series-a-sensor-reads).
+  stretch, the HTTP member polls, the location lives in the agent's own `secrets/<agent>/` (a-forecast-is-a-series-a-sensor-reads).
 - **Several transport members are one to the container** — a message goes back to the member that
   queued it, a command to the member that `reaches` the device.
 - **The transport speaks MQTT4SSN, and a topic is named by the filters that match it, which no society
@@ -860,6 +860,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   #838).
 - **What the documents leave out is derived into a document, and a renderer only formats** —
   `infra/installation.derived.ttl` is committed and held to a fresh derivation (#827).
+- **An agent keeps its secrets in a directory of its own, mounted whole, and shares none** — `secrets/<agent>/`
+  holds its credentials, its certificate and every document only it is handed, a group chat's id in each member's;
+  what is no agent's, the authority, the broker and the boards, stays in `secrets/` (#860,
+  an-agent-keeps-its-secrets-in-a-directory-of-its-own).
 - **A world's wiring is its society, and its world graph speaks no MQTT4SSN** (#823).
 - **What lasts says so in its compose file, and the host starts what says so** — the installation's
   services said nothing and podman's restart unit starts only `always`, so a power cut left every
@@ -982,7 +986,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
    document that names worlds, because a port is unique across the host and only the installation
    sees the host; a world names none of it and never learns what the others were given. What an agent may *do* with
    the store and the bus arrives as its own credentials, minted per agent into
-   `world/<name>/secrets/` and mounted into that container alone. The admin token lives apart
+   `world/<name>/secrets/<agent>/`, a directory of its own mounted whole into that container alone. The admin token lives apart
    from both, in `infra/secrets/`, and no agent ever holds it. See
    [series-and-bus-isolation](knowledge/decisions/series-and-bus-isolation.md).
 4. **There is no shared store.** A world is documents; each agent builds its own belief base

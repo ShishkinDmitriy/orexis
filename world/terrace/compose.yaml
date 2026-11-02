@@ -54,8 +54,8 @@ services:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
       # never read off the world by the agent
       MQTT_BROKERS: "http://example.org/orexis/world/terrace#broker mqtts://localhost:8888"
-      MQTT_CERT: "/app/secrets/agent.crt"
-      MQTT_KEY: "/app/secrets/agent.key"
+      MQTT_CERT: "/app/world/terrace/secrets/terrace/agent.crt"
+      MQTT_KEY: "/app/world/terrace/secrets/terrace/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
       # where each series it writes goes, and the org — the store the installation says serves each
       # purpose, its metrics only where the world is monitored — safe for every agent to hold
@@ -74,13 +74,13 @@ services:
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx terrace`, and
       # its own broker credential, minted by `orexis-mqtt terrace`; mounted into THIS container alone
-      - ./secrets/influx-history-terrace.env
-      - ./secrets/influx-metrics-terrace.env
+      - ./secrets/terrace/influx-history.env
+      - ./secrets/terrace/influx-metrics.env
       # the model's name and key — `infra/model.env.example` says how — since it translates
       - ../../infra/secrets/model.env
       # its bot's secret, written by hand: nothing can mint one
-      - ./secrets/telegram-terrace.env
-      - ./secrets/mqtt-terrace.env
+      - ./secrets/terrace/telegram.env
+      - ./secrets/terrace/mqtt.env
     network_mode: host
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent
     # can write its own belief-base volume.
@@ -97,8 +97,10 @@ services:
       - ./speech.ttl:/app/world/terrace/speech.ttl:ro
       - ./world.ttl:/app/world/terrace/world.ttl:ro
       - ./beliefs/terrace.self.ttl:/app/world/terrace/beliefs/terrace.self.ttl:ro
-      - ./secrets/terrace.crt:/app/secrets/agent.crt:ro
-      - ./secrets/terrace.key:/app/secrets/agent.key:ro
+      # its own secrets, whole: its credentials, its certificate, and every document only it is handed — written
+      # by onboarding and by hand, never committed, and mounted into THIS container alone
+      - ./secrets/terrace:/app/world/terrace/secrets/terrace:ro
+      # the world's authority, which every client of its brokers trusts
       - ./secrets/ca.crt:/app/secrets/ca.crt:ro
       # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME entries its
       # image keeps, the kernel and its own packages and no other's, which `tests/test_layout.py` holds

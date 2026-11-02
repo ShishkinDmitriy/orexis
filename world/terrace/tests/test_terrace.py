@@ -102,7 +102,7 @@ def test_one_message_is_five_observations_and_the_soil_is_below_the_beds_range(m
     assert broker.published == [], "nothing is wanted, so nothing is sent"
 
 
-#  THE SOVEREIGN'S CHAT, as its secrets/chat.ttl states it — a made-up id, since the real one is not committed.
+#  THE SOVEREIGN'S CHAT, as its secrets/terrace/chat.ttl states it — a made-up id, since the real one is not committed.
 CHAT = """@prefix : <http://example.org/orexis/world/terrace#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix telegram: <http://example.org/orexis/telegram#> .
@@ -121,7 +121,7 @@ def test_the_sovereign_asks_the_agent_through_its_own_bot_and_is_answered_with_w
 
     monkeypatch.setattr(clock, "now", lambda: NOW)
     world = _with_a_place(tmp_path)
-    (world / "secrets" / "chat.ttl").write_text(CHAT)
+    (world / "secrets" / "terrace" / "chat.ttl").write_text(CHAT)
     sent, updates = [], [{"update_id": 7, "message": {"chat": {"id": 4242}, "from": {"id": 1}, "text": "/status"}}]
 
     def api(url, body):
@@ -266,7 +266,7 @@ def test_every_field_the_agent_writes_is_drawn_by_one_health_panel(monkeypatch):
     assert {p["measurement"] for p in written} <= drawn
 
 
-#  WHERE THE TERRACE IS, as its secrets/place.ttl states it — a made-up place, since the real one is
+#  WHERE THE TERRACE IS, as its secrets/terrace/place.ttl states it — a made-up place, since the real one is
 #  not committed — and what the forecast service answers: ten millimetres in the hour to two o'clock.
 PLACE = """@prefix : <http://example.org/orexis/world/terrace#> .
 @prefix orexis: <http://example.org/orexis#> .
@@ -280,13 +280,13 @@ FORECAST_SENSOR = "http://example.org/orexis/world/terrace#forecast_terrace"
 
 
 def _with_a_place(tmp_path):
-    """The terrace's documents copied, with the place its secrets/ would hold."""
+    """The terrace's documents copied, with the place its agent's own directory under secrets/ would hold."""
     import shutil
     world = tmp_path / "world" / "terrace"
     shutil.copytree(WORLD, world, ignore=shutil.ignore_patterns("tests", "secrets", "mosquitto", "__pycache__"))
     (tmp_path / "domains").symlink_to(WORLD.parents[1] / "domains")         # where its imports resolve
-    (world / "secrets").mkdir()
-    (world / "secrets" / "place.ttl").write_text(PLACE)
+    (world / "secrets" / "terrace").mkdir(parents=True)
+    (world / "secrets" / "terrace" / "place.ttl").write_text(PLACE)
     return world
 
 
@@ -297,7 +297,7 @@ def test_without_its_place_the_forecast_is_not_asked_for_and_the_terrace_still_b
     from agent.runtime import HTTP
 
     monkeypatch.setattr(clock, "now", lambda: NOW)
-    store = boot(WORLD, "terrace") if not (WORLD / "secrets" / "place.ttl").exists() else None
+    store = boot(WORLD, "terrace") if not (WORLD / "secrets" / "terrace" / "place.ttl").exists() else None
     if store is None:
         pytest.skip("this checkout holds the terrace's place")
     runtime = Runtime(store, "terrace", transport=Mqtt(AGENT, Broker()))

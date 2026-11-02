@@ -10,7 +10,7 @@ agent may import this.
 
 **Per purpose** (knowledge/domain/kernel/series.md). A series store is told to an agent for a
 purpose — history and metrics — in the store the installation says `onboarding:serves` it, so the
-credential file names its purpose, `secrets/influx-<purpose>-<agent>.env`, and says
+credential file names its purpose, `secrets/<agent>/influx-<purpose>.env`, and says
 `INFLUX_<PURPOSE>_BUCKET` and `INFLUX_<PURPOSE>_TOKEN`; `orexis-compose` adds where the store is
 under the same purpose. The history bucket keeps the name the one bucket had, `<world>-<agent>`, so
 a history begun before purposes continues in it. A grant made before purposes — its authorization
@@ -63,7 +63,7 @@ from agent.series import HISTORY, METRICS, PURPOSES
 
 from . import compose, installation, reading
 from .worlds import REPO_ROOT
-from .worlds import shown, world_dir, worlds
+from .worlds import agent_secrets, shown, world_dir, worlds
 
 log = logging.getLogger("influx")
 
@@ -96,12 +96,12 @@ def bucket_name(world: str, agent_id: str, purpose: str = HISTORY) -> str:
 def credential_file(world: str, agent_id: str, purpose: str = HISTORY) -> Path:
     """Where the agent's credential for `purpose` is minted: its own, named for what it is for, by
     the name `orexis-compose` mounts."""
-    return world_dir(world) / "secrets" / compose.series_credential(agent_id, purpose)
+    return agent_secrets(world_dir(world), agent_id) / compose.series_credential(purpose)
 
 
 def _unpurposed_file(world: str, agent_id: str) -> Path:
     """Where a grant made before purposes was written — removed when the history grant replaces it."""
-    return world_dir(world) / "secrets" / f"influx-{agent_id}.env"
+    return agent_secrets(world_dir(world), agent_id) / "influx.env"
 
 
 def _description(world: str, agent_id: str, purpose: str | None) -> str:
@@ -325,13 +325,10 @@ def stale_files(world: str) -> list[str]:
     if not secrets.is_dir():
         return []
     found = []
-    for path in sorted(secrets.glob("influx-*.env")):
-        who = path.name[len("influx-"):-len(".env")]
-        for purpose in PURPOSES:
-            who = who.removeprefix(f"{purpose.lower()}-")
-        if who not in roster:
-            found.append(f"secrets/{path.name} — no agent {who!r} in the world; "
-                         f"`orexis-influx {world} --revoke {who}` takes it back and keeps the bucket")
+    for mine in sorted(p for p in secrets.iterdir() if p.is_dir() and p.name not in roster):
+        for path in sorted(mine.glob("influx-*.env")):
+            found.append(f"secrets/{mine.name}/{path.name} — no agent {mine.name!r} in the world; "
+                         f"`orexis-influx {world} --revoke {mine.name}` takes it back and keeps the bucket")
     return found
 
 

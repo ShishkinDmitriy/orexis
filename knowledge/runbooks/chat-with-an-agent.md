@@ -36,10 +36,11 @@ its log that it has no model for anything else.
 2. Write it where the terrace's compose file looks for it:
 
    ```bash
-   printf 'TELEGRAM_BOT_TOKEN=%s\n' '<the token>' > world/terrace/secrets/telegram-terrace.env
+   mkdir -p world/terrace/secrets/terrace
+   printf 'TELEGRAM_BOT_TOKEN=%s\n' '<the token>' > world/terrace/secrets/terrace/telegram.env
    ```
 
-   The file is `secrets/telegram-<agent id>.env`, one bot per agent. Where the Bot API answers is the
+   The file is `secrets/<agent id>/telegram.env`, in the agent's own directory, one bot per agent. Where the Bot API answers is the
    world's deployment graph's (`:terrace_bot schema:url "https://api.telegram.org"`), told to the agent as
    `TELEGRAM_URL`.
 
@@ -51,17 +52,17 @@ its log that it has no model for anything else.
 2. Ask the Bot API what it has:
 
    ```bash
-   . world/terrace/secrets/telegram-terrace.env
+   . world/terrace/secrets/terrace/telegram.env
    curl -s "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/getUpdates" | python3 -m json.tool
    ```
 
    The chat's id is `result[].message.chat.id`, a number, negative for a group; who wrote is
    `result[].message.from.id`.
-3. State it in the world, in a document under `secrets/`, since the id is yours and git holds none of
+3. State it in the world, in a document in the agent's own directory under `secrets/`, since the id is yours and git holds none of
    that directory:
 
    ```turtle
-   # world/terrace/secrets/chat.ttl
+   # world/terrace/secrets/terrace/chat.ttl
    @prefix : <http://example.org/orexis/world/terrace#> .
    @prefix orexis: <http://example.org/orexis#> .
    @prefix telegram: <http://example.org/orexis/telegram#> .
@@ -75,13 +76,12 @@ its log that it has no model for anything else.
 # Onboard and start
 
 ```bash
-orexis-onboard terrace          # the ACL, the compose file — now mounting secrets/chat.ttl — and the rest
+orexis-onboard terrace          # the ACL, the compose file and the rest
 cd world/terrace && podman compose build && podman compose up -d
 ```
 
-The compose file mounts a document under `secrets/` only where it exists when it is rendered, so run
-`orexis-onboard` after writing `chat.ttl`; the committed `compose.yaml` then differs from yours, which
-is #860. Each agent runs an image holding only its own packages and what they bring
+The compose file mounts the agent's own directory, `secrets/<agent>/`, whole, so a document written there
+reaches the agent on its next restart and changes nothing committed. Each agent runs an image holding only its own packages and what they bring
 ([a-package-brings-its-own-dependencies](/decisions/a-package-brings-its-own-dependencies.md)), so
 build the terrace's once before its first start, and again only when a package it runs changes what it
 brings; a change to the code alone is mounted from the tree and needs a restart.
@@ -119,7 +119,7 @@ read.
    ```
 
    ```turtle
-   # secrets/chat.ttl, beside the one-to-one chat
+   # secrets/<agent>/chat.ttl of EVERY agent in the group, beside the one-to-one chat
    :household_telegram telegram:chatId "<the group's id>" .
    :dmitrii telegram:userId "<your user id>" .
    ```

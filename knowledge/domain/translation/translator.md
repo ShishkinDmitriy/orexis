@@ -65,4 +65,4 @@ in where they have none. A statement of no sayable's class is not rendered, and 
 A chat it is in, of which onboarding's [requirement](/domain/onboarding/requirement.md) holds a
 translator; a model the installation names ([deployment](/domain/onboarding/deployment.md)), its key
 mounted into this agent's container alone; and each carrier's secret where a chat goes through it —
-`secrets/telegram-<agent>.env` for its bot, `secrets/mail-<agent>.env` for its mailbox.
+`secrets/<agent>/telegram.env` for its bot, `secrets/<agent>/mail.env` for its mailbox.
