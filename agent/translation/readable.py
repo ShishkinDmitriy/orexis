@@ -63,15 +63,16 @@ class Readable:
             ns = me[:max(me.rfind("#"), me.rfind("/")) + 1]
             self.world = _named(ns, set(self.prefixes) | set(read))
             self.prefixes[self.world] = ns
-        self.vocabularies = {name: _turtle(quads, self.prefixes) for name, quads in read.items()}
+        self.vocabularies = {name: _glossary(quads, self.written) for name, quads in read.items()}
 
     def tools(self) -> list[dict]:
         """The two tools the model reads the chat's graphs with, each answered by `call`."""
         prefixes = ", ".join(sorted(self.prefixes))
         return [
-            {"name": VOCABULARY, "description": "One vocabulary this chat lets you read, as Turtle: its classes and "
-             "properties, with comments saying what each means. Load the ones a question needs before querying their "
-             "terms.", "input_schema": {"type": "object", "properties": {"name": {
+            {"name": VOCABULARY, "description": "One vocabulary this chat lets you read, as a glossary: each class and "
+             "property, a class with what it is beneath and a property with its domain and range, then the first "
+             "sentence of what it means. Load the ones a question needs before querying their terms; a term's whole "
+             "rdfs:comment, and anything else the vocabulary states, is read with the query tool.", "input_schema": {"type": "object", "properties": {"name": {
                  "type": "string", "description": "the vocabulary's name, as the briefing lists it"}}, "required": ["name"]}},
             {"name": QUERY, "description": "A SPARQL SELECT or ASK over every graph this chat lets you read, merged into "
              f"one default graph. These prefixes are declared for you: {prefixes}" + (f", {self.world}: naming the "
@@ -89,11 +90,11 @@ class Readable:
         return None
 
     def listing(self) -> str:
-        """Each vocabulary the chat may read, by its prefix, with its size: what the model chooses from."""
-        return "\n".join(f" - {name} ({text.count(chr(10))} lines)" for name, text in sorted(self.vocabularies.items()))
+        """Each vocabulary the chat may read, by its prefix, with how many terms it has: what the model chooses from."""
+        return "\n".join(f" - {name} ({len(text.splitlines())} terms)" for name, text in sorted(self.vocabularies.items()))
 
     def vocabulary(self, name: str) -> str:
-        """One vocabulary the chat may read, as Turtle; told so where it reads none of that name."""
+        """One vocabulary the chat may read, as its glossary; told so where it reads none of that name."""
         found = self.vocabularies.get(name.strip().rstrip(":"))
         if found is None:
             return f"no vocabulary {name!r} in this chat; these are: {', '.join(sorted(self.vocabularies))}"
@@ -185,7 +186,46 @@ def _named(ns: str, taken: set[str]) -> str:
     return name
 
 
-def _turtle(quads, prefixes: dict[str, str]) -> str:
-    out = ox.Store()
-    out.extend(ox.Quad(q.subject, q.predicate, q.object) for q in quads)
-    return ox.serialize(out, format=ox.RdfFormat.TURTLE, prefixes=prefixes).decode()
+def _glossary(quads, written) -> str:
+    """A vocabulary as one line per class and property it declares: the term, what it is beneath or its domain and
+    range, and the first sentence of its comment, each name `written` as a row writes it. Its shapes and rules are
+    left to the query tool, since a question is about the terms."""
+    vocabulary = ox.Store()
+    vocabulary.extend(ox.Quad(q.subject, q.predicate, q.object) for q in quads)
+    out = io.BytesIO()
+    vocabulary.query(_GLOSSARY_Q, prefixes=NAMESPACES).serialize(output=out, format=ox.QueryResultsFormat.JSON)
+    terms = []
+    for row in json.loads(out.getvalue())["results"]["bindings"]:
+        name = written(row["term"])
+        kind = row["kind"]["value"]
+        if kind == "class":
+            about = f", beneath {written(row['above'])}" if "above" in row else ""
+        else:
+            ends = [written(row[k]) if k in row else "?" for k in ("domain", "range")]
+            about = f", {ends[0]} → {ends[1]}" if ends != ["?", "?"] else ""
+        said = _first_sentence(row["comment"]["value"]) if "comment" in row else ""
+        terms.append(f"{name} ({kind}{about})" + (f": {said}" if said else ""))
+    return "\n".join(sorted(terms))
+
+
+#  WHAT A GLOSSARY SAYS OF A TERM: its kind, one class it is beneath or a property's domain and range, and its comment.
+_GLOSSARY_Q = """
+SELECT ?term (SAMPLE(?k) AS ?kind) (SAMPLE(?a) AS ?above) (SAMPLE(?d) AS ?domain) (SAMPLE(?r) AS ?range)
+       (SAMPLE(?c) AS ?comment) WHERE {
+  { ?term a ?t . VALUES ?t { owl:Class rdfs:Class } BIND("class" AS ?k)
+    OPTIONAL { ?term rdfs:subClassOf ?a . FILTER(isIRI(?a)) } }
+  UNION
+  { ?term a ?t . VALUES ?t { owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty rdf:Property }
+    BIND("property" AS ?k)
+    OPTIONAL { ?term rdfs:domain ?d . FILTER(isIRI(?d)) } OPTIONAL { ?term rdfs:range ?r . FILTER(isIRI(?r)) } }
+  FILTER(isIRI(?term))
+  OPTIONAL { ?term rdfs:comment ?c } } GROUP BY ?term"""
+#  HOW LONG A GLOSSARY'S SENTENCE MAY RUN: past it the sentence is cut, and the query tool reads the rest.
+SENTENCE = 200
+
+
+def _first_sentence(text: str) -> str:
+    """The first sentence of a comment, on one line, cut at `SENTENCE` characters."""
+    flat = " ".join(text.split())
+    first = re.split(r"(?<=[.!?])\s", flat, maxsplit=1)[0]
+    return first if len(first) <= SENTENCE else first[:SENTENCE].rsplit(" ", 1)[0] + " …"

@@ -33,7 +33,8 @@ default graph on the runtime's thread when the words arrive. A chat stating none
 has the askables alone; one stating some is offered only the askables reading within them.
 
 **The model loads and queries.** The [briefing](/domain/translation/briefing.md) names the vocabularies the
-chat may read and nothing more; `vocabulary` hands the model one as Turtle, comments and all, and `query` runs
+chat may read and nothing more; `vocabulary` hands the model one as a glossary, a line per class and property with
+the first sentence of its comment (whole Turtle was most of what a forecast question spent), and `query` runs
 its SELECT or ASK over the copy, rows capped. It converses, calling as many tools over as many turns as the
 message needs, and answers in words. The askables stay as the questions a package answers well.
 
