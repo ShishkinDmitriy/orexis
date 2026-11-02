@@ -45,9 +45,15 @@ refused the model writing SPARQL on three premises, each answered here:
 
 - **Free text to action.** A SELECT or an ASK is no action. A text is parsed first, and anything else - an
   update, a CONSTRUCT - is refused before it runs; nothing the model reads becomes a belief.
-- **The `GRAPH` trap.** The model never chooses a graph: the chat's graphs are merged into the copy's one
-  default graph, and a `GRAPH`, `SERVICE` or `FROM` anywhere in the text is refused with the reason, so the
-  model may write it again.
+- **The `GRAPH` trap.** The model never reaches past the chat: the copy holds the chat's graphs and nothing
+  else, each under its name, and a `SERVICE` or a `FROM` is refused with the reason, so the model may write it
+  again. Within the copy a query states the kinds it reads, as every reader of the store does: their graphs are
+  its default graph and its `GRAPH` range, and the catalogue is named beside them, never merged in, since
+  statements about graphs merged into the data answer open patterns that mean something else. Where a belief
+  came from is then a `GRAPH` away: its document, its kinds, how it arrived, whose it is (amended when a person
+  asked the terrace how it knew their name, and it could not say). Merging every graph into one, as first
+  built, was the union-by-default the store refused, and a tool per purpose - observations, provenance - a
+  fixed list of questions again.
 - **An unbounded cost.** The query runs on the model's thread over the copy, so a slow one never stalls a
   pass; its rows are capped at fifty; a conversation is `TURNS` turns at most.
 
@@ -60,8 +66,8 @@ it reads nothing the chat does not.
   select per sentence of the world, and an agent that answers only what was foreseen.
 - **A briefing of every common belief.** Built first, the same day: correct, and paid for by every message
   whether the question needed the climate vocabulary or not.
-- **The model choosing graphs.** A `GRAPH` clause or a list of graphs to read would make the chat's reads a
-  suggestion; merged into one copy, they are a wall.
+- **The model choosing graphs.** A list of graphs to read, handed by the model, would make the chat's reads a
+  suggestion; copied, they are a wall, and a `GRAPH` inside the copy only tells them apart.
 
 # Seams left open
 

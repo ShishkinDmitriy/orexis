@@ -131,13 +131,14 @@ def test_the_model_is_briefed_with_who_the_agent_is_what_the_chat_reads_and_what
 def test_the_model_loads_a_vocabulary_and_queries_what_the_chat_reads(seeker):
     runtime, part, bot = seeker
     part.model = StandIn(calls=[("vocabulary", {"name": "speech"}),
-                                ("query", {"sparql": "SELECT ?c WHERE { ?c a speech:Chat }"}),
-                                ("query", {"sparql": "SELECT * WHERE { GRAPH ?g { ?s ?p ?o } }"})],
+                                ("query", {"sparql": "SELECT ?c WHERE { ?c a speech:Chat }", "kinds": ["orexis:BeliefGraph"]}),
+                                ("query", {"sparql": "SELECT * WHERE { SERVICE <http://elsewhere.example/> { ?s ?p ?o } }",
+                                           "kinds": ["orexis:BeliefGraph"]})],
                          text="We speak here, and in three other chats.")
     _write(runtime, V + "clara_telegram", "in which chats are you?")
     vocabulary, chats, refused = _results(part.model.asked[-1][1])
     assert "speech:Chat" in vocabulary and "seeker_and_clara" in chats and "household" in chats
-    assert refused.startswith("refused: it holds a GRAPH clause")
+    assert refused.startswith("refused: it holds a SERVICE clause")
     assert bot.said == [(V + "clara_telegram", "We speak here, and in three other chats.")]
 
 
