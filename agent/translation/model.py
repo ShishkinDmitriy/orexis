@@ -40,6 +40,7 @@ class Answer:
     """What the model answered: the text it wrote, and each tool it called with the input it filled."""
     text: str = ""
     calls: list[tuple[str, dict]] = field(default_factory=list)
+    tokens: dict[str, int] = field(default_factory=dict)
 
 
 #  WHAT A TURN SPENT, by the API's own names: fresh input, input written to and read from the cache, and output.
@@ -86,7 +87,7 @@ class Model:
             body["tools"] = list(tools)
             body["tool_choice"] = {"type": "auto"}
         reply = self.client.messages.create(**body)
-        answer = Answer()
+        answer = Answer(tokens=_tokens(reply))
         for block in reply.content:
             if block.type == "text":
                 answer.text += block.text
@@ -107,9 +108,7 @@ class Model:
             body["tools"] = list(tools)
             body["tool_choice"] = {"type": "none" if last else "auto"}
         reply = self.client.messages.create(**body)
-        usage = getattr(reply, "usage", None)
-        turn = Turn(stop=str(getattr(reply, "stop_reason", "") or ""),
-                    tokens={k: int(getattr(usage, k, 0) or 0) for k in TOKENS})
+        turn = Turn(stop=str(getattr(reply, "stop_reason", "") or ""), tokens=_tokens(reply))
         for block in reply.content:
             if block.type == "text":
                 turn.text += block.text
@@ -118,6 +117,12 @@ class Model:
                 turn.calls.append((block.id, block.name, dict(block.input or {})))
                 turn.content.append({"type": "tool_use", "id": block.id, "name": block.name, "input": dict(block.input or {})})
         return turn
+
+
+def _tokens(reply) -> dict[str, int]:
+    """What one request spent, by the API's own names; nought for a name its reply does not carry."""
+    usage = getattr(reply, "usage", None)
+    return {k: int(getattr(usage, k, 0) or 0) for k in TOKENS}
 
 
 def _cached(messages: list[dict]) -> list[dict]:

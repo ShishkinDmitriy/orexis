@@ -8,7 +8,7 @@ import anthropic
 import httpx2 as httpx
 import pytest
 
-from agent.translation.model import DEFAULT_URL, RETRIES, TIMEOUT_S, Answer, Model, why_not
+from agent.translation.model import DEFAULT_URL, RETRIES, TIMEOUT_S, Model, why_not
 
 
 class Client:
@@ -28,13 +28,14 @@ def test_a_call_sends_the_prompt_the_message_and_the_tools_and_reads_the_calls_b
                             "messages": [{"role": "user", "content": "hello"}],
                             "tools": [{"name": "ViewingOffer", "input_schema": {"type": "object"}}],
                             "tool_choice": {"type": "auto"}}]
-    assert answer == Answer("ok", [("ViewingOffer", {"listing": "the flat", "at": "2026-11-02T18:00:00+00:00"})])
+    assert (answer.text, answer.calls) == ("ok", [("ViewingOffer", {"listing": "the flat", "at": "2026-11-02T18:00:00+00:00"})])
 
 
 def test_a_call_with_no_tool_offers_none_and_reads_the_text():
     client = Client(SimpleNamespace(type="text", text="Dear Anna"))
     model = Model("m", "k", url="https://proxy.example/", client=client)
-    assert model.ask("s", "t") == Answer("Dear Anna", [])
+    answer = model.ask("s", "t")
+    assert (answer.text, answer.calls) == ("Dear Anna", []) and answer.tokens["output_tokens"] == 0
     assert "tools" not in client.sent[0] and "tool_choice" not in client.sent[0]
     assert model.url == "https://proxy.example"
 

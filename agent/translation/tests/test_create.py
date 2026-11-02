@@ -179,6 +179,18 @@ def test_a_question_is_answered_by_as_many_askables_as_it_needs_and_their_rows_h
     assert len(runtime.beliefs) == before, "a question writes nothing"
 
 
+def test_a_conversation_says_what_it_spent_where_it_is_heard(seeker):
+    runtime, part, bot = seeker
+    heard = []
+    part.translated.connect(heard.append)
+    part.model = StandIn(calls=[("viewings_offered", {"listing": "the studio on Rigaer Straße"})], text="Nothing yet.")
+    _write(runtime, V + "clara_telegram", "anything for the studio?")
+    runtime.run(passes=1, poll_s=0)
+    (spent,) = heard
+    assert (spent.act, spent.outcome, spent.requests) == ("answer", "said", 2.0), spent
+    assert spent.input_tokens == 0.0 and spent.duration_s >= 0, "a stand-in spends nothing, and says so"
+
+
 def test_a_conversation_ends_in_words_by_its_last_turn(seeker):
     runtime, part, bot = seeker
     part.model = StandIn(calls=[("viewings_offered", {"listing": "the studio on Rigaer Straße"})] * 10, text="I could not find out.")

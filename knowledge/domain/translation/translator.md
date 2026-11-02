@@ -66,3 +66,10 @@ A chat it is in, of which onboarding's [requirement](/domain/onboarding/requirem
 translator; a model the installation names ([deployment](/domain/onboarding/deployment.md)), its key
 mounted into this agent's container alone; and each carrier's secret where a chat goes through it —
 `secrets/<agent>/telegram.env` for its bot, `secrets/<agent>/mail.env` for its mailbox.
+
+# What it spends
+
+Each use of the model - a message answered over a conversation's requests, a statement rendered in one - is
+said as `Translated`, tagged by the act, how it ended and the model, with the requests and the tokens it spent
+by the API's own names. Where the world is monitored the metrics part tallies it, and `orexis-dashboards` draws
+it on the package's health dashboard, so what an agent's chats cost is watched beside its other figures.

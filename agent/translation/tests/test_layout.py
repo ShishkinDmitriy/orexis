@@ -21,8 +21,9 @@ TRANSLATION = ROOT / "agent" / "translation"
 FILES = sorted(TRANSLATION.glob("*.py"))
 VOCABULARY = sorted(TRANSLATION.glob("*.ttl"))
 ABOVE = ("planning", "execution", "belief", "sensing", "prediction", "coordination", "transport")
-#  THINGS, NOT ACTS: the chats, the model, a sayable, an askable, a shape's fields, what a chat may read, and the part.
-NOUNS = {"askable", "chat", "model", "readable", "sayable", "shape", "create"}
+#  THINGS, NOT ACTS: the chats, the model, a sayable, an askable, a shape's fields, what a chat may read, what it
+#  says happened, and the part.
+NOUNS = {"askable", "chat", "events", "model", "readable", "sayable", "shape", "create"}
 
 
 def test_the_package_imports_nothing_above_it_and_no_transport():
