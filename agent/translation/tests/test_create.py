@@ -185,6 +185,13 @@ def test_a_conversation_ends_in_words_by_its_last_turn(seeker):
     assert len(part.model.asked) == TURNS and bot.said == [(V + "clara_telegram", "I could not find out.")]
 
 
+def test_a_model_that_writes_no_words_is_said_to_have_failed(seeker):
+    runtime, part, bot = seeker
+    part.model = StandIn(text="")
+    _write(runtime, V + "clara_telegram", "what is the forecast?")
+    assert bot.said == [(V + "clara_telegram", "seeker could not answer: its model wrote no words (no reason given).")]
+
+
 def test_in_a_group_an_agent_answers_when_named_keeps_silent_when_another_is_and_says_nothing_it_does_not_know(seeker):
     runtime, part, bot = seeker
     part.model = StandIn(text="I am looking at two flats.")
