@@ -22,9 +22,22 @@ def readable():
 
 def test_each_vocabulary_is_listed_by_its_prefix_and_loaded_by_it(readable):
     assert {"orexis", "speech"} <= set(readable.vocabularies), readable.listing()
-    assert "speech:Chat" in readable.vocabulary("speech") and "rdfs:comment" in readable.vocabulary("speech:")
+    assert readable.vocabulary("speech") == readable.vocabulary("speech:")
     assert readable.vocabulary("nonesuch").startswith("no vocabulary 'nonesuch' in this chat; these are:")
     assert "closure" not in readable.listing(), "the subclass closure is derived, and no vocabulary"
+
+
+def test_a_vocabulary_is_a_glossary_of_its_terms_and_the_query_reads_the_rest(readable):
+    glossary = readable.vocabulary("speech").splitlines()
+    assert "speech:Chat (class): Who speaks with whom, through what: a standing thing of the society, with its " \
+           "`speech:participant`s - an agent and a person, or several - and its `speech:channel`, the thing their " \
+           "prose goes through." in glossary
+    assert any(line.startswith("speech:participant (property, speech:Chat → ") for line in glossary), glossary
+    assert "speech:Askable (class, beneath sh:NodeShape): " in "\n".join(glossary)
+    assert all(len(line.split(": ", 1)[-1]) <= 220 for line in glossary), "a sentence is cut, and the query reads on"
+    assert "translation (1 terms)" in readable.listing(), readable.listing()
+    whole = readable.query("SELECT ?c WHERE { speech:Chat rdfs:comment ?c }")
+    assert "the thing their prose goes through" in whole and len(whole) > 150
 
 
 def test_a_query_reads_the_chats_graphs_as_one(readable):
