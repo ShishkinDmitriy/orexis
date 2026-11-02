@@ -32,3 +32,9 @@ def test_the_self_graph_is_in_it_where_the_chat_reads_it():
     assert "orexis:Self" in briefing(store, SEEKER, (O + "Graph",), "", "")[0]
     assert briefing(store, SEEKER, (O + "Graph",), "", "")[0] == briefing(store, SEEKER, (O + "Graph",), "", "")[0], \
         "the same text for the same beliefs, or the provider caches nothing"
+
+
+def test_where_the_chat_reads_the_self_graph_each_role_the_agent_plays_is_said_in_its_packages_words():
+    who, _ = briefing(boot(WORLD, "seeker"), SEEKER, (O + "Graph",), "", "")
+    assert "THE ROLES IT PLAYS:\n - " in who and "\n - Translator: An agent that speaks with people in the chats it is in" in who, who
+    assert "THE ROLES IT PLAYS" not in briefing(boot(WORLD, "seeker"), SEEKER, (), "", "")[0]

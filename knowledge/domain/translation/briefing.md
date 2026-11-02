@@ -12,7 +12,8 @@ description: >-
 A **briefing** is the context a [translator](/domain/translation/translator.md) gives the model ahead of
 a person's words, as the system prompt of the one conversation that answers them. It says:
 
-- **who the agent is** - its name, and its self graph where the [chat](/domain/speech/chat.md) reads it;
+- **who the agent is** - its name, and its self graph where the [chat](/domain/speech/chat.md) reads it,
+  with the label and comment of each [role](/domain/kernel/role.md) it plays, in its package's words;
 - **what the chat lets the model read** - the kinds of graph the chat reads, and each vocabulary among
   them by the name the model loads it by, with its size; or, where the chat reads nothing, that the model
   has the askables alone;
