@@ -67,6 +67,14 @@ translator; a model the installation names ([deployment](/domain/onboarding/depl
 mounted into this agent's container alone; and each carrier's secret where a chat goes through it —
 `secrets/<agent>/telegram.env` for its bot, `secrets/<agent>/mail.env` for its mailbox.
 
+# What happened
+
+Where the chat reads `orexis:Event`, the model is offered two tools beside the query: `journal`, a SELECT or
+an ASK over the agent's journal where it lies, its entries their union, and `series`, the points of one
+measurement and sensor over a stretch, read from the agent's own history bucket by a Flux the tool writes from
+the fields the model fills. The present is the store's to answer and the past the record's, and the model is
+told to say which a message asks before it reads.
+
 # What it spends
 
 Each use of the model - a message answered over a conversation's requests, a statement rendered in one - is

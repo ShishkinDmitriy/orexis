@@ -11,10 +11,10 @@
 #  when a question asks it (knowledge/domain/speech/askable.md).
 #  The chat's id is the sovereign's and sits in secrets/terrace/chat.ttl, not here.
 
-#  WHAT THE MODEL MAY READ IN IT: everything the agent holds, since the chat is with its sovereign
-#  (knowledge/domain/speech/chat.md).
+#  WHAT THE MODEL MAY READ IN IT: everything the agent holds, and what happened to it - its journal and its
+#  series - since the chat is with its sovereign (knowledge/domain/speech/chat.md).
 :terrace_and_dmitrii a speech:Chat ;
     speech:participant :terrace_agent , :dmitrii ;
     speech:channel :sovereign_telegram ;
-    speech:reads orexis:Graph .
+    speech:reads orexis:Graph , orexis:Event .
 :sovereign_telegram a telegram:Chat .
