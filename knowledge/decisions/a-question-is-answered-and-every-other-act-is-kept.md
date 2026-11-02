@@ -1,7 +1,8 @@
 ---
 type: Decision
 title: A question is answered and every other act is kept, FIPA names the acts, and no engine runs a protocol
-status: accepted
+status: superseded-in-part
+superseded-by: the-model-is-briefed-and-converses
 timestamp: 2026-11-01T12:00:00Z
 description: >-
   The sovereign's question of 2026-11-01, whether the society should have FIPA's communicative acts and
@@ -16,6 +17,11 @@ description: >-
   read; FIPA's semantics, which reason about the sender's mind; an envelope beside the content; and a
   protocol engine, which would dictate the next act.
 ---
+
+> **Superseded in part** by [the-model-is-briefed-and-converses](/decisions/the-model-is-briefed-and-converses.md).
+> What does not hold any more is the ONE CALL: the model is briefed with the world the agent believes and
+> converses, calling as many askables as a question needs, and nothing says none fits. The askable, the
+> statement kept and the FIPA alignment stand.
 
 # The question
 
