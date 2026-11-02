@@ -37,6 +37,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [calibration](/domain/sensing/calibration.md) - A correction within one unit, two points the world states beside the sensor, applied by sensing's rule after any scaling.
 * [region](/domain/sensing/region.md) - SSN-System's operating and survival ranges, stated by the world; a transition judges a subject against the operating one.
 * [margin](/domain/sensing/margin.md) - How far past a bound a value must go to leave the state held of a subject; stated on the range's condition, read by a transition.
+* [defect](/domain/sensing/defect.md) - Why a sensor's numbers are not what it observes, stated by the world: its percepts kept and tagged, no reading of them believed.
 * [stuck](/domain/sensing/stuck.md) - A sensor whose last readings kept all gave one number is stuck on it, by a rule over its percepts; counts readings, not time.
 * [observer](/domain/sensing/observer.md) - The role sensing serves, played as an instance declaring the sensors it reads and how long they may be silent or stuck.
 

@@ -92,8 +92,8 @@ def test_one_message_is_five_observations_and_the_soil_is_below_the_beds_range(m
     read = {r["p"].rsplit("#", 1)[-1]: float(r["v"]) for r in rows(
         runtime.beliefs, "SELECT ?p ?v WHERE { ?o sosa:observedProperty ?p ; sosa:hasSimpleResult ?v }",
         graphs_of(runtime.beliefs, "http://example.org/orexis/sensing#ObservationGraph"))}
-    assert read == {"SoilMoisture": 0.2, "AirTemperature": 14.5, "AirHumidity": 0.8, "AirPressure": 1012.0,
-                    "BatteryVoltage": 3.91}
+    assert read == {"SoilMoisture": 0.2, "AirTemperature": 14.5, "AirHumidity": 0.8, "AirPressure": 1012.0}, \
+        "the battery's sensor is defective (#939): its number is kept, and is no reading"
     #  A FORECAST IS A BELIEF TOO (#992), about a stretch ahead: what the agent holds of the PRESENT is the rest.
     present = [g for g in _own(runtime.beliefs) if g not in graphs_of(runtime.beliefs, FORECAST_KIND)]
     held = rows(runtime.beliefs, "SELECT ?s ?p ?o WHERE { ?s ?p ?o }", present)
@@ -180,6 +180,8 @@ def test_each_reading_reaches_the_series_under_its_own_property(monkeypatch, his
         ("AirTemperature", "air_temp_terrace", 14.5), ("BatteryVoltage", "battery_sensor_terrace", 3.91),
         ("SoilMoisture", "moisture_sensor_terrace", 0.2)]
     assert {p["tags"].get("feature") for p in history} == {"terrace_bed", "terrace_battery"}
+    assert [p["tags"]["sensor"] for p in history if p["tags"].get("defective")] == ["battery_sensor_terrace"], \
+        "its number still reaches the series, tagged as no reading"
     assert {p["time"] for p in history} == {NOW}, "at the reading's own instant"
 
 

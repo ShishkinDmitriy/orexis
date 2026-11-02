@@ -23,7 +23,8 @@
 #  sensor is hosted by, a sample or the subject itself) and the property (what it observes); and the
 #  scaled quantity (`sensing:scaledResult`), the number as it is or, where a two-point scaling the
 #  world states scales the sensor — a RESCALE, the unit changing — on the straight line through its
-#  points. And whether the sensor is STUCK, from the percepts kept.
+#  points. And whether the sensor is STUCK, from the percepts kept; and whether it is DEFECTIVE, as the world
+#  states of it, which carries the defect onto the observation and withholds the reading (layer 1).
 #
 #  LAYER 1, ITS READING: the scaled quantity as it is or, where a two-point calibration corrects the
 #  sensor — the unit staying, the instrument's error taken out — on the line through its points.
@@ -38,7 +39,7 @@
 
 :observation a sh:RuleSet ;
     rdfs:label "what an observation is of, its quantity, and its reading" ;
-    sh:hasRule :ofRule , :asGivenRule , :scaledRule , :asScaledRule , :correctedRule .
+    sh:hasRule :ofRule , :asGivenRule , :scaledRule , :defectRule , :asScaledRule , :correctedRule .
 
 :ofRule a sh:SPARQLRule ;
     rdfs:label "what the sensor observes, of what hosts it" ;
@@ -76,6 +77,19 @@
                                                    / (xsd:double(?rb) - xsd:double(?ra))) * 1000000) / 1000000 AS ?value)
         }""" .
 
+:defectRule a sh:SPARQLRule ;
+    rdfs:label "an observation of a defective sensor carries why" ;
+    sh:layer 0 ;
+    sh:construct """
+        CONSTRUCT { ?obs sensing:defect ?why }
+        WHERE {
+            ?obs a sosa:Observation ; sosa:madeBySensor ?sensor ; sensing:rawResult ?raw .
+            ?sensor sensing:defect ?why .
+        }""" .
+
+#  A DEFECTIVE SENSOR'S NUMBER IS NO READING (knowledge/domain/sensing/defect.md): both reading rules pass
+#  over a sensor the world states a defect of, so its percept keeps the number it gave and its quantity, and
+#  nothing that reads a reading - a domain's transition, a command, a drift - believes it.
 :asScaledRule a sh:SPARQLRule ;
     rdfs:label "a quantity no calibration corrects" ;
     sh:layer 1 ;
@@ -84,6 +98,7 @@
         WHERE {
             ?obs a sosa:Observation ; sosa:madeBySensor ?sensor ; sensing:scaledResult ?scaled .
             FILTER NOT EXISTS { ?calibration sensing:corrects ?sensor }
+            FILTER NOT EXISTS { ?sensor sensing:defect ?why }
         }""" .
 
 :correctedRule a sh:SPARQLRule ;
@@ -98,6 +113,7 @@
             ?b sensing:reads ?rb ; sensing:standsFor ?qb .
             FILTER(?ra < ?rb)
             FILTER NOT EXISTS { ?calibration sensing:point ?c . ?c sensing:reads ?rc FILTER(?rc != ?ra && ?rc != ?rb) }
+            FILTER NOT EXISTS { ?sensor sensing:defect ?why }
             BIND(ROUND(xsd:decimal(xsd:double(?qa) + ((xsd:double(?scaled) - xsd:double(?ra)) * (xsd:double(?qb) - xsd:double(?qa)))
                                                    / (xsd:double(?rb) - xsd:double(?ra))) * 1000000) / 1000000 AS ?value)
         }""" .

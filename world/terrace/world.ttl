@@ -131,5 +131,7 @@
     sosa:isHostedBy :terrace_battery ;
     sosa:observes power:BatteryVoltage ;
     sensing:readingPointer "/battery" ;
+    #  NOT BELIEVED UNTIL #939 IS FIXED: its numbers track the soil probe's raw count (rho 0.998), not the cell.
+    sensing:defect "its channel reads the soil probe's charge, not the cell: the divider has no capacitor for the ADC to sample (#939)" ;
     ssn-system:hasSystemCapability [ ssn-system:hasSystemProperty
         [ a ssn-system:Frequency , schema:PropertyValue ; schema:value 20 ; schema:unitCode unit:MIN ] ] .

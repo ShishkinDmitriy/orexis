@@ -16,6 +16,9 @@ one short string a process is handed. The dashboards filter on `sensor` alone. `
 asks `measurement_of`, `tag_of` and `FIELD` here, so a panel cannot query a name or a tag sensing
 does not write.
 
+A DEFECTIVE SENSOR'S POINT IS TAGGED `defective`, and its value is the quantity it gave, which is no reading
+(knowledge/domain/sensing/defect.md): the series watches what the world doubts, so the day it is mended shows.
+
 THE POINT CARRIES THE RAW COUNT BESIDE THE READING (#894): field `raw`, the number the sensor gave
 (`sensing:rawResult`), where the observation has one. Reflection reads the series and never the
 beliefs, and two of its questions — a count that has not moved for days, a reading past a
@@ -67,9 +70,10 @@ class Observed:
     interval_s: Value = None
     cadence_s: Value = None
     raw: float | None = None
+    defective: bool = False
 
     def point(self) -> dict:
-        tags = {}
+        tags = {"defective": "true"} if self.defective else {}
         if self.feature_id:
             tags["feature"] = self.feature_id
         if self.sensor_id:

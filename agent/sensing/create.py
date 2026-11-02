@@ -49,10 +49,14 @@ EVERY_S = 60.0
 #  of it, in its revisions — with the percept before it. Its sensor and its subject go by the local
 #  names of their IRIs (`events.tag_of`), never by a stated id a world may leave out (#885). The raw
 #  number rides on the point beside the reading, where the observation has one.
+#  A DEFECTIVE SENSOR'S NUMBER IS NO READING, and still reaches the series: its quantity, tagged `defective`, so
+#  what the world doubts is watched and the day it is mended can be seen (knowledge/domain/sensing/defect.md).
 _OBSERVED_Q = """
-SELECT ?sensor ?feature ?property ?value ?t ?raw ?previous WHERE {
+SELECT ?sensor ?feature ?property ?value ?scaled ?defect ?t ?raw ?previous WHERE {
   ?o sosa:madeBySensor ?sensor ; sosa:resultTime ?t ; sosa:hasFeatureOfInterest ?feature ;
-     sosa:observedProperty ?property ; sosa:hasSimpleResult ?value
+     sosa:observedProperty ?property
+  OPTIONAL { ?o sosa:hasSimpleResult ?value } OPTIONAL { ?o sensing:scaledResult ?scaled }
+  OPTIONAL { ?o sensing:defect ?defect }
   OPTIONAL { ?o sensing:rawResult ?raw } OPTIONAL { ?o sensing:previous ?previous } } LIMIT 1"""
 
 #  WHEN THE PERCEPT BEFORE IT WAS MADE, read where sensing keeps it.
@@ -65,9 +69,10 @@ _STUCK_Q = "SELECT DISTINCT ?sensor WHERE { ?sensor sensing:stuckOn ?number }"
 #  observed, of what, its reading and when: what sensing says of itself for a person (`account`). Read over every
 #  observation graph as one, since what was concluded of a percept lives in its revision graph beside it.
 _LATEST_Q = """
-SELECT ?sensor ?property ?feature ?value ?t WHERE {
+SELECT ?sensor ?property ?feature ?value ?defect ?t WHERE {
   ?o sosa:madeBySensor ?sensor ; sosa:resultTime ?t .
   OPTIONAL { ?o sosa:observedProperty ?property } OPTIONAL { ?o sosa:hasSimpleResult ?value }
+  OPTIONAL { ?o sensing:defect ?defect }
   OPTIONAL { ?o sosa:hasFeatureOfInterest ?feature }
   FILTER NOT EXISTS { ?later sensing:previous ?o } }
 ORDER BY ?sensor"""
@@ -131,6 +136,8 @@ class _Sensing:
                 line += " — silent"
             if r["sensor"] in stuck:
                 line += " — stuck"
+            if r.get("defect"):
+                line += f" — defective: {r['defect']}"
             out.append(line)
         return out
 
@@ -146,12 +153,15 @@ class _Sensing:
         if not found:
             return []
         o = found[0]
+        value = o.get("value") if o.get("value") is not None else (o.get("scaled") if o.get("defect") else None)
+        if value is None:
+            return []
         at = datetime.fromisoformat(o["t"])
         made = rows(beliefs, _MADE_Q, graphs_of(beliefs, OBSERVATION_GRAPH), percept=o["previous"]) if o.get("previous") else []
         before = datetime.fromisoformat(made[0]["t"]) if made else None
         cadence = cadence_of(beliefs, o["sensor"])
         return self.observed.emit(Observed(
-            observed_property=o["property"], value=round(float(o["value"]), 6), at=at,
+            observed_property=o["property"], value=round(float(value), 6), at=at, defective=bool(o.get("defect")),
             sensor=tag_of(o["sensor"]), sensor_id=tag_of(o["sensor"]), feature_id=tag_of(o["feature"]),
             interval_s=round((at - before).total_seconds(), 3) if before is not None else None,
             cadence_s=float(cadence) if cadence is not None else None,
