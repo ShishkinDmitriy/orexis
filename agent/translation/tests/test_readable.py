@@ -44,12 +44,12 @@ def test_a_query_that_could_do_anything_but_read_the_chats_graphs_is_refused_wit
     assert readable.query(text).startswith("refused: " + why)
 
 
-def test_a_row_writes_a_name_with_its_prefix_and_the_agents_world_with_the_empty_one(readable):
+def test_a_row_writes_a_name_with_its_prefix_and_the_agents_world_with_one_named_for_it(readable):
     assert "c: speech:Chat" in readable.query("SELECT ?c WHERE { ?x a ?c } VALUES ?c { speech:Chat }")
     named = readable.query("SELECT ?c WHERE { ?c a speech:Chat }")
-    assert named.startswith("c: :") and "http://" not in named, named
-    assert readable.query("ASK { ?c a speech:Chat ; speech:participant :seeker }") == "true", "the empty prefix is declared"
-    assert "`:`, for the agent's own world" in readable.tools()[1]["description"]
+    assert named.startswith("c: viewing:") and "http://" not in named, named
+    assert readable.query("ASK { ?c a speech:Chat ; speech:participant viewing:seeker }") == "true", "declared"
+    assert "viewing: naming the agent's own world" in readable.tools()[1]["description"]
 
 
 def test_a_word_in_a_literal_is_no_clause(readable):

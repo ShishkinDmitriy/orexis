@@ -45,8 +45,6 @@ class Readable:
     def __init__(self, stores, kinds, me: str | None = None):
         self.store = ox.Store()
         self.prefixes: dict[str, str] = dict(NAMESPACES)
-        if me:                                                   # the agent's own world's names, written `:name`
-            self.prefixes[""] = me[:max(me.rfind("#"), me.rfind("/")) + 1]
         read: dict[str, list] = {}
         for store in {id(s): s for s in stores if s is not None}.values():
             ontologies = set(graphs_of(store, ONTOLOGY)) - {CLOSURE_GRAPH}      # derived, and no vocabulary
@@ -60,19 +58,24 @@ class Readable:
                     read[name] = quads
                     if ns and ns not in self.prefixes.values() and name not in self.prefixes:
                         self.prefixes[name] = ns
+        self.world = None                                        # the agent's world's names, by its namespace's word
+        if me:
+            ns = me[:max(me.rfind("#"), me.rfind("/")) + 1]
+            self.world = _named(ns, set(self.prefixes) | set(read))
+            self.prefixes[self.world] = ns
         self.vocabularies = {name: _turtle(quads, self.prefixes) for name, quads in read.items()}
 
     def tools(self) -> list[dict]:
         """The two tools the model reads the chat's graphs with, each answered by `call`."""
-        prefixes = ", ".join(sorted(p for p in self.prefixes if p))
+        prefixes = ", ".join(sorted(self.prefixes))
         return [
             {"name": VOCABULARY, "description": "One vocabulary this chat lets you read, as Turtle: its classes and "
              "properties, with comments saying what each means. Load the ones a question needs before querying their "
              "terms.", "input_schema": {"type": "object", "properties": {"name": {
                  "type": "string", "description": "the vocabulary's name, as the briefing lists it"}}, "required": ["name"]}},
             {"name": QUERY, "description": "A SPARQL SELECT or ASK over every graph this chat lets you read, merged into "
-             f"one default graph. These prefixes are declared for you: {prefixes}" + (", and the empty one, `:`, for "
-             "the agent's own world" if "" in self.prefixes else "") + "; declare any other with PREFIX. The rows "
+             f"one default graph. These prefixes are declared for you: {prefixes}" + (f", {self.world}: naming the "
+             "agent's own world" if self.world else "") + "; declare any other with PREFIX. The rows "
              f"write a name with them, as the vocabularies do. Write no GRAPH, SERVICE or FROM. At most {ROWS} rows "
              "come back.",
              "input_schema": {"type": "object", "properties": {"sparql": {"type": "string"}}, "required": ["sparql"]}}]
@@ -172,6 +175,14 @@ def _prefix_of(quads) -> tuple[str, str] | None:
     known = {iri: prefix for prefix, iri in NAMESPACES.items()}
     name = known.get(ns) or ns.rstrip("#/").rsplit("/", 1)[-1]
     return (name, ns) if name else None
+
+
+def _named(ns: str, taken: set[str]) -> str:
+    """A prefix for `ns`: its last word, made apart from every name in `taken`."""
+    name = ns.rstrip("#/").rsplit("/", 1)[-1] or "world"
+    while name in taken:
+        name += "_"
+    return name
 
 
 def _turtle(quads, prefixes: dict[str, str]) -> str:
