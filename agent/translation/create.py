@@ -33,15 +33,18 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from collections import Counter
 from concurrent.futures import Future
 
+from agent.lifecycle import Signal
 from agent.ontology import local_of
 from agent.store import NAMESPACES, DocumentRefused, document_of, graphs_of
 
 from .askable import askables, answered, lines, status, tool_of as asking
 from .briefing import briefing
 from .chat import Chat, chats_of, named
+from .events import Translated
 from .model import TOKENS, Model, why_not
 from .readable import Readable
 from .sayable import document_of as statement_of, said_in, sayables, tool_of
@@ -91,6 +94,7 @@ class _Translation:
         self.carriers: list = []
         self.spawn = lambda work: threading.Thread(target=work, daemon=True).start()
         self.writing: dict[str, list] = {}                       # chat IRI -> [the chat, answers being thought]
+        self.translated = Signal("translated")
 
     def link(self, parts) -> None:
         members = []
@@ -158,8 +162,10 @@ class _Translation:
                  (readable.tools() if readable is not None else []))
         messages = [{"role": "user", "content": f"From {person[1]}:\n\n{text}"}]
         spent: Counter = Counter()
+        began, requests = time.monotonic(), 0
         try:
             for turn_no in range(TURNS):
+                requests += 1
                 turn = self.model.converse(system, messages, tools, last=turn_no == TURNS - 1)
                 spent.update(turn.tokens)
                 if not turn.calls:
@@ -170,18 +176,28 @@ class _Translation:
                      "content": self._called(name, inputs, saying, asking_of, readable, person, text)}
                     for id_, name, inputs in turn.calls]})
         except Exception as exc:                                 # noqa: BLE001 — the model fails
+            self._spent("answer", "failed", requests, spent, began)
             return self._failed(chat, person, exc, unaddressed, reply)
         log.info("%s answered %s in %d request(s): %s", local_of(self.runtime.me), person[1], turn_no + 1,
                  ", ".join(f"{spent[k]} {k}" for k in TOKENS))
         words = turn.text.strip()
+        outcome = "silent" if words == SILENT else "said" if words else "no words"
         if not words:                                            # no words is a failure, said where it was addressed
             me = local_of(self.runtime.me)
             log.warning("%s could not answer %s: the model wrote no words (%s)", me, person[1], turn.stop or "no reason")
             if not unaddressed:
                 words = f"{me} could not answer: its model wrote no words ({turn.stop or 'no reason given'})."
+        self._spent("answer", outcome, requests, spent, began)
         if words and words != SILENT:
             self.runtime.submit(lambda: self._said(chat, words, reply))
         self._ended(chat, unaddressed)
+
+    def _spent(self, act: str, outcome: str, requests: int, spent, began: float) -> None:
+        """Off the runtime's thread: what one use of the model spent, said on the runtime's, where it is heard."""
+        if self.translated.connected:
+            event = Translated(act, outcome, getattr(self.model, "name", None), float(requests),
+                               *(float(spent.get(k, 0)) for k in TOKENS), time.monotonic() - began)
+            self.runtime.submit(lambda: self.translated.emit(event))
 
     def _called(self, name: str, inputs: dict, saying, asking_of, readable, person, text: str) -> str:
         """What a tool call answers, off the runtime's thread: a sayable's statement kept, an askable's rows, a
@@ -300,7 +316,10 @@ class _Translation:
                 f"Statement: {sayable.description or sayable.name}\n{lines}")
 
         def render():
-            words = self.model.ask(SAY_SYSTEM, text).text.strip()
+            began = time.monotonic()
+            answer = self.model.ask(SAY_SYSTEM, text)
+            words = answer.text.strip()
+            self._spent("render", "said" if words else "no words", 1, answer.tokens, began)
             if words:
                 self.runtime.submit(lambda: self._said(chat, words))
         self.spawn(render)
