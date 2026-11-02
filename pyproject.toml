@@ -29,6 +29,7 @@ dependencies = [
 [tool.setuptools.dynamic.optional-dependencies]
 belief = { file = ["agent/belief/dependencies.txt"] }
 transport-mqtt = { file = ["agent/transport/mqtt/dependencies.txt"] }
+translation = { file = ["agent/translation/dependencies.txt"] }
 series = { file = ["agent/series.dependencies.txt"] }
 simulation = { file = ["simulation/dependencies.txt"] }
 onboarding = { file = ["onboarding/dependencies.txt"] }

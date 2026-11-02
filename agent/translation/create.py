@@ -37,7 +37,7 @@ from agent.store import DocumentRefused, document_of
 
 from .askable import askables, answered, lines, status, tool_of as asking
 from .chat import Chat, chats_of, named
-from .model import Model
+from .model import Model, why_not
 from .sayable import document_of as statement_of, said_in, sayables, tool_of
 from .shape import NOTHING, nothing_tool
 
@@ -181,7 +181,7 @@ class _Translation:
         me = local_of(self.runtime.me)
         log.warning("%s could not answer %s: the model would not answer: %s", me, person[1], exc)
         if not unaddressed:
-            words = f"{me} could not answer: its model would not answer ({exc})."
+            words = f"{me} could not answer: {why_not(exc)}."
             self.runtime.submit(lambda: self._said(chat, words, reply))
         self._ended(chat, unaddressed)
 

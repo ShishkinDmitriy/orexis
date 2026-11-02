@@ -697,6 +697,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   and the language being the triples believed is the market's coincidence (#958,
   a-peers-word-is-testimony-and-a-rule-makes-it-a-belief); **the market is files** —
   six actions whose `execution:Saying` operations make the documents at take time (`domains/market/`).
+- **A client earns a library by what one POST does not do** — the model's SDK retries an overloaded API and
+  names each failure, which a person in a chat otherwise met as "could not answer"; a thinking model refuses
+  a forced tool choice, so the hearing call offers its tools and the model chooses.
 - **Signing is between agents, and an agent trusts itself** — the broker's ACL already admits only
   the holder to its devices' command topics.
 
