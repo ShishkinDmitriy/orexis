@@ -39,6 +39,21 @@ def test_a_call_with_no_tool_offers_none_and_reads_the_text():
     assert model.url == "https://proxy.example"
 
 
+def test_a_turn_marks_the_conversations_last_block_for_the_cache_and_leaves_the_conversation_unmarked():
+    client = Client(SimpleNamespace(type="text", text="ok"))
+    model = Model("m", "k", client=client)
+    messages = [{"role": "user", "content": "the forecast?"},
+                {"role": "assistant", "content": [{"type": "tool_use", "id": "c0", "name": "query", "input": {}}]},
+                {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "c0", "content": "(no rows)"}]}]
+    model.converse(["instructions", "briefing"], messages)
+    sent = client.sent[0]["messages"]
+    assert sent[-1]["content"][-1]["cache_control"] == {"type": "ephemeral"} and sent[:-1] == messages[:-1]
+    assert "cache_control" not in messages[-1]["content"][-1], "the mark is the request's, and the next turn moves it"
+    model.converse(["instructions"], messages[:1])
+    assert client.sent[1]["messages"] == [{"role": "user", "content": [
+        {"type": "text", "text": "the forecast?", "cache_control": {"type": "ephemeral"}}]}]
+
+
 def test_the_sdks_client_is_told_the_key_the_endpoint_the_timeout_and_the_retries():
     client = Model("m", "k3y", url="https://proxy.example/").client
     assert (client.api_key, str(client.base_url).rstrip("/"), client.timeout, client.max_retries) == \

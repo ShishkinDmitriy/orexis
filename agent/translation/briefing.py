@@ -27,12 +27,14 @@ SELECT DISTINCT ?label ?comment WHERE {
   ?class rdfs:label ?label . OPTIONAL { ?class rdfs:comment ?comment } } ORDER BY ?label"""
 
 
-def briefing(store: ox.Store, me: str, reads, listing: str, status: str) -> tuple[str, str]:
-    """Who the agent is and what the chat lets the model read, then what it holds now: the two blocks."""
+def briefing(store: ox.Store, me: str, reads, listing: str, status: str,
+             prefixes: dict[str, str] = NAMESPACES) -> tuple[str, str]:
+    """Who the agent is and what the chat lets the model read, then what it holds now: the two blocks, a name in the
+    self graph written with `prefixes`, as the chat's queries write theirs."""
     selves = graphs_of(store, SELF_GRAPH)
     who = f"YOU SPEAK FOR {local_of(me)}."
     if reads and set(selves) <= set(graphs_of(store, *reads)):
-        who += " Its self graph:\n\n" + _turtle(store, selves)
+        who += " Its self graph:\n\n" + _turtle(store, selves, prefixes)
         roles = rows(store, _ROLES_Q, [*selves, *graphs_of(store, *reads)])
         if roles:
             who += "\n\nTHE ROLES IT PLAYS:\n" + "\n".join(
@@ -45,8 +47,8 @@ def briefing(store: ox.Store, me: str, reads, listing: str, status: str) -> tupl
     return who, "WHAT IT HOLDS NOW:\n\n" + status
 
 
-def _turtle(store: ox.Store, graphs) -> str:
+def _turtle(store: ox.Store, graphs, prefixes: dict[str, str]) -> str:
     out = ox.Store()
     for graph in graphs:
         out.extend(ox.Quad(q.subject, q.predicate, q.object) for q in store.quads_for_pattern(None, None, None, ox.NamedNode(graph)))
-    return ox.serialize(out, format=ox.RdfFormat.TURTLE, prefixes=NAMESPACES).decode()
+    return ox.serialize(out, format=ox.RdfFormat.TURTLE, prefixes=prefixes).decode()

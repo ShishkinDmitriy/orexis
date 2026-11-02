@@ -18,53 +18,66 @@ from __future__ import annotations
 
 import io
 import json
+import re
 
 import pyoxigraph as ox
 from rdflib.plugins.sparql.parser import parseQuery
 from rdflib.plugins.sparql.parserutils import CompValue
 
 from agent.ontology import CLOSURE_GRAPH, OREXIS, local_of
-from agent.store import NAMESPACES, bindings, graphs_of
+from agent.store import NAMESPACES, graphs_of
 
 #  HOW MANY ROWS A QUERY HANDS THE MODEL: past these it is told how many there were, and asks again more narrowly.
 ROWS = 50
 ONTOLOGY = OREXIS + "OntologyGraph"
 VOCABULARY, QUERY = "vocabulary", "query"
-_HEADER = "".join(f"PREFIX {p}: <{ns}>\n" for p, ns in NAMESPACES.items())
 #  WHAT A QUERY MAY NOT HOLD: a graph of its own choosing, a service elsewhere, a dataset named.
 _REFUSED = {"GraphGraphPattern": "a GRAPH clause", "ServiceGraphPattern": "a SERVICE clause", "datasetClause": "a FROM"}
 _KINDS = ("SelectQuery", "AskQuery")
+#  WHAT A NAME MAY BE AFTER A PREFIX, written plainly: where an IRI's tail is not one, it is written whole.
+_LOCAL = re.compile(r"[A-Za-z0-9_](?:[A-Za-z0-9_.-]*[A-Za-z0-9_-])?")
 
 
 class Readable:
     """What one chat may read: the graphs of its kinds, copied, and each vocabulary among them by its prefix — all
     read on the runtime's thread when it is made, and only the copy afterwards."""
 
-    def __init__(self, stores, kinds):
+    def __init__(self, stores, kinds, me: str | None = None):
         self.store = ox.Store()
-        self.vocabularies: dict[str, str] = {}
+        self.prefixes: dict[str, str] = dict(NAMESPACES)
+        read: dict[str, list] = {}
         for store in {id(s): s for s in stores if s is not None}.values():
             ontologies = set(graphs_of(store, ONTOLOGY)) - {CLOSURE_GRAPH}      # derived, and no vocabulary
             for graph in graphs_of(store, *kinds):
                 quads = list(store.quads_for_pattern(None, None, None, ox.NamedNode(graph)))
                 self.store.extend(ox.Quad(q.subject, q.predicate, q.object) for q in quads)
                 if graph in ontologies and quads:
-                    name = _prefix_of(quads) or local_of(graph)
-                    while name in self.vocabularies:
+                    name, ns = _prefix_of(quads) or (local_of(graph), None)
+                    while name in read:
                         name += "_"
-                    self.vocabularies[name] = _turtle(quads)
+                    read[name] = quads
+                    if ns and ns not in self.prefixes.values() and name not in self.prefixes:
+                        self.prefixes[name] = ns
+        self.world = None                                        # the agent's world's names, by its namespace's word
+        if me:
+            ns = me[:max(me.rfind("#"), me.rfind("/")) + 1]
+            self.world = _named(ns, set(self.prefixes) | set(read))
+            self.prefixes[self.world] = ns
+        self.vocabularies = {name: _turtle(quads, self.prefixes) for name, quads in read.items()}
 
     def tools(self) -> list[dict]:
         """The two tools the model reads the chat's graphs with, each answered by `call`."""
-        prefixes = ", ".join(sorted(NAMESPACES))
+        prefixes = ", ".join(sorted(self.prefixes))
         return [
             {"name": VOCABULARY, "description": "One vocabulary this chat lets you read, as Turtle: its classes and "
              "properties, with comments saying what each means. Load the ones a question needs before querying their "
              "terms.", "input_schema": {"type": "object", "properties": {"name": {
                  "type": "string", "description": "the vocabulary's name, as the briefing lists it"}}, "required": ["name"]}},
             {"name": QUERY, "description": "A SPARQL SELECT or ASK over every graph this chat lets you read, merged into "
-             f"one default graph. These prefixes are declared for you: {prefixes}; declare any other with PREFIX, as "
-             f"the vocabulary's Turtle does. Write no GRAPH, SERVICE or FROM. At most {ROWS} rows come back.",
+             f"one default graph. These prefixes are declared for you: {prefixes}" + (f", {self.world}: naming the "
+             "agent's own world" if self.world else "") + "; declare any other with PREFIX. The rows "
+             f"write a name with them, as the vocabularies do. Write no GRAPH, SERVICE or FROM. At most {ROWS} rows "
+             "come back.",
              "input_schema": {"type": "object", "properties": {"sparql": {"type": "string"}}, "required": ["sparql"]}}]
 
     def call(self, name: str, inputs: dict) -> str | None:
@@ -88,27 +101,39 @@ class Readable:
 
     def query(self, text: str) -> str:
         """The model's SELECT or ASK over what the chat reads, its rows as lines; the reason, where it is refused."""
-        refused = _refusal(text)
+        refused = _refusal(text, self.prefixes)
         if refused:
             return f"refused: {refused}"
         out = io.BytesIO()
         try:
-            self.store.query(text, prefixes=NAMESPACES).serialize(output=out, format=ox.QueryResultsFormat.JSON)
+            self.store.query(text, prefixes=self.prefixes).serialize(output=out, format=ox.QueryResultsFormat.JSON)
         except (SyntaxError, OSError, ValueError) as exc:
             return f"the engine would not run it: {exc}"
         answer = json.loads(out.getvalue())
         if "boolean" in answer:
             return str(answer["boolean"]).lower()
-        found = bindings(answer)
-        shown = [", ".join(f"{k}: {v}" for k, v in row.items() if v is not None) for row in found[:ROWS]]
+        found = answer.get("results", {}).get("bindings", [])
+        shown = [", ".join(f"{k}: {self.written(v)}" for k, v in row.items()) for row in found[:ROWS]]
         more = f"\n(the first {ROWS} of {len(found)} rows: ask more narrowly)" if len(found) > ROWS else ""
         return ("\n".join(shown) or "(no rows)") + more
 
 
-def _refusal(text: str) -> str | None:
+    def written(self, value: dict) -> str:
+        """One value of a row as the model reads it: an IRI by the longest prefix it is under, whole where none
+        fits; a literal by its text."""
+        if value.get("type") != "uri":
+            return value.get("value", "")
+        iri = value["value"]
+        for prefix, ns in sorted(self.prefixes.items(), key=lambda p: -len(p[1])):
+            if iri.startswith(ns) and _LOCAL.fullmatch(iri[len(ns):]):
+                return f"{prefix}:{iri[len(ns):]}"
+        return f"<{iri}>"
+
+
+def _refusal(text: str, prefixes: dict[str, str]) -> str | None:
     """Why a query may not run: not parsed, not a SELECT or an ASK, or holding what reads past the chat."""
     try:
-        parsed = parseQuery(_HEADER + text)
+        parsed = parseQuery("".join(f"PREFIX {p}: <{ns}>\n" for p, ns in prefixes.items()) + text)
     except Exception as exc:                                     # noqa: BLE001 — the parser's own errors
         return f"it does not parse: {exc}"
     query = parsed[1]
@@ -135,9 +160,9 @@ def _holds(node) -> str | None:
     return None
 
 
-def _prefix_of(quads) -> str | None:
-    """The name a vocabulary goes by: the store's prefix for the namespace most of its subjects are named in, or the
-    namespace's last word where the store has none for it, as a domain's has not."""
+def _prefix_of(quads) -> tuple[str, str] | None:
+    """The name a vocabulary goes by, and its namespace: the store's prefix for the namespace most of its subjects are
+    named in, or the namespace's last word where the store has none for it, as a domain's has not."""
     counts: dict[str, int] = {}
     for q in quads:
         if isinstance(q.subject, ox.NamedNode):
@@ -148,10 +173,19 @@ def _prefix_of(quads) -> str | None:
         return None
     ns = max(counts, key=counts.get)
     known = {iri: prefix for prefix, iri in NAMESPACES.items()}
-    return known.get(ns) or ns.rstrip("#/").rsplit("/", 1)[-1] or None
+    name = known.get(ns) or ns.rstrip("#/").rsplit("/", 1)[-1]
+    return (name, ns) if name else None
 
 
-def _turtle(quads) -> str:
+def _named(ns: str, taken: set[str]) -> str:
+    """A prefix for `ns`: its last word, made apart from every name in `taken`."""
+    name = ns.rstrip("#/").rsplit("/", 1)[-1] or "world"
+    while name in taken:
+        name += "_"
+    return name
+
+
+def _turtle(quads, prefixes: dict[str, str]) -> str:
     out = ox.Store()
     out.extend(ox.Quad(q.subject, q.predicate, q.object) for q in quads)
-    return ox.serialize(out, format=ox.RdfFormat.TURTLE, prefixes=NAMESPACES).decode()
+    return ox.serialize(out, format=ox.RdfFormat.TURTLE, prefixes=prefixes).decode()

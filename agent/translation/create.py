@@ -37,7 +37,7 @@ from collections import Counter
 from concurrent.futures import Future
 
 from agent.ontology import local_of
-from agent.store import DocumentRefused, document_of, graphs_of
+from agent.store import NAMESPACES, DocumentRefused, document_of, graphs_of
 
 from .askable import askables, answered, lines, status, tool_of as asking
 from .briefing import briefing
@@ -136,11 +136,12 @@ class _Translation:
         if self.model is None:
             log.warning("%s wrote to %s, and there is no model to hear it with", person[1], local_of(me))
             return []
-        readable = Readable(stores, chat.reads) if chat.reads else None
+        readable = Readable(stores, chat.reads, me) if chat.reads else None
         offered = ([] if unaddressed else sayables(store)), known, readable
         system = [CONVERSE_SYSTEM + (UNADDRESSED if unaddressed else ""),
                   *briefing(store, me, chat.reads, readable.listing() if readable else "",
-                            status(stores, known, me, self.runtime.now))]
+                            status(stores, known, me, self.runtime.now),
+                            readable.prefixes if readable else NAMESPACES)]
         if not unaddressed:
             self._begin(chat)
         self._thread = threading.get_ident()
