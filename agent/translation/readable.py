@@ -131,7 +131,7 @@ class Readable:
     def query(self, text: str, kinds: list[str]) -> str:
         """The model's SELECT or ASK over the graphs of `kinds`, the catalogue named beside them, its rows as lines;
         the reason, where it is refused."""
-        refused = _refusal(text, self.prefixes)
+        refused = refusal(text, self.prefixes)
         if refused:
             return f"refused: {refused}"
         graphs: set[ox.NamedNode] = set()
@@ -143,21 +143,11 @@ class Readable:
             graphs |= found
         if not graphs:
             return "refused: name the kinds of graph the query reads"
-        out = io.BytesIO()
         try:
-            self.store.query(text, prefixes=self.prefixes, default_graph=sorted(graphs, key=str),
-                             named_graphs=sorted(graphs | self.catalogues, key=str)).serialize(
-                output=out, format=ox.QueryResultsFormat.JSON)
+            return answered(self.store.query(text, prefixes=self.prefixes, default_graph=sorted(graphs, key=str),
+                                             named_graphs=sorted(graphs | self.catalogues, key=str)), self.written)
         except (SyntaxError, OSError, ValueError) as exc:
             return f"the engine would not run it: {exc}"
-        answer = json.loads(out.getvalue())
-        if "boolean" in answer:
-            return str(answer["boolean"]).lower()
-        found = answer.get("results", {}).get("bindings", [])
-        shown = [", ".join(f"{k}: {self.written(v)}" for k, v in row.items()) for row in found[:ROWS]]
-        more = f"\n(the first {ROWS} of {len(found)} rows: ask more narrowly)" if len(found) > ROWS else ""
-        return ("\n".join(shown) or "(no rows)") + more
-
 
     def expanded(self, name: str) -> str:
         """A name the model wrote — `prefix:local`, `<iri>` or an IRI — as the IRI it is."""
@@ -168,15 +158,8 @@ class Readable:
         return self.prefixes[prefix] + local if prefix in self.prefixes and not local.startswith("//") else name
 
     def written(self, value: dict) -> str:
-        """One value of a row as the model reads it: an IRI by the longest prefix it is under, whole where none
-        fits; a literal by its text on one line, so a row stays one."""
-        if value.get("type") != "uri":
-            return " ".join(value.get("value", "").split())
-        iri = value["value"]
-        for prefix, ns in sorted(self.prefixes.items(), key=lambda p: -len(p[1])):
-            if iri.startswith(ns) and _LOCAL.fullmatch(iri[len(ns):]):
-                return f"{prefix}:{iri[len(ns):]}"
-        return f"<{iri}>"
+        """One value of a row as the model reads it, with this chat's prefixes (`written`)."""
+        return written(value, self.prefixes)
 
 
 def _described(store, graph: ox.NamedNode, catalogue: ox.NamedNode) -> list:
@@ -195,7 +178,33 @@ def _described(store, graph: ox.NamedNode, catalogue: ox.NamedNode) -> list:
     return found
 
 
-def _refusal(text: str, prefixes: dict[str, str]) -> str | None:
+def written(value: dict, prefixes: dict[str, str]) -> str:
+    """One value of a SPARQL-JSON row as the model reads it: an IRI by the longest of `prefixes` it is under, whole
+    where none fits; a literal by its text on one line, so a row stays one."""
+    if value.get("type") != "uri":
+        return " ".join(str(value.get("value", "")).split())
+    iri = value["value"]
+    for prefix, ns in sorted(prefixes.items(), key=lambda p: -len(p[1])):
+        if iri.startswith(ns) and _LOCAL.fullmatch(iri[len(ns):]):
+            return f"{prefix}:{iri[len(ns):]}"
+    return f"<{iri}>"
+
+
+def answered(result, write) -> str:
+    """A query's result as the model reads it: an ASK's truth, or a row per line with each value `write`n, the rows
+    capped at `ROWS` and their count said past it."""
+    out = io.BytesIO()
+    result.serialize(output=out, format=ox.QueryResultsFormat.JSON)
+    answer = json.loads(out.getvalue())
+    if "boolean" in answer:
+        return str(answer["boolean"]).lower()
+    found = answer.get("results", {}).get("bindings", [])
+    shown = [", ".join(f"{k}: {write(v)}" for k, v in row.items()) for row in found[:ROWS]]
+    more = f"\n(the first {ROWS} of {len(found)} rows: ask more narrowly)" if len(found) > ROWS else ""
+    return ("\n".join(shown) or "(no rows)") + more
+
+
+def refusal(text: str, prefixes: dict[str, str]) -> str | None:
     """Why a query may not run: not parsed, not a SELECT or an ASK, or holding what reads past the chat."""
     try:
         parsed = parseQuery("".join(f"PREFIX {p}: <{ns}>\n" for p, ns in prefixes.items()) + text)

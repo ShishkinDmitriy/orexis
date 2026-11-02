@@ -59,12 +59,15 @@ states its own reads with:
 :terrace_and_dmitrii a speech:Chat ;
     speech:participant :terrace_agent , :dmitrii ;
     speech:channel :sovereign_telegram ;
-    speech:reads orexis:Graph .
+    speech:reads orexis:Graph , orexis:Event .
 ```
 
 The sovereign's chat reads everything; a broker's would read the market's kinds and no sensor. The
-translator copies the graphs of those kinds into one graph when words arrive, and the model's queries run
-over that copy and nothing else, whatever they say; it is offered only the askables reading within them.
+translator copies the graphs of those kinds, each under its name, when words arrive, and the model's
+queries run over that copy and nothing else, whatever they say; it is offered only the askables reading
+within them. A chat reading `orexis:Event` reads what happened besides - the agent's
+[journal](/domain/kernel/journal.md) and its [series](/domain/kernel/series.md), which are what events
+say - so what holds now is asked of the store and what happened of the record.
 A chat stating no kind reads nothing, and its model has the askables alone
 ([the-model-queries-what-its-chat-may-read](/decisions/the-model-queries-what-its-chat-may-read.md)).
 

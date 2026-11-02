@@ -31,7 +31,9 @@ replay be fully on top of a triplestore — but no central store, and keep Influ
 
 **Each agent keeps a journal: a triplestore of its own, beside its beliefs and apart from them**
 ([journal](/domain/kernel/journal.md)). It is a pyoxigraph store in a volume of its own (`--journal`), so a reader of
-the journal is handed no belief, and nothing in it reaches a plan: no part reads it. Each entry is a named graph
+the journal is handed no belief, and nothing in it reaches a plan: no part reads it to act. A chat that reads what
+happened has it read for a person, in the process that writes it as its endpoint is, and the model reading it
+authors no belief (amended when a person asked an agent what had happened, [chat](/domain/speech/chat.md)). Each entry is a named graph
 holding one node, named by a UUID's URN so two agents' journals merge without renaming.
 
 **An event is history in its package's words** ([event](/domain/kernel/event.md)). An event class that is history

@@ -59,8 +59,8 @@ class Sink:
     """One purpose's bucket, and how a point reaches it: `write(bucket, record)`, the client's own
     call, handed the points as they were contributed."""
 
-    def __init__(self, purpose: str, bucket: str, write):
-        self.purpose, self.bucket, self._write = purpose, bucket, write
+    def __init__(self, purpose: str, bucket: str, write, read=None):
+        self.purpose, self.bucket, self._write, self._read = purpose, bucket, write, read
 
     @classmethod
     def from_environment(cls, purpose: str, environ=None) -> "Sink | None":
@@ -82,7 +82,8 @@ class Sink:
                                "own: `pip install 'orexis[series]'`, or regenerate the compose file") from exc
 
         client = InfluxDBClient(url=named["URL"], token=named["TOKEN"], org=named["ORG"])
-        return cls(purpose, named["BUCKET"], client.write_api(write_options=SYNCHRONOUS).write)
+        return cls(purpose, named["BUCKET"], client.write_api(write_options=SYNCHRONOUS).write,
+                   lambda flux: [r.values for table in client.query_api().query(flux) for r in table.records])
 
     def write(self, points: list[dict]) -> int:
         """Write `points`; how many. A store that refuses is said in the log, never raised."""
@@ -94,6 +95,18 @@ class Sink:
             log.warning("the %s store refused %d point(s): %s", self.purpose.lower(), len(points), exc)
             return 0
         return len(points)
+
+
+    def read(self, flux: str) -> list[dict] | str:
+        """The records a Flux query of this sink's bucket answers, each its columns; why not, where the store
+        refuses or the sink reads nothing. A person's question reads its agent's own past this way, which the
+        history token grants and the metrics token does not."""
+        if self._read is None:
+            return f"the {self.purpose.lower()} store is written here and never read"
+        try:
+            return self._read(flux)
+        except Exception as exc:                                   # noqa: BLE001
+            return f"the {self.purpose.lower()} store would not answer: {exc}"
 
 
 def load(environ=None) -> tuple[str, ...]:
