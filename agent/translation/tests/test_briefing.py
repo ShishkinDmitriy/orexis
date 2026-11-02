@@ -1,5 +1,5 @@
-"""The briefing over the translator's test world: the self graph and the common beliefs as Turtle with the store's
-prefixes, the vocabularies' comments among them, and the status apart, as the block that changes with every
+"""The briefing over the translator's test world: who the agent is, what the chat lets the model read — the self graph
+where it reads it, and the vocabularies by name — and the status apart, as the block that changes with every
 reading."""
 
 from __future__ import annotations
@@ -10,17 +10,25 @@ from agent.runtime import boot
 from agent.translation.briefing import briefing
 
 WORLD = Path(__file__).parent / "world"
+O = "http://example.org/orexis#"
+SEEKER = "http://example.org/orexis/world/viewing#seeker"
 
 
-def test_the_world_and_the_self_are_one_block_and_what_it_holds_now_another():
-    world, now = briefing(boot(WORLD, "seeker"), "seeker at 2026-11-01 09:00 UTC\nnothing to say yet")
-    assert world.startswith("WHO YOU SPEAK FOR") and "THE WORLD AS IT BELIEVES IT" in world
-    assert "@prefix orexis:" in world and "orexis:Self" in world, "the store's prefixes, and the self graph"
-    assert "flat_12" in world and "rdfs:comment" in world, "the world's things, and what its terms mean"
-    assert "nothing to say yet" not in world, "the status is not cached with the world"
-    assert now == "WHAT IT HOLDS NOW:\n\nseeker at 2026-11-01 09:00 UTC\nnothing to say yet"
+def test_a_chat_reading_the_beliefs_is_briefed_with_the_self_graph_and_the_vocabularies_by_name():
+    who, now = briefing(boot(WORLD, "seeker"), SEEKER, (O + "BeliefGraph",), " - speech (93 lines)", "nothing to say yet")
+    assert who.startswith("YOU SPEAK FOR seeker.")
+    assert "WHAT THIS CHAT LETS YOU READ: every graph of BeliefGraph" in who and " - speech (93 lines)" in who
+    assert now == "WHAT IT HOLDS NOW:\n\nnothing to say yet", "the status is not cached with the rest"
 
 
-def test_the_briefing_is_the_same_text_for_the_same_beliefs():
+def test_a_chat_reading_nothing_is_briefed_with_who_the_agent_is_alone():
+    who, _ = briefing(boot(WORLD, "seeker"), SEEKER, (), "", "")
+    assert who.startswith("YOU SPEAK FOR seeker.") and "beyond the questions offered as tools" in who
+    assert "orexis:Self" not in who and "WHAT THIS CHAT LETS YOU READ" not in who
+
+
+def test_the_self_graph_is_in_it_where_the_chat_reads_it():
     store = boot(WORLD, "seeker")
-    assert briefing(store, "")[0] == briefing(store, "")[0], "or the provider caches nothing"
+    assert "orexis:Self" in briefing(store, SEEKER, (O + "Graph",), "", "")[0]
+    assert briefing(store, SEEKER, (O + "Graph",), "", "")[0] == briefing(store, SEEKER, (O + "Graph",), "", "")[0], \
+        "the same text for the same beliefs, or the provider caches nothing"

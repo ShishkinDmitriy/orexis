@@ -89,7 +89,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 # Translation — what a person says
 
-* [briefing](/domain/translation/briefing.md) - What a translator hands the model before a person's words: its self graph, the common beliefs, its status.
+* [briefing](/domain/translation/briefing.md) - What a translator hands the model first: who the agent is, what its chat may read, its status.
 * [translator](/domain/translation/translator.md) - An agent speaking with its chats' people itself: prose heard through a transport member, a statement rendered back through it.
 
 # Speech — what peers say

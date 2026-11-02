@@ -116,16 +116,37 @@ def test_a_persons_prose_becomes_a_statement_the_agent_hears_and_believes(seeker
     assert bot.said == [(V + "clara_telegram", "Thank you, Clara: Tuesday at six.")], "and the model says so"
 
 
-def test_the_model_is_briefed_with_who_the_agent_is_the_world_it_believes_and_what_it_holds_now(seeker):
+def test_the_model_is_briefed_with_who_the_agent_is_what_the_chat_reads_and_what_it_holds_now(seeker):
     runtime, part, bot = seeker
     part.model = StandIn(text="I am the seeker; I look for a flat.")
     _write(runtime, V + "clara_telegram", "who are you?")
-    ((instructions, world, now), messages, _), = part.model.asked
-    assert instructions == CONVERSE_SYSTEM
-    assert "WHO YOU SPEAK FOR" in world and "orexis:Self" in world, "its self graph"
-    assert "flat_12" in world and "rdfs:comment" in world, "the world it believes, with the vocabularies' comments"
+    ((instructions, who, now), messages, offered), = part.model.asked
+    assert instructions == CONVERSE_SYSTEM and who.startswith("YOU SPEAK FOR seeker.")
+    assert "WHAT THIS CHAT LETS YOU READ" in who and " - speech (" in who, "the vocabularies by name, loaded on asking"
     assert now.startswith("WHAT IT HOLDS NOW") and "nothing to say yet" in now, "and its status, apart"
+    assert {"vocabulary", "query"} <= set(offered), "Clara's chat reads the beliefs, so the model may too"
     assert bot.said == [(V + "clara_telegram", "I am the seeker; I look for a flat.")], "answered with no tool called"
+
+
+def test_the_model_loads_a_vocabulary_and_queries_what_the_chat_reads(seeker):
+    runtime, part, bot = seeker
+    part.model = StandIn(calls=[("vocabulary", {"name": "speech"}),
+                                ("query", {"sparql": "SELECT ?c WHERE { ?c a speech:Chat }"}),
+                                ("query", {"sparql": "SELECT * WHERE { GRAPH ?g { ?s ?p ?o } }"})],
+                         text="We speak here, and in three other chats.")
+    _write(runtime, V + "clara_telegram", "in which chats are you?")
+    vocabulary, chats, refused = _results(part.model.asked[-1][1])
+    assert "speech:Chat" in vocabulary and "seeker_and_clara" in chats and "household" in chats
+    assert refused.startswith("refused: it holds a GRAPH clause")
+    assert bot.said == [(V + "clara_telegram", "We speak here, and in three other chats.")]
+
+
+def test_a_chat_reading_nothing_offers_no_query(seeker):
+    runtime, part, bot = seeker
+    part.model = StandIn(text="I am looking at two flats.")
+    _write(runtime, V + "household_telegram", "seeker, how is the search going?", V + "anna")
+    (_, who, _), _, offered = part.model.asked[0]
+    assert "vocabulary" not in offered and "query" not in offered and "beyond the questions offered as tools" in who
 
 
 def test_status_is_answered_for_nothing(seeker):

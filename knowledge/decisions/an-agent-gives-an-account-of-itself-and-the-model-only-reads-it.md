@@ -20,7 +20,10 @@ description: >-
 > **Superseded in part 2026-10-31** by [an-agent-translates-for-itself](/decisions/an-agent-translates-for-itself.md):
 > a world runs no process, so the gateway is each agent's own translation part, a bot per agent; the
 > question reaches the agent as a person's words in its chat; and the account is a select each package
-> ships, asked when a person asks and published nowhere. Its limits on the model stand. The amendment
+> ships, asked when a person asks and published nowhere. Its limits on the model stand, but one: the
+> model writes SELECT and ASK queries over what its chat may read, since
+> [the-model-queries-what-its-chat-may-read](/decisions/the-model-queries-what-its-chat-may-read.md)
+> answered the three premises of that refusal. The amendment
 > below records the shape #1043 first shipped, which that record refused.
 
 > **Amended 2026-10-31:** the gateway is the [translator](/domain/translation/translator.md), and the

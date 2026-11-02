@@ -27,3 +27,9 @@ def test_the_agent_reads_its_chats_off_the_world_each_with_its_channel_and_who_i
 def test_an_agent_is_named_by_a_word_of_its_own():
     assert named("seeker, how is it going?", ("seeker",)) and named("ask the Seeker", ("seeker",))
     assert not named("the seekers are out", ("seeker",)) and not named("house-seeker", ("seeker",))
+
+
+def test_a_chat_says_the_kinds_of_graph_its_model_may_read_and_one_saying_none_reads_none():
+    chats = {c.iri.rsplit("#", 1)[1]: c for c in chats_of(boot(WORLD, "seeker"))}
+    assert chats["seeker_and_clara"].reads == ("http://example.org/orexis#BeliefGraph",)
+    assert chats["household"].reads == () and chats["seeker_and_anna"].reads == ()

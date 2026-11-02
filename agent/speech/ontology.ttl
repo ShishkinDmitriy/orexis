@@ -105,9 +105,8 @@
     and fills it, and never writes the text nor sees it.""" .
 
 :reads a owl:ObjectProperty ;
-    rdfs:domain :Askable ;
     rdfs:label "reads" ;
-    rdfs:comment "A kind of graph an askable's select is handed as its default graph, as every reader states the kinds it reads; several where it reads several." .
+    rdfs:comment "A kind of graph a reader in speech is handed as its default graph, as every reader states the kinds it reads; several where it reads several. Of an askable, what its select reads; of a chat, what the model speaking in it may read and query - every graph of the kind and of every kind beneath it - and a chat stating none lets it query nothing, and ask only the askables." .
 
 :select a owl:DatatypeProperty ;
     rdfs:domain :Askable ;
