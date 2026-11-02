@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import logging
 import threading
+from collections import Counter
 from concurrent.futures import Future
 
 from agent.ontology import local_of
@@ -41,7 +42,7 @@ from agent.store import DocumentRefused, document_of, graphs_of
 from .askable import askables, answered, lines, status, tool_of as asking
 from .briefing import briefing
 from .chat import Chat, chats_of, named
-from .model import Model, why_not
+from .model import TOKENS, Model, why_not
 from .readable import Readable
 from .sayable import document_of as statement_of, said_in, sayables, tool_of
 
@@ -155,9 +156,11 @@ class _Translation:
         tools = ([tool_of(s) for s in saying] + [asking(a) for a in asking_of] +
                  (readable.tools() if readable is not None else []))
         messages = [{"role": "user", "content": f"From {person[1]}:\n\n{text}"}]
+        spent: Counter = Counter()
         try:
             for turn_no in range(TURNS):
                 turn = self.model.converse(system, messages, tools, last=turn_no == TURNS - 1)
+                spent.update(turn.tokens)
                 if not turn.calls:
                     break
                 messages.append({"role": "assistant", "content": turn.content})
@@ -167,6 +170,8 @@ class _Translation:
                     for id_, name, inputs in turn.calls]})
         except Exception as exc:                                 # noqa: BLE001 — the model fails
             return self._failed(chat, person, exc, unaddressed, reply)
+        log.info("%s answered %s in %d request(s): %s", local_of(self.runtime.me), person[1], turn_no + 1,
+                 ", ".join(f"{spent[k]} {k}" for k in TOKENS))
         words = turn.text.strip()
         if not words:                                            # no words is a failure, said where it was addressed
             me = local_of(self.runtime.me)

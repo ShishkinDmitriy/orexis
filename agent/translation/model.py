@@ -42,6 +42,10 @@ class Answer:
     calls: list[tuple[str, dict]] = field(default_factory=list)
 
 
+#  WHAT A TURN SPENT, by the API's own names: fresh input, input written to and read from the cache, and output.
+TOKENS = ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens", "output_tokens")
+
+
 @dataclass
 class Turn:
     """One turn of a conversation: the text the model wrote, each tool it called as its id, name and input, and
@@ -50,6 +54,7 @@ class Turn:
     calls: list[tuple[str, str, dict]] = field(default_factory=list)
     content: list[dict] = field(default_factory=list)
     stop: str = ""
+    tokens: dict[str, int] = field(default_factory=dict)
 
 
 class Model:
@@ -102,7 +107,9 @@ class Model:
             body["tools"] = list(tools)
             body["tool_choice"] = {"type": "none" if last else "auto"}
         reply = self.client.messages.create(**body)
-        turn = Turn(stop=str(getattr(reply, "stop_reason", "") or ""))
+        usage = getattr(reply, "usage", None)
+        turn = Turn(stop=str(getattr(reply, "stop_reason", "") or ""),
+                    tokens={k: int(getattr(usage, k, 0) or 0) for k in TOKENS})
         for block in reply.content:
             if block.type == "text":
                 turn.text += block.text
