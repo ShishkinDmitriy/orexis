@@ -31,6 +31,7 @@ frame "sensing" {
   component "received · missed\nruns revision over its observations" as SEN
   folder "sensing:ObservationGraph\none per reading · linked by sensing:previous" as obs #FFFCF2
   folder "orexis:ForecastGraph" as fc
+  folder "sensing:DefectGraph\na defect a person said · read beside the world" as dg
 }
 
 frame "speech" {
@@ -101,6 +102,8 @@ TRL --> SP : a statement
 TR  --> SEN : bytes
 TR  --> SP : a document
 SEN --> obs
+SP  --> dg : a defect report extracted
+dg  ..> SEN : revised beside the world
 SEN --> fc
 SEN --> DEL : revise · trigger
 DEL --> rev
