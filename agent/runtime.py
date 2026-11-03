@@ -464,8 +464,8 @@ def _put_documents(store: ox.Store, world: Path, agent_id: str | None = None,
         else:
             log.warning("%s plays no role, so it loads no package and runs nothing: its self graph "
                         "says what it runs, `<agent> orexis:plays [ a <role> ]`", agent_id)
-    #  A PACKAGE'S DOCUMENT FOR A READER THIS AGENT DOES NOT LOAD is expected, and said quietly: sensing's
-    #  askables are speech's kind, and an agent that speaks with nobody holds no speech.
+    #  A PACKAGE'S DOCUMENT FOR A READER THIS AGENT DOES NOT LOAD is expected, and said quietly: a kind only a
+    #  package above declares, which an agent playing none of its roles holds no word of.
     for path, _doc, graph, kinds in passed:
         expected = others & set(kinds) or (KERNEL in Path(path).resolve().parents and set(kinds) & _declared_kinds())
         log.log(logging.DEBUG if expected else logging.INFO,

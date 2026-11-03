@@ -2,6 +2,7 @@
 @prefix speech: <http://example.org/orexis/speech#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -73,46 +74,21 @@
 
 #  WHAT A PERSON MAY SAY, AND THE WORDS A STATEMENT WAS MADE FROM (#1034). A person who is not an agent
 #  speaks prose, and a language model at a transport's edge — the agent's own translation part —
-#  turns it into a statement of a shape the domain declares, and a statement the agent says to them into
-#  prose (knowledge/domain/translation/translator.md). The model fills a shape's fields and nothing else: it
-#  authors no belief, the extraction does, and a sayable has no field an action could be read from
-#  (knowledge/decisions/the-model-compiles-a-routine-and-is-called-back-at-its-edges.md).
-
-:Sayable a owl:Class ;
-    rdfs:subClassOf sh:NodeShape ;
-    rdfs:label "Sayable" ;
-    rdfs:comment """A shape a person's prose may become, and a statement of which is rendered into prose
-    (knowledge/domain/speech/sayable.md): `sh:targetClass` the kind of statement, and `sh:property` for
-    each thing it may carry — `sh:path`, a `sh:datatype` for a literal or a `sh:class` for a thing of the
-    world chosen by its label, `sh:minCount` for what it must carry, `sh:description` for what the model is
-    told. A domain ships them in its rules graph beside the extraction that believes them. The translator
-    offers the model every sayable the world declares and makes a statement of the one it fills, dropping
-    a field the shape does not declare and refusing one that lacks a field it requires.""" .
-
-:AskableGraph a owl:Class ;
-    rdfs:subClassOf orexis:Graph ;
-    rdfs:label "Askable graph" ;
-    rdfs:comment "A graph of askables — the questions a person may ask an agent about itself, each answered from its store — named for what it holds. A package ships one beside its ontology (`agent/<package>/askables.ttl`), in its own words and speech's, and a domain or a world may ship one too. No belief: a question is what the agent can be asked, read by translation alone. Held where speech's vocabulary is, so a package's askables are passed over by an agent that speaks with nobody (knowledge/decisions/a-question-is-answered-and-every-other-act-is-kept.md)." .
-
-:Askable a owl:Class ;
-    rdfs:subClassOf sh:NodeShape ;
-    rdfs:label "Askable" ;
-    rdfs:comment """A question a person may ask an agent, answered from the agent's own store and writing nothing
-    — FIPA's query-ref, beside the sayable, which is every other act (knowledge/domain/speech/askable.md). A node
-    shape: `sh:description` what the model is told it answers, `sh:property` each thing the asker may fill,
-    declared as a sayable's fields are, `speech:reads` the kinds of graph it is handed and `speech:select` the
-    text the agent runs, each filled field bound into it as a `$` token of its local name. The asker picks it
-    and fills it, and never writes the text nor sees it.""" .
+#  turns it into a statement in the words the chat allows, held to what the vocabulary declares of them,
+#  and a statement the agent says to them into prose (knowledge/domain/translation/translator.md). The
+#  model authors no belief: what a person states is believed as the world's word only within those bounds
+#  (knowledge/decisions/a-person-states-what-the-chat-allows-in-the-worlds-words.md).
 
 :reads a owl:ObjectProperty ;
     rdfs:label "reads" ;
-    rdfs:comment "A kind of graph a reader in speech is handed as its default graph, as every reader states the kinds it reads; several where it reads several. Of an askable, what its select reads; of a chat, what the model speaking in it may read and query - every graph of the kind and of every kind beneath it - and a chat stating none lets it query nothing, and ask only the askables. A chat reading `orexis:Event` reads what happened besides: the agent's journal and its series, which are what events say." .
+    rdfs:domain :Chat ;
+    rdfs:comment "A kind of graph the model speaking in a chat may read and query - every graph of the kind and of every kind beneath it; several where it reads several - as every reader states the kinds it reads. A chat stating none lets it query nothing. A chat reading `orexis:Event` reads what happened besides: the agent's journal and its series, which are what events say." .
 
-:select a owl:DatatypeProperty ;
-    rdfs:domain :Askable ;
-    rdfs:range xsd:string ;
-    rdfs:label "select" ;
-    rdfs:comment "The SELECT an askable is answered by, a row per line of the answer, each column a value the model phrases. A field the asker filled is bound as `$` and its local name; a token no field binds refuses the text." .
+:allows a owl:ObjectProperty ;
+    rdfs:domain :Chat ;
+    rdfs:range rdf:Property ;
+    rdfs:label "allows" ;
+    rdfs:comment "A word a person may state in a chat - a property a vocabulary declares, said of what its domain says and of a value its range takes, and believed as the world's word - or `rdf:Property` for every one. A chat allowing none hears questions alone. A question writes nothing, so it is never restricted here; what it may read is the chat's `speech:reads` (knowledge/domain/speech/chat.md)." .
 
 :prose a owl:DatatypeProperty ; rdfs:range xsd:string ;
     rdfs:label "prose" ;

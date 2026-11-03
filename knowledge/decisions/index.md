@@ -91,6 +91,7 @@ The search itself, and the two places a language model is allowed near it.
 * [an-agent-translates-for-itself](/decisions/an-agent-translates-for-itself.md) - A world runs no process; each agent translates its own chats through transports of its own, a bot each, and its account is selects.
 * [a-question-is-answered-and-every-other-act-is-kept](/decisions/a-question-is-answered-and-every-other-act-is-kept.md) - A question is answered from the store and every other act kept as a statement; FIPA names the acts, and no engine runs a protocol.
 * [the-model-queries-what-its-chat-may-read](/decisions/the-model-queries-what-its-chat-may-read.md) - A chat states what its model may read; the model loads vocabularies and queries a copy of those graphs, never choosing one.
+* [a-person-states-what-the-chat-allows-in-the-worlds-words](/decisions/a-person-states-what-the-chat-allows-in-the-worlds-words.md) - No sayable or askable: a question is a query; a statement is triples in allowed words, held to domain and range, believed as the world's.
 
 # The mind — time and prediction
 

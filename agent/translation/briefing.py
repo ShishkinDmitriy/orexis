@@ -1,14 +1,14 @@
-"""`briefing`: what the model is handed before a person's words — who the agent is, what the chat lets it read, and
-what it holds now (knowledge/domain/translation/briefing.md).
+"""`briefing`: what the model is handed before a person's words — who the agent is, what the chat lets it read and what
+it lets a person state (knowledge/domain/translation/briefing.md).
 
 **SMALL, AND SCOPED BY THE CHAT.** It carries no vocabulary and no world: it names the vocabularies the chat may
 read, by the name the model loads each by, and the kinds of graph its queries read, and the model loads and asks
 for what the question needs. The self graph is in it where the chat reads it, with what each role the agent plays
 is, in its package's words, since "what are you" is the first thing a person asks. A chat that reads nothing is briefed
-with who the agent is and its status alone, and its model has the askables.
+with who the agent is alone, and with the things a person may state something of, since its model can look none up.
 
-**TWO BLOCKS, THE FIRST CACHED.** Who the agent is and what the chat reads change when a document does; the
-status, apart, changes with every reading.
+**ONE BLOCK, CACHED.** Who the agent is, what the chat reads and what it allows change when a document does, and not
+with every reading: what holds now is the model's to query.
 
 **IT IS READ ON THE RUNTIME'S THREAD**, as every read of the store is, and handed to the model's thread as text.
 """
@@ -27,9 +27,9 @@ SELECT DISTINCT ?label ?comment WHERE {
   ?class rdfs:label ?label . OPTIONAL { ?class rdfs:comment ?comment } } ORDER BY ?label"""
 
 
-def briefing(store: ox.Store, me: str, reads, listing: str, status: str,
-             prefixes: dict[str, str] = NAMESPACES) -> tuple[str, str]:
-    """Who the agent is and what the chat lets the model read, then what it holds now: the two blocks, a name in the
+def briefing(store: ox.Store, me: str, reads, listing: str, stating: str = "",
+             prefixes: dict[str, str] = NAMESPACES) -> str:
+    """Who the agent is, what the chat lets the model read and what it lets a person state: one block, a name in the
     self graph written with `prefixes`, as the chat's queries write theirs."""
     selves = graphs_of(store, SELF_GRAPH)
     who = f"YOU SPEAK FOR {local_of(me)}."
@@ -44,8 +44,9 @@ def briefing(store: ox.Store, me: str, reads, listing: str, status: str,
                 ". Load a vocabulary to learn its terms before you query them, and name the kinds of graph a query "
                 "reads.\n" + listing)
     else:
-        who += "\n\nThis chat lets you read nothing of the agent's store beyond the questions offered as tools."
-    return who, "WHAT IT HOLDS NOW:\n\n" + status
+        who += "\n\nThis chat lets you read nothing of the agent's store."
+    return who + ("\n\nWHAT A PERSON MAY STATE HERE, with the state tool. " + stating if stating
+                  else "\n\nA person states nothing here: what they write is a question, or nothing to keep.")
 
 
 def _turtle(store: ox.Store, graphs, prefixes: dict[str, str]) -> str:

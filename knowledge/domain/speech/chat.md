@@ -52,22 +52,28 @@ translator, and an agent in a chat on Telegram to a bot of its own.
 
 # What its model may read
 
-A chat says which kinds of graph the model speaking in it may read, `speech:reads`, the word an askable
-states its own reads with:
+A chat says which kinds of graph the model speaking in it may read, `speech:reads`:
 
 ```turtle
 :terrace_and_dmitrii a speech:Chat ;
     speech:participant :terrace_agent , :dmitrii ;
     speech:channel :sovereign_telegram ;
-    speech:reads orexis:Graph , orexis:Event .
+    speech:reads orexis:Graph , orexis:Event ;
+    speech:allows rdf:Property .
 ```
 
 The sovereign's chat reads everything; a broker's would read the market's kinds and no sensor. The
 translator copies the graphs of those kinds, each under its name, when words arrive, and the model's
-queries run over that copy and nothing else, whatever they say; it is offered only the askables reading
-within them. A chat reading `orexis:Event` reads what happened besides - the agent's
-[journal](/domain/kernel/journal.md) and its [series](/domain/kernel/series.md), which are what events
-say - so what holds now is asked of the store and what happened of the record.
-A chat stating no kind reads nothing, and its model has the askables alone
+queries run over that copy and nothing else, whatever they say. A chat reading `orexis:Event` reads what
+happened besides - the agent's [journal](/domain/kernel/journal.md) and its
+[series](/domain/kernel/series.md), which are what events say - so what holds now is asked of the store
+and what happened of the record. A chat stating no kind reads nothing
 ([the-model-queries-what-its-chat-may-read](/decisions/the-model-queries-what-its-chat-may-read.md)).
 
+# What a person may state in it
+
+A chat says which words a person may state in it, `speech:allows`: properties a vocabulary declares, or
+`rdf:Property` for every one, as the sovereign's chat allows. What a person states is triples in those
+words, each held to its property's domain and range, and believed as the world's word. A chat allowing
+none hears questions alone, since a question writes nothing and what it may read is `speech:reads`
+([a-person-states-what-the-chat-allows-in-the-worlds-words](/decisions/a-person-states-what-the-chat-allows-in-the-worlds-words.md)).

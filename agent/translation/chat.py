@@ -1,6 +1,6 @@
 """`chat`: the chats an agent is in, read off the common beliefs — each its channel, the people in it by the names
-they go by, the agents in it by the names they answer to, and the kinds of graph its model may query — and whether words name
-an agent.
+they go by, the agents in it by the names they answer to, the kinds of graph its model may query and the words a person
+may state in it — and whether words name an agent.
 
 A CHAT IS WHO SPEAKS WITH WHOM THROUGH WHAT (knowledge/domain/speech/chat.md): `speech:Chat`, its participants and
 its one channel, of whatever kind a transport carries. An agent answers to its local id, its IRI's local name and the
@@ -25,6 +25,9 @@ SELECT ?chat ?channel ?who ?kind ?name ?id WHERE {
 #  WHAT EACH CHAT'S MODEL MAY QUERY: the kinds of graph it reads (knowledge/domain/speech/chat.md).
 _READS_Q = "SELECT ?chat ?kind WHERE { ?chat a speech:Chat ; speech:reads ?kind } ORDER BY ?chat ?kind"
 
+#  WHAT A PERSON MAY STATE IN EACH CHAT: a property, or `rdf:Property` for every one; a question is always theirs.
+_ALLOWS_Q = "SELECT ?chat ?word WHERE { ?chat a speech:Chat ; speech:allows ?word } ORDER BY ?chat ?word"
+
 
 @dataclass(frozen=True)
 class Chat:
@@ -33,6 +36,7 @@ class Chat:
     people: tuple[tuple[str, str], ...]          # (IRI, name)
     agents: tuple[tuple[str, tuple[str, ...]], ...]  # (IRI, the names it answers to)
     reads: tuple[str, ...] = ()                  # the kinds of graph its model may query, none where it states none
+    allows: tuple[str, ...] = ()                 # the words a person may state in it, none where it states none
 
     def person(self, sender: str | None) -> tuple[str, str] | None:
         """Who wrote: the sender the channel told, where they are in the chat, or the chat's one person."""
@@ -54,8 +58,11 @@ def chats_of(store) -> list[Chat]:
     reads: dict[str, list[str]] = {}
     for r in rows(store, _READS_Q, graphs):
         reads.setdefault(r["chat"], []).append(r["kind"])
+    allows: dict[str, list[str]] = {}
+    for r in rows(store, _ALLOWS_Q, graphs):
+        allows.setdefault(r["chat"], []).append(r["word"])
     return [Chat(iri, c["channel"], tuple(sorted(c["people"].items())), tuple(sorted(c["agents"].items())),
-                 tuple(sorted(reads.get(iri, ()))))
+                 tuple(sorted(reads.get(iri, ()))), tuple(sorted(allows.get(iri, ()))))
             for iri, c in sorted(found.items())]
 
 

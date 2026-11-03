@@ -1,5 +1,6 @@
 @prefix : <http://example.org/orexis/world/viewing#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix schema: <https://schema.org/> .
 @prefix speech: <http://example.org/orexis/speech#> .
 @prefix telegram: <http://example.org/orexis/telegram#> .
@@ -16,8 +17,10 @@
 :seeker_and_boris a speech:Chat ; speech:participant :seeker , :boris ; speech:channel :boris_topic .
 
 :seeker_and_clara a speech:Chat ; speech:participant :seeker , :clara ; speech:channel :clara_telegram ;
-    speech:reads orexis:BeliefGraph .    # the model speaking with Clara may query what the seeker believes
+    speech:reads orexis:BeliefGraph ;    # the model speaking with Clara may query what the seeker believes
+    speech:allows rdf:Property .         # and Clara may state anything in the world's words
 :clara_telegram a telegram:Chat ; telegram:chatId "4815162342" .
 
-:household a speech:Chat ; speech:participant :seeker , :keeper , :anna , :clara ; speech:channel :household_telegram .
+:household a speech:Chat ; speech:participant :seeker , :keeper , :anna , :clara ; speech:channel :household_telegram ;
+    speech:allows :viewingAt , :refused .    # the household may offer a viewing and refuse one, and ask for none
 :household_telegram a telegram:Chat ; telegram:chatId "-1001" .

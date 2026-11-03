@@ -356,9 +356,9 @@ def _refusals(here: Path, beliefs: ox.Store, broken: list[str]) -> list[str]:
         for graph, kinds in sorted(kinds_in(doc).items()):
             if known(beliefs, kinds) or ours() & kinds or whose(doc, graph) not in (None, me):
                 continue
-            #  A PACKAGE'S DOCUMENT FOR A READER THE AGENT DOES NOT LOAD is passed over, as its requirements are:
-            #  sensing's askables are speech's kind, and an agent that speaks with nobody holds no speech. A world's
-            #  document is held to its loaded packages still.
+            #  A PACKAGE'S DOCUMENT FOR A READER THE AGENT DOES NOT LOAD is passed over, as its requirements are: a
+            #  kind only a package above declares, which an agent playing none of its roles holds no word of. A
+            #  world's document is held to its loaded packages still.
             if KERNEL in Path(path).resolve().parents:
                 everyone = everyone if everyone is not None else world(here)
                 if known(everyone, kinds):

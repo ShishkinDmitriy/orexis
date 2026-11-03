@@ -1,5 +1,6 @@
 @prefix : <http://example.org/orexis/world/terrace#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix speech: <http://example.org/orexis/speech#> .
 @prefix telegram: <http://example.org/orexis/telegram#> .
 
@@ -7,14 +8,15 @@
 
 #  WHO SPEAKS WITH WHOM, THROUGH WHAT: the terrace's agent with its sovereign, in a Telegram chat
 #  through the agent's own bot (society.ttl). The agent wants nothing and says nothing of its own;
-#  what the chat carries is what it observes, sensing's askable: sent on `/status`, and answered from
-#  when a question asks it (knowledge/domain/speech/askable.md).
+#  what the chat carries is what it observes, queried when a question asks it.
 #  The chat's id is the sovereign's and sits in secrets/terrace/chat.ttl, not here.
 
 #  WHAT THE MODEL MAY READ IN IT: everything the agent holds, and what happened to it - its journal and its
-#  series - since the chat is with its sovereign (knowledge/domain/speech/chat.md).
+#  series - since the chat is with its sovereign; and the sovereign may state anything in the world's words, a
+#  sensor's defect among them, since theirs is the world's word (knowledge/domain/speech/chat.md).
 :terrace_and_dmitrii a speech:Chat ;
     speech:participant :terrace_agent , :dmitrii ;
     speech:channel :sovereign_telegram ;
-    speech:reads orexis:Graph , orexis:Event .
+    speech:reads orexis:Graph , orexis:Event ;
+    speech:allows rdf:Property .
 :sovereign_telegram a telegram:Chat .

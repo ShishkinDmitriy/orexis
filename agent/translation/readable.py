@@ -3,7 +3,7 @@ their names for the model's queries — and the two tools that read it, `vocabul
 (knowledge/domain/speech/chat.md, knowledge/decisions/the-model-queries-what-its-chat-may-read.md).
 
 **THE CHAT SAYS WHAT IT READS, AND THE MODEL NEVER CHOOSES A GRAPH.** A chat stating no kind reads nothing here, and
-its model has the askables alone. One stating kinds — a sovereign's chat every graph, a broker's the market's — is
+its model reads nothing. One stating kinds — a sovereign's chat every graph, a broker's the market's — is
 read as the graphs of those kinds in every store the agent holds, COPIED on the runtime's thread, each under its own
 name with the catalogue's rows about it, so a query runs over what the chat admits and nothing else, whatever the
 model writes, and a slow one stalls the model's thread and never a pass.

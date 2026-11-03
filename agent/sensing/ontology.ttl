@@ -263,11 +263,13 @@
     age: a silent sensor has no present, a stuck one has a present not to be believed (#462).""" .
 
 :defect a owl:DatatypeProperty ;
+    rdfs:domain sosa:Sensor ;
     rdfs:range xsd:string ;
     rdfs:label "defect" ;
     rdfs:comment """Why a sensor's numbers are not what it says it observes - a miswired channel, a divider the ADC
     cannot read through - stated by the world of the sensor, as testimony about the device, since no rule can
-    tell a number that is fresh and varies from a true one. Its percepts are kept, and sensing concludes no
+    tell a number that is fresh and varies from a true one - or by a person in a chat that allows the word, believed as
+    the world's (knowledge/decisions/a-person-states-what-the-chat-allows-in-the-worlds-words.md). Its percepts are kept, and sensing concludes no
     reading of them, so nothing that reads a reading believes one; and each observation the sensor makes is
     said to carry it, in its revision, so a reader of percepts sees why beside the number. The third doubt
     the agent holds about a reading, beside its age and a stuck sensor, and the one stated rather than
