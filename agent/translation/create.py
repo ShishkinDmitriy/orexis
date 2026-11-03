@@ -45,7 +45,7 @@ from agent.store import NAMESPACES, DocumentRefused, document_of, graphs_of
 from .askable import askables, answered, lines, status, tool_of as asking
 from .briefing import briefing
 from .chat import Chat, chats_of, named
-from .events import Translated
+from .events import Conversed, Translated
 from .model import TOKENS, Model, why_not
 from .past import Past
 from .readable import Readable
@@ -102,6 +102,7 @@ class _Translation:
         self.spawn = lambda work: threading.Thread(target=work, daemon=True).start()
         self.writing: dict[str, list] = {}                       # chat IRI -> [the chat, answers being thought]
         self.translated = Signal("translated")
+        self.conversed = Signal("conversed")
 
     def link(self, parts) -> None:
         members = []
@@ -172,6 +173,7 @@ class _Translation:
         tools = ([tool_of(s) for s in saying] + [asking(a) for a in asking_of] +
                  [tool for reader in readers for tool in reader.tools()])
         messages = [{"role": "user", "content": f"From {person[1]}:\n\n{text}"}]
+        calls: list = []
         spent: Counter = Counter()
         began, requests = time.monotonic(), 0
         try:
@@ -182,12 +184,15 @@ class _Translation:
                 if not turn.calls:
                     break
                 messages.append({"role": "assistant", "content": turn.content})
-                messages.append({"role": "user", "content": [
-                    {"type": "tool_result", "tool_use_id": id_,
-                     "content": self._called(name, inputs, saying, asking_of, readers, person, text)}
-                    for id_, name, inputs in turn.calls]})
+                results = []
+                for id_, name, inputs in turn.calls:
+                    found = self._called(name, inputs, saying, asking_of, readers, person, text)
+                    calls.append((name, inputs, found))
+                    results.append({"type": "tool_result", "tool_use_id": id_, "content": found})
+                messages.append({"role": "user", "content": results})
         except Exception as exc:                                 # noqa: BLE001 — the model fails
             self._spent("answer", "failed", requests, spent, began)
+            self._conversed(chat, person, text, calls, f"the model would not answer: {exc}", "failed")
             return self._failed(chat, person, exc, unaddressed, reply)
         log.info("%s answered %s in %d request(s): %s", local_of(self.runtime.me), person[1], turn_no + 1,
                  ", ".join(f"{spent[k]} {k}" for k in TOKENS))
@@ -199,6 +204,7 @@ class _Translation:
             if not unaddressed:
                 words = f"{me} could not answer: its model wrote no words ({turn.stop or 'no reason given'})."
         self._spent("answer", outcome, requests, spent, began)
+        self._conversed(chat, person, text, calls, words or None, outcome)
         if words and words != SILENT:
             self.runtime.submit(lambda: self._said(chat, words, reply))
         self._ended(chat, unaddressed)
@@ -209,6 +215,13 @@ class _Translation:
             event = Translated(act, outcome, getattr(self.model, "name", None), float(requests),
                                *(float(spent.get(k, 0)) for k in TOKENS), time.monotonic() - began)
             self.runtime.submit(lambda: self.translated.emit(event))
+
+    def _conversed(self, chat: Chat, person, text: str, calls, answer: str | None, outcome: str) -> None:
+        """Off the runtime's thread: the conversation a message began, said on the runtime's, where it is heard."""
+        if self.conversed.connected:
+            event = Conversed(chat.iri, person[0], text, tuple(calls), answer, outcome,
+                              getattr(self.model, "name", None), self.runtime.now)
+            self.runtime.submit(lambda: self.conversed.emit(event))
 
     def _called(self, name: str, inputs: dict, saying, asking_of, readers, person, text: str) -> str:
         """What a tool call answers, off the runtime's thread: a sayable's statement kept, an askable's rows, a

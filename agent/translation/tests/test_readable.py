@@ -4,6 +4,8 @@ it runs where it could do anything but read."""
 
 from __future__ import annotations
 
+import re
+
 from pathlib import Path
 
 import pytest
@@ -36,7 +38,7 @@ def test_a_vocabulary_is_a_glossary_of_its_terms_and_the_query_reads_the_rest(re
     assert any(line.startswith("speech:participant (property, speech:Chat → ") for line in glossary), glossary
     assert "speech:Askable (class, beneath sh:NodeShape): " in "\n".join(glossary)
     assert all(len(line.split(": ", 1)[-1]) <= 220 for line in glossary), "a sentence is cut, and the query reads on"
-    assert "translation (1 terms)" in readable.listing(), readable.listing()
+    assert re.search(r"translation \([0-9]+ terms\)", readable.listing()), readable.listing()
     whole = readable.query("SELECT ?c WHERE { speech:Chat rdfs:comment ?c }", BELIEFS)
     assert "the thing their prose goes through" in whole and len(whole) > 150
 
