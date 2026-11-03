@@ -34,12 +34,13 @@ class _Belief:
         self.runtime = runtime
         self.deliberator = Deliberator(runtime.beliefs, runtime.id)
 
-    def revise(self, graphs, *, kind: str = BELIEF) -> list[str]:
-        """Revise `graphs` beside what the world states, the common beliefs, and apply the transitions each triggers, now — their
-        revisions classified `kind`: a belief's are beliefs, and a package above hands the kind its
-        own graphs' revisions are. Writes nothing a reader hears of, so it answers nothing."""
+    def revise(self, graphs, *, kind: str = BELIEF, beside=()) -> list[str]:
+        """Revise `graphs` beside what the world states, the common beliefs, and the agent's own beliefs of each kind
+        `beside` names, and apply the transitions each triggers, now — their revisions classified `kind`: a belief's
+        are beliefs, and a package above hands the kind its own graphs' revisions are, and what it reads besides the
+        world. Writes nothing a reader hears of, so it answers nothing."""
         runtime = self.runtime
-        stated = graphs_of(runtime.beliefs, BELIEF, common=True)
+        stated = graphs_of(runtime.beliefs, BELIEF, common=True) + (graphs_of(runtime.beliefs, *beside) if beside else [])
         for graph in graphs:
             self.deliberator.changed(graph, read=stated, kind=kind)
         self.deliberator.deliberate(runtime.now or clock.now())

@@ -7,7 +7,8 @@ one statement and the world's documents beside it, and over nothing else the age
 what was said and never what was believed before — a transition, which reads the agent's own state
 beside its arrival, would carry what an earlier statement said into the belief made of a later one. What
 every extraction constructs is written into one belief graph of the agent's own, derived from the
-statement (`prov:wasDerivedFrom`), arrived `orexis:Derived`, holding over the statement's period: so a
+statement (`prov:wasDerivedFrom`), arrived `orexis:Derived`, of every kind an extraction that concluded
+something names (`speech:believedAs`) besides, holding over the statement's period: so a
 round believed holds while the round said does, and goes when it is said again, as a revision goes with
 its source (`forget_graph`). A statement nothing extracts from leaves no belief at all.
 
@@ -37,8 +38,9 @@ _RULES_GRAPH = "http://www.w3.org/ns/shacl#RulesGraph"
 
 #  EVERY ACTIVE EXTRACTION, with its text, over the rules graphs.
 _EXTRACTIONS_Q = """
-SELECT ?rule ?text WHERE { ?rule a speech:Extraction ; sh:construct ?text .
-                           FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule"""
+SELECT ?rule ?text ?kind WHERE { ?rule a speech:Extraction ; sh:construct ?text .
+                                 OPTIONAL { ?rule speech:believedAs ?kind }
+                                 FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule"""
 
 #  THE STATEMENT'S ROW: whose it is and when it holds.
 _ROW_Q = """
@@ -57,16 +59,20 @@ def extract(store: ox.Store, statement: str) -> list[str]:
         return []
     reads = [statement, *graphs_of(store, BELIEF, common=True)]
     found: list = []
+    kinds: set[str] = set()
     for r in rows(store, _EXTRACTIONS_Q, graphs_of(store, _RULES_GRAPH)):
         try:
-            found += construct(store, r["text"], reads)
+            concluded = construct(store, r["text"], reads)
+            found += concluded
+            if concluded and r.get("kind"):
+                kinds.add(r["kind"])
         except Exception as exc:                                    # noqa: BLE001
             log.error("%s: an extraction would not run, so it extracts nothing: %s", local_of(r["rule"]), exc)
     if not found:
         return []
     row = next(iter(rows(store, _ROW_Q, (), cat=Raw(f"<{cat}>"), g=Raw(f"<{statement}>"))), {})
     add_quads(store, (ox.Quad(t.subject, t.predicate, t.object, ox.NamedNode(target)) for t in found))
-    update(store, f"""INSERT DATA {{ {entry(store, target, BELIEF, DERIVED, row.get("owner"), row.get("start"), row.get("end"))}
+    update(store, f"""INSERT DATA {{ {entry(store, target, (BELIEF, *sorted(kinds)), DERIVED, row.get("owner"), row.get("start"), row.get("end"))}
   GRAPH <{cat}> {{ <{target}> prov:wasDerivedFrom <{statement}> }} }}""")
     hash_named_graph(store, target)
     return [target]

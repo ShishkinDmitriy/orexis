@@ -3,7 +3,8 @@ type: Domain Concept
 title: Defect
 term: http://example.org/orexis/sensing#defect
 description: >-
-  Why a sensor's numbers are not what it says it observes, stated by the world of the sensor, since no
+  Why a sensor's numbers are not what it says it observes, stated by the world of the sensor or said by a
+  person in a chat that allows it, since no
   rule can tell a fresh and varying number from a true one. Its percepts are kept and carry why; sensing
   concludes no reading of them, so nothing believes them; the series still draws them, tagged. The third
   doubt about a reading, and the one stated rather than concluded.
@@ -35,4 +36,13 @@ voltage for weeks, and it was the probe's count.
 - **A person is told**: sensing's askable answers the defect and the number beside the latest percept, and
   sensing's account line names it.
 
-Mending it is taking the statement out of the world.
+# Said by a person
+
+The world's document is one way to state it; a person's word is the other. Sensing ships a sayable, a
+`sensing:DefectReport` of the sensor and why, offered in a chat that allows it ([chat](/domain/speech/chat.md)),
+and an extraction believing it into a `sensing:DefectGraph`, which sensing's revision reads beside the world, so
+the next percept carries the defect as though the world stated it. The report is named by its sensor, so said
+again with no why it replaces the one before and the belief goes
+([a-person-may-say-a-sensor-is-defective](/decisions/a-person-may-say-a-sensor-is-defective.md)).
+
+Mending it is taking the statement out of the world, or saying it sound.

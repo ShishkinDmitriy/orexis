@@ -35,6 +35,8 @@ SENSING = "http://example.org/orexis/sensing#"
 #  an observer role states, and the codec that ships. Every other word of this layer is spoken by a
 #  query text, under its prefix, and needs no constant here.
 OBSERVATION_GRAPH = SENSING + "ObservationGraph"
+#  WHAT A PERSON SAID IS DEFECTIVE, a belief graph extracted of their word, read beside what the world states.
+DEFECT_GRAPH = SENSING + "DefectGraph"
 SILENT_AFTER_TERM = SENSING + "silentAfter"      # an observer role's limits: cadences, and readings
 STUCK_AFTER_TERM = SENSING + "stuckAfter"
 JSON_CODEC = SENSING + "Json"

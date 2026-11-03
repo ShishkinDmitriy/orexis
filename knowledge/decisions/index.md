@@ -90,6 +90,7 @@ The search itself, and the two places a language model is allowed near it.
 * [an-agent-gives-an-account-of-itself-and-the-model-only-reads-it](/decisions/an-agent-gives-an-account-of-itself-and-the-model-only-reads-it.md) - SUPERSEDED IN PART — the sovereign asks over chat; a model phrases an agent's account of itself and decides nothing.
 * [an-agent-translates-for-itself](/decisions/an-agent-translates-for-itself.md) - A world runs no process; each agent translates its own chats through transports of its own, a bot each, and its account is selects.
 * [a-question-is-answered-and-every-other-act-is-kept](/decisions/a-question-is-answered-and-every-other-act-is-kept.md) - A question is answered from the store and every other act kept as a statement; FIPA names the acts, and no engine runs a protocol.
+* [a-person-may-say-a-sensor-is-defective](/decisions/a-person-may-say-a-sensor-is-defective.md) - A defect a person says in a chat that allows it is extracted into a kind sensing reads beside the world, and said sound, goes.
 * [the-model-queries-what-its-chat-may-read](/decisions/the-model-queries-what-its-chat-may-read.md) - A chat states what its model may read; the model loads vocabularies and queries a copy of those graphs, never choosing one.
 
 # The mind — time and prediction

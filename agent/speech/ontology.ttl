@@ -89,6 +89,16 @@
     offers the model every sayable the world declares and makes a statement of the one it fills, dropping
     a field the shape does not declare and refusing one that lacks a field it requires.""" .
 
+:keyedBy a owl:ObjectProperty ;
+    rdfs:domain :Sayable ;
+    rdfs:label "keyed by" ;
+    rdfs:comment "A field of a sayable - its `sh:path` - whose value names the statement made of it, so the same thing said again replaces what was said of it before, and what was believed of that goes with it: a sensor said defective and then said sound is one statement said twice. A sayable keyed by nothing makes a new statement each time (knowledge/domain/speech/sayable.md)." .
+
+:believedAs a owl:ObjectProperty ;
+    rdfs:domain :Extraction ;
+    rdfs:label "believed as" ;
+    rdfs:comment "The kind of belief graph an extraction's conclusions are, beside `orexis:BeliefGraph`, so a reader that reads them by name of kind finds them - sensing reading a defect a person said of a sensor beside what the world states. Named by the extraction, since the runner prepares the target; the rule's text still says nothing of the graph it writes (knowledge/domain/speech/extraction.md)." .
+
 :AskableGraph a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
     rdfs:label "Askable graph" ;

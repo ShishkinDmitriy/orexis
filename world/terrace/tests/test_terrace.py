@@ -102,6 +102,43 @@ def test_one_message_is_five_observations_and_the_soil_is_below_the_beds_range(m
     assert broker.published == [], "nothing is wanted, so nothing is sent"
 
 
+def test_the_sovereign_says_the_probe_is_defective_and_its_next_number_is_no_reading_until_said_sound(monkeypatch):
+    """A defect report, sensing's sayable, heard as the sovereign's statement and extracted into a defect graph that
+    sensing's revision reads beside the world: the probe's next number is kept and no reading, and said again with
+    no why the report is replaced, its belief goes, and the number after is a reading again
+    (knowledge/decisions/a-person-may-say-a-sensor-is-defective.md)."""
+    from datetime import timedelta
+
+    from agent.sensing.ontology import DEFECT_GRAPH, OBSERVATION_GRAPH
+    from agent.speech.heard import heard
+    from agent.translation.sayable import document_of, sayables
+
+    runtime, _ = _terrace(monkeypatch)
+    (report,) = [s for s in sayables(runtime.beliefs) if s.name == "DefectReport"]
+    probe = "http://example.org/orexis/world/terrace#moisture_sensor_terrace"
+    sovereign = "http://example.org/orexis/world/terrace#dmitrii"
+
+    def say(**fields):
+        payload = document_of(report, {"defective": "moisture_sensor_terrace", **fields}, by=sovereign,
+                              prose="the probe shows strange numbers", at=NOW)
+        runtime.submit(lambda: heard(runtime.beliefs, AGENT, payload))
+        runtime.run(passes=1, poll_s=0)
+
+    def soil(at):
+        runtime.deliver("sensors/moisture_sensor_terrace/reading", MESSAGE, at)
+        runtime.run(passes=1, poll_s=0)
+        return rows(runtime.beliefs, "SELECT ?v ?why WHERE { ?o sosa:resultTime ?t ; sosa:madeBySensor $probe "
+                    "OPTIONAL { ?o sosa:hasSimpleResult ?v } OPTIONAL { ?o sensing:defect ?why } } ORDER BY DESC(?t) LIMIT 1",
+                    graphs_of(runtime.beliefs, OBSERVATION_GRAPH), probe=ox.NamedNode(probe))
+
+    say(defect="it reads half of what the bed holds")
+    (believed,) = graphs_of(runtime.beliefs, DEFECT_GRAPH)
+    assert soil(NOW) == [{"why": "it reads half of what the bed holds"}], "kept, and no reading"
+    say()
+    assert graphs_of(runtime.beliefs, DEFECT_GRAPH) == [], "said again with no why: the report replaced, its belief gone"
+    assert soil(NOW + timedelta(minutes=20)) == [{"v": "0.2"}], "a reading again"
+
+
 #  THE SOVEREIGN'S CHAT, as its secrets/terrace/chat.ttl states it — a made-up id, since the real one is not committed.
 CHAT = """@prefix : <http://example.org/orexis/world/terrace#> .
 @prefix orexis: <http://example.org/orexis#> .

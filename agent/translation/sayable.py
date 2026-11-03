@@ -12,7 +12,8 @@ statement of a declared shape (knowledge/domain/speech/sayable.md).
 
 **A THING OF THE WORLD IS CHOSEN BY ITS LABEL**, as every field of a shape is (`shape`).
 
-**THE STATEMENT IS A DOCUMENT AS ANY PEER'S.** One graph, named by a URN, typed `speech:StatementGraph`
+**THE STATEMENT IS A DOCUMENT AS ANY PEER'S.** One graph, named by a URN — new each time, or the same for the
+same values of the fields the sayable is `speech:keyedBy`, so saying it again replaces it — typed `speech:StatementGraph`
 in the default graph with the period it holds from; inside it the node of the sayable's class with
 the fields filled, the prose it was made from (`speech:prose`) and who said it (`speech:saidBy`), so
 the agent's journal keeps the words with the statement and the extraction reads the fields.
@@ -43,12 +44,16 @@ _SAYABLES_Q = """
 SELECT ?shape ?class ?description WHERE {
   ?shape a speech:Sayable ; sh:targetClass ?class .
   OPTIONAL { ?shape sh:description ?description } } ORDER BY ?shape"""
+
+#  THE FIELDS A SAYABLE'S STATEMENT IS NAMED BY, so the same thing said again replaces what was said of it.
+_KEYS_Q = "SELECT ?path WHERE { $shape speech:keyedBy ?path } ORDER BY ?path"
 @dataclass(frozen=True)
 class Sayable:
     shape: str
     cls: str
     description: str
     fields: tuple[Field, ...]
+    keys: tuple[str, ...] = ()
 
     @property
     def name(self) -> str:
@@ -58,7 +63,8 @@ class Sayable:
 def sayables(store: ox.Store) -> list[Sayable]:
     """Every sayable the world's rules graphs declare, its fields read with the choices the world states."""
     rules = graphs_of(store, RULES_GRAPH)
-    return [Sayable(s["shape"], s["class"], s.get("description") or "", fields_of(store, s["shape"], rules))
+    return [Sayable(s["shape"], s["class"], s.get("description") or "", fields_of(store, s["shape"], rules),
+                    tuple(k["path"] for k in rows(store, _KEYS_Q, rules, shape=s["shape"])))
             for s in rows(store, _SAYABLES_Q, rules)]
 
 
@@ -71,9 +77,12 @@ def document_of(sayable: Sayable, inputs: dict, *, by: str, prose: str, at: date
     """A statement of `sayable` made from what the model filled, as the TriG a peer's document is: None,
     said in the log, where a required field is missing or holds what its datatype does not take. A field
     the shape does not declare is dropped and said."""
-    graph = ox.NamedNode(f"urn:uuid:{uuid.uuid4()}")
     doc = ox.Store()
     declared = {f.name: f for f in sayable.fields}
+    keyed = [f for f in sayable.fields if f.path in sayable.keys]
+    #  KEYED, the statement is named by the shape and its key's values, so saying it again replaces it.
+    graph = ox.NamedNode(f"urn:uuid:{uuid.uuid5(uuid.NAMESPACE_URL, ' '.join([sayable.shape, *(str(term_of(f, inputs.get(f.name)) or '') for f in keyed)]))}"
+                         if keyed else f"urn:uuid:{uuid.uuid4()}")
     for name in sorted(set(inputs) - set(declared)):
         log.warning("%s: the model filled %r, which the shape does not declare — dropped", sayable.name, name)
     for field in sayable.fields:

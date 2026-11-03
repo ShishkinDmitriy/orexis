@@ -36,7 +36,9 @@ chosen by `rdfs:label`, and written back as the IRI; a label the world does not 
 what the model filled, a statement is made — one graph, typed `speech:StatementGraph`, the node of the
 sayable's class with its fields, the words it was made from as `speech:prose` and who said it as
 `speech:saidBy` — and a field the shape does not declare is dropped, a required one missing refuses the
-whole, a value the datatype does not take is none. Outbound, a statement of a sayable's class is read
+whole, a value the datatype does not take is none. The graph is named anew each time, unless the sayable is
+`speech:keyedBy` some of its fields: then the same values name the same statement, and said again it replaces
+what was said before and what was believed of it, as a sensor said defective and then sound. Outbound, a statement of a sayable's class is read
 back field by field for the model to render.
 
 # Why a shape and not a free reading

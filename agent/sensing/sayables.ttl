@@ -1,0 +1,26 @@
+@prefix : <http://example.org/orexis/sensing#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<> a sh:RulesGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A PERSON MAY SAY OF A SENSOR (knowledge/domain/sensing/defect.md): that its numbers are not to be believed,
+#  and why, or that they are again. A sayable, offered in a chat that allows it, keyed by the sensor so a report said
+#  again replaces the one before; and the extraction that believes it, as the world's `sensing:defect` would be,
+#  into a graph sensing's revision reads beside the world. Sensing's words, and speech's for the act.
+
+:defect_report a speech:Sayable , sh:NodeShape ;
+    sh:targetClass :DefectReport ;
+    sh:description "a sensor whose numbers are not to be believed, and why; or, with no why, that it is sound again" ;
+    speech:keyedBy :defective ;
+    sh:property [ sh:path :defective ; sh:class sosa:Sensor ; sh:minCount 1 ; sh:description "which sensor" ] ,
+                [ sh:path :defect ; sh:datatype xsd:string ;
+                  sh:description "why its numbers are not to be believed, in the person's words; leave it out to say the sensor is sound again" ] .
+
+:defect_believed a speech:Extraction ;
+    speech:believedAs :DefectGraph ;
+    sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+        CONSTRUCT { ?sensor sensing:defect ?why } WHERE {
+            ?report a sensing:DefectReport ; sensing:defective ?sensor ; sensing:defect ?why }""" .

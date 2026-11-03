@@ -273,6 +273,27 @@
     the agent holds about a reading, beside its age and a stuck sensor, and the one stated rather than
     concluded (knowledge/domain/sensing/defect.md).""" .
 
+:DefectReport a owl:Class ;
+    rdfs:label "Defect report" ;
+    rdfs:comment """What a person says of a sensor whose numbers they doubt: the sensor (`defective`) and why
+    (`defect`), or no why, to say it is sound again. A statement of sensing's sayable (sayables.ttl), kept as any
+    peer's document and named by its sensor, so a report said again replaces the one before; the extraction beside
+    the sayable believes it into a `DefectGraph` (knowledge/domain/sensing/defect.md).""" .
+
+:defective a owl:ObjectProperty ;
+    rdfs:domain :DefectReport ; rdfs:range sosa:Sensor ;
+    rdfs:label "defective" ;
+    rdfs:comment "The sensor a defect report is of." .
+
+:DefectGraph a owl:Class ;
+    rdfs:subClassOf orexis:BeliefGraph ;
+    rdfs:label "Defect graph" ;
+    rdfs:comment """What the agent believes of a person's defect report: `sensing:defect` of the sensor, as the world
+    would state it. A belief of the agent's own, and the one sensing's revision reads beside what the world states,
+    since a defect is testimony about a device that no rule can conclude and whoever may say it - the sovereign, in a
+    chat that allows it - is believed as the world is. Gone when the report is said again with no why
+    (knowledge/decisions/a-person-may-say-a-sensor-is-defective.md).""" .
+
 #  THE MARGIN (knowledge/domain/sensing/margin.md, #944): how far past a bound of an operating range a
 #  reading must go to leave a state held. The world states it on a range's condition, beside the
 #  bounds it widens, sized from the instrument's noise; a domain's transition, judging its subject's

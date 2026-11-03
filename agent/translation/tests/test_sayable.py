@@ -29,7 +29,7 @@ def _by_name(known, name):
 
 
 def test_the_world_declares_three_sayables_with_their_fields_and_choices(known):
-    assert [s.name for s in known] == ["Refusal", "ViewingOffer", "ViewingRequest"]
+    assert {"Refusal", "ViewingOffer", "ViewingRequest"} <= {s.name for s in known}, "sensing's beside them"
     offer = _by_name(known, "ViewingOffer")
     assert [(f.name, f.required) for f in offer.fields] == [("at", True), ("listing", True)]
     listing = next(f for f in offer.fields if f.name == "listing")

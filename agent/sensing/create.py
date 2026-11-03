@@ -38,7 +38,7 @@ from agent.store import Raw, catalogue_of, graphs_of, revisions_of, rows
 from .cadence import cadence_of
 from .events import Doubted, Observed, Silence, tag_of
 from .missed import missed
-from .ontology import OBSERVATION_GRAPH
+from .ontology import DEFECT_GRAPH, OBSERVATION_GRAPH
 
 log = logging.getLogger("missed")
 
@@ -144,7 +144,7 @@ class _Sensing:
     def _revise(self, graphs) -> list[str]:
         """Hand `graphs` to belief's part, which revises them by this layer's rules and applies the
         transitions each triggers — their revisions of this layer's kind, and no belief."""
-        return self.belief.revise(graphs, kind=OBSERVATION_GRAPH)
+        return self.belief.revise(graphs, kind=OBSERVATION_GRAPH, beside=(DEFECT_GRAPH,))
 
     def _observation(self, graph: str) -> list[str]:
         """Say the observation `graph` holds, with how long after the percept before it it came."""

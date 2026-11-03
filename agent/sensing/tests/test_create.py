@@ -89,7 +89,7 @@ class _Belief:
     def __init__(self):
         self.handed: list[tuple[tuple, str]] = []
 
-    def revise(self, graphs, *, kind):
+    def revise(self, graphs, *, kind, beside=()):
         self.handed.append((tuple(graphs), kind))
         return []
 

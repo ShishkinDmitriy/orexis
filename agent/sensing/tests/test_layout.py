@@ -52,11 +52,14 @@ def test_the_layer_imports_nothing_above_it_and_no_transport():
 
 @pytest.mark.parametrize("path", CODE + VOCABULARY, ids=lambda p: p.name)
 def test_no_file_of_this_layer_speaks_a_higher_layers_words_or_a_transports(path):
-    """But for its askables, which are speech's kind of document stated in sensing's words: the one place a
-    question about what sensing observes can be asked in them (knowledge/domain/speech/askable.md)."""
+    """But for its askables and its sayables, which are speech's acts stated in sensing's words: the one place a
+    question about what sensing observes can be asked in them, and a sensor said defective said
+    (knowledge/domain/speech/askable.md, knowledge/domain/sensing/defect.md)."""
     text = path.read_text()
     if path.name == "askables.ttl":
         text = re.sub(r"\bspeech:(?:AskableGraph|Askable|reads|select)\b", "", text)
+    if path.name == "sayables.ttl":
+        text = re.sub(r"\bspeech:(?:Sayable|keyedBy|Extraction|believedAs)\b", "", text)
     said = re.findall(r"\b(?:prediction|planning|execution|speech|mqtt):\w+", text)
     assert not said, f"{path.name} names another layer's or a transport's words: {sorted(set(said))}"
 
