@@ -152,7 +152,7 @@ class _Translation:
                      readable.prefixes if readable else NAMESPACES, series.sink(series.METRICS, self.runtime.id))
                 if EVENT in chat.reads else None)
         readers = [r for r in (readable, past) if r is not None]
-        offered = ([] if unaddressed else sayables(store)), known, readers
+        offered = ([] if unaddressed else [s for s in sayables(store) if chat.says(s.shape)]), known, readers
         system = [CONVERSE_SYSTEM + (UNADDRESSED if unaddressed else ""),
                   *briefing(store, me, chat.reads, readable.listing() if readable else "",
                             status(stores, known, me, self.runtime.now),

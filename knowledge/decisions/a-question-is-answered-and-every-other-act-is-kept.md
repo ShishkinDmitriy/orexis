@@ -158,6 +158,16 @@ bids beside its agents'. Nothing in the mechanism changes; what a world must dec
 - [the-agent-stack-is-a-second-axis](/decisions/the-agent-stack-is-a-second-axis.md): the speech-act path
   has its vocabulary, the statement for every act and the askable for a question.
 
+## Amended 2026-11-03: a chat allows the sayables a person may make in it
+
+The sovereign asked for a chat to restrict the kinds of act a person may make in it - FIPA's query and
+propose, every act in the sovereign's own chat, questions alone in another. That is the first reader to
+branch on what a person may do, and it branches on the one distinction this record mechanised: a chat
+states the sayables it `speech:allows`, by name or every one, and a question is always allowed. **The
+performative term stays refused**: allowing by FIPA act would need every sayable tagged `propose` or
+`inform`, a second word for what the sayable already names, and a chat that allows a viewing offer and
+not a request is said by naming the two, where the act would allow both or neither.
+
 # Seams left open
 
 - **People in a round.** The market's windows are seconds, and a person answers in minutes, so a world

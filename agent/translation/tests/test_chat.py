@@ -33,3 +33,11 @@ def test_a_chat_says_the_kinds_of_graph_its_model_may_read_and_one_saying_none_r
     chats = {c.iri.rsplit("#", 1)[1]: c for c in chats_of(boot(WORLD, "seeker"))}
     assert chats["seeker_and_clara"].reads == ("http://example.org/orexis#BeliefGraph",)
     assert chats["household"].reads == () and chats["seeker_and_anna"].reads == ()
+
+
+def test_a_chat_allows_the_sayables_it_names_every_one_or_none():
+    chats = {c.iri.rsplit("#", 1)[1]: c for c in chats_of(boot(WORLD, "seeker"))}
+    offer, request = V + "viewing_offer", V + "viewing_request"
+    assert chats["seeker_and_clara"].says(offer) and chats["seeker_and_clara"].says(request), "speech:Sayable: every one"
+    assert chats["household"].says(offer) and not chats["household"].says(request), "by name"
+    assert not chats["seeker_and_anna"].says(offer), "a chat allowing none hears questions alone"

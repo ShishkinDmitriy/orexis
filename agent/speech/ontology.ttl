@@ -108,6 +108,11 @@
     rdfs:label "reads" ;
     rdfs:comment "A kind of graph a reader in speech is handed as its default graph, as every reader states the kinds it reads; several where it reads several. Of an askable, what its select reads; of a chat, what the model speaking in it may read and query - every graph of the kind and of every kind beneath it - and a chat stating none lets it query nothing, and ask only the askables. A chat reading `orexis:Event` reads what happened besides: the agent's journal and its series, which are what events say." .
 
+:allows a owl:ObjectProperty ;
+    rdfs:domain :Chat ;
+    rdfs:label "allows" ;
+    rdfs:comment "A sayable a person may make in a chat - a statement the agent keeps and believes by its extraction - or `speech:Sayable` itself, for every one the world declares. A chat allowing none hears questions alone: its askables, and its queries where it reads. A question writes nothing, so it is never restricted here; what it may read is the chat's `speech:reads` (knowledge/domain/speech/chat.md)." .
+
 :select a owl:DatatypeProperty ;
     rdfs:domain :Askable ;
     rdfs:range xsd:string ;

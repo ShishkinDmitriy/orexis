@@ -16,5 +16,6 @@
 :terrace_and_dmitrii a speech:Chat ;
     speech:participant :terrace_agent , :dmitrii ;
     speech:channel :sovereign_telegram ;
-    speech:reads orexis:Graph , orexis:Event .
+    speech:reads orexis:Graph , orexis:Event ;
+    speech:allows speech:Sayable .    # and say anything the world gives words for
 :sovereign_telegram a telegram:Chat .

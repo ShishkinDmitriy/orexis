@@ -71,3 +71,9 @@ say - so what holds now is asked of the store and what happened of the record.
 A chat stating no kind reads nothing, and its model has the askables alone
 ([the-model-queries-what-its-chat-may-read](/decisions/the-model-queries-what-its-chat-may-read.md)).
 
+A chat says too which [sayables](/domain/speech/sayable.md) a person may make in it, `speech:allows`: each by
+name, or `speech:Sayable` itself for every one the world declares, as the sovereign's chat does. A chat
+allowing none hears questions alone, since a question writes nothing and what it may read is already the
+chat's `speech:reads`; the model is offered no sayable the chat does not allow, so words to make one find no
+tool to make it with.
+

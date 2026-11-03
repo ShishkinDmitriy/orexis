@@ -213,6 +213,7 @@ def test_in_a_group_an_agent_answers_when_named_keeps_silent_when_another_is_and
     _write(runtime, V + "household_telegram", "seeker, how is the search going?", V + "anna")
     (system, _, offered), = part.model.asked
     assert system[0] == CONVERSE_SYSTEM and "ViewingOffer" in offered, "named: briefed, and every act offered"
+    assert "ViewingRequest" not in offered, "a sayable the household does not allow is not offered"
     assert bot.said == [(V + "household_telegram", "I am looking at two flats.")]
     bot.said.clear()
     part.model = StandIn(text=SILENT)
