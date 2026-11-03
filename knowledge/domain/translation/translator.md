@@ -39,9 +39,8 @@ they came on, the part:
 - opens a conversation with the model on any other words, briefed first with a
   [briefing](/domain/translation/briefing.md) - who the agent is, what the chat lets it read and what it
   lets a person state - and offered, where the chat reads anything, a vocabulary to load and a query to
-  run over what it reads, and, where the chat allows words, the `state` tool: triples in those words, each
-  held to its property's domain and range on the runtime's thread, kept by speech's `heard` as a
-  statement per subject and property and believed as the world's word
+  run over what it reads, and, where the [chat allows words](/domain/speech/chat.md), the `state` tool,
+  whose triples are checked on the runtime's thread and then handed to speech's `heard`
   ([a-person-states-what-the-chat-allows-in-the-worlds-words](/decisions/a-person-states-what-the-chat-allows-in-the-worlds-words.md));
   each query runs over the chat's copy; the model calls as many as the message needs, then answers in
   words. Unaddressed in a group, the model states nothing and is told to say nothing where what the agent
