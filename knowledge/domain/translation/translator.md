@@ -69,10 +69,12 @@ mounted into this agent's container alone; and each carrier's secret where a cha
 
 # What happened
 
-Where the chat reads `orexis:Event`, the model is offered two tools beside the query: `journal`, a SELECT or
-an ASK over the agent's journal where it lies, its entries their union, and `series`, the points of one
+Where the chat reads `orexis:Event`, the model is offered three tools beside the query: `journal`, a SELECT or
+an ASK over the agent's journal where it lies, its entries their union; `series`, the points of one
 measurement and sensor over a stretch, read from the agent's own history bucket by a Flux the tool writes from
-the fields the model fills. The present is the store's to answer and the past the record's, and the model is
+the fields the model fills; and, where the world is monitored, `metrics`, one field of a measurement in the
+agent's own metrics bucket aggregated over a stretch, per window and per value of a tag where asked, by a Flux
+written the same way. The present is the store's to answer and the past the record's, and the model is
 told to say which a message asks before it reads.
 
 # What it spends
@@ -80,4 +82,5 @@ told to say which a message asks before it reads.
 Each use of the model - a message answered over a conversation's requests, a statement rendered in one - is
 said as `Translated`, tagged by the act, how it ended and the model, with the requests and the tokens it spent
 by the API's own names. Where the world is monitored the metrics part tallies it, and `orexis-dashboards` draws
-it on the package's health dashboard, so what an agent's chats cost is watched beside its other figures.
+it on the package's health dashboard, so what an agent's chats cost is watched beside its other figures — and asked of the agent itself, through
+`metrics`, its metrics token opening its own bucket to read as well as to write.

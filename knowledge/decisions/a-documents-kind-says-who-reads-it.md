@@ -359,8 +359,10 @@ reads it, which "a kind said by absence" already refuses.
 purpose. **Refused: a measurement in the history bucket**, which one credential would have covered.
 Three things differ by bucket and cannot be had inside one. History is the record and is kept for
 good, while metrics come every pass — about once a second for an agent with nothing to do — so their
-bucket lets a point go after the installation's `onboarding:retentionDays`, thirty. The agent reads
-its own history and never its metrics, so the metrics token writes and nothing else. And a metric's
+bucket lets a point go after the installation's `onboarding:retentionDays`, thirty. The agent read
+its own history and never its metrics, so the metrics token wrote and nothing else — until a chat
+asked what the agent's model had spent, and the token was given read on its own bucket too
+([translator](/domain/translation/translator.md)). And a metric's
 local name and a property's cannot collide once they are measured in two buckets.
 
 **The installation ties a store to a purpose with `onboarding:serves`**, the word the amendment
