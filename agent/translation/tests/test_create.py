@@ -191,6 +191,19 @@ def test_a_conversation_says_what_it_spent_where_it_is_heard(seeker):
     assert spent.input_tokens == 0.0 and spent.duration_s >= 0, "a stand-in spends nothing, and says so"
 
 
+def test_a_conversation_is_said_with_what_was_written_called_and_answered_where_it_is_heard(seeker):
+    runtime, part, bot = seeker
+    heard = []
+    part.conversed.connect(heard.append)
+    part.model = StandIn(calls=[("viewings_offered", {"listing": "the studio on Rigaer Straße"})], text="Nothing yet.")
+    _write(runtime, V + "clara_telegram", "anything for the studio?")
+    runtime.run(passes=1, poll_s=0)
+    (conversed,) = heard
+    assert (conversed.wrote, conversed.answer, conversed.outcome) == ("anything for the studio?", "Nothing yet.", "said")
+    ((tool, handed, answered),) = conversed.calls
+    assert tool == "viewings_offered" and handed == {"listing": "the studio on Rigaer Straße"} and answered
+
+
 def test_a_conversation_ends_in_words_by_its_last_turn(seeker):
     runtime, part, bot = seeker
     part.model = StandIn(calls=[("viewings_offered", {"listing": "the studio on Rigaer Straße"})] * 10, text="I could not find out.")

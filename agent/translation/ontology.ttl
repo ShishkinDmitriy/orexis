@@ -18,3 +18,56 @@ translation:Translator a owl:Class ;
     person's statement is a peer's document to speech. Declared, never derived; the boot loads this package for it,
     and the agent's container is handed the model's key for it and for nothing else
     (knowledge/domain/translation/translator.md).""" .
+
+#  WHAT TRANSLATION JOURNALS (agent/translation/events.py): a person's message and the conversation it began.
+
+translation:Conversed a owl:Class ; rdfs:subClassOf orexis:Event ;
+    rdfs:label "Conversed" ;
+    rdfs:comment """A person's message in a chat, answered by the agent's model: the chat, the person, what they wrote,
+    each tool the model called on the way, and the words said back, with how it ended - said, silent, no words or
+    failed. Journaled for good, so what a chat heard and said, and how each answer was found, is read afterwards
+    (knowledge/domain/translation/translator.md).""" .
+
+translation:chat a owl:ObjectProperty ; rdfs:domain translation:Conversed ; rdfs:range speech:Chat ;
+    rdfs:label "chat" ;
+    rdfs:comment "The chat a conversation was in." .
+
+translation:person a owl:ObjectProperty ; rdfs:domain translation:Conversed ;
+    rdfs:label "person" ;
+    rdfs:comment "The person whose message began a conversation." .
+
+translation:wrote a owl:DatatypeProperty ; rdfs:domain translation:Conversed ;
+    rdfs:label "wrote" ;
+    rdfs:comment "What the person wrote, as they wrote it." .
+
+translation:answer a owl:DatatypeProperty ; rdfs:domain translation:Conversed ;
+    rdfs:label "answer" ;
+    rdfs:comment "The words the agent said back, or why it could not answer; absent where its model wrote none." .
+
+translation:outcome a owl:DatatypeProperty ; rdfs:domain translation:Conversed ;
+    rdfs:label "outcome" ;
+    rdfs:comment "How a conversation ended: said, silent (another agent's to answer), no words, or failed." .
+
+translation:model a owl:DatatypeProperty ; rdfs:domain translation:Conversed ;
+    rdfs:label "model" ;
+    rdfs:comment "The model the conversation was had with, by the name the installation gives it." .
+
+translation:call a owl:ObjectProperty ; rdfs:domain translation:Conversed ;
+    rdfs:label "call" ;
+    rdfs:comment "A tool the model called in a conversation, in the order said by `translation:order`." .
+
+translation:order a owl:DatatypeProperty ;
+    rdfs:label "order" ;
+    rdfs:comment "Where a call came in its conversation, the first nought." .
+
+translation:tool a owl:DatatypeProperty ;
+    rdfs:label "tool" ;
+    rdfs:comment "The name of the tool a call was of: query, vocabulary, journal, series, metrics, a sayable or an askable." .
+
+translation:handed a owl:DatatypeProperty ;
+    rdfs:label "handed" ;
+    rdfs:comment "What the model handed a tool, as JSON." .
+
+translation:answered a owl:DatatypeProperty ;
+    rdfs:label "answered" ;
+    rdfs:comment "What a tool answered the model, cut where it ran long, which it then says." .

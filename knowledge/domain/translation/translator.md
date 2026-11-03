@@ -77,6 +77,11 @@ agent's own metrics bucket aggregated over a stretch, per window and per value o
 written the same way. The present is the store's to answer and the past the record's, and the model is
 told to say which a message asks before it reads.
 
+What a chat heard and said is in the journal too: each message a person writes and the agent's model answers is a
+`translation:Conversed`, kept for good, with the chat, the person, what they wrote, every tool the model called -
+what it was handed and what it answered, cut where long - and the words said back, or why there were none. It is how
+an answer is debugged afterwards, and how the agent is asked what it was asked.
+
 # What it spends
 
 Each use of the model - a message answered over a conversation's requests, a statement rendered in one - is
