@@ -9,9 +9,9 @@ import pyoxigraph as ox
 import pytest
 
 from agent.journal import Journal
-from agent.series import HISTORY, Sink
+from agent.series import HISTORY, METRICS as SPENT, Sink
 from agent.store import NAMESPACES
-from agent.translation.past import JOURNAL, ROWS, SERIES, Past
+from agent.translation.past import JOURNAL, METRICS, ROWS, SERIES, Past
 
 AT = datetime(2026, 11, 2, 21, 0, tzinfo=timezone.utc)
 
@@ -88,3 +88,32 @@ def test_a_store_that_reads_nothing_or_refuses_says_so():
         raise RuntimeError("unauthorized")
     refused = Past(None, Sink(HISTORY, "b", lambda bucket, record: None, refuse), NAMESPACES)
     assert refused.call(SERIES, {}) == "the history store would not answer: unauthorized"
+
+
+def test_the_metrics_are_aggregated_by_the_fields_and_a_total_is_one_figure():
+    store = Store([{"outcome": "said", "_start": AT, "_stop": AT, "_value": 605.0}])
+    past = Past(None, None, NAMESPACES, Sink(SPENT, "terrace-terrace-metrics", lambda bucket, record: None, store))
+    assert [t["name"] for t in past.tools()] == [METRICS]
+    found = past.call(METRICS, {"measurement": "translated", "field": "output_tokens_sum", "by": "outcome",
+                                "start": "-7d"})
+    assert found == "outcome: said, start: 2026-11-02T21:00:00+00:00, stop: 2026-11-02T21:00:00+00:00, value: 605.0"
+    (flux,) = store.asked
+    assert 'from(bucket: "terrace-terrace-metrics")' in flux and "range(start: -7d)" in flux
+    assert 'r._measurement == "translated" and r._field == "output_tokens_sum"' in flux
+    assert 'group(columns: ["outcome"])' in flux and "|> sum()" in flux, "sum where no fn is given"
+    past.call(METRICS, {"measurement": "translated", "field": "count", "every": "1d", "fn": "sum"})
+    assert "aggregateWindow(every: 1d, fn: sum" in store.asked[-1] and "group(columns: [])" in store.asked[-1]
+    past.call(METRICS, {})
+    assert 'distinct(column: "_field")' in store.asked[-1], "no measurement: each one with its fields"
+
+
+@pytest.mark.parametrize(("fields", "why"), [
+    ({"measurement": "translated"}, "refused: name the field"),
+    ({"measurement": "translated", "field": 'x") |> drop()'}, "refused: field is a name"),
+    ({"measurement": "translated", "field": "count", "by": "a b"}, "refused: by is a name"),
+    ({"measurement": "translated", "field": "count", "fn": "exec"}, "refused: fn is one of"),
+])
+def test_a_metric_field_that_is_no_name_is_refused_before_anything_is_read(fields, why):
+    store = Store([])
+    past = Past(None, None, NAMESPACES, Sink(SPENT, "b", lambda bucket, record: None, store))
+    assert past.call(METRICS, fields).startswith(why) and store.asked == []

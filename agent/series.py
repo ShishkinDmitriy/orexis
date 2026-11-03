@@ -99,8 +99,8 @@ class Sink:
 
     def read(self, flux: str) -> list[dict] | str:
         """The records a Flux query of this sink's bucket answers, each its columns; why not, where the store
-        refuses or the sink reads nothing. A person's question reads its agent's own past this way, which the
-        history token grants and the metrics token does not."""
+        refuses or the sink reads nothing. A person's question reads its agent's own past and metrics this way,
+        each token opening its own bucket to read."""
         if self._read is None:
             return f"the {self.purpose.lower()} store is written here and never read"
         try:

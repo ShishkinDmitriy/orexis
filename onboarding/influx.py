@@ -21,8 +21,7 @@ on purpose.
 **Metrics are a bucket of their own, `<world>-<agent>-metrics`**, and not a measurement in the
 history bucket. Three things differ, each by the bucket: how long a point is kept — history is the
 record and keeps everything, while metrics are the admins' figures, read over hours and days, and
-the installation lets them go after `onboarding:retentionDays`; what the agent may do there — it
-reads its own past and never its metrics, so the metrics token writes and nothing else; and the
+the installation lets them go after `onboarding:retentionDays`; and the
 measurement names, which are a property's local name in history and a metric's in metrics, and
 could not collide once they were in two buckets.
 
@@ -153,11 +152,10 @@ def _write_credential(path: Path, agent_id: str, purpose: str, bucket: str, toke
     path.chmod(0o600)
 
 
-#  WHAT AN AGENT MAY DO WITH EACH PURPOSE'S BUCKET. History is read as well as written: an agent that
-#  forecasts reads its OWN past, and it is the neighbour's past this exists to deny, which the
-#  resource id does. Metrics are written and never read by the agent — Grafana reads them with a
-#  token of its own — so their grant is write alone.
-ACTIONS = {HISTORY: ("read", "write"), METRICS: ("write",)}
+#  WHAT AN AGENT MAY DO WITH EACH PURPOSE'S BUCKET: read its own and write it, for either purpose. It
+#  is the neighbour's past this exists to deny, which the resource id does; an agent's own metrics are
+#  read by a person asking it what it did and spent, through its chat (translator.md).
+ACTIONS = {HISTORY: ("read", "write"), METRICS: ("read", "write")}
 
 
 def provision(world: str, rotate: bool = False) -> None:
@@ -239,7 +237,9 @@ def _provision(world: str, agents: list[str], purpose: str, rotate: bool) -> Non
                 _unpurposed_file(world, agent_id).unlink(missing_ok=True)
                 log.info("  bucket %-32s the grant naming no purpose is replaced by history's", name)
 
-            if held and path.exists() and not rotate:
+            #  A GRANT THAT OPENS LESS OR MORE THAN ITS PURPOSE NOW SAYS is replaced, as a missing file's is.
+            narrowed = held and sorted(p.action for p in held.permissions or []) != sorted(ACTIONS[purpose])
+            if held and path.exists() and not rotate and not narrowed:
                 log.info("  bucket %-32s already granted", name)
                 continue
             if held:
@@ -247,8 +247,9 @@ def _provision(world: str, agents: list[str], purpose: str, rotate: bool) -> Non
                 # whose credential file has gone is unrecoverable rather than re-readable. The
                 # honest repair is to replace it.
                 auth_api.delete_authorization(held)
-                log.info("  bucket %-32s token %s", name,
-                         "rotated" if rotate else "replaced (credential file was missing)")
+                log.info("  bucket %-32s token %s", name, "rotated" if rotate else
+                         "replaced (its grant was not what the purpose opens)" if narrowed and path.exists()
+                         else "replaced (credential file was missing)")
 
             resource = PermissionResource(id=bucket.id, org_id=organisation.id, type="buckets")
             auth = auth_api.create_authorization(authorization=Authorization(

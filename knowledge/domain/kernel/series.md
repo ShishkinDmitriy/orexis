@@ -117,7 +117,8 @@ not lose it.
 **Optional at every level.** An agent with no metrics sink computes nothing. A world is monitored
 only where its own deployment graph says `onboarding:monitored`
 ([deployment](/domain/onboarding/deployment.md)): only then does `orexis-influx` mint each agent a
-metrics bucket, `<world>-<agent>-metrics`, written to and never read by the agent and kept as many
+metrics bucket, `<world>-<agent>-metrics`, written by the agent, read by it only where a chat asks after what it
+did and spent ([translator](/domain/translation/translator.md)), and kept as many
 days as the installation's `onboarding:retentionDays` says; only then does `orexis-compose` tell it
 the store and the window; and only then does `orexis-dashboards` draw health, a dashboard per
 package that reports and the runtime's own, linked to one another. They are learnt from the
