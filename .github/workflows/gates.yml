@@ -116,3 +116,23 @@ jobs:
       #  `-m ""` runs the walks too, which the local gate's `-m "not walk"` leaves out (pyproject.toml).
       - name: pytest, the agent and the worlds, walks included
         run: pytest -q -n auto -m "" agent world
+
+  rust:
+    # THE RUST AGENT, ported one package at a time beside the Python one
+    # (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md): its crates' format, clippy with every
+    # warning refused, and their tests.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - name: format
+        run: cargo fmt --check
+      - name: clippy
+        run: cargo clippy --all-targets -- -D warnings
+      - name: cargo test
+        run: cargo test
+

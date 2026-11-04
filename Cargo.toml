@@ -1,0 +1,13 @@
+# THE RUST AGENT, ported one package at a time beside the Python one
+# (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md). Each package is a crate in its
+# own directory of `agent/`, beside its ontology and its Python, so both read the same documents.
+[workspace]
+resolver = "3"
+members = ["agent"]
+
+[workspace.package]
+edition = "2024"
+license = "MIT"
+
+[workspace.dependencies]
+oxigraph = { version = "0.5", default-features = false }

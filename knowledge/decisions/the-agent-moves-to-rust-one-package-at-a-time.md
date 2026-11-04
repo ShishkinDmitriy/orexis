@@ -35,6 +35,11 @@ parsing is an upper bound: every statement replayed on an empty store. The green
 | greenhouse, comfortable bed | 353 ms | ~20% | ~31% | ~31% | ~18% |
 | hanoi, four disks, after #1071 | 669 ms | ~85% | ~8% | ~3%, once per process | ~7% |
 
+Parsing alone was then measured in Rust with the same parser, over the statements those passes ran: 40 µs a
+statement on the Pi, 66 ms of the greenhouse's pass and 84 ms of four disks', about 13%. Parsed once a process,
+as the kernel crate's store parses, the same statements' 1,454 and 1,510 distinct texts take 68 ms in all. The
+rest of the replay's upper bound is the engine planning each query as it runs it.
+
 Two findings decided the shape of the move.
 
 **A pass on a shipped world is mostly not evaluation.** The greenhouse runs about 1,650 statements a pass,
