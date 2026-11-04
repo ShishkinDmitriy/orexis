@@ -13,9 +13,9 @@ from agent.ontology import BELIEF
 from agent.sensing.create import EVERY_S, create
 from agent.sensing.events import Doubted, Observed, Silence
 from agent.sensing.ontology import SILENT_AFTER_TERM, default_of
-from agent.sensing.ontology import OBSERVATION_GRAPH
+from agent.sensing.ontology import OBSERVATION_GRAPH, SILENCE_GRAPH
 from agent.sensing.received import GRACE, received
-from agent.store import close_catalogue, document, graphs_of, put_document
+from agent.store import close_catalogue, document, graphs_of, put_document, rows
 
 SILENT_AFTER = default_of(SILENT_AFTER_TERM)          # where the observer role states none, the observer shape's default
 
@@ -27,21 +27,34 @@ PROBE = "http://example.org/test#probe"
 CADENCE = timedelta(seconds=900)
 
 
-def test_its_part_asks_after_silence_every_minute(monkeypatch, snapshots, stand_in_runtime, caplog):
-    """Past its limit the probe is silent, said in the log once, at the ask it fell silent, and nothing
-    is written of it."""
+def test_its_part_asks_after_silence_every_minute_and_keeps_each_silence_until_a_reading_ends_it(
+        monkeypatch, snapshots, stand_in_runtime, caplog):
+    """Past its limit the probe is silent: kept as a silence since its reading ended, and said in the log, at the
+    first ask that finds it and at no later one, nor after a restart; a reading then says until when, and the
+    silence holds no longer, kept for good."""
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)
     store = snapshots.stand_in(WORLD)
     received(store, snapshots.ME, PROBE, b'{"value": 0.2}', snapshots.NOW)
-    runtime = stand_in_runtime(store, snapshots.ME, snapshots.NOW + CADENCE * (1 + GRACE + SILENT_AFTER))
+    later = snapshots.NOW + CADENCE * (1 + GRACE + SILENT_AFTER)
+    runtime = stand_in_runtime(store, snapshots.ME, later)
     create(runtime).start(runtime)
     [(seconds, ask)] = runtime.timers
     assert seconds == EVERY_S and runtime.heard == [], "nobody hears an observation, so none is listened for"
-    before = set(store)
-    assert ask() == [] and ask() == []
+    since = snapshots.NOW + CADENCE * (1 + GRACE)
+    (silence,) = ask()
+    assert ask() == [], "kept once"
+    restarted = stand_in_runtime(store, snapshots.ME, later)
+    create(restarted).start(restarted)
+    assert restarted.timers[0][1]() == [], "and not again by a restart"
     assert [r.getMessage() for r in caplog.records if "silent since" in r.getMessage()] == [
-        f"keeper: probe silent since {(snapshots.NOW + CADENCE * (1 + GRACE)).isoformat(timespec='seconds')}"]
-    assert set(store) == before, "a silence is computed, never written"
+        f"keeper: probe silent since {since.isoformat(timespec='seconds')}"]
+    z = lambda at: at.isoformat().replace("+00:00", "Z")
+    said = "SELECT ?since ?until WHERE { ?s sensing:silentSince ?since OPTIONAL { ?s sensing:silentUntil ?until } }"
+    assert rows(store, said, [silence]) == [{"since": z(since)}]
+    received(store, snapshots.ME, PROBE, b'{"value": 0.3}', later)
+    assert rows(store, said, [silence]) == [{"since": z(since), "until": z(later)}]
+    assert graphs_of(store, SILENCE_GRAPH) == [silence] and graphs_of(store, SILENCE_GRAPH, at=later) == [], \
+        "kept, and holding no longer"
 
 
 def test_where_heard_it_says_each_observation_with_its_interval_and_the_silence(monkeypatch, snapshots, stand_in_runtime):

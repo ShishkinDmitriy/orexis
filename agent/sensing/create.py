@@ -1,6 +1,6 @@
 """`create`: sensing's part, and what it does of its own accord once started (a-package-starts-itself) —
 it asks, every `EVERY_S` of the one timeline, which sensors have gone silent (`missed`), whether or
-not anything arrived (#843), and says each once in the log as it falls silent. What a transport hands
+not anything arrived (#843), and keeps each as a silence and says it in the log as it falls silent. What a transport hands
 it, `received` writes. What the agent comes to hold true of a subject from a percept is no
 part of sensing's: a domain's transition, triggered by the percept arriving, makes it, and the
 belief package applies it (a-transition-changes-the-state-and-an-inference-only-concludes).
@@ -22,7 +22,7 @@ the graph to belief before it says it; and with how long after the percept befor
 off that percept, which is kept (`sensing:previous`, #944) — `silence`, how many sensors are silent at each ask — and
 `doubted`, which sensors are said silent or stuck after each ask, one event per sensor doubted, and
 one saying neither for a sensor doubted at the last ask and no longer, so the series' last word on it
-in a window is that it is fine (#894). Silent is what `missed` answers, computed and never written; stuck is
+in a window is that it is fine (#894). Silent is what `missed` answers, kept as a silence as it starts; stuck is
 what sensing's rule concluded of the latest percept, read where that percept holds now.
 """
 
@@ -32,13 +32,13 @@ import logging
 from datetime import datetime, timedelta
 
 from agent.lifecycle import Signal
-from agent.ontology import local_of
-from agent.store import Raw, catalogue_of, graphs_of, revisions_of, rows
+from agent.ontology import DERIVED, local_of
+from agent.store import Raw, catalogue_of, entry, graphs_of, revisions_of, rows, update
 
 from .cadence import cadence_of
 from .events import Doubted, Observed, Silence, tag_of
 from .missed import missed
-from .ontology import OBSERVATION_GRAPH
+from .ontology import OBSERVATION_GRAPH, SILENCE_GRAPH, silence_graph
 
 log = logging.getLogger("missed")
 
@@ -61,6 +61,9 @@ SELECT ?sensor ?feature ?property ?value ?scaled ?defect ?t ?raw ?previous WHERE
 
 #  WHEN THE PERCEPT BEFORE IT WAS MADE, read where sensing keeps it.
 _MADE_Q = "SELECT ?t WHERE { $percept sosa:resultTime ?t } LIMIT 1"
+
+#  THE SENSORS KEPT SILENT NOW: each silence graph holding, its end not yet said by a reading.
+_SILENT_Q = "SELECT DISTINCT ?sensor WHERE { ?sensor sensing:silentSince ?since }"
 
 #  THE SENSORS STUCK NOW: what sensing's rule concluded of the percept holding now.
 _STUCK_Q = "SELECT DISTINCT ?sensor WHERE { ?sensor sensing:stuckOn ?number }"
@@ -96,6 +99,7 @@ class _Sensing:
         self.doubted = Signal("doubted")
         self._doubts: set[str] = set()                # the sensors doubted at the last ask
         self._silent: set[str] = set()                # the sensors silent at the last ask
+        self._kept: list[str] = []                    # the silences the last ask wrote
 
     def link(self, parts) -> None:
         self.belief = parts.get("belief")
@@ -103,7 +107,8 @@ class _Sensing:
     def start(self, runtime) -> None:
         def ask():
             silent = self._missed(runtime.now)
-            written = self.silence.emit(Silence(silent=len(silent))) if self.silence.connected else []
+            written = list(self._kept)
+            written += self.silence.emit(Silence(silent=len(silent))) if self.silence.connected else []
             if self.doubted.connected:
                 for event in self._doubted(runtime.now, silent):
                     written += self.doubted.emit(event)
@@ -168,13 +173,23 @@ class _Sensing:
             raw=round(float(o["raw"]), 6) if o.get("raw") is not None else None))
 
     def _missed(self, now: datetime) -> set[str]:
-        """The sensors silent at `now` (`missed`), each said in the log once, at the ask it fell
-        silent — a silence is computed afresh every ask, so the part remembers which it has said."""
-        found = missed(self.runtime.beliefs, now)
+        """The sensors silent at `now` (`missed`), each kept as a silence and said in the log at the first ask
+        that finds it — the silences already kept, holding until a reading ends them, are the ones said, so a
+        restart says none again."""
+        beliefs, me = self.runtime.beliefs, self.runtime.me
+        found = missed(beliefs, now)
+        kept = {r["sensor"] for r in rows(beliefs, _SILENT_Q, graphs_of(beliefs, SILENCE_GRAPH, at=now))}
+        self._kept = []
         for sensor, since in found:
-            if sensor not in self._silent:
-                log.warning("%s: %s silent since %s", local_of(self.runtime.me), local_of(sensor),
-                            since.isoformat(timespec="seconds"))
+            if sensor in kept:
+                continue
+            graph = silence_graph(local_of(me), sensor, since)
+            update(beliefs, f"""
+INSERT DATA {{
+  GRAPH <{graph}> {{ <{sensor}> sensing:silentSince "{since.isoformat()}"^^xsd:dateTime . }}
+  {entry(beliefs, graph, SILENCE_GRAPH, DERIVED, me, start=since)} }}""")
+            self._kept.append(graph)
+            log.warning("%s: %s silent since %s", local_of(me), local_of(sensor), since.isoformat(timespec="seconds"))
         self._silent = {sensor for sensor, _ in found}
         return self._silent
 
