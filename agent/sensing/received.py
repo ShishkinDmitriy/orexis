@@ -50,8 +50,9 @@ next forecast replaces the last. A stretch already over when the forecast arrive
 A forecast is a belief and not a reading, so it ends no silence, is kept as no percept and is said as
 no observation.
 
-**A READING ENDS A SILENCE.** A sensor `missed` had said silent is silent no longer: the graph
-saying so goes before the percept is written, found by the row's content and never by name.
+**A READING ENDS A SILENCE.** A sensor sensing kept silent is silent no longer: its silence says until
+when and stops holding, found by its content and never by name, and is kept, as what sensing knows of
+the sensor.
 
 **AND IT IS SAID.** The graph written is answered to whoever runs the transport, and sensing's
 part, hearing an observation graph written, says it as an `Observed` (`events.py`), which history
@@ -78,7 +79,7 @@ from agent.ontology import FORECAST, BELIEF, RECEIVED, local_of
 from agent.store import Raw, catalogue_of, end_graph, entry, forget_graph, graphs_of, rows, update
 
 from .cadence import cadence_of, limit_of
-from .ontology import (OBSERVATION_GRAPH, STUCK_AFTER_TERM, forecast_graph, forecast_of,
+from .ontology import (OBSERVATION_GRAPH, SILENCE_GRAPH, STUCK_AFTER_TERM, forecast_graph, forecast_of,
                        percept_graph, percept_of)
 from .pipeline import decode, decode_series, reads_series
 
@@ -107,6 +108,11 @@ ORDER BY DESC(?t) DESC(?g)"""
 
 #  WHETHER A GRAPH OF THIS NAME IS ALREADY SAID — a second reading of one sensor at one instant.
 _SAID_Q = "SELECT ?p WHERE { GRAPH $cat { $g ?p ?o } } LIMIT 1"
+
+#  THE SILENCE A READING ENDS: each kept of this sensor whose end is not yet said, found by its content.
+_SILENT_Q = """
+SELECT ?g ?since WHERE { GRAPH $cat { ?g a sensing:SilenceGraph }
+  GRAPH ?g { $sensor sensing:silentSince ?since FILTER NOT EXISTS { $sensor sensing:silentUntil ?until } } }"""
 
 #  THE FORECAST THIS SENSOR GAVE BEFORE: every graph of it, found by its content.
 _FORECAST_Q = """
@@ -147,6 +153,10 @@ def received(store, me: str, sensor: str, payload: bytes, at: datetime, *,
     cadence = cadence_of(store, sensor, memo)
     if latest is not None:
         end_graph(store, latest["g"], instants[0], revisions=OBSERVATION_GRAPH)
+    for silence in rows(store, _SILENT_Q, (), cat=cat, sensor=sensor):
+        update(store, f'INSERT DATA {{ GRAPH <{silence["g"]}> {{ <{sensor}> sensing:silentUntil "{instants[0].isoformat()}"^^xsd:dateTime }} }}')
+        end_graph(store, silence["g"], instants[0], revisions=SILENCE_GRAPH)
+        log.info("%s: %s reads again, silent since %s", local_of(me), local_of(sensor), silence["since"])
     before = latest["o"] if latest is not None else None
     written = []
     for n, ((number, _), when) in enumerate(zip(readings, instants)):

@@ -11,15 +11,15 @@ percept's period. An older percept's period ended when its successor arrived, an
 (#944). Which sensors are in that state is `cadence.lapsed`, the one read of it, which the MQTT member
 asks too, to nudge a board.
 
-**A SENSOR SILENT PAST THE LIMIT IS ANSWERED, AND NOTHING IS WRITTEN.** One whose reading has been
+**A SENSOR SILENT PAST THE LIMIT IS ANSWERED, AND KEPT BY THE ASKER.** One whose reading has been
 missing for `sensing:silentAfter` cadences and more — the limit the observer role reading it states,
 the observer shape's default where it states none (`cadence.limit_of`) — is silent since the instant
-its latest percept ended. Every premise of that is stored — the percept's period, the sensor's
-cadence, the role's limit — so the silence is computed, never asserted: kept, it was a second record
-of what the period's end already says, a graph the next reading had to find and take back, and a fact
-nothing in the mind reads, since the belief made of the percept ended with it. The container says a
-silence in the log and the series (`create`); SOSA and SSN say how often a sensor reports and nothing
-about one that has stopped, so silent is one of sensing's own words, and a word for eyes.
+its latest percept ended. This answers it from the percept's period, the sensor's cadence and the
+role's limit, and writes nothing; sensing's part keeps each silence the first ask finds it, as a
+`sensing:SilenceGraph`, and `received` ends it when the sensor reads again — since the percepts it was
+computed from are forgotten, and a sensor's silences are what sensing knows of it
+(knowledge/decisions/a-silence-is-kept-as-what-sensing-knows-of-its-sensor.md). No reader of the mind is
+handed one, the belief made of the percept having ended with it.
 
 **A SENSOR THAT HAS NEVER REPORTED IS NOT HERE.** Its absence is, in the store, the same as
 a sensor not yet due; that fault is the container's to count from boot, and is the seam this

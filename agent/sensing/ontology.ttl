@@ -234,9 +234,31 @@
     rdfs:label "silent after" ;
     rdfs:comment """How many of a sensor's cadences its reading may be missing before `missed` answers
     the sensor silent, since the instant its latest percept ended: computed from that period, the
-    sensor's frequency and this, and never written, since its premises are stored and nothing in the
-    mind reads it. Stated on the observer role that reads the sensor; where it states
-    none, the observer shape's default, three.""" .
+    sensor's frequency and this, and kept, the first ask that answers it, as a `SilenceGraph`. Stated on
+    the observer role that reads the sensor; where it states none, the observer shape's default, three.""" .
+
+:SilenceGraph a owl:Class ;
+    rdfs:subClassOf orexis:Graph ;
+    rdfs:label "Silence graph" ;
+    rdfs:comment """One graph per time a sensor fell silent: when (`silentSince`) and, once it read again,
+    until when (`silentUntil`), its period the same stretch. Sensing's record of its sensors, kept for good,
+    since the percepts a silence is computed from are not: written the first ask `missed` answers the sensor
+    silent, and ended by `received` when the sensor reads again. Beneath orexis:Graph alone, so no reader
+    of the mind is handed one: what the mind holds of a silent sensor is that the belief made of its last
+    reading has ended (knowledge/domain/sensing/silence.md).""" .
+
+:silentSince a owl:DatatypeProperty ;
+    rdfs:domain sosa:Sensor ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "silent since" ;
+    rdfs:comment """The instant the sensor's latest reading stopped being the present, after which none came
+    for the `silentAfter` cadences its observer role allows: the start of a silence, in its graph.""" .
+
+:silentUntil a owl:DatatypeProperty ;
+    rdfs:domain sosa:Sensor ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "silent until" ;
+    rdfs:comment """The instant the sensor read again, ending a silence, in the silence's graph.""" .
 
 :stuckAfter a owl:DatatypeProperty ;
     rdfs:domain :Observer ;

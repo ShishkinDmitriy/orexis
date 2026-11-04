@@ -9,8 +9,9 @@ a percept linked to the one before it, holding from its instant until the next i
 sensor's `ssn-system:Frequency` and a grace past it, or until the next arrives; a sensor's last
 `sensing:stuckAfter` are kept, and no reader of the mind is handed one (#944).
 `missed` is what sensing's own `start` asks every minute: which sensors have been silent for a limit
-of their cadences past their latest percept's end — computed and never written, since every premise
-is stored and the belief made of that percept ended with it — said in the log and the series. Everything is
+of their cadences past their latest percept's end — computed, and each silence kept as it starts until a
+reading ends it, as what sensing knows of the sensor, handed to no reader of the mind — said in the log and
+the series. Everything is
 SOSA's and SSN's words — a sensor `sosa:observes` a property and `sosa:isHostedBy` what it is
 mounted in, and that pair is what an observation is of — but the words this layer declares in
 `ontology.ttl`, and not one word of any transport: how a sensor's bytes decode is the pipeline's

@@ -42,9 +42,8 @@ does not decode writes nothing and says so in the log. A sensor reading a SERIES
 **`missed`** is what sensing's own `start` asks every minute of the timeline, whether or not anything
 arrived ([a-package-starts-itself](/decisions/a-package-starts-itself.md)): which sensors have been silent past their
 limit of cadences (`sensing:silentAfter`) since their latest observation's period ended, until a reading ends
-it. A silence is computed at each ask and never written: its premises — that period, the sensor's frequency,
-the limit — are stored, the belief made of the observation ended with it, and nothing in the mind reads one.
-Sensing says it in the log and the series. Both limits are the [observer](/domain/sensing/observer.md)
+it. A silence is computed at each ask, and the first ask that finds one keeps it as a
+[silence](/domain/sensing/silence.md), which a reading ends. Sensing says it in the log and the series. Both limits are the [observer](/domain/sensing/observer.md)
 role's that reads the sensor, and the observer shape's default holds where it states none.
 
 # What it leaves to others

@@ -612,10 +612,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   but it; `missed` answers which sensors are silent, their latest ended a limit of cadences ago, asking
   `cadence.lapsed` as the transport does; `agent/prediction/` accumulates the flows' rates from the
   latest, speaking sensing's kind and importing none of its code (#944).
-- **A silence is computed and never written** — its premises are stored (the latest percept's end,
-  the cadence, the role's limit), the belief made of the percept ended with that period a limit of
-  cadences before, and nothing in the mind reads one; a silence graph of sensing's own was built and refused
-  as a second record of what the period's end says, which the next reading had to find and take back.
+- **A silence is computed and kept, as what sensing knows of its sensor** — `missed` answers it from the latest
+  percept's end, the cadence and the role's limit; the first ask that finds one keeps a `sensing:SilenceGraph`
+  saying since when, the next reading says until when and ends it, and it is kept for good, handed to no reader
+  of the mind; computed alone, a silence was lost with the percepts around it and no reader of the store could
+  find it (a-silence-is-kept-as-what-sensing-knows-of-its-sensor).
 - **A belief is a crisp triple, and probability lives only inside an estimator** — sensing and
   prediction may keep a mean and a spread while they work, and write a value, a side or a band as
   two numbers (a-belief-is-crisp-and-an-estimator-may-reason-with-probability).

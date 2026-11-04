@@ -39,6 +39,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [margin](/domain/sensing/margin.md) - How far past a bound a value must go to leave the state held of a subject; stated on the range's condition, read by a transition.
 * [defect](/domain/sensing/defect.md) - Why a sensor's numbers are not what it observes, stated by the world: its percepts kept and tagged, no reading of them believed.
 * [stuck](/domain/sensing/stuck.md) - A sensor whose last readings kept all gave one number is stuck on it, by a rule over its percepts; counts readings, not time.
+* [silence](/domain/sensing/silence.md) - A time a sensor sent nothing past its limit, kept from the first ask that finds it until a reading ends it, and then for good.
 * [observer](/domain/sensing/observer.md) - The role sensing serves, played as an instance declaring the sensors it reads and how long they may be silent or stuck.
 
 # Transport — reaching the society
