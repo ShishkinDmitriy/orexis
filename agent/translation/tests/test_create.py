@@ -164,8 +164,9 @@ def test_the_model_is_briefed_with_who_the_agent_is_what_the_chat_reads_and_what
     runtime, part, bot = seeker
     part.model = StandIn(text="I am the seeker; I look for a flat.")
     _write(runtime, V + "clara_telegram", "who are you?")
-    ((instructions, who), messages, offered), = part.model.asked
+    ((instructions, who, now), messages, offered), = part.model.asked
     assert instructions == CONVERSE_SYSTEM and who.startswith("YOU SPEAK FOR seeker.")
+    assert now.startswith("IT IS NOW 2026-11-01T09:00"), "the instant last, so what is read is told by its age"
     assert "WHAT THIS CHAT LETS YOU READ" in who and " - speech (" in who, "the vocabularies by name, loaded on asking"
     assert "WHAT A PERSON MAY STATE HERE" in who and "anything in a word a vocabulary declares" in who, "Clara may state any"
     assert {"vocabulary", "query", "state"} <= set(offered), "Clara's chat reads the beliefs, so the model may too"
@@ -190,7 +191,7 @@ def test_a_chat_reading_nothing_offers_no_query_and_names_the_things_a_person_ma
     runtime, part, bot = seeker
     part.model = StandIn(text="I am looking at two flats.")
     _write(runtime, V + "household_telegram", "seeker, how is the search going?", V + "anna")
-    (_, who), _, offered = part.model.asked[0]
+    (_, who, now), _, offered = part.model.asked[0]
     assert offered == ["state"] and "lets you read nothing of the agent's store" in who
     assert "viewing:viewingAt (viewing offered at), of a viewing:Listing, a xsd:dateTime" in who, who
     assert "viewing:flat_12 (the two-room flat on Kastanienallee)" in who, "its model can look none up"
@@ -201,7 +202,7 @@ def test_a_chat_allowing_nothing_hears_questions_alone(seeker):
     runtime, part, bot = seeker
     part.model = StandIn(text="hello")
     _write(runtime, V + "anna_mail", "a viewing on Tuesday?")
-    (_, who), _, offered = part.model.asked[0]
+    (_, who, now), _, offered = part.model.asked[0]
     assert offered == [] and "A person states nothing here" in who
 
 

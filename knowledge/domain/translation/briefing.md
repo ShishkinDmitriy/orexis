@@ -23,7 +23,8 @@ a person's words, as the system prompt of the one conversation that answers them
   person states nothing there.
 
 All three change when a document does, so they are one block the model's provider may cache; what holds
-now is the model's to query. Each turn of the conversation marks its last block for the
+now is the model's to query. The instant the agent stands at follows it, a block of its own and uncached, so the
+model tells a reading of weeks ago from one of the hour and says how old it is. Each turn of the conversation marks its last block for the
 cache too, so the next turn pays in full only for what it adds. A name in the self graph, a vocabulary or a
 query's rows is written with a prefix - the store's, a vocabulary's own, and one named for the agent's world by its namespace's last word - since
 whole IRIs were most of what a turn re-sent.
