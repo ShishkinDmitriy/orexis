@@ -6,9 +6,9 @@ timestamp: 2026-11-04T22:00:00Z
 description: >-
   The sovereign's ruling of 2026-11-04, with 0.2.0 tagged, that the agent moves to Rust - for speed on the
   Pi, a typed SPARQL algebra, deployment to smaller hardware, and an image holding the bare minimum.
-  Decided - one Rust binary per agent, each package a Cargo feature, ported one at a time with the
-  snapshot cases as the conformance suite, every text parsed once, and the documents unchanged since the
-  engine is the same. Refused - a Rust core under Python, staying Python, and the reasoning as Rust code.
+  Decided - one Rust binary per agent, each package a Cargo feature, held alone by its snapshot cases as it
+  is ported, an agent running in Rust once its roles' packages all are, world by world, a society mixing the
+  two in between, every text parsed once, and the documents unchanged since the engine is the same. Refused - a Rust core under Python, staying Python, and the reasoning as Rust code.
 ---
 
 # The question
@@ -64,13 +64,31 @@ at boot or when it arrives, with spargebra, and kept parsed. A value is bound in
 by substituting `$tokens` into text. Speech, onboarding and the footprint all read the same typed algebra
 in place of rdflib's parse tree, so the traps that parse tree had go with it.
 
-**The snapshot cases are the conformance suite.** A case is held to the whole store it leaves. A package is
-ported when its cases leave the same store run by the Rust binary as run by Python, and its walks pass.
-Until the last package moves, the Python tree stays the reference, and main keeps moving under it.
+**A package is held alone the day it is ported.** A snapshot case holds a function to the whole store it
+leaves: a store in, the function run, the store out. A ported function runs the same case with no agent
+around it and no Python beside it, and leaves the same store, so `revise`, `take` and `weigh` are each
+checked as they land, not at the end.
 
-**The order goes up the stack.** First the kernel: the store, the catalogue, the binder, the lifecycle and
-the runtime. Then belief, sensing, prediction, planning, execution, speech, coordination and the
-transports, then the journal, the series and the metrics, and translation last.
+**An agent runs in Rust once every package its roles load is ported.** Inside one agent the packages share
+one store in one process, and a Rust runtime hosting a Python package would need the interpreter in the
+image, the bridge refused below. So the order is the order in which the worlds' agents become wholly
+ported, each world's walks and benches passing on the binary as it does:
+
+| ported | the first world wholly in Rust |
+|---|---|
+| the kernel and planning | `hanoi`, a planner alone |
+| belief and execution | `tower`, `courier`, `driver`, `layby` |
+| sensing, prediction and the MQTT transport | `greenhouse`, its day bench sending the same commands |
+| speech and coordination | `lane` |
+| the market | `allotment` |
+| translation, the Telegram and HTTP members | `terrace` |
+
+The kernel is the store, the catalogue, the binder, the lifecycle and the runtime.
+
+**A world may mix the two.** Agents share no store and meet only by the documents on the bus, so a Rust
+courier can drive beside a Python one in the lane. A mixed society is what holds the two to one wire, where
+a case holds each to itself. Until the last package moves, the Python tree is the reference, and main keeps
+moving under it.
 
 **What is no agent's stays Python.** Onboarding stays Python, with pyshacl, and keeps the admin token out of
 every image. It reads a world as an agent boots it by running the agent's binary to boot and check that

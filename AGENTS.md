@@ -858,8 +858,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 ### Deployment, onboarding and operating
 
 - **The agent moves to Rust one package at a time, and the documents do not change** — one binary per agent,
-  each package a Cargo feature, every text parsed once and bound on its algebra, the snapshot cases the
-  conformance suite and the Python tree the reference until the last package moves; onboarding stays Python
+  each package a Cargo feature, every text parsed once and bound on its algebra, a package held alone by its
+  snapshot cases as it lands, an agent running in Rust once its roles' packages all are, world by world, and a
+  society mixing the two in between, the Python tree the reference until the last package moves; onboarding stays Python
   and boots the binary to check a world; a Rust core under Python and the reasoning as Rust code were refused
   (the-agent-moves-to-rust-one-package-at-a-time).
 - **A broker's address is the world's to assert or the installation's to allocate, and the agent's
