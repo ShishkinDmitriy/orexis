@@ -8,15 +8,15 @@ A PERSON'S WORDS ARE HEARD IN THE CHAT THEY ARRIVE IN. The chat is the one whose
 the sender the channel told, or the chat's one person where it told none. Words are addressed to the agent where they
 name it as a word of their own, or where the carrier says they tagged its account or replied to it; they are
 another's where they name another agent of the chat, or the carrier says they were for someone else, and do not
-name it — and those it passes over in silence. An answer replies to the words it answers, where the carrier threads. `/status` is
-answered with the rows of every askable that takes no field, for nothing. Any other words open a CONVERSATION with
-the model, briefed first (knowledge/domain/translation/briefing.md) — who the agent is, the world as it believes it
-with its vocabularies, and its status — and offered every sayable the world declares and every askable the agent's
-packages, domains and world declare as tools (knowledge/decisions/a-question-is-answered-and-every-other-act-is-kept.md):
-a statement of the sayable it fills is handed to speech as any peer's document; each askable it calls is answered from
-the store and its rows handed back; and it may call as many as the question needs, over at most `TURNS` turns, before
-it answers in words. Where the chat has other agents and nobody was named, the model is offered the askables alone
-and told to say nothing where what it holds does not speak to the question, so the agent that knows answers.
+name it — and those it passes over in silence. An answer replies to the words it answers, where the carrier threads. The
+words open a CONVERSATION with the model, briefed first (knowledge/domain/translation/briefing.md) — who the agent is,
+what the chat lets it read and what it lets a person state — and offered as tools what the chat's `speech:reads` lets
+it read and, where the chat `speech:allows` words, the stating of them
+(knowledge/decisions/a-person-states-what-the-chat-allows-in-the-worlds-words.md): a question is answered by its
+queries, and what the person states, held to the words' bounds, is handed to speech as any peer's document and
+believed as the world's word (`stated`); it may call as many as the message needs, over at most `TURNS` turns, before
+it answers in words. Where the chat has other agents and nobody was named, the model may read alone, and is told to
+say nothing where what it holds does not speak to the question, so the agent that knows answers.
 
 THE PERSON SEES THE AGENT WRITING WHILE IT THINKS, AND HEARS WHY WHERE IT CANNOT ANSWER. From the words heard to the
 answer said, every member carrying the chat's channel is asked to show it (`writing_in`) once and again every
@@ -24,9 +24,9 @@ answer said, every member carrying the chat's channel is asked to show it (`writ
 so in the chat, where the agent was addressed, rather than leaving the person waiting on nothing.
 
 THE MODEL IS CALLED OFF THE RUNTIME'S THREAD, AND THE STORE IS READ ON IT. What the model needs is read first, the
-call runs on a thread of its own, and what comes of it — the statement kept, the askable answered, the words sent —
-is submitted back as a job, so a pass never waits on a model and nothing reads the store but the runtime's thread;
-an askable called mid-conversation is answered by a job the model's thread waits on.
+call runs on a thread of its own, and what comes of it — the statement kept, the words sent — is submitted back as a
+job, so a pass never waits on a model and nothing reads the store but the runtime's thread; a statement is held to its
+words' bounds by a job the model's thread waits on.
 """
 
 from __future__ import annotations
@@ -42,27 +42,26 @@ from agent.lifecycle import Signal
 from agent.ontology import OREXIS, local_of
 from agent.store import NAMESPACES, DocumentRefused, document_of, graphs_of
 
-from .askable import askables, answered, lines, status, tool_of as asking
 from .briefing import briefing
 from .chat import Chat, chats_of, named
 from .events import Conversed, Translated
 from .model import TOKENS, Model, why_not
 from .past import Past
-from .readable import Readable
-from .sayable import document_of as statement_of, said_in, sayables, tool_of
+from .readable import Readable, _named
+from .stated import PROPERTY, STATE, believe, listing, rendered, statement_of, tool as stating, words
 
 log = logging.getLogger("translation")
 
 CONVERSE_SYSTEM = (
     "You are the voice of a software agent, speaking for it with a person in a chat. Below is its briefing: who it "
     "is, what this chat lets you read of its store, and what it holds now. The tools ask the agent a question it "
-    "answers from its store, or state something of a declared shape, which the agent keeps; and where the chat lets "
-    "you read, they load a vocabulary — the terms the agent's world is described in, with comments saying what each "
-    "means — and query what you may read in SPARQL. Load and query only what the message needs; fill a field only "
-    "with what the message itself says, never a guess. Then answer briefly and plainly in the person's language, in "
+    "answers from its store, or state what the person says in the words the chat allows, which the agent believes; "
+    "and where the chat lets you read, they load a vocabulary — the terms the agent's world is described in, with comments saying what each "
+    "means — and query what you may read in SPARQL. Load and query only what the message needs; state only "
+    "what the message itself says, never a guess. Then answer briefly and plainly in the person's language, in "
     "plain words and never in IRIs, Turtle or SPARQL, as plain text: no Markdown, no asterisks, no headings; a list "
     "is lines that begin with a dash. Answer what the message asks and nothing else: what the agent "
-    "holds now is there for you to draw on, never to recite unasked. Say only what the briefing, the vocabularies "
+    "holds is there for you to draw on, never to recite unasked. Say only what the briefing, the vocabularies "
     "and the rows state, and what follows from them. What the agent does and pursues is what its roles say: "
     "something no role of it does, it does not do, and you say so plainly. A thing is described by the triples that "
     "point at it as well as by its own, an observation naming the sensor that made it, so query both ways, in the "
@@ -81,13 +80,14 @@ UNADDRESSED = (f" Several agents are in this chat and the message names none. Wh
                f"nothing that answers it, reply with exactly {SILENT} and nothing else.")
 #  HOW MANY TURNS A CONVERSATION MAY TAKE: the last offers no tool, so the model answers in words.
 TURNS = 8
-#  HOW LONG THE MODEL'S THREAD WAITS FOR AN ASKABLE ANSWERED ON THE RUNTIME'S, in real seconds.
+#  HOW LONG THE MODEL'S THREAD WAITS FOR A STATEMENT HELD TO ITS BOUNDS ON THE RUNTIME'S, in real seconds.
 ANSWER_S = 60.0
 SAY_SYSTEM = (
-    "You write the message a software agent sends to a person. You are given who the person is, what "
-    "kind of statement the agent is making and the statement's fields. Write it as a short, plain, "
-    "courteous message in the person's language, saying exactly what the fields say and nothing more: "
-    "invent no detail, make no promise the statement does not make, and sign as the agent.")
+    "You write the message a software agent sends to a person. You are given who the person is and the "
+    "statement the agent is making, in Turtle, with the labels and comments of the words it is in. Write it as a "
+    "short, plain, courteous message in the person's language, never in IRIs or Turtle, saying exactly what the "
+    "statement says and nothing more: invent no detail, make no promise the statement does not make, and sign as "
+    "the agent.")
 
 #  HOW OFTEN THE AGENT IS SHOWN WRITING AGAIN, in seconds of the one timeline: Telegram shows a chat action for five
 #  seconds, or until a message is sent.
@@ -140,11 +140,7 @@ class _Translation:
             return []                                            # words to someone else of the chat
         unaddressed = bool(others) and not addressed
         stores = [store, self.runtime.intentions]
-        known = [a for a in askables(store) if _within(stores, a.reads, chat.reads)]
         reply = prose.message
-        if prose.text.strip().lower().startswith("/status"):
-            self.say(chat, status(stores, known, me, self.runtime.now), reply=reply)
-            return []
         if self.model is None:
             log.warning("%s wrote to %s, and there is no model to hear it with", person[1], local_of(me))
             return []
@@ -153,25 +149,27 @@ class _Translation:
                      readable.prefixes if readable else NAMESPACES, series.sink(series.METRICS, self.runtime.id))
                 if EVENT in chat.reads else None)
         readers = [r for r in (readable, past) if r is not None]
-        offered = ([] if unaddressed else sayables(store)), known, readers
+        prefixes = readable.prefixes if readable else _prefixes(me)
+        allowed = [] if unaddressed else words(store, chat.allows)
+        every = PROPERTY in chat.allows and not unaddressed
+        stating_ = (allowed, every, prefixes) if allowed else None
         system = [CONVERSE_SYSTEM + (UNADDRESSED if unaddressed else ""),
-                  *briefing(store, me, chat.reads, readable.listing() if readable else "",
-                            status(stores, known, me, self.runtime.now),
-                            readable.prefixes if readable else NAMESPACES)]
+                  briefing(store, me, chat.reads, readable.listing() if readable else "",
+                           listing(store, allowed, every, prefixes, things=readable is None) if allowed else "",
+                           prefixes)]
         if not unaddressed:
             self._begin(chat)
         self._thread = threading.get_ident()
-        self.spawn(lambda: self._converse(chat, person, prose.text, system, offered, unaddressed, reply))
+        self.spawn(lambda: self._converse(chat, person, prose.text, system, (stating_, readers), unaddressed, reply))
         return []
 
     def _converse(self, chat: Chat, person, text: str, system: list[str], offered, unaddressed: bool,
                   reply: str | None = None) -> None:
-        """The conversation, off the runtime's thread: each turn's tool calls answered — a sayable kept, an askable's
-        rows read on the runtime's thread, a vocabulary or a query read off the chat's copy — and handed back, until
-        the model answers in words, or keeps silent."""
-        saying, asking_of, readers = offered
-        tools = ([tool_of(s) for s in saying] + [asking(a) for a in asking_of] +
-                 [tool for reader in readers for tool in reader.tools()])
+        """The conversation, off the runtime's thread: each turn's tool calls answered — a statement held to its
+        words' bounds on the runtime's thread and kept, a vocabulary or a query read off the chat's copy — and handed
+        back, until the model answers in words, or keeps silent."""
+        stating_, readers = offered
+        tools = ([stating(stating_[2])] if stating_ else []) + [tool for reader in readers for tool in reader.tools()]
         messages = [{"role": "user", "content": f"From {person[1]}:\n\n{text}"}]
         calls: list = []
         spent: Counter = Counter()
@@ -186,7 +184,7 @@ class _Translation:
                 messages.append({"role": "assistant", "content": turn.content})
                 results = []
                 for id_, name, inputs in turn.calls:
-                    found = self._called(name, inputs, saying, asking_of, readers, person, text)
+                    found = self._called(name, inputs, stating_, readers, person, text)
                     calls.append((name, inputs, found))
                     results.append({"type": "tool_result", "tool_use_id": id_, "content": found})
                 messages.append({"role": "user", "content": results})
@@ -223,28 +221,24 @@ class _Translation:
                               getattr(self.model, "name", None), self.runtime.now)
             self.runtime.submit(lambda: self.conversed.emit(event))
 
-    def _called(self, name: str, inputs: dict, saying, asking_of, readers, person, text: str) -> str:
-        """What a tool call answers, off the runtime's thread: a sayable's statement kept, an askable's rows, a
-        vocabulary or a query's rows off the chat's copy, the journal's entries or the series' points."""
+    def _called(self, name: str, inputs: dict, stating_, readers, person, text: str) -> str:
+        """What a tool call answers, off the runtime's thread: a statement kept, or why it is refused; a vocabulary or
+        a query's rows off the chat's copy, the journal's entries or the series' points."""
         read = next((found for reader in readers if (found := reader.call(name, inputs)) is not None), None)
         if read is not None:
             log.info("%s read for %s: %s %s", local_of(self.runtime.me), person[1], name, inputs)
             return read
-        sayable = next((s for s in saying if s.name == name), None)
-        if sayable is not None:
-            payload = statement_of(sayable, inputs, by=person[0], prose=text, at=self.runtime.now)
-            if payload is None:
-                return "not kept: a field was not filled with a value it takes"
-            self.runtime.submit(lambda: self._keep(payload))
-            return "kept: the agent believes it now"
-        askable = next((a for a in asking_of if a.name == name), None)
-        if askable is None:
-            log.warning("the model called %r, which is neither a sayable nor an askable", name)
+        if name != STATE or stating_ is None:
+            log.warning("the model called %r, which this chat offers no tool of", name)
             return f"no tool is named {name}"
-        found = self._on_runtime(lambda: answered([self.runtime.beliefs, self.runtime.intentions], askable, inputs))
-        if found is None:
-            return "not answered: a field was not filled with a value it takes"
-        return "\n".join(lines(found)) or "(no rows)"
+        allowed, every, prefixes = stating_
+        payload, why = self._on_runtime(lambda: statement_of(self.runtime.beliefs, allowed, every, prefixes, inputs,
+                                                             by=person[0], prose=text, at=self.runtime.now))
+        if payload is None:
+            log.info("%s refused what %s stated: %s", local_of(self.runtime.me), person[1], "; ".join(why))
+            return "not kept: " + "; ".join(why)
+        self.runtime.submit(lambda: self._keep(payload))
+        return "kept: the agent believes it now"
 
     def _on_runtime(self, work):
         """`work` done on the runtime's thread, and its answer waited for: the store is read there alone."""
@@ -303,11 +297,13 @@ class _Translation:
                 return
 
     def _keep(self, payload: bytes) -> list[str]:
-        """A person's statement, kept as any peer's document: speech's `heard`, its extraction believing it."""
+        """A person's statement, kept as any peer's document by speech's `heard`, and what it says believed as the
+        world's word (`stated`)."""
         from agent.speech.heard import heard
         written = heard(self.runtime.beliefs, self.runtime.me, payload)
+        believed = [g for statement in written for g in believe(self.runtime.beliefs, statement)]
         log.info("%s heard a statement from a person", local_of(self.runtime.me))
-        return written
+        return written + believed
 
     # ── told ──────────────────────────────────────────────────────────────────────────────────
 
@@ -325,19 +321,12 @@ class _Translation:
         except DocumentRefused as exc:
             log.warning("%s: what was said to %s is no document: %s", local_of(me), local_of(told.to), exc)
             return []
-        offered = sayables(store)
-        found = said_in(doc, offered)
-        if found is None:
-            log.warning("%s told %s something the world gives no words for — not rendered", local_of(me), local_of(told.to))
-            return []
         if self.model is None:
-            log.warning("%s told %s a %s, and there is no model to say it with", local_of(me), local_of(told.to), found[0].name)
+            log.warning("%s told %s something, and there is no model to say it with", local_of(me), local_of(told.to))
             return []
-        sayable, values = found
         name = dict(chat.people)[told.to]
-        lines = "\n".join(f"{field}: {value}" for field, value in values.items())
-        text = (f"To: {name}\nFrom: {local_of(me)}, a software agent\n"
-                f"Statement: {sayable.description or sayable.name}\n{lines}")
+        text = (f"To: {name}\nFrom: {local_of(me)}, a software agent\nStatement:\n"
+                f"{rendered(store, doc, _prefixes(me))}")
 
         def render():
             began = time.monotonic()
@@ -364,10 +353,11 @@ class _Translation:
         return False
 
 
-def _within(stores, kinds, reads) -> bool:
-    """Whether every graph of `kinds` is one a chat reading `reads` reads; any, where the chat states no reads."""
-    return not reads or all(set(graphs_of(store, *kinds)) <= set(graphs_of(store, *reads))
-                            for store in stores if store is not None)
+def _prefixes(me: str) -> dict[str, str]:
+    """The prefixes a statement is written with where the chat reads nothing: the store's, and the agent's own world's
+    by the name a chat that reads it gives it."""
+    ns = me[:max(me.rfind("#"), me.rfind("/")) + 1]
+    return {**NAMESPACES, _named(ns, set(NAMESPACES)): ns}
 
 
 def create(runtime) -> _Translation:

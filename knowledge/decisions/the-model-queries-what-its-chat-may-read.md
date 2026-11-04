@@ -13,6 +13,10 @@ description: >-
   askable per question, a briefing of every common belief, and the model choosing graphs.
 ---
 
+> **Amended** by [a-person-states-what-the-chat-allows-in-the-worlds-words](/decisions/a-person-states-what-the-chat-allows-in-the-worlds-words.md):
+> the askables this record kept as "the questions a package answers well" are retired with `/status`, and
+> a chat reading nothing has nothing to ask with.
+
 # The question
 
 [a-question-is-answered-and-every-other-act-is-kept](/decisions/a-question-is-answered-and-every-other-act-is-kept.md)

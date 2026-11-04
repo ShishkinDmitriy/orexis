@@ -16,6 +16,11 @@ graph, and each can count on the others holding it too. The vocabulary, the worl
 society and what the boot derives of them are common beliefs; a reading an agent observed, a state
 it derived and a word a peer said to it are its own.
 
+One common belief is held by one agent alone: what a person states in a chat that allows the words.
+The person speaks for the world in those words, so the agent they said it to believes it as the
+world's, naming no owner, though no other agent heard it
+([a-person-states-what-the-chat-allows-in-the-worlds-words](/decisions/a-person-states-what-the-chat-allows-in-the-worlds-words.md)).
+
 The catalogue says which by `orexis:ownedBy`. A graph of an agent's own names its owner there;
 a common belief names none:
 

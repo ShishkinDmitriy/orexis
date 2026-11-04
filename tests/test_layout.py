@@ -1905,7 +1905,6 @@ def _viewing(society=lambda text: text, deployment=lambda text: text) -> dict:
         return "\n".join(line for line in text.splitlines() if "a mqtt4ssn:TopicFilter" not in line) + "\n"
     bots = "\n".join(line for line in (_VIEWING / "deployment.ttl").read_text().splitlines() if "_bot schema:url" in line)
     return {("viewing", "world.ttl"): lambda _: (_VIEWING / "world.ttl").read_text(),
-            ("viewing", "rules.ttl"): lambda _: (_VIEWING / "rules.ttl").read_text(),
             ("viewing", "speech.ttl"): lambda _: (_VIEWING / "speech.ttl").read_text(),
             ("viewing", "beliefs/seeker.self.ttl"): lambda _: (_VIEWING / "beliefs" / "seeker.self.ttl").read_text(),
             ("viewing", "beliefs/keeper.self.ttl"): lambda _: (_VIEWING / "beliefs" / "keeper.self.ttl").read_text(),

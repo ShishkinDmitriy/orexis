@@ -639,8 +639,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A world's test hands its agent no budget, so the figure it passes at is the one the self graph
   states** — handed by the tests, 128 and 256 were proved while every container searched at 32, at
   which the tower's two disks were not walked home in the test's passes (#932).
-- **A defective sensor is stated by the world, and its number is kept and believed by nothing** — `sensing:defect`
-  says why; no reading is concluded, the series tags the point `defective`, and a rule cannot detect what is fresh,
+- **A defective sensor is stated by the world, or by a person in a chat allowing the word, and its number is kept
+  and believed by nothing** — `sensing:defect` says why; no reading is concluded, the series tags the point `defective`, and a rule cannot detect what is fresh,
   varies and is false, as the terrace's battery channel was the probe's for weeks (#939, defect).
 - **A reading late is not a reading missing** — ended exactly at the next one's due, a late reading
   left no present, and a dose sized from it commanded nothing (#870,
@@ -922,9 +922,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   container alone, the call off the pass and submitted back as a job; a translator as a process of the world
   and a manager agent speaking for the others were refused, and a bot per agent lifted the account record's
   refusal of one (an-agent-translates-for-itself, translator).
-- **A person's prose becomes a statement only through a sayable** — the model fills a declared shape's fields
-  or says none fits, a field the shape does not declare is dropped, speech's `heard` keeps the statement as any
-  peer's document and the extraction makes the belief (#1034, sayable, translator).
+- **A person states what the chat allows in the world's words, and is believed as the world** — `speech:allows`
+  names properties, or `rdf:Property` for all, and each triple is held to its property's domain and range, kept as a
+  statement per subject and property and believed in a graph no agent owns, so revision reads it beside the world's
+  documents; a sayable per statement, an askable per question and a person's word in a kind of its own read
+  `beside` were built and refused as hardcoding what the vocabulary already bounds
+  (a-person-states-what-the-chat-allows-in-the-worlds-words, translator).
 - **A channel is the transport's, and what points at it says which row reads it** — a sensor's is sensing's,
   a listened topic speech's, a chat's translation's; a member says `prose` and answers `say_to`, so translation
   imports no member and no member translation, and Telegram and email are members beside MQTT and HTTP
@@ -934,14 +937,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   no carrier; a person connects by a user agent that `prov:actedOnBehalfOf` them, each agent speaks through a
   `telegram:Bot` of its own (`telegram:hasBot`), and in a group an agent answers when named, tagged or replied to, keeps
   silent when another is, and answers an unnamed question only where its account speaks to it (chat, translator).
-- **What an agent says of itself is its askables and what its chat lets the model query** — an `speech:Askable` in an
-  `speech:AskableGraph` beside a package's ontology, its fields filled by the model and its select the
-  package's own; `/status` is the rows of every one that takes no field, for nothing; stored nowhere, published
-  nowhere, and a method per part rendered by templates and selects found by file name were built and refused
-  (askable, a-question-is-answered-and-every-other-act-is-kept).
-- **A question is answered and every other act is kept, and FIPA names the acts** — an askable a
-  package declares is answered from the store by its own select and writes nothing, a statement of any other
-  act is kept and extracted; a performative term on every statement kind, FIPA's semantics, an envelope and a
+- **A question is answered and every other act is kept, and FIPA names the acts** — a question is the model's
+  query and writes nothing, a statement of any other act is kept; a performative term on every statement kind, FIPA's semantics, an envelope and a
   protocol engine were refused, a protocol being what the actions' preconditions allow (a-question-is-answered-and-every-other-act-is-kept).
 - **The core is the kernel's dependencies, a package brings its own in a `dependencies.txt` beside its ontology,
   and each agent's image holds only what it runs** — the file is the package's extra, named for its directory,

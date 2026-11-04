@@ -33,3 +33,9 @@ def test_a_chat_says_the_kinds_of_graph_its_model_may_read_and_one_saying_none_r
     chats = {c.iri.rsplit("#", 1)[1]: c for c in chats_of(boot(WORLD, "seeker"))}
     assert chats["seeker_and_clara"].reads == ("http://example.org/orexis#BeliefGraph",)
     assert chats["household"].reads == () and chats["seeker_and_anna"].reads == ()
+
+
+def test_a_chat_says_the_words_a_person_may_state_in_it_and_one_saying_none_allows_none():
+    chats = {c.iri.rsplit("#", 1)[1]: c for c in chats_of(boot(WORLD, "seeker"))}
+    assert chats["seeker_and_clara"].allows == ("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property",)
+    assert chats["household"].allows == (V + "refused", V + "viewingAt") and chats["seeker_and_anna"].allows == ()

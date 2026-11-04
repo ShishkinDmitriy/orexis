@@ -81,7 +81,8 @@ ontology: its first comment line the section's title, its `# reads:` line the ki
 to it as the default graph. Sensing's says the latest reading of each sensor, execution's each
 intention standing. Translation asks each loaded package's select when a person asks — `/account`
 answered with the rows for nothing, a question in words answered by the model from them — and stores
-nothing (now the [askable](/domain/speech/askable.md)). The account is still telemetry and never a
+nothing (later the askable, retired in turn by
+[a-person-states-what-the-chat-allows-in-the-worlds-words](/decisions/a-person-states-what-the-chat-allows-in-the-worlds-words.md)). The account is still telemetry and never a
 belief.
 
 # What was refused

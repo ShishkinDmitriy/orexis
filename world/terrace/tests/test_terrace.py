@@ -111,10 +111,16 @@ CHAT = """@prefix : <http://example.org/orexis/world/terrace#> .
 """
 
 
-def test_the_sovereign_asks_the_agent_through_its_own_bot_and_is_answered_with_what_it_observes(monkeypatch, tmp_path):
-    """A translator: `/status` written in the sovereign's chat reaches the agent through its own bot, and the agent
-    sends back what it observes — each sensor's latest reading, of what and when — read off its store by sensing's
-    select, with no model asked."""
+def test_the_sovereign_says_through_the_agents_own_bot_that_the_probe_is_defective_and_its_next_number_is_no_reading(
+        monkeypatch, tmp_path):
+    """A translator: the sovereign writes in their chat, through the agent's own bot, that the probe shows strange
+    numbers; the model states it in sensing's word, `sensing:defect`, which the chat allows as it allows every word,
+    and the agent believes it as the world's — so the probe's next number is kept and no reading. Unsaid, the number
+    after is a reading again (knowledge/decisions/a-person-states-what-the-chat-allows-in-the-worlds-words.md)."""
+    from datetime import timedelta
+
+    from agent.sensing.ontology import OBSERVATION_GRAPH
+    from agent.translation.model import Turn
     from agent.transport.mqtt.driver import Mqtt
     from agent.transport.telegram.driver import Telegram
     from agent.transport.transport import Transports
@@ -122,7 +128,7 @@ def test_the_sovereign_asks_the_agent_through_its_own_bot_and_is_answered_with_w
     monkeypatch.setattr(clock, "now", lambda: NOW)
     world = _with_a_place(tmp_path)
     (world / "secrets" / "terrace" / "chat.ttl").write_text(CHAT)
-    sent, updates = [], [{"update_id": 7, "message": {"chat": {"id": 4242}, "from": {"id": 1}, "text": "/status"}}]
+    sent, updates = [], []
 
     def api(url, body):
         if url.endswith("/getUpdates"):
@@ -133,19 +139,47 @@ def test_the_sovereign_asks_the_agent_through_its_own_bot_and_is_answered_with_w
         sent.append(body)
         return {"ok": True}
 
+    class Model:
+        """States what the test hands it, once, then answers in words."""
+        def __init__(self, inputs):
+            self.inputs, self.answers = inputs, []
+
+        def converse(self, system, messages, tools=(), *, last=False):
+            if len(messages) == 1:
+                return Turn("", [("c", "state", self.inputs)], [{"type": "tool_use", "id": "c", "name": "state", "input": self.inputs}])
+            self.answers.append(messages[-1]["content"][0]["content"])
+            return Turn("noted", [], [{"type": "text", "text": "noted"}])
+
     bot = Telegram(AGENT, "token", call=api, spawn=lambda work: work())
     runtime = Runtime(boot(world, "terrace"), "terrace", transport=Transports([Mqtt(AGENT, Broker()), bot]))
-    runtime.deliver((0, "sensors/moisture_sensor_terrace/reading"), MESSAGE, NOW)
-    runtime.run(passes=1, poll_s=0)
-    for channel, payload in bot.updates():
-        runtime.deliver((1, channel), payload, NOW)
-    runtime.run(passes=1, poll_s=0)
-    (said,) = sent
-    lines = said["text"].split("\n")
-    assert said["chat_id"] == "4242" and lines[:2] == ["terrace_agent at 2026-01-01 12:00 UTC", "observes:"], lines
-    assert (" - observed: SoilMoisture, of: terrace_bed, reading: 0.2, sensor: moisture_sensor_terrace, "
-            "at: 2026-01-01 12:00 UTC") in lines
-    assert sum(1 for line in lines if line.startswith(" - ")) == 5, "one line per sensor read"
+    part = runtime.parts["translation"]
+    part.spawn = lambda work: work()
+
+    def say(text, inputs):
+        part.model = Model(inputs)
+        updates.append({"update_id": len(sent) + 7, "message": {"chat": {"id": 4242}, "from": {"id": 1}, "text": text}})
+        for channel, payload in bot.updates():
+            runtime.deliver((1, channel), payload, NOW)
+        runtime.run(passes=2, poll_s=0)
+        return part.model.answers
+
+    def soil(at):
+        runtime.deliver((0, "sensors/moisture_sensor_terrace/reading"), MESSAGE, at)
+        runtime.run(passes=1, poll_s=0)
+        return rows(runtime.beliefs, "SELECT ?v ?why WHERE { ?o sosa:resultTime ?t ; sosa:madeBySensor $probe "
+                    "OPTIONAL { ?o sosa:hasSimpleResult ?v } OPTIONAL { ?o sensing:defect ?why } } ORDER BY DESC(?t) LIMIT 1",
+                    graphs_of(runtime.beliefs, OBSERVATION_GRAPH), probe=ox.NamedNode(PROBE))
+
+    assert say("the probe shows strange numbers", {"says": f'<{PROBE}> sensing:defect "it shows strange numbers" .'}) == \
+        ["kept: the agent believes it now"]
+    said = [m for m in sent if "text" in m]
+    assert [m["text"] for m in said] == ["noted"] and said[0]["chat_id"] == "4242", "answered through its own bot"
+    assert soil(NOW) == [{"why": "it shows strange numbers"}], "kept, and no reading"
+    assert say("the probe is fine again", {"unsays": [f"<{PROBE}> sensing:defect"]}) == ["kept: the agent believes it now"]
+    assert soil(NOW + timedelta(minutes=20)) == [{"v": "0.2"}], "unsaid, a reading again"
+
+
+PROBE = "http://example.org/orexis/world/terrace#moisture_sensor_terrace"
 
 
 def test_a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving(monkeypatch, caplog):

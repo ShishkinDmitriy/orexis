@@ -2,7 +2,7 @@
 type: Decision
 title: A question is answered and every other act is kept, FIPA names the acts, and no engine runs a protocol
 status: superseded-in-part
-superseded-by: the-model-queries-what-its-chat-may-read
+superseded-by: a-person-states-what-the-chat-allows-in-the-worlds-words
 timestamp: 2026-11-01T12:00:00Z
 description: >-
   The sovereign's question of 2026-11-01, whether the society should have FIPA's communicative acts and
@@ -20,12 +20,17 @@ description: >-
 
 > **Superseded in part** by [the-model-queries-what-its-chat-may-read](/decisions/the-model-queries-what-its-chat-may-read.md).
 > What does not hold any more is the ONE CALL: the model converses, calling as many askables as a question
-> needs, and loads and queries what its chat may read, and nothing says none fits. The askable, the
-> statement kept and the FIPA alignment stand.
+> needs, and loads and queries what its chat may read, and nothing says none fits.
+>
+> **And superseded in part again** by [a-person-states-what-the-chat-allows-in-the-worlds-words](/decisions/a-person-states-what-the-chat-allows-in-the-worlds-words.md).
+> The askable and the sayable are retired: a question is the model's query, and a statement is triples in
+> the words the chat allows, held to their domain and range. What stands is the distinction itself - a
+> question writes nothing and every other act is kept - and the FIPA alignment, with the refusals of a
+> performative term, FIPA's semantics, an envelope and a protocol engine.
 
 # The question
 
-A person's words now meet two kinds of tool at the model: a [sayable](/domain/speech/sayable.md), the
+A person's words now meet two kinds of tool at the model: a sayable, the
 shape of a statement they may make, which the model fills and the agent keeps; and the askable, a
 question they may ask, which the agent answers from its store and which replaces the account's dumped
 sections ([an-agent-translates-for-itself](/decisions/an-agent-translates-for-itself.md)). The sovereign

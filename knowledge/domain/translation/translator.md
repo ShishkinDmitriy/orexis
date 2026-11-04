@@ -5,8 +5,9 @@ term: http://example.org/orexis/translation#Translator
 description: >-
   An agent that speaks with the people of its chats itself - the role beneath the speaker whose part
   is the translation package's. A person's words reach it through a transport member as prose and
-  become a statement of a sayable or the question of an askable, answered from its store; a statement the
-  agent says to a person is rendered by the model and sent back on the chat's channel.
+  become a statement in the words the chat allows, believed as the world's word, or a question answered by
+  the model's queries; a statement the agent says to a person is rendered by the model and sent back on
+  the chat's channel.
 ---
 
 # What it is
@@ -31,22 +32,19 @@ A person's words arrive as `prose` from the member carrying the chat's channel �
 mailbox, the chat's topic — with the sender where the channel tells one. In the chat whose channel
 they came on, the part:
 
-- answers `/status` with the rows of every [askable](/domain/speech/askable.md) that takes no field,
-  and asks no model;
 - passes over words that are someone else's and not this agent's: words that name another agent of
   the chat, by its id or the name it goes by, or that the carrier says tagged or replied to someone
   else; words the carrier says tagged or replied to this agent's own account are this agent's, as if
   they named it;
 - opens a conversation with the model on any other words, briefed first with a
-  [briefing](/domain/translation/briefing.md) - who the agent is, what the chat lets it read, and its
-  status - and offered every [sayable](/domain/speech/sayable.md) the world declares, every askable the
-  chat admits, and, where the chat reads anything, a vocabulary to load and a query to run over what it
-  reads: a statement of the sayable filled is handed to speech's `heard`, and the domain's
-  [extraction](/domain/speech/extraction.md) makes the belief; each askable called is answered from the
-  store on the runtime's thread; each query runs over the chat's copy; the model calls as many as the
-  message needs, then answers in words. Unaddressed in a group, the model is offered no sayable and told to
-  say nothing where what the agent holds does not answer, so the agent that knows is the
-  one heard. An answer replies to the words it answers, where the carrier threads.
+  [briefing](/domain/translation/briefing.md) - who the agent is, what the chat lets it read and what it
+  lets a person state - and offered, where the chat reads anything, a vocabulary to load and a query to
+  run over what it reads, and, where the [chat allows words](/domain/speech/chat.md), the `state` tool,
+  whose triples are checked on the runtime's thread and then handed to speech's `heard`
+  ([a-person-states-what-the-chat-allows-in-the-worlds-words](/decisions/a-person-states-what-the-chat-allows-in-the-worlds-words.md));
+  each query runs over the chat's copy; the model calls as many as the message needs, then answers in
+  words. Unaddressed in a group, the model states nothing and is told to say nothing where what the agent
+  holds does not answer, so the agent that knows is the one heard. An answer replies to the words it answers, where the carrier threads.
 
 From the words heard to the answer said, every member carrying the chat's channel is asked to show the
 agent writing (`writing_in`, Telegram's `typing`), and again every few seconds while the model thinks;
@@ -56,9 +54,9 @@ said in the chat where the agent was addressed, so the person is not left waitin
 # Said
 
 A document the agent says to a person — the TriG an `execution:Saying` made — reaches the part by
-speech's `told`. It finds the sayable the document is a statement of, hands the model its fields and
-who it is for, and sends the words through the person's own chat with the agent, or a group they are
-in where they have none. A statement of no sayable's class is not rendered, and is said in the log.
+speech's `told`. It hands the model the statement's triples in Turtle, with the label and comment of
+each word and thing in it, and who it is for, and sends the words through the person's own chat with
+the agent, or a group they are in where they have none.
 
 # What it needs
 

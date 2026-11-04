@@ -3,15 +3,16 @@ type: Runbook
 title: Chat with an agent
 description: >-
   Give an agent a Telegram bot and a chat with you, worked on the terrace - the bot's token, the
-  model's key, the chat's id in the world's secrets, onboarding and up - then ask it with /status or in
-  words, check it is listening, and set up a group where several agents' bots answer.
+  model's key, the chat's id in the world's secrets, onboarding and up - then ask it or tell it in words,
+  check it is listening, and set up a group where several agents' bots answer.
 ---
 
 # What you end up with
 
 An agent that is a [translator](/domain/translation/translator.md) reads a [chat](/domain/speech/chat.md)
-the world states and answers you there: `/status` with what it observes, for nothing, and a question
-in words with the model's answer from its [askables](/domain/speech/askable.md). The terrace is
+the world states and answers you there: a question in words with the model's answer from what the chat
+lets it read, and what you state in the words the chat allows - "the probe shows strange numbers" -
+believed as the world's word. The terrace is
 already declared for it: `:terrace_agent` plays `translation:Translator`, speaks through
 `:terrace_bot`, and `speech.ttl` states `:terrace_and_dmitrii` over `:sovereign_telegram`. What the
 repository cannot hold is the token, the key and the chat's id, so those are the steps below. For
@@ -26,8 +27,8 @@ cp infra/model.env.example infra/secrets/model.env    # then set MODEL_NAME and 
 A changed key reaches a running agent only by recreating its container,
 `podman compose up -d --force-recreate agent-<id>`: `podman compose restart` keeps the environment the
 container was created with. Where the model answers is `infra/installation.ttl`'s `onboarding:Model`; with none there, onboarding
-refuses a world with a translating agent. Without a key the agent still answers `/status`, and says in
-its log that it has no model for anything else.
+refuses a world with a translating agent. Without a key the agent answers nothing, and says so in its
+log.
 
 # Per agent: the bot
 
@@ -94,11 +95,11 @@ podman compose logs -f agent-terrace
 
 At boot it says what it loads, and the list ends with `transport/telegram`:
 `terrace loads belief, sensing, prediction, speech, translation, transport/mqtt, transport/http, transport/telegram`.
-Then send `/status` to the bot: it answers within a few seconds (`TELEGRAM_POLL_S`, three by default)
-with each sensor's latest reading, and asks no model. `/status` is a shortcut, not the way in: any
-other words — "is the bed dry?", with or without the bot's @name — go to the model with the agent's
-askables, the chat shows the bot typing while it thinks, and the answer comes from the rows the agent
-read.
+Then write to the bot — "is the bed dry?", with or without its @name. The words go to the model, the
+chat shows the bot typing while it thinks (polled every `TELEGRAM_POLL_S`, three seconds by default),
+and the answer comes from the rows its queries read. Tell it "the probe shows strange numbers" and the
+model states `sensing:defect` of the probe, which the terrace's chat allows as it allows every word; the
+probe's next number is kept and no reading, until you say it is fine again.
 
 # A group with several agents
 
@@ -130,8 +131,7 @@ In the group, ask one agent as you would ask a person: tag its bot (`@<its bot's
 one of its messages, or name it — its id or the name the world gives it, `schema:name` ("terrace, is
 the bed dry?"). The agent answers as a reply to your message, and the others keep silent; tag or reply
 to someone else and every agent keeps silent unless you name it too. Ask nobody, and only an agent whose
-askables answer the question replies. `/status` in a group is answered by every agent in it, and
-`/status@<bot>` by that bot's agent alone. The bot's username is asked of Telegram, so no document
+store answers the question replies, and none states anything. The bot's username is asked of Telegram, so no document
 states it.
 
 # When it does not answer
@@ -142,9 +142,10 @@ states it.
 | `a message in Telegram chat <id>, which the world names in no chat: dropped` | `chat.ttl` is missing, holds another id, or is not mounted: check the id against `getUpdates` and re-run `orexis-onboard` |
 | `words in <chat> from someone the chat names not: dropped` | in a group, the writer's `telegram:userId` is not stated, or names someone not in the chat |
 | `<agent> could not answer: its model would not answer (HTTP Error 401: Unauthorized)`, in the chat too | the key in `infra/secrets/model.env` is refused: replace it, then recreate the container (`up -d --force-recreate`), since a restart keeps the old one |
-| `<person> wrote to <agent>, and there is no model to hear it with` | `infra/secrets/model.env` lacks `MODEL_NAME` or `MODEL_API_KEY`; `/status` still works |
+| `<person> wrote to <agent>, and there is no model to hear it with` | `infra/secrets/model.env` lacks `MODEL_NAME` or `MODEL_API_KEY` |
+| `<agent> refused what <person> stated: …` | the model stated a word the chat does not allow, or of a thing its domain does not admit: the reason names which |
 | `the bot would not answer: …` | the token is wrong (HTTP 401) or the API is unreachable from the host |
-| nothing at all, in a group | privacy mode is still on for that bot, or no askable of the agent's speaks to an unnamed question |
+| nothing at all, in a group | privacy mode is still on for that bot, or nothing the agent holds speaks to an unnamed question |
 
 Onboarding refuses before anything runs where a chat's agent has no bot (`speaks through no bot of its
 own`), a bot's url is not `https://`, or the installation names no model. What each refusal holds is the

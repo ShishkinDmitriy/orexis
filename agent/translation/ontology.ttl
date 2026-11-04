@@ -13,8 +13,8 @@ translation:Translator a owl:Class ;
     rdfs:subClassOf speech:Speaker ;
     rdfs:label "Translator" ;
     rdfs:comment """An agent that speaks with people in the chats it is in: what a person writes on a chat's channel
-    becomes a statement of a sayable, believed by speech's extraction, or a question answered from the agent's
-    account; what the agent says to a person is rendered and sent back on the channel. Beneath the speaker, since a
+    becomes a statement in the words the chat allows, believed as the world's word, or a question answered from
+    what the chat lets it read; what the agent says to a person is rendered and sent back on the channel. Beneath the speaker, since a
     person's statement is a peer's document to speech. Declared, never derived; the boot loads this package for it,
     and the agent's container is handed the model's key for it and for nothing else
     (knowledge/domain/translation/translator.md).""" .
@@ -62,7 +62,7 @@ translation:order a owl:DatatypeProperty ;
 
 translation:tool a owl:DatatypeProperty ;
     rdfs:label "tool" ;
-    rdfs:comment "The name of the tool a call was of: query, vocabulary, journal, series, metrics, a sayable or an askable." .
+    rdfs:comment "The name of the tool a call was of: query, vocabulary, journal, series, metrics or state." .
 
 translation:handed a owl:DatatypeProperty ;
     rdfs:label "handed" ;
