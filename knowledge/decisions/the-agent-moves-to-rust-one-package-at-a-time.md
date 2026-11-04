@@ -95,6 +95,30 @@ every image. It reads a world as an agent boots it by running the agent's binary
 world, rather than by importing its code. The simulator, the operator's tools and the history view stay as
 they are.
 
+**What waits is a task, and the mind is one thread.** Today the runtime polls: a pass that moved
+nothing sleeps a second and looks again, so a reading waits up to that second and an idle agent wakes every
+one. Each transport, the model's call and the journal's server has a thread of its own, and so does the
+executor, twice. In Rust, everything that waits on the network or the clock is a Tokio task:
+
+- the MQTT, HTTP, Telegram and email members;
+- the model's call, the series' writes and the journal's server;
+- every timer, the executor's landings and patience among them.
+
+Each task hands the mind what arrived over a channel. The mind is one thread that owns every write to the
+store and runs the passes, woken by its channel or the next timer due, so a reading starts a pass at once and
+an idle agent sleeps. Its jobs run in the order they came, which is what lets a snapshot case and the day
+bench's digest hold the binary to one result. A pass blocks on the engine and a search can run for seconds,
+so the mind is a thread of its own and never one of Tokio's workers, whose transports it would stall.
+
+**What cannot change the result runs in parallel.** Each scope's imaginarium is a store of its own, so the
+scopes are searched at once and their plans taken in scope order. Laying grounds is per scope and about
+two-thirds of the greenhouse's planning. A reader of the store, a chat's query or the journal's server, reads
+a snapshot of it, beside a pass and without waiting for one.
+
+**The clock is handed in.** A walk or a bench runs in the world's time, so the binary reads time through
+one clock it is handed: the wall in a container, a simulated one in a test, which a day runs through as fast
+as the machine allows.
+
 # What was refused
 
 **A Rust core under Python.** Moving the hot kernel into a crate that Python calls through PyO3 would have
@@ -104,6 +128,12 @@ languages in one agent for good, and a boundary between them crossed per stateme
 
 **Staying Python.** Parsing, rdflib and conversions are most of a shipped world's pass, and are what the
 language costs. The image cannot be made minimal around an interpreter.
+
+**A store shared under locks.** Every task could write the store itself, behind a lock. Then the order of
+two writes would be the scheduler's, and a case or a digest could not hold the binary to one result.
+
+**Async into the mind.** The mind's functions could be async too. The engine is synchronous, so nothing
+would be gained, and every function would take on async to call one that has it.
 
 **The reasoning as Rust code.** A port could replace the SPARQL texts with Rust: a transition as a function,
 a met-test as a match. It would be faster, and it would end what the architecture rests on: a domain is
