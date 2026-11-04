@@ -92,6 +92,7 @@ The search itself, and the two places a language model is allowed near it.
 * [a-question-is-answered-and-every-other-act-is-kept](/decisions/a-question-is-answered-and-every-other-act-is-kept.md) - A question is answered from the store and every other act kept as a statement; FIPA names the acts, and no engine runs a protocol.
 * [the-model-queries-what-its-chat-may-read](/decisions/the-model-queries-what-its-chat-may-read.md) - A chat states what its model may read; the model loads vocabularies and queries a copy of those graphs, never choosing one.
 * [a-person-states-what-the-chat-allows-in-the-worlds-words](/decisions/a-person-states-what-the-chat-allows-in-the-worlds-words.md) - No sayable or askable: a question is a query; a statement is triples in allowed words, held to domain and range, believed as the world's.
+* [the-agent-moves-to-rust-one-package-at-a-time](/decisions/the-agent-moves-to-rust-one-package-at-a-time.md) - One Rust binary per agent, packages as Cargo features, ported one at a time against the snapshot cases; the documents unchanged.
 * [a-silence-is-kept-as-what-sensing-knows-of-its-sensor](/decisions/a-silence-is-kept-as-what-sensing-knows-of-its-sensor.md) - A silence is kept from the first ask that finds it until a reading ends it, and for good; handed to no reader of the mind.
 
 # The mind — time and prediction
