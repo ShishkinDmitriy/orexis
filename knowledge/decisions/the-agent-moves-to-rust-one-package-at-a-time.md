@@ -8,7 +8,8 @@ description: >-
   Pi, a typed SPARQL algebra, deployment to smaller hardware, and an image holding the bare minimum.
   Decided - one Rust binary per agent, each package a Cargo feature, held alone by its snapshot cases as it
   is ported, an agent running in Rust once its roles' packages all are, world by world, a society mixing the
-  two in between, every text parsed once, and the documents unchanged since the engine is the same. Refused - a Rust core under Python, staying Python, and the reasoning as Rust code.
+  two in between, a ported package frozen until its last Python user moves and the Python agent retired whole
+  at the end, every text parsed once, and the documents unchanged since the engine is the same. Refused - a Rust core under Python, staying Python, and the reasoning as Rust code.
 ---
 
 # The question
@@ -87,8 +88,17 @@ The kernel is the store, the catalogue, the binder, the lifecycle and the runtim
 
 **A world may mix the two.** Agents share no store and meet only by the documents on the bus, so a Rust
 courier can drive beside a Python one in the lane. A mixed society is what holds the two to one wire, where
-a case holds each to itself. Until the last package moves, the Python tree is the reference, and main keeps
-moving under it.
+a case holds each to itself.
+
+**A ported package is frozen until its last Python user moves.** A package ported early is still loaded in
+Python by every agent whose other packages are not yet ported, so both copies live for a while. While they
+do, a fix lands in both, and a new behaviour waits, or lands in Rust alone once no Python agent loads the
+package. So the two copies never drift apart, and nobody pays for a feature twice. The cases are TriG files
+that both runners read, so they hold either copy to the same store.
+
+**When the last world runs on the binary, the Python agent is retired whole.** The commit before its deletion
+is tagged as the last Python release, as 0.1.0's tree was retired, and `agent/` holds the Rust agent alone.
+The snapshot cases outlive it, being files and not Python.
 
 **What is no agent's stays Python.** Onboarding stays Python, with pyshacl, and keeps the admin token out of
 every image. It reads a world as an agent boots it by running the agent's binary to boot and check that
