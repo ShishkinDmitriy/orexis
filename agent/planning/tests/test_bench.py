@@ -102,6 +102,8 @@ def _record(row: dict) -> None:
 
 
 @pytest.mark.parametrize("case, moves, budget", [("two_disk_hanoi", 3, 32), ("three_disk_hanoi", 7, 128),
+                                                  ("four_disk_hanoi", 15, 1024),
+                                                  ("five_disk_hanoi", 31, 4096),
                                                   ("courier_corner", 8, 128)])
 def test_the_planner_solves_hanoi_and_says_what_it_cost(case, moves, budget, monkeypatch, request, snapshots):
     monkeypatch.setattr(clock, "now", lambda: snapshots.NOW)

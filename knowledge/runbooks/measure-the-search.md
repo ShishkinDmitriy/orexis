@@ -27,7 +27,7 @@ python -m cProfile -o /tmp/bench.prof -m pytest agent/planning/tests/test_bench.
 ```
 
 `agent/planning/tests/test_bench.py` asserts the plans — three moves for two disks, seven for
-three, eight steps for the parcel — and reports the median of five passes with the count of
+three, fifteen for four, thirty-one for five, eight steps for the parcel — and reports the median of five passes with the count of
 engine statements beside it. No time is asserted. cProfile roughly doubles everything, so a
 profile is for SHARES and the plain run is for the ledger.
 
@@ -958,3 +958,28 @@ ticks. No two vans stood at one position in any walk
 **Real time.** The head-on walk took 271 s of the development container's time for its 61 ticks, the
 crossings 141 s and 110 s: about four seconds a tick for the two agents together, the planner's pass most of
 it, which is why the lane's suite runs for a quarter of an hour.
+
+# A statement that grows with the cone
+
+**Four and five disks, 2026-11-04, the bench Pi.** The two cases were added to find what grows: the
+cost of one statement rose from 0.2 ms at three disks to 0.9 at four and about 10 at five, so five
+disks took 72 s, 99% of it in the engine. Each statement was timed by its text, and three were the
+cause. `take`'s candidate read joined a possible world and an ended period in one `OPTIONAL` only
+through the outer pattern, a cross product of every world and every period. The frontier joined the
+count of the want's weighings in as a subselect, evaluated again per open weighing. `unweighed` asked
+a candidate's child inside the catalogue's group, before the want narrowed the candidates. Fixed,
+the same tree's medians of five, alternated in one session:
+
+| case | before | after |
+|---|---|---|
+| two disks | 129 ms | 126 ms |
+| three disks | 271 ms | 234 ms |
+| four disks | 2128 ms | 669 ms |
+| five disks | 72 s, one run | 3339 ms |
+| courier corner | 371 ms | 289 ms |
+
+**How the time splits now.** Timed by category around `Planner.plan`, rather than by cProfile, which
+charges pyoxigraph's time to its caller: at four disks the engine is about 85% of the pass, our
+Python about 7% and rdflib's grammar 3%, read once per process. At three disks and on the courier
+corner, parsing the statements is up to a third of the pass, since each is asked over a small store.
+

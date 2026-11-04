@@ -1265,6 +1265,12 @@ hand-rolled walk was once refused for exactly that reason. See
   anything, and chunked alone it would have read everything but `answered`, the unsafe side
   (#908); `footprint._triples_in` reads the key three terms at a time and the attribute as any
   group, recursively.
+- **An `OPTIONAL` group and a joined subselect are evaluated on their own, before the join.** Two
+  patterns in an `OPTIONAL` that meet only through a variable the outside binds are a cross product,
+  every possible world against every ended period in `take`'s candidate read, 24 ms a call where
+  joined within the group it costs 0.3; and a `{ SELECT (COUNT …) }` joined into a read was evaluated
+  again per row, 16 of the frontier's 19 ms, where asked apart it costs 0.7. Both grow with the cone, so
+  they hid on small searches: five disks took 72 s and take 3.4 (`agent/planning/tests/bench/`).
 - **A `BIND` inside a `UNION` branch cannot see a variable bound outside the union.** The
   branches are evaluated on their own and joined with the surrounding pattern afterwards, so
   the tidy form — state the preamble once, then `{ … } UNION { … }` — leaves every outer

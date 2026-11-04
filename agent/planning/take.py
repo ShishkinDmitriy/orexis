@@ -122,11 +122,15 @@ ORDER BY ?order"""
 #  the search stands, so a ground is a point — the action it fills, its mint number, which names
 #  the world it makes, and every parameter it is filled with — the parameter's IRI and the
 #  value, one row each. A candidate stating no mint number was admitted by nobody, and is refused.
+#  AN OPTIONAL'S GROUP JOINED WITHIN ITSELF. The engine evaluates the group on its own before it joins it, so two
+#  patterns in it meeting only through a variable the outside binds are a cross product: `?from a
+#  planning:PossibleGraph . ?period orexis:end ?e` was every possible world against every ended period, 24 ms a
+#  call on a four-disk cone of 158 worlds, two-thirds of the search; joined through `?from`'s period, 0.3.
 _CANDIDATE_Q = """
 SELECT ?from ?start ?end ?spent ?action ?minted ?p ?v WHERE {
   GRAPH $cat { $cand planning:from ?from ; planning:fills ?action ; planning:minted ?minted .
     ?from dcterms:temporal ?period . ?period orexis:start ?start .
-    OPTIONAL { ?from a planning:PossibleGraph . ?period orexis:end ?e }
+    OPTIONAL { ?from a planning:PossibleGraph ; dcterms:temporal ?period . ?period orexis:end ?e }
     OPTIONAL { ?from planning:spent ?s }
     OPTIONAL { $cand ?p ?v . FILTER(?p NOT IN (planning:from, planning:fills, planning:minted, rdf:type)) } }
   BIND(COALESCE(?e, ?start) AS ?end) BIND(COALESCE(?s, 0.0) AS ?spent) }"""
