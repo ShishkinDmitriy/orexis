@@ -347,7 +347,7 @@ WHERE { GRAPH ?plan { ?p a planning:Plan ; planning:outcome ?outcome } }"""
 #  and then by its key, and the achiever bounding them is the best by the same order — on time and
 #  cheapest, or, where none is on time, soonest and then cheapest. A late dose beats none.
 _FRONTIER_Q = """
-SELECT ?w ?spent ?remaining ?minted ?weighing ?late ?lands ?best ?bestLate ?bestLands ?used WHERE {
+SELECT ?w ?spent ?remaining ?minted ?weighing ?late ?lands ?best ?bestLate ?bestLands WHERE {
   GRAPH $cat { ?weighing a planning:Weighing ; planning:for $want ; planning:open true ; planning:weighs ?w .
     OPTIONAL { ?w planning:spent ?s } OPTIONAL { ?w planning:minted ?m }
     OPTIONAL { ?weighing planning:remaining ?r }
@@ -358,12 +358,11 @@ SELECT ?w ?spent ?remaining ?minted ?weighing ?late ?lands ?best ?bestLate ?best
       OPTIONAL { ?y planning:late ?bestLands } }
     BIND(IF(BOUND(?bestLands), 1, 0) AS ?bestLate) }
     ORDER BY ?bestLate ?bestLands ?best LIMIT 1 }
-  { SELECT (COUNT(?x) AS ?used) WHERE {
-    GRAPH $cat { ?x a planning:Weighing ; planning:for $want ; planning:weighs ?u .
-      FILTER NOT EXISTS { ?u a planning:GroundGraph } } } }
   BIND(COALESCE(?s, 0.0) AS ?spent) BIND(COALESCE(?m, 0) AS ?minted) BIND(COALESCE(?r, 0.0) AS ?remaining)
   BIND(IF(BOUND(?lands), 1, 0) AS ?late) }
 ORDER BY ?late ?lands (?spent + ?remaining) ?minted LIMIT 1"""
+#  AND WHAT IS SPENT ASKED APART (`_spent`): joined into this read as a subselect, the count of the want's weighings
+#  was evaluated again per open weighing, 16 of the read's 19 ms on a four-disk cone, where alone it costs 0.7.
 
 #  A WORLD OPENED: off the frontier, and said to have been expanded.
 _CLOSE_U = """
@@ -1282,7 +1281,7 @@ SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId "{agent_id}" }} LIMIT 1"""
         constraints = remember(memo, ("constraints",),
                                lambda: _constraints(store, _shapes(store, memo), self.uri, only, at or clock.now()))
         admit(store, world, only=only, elsewhere=elsewhere, memo=memo)
-        spent = int(top.get("used") or 0)
+        spent = _spent(store, want, memo)
         for pair in unweighed(store, for_=want, leaving=world, memo=memo):
             if spent >= budget:
                 return spent            # cut: the world stays open, to be taken up next time

@@ -67,6 +67,8 @@ ORDER BY ?for ?about"""
 #  weighings — the read cost 74 ms and answered nothing; `?x planning:weighs ?about ; …` costs
 #  4. Only a weighing says `planning:weighs`, so the type it no longer asks is not a check
 #  given up.
+#  THE CHILD ASKED LAST, IN A GROUP OF ITS OWN. Optional inside the catalogue's group, `?child planning:by ?about` was
+#  joined before the want graph narrowed the candidates, 6.7 ms a call on a four-disk cone; after the filters, 1.0.
 #  THE CANDIDATES IN THE ORDER THEY WERE MINTED, off the row and not the name: a name is a
 #  number now (#486), and `possible/10.by` sorts before `possible/9.by` as text.
 _CANDIDATES_Q = """
@@ -75,10 +77,10 @@ SELECT DISTINCT ?for ?about ?from ?child WHERE {
   GRAPH ?d { ?holder planning:holds ?for . ?for a planning:Want $narrow }
   GRAPH $cat {
     ?about a planning:Candidate ; planning:from ?from ; planning:minted ?m $leaving .
-    ?y planning:weighs ?from ; planning:for ?for ; a planning:Weighing .
-    OPTIONAL { ?child planning:by ?about } }
+    ?y planning:weighs ?from ; planning:for ?for ; a planning:Weighing . }
   FILTER NOT EXISTS { GRAPH $cat { ?x planning:weighs ?about ; planning:for ?for } }
-  FILTER NOT EXISTS { GRAPH $cat { ?c planning:by ?about . ?z planning:weighs ?c ; planning:for ?for } } }
+  FILTER NOT EXISTS { GRAPH $cat { ?c planning:by ?about . ?z planning:weighs ?c ; planning:for ?for } }
+  OPTIONAL { GRAPH $cat { ?child planning:by ?about } } }
 ORDER BY ?for ?m"""
 
 
