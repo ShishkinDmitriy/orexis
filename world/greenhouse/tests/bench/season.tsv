@@ -1,0 +1,3 @@
+date	commit	machine	case	hours	passes	total_s	median_ms	p95_ms	max_ms	quads	commands	digest
+2026-11-04	3d04a7f1	raspberry	day	24	144	88.7	606	801	886	1888	1	7e9516c5e8e233ad
+2026-11-04	3d04a7f1	raspberry	framed_day	24	144	106.6	728	959	980	1938	1	7e9516c5e8e233ad

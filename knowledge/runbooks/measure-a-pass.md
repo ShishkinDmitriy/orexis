@@ -102,3 +102,24 @@ weighed against the worlds a split saves. The warm pass answering both steps spe
 drain than the cold one did, because the intentions end there. None of these is the 0.4 s the
 end-to-end script quotes for the Pi; that figure is the Pi's, and the next rows from the bench Pi
 will say by how much.
+
+# A day
+
+`world/greenhouse/tests/test_season_bench.py` runs the grower against its simulator for 24 simulated
+hours, a reading every ten minutes, on one store: every pass of a day, where the bench above times one
+pass from a fresh boot. It is a walk, so `pytest -q` leaves it out:
+
+```bash
+pytest world/greenhouse/tests/test_season_bench.py -s -n0 -m walk                 # print the figures
+pytest world/greenhouse/tests/test_season_bench.py -s -n0 -m walk --bench-record  # and append them
+```
+
+Its ledger, `world/greenhouse/tests/bench/season.tsv`, has a row per case: the passes, the day's seconds,
+the median, 95th percentile and slowest pass, the quads at the end, the commands, and a digest of them,
+each command's instant, topic and payload. Another implementation of the agent running the same day must
+send the same commands, so its digest is the same, and a comparison of two is a comparison of one day.
+The first rows, 2026-11-04 on the bench Pi: the bed alone in 89 s, a median pass of 606 ms against the
+fresh boot's 353 for a quiet one, since a store that has lived a day costs more; the framed bed in 107 s.
+Both days send one dose and nothing else, so the day measures what a quiet agent costs more than what a
+busy one decides.
+
