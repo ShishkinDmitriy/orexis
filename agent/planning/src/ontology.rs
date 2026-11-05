@@ -20,3 +20,10 @@ pub const PRECONDITION: &str = "http://example.org/orexis/planning#precondition"
 pub const POSSIBLE_GRAPH: &str = "http://example.org/orexis/planning#PossibleGraph";
 pub const GROUND_GRAPH: &str = "http://example.org/orexis/planning#GroundGraph";
 pub const CHANGEABLE_GRAPH: &str = "http://example.org/orexis/planning#ChangeableGraph";
+pub const SPENT: &str = "http://example.org/orexis/planning#spent";
+pub const BY: &str = "http://example.org/orexis/planning#by";
+
+/// A step's prediction, two graphs it names: EXECUTION'S words, which the Python planning package imports from
+/// `agent/execution/ontology.py` as these two terms alone.
+pub const ADDS_GRAPH: &str = "http://example.org/orexis/execution#AddsGraph";
+pub const RETRACTS_GRAPH: &str = "http://example.org/orexis/execution#RetractsGraph";

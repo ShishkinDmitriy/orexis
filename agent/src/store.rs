@@ -35,6 +35,7 @@ pub struct Store {
     namespaces: Arc<Namespaces>,
     queries: Mutex<HashMap<String, PreparedSparqlQuery>>,
     updates: Mutex<HashMap<String, PreparedSparqlUpdate>>,
+    algebra: Mutex<HashMap<String, spargebra::Update>>,
     parsed: AtomicUsize,
     run: AtomicUsize,
 }
@@ -113,6 +114,7 @@ impl Store {
             namespaces,
             queries: Mutex::new(HashMap::new()),
             updates: Mutex::new(HashMap::new()),
+            algebra: Mutex::new(HashMap::new()),
             parsed: AtomicUsize::new(0),
             run: AtomicUsize::new(0),
         })
@@ -254,6 +256,38 @@ impl Store {
             .map_err(|e| Error::Evaluation(e.to_string()))
     }
 
+    /// An update text as its ALGEBRA, parsed once by its text with every prefix the tree declares — for a runner
+    /// that says on the parse what the text does not: which graph it changes and which it reads.
+    pub fn parse_update(&self, text: &str) -> Result<spargebra::Update, Error> {
+        self.run.fetch_add(1, Ordering::Relaxed);
+        let mut parsed = self.algebra.lock().expect("a cache nobody poisoned");
+        if let Some(update) = parsed.get(text) {
+            return Ok(update.clone());
+        }
+        let parser = self
+            .namespaces
+            .iter()
+            .try_fold(spargebra::SparqlParser::new(), |parser, (label, iri)| {
+                parser.with_prefix(label, iri)
+            })
+            .map_err(|e| Error::Syntax(e.to_string()))?;
+        let update = parser
+            .parse_update(text)
+            .map_err(|e| Error::Syntax(format!("{e}: {text}")))?;
+        self.parsed.fetch_add(1, Ordering::Relaxed);
+        parsed.insert(text.to_string(), update.clone());
+        Ok(update)
+    }
+
+    /// An update's algebra, run.
+    pub fn run_update(&self, update: spargebra::Update) -> Result<(), Error> {
+        SparqlEvaluator::new()
+            .for_update(update)
+            .on_store(&self.engine)
+            .execute()
+            .map_err(|e| Error::Evaluation(e.to_string()))
+    }
+
     /// THE ONE GRAPH THAT DESCRIBES EVERY GRAPH AND ITSELF, found by its own row: None for a store nobody has told
     /// anything, and two refused, since a store with two catalogues has two truths about what its graphs are.
     pub fn catalogue(&self) -> Result<Option<String>, Error> {
@@ -341,7 +375,7 @@ impl Store {
         let whose = owner.map(|o| format!(" ; orexis:ownedBy <{o}>")).unwrap_or_default();
         let bounds: String = [("start", start), ("end", end)]
             .iter()
-            .filter_map(|(k, v)| v.map(|v| format!(" ; orexis:{k} \"{v}\"^^xsd:dateTime")))
+            .filter_map(|(k, v)| v.map(|v| format!(" ; orexis:{k} \"{}\"^^xsd:dateTime", crate::clock::isoformat(v))))
             .collect();
         let when = if bounds.is_empty() {
             String::new()
@@ -614,9 +648,9 @@ fn engine(e: impl std::fmt::Display) -> Error {
     Error::Evaluation(e.to_string())
 }
 
-/// An instant as the term a query compares it as.
+/// An instant as the term a query compares it as, spelled as the Python kernel spells it.
 pub fn instant(at: DateTime) -> Value {
-    Value::Term(Literal::new_typed_literal(at.to_string(), xsd::DATE_TIME).into())
+    Value::Term(Literal::new_typed_literal(crate::clock::isoformat(at), xsd::DATE_TIME).into())
 }
 
 /// The IRI a row binds `variable` to, where it binds one.

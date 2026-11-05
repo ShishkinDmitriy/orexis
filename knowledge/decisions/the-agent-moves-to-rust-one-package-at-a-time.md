@@ -88,8 +88,10 @@ checked as they land, not at the end.
 shape, and regenerates nothing: two writers of one canonical form would drift. So what a diff records, the
 Rust copy reproduces exactly, and the graph hash shows what that costs: a digest is Python's `repr` of the
 canonical facts, hashed, and `agent/src/hash.rs` spells each tuple, string and float as `repr` does, so the
-four `hash_named_graph` cases pass on both. The spelling is free to change once the Python agent is retired
-and the diffs are the crate's to write.
+four `hash_named_graph` cases pass on both. The same holds for every literal a ported act writes, since a
+case compares terms and not values: an instant is spelled as Python's `isoformat` spells it, `+00:00` and not
+`Z`, and a parameter's value reaches a rule text as Python's binder hands it. The spelling is free to change once
+the Python agent is retired and the diffs are the crate's to write.
 
 **An agent runs in Rust once every package its roles load is ported.** Inside one agent the packages share
 one store in one process, and a Rust runtime hosting a Python package would need the interpreter in the
@@ -105,7 +107,10 @@ ported, each world's walks and benches passing on the binary as it does:
 | the market | `allotment` |
 | translation, the Telegram and HTTP members | `terrace` |
 
-The kernel is the store, the catalogue, the binder, the lifecycle and the runtime.
+The kernel is the store, the catalogue, the binder, the lifecycle and the runtime. Belief's transition
+machine lands with planning, before the rest of belief, because an action's effect is a transition and `take`
+applies it; it says a rule's scope on the parsed update, its templates the world's and its dataset the graphs
+read, where the Python copy reprints the text around rdflib's parse.
 
 **A world may mix the two.** Agents share no store and meet only by the documents on the bus, so a Rust
 courier can drive beside a Python one in the lane. A mixed society is what holds the two to one wire, where
