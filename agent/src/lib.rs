@@ -5,13 +5,20 @@
 //! - [`bind`]: a rule text's `$tokens` bound to the terms they are, refusing a token nobody bound;
 //! - [`store`]: the engine, every text parsed once, and the catalogue that says what each graph is;
 //! - [`clock`]: the one timeline, which may run fast;
-//! - [`ontology`]: the kernel's terms code may name (rule 1: a T-Box term, never an instance).
+//! - [`hash`]: what a graph holds, as the digest the Python kernel writes, a world hashed within what is read;
+//! - [`document`]: a file or a peer's bytes as a document that says what its graphs are, refused otherwise;
+//! - [`ontology`]: the kernel's terms code may name (rule 1: a T-Box term, never an instance);
+//! - [`snapshots`]: the case runner, holding a store to the Python suite's own `.trig` and `.diff`.
 
 pub mod bind;
 pub mod clock;
+pub mod document;
 pub mod error;
+pub mod hash;
 pub mod namespaces;
 pub mod ontology;
+#[cfg(any(test, feature = "snapshots"))]
+pub mod snapshots;
 pub mod store;
 
 pub use error::Error;
