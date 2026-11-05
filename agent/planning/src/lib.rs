@@ -9,10 +9,12 @@
 //! - [`prepare_ground`]: what crosses from the belief base into the store a search over one scope stands in;
 //! - [`lay_ground`]: one ground world per period the agent can see, cut to what the search can change;
 //! - [`scope_actions`]: the actions clustered into the scopes their effects join, written as the store's partition;
-//! - [`find_scopes`]: every scope each predicate, term and action is in, read back.
+//! - [`find_scopes`]: every scope each predicate, term and action is in, read back;
+//! - [`find_wants`]: the wants a store holds at an instant, narrowed by the criteria a caller names.
 
 pub mod admit;
 pub mod find_scopes;
+pub mod find_wants;
 pub mod footprint;
 pub mod lay_ground;
 pub mod memo;
