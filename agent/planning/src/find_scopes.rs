@@ -11,7 +11,7 @@ use orexis::store::{Store, iri};
 const SCOPES_Q: &str = "SELECT ?member ?scope WHERE { ?member planning:inScope ?scope }";
 
 /// EVERY STANDING SCOPE GRAPH, asked of the catalogue by class.
-const STANDING_Q: &str = "
+pub(crate) const STANDING_Q: &str = "
 SELECT ?g WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:ScopeGraph } }
 ORDER BY ?g";
