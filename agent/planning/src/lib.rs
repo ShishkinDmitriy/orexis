@@ -11,7 +11,11 @@ pub mod admit;
 pub mod memo;
 pub mod next_ground;
 pub mod ontology;
+pub mod shapes;
 pub mod take;
+pub mod unweighed;
+pub mod violation;
+pub mod weigh;
 pub mod world_at;
 
 pub use memo::Memo;
