@@ -391,6 +391,32 @@ impl Store {
         Ok(out)
     }
 
+    /// What `subject` says under `predicate` in `graph`, in no order: the one-hop read a catalogue row is, asked of
+    /// the engine's index rather than a text bound per subject and parsed per subject.
+    pub fn objects(&self, subject: &Term, predicate: &str, graph: &str) -> Result<Vec<Term>, Error> {
+        let subject = match subject {
+            Term::NamedNode(n) => NamedOrBlankNode::from(n.clone()),
+            Term::BlankNode(b) => NamedOrBlankNode::from(b.clone()),
+            Term::Literal(_) => return Ok(Vec::new()),
+        };
+        let (predicate, graph) = (named(predicate)?, named(graph)?);
+        self.engine
+            .quads_for_pattern(
+                Some(subject.as_ref()),
+                Some(predicate.as_ref()),
+                None,
+                Some(GraphNameRef::NamedNode(graph.as_ref())),
+            )
+            .map(|q| q.map(|q| q.object).map_err(engine))
+            .collect()
+    }
+
+    /// Whether `graph` holds the triple.
+    pub fn holds(&self, subject: &str, predicate: &str, object: &str, graph: &str) -> Result<bool, Error> {
+        let quad = Quad::new(named(subject)?, named(predicate)?, named(object)?, named(graph)?);
+        self.engine.contains(&quad).map_err(engine)
+    }
+
     /// Quads straight in, as the terms they are.
     pub fn add(&self, quads: impl IntoIterator<Item = Quad>) -> Result<(), Error> {
         for quad in quads {

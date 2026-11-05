@@ -181,6 +181,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "orexis-planning"
+version = "0.2.0"
+dependencies = [
+ "orexis",
+ "oxigraph",
+ "oxsdatatypes",
+]
+
+[[package]]
 name = "oxigraph"
 version = "0.5.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"

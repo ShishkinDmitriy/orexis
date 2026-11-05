@@ -61,6 +61,14 @@ an agent does not run is then compiled out rather than merely left uninstalled. 
 binary and the CA certificates, and the world is mounted read-only. That leaves no interpreter, no
 package manager and no shell.
 
+**Each package is a crate of its own, in its own directory, and the features are the binary's.** The kernel
+is `agent/Cargo.toml` and planning `agent/planning/Cargo.toml`, beside the package's ontology and its Python,
+and a package's crate depends on the crates beneath it alone. So the compiler holds the rule that a package
+imports what lies beneath it and never above, as `lint-imports` and the layout test hold it in Python. Features
+in one crate were refused: a module of sensing calling planning would compile in every build with both on
+and break only in the build without planning. A package's own dependencies are its crate's, so a binary built
+without a feature links none of them.
+
 **The documents do not change.** The ontologies, the actions, the rules, the shapes, the desires and the
 worlds are read as they are, by the same engine, so the engine's traps that AGENTS.md lists stay true.
 A domain stays documents and no code an agent runs.

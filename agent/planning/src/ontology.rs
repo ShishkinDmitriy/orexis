@@ -1,0 +1,22 @@
+//! PLANNING'S TERMS that code names, as `agent/planning/ontology.py` names them.
+
+use orexis::ontology::{BELIEF, RECORD};
+
+pub const PLANNING: &str = "http://example.org/orexis/planning#";
+
+pub const DESIRE: &str = "http://example.org/orexis/planning#DesireGraph";
+pub const WANT: &str = "http://example.org/orexis/planning#WantGraph";
+
+/// What a planning text is answered over: the kernel's kinds, and the desires and wants.
+pub const KNOWN: &[&str] = &[BELIEF, RECORD, DESIRE, WANT];
+
+pub const CANDIDATE: &str = "http://example.org/orexis/planning#Candidate";
+pub const WAIT: &str = "http://example.org/orexis/planning#Wait";
+pub const FILLS: &str = "http://example.org/orexis/planning#fills";
+pub const FROM: &str = "http://example.org/orexis/planning#from";
+pub const MINTED: &str = "http://example.org/orexis/planning#minted";
+pub const PRECONDITION: &str = "http://example.org/orexis/planning#precondition";
+
+pub const POSSIBLE_GRAPH: &str = "http://example.org/orexis/planning#PossibleGraph";
+pub const GROUND_GRAPH: &str = "http://example.org/orexis/planning#GroundGraph";
+pub const CHANGEABLE_GRAPH: &str = "http://example.org/orexis/planning#ChangeableGraph";
