@@ -111,6 +111,17 @@ impl Shapes {
         !self.objects(subject, predicate).is_empty()
     }
 
+    /// Every triple described, subject by subject: within a concise bounded description, its triples alone.
+    pub fn triples(&self) -> Vec<(Term, NamedNode, Term)> {
+        let mut out = Vec::new();
+        for subject in self.subjects.keys() {
+            for (p, o) in self.predicate_objects(subject) {
+                out.push((subject.clone(), p, o));
+            }
+        }
+        out
+    }
+
     /// An RDF list's members, from its head, as rdflib's `Collection` walks it.
     pub fn list(&self, head: &Term) -> Vec<Term> {
         let mut out = Vec::new();

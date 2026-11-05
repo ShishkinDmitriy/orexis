@@ -210,6 +210,32 @@ impl Store {
         }
     }
 
+    /// `text`, a CONSTRUCT, over the union of `graphs` as its default graph: the triples it makes.
+    pub fn construct(&self, text: &str, graphs: &[&str]) -> Result<Vec<Triple>, Error> {
+        let mut query = self.query(text)?;
+        let default = graphs
+            .iter()
+            .map(|g| {
+                NamedNode::new(*g)
+                    .map(GraphName::from)
+                    .map_err(|e| Error::Evaluation(e.to_string()))
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        query.dataset_mut().set_default_graph(default);
+        match query
+            .on_store(&self.engine)
+            .execute()
+            .map_err(|e| Error::Evaluation(e.to_string()))?
+        {
+            QueryResults::Graph(triples) => triples
+                .map(|t| t.map_err(|e| Error::Evaluation(e.to_string())))
+                .collect(),
+            _ => Err(Error::Evaluation(
+                "a construct was asked for and the text is not one".into(),
+            )),
+        }
+    }
+
     /// Whether `text`, an ASK, holds over the union of `graphs`.
     pub fn ask(&self, text: &str, graphs: &[&str]) -> Result<bool, Error> {
         let mut query = self.query(text)?;

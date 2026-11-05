@@ -10,9 +10,14 @@
 //! - [`lay_ground`]: one ground world per period the agent can see, cut to what the search can change;
 //! - [`scope_actions`]: the actions clustered into the scopes their effects join, written as the store's partition;
 //! - [`find_scopes`]: every scope each predicate, term and action is in, read back;
-//! - [`find_wants`]: the wants a store holds at an instant, narrowed by the criteria a caller names.
+//! - [`find_wants`]: the wants a store holds at an instant, narrowed by the criteria a caller names;
+//! - [`derive_wants`]: a want minted for every cluster of what a desire's met-test reads unmet, read off the weighings;
+//! - [`couplings`]: which instances a holder's constraints can make collide, over what the actions can reach;
+//! - [`withdraw`]: every derived want the derivation no longer implies, and every want reached, taken away.
 
 pub mod admit;
+pub mod couplings;
+pub mod derive_wants;
 pub mod find_scopes;
 pub mod find_wants;
 pub mod footprint;
@@ -27,6 +32,7 @@ pub mod take;
 pub mod unweighed;
 pub mod violation;
 pub mod weigh;
+pub mod withdraw;
 pub mod world_at;
 
 pub use memo::Memo;
