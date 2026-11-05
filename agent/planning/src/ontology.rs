@@ -31,3 +31,4 @@ pub const SHAPES: &str = "http://example.org/orexis/planning#ShapesGraph";
 pub const CONSTRAINT_GRAPH: &str = "http://example.org/orexis/planning#ConstraintGraph";
 pub const DERIVATION_GRAPH: &str = "http://example.org/orexis/planning#DerivationGraph";
 pub const SCOPE_GRAPH: &str = "http://example.org/orexis/planning#ScopeGraph";
+pub const ANYTHING: &str = "http://example.org/orexis/planning#Anything";

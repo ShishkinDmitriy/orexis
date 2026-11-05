@@ -242,7 +242,8 @@ fn py_tuple(items: &[String]) -> String {
 /// Python's printability is its Unicode database's; this asks what Rust can — control, whitespace other than a
 /// space, the format characters and the private and unpaired ranges — and an unassigned code point, which
 /// Python escapes, is printed. No document this project hashes holds one.
-fn py_str(text: &str) -> String {
+/// A string as Python's `repr` spells it.
+pub fn py_str(text: &str) -> String {
     let quote = if text.contains('\'') && !text.contains('"') {
         '"'
     } else {

@@ -279,6 +279,21 @@ impl Store {
         Ok(update)
     }
 
+    /// A query text as its ALGEBRA, with every prefix the tree declares — for a reader of what a text says, never
+    /// to run it.
+    pub fn parse_query(&self, text: &str) -> Result<spargebra::Query, Error> {
+        let parser = self
+            .namespaces
+            .iter()
+            .try_fold(spargebra::SparqlParser::new(), |parser, (label, iri)| {
+                parser.with_prefix(label, iri)
+            })
+            .map_err(|e| Error::Syntax(e.to_string()))?;
+        parser
+            .parse_query(text)
+            .map_err(|e| Error::Syntax(format!("{e}: {text}")))
+    }
+
     /// An update's algebra, run.
     pub fn run_update(&self, update: spargebra::Update) -> Result<(), Error> {
         SparqlEvaluator::new()

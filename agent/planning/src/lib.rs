@@ -8,6 +8,7 @@
 //! - [`take`]: one candidate taken, the world it reaches forked with the action's effect applied, and its row;
 //! - [`prepare_ground`]: what crosses from the belief base into the store a search over one scope stands in;
 //! - [`lay_ground`]: one ground world per period the agent can see, cut to what the search can change;
+//! - [`scope_actions`]: the actions clustered into the scopes their effects join, written as the store's partition;
 //! - [`find_scopes`]: every scope each predicate, term and action is in, read back.
 
 pub mod admit;
@@ -18,6 +19,7 @@ pub mod memo;
 pub mod next_ground;
 pub mod ontology;
 pub mod prepare_ground;
+pub mod scope_actions;
 pub mod shapes;
 pub mod take;
 pub mod unweighed;

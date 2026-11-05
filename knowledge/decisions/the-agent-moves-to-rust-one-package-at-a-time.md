@@ -94,7 +94,10 @@ case compares terms and not values: an instant is spelled as Python's `isoformat
 states: a met-test numbers its constraints in the order the shapes come back from the engine, the number is part
 of a violation row and of a want's key, and the engine hands quads back in no order a document says, reversed by
 each store they are copied through. So a case is loaded as `put_graph` loads it, through a store of its own, and
-the shapes are merged as rdflib's `Graph` merges them, each subject's predicates in the order first met. The
+the shapes are merged as rdflib's `Graph` merges them, each subject's predicates in the order first met. A filling is
+asked as a chain of OPTIONALs in the order rdflib's algebra holds a precondition's patterns, each block reordered by
+`reorderTriples`, and the chain's order decides which rows bind, so `agent/planning/src/footprint/atoms.rs` orders
+them as rdflib does; read in the order written, seven of the eleven shipped agents' scopes came out otherwise. The
 spelling and the order are free to change once the Python agent is retired and the diffs are the crate's to
 write. What the two parsers READ differs in one place, and no shipped text meets it: the engine's parser
 translates a sequence or an inverse of plain predicates into triples, as SPARQL's algebra says, where rdflib

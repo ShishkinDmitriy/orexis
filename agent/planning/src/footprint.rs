@@ -2,7 +2,8 @@
 //! `agent/planning/footprint.py` reads it, here off the parsed algebra rather than rdflib's.
 //!
 //! Ported so far: what the laying of the grounds asks of it — `changeable`, the patterns a search can change, and
-//! `read_by_transitions`, what a transition's WHERE reads. **ANYTHING UNREADABLE READS AS ANYTHING** (`None`): a
+//! `read_by_transitions`, what a transition's WHERE reads — and what `scope_actions` asks, `atoms_of`, each action's
+//! fillings as predicates on keys, and `stored_edges`, the derivations' (`atoms`). **ANYTHING UNREADABLE READS AS ANYTHING** (`None`): a
 //! text that will not parse, a template whose predicate is a variable nothing bounds. Over-approximation is safe
 //! wherever these sets are used and under-approximation is not.
 //!
@@ -91,7 +92,7 @@ fn as_variables(text: &str) -> String {
 
 /// A transition's or an effect's update as the runner reads it, made parseable — `None` where the runner refuses
 /// it, its tokens read as variables, or the parseable text will not parse, which is anything.
-fn read(store: &Store, text: &str) -> Option<Parts> {
+pub(crate) fn read(store: &Store, text: &str) -> Option<Parts> {
     parts(store, &as_variables(text)).ok()?;
     parts(store, &parseable(text)).ok()
 }
@@ -172,7 +173,7 @@ fn triple(t: &TriplePattern, out: &mut BTreeSet<String>) -> bool {
     }
 }
 
-fn path_iris(path: &PropertyPathExpression) -> Option<BTreeSet<String>> {
+pub(crate) fn path_iris(path: &PropertyPathExpression) -> Option<BTreeSet<String>> {
     match path {
         PropertyPathExpression::NamedNode(n) => Some(BTreeSet::from([n.as_str().to_string()])),
         PropertyPathExpression::Reverse(p)
@@ -335,7 +336,7 @@ fn ground_object(term: &GroundTermPattern) -> Option<Term> {
 
 /// Every variable a `VALUES` block under `pattern` binds, to the IRIs it binds it to — `None` where a row leaves
 /// it `UNDEF` or binds it to something that is no IRI. Two blocks binding one variable are unioned.
-fn values_in(pattern: &GraphPattern) -> BTreeMap<Variable, Option<BTreeSet<String>>> {
+pub(crate) fn values_in(pattern: &GraphPattern) -> BTreeMap<Variable, Option<BTreeSet<String>>> {
     let mut found = BTreeMap::new();
     collect_values(pattern, &mut found);
     found
@@ -388,7 +389,7 @@ pub fn n3(term: &Term) -> String {
     }
 }
 
-fn literal_n3(literal: &Literal) -> String {
+pub(crate) fn literal_n3(literal: &Literal) -> String {
     let v = literal.value();
     let encoded = if v.contains('\n') {
         let mut e = v.replace('\\', "\\\\");
@@ -418,6 +419,10 @@ fn literal_n3(literal: &Literal) -> String {
         encoded
     }
 }
+
+mod atoms;
+
+pub use atoms::{Atom, Filling, Key, Side, atoms_of, spelled, stored_edges};
 
 #[cfg(test)]
 mod tests;
