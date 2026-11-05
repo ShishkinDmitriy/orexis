@@ -12,11 +12,11 @@ use super::*;
 const DESIRE: &str = "urn:test:gardener.no_overdue_debts";
 const HOLDER: &str = "urn:test:gardener";
 
-fn at() -> DateTime {
+pub(crate) fn at() -> DateTime {
     "2026-09-17T12:00:00+00:00".parse().unwrap()
 }
 
-fn store() -> Store {
+pub(crate) fn store() -> Store {
     let store = Store::new(snapshots::namespaces()).expect("an empty store");
     store
         .update(
@@ -28,7 +28,7 @@ fn store() -> Store {
     store
 }
 
-fn graph_of(at: DateTime, until: Option<DateTime>) -> String {
+pub(crate) fn graph_of(at: DateTime, until: Option<DateTime>) -> String {
     let stamp = |t: DateTime| isoformat(t).replace(':', "").replace('+', "p");
     format!(
         "urn:test:wants/{}--{}",
@@ -38,7 +38,7 @@ fn graph_of(at: DateTime, until: Option<DateTime>) -> String {
 }
 
 /// A want, written the way the derivation writes one: a graph of wants that arrived derived, its period the stretch.
-fn derived(store: &Store, uri: &str, from: DateTime, until: Option<DateTime>) {
+pub(crate) fn derived(store: &Store, uri: &str, from: DateTime, until: Option<DateTime>) {
     let graph = graph_of(from, until);
     let mut period = format!(" ; orexis:start \"{}\"^^xsd:dateTime", isoformat(from));
     if let Some(until) = until {
@@ -64,7 +64,7 @@ WHERE {{ GRAPH <urn:test:catalogue> {{ }}
 }
 
 /// A debt, written the way a ledger writes one: its own graph, a record of the case's own family.
-fn owed(store: &Store, uri: &str) {
+pub(crate) fn owed(store: &Store, uri: &str) {
     let graph = format!(
         "http://example.org/orexis/market#obligations/gardener/{}",
         uri.rsplit(':').next().unwrap()
