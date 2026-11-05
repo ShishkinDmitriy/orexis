@@ -3,16 +3,18 @@
 //! (the-agent-moves-to-rust-one-package-at-a-time).
 //!
 //! A case is `<function>/<case>.trig`, the store before, and `<case>.diff`, what the function changes; what the
-//! function must leave is the case with the diff applied, compared quad by quad, blank nodes by their shape. The
+//! function must leave is the case with the diff applied, compared quad by quad, blank nodes by their shape, and a
+//! mismatch reported graph by graph. The
 //! diff is the Python suite's to WRITE (`pytest --update-snapshots`) and this runner's only to hold a store to: a
 //! case regenerated here would be a second writer of one claim, and two writers of a canonical form drift.
 
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, LazyLock};
 
 use oxigraph::model::dataset::CanonicalizationAlgorithm;
-use oxigraph::model::{Dataset, Quad};
+use oxigraph::model::{Dataset, Graph};
 use oxsdatatypes::DateTime;
 use regex::Regex;
 
@@ -138,20 +140,15 @@ pub fn held_to_diff(case: &Path, store: &Store, function: &str) {
     expected
         .put_trig(WORLD, &patched(&read(case), &read(&path)))
         .unwrap_or_else(|e| panic!("{} with its diff: {e}", name(case)));
-    let (left, missing) = differing(&dataset(store), &dataset(&expected));
-    assert!(
-        left.is_empty() && missing.is_empty(),
-        "{}: the store `{function}` left differs from case + {}\n{}{}  where the Python kernel agrees, `{REGENERATE}` \
+    if dataset(store) == dataset(&expected) {
+        return;
+    }
+    panic!(
+        "{}: the store `{function}` left differs from case + {}\n{}  where the Python kernel agrees, `{REGENERATE}` \
          rewrites the diff; where it does not, the port is wrong",
         name(case),
         name(&path),
-        left.iter()
-            .map(|l| format!("  left, unexpected:           {l}\n"))
-            .collect::<String>(),
-        missing
-            .iter()
-            .map(|l| format!("  the diff says, missing:    {l}\n"))
-            .collect::<String>(),
+        by_graph(store, &expected),
     );
 }
 
@@ -167,7 +164,8 @@ pub fn orphans_in(directory: &Path) -> Vec<String> {
     out
 }
 
-/// Every quad of every named graph — the default graph is nothing a case holds a function to.
+/// Every quad of every named graph — the default graph is nothing a case holds a function to — canonical as one
+/// dataset, so a blank node two graphs share is held to being shared.
 fn dataset(store: &Store) -> Dataset {
     let mut out = Dataset::new();
     for graph in store.graph_names().expect("the graphs") {
@@ -179,12 +177,40 @@ fn dataset(store: &Store) -> Dataset {
     out
 }
 
-/// What one canonical dataset holds that the other does not, and the reverse, one quad a line.
-fn differing(left: &Dataset, expected: &Dataset) -> (Vec<String>, Vec<String>) {
-    let lines =
-        |d: &Dataset| -> std::collections::BTreeSet<String> { d.iter().map(|q| Quad::from(q).to_string()).collect() };
-    let (l, e) = (lines(left), lines(expected));
-    (l.difference(&e).cloned().collect(), e.difference(&l).cloned().collect())
+/// One graph's triples, canonical alone: a graph that differs is reported by itself, and a blank node relabelled
+/// in it relabels nothing in another.
+fn triples(store: &Store, graph: &str) -> BTreeSet<String> {
+    let mut out = Graph::new();
+    for triple in store.triples(graph).expect("a graph's triples") {
+        out.insert(&triple);
+    }
+    out.canonicalize(CanonicalizationAlgorithm::Unstable);
+    out.iter().map(|t| t.to_string()).collect()
+}
+
+/// The report of two stores that differ: per graph either holds, what it has that the other lacks, one triple a
+/// line. Where every graph agrees alone, what differs is which blank nodes the graphs share.
+fn by_graph(left: &Store, expected: &Store) -> String {
+    let mut graphs: BTreeSet<String> = left.graph_names().expect("the graphs").into_iter().collect();
+    graphs.extend(expected.graph_names().expect("the graphs"));
+    let mut out = String::new();
+    for graph in &graphs {
+        let (l, e) = (triples(left, graph), triples(expected, graph));
+        if l == e {
+            continue;
+        }
+        out += &format!("  <{graph}>\n");
+        for t in l.difference(&e) {
+            out += &format!("    left, unexpected:         {t}\n");
+        }
+        for t in e.difference(&l) {
+            out += &format!("    the diff says, missing:  {t}\n");
+        }
+    }
+    if out.is_empty() {
+        out += "  every graph agrees alone: the blank nodes two graphs share differ\n";
+    }
+    out
 }
 
 fn read(path: &Path) -> String {
@@ -210,6 +236,38 @@ mod tests {
             patched(case, diff),
             "@prefix : <urn:> .\nGRAPH :g {\n  :a :b :c .\n  :a :b :d .\n}\n"
         );
+    }
+
+    fn store_of(trig: &str) -> Store {
+        let store = Store::new(namespaces()).expect("an empty store");
+        store.put_trig(WORLD, trig).expect("the case");
+        store
+    }
+
+    #[test]
+    fn a_report_names_the_graph_that_differs_and_no_other() {
+        let left = store_of("@prefix : <urn:> .\nGRAPH :g { :a :b [ :c 1 ] }\nGRAPH :h { :a :b :c }\n");
+        let expected = store_of("@prefix : <urn:> .\nGRAPH :g { :a :b [ :c 1 ] }\nGRAPH :h { :a :b :d }\n");
+        assert_ne!(dataset(&left), dataset(&expected));
+        let report = by_graph(&left, &expected);
+        assert!(!report.contains("<urn:g>"), "{report}");
+        assert!(report.contains("<urn:h>"), "{report}");
+        assert!(
+            report.contains("left, unexpected:         <urn:a> <urn:b> <urn:c>"),
+            "{report}"
+        );
+        assert!(
+            report.contains("the diff says, missing:  <urn:a> <urn:b> <urn:d>"),
+            "{report}"
+        );
+    }
+
+    #[test]
+    fn a_blank_node_two_graphs_share_is_held_to_being_shared() {
+        let left = store_of("@prefix : <urn:> .\nGRAPH :g { :a :b _:x }\nGRAPH :h { _:x :c 1 }\n");
+        let expected = store_of("@prefix : <urn:> .\nGRAPH :g { :a :b _:x }\nGRAPH :h { _:y :c 1 }\n");
+        assert_ne!(dataset(&left), dataset(&expected));
+        assert!(by_graph(&left, &expected).contains("the blank nodes two graphs share differ"));
     }
 
     #[test]
