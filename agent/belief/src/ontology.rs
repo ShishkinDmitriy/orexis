@@ -4,3 +4,4 @@ pub const BELIEF: &str = "http://example.org/orexis/belief#";
 pub const TRANSITION: &str = "http://example.org/orexis/belief#Transition";
 pub const UPDATE: &str = "http://example.org/orexis/belief#update";
 pub const RULES_GRAPH: &str = "http://www.w3.org/ns/shacl#RulesGraph";
+pub const REVISION_GRAPH: &str = "http://example.org/orexis/belief#RevisionGraph";
