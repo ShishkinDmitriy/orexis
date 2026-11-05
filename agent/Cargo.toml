@@ -20,3 +20,6 @@ spargebra = "0.4"
 [features]
 # THE SNAPSHOT RUNNER, for a package crate's tests: a case's `.trig` and `.diff` read as the Python suite reads them.
 snapshots = []
+# A VOLUME: the store on disk, RocksDB as pyoxigraph keeps it, so an agent moving from the Python kernel keeps its
+# volume. The binary's alone: a package's tests run in memory.
+volume = ["oxigraph/rocksdb"]

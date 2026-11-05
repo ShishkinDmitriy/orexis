@@ -1,0 +1,26 @@
+# THE BINARY: one agent, booted from a world's files and run until nothing is left to pursue, each package a
+# feature, so a package an agent does not run is compiled out
+# (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md).
+[package]
+name = "orexis-agent"
+version = "0.2.0"
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "orexis-agent"
+path = "src/main.rs"
+
+[lib]
+path = "src/lib.rs"
+
+[features]
+default = ["planning"]
+planning = ["dep:orexis-planning"]
+volume = ["orexis/volume"]
+
+[dependencies]
+orexis = { path = "../agent" }
+orexis-planning = { path = "../agent/planning", optional = true }
+oxsdatatypes = "0.2"
+log = "0.4"

@@ -120,6 +120,20 @@ impl Store {
         })
     }
 
+    /// A store on disk at `path`, opened or made, speaking `namespaces`: a volume an agent lives in.
+    #[cfg(feature = "volume")]
+    pub fn open(path: &std::path::Path, namespaces: Arc<Namespaces>) -> Result<Self, Error> {
+        Ok(Store {
+            engine: Engine::open(path).map_err(|e| Error::Evaluation(e.to_string()))?,
+            namespaces,
+            queries: Mutex::new(HashMap::new()),
+            updates: Mutex::new(HashMap::new()),
+            algebra: Mutex::new(HashMap::new()),
+            parsed: AtomicUsize::new(0),
+            run: AtomicUsize::new(0),
+        })
+    }
+
     /// The engine itself, for a reader of quads.
     pub fn engine(&self) -> &Engine {
         &self.engine

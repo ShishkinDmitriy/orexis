@@ -59,7 +59,9 @@ features its roles load, as it builds an image with the extras today
 ([a-package-brings-its-own-dependencies](/decisions/a-package-brings-its-own-dependencies.md)). A package
 an agent does not run is then compiled out rather than merely left uninstalled. The image holds the
 binary and the CA certificates, and the world is mounted read-only. That leaves no interpreter, no
-package manager and no shell.
+package manager and no shell. The binary is its own crate, `binary/`, beside `agent/` and not in it: every entry of `agent/` that is no
+package is kept in each Python agent's image (`agent/tree.py`). Its volume is RocksDB, as pyoxigraph keeps one, so an
+agent moving to the binary keeps the beliefs it has lived in.
 
 **Each package is a crate of its own, in its own directory, and the features are the binary's.** The kernel
 is `agent/Cargo.toml` and planning `agent/planning/Cargo.toml`, beside the package's ontology and its Python,

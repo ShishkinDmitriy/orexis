@@ -123,6 +123,11 @@ impl Document {
         Ok(Document { graphs, quads })
     }
 
+    /// Every quad the document holds, its graphs' and its rows.
+    pub fn quads(&self) -> &[Quad] {
+        &self.quads
+    }
+
     /// The rows: what the document says about its graphs.
     fn rows(&self) -> impl Iterator<Item = &Quad> {
         self.quads.iter().filter(|q| q.graph_name.is_default_graph())
