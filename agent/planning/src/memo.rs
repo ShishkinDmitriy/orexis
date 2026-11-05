@@ -60,4 +60,10 @@ pub struct Memo {
     pub ground_set: Option<HashSet<String>>,
     pub ground_at: HashMap<String, Option<String>>,
     pub closed: HashMap<String, Vec<String>>,
+    pub shapes: Option<crate::shapes::Shapes>,
+    pub held: HashMap<String, orexis::store::Row>,
+    pub selects: HashMap<String, Option<String>>,
+    pub estimates: HashMap<String, Option<String>>,
+    pub periods: HashMap<String, orexis::store::Row>,
+    pub present: Option<Option<DateTime>>,
 }

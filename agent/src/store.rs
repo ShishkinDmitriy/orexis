@@ -14,7 +14,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
-use oxigraph::io::{RdfFormat, RdfParser};
+use oxigraph::io::RdfFormat;
 use oxigraph::model::vocab::{rdf, xsd};
 use oxigraph::model::{GraphName, GraphNameRef, Literal, NamedNode, NamedOrBlankNode, Quad, Term, Triple};
 use oxigraph::sparql::{PreparedSparqlQuery, PreparedSparqlUpdate, QueryResults, SparqlEvaluator};
@@ -477,11 +477,14 @@ impl Store {
     /// into `into`, which is replaced too — what a case is loaded by, as `put_graph(…, dataset=True)` loads one.
     pub fn put_trig(&self, into: &str, text: &str) -> Result<(), Error> {
         let target = named(into)?;
-        let parsed: Vec<Quad> = RdfParser::from_format(RdfFormat::TriG)
-            .rename_blank_nodes()
-            .for_slice(text.as_bytes())
-            .collect::<Result<_, _>>()
+        //  THROUGH A STORE OF ITS OWN, as `put_graph` reads a dataset: parsed into one, then each quad of it put
+        //  here in the order that store hands them back. The order a reader later meets quads in is the engine's,
+        //  and a case's compiled met-test numbers its constraints in it, so the two kernels load alike.
+        let staged = Engine::new().map_err(engine)?;
+        staged
+            .load_from_slice(RdfFormat::TriG, text.as_bytes())
             .map_err(|e| Error::Document(e.to_string()))?;
+        let parsed: Vec<Quad> = staged.iter().collect::<Result<_, _>>().map_err(engine)?;
         let mut replaced: HashSet<GraphName> = parsed
             .iter()
             .map(|q| q.graph_name.clone())

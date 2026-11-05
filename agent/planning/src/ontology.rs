@@ -27,3 +27,5 @@ pub const BY: &str = "http://example.org/orexis/planning#by";
 /// `agent/execution/ontology.py` as these two terms alone.
 pub const ADDS_GRAPH: &str = "http://example.org/orexis/execution#AddsGraph";
 pub const RETRACTS_GRAPH: &str = "http://example.org/orexis/execution#RetractsGraph";
+pub const SHAPES: &str = "http://example.org/orexis/planning#ShapesGraph";
+pub const CONSTRAINT_GRAPH: &str = "http://example.org/orexis/planning#ConstraintGraph";

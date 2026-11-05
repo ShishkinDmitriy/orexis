@@ -90,8 +90,13 @@ Rust copy reproduces exactly, and the graph hash shows what that costs: a digest
 canonical facts, hashed, and `agent/src/hash.rs` spells each tuple, string and float as `repr` does, so the
 four `hash_named_graph` cases pass on both. The same holds for every literal a ported act writes, since a
 case compares terms and not values: an instant is spelled as Python's `isoformat` spells it, `+00:00` and not
-`Z`, and a parameter's value reaches a rule text as Python's binder hands it. The spelling is free to change once
-the Python agent is retired and the diffs are the crate's to write.
+`Z`, and a parameter's value reaches a rule text as Python's binder hands it. And so does an ORDER no document
+states: a met-test numbers its constraints in the order the shapes come back from the engine, the number is part
+of a violation row and of a want's key, and the engine hands quads back in no order a document says, reversed by
+each store they are copied through. So a case is loaded as `put_graph` loads it, through a store of its own, and
+the shapes are merged as rdflib's `Graph` merges them, each subject's predicates in the order first met. The
+spelling and the order are free to change once the Python agent is retired and the diffs are the crate's to
+write.
 
 **An agent runs in Rust once every package its roles load is ported.** Inside one agent the packages share
 one store in one process, and a Rust runtime hosting a Python package would need the interpreter in the
