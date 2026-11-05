@@ -15,7 +15,7 @@
 
 use oxigraph::model::NamedNode;
 use spargebra::algebra::{Expression, GraphPattern, QueryDataset};
-use spargebra::term::GraphNamePattern;
+use spargebra::term::{GraphNamePattern, GroundQuadPattern, QuadPattern};
 use spargebra::{GraphUpdateOperation, Update};
 
 use orexis::Error;
@@ -111,10 +111,24 @@ pub fn run(store: &Store, rules: &[Rule], into: &str, graphs: &[&str], tokens: &
     flat.len()
 }
 
-/// `update`, one `DELETE`/`INSERT … WHERE` naming no graph, scoped to a world: its templates `into`'s, and its
-/// WHERE reading `graphs` merged, each once. Refused, saying why, where the runner will not run it.
-pub fn scoped(update: Update, into: &str, graphs: &[&str]) -> Result<Update, Error> {
-    let Update { base_iri, operations } = update;
+/// A transition's update as its runner reads it: the delete templates, the insert templates and the one WHERE —
+/// a `DELETE WHERE` its pattern as both — as `agent/belief/transition.py`'s `templates` finds them. Refused,
+/// saying why, where the runner will not run it.
+#[derive(Clone, Debug)]
+pub struct Parts {
+    pub delete: Vec<GroundQuadPattern>,
+    pub insert: Vec<QuadPattern>,
+    pub pattern: GraphPattern,
+}
+
+/// `text`, a transition's update, as its parts: refused where it chains operations, is no `DELETE`/`INSERT …
+/// WHERE`, or names a graph anywhere.
+pub fn parts(store: &Store, text: &str) -> Result<Parts, Error> {
+    refuse_a_chain(text)?;
+    parts_of(store.parse_update(text)?.operations)
+}
+
+fn parts_of(operations: Vec<GraphUpdateOperation>) -> Result<Parts, Error> {
     let [operation] = <[GraphUpdateOperation; 1]>::try_from(operations)
         .map_err(|_| refused("its update chains operations with `;`, and a transition is one"))?;
     let GraphUpdateOperation::DeleteInsert {
@@ -136,6 +150,22 @@ pub fn scoped(update: Update, into: &str, graphs: &[&str]) -> Result<Update, Err
     if names_a_graph {
         return Err(refused("its update names its own graphs, and the runner says them"));
     }
+    Ok(Parts {
+        delete,
+        insert,
+        pattern: *pattern,
+    })
+}
+
+/// `update`, one `DELETE`/`INSERT … WHERE` naming no graph, scoped to a world: its templates `into`'s, and its
+/// WHERE reading `graphs` merged, each once. Refused, saying why, where the runner will not run it.
+pub fn scoped(update: Update, into: &str, graphs: &[&str]) -> Result<Update, Error> {
+    let Update { base_iri, operations } = update;
+    let Parts {
+        delete,
+        insert,
+        pattern,
+    } = parts_of(operations)?;
     let world = node(into)?;
     let mut default: Vec<oxigraph::model::NamedNode> = Vec::new();
     for g in graphs {
@@ -167,7 +197,7 @@ pub fn scoped(update: Update, into: &str, graphs: &[&str]) -> Result<Update, Err
                 default,
                 named: Some(Vec::new()),
             }),
-            pattern,
+            pattern: Box::new(pattern),
         }],
     })
 }

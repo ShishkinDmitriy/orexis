@@ -96,7 +96,12 @@ of a violation row and of a want's key, and the engine hands quads back in no or
 each store they are copied through. So a case is loaded as `put_graph` loads it, through a store of its own, and
 the shapes are merged as rdflib's `Graph` merges them, each subject's predicates in the order first met. The
 spelling and the order are free to change once the Python agent is retired and the diffs are the crate's to
-write.
+write. What the two parsers READ differs in one place, and no shipped text meets it: the engine's parser
+translates a sequence or an inverse of plain predicates into triples, as SPARQL's algebra says, where rdflib
+keeps the path, so `?x :p/a :C` reads the class in the crate and every type in Python. And a parser may refuse
+what the other lets pass: `$tank` and `?tank` are one variable to SPARQL, so an effect's `BIND($tank AS ?tank)`
+is refused by the engine's and passed by rdflib's, and `agent/planning/src/footprint.rs` reads a token as a
+variable of its own name.
 
 **An agent runs in Rust once every package its roles load is ported.** Inside one agent the packages share
 one store in one process, and a Rust runtime hosting a Python package would need the interpreter in the

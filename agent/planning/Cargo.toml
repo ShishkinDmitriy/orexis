@@ -17,6 +17,8 @@ oxigraph.workspace = true
 oxsdatatypes = "0.2"
 log = "0.4"
 regex = "1"
+sha2 = "0.11"
+spargebra = "0.4"
 
 [dev-dependencies]
 orexis = { path = "..", features = ["snapshots"] }
