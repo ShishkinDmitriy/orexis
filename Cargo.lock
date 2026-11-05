@@ -201,6 +201,8 @@ dependencies = [
  "oxigraph",
  "oxsdatatypes",
  "regex",
+ "sha2",
+ "spargebra",
 ]
 
 [[package]]

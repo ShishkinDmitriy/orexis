@@ -394,6 +394,29 @@ impl Store {
         ))
     }
 
+    /// Say what a graph IS, how it arrived, whose it is and when it holds, as its owner does when it creates the
+    /// graph. IDEMPOTENT, INCLUDING THE PERIOD: a period is a blank node, so it is written only where the graph
+    /// has none — a graph's stretch is fixed when it is created.
+    pub fn classify(
+        &self,
+        graph: &str,
+        class: &str,
+        arrival: &str,
+        owner: Option<&str>,
+        start: Option<DateTime>,
+        end: Option<DateTime>,
+    ) -> Result<(), Error> {
+        let block = self.entry(graph, &[class], arrival, owner, start, end)?;
+        if start.is_none() && end.is_none() {
+            return self.update(&format!("INSERT DATA {{ {block} }}"));
+        }
+        let catalogue = self.catalogue()?.unwrap_or_default();
+        self.update(&format!(
+            "INSERT {{ {block} }}\nWHERE  {{ GRAPH <{catalogue}> {{ }}\n          FILTER NOT EXISTS {{ GRAPH \
+             <{catalogue}> {{ <{graph}> dcterms:temporal ?period }} }} }}"
+        ))
+    }
+
     // --- graphs, as quads -----------------------------------------------------------------------------------------
 
     /// One graph's contents as the quads they are.
@@ -459,7 +482,8 @@ impl Store {
         Ok(())
     }
 
-    fn remove_all(&self, quads: &[Quad]) -> Result<(), Error> {
+    /// Take every quad of `quads` out of the store.
+    pub fn remove_all(&self, quads: &[Quad]) -> Result<(), Error> {
         for quad in quads {
             self.engine.remove(quad).map_err(engine)?;
         }
