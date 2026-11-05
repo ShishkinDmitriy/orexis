@@ -29,6 +29,10 @@ ONTOLOGY = "ontology.ttl"
 #  core's, bringing nothing.
 DEPENDENCIES = "dependencies.txt"
 _SKIPPED = {"__pycache__", "tests"}
+#  THE RUST AGENT'S OWN ENTRIES, ported beside the Python one: a crate's manifest, its sources and its examples, which
+#  no Python agent runs, so no image of one keeps them and no container of one mounts them
+#  (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md).
+_CRATE = {"Cargo.toml", "src", "examples"}
 
 
 def packages(root: Path = KERNEL) -> list[str]:
@@ -81,6 +85,8 @@ def kept(named, root: Path = KERNEL) -> list[str]:
             rel = child.relative_to(root).as_posix()
             if child.name in _SKIPPED or child.name == "conftest.py":
                 continue                                             # what the runner reads, never the agent
+            if child.name in _CRATE:
+                continue                                             # what the Rust agent builds from
             if child.is_dir() and rel in every:
                 if rel in keep:
                     out.append(rel)
@@ -117,7 +123,7 @@ def lay_out(source: Path, out: Path, named, simulator: bool) -> None:
         src, dst = source / "agent" / rel, trees / "agent" / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
         if src.is_dir():
-            shutil.copytree(src, dst, ignore=shutil.ignore_patterns("__pycache__"))
+            shutil.copytree(src, dst, ignore=shutil.ignore_patterns("__pycache__", *_CRATE))
         else:
             shutil.copy2(src, dst)
     shutil.copytree(source / "domains", trees / "domains", ignore=shutil.ignore_patterns("__pycache__"))

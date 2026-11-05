@@ -1137,6 +1137,8 @@ pytest -q tests        # the four files that read the whole tree: knowledge, lay
 pytest infra -q -n0    # 8 more, against the RUNNING broker and store — see below.
                        # -n0 is REQUIRED: they rewrite one acl.conf in place. It refuses without it.
 lint-imports           # onboarding may import agent, never the reverse
+cargo test             # THE RUST AGENT, ported one package at a time beside the Python one: its crates' tests
+cargo clippy --all-targets -- -D warnings && cargo fmt --check   # and what CI's `rust` job refuses besides
 ```
 
 `pytest`, `pytest tests` and `lint-imports` are the gates, and all must pass before a change is

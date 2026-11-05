@@ -56,3 +56,6 @@ infra/grafana/dashboards/
 
 # the history view's toolchain, installed by `npm ci` from package-lock.json — never committed
 node_modules/
+
+# the Rust agent's build output, at the workspace root
+/target/
