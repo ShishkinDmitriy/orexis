@@ -287,7 +287,7 @@ fn py_float(text: &str) -> Option<f64> {
 
 /// `round(x, 6)`: correctly rounded to six decimals, the way Python rounds, and read back. A tie is never met,
 /// since no binary fraction ends in a five at the seventh decimal.
-fn py_round(x: f64) -> f64 {
+pub fn py_round(x: f64) -> f64 {
     if !x.is_finite() {
         return x;
     }
@@ -296,7 +296,7 @@ fn py_round(x: f64) -> f64 {
 
 /// A float as `repr` writes it: the shortest digits that read back, fixed between 1e-4 and 1e16 with a `.0` where
 /// it has no fraction, and an exponent of two digits at least outside.
-fn py_float_repr(x: f64) -> String {
+pub fn py_float_repr(x: f64) -> String {
     if x.is_nan() {
         return "nan".to_string();
     }

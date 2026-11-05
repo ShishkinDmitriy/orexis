@@ -130,6 +130,54 @@ pub fn instant(text: &str) -> Result<DateTime, Error> {
     }
 }
 
+/// An instant as Python's `datetime.isoformat` spells it — `2026-01-01T12:00:00+00:00`, microseconds only where
+/// there are some — the spelling every instant the Python kernel writes carries. A literal is compared as a
+/// term, so `…Z` and `…+00:00` are two terms of one value, and a case written by the one kernel holds the other
+/// only where both spell an instant alike.
+pub fn isoformat(at: DateTime) -> String {
+    let second: f64 = at.second().to_string().parse().unwrap_or(0.0);
+    let whole = second.trunc();
+    let micro = ((second - whole) * 1e6).round() as u32;
+    let fraction = if micro > 0 {
+        format!(".{micro:06}")
+    } else {
+        String::new()
+    };
+    let zone = match at.timezone_offset() {
+        None => String::new(),
+        Some(offset) => {
+            let minutes: f64 = DayTimeDuration::from(offset)
+                .as_seconds()
+                .to_string()
+                .parse::<f64>()
+                .unwrap_or(0.0)
+                / 60.0;
+            let minutes = minutes as i64;
+            let sign = if minutes < 0 { '-' } else { '+' };
+            format!("{sign}{:02}:{:02}", minutes.abs() / 60, minutes.abs() % 60)
+        }
+    };
+    format!(
+        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}{fraction}{zone}",
+        at.year(),
+        at.month(),
+        at.day(),
+        at.hour(),
+        at.minute(),
+        whole as u32
+    )
+}
+
+/// A stretch of seconds as Python's `timedelta(seconds=…)` makes it: rounded to the microsecond.
+pub fn microseconds(seconds: f64) -> DayTimeDuration {
+    let micros = (seconds * 1e6).round();
+    let sign = if micros < 0.0 { "-" } else { "" };
+    let micros = micros.abs() as u64;
+    format!("{sign}PT{}.{:06}S", micros / 1_000_000, micros % 1_000_000)
+        .parse()
+        .unwrap_or_default()
+}
+
 /// A stretch of the timeline, in seconds, as the duration SPARQL adds to an instant.
 pub fn seconds(seconds: f64) -> DayTimeDuration {
     DayTimeDuration::try_from(Duration::from_secs_f64(seconds.max(0.0))).unwrap_or_default()
@@ -171,6 +219,22 @@ mod tests {
     #[test]
     fn a_pace_that_is_not_positive_is_refused() {
         assert!(Paced::new(0.0, None).is_err());
+    }
+
+    #[test]
+    fn an_instant_is_spelled_as_python_spells_it() {
+        assert_eq!(
+            isoformat(instant("2026-01-01T12:00:00Z").unwrap()),
+            "2026-01-01T12:00:00+00:00"
+        );
+        assert_eq!(
+            isoformat(instant("2026-01-01T12:00:00.5-05:30").unwrap()),
+            "2026-01-01T12:00:00.500000-05:30"
+        );
+        let later = instant("2026-01-01T12:00:00Z")
+            .unwrap()
+            .checked_add_day_time_duration(microseconds(90.0000004));
+        assert_eq!(isoformat(later.unwrap()), "2026-01-01T12:01:30+00:00");
     }
 
     #[test]
