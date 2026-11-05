@@ -195,6 +195,7 @@ dependencies = [
 name = "orexis-planning"
 version = "0.2.0"
 dependencies = [
+ "getrandom",
  "log",
  "orexis",
  "orexis-belief",
