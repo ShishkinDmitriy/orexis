@@ -13,3 +13,9 @@ path = "src/lib.rs"
 oxigraph.workspace = true
 oxsdatatypes = "0.2"
 regex = "1"
+sha2 = "0.11"
+log = "0.4"
+
+[features]
+# THE SNAPSHOT RUNNER, for a package crate's tests: a case's `.trig` and `.diff` read as the Python suite reads them.
+snapshots = []

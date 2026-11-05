@@ -10,13 +10,13 @@
 //! `rows` is handed the graphs its default graph is the union of, `graphs_of` answers which by kind and instant,
 //! and a text that reads one graph names it in its own `GRAPH` clause. Never wrap `GRAPH <…>` around a select.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
-use oxigraph::io::RdfFormat;
-use oxigraph::model::vocab::xsd;
-use oxigraph::model::{GraphName, Literal, NamedNode, Term};
+use oxigraph::io::{RdfFormat, RdfParser};
+use oxigraph::model::vocab::{rdf, xsd};
+use oxigraph::model::{GraphName, GraphNameRef, Literal, NamedNode, NamedOrBlankNode, Quad, Term, Triple};
 use oxigraph::sparql::{PreparedSparqlQuery, PreparedSparqlUpdate, QueryResults, SparqlEvaluator};
 use oxigraph::store::Store as Engine;
 use oxsdatatypes::DateTime;
@@ -24,6 +24,7 @@ use oxsdatatypes::DateTime;
 use crate::Error;
 use crate::bind::{Value, bind};
 use crate::namespaces::Namespaces;
+use crate::ontology::BELIEF;
 
 /// One solution: each variable it binds, to the term it binds.
 pub type Row = BTreeMap<String, Term>;
@@ -93,6 +94,12 @@ const HOLDING: &str = "OPTIONAL { ?g dcterms:temporal ?period .
 
 /// A class and every class the vocabulary puts it beneath: the closure is materialised at genesis, so one step is
 /// every step.
+const ROWS_Q: &str = "
+SELECT ?g ?class WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?class . FILTER(isIRI(?g)) } }";
+
+const PROV_DERIVED: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
+const DCTERMS_TEMPORAL: &str = "http://purl.org/dc/terms/temporal";
+
 const SUBCLASSES_Q: &str = "
 SELECT DISTINCT ?super WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }
@@ -353,6 +360,216 @@ impl Store {
         ))
     }
 
+    // --- graphs, as quads -----------------------------------------------------------------------------------------
+
+    /// One graph's contents as the quads they are.
+    pub fn quads(&self, graph: &str) -> Result<Vec<Quad>, Error> {
+        let name = named(graph)?;
+        self.engine
+            .quads_for_pattern(None, None, None, Some(GraphNameRef::NamedNode(name.as_ref())))
+            .collect::<Result<_, _>>()
+            .map_err(engine)
+    }
+
+    /// One graph's contents as triples.
+    pub fn triples(&self, graph: &str) -> Result<Vec<Triple>, Error> {
+        Ok(self.quads(graph)?.into_iter().map(Triple::from).collect())
+    }
+
+    /// Every named graph present, by name, sorted.
+    pub fn graph_names(&self) -> Result<Vec<String>, Error> {
+        let mut out: Vec<String> = self
+            .engine
+            .named_graphs()
+            .filter_map(|g| match g {
+                Ok(NamedOrBlankNode::NamedNode(node)) => Some(Ok(node.into_string())),
+                Ok(NamedOrBlankNode::BlankNode(_)) => None,
+                Err(e) => Some(Err(engine(e))),
+            })
+            .collect::<Result<_, _>>()?;
+        out.sort();
+        Ok(out)
+    }
+
+    /// Quads straight in, as the terms they are.
+    pub fn add(&self, quads: impl IntoIterator<Item = Quad>) -> Result<(), Error> {
+        for quad in quads {
+            self.engine.insert(&quad).map_err(engine)?;
+        }
+        Ok(())
+    }
+
+    fn remove_all(&self, quads: &[Quad]) -> Result<(), Error> {
+        for quad in quads {
+            self.engine.remove(quad).map_err(engine)?;
+        }
+        Ok(())
+    }
+
+    /// Empty one graph, its name with it — for one about to be refilled.
+    pub fn clear_graph(&self, graph: &str) -> Result<(), Error> {
+        let name = named(graph)?;
+        self.engine.remove_named_graph(name.as_ref()).map_err(engine)?;
+        Ok(())
+    }
+
+    /// A TriG dataset in, every graph it names REPLACING the graph of that name, and its default graph's quads
+    /// into `into`, which is replaced too — what a case is loaded by, as `put_graph(…, dataset=True)` loads one.
+    pub fn put_trig(&self, into: &str, text: &str) -> Result<(), Error> {
+        let target = named(into)?;
+        let parsed: Vec<Quad> = RdfParser::from_format(RdfFormat::TriG)
+            .rename_blank_nodes()
+            .for_slice(text.as_bytes())
+            .collect::<Result<_, _>>()
+            .map_err(|e| Error::Document(e.to_string()))?;
+        let mut replaced: HashSet<GraphName> = parsed
+            .iter()
+            .map(|q| q.graph_name.clone())
+            .filter(|g| !g.is_default_graph())
+            .collect();
+        replaced.insert(target.clone().into());
+        for graph in &replaced {
+            if let GraphName::NamedNode(node) = graph {
+                self.engine.remove_named_graph(node.as_ref()).map_err(engine)?;
+            }
+        }
+        self.add(parsed.into_iter().map(|q| {
+            if q.graph_name.is_default_graph() {
+                Quad::new(q.subject, q.predicate, q.object, target.clone())
+            } else {
+                q
+            }
+        }))
+    }
+
+    /// Everything `parent` holds, under `name` as well, copied by the engine. The name, for chaining.
+    pub fn copy_graph(&self, parent: &str, name: &str) -> Result<String, Error> {
+        let into = named(name)?;
+        let copied: Vec<Quad> = self
+            .quads(parent)?
+            .into_iter()
+            .map(|q| Quad::new(q.subject, q.predicate, q.object, into.clone()))
+            .collect();
+        self.add(copied)?;
+        Ok(name.to_string())
+    }
+
+    /// `parent`'s facts under `name`, less what each retraction takes, plus `added` — THE ORDER IS THE WHOLE OF
+    /// IT: copy, every delete, then the adds, since a construct reuses the very node its retraction names. The
+    /// name.
+    ///
+    /// A RETRACTION THAT WILL NOT RUN RETRACTS NOTHING, LOUDLY, and the fork exists either way: it is a package's
+    /// bug and must not take an agent down. Each runs on its own, parsed once by its text, so the Python kernel's
+    /// joining of them into one text — a round trip saved — has nothing to save here.
+    pub fn fork(&self, parent: &str, name: &str, added: &[Triple], retracts: &[String]) -> Result<String, Error> {
+        self.copy_graph(parent, name)?;
+        for text in retracts {
+            if let Err(refused) = self.update(text) {
+                log::error!("a retraction would not run, so it retracts nothing: {refused}");
+            }
+        }
+        let into = named(name)?;
+        self.add(added.iter().map(|t| t.clone().in_graph(into.clone())))?;
+        Ok(name.to_string())
+    }
+
+    /// Every graph of `kind` the catalogue says was derived from one of `sources`, sorted: what the rules
+    /// concluded of them, their revisions.
+    pub fn revisions_of(&self, sources: &[&str], kind: &str) -> Result<Vec<String>, Error> {
+        let Some(catalogue) = self.catalogue()? else {
+            return Ok(Vec::new());
+        };
+        let (cat, derived, kind) = (named(&catalogue)?, named(PROV_DERIVED)?, named(kind)?);
+        let mut out = BTreeSet::new();
+        for source in sources {
+            let source = named(source)?;
+            for quad in self.engine.quads_for_pattern(
+                None,
+                Some(derived.as_ref()),
+                Some(source.as_ref().into()),
+                Some(GraphNameRef::NamedNode(cat.as_ref())),
+            ) {
+                let quad = quad.map_err(engine)?;
+                let typed = Quad::new(quad.subject.clone(), rdf::TYPE, kind.clone(), cat.clone());
+                if self.engine.contains(&typed).map_err(engine)?
+                    && let NamedOrBlankNode::NamedNode(r) = quad.subject
+                {
+                    out.insert(r.into_string());
+                }
+            }
+        }
+        Ok(out.into_iter().collect())
+    }
+
+    /// Empty one graph AND take back everything the catalogue said of it, its period with its row — and its
+    /// revisions, of the kind `revisions` says they are; None takes the graph alone.
+    pub fn forget_graph(&self, graph: &str, revisions: Option<&str>) -> Result<(), Error> {
+        if let Some(kind) = revisions {
+            for revision in self.revisions_of(&[graph], kind)? {
+                self.forget_graph(&revision, Some(BELIEF))?;
+            }
+        }
+        self.clear_graph(graph)?;
+        let Some(catalogue) = self.catalogue()? else {
+            return Ok(());
+        };
+        let (cat, subject, temporal) = (named(&catalogue)?, named(graph)?, named(DCTERMS_TEMPORAL)?);
+        let row: Vec<Quad> = self
+            .engine
+            .quads_for_pattern(
+                Some(subject.as_ref().into()),
+                None,
+                None,
+                Some(GraphNameRef::NamedNode(cat.as_ref())),
+            )
+            .collect::<Result<_, _>>()
+            .map_err(engine)?;
+        let mut gone = row.clone();
+        for quad in &row {
+            if quad.predicate == temporal
+                && let Term::BlankNode(period) = &quad.object
+            {
+                gone.extend(
+                    self.engine
+                        .quads_for_pattern(
+                            Some(period.as_ref().into()),
+                            None,
+                            None,
+                            Some(GraphNameRef::NamedNode(cat.as_ref())),
+                        )
+                        .collect::<Result<Vec<_>, _>>()
+                        .map_err(engine)?,
+                );
+            }
+        }
+        self.remove_all(&gone)
+    }
+
+    /// Say on every row each kind the vocabulary puts its class beneath — what `entry` writes on a new row, said
+    /// again of every row there is. Idempotent.
+    pub fn close_catalogue(&self) -> Result<(), Error> {
+        let Some(catalogue) = self.catalogue()? else {
+            return Ok(());
+        };
+        let mut held: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+        for row in self.rows_named(ROWS_Q)? {
+            if let (Some(g), Some(class)) = (iri(&row, "g"), iri(&row, "class")) {
+                held.entry(g).or_default().insert(class);
+            }
+        }
+        let cat = named(&catalogue)?;
+        let mut rows = Vec::new();
+        for (graph, classes) in held {
+            let subject = named(&graph)?;
+            for class in classes {
+                for kind in self.closed(&class)? {
+                    rows.push(Quad::new(subject.clone(), rdf::TYPE, named(&kind)?, cat.clone()));
+                }
+            }
+        }
+        self.add(rows)
+    }
+
     /// How many quads the store holds.
     pub fn len(&self) -> Result<usize, Error> {
         self.engine.len().map_err(|e| Error::Evaluation(e.to_string()))
@@ -361,6 +578,14 @@ impl Store {
     pub fn is_empty(&self) -> Result<bool, Error> {
         Ok(self.len()? == 0)
     }
+}
+
+fn named(iri: &str) -> Result<NamedNode, Error> {
+    NamedNode::new(iri).map_err(|e| Error::Evaluation(format!("no IRI: {iri}: {e}")))
+}
+
+fn engine(e: impl std::fmt::Display) -> Error {
+    Error::Evaluation(e.to_string())
 }
 
 /// An instant as the term a query compares it as.

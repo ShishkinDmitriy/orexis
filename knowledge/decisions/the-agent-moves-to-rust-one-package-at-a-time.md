@@ -75,6 +75,14 @@ leaves: a store in, the function run, the store out. A ported function runs the 
 around it and no Python beside it, and leaves the same store, so `revise`, `take` and `weigh` are each
 checked as they land, not at the end.
 
+**The diff is Python's to write and the crate's to read.** `agent/src/snapshots.rs` loads a case as
+`agent/conftest.py` does, applies its diff by line number and compares every quad, blank nodes by their
+shape, and regenerates nothing: two writers of one canonical form would drift. So what a diff records, the
+Rust copy reproduces exactly, and the graph hash shows what that costs: a digest is Python's `repr` of the
+canonical facts, hashed, and `agent/src/hash.rs` spells each tuple, string and float as `repr` does, so the
+four `hash_named_graph` cases pass on both. The spelling is free to change once the Python agent is retired
+and the diffs are the crate's to write.
+
 **An agent runs in Rust once every package its roles load is ported.** Inside one agent the packages share
 one store in one process, and a Rust runtime hosting a Python package would need the interpreter in the
 image, the bridge refused below. So the order is the order in which the worlds' agents become wholly
