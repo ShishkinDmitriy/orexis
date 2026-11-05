@@ -16,8 +16,10 @@
 //! - [`withdraw`]: every derived want the derivation no longer implies, and every want reached, taken away.
 
 pub mod admit;
+pub mod bridge;
 pub mod couplings;
 pub mod derive_wants;
+pub mod extract_plan;
 pub mod find_scopes;
 pub mod find_wants;
 pub mod footprint;
@@ -25,7 +27,11 @@ pub mod lay_ground;
 pub mod memo;
 pub mod next_ground;
 pub mod ontology;
+pub mod planner;
 pub mod prepare_ground;
+pub mod publish_plan;
+pub mod refine;
+pub mod reroot;
 pub mod scope_actions;
 pub mod shapes;
 pub mod take;
@@ -36,3 +42,4 @@ pub mod withdraw;
 pub mod world_at;
 
 pub use memo::Memo;
+pub use planner::Planner;

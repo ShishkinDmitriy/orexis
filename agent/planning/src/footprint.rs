@@ -421,8 +421,10 @@ pub(crate) fn literal_n3(literal: &Literal) -> String {
 }
 
 mod atoms;
+mod shapes;
 
-pub use atoms::{Atom, Filling, Key, Side, atoms_of, spelled, stored_edges};
+pub use atoms::{Atom, Filling, Key, Side, actions_of, atoms_of, spelled, stored_edges, written};
+pub use shapes::{reads_of_select, reads_of_shape, terms_of_shape};
 
 #[cfg(test)]
 mod tests;

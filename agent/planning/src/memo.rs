@@ -66,4 +66,6 @@ pub struct Memo {
     pub estimates: HashMap<String, Option<String>>,
     pub periods: HashMap<String, orexis::store::Row>,
     pub present: Option<Option<DateTime>>,
+    pub constraints: Option<Vec<String>>,
+    pub broken: HashMap<(String, String), std::collections::BTreeSet<crate::planner::Violation>>,
 }

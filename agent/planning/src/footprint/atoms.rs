@@ -253,7 +253,7 @@ fn walk(pattern: &GraphPattern, out: &mut Vec<Pat>) {
 fn expression_walk(expression: &Expression, out: &mut Vec<Pat>) {
     match expression {
         Expression::Exists(pattern) => {
-            written(pattern, out);
+            as_written(pattern, out);
             walk(pattern, out);
         }
         Expression::Or(a, b)
@@ -289,7 +289,7 @@ fn expression_walk(expression: &Expression, out: &mut Vec<Pat>) {
 }
 
 /// A group's triples in the order written, its filters left out.
-fn written(pattern: &GraphPattern, out: &mut Vec<Pat>) {
+fn as_written(pattern: &GraphPattern, out: &mut Vec<Pat>) {
     match pattern {
         GraphPattern::Bgp { patterns } => out.extend(bgp(patterns)),
         GraphPattern::Path { subject, path, object } => {
@@ -299,14 +299,14 @@ fn written(pattern: &GraphPattern, out: &mut Vec<Pat>) {
         | GraphPattern::Union { left, right }
         | GraphPattern::Minus { left, right }
         | GraphPattern::LeftJoin { left, right, .. } => {
-            written(left, out);
-            written(right, out);
+            as_written(left, out);
+            as_written(right, out);
         }
         GraphPattern::Filter { inner, .. }
         | GraphPattern::Extend { inner, .. }
         | GraphPattern::Graph { inner, .. }
         | GraphPattern::Project { inner, .. }
-        | GraphPattern::Distinct { inner } => written(inner, out),
+        | GraphPattern::Distinct { inner } => as_written(inner, out),
         _ => {}
     }
 }
@@ -474,6 +474,37 @@ fn written_subjects(effect: &Effect) -> Option<BTreeMap<String, BTreeSet<String>
         }
     }
     Some(out)
+}
+
+/// What one action reads and writes: `None` on a side that cannot be read, anything.
+pub type Footprint = (Option<BTreeSet<String>>, Option<BTreeSet<String>>);
+
+/// Every action the store holds that states an effect, as what its precondition reads and what its effect writes.
+pub fn actions_of(store: &Store, at: DateTime) -> Result<BTreeMap<String, Footprint>, Error> {
+    let mut out = BTreeMap::new();
+    for (action, effect) in effects(store, at)? {
+        if !effect.states() {
+            continue;
+        }
+        let reads = match &effect.precondition {
+            Some(text) => super::reads_of_select(store, text),
+            None => Some(BTreeSet::new()),
+        };
+        out.insert(action, (reads, writes(&effect)));
+    }
+    Ok(out)
+}
+
+/// Every predicate some action's effect can write — nothing where one writes anything, and then nothing is left out.
+pub fn written(store: &Store, at: DateTime) -> Result<BTreeSet<String>, Error> {
+    let mut out = BTreeSet::new();
+    for (_, writes) in actions_of(store, at)?.into_values() {
+        match writes {
+            Some(w) => out.extend(w),
+            None => return Ok(BTreeSet::new()),
+        }
+    }
+    Ok(out)
 }
 
 /// Every action the store holds as its fillings — `None` where its texts cannot be read so. An action stating no
