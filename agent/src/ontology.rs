@@ -37,3 +37,9 @@ pub const ROLE: &str = "http://example.org/orexis#Role";
 /// The two graphs a writer names: the catalogue, created by genesis alone, and the vocabulary's closure.
 pub const CATALOGUE_GRAPH: &str = "http://example.org/orexis/graph/catalogue";
 pub const CLOSURE_GRAPH: &str = "http://example.org/orexis/graph/ontology/closure";
+
+/// An IRI's local part, the name a parameter answers to as a variable, a token and a column.
+pub fn local_of(iri: &str) -> String {
+    let tail = iri.rsplit('#').next().unwrap_or(iri);
+    tail.rsplit('/').next().unwrap_or(tail).to_string()
+}

@@ -116,8 +116,9 @@ ported, each world's walks and benches passing on the binary as it does:
 | ported | the first world wholly in Rust |
 |---|---|
 | the kernel and planning | `hanoi`, a planner alone |
-| belief and execution | `tower`, `courier`, `driver`, `layby` |
-| sensing, prediction and the MQTT transport | `greenhouse`, its day bench sending the same commands |
+| execution | `courier`, `driver` |
+| belief | `tower` |
+| sensing, prediction and the MQTT transport | `greenhouse`, its day bench sending the same commands, and `layby` |
 | speech and coordination | `lane` |
 | the market | `allotment` |
 | translation, the Telegram and HTTP members | `terrace` |
@@ -160,6 +161,12 @@ store and runs the passes, woken by its channel or the next timer due, so a read
 an idle agent sleeps. Its jobs run in the order they came, which is what lets a snapshot case and the day
 bench's digest hold the binary to one result. A pass blocks on the engine and a search can run for seconds,
 so the mind is a thread of its own and never one of Tokio's workers, whose transports it would stall.
+
+**The binary links the parts.** A Python part links to the others by connecting signals. In the mind's one thread,
+the binary shares a part's own object instead. The executor asks the shared Planner about a head it is about to
+take, and planning tells the shared executor, after its pass and before it decides what holds the agent, what the
+pass published, reached and reconsidered, in the order the Python signals fire. No crate names another's, since the
+binary is the container that assembles them all.
 
 **What cannot change the result runs in parallel.** Each scope's imaginarium is a store of its own, so the
 scopes are searched at once and their plans taken in scope order. Laying grounds is per scope and about

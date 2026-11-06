@@ -80,16 +80,7 @@ fn run(args: &Args) -> Result<String, Error> {
     };
     let clock = Paced::from_env()?;
     let loaded = orexis_agent::booted(&store, &tree, &args.world, &args.agent, clock.now())?;
-    let mut parts: Vec<(String, Box<dyn Part + '_>)> = Vec::new();
-    for package in &loaded {
-        #[cfg(feature = "planning")]
-        if package == "planning" {
-            parts.push((
-                package.clone(),
-                Box::new(orexis_planning::create::Planning::new(&store, &args.agent, None)?),
-            ));
-        }
-    }
+    let mut parts = orexis_agent::assemble(&store, &args.agent, &clock, &loaded, None)?;
     let lent: Vec<(String, &mut dyn Part)> = parts
         .iter_mut()
         .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))

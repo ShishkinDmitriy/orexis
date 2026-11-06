@@ -218,11 +218,7 @@ fn written(term: &Term) -> Term {
     }
 }
 
-/// An IRI's local part, the name a parameter answers to as a variable and a token.
-pub fn local_of(iri: &str) -> String {
-    let tail = iri.rsplit('#').next().unwrap_or(iri);
-    tail.rsplit('/').next().unwrap_or(tail).to_string()
-}
+pub use orexis::ontology::local_of;
 
 #[cfg(test)]
 mod tests {

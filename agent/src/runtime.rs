@@ -148,7 +148,8 @@ impl<'p> Runtime<'p> {
     }
 
     /// Pass after pass until nobody holds the agent, ending as the last to let go said, or `passes` ran out. A pass
-    /// that moved nothing waits the poll, unless a part asked to go again.
+    /// that moved nothing waits the poll, unless a part asked to go again. THE POLL IS REAL SECONDS, as the Python
+    /// runtime sleeps it: divided by a fast clock's pace, a courier at pace 30 passed 119 times where it passes 14.
     pub fn run(&mut self, passes: Option<usize>, poll_s: f64) -> Result<String, Error> {
         let mut n = 0;
         while passes.is_none_or(|p| n < p) {
@@ -161,7 +162,7 @@ impl<'p> Runtime<'p> {
                 return Ok(self.outcome.clone().unwrap_or_else(|| MET.to_string()));
             }
             if !self.again {
-                std::thread::sleep(self.clock.real_delay(poll_s));
+                std::thread::sleep(std::time::Duration::from_secs_f64(poll_s));
             }
         }
         Ok(UNFINISHED.to_string())
