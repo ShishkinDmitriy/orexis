@@ -10,3 +10,13 @@ date	commit	machine	case	budget	runs	median_ms	min_ms	queries	updates	steps
 2026-11-04	3d04a7f1-dirty	raspberry	four_disk_hanoi	1024	5	669	648	1368	751	15
 2026-11-04	3d04a7f1-dirty	raspberry	five_disk_hanoi	4096	5	3339	3277	4176	2487	31
 2026-11-04	3d04a7f1-dirty	raspberry	courier_corner	128	5	289	285	680	259	8
+2026-11-06	b9dd52f7-dirty	raspberry	two_disk_hanoi	32	5	125	123	256	79	3
+2026-11-06	b9dd52f7-dirty	raspberry	three_disk_hanoi	128	5	232	227	540	247	7
+2026-11-06	b9dd52f7-dirty	raspberry	four_disk_hanoi	1024	5	681	653	1368	751	15
+2026-11-06	b9dd52f7-dirty	raspberry	five_disk_hanoi	4096	5	3422	3331	4176	2487	31
+2026-11-06	b9dd52f7-dirty	raspberry	courier_corner	128	5	289	287	680	259	8
+2026-11-06	b9dd52f7-dirty	raspberry	rust:five_disk_hanoi	4096	5	1084	1080	3976	721	31
+2026-11-06	b9dd52f7-dirty	raspberry	rust:four_disk_hanoi	1024	5	229	227	1300	225	15
+2026-11-06	b9dd52f7-dirty	raspberry	rust:courier_corner	128	5	98	97	634	94	8
+2026-11-06	b9dd52f7-dirty	raspberry	rust:three_disk_hanoi	128	5	75	74	510	81	7
+2026-11-06	b9dd52f7-dirty	raspberry	rust:two_disk_hanoi	32	5	32	32	240	33	3

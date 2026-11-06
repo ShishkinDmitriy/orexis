@@ -35,12 +35,46 @@ profile is for SHARES and the plain run is for the ledger.
 twofold between invocations, and two trees timed minutes apart made a change that does nothing
 read as a thirty-percent win.
 
+## The Rust agent's bench
+
+```bash
+cargo test --release -p orexis-planning --test bench -- --nocapture --test-threads 1                       # print
+OREXIS_BENCH_RECORD=1 cargo test --release -p orexis-planning --test bench -- --nocapture --test-threads 1  # and record
+```
+
+`agent/planning/tests/bench.rs` holds the crate's `Planner` to the same cases and the same plans, through its public
+names alone, and times the same way. A debug build is held to the plans and times nothing, since a debug figure
+measures the compiler's checks. Its rows go into the same ledger with the case named `rust:<case>`. Its statement
+counts are the store's own (`Store::ran`, over the belief base and the imaginarium), and the crate reads a graph by
+the engine's index where the Python one asked a query, so they are close to Python's counts but not the same.
+No profiler is installed on the bench Pi. gdb as the parent process works (`ptrace_scope` is 1): interrupt the test
+binary every tenth of a second, built with `CARGO_PROFILE_RELEASE_DEBUG=line-tables-only`, and count the
+innermost frame of `agent/planning/src` in each stack.
+
+**The first Rust bench (2026-11-06, the bench Pi, alternated in one session),** medians of five, ms:
+
+| case | Rust as ported | candidate's rows by subject | seen worlds asked apart | Python |
+|---|---|---|---|---|
+| two disks | 41 | 33 | 32 | 125 |
+| three disks | 125 | 80 | 75 | 232 |
+| four disks | 756 | 285 | 229 | 681 |
+| five disks | 7,469 | 1,778 | 1,084 | 3,422 |
+| corner | 160 | 105 | 98 | 289 |
+
+As ported, the crate grew faster than the search did. `take`'s binding read a candidate's rows by scanning the
+whole catalogue, which grows with the cone, and that was three quarters of the five-disk pass. Read by the
+candidate's subject in the catalogue's index, it went. Half of what was left was `weigh`'s one read: the worlds
+already weighed that hold the child's hash sat in an OPTIONAL inside the child's, and an OPTIONAL group is
+evaluated on its own before the join. Asked apart, bound to the hash, it went too. Both reads answer the same rows
+as before, and both texts are still the Python agent's in `agent/planning/`. What is left is spread across the
+engine's evaluation, and the largest piece is `unweighed`'s candidates read, about a quarter of the pass.
+
 # The ledger
 
 **The ledger is `agent/planning/tests/bench/results.tsv`**, one row per case per
 recorded run: the date, the commit (`-dirty` where the tree had uncommitted changes), the
 machine, the case, the budget, the runs, the median and minimum milliseconds, the queries and
-updates of one pass, and the steps of the plan. It is appended, never rewritten, so the series
+updates of one pass, and the steps of the plan, with the Rust agent's rows under `rust:<case>`. It is appended, never rewritten, so the series
 is the history; a row is a measurement because it names its commit and its machine. Two
 trees are compared alternated in one session, never minutes apart, and the ledger
 holds each tree's own rows rather than a difference somebody computed once.
