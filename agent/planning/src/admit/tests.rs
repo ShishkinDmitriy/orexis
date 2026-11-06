@@ -33,8 +33,7 @@ fn admit_writes_the_candidates_the_diff_says() {
 
 #[test]
 fn every_case_is_read_and_no_diff_is_orphaned() {
-    assert!(snapshots::cases_in(&directory()).len() >= 3);
-    assert!(snapshots::orphans_in(&directory()).is_empty());
+    snapshots::all_read(&directory(), 3);
 }
 
 fn candidates(store: &Store) -> BTreeSet<String> {

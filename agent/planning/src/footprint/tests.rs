@@ -7,6 +7,7 @@ use spargebra::{Query, SparqlParser};
 use orexis::snapshots;
 
 use super::*;
+use crate::terms::RDF_TYPE;
 
 fn reads(text: &str) -> Option<BTreeSet<String>> {
     let Query::Select { pattern, .. } = SparqlParser::new().parse_query(text).expect("a query") else {
@@ -18,8 +19,6 @@ fn reads(text: &str) -> Option<BTreeSet<String>> {
 fn set(iris: &[&str]) -> Option<BTreeSet<String>> {
     Some(iris.iter().map(|i| i.to_string()).collect())
 }
-
-const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 
 #[test]
 fn what_a_select_reads_is_the_predicates_of_its_patterns_and_a_type_pattern_its_class() {

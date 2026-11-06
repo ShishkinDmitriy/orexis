@@ -2,6 +2,8 @@
 
 use orexis::snapshots;
 
+use oxigraph::model::Literal;
+
 use super::*;
 
 const A_LIST_UNDER_A_FILTER: &str =

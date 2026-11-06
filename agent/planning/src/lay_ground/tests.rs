@@ -30,8 +30,7 @@ fn lay_ground_lays_the_grounds_the_diff_says() {
 
 #[test]
 fn every_case_is_read_and_no_diff_is_orphaned() {
-    assert!(snapshots::cases_in(&cases()).len() >= 3);
-    assert!(snapshots::orphans_in(&cases()).is_empty());
+    snapshots::all_read(&cases(), 3);
 }
 
 fn within(locals: &[&str]) -> BTreeSet<String> {

@@ -10,11 +10,9 @@ use spargebra::Query;
 use orexis::store::Store;
 
 use super::{parseable, reads_of};
+use crate::ontology::ABOUT;
 use crate::shapes::Shapes;
-
-const SH: &str = "http://www.w3.org/ns/shacl#";
-const RDF_FIRST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#first";
-const ABOUT: &str = "http://example.org/orexis/planning#about";
+use crate::terms::{RDF_FIRST, SH};
 
 fn sh(local: &str) -> String {
     format!("{SH}{local}")

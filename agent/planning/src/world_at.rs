@@ -13,16 +13,12 @@ use oxsdatatypes::DateTime;
 use orexis::Error;
 use orexis::bind::bind;
 use orexis::clock::instant;
-use orexis::ontology::BELIEF;
+use orexis::ontology::{BELIEF, END, START};
 use orexis::store::{Store, Within, iri};
 
 use crate::Memo;
 use crate::ontology::{CHANGEABLE_GRAPH, GROUND_GRAPH, KNOWN, POSSIBLE_GRAPH};
-
-const TEMPORAL: &str = "http://purl.org/dc/terms/temporal";
-const START: &str = "http://example.org/orexis#start";
-const END: &str = "http://example.org/orexis#end";
-const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+use crate::terms::{RDF_TYPE, TEMPORAL};
 
 /// EVERY BELIEF THAT BEGINS AFTER `$now`, and the changeable part cut from one: a forecast the present has not
 /// reached (#987).

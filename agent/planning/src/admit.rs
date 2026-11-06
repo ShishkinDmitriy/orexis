@@ -18,14 +18,13 @@ use crate::Memo;
 use crate::memo::{Declared, Filling};
 use crate::next_ground::next_ground;
 use crate::ontology::{CANDIDATE, FILLS, FROM, MINTED, WAIT};
+use crate::terms::RDF_TYPE;
 use crate::world_at::{Asking, catalogue, named, world_at};
 
 /// Where a possible world's readings sit, under the same root as every other graph.
 pub fn possible() -> String {
     format!("{GRAPH_PREFIX}possible/")
 }
-
-const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 
 /// WHETHER THE STORE HOLDS THE WAIT, among the actions.
 const WAIT_Q: &str = "SELECT ?w WHERE { $wait a orexis:Action BIND($wait AS ?w) } LIMIT 1";
