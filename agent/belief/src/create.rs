@@ -1,0 +1,200 @@
+//! THE BELIEF PACKAGE'S PART, as `agent/belief/create.py` makes it: its deliberator, which says by its own `revised`
+//! what a pass revised. Started, it revises what the world authored as its state, once, so a fact concluded from
+//! where things stand is believed from the first pass; then every belief written, as it is written, beside what the
+//! world states and nothing else, and applies the transitions each triggers. Belief links to nothing.
+//!
+//! WHAT STANDS BESIDE A GRAPH REVISED is the common beliefs alone: never another testimony, and not the agent's own
+//! state, which is a transition's premise and `trigger` hands it itself
+//! (a-transition-changes-the-state-and-an-inference-only-concludes).
+//!
+//! A GRAPH WRITTEN MID-ACT is told `wrote` by whoever linked it — the executor, whose writes as the world are revised
+//! before its walk goes on, as Python's `runtime.wrote` hands them on at once; a part cannot reach the runtime while
+//! it runs.
+
+use std::cell::{Cell, RefCell};
+use std::rc::Rc;
+
+use oxsdatatypes::DateTime;
+
+use orexis::Error;
+use orexis::bind::{Value, bind};
+use orexis::ontology::BELIEF;
+use orexis::runtime::{Part, Pass, Starting};
+use orexis::store::{Store, Within};
+
+use crate::Deliberator;
+use crate::ontology::REVISION_GRAPH;
+
+const HEARD: usize = 0;
+
+/// WHETHER A GRAPH IS A BELIEF, by the catalogue.
+const BELIEF_Q: &str = "ASK { GRAPH $cat { $g a orexis:BeliefGraph } }";
+
+/// Belief's part: its deliberator, shared with whoever links to it.
+pub struct Belief<'a> {
+    beliefs: &'a Store,
+    pub deliberator: Rc<RefCell<Deliberator<'a>>>,
+    /// The instant the part last stood at, for an arrival a restart queued with nothing said beside it.
+    at: Rc<Cell<Option<DateTime>>>,
+}
+
+impl<'a> Belief<'a> {
+    pub fn new(beliefs: &'a Store, agent: &str) -> Result<Self, Error> {
+        Ok(Belief {
+            beliefs,
+            deliberator: Rc::new(RefCell::new(Deliberator::new(beliefs, agent, None)?)),
+            at: Rc::new(Cell::new(None)),
+        })
+    }
+
+    /// Revise `graphs` beside what the world states and apply the transitions each triggers, now — their revisions
+    /// classified `kind`.
+    pub fn revise(&self, graphs: &[String], kind: &str, at: DateTime) -> Result<(), Error> {
+        self.at.set(Some(at));
+        let stated = self.beliefs.graphs_of(&[BELIEF], &Within::common())?;
+        let mut deliberator = self.deliberator.borrow_mut();
+        for graph in graphs {
+            deliberator.changed(graph, Some(stated.clone()), kind);
+        }
+        deliberator.deliberate(at)?;
+        Ok(())
+    }
+
+    /// What a part linked to this one tells it was written mid-act: revised now where it is a belief.
+    pub fn hears(&self) -> impl FnMut(&str) -> Result<(), Error> + 'a {
+        let (beliefs, deliberator, at) = (self.beliefs, self.deliberator.clone(), self.at.clone());
+        move |graph| {
+            let Some(cat) = beliefs.catalogue()? else {
+                return Ok(());
+            };
+            let belief = beliefs.ask(
+                &bind(BELIEF_Q, &[("cat", Value::iri(cat)), ("g", Value::iri(graph))])?,
+                &[],
+            )?;
+            let Some(now) = at.get() else { return Ok(()) };
+            if !belief {
+                return Ok(());
+            }
+            let part = Belief {
+                beliefs,
+                deliberator: deliberator.clone(),
+                at: at.clone(),
+            };
+            part.revise(&[graph.to_string()], BELIEF, now)
+        }
+    }
+}
+
+impl Part for Belief<'_> {
+    fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
+        //  EVERY BELIEF NOT YET REVISED, but the common ones: the world's documents were concluded on at genesis.
+        let mut skip = self.beliefs.graphs_of(&[REVISION_GRAPH], &Within::default())?;
+        skip.extend(self.beliefs.graphs_of(&[BELIEF], &Within::common())?);
+        let mut due = Vec::new();
+        for g in self.beliefs.graphs_of(&[BELIEF], &Within::default())? {
+            if !skip.contains(&g) && self.beliefs.revisions_of(&[&g], BELIEF)?.is_empty() {
+                due.push(g);
+            }
+        }
+        self.revise(&due, BELIEF, starting.now())?;
+        starting.on(BELIEF, HEARD);
+        Ok(())
+    }
+
+    fn run(&mut self, _job: usize, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        Ok(Vec::new())
+    }
+
+    fn heard(&mut self, _job: usize, graph: &str, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        self.revise(&[graph.to_string()], BELIEF, pass.now)?;
+        Ok(Vec::new())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    //! Belief's part, held as `agent/belief/tests/test_create.py` holds it.
+
+    use orexis::clock::Manual;
+    use orexis::ontology::CATALOGUE_GRAPH;
+    use orexis::runtime::Runtime;
+    use orexis::snapshots;
+
+    use super::*;
+
+    fn bare() -> Store {
+        let store = Store::new(snapshots::namespaces()).unwrap();
+        store
+            .update(&format!(
+                "INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph }} }}"
+            ))
+            .unwrap();
+        store
+    }
+
+    #[test]
+    fn its_part_hears_beliefs_written_and_says_each_pass_revised() {
+        let store = bare();
+        let clock = Manual::at(snapshots::now());
+        let mut part = Belief::new(&store, "urn:test:me").unwrap();
+        let heard = Rc::new(RefCell::new(Vec::new()));
+        let into = heard.clone();
+        part.deliberator.borrow_mut().revised = Some(Box::new(move |r| {
+            into.borrow_mut().extend(r.graphs.clone());
+            Ok(())
+        }));
+        {
+            let parts: Vec<(String, &mut dyn Part)> = vec![("belief".into(), &mut part)];
+            Runtime::new(&store, "urn:test:me", &clock, parts).unwrap();
+        }
+        let mut told = part.hears();
+        store
+            .update(&format!(
+                "INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <urn:test:nothing> a orexis:BeliefGraph }} }}"
+            ))
+            .unwrap();
+        told("urn:test:nothing").unwrap();
+        told("urn:test:unclassified").unwrap();
+        assert_eq!(
+            *heard.borrow(),
+            ["urn:test:nothing"],
+            "each pass says what it revised, and a belief alone"
+        );
+    }
+
+    #[test]
+    fn a_graph_written_is_revised_beside_the_world_alone() {
+        let store = bare();
+        let said = [
+            (
+                "urn:test:world",
+                "orexis:BeliefGraph ; orexis:arrivedBy orexis:Asserted",
+            ),
+            (
+                "urn:test:concluded",
+                "orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy <urn:test:me>",
+            ),
+            (
+                "urn:test:other_reading",
+                "orexis:BeliefGraph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy <urn:test:me>",
+            ),
+            (
+                "urn:test:said",
+                "orexis:BeliefGraph ; orexis:arrivedBy orexis:Recorded ; orexis:ownedBy <urn:test:me>",
+            ),
+        ];
+        let rows: String = said.iter().map(|(g, s)| format!("<{g}> a {s} . ")).collect();
+        store
+            .update(&format!("INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ {rows} }} }}"))
+            .unwrap();
+        let part = Belief::new(&store, "urn:test:me").unwrap();
+        part.revise(&["urn:test:reading".to_string()], BELIEF, snapshots::now())
+            .unwrap();
+        assert!(part.deliberator.borrow().pending().is_empty());
+        let mut deliberator = Deliberator::new(&store, "urn:test:me", Some(0)).unwrap();
+        let stated = store.graphs_of(&[BELIEF], &Within::common()).unwrap();
+        assert_eq!(stated, ["urn:test:world"], "the common beliefs alone stand beside it");
+        deliberator.changed("urn:test:observed", Some(stated), "urn:test:ObservedGraph");
+        assert_eq!(deliberator.pending(), ["urn:test:observed"]);
+    }
+}

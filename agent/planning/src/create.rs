@@ -85,8 +85,9 @@ impl<'a> Planning<'a> {
 }
 
 impl Part for Planning<'_> {
-    fn start(&mut self, starting: &mut Starting) {
+    fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         starting.every(0.0, PLAN);
+        Ok(())
     }
 
     fn run(&mut self, _job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {

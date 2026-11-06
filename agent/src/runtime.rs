@@ -4,11 +4,15 @@
 //! part due, in the order of the pass, on the one thread, the mind. The run ends when nothing holds the agent, as the
 //! last to let go said: `met`, `planned` or `unreachable`; or when the passes ran out, `unfinished`.
 //!
-//! NOT YET PORTED: the jobs a transport submits from its own thread and the graphs-written signal a package hears
-//! another's work by; they come with the first package that needs them, and with them the Tokio tasks the decision
-//! record says what waits is (the-agent-moves-to-rust-one-package-at-a-time).
+//! A PART HEARS A KIND OF GRAPH WRITTEN (`on`), as Python's `runtime.on` offers it: every graph a job answers it
+//! wrote is told to each part listening for a kind the catalogue says it is, and what that part writes in turn is
+//! told the same way — how a package answers another's work with neither naming the other. And A PART QUEUES A JOB
+//! (`submitted`), which runs after the jobs queued before it in the same drain, as Python's `submit` queues one.
+//!
+//! NOT YET PORTED: the jobs a transport submits from its own thread; they come with the first transport, and with
+//! them the Tokio tasks the decision record says what waits is (the-agent-moves-to-rust-one-package-at-a-time).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, VecDeque};
 
 use oxsdatatypes::DateTime;
 
@@ -23,12 +27,23 @@ pub const UNREACHABLE: &str = "unreachable";
 pub const UNFINISHED: &str = "unfinished";
 
 /// What a part asks for as it starts.
-#[derive(Default)]
-pub struct Starting {
+pub struct Starting<'c> {
     timers: Vec<(f64, usize)>,
+    hears: Vec<(String, usize)>,
+    clock: &'c dyn Clock,
 }
 
-impl Starting {
+impl Starting<'_> {
+    /// The instant the part starts at, read off the one timeline — a tick in a test, so read only where needed.
+    pub fn now(&self) -> DateTime {
+        self.clock.now()
+    }
+
+    /// Run the part's `job` for every graph of `kind` written, handed the graph (`Part::heard`).
+    pub fn on(&mut self, kind: &str, job: usize) {
+        self.hears.push((kind.to_string(), job));
+    }
+
     /// Run the part's `job` at the first pass and again every `seconds` of the one timeline after — every pass where
     /// `seconds` is nought.
     pub fn every(&mut self, seconds: f64, job: usize) {
@@ -67,10 +82,22 @@ impl Pass<'_> {
 
 /// A package's part: started once, run when what it asked for falls due, stopped at the end, the last first.
 pub trait Part {
-    fn start(&mut self, _starting: &mut Starting) {}
+    fn start(&mut self, _starting: &mut Starting) -> Result<(), Error> {
+        Ok(())
+    }
 
     /// Run `job` at the pass; the graphs written.
     fn run(&mut self, job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error>;
+
+    /// Run `job` for `graph`, written and of a kind the part listens for; the graphs written in turn.
+    fn heard(&mut self, _job: usize, _graph: &str, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        Ok(Vec::new())
+    }
+
+    /// The jobs the part queued since it was last asked, to run in this drain after those queued before them.
+    fn submitted(&mut self) -> Vec<usize> {
+        Vec::new()
+    }
 
     fn stop(&mut self) {}
 }
@@ -89,6 +116,9 @@ pub struct Runtime<'p> {
     clock: &'p dyn Clock,
     parts: Vec<(String, &'p mut dyn Part)>,
     timers: Vec<Timer>,
+    /// (part, kind, job): who hears a kind of graph written, in the order they asked.
+    hears: Vec<(usize, String, usize)>,
+    jobs: VecDeque<(usize, usize)>,
     held: BTreeMap<String, ()>,
     outcome: Option<String>,
     again: bool,
@@ -96,20 +126,34 @@ pub struct Runtime<'p> {
 
 impl<'p> Runtime<'p> {
     /// The runtime of `id` over `beliefs`, reading the one timeline off `clock`, its parts each started.
-    pub fn new(beliefs: &'p Store, id: &str, clock: &'p dyn Clock, parts: Vec<(String, &'p mut dyn Part)>) -> Self {
+    pub fn new(
+        beliefs: &'p Store,
+        id: &str,
+        clock: &'p dyn Clock,
+        parts: Vec<(String, &'p mut dyn Part)>,
+    ) -> Result<Self, Error> {
         let mut runtime = Runtime {
             beliefs,
             id: id.to_string(),
             clock,
             parts,
             timers: Vec::new(),
+            hears: Vec::new(),
+            jobs: VecDeque::new(),
             held: BTreeMap::new(),
             outcome: None,
             again: false,
         };
         for (i, (_, part)) in runtime.parts.iter_mut().enumerate() {
-            let mut starting = Starting::default();
-            part.start(&mut starting);
+            let mut starting = Starting {
+                timers: Vec::new(),
+                hears: Vec::new(),
+                clock,
+            };
+            part.start(&mut starting)?;
+            runtime
+                .hears
+                .extend(starting.hears.into_iter().map(|(kind, job)| (i, kind, job)));
             runtime
                 .timers
                 .extend(starting.timers.into_iter().map(|(seconds, job)| Timer {
@@ -119,7 +163,7 @@ impl<'p> Runtime<'p> {
                     job,
                 }));
         }
-        runtime
+        Ok(runtime)
     }
 
     /// The packages whose parts run, in the order a pass runs them.
@@ -127,14 +171,25 @@ impl<'p> Runtime<'p> {
         self.parts.iter().map(|(p, _)| p.as_str()).collect()
     }
 
-    /// Run every part due at `now`, in the order they asked: the graphs written.
+    /// Run every job queued, and what their writes set off, until none is left; then every part due at `now`, in
+    /// the order they asked, the same way: the graphs written.
     pub fn drain(&mut self, now: DateTime) -> Result<Vec<String>, Error> {
         let mut written = Vec::new();
+        self.queue_submitted();
+        self.run_jobs(now, &mut written)?;
         for timer in &mut self.timers {
             if timer.due.is_some_and(|due| now < due) {
                 continue;
             }
             timer.due = Some(now.checked_add_day_time_duration(seconds(timer.seconds)).unwrap_or(now));
+            self.jobs.push_back((timer.part, timer.job));
+        }
+        self.run_jobs(now, &mut written)?;
+        Ok(written)
+    }
+
+    fn run_jobs(&mut self, now: DateTime, written: &mut Vec<String>) -> Result<(), Error> {
+        while let Some((part, job)) = self.jobs.pop_front() {
             let mut pass = Pass {
                 now,
                 agent: &self.id,
@@ -142,9 +197,65 @@ impl<'p> Runtime<'p> {
                 outcome: &mut self.outcome,
                 again: &mut self.again,
             };
-            written.extend(self.parts[timer.part].1.run(timer.job, &mut pass)?);
+            let wrote = self.parts[part].1.run(job, &mut pass)?;
+            self.queue_submitted();
+            self.wrote(now, wrote, written)?;
         }
-        Ok(written)
+        Ok(())
+    }
+
+    /// Say that `graphs` were written, so whoever listens for their kinds hears it now, and what they write in turn.
+    fn wrote(&mut self, now: DateTime, graphs: Vec<String>, written: &mut Vec<String>) -> Result<(), Error> {
+        for graph in graphs {
+            let mut answered = Vec::new();
+            if !self.hears.is_empty() {
+                let kinds = self.kinds(&graph)?;
+                for h in 0..self.hears.len() {
+                    let (part, kind, job) = self.hears[h].clone();
+                    if !kinds.contains(&kind) {
+                        continue;
+                    }
+                    let mut pass = Pass {
+                        now,
+                        agent: &self.id,
+                        held: &mut self.held,
+                        outcome: &mut self.outcome,
+                        again: &mut self.again,
+                    };
+                    answered.extend(self.parts[part].1.heard(job, &graph, &mut pass)?);
+                    self.queue_submitted();
+                }
+            }
+            written.push(graph);
+            self.wrote(now, answered, written)?;
+        }
+        Ok(())
+    }
+
+    /// Every kind the catalogue says `graph` is.
+    fn kinds(&self, graph: &str) -> Result<Vec<String>, Error> {
+        let Some(cat) = self.beliefs.catalogue()? else {
+            return Ok(Vec::new());
+        };
+        let text = crate::bind::bind(
+            "SELECT ?k WHERE { GRAPH $cat { $g a ?k } }",
+            &[
+                ("cat", crate::bind::Value::iri(cat)),
+                ("g", crate::bind::Value::iri(graph)),
+            ],
+        )?;
+        Ok(self
+            .beliefs
+            .rows(&text, &[])?
+            .iter()
+            .filter_map(|r| crate::store::iri(r, "k"))
+            .collect())
+    }
+
+    fn queue_submitted(&mut self) {
+        for (i, (_, part)) in self.parts.iter_mut().enumerate() {
+            self.jobs.extend(part.submitted().into_iter().map(|job| (i, job)));
+        }
     }
 
     /// Pass after pass until nobody holds the agent, ending as the last to let go said, or `passes` ran out. A pass

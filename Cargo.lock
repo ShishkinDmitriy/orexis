@@ -313,6 +313,7 @@ version = "0.2.0"
 dependencies = [
  "log",
  "orexis",
+ "orexis-belief",
  "orexis-execution",
  "orexis-planning",
  "oxsdatatypes",
@@ -325,6 +326,8 @@ dependencies = [
  "log",
  "orexis",
  "oxigraph",
+ "oxsdatatypes",
+ "regex",
  "spargebra",
 ]
 

@@ -47,7 +47,7 @@ fn run(store: &Store, world: &Path, agent: &str, clock: &Ticking, passes: usize,
         .iter_mut()
         .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
         .collect();
-    let mut runtime = Runtime::new(store, agent, clock, lent);
+    let mut runtime = Runtime::new(store, agent, clock, lent).unwrap();
     let outcome = runtime.run(Some(passes), 0.0).unwrap();
     runtime.stop();
     outcome
