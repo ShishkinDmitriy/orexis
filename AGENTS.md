@@ -867,8 +867,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   (the-agent-moves-to-rust-one-package-at-a-time).
 - **A world the simulator plays is held on the binary by a replay of what the simulator published to the Python
   agent, and the binary must send what that agent sent** — a reading answers the command before it, so the replay is
-  the closed loop for as long as the commands agree; the simulator stays Python, and the greenhouse's day and the
-  layby's walks are `binary/tests/fixtures/`, held to the day bench's digest and the walks' drives.
+  the closed loop for as long as the commands agree; the simulator stays Python, and the greenhouse's day, the
+  layby's walks and the lane's are `binary/tests/fixtures/`, held to the day bench's digest, the walks' drives and, for
+  two minds on one bus, every document they told each other and who each concluded won.
 - **A broker's address is the world's to assert or the installation's to allocate, and the agent's
   to be told** — asserted wins, derived completes, a collision is refused (#827, #823); a world may
   have any number, each served apart, and only what makes an address ambiguous is refused (#821,

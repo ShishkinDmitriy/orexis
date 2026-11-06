@@ -100,6 +100,9 @@ pub struct Execution<'a> {
     walked_at: Option<DateTime>,
     since: usize,
     resolved: usize,
+    /// What whoever was linked wrote as a step was taken — the statements speech kept of what a step said — for the
+    /// pass to hand on with what the executor wrote.
+    pub said: Rc<RefCell<Vec<String>>>,
 }
 
 impl<'a> Execution<'a> {
@@ -111,6 +114,7 @@ impl<'a> Execution<'a> {
             walked_at: None,
             since: usize::MAX,
             resolved: 0,
+            said: Rc::new(RefCell::new(Vec::new())),
         })
     }
 }
@@ -141,7 +145,7 @@ impl Execution<'_> {
             pass.again();
         }
         self.walked_at = Some(pass.now);
-        self.since = executor.standing()?.len();
+        self.since = executor.intentions.len()?;
         Ok(())
     }
 }
@@ -156,8 +160,10 @@ impl Part for Execution<'_> {
         if job == WALK {
             self.walk(pass)?;
         } else {
-            let standing = self.executor.borrow().standing()?.len();
-            if self.walked_at != Some(pass.now) || self.since != standing {
+            //  OVER THE INTENTIONS THE LAST WALK STOOD AT: nothing written to them since, as Python reads it off the
+            //  store's length — a plan that replaced another leaves as many standing, and is walked at once.
+            let held = self.executor.borrow().intentions.len()?;
+            if self.walked_at != Some(pass.now) || self.since != held {
                 self.walk(pass)?;
             }
         }
@@ -166,7 +172,9 @@ impl Part for Execution<'_> {
             self.resolved = executor.resolved;
             pass.again();
         }
-        Ok(std::mem::take(&mut executor.written))
+        let mut written = std::mem::take(&mut executor.written);
+        written.append(&mut self.said.borrow_mut());
+        Ok(written)
     }
 
     fn submitted(&mut self) -> Vec<usize> {

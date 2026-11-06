@@ -87,7 +87,7 @@ pub(crate) mod tests {
         let round = format!("{T}round");
         assert_eq!(
             said(&store, &me(), &Document::of_quads(quads(&round, "open"))).unwrap(),
-            [round.clone()]
+            std::slice::from_ref(&round)
         );
         let q = format!(
             "SELECT ?a ?o WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{round}> orexis:arrivedBy ?a ; orexis:ownedBy ?o }} }}"

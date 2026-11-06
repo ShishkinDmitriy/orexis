@@ -3,7 +3,7 @@
 # own directory of `agent/`, beside its ontology and its Python, so both read the same documents.
 [workspace]
 resolver = "3"
-members = ["agent", "agent/belief", "agent/execution", "agent/planning", "agent/prediction", "agent/sensing", "agent/speech", "agent/transport/mqtt", "binary"]
+members = ["agent", "agent/belief", "agent/coordination", "agent/execution", "agent/planning", "agent/prediction", "agent/sensing", "agent/speech", "agent/transport/mqtt", "binary"]
 
 [workspace.package]
 edition = "2024"

@@ -1,0 +1,155 @@
+# THE LANE AS ITS SIMULATOR PLAYED IT to the two Python couriers, world/lane/tests/test_lane.py: the crossing, A going first with secrets of 0s and 1s.
+# `step` lines are each ten-second step's instant and what the simulator published then; `command`, `told` and
+# `won` lines are what the Python couriers did over it — each drive, each document told the other with the kinds
+# it carries, and who each concluded won.
+step	2026-01-01T12:00:00+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 0.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": 5.0, "y": 5.0}}, "van_b": {"fix": {"x": 5.0, "y": -4.0}, "contact_2": {"x": 2.0, "y": 2.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 5.0, "y": 5.0}}}
+step	2026-01-01T12:00:10+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 0.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": 5.0, "y": 5.0}}, "van_b": {"fix": {"x": 5.0, "y": -4.0}, "contact_2": {"x": 2.0, "y": 2.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 5.0, "y": 5.0}}}
+step	2026-01-01T12:00:20+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 0.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": 5.0, "y": 5.0}}, "van_b": {"fix": {"x": 5.0, "y": -4.0}, "contact_2": {"x": 2.0, "y": 2.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 5.0, "y": 5.0}}}
+step	2026-01-01T12:00:30+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 0.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": 5.0, "y": 5.0}}, "van_b": {"fix": {"x": 5.0, "y": -4.0}, "contact_2": {"x": 2.0, "y": 2.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 5.0, "y": 5.0}}}
+step	2026-01-01T12:00:40+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 0.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": 5.0, "y": 5.0}}, "van_b": {"fix": {"x": 5.0, "y": -4.0}, "contact_2": {"x": 2.0, "y": 2.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 5.0, "y": 5.0}}}
+step	2026-01-01T12:00:50+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 1.0, "y": 1.0}, "contact_1": {"x": 1.0, "y": -1.0}, "contact_3": {"x": 1.0, "y": 1.0}, "van_b": {"x": 4.0, "y": -4.0}}, "van_b": {"fix": {"x": 5.0, "y": -3.0}, "contact_2": {"x": 2.0, "y": 2.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -4.0, "y": 4.0}}}
+step	2026-01-01T12:01:00+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 1.0, "y": 1.0}, "contact_1": {"x": 1.0, "y": -1.0}, "contact_3": {"x": 1.0, "y": 1.0}, "van_b": {"x": 4.0, "y": -4.0}}, "van_b": {"fix": {"x": 5.0, "y": -3.0}, "contact_2": {"x": 2.0, "y": 2.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -4.0, "y": 4.0}}}
+step	2026-01-01T12:01:10+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 1.0, "y": 1.0}, "contact_1": {"x": 1.0, "y": -1.0}, "contact_3": {"x": 1.0, "y": 1.0}, "van_b": {"x": 4.0, "y": -4.0}}, "van_b": {"fix": {"x": 5.0, "y": -3.0}, "contact_2": {"x": 2.0, "y": 2.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -4.0, "y": 4.0}}}
+step	2026-01-01T12:01:20+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 1.0, "y": 1.0}, "contact_1": {"x": 1.0, "y": -1.0}, "contact_3": {"x": 1.0, "y": 1.0}, "van_b": {"x": 4.0, "y": -4.0}}, "van_b": {"fix": {"x": 5.0, "y": -3.0}, "contact_2": {"x": 2.0, "y": 2.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -4.0, "y": 4.0}}}
+step	2026-01-01T12:01:30+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 1.0, "y": 1.0}, "contact_1": {"x": 1.0, "y": -1.0}, "contact_3": {"x": 1.0, "y": 1.0}, "van_b": {"x": 4.0, "y": -4.0}}, "van_b": {"fix": {"x": 5.0, "y": -3.0}, "contact_2": {"x": 2.0, "y": 2.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -4.0, "y": 4.0}}}
+step	2026-01-01T12:01:40+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 2.0, "y": 1.0}, "contact_1": {"x": 0.0, "y": -1.0}, "contact_3": {"x": 0.0, "y": 1.0}, "van_b": {"x": 3.0, "y": -3.0}}, "van_b": {"fix": {"x": 5.0, "y": -2.0}, "contact_2": {"x": 2.0, "y": 2.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -3.0, "y": 3.0}}}
+step	2026-01-01T12:01:50+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 2.0, "y": 1.0}, "contact_1": {"x": 0.0, "y": -1.0}, "contact_3": {"x": 0.0, "y": 1.0}, "van_b": {"x": 3.0, "y": -3.0}}, "van_b": {"fix": {"x": 5.0, "y": -2.0}, "contact_2": {"x": 2.0, "y": 2.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -3.0, "y": 3.0}}}
+step	2026-01-01T12:02:00+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 2.0, "y": 1.0}, "contact_1": {"x": 0.0, "y": -1.0}, "contact_3": {"x": 0.0, "y": 1.0}, "van_b": {"x": 3.0, "y": -3.0}}, "van_b": {"fix": {"x": 5.0, "y": -2.0}, "contact_2": {"x": 2.0, "y": 2.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -3.0, "y": 3.0}}}
+step	2026-01-01T12:02:10+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 2.0, "y": 1.0}, "contact_1": {"x": 0.0, "y": -1.0}, "contact_3": {"x": 0.0, "y": 1.0}, "van_b": {"x": 3.0, "y": -3.0}}, "van_b": {"fix": {"x": 5.0, "y": -2.0}, "contact_2": {"x": 2.0, "y": 2.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -3.0, "y": 3.0}}}
+step	2026-01-01T12:02:20+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 2.0, "y": 1.0}, "contact_1": {"x": 0.0, "y": -1.0}, "contact_3": {"x": 0.0, "y": 1.0}, "van_b": {"x": 3.0, "y": -3.0}}, "van_b": {"fix": {"x": 5.0, "y": -2.0}, "contact_2": {"x": 2.0, "y": 2.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -3.0, "y": 3.0}}}
+step	2026-01-01T12:02:30+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 3.0, "y": 1.0}, "contact_1": {"x": 0.0, "y": -1.0}, "contact_3": {"x": -1.0, "y": -1.0}, "van_b": {"x": 2.0, "y": -2.0}}, "van_b": {"fix": {"x": 5.0, "y": -1.0}, "contact_2": {"x": -1.0, "y": 1.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -2.0, "y": 2.0}}}
+step	2026-01-01T12:02:40+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 3.0, "y": 1.0}, "contact_1": {"x": 0.0, "y": -1.0}, "contact_3": {"x": -1.0, "y": -1.0}, "van_b": {"x": 2.0, "y": -2.0}}, "van_b": {"fix": {"x": 5.0, "y": -1.0}, "contact_2": {"x": -1.0, "y": 1.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -2.0, "y": 2.0}}}
+step	2026-01-01T12:02:50+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 3.0, "y": 1.0}, "contact_1": {"x": 0.0, "y": -1.0}, "contact_3": {"x": -1.0, "y": -1.0}, "van_b": {"x": 2.0, "y": -2.0}}, "van_b": {"fix": {"x": 5.0, "y": -1.0}, "contact_2": {"x": -1.0, "y": 1.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -2.0, "y": 2.0}}}
+step	2026-01-01T12:03:00+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 3.0, "y": 1.0}, "contact_1": {"x": 0.0, "y": -1.0}, "contact_3": {"x": -1.0, "y": -1.0}, "van_b": {"x": 2.0, "y": -2.0}}, "van_b": {"fix": {"x": 5.0, "y": -1.0}, "contact_2": {"x": -1.0, "y": 1.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -2.0, "y": 2.0}}}
+step	2026-01-01T12:03:10+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 3.0, "y": 1.0}, "contact_1": {"x": 0.0, "y": -1.0}, "contact_3": {"x": -1.0, "y": -1.0}, "van_b": {"x": 2.0, "y": -2.0}}, "van_b": {"fix": {"x": 5.0, "y": -1.0}, "contact_2": {"x": -1.0, "y": 1.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -2.0, "y": 2.0}}}
+step	2026-01-01T12:03:20+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 4.0, "y": 1.0}, "contact_1": {"x": 0.0, "y": -1.0}, "contact_3": {"x": 0.0, "y": 1.0}, "van_b": {"x": 1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -1.0, "y": 1.0}}}
+step	2026-01-01T12:03:30+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 4.0, "y": 1.0}, "contact_1": {"x": 0.0, "y": -1.0}, "contact_3": {"x": 0.0, "y": 1.0}, "van_b": {"x": 1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -1.0, "y": 1.0}}}
+step	2026-01-01T12:03:40+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 4.0, "y": 1.0}, "contact_1": {"x": 0.0, "y": -1.0}, "contact_3": {"x": 0.0, "y": 1.0}, "van_b": {"x": 1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -1.0, "y": 1.0}}}
+step	2026-01-01T12:03:50+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 4.0, "y": 1.0}, "contact_1": {"x": 0.0, "y": -1.0}, "contact_3": {"x": 0.0, "y": 1.0}, "van_b": {"x": 1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -1.0, "y": 1.0}}}
+step	2026-01-01T12:04:00+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 4.0, "y": 1.0}, "contact_1": {"x": 0.0, "y": -1.0}, "contact_3": {"x": 0.0, "y": 1.0}, "van_b": {"x": 1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": -1.0, "y": 1.0}}}
+step	2026-01-01T12:04:10+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 5.0, "y": 1.0}, "contact_1": {"x": -1.0, "y": -1.0}, "contact_3": {"x": -1.0, "y": 1.0}, "van_b": {"x": 0.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 0.0, "y": 1.0}}}
+step	2026-01-01T12:04:20+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 5.0, "y": 1.0}, "contact_1": {"x": -1.0, "y": -1.0}, "contact_3": {"x": -1.0, "y": 1.0}, "van_b": {"x": 0.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 0.0, "y": 1.0}}}
+step	2026-01-01T12:04:30+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 5.0, "y": 1.0}, "contact_1": {"x": -1.0, "y": -1.0}, "contact_3": {"x": -1.0, "y": 1.0}, "van_b": {"x": 0.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 0.0, "y": 1.0}}}
+step	2026-01-01T12:04:40+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 5.0, "y": 1.0}, "contact_1": {"x": -1.0, "y": -1.0}, "contact_3": {"x": -1.0, "y": 1.0}, "van_b": {"x": 0.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 0.0, "y": 1.0}}}
+step	2026-01-01T12:04:50+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 5.0, "y": 1.0}, "contact_1": {"x": -1.0, "y": -1.0}, "contact_3": {"x": -1.0, "y": 1.0}, "van_b": {"x": 0.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 0.0, "y": 1.0}}}
+step	2026-01-01T12:05:00+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": 1.0}}}
+step	2026-01-01T12:05:10+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": 1.0}}}
+step	2026-01-01T12:05:20+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": 1.0}}}
+step	2026-01-01T12:05:30+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": 1.0}}}
+step	2026-01-01T12:05:40+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": 1.0}}}
+step	2026-01-01T12:05:50+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": 1.0}}}
+step	2026-01-01T12:06:00+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": 1.0}}}
+step	2026-01-01T12:06:10+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": 1.0}}}
+step	2026-01-01T12:06:20+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": 1.0}}}
+step	2026-01-01T12:06:30+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": 1.0}}}
+step	2026-01-01T12:06:40+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": 1.0}}}
+step	2026-01-01T12:06:50+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": 1.0}}}
+step	2026-01-01T12:07:00+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": 1.0}}}
+step	2026-01-01T12:07:10+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": 1.0}}}
+step	2026-01-01T12:07:20+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": 1.0}}}
+step	2026-01-01T12:07:30+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": 1.0}}}
+step	2026-01-01T12:07:40+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": -1.0}}, "van_b": {"fix": {"x": 5.0, "y": 0.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": 1.0}}}
+step	2026-01-01T12:07:50+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": 0.0}}, "van_b": {"fix": {"x": 5.0, "y": 1.0}, "contact_2": {"x": -1.0, "y": -1.0}, "contact_4": {"x": -1.0, "y": 1.0}, "van_a": {"x": 1.0, "y": 0.0}}}
+step	2026-01-01T12:08:00+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": 0.0}}, "van_b": {"fix": {"x": 5.0, "y": 1.0}, "contact_2": {"x": -1.0, "y": -1.0}, "contact_4": {"x": -1.0, "y": 1.0}, "van_a": {"x": 1.0, "y": 0.0}}}
+step	2026-01-01T12:08:10+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": 0.0}}, "van_b": {"fix": {"x": 5.0, "y": 1.0}, "contact_2": {"x": -1.0, "y": -1.0}, "contact_4": {"x": -1.0, "y": 1.0}, "van_a": {"x": 1.0, "y": 0.0}}}
+step	2026-01-01T12:08:20+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": 0.0}}, "van_b": {"fix": {"x": 5.0, "y": 1.0}, "contact_2": {"x": -1.0, "y": -1.0}, "contact_4": {"x": -1.0, "y": 1.0}, "van_a": {"x": 1.0, "y": 0.0}}}
+step	2026-01-01T12:08:30+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": 0.0}}, "van_b": {"fix": {"x": 5.0, "y": 1.0}, "contact_2": {"x": -1.0, "y": -1.0}, "contact_4": {"x": -1.0, "y": 1.0}, "van_a": {"x": 1.0, "y": 0.0}}}
+step	2026-01-01T12:08:40+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": 1.0}}, "van_b": {"fix": {"x": 5.0, "y": 2.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": -1.0}}}
+step	2026-01-01T12:08:50+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": 1.0}}, "van_b": {"fix": {"x": 5.0, "y": 2.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": -1.0}}}
+step	2026-01-01T12:09:00+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": 1.0}}, "van_b": {"fix": {"x": 5.0, "y": 2.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": -1.0}}}
+step	2026-01-01T12:09:10+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": 1.0}}, "van_b": {"fix": {"x": 5.0, "y": 2.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": -1.0}}}
+step	2026-01-01T12:09:20+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": 1.0}}, "van_b": {"fix": {"x": 5.0, "y": 2.0}, "contact_2": {"x": -1.0, "y": 0.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": -1.0}}}
+step	2026-01-01T12:09:30+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": 2.0}}, "van_b": {"fix": {"x": 5.0, "y": 3.0}, "contact_2": {"x": -1.0, "y": -1.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": -2.0}}}
+step	2026-01-01T12:09:40+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": 2.0}}, "van_b": {"fix": {"x": 5.0, "y": 3.0}, "contact_2": {"x": -1.0, "y": -1.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": -2.0}}}
+step	2026-01-01T12:09:50+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": 2.0}}, "van_b": {"fix": {"x": 5.0, "y": 3.0}, "contact_2": {"x": -1.0, "y": -1.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": -2.0}}}
+step	2026-01-01T12:10:00+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": 2.0}}, "van_b": {"fix": {"x": 5.0, "y": 3.0}, "contact_2": {"x": -1.0, "y": -1.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": -2.0}}}
+step	2026-01-01T12:10:10+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": 2.0}}, "van_b": {"fix": {"x": 5.0, "y": 3.0}, "contact_2": {"x": -1.0, "y": -1.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": -2.0}}}
+step	2026-01-01T12:10:20+00:00	sensors/simulation/reading	{"van_a": {"fix": {"x": 6.0, "y": 1.0}, "contact_1": {"x": 2.0, "y": 2.0}, "contact_3": {"x": 2.0, "y": 2.0}, "van_b": {"x": -1.0, "y": 3.0}}, "van_b": {"fix": {"x": 5.0, "y": 4.0}, "contact_2": {"x": 2.0, "y": 2.0}, "contact_4": {"x": 2.0, "y": 2.0}, "van_a": {"x": 1.0, "y": -3.0}}}
+command	2026-01-01T12:00:00+00:00	actuators/van_a/command	{"to":{"x":1,"y":1}}
+command	2026-01-01T12:00:00+00:00	actuators/van_b/command	{"to":{"x":5,"y":-3}}
+command	2026-01-01T12:00:50+00:00	actuators/van_a/command	{"to":{"x":2,"y":1}}
+command	2026-01-01T12:00:50+00:00	actuators/van_b/command	{"to":{"x":5,"y":-2}}
+command	2026-01-01T12:01:40+00:00	actuators/van_a/command	{"to":{"x":3,"y":1}}
+command	2026-01-01T12:01:40+00:00	actuators/van_b/command	{"to":{"x":5,"y":-1}}
+command	2026-01-01T12:02:30+00:00	actuators/van_a/command	{"to":{"x":4,"y":1}}
+command	2026-01-01T12:02:30+00:00	actuators/van_b/command	{"to":{"x":5,"y":0}}
+command	2026-01-01T12:03:20+00:00	actuators/van_a/command	{"to":{"x":5,"y":1}}
+command	2026-01-01T12:04:10+00:00	actuators/van_a/command	{"to":{"x":6,"y":1}}
+command	2026-01-01T12:07:00+00:00	actuators/van_b/command	{"to":{"x":5,"y":1}}
+command	2026-01-01T12:07:50+00:00	actuators/van_b/command	{"to":{"x":5,"y":2}}
+command	2026-01-01T12:08:40+00:00	actuators/van_b/command	{"to":{"x":5,"y":3}}
+command	2026-01-01T12:09:30+00:00	actuators/van_b/command	{"to":{"x":5,"y":4}}
+told	2026-01-01T12:00:50+00:00	agents/courier_b/inbox	coordination#Question
+told	2026-01-01T12:00:50+00:00	agents/courier_b/inbox	coordination#Question
+told	2026-01-01T12:00:50+00:00	agents/courier_a/inbox	coordination#Answer
+told	2026-01-01T12:00:50+00:00	agents/courier_a/inbox	coordination#Answer
+told	2026-01-01T12:00:50+00:00	agents/courier_a/inbox	draw#Commitment
+told	2026-01-01T12:00:50+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:00:50+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:01:00+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:01:00+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:01:00+00:00	agents/courier_b/inbox	draw#Commitment
+told	2026-01-01T12:01:00+00:00	agents/courier_a/inbox	draw#Reveal
+told	2026-01-01T12:01:10+00:00	agents/courier_b/inbox	draw#Reveal
+told	2026-01-01T12:01:20+00:00	agents/courier_b/inbox	coordination#Question
+told	2026-01-01T12:01:20+00:00	agents/courier_b/inbox	coordination#Question
+told	2026-01-01T12:01:20+00:00	agents/courier_a/inbox	coordination#Answer
+told	2026-01-01T12:01:20+00:00	agents/courier_a/inbox	coordination#Answer
+told	2026-01-01T12:01:40+00:00	agents/courier_b/inbox	coordination#Question
+told	2026-01-01T12:01:40+00:00	agents/courier_b/inbox	coordination#Question
+told	2026-01-01T12:01:40+00:00	agents/courier_a/inbox	coordination#Answer
+told	2026-01-01T12:01:40+00:00	agents/courier_a/inbox	coordination#Answer
+told	2026-01-01T12:01:40+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:01:40+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:01:50+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:01:50+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:02:30+00:00	agents/courier_b/inbox	coordination#Question
+told	2026-01-01T12:02:30+00:00	agents/courier_b/inbox	coordination#Question
+told	2026-01-01T12:02:30+00:00	agents/courier_a/inbox	coordination#Answer
+told	2026-01-01T12:02:30+00:00	agents/courier_a/inbox	coordination#Answer
+told	2026-01-01T12:02:30+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:02:30+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:02:40+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:02:40+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:03:20+00:00	agents/courier_b/inbox	coordination#Question
+told	2026-01-01T12:03:20+00:00	agents/courier_b/inbox	coordination#Question
+told	2026-01-01T12:03:20+00:00	agents/courier_a/inbox	coordination#Answer
+told	2026-01-01T12:03:20+00:00	agents/courier_a/inbox	coordination#Answer
+told	2026-01-01T12:03:20+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:03:20+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:03:30+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:03:30+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:04:10+00:00	agents/courier_b/inbox	coordination#Question
+told	2026-01-01T12:04:10+00:00	agents/courier_b/inbox	coordination#Question
+told	2026-01-01T12:04:10+00:00	agents/courier_a/inbox	coordination#Answer
+told	2026-01-01T12:04:10+00:00	agents/courier_a/inbox	coordination#Answer
+told	2026-01-01T12:04:20+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:04:20+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:04:30+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:04:30+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:05:20+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:05:20+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:05:30+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:05:30+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:06:20+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:06:20+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:06:30+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:06:30+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:07:00+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:07:00+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:07:10+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:07:10+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:07:50+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:07:50+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:08:00+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:08:00+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:08:40+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:08:40+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:08:50+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:08:50+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:09:30+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:09:30+00:00	agents/courier_a/inbox	coordination#Question
+told	2026-01-01T12:09:40+00:00	agents/courier_b/inbox	coordination#Answer
+told	2026-01-01T12:09:40+00:00	agents/courier_b/inbox	coordination#Answer
+won	courier_a	http://example.org/orexis/world/lane#courier_a
+won	courier_b	http://example.org/orexis/world/lane#courier_a

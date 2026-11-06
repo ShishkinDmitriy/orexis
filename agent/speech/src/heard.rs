@@ -108,7 +108,7 @@ mod tests {
         let round = format!("{T}round");
         assert_eq!(
             heard(&store, &me(), &doc(&round, &format!("{T}RoundGraph"), "open")).unwrap(),
-            [round.clone()]
+            std::slice::from_ref(&round)
         );
         assert!(
             kinds(&store, STATEMENT).contains(&round),
@@ -149,7 +149,7 @@ mod tests {
             let wish = format!("{T}wish");
             assert_eq!(
                 heard(&store, &me(), &doc(&wish, &kind, "want")).unwrap(),
-                [wish.clone()],
+                std::slice::from_ref(&wish),
                 "{kind}"
             );
             let expected: Vec<String> = if kind == BELIEF {
