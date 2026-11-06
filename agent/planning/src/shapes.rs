@@ -8,10 +8,10 @@ use std::collections::{HashMap, HashSet};
 
 use oxigraph::model::{NamedNode, NamedOrBlankNode, Term};
 
+use crate::terms::RDF_FIRST;
 use orexis::Error;
 use orexis::store::Store;
 
-const RDF_FIRST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#first";
 const RDF_REST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest";
 const RDF_NIL: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil";
 

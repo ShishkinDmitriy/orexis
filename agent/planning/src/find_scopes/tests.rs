@@ -56,12 +56,6 @@ fn every_member_is_read_with_every_scope_it_is_in() {
     .collect();
     assert_eq!(scopes.0, expected);
     assert_eq!(scopes.all(), set(&["urn:test:s1", "urn:test:s2"]));
-    assert_eq!(scopes.one("urn:test:level"), Some("urn:test:s1"));
-    assert_eq!(
-        scopes.one("urn:test:bed"),
-        None,
-        "a member of two scopes is unique to neither"
-    );
 }
 
 #[test]

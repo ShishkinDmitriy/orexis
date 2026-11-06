@@ -28,7 +28,7 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::microseconds;
 use orexis::hash::{digest_of, py_float_repr, py_round};
-use orexis::ontology::{ACTION, BELIEF, DERIVED, SELF_GRAPH};
+use orexis::ontology::{ACTION, BELIEF, DERIVED, END, HASH, SELF_GRAPH, START};
 use orexis::store::{Store, Within, instant, iri, value};
 use orexis_belief::transition::{Rule, run};
 
@@ -37,15 +37,11 @@ use crate::admit::{local_of, possible};
 use crate::memo::{Binding, Carried};
 use crate::next_ground::next_ground;
 use crate::ontology::{ADDS_GRAPH, BY, FILLS, FROM, GROUND_GRAPH, MINTED, POSSIBLE_GRAPH, RETRACTS_GRAPH, SPENT, WAIT};
+use crate::terms::{RDF_TYPE, TEMPORAL};
 use crate::world_at::{Asking, catalogue, lexical, named, world_at};
 
-const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-const TEMPORAL: &str = "http://purl.org/dc/terms/temporal";
 const PERIOD_OF_TIME: &str = "http://purl.org/dc/terms/PeriodOfTime";
-const START: &str = "http://example.org/orexis#start";
-const END: &str = "http://example.org/orexis#end";
 const ARRIVED_BY: &str = "http://example.org/orexis#arrivedBy";
-const HASH: &str = "http://example.org/orexis#hash";
 const WAS_DERIVED_FROM: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
 
 /// THE ACTION'S TEXTS, off what the world states.

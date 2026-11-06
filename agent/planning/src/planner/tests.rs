@@ -12,8 +12,11 @@ use orexis::ontology::FORECAST;
 use orexis::snapshots;
 
 use super::*;
+use crate::extract_plan::extract_plan;
 use crate::footprint::changeable;
 use crate::ontology::POSSIBLE_GRAPH;
+use crate::ontology::{EXHAUSTED, GROUND_GRAPH, PLAN_GRAPH, SATISFIED};
+use crate::world_at::{Asking, world_at};
 
 fn cases() -> PathBuf {
     snapshots::tree().join("planning/tests/plans")
@@ -49,8 +52,7 @@ fn the_pass_leaves_the_imaginarium_the_diff_says() {
 #[test]
 fn every_case_is_read_and_no_diff_is_orphaned() {
     for dir in [cases(), snapshots::tree().join("planning/tests/expand")] {
-        assert!(snapshots::cases_in(&dir).len() >= 3);
-        assert!(snapshots::orphans_in(&dir).is_empty());
+        snapshots::all_read(&dir, 3);
     }
 }
 

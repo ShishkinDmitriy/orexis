@@ -13,6 +13,7 @@ use crate::lay_ground::{Laying, lay_ground};
 use crate::unweighed::unweighed;
 use crate::weigh::weigh;
 use crate::withdraw::withdraw;
+use crate::world_at::lexical;
 
 fn cases() -> PathBuf {
     snapshots::tree().join("planning/tests/derive_wants")
@@ -66,8 +67,7 @@ fn derive_wants_leaves_the_store_as_the_diff_says() {
 
 #[test]
 fn every_case_is_read_and_no_diff_is_orphaned() {
-    assert!(snapshots::cases_in(&cases()).len() >= 14);
-    assert!(snapshots::orphans_in(&cases()).is_empty());
+    snapshots::all_read(&cases(), 14);
 }
 
 const HOMES: &str = "

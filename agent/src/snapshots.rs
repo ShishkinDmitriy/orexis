@@ -152,6 +152,24 @@ pub fn held_to_diff(case: &Path, store: &Store, function: &str) {
     );
 }
 
+/// What every suite asks of its directory: at least `least` cases are read, and no diff is left whose case was
+/// deleted or renamed.
+pub fn all_read(directory: &Path, least: usize) {
+    let found = cases_in(directory);
+    assert!(
+        found.len() >= least,
+        "{}: {} case(s), fewer than {least}",
+        directory.display(),
+        found.len()
+    );
+    let orphans = orphans_in(directory);
+    assert!(
+        orphans.is_empty(),
+        "{}: orphaned diffs {orphans:?}",
+        directory.display()
+    );
+}
+
 /// Diffs whose case was deleted or renamed.
 pub fn orphans_in(directory: &Path) -> Vec<String> {
     let mut out: Vec<String> = fs::read_dir(directory)

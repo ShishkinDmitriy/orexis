@@ -27,15 +27,6 @@ impl Scopes {
         self.0.values().flatten().cloned().collect()
     }
 
-    /// The scope `member` is in where that is exactly one, else None — a word two scopes' keys both hold tells
-    /// nothing on its own.
-    pub fn one(&self, member: &str) -> Option<&str> {
-        match self.0.get(member) {
-            Some(held) if held.len() == 1 => held.iter().next().map(String::as_str),
-            _ => None,
-        }
-    }
-
     /// The scopes a thing naming `names` is of: the scopes every one of its named members is in, and where no scope
     /// holds them all, every scope any of them is in; nothing where it names no member at all, which is a thing
     /// every scope holds.

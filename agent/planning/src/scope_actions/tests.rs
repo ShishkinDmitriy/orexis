@@ -22,6 +22,5 @@ fn scope_actions_leaves_the_store_the_diff_says() {
 
 #[test]
 fn every_case_is_read_and_no_diff_is_orphaned() {
-    assert!(snapshots::cases_in(&cases()).len() >= 5);
-    assert!(snapshots::orphans_in(&cases()).is_empty());
+    snapshots::all_read(&cases(), 5);
 }

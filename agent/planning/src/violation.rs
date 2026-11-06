@@ -19,12 +19,9 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::namespaces::Namespaces;
 
+use crate::ontology::PLANNING;
 use crate::shapes::Shapes;
-
-const SH: &str = "http://www.w3.org/ns/shacl#";
-const PLANNING: &str = "http://example.org/orexis/planning#";
-const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-const RDF_FIRST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#first";
+use crate::terms::{RDF_FIRST, RDF_TYPE, SH, node};
 
 fn sh(local: &str) -> String {
     format!("{SH}{local}")
@@ -711,10 +708,6 @@ fn lexical(t: &Term) -> String {
         Term::NamedNode(n) => n.as_str().to_string(),
         Term::BlankNode(b) => b.as_str().to_string(),
     }
-}
-
-fn node(iri: &str) -> Term {
-    oxigraph::model::NamedNode::new_unchecked(iri).into()
 }
 
 #[cfg(test)]

@@ -23,13 +23,12 @@ use orexis::store::{Row, Store, Within, iri, value};
 
 use crate::Memo;
 use crate::admit::local_of;
-use crate::ontology::{CONSTRAINT_GRAPH, DESIRE, SHAPES, WANT};
+use crate::ontology::{CONSTRAINT_GRAPH, DESIRE, PLANNING, SHAPES, WANT};
 use crate::shapes::Shapes;
+use crate::terms::RDF_TYPE;
 use crate::violation::{Compiled, select_of};
 use crate::world_at::{Asking, catalogue, named, world_at};
 
-const PLANNING: &str = "http://example.org/orexis/planning#";
-const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 const SH_SELECT: &str = "http://www.w3.org/ns/shacl#select";
 const DERIVED_FROM: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
 

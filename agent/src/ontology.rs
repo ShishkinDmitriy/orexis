@@ -24,6 +24,10 @@ pub const SELF_GRAPH: &str = "http://example.org/orexis#SelfGraph";
 pub const HASH: &str = "http://example.org/orexis#hash";
 pub const SELF: &str = "http://example.org/orexis#Self";
 
+/// Where a period begins and ends.
+pub const START: &str = "http://example.org/orexis#start";
+pub const END: &str = "http://example.org/orexis#end";
+
 /// What the boot reads the world by.
 pub const WORLD_GRAPH: &str = "http://example.org/orexis#WorldGraph";
 pub const SOCIETY_GRAPH: &str = "http://example.org/orexis#SocietyGraph";
