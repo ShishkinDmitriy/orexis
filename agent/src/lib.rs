@@ -18,6 +18,7 @@ pub mod boot;
 pub mod clock;
 pub mod document;
 pub mod error;
+pub mod foresight;
 pub mod hash;
 pub mod namespaces;
 pub mod ontology;

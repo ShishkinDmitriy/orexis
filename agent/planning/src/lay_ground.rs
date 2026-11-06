@@ -9,9 +9,9 @@
 //! worlds is cut in two, what a writer can write into a `planning:ChangeableGraph` derived from it (#953). **WHAT
 //! IS BUILT IS CLASSIFIED, NOT RETURNED**: each ground is a `planning:GroundGraph` with the stretch it holds over.
 //!
-//! NOT YET PORTED: the predictor's foresight, the integration of the flows advanced from each ground and the
-//! transitions a predicted observation triggers where it arrives (#1000). It is the prediction package's to make,
-//! and lands with that package; until then the grounds are laid as Python lays them handed no foresight.
+//! **WHAT MOVES FROM EACH GROUND** is the predictor's foresight, handed in by whoever lays the grounds and advanced
+//! here from each ground to the next boundary: a ground laid at every crossing it answers, where the predicted
+//! observation arrives and the transitions judge it beside the agent's own state as the ground before left it (#1000).
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
@@ -26,6 +26,9 @@ use orexis::clock::{instant, isoformat};
 use orexis::hash::{digest_of, hash_named_graph};
 use orexis::ontology::{BELIEF, DERIVED, FORECAST, ONTOLOGY, RECORD};
 use orexis::store::{Store, Within, iri};
+
+use orexis::foresight::Foresight;
+use orexis_belief::transition::{Rule, run, transitions};
 
 use crate::footprint::{self, Pattern, read_by_transitions};
 use crate::ontology::{CHANGEABLE_GRAPH, GROUND_GRAPH, POSSIBLE_GRAPH};
@@ -103,8 +106,20 @@ WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                       OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }";
 
 /// Build one ground world per period the agent can see, classified with its stretch; the graphs made, earliest
-/// first. In place: it lays the grounds into whichever store it is handed.
+/// first. In place: it lays the grounds into whichever store it is handed. Handed no foresight.
 pub fn lay_ground(store: &Store, now: DateTime, laying: &Laying<'_>) -> Result<Vec<String>, Error> {
+    lay_ground_foreseeing(store, now, laying, None)
+}
+
+/// `lay_ground`, with the predictor's integration of the flows made for this pass (#1000) — advanced here from each
+/// ground to the next boundary, and laying a ground at every crossing it answers, where the predicted observation
+/// arrives and the transitions judge it; None, and no flow is integrated.
+pub fn lay_ground_foreseeing(
+    store: &Store,
+    now: DateTime,
+    laying: &Laying<'_>,
+    mut foresight: Option<&mut dyn Foresight>,
+) -> Result<Vec<String>, Error> {
     //  WHAT A BELIEF AHEAD IS LAID FOR: some text of the pass reads it, or some transition does.
     let gate = match laying.within {
         None => None,
@@ -114,6 +129,23 @@ pub fn lay_ground(store: &Store, now: DateTime, laying: &Laying<'_>) -> Result<V
     let ahead = foreseen(store, now)?;
     let boundaries = ahead.len();
     let here = present(store, now)?;
+    //  THE TRANSITIONS A PREDICTED OBSERVATION TRIGGERS, and the agent's own state they read and change as the
+    //  grounds are laid, from the present's: asked only where the flows are integrated (#1000).
+    let rules = if foresight.is_some() {
+        transitions(store)?
+    } else {
+        Vec::new()
+    };
+    let own = if rules.is_empty() {
+        None
+    } else {
+        Some(own_state(store)?)
+    };
+    let stated = if rules.is_empty() {
+        Vec::new()
+    } else {
+        whole(store, store.graphs_of(&[BELIEF], &Within::common())?)?
+    };
     let mut ground = Ground {
         store,
         within: laying.within,
@@ -125,6 +157,9 @@ pub fn lay_ground(store: &Store, now: DateTime, laying: &Laying<'_>) -> Result<V
         landing: laying.landings.iter().copied().filter(|at| *at > now).collect(),
         ending: Vec::new(),
         alone: HashSet::new(),
+        rules,
+        own,
+        stated,
     };
     for (at, piece) in ending(store, now)? {
         match ground.ending.iter_mut().find(|(t, _)| *t == at) {
@@ -136,20 +171,51 @@ pub fn lay_ground(store: &Store, now: DateTime, laying: &Laying<'_>) -> Result<V
         ground.alone = foreseen_alone(store)?;
     }
     let ends: Vec<DateTime> = ground.ending.iter().map(|(at, _)| *at).collect();
-    for (at, group) in by_instant(ahead, &ground.landing, &ends) {
-        if at <= now {
-            continue;
+    let mut bounds: Vec<(DateTime, Vec<(String, String)>)> = by_instant(ahead, &ground.landing, &ends)
+        .into_iter()
+        .filter(|(at, _)| *at > now)
+        .collect();
+    //  WHERE THE FLOWS ARE INTEGRATED, the end of what is foreseen, integrated to and laid at nothing.
+    if let Some(f) = foresight.as_deref() {
+        bounds.push((f.horizon(), Vec::new()));
+        bounds.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+    }
+    let spoken: HashSet<String> = store
+        .graphs_of(&[CHANGEABLE_GRAPH, GROUND_GRAPH, POSSIBLE_GRAPH], &Within::default())?
+        .into_iter()
+        .collect();
+    let mut stands = now;
+    for (at, group) in bounds {
+        //  WHAT MOVES FROM HERE BEFORE THE BOUNDARY: the flows integrated from the ground standing, and a ground laid
+        //  at every crossing the predictor answers; a crossing exactly at the boundary is one world change with what
+        //  begins there.
+        let mut crossing: Vec<Triple> = Vec::new();
+        while let Some(f) = foresight.as_deref_mut() {
+            let knot = {
+                let (made, here) = (&ground.made, &ground.here);
+                let mut graphs_at = |t: DateTime| graphs_at(store, &spoken, made, here, t);
+                f.advance(store, stands, at, &mut graphs_at)?
+            };
+            let Some((when, arrival)) = knot else { break };
+            if when >= at {
+                crossing = arrival;
+                break;
+            }
+            ground.lay(when, Vec::new(), &arrival)?;
+            stands = when;
         }
         let mut added = Vec::new();
         for (piece, _) in &group {
             added.extend(store.triples(piece)?);
         }
-        if added.is_empty() && !ground.landing.contains(&at) && !ends.contains(&at) {
+        stands = at;
+        if added.is_empty() && crossing.is_empty() && !ground.landing.contains(&at) && !ends.contains(&at) {
             //  A boundary that changes nothing is not a period — an early-out, not a guard.
             continue;
         }
-        ground.lay(at, added)?;
+        ground.lay(at, added, &crossing)?;
     }
+    let _ = stands;
     store.classify(
         &ground.here,
         GROUND_GRAPH,
@@ -158,12 +224,70 @@ pub fn lay_ground(store: &Store, now: DateTime, laying: &Laying<'_>) -> Result<V
         ground.opened.last().copied(),
         None,
     )?;
+    if let Some(own) = &ground.own {
+        store.clear_graph(own)?;
+    }
+    if let Some(f) = foresight {
+        f.finish(store)?;
+        store.clear_graph(ARRIVAL)?;
+    }
     log::debug!(
         "{} ground world(s) over {} boundar(ies) ahead",
         ground.made.len(),
         boundaries
     );
     Ok(ground.made)
+}
+
+/// What a flow reads in the ground standing, at `at`: the ground, and every graph holding then beside it, as
+/// `world_at` hands a reader — the remainders by their periods, and nothing a ground speaks for.
+fn graphs_at(
+    store: &Store,
+    spoken: &HashSet<String>,
+    made: &[String],
+    here: &str,
+    at: DateTime,
+) -> Result<Vec<String>, Error> {
+    let within = Within {
+        at: Some(at),
+        until: Some(at),
+        ..Within::default()
+    };
+    let mut out: Vec<String> = store
+        .graphs_of(&[BELIEF, RECORD], &within)?
+        .into_iter()
+        .filter(|g| !spoken.contains(g) && !made.contains(g))
+        .collect();
+    out.push(here.to_string());
+    Ok(out)
+}
+
+/// THE BELIEFS THE AGENT DERIVED — what the transitions wrote of each arrival of testimony — as against those it
+/// received: no revision, and nothing everyone reads; as `trigger` reads the agent's own state.
+const DERIVED_Q: &str = "
+SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                               ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
+                               FILTER NOT EXISTS { ?g a belief:RevisionGraph }
+                               ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
+
+/// WHERE THE AGENT'S OWN STATE IS KEPT WHILE THE GROUNDS ARE LAID: a working graph, not a belief.
+const OWN: &str = "http://example.org/orexis/graph/ground/own-state";
+
+/// WHERE A PREDICTED OBSERVATION STANDS AS IT ARRIVES IN A GROUND: a working graph the transitions are handed.
+const ARRIVAL: &str = "http://example.org/orexis/graph/ground/arrival";
+
+/// The agent's own state as the present ground holds it — every belief the agent derived that is no revision and
+/// nothing everyone reads, copied into a working graph of its own, APART FROM THE GROUND, because a transition is
+/// handed the arrival and no other testimony (#947) — and the working graph's name.
+fn own_state(store: &Store) -> Result<String, Error> {
+    store.clear_graph(OWN)?;
+    let derived: Vec<String> = store.rows(DERIVED_Q, &[])?.iter().filter_map(|r| iri(r, "g")).collect();
+    for g in whole(store, derived)? {
+        store.update(&format!(
+            "INSERT {{ GRAPH <{OWN}> {{ ?s ?p ?o }} }} WHERE {{ GRAPH <{g}> {{ ?s ?p ?o }} }}"
+        ))?;
+    }
+    Ok(OWN.to_string())
 }
 
 /// The grounds as they are being laid: the one standing and what it is told apart by, and what each boundary
@@ -179,12 +303,18 @@ struct Ground<'a> {
     landing: Vec<DateTime>,
     ending: Vec<(DateTime, Vec<String>)>,
     alone: HashSet<NamedOrBlankNode>,
+    /// The transitions a predicted observation triggers, the agent's own state as the grounds leave it, and what the
+    /// world states beside it — none where no flow is integrated.
+    rules: Vec<Vec<Rule>>,
+    own: Option<String>,
+    stated: Vec<String>,
 }
 
 impl Ground<'_> {
     /// One ground at `at`, forked from the one standing: `added` laid superseding by key, with what every step
-    /// landing here changes — and kept only where it differs from the one before, or lands a step.
-    fn lay(&mut self, at: DateTime, mut added: Vec<Triple>) -> Result<(), Error> {
+    /// landing here changes, `arrival` judged by the transitions — and kept only where it differs from the one
+    /// before, or lands a step.
+    fn lay(&mut self, at: DateTime, mut added: Vec<Triple>, arrival: &[Triple]) -> Result<(), Error> {
         let store = self.store;
         let mut retracted: Vec<Triple> = Vec::new();
         for change in self.landed.iter().filter(|l| l.at == at) {
@@ -213,6 +343,9 @@ impl Ground<'_> {
             .map(|t| t.clone().in_graph(into.clone()))
             .collect();
         store.remove_all(&gone)?;
+        if !self.rules.is_empty() && !arrival.is_empty() {
+            self.arrived(&there, arrival)?;
+        }
         let mark = marked(store, &there, self.within)?;
         if mark == self.marks && !self.landing.contains(&at) {
             //  THE SAME GROUND UNDER ANOTHER NAME: this instant is not a period of its own.
@@ -231,6 +364,29 @@ impl Ground<'_> {
         self.opened.push(at);
         self.here = there;
         self.marks = mark;
+        Ok(())
+    }
+}
+
+impl Ground<'_> {
+    /// The predicted observations in `arrival` arriving in `ground`: written into the arrival's working graph and
+    /// transitioned on there. A PREDICTED OBSERVATION IS AN ARRIVAL THERE, as a received one is in the present: it
+    /// triggers every transition once, rule by rule, reading itself, the common beliefs and the agent's own state as
+    /// the ground before left it — each rule run `WITH` the ground and then `WITH` the working state, so the next
+    /// rule reads the state this one left (#953). No budget is spent.
+    fn arrived(&self, ground: &str, arrival: &[Triple]) -> Result<(), Error> {
+        let store = self.store;
+        store.clear_graph(ARRIVAL)?;
+        let into = named(ARRIVAL)?;
+        store.add(arrival.iter().map(|t| t.clone().in_graph(into.clone())))?;
+        let Some(own) = &self.own else { return Ok(()) };
+        let mut reads: Vec<&str> = vec![ARRIVAL];
+        reads.extend(self.stated.iter().map(String::as_str));
+        reads.push(own);
+        for rule in self.rules.iter().flatten() {
+            run(store, std::slice::from_ref(rule), ground, &reads, &[]);
+            run(store, std::slice::from_ref(rule), own, &reads, &[]);
+        }
         Ok(())
     }
 }
@@ -623,8 +779,8 @@ fn name(at: DateTime) -> String {
 #[cfg(test)]
 mod tests {
     //! `lay_ground`, held to `agent/planning/tests/lay_ground/`'s cases as `test_lay_ground.py` holds the Python act,
-    //! and to its tests beside them. The cases laid with the predictor's foresight, `tests/foreseen/`, come with the
-    //! prediction package.
+    //! and to its tests beside them — and to `tests/foreseen/`'s, laid with the predictor's foresight, which a test may
+    //! make and the code may not.
 
     use std::collections::{BTreeMap, HashSet};
     use std::path::PathBuf;
@@ -655,6 +811,27 @@ mod tests {
     #[test]
     fn every_case_is_read_and_no_diff_is_orphaned() {
         snapshots::all_read(&cases(), 3);
+    }
+
+    /// The flows integrated from each ground as the grounds are laid (#1000): a ground at every crossing the
+    /// predictor answers, where the predicted observation arrives and the transitions judge it, and at the hour's end
+    /// where a key moved; one that changes no state collapses as any does.
+    #[test]
+    fn lay_ground_lays_the_grounds_the_foresight_answers() {
+        let foreseen = snapshots::tree().join("planning/tests/foreseen");
+        snapshots::all_read(&foreseen, 1);
+        for case in snapshots::cases_in(&foreseen) {
+            let store = snapshots::stand_in(&case);
+            let mut foresight = orexis_prediction::foresee::foresee(&store, snapshots::now(), None).unwrap();
+            lay_ground_foreseeing(
+                &store,
+                snapshots::now(),
+                &Laying::default(),
+                foresight.as_mut().map(|f| f as &mut dyn Foresight),
+            )
+            .unwrap();
+            snapshots::held_to_diff(&case, &store, "lay_ground");
+        }
     }
 
     fn within(locals: &[&str]) -> BTreeSet<String> {

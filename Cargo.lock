@@ -322,6 +322,7 @@ dependencies = [
  "orexis-belief",
  "orexis-execution",
  "orexis-planning",
+ "orexis-prediction",
  "orexis-sensing",
  "oxsdatatypes",
 ]
@@ -357,11 +358,24 @@ dependencies = [
  "log",
  "orexis",
  "orexis-belief",
+ "orexis-prediction",
  "oxigraph",
  "oxsdatatypes",
  "regex",
  "sha2",
  "spargebra",
+]
+
+[[package]]
+name = "orexis-prediction"
+version = "0.2.0"
+dependencies = [
+ "log",
+ "orexis",
+ "orexis-belief",
+ "orexis-sensing",
+ "oxigraph",
+ "oxsdatatypes",
 ]
 
 [[package]]
