@@ -313,6 +313,7 @@ version = "0.2.0"
 dependencies = [
  "log",
  "orexis",
+ "orexis-execution",
  "orexis-planning",
  "oxsdatatypes",
 ]
@@ -325,6 +326,17 @@ dependencies = [
  "orexis",
  "oxigraph",
  "spargebra",
+]
+
+[[package]]
+name = "orexis-execution"
+version = "0.2.0"
+dependencies = [
+ "getrandom 0.3.4",
+ "log",
+ "orexis",
+ "oxigraph",
+ "oxsdatatypes",
 ]
 
 [[package]]

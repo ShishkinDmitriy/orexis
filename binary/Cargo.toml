@@ -15,12 +15,14 @@ path = "src/main.rs"
 path = "src/lib.rs"
 
 [features]
-default = ["planning"]
+default = ["planning", "execution"]
 planning = ["dep:orexis-planning"]
+execution = ["dep:orexis-execution"]
 volume = ["orexis/volume"]
 
 [dependencies]
 orexis = { path = "../agent" }
 orexis-planning = { path = "../agent/planning", optional = true }
+orexis-execution = { path = "../agent/execution", optional = true }
 oxsdatatypes = "0.2"
 log = "0.4"

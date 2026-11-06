@@ -7,6 +7,8 @@ use std::path::Path;
 
 use orexis::Error;
 use orexis::boot::{Booting, boot};
+use orexis::clock::Clock;
+use orexis::runtime::Part;
 use orexis::store::Store;
 
 /// Boot `agent` of `world` into `store` from the documents of `tree`: the packages it loads, each one this binary
@@ -36,5 +38,78 @@ pub fn booted(
 
 /// Whether this binary holds `package`'s part.
 pub fn built(package: &str) -> bool {
-    package == "planning" && cfg!(feature = "planning")
+    (package == "planning" && cfg!(feature = "planning")) || (package == "execution" && cfg!(feature = "execution"))
+}
+
+/// Link planning's part to execution's, as the Python parts' `link` connects their signals: what a pass reached
+/// ends the unbegun intentions pursuing it, what it reconsidered ends after its step in flight, and what it
+/// published is adopted, in the order the Python Planner says them; and a head about to be taken is asked of the
+/// Planner, which says where the present no longer admits it (#916). Whatever walks what planning publishes makes
+/// it hold the agent while something is walked.
+#[cfg(all(feature = "planning", feature = "execution"))]
+pub fn link<'a>(
+    planning: &mut orexis_planning::create::Planning<'a>,
+    execution: &orexis_execution::create::Execution<'a>,
+) {
+    planning.walked = true;
+    let executor = execution.executor.clone();
+    planning.heard = Some(Box::new(move |planner| {
+        let mut executor = executor.borrow_mut();
+        let mut written = Vec::new();
+        for want in &planner.reached {
+            written.extend(executor.end_for(want, "reached")?);
+        }
+        for replaced in &planner.superseded {
+            written.extend(executor.supersede_after(&replaced.head, Some(&replaced.by))?);
+        }
+        for (plan, want) in &planner.handed {
+            written.extend(executor.adopt(plan, want)?);
+        }
+        Ok(written)
+    }));
+    let planner = planning.planner.clone();
+    execution.executor.borrow_mut().taking = Some(Box::new(move |step, at| planner.borrow_mut().check(step, at)));
+}
+
+/// The parts an agent runs, each named by its package, in the order a pass runs them.
+pub type Parts<'a> = Vec<(String, Box<dyn Part + 'a>)>;
+
+/// The parts of the packages `loaded` names, made, linked and in the order a pass runs them: planning, then
+/// execution walking what it adopted. `budget` sizes planning's search where a caller states one; none reads the
+/// agent's stance.
+pub fn assemble<'a>(
+    store: &'a Store,
+    agent: &str,
+    clock: &'a dyn Clock,
+    loaded: &[String],
+    budget: Option<usize>,
+) -> Result<Parts<'a>, Error> {
+    let mut parts: Parts<'a> = Vec::new();
+    let holds = |package: &str| loaded.iter().any(|p| p == package);
+    #[cfg(feature = "planning")]
+    let mut planning = if holds("planning") {
+        Some(orexis_planning::create::Planning::new(store, agent, budget)?)
+    } else {
+        None
+    };
+    #[cfg(feature = "execution")]
+    let execution = if holds("execution") {
+        Some(orexis_execution::create::Execution::new(store, agent, clock)?)
+    } else {
+        None
+    };
+    #[cfg(all(feature = "planning", feature = "execution"))]
+    if let (Some(planning), Some(execution)) = (planning.as_mut(), execution.as_ref()) {
+        link(planning, execution);
+    }
+    #[cfg(feature = "planning")]
+    if let Some(planning) = planning {
+        parts.push(("planning".into(), Box::new(planning)));
+    }
+    #[cfg(feature = "execution")]
+    if let Some(execution) = execution {
+        parts.push(("execution".into(), Box::new(execution)));
+    }
+    let _ = (store, agent, clock, budget, holds);
+    Ok(parts)
 }

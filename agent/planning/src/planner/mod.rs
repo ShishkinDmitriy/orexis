@@ -24,7 +24,7 @@ use oxsdatatypes::{DateTime, DayTimeDuration};
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
-use orexis::ontology::{ACTION, BELIEF, RECORD, SELF_GRAPH};
+use orexis::ontology::{ACTION, BELIEF, RECORD};
 use orexis::store::{Store, Within, instant, iri, value};
 
 use crate::admit::local_of;
@@ -255,29 +255,6 @@ fn spent(store: &Store, want: &str, memo: &mut Memo) -> Result<usize, Error> {
         .and_then(|r| value(r, "used"))
         .and_then(|n| n.parse().ok())
         .unwrap_or(0))
-}
-
-/// A figure the self states of itself in its self graph, or None where it states none or several.
-fn stance(store: &Store, term: &str) -> Result<Option<f64>, Error> {
-    let selves = graphs(store, &[SELF_GRAPH])?;
-    let found = store.rows(
-        &bind(
-            "SELECT ?n WHERE { ?me a orexis:Self ; $stance ?n }",
-            &[("stance", Value::iri(term))],
-        )?,
-        &strs(&selves),
-    )?;
-    if found.len() != 1 {
-        if !found.is_empty() {
-            log::warn!(
-                "the self states {} figures for {}: the default holds",
-                found.len(),
-                local_of(term)
-            );
-        }
-        return Ok(None);
-    }
-    Ok(value(&found[0], "n").and_then(|n| n.parse().ok()))
 }
 
 /// Every predicate a text a pass evaluates reads or writes — what a world is hashed within; None for anything.
@@ -512,7 +489,7 @@ impl<'a> Planner<'a> {
     pub fn new(beliefs: &'a Store, agent_id: &str, budget: Option<usize>) -> Result<Self, Error> {
         let budget = match budget {
             Some(b) => b,
-            None => stance(beliefs, BUDGET_TERM)?.map_or(BUDGET, |n| n as usize),
+            None => orexis::stance::stance(beliefs, BUDGET_TERM)?.map_or(BUDGET, |n| n as usize),
         };
         let common = beliefs.graphs_of(&[BELIEF], &Within::common())?;
         let text = format!("SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId \"{agent_id}\" }} LIMIT 1");

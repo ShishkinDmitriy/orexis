@@ -183,6 +183,11 @@ pub fn seconds(seconds: f64) -> DayTimeDuration {
     DayTimeDuration::try_from(Duration::from_secs_f64(seconds.max(0.0))).unwrap_or_default()
 }
 
+/// A duration as the seconds it is.
+pub fn seconds_of(duration: DayTimeDuration) -> f64 {
+    duration.as_seconds().to_string().parse().unwrap_or(0.0)
+}
+
 fn real_seconds() -> f64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)

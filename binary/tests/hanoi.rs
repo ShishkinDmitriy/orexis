@@ -207,13 +207,15 @@ fn the_plan_is_the_seven_textbook_moves_at_a_cost_the_estimate_does_not_exceed()
     assert_eq!(outcome, PLANNED);
     let (spent, moves) = plan(&store);
     assert_eq!((spent, moves), (7.0, textbook()));
-    let im = planning.planner.imaginaria.values().next().unwrap();
-    let estimates: Vec<f64> = im
-        .rows(ESTIMATE_Q, &[])
-        .unwrap()
-        .iter()
-        .filter_map(|r| value(r, "left")?.parse().ok())
-        .collect();
+    let estimates: Vec<f64> = {
+        let planner = planning.planner.borrow();
+        let im = planner.imaginaria.values().next().unwrap();
+        im.rows(ESTIMATE_Q, &[])
+            .unwrap()
+            .iter()
+            .filter_map(|r| value(r, "left")?.parse().ok())
+            .collect()
+    };
     assert_eq!(estimates, [3.0], "an estimate never overstates what the plan cost");
     assert_eq!(home(&store), 0, "a plan published moves no disk");
     let published = store.graphs_of(&[PLAN], &Within::default()).unwrap();
@@ -260,7 +262,7 @@ fn a_lived_in_volume_keeps_the_plan_and_does_not_search_again() {
     let (outcome, planning) = ran(&store, 64, &clock, 20);
     assert_eq!(outcome, PLANNED);
     assert!(
-        planning.planner.imaginaria.values().all(|im| im
+        planning.planner.borrow().imaginaria.values().all(|im| im
             .graphs_of(&[orexis_planning::ontology::POSSIBLE_GRAPH], &Within::default())
             .unwrap()
             .is_empty()),

@@ -9,6 +9,7 @@
 //! - [`boot`]: one agent's store from its world's documents, its self checked, its roles' packages read;
 //! - [`document`]: a file or a peer's bytes as a document that says what its graphs are, refused otherwise;
 //! - [`runtime`]: one agent's process, a lifecycle container for its packages' parts, run pass by pass;
+//! - [`stance`]: a figure the agent states of itself in its self graph;
 //! - [`ontology`]: the kernel's terms code may name (rule 1: a T-Box term, never an instance);
 //! - [`snapshots`]: the case runner, holding a store to the Python suite's own `.trig` and `.diff`.
 
@@ -23,6 +24,7 @@ pub mod ontology;
 pub mod runtime;
 #[cfg(any(test, feature = "snapshots"))]
 pub mod snapshots;
+pub mod stance;
 pub mod store;
 
 pub use error::Error;
