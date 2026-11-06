@@ -16,6 +16,7 @@ oxigraph.workspace = true
 oxsdatatypes = "0.2"
 log = "0.4"
 getrandom = "0.3"
+serde_json = { version = "1", features = ["preserve_order"] }
 
 [dev-dependencies]
 orexis = { path = "..", features = ["snapshots"] }
