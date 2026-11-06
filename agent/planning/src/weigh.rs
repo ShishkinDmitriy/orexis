@@ -33,12 +33,16 @@ const SH_SELECT: &str = "http://www.w3.org/ns/shacl#select";
 const DERIVED_FROM: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
 
 const ABOUT_Q: &str = "
-SELECT ?from ?child ?seen ?impossible WHERE {
+SELECT ?from ?child ?hash ?impossible WHERE {
   GRAPH $cat { OPTIONAL { $about planning:from ?from }
     OPTIONAL { ?child planning:by $about ; orexis:hash ?hash .
-               OPTIONAL { ?child planning:impossible ?impossible }
-               OPTIONAL { ?x a planning:Weighing ; planning:for $for ; planning:weighs ?seen .
-                          ?seen orexis:hash ?hash } } } }
+               OPTIONAL { ?child planning:impossible ?impossible } } } }";
+
+/// THE WORLDS ALREADY WEIGHED FOR THE WANT THAT HOLD THE CHILD'S HASH, asked apart from the child: inside its
+/// OPTIONAL, the group was evaluated on its own before the join, every weighing of the cone against every hash, and
+/// it was half of a five-disk pass.
+const SEEN_Q: &str = "
+SELECT ?seen WHERE { GRAPH $cat { ?seen orexis:hash $hash . ?x a planning:Weighing ; planning:for $for ; planning:weighs ?seen } }
 ORDER BY ?seen";
 
 const HELD_Q: &str = "
@@ -78,8 +82,7 @@ pub fn weigh(store: &Store, for_: &str, about: &str, memo: &mut Memo) -> Result<
             ("for", Value::iri(for_)),
         ],
     )?;
-    let answers = store.rows(&text, &[])?;
-    let found = answers.first().cloned().unwrap_or_default();
+    let found = store.rows(&text, &[])?.into_iter().next().unwrap_or_default();
     let held = held(store, for_, memo)?;
     let wants = value(&held, "want").is_some();
     let mut verdict: Vec<(&str, Term)> = Vec::new();
@@ -92,7 +95,20 @@ pub fn weigh(store: &Store, for_: &str, about: &str, memo: &mut Memo) -> Result<
         {
             (late, past) = when(store, for_, w, &cat, memo)?;
         }
-        let mut seen: Vec<String> = answers.iter().filter_map(|a| iri(a, "seen")).collect();
+        let mut seen: Vec<String> = match (&world, found.get("hash")) {
+            (Some(_), Some(hash)) => {
+                let text = bind(
+                    SEEN_Q,
+                    &[
+                        ("cat", Value::iri(cat.clone())),
+                        ("for", Value::iri(for_)),
+                        ("hash", Value::Term(hash.clone())),
+                    ],
+                )?;
+                store.rows(&text, &[])?.iter().filter_map(|a| iri(a, "seen")).collect()
+            }
+            _ => Vec::new(),
+        };
         if world.is_some() && wants && !seen.is_empty() {
             let ours = rank(late, past);
             let mut kept = Vec::new();

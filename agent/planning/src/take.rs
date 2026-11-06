@@ -341,7 +341,8 @@ fn binding(store: &Store, cand: &str, memo: &mut Memo) -> Result<Binding, Error>
         return Ok(known.clone());
     }
     let cat = catalogue(store, memo)?;
-    let subject = Term::NamedNode(named(cand)?);
+    let node = named(cand)?;
+    let subject = Term::NamedNode(node.clone());
     let one = |p: &str| -> Result<Option<Term>, Error> { Ok(store.objects(&subject, p, &cat)?.into_iter().next()) };
     let missing = || Error::Evaluation(format!("no candidate {cand} — was it admitted?"));
     let (Some(Term::NamedNode(from)), Some(Term::NamedNode(action)), Some(minted)) =
@@ -374,9 +375,16 @@ fn binding(store: &Store, cand: &str, memo: &mut Memo) -> Result<Binding, Error>
         })
         .unwrap_or(0.0);
     let read: HashSet<&str> = [FROM, FILLS, MINTED, RDF_TYPE].into();
+    //  THE CANDIDATE'S OWN ROWS, by its subject in the catalogue's index, never the catalogue scanned: it grows
+    //  with the cone, and scanned per candidate it was three quarters of a five-disk pass.
     let mut filled = Vec::new();
-    for quad in store.quads(&cat)? {
-        if quad.subject.to_string() == format!("<{cand}>") && !read.contains(quad.predicate.as_str()) {
+    let graph = named(&cat)?;
+    for quad in store
+        .engine()
+        .quads_for_pattern(Some(node.as_ref().into()), None, None, Some(graph.as_ref().into()))
+    {
+        let quad = quad.map_err(|e| Error::Evaluation(e.to_string()))?;
+        if !read.contains(quad.predicate.as_str()) {
             filled.push((quad.predicate.as_str().to_string(), term_text(&quad.object)));
         }
     }

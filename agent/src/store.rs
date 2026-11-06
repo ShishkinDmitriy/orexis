@@ -38,6 +38,7 @@ pub struct Store {
     algebra: Mutex<HashMap<String, spargebra::Update>>,
     parsed: AtomicUsize,
     run: AtomicUsize,
+    updated: AtomicUsize,
 }
 
 /// What a reader of `graphs_of` stands at: an instant, or a period from `at` to `until`; whose graphs; and the
@@ -117,6 +118,7 @@ impl Store {
             algebra: Mutex::new(HashMap::new()),
             parsed: AtomicUsize::new(0),
             run: AtomicUsize::new(0),
+            updated: AtomicUsize::new(0),
         })
     }
 
@@ -131,6 +133,7 @@ impl Store {
             algebra: Mutex::new(HashMap::new()),
             parsed: AtomicUsize::new(0),
             run: AtomicUsize::new(0),
+            updated: AtomicUsize::new(0),
         })
     }
 
@@ -146,6 +149,12 @@ impl Store {
     /// How many texts were parsed, and how many statements run: what parsing once saved.
     pub fn statements(&self) -> (usize, usize) {
         (self.parsed.load(Ordering::Relaxed), self.run.load(Ordering::Relaxed))
+    }
+
+    /// The statements run, as the queries and the updates among them: what the bench's ledger counts a pass by.
+    pub fn ran(&self) -> (usize, usize) {
+        let updated = self.updated.load(Ordering::Relaxed);
+        (self.run.load(Ordering::Relaxed) - updated, updated)
     }
 
     /// A dataset into the store, as TriG.
@@ -275,6 +284,7 @@ impl Store {
     /// An update, which names the graphs it writes.
     pub fn update(&self, text: &str) -> Result<(), Error> {
         self.run.fetch_add(1, Ordering::Relaxed);
+        self.updated.fetch_add(1, Ordering::Relaxed);
         let update = {
             let mut parsed = self.updates.lock().expect("a cache nobody poisoned");
             match parsed.get(text) {
@@ -300,6 +310,7 @@ impl Store {
     /// that says on the parse what the text does not: which graph it changes and which it reads.
     pub fn parse_update(&self, text: &str) -> Result<spargebra::Update, Error> {
         self.run.fetch_add(1, Ordering::Relaxed);
+        self.updated.fetch_add(1, Ordering::Relaxed);
         let mut parsed = self.algebra.lock().expect("a cache nobody poisoned");
         if let Some(update) = parsed.get(text) {
             return Ok(update.clone());
