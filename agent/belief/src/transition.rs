@@ -13,10 +13,10 @@
 //! chaining a second operation, no `DELETE`/`INSERT … WHERE`, refusing to bind or refused by the engine is said in
 //! the log, naming the rule, and the whole of it changes nothing.
 
-use oxigraph::model::NamedNode;
+use oxigraph::model::{NamedNode, Triple};
 use spargebra::algebra::{Expression, GraphPattern, QueryDataset};
-use spargebra::term::{GraphNamePattern, GroundQuadPattern, QuadPattern};
-use spargebra::{GraphUpdateOperation, Update};
+use spargebra::term::{GraphNamePattern, GroundQuadPattern, QuadPattern, TriplePattern};
+use spargebra::{GraphUpdateOperation, Query, Update};
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
@@ -109,6 +109,120 @@ pub fn run(store: &Store, rules: &[Rule], into: &str, graphs: &[&str], tokens: &
         }
     }
     flat.len()
+}
+
+/// What one order changes, asked of the state every rule of it reads: the triples it adds, the triples it takes out,
+/// and the rule executions asking cost — one a rule, whatever it states.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Change {
+    pub added: Vec<Triple>,
+    pub deleted: Vec<Triple>,
+    pub executions: usize,
+}
+
+/// What the rules of ONE order change, every one of them reading `graphs` as they stand: each rule's delete template
+/// and insert template asked as a `CONSTRUCT` over its one WHERE, before anything is applied. BOTH TEMPLATES OR
+/// NEITHER: one text is one change, and a rule that will not run changes nothing, said in the log.
+pub fn asked(store: &Store, rules: &[Rule], graphs: &[&str], tokens: &[(&str, Value)]) -> Change {
+    let (mut added, mut deleted) = (Vec::new(), Vec::new());
+    for rule in rules {
+        let Some(text) = &rule.update else {
+            log::error!(
+                "{}: a transition states no belief:update, so it changes nothing",
+                rule.named()
+            );
+            continue;
+        };
+        let asked = bind(text, tokens).and_then(|bound| {
+            let Parts {
+                delete,
+                insert,
+                pattern,
+            } = parts(store, &bound)?;
+            let delete: Vec<TriplePattern> = delete
+                .into_iter()
+                .map(|q| TriplePattern {
+                    subject: q.subject.into(),
+                    predicate: q.predicate,
+                    object: q.object.into(),
+                })
+                .collect();
+            let insert: Vec<TriplePattern> = insert
+                .into_iter()
+                .map(|q| TriplePattern {
+                    subject: q.subject,
+                    predicate: q.predicate,
+                    object: q.object,
+                })
+                .collect();
+            let made = |template: Vec<TriplePattern>| -> Result<Vec<Triple>, Error> {
+                if template.is_empty() {
+                    return Ok(Vec::new());
+                }
+                let query = Query::Construct {
+                    template,
+                    dataset: None,
+                    pattern: pattern.clone(),
+                    base_iri: None,
+                };
+                store.construct(&query.to_string(), graphs)
+            };
+            Ok((made(delete)?, made(insert)?))
+        });
+        match asked {
+            Ok((taken, made)) => {
+                deleted.extend(taken);
+                added.extend(made);
+            }
+            Err(Error::Document(reason)) => log::error!("{}: {reason}, so it changes nothing", rule.named()),
+            Err(other) => log::error!(
+                "{}: its update would not run, so it changes nothing: {other}",
+                rule.named()
+            ),
+        }
+    }
+    Change {
+        added,
+        deleted,
+        executions: rules.len(),
+    }
+}
+
+/// `change` applied: what it deletes taken out of every graph of `targets` that holds it, then what it adds put
+/// into `into`. The targets the deletions left empty, as they stood BEFORE the additions — for a caller that
+/// forgets an emptied graph.
+pub fn applied(store: &Store, change: &Change, into: &str, targets: &[&str]) -> Result<Vec<String>, Error> {
+    let mut seen: Vec<&str> = Vec::new();
+    for t in targets {
+        if !seen.contains(t) {
+            seen.push(t);
+        }
+    }
+    let mut touched: Vec<&str> = Vec::new();
+    for t in &change.deleted {
+        for graph in &seen {
+            let quad = t.clone().in_graph(node(graph)?);
+            if store
+                .engine()
+                .contains(&quad)
+                .map_err(|e| Error::Evaluation(e.to_string()))?
+            {
+                store.remove_all(&[quad])?;
+                if !touched.contains(graph) {
+                    touched.push(graph);
+                }
+            }
+        }
+    }
+    let mut emptied = Vec::new();
+    for graph in &seen {
+        if touched.contains(graph) && store.quads(graph)?.is_empty() {
+            emptied.push(graph.to_string());
+        }
+    }
+    let into = node(into)?;
+    store.add(change.added.iter().map(|t| t.clone().in_graph(into.clone())))?;
+    Ok(emptied)
 }
 
 /// A transition's update as its runner reads it: the delete templates, the insert templates and the one WHERE —
@@ -557,5 +671,118 @@ mod tests {
             &[("lamp", Value::iri(t("lamp")))],
         );
         assert!(facts(&store, "state").contains(&("lamp".into(), "is".into(), "Dark".into())));
+    }
+
+    /// What triples say, by local names, the test's namespace cut off.
+    fn said(triples: &[Triple]) -> BTreeSet<(String, String, String)> {
+        let local = |s: String| s.trim_matches(['<', '>']).rsplit('#').next().unwrap().to_string();
+        triples
+            .iter()
+            .map(|x| {
+                (
+                    local(x.subject.to_string()),
+                    local(x.predicate.to_string()),
+                    local(x.object.to_string()),
+                )
+            })
+            .collect()
+    }
+
+    #[test]
+    fn asked_reads_one_state_for_every_rule_of_an_order() {
+        let store = store();
+        let change = asked(&store, &[darken(), witness()], &[&t("state")], &[]);
+        assert_eq!(
+            said(&change.added),
+            set(&[("lamp", "is", "Dark"), ("lamp", "seen", "Lit")])
+        );
+        assert_eq!(said(&change.deleted), set(&[("lamp", "is", "Lit")]));
+        assert_eq!(change.executions, 2);
+        assert_eq!(
+            facts(&store, "state"),
+            set(&[("lamp", "is", "Lit"), ("switch", "says", "off")]),
+            "asking changes nothing"
+        );
+    }
+
+    #[test]
+    fn an_update_of_one_template_changes_what_that_template_says() {
+        let store = store();
+        let rules = [
+            Rule::new(0.0, p("INSERT { ?l :seen ?was } WHERE { ?l :is ?was }"), "insert"),
+            Rule::new(
+                0.0,
+                p("DELETE { :switch :says ?what } WHERE { :switch :says ?what }"),
+                "delete",
+            ),
+            Rule::new(0.0, p("DELETE WHERE { ?l :is :Lit }"), "short"),
+        ];
+        let change = asked(&store, &rules, &[&t("state")], &[]);
+        assert_eq!(said(&change.added), set(&[("lamp", "seen", "Lit")]));
+        assert_eq!(
+            said(&change.deleted),
+            set(&[("switch", "says", "off"), ("lamp", "is", "Lit")])
+        );
+        applied(&store, &change, &t("state"), &[&t("state")]).unwrap();
+        assert_eq!(facts(&store, "state"), set(&[("lamp", "seen", "Lit")]));
+    }
+
+    #[test]
+    fn applied_deletes_from_its_targets_alone_then_adds() {
+        let store = store();
+        let change = asked(&store, &[darken()], &[&t("state")], &[]);
+        let both = Change {
+            added: [change.added.clone(), change.deleted.clone()].concat(),
+            deleted: change.deleted.clone(),
+            executions: 1,
+        };
+        let emptied = applied(&store, &both, &t("state"), &[&t("state")]).unwrap();
+        assert_eq!(
+            facts(&store, "state"),
+            set(&[("lamp", "is", "Dark"), ("lamp", "is", "Lit"), ("switch", "says", "off")])
+        );
+        assert_eq!(
+            facts(&store, "other"),
+            set(&[("lamp", "is", "Lit")]),
+            "no target, so not deleted from"
+        );
+        assert!(emptied.is_empty());
+        let store = self::store();
+        let change = asked(&store, &[darken()], &[&t("state"), &t("other")], &[]);
+        let emptied = applied(&store, &change, &t("next"), &[&t("other")]).unwrap();
+        assert_eq!(emptied, [t("other")]);
+        assert!(facts(&store, "other").is_empty());
+        assert_eq!(facts(&store, "next"), set(&[("lamp", "is", "Dark")]));
+    }
+
+    #[test]
+    fn asked_a_refused_update_changes_nothing_and_the_order_still_asks() {
+        for (name, text) in REFUSED {
+            let store = store();
+            let change = asked(
+                &store,
+                &[Rule::new(0.0, p(text), *name), witness()],
+                &[&t("state")],
+                &[],
+            );
+            assert_eq!(
+                said(&change.added),
+                set(&[("lamp", "seen", "Lit")]),
+                "{name}: the witness ran, and nothing of the refused rule"
+            );
+            assert!(change.deleted.is_empty(), "{name}");
+        }
+    }
+
+    #[test]
+    fn an_update_that_will_not_run_changes_nothing_whole() {
+        let store = store();
+        let rule = Rule::new(
+            0.0,
+            p("DELETE { ?l :is ?w } INSERT { $nobody :is :Dark } WHERE { ?l :is ?w }"),
+            "unbound",
+        );
+        let change = asked(&store, &[rule], &[&t("state")], &[]);
+        assert!(change.added.is_empty() && change.deleted.is_empty());
     }
 }

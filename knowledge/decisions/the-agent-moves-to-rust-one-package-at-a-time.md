@@ -124,7 +124,7 @@ ported, each world's walks and benches passing on the binary as it does:
 | translation, the Telegram and HTTP members | `terrace` |
 
 The kernel is the store, the catalogue, the binder, the lifecycle and the runtime. Belief's transition
-machine lands with planning, before the rest of belief, because an action's effect is a transition and `take`
+machine landed with planning, before the rest of belief, because an action's effect is a transition and `take`
 applies it; it says a rule's scope on the parsed update, its templates the world's and its dataset the graphs
 read, where the Python copy reprints the text around rdflib's parse.
 
@@ -165,8 +165,11 @@ so the mind is a thread of its own and never one of Tokio's workers, whose trans
 **The binary links the parts.** A Python part links to the others by connecting signals. In the mind's one thread,
 the binary shares a part's own object instead. The executor asks the shared Planner about a head it is about to
 take, and planning tells the shared executor, after its pass and before it decides what holds the agent, what the
-pass published, reached and reconsidered, in the order the Python signals fire. No crate names another's, since the
-binary is the container that assembles them all.
+pass published, reached and reconsidered, in the order the Python signals fire. The executor tells the shared
+deliberator each graph it writes as the world, as it writes it, so what the rules conclude of it stands before the
+walk goes on, and a revision pass that changed the present queues a walk. What a part answers it wrote, the runtime
+hands to each part listening for a kind the catalogue says it is, as the Python runtime's `on` does. No crate names
+another's, since the binary is the container that assembles them all.
 
 **What cannot change the result runs in parallel.** Each scope's imaginarium is a store of its own, so the
 scopes are searched at once and their plans taken in scope order. Laying grounds is per scope and about

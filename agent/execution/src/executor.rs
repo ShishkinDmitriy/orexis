@@ -15,8 +15,9 @@
 //! waits for it. EVERY HEAD IS CHECKED WHEN IT IS TAKEN, and not here (#916): `taking` asks whoever judges, and a
 //! head it blocks ends its intention `failed` and is not taken.
 //!
-//! NOT PORTED: the threads, and the signals, whose events no Rust package hears yet. What the Python copy told
-//! `on_write`, a caller reads off `written`; that an intention was resolved, off `resolved`.
+//! NOT PORTED: the threads, and the signals, whose events no Rust package hears yet. Every graph written as the
+//! world is told `on_write` where a caller linked one, as the Python copy tells it, and read off `written` where
+//! none is; that an intention was resolved, off `resolved`.
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
@@ -193,6 +194,9 @@ pub type Take<'a> = Box<dyn FnMut(&Said, &str) -> Result<(), Error> + 'a>;
 /// Whoever judges a head about to be taken at an instant: true where it is BLOCKED.
 pub type Taking<'a> = Box<dyn FnMut(&str, DateTime) -> Result<bool, Error> + 'a>;
 
+/// Whoever is told of a graph written as the world, as it is written.
+pub type Writes<'a> = Box<dyn FnMut(&str) -> Result<(), Error> + 'a>;
+
 /// One commitment not resolved: what it pursues, where it has got to, and when it was adopted.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Standing {
@@ -218,7 +222,10 @@ pub struct Executor<'a> {
     pub take: Option<Take<'a>>,
     /// Whoever judges a head about to be taken; none, and every head is taken.
     pub taking: Option<Taking<'a>>,
-    /// The graphs written as the world, in the order written, for the caller to say.
+    /// Told of every graph written as the world, as it is written, so what the rules conclude of it is concluded
+    /// before the walk goes on; none, and the graph is kept in `written`.
+    pub on_write: Option<Writes<'a>>,
+    /// The graphs written as the world, in the order written, for the caller to say where no `on_write` is linked.
     pub written: Vec<String>,
     /// How many intentions were resolved, for the caller to ask for another pass.
     pub resolved: usize,
@@ -305,6 +312,7 @@ impl<'a> Executor<'a> {
             all_fictive: false,
             take: None,
             taking: None,
+            on_write: None,
             written: Vec::new(),
             resolved: 0,
             next_due: None,
@@ -673,7 +681,7 @@ impl<'a> Executor<'a> {
                 local_of(step),
                 isoformat(opens)
             );
-            self.written.push(graph);
+            self.wrote(graph)?;
         }
         Ok(())
     }
@@ -710,8 +718,7 @@ impl<'a> Executor<'a> {
                 ("now", instant(now)),
             ],
         )?)?;
-        self.written.push(graph);
-        Ok(())
+        self.wrote(graph)
     }
 
     fn sweep(&mut self, now: DateTime) -> Result<(), Error> {
@@ -1181,8 +1188,21 @@ impl<'a> Executor<'a> {
                 }
             }
         }
-        self.written.extend(touched);
+        for graph in touched {
+            self.wrote(graph)?;
+        }
         Ok(())
+    }
+
+    /// Say `graph` was written as the world: to `on_write` where one is linked, else kept in `written`.
+    fn wrote(&mut self, graph: String) -> Result<(), Error> {
+        match self.on_write.as_mut() {
+            Some(tell) => tell(&graph),
+            None => {
+                self.written.push(graph);
+                Ok(())
+            }
+        }
     }
 }
 

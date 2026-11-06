@@ -139,7 +139,7 @@ fn ran<'s>(store: &'s Store, budget: usize, clock: &'s dyn Clock, passes: usize)
     let mut planning = Planning::new(store, "hanoi", Some(budget)).unwrap();
     let outcome = {
         let parts: Vec<(String, &mut dyn Part)> = vec![("planning".into(), &mut planning)];
-        let mut runtime = Runtime::new(store, "hanoi", clock, parts);
+        let mut runtime = Runtime::new(store, "hanoi", clock, parts).unwrap();
         assert_eq!(runtime.parts(), ["planning"]);
         runtime.run(Some(passes), 0.0).unwrap()
     };

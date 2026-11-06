@@ -38,7 +38,9 @@ pub fn booted(
 
 /// Whether this binary holds `package`'s part.
 pub fn built(package: &str) -> bool {
-    (package == "planning" && cfg!(feature = "planning")) || (package == "execution" && cfg!(feature = "execution"))
+    (package == "belief" && cfg!(feature = "belief"))
+        || (package == "planning" && cfg!(feature = "planning"))
+        || (package == "execution" && cfg!(feature = "execution"))
 }
 
 /// Link planning's part to execution's, as the Python parts' `link` connects their signals: what a pass reached
@@ -71,11 +73,31 @@ pub fn link<'a>(
     execution.executor.borrow_mut().taking = Some(Box::new(move |step, at| planner.borrow_mut().check(step, at)));
 }
 
+/// Link execution's part to belief's, as the Python executor's `on_write` tells the runtime and execution hears the
+/// deliberator's `revised`: every graph the executor writes as the world is revised as it is written, before its
+/// walk goes on, and a pass that revised the present queues a walk, since the world may have answered a step.
+#[cfg(all(feature = "belief", feature = "execution"))]
+pub fn hear<'a>(
+    store: &'a Store,
+    belief: &orexis_belief::create::Belief<'a>,
+    execution: &orexis_execution::create::Execution<'a>,
+) {
+    execution.executor.borrow_mut().on_write = Some(Box::new(belief.hears()));
+    let soon = execution.soon.clone();
+    belief.deliberator.borrow_mut().revised = Some(Box::new(move |revised| {
+        if orexis_execution::create::present(store, &revised.graphs, &revised.changed)? {
+            soon.set(true);
+        }
+        Ok(())
+    }));
+}
+
 /// The parts an agent runs, each named by its package, in the order a pass runs them.
 pub type Parts<'a> = Vec<(String, Box<dyn Part + 'a>)>;
 
-/// The parts of the packages `loaded` names, made, linked and in the order a pass runs them: planning, then
-/// execution walking what it adopted. `budget` sizes planning's search where a caller states one; none reads the
+/// The parts of the packages `loaded` names, made, linked and in the order a pass runs them: belief, so its rules
+/// have concluded of a graph written before anything else hears it, then planning, then execution walking what it
+/// adopted. `budget` sizes planning's search where a caller states one; none reads the
 /// agent's stance.
 pub fn assemble<'a>(
     store: &'a Store,
@@ -86,6 +108,12 @@ pub fn assemble<'a>(
 ) -> Result<Parts<'a>, Error> {
     let mut parts: Parts<'a> = Vec::new();
     let holds = |package: &str| loaded.iter().any(|p| p == package);
+    #[cfg(feature = "belief")]
+    let belief = if holds("belief") {
+        Some(orexis_belief::create::Belief::new(store, agent)?)
+    } else {
+        None
+    };
     #[cfg(feature = "planning")]
     let mut planning = if holds("planning") {
         Some(orexis_planning::create::Planning::new(store, agent, budget)?)
@@ -101,6 +129,14 @@ pub fn assemble<'a>(
     #[cfg(all(feature = "planning", feature = "execution"))]
     if let (Some(planning), Some(execution)) = (planning.as_mut(), execution.as_ref()) {
         link(planning, execution);
+    }
+    #[cfg(all(feature = "belief", feature = "execution"))]
+    if let (Some(belief), Some(execution)) = (belief.as_ref(), execution.as_ref()) {
+        hear(store, belief, execution);
+    }
+    #[cfg(feature = "belief")]
+    if let Some(belief) = belief {
+        parts.push(("belief".into(), Box::new(belief)));
     }
     #[cfg(feature = "planning")]
     if let Some(planning) = planning {

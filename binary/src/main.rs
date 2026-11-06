@@ -85,7 +85,7 @@ fn run(args: &Args) -> Result<String, Error> {
         .iter_mut()
         .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
         .collect();
-    let mut runtime = Runtime::new(&store, &args.agent, &clock, lent);
+    let mut runtime = Runtime::new(&store, &args.agent, &clock, lent)?;
     let outcome = runtime.run(args.passes, 1.0);
     runtime.stop();
     outcome
