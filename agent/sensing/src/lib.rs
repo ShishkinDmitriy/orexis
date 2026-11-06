@@ -1,0 +1,19 @@
+//! SENSING, in Rust: the translation row of the agent stack, and nothing above it — ported from `agent/sensing/`
+//! and held to what its suite asks.
+//!
+//! - [`received`]: a transport hands it the bytes it read for a sensor, and a percept is written per reading,
+//!   linked to the one before it — or, for a sensor reading a series, a forecast per stretch ahead;
+//! - [`pipeline`]: bytes to a document by the codec, to a number by the pointer;
+//! - [`cadence`]: how often a sensor reports, which sensors are the agent's, and which have lapsed;
+//! - [`missed`]: which sensors have gone silent, computed and never written;
+//! - [`create`]: the package's part, which asks after silence every minute and hands each percept to belief.
+//!
+//! NOT PORTED: the events the Python copy signals (`observed`, `silence`, `doubted`) and the account sensing gives of
+//! itself for a person, which wait for the journal and for translation.
+
+pub mod cadence;
+pub mod create;
+pub mod missed;
+pub mod ontology;
+pub mod pipeline;
+pub mod received;

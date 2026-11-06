@@ -15,10 +15,12 @@ path = "src/main.rs"
 path = "src/lib.rs"
 
 [features]
-default = ["belief", "planning", "execution"]
+default = ["belief", "planning", "execution", "sensing", "prediction"]
 belief = ["dep:orexis-belief"]
 planning = ["dep:orexis-planning"]
 execution = ["dep:orexis-execution"]
+sensing = ["dep:orexis-sensing"]
+prediction = ["dep:orexis-prediction"]
 volume = ["orexis/volume"]
 
 [dependencies]
@@ -26,5 +28,7 @@ orexis = { path = "../agent" }
 orexis-belief = { path = "../agent/belief", optional = true }
 orexis-planning = { path = "../agent/planning", optional = true }
 orexis-execution = { path = "../agent/execution", optional = true }
+orexis-sensing = { path = "../agent/sensing", optional = true }
+orexis-prediction = { path = "../agent/prediction", optional = true }
 oxsdatatypes = "0.2"
 log = "0.4"

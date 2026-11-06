@@ -41,6 +41,8 @@ pub fn built(package: &str) -> bool {
     (package == "belief" && cfg!(feature = "belief"))
         || (package == "planning" && cfg!(feature = "planning"))
         || (package == "execution" && cfg!(feature = "execution"))
+        || (package == "sensing" && cfg!(feature = "sensing"))
+        || (package == "prediction" && cfg!(feature = "prediction"))
 }
 
 /// Link planning's part to execution's, as the Python parts' `link` connects their signals: what a pass reached
@@ -92,12 +94,31 @@ pub fn hear<'a>(
     }));
 }
 
+/// Link sensing's part to belief's, as the Python part's `link` takes belief's: every percept sensing writes, and at
+/// start each one nothing was concluded of, is revised by belief's deliberator into sensing's own kind (#944).
+#[cfg(all(feature = "belief", feature = "sensing"))]
+pub fn observe<'a>(belief: &orexis_belief::create::Belief<'a>, sensing: &mut orexis_sensing::create::Sensing<'a>) {
+    let belief = belief.clone();
+    sensing.revise = Some(Box::new(move |graphs, kind, at| belief.revise(graphs, kind, at)));
+}
+
+/// Link planning's part to prediction's, as the Python planner takes the predictor's `foresee` at link: every pass
+/// the flows are integrated from each ground as the grounds are laid (#1000), through the kernel's `Foresight`,
+/// neither package importing the other.
+#[cfg(all(feature = "planning", feature = "prediction"))]
+pub fn foresee<'a>(
+    planning: &orexis_planning::create::Planning<'a>,
+    prediction: &orexis_prediction::create::Prediction,
+) {
+    planning.planner.borrow_mut().foresee = Some(prediction.offered());
+}
+
 /// The parts an agent runs, each named by its package, in the order a pass runs them.
 pub type Parts<'a> = Vec<(String, Box<dyn Part + 'a>)>;
 
 /// The parts of the packages `loaded` names, made, linked and in the order a pass runs them: belief, so its rules
 /// have concluded of a graph written before anything else hears it, then planning, then execution walking what it
-/// adopted. `budget` sizes planning's search where a caller states one; none reads the
+/// adopted, then sensing and prediction. `budget` sizes planning's search where a caller states one; none reads the
 /// agent's stance.
 pub fn assemble<'a>(
     store: &'a Store,
@@ -126,6 +147,22 @@ pub fn assemble<'a>(
     } else {
         None
     };
+    #[cfg(feature = "sensing")]
+    let mut sensing = if holds("sensing") {
+        Some(orexis_sensing::create::Sensing::new(store, agent)?)
+    } else {
+        None
+    };
+    #[cfg(all(feature = "belief", feature = "sensing"))]
+    if let (Some(belief), Some(sensing)) = (belief.as_ref(), sensing.as_mut()) {
+        observe(belief, sensing);
+    }
+    #[cfg(feature = "prediction")]
+    let prediction = holds("prediction").then(orexis_prediction::create::Prediction::default);
+    #[cfg(all(feature = "planning", feature = "prediction"))]
+    if let (Some(planning), Some(prediction)) = (planning.as_ref(), prediction.as_ref()) {
+        foresee(planning, prediction);
+    }
     #[cfg(all(feature = "planning", feature = "execution"))]
     if let (Some(planning), Some(execution)) = (planning.as_mut(), execution.as_ref()) {
         link(planning, execution);
@@ -145,6 +182,14 @@ pub fn assemble<'a>(
     #[cfg(feature = "execution")]
     if let Some(execution) = execution {
         parts.push(("execution".into(), Box::new(execution)));
+    }
+    #[cfg(feature = "sensing")]
+    if let Some(sensing) = sensing {
+        parts.push(("sensing".into(), Box::new(sensing)));
+    }
+    #[cfg(feature = "prediction")]
+    if let Some(prediction) = prediction {
+        parts.push(("prediction".into(), Box::new(prediction)));
     }
     let _ = (store, agent, clock, budget, holds);
     Ok(parts)

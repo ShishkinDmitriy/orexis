@@ -8,7 +8,7 @@
 //! `search`, and `extract_plan`, and `_reconsider` against a walking intention's untaken steps; `publish_plan`. And
 //! outside the pass, `check`, of a head about to be taken.
 //!
-//! NOT PORTED: the events the Python copy signals, its laps, and the predictor's foresight. What a pass says it did
+//! NOT PORTED: the events the Python copy signals, and its laps. What a pass says it did
 //! is on the fields a caller reads — `handed`, `reached`, `blocked`, `superseded` — and whoever runs the pass says it.
 
 mod check;
@@ -24,6 +24,7 @@ use oxsdatatypes::{DateTime, DayTimeDuration};
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
+use orexis::foresight::{Foresees, Foresight};
 use orexis::ontology::{ACTION, BELIEF, RECORD};
 use orexis::store::{Store, Within, instant, iri, value};
 
@@ -32,7 +33,7 @@ use crate::derive_wants::derive_wants;
 use crate::find_scopes::{Scopes, find_scopes};
 use crate::find_wants::{Finding, find_wants};
 use crate::footprint::{actions_of, reads_of_shape, terms_of_shape, written};
-use crate::lay_ground::{Landed, Laying, lay_ground};
+use crate::lay_ground::{Landed, Laying, lay_ground, lay_ground_foreseeing};
 use crate::memo::Memo;
 use crate::ontology::{BUDGET_TERM, CONSTRAINT_GRAPH, DESIRE, PLANNING, SCOPE_GRAPH, SHAPES, WANT};
 use crate::prepare_ground::prepare_ground;
@@ -171,6 +172,8 @@ pub struct Planner<'a> {
     pub doomed: BTreeMap<String, String>,
     /// The wants a role above planning asked to have reopened, until the next pass reopens them.
     pub asked: BTreeSet<String>,
+    /// THE PREDICTOR'S FORESIGHT, where the agent plays one: taken at link and asked at every pass, never imported.
+    pub foresee: Option<Foresees<'a>>,
 }
 
 fn strs(names: &[String]) -> Vec<&str> {
@@ -515,6 +518,7 @@ impl<'a> Planner<'a> {
             superseded: Vec::new(),
             doomed: BTreeMap::new(),
             asked: BTreeSet::new(),
+            foresee: None,
         })
     }
 
@@ -645,7 +649,18 @@ impl<'a> Planner<'a> {
                     .filter_map(|r| value(r, "h"))
                     .collect()
             };
-            let laid = lay_ground(
+            //  AND WHAT MOVES FROM EACH GROUND: the flows, integrated by the predictor's foresight as the grounds are
+            //  laid (#1000) — every key advanced, and a crossing laid here where the key is this scope's, as a reading
+            //  is placed: the scopes its feature and property meet in, or every scope where none.
+            let placed = |feature: &str, property: &str| {
+                let met = scopes.meet([feature, property]);
+                met.is_empty() || met.contains(scope.as_str())
+            };
+            let mut foresight = match &self.foresee {
+                Some(foresee) => foresee(beliefs, at, if unscoped { None } else { Some(&placed) })?,
+                None => None,
+            };
+            let laid = lay_ground_foreseeing(
                 store,
                 at,
                 &Laying {
@@ -654,6 +669,7 @@ impl<'a> Planner<'a> {
                     landed: &landed,
                     actions: only.as_ref(),
                 },
+                foresight.as_mut().map(|f| f.as_mut() as &mut dyn Foresight),
             )?;
             let present = laid
                 .first()

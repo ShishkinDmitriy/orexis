@@ -167,7 +167,10 @@ the binary shares a part's own object instead. The executor asks the shared Plan
 take, and planning tells the shared executor, after its pass and before it decides what holds the agent, what the
 pass published, reached and reconsidered, in the order the Python signals fire. The executor tells the shared
 deliberator each graph it writes as the world, as it writes it, so what the rules conclude of it stands before the
-walk goes on, and a revision pass that changed the present queues a walk. What a part answers it wrote, the runtime
+walk goes on, and a revision pass that changed the present queues a walk. Sensing hands the shared deliberator every
+percept it writes, with its own kind for the revision. The planner is handed the predictor's foresight, which it
+advances as it lays each ground, through a trait the kernel keeps because the two packages meet at it, as they meet
+at `orexis:FlowGraph`. What a part answers it wrote, the runtime
 hands to each part listening for a kind the catalogue says it is, as the Python runtime's `on` does. No crate names
 another's, since the binary is the container that assembles them all.
 

@@ -99,6 +99,15 @@ const HOLDING: &str = "OPTIONAL { ?g dcterms:temporal ?period .
 const ROWS_Q: &str = "
 SELECT ?g ?class WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?class . FILTER(isIRI(?g)) } }";
 
+/// A GRAPH ENDS WHERE IT HELD PAST: its period's end moved to `$at`, or to its start where it begins later.
+const END_U: &str = "
+DELETE { GRAPH $cat { ?period orexis:end ?was } }
+INSERT { GRAPH $cat { ?period orexis:end ?end } }
+WHERE  { GRAPH $cat { VALUES ?g { $graphs } ?g dcterms:temporal ?period .
+                      OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?was }
+                      BIND(IF(BOUND(?start) && ?start > $at, ?start, $at) AS ?end)
+                      FILTER(!BOUND(?was) || ?was > ?end) } }";
+
 const PROV_DERIVED: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
 const DCTERMS_TEMPORAL: &str = "http://purl.org/dc/terms/temporal";
 
@@ -652,6 +661,27 @@ impl Store {
             }
         }
         Ok(out.into_iter().collect())
+    }
+
+    /// Say a graph stops holding at `at`, and its revisions with it, of the kind `revisions` says they are — where it
+    /// held past `at`; one that has ended already is left as it stands, and one that begins later ends where it
+    /// begins, holding at no instant — as `agent/store.py`'s `end_graph` says it. An observation's period is said
+    /// when it arrives, until the next reading is due, and the next arriving earlier ends it there.
+    pub fn end_graph(&self, graph: &str, at: DateTime, revisions: &str) -> Result<(), Error> {
+        let Some(catalogue) = self.catalogue()? else {
+            return Ok(());
+        };
+        let mut graphs = vec![graph.to_string()];
+        graphs.extend(self.revisions_of(&[graph], revisions)?);
+        let listed: String = graphs.iter().map(|g| format!("<{g}> ")).collect();
+        self.update(&bind(
+            END_U,
+            &[
+                ("cat", Value::iri(catalogue)),
+                ("at", instant(at)),
+                ("graphs", Value::raw(listed)),
+            ],
+        )?)
     }
 
     /// Empty one graph AND take back everything the catalogue said of it, its period with its row — and its
