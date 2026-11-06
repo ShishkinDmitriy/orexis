@@ -136,3 +136,6 @@ jobs:
       - name: cargo test
         run: cargo test
 
+      - name: cargo test, the binary with its volume
+        # RocksDB, as pyoxigraph keeps a volume: built from source, its bindings by libclang, which the runner holds.
+        run: cargo test -p orexis-agent --features volume
