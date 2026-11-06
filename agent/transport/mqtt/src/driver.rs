@@ -31,6 +31,7 @@ use orexis::ontology::{BELIEF, local_of};
 use orexis::store::{Store, Within, iri, value};
 use orexis_sensing::cadence::{lapsed, sensors};
 use orexis_sensing::received::received;
+use orexis_speech::heard::heard;
 
 /// HOW OFTEN THE MEMBER ASKS AFTER ITS SENSORS' MISSING READINGS, in seconds of the one timeline.
 pub const NUDGE_S: f64 = 60.0;
@@ -301,7 +302,8 @@ impl<'a> Mqtt<'a> {
         Ok(all)
     }
 
-    /// Route one message: to sensing, for every sensor of the agent's whose topic's filter matches `topic`, the
+    /// Route one message: on the topic the agent listens to, a peer's document, kept by speech's `heard`, each graph
+    /// answered with no sensor; otherwise to sensing, for every sensor of the agent's whose topic's filter matches `topic`, the
     /// observation `received` writes of `payload` at `at`. The sensor and the graph written, first sensor first, and
     /// none where the topic is nobody's of the agent's.
     pub fn handle(
@@ -316,11 +318,10 @@ impl<'a> Mqtt<'a> {
             .iter()
             .any(|p| matches(p, topic))
         {
-            log::warn!(
-                "{}: a peer's document on {topic} is not heard, since speech is not ported",
-                local_of(&self.me)
-            );
-            return Ok(Vec::new());
+            return Ok(heard(self.beliefs, &self.me, payload)?
+                .into_iter()
+                .map(|g| (None, g))
+                .collect());
         }
         if self
             .patterns(CHAT_TOPICS_Q, &[("agent", me)])?
@@ -1036,6 +1037,20 @@ GRAPH :world {
         assert!(
             !mqtt.tell(&t("fern"), b"").unwrap(),
             "a thing that listens nowhere is told nothing"
+        );
+    }
+
+    #[test]
+    fn a_document_on_the_agents_own_topic_is_heard_and_answered_with_no_sensor() {
+        let more =
+            format!("{PEERS}\nGRAPH :ontology {{ :NoteGraph rdfs:subClassOf orexis:BeliefGraph , orexis:Graph . }}");
+        let store = stand_in_with(&world(), &more);
+        let (mut mqtt, _) = bus(&store);
+        let document =
+            format!("<{TEST}note> {{ <{TEST}note> <{TEST}says> \"hello\" }}\n<{TEST}note> a <{TEST}NoteGraph> .");
+        assert_eq!(
+            mqtt.handle("agents/keeper/inbox", document.as_bytes(), now()).unwrap(),
+            [(None, t("note"))]
         );
     }
 

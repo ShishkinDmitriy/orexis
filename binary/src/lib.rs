@@ -128,7 +128,10 @@ pub fn command<'a>(
     execution.executor.borrow_mut().take = Some(orexis_execution::create::taker(
         store,
         clock,
-        Box::new(move |actuator, payload| member.borrow_mut().command(actuator, payload)),
+        Some(Box::new(move |actuator, payload| {
+            member.borrow_mut().command(actuator, payload)
+        })),
+        None,
     ));
 }
 

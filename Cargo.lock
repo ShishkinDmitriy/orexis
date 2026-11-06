@@ -480,6 +480,7 @@ dependencies = [
  "log",
  "orexis",
  "orexis-sensing",
+ "orexis-speech",
  "oxigraph",
  "oxsdatatypes",
  "rumqttc",
@@ -524,6 +525,15 @@ dependencies = [
  "oxigraph",
  "oxsdatatypes",
  "serde_json",
+]
+
+[[package]]
+name = "orexis-speech"
+version = "0.2.0"
+dependencies = [
+ "log",
+ "orexis",
+ "oxigraph",
 ]
 
 [[package]]

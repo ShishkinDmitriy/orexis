@@ -6,7 +6,7 @@
 //! answers `taking` (#916); belief, where the agent deliberates, raises `soon` where a pass revised the present, and
 //! a walk is queued, once, however many revisions say so before it runs. A TRANSPORT, linked, is handed each command a
 //! step's implementation sends, order by order (`taker`); a step whose command answers nothing is not taken (#869).
-//! NOT PORTED: the sayings an implementation makes, which wait for speech.
+//! And speech, linked, is handed each document a step's implementation says, with the agents it is to.
 
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
@@ -25,17 +25,26 @@ use crate::command::command;
 use crate::executor::Take;
 use crate::implementation::operations;
 use crate::ontology::{COMMAND, SAYING};
+use crate::says::says;
 use crate::{Executor, Said};
 
 /// Whoever sends a step's command to the device: the actuator and the payload, as a transport's `command` takes them.
 pub type Commands<'a> = Box<dyn FnMut(&str, &Json) -> Result<(), Error> + 'a>;
+
+/// Whoever says a step's document to the agents it is to, as speech's `say` takes them.
+pub type Sayings<'a> = Box<dyn FnMut(&[String], &orexis::document::Document) -> Result<(), Error> + 'a>;
 
 /// The taker a transport links, as Python's `_take` takes a step: the action's implementation, order by order, each
 /// command sized from the present at the clock's instant and handed to `send`. A step whose action carries no command
 /// or saying reaches nothing and is said in the log; a command that answers nothing is a step NOT taken (#869),
 /// since the present held nothing it sizes from and recording it taken would have the intention wait out its patience
 /// as though the device had run.
-pub fn taker<'a>(beliefs: &'a Store, clock: &'a dyn Clock, mut send: Commands<'a>) -> Take<'a> {
+pub fn taker<'a>(
+    beliefs: &'a Store,
+    clock: &'a dyn Clock,
+    mut send: Option<Commands<'a>>,
+    mut say: Option<Sayings<'a>>,
+) -> Take<'a> {
     Box::new(move |said: &Said, _intention: &str| {
         let action = said.get("fills").cloned().unwrap_or_default();
         let ops = operations(beliefs, &action)?;
@@ -58,14 +67,15 @@ pub fn taker<'a>(beliefs: &'a Store, clock: &'a dyn Clock, mut send: Commands<'a
                     orexis::ontology::local_of(&action)
                 )));
             }
-            for (actuator, payload) in &sent {
-                send(actuator, payload)?;
+            if let Some(send) = send.as_mut() {
+                for (actuator, payload) in &sent {
+                    send(actuator, payload)?;
+                }
             }
-            if ops.iter().any(|op| op.kind == SAYING && op.order == order) {
-                log::warn!(
-                    "{}: a saying is not ported, so nothing is said",
-                    orexis::ontology::local_of(&action)
-                );
+            if let Some(say) = say.as_mut() {
+                for (agents, document) in says(beliefs, said, Some(order), now)? {
+                    say(&agents, &document)?;
+                }
             }
         }
         Ok(true)

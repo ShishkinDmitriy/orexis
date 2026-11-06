@@ -68,7 +68,9 @@ impl Document {
         Document::of_quads(parsed).checked("a document", false)
     }
 
-    fn of_quads(quads: Vec<Quad>) -> Self {
+    /// A document made of `quads` as they stand — what a saying constructs — its graphs the ones its quads are in,
+    /// and checked by nothing: whoever keeps it holds it to what it keeps (`refuse_the_sovereigns`).
+    pub fn of_quads(quads: Vec<Quad>) -> Self {
         let graphs = quads
             .iter()
             .filter_map(|q| match &q.graph_name {
@@ -243,6 +245,21 @@ impl Document {
             self.no_sovereigns(name)?;
         }
         Ok(self)
+    }
+
+    /// The document as TriG, as a peer is told it.
+    pub fn trig(&self) -> Result<Vec<u8>, Error> {
+        let mut out = oxigraph::io::RdfSerializer::from_format(RdfFormat::TriG).for_writer(Vec::new());
+        for quad in &self.quads {
+            out.serialize_quad(quad).map_err(|e| Error::Document(e.to_string()))?;
+        }
+        out.finish().map_err(|e| Error::Document(e.to_string()))
+    }
+
+    /// Where nothing in the document says whose a graph is, that anything is the self, or that a graph is a self
+    /// graph — what a document the world did not author is held to: a peer's, and the agent's own saying.
+    pub fn refuse_the_sovereigns(&self, name: &str) -> Result<(), Error> {
+        self.no_sovereigns(name)
     }
 
     /// Nothing says whose a graph is, that anything is the self, or that a graph is a self graph: what a document
