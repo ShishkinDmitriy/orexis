@@ -30,7 +30,8 @@ const HEARD: usize = 0;
 /// WHETHER A GRAPH IS A BELIEF, by the catalogue.
 const BELIEF_Q: &str = "ASK { GRAPH $cat { $g a orexis:BeliefGraph } }";
 
-/// Belief's part: its deliberator, shared with whoever links to it.
+/// Belief's part: its deliberator, shared with whoever links to it — a clone is the same part, as a linked part holds it.
+#[derive(Clone)]
 pub struct Belief<'a> {
     beliefs: &'a Store,
     pub deliberator: Rc<RefCell<Deliberator<'a>>>,
