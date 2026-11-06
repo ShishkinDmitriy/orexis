@@ -9,8 +9,11 @@
 //! told the same way — how a package answers another's work with neither naming the other. And A PART QUEUES A JOB
 //! (`submitted`), which runs after the jobs queued before it in the same drain, as Python's `submit` queues one.
 //!
-//! NOT YET PORTED: the jobs a transport submits from its own thread; they come with the first transport, and with
-//! them the Tokio tasks the decision record says what waits is (the-agent-moves-to-rust-one-package-at-a-time).
+//! A TRANSPORT'S THREAD HANDS THE PASS WHAT ARRIVED through the member's inbox: what a client received waits there,
+//! and the member's part queues a job per message when the runtime asks what it `submitted`, so a message is handled
+//! on the one thread the store is written from. NOT YET PORTED: the wake — a pass that moved nothing waits the poll,
+//! as the Python runtime does, where the decision record has the mind woken by its channel
+//! (the-agent-moves-to-rust-one-package-at-a-time).
 
 use std::collections::{BTreeMap, VecDeque};
 

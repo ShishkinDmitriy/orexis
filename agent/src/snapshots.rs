@@ -65,9 +65,15 @@ pub fn cases_in(directory: &Path) -> Vec<PathBuf> {
 /// The store a case describes, its rows closed: refused where it names no catalogue or types no vocabulary graph,
 /// since a case says what its graphs are and what it is loaded with.
 pub fn stand_in(case: &Path) -> Store {
+    stand_in_with(case, "")
+}
+
+/// The store a case describes with `more` TriG after it, in the case's prefixes — as the Python stand-in takes a
+/// case's text with a test's additions.
+pub fn stand_in_with(case: &Path, more: &str) -> Store {
     let store = Store::new(namespaces()).expect("an empty store");
     store
-        .put_trig(WORLD, &read(case))
+        .put_trig(WORLD, &format!("{}\n{more}", read(case)))
         .unwrap_or_else(|e| panic!("{}: {e}", name(case)));
     assert!(
         store.catalogue().expect("one catalogue").is_some(),

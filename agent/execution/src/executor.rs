@@ -188,8 +188,9 @@ WHERE  { GRAPH $intentions { $intention execution:by $step } }";
 /// the step's own IRI under `step` — what a taker is handed.
 pub type Said = BTreeMap<String, String>;
 
-/// A taker: handed the step's rows and its intention, and refusing where the step could not be taken.
-pub type Take<'a> = Box<dyn FnMut(&Said, &str) -> Result<(), Error> + 'a>;
+/// A taker: handed the step's rows and its intention, refusing where the step could not be taken, and answering
+/// whether anything reached the world — where nothing did, the step is said in the log as the executor alone says it.
+pub type Take<'a> = Box<dyn FnMut(&Said, &str) -> Result<bool, Error> + 'a>;
 
 /// Whoever judges a head about to be taken at an instant: true where it is BLOCKED.
 pub type Taking<'a> = Box<dyn FnMut(&str, DateTime) -> Result<bool, Error> + 'a>;
@@ -1083,13 +1084,14 @@ impl<'a> Executor<'a> {
         if fictive {
             return self.fictive(said, intention);
         }
-        match self.take.as_mut() {
-            Some(take) => take(said, intention),
-            None => {
-                self.say(said, intention);
-                Ok(())
-            }
+        let reached = match self.take.as_mut() {
+            Some(take) => take(said, intention)?,
+            None => false,
+        };
+        if !reached {
+            self.say(said, intention);
         }
+        Ok(())
     }
 
     /// A step's rows in words other than this layer's, keyed by the local part of each predicate.

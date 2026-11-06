@@ -4,8 +4,9 @@
 //!
 //! LINKED by whoever assembles the parts: planning hands it what a pass published, reached and reconsidered, and
 //! answers `taking` (#916); belief, where the agent deliberates, raises `soon` where a pass revised the present, and
-//! a walk is queued, once, however many revisions say so before it runs. NOT PORTED: the commands and sayings an
-//! implementation makes, since no transport and no speech are ported; a step is said in the log, or taken fictively.
+//! a walk is queued, once, however many revisions say so before it runs. A TRANSPORT, linked, is handed each command a
+//! step's implementation sends, order by order (`taker`); a step whose command answers nothing is not taken (#869).
+//! NOT PORTED: the sayings an implementation makes, which wait for speech.
 
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
@@ -18,7 +19,58 @@ use orexis::clock::Clock;
 use orexis::runtime::{Part, Pass, Starting};
 use orexis::store::Store;
 
-use crate::Executor;
+use serde_json::Value as Json;
+
+use crate::command::command;
+use crate::executor::Take;
+use crate::implementation::operations;
+use crate::ontology::{COMMAND, SAYING};
+use crate::{Executor, Said};
+
+/// Whoever sends a step's command to the device: the actuator and the payload, as a transport's `command` takes them.
+pub type Commands<'a> = Box<dyn FnMut(&str, &Json) -> Result<(), Error> + 'a>;
+
+/// The taker a transport links, as Python's `_take` takes a step: the action's implementation, order by order, each
+/// command sized from the present at the clock's instant and handed to `send`. A step whose action carries no command
+/// or saying reaches nothing and is said in the log; a command that answers nothing is a step NOT taken (#869),
+/// since the present held nothing it sizes from and recording it taken would have the intention wait out its patience
+/// as though the device had run.
+pub fn taker<'a>(beliefs: &'a Store, clock: &'a dyn Clock, mut send: Commands<'a>) -> Take<'a> {
+    Box::new(move |said: &Said, _intention: &str| {
+        let action = said.get("fills").cloned().unwrap_or_default();
+        let ops = operations(beliefs, &action)?;
+        let mut orders: Vec<f64> = ops
+            .iter()
+            .filter(|op| op.kind == COMMAND || op.kind == SAYING)
+            .map(|op| op.order)
+            .collect();
+        orders.sort_by(f64::total_cmp);
+        orders.dedup();
+        if orders.is_empty() {
+            return Ok(false);
+        }
+        let now = clock.now();
+        for order in orders {
+            let sent = command(beliefs, said, Some(order), now)?;
+            if sent.is_empty() && ops.iter().any(|op| op.kind == COMMAND && op.order == order) {
+                return Err(Error::Evaluation(format!(
+                    "{}'s command answered nothing in the present",
+                    orexis::ontology::local_of(&action)
+                )));
+            }
+            for (actuator, payload) in &sent {
+                send(actuator, payload)?;
+            }
+            if ops.iter().any(|op| op.kind == SAYING && op.order == order) {
+                log::warn!(
+                    "{}: a saying is not ported, so nothing is said",
+                    orexis::ontology::local_of(&action)
+                );
+            }
+        }
+        Ok(true)
+    })
+}
 
 /// WHETHER ANY OF SOME GRAPHS IS THE PRESENT: a belief of the agent's, by the catalogue.
 const PRESENT_Q: &str = "

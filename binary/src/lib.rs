@@ -43,6 +43,7 @@ pub fn built(package: &str) -> bool {
         || (package == "execution" && cfg!(feature = "execution"))
         || (package == "sensing" && cfg!(feature = "sensing"))
         || (package == "prediction" && cfg!(feature = "prediction"))
+        || (package == "transport/mqtt" && cfg!(feature = "mqtt"))
 }
 
 /// Link planning's part to execution's, as the Python parts' `link` connects their signals: what a pass reached
@@ -113,12 +114,40 @@ pub fn foresee<'a>(
     planning.planner.borrow_mut().foresee = Some(prediction.offered());
 }
 
+/// Link execution's part to the MQTT member, as the Python executor's `commanded` is connected to every transport: a
+/// step's implementation is taken order by order, each command sized from the present and sent where the member
+/// reaches the actuator.
+#[cfg(all(feature = "execution", feature = "mqtt"))]
+pub fn command<'a>(
+    store: &'a Store,
+    clock: &'a dyn Clock,
+    execution: &orexis_execution::create::Execution<'a>,
+    transport: &orexis_mqtt::create::Transport<'a>,
+) {
+    let member = transport.member.clone();
+    execution.executor.borrow_mut().take = Some(orexis_execution::create::taker(
+        store,
+        clock,
+        Box::new(move |actuator, payload| member.borrow_mut().command(actuator, payload)),
+    ));
+}
+
+/// What the agent's bus is, where a test hands one: the MQTT member over a client of its own. None, and a member the
+/// agent loads is brought up from the environment.
+#[derive(Default)]
+pub struct Wiring<'a> {
+    #[cfg(feature = "mqtt")]
+    pub mqtt: Option<orexis_mqtt::driver::Mqtt<'a>>,
+    #[cfg(not(feature = "mqtt"))]
+    pub mqtt: Option<std::marker::PhantomData<&'a ()>>,
+}
+
 /// The parts an agent runs, each named by its package, in the order a pass runs them.
 pub type Parts<'a> = Vec<(String, Box<dyn Part + 'a>)>;
 
 /// The parts of the packages `loaded` names, made, linked and in the order a pass runs them: belief, so its rules
 /// have concluded of a graph written before anything else hears it, then planning, then execution walking what it
-/// adopted, then sensing and prediction. `budget` sizes planning's search where a caller states one; none reads the
+/// adopted, then sensing and prediction, and the transport last. `budget` sizes planning's search where a caller states one; none reads the
 /// agent's stance.
 pub fn assemble<'a>(
     store: &'a Store,
@@ -127,6 +156,43 @@ pub fn assemble<'a>(
     loaded: &[String],
     budget: Option<usize>,
 ) -> Result<Parts<'a>, Error> {
+    assemble_wired(store, agent, clock, loaded, budget, Wiring::default())
+}
+
+/// `assemble`, over the bus `wiring` hands — a test's — where it hands one.
+pub fn assemble_wired<'a>(
+    store: &'a Store,
+    agent: &str,
+    clock: &'a dyn Clock,
+    loaded: &[String],
+    budget: Option<usize>,
+    wiring: Wiring<'a>,
+) -> Result<Parts<'a>, Error> {
+    Ok(assemble_seen(store, agent, clock, loaded, budget, wiring)?.0)
+}
+
+/// What a test reads of the parts once they are lent to the runtime: the planner and the executor they share.
+#[derive(Default)]
+pub struct Seen<'a> {
+    #[cfg(feature = "planning")]
+    pub planner: Option<std::rc::Rc<std::cell::RefCell<orexis_planning::Planner<'a>>>>,
+    #[cfg(feature = "execution")]
+    pub executor: Option<std::rc::Rc<std::cell::RefCell<orexis_execution::Executor<'a>>>>,
+    #[cfg(not(any(feature = "planning", feature = "execution")))]
+    pub none: Option<std::marker::PhantomData<&'a ()>>,
+}
+
+/// `assemble_wired`, and what a test reads of the parts.
+pub fn assemble_seen<'a>(
+    store: &'a Store,
+    agent: &str,
+    clock: &'a dyn Clock,
+    loaded: &[String],
+    budget: Option<usize>,
+    wiring: Wiring<'a>,
+) -> Result<(Parts<'a>, Seen<'a>), Error> {
+    #[allow(unused_mut)]
+    let mut seen = Seen::default();
     let mut parts: Parts<'a> = Vec::new();
     let holds = |package: &str| loaded.iter().any(|p| p == package);
     #[cfg(feature = "belief")]
@@ -163,6 +229,25 @@ pub fn assemble<'a>(
     if let (Some(planning), Some(prediction)) = (planning.as_ref(), prediction.as_ref()) {
         foresee(planning, prediction);
     }
+    #[cfg(feature = "mqtt")]
+    let transport = if holds("transport/mqtt") {
+        let member = match wiring.mqtt {
+            Some(member) => member,
+            None => {
+                let me = orexis::boot::selves(store)?.into_iter().next().unwrap_or_default();
+                orexis_mqtt::driver::connect(store, &me, &|name| std::env::var(name).ok())?
+            }
+        };
+        Some(orexis_mqtt::create::Transport::new(member))
+    } else {
+        None
+    };
+    #[cfg(not(feature = "mqtt"))]
+    let _ = wiring;
+    #[cfg(all(feature = "execution", feature = "mqtt"))]
+    if let (Some(execution), Some(transport)) = (execution.as_ref(), transport.as_ref()) {
+        command(store, clock, execution, transport);
+    }
     #[cfg(all(feature = "planning", feature = "execution"))]
     if let (Some(planning), Some(execution)) = (planning.as_mut(), execution.as_ref()) {
         link(planning, execution);
@@ -170,6 +255,14 @@ pub fn assemble<'a>(
     #[cfg(all(feature = "belief", feature = "execution"))]
     if let (Some(belief), Some(execution)) = (belief.as_ref(), execution.as_ref()) {
         hear(store, belief, execution);
+    }
+    #[cfg(feature = "planning")]
+    {
+        seen.planner = planning.as_ref().map(|p| p.planner.clone());
+    }
+    #[cfg(feature = "execution")]
+    {
+        seen.executor = execution.as_ref().map(|e| e.executor.clone());
     }
     #[cfg(feature = "belief")]
     if let Some(belief) = belief {
@@ -191,6 +284,10 @@ pub fn assemble<'a>(
     if let Some(prediction) = prediction {
         parts.push(("prediction".into(), Box::new(prediction)));
     }
+    #[cfg(feature = "mqtt")]
+    if let Some(transport) = transport {
+        parts.push(("transport/mqtt".into(), Box::new(transport)));
+    }
     let _ = (store, agent, clock, budget, holds);
-    Ok(parts)
+    Ok((parts, seen))
 }

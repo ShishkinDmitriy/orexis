@@ -168,7 +168,9 @@ take, and planning tells the shared executor, after its pass and before it decid
 pass published, reached and reconsidered, in the order the Python signals fire. The executor tells the shared
 deliberator each graph it writes as the world, as it writes it, so what the rules conclude of it stands before the
 walk goes on, and a revision pass that changed the present queues a walk. Sensing hands the shared deliberator every
-percept it writes, with its own kind for the revision. The planner is handed the predictor's foresight, which it
+percept it writes, with its own kind for the revision. The executor hands the shared transport member each command a
+step's implementation sends, and what the member's thread receives waits in its inbox until the pass takes it as a
+job. The planner is handed the predictor's foresight, which it
 advances as it lays each ground, through a trait the kernel keeps because the two packages meet at it, as they meet
 at `orexis:FlowGraph`. What a part answers it wrote, the runtime
 hands to each part listening for a kind the catalogue says it is, as the Python runtime's `on` does. No crate names

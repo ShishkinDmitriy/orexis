@@ -9,9 +9,10 @@
 //! NOT PORTED: the two threads, which the runtime's pass replaces, the events the Python copy signals, and the
 //! command and the saying an implementation's operations make, which wait for a transport and for speech.
 
+pub mod command;
 pub mod create;
 mod executor;
 mod implementation;
 pub mod ontology;
 
-pub use executor::{Executor, Said, Standing};
+pub use executor::{Executor, Said, Standing, Take};
