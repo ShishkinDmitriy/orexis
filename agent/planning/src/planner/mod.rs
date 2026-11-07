@@ -164,6 +164,8 @@ pub struct Planner<'a> {
     pub handed: Vec<(String, String)>,
     /// The walking wants the present meets.
     pub reached: BTreeSet<String>,
+    /// Which of the four each scope's present was in the last pass, as the Python Planner's `rerooted` says it.
+    pub rerooted: Vec<&'static str>,
     /// The heads `check` refused as they were about to be taken.
     pub blocked: Vec<String>,
     /// The intentions a reconsideration replaced, to end after their steps in flight.
@@ -174,6 +176,13 @@ pub struct Planner<'a> {
     pub asked: BTreeSet<String>,
     /// THE PREDICTOR'S FORESIGHT, where the agent plays one: taken at link and asked at every pass, never imported.
     pub foresee: Option<Foresees<'a>>,
+}
+
+impl Planner<'_> {
+    /// What the texts the last pass evaluated read, None where one of them could read anything.
+    pub fn read(&self) -> Option<&BTreeSet<String>> {
+        self.read.as_ref().and_then(|(_, r)| r.as_ref())
+    }
 }
 
 fn strs(names: &[String]) -> Vec<&str> {
@@ -514,6 +523,7 @@ impl<'a> Planner<'a> {
             read: None,
             handed: Vec::new(),
             reached: BTreeSet::new(),
+            rerooted: Vec::new(),
             blocked: Vec::new(),
             superseded: Vec::new(),
             doomed: BTreeMap::new(),
@@ -539,6 +549,7 @@ impl<'a> Planner<'a> {
         };
         self.handed.clear();
         self.reached.clear();
+        self.rerooted.clear();
         self.blocked.clear();
         self.superseded.clear();
         let mut searched = BTreeSet::new();
@@ -683,7 +694,7 @@ impl<'a> Planner<'a> {
                     .filter_map(|r| value(r, "h"))
                     .any(|h| !foreseen.contains(&h))
             };
-            reroot(store, &present)?;
+            self.rerooted.push(reroot(store, &present)?.present);
             let constraints = held_constraints(store, &self.uri, only.as_ref(), at, &mut memo)?;
             for constraint in &constraints {
                 let broken = broken(store, constraint, &present, &mut memo)?;
