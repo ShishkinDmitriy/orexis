@@ -1135,7 +1135,7 @@ orexis-firmware <world>      # a board's config.h, from the world it belongs to
 orexis-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
 orexis-infra-compose         # INFRA — infra/compose.yaml, from infra/installation.ttl
 cd world/<world> && podman compose up -d      # one container per agent
-podman compose build                           # only when a dependency changes: each agent's image, by its packages' extras
+podman compose build                           # each agent's binary, by its packages' features: after any change to agent/ or binary/
 pytest -q              # what testpaths names, walks left out: a few minutes. No infra needed.
 pytest -q -m ""        # the walks too, as CI runs them on every pull request.
 pytest -q tests        # the four files that read the whole tree: knowledge, layout, store, projects

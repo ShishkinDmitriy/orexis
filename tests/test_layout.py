@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import re
 import subprocess
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -41,6 +42,19 @@ def copied_paths() -> list[str]:
             parts = re.split(r"\s+", line)[1:]
             out.extend(p for p in parts[:-1] if not p.startswith("--"))
     return out
+
+
+BINARY_CONTAINERFILE = REPO_ROOT / "binary" / "Containerfile"
+
+
+def test_the_binarys_image_copies_only_the_tree_it_builds_and_the_domains():
+    """The binary's image is a second boundary: it copies the kernel's and the packages' crates, the binary's own and
+    the domains, and never `onboarding/`, whose code holds what no agent may."""
+    copied = [re.split(r"\s+", line.strip())[1:-1] for line in BINARY_CONTAINERFILE.read_text().splitlines()
+              if line.strip().upper().startswith("COPY ") and "--from=" not in line]
+    trees = {p.split("/")[0].strip("./") for paths in copied for p in paths if not p.startswith("--")}
+    assert copied, f"no COPY lines found in {BINARY_CONTAINERFILE} — this test is not looking"
+    assert trees <= {"agent", "binary", "domains", "Cargo.toml", "Cargo.lock"}, trees
 
 
 def test_the_image_copies_something():
@@ -1191,6 +1205,8 @@ def test_an_agents_image_holds_the_packages_it_loads_and_those_they_import_and_w
     assert hanoi.packages == ("belief", "execution", "planning") and hanoi.extras == ("belief",), "planning imports belief"
     simulator = compose.simulator_image("greenhouse")
     assert simulator.packages == ("sensing",) and simulator.extras == ("simulation",) and simulator.simulator
+    assert terrace.binary and hanoi.binary and not simulator.binary, "an agent whose packages are all ported is the binary's"
+    assert terrace.features() == ("belief", "http", "mqtt", "prediction", "sensing", "speech", "telegram", "translation")
 
 
 def test_every_committed_service_mounts_what_its_image_keeps_and_builds_what_its_agent_loads():
@@ -1201,10 +1217,19 @@ def test_every_committed_service_mounts_what_its_image_keeps_and_builds_what_its
 
     from agent.tree import kept
 
+    declared = set(tomllib.loads((REPO_ROOT / "binary" / "Cargo.toml").read_text())["features"])
     checked = 0
     for path in sorted((REPO_ROOT / "world").glob("*/compose.yaml")):
         for name, service in yaml.safe_load(path.read_text())["services"].items():
             build = service.get("build")
+            if build and "FEATURES" in build.get("args", {}):
+                #  the binary's: built with features it declares, and handed no tree of the agent's, which it compiled
+                features = set(build["args"]["FEATURES"].split(","))
+                assert features and features <= declared, (path.parent.name, name, features - declared)
+                assert build["dockerfile"] == "binary/Containerfile", (path.parent.name, name)
+                assert not [v for v in service["volumes"] if v.startswith("../../agent/")], (path.parent.name, name)
+                checked += 1
+                continue
             if not build or "PACKAGES" not in build.get("args", {}):
                 continue
             named = [p for p in build["args"]["PACKAGES"].split(",") if p]

@@ -118,10 +118,21 @@ class Image:
     packages: tuple[str, ...]
     extras: tuple[str, ...]
     simulator: bool = False
+    binary: bool = False
+
+    def features(self) -> tuple[str, ...]:
+        """The binary's features for the packages it holds: each a feature named for its directory's last part,
+        `transport/mqtt` the `mqtt` member."""
+        return tuple(sorted(package.rsplit("/", 1)[-1] for package in self.packages))
 
     def build(self) -> str:
         """The service's image and the build that makes it, its own: the Containerfile handed the packages to
-        keep and the extras to install (knowledge/decisions/a-package-brings-its-own-dependencies.md)."""
+        keep and the extras to install (knowledge/decisions/a-package-brings-its-own-dependencies.md) — or, for an
+        agent whose every package is ported, the binary's handed the features to build it with."""
+        if self.binary:
+            return (f"image: {self.tag}\n    build:\n      context: ../..\n      dockerfile: binary/Containerfile\n"
+                    f"      args:\n        # the packages it runs, each a feature of the binary, and nothing else's\n"
+                    f'        FEATURES: "{",".join(self.features())}"')
         return (f"image: {self.tag}\n    build:\n      context: ../..\n      dockerfile: Containerfile\n      args:\n"
                 f"        # the packages it runs and what they bring beyond the core, and nothing else's\n"
                 f'        PACKAGES: "{",".join(self.packages)}"\n'
@@ -130,7 +141,10 @@ class Image:
 
     def mounts(self) -> str:
         """The trees mounted over what the image copies, so a code change needs a restart and no rebuild — the
-        agent tree entry by entry as the image keeps it (`agent.tree.kept`), the domains, the simulator's own."""
+        agent tree entry by entry as the image keeps it (`agent.tree.kept`), the domains, the simulator's own. The
+        binary's image is compiled, so a code change is a rebuild, and only the domains are mounted over it."""
+        if self.binary:
+            return "\n      - ../../domains:/app/domains:ro"
         lines = [f"\n      - ../../agent/{rel}:/app/agent/{rel}:ro" for rel in kept(self.packages, KERNEL)]
         lines.append("\n      - ../../domains:/app/domains:ro")
         if self.simulator:
@@ -148,7 +162,13 @@ def image_of(world: str, agent_id: str, series: bool) -> Image:
     """`agent_id`'s own image: every package it loads and every package whose code those import, by
     `agent.tree.closed`, and the extras they bring — the series writer's where the installation serves a store."""
     packages = tuple(closed(packages_of(reading.boot(world_dir(world), agent_id, others=reading.ours()))))
-    return Image(f"orexis-{world}-{agent_id}:local", packages, _extras(packages, series))
+    return Image(f"orexis-{world}-{agent_id}:local", packages, _extras(packages, series), binary=ported(packages))
+
+
+def ported(packages, root: Path = KERNEL) -> bool:
+    """Whether every package named is ported, a crate of its own beside its ontology: an agent runs on the binary
+    once each package its roles load is (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md)."""
+    return all((root / package / "Cargo.toml").is_file() for package in packages)
 
 
 def simulator_image(world: str) -> Image:
@@ -371,10 +391,16 @@ def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, st
       # its own secrets, whole: its credentials, its certificate, and every document only it is handed — written
       # by onboarding and by hand, never committed, and mounted into THIS container alone
       - {mine}:/app/world/{world}/{SECRETS}/{agent_id}:ro{certificates}
-      # The trees, mounted so a code change needs a restart rather than a rebuild — the SAME entries its
-      # image keeps, the kernel and its own packages and no other's, which `tests/test_layout.py` holds
-      # to `agent.tree.kept`.{image.mounts()}
+      {_TREES_BINARY if image.binary else _TREES}{image.mounts()}
 """
+
+
+#  WHAT A SERVICE IS HANDED OF THE TREES, said above the mounts.
+_TREES = """# The trees, mounted so a code change needs a restart rather than a rebuild — the SAME entries its
+      # image keeps, the kernel and its own packages and no other's, which `tests/test_layout.py` holds
+      # to `agent.tree.kept`."""
+_TREES_BINARY = """# The domains, mounted over the image's copy so a changed document needs a restart; the binary and the
+      # tree's documents are its image's, so a change to the agent is a rebuild."""
 
 
 def _broker(world: str, broker_iri: str, plain: int, tls: int | None) -> str:
