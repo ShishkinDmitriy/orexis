@@ -1,6 +1,7 @@
-//! `orexis-agent <world> <agent> [--volume PATH] [--journal PATH] [--passes N]`: one agent, booted from a world's files
-//! and run until nothing is left to pursue — exit 0 `met` or `planned`, 1 `unreachable`, 2 `unfinished`, and 143 where
-//! it was told to stop, as the Python runtime's `main` exits.
+//! `orexis-agent <world> <agent> [--volume PATH] [--journal PATH] [--passes N] [--check]`: one agent, booted from a
+//! world's files and run until nothing is left to pursue — exit 0 `met` or `planned`, 1 `unreachable`, 2 `unfinished`,
+//! and 143 where it was told to stop, as the Python runtime's `main` exits. With `--check` it runs nothing: booted in
+//! memory, its parts made over members that reach nothing, it exits 0 naming the packages it makes, or 3 and why not.
 //!
 //! THE JOURNAL FIRST, so the log of the boot is in it: a store of its own, on disk where `--journal` says, its log kept
 //! for the window the environment says and served read-only where the environment names a port (`JOURNAL_PORT`). A
@@ -72,11 +73,12 @@ struct Args {
     volume: Option<PathBuf>,
     journal: Option<PathBuf>,
     passes: Option<usize>,
+    check: bool,
 }
 
 fn args() -> Result<Args, String> {
     let mut rest = std::env::args().skip(1);
-    let (mut positional, mut volume, mut journal, mut passes) = (Vec::new(), None, None, None);
+    let (mut positional, mut volume, mut journal, mut passes, mut check) = (Vec::new(), None, None, None, false);
     while let Some(arg) = rest.next() {
         match arg.as_str() {
             "--volume" => volume = Some(PathBuf::from(rest.next().ok_or("--volume takes a path")?)),
@@ -89,11 +91,14 @@ fn args() -> Result<Args, String> {
                         .map_err(|_| "--passes takes a number")?,
                 )
             }
+            "--check" => check = true,
             other => positional.push(other.to_string()),
         }
     }
     let [world, agent] = positional.as_slice() else {
-        return Err("usage: orexis-agent <world> <agent> [--volume PATH] [--journal PATH] [--passes N]".into());
+        return Err(
+            "usage: orexis-agent <world> <agent> [--volume PATH] [--journal PATH] [--passes N] [--check]".into(),
+        );
     };
     Ok(Args {
         world: PathBuf::from(world),
@@ -101,6 +106,7 @@ fn args() -> Result<Args, String> {
         volume,
         journal,
         passes,
+        check,
     })
 }
 
@@ -201,6 +207,20 @@ fn main() {
             std::process::exit(2);
         }
     };
+    if args.check {
+        //  A CHECK RUNS NOTHING: no journal, no series, no bus — the boot and the parts' making, and the verdict.
+        let tree = PathBuf::from(env("OREXIS_TREE").unwrap_or_else(|| TREE.to_string()));
+        match orexis_agent::check(&tree, &args.world, &args.agent, oxsdatatypes::DateTime::now()) {
+            Ok(loaded) => {
+                println!("{} boots, and makes {}", args.agent, loaded.join(", "));
+                std::process::exit(0);
+            }
+            Err(e) => {
+                eprintln!("{}: {e}", args.agent);
+                std::process::exit(3);
+            }
+        }
+    }
     static CLOCK: OnceLock<Paced> = OnceLock::new();
     let clock = match Paced::from_env() {
         Ok(c) => CLOCK.get_or_init(|| c),

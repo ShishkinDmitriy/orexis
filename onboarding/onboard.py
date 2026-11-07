@@ -21,7 +21,8 @@ without it and told so in one line; metrics are where the world says it is monit
 **What an agent runs is declared, and checked here before anything is granted.** Each agent's roles
 are stated in its own self graph; `reading.refused` boots every agent as its container would and
 refuses an agent declaring no role, a role whose needs its world lacks, and what would arrive for an
-agent and be read by none of its roles (#927).
+agent and be read by none of its roles (#927); and `checked_on_the_binary` boots each on the binary its container
+runs, in memory with its parts made, so a store that will not initialise is refused before a grant.
 
 Calling that phase **onboarding** is not decoration. It names the moment an agent stops being a
 description and acquires the means to act: an account of its own on the series store, a
@@ -59,11 +60,14 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
+import subprocess
+from pathlib import Path
 
 from agent.store import DocumentRefused
 
 from . import certs, compose, dashboards, influx, installation, mqtt, reading, topics
-from .worlds import world_dir, worlds
+from .worlds import REPO_ROOT, world_dir, worlds
 
 log = logging.getLogger("onboard")
 
@@ -92,6 +96,9 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
         # mints real credentials for agents that will refuse to boot, or for a society reading what its
         # words refuse, and leaves them lying around (`reading.check`).
         reading.check(here)
+        # And as the binary its containers run boots it: every agent booted in memory and its parts made, so a store
+        # that will not initialise is refused here, against the documents and secrets the container will be handed.
+        checked_on_the_binary(here)
 
     log.info("onboarding %s", world)
     # A world asking to be monitored where the installation serves metrics nowhere is refused before
@@ -119,6 +126,29 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
         log.warning("  ! no certificate authority for this world")
     report(world)
     log.info("onboarded %s — `cd world/%s && podman compose up -d` to start it", world, world)
+
+
+def checked_on_the_binary(here: Path) -> None:
+    """Refuse the world in `here` where an agent of it would not boot on the binary: `orexis-agent <world> <agent>
+    --check`, for each agent the world states, run as `OREXIS_AGENT` names the binary or as cargo builds the tree's,
+    each said by the last line it gave (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md)."""
+    named = os.environ.get("OREXIS_AGENT")
+    command = [named] if named else ["cargo", "run", "-q", "-p", "orexis-agent", "--"]
+    refused = []
+    for agent_id in reading.agents(here):
+        try:
+            done = subprocess.run([*command, str(here), agent_id, "--check"], capture_output=True, text=True,
+                                  cwd=REPO_ROOT)
+        except FileNotFoundError:
+            raise SystemExit(f"no binary to check {here.name!r} with — install cargo, or name one in OREXIS_AGENT; "
+                             "nothing granted")
+        if done.returncode:
+            said = (done.stderr.strip() or done.stdout.strip() or f"exit {done.returncode}").splitlines()[-1]
+            refused.append(said)
+        else:
+            log.info("  %s", done.stdout.strip())
+    if refused:
+        raise SystemExit(f"world {here.name!r} does not boot on the binary — {'; '.join(refused)}; nothing granted")
 
 
 def report(world: str) -> list[str]:

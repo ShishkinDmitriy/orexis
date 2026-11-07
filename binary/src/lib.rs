@@ -41,6 +41,37 @@ pub fn booted(
     Ok(loaded)
 }
 
+/// CHECK `agent` of `world` as its container would boot it, and run nothing: booted into a store in memory from the
+/// documents of `tree`, and every part its roles load made over members that reach nothing — no broker, no web, no bot
+/// and no model — so every text a part parses at its making is parsed. The packages it loads, or why it would not boot.
+/// `orexis-onboard` asks it of every agent before anything is granted, and `binary/tests/check.rs` of every world.
+pub fn check(tree: &Path, world: &Path, agent: &str, now: oxsdatatypes::DateTime) -> Result<Vec<String>, Error> {
+    let namespaces = Arc::new(orexis::namespaces::Namespaces::of_tree(tree)?);
+    let store = Store::new(namespaces)?;
+    let loaded = booted(&store, tree, world, agent, now)?;
+    let clock = orexis::clock::Manual::at(now);
+    #[allow(unused_variables)]
+    let me = orexis::boot::selves(&store)?.into_iter().next().unwrap_or_default();
+    let wiring = Wiring {
+        #[cfg(feature = "mqtt")]
+        mqtt: Some(orexis_mqtt::driver::Mqtt::new(&store, &me, Vec::new())),
+        #[cfg(feature = "http")]
+        http: Some(orexis_http::driver::Http::new(
+            &store,
+            &me,
+            Arc::new(|_: &str| Err("a check reaches no web".to_string())),
+        )),
+        #[cfg(feature = "telegram")]
+        telegram: Some(orexis_telegram::driver::Telegram::new(&store, &me, "", "", {
+            let call: orexis_telegram::driver::Call = Arc::new(|_, _| Err("a check reaches no bot".to_string()));
+            call
+        })),
+        ..Wiring::default()
+    };
+    assemble_seen(&store, agent, &clock, &loaded, None, wiring)?;
+    Ok(loaded)
+}
+
 /// Whether this binary holds `package`'s part.
 pub fn built(package: &str) -> bool {
     (package == "belief" && cfg!(feature = "belief"))
