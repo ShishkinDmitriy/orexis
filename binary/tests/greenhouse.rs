@@ -130,6 +130,7 @@ fn grower_watched<'a>(store: &'a Store, clock: &'a Ticking, watching: orexis_age
     let wiring = Wiring {
         mqtt: Some(member),
         watching,
+        ..Wiring::default()
     };
     let (parts, seen) = assemble_seen(store, "grower", clock, &loaded, None, wiring).unwrap();
     Grower {

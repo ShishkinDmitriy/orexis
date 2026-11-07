@@ -12,6 +12,7 @@
 //! - [`journal`]: what happened to the agent, in a triplestore of its own, and its log for a window;
 //! - [`series`]: the points an event answers, written to the store the environment names for their purpose;
 //! - [`runtime`]: one agent's process, a lifecycle container for its packages' parts, run pass by pass;
+//! - [`transport`]: what is the same of every transport member — the inbox, a person's prose, what carries a chat;
 //! - [`stance`]: a figure the agent states of itself in its self graph;
 //! - [`ontology`]: the kernel's terms code may name (rule 1: a T-Box term, never an instance);
 //! - [`snapshots`]: the case runner, holding a store to the Python suite's own `.trig` and `.diff`.
@@ -33,5 +34,6 @@ pub mod series;
 pub mod snapshots;
 pub mod stance;
 pub mod store;
+pub mod transport;
 
 pub use error::Error;

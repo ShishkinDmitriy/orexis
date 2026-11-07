@@ -51,6 +51,9 @@ pub fn built(package: &str) -> bool {
         || (package == "transport/mqtt" && cfg!(feature = "mqtt"))
         || (package == "speech" && cfg!(feature = "speech"))
         || (package == "coordination" && cfg!(feature = "coordination"))
+        || (package == "translation" && cfg!(feature = "translation"))
+        || (package == "transport/http" && cfg!(feature = "http"))
+        || (package == "transport/telegram" && cfg!(feature = "telegram"))
 }
 
 /// Link planning's part to execution's, as the Python parts' `link` connects their signals: what a pass reached
@@ -153,11 +156,18 @@ pub struct Watching {
     pub metrics: Option<orexis_metrics::Window>,
 }
 
-/// What the agent's bus is, where a test hands one: the MQTT member over a client of its own. None, and a member the
-/// agent loads is brought up from the environment. And what watches it.
+/// What the agent's bus is, where a test hands one: the MQTT member over a client of its own, the HTTP member over a
+/// web of its own, the Telegram member over a Bot API of its own, translation's model. None, and a member the agent
+/// loads is brought up from the environment. And what watches it.
 #[derive(Default)]
 pub struct Wiring<'a> {
     pub watching: Watching,
+    #[cfg(feature = "http")]
+    pub http: Option<orexis_http::driver::Http<'a>>,
+    #[cfg(feature = "telegram")]
+    pub telegram: Option<orexis_telegram::driver::Telegram<'a>>,
+    #[cfg(feature = "translation")]
+    pub model: Option<std::sync::Arc<dyn orexis_translation::model::Model>>,
     #[cfg(feature = "mqtt")]
     pub mqtt: Option<orexis_mqtt::driver::Mqtt<'a>>,
     #[cfg(not(feature = "mqtt"))]
@@ -218,11 +228,28 @@ pub fn assemble_seen<'a>(
     #[allow(unused_mut)]
     let mut seen = Seen::default();
     let mut parts: Parts<'a> = Vec::new();
-    let Wiring { watching, mqtt } = wiring;
+    let Wiring {
+        watching,
+        mqtt,
+        #[cfg(feature = "http")]
+        http,
+        #[cfg(feature = "telegram")]
+        telegram,
+        #[cfg(feature = "translation")]
+        model,
+    } = wiring;
     let wiring = Wiring {
         watching: Watching::default(),
         mqtt,
+        ..Wiring::default()
     };
+    //  WHAT A CHAT READS OF WHAT HAPPENED, where it reads it: the journal where it is, and the series as read.
+    #[cfg(feature = "translation")]
+    let (journal_store, history_reader, metrics_reader) = (
+        watching.journal.as_ref().map(|j| j.store.clone()),
+        watching.history.as_ref().map(Sink::reader),
+        watching.metrics.as_ref().map(|w| w.sink.reader()),
+    );
     let watch = seen.watch.clone();
     let mut watchers: Parts<'a> = Vec::new();
     if watching.journal.is_some() || watching.history.is_some() {
@@ -269,7 +296,8 @@ pub fn assemble_seen<'a>(
         foresee(planning, prediction);
     }
     #[cfg(feature = "mqtt")]
-    let transport = if holds("transport/mqtt") {
+    #[allow(unused_mut)]
+    let mut transport = if holds("transport/mqtt") {
         let member = match wiring.mqtt {
             Some(member) => member,
             None => {
@@ -288,11 +316,77 @@ pub fn assemble_seen<'a>(
     let speech = holds("speech").then(|| orexis_speech::create::Speech::new(store, &me));
     #[cfg(feature = "coordination")]
     let mut coordination = holds("coordination").then(|| orexis_coordination::create::Coordination::new(store, &me));
-    #[cfg(all(feature = "speech", feature = "mqtt"))]
-    if let (Some(speech), Some(transport)) = (speech.as_ref(), transport.as_ref()) {
-        let member = transport.member.clone();
+    #[cfg(feature = "translation")]
+    let translation = if holds("translation") {
+        let model = model.or_else(|| {
+            orexis_translation::model::Anthropic::from_environ(&|n| std::env::var(n).ok())
+                .map(|m| std::sync::Arc::new(m) as std::sync::Arc<dyn orexis_translation::model::Model>)
+        });
+        let mut translator = orexis_translation::create::Translator::new(store, &me, model);
+        translator.journal = journal_store;
+        translator.history = history_reader;
+        translator.metrics = metrics_reader;
+        translator.watch = watch.clone();
+        Some(orexis_translation::create::Translation::new(translator))
+    } else {
+        None
+    };
+    #[cfg(feature = "http")]
+    let web = if holds("transport/http") {
+        let member = http.unwrap_or_else(|| orexis_http::driver::Http::new(store, &me, orexis_http::driver::get()));
+        Some(orexis_http::create::Transport::new(member))
+    } else {
+        None
+    };
+    #[cfg(feature = "telegram")]
+    let mut bot = if holds("transport/telegram") {
+        let member = match telegram {
+            Some(member) => member,
+            None => orexis_telegram::driver::Telegram::connect(store, &me, &|n| std::env::var(n).ok())?,
+        };
+        Some(orexis_telegram::create::Transport::new(member))
+    } else {
+        None
+    };
+    //  WHAT CARRIES A CHAT, in the order of a pass: a topic of the bus first, then the agent's own bot.
+    #[cfg(all(feature = "translation", feature = "mqtt"))]
+    if let (Some(translation), Some(transport)) = (translation.as_ref(), transport.as_mut()) {
+        let carrier: std::rc::Rc<std::cell::RefCell<dyn orexis::transport::Carrier + 'a>> = transport.member.clone();
+        translation.translator.borrow_mut().carriers.push(carrier);
+        let translator = translation.translator.clone();
+        transport.prose = Some(Box::new(move |prose| {
+            let at = prose.at.unwrap_or_else(oxsdatatypes::DateTime::now);
+            translator.borrow_mut().heard(prose, at)
+        }));
+    }
+    #[cfg(all(feature = "translation", feature = "telegram"))]
+    if let (Some(translation), Some(bot)) = (translation.as_ref(), bot.as_mut()) {
+        let carrier: std::rc::Rc<std::cell::RefCell<dyn orexis::transport::Carrier + 'a>> = bot.member.clone();
+        translation.translator.borrow_mut().carriers.push(carrier);
+        let translator = translation.translator.clone();
+        bot.prose = Some(Box::new(move |prose| {
+            let at = prose.at.unwrap_or_else(oxsdatatypes::DateTime::now);
+            translator.borrow_mut().heard(prose, at)
+        }));
+    }
+    //  WHAT SPEECH TELLS, every member that reaches the peer told it, and translation, which says it to a person.
+    #[cfg(feature = "speech")]
+    if let Some(speech) = speech.as_ref() {
+        #[cfg(feature = "mqtt")]
+        let member = transport.as_ref().map(|t| t.member.clone());
+        #[cfg(feature = "translation")]
+        let translator = translation.as_ref().map(|t| t.translator.clone());
         *speech.speaker.tell.borrow_mut() = Some(Box::new(move |to, document| {
-            member.borrow_mut().tell(to, document).map(|_| ())
+            #[cfg(feature = "mqtt")]
+            if let Some(member) = member.as_ref() {
+                member.borrow_mut().tell(to, document)?;
+            }
+            #[cfg(feature = "translation")]
+            if let Some(translator) = translator.as_ref() {
+                translator.borrow_mut().told(to, document)?;
+            }
+            let _ = (to, document);
+            Ok(())
         }));
     }
     #[cfg(all(feature = "speech", feature = "coordination"))]
@@ -395,6 +489,10 @@ pub fn assemble_seen<'a>(
     if let Some(speech) = speech {
         parts.push(("speech".into(), Box::new(speech)));
     }
+    #[cfg(feature = "translation")]
+    if let Some(translation) = translation {
+        parts.push(("translation".into(), Box::new(translation)));
+    }
     #[cfg(feature = "coordination")]
     if let Some(coordination) = coordination {
         parts.push(("coordination".into(), Box::new(coordination)));
@@ -402,6 +500,14 @@ pub fn assemble_seen<'a>(
     #[cfg(feature = "mqtt")]
     if let Some(transport) = transport {
         parts.push(("transport/mqtt".into(), Box::new(transport)));
+    }
+    #[cfg(feature = "http")]
+    if let Some(web) = web {
+        parts.push(("transport/http".into(), Box::new(web)));
+    }
+    #[cfg(feature = "telegram")]
+    if let Some(bot) = bot {
+        parts.push(("transport/telegram".into(), Box::new(bot)));
     }
     //  WHAT WATCHES THE AGENT, last, so it is stopped first and writes the last window.
     parts.extend(watchers);

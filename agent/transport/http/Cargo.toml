@@ -1,0 +1,22 @@
+# THE HTTP TRANSPORT: how an agent reaches a service over the web, in the words of the W3C Web of Things Thing
+# Description — ported from `agent/transport/http/*.py` beside it, held to what its suite asks
+# (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md).
+[package]
+name = "orexis-http"
+version = "0.2.0"
+edition.workspace = true
+license.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+orexis = { path = "../.." }
+orexis-sensing = { path = "../../sensing" }
+oxsdatatypes = "0.2"
+regex = "1"
+ureq = "2"
+log = "0.4"
+
+[dev-dependencies]
+orexis = { path = "../..", features = ["snapshots"] }

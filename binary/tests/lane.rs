@@ -357,6 +357,7 @@ fn replayed_keeping(
             Wiring {
                 mqtt: Some(member),
                 watching,
+                ..Wiring::default()
             },
         )
         .unwrap();

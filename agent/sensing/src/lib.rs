@@ -9,7 +9,7 @@
 //! - [`create`]: the package's part, which asks after silence every minute and hands each percept to belief;
 //! - [`events`]: what it says happened — each observation, a point of the history, and the sensors silent and doubted.
 //!
-//! NOT PORTED: the account sensing gives of itself for a person, which waits for translation.
+//! The Python copy's `account`, sensing's word of itself for a person, is read by nothing, and is not ported.
 
 pub mod cadence;
 pub mod create;

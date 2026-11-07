@@ -118,10 +118,10 @@ ported, each world's walks and benches passing on the binary as it does:
 | the kernel and planning | `hanoi`, a planner alone |
 | execution | `courier`, `driver` |
 | belief | `tower` |
-| sensing, prediction and the MQTT transport | `greenhouse`, its day bench sending the same commands, and `layby` |
+| sensing, prediction and the MQTT transport | `greenhouse`, its day bench sending the same commands, `layby` and `sensing` |
 | speech and coordination | `lane` |
 | the market, documents over speech that bring no code | `allotment` |
-| translation, the Telegram and HTTP members | `terrace` |
+| the journal, the series, history and metrics; translation, the Telegram and HTTP members | `terrace` |
 
 The kernel is the store, the catalogue, the binder, the lifecycle and the runtime. Belief's transition
 machine landed with planning, before the rest of belief, because an action's effect is a transition and `take`
