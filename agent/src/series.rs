@@ -10,6 +10,7 @@
 //! binary the parts are linked by sharing objects, and the one process is one agent.
 
 use std::collections::BTreeMap;
+use std::sync::Arc;
 
 use oxsdatatypes::DateTime;
 
@@ -22,8 +23,41 @@ const KEYS: [&str; 4] = ["URL", "ORG", "BUCKET", "TOKEN"];
 
 /// How a batch of points reaches a bucket: the client's own call, refused with why.
 pub type Write = Box<dyn Fn(&str, &[Point]) -> Result<(), String>>;
-/// How a Flux query of the bucket is answered: each record as its columns, or why not.
-pub type Read = Box<dyn Fn(&str) -> Result<Vec<BTreeMap<String, String>>, String>>;
+/// How a Flux query of the bucket is answered: each record as its columns, each value as Python's client reads it and
+/// `str` says it, or why not. Shared with the model's thread, which reads the past off it.
+pub type Read = Arc<dyn Fn(&str) -> Result<Vec<BTreeMap<String, String>>, String> + Send + Sync>;
+
+/// One purpose's bucket as a chat reads it: what a Flux query of it answers, off any thread.
+#[derive(Clone)]
+pub struct Reader {
+    pub purpose: &'static str,
+    pub bucket: String,
+    read: Option<Read>,
+}
+
+impl Reader {
+    /// A reader of `bucket` through `read`, or of nothing where `read` is none.
+    pub fn new(purpose: &'static str, bucket: &str, read: Option<Read>) -> Self {
+        Reader {
+            purpose,
+            bucket: bucket.to_string(),
+            read,
+        }
+    }
+
+    /// The records a Flux query of this bucket answers; why not, where the store refuses or the sink reads nothing.
+    pub fn read(&self, flux: &str) -> Result<Vec<BTreeMap<String, String>>, String> {
+        match &self.read {
+            None => Err(format!(
+                "the {} store is written here and never read",
+                self.purpose.to_lowercase()
+            )),
+            Some(read) => {
+                read(flux).map_err(|e| format!("the {} store would not answer: {e}", self.purpose.to_lowercase()))
+            }
+        }
+    }
+}
 
 /// One purpose's bucket, and how a point reaches it.
 pub struct Sink {
@@ -94,6 +128,20 @@ impl Sink {
             org.to_string(),
             token.to_string(),
         );
+        let (reading, read_url, read_org, read_token) = (agent.clone(), url.clone(), org.clone(), token.clone());
+        let read: Read = Arc::new(move |flux| {
+            let body = reading
+                .post(&format!("{read_url}/api/v2/query"))
+                .query("org", &read_org)
+                .set("Authorization", &format!("Token {read_token}"))
+                .set("Content-Type", "application/vnd.flux")
+                .set("Accept", "application/csv")
+                .send_string(flux)
+                .map_err(|e| e.to_string())?
+                .into_string()
+                .map_err(|e| e.to_string())?;
+            Ok(records(&body))
+        });
         let write: Write = Box::new(move |bucket, points| {
             let body: Vec<String> = points.iter().map(line).collect();
             agent
@@ -107,7 +155,10 @@ impl Sink {
                 .map(|_| ())
                 .map_err(|e| e.to_string())
         });
-        Sink::new(purpose, bucket, write)
+        Sink {
+            read: Some(read),
+            ..Sink::new(purpose, bucket, write)
+        }
     }
 
     #[cfg(not(feature = "series"))]
@@ -139,16 +190,100 @@ impl Sink {
 
     /// The records a Flux query of this sink's bucket answers; why not, where the store refuses or reads nothing.
     pub fn read(&self, flux: &str) -> Result<Vec<BTreeMap<String, String>>, String> {
-        match &self.read {
-            None => Err(format!(
-                "the {} store is written here and never read",
-                self.purpose.to_lowercase()
-            )),
-            Some(read) => {
-                read(flux).map_err(|e| format!("the {} store would not answer: {e}", self.purpose.to_lowercase()))
+        self.reader().read(flux)
+    }
+
+    /// The bucket as a chat reads it, off any thread.
+    pub fn reader(&self) -> Reader {
+        Reader::new(self.purpose, &self.bucket, self.read.clone())
+    }
+}
+
+/// The records InfluxDB's annotated CSV holds, each column's value as Python's client reads it and `str` says it: an
+/// instant as `isoformat` to the second, a double as its `repr`, an integer as itself, a text as it is.
+pub fn records(csv: &str) -> Vec<BTreeMap<String, String>> {
+    let mut out = Vec::new();
+    let (mut types, mut header): (Vec<String>, Vec<String>) = (Vec::new(), Vec::new());
+    for line in csv.lines() {
+        let line = line.trim_end_matches('\r');
+        if line.trim().is_empty() {
+            header.clear();
+            continue;
+        }
+        let cells = cells(line);
+        if cells.first().is_some_and(|c| c == "#datatype") {
+            types = cells;
+            continue;
+        }
+        if cells.first().is_some_and(|c| c.starts_with('#')) {
+            continue;
+        }
+        if header.is_empty() {
+            header = cells;
+            continue;
+        }
+        let mut record = BTreeMap::new();
+        for (i, name) in header.iter().enumerate().skip(1) {
+            let Some(cell) = cells.get(i) else { continue };
+            if name.is_empty() || name == "result" || name == "table" {
+                continue;
+            }
+            let kind = types.get(i).map(String::as_str).unwrap_or("string");
+            record.insert(name.clone(), said(cell, kind));
+        }
+        out.push(record);
+    }
+    out
+}
+
+/// One cell as Python's client reads its type and `str` says it.
+fn said(cell: &str, kind: &str) -> String {
+    match kind {
+        "double" => cell.parse::<f64>().map_or(cell.to_string(), crate::events::repr),
+        k if k.starts_with("dateTime") => match crate::clock::instant(cell) {
+            Ok(at) => {
+                let iso = crate::clock::isoformat(at);
+                match iso.find('.') {
+                    Some(dot) => format!(
+                        "{}{}",
+                        &iso[..dot],
+                        &iso[iso[dot..].find(['+', '-', 'Z']).map_or(iso.len(), |o| dot + o)..]
+                    ),
+                    None => iso,
+                }
+            }
+            Err(_) => cell.to_string(),
+        },
+        "boolean" => {
+            if cell == "true" {
+                "True".into()
+            } else {
+                "False".into()
             }
         }
+        _ => cell.split_whitespace().collect::<Vec<_>>().join(" "),
     }
+}
+
+/// The cells of one CSV line, a quoted one unquoted.
+fn cells(line: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut cell = String::new();
+    let mut quoted = false;
+    let mut chars = line.chars().peekable();
+    while let Some(c) = chars.next() {
+        match c {
+            '"' if quoted && chars.peek() == Some(&'"') => {
+                cell.push('"');
+                chars.next();
+            }
+            '"' => quoted = !quoted,
+            ',' if !quoted => out.push(std::mem::take(&mut cell)),
+            other => cell.push(other),
+        }
+    }
+    out.push(cell);
+    out
 }
 
 /// A sink for every purpose the environment names a store for.
@@ -293,6 +428,25 @@ mod tests {
         assert_eq!(
             (sinks[HISTORY].bucket.as_str(), sinks[METRICS].bucket.as_str()),
             ("terrace-terrace", "terrace-terrace-metrics")
+        );
+    }
+
+    #[test]
+    fn a_query_is_read_off_the_annotated_csv_each_value_as_python_says_it() {
+        let csv = "#group,false,false,true,false,false\r\n#datatype,string,long,string,dateTime:RFC3339,double\r\n\
+                   #default,_result,,,,\r\n,result,table,_measurement,_time,_value\r\n\
+                   ,,0,SoilMoisture,2026-10-16T08:38:00Z,0.427\r\n,,0,\"a, b\",2026-10-16T09:00:00.5Z,605\r\n\r\n";
+        let found = records(csv);
+        assert_eq!(found.len(), 2);
+        assert_eq!(found[0]["_measurement"], "SoilMoisture");
+        assert_eq!(found[0]["_time"], "2026-10-16T08:38:00+00:00");
+        assert_eq!(
+            (found[0]["_value"].as_str(), found[1]["_value"].as_str()),
+            ("0.427", "605.0")
+        );
+        assert_eq!(
+            (found[1]["_measurement"].as_str(), found[1]["_time"].as_str()),
+            ("a, b", "2026-10-16T09:00:00+00:00")
         );
     }
 

@@ -6,7 +6,8 @@
 //! - [`create`]: the member's part, which listens, hands each message to sensing as a job, asks after missing
 //!   readings every minute and holds the agent.
 //!
-//! NOT PORTED: a person's prose on a chat's topic, which waits for translation.
+//! A CHAT ON A TOPIC is carried too: a person's prose heard there is kept for translation, which the part hands it to,
+//! and words said back are published as `{"from": the agent, "text": …}`.
 
 pub mod create;
 pub mod driver;

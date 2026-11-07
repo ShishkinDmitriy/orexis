@@ -15,7 +15,7 @@ path = "src/main.rs"
 path = "src/lib.rs"
 
 [features]
-default = ["belief", "planning", "execution", "sensing", "prediction", "speech", "coordination", "mqtt"]
+default = ["belief", "planning", "execution", "sensing", "prediction", "speech", "coordination", "translation", "mqtt", "http", "telegram"]
 belief = ["dep:orexis-belief"]
 planning = ["dep:orexis-planning"]
 execution = ["dep:orexis-execution"]
@@ -24,6 +24,9 @@ prediction = ["dep:orexis-prediction"]
 mqtt = ["dep:orexis-mqtt"]
 speech = ["dep:orexis-speech"]
 coordination = ["dep:orexis-coordination"]
+translation = ["dep:orexis-translation", "speech"]
+http = ["dep:orexis-http"]
+telegram = ["dep:orexis-telegram"]
 volume = ["orexis/volume", "oxigraph/rocksdb"]
 
 [dependencies]
@@ -36,6 +39,9 @@ orexis-prediction = { path = "../agent/prediction", optional = true }
 orexis-mqtt = { path = "../agent/transport/mqtt", optional = true }
 orexis-speech = { path = "../agent/speech", optional = true }
 orexis-coordination = { path = "../agent/coordination", optional = true }
+orexis-translation = { path = "../agent/translation", optional = true }
+orexis-http = { path = "../agent/transport/http", optional = true }
+orexis-telegram = { path = "../agent/transport/telegram", optional = true }
 orexis-history = { path = "../agent/history" }
 orexis-metrics = { path = "../agent/metrics" }
 oxsdatatypes = "0.2"

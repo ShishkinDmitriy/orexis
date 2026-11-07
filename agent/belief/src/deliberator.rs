@@ -13,7 +13,8 @@
 //! **A CUT SURVIVES A RESTART.** At construction every revision graph whose row says it did not settle is queued
 //! again, read off the catalogue.
 //!
-//! NOT PORTED: `revisions_held`, which only the metrics part hears.
+//! **WHAT A PASS REVISED IS SAID** to whoever watches the agent, and with it the revisions the catalogue holds and how
+//! many are unsettled (`RevisionsHeld`), which only the metrics hear.
 
 use std::time::Instant;
 

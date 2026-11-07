@@ -23,6 +23,8 @@ const HOLDER: &str = "transport/mqtt";
 /// The member's part: the member, shared with whoever links to it, and the messages handed to the pass.
 pub struct Transport<'a> {
     pub member: Rc<RefCell<Mqtt<'a>>>,
+    /// Whoever hears a person's prose on a chat's topic: translation, linked — handed it once the member is let go.
+    pub prose: Option<orexis::transport::Hears<'a>>,
     pending: VecDeque<Message>,
 }
 
@@ -30,6 +32,7 @@ impl<'a> Transport<'a> {
     pub fn new(member: Mqtt<'a>) -> Self {
         Transport {
             member: Rc::new(RefCell::new(member)),
+            prose: None,
             pending: VecDeque::new(),
         }
     }
@@ -54,12 +57,18 @@ impl Part for Transport<'_> {
                 let Some(message) = self.pending.pop_front() else {
                     return Ok(Vec::new());
                 };
-                let written = self.member.borrow_mut().handle(
-                    &message.topic,
-                    &message.payload,
-                    message.at.unwrap_or(pass.now),
-                )?;
-                Ok(written.into_iter().map(|(_, graph)| graph).collect())
+                let (written, heard) = {
+                    let mut member = self.member.borrow_mut();
+                    let written = member.handle(&message.topic, &message.payload, message.at.unwrap_or(pass.now))?;
+                    (written, std::mem::take(&mut member.prose))
+                };
+                let mut written: Vec<String> = written.into_iter().map(|(_, graph)| graph).collect();
+                if let Some(hears) = self.prose.as_mut() {
+                    for prose in &heard {
+                        written.extend(hears(prose)?);
+                    }
+                }
+                Ok(written)
             }
             _ => Ok(Vec::new()),
         }
