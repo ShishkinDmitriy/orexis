@@ -120,7 +120,7 @@ ported, each world's walks and benches passing on the binary as it does:
 | belief | `tower` |
 | sensing, prediction and the MQTT transport | `greenhouse`, its day bench sending the same commands, and `layby` |
 | speech and coordination | `lane` |
-| the market | `allotment` |
+| the market, documents over speech that bring no code | `allotment` |
 | translation, the Telegram and HTTP members | `terrace` |
 
 The kernel is the store, the catalogue, the binder, the lifecycle and the runtime. Belief's transition
