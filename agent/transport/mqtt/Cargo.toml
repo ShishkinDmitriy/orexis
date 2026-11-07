@@ -13,6 +13,7 @@ path = "src/lib.rs"
 [dependencies]
 orexis = { path = "../.." }
 orexis-sensing = { path = "../../sensing" }
+orexis-speech = { path = "../../speech" }
 oxigraph.workspace = true
 oxsdatatypes = "0.2"
 serde_json = { version = "1", features = ["preserve_order"] }

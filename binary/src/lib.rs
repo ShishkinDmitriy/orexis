@@ -44,6 +44,8 @@ pub fn built(package: &str) -> bool {
         || (package == "sensing" && cfg!(feature = "sensing"))
         || (package == "prediction" && cfg!(feature = "prediction"))
         || (package == "transport/mqtt" && cfg!(feature = "mqtt"))
+        || (package == "speech" && cfg!(feature = "speech"))
+        || (package == "coordination" && cfg!(feature = "coordination"))
 }
 
 /// Link planning's part to execution's, as the Python parts' `link` connects their signals: what a pass reached
@@ -114,22 +116,21 @@ pub fn foresee<'a>(
     planning.planner.borrow_mut().foresee = Some(prediction.offered());
 }
 
-/// Link execution's part to the MQTT member, as the Python executor's `commanded` is connected to every transport: a
-/// step's implementation is taken order by order, each command sized from the present and sent where the member
-/// reaches the actuator.
-#[cfg(all(feature = "execution", feature = "mqtt"))]
-pub fn command<'a>(
+/// Link execution's part to whoever carries a step out, as the Python executor's `commanded` is connected to every
+/// transport and its `said` to speech: a step's implementation is taken order by order, each command sized from the
+/// present and sent where the member reaches the actuator, and each document it says kept by speech and told — the
+/// statements speech kept handed on with what the executor wrote.
+#[cfg(feature = "execution")]
+pub fn take<'a>(
     store: &'a Store,
     clock: &'a dyn Clock,
     execution: &orexis_execution::create::Execution<'a>,
-    transport: &orexis_mqtt::create::Transport<'a>,
+    send: Option<orexis_execution::create::Commands<'a>>,
+    say: Option<orexis_execution::create::Sayings<'a>>,
 ) {
-    let member = transport.member.clone();
-    execution.executor.borrow_mut().take = Some(orexis_execution::create::taker(
-        store,
-        clock,
-        Box::new(move |actuator, payload| member.borrow_mut().command(actuator, payload)),
-    ));
+    if send.is_some() || say.is_some() {
+        execution.executor.borrow_mut().take = Some(orexis_execution::create::taker(store, clock, send, say));
+    }
 }
 
 /// What the agent's bus is, where a test hands one: the MQTT member over a client of its own. None, and a member the
@@ -147,7 +148,7 @@ pub type Parts<'a> = Vec<(String, Box<dyn Part + 'a>)>;
 
 /// The parts of the packages `loaded` names, made, linked and in the order a pass runs them: belief, so its rules
 /// have concluded of a graph written before anything else hears it, then planning, then execution walking what it
-/// adopted, then sensing and prediction, and the transport last. `budget` sizes planning's search where a caller states one; none reads the
+/// adopted, then sensing, prediction, speech and coordination, and the transport last. `budget` sizes planning's search where a caller states one; none reads the
 /// agent's stance.
 pub fn assemble<'a>(
     store: &'a Store,
@@ -244,9 +245,53 @@ pub fn assemble_seen<'a>(
     };
     #[cfg(not(feature = "mqtt"))]
     let _ = wiring;
-    #[cfg(all(feature = "execution", feature = "mqtt"))]
-    if let (Some(execution), Some(transport)) = (execution.as_ref(), transport.as_ref()) {
-        command(store, clock, execution, transport);
+    let me = orexis::boot::selves(store)?.into_iter().next().unwrap_or_default();
+    #[cfg(feature = "speech")]
+    let speech = holds("speech").then(|| orexis_speech::create::Speech::new(store, &me));
+    #[cfg(feature = "coordination")]
+    let mut coordination = holds("coordination").then(|| orexis_coordination::create::Coordination::new(store, &me));
+    #[cfg(all(feature = "speech", feature = "mqtt"))]
+    if let (Some(speech), Some(transport)) = (speech.as_ref(), transport.as_ref()) {
+        let member = transport.member.clone();
+        *speech.speaker.tell.borrow_mut() = Some(Box::new(move |to, document| {
+            member.borrow_mut().tell(to, document).map(|_| ())
+        }));
+    }
+    #[cfg(all(feature = "speech", feature = "coordination"))]
+    if let (Some(speech), Some(coordination)) = (speech.as_ref(), coordination.as_mut()) {
+        let speaker = speech.speaker.clone();
+        coordination.say = Some(Box::new(move |peer, document| {
+            speaker.say(document, &[peer.to_string()])
+        }));
+    }
+    #[cfg(all(feature = "planning", feature = "coordination"))]
+    if let (Some(planning), Some(coordination)) = (planning.as_ref(), coordination.as_mut()) {
+        let planner = planning.planner.clone();
+        coordination.reopen = Some(Box::new(move |wants| planner.borrow_mut().reopen(wants)));
+    }
+    #[cfg(feature = "execution")]
+    if let Some(execution) = execution.as_ref() {
+        #[allow(unused_mut)]
+        let mut send: Option<orexis_execution::create::Commands<'a>> = None;
+        #[allow(unused_mut)]
+        let mut say: Option<orexis_execution::create::Sayings<'a>> = None;
+        #[cfg(feature = "mqtt")]
+        if let Some(transport) = transport.as_ref() {
+            let member = transport.member.clone();
+            send = Some(Box::new(move |actuator, payload| {
+                member.borrow_mut().command(actuator, payload)
+            }));
+        }
+        #[cfg(feature = "speech")]
+        if let Some(speech) = speech.as_ref() {
+            let (speaker, said) = (speech.speaker.clone(), execution.said.clone());
+            say = Some(Box::new(move |agents, document| {
+                let kept = speaker.say(document, agents)?;
+                said.borrow_mut().extend(kept);
+                Ok(())
+            }));
+        }
+        take(store, clock, execution, send, say);
     }
     #[cfg(all(feature = "planning", feature = "execution"))]
     if let (Some(planning), Some(execution)) = (planning.as_mut(), execution.as_ref()) {
@@ -283,6 +328,14 @@ pub fn assemble_seen<'a>(
     #[cfg(feature = "prediction")]
     if let Some(prediction) = prediction {
         parts.push(("prediction".into(), Box::new(prediction)));
+    }
+    #[cfg(feature = "speech")]
+    if let Some(speech) = speech {
+        parts.push(("speech".into(), Box::new(speech)));
+    }
+    #[cfg(feature = "coordination")]
+    if let Some(coordination) = coordination {
+        parts.push(("coordination".into(), Box::new(coordination)));
     }
     #[cfg(feature = "mqtt")]
     if let Some(transport) = transport {

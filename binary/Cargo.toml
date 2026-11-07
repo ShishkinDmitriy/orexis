@@ -15,13 +15,15 @@ path = "src/main.rs"
 path = "src/lib.rs"
 
 [features]
-default = ["belief", "planning", "execution", "sensing", "prediction", "mqtt"]
+default = ["belief", "planning", "execution", "sensing", "prediction", "speech", "coordination", "mqtt"]
 belief = ["dep:orexis-belief"]
 planning = ["dep:orexis-planning"]
 execution = ["dep:orexis-execution"]
 sensing = ["dep:orexis-sensing"]
 prediction = ["dep:orexis-prediction"]
 mqtt = ["dep:orexis-mqtt"]
+speech = ["dep:orexis-speech"]
+coordination = ["dep:orexis-coordination"]
 volume = ["orexis/volume"]
 
 [dependencies]
@@ -32,6 +34,8 @@ orexis-execution = { path = "../agent/execution", optional = true }
 orexis-sensing = { path = "../agent/sensing", optional = true }
 orexis-prediction = { path = "../agent/prediction", optional = true }
 orexis-mqtt = { path = "../agent/transport/mqtt", optional = true }
+orexis-speech = { path = "../agent/speech", optional = true }
+orexis-coordination = { path = "../agent/coordination", optional = true }
 oxsdatatypes = "0.2"
 log = "0.4"
 
