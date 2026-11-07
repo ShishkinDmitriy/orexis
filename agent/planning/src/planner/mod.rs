@@ -8,28 +8,33 @@
 //! `search`, and `extract_plan`, and `_reconsider` against a walking intention's untaken steps; `publish_plan`. And
 //! outside the pass, `check`, of a head about to be taken.
 //!
-//! NOT PORTED: the events the Python copy signals, and its laps. What a pass says it did
-//! is on the fields a caller reads — `handed`, `reached`, `blocked`, `superseded` — and whoever runs the pass says it.
+//! WHAT A PASS SAYS IT DID is on the fields a caller reads — `handed`, `reached`, `blocked`, `superseded`, `published`
+//! — for the executor it is linked to, and in the events said to whoever watches the agent (`events`), with the pass's
+//! laps, where somebody does.
 
 mod check;
 mod kept;
 mod reconsider;
 mod search;
 
+use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
+use std::time::Instant;
 
 use oxigraph::model::{NamedNode, Quad, Term, Triple};
 use oxsdatatypes::{DateTime, DayTimeDuration};
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
+use orexis::events::{Laps, Watch, round6};
 use orexis::foresight::{Foresees, Foresight};
 use orexis::ontology::{ACTION, BELIEF, RECORD};
 use orexis::store::{Store, Within, instant, iri, value};
 
 use crate::admit::local_of;
 use crate::derive_wants::derive_wants;
+use crate::events::{Imagined, PlanPublished, Planned, Rerooted, SearchEnded, WantUnreachable};
 use crate::find_scopes::{Scopes, find_scopes};
 use crate::find_wants::{Finding, find_wants};
 use crate::footprint::{actions_of, reads_of_shape, terms_of_shape, written};
@@ -99,6 +104,34 @@ SELECT ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:Grou
 ORDER BY ?s"#;
 
 const PURSUES_Q: &str = r#"SELECT ?want WHERE { GRAPH ?g { $plan execution:pursues ?want } } LIMIT 1"#;
+
+/// WHAT IS SAID OF A SEARCH AND A PLAN, as the Python Planner reads it for its events: how the want's search ended and
+/// what its plan spent, the desire it was derived under, what its estimate said was left at the present ground, and
+/// how many intentions pursued it before.
+const PLAN_OF_Q: &str = r#"
+SELECT ?outcome ?spent WHERE { GRAPH ?g { ?p a planning:Plan ; planning:for $want ; planning:outcome ?outcome .
+  OPTIONAL { ?p planning:spent ?spent } } } LIMIT 1"#;
+const DESIRE_OF_Q: &str = r#"SELECT ?d WHERE { GRAPH ?g { $want a planning:Want ; prov:wasDerivedFrom ?d } } LIMIT 1"#;
+const ESTIMATE_Q: &str = r#"
+SELECT ?remaining WHERE { GRAPH $cat { ?x planning:weighs $ground ; planning:for $want ; planning:remaining ?remaining } } LIMIT 1"#;
+const PURSUERS_Q: &str =
+    r#"SELECT (COUNT(DISTINCT ?i) AS ?n) WHERE { GRAPH ?g { ?i a execution:Intention ; execution:pursues $want } }"#;
+
+/// WHAT AN IMAGINARIUM HOLDS: its possible worlds and the weighings of them, of those how many are on a frontier and
+/// how many met their want; and its plans, by why each search ended — counted by OPTIONAL rows inside the catalogue,
+/// as the Python Planner counts them.
+const IMAGINED_Q: &str = r#"
+SELECT ?worlds ?weighings ?open ?met WHERE {
+  { SELECT (COUNT(?w) AS ?worlds) WHERE { GRAPH $cat { ?w a planning:PossibleGraph } } }
+  { SELECT (COUNT(?x) AS ?weighings) (COUNT(?o) AS ?open) (COUNT(?m) AS ?met) WHERE {
+      GRAPH $cat { ?x a planning:Weighing .
+                   OPTIONAL { ?x planning:open true BIND(?x AS ?o) }
+                   OPTIONAL { ?x planning:met true BIND(?x AS ?m) } } } } }"#;
+const PLANS_HELD_Q: &str = r#"
+SELECT (SUM(IF(?outcome = planning:Satisfied, 1, 0)) AS ?satisfied)
+       (SUM(IF(?outcome = planning:Exhausted, 1, 0)) AS ?exhausted)
+       (SUM(IF(?outcome = planning:NoCandidate, 1, 0)) AS ?noCandidate)
+WHERE { GRAPH ?plan { ?p a planning:Plan ; planning:outcome ?outcome } }"#;
 
 const CONSTRAINTS_Q: &str = r#"SELECT ?c WHERE { $holder planning:holds ?c . ?c a planning:Constraint } ORDER BY ?c"#;
 
@@ -176,6 +209,14 @@ pub struct Planner<'a> {
     pub asked: BTreeSet<String>,
     /// THE PREDICTOR'S FORESIGHT, where the agent plays one: taken at link and asked at every pass, never imported.
     pub foresee: Option<Foresees<'a>>,
+    /// The plans the last pass published, said whole with the desire each want was derived under.
+    pub published: Vec<PlanPublished>,
+    /// Whoever watches the agent.
+    pub watch: Watch,
+    /// How long each part of the pass in progress took, where anybody watches.
+    laps: Option<Laps>,
+    /// Each want searched and not yet published: when it was first searched, and in how many passes.
+    searches: RefCell<BTreeMap<String, (Instant, usize)>>,
 }
 
 impl Planner<'_> {
@@ -208,6 +249,8 @@ fn zero() -> DayTimeDuration {
 /// What a search is scoped to: the scope's actions, the terms that are another scope's, what a world is hashed
 /// within, and the pass's instant.
 pub struct Searching<'s> {
+    /// The scope searched in, for what is said of the search.
+    pub scope: Option<&'s str>,
     pub only: Option<&'s BTreeSet<String>>,
     pub elsewhere: &'s BTreeSet<String>,
     pub within: Option<&'s BTreeSet<String>>,
@@ -259,6 +302,38 @@ fn beaten(top: &orexis::store::Row) -> Result<bool, Error> {
 }
 
 /// What a want's search has spent: every weighing for it but a ground's.
+/// The local name of the desire `want` was derived under in `store`, or None — for a want the world authored, or a
+/// step kept below.
+fn desire_of(store: &Store, want: &str) -> Result<Option<String>, Error> {
+    Ok(store
+        .rows(&bind(DESIRE_OF_Q, &[("want", Value::iri(want))])?, &[])?
+        .first()
+        .and_then(|r| iri(r, "d"))
+        .map(|d| local_of(&d)))
+}
+
+/// What the imaginarium of `scope` holds now.
+fn imagined(store: &Store, scope: &str, memo: &mut Memo) -> Result<Imagined, Error> {
+    let cone = store.rows(&bind(IMAGINED_Q, &[("cat", cat(store, memo)?)])?, &[])?;
+    let held = store.rows(PLANS_HELD_Q, &[])?;
+    let number = |rows: &[orexis::store::Row], key: &str| -> i64 {
+        rows.first()
+            .and_then(|r| value(r, key))
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(0)
+    };
+    Ok(Imagined {
+        scope: local_of(scope),
+        worlds: number(&cone, "worlds"),
+        weighings: number(&cone, "weighings"),
+        open: number(&cone, "open"),
+        met: number(&cone, "met"),
+        satisfied: number(&held, "satisfied"),
+        exhausted: number(&held, "exhausted"),
+        no_candidate: number(&held, "noCandidate"),
+    })
+}
+
 fn spent(store: &Store, want: &str, memo: &mut Memo) -> Result<usize, Error> {
     let c = cat(store, memo)?;
     Ok(store
@@ -524,6 +599,10 @@ impl<'a> Planner<'a> {
             handed: Vec::new(),
             reached: BTreeSet::new(),
             rerooted: Vec::new(),
+            published: Vec::new(),
+            watch: Watch::default(),
+            laps: None,
+            searches: RefCell::new(BTreeMap::new()),
             blocked: Vec::new(),
             superseded: Vec::new(),
             doomed: BTreeMap::new(),
@@ -552,6 +631,9 @@ impl<'a> Planner<'a> {
         self.rerooted.clear();
         self.blocked.clear();
         self.superseded.clear();
+        self.published.clear();
+        //  HOW LONG EACH PART OF THE PASS TOOK, where anybody watches: real seconds, never the agent's.
+        self.laps = self.watch.connected().then(Laps::default);
         let mut searched = BTreeSet::new();
         let texts: BTreeSet<String> = graphs(beliefs, &[ACTION, DESIRE, WANT, RECORD, SHAPES, CONSTRAINT_GRAPH])?
             .into_iter()
@@ -584,6 +666,14 @@ impl<'a> Planner<'a> {
             written.extend(result?);
         }
         self.asked.clear();
+        //  A WANT NO LONGER SEARCHED — reached, withdrawn, or walked — takes its tally with it.
+        self.searches.borrow_mut().retain(|w, _| searched.contains(w));
+        if let Some(laps) = self.laps.take() {
+            self.watch.emit(&Planned {
+                wants: Some(searched.len() as f64),
+                laps: laps.spent,
+            });
+        }
         Ok(written)
     }
 
@@ -694,7 +784,17 @@ impl<'a> Planner<'a> {
                     .filter_map(|r| value(r, "h"))
                     .any(|h| !foreseen.contains(&h))
             };
-            self.rerooted.push(reroot(store, &present)?.present);
+            let rerooting = reroot(store, &present)?;
+            self.rerooted.push(rerooting.present);
+            if self.watch.connected() {
+                self.watch.emit(&Rerooted {
+                    scope: local_of(&scope),
+                    present: rerooting.present.to_string(),
+                    kept: Some(rerooting.kept.len() as f64),
+                    dropped: Some(rerooting.dropped.len() as f64),
+                });
+            }
+            self.lap("ground");
             let constraints = held_constraints(store, &self.uri, only.as_ref(), at, &mut memo)?;
             for constraint in &constraints {
                 let broken = broken(store, constraint, &present, &mut memo)?;
@@ -720,6 +820,7 @@ impl<'a> Planner<'a> {
                 BTreeSet::new()
             };
             reopen.extend(self.asked_here(store, &flights, only.as_ref())?);
+            self.lap("weigh");
             let met_now: BTreeSet<String> = store
                 .rows(
                     &bind(
@@ -747,6 +848,7 @@ impl<'a> Planner<'a> {
             if !reached.is_empty() {
                 withdraw(beliefs, None, &reached, &none)?;
             }
+            self.lap("derive");
             //  THE SHAPES ARE FORGOTTEN AFTER THE DERIVATION, because the derivation WRITES them.
             memo.shapes = None;
             memo.selects.clear();
@@ -767,6 +869,7 @@ impl<'a> Planner<'a> {
                     continue;
                 }
                 let scoped = Searching {
+                    scope: Some(scope.as_str()),
                     only: only.as_ref(),
                     elsewhere: &elsewhere,
                     within: within.as_ref(),
@@ -776,21 +879,166 @@ impl<'a> Planner<'a> {
                 searched.insert(want.clone());
                 self.reconsider(store, &want, &flights, &mut kept)?;
             }
+            self.lap("search");
             let mut unwalked: BTreeSet<String> = walking.clone();
             for w in reopening.intersection(searched) {
                 unwalked.remove(w);
             }
             let handed = publish_plan(store, beliefs, &self.uri, &unwalked, &kept)?;
             self.mark_kept(&handed)?;
-            for plan in &handed {
-                let found = beliefs.rows(&bind(PURSUES_Q, &[("plan", Value::iri(plan.as_str()))])?, &[])?;
-                if let Some(want) = found.first().and_then(|r| iri(r, "want")) {
-                    self.handed.push((plan.clone(), want));
+            let published = self.said_published(store, &handed, &present, &scope, &mut memo, at)?;
+            self.lap("publish");
+            for event in published {
+                self.handed.push((event.plan.clone(), event.want.clone()));
+                if self.watch.connected() {
+                    self.watch.emit(&event);
                 }
+                self.published.push(event);
+            }
+            if self.watch.connected() {
+                let imagined = imagined(store, &scope, &mut memo)?;
+                self.watch.emit(&imagined);
             }
             *walking = self.walking()?;
             Ok(handed)
         }
+    }
+
+    /// Mark the end of a part of the pass, where anybody watches.
+    fn lap(&mut self, part: &str) {
+        if let Some(laps) = self.laps.as_mut() {
+            laps.lap(part);
+        }
+    }
+
+    /// What is said of each plan this pass published from `store` at `at`: the want it pursues, the tally of the want's
+    /// searches, which goes with it, what the want's estimate said was left at the `present` ground against what the
+    /// plan spent, whether an intention pursued the want before — a replan — and its plan graph's triples.
+    fn said_published(
+        &self,
+        store: &Store,
+        handed: &[String],
+        present: &str,
+        scope: &str,
+        memo: &mut Memo,
+        at: DateTime,
+    ) -> Result<Vec<PlanPublished>, Error> {
+        let beliefs = self.beliefs;
+        let mut out = Vec::new();
+        for plan in handed {
+            let found = beliefs.rows(&bind(PURSUES_Q, &[("plan", Value::iri(plan.as_str()))])?, &[])?;
+            let Some(want) = found.first().and_then(|r| iri(r, "want")) else {
+                continue;
+            };
+            let tally = self.searches.borrow_mut().remove(&want);
+            let spent_by = store
+                .rows(&bind(PLAN_OF_Q, &[("want", Value::iri(want.as_str()))])?, &[])?
+                .first()
+                .and_then(|r| value(r, "spent"))
+                .and_then(|v| v.parse::<f64>().ok());
+            let estimate = store
+                .rows(
+                    &bind(
+                        ESTIMATE_Q,
+                        &[
+                            ("want", Value::iri(want.as_str())),
+                            ("ground", Value::iri(present)),
+                            ("cat", cat(store, memo)?),
+                        ],
+                    )?,
+                    &[],
+                )?
+                .first()
+                .and_then(|r| value(r, "remaining"))
+                .and_then(|v| v.parse::<f64>().ok());
+            let pursued: i64 = beliefs
+                .rows(&bind(PURSUERS_Q, &[("want", Value::iri(want.as_str()))])?, &[])?
+                .first()
+                .and_then(|r| value(r, "n"))
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0);
+            let said: Vec<Triple> = match NamedNode::new(plan.as_str()) {
+                Ok(graph) => beliefs
+                    .engine()
+                    .quads_for_pattern(None, None, None, Some(graph.as_ref().into()))
+                    .flatten()
+                    .map(|q| Triple::new(q.subject, q.predicate, q.object))
+                    .collect(),
+                Err(_) => Vec::new(),
+            };
+            out.push(PlanPublished {
+                plan: plan.clone(),
+                desire: desire_of(store, &want)?,
+                scope: Some(local_of(scope)),
+                passes: Some(tally.map_or(0, |(_, n)| n) as f64),
+                weighed: Some(spent(store, &want, memo)? as f64),
+                wall_s: tally.map(|(first, _)| round6(first.elapsed().as_secs_f64())),
+                estimate,
+                cost: spent_by,
+                replan: pursued > 0,
+                at: Some(at),
+                said,
+                want,
+            });
+        }
+        Ok(out)
+    }
+
+    /// Say that nothing this agent holds reaches `wants`, each by the desire it was derived under.
+    pub fn unreachable(&self, wants: &[String], at: DateTime) -> Result<(), Error> {
+        if !self.watch.connected() {
+            return Ok(());
+        }
+        for want in wants {
+            let mut desire = None;
+            for store in self.imaginaria.values() {
+                if let Some(d) = desire_of(store, want)? {
+                    desire = Some(d);
+                    break;
+                }
+            }
+            self.watch.emit(&WantUnreachable {
+                want: want.clone(),
+                desire,
+                at: Some(at),
+            });
+        }
+        Ok(())
+    }
+
+    /// Tally a search of `want` begun at `started`, and say how it ended where anybody watches.
+    pub(crate) fn searched(
+        &self,
+        store: &Store,
+        want: &str,
+        started: Instant,
+        budget: usize,
+        weighed: usize,
+        scope: Option<&str>,
+    ) -> Result<(), Error> {
+        self.searches
+            .borrow_mut()
+            .entry(want.to_string())
+            .or_insert((started, 0))
+            .1 += 1;
+        if !self.watch.connected() {
+            return Ok(());
+        }
+        let outcome = store
+            .rows(&bind(PLAN_OF_Q, &[("want", Value::iri(want))])?, &[])?
+            .first()
+            .and_then(|r| iri(r, "outcome"))
+            .map(|o| local_of(&o));
+        self.watch.emit(&SearchEnded {
+            want: want.to_string(),
+            desire: desire_of(store, want)?,
+            scope: scope.map(local_of),
+            outcome,
+            duration_s: Some(round6(started.elapsed().as_secs_f64())),
+            budget: Some(budget as f64),
+            weighed: Some(weighed as f64),
+        });
+        Ok(())
     }
 
     /// Every want this agent is walking: pursued by a standing intention, or by a plan published and not yet adopted.
@@ -960,6 +1208,7 @@ ORDER BY ?want";
             assert!(!wants.is_empty(), "{} has nothing to expand", case.display());
             let none = BTreeSet::new();
             let scoped = Searching {
+                scope: None,
                 only: None,
                 elsewhere: &none,
                 within: None,
@@ -1545,6 +1794,7 @@ GROUP BY ?outcome";
         let planner = Planner::new(&beliefs, snapshots::AGENT, None).unwrap();
         let none = BTreeSet::new();
         let scoped = Searching {
+            scope: None,
             only: None,
             elsewhere: &none,
             within: None,
@@ -1575,6 +1825,7 @@ GROUP BY ?outcome";
         let planner = Planner::new(&beliefs, snapshots::AGENT, None).unwrap();
         let none = BTreeSet::new();
         let scoped = Searching {
+            scope: None,
             only: None,
             elsewhere: &none,
             within: None,

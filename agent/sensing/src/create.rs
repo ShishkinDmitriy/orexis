@@ -9,18 +9,27 @@
 //! to be: `sensing:ObservationGraph`, this layer's own, so what the rules conclude of what a sensor said reaches no
 //! reader of the mind either.
 //!
-//! NOT PORTED: the signals `observed`, `silence` and `doubted`, which wait for the journal and the series.
+//! WHAT SENSING SAYS HAPPENED, to whoever watches the agent and made only where somebody does (`events`): an
+//! observation graph written, heard as it is written and said with what the rules concluded of it, which belief has
+//! written by then, and with how long after the percept before it it came; how many sensors are silent at each ask;
+//! and which are said silent or stuck after each ask, one event per sensor doubted, and one saying neither for a
+//! sensor doubted at the last ask and no longer, so the series' last word on it in a window is that it is fine.
+
+use std::collections::BTreeSet;
 
 use oxigraph::model::Literal;
 use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
-use orexis::clock::isoformat;
+use orexis::clock::{instant, isoformat, seconds_of};
+use orexis::events::{Watch, round6};
 use orexis::ontology::{BELIEF, DERIVED, local_of};
 use orexis::runtime::{Part, Pass, Starting};
-use orexis::store::{Store, Within, iri};
+use orexis::store::{Store, Within, iri, value};
 
+use crate::cadence::cadence_of;
+use crate::events::{Doubted, Observed, Silence, tag_of};
 use crate::missed::missed;
 use crate::ontology::{OBSERVATION_GRAPH, SILENCE_GRAPH, silence_graph};
 
@@ -42,6 +51,19 @@ SELECT ?g WHERE {
                FILTER NOT EXISTS { ?r prov:wasDerivedFrom ?g ; a sensing:ObservationGraph } } }
 ORDER BY ?start ?g";
 
+/// WHAT AN OBSERVATION SAYS, read off the graph and what was concluded of it.
+const OBSERVED_Q: &str = "
+SELECT ?sensor ?feature ?property ?value ?scaled ?defect ?t ?raw ?previous WHERE {
+  ?o sosa:madeBySensor ?sensor ; sosa:resultTime ?t ; sosa:hasFeatureOfInterest ?feature ;
+     sosa:observedProperty ?property
+  OPTIONAL { ?o sosa:hasSimpleResult ?value } OPTIONAL { ?o sensing:scaledResult ?scaled }
+  OPTIONAL { ?o sensing:defect ?defect }
+  OPTIONAL { ?o sensing:rawResult ?raw } OPTIONAL { ?o sensing:previous ?previous } } LIMIT 1";
+
+const MADE_Q: &str = "SELECT ?t WHERE { $percept sosa:resultTime ?t } LIMIT 1";
+
+const STUCK_Q: &str = "SELECT DISTINCT ?sensor WHERE { ?sensor sensing:stuckOn ?number }";
+
 /// What sensing hands belief to revise: the graphs, the kind their revisions are to be, and the instant.
 pub type Revises<'a> = Box<dyn FnMut(&[String], &str, DateTime) -> Result<(), Error> + 'a>;
 
@@ -51,6 +73,10 @@ pub struct Sensing<'a> {
     me: String,
     /// Belief's revision, beneath, where the agent is linked to a deliberator.
     pub revise: Option<Revises<'a>>,
+    /// Whoever watches the agent.
+    pub watch: Watch,
+    /// The sensors doubted at the last ask.
+    doubts: BTreeSet<String>,
 }
 
 impl<'a> Sensing<'a> {
@@ -59,15 +85,31 @@ impl<'a> Sensing<'a> {
             beliefs,
             me: me_of(beliefs, agent)?,
             revise: None,
+            watch: Watch::default(),
+            doubts: BTreeSet::new(),
         })
     }
 
     /// The sensors silent at `now` (`missed`), each kept as a silence and said in the log at the first ask that
     /// finds it — the silences already kept, holding until a reading ends them, are the ones said, so a restart says
     /// none again. The silences written.
-    pub fn ask(&self, now: DateTime) -> Result<Vec<String>, Error> {
+    pub fn ask(&mut self, now: DateTime) -> Result<Vec<String>, Error> {
+        let (written, silent) = self.missed(now)?;
+        if self.watch.connected() {
+            self.watch.emit(&Silence {
+                silent: i64::try_from(silent.len()).ok(),
+            });
+            for event in self.doubted(now, &silent)? {
+                self.watch.emit(&event);
+            }
+        }
+        Ok(written)
+    }
+
+    fn missed(&self, now: DateTime) -> Result<(Vec<String>, BTreeSet<String>), Error> {
         let beliefs = self.beliefs;
         let found = missed(beliefs, now)?;
+        let silent: BTreeSet<String> = found.iter().map(|(s, _)| s.clone()).collect();
         let holding = beliefs.graphs_of(&[SILENCE_GRAPH], &Within::at(now))?;
         let holding: Vec<&str> = holding.iter().map(String::as_str).collect();
         let kept: Vec<String> = beliefs
@@ -94,7 +136,91 @@ impl<'a> Sensing<'a> {
             );
             written.push(graph);
         }
-        Ok(written)
+        Ok((written, silent))
+    }
+
+    /// Which sensors are doubted at `now`, and how — `silent` as `missed` answered it; and, saying neither, each
+    /// doubted at the last ask and no longer.
+    fn doubted(&mut self, now: DateTime, silent: &BTreeSet<String>) -> Result<Vec<Doubted>, Error> {
+        let holding = self.beliefs.graphs_of(
+            &[OBSERVATION_GRAPH],
+            &Within {
+                at: Some(now),
+                now: Some(now),
+                ..Within::default()
+            },
+        )?;
+        let holding: Vec<&str> = holding.iter().map(String::as_str).collect();
+        let stuck: BTreeSet<String> = self
+            .beliefs
+            .rows(STUCK_Q, &holding)?
+            .iter()
+            .filter_map(|r| iri(r, "sensor"))
+            .collect();
+        let doubts: BTreeSet<String> = silent.union(&stuck).cloned().collect();
+        let mut said: Vec<Doubted> = doubts
+            .iter()
+            .map(|sensor| Doubted {
+                sensor: tag_of(sensor),
+                silent: i64::from(silent.contains(sensor)),
+                stuck: i64::from(stuck.contains(sensor)),
+            })
+            .collect();
+        said.extend(self.doubts.difference(&doubts).map(|sensor| Doubted {
+            sensor: tag_of(sensor),
+            silent: 0,
+            stuck: 0,
+        }));
+        self.doubts = doubts;
+        Ok(said)
+    }
+
+    /// Say the observation `graph` holds, with how long after the percept before it it came.
+    fn observation(&self, graph: &str) -> Result<(), Error> {
+        let beliefs = self.beliefs;
+        let mut read = vec![graph.to_string()];
+        read.extend(beliefs.revisions_of(&[graph], OBSERVATION_GRAPH)?);
+        let read: Vec<&str> = read.iter().map(String::as_str).collect();
+        let Some(o) = beliefs.rows(OBSERVED_Q, &read)?.into_iter().next() else {
+            return Ok(());
+        };
+        let number = |key: &str| value(&o, key).and_then(|v| v.parse::<f64>().ok());
+        let defective = o.contains_key("defect");
+        let Some(reading) = number("value").or_else(|| if defective { number("scaled") } else { None }) else {
+            return Ok(());
+        };
+        let (Some(sensor), Some(t)) = (iri(&o, "sensor"), value(&o, "t")) else {
+            return Ok(());
+        };
+        let at = instant(&t)?;
+        let before = match iri(&o, "previous") {
+            Some(previous) => {
+                let all = beliefs.graphs_of(&[OBSERVATION_GRAPH], &Within::default())?;
+                let all: Vec<&str> = all.iter().map(String::as_str).collect();
+                let made = beliefs.rows(&bind(MADE_Q, &[("percept", Value::iri(previous.as_str()))])?, &all)?;
+                made.first()
+                    .and_then(|r| value(r, "t"))
+                    .map(|t| instant(&t))
+                    .transpose()?
+            }
+            None => None,
+        };
+        let cadence = cadence_of(beliefs, &sensor)?;
+        self.watch.emit(&Observed {
+            observed_property: iri(&o, "property").unwrap_or_default(),
+            value: round6(reading),
+            at,
+            sensor: Some(tag_of(&sensor)),
+            sensor_id: Some(tag_of(&sensor)),
+            feature_id: iri(&o, "feature").map(|f| tag_of(&f)),
+            interval_s: before
+                .and_then(|b| at.checked_sub(b))
+                .map(|d| (seconds_of(d) * 1000.0).round() / 1000.0),
+            cadence_s: cadence,
+            raw: number("raw").map(round6),
+            defective,
+        });
+        Ok(())
     }
 
     fn revised(&mut self, graphs: &[String], at: DateTime) -> Result<(), Error> {
@@ -123,16 +249,18 @@ fn me_of(beliefs: &Store, agent: &str) -> Result<String, Error> {
 impl Part for Sensing<'_> {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         starting.every(EVERY_S, ASK);
-        if self.revise.is_some() {
-            if let Some(cat) = self.beliefs.catalogue()? {
-                let unrevised: Vec<String> = self
-                    .beliefs
-                    .rows(&bind(UNREVISED_Q, &[("cat", Value::iri(cat))])?, &[])?
-                    .iter()
-                    .filter_map(|r| iri(r, "g"))
-                    .collect();
-                self.revised(&unrevised, starting.now())?;
-            }
+        if self.revise.is_some()
+            && let Some(cat) = self.beliefs.catalogue()?
+        {
+            let unrevised: Vec<String> = self
+                .beliefs
+                .rows(&bind(UNREVISED_Q, &[("cat", Value::iri(cat))])?, &[])?
+                .iter()
+                .filter_map(|r| iri(r, "g"))
+                .collect();
+            self.revised(&unrevised, starting.now())?;
+        }
+        if self.revise.is_some() || self.watch.connected() {
             starting.on(OBSERVATION_GRAPH, HEARD);
         }
         Ok(())
@@ -147,6 +275,9 @@ impl Part for Sensing<'_> {
 
     fn heard(&mut self, _job: usize, graph: &str, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
         self.revised(&[graph.to_string()], pass.now)?;
+        if self.watch.connected() {
+            self.observation(graph)?;
+        }
         Ok(Vec::new())
     }
 }
@@ -198,7 +329,7 @@ mod tests {
         assert_eq!(written.len(), 1, "the ask runs at the first pass: {written:?}");
         let silence = written[0].clone();
         assert_eq!(part.ask(later).unwrap(), Vec::<String>::new(), "kept once");
-        let restarted = Sensing::new(&store, "keeper").unwrap();
+        let mut restarted = Sensing::new(&store, "keeper").unwrap();
         assert_eq!(
             restarted.ask(later).unwrap(),
             Vec::<String>::new(),

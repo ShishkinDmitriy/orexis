@@ -15,24 +15,28 @@
 //! waits for it. EVERY HEAD IS CHECKED WHEN IT IS TAKEN, and not here (#916): `taking` asks whoever judges, and a
 //! head it blocks ends its intention `failed` and is not taken.
 //!
-//! NOT PORTED: the threads, and the signals, whose events no Rust package hears yet. Every graph written as the
-//! world is told `on_write` where a caller linked one, as the Python copy tells it, and read off `written` where
-//! none is; that an intention was resolved, off `resolved`.
+//! WHAT IT SAYS HAPPENED goes to whoever watches the agent (`events`), made only where somebody does: a step taken,
+//! a step answered, an intention resolved, and how many stand after a walk.
+//!
+//! NOT PORTED: the threads. Every graph written as the world is told `on_write` where a caller linked one, as the
+//! Python copy tells it, and read off `written` where none is; that an intention was resolved, off `resolved`.
 
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use oxigraph::model::vocab::{rdf, xsd};
-use oxigraph::model::{GraphName, Literal, NamedNode, NamedOrBlankNode, Quad, Term};
+use oxigraph::model::{GraphName, Literal, NamedNode, NamedOrBlankNode, Quad, Term, Triple};
 use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::{Clock, instant as parse_instant, isoformat, seconds, seconds_of};
+use orexis::events::{Event, Watch};
 use orexis::hash::hash_named_graph;
 use orexis::ontology::{BELIEF, DERIVED, OREXIS, RECORDED, local_of};
 use orexis::stance::stance;
 use orexis::store::{Row, Store, Within, instant, iri, value};
 
+use crate::events::{About, IntentionResolved, StepAnswered, StepTaken, Walked};
 use crate::implementation::operations;
 use crate::ontology::{
     ADDS_GRAPH, ANSWERED_WITHIN_S, COMMITTED_STEP_GRAPH, EXECUTION, FICTIVE, INTENTION, INTENTION_GRAPH,
@@ -136,6 +140,12 @@ SELECT DISTINCT ?below WHERE { GRAPH $intentions {
   ?below a execution:Intention ; execution:pursues ?want .
   FILTER NOT EXISTS { ?below execution:resolvedAt ?at } } }";
 
+/// THE WANT AN INTENTION PURSUES, and THE LATEST ACT RECORDED OF A STEP: what an event about a step carries.
+const PURSUED_Q: &str = "SELECT ?want WHERE { GRAPH $intentions { $intention execution:pursues ?want } }";
+const LAST_ACT_Q: &str = "
+SELECT ?act WHERE { GRAPH $intentions { ?act a execution:Act ; execution:of $step ; execution:takenAt ?t } }
+ORDER BY DESC(?t) LIMIT 1";
+
 const STEP_Q: &str = "
 SELECT ?p ?o WHERE {
   GRAPH ?plan { $step ?p ?o . FILTER(!STRSTARTS(STR(?p), STR(execution:)) && ?p != rdf:type) } }
@@ -232,6 +242,10 @@ pub struct Executor<'a> {
     pub resolved: usize,
     /// When the next thing not yet due is, as the last tick found it.
     pub next_due: Option<DateTime>,
+    /// Whoever watches the agent.
+    pub watch: Watch,
+    /// The desire each want adopted was derived under, as planning said it published the plan.
+    pub desires: BTreeMap<String, String>,
     clock: &'a dyn Clock,
     replaced: BTreeMap<String, Vec<String>>,
     work: VecDeque<(String, String)>,
@@ -317,6 +331,8 @@ impl<'a> Executor<'a> {
             written: Vec::new(),
             resolved: 0,
             next_due: None,
+            watch: Watch::default(),
+            desires: BTreeMap::new(),
             clock,
             replaced: BTreeMap::new(),
             work: VecDeque::new(),
@@ -816,6 +832,23 @@ impl<'a> Executor<'a> {
                 self.close_window(&step, now)?;
             }
         }
+        if self.watch.connected() {
+            let want = self
+                .rows_of(
+                    PURSUED_Q,
+                    &[("intentions", self.mine()), ("intention", Value::iri(intention))],
+                )?
+                .first()
+                .and_then(|r| iri(r, "want"));
+            self.watch.emit(&IntentionResolved {
+                intention: intention.to_string(),
+                desire: want.as_ref().and_then(|w| self.desires.get(w).cloned()),
+                want,
+                outcome: outcome.to_string(),
+                at: Some(now),
+                said: self.described(&[intention]),
+            });
+        }
         if outcome != "done" && outcome != "reached" {
             let below = self.rows_of(
                 BELOW_Q,
@@ -896,6 +929,7 @@ impl<'a> Executor<'a> {
             if now < lands {
                 wake_at(lands);
             } else if self.answered(adds.as_deref(), retracts.as_deref())? {
+                self.verdict(&intention, &step, &r, now, true, false)?;
                 self.advance(&intention, &step, Some(now))?;
             } else if below.contains(&None) {
                 continue;
@@ -906,6 +940,7 @@ impl<'a> Executor<'a> {
                     local_of(&step),
                     short(&intention)
                 );
+                self.verdict(&intention, &step, &r, now, false, false)?;
                 self.resolve(&intention, "failed")?;
             } else if now >= given_up {
                 log::warn!(
@@ -915,6 +950,7 @@ impl<'a> Executor<'a> {
                     isoformat(latest),
                     short(&intention)
                 );
+                self.verdict(&intention, &step, &r, now, false, true)?;
                 self.resolve(&intention, "failed")?;
             } else {
                 wake_at(given_up);
@@ -989,6 +1025,11 @@ impl<'a> Executor<'a> {
             }
             now = self.clock.now();
         }
+        if self.watch.connected() {
+            self.watch.emit(&Walked {
+                standing: i64::try_from(self.walking()?.len()).ok(),
+            });
+        }
         Ok(taken)
     }
 
@@ -1052,6 +1093,15 @@ impl<'a> Executor<'a> {
                 self.graph
             ))?;
         }
+        if self.watch.connected() {
+            let about = self.about(intention, step, Some(&act))?;
+            self.watch.emit(&StepTaken {
+                step: step.to_string(),
+                at: taken_at,
+                taken,
+                about,
+            });
+        }
         if !taken {
             self.resolve(intention, "failed")?;
         } else if !self.predicts(step)? {
@@ -1059,6 +1109,100 @@ impl<'a> Executor<'a> {
         }
         self.inflight.remove(step);
         Ok(true)
+    }
+
+    /// Say the verdict on `step` at `now`, where anybody watches: landed or not, and how late the world answered it —
+    /// `now` less the `landsAt` the plan placed — in the agent's own seconds.
+    fn verdict(
+        &self,
+        intention: &str,
+        step: &str,
+        head: &Row,
+        now: DateTime,
+        landed: bool,
+        timed_out: bool,
+    ) -> Result<(), Error> {
+        if !self.watch.connected() {
+            return Ok(());
+        }
+        let late_s = match at_of(head, "lands")? {
+            Some(lands) if landed || timed_out => Some((between(lands, now) * 1000.0).round() / 1000.0),
+            _ => None,
+        };
+        let about = self.about(intention, step, None)?;
+        let event: &dyn Event = &StepAnswered {
+            step: step.to_string(),
+            at: now,
+            landed,
+            late_s,
+            timed_out,
+            about,
+        };
+        self.watch.emit(event);
+        Ok(())
+    }
+
+    /// What an event about `step` of `intention` carries: the want, its desire, the local name of the action the step
+    /// fills, the act recorded of it — `act`, or the latest — and what the journal keeps: the act's own triples, the
+    /// step's as its plan states them, and the want the intention pursues.
+    fn about(&self, intention: &str, step: &str, act: Option<&str>) -> Result<About, Error> {
+        let want = self
+            .rows_of(
+                PURSUED_Q,
+                &[("intentions", self.mine()), ("intention", Value::iri(intention))],
+            )?
+            .first()
+            .and_then(|r| iri(r, "want"));
+        let act = match act {
+            Some(act) => Some(act.to_string()),
+            None => self
+                .rows_of(LAST_ACT_Q, &[("intentions", self.mine()), ("step", Value::iri(step))])?
+                .first()
+                .and_then(|r| iri(r, "act")),
+        };
+        let mut nodes = vec![step];
+        if let Some(act) = act.as_deref() {
+            nodes.push(act);
+        }
+        let mut said = self.described(&nodes);
+        if let Some(want) = want.as_deref() {
+            said.push(Triple::new(named(intention)?, named(PURSUES)?, named(want)?));
+        }
+        let action = said
+            .iter()
+            .find(|t| {
+                matches!(&t.subject, NamedOrBlankNode::NamedNode(s) if s.as_str() == step)
+                    && local_of(t.predicate.as_str()) == "fills"
+            })
+            .and_then(|t| match &t.object {
+                Term::NamedNode(a) => Some(local_of(a.as_str())),
+                _ => None,
+            });
+        Ok(About {
+            desire: want.as_ref().and_then(|w| self.desires.get(w).cloned()),
+            want,
+            action,
+            act,
+            said,
+        })
+    }
+
+    /// Every triple the intentions and the plans hold of `nodes`, in whichever graph, once each.
+    fn described(&self, nodes: &[&str]) -> Vec<Triple> {
+        let mut out: BTreeMap<String, Triple> = BTreeMap::new();
+        for n in nodes {
+            let Ok(subject) = NamedNode::new(*n) else { continue };
+            for q in self
+                .intentions
+                .engine()
+                .quads_for_pattern(Some(subject.as_ref().into()), None, None, None)
+                .flatten()
+            {
+                let t = Triple::new(q.subject, q.predicate, q.object);
+                out.insert(t.to_string(), t);
+            }
+        }
+        out.into_values().collect()
     }
 
     fn predicts(&self, step: &str) -> Result<bool, Error> {
@@ -1975,6 +2119,170 @@ GRAPH <http://example.org/test#catalogue> {{
         assert_eq!(
             committed_graph(AGENT, "http://example.org/test#plan.0"),
             "http://example.org/orexis/graph/committed/keeper/plan_0"
+        );
+    }
+
+    // --- what the executor says happened: held to `agent/execution/tests/test_events.py` ----------------------
+
+    const T: &str = "http://example.org/test#";
+    const FILLS: &str = "http://example.org/orexis/planning#fills";
+
+    /// Every event the executor says, kept in a journal as the history part keeps them.
+    fn heard(x: &mut Executor<'_>) -> std::sync::Arc<orexis::journal::Journal> {
+        let journal =
+            std::sync::Arc::new(orexis::journal::Journal::new(None, 600.0, std::sync::Arc::new(now)).unwrap());
+        let kept = journal.clone();
+        x.watch.connect(move |event| {
+            let entry = orexis::events::mint();
+            if let Some(triples) = event.statements(&entry) {
+                kept.record(&entry, triples, event.at(), false).unwrap();
+            }
+        });
+        journal
+    }
+
+    /// The move plan, its step filling `Move` with the disk and peg B.
+    fn filled_move() -> Store {
+        let plan = predicting_move(1, PLAN);
+        plan.update(&format!(
+            "INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> <{FILLS}> <{T}Move> ; <{T}disk> <{DISK}> ; <{T}to> <{PEG_B}> }} }}"
+        ))
+        .unwrap();
+        plan
+    }
+
+    /// Each step event, in time order: its kind, the act's `taken`, the verdict's `landed`, whether it failed, the
+    /// action the step fills, the values it takes and the want its intention pursues.
+    fn step_events(journal: &orexis::journal::Journal) -> Vec<Vec<String>> {
+        let text = format!(
+            "PREFIX execution: <http://example.org/orexis/execution#> PREFIX prov: <http://www.w3.org/ns/prov#>
+SELECT ?kind ?taken ?landed ?failed ?action ?disk ?to ?want WHERE {{ GRAPH ?e {{
+  ?e a ?kind ; prov:atTime ?at ; execution:act ?act . ?act execution:of ?step ; execution:taken ?taken .
+  ?step <{FILLS}> ?action ; <{T}disk> ?disk ; <{T}to> ?to . ?i execution:pursues ?want
+  OPTIONAL {{ ?e execution:landed ?landed }}
+  BIND(EXISTS {{ ?e a execution:StepFailed }} AS ?failed)
+  FILTER(?kind IN (execution:StepTaken, execution:StepAnswered)) }} }} ORDER BY ?at ?kind"
+        );
+        let (_, body) = orexis::journal::answer(&journal.store, &text).unwrap();
+        let json = String::from_utf8(body).unwrap();
+        //  EACH BINDING'S VALUE, in the projected order, read off the results' JSON by hand.
+        let mut out = Vec::new();
+        for result in json.split("{\"kind\"").skip(1) {
+            let mut row = Vec::new();
+            for var in ["kind", "taken", "landed", "failed", "action", "disk", "to", "want"] {
+                let key = format!("\"{var}\":");
+                let found = if var == "kind" {
+                    Some(result)
+                } else {
+                    result.split(&key).nth(1)
+                };
+                let v = found
+                    .and_then(|f| f.split("\"value\":\"").nth(1))
+                    .and_then(|v| v.split('"').next())
+                    .unwrap_or("-");
+                row.push(local_of(v));
+            }
+            out.push(row);
+        }
+        out
+    }
+
+    #[test]
+    fn a_step_taken_carries_its_act_its_step_as_the_plan_states_it_and_its_want() {
+        let (b, i, clock) = (beliefs(PEG_A), store(), Manual::at(now()));
+        let mut x = Executor::new(&b, AGENT, Some(&i), None, &clock).unwrap();
+        let journal = heard(&mut x);
+        x.commit(Some(&filled_move()), PLAN, WANT).unwrap();
+        x.tick(now()).unwrap();
+        x.drain().unwrap();
+        assert_eq!(
+            step_events(&journal),
+            [["StepTaken", "true", "-", "false", "Move", "disk_1", "PegB", "want"]]
+        );
+    }
+
+    #[test]
+    fn a_step_taken_and_answered_is_said_taken_and_then_landed() {
+        let (b, i, clock) = (beliefs(PEG_A), store(), Manual::at(now()));
+        let mut x = Executor::new(&b, AGENT, Some(&i), None, &clock).unwrap();
+        let journal = heard(&mut x);
+        x.commit(Some(&filled_move()), PLAN, WANT).unwrap();
+        x.tick(now()).unwrap();
+        x.drain().unwrap();
+        moved(&b);
+        x.tick(after(60.0)).unwrap();
+        let said: Vec<Vec<String>> = step_events(&journal).into_iter().map(|r| r[..4].to_vec()).collect();
+        assert_eq!(
+            said,
+            [
+                ["StepTaken", "true", "-", "false"],
+                ["StepAnswered", "true", "true", "false"]
+            ]
+        );
+    }
+
+    #[test]
+    fn a_step_the_world_does_not_answer_by_the_patience_has_failed_and_says_how_late() {
+        let (b, i, clock) = (beliefs(PEG_A), store(), Manual::at(now()));
+        let mut x = Executor::new(&b, AGENT, Some(&i), None, &clock).unwrap();
+        let journal = heard(&mut x);
+        let verdicts = std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));
+        let kept = verdicts.clone();
+        x.watch.connect(move |e| {
+            if let Some(v) = orexis::events::as_of::<StepAnswered>(e) {
+                kept.borrow_mut().push(v.clone());
+            }
+        });
+        x.commit(Some(&filled_move()), PLAN, WANT).unwrap();
+        x.tick(now()).unwrap();
+        x.drain().unwrap();
+        x.tick(after(DEFAULT_PATIENCE_S - 1.0)).unwrap();
+        assert_eq!(step_events(&journal).len(), 1, "waiting is no verdict");
+        x.tick(after(DEFAULT_PATIENCE_S)).unwrap();
+        let said: Vec<Vec<String>> = step_events(&journal).into_iter().map(|r| r[..4].to_vec()).collect();
+        assert_eq!(
+            said,
+            [
+                ["StepTaken", "true", "-", "false"],
+                ["StepAnswered", "true", "false", "true"]
+            ]
+        );
+        let verdict = verdicts.borrow()[0].clone();
+        assert_eq!(
+            (
+                verdict.landed,
+                verdict.timed_out,
+                verdict.late_s,
+                verdict.about.action.as_deref()
+            ),
+            (false, true, Some(DEFAULT_PATIENCE_S), Some("Move"))
+        );
+    }
+
+    #[test]
+    fn a_step_that_could_not_be_taken_says_so_and_fails_its_intention_an_incident() {
+        let (b, i, clock) = (beliefs(PEG_A), store(), Manual::at(now()));
+        let mut x = Executor::new(&b, AGENT, Some(&i), None, &clock).unwrap();
+        x.take = Some(Box::new(|_, _| Err(Error::Evaluation("no valve answers".into()))));
+        let journal = heard(&mut x);
+        x.commit(Some(&filled_move()), PLAN, WANT).unwrap();
+        x.tick(now()).unwrap();
+        x.drain().unwrap();
+        x.tick(after(DEFAULT_PATIENCE_S)).unwrap();
+        let said: Vec<Vec<String>> = step_events(&journal).into_iter().map(|r| r[..4].to_vec()).collect();
+        assert_eq!(said, [["StepTaken", "false", "-", "false"]]);
+        let (_, body) = orexis::journal::answer(
+            &journal.store,
+            "PREFIX execution: <http://example.org/orexis/execution#>
+SELECT ?outcome WHERE { ?e a execution:IntentionResolved, execution:IntentionFailed ; execution:intention ?i .
+                        ?i execution:outcome ?outcome }",
+        )
+        .unwrap();
+        let body = String::from_utf8(body).unwrap();
+        assert_eq!(
+            body.matches("\"failed\"").count(),
+            1,
+            "the intention it failed is an IntentionFailed: {body}"
         );
     }
 }

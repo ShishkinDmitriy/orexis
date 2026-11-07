@@ -7,7 +7,7 @@
 //! loop for as long as the drives agree, since the fixes answer the drives before them.
 
 use std::cell::RefCell;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
@@ -23,7 +23,7 @@ use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
 use orexis::runtime::{Part, Runtime};
 use orexis::store::{Store, Within, iri};
-use orexis_agent::{Wiring, assemble_wired, booted};
+use orexis_agent::{Wiring, booted};
 use orexis_mqtt::driver::{Client, Inbox, Mqtt};
 
 const L: &str = "http://example.org/orexis/world/lane#";
@@ -303,6 +303,16 @@ fn won(store: &Store) -> String {
 
 /// Walk the two couriers of `world` through `name`'s recorded steps, and hold them to what the Python couriers did.
 fn replayed(name: &str, world: &Path, dropping: Option<&str>) {
+    replayed_keeping(name, world, dropping, false);
+}
+
+/// `replayed`, each courier keeping a journal where `kept` says so: the journals, courier A's first.
+fn replayed_keeping(
+    name: &str,
+    world: &Path,
+    dropping: Option<&str>,
+    kept: bool,
+) -> Vec<Arc<orexis::journal::Journal>> {
     let walk = walk_of(name);
     let namespaces = Arc::new(Namespaces::of_tree(tree()).unwrap());
     let stores = [Store::new(namespaces.clone()).unwrap(), Store::new(namespaces).unwrap()];
@@ -312,6 +322,16 @@ fn replayed(name: &str, world: &Path, dropping: Option<&str>) {
         ..Carried::default()
     }));
     let names = ["courier_a", "courier_b"];
+    let journals: Vec<Arc<orexis::journal::Journal>> = if kept {
+        let at = walk.steps[0].0;
+        names
+            .iter()
+            .map(|_| Arc::new(orexis::journal::Journal::new(None, 600.0, Arc::new(move || at)).unwrap()))
+            .collect()
+    } else {
+        Vec::new()
+    };
+    let mut watches = Vec::new();
     let mut all_parts = Vec::new();
     for (store, name) in stores.iter().zip(names) {
         let loaded = booted(store, tree(), world, name, clock.now()).unwrap();
@@ -324,7 +344,24 @@ fn replayed(name: &str, world: &Path, dropping: Option<&str>) {
             .borrow_mut()
             .inboxes
             .insert(name.to_string(), member.inbox.clone());
-        all_parts.push(assemble_wired(store, name, &clock, &loaded, None, Wiring { mqtt: Some(member) }).unwrap());
+        let watching = orexis_agent::Watching {
+            journal: journals.get(watches.len()).cloned(),
+            ..Default::default()
+        };
+        let (parts, seen) = orexis_agent::assemble_seen(
+            store,
+            name,
+            &clock,
+            &loaded,
+            None,
+            Wiring {
+                mqtt: Some(member),
+                watching,
+            },
+        )
+        .unwrap();
+        watches.push(seen.watch.clone());
+        all_parts.push(parts);
     }
     let inboxes: Vec<Inbox> = names.iter().map(|n| carried.borrow().inboxes[*n].clone()).collect();
     let mut runtimes: Vec<Runtime<'_>> = Vec::new();
@@ -333,7 +370,9 @@ fn replayed(name: &str, world: &Path, dropping: Option<&str>) {
             .iter_mut()
             .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
             .collect();
-        runtimes.push(Runtime::new(store, name, &clock, lent).unwrap());
+        let mut runtime = Runtime::new(store, name, &clock, lent).unwrap();
+        runtime.watch = watches[runtimes.len()].clone();
+        runtimes.push(runtime);
     }
     for (when, published) in &walk.steps {
         *clock.0.lock().unwrap() = *when;
@@ -364,6 +403,7 @@ fn replayed(name: &str, world: &Path, dropping: Option<&str>) {
         .map(|(n, s)| (n.to_string(), won(s)))
         .collect();
     assert_eq!(concluded, walk.won, "{name}: who each concluded won");
+    journals
 }
 
 #[test]
@@ -407,4 +447,51 @@ fn two_couriers_silent_to_each_other_both_yield_and_still_part() {
         &variant("lost_commitment", &head_on()),
         Some("Commitment"),
     );
+}
+
+/// As `world/lane/tests/test_history.py` holds the head-on meeting recorded: each courier's journal holds the exchange,
+/// each kind of it said by one and heard by the other, and the conflict won by the same courier in both.
+#[test]
+fn the_head_on_meeting_is_journaled_and_both_couriers_agree_who_won() {
+    let journals = replayed_keeping("head_on", &variant("head_on_kept", &head_on()), None, true);
+    let rows = |journal: &orexis::journal::Journal, text: &str| -> String {
+        String::from_utf8(orexis::journal::answer(&journal.store, text).unwrap().1).unwrap()
+    };
+    let won: Vec<String> = journals
+        .iter()
+        .map(|j| {
+            rows(
+                j,
+                "SELECT DISTINCT ?w WHERE { ?c <http://example.org/orexis/coordination#wonBy> ?w }",
+            )
+        })
+        .collect();
+    let winner = |body: &str| -> Vec<String> {
+        body.split("\"value\":\"")
+            .skip(1)
+            .map(|v| v.split('"').next().unwrap().to_string())
+            .collect()
+    };
+    assert_eq!(winner(&won[0]).len(), 1, "courier A concluded one winner: {}", won[0]);
+    assert_eq!(winner(&won[0]), winner(&won[1]), "both agree who won");
+    let mut spoken = BTreeSet::new();
+    for journal in &journals {
+        let body = rows(
+            journal,
+            "SELECT ?k ?t WHERE { ?e a ?k ; <http://example.org/orexis/speech#statement> ?g . ?g a ?t }",
+        );
+        let values = winner(&body);
+        for pair in values.chunks(2) {
+            let local = |v: &str| v.rsplit('#').next().unwrap().to_string();
+            spoken.insert((local(&pair[0]), local(&pair[1])));
+        }
+    }
+    for kind in ["Said", "Heard"] {
+        for graph in ["QuestionGraph", "AnswerGraph", "CommitmentGraph", "RevealGraph"] {
+            assert!(
+                spoken.contains(&(kind.to_string(), graph.to_string())),
+                "{kind} {graph} in {spoken:?}"
+            );
+        }
+    }
 }

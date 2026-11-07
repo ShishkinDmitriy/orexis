@@ -21,11 +21,12 @@ use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
+use orexis::events::{Event, Mark, Number, Watch};
 use orexis::ontology::{BELIEF, RECORD};
 use orexis::stance::stance;
 use orexis::store::{Store, Within, iri};
 
-use crate::ontology::{BUDGET_TERM, SETTLED, revision_graph};
+use crate::ontology::{BUDGET_TERM, REVISION_GRAPH, SETTLED, revision_graph};
 use crate::revise::{self, revise, say_settled};
 use crate::trigger::trigger;
 
@@ -49,6 +50,47 @@ pub struct Revised {
     pub cut: usize,
     pub duration_s: f64,
 }
+
+impl Event for Revised {
+    fn metric(&self) -> Option<&'static str> {
+        Some("revise")
+    }
+
+    fn marks(&self) -> Vec<(&'static str, Mark)> {
+        vec![
+            ("sources", Mark::Value(Some(self.sources as f64))),
+            ("executions", Mark::Value(Some(self.executions as f64))),
+            ("cut", Mark::Value(Some(self.cut as f64))),
+            ("duration_s", Mark::Value(Some(self.duration_s))),
+        ]
+    }
+}
+
+/// The revisions the belief base's catalogue describes, and how many a budget cut short — settled false, which the
+/// next pass continues. A revision unsettled window after window is a rule set that never settles.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct RevisionsHeld {
+    pub revisions: i64,
+    pub unsettled: i64,
+}
+
+impl Event for RevisionsHeld {
+    fn metric(&self) -> Option<&'static str> {
+        Some("revisions")
+    }
+
+    fn marks(&self) -> Vec<(&'static str, Mark)> {
+        vec![
+            ("revisions", Mark::Level(Some(Number::Int(self.revisions)))),
+            ("unsettled", Mark::Level(Some(Number::Int(self.unsettled)))),
+        ]
+    }
+}
+
+/// THE REVISIONS THE CATALOGUE DESCRIBES, and how many are unsettled.
+const HELD_Q: &str = "
+SELECT (COUNT(?g) AS ?revisions) (SUM(IF(?settled, 0, 1)) AS ?unsettled)
+WHERE { GRAPH $cat { ?g a $revision ; $settled ?settled } }";
 
 /// A source queued: what stands beside it — None for the beliefs holding at the pass's instant — whether its
 /// revision has settled, how many orders of its transitions are applied, whether its row was said unsettled for
@@ -88,6 +130,8 @@ pub struct Deliberator<'a> {
     queue: Vec<(String, Arrival)>,
     /// What a pass revised or transitioned on, for whoever is interested in the present changing.
     pub revised: Option<Hears<'a>>,
+    /// Whoever watches the agent.
+    pub watch: Watch,
 }
 
 impl<'a> Deliberator<'a> {
@@ -105,6 +149,7 @@ impl<'a> Deliberator<'a> {
             per_source: revise::BUDGET,
             queue: Vec::new(),
             revised: None,
+            watch: Watch::default(),
         };
         for source in deliberator.unsettled()? {
             deliberator.queue.push((source, Arrival::new(None, BELIEF)));
@@ -207,8 +252,42 @@ impl<'a> Deliberator<'a> {
             if let Some(hears) = self.revised.as_mut() {
                 hears(&revised)?;
             }
+            if self.watch.connected() {
+                self.watch.emit(&revised);
+                let held = self.held()?;
+                self.watch.emit(&held);
+            }
         }
         Ok(spent)
+    }
+
+    /// The revisions the catalogue describes now, and how many are unsettled.
+    pub fn held(&self) -> Result<RevisionsHeld, Error> {
+        let Some(cat) = self.beliefs.catalogue()? else {
+            return Ok(RevisionsHeld::default());
+        };
+        let found = self.beliefs.rows(
+            &bind(
+                HELD_Q,
+                &[
+                    ("cat", Value::iri(cat)),
+                    ("revision", Value::iri(REVISION_GRAPH)),
+                    ("settled", Value::iri(SETTLED)),
+                ],
+            )?,
+            &[],
+        )?;
+        let count = |key: &str| {
+            found
+                .first()
+                .and_then(|r| orexis::store::value(r, key))
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0)
+        };
+        Ok(RevisionsHeld {
+            revisions: count("revisions"),
+            unsettled: count("unsettled"),
+        })
     }
 
     /// Say on the source's revision row whether it is done, so a restart continues an arrival whose transitions

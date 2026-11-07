@@ -174,8 +174,10 @@ job. Speech keeps each document a step says and tells it through the member, and
 and answers through speech, and asks the shared Planner to reopen the plans a draw it has won decides. The planner is handed the predictor's foresight, which it
 advances as it lays each ground, through a trait the kernel keeps because the two packages meet at it, as they meet
 at `orexis:FlowGraph`. What a part answers it wrote, the runtime
-hands to each part listening for a kind the catalogue says it is, as the Python runtime's `on` does. No crate names
-another's, since the binary is the container that assembles them all.
+hands to each part listening for a kind the catalogue says it is, as the Python runtime's `on` does. What WATCHES the
+agent is one watch per agent, handed to every part: history and metrics heard every Python signal, so a Python
+signal's `connected` was always the question whether anybody watches, and an event is made exactly where it was. No
+crate names another's, since the binary is the container that assembles them all.
 
 **What cannot change the result runs in parallel.** Each scope's imaginarium is a store of its own, so the
 scopes are searched at once and their plans taken in scope order. Laying grounds is per scope and about

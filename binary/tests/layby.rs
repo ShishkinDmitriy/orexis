@@ -136,7 +136,10 @@ fn walk(world: &Path, fixture: &str) -> (Drives, BTreeMap<String, (i64, i64)>) {
         &clock,
         &loaded,
         None,
-        Wiring { mqtt: Some(member) },
+        Wiring {
+            mqtt: Some(member),
+            ..Wiring::default()
+        },
     )
     .unwrap();
     let lent: Vec<(String, &mut dyn Part)> = parts

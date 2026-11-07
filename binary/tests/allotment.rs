@@ -168,7 +168,20 @@ fn allotment_on(ticks: bool, walk: impl FnOnce(&mut Market<'_, '_>)) {
             .borrow_mut()
             .inboxes
             .insert(name.to_string(), member.inbox.clone());
-        assembled.push(assemble_seen(store, name, &clock, &loaded, None, Wiring { mqtt: Some(member) }).unwrap());
+        assembled.push(
+            assemble_seen(
+                store,
+                name,
+                &clock,
+                &loaded,
+                None,
+                Wiring {
+                    mqtt: Some(member),
+                    ..Wiring::default()
+                },
+            )
+            .unwrap(),
+        );
     }
     let mut seen = Vec::new();
     let mut runtimes: Vec<Runtime<'_>> = Vec::new();

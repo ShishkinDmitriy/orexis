@@ -415,6 +415,62 @@ fn refused(store: &Store, held: &Holding, at: DateTime, landing: &[Holding]) -> 
     Ok(false)
 }
 
+/// EVERY CONFLICT THE AGENT HOLDS, by peer and constraint.
+const ALL_Q: &str = "SELECT DISTINCT ?peer ?constraint WHERE { GRAPH $graph { ?c a coordination:Conflict ; coordination:with ?peer ;
+                                                                   coordination:over ?constraint } } ORDER BY ?peer ?constraint";
+
+/// A peer and a constraint, and the holdings laid of the peer under it: as said, and as foreseen.
+pub(crate) type Laid = ((String, String), (Vec<Holding>, Vec<Holding>));
+
+/// What the self `me` of `store` lays now, per peer and constraint of a conflict it holds: the holdings the peer said,
+/// and those it foresaw of the peer — told apart by whether the peer acts for the thing. What a history view is told; a
+/// conflict laying nothing answers two empty lists.
+pub(crate) fn laid(store: &Store, me: &str) -> Result<Vec<Laid>, Error> {
+    let Some(cat) = store.catalogue()? else {
+        return Ok(Vec::new());
+    };
+    let text = bind(
+        LAID_Q,
+        &[
+            ("cat", Value::iri(cat.as_str())),
+            ("root", Value::raw(format!("\"{}\"", laid_root(me)))),
+        ],
+    )?;
+    let present: BTreeSet<String> = store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "g")).collect();
+    let common = store.graphs_of(&[BELIEF], &orexis::store::Within::common())?;
+    let common: Vec<&str> = common.iter().map(String::as_str).collect();
+    let mut out = Vec::new();
+    for r in store.rows(&bind(ALL_Q, &[("graph", Value::iri(conflicts_graph(me)))])?, &[])? {
+        let (Some(peer), Some(constraint)) = (iri(&r, "peer"), iri(&r, "constraint")) else {
+            continue;
+        };
+        let acts: BTreeSet<String> = store
+            .rows(&bind(ACTS_FOR_Q, &[("peer", Value::iri(peer.as_str()))])?, &common)?
+            .iter()
+            .filter_map(|a| iri(a, "t"))
+            .collect();
+        let full = laid_graph(me, &peer, &constraint, 0);
+        let under = &full[..full.len() - 1];
+        let mut graphs: Vec<(usize, &String)> = present
+            .iter()
+            .filter_map(|g| g.strip_prefix(under).and_then(|n| n.parse().ok()).map(|n| (n, g)))
+            .collect();
+        graphs.sort();
+        let (mut said, mut foreseen) = (Vec::new(), Vec::new());
+        for (_, graph) in graphs {
+            if let Some(h) = holding_in(store, graph)? {
+                if acts.contains(&h.thing) {
+                    said.push(h)
+                } else {
+                    foreseen.push(h)
+                }
+            }
+        }
+        out.push(((peer, constraint), (said, foreseen)));
+    }
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     //! `lay`, held to `agent/coordination/tests/lay/`'s cases as `test_lay_cases.py` holds the Python act: each a

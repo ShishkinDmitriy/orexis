@@ -6,11 +6,13 @@
 //! - `implementation`: the operations taking a step does, read off the action's row;
 //! - `create`: the package's part, walking what is due every pass.
 //!
-//! NOT PORTED: the two threads, which the runtime's pass replaces, the events the Python copy signals, and the
-//! command and the saying an implementation's operations make, which wait for a transport and for speech.
+//! - `events`: what it says happened — a step taken and answered, an intention resolved — to whoever watches.
+//!
+//! NOT PORTED: the two threads, which the runtime's pass replaces.
 
 pub mod command;
 pub mod create;
+pub mod events;
 mod executor;
 mod implementation;
 pub mod ontology;

@@ -7,9 +7,10 @@
 //! - [`extract`]: what every extraction the agent holds concludes of one statement, one belief derived from it;
 //! - [`create`]: the package's part, which extracts from every statement written and says what a step says.
 //!
-//! NOT PORTED: the events speech signals (`said`, `heard`), which wait for the journal.
+//! - [`events`]: every statement said and heard, history in speech's words.
 
 pub mod create;
+pub mod events;
 pub mod extract;
 pub mod heard;
 pub mod ontology;
