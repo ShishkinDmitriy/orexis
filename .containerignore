@@ -32,3 +32,6 @@ keys
 knowledge
 infra/grafana
 infra/mosquitto
+
+# the Rust build's output, built again inside the binary's image and never sent as context
+target

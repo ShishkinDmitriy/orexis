@@ -55,7 +55,7 @@ in either language.
 # What was decided
 
 **One binary per agent, each package a Cargo feature.** `orexis-compose` builds an agent's binary with the
-features its roles load, as it builds an image with the extras today
+features its roles load, from `binary/Containerfile`, for every agent whose packages are all crates (`compose.ported`), as it builds an image with the extras today
 ([a-package-brings-its-own-dependencies](/decisions/a-package-brings-its-own-dependencies.md)). A package
 an agent does not run is then compiled out rather than merely left uninstalled. The image holds the
 binary and the CA certificates, and the world is mounted read-only. That leaves no interpreter, no
