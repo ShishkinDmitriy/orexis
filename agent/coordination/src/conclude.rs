@@ -397,6 +397,27 @@ fn written(
     Ok(vec![graph.to_string()])
 }
 
+/// Every conflict the self `me` of `store` holds, as it last concluded them: what the history view is told.
+pub(crate) fn conflicts(store: &Store, me: &str) -> Result<Vec<crate::events::Conflict>, Error> {
+    let mut out: Vec<crate::events::Conflict> = store
+        .rows(&bind(PRIOR_Q, &[("graph", Value::iri(conflicts_graph(me)))])?, &[])?
+        .iter()
+        .filter_map(|r| {
+            Some(crate::events::Conflict {
+                conflict: iri(r, "c")?,
+                peer: iri(r, "peer")?,
+                constraint: iri(r, "constraint")?,
+                standing: value(r, "standing").as_deref() == Some("true"),
+                silent: value(r, "silent").as_deref() == Some("true"),
+                round: value(r, "round").and_then(|v| v.parse().ok()).unwrap_or(0),
+                won_by: iri(r, "winner"),
+            })
+        })
+        .collect();
+    out.sort_by(|a, b| a.conflict.cmp(&b.conflict));
+    Ok(out)
+}
+
 #[cfg(test)]
 mod tests {
     //! `conclude`, held to `agent/coordination/tests/conclude/`'s cases as `test_conclude_cases.py` holds the Python

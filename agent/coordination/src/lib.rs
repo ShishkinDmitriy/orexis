@@ -9,13 +9,15 @@
 //! - [`lay`]: what it lays of a peer's holdings as forecasts, as the draw says it yields;
 //! - [`mint`]: the secret its draws' numbers come from; [`create`]: the package's part.
 //!
+//! - [`events`]: what it says happened — the holdings asked with, said and foreseen, and the conflicts concluded.
+//!
 //! It imports no code of planning, execution or speech, and meets them at the store and through whoever links them.
-//! NOT PORTED: the events it signals, which wait for the journal.
 
 pub mod answer;
 pub mod ask;
 pub mod conclude;
 pub mod create;
+pub mod events;
 pub mod holdings;
 pub mod lay;
 pub mod mint;

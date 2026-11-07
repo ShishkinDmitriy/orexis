@@ -79,6 +79,8 @@ impl<'a> Planning<'a> {
             unplanned.len(),
             unplanned.iter().map(|w| local_of(w)).collect::<Vec<_>>().join(", ")
         );
+        let unplanned: Vec<String> = unplanned.into_iter().cloned().collect();
+        planner.unreachable(&unplanned, pass.now)?;
         settle(pass, UNREACHABLE);
         Ok(())
     }
@@ -96,6 +98,7 @@ impl Part for Planning<'_> {
             written.extend(heard(&self.planner.borrow())?);
         }
         self.keep(pass)?;
+        pass.lap("plan");
         Ok(written)
     }
 }

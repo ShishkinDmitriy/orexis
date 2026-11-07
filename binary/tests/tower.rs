@@ -181,3 +181,51 @@ fn the_puzzle_is_planned_above_and_carried_out_by_the_van_below() {
         "each of the three moves was kept below, and none was taken as fictive"
     );
 }
+
+/// As `agent/metrics/tests/test_window.py`'s last case holds it: the mover, which plans, walks and deliberates, writes
+/// the window it was in as it stops — the one pass tallied, every level as it last stood — so the window holds every
+/// one of those three packages' figures, tagged with the world.
+#[test]
+fn the_last_window_is_written_as_the_process_stops() {
+    let store = store();
+    let loaded = booted(&store, tree(), &world(), "mover", now()).unwrap();
+    let written: std::rc::Rc<std::cell::RefCell<Vec<orexis::events::Point>>> = Default::default();
+    let kept = written.clone();
+    let sink = orexis::series::Sink::new(
+        "METRICS",
+        "m",
+        Box::new(move |_, points| {
+            kept.borrow_mut().extend(points.iter().cloned());
+            Ok(())
+        }),
+    );
+    let mut wiring = orexis_agent::Wiring::default();
+    wiring.watching.metrics = Some(orexis_metrics::Window::new(sink, 3600.0, Some("tower"), Some("mover")));
+    let clock = Still;
+    let (mut parts, seen) = orexis_agent::assemble_seen(&store, "mover", &clock, &loaded, None, wiring).unwrap();
+    {
+        let lent: Vec<(String, &mut dyn Part)> = parts
+            .iter_mut()
+            .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
+            .collect();
+        let mut runtime = Runtime::new(&store, "mover", &clock, lent).unwrap();
+        runtime.watch = seen.watch.clone();
+        runtime.run(Some(1), 0.0).unwrap();
+        runtime.stop();
+    }
+    let by: BTreeMap<String, orexis::events::Point> = written
+        .borrow()
+        .iter()
+        .map(|p| (p.measurement.clone(), p.clone()))
+        .collect();
+    assert_eq!(
+        by["pass"].fields["count"],
+        orexis::events::Field::Int(1),
+        "the one pass, written at the stop"
+    );
+    assert!(matches!(by["pass"].fields["quads"], orexis::events::Field::Int(n) if n > 0));
+    for m in ["planner", "imaginarium", "search", "revise", "revisions", "intentions"] {
+        assert!(by.contains_key(m), "{m} in {:?}", by.keys());
+    }
+    assert!(written.borrow().iter().all(|p| p.tags["world"] == "tower"));
+}

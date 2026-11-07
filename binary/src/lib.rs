@@ -5,10 +5,15 @@
 
 use std::path::Path;
 
+use std::sync::Arc;
+
 use orexis::Error;
 use orexis::boot::{Booting, boot};
 use orexis::clock::Clock;
+use orexis::events::Watch;
+use orexis::journal::Journal;
 use orexis::runtime::Part;
+use orexis::series::Sink;
 use orexis::store::Store;
 
 /// Boot `agent` of `world` into `store` from the documents of `tree`: the packages it loads, each one this binary
@@ -63,6 +68,11 @@ pub fn link<'a>(
     planning.heard = Some(Box::new(move |planner| {
         let mut executor = executor.borrow_mut();
         let mut written = Vec::new();
+        for published in &planner.published {
+            if let Some(desire) = &published.desire {
+                executor.desires.insert(published.want.clone(), desire.clone());
+            }
+        }
         for want in &planner.reached {
             written.extend(executor.end_for(want, "reached")?);
         }
@@ -133,10 +143,21 @@ pub fn take<'a>(
     }
 }
 
+/// WHAT WATCHES THE AGENT, where the deployment keeps any of it: the journal, the history sink and the metrics window.
+/// The history part is made where a journal is kept or a history sink is loaded, and the metrics part where a metrics
+/// window is, as the Python runtime makes its watchers; each hears every event the parts say.
+#[derive(Default)]
+pub struct Watching {
+    pub journal: Option<Arc<Journal>>,
+    pub history: Option<Sink>,
+    pub metrics: Option<orexis_metrics::Window>,
+}
+
 /// What the agent's bus is, where a test hands one: the MQTT member over a client of its own. None, and a member the
-/// agent loads is brought up from the environment.
+/// agent loads is brought up from the environment. And what watches it.
 #[derive(Default)]
 pub struct Wiring<'a> {
+    pub watching: Watching,
     #[cfg(feature = "mqtt")]
     pub mqtt: Option<orexis_mqtt::driver::Mqtt<'a>>,
     #[cfg(not(feature = "mqtt"))]
@@ -172,9 +193,11 @@ pub fn assemble_wired<'a>(
     Ok(assemble_seen(store, agent, clock, loaded, budget, wiring)?.0)
 }
 
-/// What a test reads of the parts once they are lent to the runtime: the planner and the executor they share.
+/// What a test reads of the parts once they are lent to the runtime: the planner and the executor they share, and the
+/// watch every part says its events to, which the runtime is handed too.
 #[derive(Default)]
 pub struct Seen<'a> {
+    pub watch: Watch,
     #[cfg(feature = "planning")]
     pub planner: Option<std::rc::Rc<std::cell::RefCell<orexis_planning::Planner<'a>>>>,
     #[cfg(feature = "execution")]
@@ -195,6 +218,21 @@ pub fn assemble_seen<'a>(
     #[allow(unused_mut)]
     let mut seen = Seen::default();
     let mut parts: Parts<'a> = Vec::new();
+    let Wiring { watching, mqtt } = wiring;
+    let wiring = Wiring {
+        watching: Watching::default(),
+        mqtt,
+    };
+    let watch = seen.watch.clone();
+    let mut watchers: Parts<'a> = Vec::new();
+    if watching.journal.is_some() || watching.history.is_some() {
+        let incidents = orexis_history::incidents(store)?;
+        let history = orexis_history::History::new(&watch, watching.history, watching.journal, incidents);
+        watchers.push(("history".into(), Box::new(history)));
+    }
+    if let Some(window) = watching.metrics {
+        watchers.push(("metrics".into(), Box::new(orexis_metrics::Metrics::new(window, &watch))));
+    }
     let holds = |package: &str| loaded.iter().any(|p| p == package);
     #[cfg(feature = "belief")]
     let belief = if holds("belief") {
@@ -301,6 +339,30 @@ pub fn assemble_seen<'a>(
     if let (Some(belief), Some(execution)) = (belief.as_ref(), execution.as_ref()) {
         hear(store, belief, execution);
     }
+    #[cfg(feature = "belief")]
+    if let Some(belief) = belief.as_ref() {
+        belief.deliberator.borrow_mut().watch = watch.clone();
+    }
+    #[cfg(feature = "planning")]
+    if let Some(planning) = planning.as_ref() {
+        planning.planner.borrow_mut().watch = watch.clone();
+    }
+    #[cfg(feature = "execution")]
+    if let Some(execution) = execution.as_ref() {
+        execution.executor.borrow_mut().watch = watch.clone();
+    }
+    #[cfg(feature = "sensing")]
+    if let Some(sensing) = sensing.as_mut() {
+        sensing.watch = watch.clone();
+    }
+    #[cfg(feature = "speech")]
+    if let Some(speech) = speech.as_ref() {
+        *speech.speaker.watch.borrow_mut() = watch.clone();
+    }
+    #[cfg(feature = "coordination")]
+    if let Some(coordination) = coordination.as_mut() {
+        coordination.watch = watch.clone();
+    }
     #[cfg(feature = "planning")]
     {
         seen.planner = planning.as_ref().map(|p| p.planner.clone());
@@ -341,6 +403,8 @@ pub fn assemble_seen<'a>(
     if let Some(transport) = transport {
         parts.push(("transport/mqtt".into(), Box::new(transport)));
     }
+    //  WHAT WATCHES THE AGENT, last, so it is stopped first and writes the last window.
+    parts.extend(watchers);
     let _ = (store, agent, clock, budget, holds);
     Ok((parts, seen))
 }

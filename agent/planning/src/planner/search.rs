@@ -61,6 +61,7 @@ impl<'a> Planner<'a> {
         scoped: &Searching<'_>,
         memo: &mut Memo,
     ) -> Result<(), Error> {
+        let started = std::time::Instant::now();
         for pair in unweighed(store, Some(want), None, memo)? {
             if !pair.contains_key("from")
                 && let Some(about) = iri(&pair, "about")
@@ -75,6 +76,8 @@ impl<'a> Planner<'a> {
             }
         }
         extract_plan(store, want)?;
+        let weighed = spent(store, want, memo)?.saturating_sub(ceiling - budget);
+        self.searched(store, want, started, budget, weighed, scoped.scope)?;
         Ok(())
     }
 

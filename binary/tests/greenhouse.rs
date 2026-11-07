@@ -3,7 +3,7 @@
 //! the bed's soil and air of them, the grower's desire mints a want where the bed is believed dry or cold, the plan's
 //! step takes the bed and is taken by sending the device a command sized from the bed's latest reading, and the next
 //! reading's transition answers it. The broker is a fake client: what is subscribed to and published is what is held.
-//! The suite's history, journal, metrics and dashboard cases wait for those packages.
+//! And its history and journal: every reading a point in the series, and the dose published, taken and landed.
 
 use std::cell::RefCell;
 use std::collections::BTreeSet;
@@ -109,6 +109,10 @@ struct Grower<'a> {
 }
 
 fn grower<'a>(store: &'a Store, clock: &'a Ticking) -> Grower<'a> {
+    grower_watched(store, clock, orexis_agent::Watching::default())
+}
+
+fn grower_watched<'a>(store: &'a Store, clock: &'a Ticking, watching: orexis_agent::Watching) -> Grower<'a> {
     let loaded = booted(store, tree(), &world(), "grower", noon()).unwrap();
     for package in [
         "belief",
@@ -123,7 +127,10 @@ fn grower<'a>(store: &'a Store, clock: &'a Ticking) -> Grower<'a> {
     let broker = Broker::default();
     let member = Mqtt::new(store, &format!("{GH}grower"), vec![(None, Box::new(broker.clone()))]);
     let inbox = member.inbox.clone();
-    let wiring = Wiring { mqtt: Some(member) };
+    let wiring = Wiring {
+        mqtt: Some(member),
+        watching,
+    };
     let (parts, seen) = assemble_seen(store, "grower", clock, &loaded, None, wiring).unwrap();
     Grower {
         parts,
@@ -387,4 +394,242 @@ fn a_foreseen_crossing_is_planned_ahead_and_dosed_when_it_arrives() {
         ["actuators/pump/command"],
         "the foreseen crossing came, and the dose with it"
     );
+}
+
+/// WHAT THE JOURNAL HOLDS OF THE DOSE: the plan published and each step's taking and verdict, the action each step
+/// fills and the values it takes in the domain's words, each at its instant.
+const DOSE_Q: &str = "
+PREFIX planning: <http://example.org/orexis/planning#> PREFIX execution: <http://example.org/orexis/execution#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+SELECT ?kind ?at ?action ?valve ?subject ?taken ?landed WHERE { GRAPH ?e {
+  { ?e a planning:PlanPublished ; planning:published ?plan . ?step execution:partOf ?plan BIND(planning:PlanPublished AS ?kind) }
+  UNION { ?e a ?kind ; execution:act ?act . ?act execution:of ?step ; execution:taken ?taken
+          FILTER(?kind IN (execution:StepTaken, execution:StepAnswered)) OPTIONAL { ?e execution:landed ?landed } }
+  ?e prov:atTime ?at . ?step planning:fills ?action ; ?v ?valve ; ?s ?subject .
+  FILTER(STRENDS(STR(?v), \"#valve\") && STRENDS(STR(?s), \"#subject\")) } } ORDER BY ?at ?kind";
+
+#[test]
+fn history_holds_every_reading_and_the_journal_the_dose_published_taken_and_landed() {
+    use orexis::events::{Field, Point};
+    let (store, clock) = (store(), Ticking(Mutex::new(noon())));
+    let written: Rc<RefCell<Vec<Point>>> = Rc::default();
+    let kept = written.clone();
+    let sink = orexis::series::Sink::new(
+        "HISTORY",
+        "greenhouse-grower",
+        Box::new(move |_, points| {
+            kept.borrow_mut().extend(points.iter().cloned());
+            Ok(())
+        }),
+    );
+    let journal = Arc::new(orexis::journal::Journal::new(None, 600.0, Arc::new(noon)).unwrap());
+    let watching = orexis_agent::Watching {
+        journal: Some(journal.clone()),
+        history: Some(sink),
+        metrics: None,
+    };
+    let mut g = grower_watched(&store, &clock, watching);
+    let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
+    let seen = std::mem::take(&mut g.seen);
+    {
+        let mut runtime = runtime(&store, &clock, &mut g.parts);
+        runtime.watch = seen.watch.clone();
+        reading(&inbox, r#"{"temperature": 21.0}"#, noon());
+        reading(&inbox, r#"{"moisture": 0.2}"#, noon());
+        runtime.run(Some(1), 0.0).unwrap();
+        let later = plus(noon(), 11.0 * 60.0);
+        clock.set(later);
+        reading(&inbox, r#"{"moisture": 0.45}"#, later);
+        runtime.run(Some(2), 0.0).unwrap();
+    }
+    assert!(walking(&seen).is_empty(), "the dose landed");
+    let observed: Vec<(String, Field, Option<DateTime>)> = written
+        .borrow()
+        .iter()
+        .map(|p| (p.measurement.clone(), p.fields["value"].clone(), p.time))
+        .collect();
+    assert_eq!(
+        observed,
+        [
+            ("AirTemperature".to_string(), Field::Float(21.0), Some(noon())),
+            ("SoilMoisture".to_string(), Field::Float(0.2), Some(noon())),
+            (
+                "SoilMoisture".to_string(),
+                Field::Float(0.45),
+                Some(plus(noon(), 660.0))
+            ),
+        ],
+        "the series holds the readings, and nothing else"
+    );
+    assert!(
+        written
+            .borrow()
+            .iter()
+            .all(|p| p.fields.get("raw") == p.fields.get("value") && p.fields.len() == 2),
+        "this world scales no sensor, so the raw count is the reading, said twice"
+    );
+    let tags: Vec<(String, String)> = written
+        .borrow()
+        .iter()
+        .map(|p| (p.tags["sensor"].clone(), p.tags["feature"].clone()))
+        .collect();
+    assert_eq!(
+        tags,
+        [
+            pair("thermometer", "bed"),
+            pair("moisture_probe", "bed"),
+            pair("moisture_probe", "bed")
+        ]
+    );
+    let (_, body) = orexis::journal::answer(&journal.store, DOSE_Q).unwrap();
+    let body = String::from_utf8(body).unwrap();
+    let mut dose = Vec::new();
+    for row in body.split("{\"kind\"").skip(1) {
+        let of = |var: &str| -> String {
+            let found = if var == "kind" {
+                Some(row)
+            } else {
+                row.split(&format!("\"{var}\":")).nth(1)
+            };
+            found
+                .and_then(|f| f.split("\"value\":\"").nth(1))
+                .and_then(|v| v.split('"').next())
+                .map(|v| v.rsplit('#').next().unwrap().to_string())
+                .unwrap_or_else(|| "-".into())
+        };
+        dose.push([
+            of("kind"),
+            of("action"),
+            of("valve"),
+            of("subject"),
+            of("taken"),
+            of("landed"),
+        ]);
+    }
+    let said = |row: [&str; 6]| row.map(str::to_string);
+    assert_eq!(
+        dose,
+        [
+            said(["PlanPublished", "Dosing", "pump", "bed", "-", "-"]),
+            said(["StepTaken", "Dosing", "pump", "bed", "true", "-"]),
+            said(["StepAnswered", "Dosing", "pump", "bed", "true", "true"]),
+        ],
+        "the dose takes the bed, not a reading (#944): {body}"
+    );
+    assert_eq!(broker.published().len(), 1);
+}
+
+/// The dry bed dosed, and a day later the thermometer alone — with a metrics window written every pass and the last
+/// as a stop writes it: every window written, as `_unanswered` in `world/greenhouse/tests/test_greenhouse.py` has them.
+fn unanswered() -> (Vec<Vec<orexis::events::Point>>, Broker) {
+    use orexis::events::Point;
+    let (store, clock) = (store(), Ticking(Mutex::new(noon())));
+    let writes: Rc<RefCell<Vec<Vec<Point>>>> = Rc::default();
+    let kept = writes.clone();
+    let sink = orexis::series::Sink::new(
+        "METRICS",
+        "greenhouse-grower-metrics",
+        Box::new(move |_, points| {
+            kept.borrow_mut().push(points.to_vec());
+            Ok(())
+        }),
+    );
+    let watching = orexis_agent::Watching {
+        metrics: Some(orexis_metrics::Window::new(
+            sink,
+            0.0,
+            Some("greenhouse"),
+            Some("grower"),
+        )),
+        ..Default::default()
+    };
+    let mut g = grower_watched(&store, &clock, watching);
+    let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
+    let seen = std::mem::take(&mut g.seen);
+    {
+        let mut runtime = runtime(&store, &clock, &mut g.parts);
+        runtime.watch = seen.watch.clone();
+        reading(&inbox, r#"{"temperature": 21.0}"#, noon());
+        reading(&inbox, r#"{"moisture": 0.2}"#, noon());
+        runtime.run(Some(1), 0.0).unwrap();
+        let later = plus(noon(), 86400.0);
+        clock.set(later);
+        reading(&inbox, r#"{"temperature": 21.0}"#, later);
+        runtime.run(Some(1), 0.0).unwrap();
+        runtime.stop();
+    }
+    let windows = writes.borrow().iter().filter(|w| !w.is_empty()).cloned().collect();
+    (windows, broker)
+}
+
+#[test]
+fn a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_counted() {
+    use orexis::events::{Field, Point};
+    let (windows, broker) = unanswered();
+    let (dosed, a_day_later) = (&windows[0], &windows[1]);
+    let of = |window: &[Point], name: &str| -> Vec<Point> {
+        window.iter().filter(|p| p.measurement == name).cloned().collect()
+    };
+    let one = |window: &[Point], name: &str| -> std::collections::BTreeMap<String, Field> {
+        let found = of(window, name);
+        assert_eq!(found.len(), 1, "{name}: {found:?}");
+        found[0].fields.clone()
+    };
+    let int = |pairs: &[(&str, i64)]| -> std::collections::BTreeMap<String, Field> {
+        pairs.iter().map(|(k, v)| (k.to_string(), Field::Int(*v))).collect()
+    };
+    let measured: BTreeSet<&str> = dosed.iter().map(|p| p.measurement.as_str()).collect();
+    for m in ["pass", "imaginarium", "intentions", "act", "revisions", "silence"] {
+        assert!(measured.contains(m), "{m} in {measured:?}");
+    }
+    assert_eq!(one(dosed, "intentions"), int(&[("standing", 1)]));
+    assert_eq!(one(dosed, "silence"), int(&[("silent", 0)]));
+    assert_eq!(
+        (one(dosed, "act")["count"].clone(), one(dosed, "act")["taken"].clone()),
+        (Field::Int(1), Field::Int(1))
+    );
+    let sum = |window: &[Point], name: &str, field: &str| -> i64 {
+        of(window, name)
+            .iter()
+            .map(|p| match p.fields[field] {
+                Field::Int(i) => i,
+                _ => panic!("{field} is a level"),
+            })
+            .sum()
+    };
+    assert_eq!(sum(dosed, "imaginarium", "satisfied"), 1);
+    assert_eq!(
+        sum(dosed, "imaginarium", "met"),
+        2,
+        "the soil want in its dose's world, and the desire in the air's ground"
+    );
+    let revisions = one(dosed, "revisions");
+    assert_eq!(revisions["unsettled"], Field::Int(0));
+    assert!(matches!(revisions["revisions"], Field::Int(n) if n > 0));
+    let ended: Vec<(String, Field)> = of(a_day_later, "intention")
+        .iter()
+        .map(|p| (p.tags["outcome"].clone(), p.fields["count"].clone()))
+        .collect();
+    assert_eq!(ended, [("failed".to_string(), Field::Int(2))]);
+    assert_eq!(one(a_day_later, "intentions"), int(&[("standing", 0)]));
+    assert_eq!(
+        one(a_day_later, "act"),
+        int(&[("count", 1), ("taken", 0)]),
+        "the second dose, sized from no reading"
+    );
+    assert_eq!(
+        one(a_day_later, "silence"),
+        int(&[("silent", 1)]),
+        "the probe, and not the thermometer"
+    );
+    let doubted: Vec<(String, std::collections::BTreeMap<String, Field>)> = of(a_day_later, "doubted")
+        .iter()
+        .map(|p| (p.tags["sensor"].clone(), p.fields.clone()))
+        .collect();
+    assert_eq!(
+        doubted,
+        [("moisture_probe".to_string(), int(&[("silent", 1), ("stuck", 0)]))]
+    );
+    assert!(of(dosed, "doubted").is_empty(), "a sensor nobody doubts is on no point");
+    assert_eq!(broker.published().len(), 1);
 }

@@ -7,22 +7,28 @@
 //! on the key of the constraint the draw was over, since nothing a belief makes impossible reopens a plan that has
 //! only been made slower than it need be.
 //!
-//! NOT PORTED: the events it signals (`held`, `concluded`), which wait for the journal.
+//! WHAT IT SAYS HAPPENED goes to whoever watches the agent, each set where it changed since it was last said: the
+//! holdings it asked with, those it laid of each peer as said or foreseen, and every conflict as concluded.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
+use std::sync::Arc;
 
 use orexis::Error;
 use orexis::document::Document;
+use orexis::events::Watch;
 use orexis::ontology::local_of;
 use orexis::runtime::{Part, Pass, Starting};
 use orexis::store::Store;
+use oxsdatatypes::DateTime;
 
 use crate::answer::answer;
 use crate::ask::ask;
-use crate::conclude::{conclude, wins};
-use crate::holdings::walking_over;
-use crate::lay::lay;
+use crate::conclude::{conclude, conflicts, wins};
+use crate::events::{ASKED, Concluded, FORESEEN, Held, SAID};
+use crate::holdings::{heard, walking_over};
+use crate::lay::{laid, lay};
 use crate::mint::mint;
+use crate::ontology::COORDINATION;
 use crate::ontology::{ANSWER_GRAPH, QUESTION_GRAPH};
 
 const PASS: usize = 0;
@@ -43,6 +49,11 @@ pub struct Coordination<'a> {
     pub say: Option<Says<'a>>,
     pub reopen: Option<Reopens<'a>>,
     pending: Vec<String>,
+    /// Whoever watches the agent.
+    pub watch: Watch,
+    /// What was last said of each set, so a set is said where it changed.
+    told: BTreeMap<(String, String, String), Vec<crate::holdings::Holding>>,
+    concluded: Option<Vec<crate::events::Conflict>>,
 }
 
 impl<'a> Coordination<'a> {
@@ -53,10 +64,45 @@ impl<'a> Coordination<'a> {
             say: None,
             reopen: None,
             pending: Vec::new(),
+            watch: Watch::default(),
+            told: BTreeMap::new(),
+            concluded: None,
         }
     }
 
-    fn said(&mut self, peer: &str, document: &Document) -> Result<Vec<String>, Error> {
+    fn said(&mut self, peer: &str, document: &Document, at: DateTime) -> Result<Vec<String>, Error> {
+        if self.say.is_none() {
+            return Ok(Vec::new());
+        }
+        if self.watch.connected() {
+            let scratch = Store::new(Arc::new(self.beliefs.namespaces().clone()))?;
+            scratch
+                .engine()
+                .extend(document.quads().iter().cloned())
+                .map_err(|e| Error::Evaluation(e.to_string()))?;
+            let over = format!("{COORDINATION}over");
+            let mut asked: BTreeMap<String, String> = BTreeMap::new();
+            for q in document.quads() {
+                if q.predicate.as_str() == over
+                    && let (oxigraph::model::GraphName::NamedNode(g), oxigraph::model::Term::NamedNode(c)) =
+                        (&q.graph_name, &q.object)
+                {
+                    asked
+                        .entry(g.as_str().to_string())
+                        .or_insert_with(|| c.as_str().to_string());
+                }
+            }
+            for (graph, constraint) in asked {
+                let holdings = heard(&scratch, &graph)?;
+                self.tell_held(Held {
+                    at,
+                    origin: ASKED,
+                    peer: peer.to_string(),
+                    constraint,
+                    holdings,
+                });
+            }
+        }
         let Some(say) = self.say.as_mut() else {
             return Ok(Vec::new());
         };
@@ -74,17 +120,46 @@ impl<'a> Coordination<'a> {
         say(peer, document)
     }
 
+    /// Say `event` where what it says differs from what was last said of the same set.
+    fn tell_held(&mut self, event: Held) {
+        let key = (event.origin.to_string(), event.peer.clone(), event.constraint.clone());
+        if self.told.get(&key) != Some(&event.holdings) {
+            self.told.insert(key, event.holdings.clone());
+            self.watch.emit(&event);
+        }
+    }
+
     /// Conclude the conflicts and lay what the agent yields to; a draw won reopens what it decides.
     fn yielded(&mut self, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
         let (store, me, at) = (self.beliefs, self.me.clone(), pass.now);
         let before = wins(store, &me)?;
         let mut written = conclude(store, &me, at)?;
+        if self.watch.connected() {
+            let now = conflicts(store, &me)?;
+            if self.concluded.as_ref() != Some(&now) {
+                self.concluded = Some(now.clone());
+                self.watch.emit(&Concluded { at, conflicts: now });
+            }
+        }
         let won: Vec<String> = wins(store, &me)?
             .into_iter()
             .filter(|(draw, _)| !before.contains_key(draw))
             .map(|(_, constraint)| constraint)
             .collect();
         written.extend(lay(store, &me, at)?);
+        if self.watch.connected() {
+            for ((peer, constraint), (said, foreseen)) in laid(store, &me)? {
+                for (origin, holdings) in [(SAID, said), (FORESEEN, foreseen)] {
+                    self.tell_held(Held {
+                        at,
+                        origin,
+                        peer: peer.clone(),
+                        constraint: constraint.clone(),
+                        holdings,
+                    });
+                }
+            }
+        }
         let mut wants = BTreeSet::new();
         for constraint in &won {
             wants.extend(walking_over(store, constraint)?);
@@ -119,7 +194,7 @@ impl Part for Coordination<'_> {
             PASS => {
                 let mut written = Vec::new();
                 for (peer, document) in ask(self.beliefs, &self.me, pass.now)? {
-                    written.extend(self.said(&peer, &document)?);
+                    written.extend(self.said(&peer, &document, pass.now)?);
                 }
                 written.extend(self.yielded(pass)?);
                 Ok(written)
@@ -133,7 +208,7 @@ impl Part for Coordination<'_> {
         if job == QUESTIONED
             && let Some((peer, document)) = answer(self.beliefs, &self.me, graph, pass.now)?
         {
-            written.extend(self.said(&peer, &document)?);
+            written.extend(self.said(&peer, &document, pass.now)?);
         }
         written.extend(self.yielded(pass)?);
         Ok(written)

@@ -6,13 +6,14 @@
 //! - [`pipeline`]: bytes to a document by the codec, to a number by the pointer;
 //! - [`cadence`]: how often a sensor reports, which sensors are the agent's, and which have lapsed;
 //! - [`missed`]: which sensors have gone silent, computed and never written;
-//! - [`create`]: the package's part, which asks after silence every minute and hands each percept to belief.
+//! - [`create`]: the package's part, which asks after silence every minute and hands each percept to belief;
+//! - [`events`]: what it says happened — each observation, a point of the history, and the sensors silent and doubted.
 //!
-//! NOT PORTED: the events the Python copy signals (`observed`, `silence`, `doubted`) and the account sensing gives of
-//! itself for a person, which wait for the journal and for translation.
+//! NOT PORTED: the account sensing gives of itself for a person, which waits for translation.
 
 pub mod cadence;
 pub mod create;
+pub mod events;
 pub mod missed;
 pub mod ontology;
 pub mod pipeline;

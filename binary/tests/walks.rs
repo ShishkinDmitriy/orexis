@@ -1,7 +1,7 @@
 //! The courier and the driver walked on the binary, held to what `world/courier/tests/test_courier.py` and
 //! `world/driver/tests/test_driver.py` hold the Python runtime to: the plan found, adopted, walked a step at a time as
-//! each lands, and the run ending as the Python one does. The tests of those files that hold the events, the
-//! metrics and the sensing wait for those packages.
+//! each lands, and the run ending as the Python one does — and, as `agent/metrics/tests/test_window.py` holds it, a
+//! run whose metrics are written reads the agent's clock no more than one whose are not.
 
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -151,4 +151,68 @@ fn walked_the_drivers_one_plan_moves_both_parcels_and_leaves_the_driver_aboard_v
     ] {
         assert!(at.contains(&(thing.to_string(), x, y)), "{thing} at ({x}, {y}): {at:?}");
     }
+}
+
+/// The courier at 128 candidates for twelve passes on a clock that ticks per read, with a metrics window written every
+/// pass or none: how often the clock was read, how many points were written, how the run ended, and what was measured.
+fn metered_courier(watched: bool) -> (usize, usize, String, std::collections::BTreeSet<String>) {
+    struct Counting(Mutex<(DateTime, usize)>);
+    impl Clock for Counting {
+        fn now(&self) -> DateTime {
+            let mut at = self.0.lock().unwrap();
+            at.1 += 1;
+            at.0 = at.0.checked_add_day_time_duration(DayTimeDuration::new(1)).unwrap();
+            at.0
+        }
+    }
+    let store = store();
+    let clock = Counting(Mutex::new((now(), 0)));
+    let loaded = booted(&store, tree(), &world("courier"), "courier", clock.now()).unwrap();
+    let written: std::rc::Rc<std::cell::RefCell<Vec<orexis::events::Point>>> = Default::default();
+    let kept = written.clone();
+    let mut wiring = orexis_agent::Wiring::default();
+    if watched {
+        let sink = orexis::series::Sink::new(
+            "METRICS",
+            "m",
+            Box::new(move |_, points| {
+                kept.borrow_mut().extend(points.iter().cloned());
+                Ok(())
+            }),
+        );
+        wiring.watching.metrics = Some(orexis_metrics::Window::new(sink, 0.0, Some("courier"), Some("courier")));
+    }
+    let (mut parts, seen) = orexis_agent::assemble_seen(&store, "courier", &clock, &loaded, Some(128), wiring).unwrap();
+    let outcome = {
+        let lent: Vec<(String, &mut dyn Part)> = parts
+            .iter_mut()
+            .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
+            .collect();
+        let mut runtime = Runtime::new(&store, "courier", &clock, lent).unwrap();
+        runtime.watch = seen.watch.clone();
+        let outcome = runtime.run(Some(12), 0.0).unwrap();
+        runtime.stop();
+        outcome
+    };
+    let reads = clock.0.lock().unwrap().1;
+    let measured = written.borrow().iter().map(|p| p.measurement.clone()).collect();
+    let count = written.borrow().len();
+    (reads, count, outcome, measured)
+}
+
+#[test]
+fn a_timing_never_reads_the_agents_clock() {
+    let (without, with) = (metered_courier(false), metered_courier(true));
+    assert!(
+        with.1 > 0 && without.1 == 0,
+        "the sink was loaded for one run and not the other"
+    );
+    for m in ["search", "published", "intentions", "act", "landing"] {
+        assert!(with.3.contains(m), "{m} measured: {:?}", with.3);
+    }
+    assert_eq!(
+        (with.0, &with.2),
+        (without.0, &without.2),
+        "the clock is read as often, and the run ends the same"
+    );
 }

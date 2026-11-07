@@ -166,6 +166,9 @@ impl Part for Execution<'_> {
             if self.walked_at != Some(pass.now) || self.since != held {
                 self.walk(pass)?;
             }
+            //  THE PASS'S LAP IS MARKED HERE AND ONLY HERE: a walk a revision queued, run among the drain's jobs,
+            //  would mark `execute` over the sensing and revision before it.
+            pass.lap("execute");
         }
         let mut executor = self.executor.borrow_mut();
         if executor.resolved != self.resolved {

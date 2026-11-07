@@ -121,7 +121,18 @@ fn a_day_in_the_greenhouse_sends_the_commands_the_python_grower_sent() {
     };
     let member = Mqtt::new(&store, &format!("{GH}grower"), vec![(None, Box::new(bus))]);
     let inbox = member.inbox.clone();
-    let mut parts = assemble_wired(&store, "grower", &clock, &loaded, None, Wiring { mqtt: Some(member) }).unwrap();
+    let mut parts = assemble_wired(
+        &store,
+        "grower",
+        &clock,
+        &loaded,
+        None,
+        Wiring {
+            mqtt: Some(member),
+            ..Wiring::default()
+        },
+    )
+    .unwrap();
     let lent: Vec<(String, &mut dyn Part)> = parts
         .iter_mut()
         .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))

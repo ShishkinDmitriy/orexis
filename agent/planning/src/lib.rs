@@ -20,6 +20,7 @@ mod bridge;
 mod couplings;
 pub mod create;
 mod derive_wants;
+pub mod events;
 mod extract_plan;
 mod find_scopes;
 mod find_wants;

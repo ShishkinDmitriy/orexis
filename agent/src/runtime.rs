@@ -21,6 +21,7 @@ use oxsdatatypes::DateTime;
 
 use crate::Error;
 use crate::clock::{Clock, seconds};
+use crate::events::{Event, Laps, Mark, Number, Watch, round6};
 use crate::store::Store;
 
 /// How a run ends.
@@ -28,6 +29,43 @@ pub const MET: &str = "met";
 pub const PLANNED: &str = "planned";
 pub const UNREACHABLE: &str = "unreachable";
 pub const UNFINISHED: &str = "unfinished";
+
+/// The measurement a pass is reported under, which the metrics part writes its window after.
+pub const PASS_METRIC: &str = "pass";
+
+/// A pass, in real seconds, whole and by part — the jobs queued run to the last (`drain`), planning, walking; a part
+/// a pass does not reach is not in it — with how large the belief base is, in quads, and how long the process has run.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Passed {
+    pub duration_s: f64,
+    pub laps: Vec<(String, f64)>,
+    pub quads: Option<i64>,
+    pub uptime_s: f64,
+}
+
+impl Event for Passed {
+    fn metric(&self) -> Option<&'static str> {
+        Some(PASS_METRIC)
+    }
+
+    fn marks(&self) -> Vec<(&'static str, Mark)> {
+        let lap = |part: &str| self.laps.iter().find(|(n, _)| n == part).map(|(_, s)| *s);
+        vec![
+            ("duration_s", Mark::Value(Some(self.duration_s))),
+            ("drain_s", Mark::Value(lap("drain_s"))),
+            ("plan_s", Mark::Value(lap("plan_s"))),
+            ("execute_s", Mark::Value(lap("execute_s"))),
+            ("quads", Mark::Level(self.quads.map(Number::Int))),
+            ("uptime_s", Mark::Level(Some(Number::Float(self.uptime_s)))),
+        ]
+    }
+}
+
+/// When the process began, for how long it has run.
+fn started() -> std::time::Instant {
+    static STARTED: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+    *STARTED.get_or_init(std::time::Instant::now)
+}
 
 /// What a part asks for as it starts.
 pub struct Starting<'c> {
@@ -61,9 +99,17 @@ pub struct Pass<'r> {
     held: &'r mut BTreeMap<String, ()>,
     outcome: &'r mut Option<String>,
     again: &'r mut bool,
+    laps: &'r mut Option<Laps>,
 }
 
 impl Pass<'_> {
+    /// Mark the end of a part of the pass, for the pass's event, where anybody watches.
+    pub fn lap(&mut self, part: &str) {
+        if let Some(laps) = self.laps.as_mut() {
+            laps.lap(part);
+        }
+    }
+
     /// `who` keeps the agent running.
     pub fn hold(&mut self, who: &str) {
         self.held.insert(who.to_string(), ());
@@ -125,6 +171,12 @@ pub struct Runtime<'p> {
     held: BTreeMap<String, ()>,
     outcome: Option<String>,
     again: bool,
+    /// WHOEVER WATCHES THE AGENT, hearing each pass where anybody does.
+    pub watch: Watch,
+    laps: Option<Laps>,
+    /// RAISED TO STOP THE RUN, by a signal the process was sent: the run ends before its next pass, `unfinished`, so
+    /// whoever runs it stops every part and the last window is written.
+    pub halt: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
 }
 
 impl<'p> Runtime<'p> {
@@ -146,7 +198,11 @@ impl<'p> Runtime<'p> {
             held: BTreeMap::new(),
             outcome: None,
             again: false,
+            watch: Watch::default(),
+            laps: None,
+            halt: None,
         };
+        started();
         for (i, (_, part)) in runtime.parts.iter_mut().enumerate() {
             let mut starting = Starting {
                 timers: Vec::new(),
@@ -177,9 +233,13 @@ impl<'p> Runtime<'p> {
     /// Run every job queued, and what their writes set off, until none is left; then every part due at `now`, in
     /// the order they asked, the same way: the graphs written.
     pub fn drain(&mut self, now: DateTime) -> Result<Vec<String>, Error> {
+        self.watch.stand(now);
         let mut written = Vec::new();
         self.queue_submitted();
         self.run_jobs(now, &mut written)?;
+        if let Some(laps) = self.laps.as_mut() {
+            laps.lap("drain");
+        }
         for timer in &mut self.timers {
             if timer.due.is_some_and(|due| now < due) {
                 continue;
@@ -199,6 +259,7 @@ impl<'p> Runtime<'p> {
                 held: &mut self.held,
                 outcome: &mut self.outcome,
                 again: &mut self.again,
+                laps: &mut self.laps,
             };
             let wrote = self.parts[part].1.run(job, &mut pass)?;
             self.queue_submitted();
@@ -224,6 +285,7 @@ impl<'p> Runtime<'p> {
                         held: &mut self.held,
                         outcome: &mut self.outcome,
                         again: &mut self.again,
+                        laps: &mut self.laps,
                     };
                     answered.extend(self.parts[part].1.heard(job, &graph, &mut pass)?);
                     self.queue_submitted();
@@ -267,10 +329,22 @@ impl<'p> Runtime<'p> {
     pub fn run(&mut self, passes: Option<usize>, poll_s: f64) -> Result<String, Error> {
         let mut n = 0;
         while passes.is_none_or(|p| n < p) {
+            if self
+                .halt
+                .as_ref()
+                .is_some_and(|h| h.load(std::sync::atomic::Ordering::Relaxed))
+            {
+                log::info!("{}: stopped, after {n} pass(es)", self.id);
+                return Ok(UNFINISHED.to_string());
+            }
             n += 1;
             let now = self.clock.now();
+            //  THE PASS BEGINS BEFORE ITS LAPS DO, so the first part carries no gap between two reads.
+            let began = std::time::Instant::now();
+            self.laps = self.watch.connected().then(Laps::default);
             self.again = false;
             self.drain(now)?;
+            self.passed(began.elapsed().as_secs_f64())?;
             if self.held.is_empty() {
                 log::info!("{}: nothing holds it, after {n} pass(es)", self.id);
                 return Ok(self.outcome.clone().unwrap_or_else(|| MET.to_string()));
@@ -280,6 +354,19 @@ impl<'p> Runtime<'p> {
             }
         }
         Ok(UNFINISHED.to_string())
+    }
+
+    /// Say the pass, where anybody watches.
+    fn passed(&mut self, took: f64) -> Result<(), Error> {
+        let Some(laps) = self.laps.take() else { return Ok(()) };
+        let quads = i64::try_from(self.beliefs.len()?).ok();
+        self.watch.emit(&Passed {
+            duration_s: round6(took),
+            laps: laps.spent,
+            quads,
+            uptime_s: (started().elapsed().as_secs_f64() * 1000.0).round() / 1000.0,
+        });
+        Ok(())
     }
 
     /// Stop every part, the last first.
