@@ -490,6 +490,26 @@ def test_onboarding_refuses_an_agent_declaring_no_role(tmp_path, monkeypatch):
         onboard.onboard("me")
 
 
+def test_onboarding_refuses_a_world_an_agent_of_which_does_not_boot_on_the_binary(monkeypatch):
+    """Each agent the world states is booted on the binary with `--check`, and one it refuses refuses the world, said
+    by the binary's own last line; the rust job holds the binary to every shipped world (`binary/tests/check.rs`)."""
+    import subprocess
+
+    from onboarding import onboard
+
+    asked = []
+
+    def run(command, **_):
+        asked.append(command[-3:])
+        return subprocess.CompletedProcess(command, 3, "", "compiling…\nhanoi: world.ttl will not parse")
+
+    monkeypatch.setattr(onboard.subprocess, "run", run)
+    monkeypatch.setenv("OREXIS_AGENT", "/bin/orexis-agent")
+    with pytest.raises(SystemExit, match="does not boot on the binary — hanoi: world.ttl will not parse"):
+        onboard.checked_on_the_binary(REPO_ROOT / "world" / "hanoi")
+    assert asked == [[str(REPO_ROOT / "world" / "hanoi"), "hanoi", "--check"]]
+
+
 @pytest.mark.parametrize("role, message", NEEDS, ids=[role.rsplit("#", 1)[-1] for role, _ in NEEDS])
 def test_onboarding_refuses_a_declared_role_whose_needs_its_world_lacks(tmp_path, role, message):
     """Declared in the role alone, in a world holding nothing the role needs: the shape its need is
@@ -1296,6 +1316,8 @@ def _onboarded(tmp_path, monkeypatch, world: str, caplog):
     from onboarding import certs, compose, dashboards, influx, mqtt, onboard
 
     root = _installed(tmp_path, monkeypatch, {(world, "world.ttl"): lambda text: text})
+    #  THE BINARY'S CHECK is the rust job's to hold (`binary/tests/check.rs`), and this job builds no binary.
+    monkeypatch.setattr(onboard, "checked_on_the_binary", lambda here: None)
     for module in (onboard, certs, dashboards, influx):
         monkeypatch.setattr(module, "world_dir", lambda name: root / name)
     for module in (compose, mqtt, dashboards):

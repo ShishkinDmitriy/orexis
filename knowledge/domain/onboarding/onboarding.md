@@ -143,6 +143,12 @@ for this agent is the search's to say
 The dashboards ask the same booted agents which packages some agent of the world loads, since a
 world's store holds no self graph to read a role from.
 
+And each agent is booted once more, on the binary its container runs: `orexis-agent <world> <agent> --check` boots
+it in memory and makes every part its roles load over members that reach nothing, so a document that will not
+parse, a self stated twice or a text a part refuses at its making is refused before anything is granted, against
+the documents and secrets the container will be handed (`checked_on_the_binary` in `onboarding/onboard.py`); the
+`rust` job holds every shipped world to it (`binary/tests/check.rs`).
+
 # What it reads that no agent does
 
 Onboarding reads a world as the runtime boots it, and then the kinds no agent reads, declared in
