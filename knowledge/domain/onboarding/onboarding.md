@@ -143,11 +143,13 @@ for this agent is the search's to say
 The dashboards ask the same booted agents which packages some agent of the world loads, since a
 world's store holds no self graph to read a role from.
 
-And each agent is booted once more, on the binary its container runs: `orexis-agent <world> <agent> --check` boots
-it in memory and makes every part its roles load over members that reach nothing, so a document that will not
-parse, a self stated twice or a text a part refuses at its making is refused before anything is granted, against
-the documents and secrets the container will be handed (`checked_on_the_binary` in `onboarding/onboard.py`); the
-`rust` job holds every shipped world to it (`binary/tests/check.rs`).
+Every one of those boots is the binary's, the one its container runs: `orexis-agent <world> <agent> --check
+--boot FILE` boots the agent in memory, writes the store it booted, and makes every part its roles load over members
+that reach nothing, so a document that will not parse, a self stated twice or a text a part refuses at its making is
+refused before anything is granted, against the documents and secrets the container will be handed; and what the
+requirements are held to is what that agent will believe, booted once, by the agent that will run (`reading.boot`).
+Its verdict says beside the store whether the agent holds a desire and what of its world as posed its constraints
+call impossible. The `rust` job holds every shipped world to it (`binary/tests/check.rs`).
 
 # What it reads that no agent does
 

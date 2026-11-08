@@ -286,7 +286,7 @@ def grants(world: str) -> tuple[dict[str, Principal], dict[str, Principal]]:
     for row in _rows(store, _AGENTS_Q):
         agent(row["id"])
     for agent_id in list(agents):
-        beliefs = reading.boot(world_dir(world), agent_id, others=reading.ours())
+        beliefs = reading.boot(world_dir(world), agent_id)
         stated = [*graphs_of(beliefs, BELIEF, common=True), *graphs_of(beliefs, SELF_GRAPH)]
         for row in rows(beliefs, _HEARS_Q, stated):
             agent(agent_id).may(READ, row["pattern"])

@@ -50,7 +50,7 @@ oxsdatatypes = "0.2"
 oxigraph.workspace = true
 log = "0.4"
 signal-hook = "0.3"
+serde_json = "1"
 
 [dev-dependencies]
-serde_json = "1"
 sha2 = "0.11"

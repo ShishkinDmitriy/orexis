@@ -89,8 +89,16 @@ fn every_agent_of_every_world_boots_and_makes_its_parts() {
             world.display()
         );
         for agent in ids {
-            match check(Path::new(TREE), &world, &agent, now) {
-                Ok(loaded) => assert!(!loaded.is_empty(), "{agent} makes no part"),
+            match check(Path::new(TREE), &world, &agent, now, None) {
+                Ok(checked) => {
+                    assert!(!checked.loaded.is_empty(), "{agent} makes no part");
+                    assert!(
+                        checked.contradictions.is_empty(),
+                        "{}/{agent} is posed in a state its constraints say is impossible: {:?}",
+                        world.display(),
+                        checked.contradictions
+                    );
+                }
                 Err(e) => refused.push(format!("{}/{agent}: {e}", world.display())),
             }
             checked += 1;
@@ -111,9 +119,52 @@ fn an_agent_the_world_does_not_state_is_refused() {
         &world,
         "nobody",
         instant("2026-11-07T12:00:00Z").unwrap(),
+        None,
     )
     .unwrap_err();
     assert!(refused.to_string().contains("nobody"), "{refused}");
+}
+
+#[test]
+fn the_boot_is_written_as_the_agent_believes_it_and_a_desire_is_told_from_wants_alone() {
+    let now = instant("2026-11-07T12:00:00Z").unwrap();
+    let dir = std::env::temp_dir().join(format!("orexis-check-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("hanoi.nq");
+    let hanoi = check(
+        Path::new(TREE),
+        &Path::new(TREE).join("../world/hanoi"),
+        "hanoi",
+        now,
+        Some(&file),
+    )
+    .unwrap();
+    assert!(!hanoi.desire, "the mover holds wants alone, and finishes");
+    let store = oxigraph::store::Store::new().unwrap();
+    store
+        .load_from_slice(
+            RdfParser::from_format(RdfFormat::NQuads),
+            &std::fs::read(&file).unwrap(),
+        )
+        .unwrap();
+    let QueryResults::Boolean(catalogued) = SparqlEvaluator::new()
+        .parse_query("ASK { GRAPH ?c { ?c a <http://example.org/orexis#CatalogueGraph> } }")
+        .unwrap()
+        .on_store(&store)
+        .execute()
+        .unwrap()
+    else {
+        unreachable!()
+    };
+    assert!(catalogued, "the boot written holds no catalogue");
+    std::fs::remove_dir_all(&dir).unwrap();
+    let world = Path::new(TREE).join("../world/greenhouse");
+    assert!(
+        agents(&world)
+            .iter()
+            .any(|a| check(Path::new(TREE), &world, a, now, None).unwrap().desire),
+        "no agent of the greenhouse holds a desire"
+    );
 }
 
 #[test]
@@ -124,7 +175,9 @@ fn an_agent_in_a_chat_by_email_boots_with_its_mailbox() {
         &world,
         "seeker",
         instant("2026-11-07T12:00:00Z").unwrap(),
+        None,
     )
-    .unwrap();
+    .unwrap()
+    .loaded;
     assert!(loaded.iter().any(|p| p == "transport/email"), "{loaded:?}");
 }

@@ -41,14 +41,59 @@ pub fn booted(
     Ok(loaded)
 }
 
+/// One row of a violated constraint: the instance, the constraint and what it offended by, as the planner says them.
+pub type Broken = (String, Option<String>, Option<String>, Option<String>);
+
+/// What a check found of an agent that boots: the packages it loads, whether it holds a desire, and every constraint
+/// it holds that its world as posed violates, with the rows — `orexis-onboard` refuses such a world, since no agent
+/// repairs what its own word says is impossible (constraint.md).
+#[derive(Debug, Default)]
+pub struct Checked {
+    pub loaded: Vec<String>,
+    pub desire: bool,
+    pub contradictions: Vec<(String, Vec<Broken>)>,
+}
+
 /// CHECK `agent` of `world` as its container would boot it, and run nothing: booted into a store in memory from the
 /// documents of `tree`, and every part its roles load made over members that reach nothing — no broker, no web, no bot
-/// and no model — so every text a part parses at its making is parsed. The packages it loads, or why it would not boot.
+/// and no model — so every text a part parses at its making is parsed. What it found, or why it would not boot; and,
+/// where `boot` names a file, the store as booted, in N-Quads, before any part is made — which is what onboarding
+/// holds to the requirements, so the world is booted once, by the agent that will run it.
 /// `orexis-onboard` asks it of every agent before anything is granted, and `binary/tests/check.rs` of every world.
-pub fn check(tree: &Path, world: &Path, agent: &str, now: oxsdatatypes::DateTime) -> Result<Vec<String>, Error> {
+pub fn check(
+    tree: &Path,
+    world: &Path,
+    agent: &str,
+    now: oxsdatatypes::DateTime,
+    boot: Option<&Path>,
+) -> Result<Checked, Error> {
     let namespaces = Arc::new(orexis::namespaces::Namespaces::of_tree(tree)?);
     let store = Store::new(namespaces)?;
     let loaded = booted(&store, tree, world, agent, now)?;
+    if let Some(path) = boot {
+        let file = std::io::BufWriter::new(std::fs::File::create(path)?);
+        store
+            .engine()
+            .dump_to_writer(
+                oxigraph::io::RdfSerializer::from_format(oxigraph::io::RdfFormat::NQuads),
+                file,
+            )
+            .map_err(|e| Error::Evaluation(format!("the boot will not dump: {e}")))?;
+    }
+    let mut checked = Checked {
+        loaded,
+        ..Checked::default()
+    };
+    #[cfg(feature = "planning")]
+    if checked.loaded.iter().any(|p| p == "planning") {
+        let planner = orexis_planning::Planner::new(&store, agent, None)?;
+        checked.desire = planner.holds_a_desire()?;
+        checked.contradictions = planner
+            .contradictions(now)?
+            .into_iter()
+            .map(|(c, rows)| (c, rows.into_iter().collect()))
+            .collect();
+    }
     let clock = orexis::clock::Manual::at(now);
     #[allow(unused_variables)]
     let me = orexis::boot::selves(&store)?.into_iter().next().unwrap_or_default();
@@ -70,8 +115,8 @@ pub fn check(tree: &Path, world: &Path, agent: &str, now: oxsdatatypes::DateTime
         email: Some(orexis_email::driver::Email::new(&store, &me, Arc::new(Unreachable))),
         ..Wiring::default()
     };
-    assemble_seen(&store, agent, &clock, &loaded, None, wiring)?;
-    Ok(loaded)
+    assemble_seen(&store, agent, &clock, &checked.loaded, None, wiring)?;
+    Ok(checked)
 }
 
 /// The mailbox a check reaches: none.

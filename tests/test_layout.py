@@ -495,18 +495,19 @@ def test_onboarding_refuses_a_world_an_agent_of_which_does_not_boot_on_the_binar
     by the binary's own last line; the rust job holds the binary to every shipped world (`binary/tests/check.rs`)."""
     import subprocess
 
-    from onboarding import onboard
+    from onboarding import reading
 
     asked = []
 
     def run(command, **_):
-        asked.append(command[-3:])
+        asked.append(command[-5:-2])
         return subprocess.CompletedProcess(command, 3, "", "compiling…\nhanoi: world.ttl will not parse")
 
-    monkeypatch.setattr(onboard.subprocess, "run", run)
+    monkeypatch.setattr(reading.subprocess, "run", run)
     monkeypatch.setenv("OREXIS_AGENT", "/bin/orexis-agent")
+    reading._checked_as.cache_clear()
     with pytest.raises(SystemExit, match="does not boot on the binary — hanoi: world.ttl will not parse"):
-        onboard.checked_on_the_binary(REPO_ROOT / "world" / "hanoi")
+        reading.check(REPO_ROOT / "world" / "hanoi")
     assert asked == [[str(REPO_ROOT / "world" / "hanoi"), "hanoi", "--check"]]
 
 
@@ -1316,8 +1317,6 @@ def _onboarded(tmp_path, monkeypatch, world: str, caplog):
     from onboarding import certs, compose, dashboards, influx, mqtt, onboard
 
     root = _installed(tmp_path, monkeypatch, {(world, "world.ttl"): lambda text: text})
-    #  THE BINARY'S CHECK is the rust job's to hold (`binary/tests/check.rs`), and this job builds no binary.
-    monkeypatch.setattr(onboard, "checked_on_the_binary", lambda here: None)
     for module in (onboard, certs, dashboards, influx):
         monkeypatch.setattr(module, "world_dir", lambda name: root / name)
     for module in (compose, mqtt, dashboards):
