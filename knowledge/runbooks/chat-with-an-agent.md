@@ -82,10 +82,10 @@ cd world/terrace && podman compose build && podman compose up -d
 ```
 
 The compose file mounts the agent's own directory, `secrets/<agent>/`, whole, so a document written there
-reaches the agent on its next restart and changes nothing committed. Each agent runs an image holding only its own packages and what they bring
-([a-package-brings-its-own-dependencies](/decisions/a-package-brings-its-own-dependencies.md)), so
-build the terrace's once before its first start, and again only when a package it runs changes what it
-brings; a change to the code alone is mounted from the tree and needs a restart.
+reaches the agent on its next restart and changes nothing committed. The terrace runs on the binary, built with
+the features of the packages it runs ([the-agent-moves-to-rust-one-package-at-a-time](/decisions/the-agent-moves-to-rust-one-package-at-a-time.md)),
+so build its image before its first start and again after any change to `agent/` or `binary/`; only the
+domains are mounted, and a change to them needs a restart.
 
 # Check it is listening
 
