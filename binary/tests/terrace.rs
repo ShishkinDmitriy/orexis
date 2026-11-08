@@ -238,6 +238,7 @@ fn terrace(
         telegram: Some(telegram),
         model,
         watching,
+        ..Wiring::default()
     };
     let clock = Manual::at(noon());
     let (mut parts, seen) = assemble_seen(&t.store, "terrace", &clock, &loaded, None, wiring).unwrap();

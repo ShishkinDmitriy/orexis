@@ -1,0 +1,26 @@
+# THE EMAIL TRANSPORT: an agent's own mailbox over IMAP and SMTP — ported from `agent/transport/email/*.py` beside it,
+# held to what its suite asks (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md).
+[package]
+name = "orexis-email"
+version = "0.2.0"
+edition.workspace = true
+license.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+orexis = { path = "../.." }
+oxigraph.workspace = true
+oxsdatatypes = "0.2"
+log = "0.4"
+# rustls, as the bus and the web are spoken, so the image needs no CA bundle and no OpenSSL.
+imap = { version = "3.0.0-alpha.15", default-features = false, features = ["rustls-tls"] }
+lettre = { version = "0.11", default-features = false, features = ["smtp-transport", "builder", "rustls-tls"] }
+mail-parser = "0.11"
+# THE ONE CRYPTO PROVIDER the mailbox's TLS is spoken with, installed before it connects, since two crates beneath
+# would otherwise each bring one and rustls refuses to pick.
+rustls = { version = "0.23", default-features = false, features = ["ring", "std"] }
+
+[dev-dependencies]
+orexis = { path = "../..", features = ["snapshots"] }

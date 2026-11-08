@@ -15,7 +15,7 @@ path = "src/main.rs"
 path = "src/lib.rs"
 
 [features]
-default = ["belief", "planning", "execution", "sensing", "prediction", "speech", "coordination", "translation", "mqtt", "http", "telegram"]
+default = ["belief", "planning", "execution", "sensing", "prediction", "speech", "coordination", "translation", "mqtt", "http", "telegram", "email"]
 belief = ["dep:orexis-belief"]
 planning = ["dep:orexis-planning"]
 execution = ["dep:orexis-execution"]
@@ -27,6 +27,7 @@ coordination = ["dep:orexis-coordination"]
 translation = ["dep:orexis-translation", "speech"]
 http = ["dep:orexis-http"]
 telegram = ["dep:orexis-telegram"]
+email = ["dep:orexis-email"]
 volume = ["orexis/volume", "oxigraph/rocksdb"]
 
 [dependencies]
@@ -42,6 +43,7 @@ orexis-coordination = { path = "../agent/coordination", optional = true }
 orexis-translation = { path = "../agent/translation", optional = true }
 orexis-http = { path = "../agent/transport/http", optional = true }
 orexis-telegram = { path = "../agent/transport/telegram", optional = true }
+orexis-email = { path = "../agent/transport/email", optional = true }
 orexis-history = { path = "../agent/history" }
 orexis-metrics = { path = "../agent/metrics" }
 oxsdatatypes = "0.2"
