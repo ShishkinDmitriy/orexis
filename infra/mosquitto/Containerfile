@@ -16,9 +16,12 @@
 # "by ANY means", including --privileged, which does not lift AppArmor. It was never the libc.
 #
 # It also denied every signal to the broker (abi 4.0 mediates signals; the profile grants none),
-# which is why `podman stop` needed 10s and a SIGKILL. The package is now removed from the host
-# and the profile unloaded — measured: the broker process reads `crun (unconfined)`, stop takes
-# 1s and exits 0. DO NOT reinstall the server package on the host; mosquitto-clients is fine.
+# which is why `podman stop` needed 10s and a SIGKILL. The package was removed from the host,
+# which held until `apparmor` itself came to ship the profile: after the upgrade to 5.0.2 and a
+# reboot on 2026-11-09, every broker was refused its key in /run/mosquitto and exited. So the image
+# keeps the broker where no profile attaches, and what a host has installed no longer matters:
+# measured, the broker process reads `crun (unconfined)`, where `--security-opt apparmor=unconfined`
+# leaves it `mosquitto (enforce)`, the entrypoint's shell being the only process that option reaches.
 #
 # Two consequences kept anyway, because they cost nothing and hold if a profile ever returns:
 #
@@ -62,6 +65,7 @@ RUN apt-get update \
 
 # The packaged config writes a pid file, and the directory for it is created by systemd on a
 # host install. There is no systemd here.
+RUN mv /usr/sbin/mosquitto /usr/local/sbin/mosquitto
 RUN install -d -o mosquitto -g mosquitto /run/mosquitto
 
 # NO `USER` here, deliberately, and it is not a privilege regression — read entrypoint.sh.

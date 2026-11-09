@@ -73,7 +73,8 @@ Both halves were necessary:
 - while the host had mosquitto installed, the root PID 1 still could not forward the signal:
   that package ships `/etc/apparmor.d/mosquitto`, a profile bound to `/usr/sbin/mosquitto` — so
   it confined the *container's* broker too, and under `abi <abi/4.0>` a profile with no `signal`
-  rules denies every signal sent to it. **Removing the host package fixes this**, and the
+  rules denies every signal sent to it. **Keeping the broker off that path fixes this**, as the image now does at
+  `/usr/local/sbin/mosquitto` since the `apparmor` package came to ship the profile itself, and the
   difference is measurable: `podman stop` goes from 10s-then-`SIGKILL` (exit 137) to 1s and a
   clean exit 0, which is what lets mosquitto flush its persistence file instead of losing
   retained cadences.

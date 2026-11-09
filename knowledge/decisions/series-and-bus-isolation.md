@@ -209,6 +209,10 @@ correct its permissions are. Note also that `password_file` must be world-readab
 broker runs as an unprivileged user in a container that maps the host user to root. It holds
 PBKDF2 hashes; the plaintext stays 0600 in the per-principal files.
 
+Removing the host's package ended it until the `apparmor` package came to ship the profile itself,
+so after the upgrade to 5.0.2 every broker was refused its key on boot (2026-11-09). The image now
+keeps the broker at `/usr/local/sbin/mosquitto`, where no profile attaches, whatever the host has.
+
 The same profile mediated **signals**, which is why reloading took a second attempt. PID 1 in the
 container is a root shell that starts the broker as a child (`infra/mosquitto/entrypoint.sh`),
 because rootless podman cannot signal an unprivileged PID 1 — and dropping `USER` from the image
