@@ -34,10 +34,9 @@
 +  :sensed.changeable prov:wasDerivedFrom :sensed .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
--}
 +  :world planning:cutBy "sha256:79a8c5917d7f90336d9f1fb7bd315a20df72059cf7cf98de56f00fff05dac6e0" .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T120000p0000 orexis:hash "sha256:6049dbc777f47880d902c748f455b6e2f0c0df6ee3e7cd098544d26edb928bc8" .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range a planning:Weighing .
@@ -62,7 +61,7 @@
 +  plan:keeper.in_range.pursued.tank1.2.retracts a execution:RetractsGraph .
 +  plan:keeper.in_range.pursued.tank1.2.retracts orexis:arrivedBy orexis:Derived .
 +  possible:1 a planning:PossibleGraph .
-+  possible:1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:03:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:01:00+00:00"^^xsd:dateTime ] .
++  possible:1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:03:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:01:00Z"^^xsd:dateTime ] .
 +  possible:1 orexis:arrivedBy orexis:Derived .
 +  possible:1 orexis:hash "sha256:5fc000937f8262b502a2b8f48b0d1f90bac44c72d656db033cb7a98eaf7e9e49" .
 +  possible:1 planning:by possible:1.by .
@@ -80,7 +79,7 @@
 +  possible:1.for.keeper.in_range.pursued.tank1 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ; planning:offending 5 ] .
 +  possible:1.for.keeper.in_range.pursued.tank1 planning:weighs possible:1 .
 +  possible:2 a planning:PossibleGraph .
-+  possible:2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:06:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:02:00+00:00"^^xsd:dateTime ] .
++  possible:2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:06:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:02:00Z"^^xsd:dateTime ] .
 +  possible:2 orexis:arrivedBy orexis:Derived .
 +  possible:2 orexis:hash "sha256:192e554eacef02d6c30628031f9be08a4e529dc6070f1fc2867ab73d8cc1f6d6" .
 +  possible:2 planning:by possible:2.by .
@@ -97,7 +96,7 @@
 +  possible:2.for.keeper.in_range.pursued.tank1 planning:weighs possible:2 .
 +  pursued:2026-01-01T120000p0000--open a orexis:Graph .
 +  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
-+  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
 +  pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
 +}
@@ -115,9 +114,9 @@
 +  plan:keeper.in_range.pursued.tank1.1 :tank :tank1 .
 +  plan:keeper.in_range.pursued.tank1.1 a execution:Step .
 +  plan:keeper.in_range.pursued.tank1.1 execution:adds plan:keeper.in_range.pursued.tank1.1.adds .
-+  plan:keeper.in_range.pursued.tank1.1 execution:landsAt "2026-01-01T12:01:00+00:00"^^xsd:dateTime .
-+  plan:keeper.in_range.pursued.tank1.1 execution:notAfter "2026-01-01T12:03:00+00:00"^^xsd:dateTime .
-+  plan:keeper.in_range.pursued.tank1.1 execution:notBefore "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  plan:keeper.in_range.pursued.tank1.1 execution:landsAt "2026-01-01T12:01:00Z"^^xsd:dateTime .
++  plan:keeper.in_range.pursued.tank1.1 execution:notAfter "2026-01-01T12:03:00Z"^^xsd:dateTime .
++  plan:keeper.in_range.pursued.tank1.1 execution:notBefore "2026-01-01T12:00:00Z"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.1 execution:partOf plan:keeper.in_range.pursued.tank1 .
 +  plan:keeper.in_range.pursued.tank1.1 execution:retracts plan:keeper.in_range.pursued.tank1.1.retracts .
 +  plan:keeper.in_range.pursued.tank1.1 execution:then plan:keeper.in_range.pursued.tank1.2 .
@@ -126,9 +125,9 @@
 +  plan:keeper.in_range.pursued.tank1.2 :tank :tank1 .
 +  plan:keeper.in_range.pursued.tank1.2 a execution:Step .
 +  plan:keeper.in_range.pursued.tank1.2 execution:adds plan:keeper.in_range.pursued.tank1.2.adds .
-+  plan:keeper.in_range.pursued.tank1.2 execution:landsAt "2026-01-01T12:02:00+00:00"^^xsd:dateTime .
-+  plan:keeper.in_range.pursued.tank1.2 execution:notAfter "2026-01-01T12:06:00+00:00"^^xsd:dateTime .
-+  plan:keeper.in_range.pursued.tank1.2 execution:notBefore "2026-01-01T12:01:00+00:00"^^xsd:dateTime .
++  plan:keeper.in_range.pursued.tank1.2 execution:landsAt "2026-01-01T12:02:00Z"^^xsd:dateTime .
++  plan:keeper.in_range.pursued.tank1.2 execution:notAfter "2026-01-01T12:06:00Z"^^xsd:dateTime .
++  plan:keeper.in_range.pursued.tank1.2 execution:notBefore "2026-01-01T12:01:00Z"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.2 execution:partOf plan:keeper.in_range.pursued.tank1 .
 +  plan:keeper.in_range.pursued.tank1.2 execution:retracts plan:keeper.in_range.pursued.tank1.2.retracts .
 +  plan:keeper.in_range.pursued.tank1.2 planning:fills :fill .
@@ -164,7 +163,7 @@
 +  :keeper.in_range.pursued.tank1 a planning:Want .
 +  :keeper.in_range.pursued.tank1 planning:metWhen :keeper.in_range.pursued.tank1.met .
 +  :keeper.in_range.pursued.tank1 planning:state planning:Recognized .
-+  :keeper.in_range.pursued.tank1 prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.in_range.pursued.tank1 prov:generatedAtTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
 +  :keeper.in_range.pursued.tank1 prov:wasDerivedFrom :keeper.in_range .
 +  :keeper.in_range.pursued.tank1 rdfs:label "pursued: every tank in range" .
 +  :keeper.in_range.pursued.tank1.met a sh:NodeShape .
@@ -174,4 +173,4 @@
 +
 +GRAPH :sensed.changeable {
 +  :tank1 :level 0 .
-+}
+ }

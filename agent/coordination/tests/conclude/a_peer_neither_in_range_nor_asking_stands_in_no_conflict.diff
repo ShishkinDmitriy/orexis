@@ -1,5 +1,14 @@
 --- case
 +++ expected
+@@ -16,7 +16,7 @@
+   :answer coordination:holding :answer.holding .
+   :answer coordination:over :no_two_vans .
+   :answer.holding a coordination:Holding .
+-  :answer.holding coordination:from "2026-01-01T12:01:00+00:00"^^xsd:dateTime .
++  :answer.holding coordination:from "2026-01-01T12:01:00Z"^^xsd:dateTime .
+   :answer.holding coordination:of :van_p .
+   :answer.holding courier:x 3 .
+   :answer.holding courier:y 1 .
 @@ -44,6 +44,11 @@
    :state a orexis:Graph .
    :world a orexis:BeliefGraph .
@@ -23,6 +32,6 @@
 +  conflict:2216b9a9c788124d coordination:draw conflict:2216b9a9c788124d.round.0 .
 +  conflict:2216b9a9c788124d coordination:over :no_two_vans .
 +  conflict:2216b9a9c788124d coordination:round 0 .
-+  conflict:2216b9a9c788124d coordination:since "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  conflict:2216b9a9c788124d coordination:since "2026-01-01T12:00:00Z"^^xsd:dateTime .
 +  conflict:2216b9a9c788124d coordination:with :peer .
 +}

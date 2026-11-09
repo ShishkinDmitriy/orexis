@@ -19,10 +19,9 @@
 +  :sensed.changeable prov:wasDerivedFrom :sensed .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
--}
 +  :world planning:cutBy "sha256:2deb87bf68488e0e88a46d10eea04e3ee15d48c39781b51b555d87b8499254df" .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T120000p0000 orexis:hash "sha256:75beff4b3e6086898a01001eb697652e11114290129ba919a4ad3343aae879be" .
 +  ground:2026-01-01T120000p0000.for.keeper.apart a planning:Weighing .
@@ -45,7 +44,7 @@
 +  plan:keeper.apart.pursued.1.retracts a execution:RetractsGraph .
 +  plan:keeper.apart.pursued.1.retracts orexis:arrivedBy orexis:Derived .
 +  possible:1 a planning:PossibleGraph .
-+  possible:1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  possible:1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  possible:1 orexis:arrivedBy orexis:Derived .
 +  possible:1 orexis:hash "sha256:ef39f170ad670d00691ee758f354199ce15397d484025aafd22e4ccea6ad27ff" .
 +  possible:1 planning:by possible:1.by .
@@ -62,7 +61,7 @@
 +  possible:1.for.keeper.apart.pursued planning:met true .
 +  possible:1.for.keeper.apart.pursued planning:weighs possible:1 .
 +  possible:2 a planning:PossibleGraph .
-+  possible:2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  possible:2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  possible:2 orexis:arrivedBy orexis:Derived .
 +  possible:2 orexis:hash "sha256:c653a8aa4cae3f2ec108191c20b78faaaae088278ed51020ec7f29e9bd36a118" .
 +  possible:2 planning:by possible:2.by .
@@ -80,7 +79,7 @@
 +  possible:2.for.keeper.apart.pursued planning:weighs possible:2 .
 +  pursued:2026-01-01T120000p0000--open a orexis:Graph .
 +  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
-+  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
 +  pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
 +}
@@ -100,9 +99,9 @@
 +  plan:keeper.apart.pursued.1 :to :stand_b .
 +  plan:keeper.apart.pursued.1 a execution:Step .
 +  plan:keeper.apart.pursued.1 execution:adds plan:keeper.apart.pursued.1.adds .
-+  plan:keeper.apart.pursued.1 execution:landsAt "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
-+  plan:keeper.apart.pursued.1 execution:notAfter "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
-+  plan:keeper.apart.pursued.1 execution:notBefore "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  plan:keeper.apart.pursued.1 execution:landsAt "2026-01-01T12:00:00Z"^^xsd:dateTime .
++  plan:keeper.apart.pursued.1 execution:notAfter "2026-01-01T12:00:00Z"^^xsd:dateTime .
++  plan:keeper.apart.pursued.1 execution:notBefore "2026-01-01T12:00:00Z"^^xsd:dateTime .
 +  plan:keeper.apart.pursued.1 execution:partOf plan:keeper.apart.pursued .
 +  plan:keeper.apart.pursued.1 execution:retracts plan:keeper.apart.pursued.1.retracts .
 +  plan:keeper.apart.pursued.1 planning:fills :move .
@@ -132,7 +131,7 @@
 +  :keeper.apart.pursued a planning:Want .
 +  :keeper.apart.pursued planning:state planning:Recognized .
 +  :keeper.apart.pursued planning:unmetWhen :keeper.apart.pursued.avoided .
-+  :keeper.apart.pursued prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.apart.pursued prov:generatedAtTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
 +  :keeper.apart.pursued prov:wasDerivedFrom :keeper.apart .
 +  :keeper.apart.pursued rdfs:label "pursued: no stand holds two tanks" .
 +  :keeper.apart.pursued.avoided sh:select "PREFIX : <http://example.org/test#> SELECT $this ?value WHERE { $this a :Tank ; :on ?value . ?other a :Tank ; :on ?value . FILTER(?other != $this) }" .
@@ -143,4 +142,4 @@
 +GRAPH :sensed.changeable {
 +  :tank1 :on :stand_a .
 +  :tank2 :on :stand_a .
-+}
+ }

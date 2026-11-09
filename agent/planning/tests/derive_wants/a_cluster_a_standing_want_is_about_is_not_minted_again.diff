@@ -26,6 +26,15 @@
  }
  
  GRAPH pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b {
+@@ -144,7 +132,7 @@
+   :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:estimates :drivesOwed .
+   :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:metWhen :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b.met .
+   :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:state planning:Recognized .
+-  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b prov:generatedAtTime "2026-01-01T11:00:00+00:00"^^xsd:dateTime .
++  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b prov:generatedAtTime "2026-01-01T11:00:00Z"^^xsd:dateTime .
+   :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b prov:wasDerivedFrom :keeper.every_parcel_delivered .
+   :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b rdfs:label "pursued: every parcel where it is owed" .
+   :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b.met a sh:NodeShape .
 @@ -191,11 +179,69 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
@@ -41,7 +50,7 @@
 +  :world.changeable orexis:arrivedBy orexis:Derived .
 +  :world.changeable prov:wasDerivedFrom :world .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T120000p0000 orexis:hash "sha256:b7a3a4015dc513a7c519d910f42b80b35ddf765eb406dd6fa8d5b92973f57d1c" .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered a planning:Weighing .
@@ -58,7 +67,8 @@
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:weighs ground:2026-01-01T120000p0000 .
    pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b a orexis:Graph .
    pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b a planning:WantGraph .
-   pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
+-  pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
++  pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00Z"^^xsd:dateTime ] .
    pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b orexis:arrivedBy orexis:Derived .
    pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b orexis:ownedBy :keeper .
  }

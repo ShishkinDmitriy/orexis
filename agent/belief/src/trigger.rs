@@ -217,7 +217,7 @@ fn describe(store: &Store, cat: &str, into: &str, row: &orexis::store::Row) -> R
 
 #[cfg(test)]
 mod tests {
-    //! `trigger`, one case per file, held to the diff the Python suite wrote (`agent/belief/tests/test_trigger.py`).
+    //! `trigger`, one case per file, held to its diff (`agent/belief/tests/test_trigger.py`).
 
     use std::collections::BTreeMap;
     use std::path::PathBuf;

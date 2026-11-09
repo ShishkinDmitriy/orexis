@@ -1130,7 +1130,7 @@ impl<'a> Planner<'a> {
 
 #[cfg(test)]
 mod tests {
-    //! The Planner, held to what the Python suites hold it to: `plans/`'s cases (the imaginarium a pass leaves),
+    //! The Planner, held to `plans/`'s cases (the imaginarium a pass leaves),
     //! `expand/`'s (one iteration), and the tests of `test_planner.py`, `test_search.py`, `test_extract_plan.py` and
     //! `test_publish_plan.py` that need no executor. Those that walk steps through an executor wait for execution: a
     //! plan published and adopted by nobody is walked, as `walking` reads it, which is what the rest stand on.

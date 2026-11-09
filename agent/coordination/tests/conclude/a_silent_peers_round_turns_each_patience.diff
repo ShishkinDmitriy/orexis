@@ -1,6 +1,12 @@
 --- case
 +++ expected
-@@ -34,6 +34,7 @@
+@@ -29,11 +29,12 @@
+   asked:no_two_vans a coordination:QuestionGraph .
+   asked:no_two_vans a orexis:Graph .
+   asked:no_two_vans a speech:StatementGraph .
+-  asked:no_two_vans dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:30+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:58:00+00:00"^^xsd:dateTime ] .
++  asked:no_two_vans dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:30Z"^^xsd:dateTime ; orexis:start "2026-01-01T11:58:00Z"^^xsd:dateTime ] .
+   asked:no_two_vans orexis:arrivedBy orexis:Recorded .
    coordinated:conflicts a orexis:BeliefGraph .
    coordinated:conflicts a orexis:Graph .
    coordinated:conflicts orexis:arrivedBy orexis:Derived .
@@ -19,7 +25,7 @@
 +  conflict:2216b9a9c788124d coordination:round 1 .
    conflict:2216b9a9c788124d coordination:silent true .
 -  conflict:2216b9a9c788124d coordination:since "2026-01-01T11:58:59+00:00"^^xsd:dateTime .
-+  conflict:2216b9a9c788124d coordination:since "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  conflict:2216b9a9c788124d coordination:since "2026-01-01T12:00:00Z"^^xsd:dateTime .
    conflict:2216b9a9c788124d coordination:standing true .
    conflict:2216b9a9c788124d coordination:with :peer .
  }

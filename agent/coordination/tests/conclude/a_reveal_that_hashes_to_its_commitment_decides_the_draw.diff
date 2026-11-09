@@ -1,5 +1,14 @@
 --- case
 +++ expected
+@@ -17,7 +17,7 @@
+   :answer coordination:holding :answer.holding .
+   :answer coordination:over :no_two_vans .
+   :answer.holding a coordination:Holding .
+-  :answer.holding coordination:from "2026-01-01T12:01:00+00:00"^^xsd:dateTime .
++  :answer.holding coordination:from "2026-01-01T12:01:00Z"^^xsd:dateTime .
+   :answer.holding coordination:of :van_p .
+   :answer.holding courier:x 3 .
+   :answer.holding courier:y 1 .
 @@ -52,6 +52,7 @@
    coordinated:conflicts a orexis:BeliefGraph .
    coordinated:conflicts a orexis:Graph .
@@ -8,8 +17,12 @@
    coordinated:conflicts orexis:ownedBy :keeper .
  }
  GRAPH :constraints {
-@@ -141,4 +142,5 @@
-   conflict:2216b9a9c788124d coordination:since "2026-01-01T11:59:30+00:00"^^xsd:dateTime .
+@@ -138,7 +139,8 @@
+   conflict:2216b9a9c788124d coordination:draw conflict:2216b9a9c788124d.round.0 .
+   conflict:2216b9a9c788124d coordination:over :no_two_vans .
+   conflict:2216b9a9c788124d coordination:round 0 .
+-  conflict:2216b9a9c788124d coordination:since "2026-01-01T11:59:30+00:00"^^xsd:dateTime .
++  conflict:2216b9a9c788124d coordination:since "2026-01-01T11:59:30Z"^^xsd:dateTime .
    conflict:2216b9a9c788124d coordination:standing true .
    conflict:2216b9a9c788124d coordination:with :peer .
 +  conflict:2216b9a9c788124d.round.0 coordination:wonBy :keeper .

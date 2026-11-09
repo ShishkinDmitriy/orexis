@@ -15,7 +15,7 @@
 //! - [`transport`]: what is the same of every transport member — the inbox, a person's prose, what carries a chat;
 //! - [`stance`]: a figure the agent states of itself in its self graph;
 //! - [`ontology`]: the kernel's terms code may name (rule 1: a T-Box term, never an instance);
-//! - [`snapshots`]: the case runner, holding a store to the Python suite's own `.trig` and `.diff`.
+//! - [`snapshots`]: the case runner, holding a store to its `.trig` and `.diff` and writing the diff on request.
 
 pub mod bind;
 pub mod boot;

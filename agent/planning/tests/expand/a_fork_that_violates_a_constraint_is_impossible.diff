@@ -1,16 +1,26 @@
 --- case
 +++ expected
-@@ -63,8 +63,7 @@
+@@ -63,9 +63,8 @@
    :one_level sh:select "PREFIX : <http://example.org/test#> SELECT $this ?value WHERE { $this a :Tank ; :level ?value . ?other a :Tank ; :level ?value . FILTER(?other != $this) }" .
  }
  
 -GRAPH :sensed {
 -}
-+
  
++
  GRAPH :scopes {
    :fill planning:inScope :keeper.scope.1 .
-@@ -110,11 +109,55 @@
+   :keeper.scope.1 a planning:Scope .
+@@ -97,7 +96,7 @@
+   :world a orexis:BeliefGraph .
+   :world a orexis:Graph .
+   ground:2026-01-01T120000p0000 a planning:GroundGraph .
+-  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
+   ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
+   ground:2026-01-01T120000p0000 orexis:hash "sha256:b925a49cc433542befaf03149f9d7f1e92e07473431966218677da6fae49dc78" .
+   ground:2026-01-01T120000p0000.for.keeper.apart a planning:Weighing .
+@@ -110,14 +109,58 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ; planning:offending 0 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued a planning:Weighing .
@@ -21,7 +31,7 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ; planning:offending 0 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued planning:weighs ground:2026-01-01T120000p0000 .
 +  possible:1 a planning:PossibleGraph .
-+  possible:1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  possible:1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  possible:1 orexis:arrivedBy orexis:Derived .
 +  possible:1 orexis:hash "sha256:886db30e45d2ce9df71bfa463e64da2ed0b025d20c419774efde962241fa9582" .
 +  possible:1 planning:by possible:1.by .
@@ -43,7 +53,7 @@
 +  possible:1.for.keeper.in_range.pursued planning:for :keeper.in_range.pursued .
 +  possible:1.for.keeper.in_range.pursued planning:weighs possible:1 .
 +  possible:2 a planning:PossibleGraph .
-+  possible:2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  possible:2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  possible:2 orexis:arrivedBy orexis:Derived .
 +  possible:2 orexis:hash "sha256:71af2c683666133f094033222ad82f45676a17913532f4ca8f587ecc30cc9993" .
 +  possible:2 planning:by possible:2.by .
@@ -66,7 +76,20 @@
 +  possible:2.for.keeper.in_range.pursued planning:weighs possible:2 .
    pursued:2026-01-01T120000p0000--open a orexis:Graph .
    pursued:2026-01-01T120000p0000--open a planning:WantGraph .
-   pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+-  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
+   pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
+   pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
+ }
+@@ -132,7 +175,7 @@
+   :keeper.in_range.pursued a planning:Want .
+   :keeper.in_range.pursued planning:metWhen :keeper.in_range.pursued.met .
+   :keeper.in_range.pursued planning:state planning:Recognized .
+-  :keeper.in_range.pursued prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.in_range.pursued prov:generatedAtTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
+   :keeper.in_range.pursued prov:wasDerivedFrom :keeper.in_range .
+   :keeper.in_range.pursued rdfs:label "pursued: the tank in range" .
+   :keeper.in_range.pursued.met a sh:NodeShape .
 @@ -144,3 +187,14 @@
    :tank1 :level 0 .
    :tank2 :level 5 .

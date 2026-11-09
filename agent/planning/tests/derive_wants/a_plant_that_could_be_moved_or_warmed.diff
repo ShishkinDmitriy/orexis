@@ -9,7 +9,7 @@
    :world a orexis:Graph .
 +  :world planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T120000p0000 orexis:hash "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
 +  ground:2026-01-01T120000p0000.for.keeper.warm_enough a planning:Weighing .
@@ -19,10 +19,10 @@
 +  ground:2026-01-01T120000p0000.for.keeper.warm_enough planning:weighs ground:2026-01-01T120000p0000 .
 +  pursued:2026-01-01T120000p0000--open a orexis:Graph .
 +  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
-+  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
 +  pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
- }
++}
 +
 +
 +GRAPH pursued:2026-01-01T120000p0000--open {
@@ -30,11 +30,11 @@
 +  :keeper.warm_enough.pursued.fern a planning:Want .
 +  :keeper.warm_enough.pursued.fern planning:metWhen :keeper.warm_enough.pursued.fern.met .
 +  :keeper.warm_enough.pursued.fern planning:state planning:Recognized .
-+  :keeper.warm_enough.pursued.fern prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.warm_enough.pursued.fern prov:generatedAtTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
 +  :keeper.warm_enough.pursued.fern prov:wasDerivedFrom :keeper.warm_enough .
 +  :keeper.warm_enough.pursued.fern rdfs:label "pursued: every plant stands where the air is inside the range it wants" .
 +  :keeper.warm_enough.pursued.fern.met a sh:NodeShape .
 +  :keeper.warm_enough.pursued.fern.met sh:property [ planning:about water:AirTemperature ; sh:message "the air where this plant stands reads above the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
 +  :keeper.warm_enough.pursued.fern.met sh:property [ planning:about water:AirTemperature ; sh:message "the air where this plant stands reads below the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
 +  :keeper.warm_enough.pursued.fern.met sh:targetNode :fern .
-+}
+ }

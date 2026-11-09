@@ -1,19 +1,28 @@
 --- case
 +++ expected
+@@ -47,7 +47,7 @@
+   :probe.20260101T114500Z prov:wasGeneratedBy :keeper .
+   :probe.20260101T114500Z sensing:rawResult 0.25 .
+   :probe.20260101T114500Z sosa:madeBySensor :probe .
+-  :probe.20260101T114500Z sosa:resultTime "2026-01-01T11:45:00+00:00"^^xsd:dateTime .
++  :probe.20260101T114500Z sosa:resultTime "2026-01-01T11:45:00Z"^^xsd:dateTime .
+ }
+ 
+ GRAPH :catalogue {
 @@ -60,7 +60,22 @@
    :world a orexis:Graph .
    observed:probe_20260101T114500Z a orexis:Graph .
    observed:probe_20260101T114500Z a sensing:ObservationGraph .
 -  observed:probe_20260101T114500Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:45:00+00:00"^^xsd:dateTime ] .
-+  observed:probe_20260101T114500Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:45:00+00:00"^^xsd:dateTime ] .
++  observed:probe_20260101T114500Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T11:45:00Z"^^xsd:dateTime ] .
    observed:probe_20260101T114500Z orexis:arrivedBy orexis:Received .
    observed:probe_20260101T114500Z orexis:ownedBy :keeper .
 +  observed:probe_20260101T120000Z a orexis:Graph .
 +  observed:probe_20260101T120000Z a sensing:ObservationGraph .
-+  observed:probe_20260101T120000Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  observed:probe_20260101T120000Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  observed:probe_20260101T120000Z orexis:arrivedBy orexis:Received .
 +  observed:probe_20260101T120000Z orexis:ownedBy :keeper .
- }
++}
 +
 +
 +GRAPH observed:probe_20260101T120000Z {
@@ -22,5 +31,5 @@
 +  :probe.20260101T120000Z sensing:previous :probe.20260101T114500Z .
 +  :probe.20260101T120000Z sensing:rawResult 0.08 .
 +  :probe.20260101T120000Z sosa:madeBySensor :probe .
-+  :probe.20260101T120000Z sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
-+}
++  :probe.20260101T120000Z sosa:resultTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
+ }

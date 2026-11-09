@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -40,17 +40,7 @@
+@@ -40,18 +40,8 @@
    :tank2 :temperature 20 .
  }
  
@@ -15,10 +15,11 @@
 -  :keeper.in_range.pursued.tank1.level.met sh:property [ sh:minInclusive 10 ; sh:path :level ] .
 -  :keeper.in_range.pursued.tank1.level.met sh:targetNode :tank1 .
 -}
-+
  
++
  GRAPH :scopes {
    :fill planning:inScope :keeper.scope.1 .
+   :heat planning:inScope :keeper.scope.2 .
 @@ -76,10 +66,16 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
@@ -32,7 +33,7 @@
 -  pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Derived .
 +  :world planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T120000p0000 orexis:hash "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range a planning:Weighing .

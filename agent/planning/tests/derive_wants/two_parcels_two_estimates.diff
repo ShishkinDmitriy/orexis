@@ -7,10 +7,9 @@
 +  :sensed planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
--}
 +  :world planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T120000p0000 orexis:hash "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered a planning:Weighing .
@@ -21,7 +20,7 @@
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:weighs ground:2026-01-01T120000p0000 .
 +  pursued:2026-01-01T120000p0000--open a orexis:Graph .
 +  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
-+  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
 +  pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
 +}
@@ -34,7 +33,7 @@
 +  :keeper.every_parcel_delivered.pursued.parcel_a planning:estimates :keeper.every_parcel_delivered.pursued.parcel_a.estimate .
 +  :keeper.every_parcel_delivered.pursued.parcel_a planning:metWhen :keeper.every_parcel_delivered.pursued.parcel_a.met .
 +  :keeper.every_parcel_delivered.pursued.parcel_a planning:state planning:Recognized .
-+  :keeper.every_parcel_delivered.pursued.parcel_a prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.every_parcel_delivered.pursued.parcel_a prov:generatedAtTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
 +  :keeper.every_parcel_delivered.pursued.parcel_a prov:wasDerivedFrom :keeper.every_parcel_delivered .
 +  :keeper.every_parcel_delivered.pursued.parcel_a rdfs:label "pursued: every parcel where it is owed" .
 +  :keeper.every_parcel_delivered.pursued.parcel_a.estimate rdfs:label "drives still owed" .
@@ -71,7 +70,7 @@
 +  :keeper.every_parcel_delivered.pursued.parcel_b planning:estimates :keeper.every_parcel_delivered.pursued.parcel_b.estimate .
 +  :keeper.every_parcel_delivered.pursued.parcel_b planning:metWhen :keeper.every_parcel_delivered.pursued.parcel_b.met .
 +  :keeper.every_parcel_delivered.pursued.parcel_b planning:state planning:Recognized .
-+  :keeper.every_parcel_delivered.pursued.parcel_b prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.every_parcel_delivered.pursued.parcel_b prov:generatedAtTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
 +  :keeper.every_parcel_delivered.pursued.parcel_b prov:wasDerivedFrom :keeper.every_parcel_delivered .
 +  :keeper.every_parcel_delivered.pursued.parcel_b rdfs:label "pursued: every parcel where it is owed" .
 +  :keeper.every_parcel_delivered.pursued.parcel_b.estimate rdfs:label "drives still owed" .
@@ -104,4 +103,4 @@
 +          FILTER NOT EXISTS { $this courier:x ?ox ; courier:y ?oy }
 +      }""" ] .
 +  :keeper.every_parcel_delivered.pursued.parcel_b.met sh:targetNode :parcel_b .
-+}
+ }

@@ -9,7 +9,7 @@
    :world a orexis:Graph .
 +  :world planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T120000p0000 orexis:hash "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
 +  ground:2026-01-01T120000p0000.for.keeper.apart a planning:Weighing .
@@ -20,10 +20,10 @@
 +  ground:2026-01-01T120000p0000.for.keeper.apart planning:weighs ground:2026-01-01T120000p0000 .
 +  pursued:2026-01-01T120000p0000--open a orexis:Graph .
 +  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
-+  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
 +  pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
- }
++}
 +
 +
 +GRAPH pursued:2026-01-01T120000p0000--open {
@@ -31,10 +31,10 @@
 +  :keeper.apart.pursued a planning:Want .
 +  :keeper.apart.pursued planning:state planning:Recognized .
 +  :keeper.apart.pursued planning:unmetWhen :keeper.apart.pursued.avoided .
-+  :keeper.apart.pursued prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.apart.pursued prov:generatedAtTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
 +  :keeper.apart.pursued prov:wasDerivedFrom :keeper.apart .
 +  :keeper.apart.pursued rdfs:label "pursued: no stand holds two tanks" .
 +  :keeper.apart.pursued.avoided sh:select "PREFIX : <http://example.org/test#> SELECT $this ?value WHERE { $this a :Tank ; :on ?value . ?other a :Tank ; :on ?value . FILTER(?other != $this) }" .
 +  :keeper.apart.pursued.avoided sh:targetNode :tank1 .
 +  :keeper.apart.pursued.avoided sh:targetNode :tank2 .
-+}
+ }
