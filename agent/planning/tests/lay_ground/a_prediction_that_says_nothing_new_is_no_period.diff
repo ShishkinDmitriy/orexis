@@ -22,7 +22,7 @@
    :dip a orexis:BeliefGraph .
    :dip a orexis:ForecastGraph .
 +  :dip a orexis:Graph .
-+  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
++  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00Z"^^xsd:dateTime ] .
    :dip orexis:arrivedBy orexis:Recorded .
 -  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
    :dip orexis:ownedBy :keeper .
@@ -37,7 +37,7 @@
    :refill a orexis:BeliefGraph .
    :refill a orexis:ForecastGraph .
 +  :refill a orexis:Graph .
-+  :refill dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
++  :refill dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00Z"^^xsd:dateTime ] .
    :refill orexis:arrivedBy orexis:Recorded .
 -  :refill dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
    :refill orexis:ownedBy :keeper .
@@ -56,15 +56,15 @@
    :world a orexis:Graph .
 +  :world planning:cutBy "sha256:79a8c5917d7f90336d9f1fb7bd315a20df72059cf7cf98de56f00fff05dac6e0" .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T120000p0000 orexis:hash "sha256:5fc000937f8262b502a2b8f48b0d1f90bac44c72d656db033cb7a98eaf7e9e49" .
 +  ground:2026-01-01T130000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T130000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T130000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T130000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T130000p0000 orexis:hash "sha256:668afcf475ee2319100f725c49c2b6daf3ec7f5131fb575c8a3765daaea6bcb0" .
 +  ground:2026-01-01T130000p0000 prov:wasDerivedFrom ground:2026-01-01T120000p0000 .
- }
++}
 +
 +
 +GRAPH ground:2026-01-01T120000p0000 {
@@ -85,4 +85,4 @@
 +
 +GRAPH :sensed.changeable {
 +  :tank1 :level 5 .
-+}
+ }

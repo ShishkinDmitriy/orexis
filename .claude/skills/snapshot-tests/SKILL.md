@@ -59,8 +59,11 @@ reordering hunk, fix the CASE, not the diff.
 
 ## Regenerating
 
-**Nothing writes a diff at the moment**: the Python suite did, and went with the Python agent. Until the Rust runner
-writes one, a behaviour change means editing `<case>.diff` by hand to what the failing test prints. Then:
+```bash
+UPDATE_SNAPSHOTS=1 cargo test -p orexis-<package> --lib
+```
+
+Rewrites every diff the suite reads from what the function actually left (`agent/src/snapshots.rs`). Then:
 
 1. **`git diff` and read every regenerated diff.** It is a claim that behaviour changed on
    purpose. A line that surprises you means the change is wrong or the case is.
@@ -90,7 +93,7 @@ asserts rather than guessing; regenerate it.
    where the clock stands. Comments are allowed — both sides strip them before diffing.
 2. Run the case's test. It fails, and writes `<case>.actual.trig`.
 3. Read the actual, and satisfy yourself it is what the function SHOULD leave.
-4. `--update-snapshots` to write the diff, then read the diff as the reviewer will.
+4. `UPDATE_SNAPSHOTS=1 cargo test` to write the diff, then read the diff as the reviewer will.
 5. Break the guard on purpose once — strike the line of code the case exists for — and confirm
    the case goes red; a guard that has never failed is not a guard.
 

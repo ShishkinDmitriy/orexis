@@ -1,13 +1,14 @@
 --- case
 +++ expected
-@@ -16,9 +16,7 @@
+@@ -16,10 +16,8 @@
    :tank1 :level 5 .
  }
  
 -GRAPH :scratch {
 -  :note :says "a working graph of no kind the search asks for" .
 -}
-+
  
++
  GRAPH :catalogue {
    :catalogue a orexis:CatalogueGraph .
+   :catalogue a orexis:Graph .

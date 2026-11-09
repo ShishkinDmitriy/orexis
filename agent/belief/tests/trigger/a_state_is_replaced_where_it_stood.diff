@@ -1,17 +1,24 @@
 --- case
 +++ expected
-@@ -33,9 +33,7 @@
+@@ -33,10 +33,8 @@
    :t2 a :Tick .
  }
  
 -GRAPH tick1:believed {
 -  :counter :count 1 .
 -}
-+
  
++
  GRAPH :catalogue {
    :catalogue a orexis:CatalogueGraph .
-@@ -53,9 +51,15 @@
+   :catalogue a orexis:Graph .
+@@ -48,14 +46,20 @@
+   :tick2 a :TickGraph .
+   :tick2 a orexis:BeliefGraph .
+   :tick2 a orexis:Graph .
+-  :tick2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00+00:00"^^xsd:dateTime ] .
++  :tick2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00Z"^^xsd:dateTime ] .
+   :tick2 orexis:arrivedBy orexis:Received .
    :tick2 orexis:ownedBy :keeper .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
@@ -22,13 +29,13 @@
 -  tick1:believed orexis:ownedBy :keeper .
 +  tick2:believed a orexis:BeliefGraph .
 +  tick2:believed a orexis:Graph .
-+  tick2:believed dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00+00:00"^^xsd:dateTime ] .
++  tick2:believed dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00Z"^^xsd:dateTime ] .
 +  tick2:believed orexis:arrivedBy orexis:Derived .
 +  tick2:believed orexis:hash "sha256:aa46966d4ffb360392125962f625b67e7ceb301fdc2e0bf6d4564975f6cfe5a4" .
 +  tick2:believed orexis:ownedBy :keeper .
- }
++}
 +
 +
 +GRAPH tick2:believed {
 +  :counter :count 2 .
-+}
+ }

@@ -1,6 +1,11 @@
 --- case
 +++ expected
-@@ -72,13 +72,9 @@
+@@ -68,17 +68,13 @@
+   :soil sosa:hasSimpleResult 0.2999 .
+   :soil sosa:madeBySensor :probe .
+   :soil sosa:observedProperty :moisture .
+-  :soil sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :soil sosa:resultTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
  }
  
  GRAPH :believed {
@@ -25,7 +30,7 @@
    :catalogue a orexis:CatalogueGraph .
    :catalogue a orexis:Graph .
    :flows a orexis:FlowGraph .
-@@ -93,12 +93,16 @@
+@@ -93,19 +93,64 @@
    :ontology a orexis:BeliefGraph .
    :ontology a orexis:Graph .
    :ontology a orexis:OntologyGraph .
@@ -33,7 +38,7 @@
    :rain_hour a orexis:BeliefGraph .
    :rain_hour a orexis:ForecastGraph .
 +  :rain_hour a orexis:Graph .
-+  :rain_hour dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T15:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T14:00:00+00:00"^^xsd:dateTime ] .
++  :rain_hour dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T15:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T14:00:00Z"^^xsd:dateTime ] .
    :rain_hour orexis:arrivedBy orexis:Received .
 -  :rain_hour dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T15:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T14:00:00+00:00"^^xsd:dateTime ] .
    :rain_hour orexis:ownedBy :keeper .
@@ -44,26 +49,29 @@
    :rules a orexis:Graph .
    :rules a sh:RulesGraph .
    :sensed a orexis:Graph .
-@@ -108,4 +112,45 @@
+   :sensed a sensing:ObservationGraph .
+-  :sensed dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  :sensed dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
+   :sensed orexis:arrivedBy orexis:Received .
    :sensed orexis:ownedBy :keeper .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
 +  :world planning:cutBy "sha256:621c8781c566e34c0b21b8067f9372339f6388a397e7991545c698be4dbbc44e" .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T14:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T14:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T120000p0000 orexis:hash "sha256:e66c59c6d425d81ed52aac478dbae34a85ca8c1c51355b722cd37ed9ce668f9a" .
 +  ground:2026-01-01T140000p0000 <http://www.w3.org/ns/prov#wasDerivedFrom> ground:2026-01-01T120000p0000 .
 +  ground:2026-01-01T140000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T140000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T15:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T14:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T140000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T15:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T14:00:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T140000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T140000p0000 orexis:hash "sha256:832bede9433f86025b446f7be34db7ae58771b6d2e98b247fa2cd0c919bdb54f" .
 +  ground:2026-01-01T150000p0000 <http://www.w3.org/ns/prov#wasDerivedFrom> ground:2026-01-01T140000p0000 .
 +  ground:2026-01-01T150000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T150000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T15:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T150000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T15:00:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T150000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T150000p0000 orexis:hash "sha256:3c6a619ed8a91c6e9913d9ec9072d11b73c0a511e6b8f6ec8defd054f32e2a12" .
- }
++}
 +
 +
 +GRAPH ground:2026-01-01T120000p0000 {
@@ -89,4 +97,4 @@
 +  :rain a sosa:Observation .
 +  :rain sosa:hasSimpleResult 10.0 .
 +  :rain sosa:observedProperty :precipitation .
-+}
+ }

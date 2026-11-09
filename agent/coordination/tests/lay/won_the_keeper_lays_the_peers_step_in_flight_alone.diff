@@ -6,20 +6,49 @@
    coordinated:conflicts orexis:ownedBy :keeper .
 +  laid:0 a orexis:BeliefGraph .
 +  laid:0 a orexis:ForecastGraph .
-+  laid:0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:01:30+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:01:00+00:00"^^xsd:dateTime ] .
++  laid:0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:01:30Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:01:00Z"^^xsd:dateTime ] .
 +  laid:0 orexis:arrivedBy orexis:Received .
 +  laid:0 orexis:hash "sha256:5f1db75da2ee0a6a97861c89e098c3d1f9d8517a77002326840648cde0319cb5" .
 +  laid:0 orexis:ownedBy :keeper .
 +  laid:1 a orexis:BeliefGraph .
 +  laid:1 a orexis:ForecastGraph .
-+  laid:1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:02:30+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:01:30+00:00"^^xsd:dateTime ] .
++  laid:1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:02:30Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:01:30Z"^^xsd:dateTime ] .
 +  laid:1 orexis:arrivedBy orexis:Received .
 +  laid:1 orexis:hash "sha256:8839407ac1faf8ab4849b1004b3cf0dd5f646cd726bf5ba65f0fd9195b7f9ad7" .
 +  laid:1 orexis:ownedBy :keeper .
  }
  GRAPH :constraints {
    :no_two_vans a planning:Constraint .
-@@ -107,3 +119,15 @@
+@@ -81,18 +93,18 @@
+   :answer coordination:over :no_two_vans .
+   :holding_0 a coordination:Holding .
+   :holding_0 coordination:of :van_p .
+-  :holding_0 coordination:until "2026-01-01T12:01:30+00:00"^^xsd:dateTime .
++  :holding_0 coordination:until "2026-01-01T12:01:30Z"^^xsd:dateTime .
+   :holding_0 courier:x 4 .
+   :holding_0 courier:y 1 .
+   :holding_1 a coordination:Holding .
+-  :holding_1 coordination:from "2026-01-01T12:01:00+00:00"^^xsd:dateTime .
++  :holding_1 coordination:from "2026-01-01T12:01:00Z"^^xsd:dateTime .
+   :holding_1 coordination:of :van_p .
+   :holding_1 coordination:taken true .
+-  :holding_1 coordination:until "2026-01-01T12:02:30+00:00"^^xsd:dateTime .
++  :holding_1 coordination:until "2026-01-01T12:02:30Z"^^xsd:dateTime .
+   :holding_1 courier:x 3 .
+   :holding_1 courier:y 1 .
+   :holding_2 a coordination:Holding .
+-  :holding_2 coordination:from "2026-01-01T12:02:00+00:00"^^xsd:dateTime .
++  :holding_2 coordination:from "2026-01-01T12:02:00Z"^^xsd:dateTime .
+   :holding_2 coordination:of :van_p .
+   :holding_2 courier:x 2 .
+   :holding_2 courier:y 1 .
+@@ -102,8 +114,20 @@
+   conflict:2216b9a9c788124d coordination:draw conflict:2216b9a9c788124d.round.0 .
+   conflict:2216b9a9c788124d coordination:over :no_two_vans .
+   conflict:2216b9a9c788124d coordination:round 0 .
+-  conflict:2216b9a9c788124d coordination:since "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  conflict:2216b9a9c788124d coordination:since "2026-01-01T12:00:00Z"^^xsd:dateTime .
+   conflict:2216b9a9c788124d coordination:standing true .
    conflict:2216b9a9c788124d coordination:with :peer .
    conflict:2216b9a9c788124d.round.0 coordination:wonBy :keeper .
  }

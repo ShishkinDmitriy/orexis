@@ -25,6 +25,15 @@
  }
  
  GRAPH pursued:keeper.every_parcel_delivered.pursued.parcel_a {
+@@ -145,7 +134,7 @@
+   :keeper.every_parcel_delivered.pursued.parcel_a planning:estimates :drivesOwed .
+   :keeper.every_parcel_delivered.pursued.parcel_a planning:metWhen :keeper.every_parcel_delivered.pursued.parcel_a.met .
+   :keeper.every_parcel_delivered.pursued.parcel_a planning:state planning:Recognized .
+-  :keeper.every_parcel_delivered.pursued.parcel_a prov:generatedAtTime "2026-01-01T11:00:00+00:00"^^xsd:dateTime .
++  :keeper.every_parcel_delivered.pursued.parcel_a prov:generatedAtTime "2026-01-01T11:00:00Z"^^xsd:dateTime .
+   :keeper.every_parcel_delivered.pursued.parcel_a prov:wasDerivedFrom :keeper.every_parcel_delivered .
+   :keeper.every_parcel_delivered.pursued.parcel_a rdfs:label "pursued: every parcel where it is owed" .
+   :keeper.every_parcel_delivered.pursued.parcel_a.met a sh:NodeShape .
 @@ -196,14 +185,97 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
@@ -40,7 +49,7 @@
 +  :world.changeable orexis:arrivedBy orexis:Derived .
 +  :world.changeable prov:wasDerivedFrom :world .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T120000p0000 orexis:hash "sha256:829f5f72ea74453e09c8a421985cab3075ead9c6a3e49d4c6d5d7e89386af445" .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered a planning:Weighing .
@@ -61,12 +70,13 @@
    intentions:keeper orexis:ownedBy :keeper .
 +  pursued:2026-01-01T120000p0000--open a orexis:Graph .
 +  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
-+  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
 +  pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
    pursued:keeper.every_parcel_delivered.pursued.parcel_a a orexis:Graph .
    pursued:keeper.every_parcel_delivered.pursued.parcel_a a planning:WantGraph .
-   pursued:keeper.every_parcel_delivered.pursued.parcel_a dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
+-  pursued:keeper.every_parcel_delivered.pursued.parcel_a dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
++  pursued:keeper.every_parcel_delivered.pursued.parcel_a dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00Z"^^xsd:dateTime ] .
    pursued:keeper.every_parcel_delivered.pursued.parcel_a orexis:arrivedBy orexis:Derived .
    pursued:keeper.every_parcel_delivered.pursued.parcel_a orexis:ownedBy :keeper .
  }
@@ -93,7 +103,7 @@
 +  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:metWhen :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b.met .
 +  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:reopens :keeper.every_parcel_delivered.pursued.parcel_a .
 +  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:state planning:Recognized .
-+  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b prov:generatedAtTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
 +  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b prov:wasDerivedFrom :keeper.every_parcel_delivered .
 +  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b rdfs:label "pursued: every parcel where it is owed" .
 +  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b.met a sh:NodeShape .

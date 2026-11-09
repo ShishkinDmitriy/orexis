@@ -24,8 +24,12 @@
    :catalogue a orexis:CatalogueGraph .
    :catalogue a orexis:Graph .
    :ontology a orexis:BeliefGraph .
-@@ -56,6 +57,39 @@
-   :refill_said dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+@@ -53,9 +54,42 @@
+   :ontology a orexis:OntologyGraph .
+   :refill_said a orexis:BeliefGraph .
+   :refill_said a orexis:Graph .
+-  :refill_said dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
++  :refill_said dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:30:00Z"^^xsd:dateTime ] .
    :refill_said orexis:arrivedBy orexis:Received .
    :refill_said orexis:ownedBy :keeper .
 +  :refill_said planning:cutBy "sha256:a5db7610c8143784dfed29575e56ec04cfe2f5a38d39e8f23f08eeef50b13541" .
@@ -36,15 +40,15 @@
    :world a orexis:Graph .
 +  :world planning:cutBy "sha256:a5db7610c8143784dfed29575e56ec04cfe2f5a38d39e8f23f08eeef50b13541" .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T120000p0000 orexis:hash "sha256:3f7acb4b11e24ab97adfb60c436e3dc1c05e205a04c0e0c347ba9a2593aa75d6" .
 +  ground:2026-01-01T123000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T123000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T123000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T123000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T123000p0000 orexis:hash "sha256:6e6bc64053acc953da06220ff0dd7e316ef61573e3f2343b411bbf14a661631f" .
 +  ground:2026-01-01T123000p0000 prov:wasDerivedFrom ground:2026-01-01T120000p0000 .
- }
++}
 +
 +
 +GRAPH ground:2026-01-01T120000p0000 {
@@ -63,4 +67,4 @@
 +GRAPH :refill_said.changeable {
 +  :tank1 :level 12 .
 +  :tank1 :said_by :supplier .
-+}
+ }

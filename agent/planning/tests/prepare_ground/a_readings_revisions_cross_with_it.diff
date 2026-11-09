@@ -8,7 +8,7 @@
    :drying_stops a orexis:BeliefGraph .
    :drying_stops a orexis:ForecastGraph .
 +  :drying_stops a orexis:Graph .
-+  :drying_stops dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
++  :drying_stops dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00Z"^^xsd:dateTime ] .
    :drying_stops orexis:arrivedBy orexis:Recorded .
 -  :drying_stops dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
    :drying_stops orexis:ownedBy :keeper .

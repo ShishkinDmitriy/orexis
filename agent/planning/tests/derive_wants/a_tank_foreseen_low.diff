@@ -23,7 +23,7 @@
    :predicted-0 a orexis:BeliefGraph .
    :predicted-0 a orexis:ForecastGraph .
 +  :predicted-0 a orexis:Graph .
-+  :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
++  :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00Z"^^xsd:dateTime ] .
    :predicted-0 orexis:arrivedBy orexis:Recorded .
    :predicted-0 orexis:ownedBy :keeper .
 -  :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
@@ -46,7 +46,7 @@
    :world a orexis:Graph .
 +  :world planning:cutBy "sha256:79a8c5917d7f90336d9f1fb7bd315a20df72059cf7cf98de56f00fff05dac6e0" .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T120000p0000 orexis:hash "sha256:35d3a3484ac05979e29d4b8a919842bbeb7d56db4e0d619d34e5a34a2db109bf" .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range a planning:Weighing .
@@ -54,7 +54,7 @@
 +  ground:2026-01-01T120000p0000.for.keeper.in_range planning:met true .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
 +  ground:2026-01-01T123000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T123000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T123000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T123000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T123000p0000 orexis:hash "sha256:0bad464a89e5a93c3863c8acbbcb4fe91c152612b97d1513a5822e3febd611e7" .
 +  ground:2026-01-01T123000p0000 prov:wasDerivedFrom ground:2026-01-01T120000p0000 .
@@ -65,10 +65,10 @@
 +  ground:2026-01-01T123000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T123000p0000 .
 +  pursued:2026-01-01T123000p0000--open a orexis:Graph .
 +  pursued:2026-01-01T123000p0000--open a planning:WantGraph .
-+  pursued:2026-01-01T123000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T123000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00Z"^^xsd:dateTime ] .
 +  pursued:2026-01-01T123000p0000--open orexis:arrivedBy orexis:Derived .
 +  pursued:2026-01-01T123000p0000--open orexis:ownedBy :keeper .
- }
++}
 +
 +
 +GRAPH ground:2026-01-01T120000p0000 {
@@ -86,7 +86,7 @@
 +  :keeper.in_range.pursued.tank1.level a planning:Want .
 +  :keeper.in_range.pursued.tank1.level planning:metWhen :keeper.in_range.pursued.tank1.level.met .
 +  :keeper.in_range.pursued.tank1.level planning:state planning:Recognized .
-+  :keeper.in_range.pursued.tank1.level prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.in_range.pursued.tank1.level prov:generatedAtTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
 +  :keeper.in_range.pursued.tank1.level prov:wasDerivedFrom :keeper.in_range .
 +  :keeper.in_range.pursued.tank1.level rdfs:label "foreseen: every tank in range at 2026-01-01T12:30+00:00" .
 +  :keeper.in_range.pursued.tank1.level.met a sh:NodeShape .
@@ -101,4 +101,4 @@
 +GRAPH :sensed.changeable {
 +  :tank1 :level 20 .
 +  :tank2 :level 20 .
-+}
+ }

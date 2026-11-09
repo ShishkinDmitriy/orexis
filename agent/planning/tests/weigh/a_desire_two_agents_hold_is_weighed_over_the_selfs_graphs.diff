@@ -1,7 +1,11 @@
 --- case
 +++ expected
-@@ -77,6 +77,11 @@
-   ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+@@ -74,9 +74,14 @@
+   :world a orexis:BeliefGraph .
+   :world a orexis:Graph .
+   ground:2026-01-01T120000p0000 a planning:GroundGraph .
+-  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
    ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
    ground:2026-01-01T120000p0000 orexis:hash "sha256:0000000000000000000000000000000000000000000000000000000000000000" .
 +  ground:2026-01-01T120000p0000.for.keeper.apart a planning:Weighing .

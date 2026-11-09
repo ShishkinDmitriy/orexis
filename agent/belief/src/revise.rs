@@ -438,7 +438,7 @@ fn node(iri: &str) -> Result<NamedNode, Error> {
 
 #[cfg(test)]
 mod tests {
-    //! `revise`, one case per file, held to the diff the Python suite wrote (`agent/belief/tests/test_revise.py`).
+    //! `revise`, one case per file, held to its diff (`agent/belief/tests/test_revise.py`).
 
     use std::path::PathBuf;
 

@@ -9,7 +9,7 @@
    :world a orexis:Graph .
 +  :world planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T120000p0000 orexis:hash "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
 +  ground:2026-01-01T120000p0000.for.keeper.comfortable a planning:Weighing .
@@ -20,10 +20,10 @@
 +  ground:2026-01-01T120000p0000.for.keeper.comfortable planning:weighs ground:2026-01-01T120000p0000 .
 +  pursued:2026-01-01T120000p0000--open a orexis:Graph .
 +  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
-+  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
 +  pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
- }
++}
 +
 +
 +GRAPH pursued:2026-01-01T120000p0000--open {
@@ -33,7 +33,7 @@
 +  :keeper.comfortable.pursued.bed1.Moisture planning:keyedBy :bed1 .
 +  :keeper.comfortable.pursued.bed1.Moisture planning:metWhen :keeper.comfortable.pursued.bed1.Moisture.met .
 +  :keeper.comfortable.pursued.bed1.Moisture planning:state planning:Recognized .
-+  :keeper.comfortable.pursued.bed1.Moisture prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.comfortable.pursued.bed1.Moisture prov:generatedAtTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
 +  :keeper.comfortable.pursued.bed1.Moisture prov:wasDerivedFrom :keeper.comfortable .
 +  :keeper.comfortable.pursued.bed1.Moisture rdfs:label "pursued: every bed's soil inside its range" .
 +  :keeper.comfortable.pursued.bed1.Moisture.met a sh:NodeShape .
@@ -43,10 +43,10 @@
 +  :keeper.comfortable.pursued.bed2.Moisture planning:keyedBy :bed2 .
 +  :keeper.comfortable.pursued.bed2.Moisture planning:metWhen :keeper.comfortable.pursued.bed2.Moisture.met .
 +  :keeper.comfortable.pursued.bed2.Moisture planning:state planning:Recognized .
-+  :keeper.comfortable.pursued.bed2.Moisture prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.comfortable.pursued.bed2.Moisture prov:generatedAtTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
 +  :keeper.comfortable.pursued.bed2.Moisture prov:wasDerivedFrom :keeper.comfortable .
 +  :keeper.comfortable.pursued.bed2.Moisture rdfs:label "pursued: every bed's soil inside its range" .
 +  :keeper.comfortable.pursued.bed2.Moisture.met a sh:NodeShape .
 +  :keeper.comfortable.pursued.bed2.Moisture.met sh:property [ planning:about :Moisture ; sh:path ( orexis:actsFor [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:property [ sh:hasValue :Moisture ; sh:path sosa:observedProperty ] ; sh:property [ sh:minCount 1 ; sh:path :below ] ] ] .
 +  :keeper.comfortable.pursued.bed2.Moisture.met sh:targetNode :keeper .
-+}
+ }

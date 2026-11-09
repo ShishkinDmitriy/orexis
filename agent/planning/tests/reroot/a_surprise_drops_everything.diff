@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -15,10 +15,7 @@
+@@ -15,11 +15,8 @@
  @prefix possible: <http://example.org/orexis/graph/possible/> .
  @prefix plan: <http://example.org/orexis/graph/plan/> .
  
@@ -8,11 +8,12 @@
 -  :disk_1 hanoi:on :disk_2 .
 -  :disk_2 hanoi:on hanoi:PegA .
 -}
-+
  
++
  GRAPH ground:2026-01-01T120100p0000 {
    :disk_1 hanoi:on hanoi:PegC .
-@@ -52,75 +49,33 @@
+   :disk_2 hanoi:on :disk_1 .
+@@ -52,83 +49,41 @@
    plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC planning:of possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.by .
  }
  
@@ -20,102 +21,98 @@
 -  :disk_1 hanoi:on hanoi:PegB .
 -  :disk_2 hanoi:on hanoi:PegA .
 -}
--
+ 
 -GRAPH possible:Move-disk_1-PegB.Move-disk_1-PegA {
 -  :disk_1 hanoi:on :disk_2 .
 -  :disk_2 hanoi:on hanoi:PegA .
 -}
--
+ 
 -GRAPH possible:Move-disk_1-PegB.Move-disk_1-PegC {
 -  :disk_1 hanoi:on hanoi:PegC .
 -  :disk_2 hanoi:on hanoi:PegA .
 -}
--
+ 
 -GRAPH possible:Move-disk_1-PegB.Move-disk_2-PegC {
 -  :disk_1 hanoi:on hanoi:PegB .
 -  :disk_2 hanoi:on hanoi:PegC .
 -}
--
+ 
 -GRAPH possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegA {
 -  :disk_1 hanoi:on hanoi:PegA .
 -  :disk_2 hanoi:on hanoi:PegC .
 -}
--
+ 
 -GRAPH possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC {
 -  :disk_1 hanoi:on :disk_2 .
 -  :disk_2 hanoi:on hanoi:PegC .
 -}
--
+ 
 -GRAPH possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_2-PegA {
 -  :disk_1 hanoi:on hanoi:PegB .
 -  :disk_2 hanoi:on hanoi:PegA .
 -}
--
+ 
 -GRAPH possible:Move-disk_1-PegC {
 -  :disk_1 hanoi:on hanoi:PegC .
 -  :disk_2 hanoi:on hanoi:PegA .
 -}
--
+ 
 -GRAPH possible:Move-disk_1-PegC.Move-disk_1-PegA {
 -  :disk_1 hanoi:on :disk_2 .
 -  :disk_2 hanoi:on hanoi:PegA .
 -}
--
+ 
 -GRAPH possible:Move-disk_1-PegC.Move-disk_1-PegB {
 -  :disk_1 hanoi:on hanoi:PegB .
 -  :disk_2 hanoi:on hanoi:PegA .
 -}
--
+ 
 -GRAPH possible:Move-disk_1-PegC.Move-disk_2-PegB {
 -  :disk_1 hanoi:on hanoi:PegC .
 -  :disk_2 hanoi:on hanoi:PegB .
 -}
--
+ 
 -GRAPH possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegA {
 -  :disk_1 hanoi:on hanoi:PegA .
 -  :disk_2 hanoi:on hanoi:PegB .
 -}
--
+ 
 -GRAPH possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_1-PegB {
 -  :disk_1 hanoi:on :disk_2 .
 -  :disk_2 hanoi:on hanoi:PegB .
 -}
--
+ 
 -GRAPH possible:Move-disk_1-PegC.Move-disk_2-PegB.Move-disk_2-PegA {
 -  :disk_1 hanoi:on hanoi:PegC .
 -  :disk_2 hanoi:on hanoi:PegA .
 -}
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
-+
  
++
++
++
++
++
++
++
++
++
++
++
++
++
++
  GRAPH pursued:2026-01-01T120000p0000--open {
    :keeper planning:holds :keeper.every_disk_home.pursued .
-@@ -186,293 +141,12 @@
+   :keeper.every_disk_home.pursued a planning:Want .
+   :keeper.every_disk_home.pursued planning:estimates hanoi:disksAstray .
+   :keeper.every_disk_home.pursued planning:metWhen :keeper.every_disk_home.pursued.met .
+   :keeper.every_disk_home.pursued planning:state planning:Recognized .
+-  :keeper.every_disk_home.pursued prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
++  :keeper.every_disk_home.pursued prov:generatedAtTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
+   :keeper.every_disk_home.pursued prov:wasDerivedFrom :keeper.every_disk_home .
+   :keeper.every_disk_home.pursued rdfs:label "pursued: every disk home on peg C" .
+   :keeper.every_disk_home.pursued.met a sh:NodeShape .
+@@ -186,296 +141,15 @@
    :sensed.changeable prov:wasDerivedFrom :sensed .
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
@@ -138,7 +135,8 @@
 -  ground:2026-01-01T120000p0000.for.keeper.every_disk_home.pursued planning:violation [ planning:constraint 0 ; planning:instance :disk_2 ] .
 -  ground:2026-01-01T120000p0000.for.keeper.every_disk_home.pursued planning:weighs ground:2026-01-01T120000p0000 .
    ground:2026-01-01T120100p0000 a planning:GroundGraph .
-   ground:2026-01-01T120100p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:01:00+00:00"^^xsd:dateTime ] .
+-  ground:2026-01-01T120100p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:01:00+00:00"^^xsd:dateTime ] .
++  ground:2026-01-01T120100p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:01:00Z"^^xsd:dateTime ] .
    ground:2026-01-01T120100p0000 orexis:arrivedBy orexis:Derived .
    ground:2026-01-01T120100p0000 orexis:hash "sha256:7b2d5882fbc4a79c1a2890c4cf3314b6d63e7e59a967e3d6a7a82da87e181824" .
    plan:keeper.every_disk_home.pursued a planning:PlanGraph .
@@ -408,14 +406,19 @@
 -  possible:Move-disk_1-PegC.for.keeper.every_disk_home.pursued planning:weighs possible:Move-disk_1-PegC .
    pursued:2026-01-01T120000p0000--open a orexis:Graph .
    pursued:2026-01-01T120000p0000--open a planning:WantGraph .
-   pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-@@ -508,8 +182,7 @@
+-  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
+   pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
+   pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
+ }
+@@ -508,9 +182,8 @@
    hanoi:on planning:inScope :keeper.scope.1 .
  }
  
 -GRAPH :sensed {
 -}
-+
  
++
  GRAPH :world {
    :disk_1 a hanoi:Disk .
+   :disk_1 hanoi:size 1 .
