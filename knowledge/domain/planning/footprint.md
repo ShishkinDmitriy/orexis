@@ -26,7 +26,7 @@ literature's: the state variables an operator may inspect and may change.
 
 A footprint could have been a triple somebody writes next to an action. It is not, because the
 construct settles what is written and a second statement of the same thing would drift from
-the first with nothing to say so. `agent/planning/footprint.py` parses the texts with
+the first with nothing to say so. `agent/planning/src/footprint.rs` parses the texts with
 rdflib and answers per call. What it answers feeds the [scopes](/domain/planning/scope.md), which join
 predicates that one footprint holds on both halves, and places each want in the scope of what its
 met-test reads that some action can change. A type pattern reads its class, not `rdf:type`, so two

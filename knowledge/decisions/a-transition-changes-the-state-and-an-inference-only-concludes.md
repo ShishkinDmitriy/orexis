@@ -102,20 +102,20 @@ change triples, and each has found its own way around rules that cannot.
 
 # What the tree held, read on 2026-10-10
 
-- **Revision only adds.** `agent/belief/revise.py` runs SHACL 1.2's inference rules as the draft
+- **Revision only adds.** `agent/belief/src/revise.rs` runs SHACL 1.2's inference rules as the draft
   says: `sh:construct`, layer by layer to a fixpoint, what is inferred being what the evaluation
   graph does not already hold, written into the source's revision graph, and replaced only by the
   source being rewritten. [Revision](/domain/belief/revision.md) says it: "a rule states what it adds
   and nothing about what it removes".
-- **An action's effect already deletes.** `agent/planning/take.py` runs an effect's rules: a
+- **An action's effect already deletes.** `agent/planning/src/take.rs` runs an effect's rules: a
   `sh:SPARQLRule` whose `sh:construct` is what it adds or whose second text, then planning's word, is a
   `DELETE … WHERE`, grouped by `sh:order`, every rule of one order reading the same world, its deletions
   applied before its additions and a later order reading what the earlier made, each run once,
   scoped to the world it changes and naming no graph. pySHACL would run the same rules to a
   fixpoint, "the opposite shape" ([a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md)).
 - **Everything else that changes a triple is Python.** Prediction rewrote a key's forecasts until #1000
-  made its foresight the grounds' (`agent/prediction/foresee.py`); the executor closes a committed step by
-  forgetting it (`agent/execution/executor.py`); and slice 1's `believe` replaced a subject belief.
+  made its foresight the grounds' (`agent/prediction/src/foresee.rs`); the executor closes a committed step by
+  forgetting it (`agent/execution/src/executor.rs`); and slice 1's `believe` replaced a subject belief.
 - **The two kinds were already told apart in AGENTS.md, by package rather than by what they do**:
   "the effect deletes because a possible world is where taking something away is the point; the
   never-delete rule is belief revision's".

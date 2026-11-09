@@ -287,6 +287,10 @@ def _concrete(spec: str) -> str:
 #  THE TREES AGENT 0.1.0 WAS, retired on 2026-09-26: a record narrating them names a path that
 #  existed when it was written, and every one of them is history now, not a stale rename.
 _RETIRED_TREES = ("agent_old/", "packages/", "assembly/")
+#  AND THE PYTHON AGENT, retired whole once every world ran on the binary: nothing under `agent/` is Python any more, so
+#  a `.py` there, or a world's test that booted it, is a record narrating what was, `tests/test_projects.py` holding the
+#  tree to it.
+_RETIRED_PYTHON = re.compile(r"agent/.*\.py$|world/conftest\.py$|world/[^/]+/tests/")
 
 
 def test_no_document_names_a_path_that_is_not_there():
@@ -468,7 +472,7 @@ def test_no_document_names_a_path_that_is_not_there():
         for spec in set(found):
             if _is_tracked(spec, known):
                 continue
-            if not procedure and (spec in absent_on_purpose or spec.startswith(_RETIRED_TREES)):
+            if not procedure and (spec in absent_on_purpose or spec.startswith(_RETIRED_TREES) or _RETIRED_PYTHON.match(spec)):
                 continue
             where = (path.relative_to(BUNDLE) if BUNDLE in path.parents
                      else path.relative_to(REPO_ROOT))
@@ -756,7 +760,7 @@ def test_a_dictionary_term_is_a_declared_one():
 
     import rdflib
 
-    from agent.store import NAMESPACES
+    from documents.store import NAMESPACES
 
     #  Every ontology a word may be declared in: the agent's packages', the domains' and the retired 0.1.0 vocabulary a page not yet refreshed still binds.
     ontologies = _vocabulary_files("ontology.ttl", retired=False)
@@ -857,16 +861,11 @@ def _graphs() -> tuple[set[str], set[str]]:
     #  asks the class, so no ontology declares one; the helpers that spell them are the source,
     #  asked with a marker id. And the retired kernel's, spelled once here, since the records
     #  narrating 0.1.0 name its graphs and its helpers are gone with it.
-    from agent.execution.ontology import intentions_graph
-    for helper in (intentions_graph,):
-        name = helper("x")
-        assert name.startswith(_GRAPH_BASE) and name.endswith("x")
-        prefixes.add(name[len(_GRAPH_BASE):-1])
     prefixes |= {"picks/", "roots/", "promises/", "obligations/", "intentions/", "pursued/",
                  "remembered/", "evidence/", "revisions/", "summaries/"}
     #  THE CATALOGUE IS THE ONE FIXED NAME NO ONTOLOGY DECLARES: it describes itself, and the
     #  only spelling is the boot's, which creates it (one-catalogue-describes-every-graph-and-itself).
-    from agent.ontology import CATALOGUE_GRAPH
+    from documents.ontology import CATALOGUE_GRAPH
     assert CATALOGUE_GRAPH.startswith(_GRAPH_BASE)
     fixed.add(CATALOGUE_GRAPH[len(_GRAPH_BASE):])
     return {f for f in fixed if f}, prefixes
@@ -1021,7 +1020,7 @@ def test_the_agent_structure_draws_every_graph_kind_and_no_other():
     target because a drawing of the present was a registry nobody gated; this one is gated."""
     import rdflib
 
-    from agent.store import NAMESPACES
+    from documents.store import NAMESPACES
 
     g = rdflib.Graph()
     sources = [REPO_ROOT / "agent" / "ontology.ttl", *sorted((REPO_ROOT / "agent").glob("*/ontology.ttl")),

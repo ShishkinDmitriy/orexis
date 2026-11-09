@@ -35,7 +35,7 @@ record overturns that seam — the acceptance, not the ruling it was a seam of.
 **The kernel splits along its own layering, and each layer becomes a root distribution beside
 `assembly/`.** Four trees where `agent/` was one:
 
-- **the stores beneath everything** — `agent/store.py`, `agent/beliefs.py`, `agent/graphs.py`,
+- **the stores beneath everything** — `documents/store.py`, `agent/beliefs.py`, `agent/graphs.py`,
   `agent/desire.py`, `agent/intentions.py`: the modalities every layer meets at, importing no
   layer. The layers mostly do not call each other; they meet at the belief base, which is why
   this tree is the floor rather than a peer (#451);

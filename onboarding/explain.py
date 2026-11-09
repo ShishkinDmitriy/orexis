@@ -55,14 +55,15 @@ from pathlib import Path
 
 import pyoxigraph as ox
 
-from agent.journal import ask
-from agent.series import HISTORY, METRICS
-from agent.store import graphs_of, rows
+from .series import HISTORY, METRICS
+from documents.store import graphs_of, rows
 
 from . import installation, reading
 from .compose import roster
 from .influx import _admin_token, bucket_name
 from .worlds import world_dir, worlds
+
+_RESULTS = "application/sparql-results+json"
 
 log = logging.getLogger("explain")
 
@@ -100,6 +101,15 @@ class Stated:
     whose reading is a fraction of one, each by the local name the series tags it with."""
     desires: frozenset[str] = frozenset()
     fractions: frozenset[str] = frozenset()
+
+
+def ask(url: str, text: str, timeout: float = 30.0) -> ox.QuerySolutions | ox.QueryBoolean:
+    """A select or an ask over the journal at `url`, as its endpoint answers — what a reader outside the agent calls."""
+    from urllib.request import Request, urlopen
+
+    request = Request(url, data=text.encode(), headers={"Content-Type": "application/sparql-query", "Accept": _RESULTS})
+    with urlopen(request, timeout=timeout) as response:
+        return ox.parse_query_results(response.read(), format=ox.QueryResultsFormat.JSON)
 
 
 def _local(iri: str) -> str:

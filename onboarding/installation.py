@@ -61,9 +61,9 @@ from urllib.parse import urlparse
 import pyoxigraph as ox
 import rdflib
 
-from agent.ontology import local_of as local
-from agent.series import HISTORY, METRICS
-from agent.store import DocumentRefused, Raw, answer, catalogue_of, graphs_of, rdflib_view, rows
+from documents.ontology import local_of as local
+from .series import HISTORY, METRICS
+from documents.store import DocumentRefused, Raw, answer, catalogue_of, graphs_of, rdflib_view, rows
 
 from . import derived, reading
 from .reading import DEPLOYMENT, ONBOARDING

@@ -9,7 +9,7 @@ description: >-
 
 # What it is
 
-An agent's **journal** is a pyoxigraph store of its own (`agent/journal.py`), on a volume beside the belief base's
+An agent's **journal** is a pyoxigraph store of its own (`agent/src/journal.rs`), on a volume beside the belief base's
 (`--journal`), or in memory where the process is told none. It holds two kinds of entry, each a named graph holding
 one node, named by a UUID's URN:
 

@@ -20,7 +20,7 @@ the kernel no longer had to be edited for a package to be nameable in SPARQL. Th
 only reason the rest were still `orexis:`. Five packages stayed anyway — 102 terms across
 `review`, `sensing`, `water`, `mqtt` and `actuation`.
 
-`agent/ontology.py` — the kernel vocabulary, `packages/orexis-agent-progression/ontology.py` since
+`documents/ontology.py` — the kernel vocabulary, `packages/orexis-agent-progression/ontology.py` since
 #452 — opens by saying everything in the kernel is true of *every* capability.
 That has been false the whole time, and
 [self-review-is-a-capability](/decisions/0.1.0/self-review-is-a-capability.md) already found it: ~24 of the
@@ -165,7 +165,7 @@ three need someone to decide whether stating *where* an agent runs belongs in a 
   modules picked up a private copy during the conversion and now import it;
   `tests/test_layout.py` only holds the pair it knows about, so a second copy is a silent
   divergence.
-- **Namespace constants for cross-tree references** sat in `agent/ontology.py` beside the
+- **Namespace constants for cross-tree references** sat in `documents/ontology.py` beside the
   hardware ones. They are not a prefix registry — the loader still reads those off each
   ontology — but they are the list of namespaces one tree names in another's terms, and it
   should stay short.

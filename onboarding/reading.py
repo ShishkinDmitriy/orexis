@@ -71,10 +71,10 @@ import pyoxigraph as ox
 import pyshacl
 import rdflib
 
-from agent.ontology import local_of
-from agent.runtime import (EMAIL, KERNEL, MQTT, ONTOLOGY, SPEAKER, TELEGRAM, documents, known, packages_of, read_with_imports,
+from documents.ontology import local_of
+from documents.world import (EMAIL, KERNEL, MQTT, ONTOLOGY, SPEAKER, TELEGRAM, documents, known, packages_of, read_with_imports,
                            roles_of, selves, world_of)
-from agent.store import (NAMESPACES, DocumentRefused, answer, catalogue_of, close_catalogue, closed, document, graphs_of, kinds_in, put_document,
+from documents.store import (NAMESPACES, DocumentRefused, answer, catalogue_of, close_catalogue, closed, document, graphs_of, kinds_in, put_document,
                          rdflib_view, rows, whose)
 
 from .worlds import DOCUMENTS, REPO_ROOT

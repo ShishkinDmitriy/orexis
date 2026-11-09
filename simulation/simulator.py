@@ -57,10 +57,12 @@ import logging
 import random
 from datetime import datetime, timedelta
 
-from agent import clock
-from agent.runtime import world_of
-from agent.sensing.pipeline import DEFAULT_POINTER
-from agent.store import graphs_of, rows
+from documents import clock
+from documents.world import world_of
+from documents.store import graphs_of, rows
+
+#  WHERE A READING'S NUMBER STANDS IN ITS PAYLOAD where a sensor states no pointer, as sensing reads it.
+DEFAULT_POINTER = "/value"
 
 log = logging.getLogger("simulation")
 

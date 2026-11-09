@@ -51,14 +51,14 @@ timestamp: 2026-10-08T12:00:00Z
 > ontology and nothing else. (3) **The parts are still made in one order** — belief, planning,
 > execution, sensing, prediction, speech, the transports — since a pass needs the deliberator to hear
 > a graph first and the planner to publish before the executor walks; that order is `PASS` in
-> `agent/runtime.py`, which orders what the roles load and decides none of it, a package it does not
+> `agent/src/runtime.rs`, which orders what the roles load and decides none of it, a package it does not
 > name loading after the rest. The terrace's agent and the sensing world's fern agent want nothing,
 > so by §5's planner need they are observers and predictors and no planner — their dashboards lose
 > the planner's and the executor's, which they never fed.
 
 # The question
 
-What an agent runs was not anybody's choice. `PREMISES` in `agent/runtime.py` holds one ASK per
+What an agent runs was not anybody's choice. `PREMISES` in `agent/src/runtime.rs` holds one ASK per
 package beyond the mind, read off the world's public graphs with the agent bound, and `MIND` —
 belief, planning and execution — is loaded for every agent whatever its world
 ([a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md), #824). So a
@@ -74,14 +74,14 @@ Read on `e99731d0`; each measurement was an in-memory boot, nothing started, not
   `packages_of` answers `MIND` plus each package whose ASK holds, in `PREMISES`' order. Hanoi's mover
   loads exactly `('belief', 'planning', 'execution')` — measured, and pinned by
   `test_the_mover_loads_the_mind_and_nothing_else`.
-- **Planning already tolerates no executor.** `_Planning.link` in `agent/planning/create.py` returns
+- **Planning already tolerates no executor.** `_Planning.link` in `agent/planning/src/create.rs` returns
   at once where `parts.get("execution")` is `None`; nothing else in the runtime indexes
   `parts["execution"]` outside tests.
 - **Planning alone plans Hanoi, and then never ends.** Booted with `MIND` narrowed to planning
   alone, Hanoi's mover published one plan of seven steps on its first pass at a budget of 64 —
   execution's ontology document NOT in its store — and then held the agent: forty passes, every one
   `unfinished`, one want standing, one want walking. The cause is `_WALKING_Q` in
-  `agent/planning/planner.py`: a plan published and adopted by no intention is counted as WALKED,
+  `agent/planning/src/planner/mod.rs`: a plan published and adopted by no intention is counted as WALKED,
   which is right where an executor will adopt it at the next drain and wrong where none exists. So
   the expectation that such an agent "would read `unreachable` with a plan in hand" is not what the
   code does: `_keep` never reaches the unreachable branch, because something is walking. It reads

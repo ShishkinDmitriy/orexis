@@ -41,7 +41,7 @@ import argparse
 import logging
 from pathlib import Path
 
-from agent.store import graphs_of, rows as _rows_of
+from documents.store import graphs_of, rows as _rows_of
 from . import reading
 from .reading import HARDWARE
 from .worlds import REPO_ROOT

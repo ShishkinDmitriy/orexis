@@ -28,13 +28,13 @@ and never overridden by environment, a flag or a file beside the documents.
 # The stances there are
 
 Each is declared by the package that reads it, in its own `ontology.ttl`, with domain
-`orexis:Self`, and read through the kernel's one reader, `stance` in `agent/stance.py`:
+`orexis:Self`, and read through the kernel's one reader, `stance` in `agent/src/stance.rs`:
 
 | term | what it bounds | read by | where none is stated |
 |---|---|---|---|
 | `execution:patienceS` | how long a commitment absorbs a second plan for its want, and how long past its latest landing a step may go unanswered | the [executor](/domain/execution/executor.md), when it is made | `DEFAULT_PATIENCE_S`, sixty seconds |
-| `planning:budget` | candidates one want's search may weigh in a pass | the [planner](/domain/planning/planner.md), when it is made | `BUDGET` in `agent/planning/planner.py`, 32 |
-| `belief:budget` | rule executions one pass of revision may spend | the [deliberator](/domain/belief/deliberator.md), when it is made | `BUDGET` in `agent/belief/deliberator.py`, 256 |
+| `planning:budget` | candidates one want's search may weigh in a pass | the [planner](/domain/planning/planner.md), when it is made | `BUDGET` in `agent/planning/src/planner/mod.rs`, 32 |
+| `belief:budget` | rule executions one pass of revision may spend | the [deliberator](/domain/belief/deliberator.md), when it is made | `BUDGET` in `agent/belief/src/deliberator.rs`, 256 |
 | `prediction:horizonS` | seconds past an observation the flows are integrated | `foresee`, each pass | `HORIZON_S`, a day |
 
 What the two budgets are, in their units, is the [budget](/domain/planning/budget.md) page's.
@@ -60,7 +60,7 @@ is the constant, said in the log; two answers are never picked between.
 
 A figure is a stance only where it is the agent's word about ITSELF and a plan would branch on it
 ([model-it-only-if-a-plan-would-branch-on-it](/decisions/model-it-only-if-a-plan-would-branch-on-it.md)).
-The grace a reading keeps past its due (`GRACE` in `agent/sensing/received.py`) is how late an
+The grace a reading keeps past its due (`GRACE` in `agent/sensing/src/received.rs`) is how late an
 instrument's bytes may arrive — the sensor's and the path's, written into what an
 [observation](/domain/sensing/observation.md) is, and stated of the sensor if it ever varies. How
 often the metrics window is written is the admins' instrumentation, environment like the rest of a

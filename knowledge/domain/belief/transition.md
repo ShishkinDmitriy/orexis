@@ -38,7 +38,7 @@ it states. Every rule of an action's [effect](/domain/planning/effect.md) is one
 
 # One machine, two doors, three runners
 
-`agent/belief/transition.py` reads an update with rdflib's update grammar and sorts the rules by
+`agent/belief/src/transition.rs` reads an update with rdflib's update grammar and sorts the rules by
 `sh:order`, an absent order nought. It has two doors, by how many graphs a rule changes:
 
 - **One graph: the engine's own update.** `run` hands the engine the text itself, `WITH` the graph it

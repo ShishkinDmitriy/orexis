@@ -135,7 +135,7 @@ it; it no longer has to say it.
    (#377, landed).
 3. Reconcile (#378, landed): `store.PREFIXES` keeps six vocabularies the kernel speaks itself
    and DISCOVERS the rest off whichever ontology declares them — `sosa:` reaches a query because
-   sensing says so; `SOSA` left `agent/ontology.py` for `onboarding/namespaces.py`; the kernel's
+   sensing says so; `SOSA` left `documents/ontology.py` for `onboarding/namespaces.py`; the kernel's
    Turtle declares no package prefix it does not use; and the ratchet reads the prefixed form,
    every namespace, and resolves each term it finds (#344). What the widening found was the
    bus — `mqtt:` in `agent_old/world.py` and in the simulated-device shape — listed as debt with

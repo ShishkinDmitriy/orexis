@@ -20,11 +20,11 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-CONTAINERFILE = REPO_ROOT / "Containerfile"
+CONTAINERFILE = REPO_ROOT / "simulation" / "Containerfile"
 
-#  What an agent legitimately runs: the runtime and its packages, the domains its worlds import,
-#  and the simulator a world runs as a process of its own.
-ALLOWED_TREES = {"agent", "domains", "simulation"}
+#  What the simulator legitimately runs: itself, what it reads a world with, the domains its worlds import and
+#  the packages' documents.
+ALLOWED_TREES = {"agent", "documents", "domains", "simulation"}
 
 #  Never in an agent image. `orexis-influx` reads the admin token, which opens every bucket in the
 #  store and which no agent may ever hold; the surest guarantee is that the code using it is
@@ -318,12 +318,12 @@ def test_an_agents_boot_holds_no_requirement_and_its_vocabulary_refuses_nothing(
     stuck rule reads off the ontology as the agent runs."""
     import pyoxigraph as ox
 
-    from agent.runtime import boot
-    from agent.store import graphs_of
+    from onboarding.reading import boot
+    from documents.store import graphs_of
     from onboarding import reading
 
     here = REPO_ROOT / "world" / "allotment"
-    beliefs = boot(here, "fern_grower", others=reading.ours())
+    beliefs = boot(here, "fern_grower")
     assert graphs_of(beliefs, reading.REQUIREMENT) == []
     vocabulary = graphs_of(beliefs, reading.ONTOLOGY)
     constraints = [p for p in ("sparql", "minCount", "maxCount", "datatype", "xone", "message")
@@ -366,8 +366,8 @@ def test_what_the_world_leaves_out_an_agents_own_documents_may_complete(tmp_path
 def test_a_world_holds_itself_to_requirements_of_its_own(tmp_path, named):
     """A world's words are its own as a domain's are, so a requirement it ships beside its documents is
     held as a package's is — and its agents' boots pass over it, as they pass over a package's."""
-    from agent.runtime import boot
-    from agent.store import graphs_of
+    from onboarding.reading import boot
+    from documents.store import graphs_of
     from onboarding import reading
 
     world = _declared(tmp_path, ["http://example.org/orexis/belief#Deliberator"],
@@ -379,7 +379,7 @@ def test_a_world_holds_itself_to_requirements_of_its_own(tmp_path, named):
                                    '                 sh:message "a pot nobody can name on a dashboard" ] .\n')
     assert reading.invalid(world) == ([] if named else ["pot: a pot nobody can name on a dashboard"])
     assert reading.unread(world) == [] and reading.refused(world) == []
-    assert graphs_of(boot(world, "me", others=reading.ours()), reading.REQUIREMENT) == []
+    assert graphs_of(boot(world, "me"), reading.REQUIREMENT) == []
 
 
 @pytest.mark.parametrize("tests, refused", [
@@ -449,7 +449,7 @@ def _needs() -> list[tuple[str, str]]:
     import tempfile
 
     from onboarding import reading
-    from agent.store import graphs_of, rows
+    from documents.store import graphs_of, rows
 
     with tempfile.TemporaryDirectory() as here:
         store = reading.world(_declared(Path(here), []))
@@ -528,7 +528,7 @@ def test_every_role_but_the_deliberators_states_a_need():
     """The deliberator needs nothing — an agent holding no rules may be declared one and revises
     nothing — and every other role a package or the market declares has a need, so a role added with
     none is a decision someone has to make here."""
-    from agent.runtime import _vocabularies
+    from documents.world import _vocabularies
 
     targeted = {role for role, _ in NEEDS}
     roles = set(_vocabularies()[0]) | {"http://example.org/orexis/market#Host", "http://example.org/orexis/market#Bidder"}
@@ -777,8 +777,7 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
     import yaml
     from dotenv import dotenv_values
 
-    from agent.metrics import window as metrics
-    from agent.series import HISTORY, METRICS, PURPOSES, install, load, sink
+    from onboarding.series import HISTORY, METRICS, PURPOSES
     from onboarding import compose, influx, installation
 
     service = yaml.safe_load(compose.render("terrace"))["services"]["agent-terrace"]
@@ -790,14 +789,8 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
         credential = tmp_path / minted.name
         influx._write_credential(credential, "terrace", purpose, influx.bucket_name("terrace", "terrace", purpose), "a-token")
         environment.update(dotenv_values(credential))
-    try:
-        assert load(environment) == (HISTORY, METRICS)
-        assert (sink(HISTORY).bucket, sink(METRICS).bucket) == ("terrace-terrace", "terrace-terrace-metrics")
-        assert metrics.load(environment) == installation.interval(METRICS) == 60
-    finally:
-        for purpose in PURPOSES:
-            install(purpose, None)
-        metrics.reset()
+    assert (environment["INFLUX_HISTORY_BUCKET"], environment["INFLUX_METRICS_BUCKET"]) == ("terrace-terrace", "terrace-terrace-metrics")
+    assert installation.interval(METRICS) == 60 and HISTORY != METRICS
     composed = sorted((REPO_ROOT / "world").glob("*/compose.yaml"))
     assert composed, "the glob stopped matching"
     told = {path.parent.name: installation.purposes(path.parent.name) for path in composed}
@@ -807,7 +800,7 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
         text = path.read_text()
         assert "INFLUX_HISTORY_URL" in text, path
         monitored = METRICS in told[path.parent.name]
-        assert ("INFLUX_METRICS_URL" in text) == ("influx-metrics.env" in text) == (metrics.INTERVAL_KEY in text) == monitored, path
+        assert ("INFLUX_METRICS_URL" in text) == ("influx-metrics.env" in text) == (compose.INTERVAL_KEY in text) == monitored, path
         assert not re.search(r"\bINFLUX_(URL|ORG|BUCKET|TOKEN)\b", text), path
 
 
@@ -817,7 +810,7 @@ def test_history_is_served_by_one_store_and_metrics_by_one_or_by_none(tmp_path, 
     Metrics are optional (amended): served by none, a world that does not ask is told of history
     alone, and one that says it is `onboarding:monitored` is refused — by `purposes`, which every
     tool asks, so the compose file refuses it too."""
-    from agent.series import HISTORY, METRICS, PURPOSES
+    from onboarding.series import HISTORY, METRICS, PURPOSES
     from onboarding import compose, installation
 
     assert {p: installation.series(p) for p in PURPOSES} == {p: ("http://localhost:8086", "orexis") for p in PURPOSES}
@@ -870,7 +863,7 @@ def test_what_the_installation_states_is_held_to_its_requirements(tmp_path, monk
 def test_a_world_is_monitored_only_where_its_own_deployment_says_so(tmp_path, monkeypatch):
     """Opt-in, one statement: the terrace says it and is monitored; take the statement out and it is
     not, whatever the installation serves."""
-    from agent.series import HISTORY, METRICS
+    from onboarding.series import HISTORY, METRICS
     from onboarding import installation
 
     assert installation.purposes("terrace") == (HISTORY, METRICS)
@@ -1118,7 +1111,7 @@ def test_the_installation_and_its_derivation_say_where_and_nothing_else():
     allocation left behind by a world that has gone, or made under a misspelled IRI, is caught."""
     import pyoxigraph as ox
 
-    from agent.store import document
+    from documents.store import document
     from onboarding import installation
     from onboarding.reading import world as read
 
@@ -1162,7 +1155,7 @@ def test_no_agent_holds_where_its_broker_listens():
     cannot read it off the world."""
     import pyoxigraph as ox
 
-    from agent.runtime import boot
+    from onboarding.reading import boot
     from onboarding.compose import roster
 
     rdf_type, broker_class, url = (ox.NamedNode(i) for i in (
@@ -1189,7 +1182,7 @@ def test_a_world_graph_states_no_wiring_and_only_a_deployment_graph_an_address()
     nowhere, since in any other kind some agent would load it."""
     import pyoxigraph as ox
 
-    from agent.store import document, kinds_in
+    from documents.store import document, kinds_in
 
     society, deployment = "http://example.org/orexis#SocietyGraph", _ONBOARDING + "DeploymentGraph"
     seen, wrong = {"society": 0, "deployment": 0}, []
@@ -1223,9 +1216,6 @@ def test_an_agents_image_holds_the_packages_it_loads_and_those_they_import_and_w
     assert {"sensing", "transport/mqtt", "translation", "belief"} <= set(terrace.packages)
     hanoi = compose.image_of("hanoi", "hanoi", series=False)
     assert hanoi.packages == ("belief", "planning"), "planning's crate depends on belief's"
-    simulator = compose.simulator_image("greenhouse")
-    assert simulator.packages == ("sensing",) and simulator.extras == ("simulation",) and simulator.simulator
-    assert terrace.binary and hanoi.binary and not simulator.binary, "an agent whose packages are all ported is the binary's"
     assert terrace.features() == ("belief", "http", "mqtt", "prediction", "sensing", "speech", "telegram", "translation")
 
 
@@ -1234,8 +1224,6 @@ def test_every_committed_service_mounts_what_its_image_keeps_and_builds_what_its
     change needs a restart and the container holds no package its agent does not run; and the packages its
     build is handed are its agent's, as onboarding reads them."""
     import yaml
-
-    from agent.tree import kept
 
     declared = set(tomllib.loads((REPO_ROOT / "binary" / "Cargo.toml").read_text())["features"])
     checked = 0
@@ -1250,14 +1238,10 @@ def test_every_committed_service_mounts_what_its_image_keeps_and_builds_what_its
                 assert not [v for v in service["volumes"] if v.startswith("../../agent/")], (path.parent.name, name)
                 checked += 1
                 continue
-            if not build or "PACKAGES" not in build.get("args", {}):
-                continue
-            named = [p for p in build["args"]["PACKAGES"].split(",") if p]
-            mounted = sorted(v.split(":")[0].removeprefix("../../agent/") for v in service["volumes"]
-                             if v.startswith("../../agent/"))
-            assert mounted == sorted(kept(named)), (path.parent.name, name)
-            assert service["image"].startswith(f"orexis-{path.parent.name}-"), (path.parent.name, name, service["image"])
-            checked += 1
+            if build and "simulation" in service.get("command", []):
+                assert build["dockerfile"] == "simulation/Containerfile" and "args" not in build, (path.parent.name, name)
+                assert service["image"].startswith(f"orexis-{path.parent.name}-"), (path.parent.name, name, service["image"])
+                checked += 1
     assert checked > 10, "the committed compose files hold almost no built service — the guard checks nothing"
 
 
@@ -1346,7 +1330,7 @@ def test_a_world_with_no_bus_is_onboarded_without_one(tmp_path, monkeypatch, cap
     the one line saying so — and a compose file of its agents alone, which is the one committed."""
     import yaml
 
-    from agent.series import HISTORY, METRICS
+    from onboarding.series import HISTORY, METRICS
     from onboarding.compose import roster
 
     here, asked, reloaded = _onboarded(tmp_path, monkeypatch, world, caplog)
@@ -1380,7 +1364,7 @@ def test_a_world_with_a_bus_is_onboarded_with_everything(tmp_path, monkeypatch, 
     broker's address."""
     import yaml
 
-    from agent.series import HISTORY, METRICS
+    from onboarding.series import HISTORY, METRICS
     from onboarding import mqtt
     from onboarding.compose import roster
 
@@ -1683,7 +1667,7 @@ def test_onboarding_passes_over_its_own_kinds_quietly_and_an_unknown_kind_aloud(
 
     from onboarding import reading
 
-    with caplog.at_level(logging.DEBUG, logger="runtime"):
+    with caplog.at_level(logging.DEBUG, logger="documents"):
         reading.world(REPO_ROOT / "world" / "terrace")
     passed = [r for r in caplog.records if r.getMessage().startswith("passed over")]
     assert {r.levelno for r in passed} == {logging.DEBUG} and len(passed) >= 2, [(r.levelname, r.getMessage()) for r in passed]
@@ -1695,7 +1679,7 @@ def test_onboarding_passes_over_its_own_kinds_quietly_and_an_unknown_kind_aloud(
     hanoi = REPO_ROOT / "world" / "hanoi"
     (world / "world.ttl").write_text((hanoi / "world.ttl").read_text().replace("<../../domains/hanoi/ontology.ttl>", f"<{domain}>"))
     (world / "state.ttl").write_text((hanoi / "state.ttl").read_text().replace("orexis:BeliefGraph", "orexis:StateGrpah"))
-    with caplog.at_level(logging.DEBUG, logger="runtime"):
+    with caplog.at_level(logging.DEBUG, logger="documents"):
         reading.world(world)
     aloud = [r for r in caplog.records if r.getMessage().startswith("passed over") and r.levelno >= logging.INFO]
     assert len(aloud) == 1 and "StateGrpah" in aloud[0].getMessage(), [r.getMessage() for r in aloud]
@@ -1818,7 +1802,9 @@ def test_the_docs_only_name_terms_that_exist(doc):
 #  today; it held nine retired identifiers as well while the principles narrated what WAS, until the
 #  narration moved to the commit messages that already carried it. Retiring a name AGENTS.md uses is
 #  adding it here or rewording the line, and either is a choice.
-_NAMED_AS_HISTORY = {"HOURS", "MINUTES"}
+#  THE LAST FOUR ARE THE PYTHON AGENT'S, retired whole: a principle names what its argument was measured on.
+_NAMED_AS_HISTORY = {"HOURS", "MINUTES", "footprint._triples_in", "step_blocked",
+                     "test_two_couriers_silent_to_each_other_both_yield_and_still_part", "test_wants.py"}
 
 
 def test_agents_md_names_code_that_exists():
@@ -1833,7 +1819,7 @@ def test_agents_md_names_code_that_exists():
     tracked = subprocess.run(["git", "ls-files"], capture_output=True, text=True,
                              cwd=REPO_ROOT, check=True).stdout.split()
     corpus = "\n".join((REPO_ROOT / f).read_text(errors="ignore") for f in tracked
-                       if f.endswith((".py", ".toml", ".ttl", ".ru", ".trig", ".yml", ".yaml", ".sh"))
+                       if f.endswith((".py", ".rs", ".toml", ".ttl", ".ru", ".trig", ".yml", ".yaml", ".sh"))
                        or f.endswith("Containerfile"))
     words = set(re.findall(r"\w+", corpus))
     missing = sorted(n for n in named - _NAMED_AS_HISTORY if not set(n.split(".")) <= words)
@@ -1869,7 +1855,7 @@ def test_a_document_holding_drifts_is_a_drift_graph():
 
 # --- the domain is a plug-in -----------------------------------------------------------------------
 
-@pytest.mark.parametrize("tree", ["onboarding", "agent"])
+@pytest.mark.parametrize("tree", ["onboarding", "documents"])
 def test_no_shipped_code_names_a_domain(tree):
     """The domain is a plug-in, and the runtime and the operator's tools are what must survive the
     swap. A generator that named `water:` anything worked for exactly one domain and failed the
@@ -1916,11 +1902,8 @@ def test_what_a_world_counts_as_an_incident_reaches_its_agents_and_what_is_no_le
     `orexis-compose` tells every agent both, as environment its journal reads (`agent.journal.incident_level`,
     `incidents`); a world saying nothing tells nothing; and a level that is none is refused before anything is
     written."""
-    import logging
-
     import yaml
 
-    from agent.journal import incident_level, incidents
     from onboarding import compose, installation
 
     said = ('\n<> onboarding:incidentLevel "error" ;\n    onboarding:incident <http://example.org/orexis/coordination#Concluded> .\n')
@@ -1930,7 +1913,7 @@ def test_what_a_world_counts_as_an_incident_reaches_its_agents_and_what_is_no_le
     for name, service in composed["services"].items():
         env = {k: str(v) for k, v in (service.get("environment") or {}).items()}
         if name.startswith("agent-"):
-            assert incident_level(env) == logging.ERROR and incidents(env) == {"http://example.org/orexis/coordination#Concluded"}
+            assert (env["JOURNAL_INCIDENT_LEVEL"], env["JOURNAL_INCIDENTS"]) == ("ERROR", "http://example.org/orexis/coordination#Concluded")
     assert installation.incidents("greenhouse") == (None, []) and "JOURNAL_INCIDENT" not in compose.render("greenhouse")
     _installed(tmp_path / "loud", monkeypatch, {("lane", "deployment.ttl"): lambda text: text + said.replace('"error"', '"loud"')}, derivation=True)
     with pytest.raises(SystemExit, match="one of DEBUG, INFO, WARNING, ERROR, CRITICAL"):

@@ -48,22 +48,20 @@ from pathlib import Path
 
 import pyoxigraph as ox
 
-from agent import runtime
-from agent.journal import ask
-from agent.ontology import local_of
-from agent.runtime import documents, read_with_imports
-from agent.series import HISTORY, Sink
+from documents.ontology import local_of
+from documents.world import KERNEL, documents, read_with_imports
+from ..series import HISTORY, Sink
 
 from .. import installation, reading
 from ..compose import roster
-from ..explain import _since, journal_of, read
+from ..explain import ask, _since, journal_of, read
 from ..influx import _admin_token, bucket_name
 from ..worlds import world_dir, worlds
 
 log = logging.getLogger("history")
 
 HERE = Path(__file__).parent
-PACKAGES = Path(runtime.__file__).parent
+PACKAGES = KERNEL
 DRAWING = "ui/index.tsx"
 _XSD = "http://www.w3.org/2001/XMLSchema#"
 _NUMBERS = {_XSD + t for t in ("integer", "decimal", "double", "float", "int", "long")}
@@ -182,7 +180,7 @@ def _observation(p: dict, named: dict) -> list[ox.Triple]:
 
 def recorder(path: Path, agent_id: str) -> Sink:
     """A sink recording `agent_id`'s observations to `path`, a JSON line a point, for
-    `agent.series.install(HISTORY, ..., agent_id)` — what a world's test hands each agent it walks, beside a journal of
+    the points of a run, as a test writes them beside a journal.
     its own, so the walk can be replayed."""
     path = Path(path)
 

@@ -139,7 +139,8 @@ package. So the two copies never drift apart, and nobody pays for a feature twic
 that both runners read, so they hold either copy to the same store.
 
 **When the last world runs on the binary, the Python agent is retired whole.** The commit before its deletion
-is tagged as the last Python release, as 0.1.0's tree was retired, and `agent/` holds the Rust agent alone.
+is tagged as the last Python release, as 0.1.0's tree was retired, and `agent/` holds the Rust agent alone. Done on 2026-11-09: what the operator's tools and the simulator still read a world with
+is `documents/`, a package of its own since the simulator's image may hold no onboarding code.
 The snapshot cases outlive it, being files and not Python.
 
 **What is no agent's stays Python.** Onboarding stays Python, with pyshacl, and keeps the admin token out of

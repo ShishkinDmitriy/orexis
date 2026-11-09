@@ -30,7 +30,7 @@ import uuid
 
 import pytest
 
-from agent.series import HISTORY
+from onboarding.series import HISTORY
 from onboarding import influx as influx_admin
 from onboarding import installation
 

@@ -55,7 +55,7 @@ other testimony.
 # What is built
 
 History, told by purpose (#825), written by the history part (`agent/history/`). The sink is
-`agent/series.py`: it imports nothing of the agent, and a sink per purpose is loaded where
+`onboarding/series.py`: it imports nothing of the agent, and a sink per purpose is loaded where
 `INFLUX_HISTORY_URL`, `_ORG`, `_BUCKET` and `_TOKEN` are all set — none set is no sink, some set is
 none too, said in the log. Where one is loaded the runtime creates the history part with the
 others; linked, it hears every signal and writes the point each event answers, so no package asks
@@ -121,9 +121,8 @@ metrics bucket, `<world>-<agent>-metrics`, written by the agent, read by it only
 did and spent ([translator](/domain/translation/translator.md)), and kept as many
 days as the installation's `onboarding:retentionDays` says; only then does `orexis-compose` tell it
 the store and the window; and only then does `orexis-dashboards` draw health, a dashboard per
-package that reports and the runtime's own, linked to one another. They are learnt from the
-packages' event classes themselves: a row per measurement, each panel described by its event's own
-docstring, and the agent a variable choosing whose bucket every panel reads, carried from one
+package that reports and the runtime's own, linked to one another. They are read from `onboarding/reported.py`, the table of what the binary reports: a row per measurement, each panel
+described by the table's `about`, and the agent a variable choosing whose bucket every panel reads, carried from one
 dashboard to the next; an event's levels are a panel per unit, its count and flags another and each
 value one more. A dashboard no package reports for any more is removed. The history bucket keeps
 the name the one bucket had, so a history begun before purposes goes on in it.

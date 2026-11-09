@@ -60,7 +60,7 @@ same change, first (AGENTS.md).
 ## 3. Hold
 
 ```bash
-pytest -q world/<name>          # the test beside it: boots the world, runs it, asserts what it was written for
+cargo test -p orexis-agent --test check   # every agent of every world boots on the binary and makes its parts
 orexis-topics <name>            # names the topics into world/<name>/society.derived.ttl, where there is a bus; commit it
 orexis-compose <name>           # writes world/<name>/compose.yaml from the roster; commit it
 pytest -q tests                 # layout and knowledge read every world: a document of a kind no reader declares is refused,
@@ -68,10 +68,9 @@ pytest -q tests                 # layout and knowledge read every world: a docum
 pytest -q && lint-imports && ./tools/validate-okf.sh knowledge
 ```
 
-Write `world/<name>/tests/test_<name>.py` as the runbook says — `Runtime(boot(WORLD, "<id>"), "<id>")`
-with a clock that ticks, run, and the claim asserted — and break it on purpose once so it is a
-guard. Hand it no budget: it then searches at the one the self graph states, as the container will,
-and lowering that figure is one way to break it. `orexis-onboard <name>` is the full onboarding and needs the series store and the broker up;
+Write `binary/tests/<name>.rs` as `binary/tests/hanoi.rs` does — boot the world, run it, assert the claim — and break it on purpose once
+so it is a guard. Hand it no budget: it then searches at the one the self graph states, as the container will, and lowering
+that figure is one way to break it. `orexis-onboard <name>` is the full onboarding and needs the series store and the broker up;
 on a bench without them, the compose generator and the tests above are what hold the draft.
 Measure what the runbooks measure where the world is about the search
 (`knowledge/runbooks/measure-the-search.md`, `measure-a-pass.md`): a new world's figures go there.

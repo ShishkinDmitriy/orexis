@@ -15,6 +15,9 @@ description: >-
   one image carrying every library and every package, and the standard library alone as a rule.
 ---
 
+> **Amended, 2026-11-09.** The agent is the binary, so a package brings its libraries in its `Cargo.toml` and an image is a feature set.
+> The argument below stands; the `dependencies.txt` files, the extras they fed and `agent.tree.kept` went with the Python agent.
+
 # The question
 
 Every agent's image installed one list: `pyoxigraph`, `rdflib`, `pyparsing`, `paho-mqtt`,

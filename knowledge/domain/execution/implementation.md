@@ -28,4 +28,4 @@ an action nobody carries out comes to.
 
 The executor reads it to tell whether a step is fictive; the runtime reads it to take a step,
 order by order, sending what each command answers through the transport and believing, revising
-and telling what each saying makes (`agent/execution/implementation.py`).
+and telling what each saying makes (`agent/execution/src/implementation.rs`).

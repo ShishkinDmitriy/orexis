@@ -38,8 +38,8 @@ import pyoxigraph as ox
 import pyshacl
 import rdflib
 
-from agent.runtime import SOCIETY
-from agent.store import NAMESPACES, forget_graph, graphs_of, rdflib_view
+from documents.world import SOCIETY
+from documents.store import NAMESPACES, forget_graph, graphs_of, rdflib_view
 
 from . import derived, reading
 from .worlds import world_dir, worlds

@@ -16,7 +16,8 @@ and the reasoning usually lives in a linked record under `knowledge/decisions/`.
 
 # The gates, all of them, before you commit
 
-    .venv/bin/pytest -q                 the agent, the simulator and every world
+    cargo test                          the agent
+    .venv/bin/pytest -q                 the simulator and what each world holds in Python
     .venv/bin/pytest -q tests           the four files that read the whole tree
     .venv/bin/lint-imports
     ./tools/validate-okf.sh knowledge

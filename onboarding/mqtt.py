@@ -61,8 +61,8 @@ from pathlib import Path
 from cryptography import x509
 
 from . import certs, installation, reading
-from agent.ontology import local_of
-from agent.store import graphs_of, rows
+from documents.ontology import local_of
+from documents.store import graphs_of, rows
 from .worlds import REPO_ROOT
 from .worlds import agent_secrets, shown, world_dir, worlds
 

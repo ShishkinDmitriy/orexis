@@ -26,7 +26,7 @@ timestamp: 2026-09-27T12:00:00Z
 
 # What was true (measured 2026-09-27, on main at 90e5b00b)
 
-**The boot reads everything.** `documents()` in `agent/runtime.py` takes the kernel's T-Box, every
+**The boot reads everything.** `documents()` in `agent/src/runtime.rs` takes the kernel's T-Box, every
 package's documents by `rglob`, and every document in the world's directory. Hanoi's mover, which
 senses nothing, predicts nothing and has no bus, reads eleven documents before its imports, and
 four of them are for things it never does: sensing's ontology and its three rules, prediction's
@@ -50,7 +50,7 @@ clients, the topics and the subjects — the allotment's holds three agents and 
 in one graph. `broker()` in `onboarding/mqtt.py` reads every url on every broker, keeps the first
 host and a port per scheme, and refuses nothing.
 
-**The series is one property's shape, and the runtime chooses what goes in.** `agent/series.py`
+**The series is one property's shape, and the runtime chooses what goes in.** `onboarding/series.py`
 writes every observation as measurement `soil_moisture`; the terrace's test pins its air
 temperature (14.5), humidity and pressure there. The runtime hands the sink each observation graph
 sensing wrote, so history is what the runtime chose — observations — and no step taken has ever
@@ -283,7 +283,7 @@ document and `said` the agent's own — so its premise is its callers' needs, th
 listening and execution's saying.
 
 **Where a premise is stated: the runtime, as an ASK per package** (`PREMISES` in
-`agent/runtime.py`), over the world's public graphs with the agent bound, T-Box terms only, so
+`agent/src/runtime.rs`), over the world's public graphs with the agent bound, T-Box terms only, so
 rule 1 holds. **Refused: each package's own document stating its premise**, read before the
 package is. It reads as the more self-describing choice, and it fails on speech first: speech's
 premise is in execution's words, which its layout test refuses it as the layer above, and in the
@@ -460,7 +460,7 @@ Every term above is gone, and the files.
 
 **What stands: one module per package.** A `metrics.py` in the package's directory holds everything the package
 reports — its gauges, each a select over a store it owns, and its events, called from its acts —
-and the runtime's own are in `agent/runtime.py`; adding a metric is editing that module. The
+and the runtime's own are in `agent/src/runtime.rs`; adding a metric is editing that module. The
 dashboards learn what exists by importing the modules, since onboarding may import the agent and
 never the reverse. A package's module is imported where the package is loaded (#824). **A gauge
 still says which store it reads** — the lesson §6's amendment paid for: the imaginaria copy the
@@ -596,7 +596,7 @@ a message per check; and a world is never held to it, since a world states no st
   gone ([a-stance-is-the-agents-word-about-itself](/decisions/a-stance-is-the-agents-word-about-itself.md)).
   The interim of 2026-10-03, sensing's limits stated in a public graph as `orexis:actsFor` is, was
   refused there. A figure no plan branches on — one source's share of a revision pass,
-  `agent/belief/revise.py`'s 64 — stays in code
+  `agent/belief/src/revise.rs`'s 64 — stays in code
   ([model-it-only-if-a-plan-would-branch-on-it](/decisions/model-it-only-if-a-plan-would-branch-on-it.md)).
 - **A wrong world is not caught by derivation.** A premise misstated loads the wrong packages as
   confidently as a right one loads the right ones; what would catch it is a world's own tests.

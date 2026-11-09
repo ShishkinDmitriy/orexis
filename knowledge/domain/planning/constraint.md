@@ -99,7 +99,7 @@ worlds whose places are finite terms
 ([the-grid-is-infinite-and-a-position-is-two-coordinates](/decisions/the-grid-is-infinite-and-a-position-is-two-coordinates.md)).
 
 The reach begins at the present, so this is read PER PASS in the derivation and never at boot
-(`agent/planning/couplings.py`); a holder with no constraint pays one query and couples nothing,
+(`agent/planning/src/couplings.rs`); a holder with no constraint pays one query and couples nothing,
 and what the rest pay is in [measure-the-search](/runbooks/measure-the-search.md).
 
 # What coupling does
