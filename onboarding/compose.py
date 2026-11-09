@@ -161,7 +161,7 @@ def _extras(packages, series: bool, *also: str) -> tuple[str, ...]:
 def image_of(world: str, agent_id: str, series: bool) -> Image:
     """`agent_id`'s own image: every package it loads and every package whose code those import, by
     `agent.tree.closed`, and the extras they bring — the series writer's where the installation serves a store."""
-    packages = tuple(closed(packages_of(reading.boot(world_dir(world), agent_id, others=reading.ours()))))
+    packages = tuple(closed(packages_of(reading.boot(world_dir(world), agent_id))))
     return Image(f"orexis-{world}-{agent_id}:local", packages, _extras(packages, series), binary=ported(packages))
 
 
@@ -255,7 +255,7 @@ class Translating:
 def translating(world: str, agent_id: str) -> Translating | None:
     """What `agent_id` of `world` is handed for translating, booted as its container boots it — or None where it plays
     no translator. A translator where the installation names no model is refused."""
-    beliefs = reading.boot(world_dir(world), agent_id, others=reading.ours())
+    beliefs = reading.boot(world_dir(world), agent_id)
     loaded = set(packages_of(beliefs))
     if TRANSLATION not in loaded:
         return None

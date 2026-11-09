@@ -144,8 +144,9 @@ The snapshot cases outlive it, being files and not Python.
 
 **What is no agent's stays Python.** Onboarding stays Python, with pyshacl, and keeps the admin token out of
 every image. It reads a world as an agent boots it by running the agent's binary to boot and check that
-world, rather than by importing its code — `orexis-agent --check`, which `orexis-onboard` runs for every agent;
-until the Python agent goes, onboarding also still boots it through `agent/` for what it derives. The simulator,
+world, rather than by importing its code — `orexis-agent --check --boot FILE`, which `orexis-onboard` runs for
+every agent, reading back the store it wrote to hold the requirements to and to derive what it derives, so a
+world is booted once, by the agent that will run it. The simulator,
 the operator's tools and the history view stay as they are.
 
 **What waits is a task, and the mind is one thread.** Today the runtime polls: a pass that moved

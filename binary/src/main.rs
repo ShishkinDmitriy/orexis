@@ -1,7 +1,9 @@
-//! `orexis-agent <world> <agent> [--volume PATH] [--journal PATH] [--passes N] [--check]`: one agent, booted from a
+//! `orexis-agent <world> <agent> [--volume PATH] [--journal PATH] [--passes N] [--check [--boot PATH]]`: one agent, booted from a
 //! world's files and run until nothing is left to pursue — exit 0 `met` or `planned`, 1 `unreachable`, 2 `unfinished`,
 //! and 143 where it was told to stop, as the Python runtime's `main` exits. With `--check` it runs nothing: booted in
-//! memory, its parts made over members that reach nothing, it exits 0 naming the packages it makes, or 3 and why not.
+//! memory, its parts made over members that reach nothing, it exits 0 printing one line of JSON — the packages it
+//! makes, whether it holds a desire and what its world as posed contradicts — or 3 and why not; and with `--boot PATH`
+//! it writes the store as booted there, in N-Quads, which is what `orexis-onboard` reads the agent's boot from.
 //!
 //! THE JOURNAL FIRST, so the log of the boot is in it: a store of its own, on disk where `--journal` says, its log kept
 //! for the window the environment says and served read-only where the environment names a port (`JOURNAL_PORT`). A
@@ -74,11 +76,13 @@ struct Args {
     journal: Option<PathBuf>,
     passes: Option<usize>,
     check: bool,
+    boot: Option<PathBuf>,
 }
 
 fn args() -> Result<Args, String> {
     let mut rest = std::env::args().skip(1);
     let (mut positional, mut volume, mut journal, mut passes, mut check) = (Vec::new(), None, None, None, false);
+    let mut boot = None;
     while let Some(arg) = rest.next() {
         match arg.as_str() {
             "--volume" => volume = Some(PathBuf::from(rest.next().ok_or("--volume takes a path")?)),
@@ -92,12 +96,14 @@ fn args() -> Result<Args, String> {
                 )
             }
             "--check" => check = true,
+            "--boot" => boot = Some(PathBuf::from(rest.next().ok_or("--boot takes a path")?)),
             other => positional.push(other.to_string()),
         }
     }
     let [world, agent] = positional.as_slice() else {
         return Err(
-            "usage: orexis-agent <world> <agent> [--volume PATH] [--journal PATH] [--passes N] [--check]".into(),
+            "usage: orexis-agent <world> <agent> [--volume PATH] [--journal PATH] [--passes N] [--check [--boot PATH]]"
+                .into(),
         );
     };
     Ok(Args {
@@ -107,6 +113,7 @@ fn args() -> Result<Args, String> {
         journal,
         passes,
         check,
+        boot,
     })
 }
 
@@ -210,9 +217,31 @@ fn main() {
     if args.check {
         //  A CHECK RUNS NOTHING: no journal, no series, no bus — the boot and the parts' making, and the verdict.
         let tree = PathBuf::from(env("OREXIS_TREE").unwrap_or_else(|| TREE.to_string()));
-        match orexis_agent::check(&tree, &args.world, &args.agent, oxsdatatypes::DateTime::now()) {
-            Ok(loaded) => {
-                println!("{} boots, and makes {}", args.agent, loaded.join(", "));
+        match orexis_agent::check(
+            &tree,
+            &args.world,
+            &args.agent,
+            oxsdatatypes::DateTime::now(),
+            args.boot.as_deref(),
+        ) {
+            Ok(checked) => {
+                //  THE VERDICT AS ONE LINE OF JSON on the standard output, for onboarding to read; what is said for eyes
+                //  goes to the log.
+                log::info!("{} boots, and makes {}", args.agent, checked.loaded.join(", "));
+                let contradictions: Vec<serde_json::Value> = checked
+                    .contradictions
+                    .iter()
+                    .map(|(c, rows)| serde_json::json!([c, rows]))
+                    .collect();
+                println!(
+                    "{}",
+                    serde_json::json!({
+                        "agent": args.agent,
+                        "loaded": checked.loaded,
+                        "desire": checked.desire,
+                        "contradictions": contradictions,
+                    })
+                );
                 std::process::exit(0);
             }
             Err(e) => {

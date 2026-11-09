@@ -43,8 +43,15 @@ packages it loads declares — the refusal `unread` makes of the world, narrowed
 NOT refuse a flow with no predictor, foresight being the author's to decline, nor an action whose
 saying an agent is in no role to take, which is the search's to say and not onboarding's.
 
-**Whether an agent lasts is read off the agent, as its boot reads it.** `lasts` boots the agent
-from the world's documents and asks the two things the runtime's own stop rule asks
+**An agent's boot is the binary's** (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md).
+`boot` runs `orexis-agent <world> <agent> --check --boot FILE` — the binary `OREXIS_AGENT` names, or the
+tree's as cargo builds it — and reads back the store it wrote, so what onboarding holds to the requirements
+is what the agent that will run believes, booted once, by that agent; the binary's verdict beside it says
+whether the agent holds a desire and what of its world as posed its constraints call impossible. Each is
+asked once per world as its files stand.
+
+**Whether an agent lasts is read off the agent, as its boot reads it.** `lasts` asks the two things the
+runtime's own stop rule asks
 (`Runtime._pass`): a desire it holds, which asks at every instant, and a transport, whose
 readings go on arriving. Holding neither, it exits once every want is reached — or planned, where
 it is no executor — or as unreachable, and its compose service is not restarted — a restart would only boot, find nothing
@@ -53,6 +60,10 @@ to pursue and exit again. Per agent and not per world, since a desire is in an a
 
 from __future__ import annotations
 
+import json
+import os
+import subprocess
+import tempfile
 from functools import cache
 from pathlib import Path
 
@@ -60,14 +71,13 @@ import pyoxigraph as ox
 import pyshacl
 import rdflib
 
-from agent.planning.planner import Planner
 from agent.ontology import local_of
-from agent.runtime import (EMAIL, KERNEL, MQTT, ONTOLOGY, PLANNING, SPEAKER, TELEGRAM, boot, documents, known, packages_of, read_with_imports,
+from agent.runtime import (EMAIL, KERNEL, MQTT, ONTOLOGY, SPEAKER, TELEGRAM, documents, known, packages_of, read_with_imports,
                            roles_of, selves, world_of)
 from agent.store import (NAMESPACES, DocumentRefused, answer, catalogue_of, close_catalogue, closed, document, graphs_of, kinds_in, put_document,
                          rdflib_view, rows, whose)
 
-from .worlds import DOCUMENTS
+from .worlds import DOCUMENTS, REPO_ROOT
 
 REQUIREMENT = "http://example.org/orexis/onboarding#RequirementGraph"
 _SH = rdflib.Namespace("http://www.w3.org/ns/shacl#")
@@ -134,15 +144,74 @@ def premises(here: Path) -> frozenset[str]:
     return frozenset(premise for premise, ask in PREMISES.items() if answer(store, ask, stated)["boolean"])
 
 
+class Refused(RuntimeError):
+    """An agent the binary would not boot, by what it said."""
+
+
+def binary() -> list[str]:
+    """The command that runs the agent: the binary `OREXIS_AGENT` names, or the tree's, built by cargo once."""
+    named = os.environ.get("OREXIS_AGENT")
+    return [named] if named else [_built()]
+
+
+@cache
+def _built() -> str:
+    try:
+        subprocess.run(["cargo", "build", "-q", "-p", "orexis-agent"], cwd=REPO_ROOT, check=True)
+        meta = subprocess.run(["cargo", "metadata", "-q", "--format-version", "1", "--no-deps"], cwd=REPO_ROOT,
+                              check=True, capture_output=True, text=True)
+    except FileNotFoundError:
+        raise SystemExit("no binary to boot an agent with — install cargo, or name one in OREXIS_AGENT; nothing granted")
+    return str(Path(json.loads(meta.stdout)["target_directory"]) / "debug" / "orexis-agent")
+
+
+def boot(here: Path, agent_id: str) -> ox.Store:
+    """The agent `agent_id` of the world in `here` as the binary boots it — a store of its own, in memory, holding
+    what the agent will believe; `Refused` with what the binary said where it would not boot."""
+    nquads, _ = _checked(Path(here).resolve(), agent_id)
+    store = ox.Store()
+    store.load(nquads, ox.RdfFormat.N_QUADS)
+    return store
+
+
+def _checked(here: Path, agent_id: str) -> tuple[bytes, dict]:
+    return _checked_as(here, agent_id, _standing(here))
+
+
+def _standing(here: Path) -> tuple:
+    """The world's files as they stand, so a boot asked again of a world unchanged is the one already asked."""
+    return tuple(sorted((str(p), p.stat().st_mtime_ns, p.stat().st_size) for p in here.rglob("*") if p.is_file()))
+
+
+@cache
+def _checked_as(here: Path, agent_id: str, standing: tuple) -> tuple[bytes, dict]:
+    with tempfile.TemporaryDirectory() as tmp:
+        file = Path(tmp) / "boot.nq"
+        done = subprocess.run([*binary(), str(here), agent_id, "--check", "--boot", str(file)], capture_output=True,
+                              text=True, cwd=REPO_ROOT)
+        if done.returncode:
+            said = (done.stderr.strip() or done.stdout.strip() or f"exit {done.returncode}").splitlines()[-1]
+            raise Refused(said)
+        return file.read_bytes(), json.loads(done.stdout.strip().splitlines()[-1])
+
+
+def _booting(here: Path, agent_id: str) -> Refused | None:
+    """Why the binary would not boot the agent `agent_id` of the world in `here`, or None where it boots."""
+    try:
+        _checked(here, agent_id)
+    except Refused as why:
+        return why
+    return None
+
+
 def lasts(here: Path, agent_id: str) -> bool:
     """Whether the agent `agent_id` of the world in `here` runs for as long as its process does —
     booted from the documents as its container boots it, into a store of its own in memory: it
     holds a desire, or a transport that listens is among the packages it loads — the bus, a bot, a
     mailbox — which is what brings a transport up (`_transport_of`). False for an agent holding wants
     alone and reached by no transport, which the runtime lets finish."""
-    beliefs = boot(Path(here).resolve(), agent_id, others=ours())
-    loaded = packages_of(beliefs)
-    return (PLANNING in loaded and Planner(beliefs, agent_id).holds_a_desire()) or bool({MQTT, TELEGRAM, EMAIL} & set(loaded))
+    _, verdict = _checked(Path(here).resolve(), agent_id)
+    return verdict["desire"] or bool({MQTT, TELEGRAM, EMAIL} & set(verdict["loaded"]))
 
 
 def check(here: Path) -> None:
@@ -152,7 +221,8 @@ def check(here: Path) -> None:
     what it reads, judging nothing. Refused in that order, each said whole before the next is asked:
 
     a world that will not load, or a graph of a kind no reader declares — every reader passes over
-    such a graph in silence, so a misspelled kind is caught here or nowhere; a requirement the
+    such a graph in silence, so a misspelled kind is caught here or nowhere; an agent the binary its
+    container runs would not boot, in memory with its parts made; a requirement the
     world breaks; an agent whose roles its world does not bear out, an agent declaring no role among
     them, which would boot and run nothing (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in);
     and a world posed in a state its own constraints say is impossible, which no agent repairs — it
@@ -165,6 +235,9 @@ def check(here: Path) -> None:
         raise SystemExit(f"world {name!r} does not load — {why}; nothing granted")
     if found:
         raise SystemExit(f"world {name!r} holds graphs of a kind no reader declares — {'; '.join(found)}; nothing granted")
+    found = [str(why) for why in (_booting(here, a) for a in agents(here)) if why]
+    if found:
+        raise SystemExit(f"world {name!r} does not boot on the binary — {'; '.join(found)}; nothing granted")
     found = invalid(here)
     if found:
         raise SystemExit(f"world {name!r} states what its requirements refuse — {'; '.join(found)}; nothing granted")
@@ -187,13 +260,10 @@ def contradicted(here: Path, agent_id: str) -> list[str]:
     not load, since a society started that way would say the contradiction in every pass and mend
     nothing (knowledge/domain/planning/constraint.md). Empty for a world posed as it says it can be,
     and for an agent that is no planner, which weighs no constraint."""
-    beliefs = boot(Path(here).resolve(), agent_id, others=ours())
-    if PLANNING not in packages_of(beliefs):
-        return []
-    planner = Planner(beliefs, agent_id)
+    _, verdict = _checked(Path(here).resolve(), agent_id)
     return [f"{constraint.rsplit('#', 1)[-1]}: " + ", ".join(
                 f"({str(i).rsplit('#', 1)[-1]}, {c}, {str(o).rsplit('#', 1)[-1]})" for i, c, _, o in sorted(broken, key=str))
-            for constraint, broken in planner.contradictions()]
+            for constraint, broken in verdict["contradictions"]]
 
 
 def unread(here: Path) -> list[str]:
@@ -236,7 +306,7 @@ def _judged(here: Path) -> tuple[dict[tuple, str], dict[str, list[str]]]:
     common = _held_to(shapes, store, graphs_of(store, BELIEF, common=True), deployed)
     each = {}
     for agent_id in agents(here):
-        beliefs = boot(here, agent_id, others=ours())
+        beliefs = boot(here, agent_id)
         cat = catalogue_of(beliefs)
         each[agent_id] = _held_to(shapes, beliefs, [g for g in graphs_of(beliefs, GRAPH) if g != cat], deployed)
     of_world = {key: why for key, why in common.items() if all(key in found for found in each.values())}
@@ -325,7 +395,7 @@ def loaded(here: Path) -> frozenset[str]:
     boots it, since what an agent runs is its roles', declared in its own self graph, which a store
     of the whole world does not hold."""
     here = Path(here).resolve()
-    return frozenset(p for agent_id in agents(here) for p in packages_of(boot(here, agent_id, others=ours())))
+    return frozenset(p for agent_id in agents(here) for p in packages_of(boot(here, agent_id)))
 
 
 def refused(here: Path) -> list[str]:
@@ -335,7 +405,7 @@ def refused(here: Path) -> list[str]:
     here = Path(here).resolve()
     _, broken = _judged(here)
     return [f"{agent_id}: {why}" for agent_id in agents(here)
-            for why in _refusals(here, boot(here, agent_id, others=ours()), broken[agent_id])]
+            for why in _refusals(here, boot(here, agent_id), broken[agent_id])]
 
 
 def _refusals(here: Path, beliefs: ox.Store, broken: list[str]) -> list[str]:

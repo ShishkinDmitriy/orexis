@@ -56,7 +56,6 @@ from pathlib import Path
 import pyoxigraph as ox
 
 from agent.journal import ask
-from agent.runtime import boot
 from agent.series import HISTORY, METRICS
 from agent.store import graphs_of, rows
 
@@ -110,7 +109,7 @@ def _local(iri: str) -> str:
 def stated(world: str, agent: str) -> Stated:
     """`Stated` for `agent` of `world`, read off the world's documents as onboarding reads them: the
     agent booted from them in memory for the desires it holds, the common beliefs for the fractions."""
-    store = boot(world_dir(world), agent, others=reading.ours())
+    store = reading.boot(world_dir(world), agent)
     stated = graphs_of(store, BELIEF, common=True)
     desires = {_local(r["d"]) for r in rows(store, _DESIRES_Q, stated + graphs_of(store, DESIRE_GRAPH), id=ox.Literal(agent))}
     fractions = {_local(r["sensor"]) for r in rows(store, _FRACTIONS_Q, stated)}
