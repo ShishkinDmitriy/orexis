@@ -66,10 +66,26 @@ pub fn check(tree: &Path, world: &Path, agent: &str, now: oxsdatatypes::DateTime
             let call: orexis_telegram::driver::Call = Arc::new(|_, _| Err("a check reaches no bot".to_string()));
             call
         })),
+        #[cfg(feature = "email")]
+        email: Some(orexis_email::driver::Email::new(&store, &me, Arc::new(Unreachable))),
         ..Wiring::default()
     };
     assemble_seen(&store, agent, &clock, &loaded, None, wiring)?;
     Ok(loaded)
+}
+
+/// The mailbox a check reaches: none.
+#[cfg(feature = "email")]
+struct Unreachable;
+
+#[cfg(feature = "email")]
+impl orexis_email::driver::Mailbox for Unreachable {
+    fn fetch(&self) -> Result<Vec<(String, String)>, String> {
+        Err("a check reaches no mailbox".into())
+    }
+    fn send(&self, _: &str, _: &str) -> Result<(), String> {
+        Err("a check reaches no mailbox".into())
+    }
 }
 
 /// Whether this binary holds `package`'s part.
@@ -85,6 +101,7 @@ pub fn built(package: &str) -> bool {
         || (package == "translation" && cfg!(feature = "translation"))
         || (package == "transport/http" && cfg!(feature = "http"))
         || (package == "transport/telegram" && cfg!(feature = "telegram"))
+        || (package == "transport/email" && cfg!(feature = "email"))
 }
 
 /// Link planning's part to execution's, as the Python parts' `link` connects their signals: what a pass reached
@@ -188,7 +205,7 @@ pub struct Watching {
 }
 
 /// What the agent's bus is, where a test hands one: the MQTT member over a client of its own, the HTTP member over a
-/// web of its own, the Telegram member over a Bot API of its own, translation's model. None, and a member the agent
+/// web of its own, the Telegram member over a Bot API of its own, the email member over a mailbox of its own, translation's model. None, and a member the agent
 /// loads is brought up from the environment. And what watches it.
 #[derive(Default)]
 pub struct Wiring<'a> {
@@ -197,6 +214,8 @@ pub struct Wiring<'a> {
     pub http: Option<orexis_http::driver::Http<'a>>,
     #[cfg(feature = "telegram")]
     pub telegram: Option<orexis_telegram::driver::Telegram<'a>>,
+    #[cfg(feature = "email")]
+    pub email: Option<orexis_email::driver::Email<'a>>,
     #[cfg(feature = "translation")]
     pub model: Option<std::sync::Arc<dyn orexis_translation::model::Model>>,
     #[cfg(feature = "mqtt")]
@@ -266,6 +285,8 @@ pub fn assemble_seen<'a>(
         http,
         #[cfg(feature = "telegram")]
         telegram,
+        #[cfg(feature = "email")]
+        email,
         #[cfg(feature = "translation")]
         model,
     } = wiring;
@@ -379,7 +400,17 @@ pub fn assemble_seen<'a>(
     } else {
         None
     };
-    //  WHAT CARRIES A CHAT, in the order of a pass: a topic of the bus first, then the agent's own bot.
+    #[cfg(feature = "email")]
+    let mut mailbox = if holds("transport/email") {
+        let member = match email {
+            Some(member) => member,
+            None => orexis_email::driver::Email::connect(store, &me, &|n| std::env::var(n).ok())?,
+        };
+        Some(orexis_email::create::Transport::new(member))
+    } else {
+        None
+    };
+    //  WHAT CARRIES A CHAT, in the order of a pass: a topic of the bus first, then the agent's own bot, then its mailbox.
     #[cfg(all(feature = "translation", feature = "mqtt"))]
     if let (Some(translation), Some(transport)) = (translation.as_ref(), transport.as_mut()) {
         let carrier: std::rc::Rc<std::cell::RefCell<dyn orexis::transport::Carrier + 'a>> = transport.member.clone();
@@ -396,6 +427,16 @@ pub fn assemble_seen<'a>(
         translation.translator.borrow_mut().carriers.push(carrier);
         let translator = translation.translator.clone();
         bot.prose = Some(Box::new(move |prose| {
+            let at = prose.at.unwrap_or_else(oxsdatatypes::DateTime::now);
+            translator.borrow_mut().heard(prose, at)
+        }));
+    }
+    #[cfg(all(feature = "translation", feature = "email"))]
+    if let (Some(translation), Some(mailbox)) = (translation.as_ref(), mailbox.as_mut()) {
+        let carrier: std::rc::Rc<std::cell::RefCell<dyn orexis::transport::Carrier + 'a>> = mailbox.member.clone();
+        translation.translator.borrow_mut().carriers.push(carrier);
+        let translator = translation.translator.clone();
+        mailbox.prose = Some(Box::new(move |prose| {
             let at = prose.at.unwrap_or_else(oxsdatatypes::DateTime::now);
             translator.borrow_mut().heard(prose, at)
         }));
@@ -539,6 +580,10 @@ pub fn assemble_seen<'a>(
     #[cfg(feature = "telegram")]
     if let Some(bot) = bot {
         parts.push(("transport/telegram".into(), Box::new(bot)));
+    }
+    #[cfg(feature = "email")]
+    if let Some(mailbox) = mailbox {
+        parts.push(("transport/email".into(), Box::new(mailbox)));
     }
     //  WHAT WATCHES THE AGENT, last, so it is stopped first and writes the last window.
     parts.extend(watchers);

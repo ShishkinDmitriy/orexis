@@ -115,3 +115,16 @@ fn an_agent_the_world_does_not_state_is_refused() {
     .unwrap_err();
     assert!(refused.to_string().contains("nobody"), "{refused}");
 }
+
+#[test]
+fn an_agent_in_a_chat_by_email_boots_with_its_mailbox() {
+    let world = Path::new(TREE).join("translation/tests/world");
+    let loaded = check(
+        Path::new(TREE),
+        &world,
+        "seeker",
+        instant("2026-11-07T12:00:00Z").unwrap(),
+    )
+    .unwrap();
+    assert!(loaded.iter().any(|p| p == "transport/email"), "{loaded:?}");
+}
