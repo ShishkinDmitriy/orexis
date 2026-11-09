@@ -1,7 +1,7 @@
 //! THE MQTT TRANSPORT'S PART, as `agent/transport/mqtt/create.py` and the family's `Transport.start` make it
 //! (a-package-starts-itself): started, it subscribes what the world implies, asks after its sensors' missing readings
 //! every `NUDGE_S` of the timeline, and holds the agent running, since what it senses goes on arriving whatever is
-//! wanted. Every message a client's thread receives waits in the member's inbox and is handed to the one executing
+//! wanted. Every message a session's task receives waits in the member's inbox and is handed to the one executing
 //! thread as a job that handles it — sensing writing a percept per sensor it is for, whose arrival the runtime tells
 //! whoever listens. The executor's commands reach the member through whoever links the parts, sharing it.
 
@@ -40,6 +40,15 @@ impl<'a> Transport<'a> {
 
 impl Part for Transport<'_> {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
+        //  THE SESSIONS LISTEN BEFORE THE MEMBER SUBSCRIBES: a subscription waits in a queue only they empty.
+        let listening = {
+            let mut member = self.member.borrow_mut();
+            member.inbox.wakes(starting.wake());
+            std::mem::take(&mut member.listening)
+        };
+        for session in listening {
+            starting.task(session)?;
+        }
         self.member.borrow_mut().open()?;
         starting.every(NUDGE_S, NUDGE);
         Ok(())

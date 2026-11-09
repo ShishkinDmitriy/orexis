@@ -11,11 +11,17 @@
 //!
 //! A TRANSPORT'S THREAD HANDS THE PASS WHAT ARRIVED through the member's inbox: what a client received waits there,
 //! and the member's part queues a job per message when the runtime asks what it `submitted`, so a message is handled
-//! on the one thread the store is written from. NOT YET PORTED: the wake — a pass that moved nothing waits the poll,
-//! as the Python runtime does, where the decision record has the mind woken by its channel
-//! (the-agent-moves-to-rust-one-package-at-a-time).
+//! on the one thread the store is written from.
+//!
+//! WHAT WAITS IS A TASK, AND THE MIND WAITS FOR AN ARRIVAL: a part asks for a `task` as it starts, which holds no part
+//! and writes no belief, and runs among the tasks of the process, built the first time one is asked for. What arrives
+//! rings the `Wake`, so a pass that moved nothing waits the poll or the next arrival, whichever comes first; a timer
+//! still falls due only at a pass, so the poll stays as their ceiling (the-agent-moves-to-rust-one-package-at-a-time).
 
 use std::collections::{BTreeMap, VecDeque};
+use std::future::Future;
+use std::sync::{Arc, Condvar, Mutex};
+use std::time::Duration;
 
 use oxsdatatypes::DateTime;
 
@@ -67,11 +73,38 @@ fn started() -> std::time::Instant {
     *STARTED.get_or_init(std::time::Instant::now)
 }
 
+/// What ends the mind's wait: rung from any thread or task, and remembered until the mind next waits, so an arrival
+/// during a pass is not slept through.
+#[derive(Clone, Default)]
+pub struct Wake(Arc<(Mutex<bool>, Condvar)>);
+
+impl Wake {
+    /// Something arrived.
+    pub fn ring(&self) {
+        let (rung, ringing) = &*self.0;
+        if let Ok(mut rung) = rung.lock() {
+            *rung = true;
+            ringing.notify_one();
+        }
+    }
+
+    /// Wait until rung, or `longest` passed.
+    fn wait(&self, longest: Duration) {
+        let (rung, ringing) = &*self.0;
+        let Ok(guard) = rung.lock() else { return };
+        if let Ok((mut guard, _)) = ringing.wait_timeout_while(guard, longest, |rung| !*rung) {
+            *guard = false;
+        }
+    }
+}
+
 /// What a part asks for as it starts.
 pub struct Starting<'c> {
     timers: Vec<(f64, usize)>,
     hears: Vec<(String, usize)>,
     clock: &'c dyn Clock,
+    wake: &'c Wake,
+    tasks: &'c mut Option<tokio::runtime::Runtime>,
 }
 
 impl Starting<'_> {
@@ -89,6 +122,29 @@ impl Starting<'_> {
     /// `seconds` is nought.
     pub fn every(&mut self, seconds: f64, job: usize) {
         self.timers.push((seconds, job));
+    }
+
+    /// What ends the mind's wait, for whatever hands it an arrival.
+    pub fn wake(&self) -> Wake {
+        self.wake.clone()
+    }
+
+    /// Run `work` among the process's tasks, from now until it ends or the process does. It waits on the outside and
+    /// hands the mind what arrived: it holds no part and writes no belief.
+    pub fn task(&mut self, work: impl Future<Output = ()> + Send + 'static) -> Result<(), Error> {
+        if self.tasks.is_none() {
+            let built = tokio::runtime::Builder::new_multi_thread()
+                .worker_threads(1)
+                .thread_name("orexis-tasks")
+                .enable_all()
+                .build()
+                .map_err(|e| Error::Evaluation(format!("the tasks could not start: {e}")))?;
+            *self.tasks = Some(built);
+        }
+        if let Some(tasks) = self.tasks.as_ref() {
+            tasks.spawn(work);
+        }
+        Ok(())
     }
 }
 
@@ -177,6 +233,9 @@ pub struct Runtime<'p> {
     /// RAISED TO STOP THE RUN, by a signal the process was sent: the run ends before its next pass, `unfinished`, so
     /// whoever runs it stops every part and the last window is written.
     pub halt: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
+    wake: Wake,
+    /// WHAT WAITS ON THE OUTSIDE, there once a part asks for a task; a run with none builds nothing.
+    tasks: Option<tokio::runtime::Runtime>,
 }
 
 impl<'p> Runtime<'p> {
@@ -201,6 +260,8 @@ impl<'p> Runtime<'p> {
             watch: Watch::default(),
             laps: None,
             halt: None,
+            wake: Wake::default(),
+            tasks: None,
         };
         started();
         for (i, (_, part)) in runtime.parts.iter_mut().enumerate() {
@@ -208,6 +269,8 @@ impl<'p> Runtime<'p> {
                 timers: Vec::new(),
                 hears: Vec::new(),
                 clock,
+                wake: &runtime.wake,
+                tasks: &mut runtime.tasks,
             };
             part.start(&mut starting)?;
             runtime
@@ -324,7 +387,7 @@ impl<'p> Runtime<'p> {
     }
 
     /// Pass after pass until nobody holds the agent, ending as the last to let go said, or `passes` ran out. A pass
-    /// that moved nothing waits the poll, unless a part asked to go again. THE POLL IS REAL SECONDS, as the Python
+    /// that moved nothing waits the poll or the next arrival, unless a part asked to go again. THE POLL IS REAL SECONDS, as the Python
     /// runtime sleeps it: divided by a fast clock's pace, a courier at pace 30 passed 119 times where it passes 14.
     pub fn run(&mut self, passes: Option<usize>, poll_s: f64) -> Result<String, Error> {
         let mut n = 0;
@@ -350,7 +413,7 @@ impl<'p> Runtime<'p> {
                 return Ok(self.outcome.clone().unwrap_or_else(|| MET.to_string()));
             }
             if !self.again {
-                std::thread::sleep(std::time::Duration::from_secs_f64(poll_s));
+                self.wake.wait(Duration::from_secs_f64(poll_s));
             }
         }
         Ok(UNFINISHED.to_string())
@@ -374,5 +437,84 @@ impl<'p> Runtime<'p> {
         for (_, part) in self.parts.iter_mut().rev() {
             part.stop();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::clock::Manual;
+    use crate::transport::Inbox;
+
+    /// Holds the agent for one pass and lets go at the second; a task delivers a message soon after it starts.
+    struct Waiting {
+        inbox: Inbox,
+        passes: usize,
+    }
+
+    impl Part for Waiting {
+        fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
+            self.inbox.wakes(starting.wake());
+            let inbox = self.inbox.clone();
+            starting.every(0.0, 0);
+            starting.task(async move {
+                tokio::time::sleep(Duration::from_millis(50)).await;
+                inbox.deliver("topic", b"payload", None);
+            })
+        }
+
+        fn run(&mut self, _job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+            self.passes += 1;
+            if self.passes == 1 {
+                pass.hold("waiting");
+            } else {
+                pass.release("waiting", None);
+            }
+            Ok(Vec::new())
+        }
+    }
+
+    #[test]
+    fn an_arrival_from_a_task_ends_the_minds_wait() {
+        let store = Store::new(Arc::new(crate::namespaces::Namespaces::default())).unwrap();
+        let clock = Manual::at("2026-11-09T12:00:00Z".parse().unwrap());
+        let mut part = Waiting {
+            inbox: Inbox::default(),
+            passes: 0,
+        };
+        let parts: Vec<(String, &mut dyn Part)> = vec![("waiting".to_string(), &mut part)];
+        let mut runtime = Runtime::new(&store, "urn:test:me", &clock, parts).unwrap();
+        let began = std::time::Instant::now();
+        assert_eq!(runtime.run(None, 60.0).unwrap(), MET);
+        assert!(began.elapsed() < Duration::from_secs(30), "the poll was slept out");
+    }
+
+    #[test]
+    fn a_ring_during_a_pass_is_not_slept_through() {
+        let wake = Wake::default();
+        wake.ring();
+        let began = std::time::Instant::now();
+        wake.wait(Duration::from_secs(60));
+        assert!(began.elapsed() < Duration::from_secs(30));
+    }
+
+    #[test]
+    fn a_run_with_no_task_builds_none() {
+        struct Idle;
+        impl Part for Idle {
+            fn run(&mut self, _job: usize, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+                Ok(Vec::new())
+            }
+        }
+        let store = Store::new(Arc::new(crate::namespaces::Namespaces::default())).unwrap();
+        let clock = Manual::at("2026-11-09T12:00:00Z".parse().unwrap());
+        let mut part = Idle;
+        let parts: Vec<(String, &mut dyn Part)> = vec![("idle".to_string(), &mut part)];
+        assert!(
+            Runtime::new(&store, "urn:test:me", &clock, parts)
+                .unwrap()
+                .tasks
+                .is_none()
+        );
     }
 }

@@ -37,6 +37,7 @@ impl<'a> Transport<'a> {
 
 impl Part for Transport<'_> {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
+        self.member.inbox.wakes(starting.wake());
         for sensor in self.member.open()? {
             let job = HANDLE + 1 + self.polled.len();
             match cadence_of(self.member_beliefs(), &sensor)? {

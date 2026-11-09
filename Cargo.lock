@@ -823,6 +823,7 @@ dependencies = [
  "similar",
  "spargebra",
  "tiny_http",
+ "tokio",
  "ureq",
 ]
 
@@ -947,6 +948,7 @@ dependencies = [
  "oxsdatatypes",
  "rumqttc",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]
