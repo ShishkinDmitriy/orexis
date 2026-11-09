@@ -858,7 +858,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 ### Deployment, onboarding and operating
 
 - **The agent moves to Rust one package at a time, and the documents do not change** — one binary per agent,
-  each package a Cargo feature, every text parsed once and bound on its algebra, a package held alone by its
+  each package a Cargo feature, every text kept parsed up to a cap and its values bound into the text, a package held alone by its
   snapshot cases as it lands, an agent running in Rust once its roles' packages all are, world by world, and a
   society mixing the two in between, a ported package frozen but for fixes in both until its last Python user moves,
   and the Python agent retired whole when the last world ran on the binary (2026-11-09); what waits is a

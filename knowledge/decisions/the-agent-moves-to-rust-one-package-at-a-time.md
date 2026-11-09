@@ -9,7 +9,7 @@ description: >-
   Decided - one Rust binary per agent, each package a Cargo feature, held alone by its snapshot cases as it
   is ported, an agent running in Rust once its roles' packages all are, world by world, a society mixing the
   two in between, a ported package frozen until its last Python user moves and the Python agent retired whole
-  at the end, every text parsed once, and the documents unchanged since the engine is the same. Refused - a Rust core under Python, staying Python, and the reasoning as Rust code.
+  at the end, every text kept parsed up to a cap, and the documents unchanged since the engine is the same. Refused - a Rust core under Python, staying Python, and the reasoning as Rust code.
 ---
 
 # The question
@@ -75,10 +75,14 @@ without a feature links none of them.
 worlds are read as they are, by the same engine, so the engine's traps that AGENTS.md lists stay true.
 A domain stays documents and no code an agent runs.
 
-**Every text is parsed once.** A rule, a met-test, an estimate or an action's text is parsed when it is read,
-at boot or when it arrives, with spargebra, and kept parsed. A value is bound into the parsed query, never
-by substituting `$tokens` into text. Speech, onboarding and the footprint all read the same typed algebra
-in place of rdflib's parse tree, so the traps that parse tree had go with it.
+**A text is kept parsed, up to a cap.** A text is parsed with spargebra the first time it is run and kept by
+its text, and the store keeps the thousand asked most recently of each kind. A value is bound by substituting
+`$tokens` into the text before it is parsed, so a text naming an instant or a possible world is new each time.
+This record first said a value would be bound into the parsed query, and the binary never did that. Measured
+over the greenhouse's day on 2026-11-09, parsing was 5.5% of the run and the cache, then uncapped, ended at 118 MB,
+so the cache was capped; binding on the algebra stays available if parsing ever limits a pass. The footprint and
+the transitions read the same typed algebra in place of rdflib's parse tree, so the traps that parse tree had go
+with it.
 
 **A package is held alone the day it is ported.** A snapshot case holds a function to the whole store it
 leaves: a store in, the function run, the store out. A ported function runs the same case with no agent
