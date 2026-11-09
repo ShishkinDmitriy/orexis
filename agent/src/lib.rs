@@ -3,7 +3,7 @@
 //!
 //! - [`namespaces`]: every prefix the tree's ontologies declare, found by looking, one label one IRI;
 //! - [`bind`]: a rule text's `$tokens` bound to the terms they are, refusing a token nobody bound;
-//! - [`store`]: the engine, every text parsed once, and the catalogue that says what each graph is;
+//! - [`store`]: the engine, the texts it keeps parsed, and the catalogue that says what each graph is;
 //! - [`clock`]: the one timeline, which may run fast;
 //! - [`hash`]: what a graph holds, as the digest the Python kernel writes, a world hashed within what is read;
 //! - [`boot`]: one agent's store from its world's documents, its self checked, its roles' packages read;

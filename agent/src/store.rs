@@ -1,19 +1,24 @@
-//! THE STORE: Oxigraph's engine, every text parsed once, and the catalogue that says what each graph is — the
+//! THE STORE: Oxigraph's engine, the texts it keeps parsed, and the catalogue that says what each graph is — the
 //! functions over the engine `agent/store.py` offers, the same questions in the same texts.
 //!
-//! **EVERY TEXT IS PARSED ONCE.** A text a pass runs is parsed the first time it is run and kept parsed by its
-//! text, so a rule asked per world, a read asked per candidate, is parsed once a process. Measured on the bench Pi
-//! (`examples/parsing.rs`), a statement takes 40 µs to parse, and a greenhouse pass runs about 1,650: 66 ms of a
-//! 460 ms pass, every pass, where ten passes' 16,551 statements are 1,454 texts, parsed once in 68 ms.
+//! **A TEXT IS KEPT PARSED, AND WHAT IS KEPT IS CAPPED.** A text a pass runs is parsed the first time it is run and
+//! kept parsed by its text, so a rule asked per world, a read asked per candidate, is not parsed again. Measured on
+//! the bench Pi (`examples/parsing.rs`), a statement takes 40 µs to parse, and a greenhouse pass runs about 1,650:
+//! 66 ms of a 460 ms pass, every pass, where ten passes' 16,551 statements are 1,454 texts, parsed once in 68 ms.
+//! A value is bound into the text, so a text naming an instant or a possible world is new each time and is never
+//! asked again: kept without a cap, a day of the greenhouse left 118 MB of them, so each cache holds the texts
+//! asked most recently (`KEPT`), and one that falls out is parsed again if it is ever asked.
 //!
 //! **A READER STATES THE GRAPHS IT READS**, and the store decides nothing (a-reader-states-the-kinds-it-reads):
 //! `rows` is handed the graphs its default graph is the union of, `graphs_of` answers which by kind and instant,
 //! and a text that reads one graph names it in its own `GRAPH` clause. Never wrap `GRAPH <…>` around a select.
 
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::num::NonZeroUsize;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
+use lru::LruCache;
 use oxigraph::io::RdfFormat;
 use oxigraph::model::vocab::{rdf, xsd};
 use oxigraph::model::{GraphName, GraphNameRef, Literal, NamedNode, NamedOrBlankNode, Quad, Term, Triple};
@@ -29,13 +34,23 @@ use crate::ontology::BELIEF;
 /// One solution: each variable it binds, to the term it binds.
 pub type Row = BTreeMap<String, Term>;
 
+/// How many parsed texts each cache keeps: about 6 KB each, measured over a day of the greenhouse.
+const KEPT: NonZeroUsize = NonZeroUsize::new(1000).expect("a cap above nought");
+
+/// A cache of what has been parsed, by its text.
+type Parsed<T> = Mutex<LruCache<String, T>>;
+
+fn parsed_cache<T>() -> Parsed<T> {
+    Mutex::new(LruCache::new(KEPT))
+}
+
 /// The engine, the namespaces every text may speak, and what has been parsed.
 pub struct Store {
     engine: Engine,
     namespaces: Arc<Namespaces>,
-    queries: Mutex<HashMap<String, PreparedSparqlQuery>>,
-    updates: Mutex<HashMap<String, PreparedSparqlUpdate>>,
-    algebra: Mutex<HashMap<String, spargebra::Update>>,
+    queries: Parsed<PreparedSparqlQuery>,
+    updates: Parsed<PreparedSparqlUpdate>,
+    algebra: Parsed<spargebra::Update>,
     parsed: AtomicUsize,
     run: AtomicUsize,
     updated: AtomicUsize,
@@ -122,9 +137,9 @@ impl Store {
         Ok(Store {
             engine: Engine::new().map_err(|e| Error::Evaluation(e.to_string()))?,
             namespaces,
-            queries: Mutex::new(HashMap::new()),
-            updates: Mutex::new(HashMap::new()),
-            algebra: Mutex::new(HashMap::new()),
+            queries: parsed_cache(),
+            updates: parsed_cache(),
+            algebra: parsed_cache(),
             parsed: AtomicUsize::new(0),
             run: AtomicUsize::new(0),
             updated: AtomicUsize::new(0),
@@ -137,9 +152,9 @@ impl Store {
         Ok(Store {
             engine: Engine::open(path).map_err(|e| Error::Evaluation(e.to_string()))?,
             namespaces,
-            queries: Mutex::new(HashMap::new()),
-            updates: Mutex::new(HashMap::new()),
-            algebra: Mutex::new(HashMap::new()),
+            queries: parsed_cache(),
+            updates: parsed_cache(),
+            algebra: parsed_cache(),
             parsed: AtomicUsize::new(0),
             run: AtomicUsize::new(0),
             updated: AtomicUsize::new(0),
@@ -194,7 +209,7 @@ impl Store {
             .parse_query(text)
             .map_err(|e| Error::Syntax(format!("{e}: {text}")))?;
         self.parsed.fetch_add(1, Ordering::Relaxed);
-        parsed.insert(text.to_string(), query.clone());
+        parsed.put(text.to_string(), query.clone());
         Ok(query)
     }
 
@@ -304,7 +319,7 @@ impl Store {
                         .parse_update(text)
                         .map_err(|e| Error::Syntax(format!("{e}: {text}")))?;
                     self.parsed.fetch_add(1, Ordering::Relaxed);
-                    parsed.insert(text.to_string(), update.clone());
+                    parsed.put(text.to_string(), update.clone());
                     update
                 }
             }
@@ -335,7 +350,7 @@ impl Store {
             .parse_update(text)
             .map_err(|e| Error::Syntax(format!("{e}: {text}")))?;
         self.parsed.fetch_add(1, Ordering::Relaxed);
-        parsed.insert(text.to_string(), update.clone());
+        parsed.put(text.to_string(), update.clone());
         Ok(update)
     }
 
@@ -991,6 +1006,20 @@ mod tests {
         }
         let (parsed, run) = store.statements();
         assert_eq!((parsed, run), (1, 10));
+    }
+
+    #[test]
+    fn what_is_kept_parsed_is_capped_and_the_text_still_asked_stays() {
+        let store = store();
+        let asked = "ASK { ?s ?p ?o }";
+        let once = KEPT.get() + 1;
+        for i in 0..once {
+            store.ask(asked, &[]).unwrap();
+            store.ask(&format!("ASK {{ <urn:once:{i}> ?p ?o }}"), &[]).unwrap();
+        }
+        let (parsed, run) = store.statements();
+        assert_eq!((parsed, run), (once + 1, 2 * once), "the text still asked was parsed the once");
+        assert_eq!(store.queries.lock().unwrap().len(), KEPT.get());
     }
 
     #[test]

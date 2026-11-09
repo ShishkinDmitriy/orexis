@@ -4,8 +4,8 @@
 //! reaches only a variable the query projects at its top level, in Oxigraph as in pyoxigraph, so a token is what
 //! reaches every scope.
 //!
-//! The text it makes is parsed once by the store, which keeps what it parsed by the text, so a text bound to the
-//! same values again is not parsed again.
+//! The text it makes is parsed by the store, which keeps the texts asked most recently, so a text bound to the same
+//! values again is not parsed again while it is kept.
 
 use std::collections::BTreeSet;
 use std::sync::LazyLock;
