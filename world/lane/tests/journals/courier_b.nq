@@ -1,0 +1,11 @@
+<urn:uuid:66839d49-f057-434c-aa58-19e53ffa0728> <http://www.w3.org/ns/prov#atTime> "2026-01-01T12:00:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <urn:uuid:66839d49-f057-434c-aa58-19e53ffa0728> .
+<http://example.org/orexis/world/lane#van_b> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/orexis/courier#Van> <urn:uuid:66839d49-f057-434c-aa58-19e53ffa0728> .
+<urn:uuid:7aac7955-f178-4712-ad0a-b2c511f15d44> <http://example.org/orexis/courier#y> "1"^^<http://www.w3.org/2001/XMLSchema#integer> <urn:uuid:66839d49-f057-434c-aa58-19e53ffa0728> .
+<urn:uuid:7aac7955-f178-4712-ad0a-b2c511f15d44> <http://example.org/orexis/courier#x> "3"^^<http://www.w3.org/2001/XMLSchema#integer> <urn:uuid:66839d49-f057-434c-aa58-19e53ffa0728> .
+<urn:uuid:7aac7955-f178-4712-ad0a-b2c511f15d44> <http://example.org/orexis/coordination#taken> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> <urn:uuid:66839d49-f057-434c-aa58-19e53ffa0728> .
+<urn:uuid:7aac7955-f178-4712-ad0a-b2c511f15d44> <http://example.org/orexis/coordination#of> <http://example.org/orexis/world/lane#van_b> <urn:uuid:66839d49-f057-434c-aa58-19e53ffa0728> .
+<urn:uuid:7aac7955-f178-4712-ad0a-b2c511f15d44> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/orexis/coordination#Holding> <urn:uuid:66839d49-f057-434c-aa58-19e53ffa0728> .
+<urn:uuid:66839d49-f057-434c-aa58-19e53ffa0728> <http://example.org/orexis/coordination#holding> <urn:uuid:7aac7955-f178-4712-ad0a-b2c511f15d44> <urn:uuid:66839d49-f057-434c-aa58-19e53ffa0728> .
+<urn:uuid:66839d49-f057-434c-aa58-19e53ffa0728> <http://example.org/orexis/coordination#over> <http://example.org/orexis/world/lane#c> <urn:uuid:66839d49-f057-434c-aa58-19e53ffa0728> .
+<urn:uuid:66839d49-f057-434c-aa58-19e53ffa0728> <http://example.org/orexis/coordination#peer> <http://example.org/orexis/world/lane#courier_a> <urn:uuid:66839d49-f057-434c-aa58-19e53ffa0728> .
+<urn:uuid:66839d49-f057-434c-aa58-19e53ffa0728> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/orexis/coordination#Asked> <urn:uuid:66839d49-f057-434c-aa58-19e53ffa0728> .

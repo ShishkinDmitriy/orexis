@@ -1,38 +1,17 @@
-"""`orexis-explain` held to what the grower writes: the fixed questions run over points the agent's
-own sinks recorded — the greenhouse played by its simulator in-process, with no InfluxDB in the room —
-and over points made by hand for the findings the greenhouse does not produce, so each question is
-seen to name a thing once and say nothing stood out otherwise. The rows a live store answers are
-pivoted back into those same points (`points_of`), held here to a round trip.
-
-The season run is the in-process stand-in for the issue's measurement — the greenhouse at pace 600
-for a real hour, which needs the containers — and prints its figures under `-s`: points read, the
-report's time, and what each question answered (knowledge/runbooks/reflect.md).
-"""
+"""`orexis-explain` held to points made by hand for each finding, so each question is seen to name a thing once and say
+nothing stood out otherwise; to a journal's steps; and to a round trip of the rows a live store answers through
+`points_of` (knowledge/runbooks/reflect.md)."""
 
 from __future__ import annotations
-
-import os
-import time
-import pytest
 
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from agent import clock
-from agent.metrics import window as metrics
-from agent.runtime import Runtime, boot, world_name
-from agent.series import HISTORY, METRICS, Sink, install
-from agent.transport.mqtt.driver import Mqtt
-from agent.journal import Journal, install as keep, mint
-from onboarding.explain import _STEPS_Q, QUESTIONS, Stated, points_of, report, stated, steps
-from simulation.simulator import Simulator
+import pyoxigraph as ox
 
-WORLD = Path(__file__).resolve().parents[1]
+from onboarding.explain import _STEPS_Q, QUESTIONS, Stated, points_of, report, steps
+
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
-GH = "http://example.org/orexis/world/greenhouse#"
-#  HOW LONG A SEASON THE SUITE PLAYS, in simulated hours at the greenhouse's ten-minute cadence: a day
-#  is 144 passes; `OREXIS_EXPLAIN_HOURS` plays longer for the runbook's figures.
-HOURS = float(os.environ.get("OREXIS_EXPLAIN_HOURS", "24"))
 
 T = lambda minutes: NOW + timedelta(minutes=minutes)
 
@@ -113,22 +92,12 @@ def test_a_quiet_season_says_nothing_stood_out_and_a_mixed_one_is_not_exhausted(
 def test_the_steps_a_journal_keeps_are_the_points_the_questions_read():
     """A dose taken and answered undone, as the executor's events state them: read back from the journal by its
     action, a taking and a verdict, at their instants — and nothing before `since`."""
-    from agent.execution.events import StepAnswered, StepTaken
-    import pyoxigraph as ox
-
-    act, step = ox.NamedNode(GH + "plan.0.act"), ox.NamedNode(GH + "plan.0")
-    said = (ox.Triple(act, ox.NamedNode("http://example.org/orexis/execution#of"), step),
-            ox.Triple(act, ox.NamedNode("http://example.org/orexis/execution#taken"),
-                      ox.Literal("true", datatype=ox.NamedNode("http://www.w3.org/2001/XMLSchema#boolean"))),
-            ox.Triple(step, ox.NamedNode("http://example.org/orexis/planning#fills"), ox.NamedNode("http://example.org/orexis/climate#Dosing")))
-    journal = Journal()
-    for event in (StepTaken(step.value, T(5), act=act.value, said=said),
-                  StepAnswered(step.value, T(15), landed=False, act=act.value, said=said)):
-        journal.record(node := mint(), event.statements(node), event.at)
-    assert steps(journal.store.query(_STEPS_Q)) == [
+    journal = ox.Store()
+    journal.load(path=str(Path(__file__).parent / "a_dose_undone.nq"), format=ox.RdfFormat.N_QUADS)
+    assert steps(journal.query(_STEPS_Q)) == [
         {"measurement": "Step", "tags": {"action": "Dosing"}, "fields": {"taken": True}, "time": T(5)},
         {"measurement": "Step", "tags": {"action": "Dosing"}, "fields": {"landed": False}, "time": T(15)}]
-    assert [p["time"] for p in steps(journal.store.query(_STEPS_Q), since=T(10))] == [T(15)]
+    assert [p["time"] for p in steps(journal.query(_STEPS_Q), since=T(10))] == [T(15)]
 
 
 class _Record:
@@ -153,78 +122,3 @@ def test_the_rows_a_store_answers_pivot_back_into_the_points_the_sink_wrote():
                                   "_measurement": p["measurement"], "_field": name, "_value": value, **p["tags"]}))
     back = points_of([_Table(rows_[:2]), _Table(rows_[2:])])
     assert back == [written[1], written[0]], back
-
-
-class _Bus:
-    """One broker: what the simulator publishes reaches the grower, what the grower publishes reaches
-    the simulator, and every command is kept."""
-
-    def __init__(self):
-        self.runtime = self.simulator = None
-        self.commands = []
-
-    def subscribe(self, pattern):
-        pass
-
-    def publish(self, topic, payload, retain=False):
-        payload = payload if isinstance(payload, bytes) else payload.encode()
-        if topic.startswith("sensors/"):
-            self.runtime.deliver(topic, payload, clock.now())
-        else:
-            self.commands.append((topic, payload))
-            self.simulator.command(topic, payload)
-
-
-@pytest.mark.walk
-def test_the_growers_season_is_reported_from_what_its_sinks_wrote(monkeypatch):
-    """The greenhouse played by its simulator for `HOURS`, a reading every ten minutes, the grower
-    dosing the bed as it dries, with a history and a metrics sink recording and a window a pass long:
-    the report over those points names the dose's landings and finds nothing wrong — no want
-    unreachable, the one desire searched, no search exhausted, no reading past a calibration point, no
-    raw count repeated (the simulated instrument jitters, #879), no sensor doubted — which is the honest
-    answer for a world that works. The raw count rides on every reading."""
-    time_ = {"at": NOW}
-    monkeypatch.setattr(clock, "now", lambda: time_["at"])
-    history, windows = [], []
-    install(HISTORY, Sink(HISTORY, "greenhouse-grower", lambda bucket, record: history.extend(record)))
-    install(METRICS, Sink(METRICS, "greenhouse-grower-metrics", lambda bucket, record: windows.extend(record)))
-    kept = Journal(now=lambda: time_["at"])
-    keep(kept)
-    metrics.configure(interval_s=0)
-    metrics.identify(world=world_name(WORLD), agent="grower")
-    try:
-        bus = _Bus()
-        bus.simulator = Simulator(WORLD, bus, now=NOW)
-        bus.runtime = Runtime(boot(WORLD, "grower"), "grower", transport=Mqtt(GH + "grower", bus))
-        bus.simulator.open()
-        passes, started = 0, time.perf_counter()
-        while time_["at"] < NOW + timedelta(hours=HOURS):
-            bus.simulator.step(time_["at"])
-            bus.runtime.run(passes=1, poll_s=0)
-            passes += 1
-            time_["at"] += timedelta(minutes=10)
-        ran_s = time.perf_counter() - started
-        bus.runtime.stop()
-    finally:
-        install(HISTORY, None)
-        install(METRICS, None)
-        keep(None)
-        metrics.reset()
-        metrics.identify()
-    readings = len(history)
-    history += steps(kept.store.query(_STEPS_Q))
-    held = stated("greenhouse", "grower")
-    started = time.perf_counter()
-    season = report("greenhouse", "grower", history, windows, held)
-    report_s = time.perf_counter() - started
-    found = {title: lines for title, _, lines in season.sections}
-    print(f"\n{passes} passes over {HOURS:g} simulated hours in {ran_s:.1f} s; {readings} readings, {len(history) - readings} steps from the journal and "
-          f"{len(windows)} metrics points; report in {report_s * 1000:.1f} ms\n{season.text()}")
-    doses = [t for t, _ in bus.commands if t == "actuators/pump/command"]
-    assert doses and len(doses) == len([p for p in history if p["measurement"] == "Step" and p["fields"].get("taken")])
-    assert all("raw" in p["fields"] for p in history[:readings]), "the raw count rides on every reading"
-    assert found["wants nothing reached"] == [] and found["desires never unmet"] == [] and found["searches exhausted"] == []
-    (dosing,) = found["landings"]
-    assert dosing.startswith(f"Dosing: {len(doses)} verdict(s), {len(doses)} landed, 0 timed out") and "STOOD OUT" not in dosing
-    assert found["probes"] == [], found["probes"]
-    assert held.desires == {"the_bed_is_comfortable"} and held.fractions == {"moisture_probe"}

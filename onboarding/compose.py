@@ -62,6 +62,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
@@ -159,16 +160,25 @@ def _extras(packages, series: bool, *also: str) -> tuple[str, ...]:
 
 
 def image_of(world: str, agent_id: str, series: bool) -> Image:
-    """`agent_id`'s own image: every package it loads and every package whose code those import, by
-    `agent.tree.closed`, and the extras they bring — the series writer's where the installation serves a store."""
-    packages = tuple(closed(packages_of(reading.boot(world_dir(world), agent_id))))
-    return Image(f"orexis-{world}-{agent_id}:local", packages, _extras(packages, series), binary=ported(packages))
+    """`agent_id`'s own image: every package it loads and every package whose crate those depend on, each a feature
+    the binary is built with."""
+    packages = tuple(_with_crates(packages_of(reading.boot(world_dir(world), agent_id))))
+    return Image(f"orexis-{world}-{agent_id}:local", packages, (), binary=True)
 
 
-def ported(packages, root: Path = KERNEL) -> bool:
-    """Whether every package named is ported, a crate of its own beside its ontology: an agent runs on the binary
-    once each package its roles load is (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md)."""
-    return all((root / package / "Cargo.toml").is_file() for package in packages)
+def _with_crates(named, root: Path = KERNEL) -> list[str]:
+    """`named` with every package whose crate they depend on, by the path each `Cargo.toml` states, and theirs."""
+    seen, todo = set(), list(named)
+    while todo:
+        package = todo.pop()
+        if package in seen:
+            continue
+        seen.add(package)
+        crate = root / package
+        declared = tomllib.loads((crate / "Cargo.toml").read_text())["dependencies"]
+        paths = [(crate / d["path"]).resolve() for d in declared.values() if isinstance(d, dict) and "path" in d]
+        todo += [p.relative_to(root).as_posix() for p in paths if p != root and (p / "ontology.ttl").is_file()]
+    return sorted(seen)
 
 
 def simulator_image(world: str) -> Image:
