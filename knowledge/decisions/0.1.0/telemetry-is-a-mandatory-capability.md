@@ -176,7 +176,7 @@ kept coming back. They are not the same fact, and only the second could ever be 
 
 # Consequences
 
-- **`agent/ontology.py`'s claim gets closer to true.** Its docstring listed eleven kernel terms
+- **`documents/ontology.py`'s claim gets closer to true.** Its docstring listed eleven kernel terms
   that are not universal; ten now, and this one left by becoming a package rather than by
   ceasing to claim something.
 - **Every agent runs one more module.** `reporting` appears in every module set, which two

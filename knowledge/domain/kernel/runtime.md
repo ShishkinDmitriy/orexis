@@ -6,7 +6,7 @@ description: >-
   whose catalogue says what every graph is, then run pass by pass — the planner's pass, then the
   executor walked until nothing is due — and stopped when no desire is held, no want stands and
   no intention walks, or, for a planner that is no executor, when every want standing has a plan
-  published; an agent holding a desire runs for good. `agent/runtime.py`.
+  published; an agent holding a desire runs for good. `agent/src/runtime.rs`.
 ---
 
 # Runtime
@@ -109,5 +109,5 @@ implementation holds an `execution:Command` is taken by handing what the command
 the present, to the transport reaching the device; the [greenhouse](/domain/kernel/domain.md)'s pump
 and heater are taken so.
 
-**A world's tests live with the world.** `world/hanoi/tests/` boots the world from the files
-beside it and runs it to `planned`, held to the plan; `world/courier/tests/` runs its world to met.
+**A world's tests live with the world.** `binary/tests/hanoi.rs` boots the world from the files
+beside it and runs it to `planned`, held to the plan.

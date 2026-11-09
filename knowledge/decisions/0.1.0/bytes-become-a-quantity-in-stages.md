@@ -163,7 +163,7 @@ use here.
 ValueFlows: the IRIs are referenced, nothing of QUDT is loaded, and `agent_old/inference.py`'s
 hand-materialised closure gains no axioms to cover. `unit:` reaches a query from whichever ontology declares it, and the loader refuses a second
 ontology binding the label to another IRI — one that could rebind `unit:` could quietly redirect
-every unit in the society. (It sat in a kernel prefix list in `agent/store.py` when this was
+every unit in the society. (It sat in a kernel prefix list in `documents/store.py` when this was
 written, on the same argument; the refusal is what the argument needed, and the list went with
 [the-region-want-is-sensings-want](/decisions/the-region-want-is-sensings-want.md).)
 

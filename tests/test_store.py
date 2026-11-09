@@ -7,7 +7,7 @@ store the agent ran on did not, so the tests were green while every bidder faile
 The lesson is not "remember to add the prefix" — it is that the test harness was more forgiving
 than the store, so a whole class of query bug could not be caught by testing behaviour. This
 checks the text instead: a SPARQL text in the agent, the operator's tools, the simulator, a
-domain or a world uses only names `agent.store` declares, or declares them itself with `PREFIX`.
+domain or a world uses only names `documents.store` declares, or declares them itself with `PREFIX`.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from agent.store import DECLARED
+from documents.store import DECLARED
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -40,7 +40,8 @@ def _shipped(tree: str, *suffixes: str) -> list[Path]:
 # one of these globs and took cases off this guard without failing anything; a guard that quietly
 # stops guarding is worse than none, so each group is asserted non-empty below.
 _GROUPS = {
-    "agent": _shipped("agent", ".py", ".ttl"),
+    "agent": _shipped("agent", ".ttl"),
+    "documents": _shipped("documents", ".py"),
     "onboarding": _shipped("onboarding", ".py"),
     "simulation": _shipped("simulation", ".py"),
     "domains": _shipped("domains", ".ttl"),

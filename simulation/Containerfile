@@ -1,0 +1,29 @@
+# THE SIMULATOR'S IMAGE, the one Python a world runs: the agent is `binary/Containerfile`. It reads a world as an agent
+# would, so it holds the packages' documents and none of their code; and never onboarding, whose tools hold the admin token.
+FROM docker.io/library/python:3.13-slim AS source
+WORKDIR /src
+COPY agent/ agent/
+RUN find agent -type d -name tests -prune -exec rm -rf {} + \
+ && find agent -type f ! -name '*.ttl' ! -name '*.trig' -delete
+
+FROM docker.io/library/python:3.13-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+COPY pyproject.toml pyproject.toml
+COPY simulation/dependencies.txt simulation/dependencies.txt
+RUN pip install "setuptools>=68" && pip install -e ".[simulation]"
+
+COPY --from=source /src/agent/ agent/
+COPY documents/ documents/
+COPY domains/ domains/
+COPY simulation/ simulation/
+RUN pip install --no-build-isolation --no-deps -e .
+
+RUN useradd --uid 10001 --no-create-home --shell /usr/sbin/nologin orexis \
+ && chown -R orexis:orexis /app
+USER orexis

@@ -58,7 +58,7 @@ from dotenv import dotenv_values
 from influxdb_client import Authorization, BucketRetentionRules, InfluxDBClient, Permission, \
     PermissionResource
 
-from agent.series import HISTORY, METRICS, PURPOSES
+from .series import HISTORY, METRICS, PURPOSES
 
 from . import compose, installation, reading
 from .worlds import REPO_ROOT

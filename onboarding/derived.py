@@ -27,8 +27,8 @@ from pathlib import Path
 
 import pyoxigraph as ox
 
-from agent.ontology import ASSERTED, CATALOGUE_GRAPH, DERIVED
-from agent.store import document, put_document, rows, update
+from documents.ontology import ASSERTED, CATALOGUE_GRAPH, DERIVED
+from documents.store import document, put_document, rows, update
 
 
 _TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"

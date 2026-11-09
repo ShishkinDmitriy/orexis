@@ -8,6 +8,9 @@ description: >-
   figures say. The search's own bench is measure-the-search; this is the agent around it.
 ---
 
+> **The figures below, and every command and test file this page names, are the retired Python agent's.** They are kept as the
+> record of what was measured; none of those commands runs any more. What runs is `binary/tests/greenhouse_day.rs`, which replays the greenhouse's day.
+
 # Why a second bench
 
 [measure-the-search](/runbooks/measure-the-search.md) times the Planner on a problem that is all
@@ -67,7 +70,7 @@ the dashboards, and the day the two disagreed nobody would know which to believe
 this bench, while two readings were being sensed; the executor's walk, queued by a revision and run
 among the drain's jobs, marked `execute` there and took sensing's time with it. The hand-timed
 drain was 52 ms, and so it reads now that only the walk a pass asks for marks the lap
-(`agent/execution/create.py`). A column that says nought while work is plainly being done is the
+(`agent/execution/src/create.rs`). A column that says nought while work is plainly being done is the
 first thing to doubt in a new row.
 
 **The machine drifts, here too.** Two serial runs of the same tree minutes apart gave the cold dry

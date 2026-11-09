@@ -67,28 +67,20 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
 
-from agent.runtime import EMAIL, KERNEL, SECRETS, TELEGRAM, documents, extra_of, known, packages_of, world_of
-from agent.tree import closed, dependency_files, imported, kept, packages as tree_packages, sources as tree_sources
-from agent.metrics.window import INTERVAL_KEY
-from agent.series import HISTORY, METRICS
-from agent.store import document, graphs_of, kinds_in, rows, whose
+from documents.world import EMAIL, KERNEL, SECRETS, TELEGRAM, documents, known, packages_of, world_of
+from .series import HISTORY, METRICS
+from documents.store import document, graphs_of, kinds_in, rows, whose
 from . import installation, reading
 from .worlds import REPO_ROOT
 from .worlds import agent_secrets, world_dir, worlds
 
 from .mqtt import addresses, broker_of, service_of
-from agent.ontology import local_of
+from documents.ontology import local_of
 from .reading import MQTT4SSN
 
 log = logging.getLogger("compose")
 
 IMAGE = "orexis:local"
-#  THE EXTRA THE KERNEL'S SERIES WRITER BRINGS, and the simulator's: units beside the packages
-#  (knowledge/decisions/a-package-brings-its-own-dependencies.md).
-SERIES, SIMULATION = "series", "simulation"
-#  THE DISTRIBUTION'S OWN FILES, where its extras are declared and its packages' code is: beside this tree,
-#  whatever root a caller's worlds are read from.
-_PYPROJECT = Path(__file__).resolve().parents[1] / "pyproject.toml"
 
 
 TRANSLATION = "translation"
@@ -107,19 +99,15 @@ _BOT_Q = """
 SELECT ?url WHERE { $agent <http://example.org/orexis/telegram#hasBot> ?bot . ?bot <https://schema.org/url> ?url } ORDER BY ?url"""
 
 
-def declared_extras() -> frozenset[str]:
-    """Every extra the distribution declares: the units that bring a library of their own, each from its file."""
-    return frozenset(dependency_files(_PYPROJECT))
+#  HOW LONG A METRICS WINDOW IS, the name the binary reads it by.
+INTERVAL_KEY = "METRICS_INTERVAL_S"
 
 
 @dataclass(frozen=True)
 class Image:
-    """What one container is built from: the packages of `agent/` it holds, and the extras those bring."""
+    """What one agent's container is built from: the packages of `agent/` it holds, each a feature of the binary."""
     tag: str
     packages: tuple[str, ...]
-    extras: tuple[str, ...]
-    simulator: bool = False
-    binary: bool = False
 
     def features(self) -> tuple[str, ...]:
         """The binary's features for the packages it holds: each a feature named for its directory's last part,
@@ -127,43 +115,17 @@ class Image:
         return tuple(sorted(package.rsplit("/", 1)[-1] for package in self.packages))
 
     def build(self) -> str:
-        """The service's image and the build that makes it, its own: the Containerfile handed the packages to
-        keep and the extras to install (knowledge/decisions/a-package-brings-its-own-dependencies.md) — or, for an
-        agent whose every package is ported, the binary's handed the features to build it with."""
-        if self.binary:
-            return (f"image: {self.tag}\n    build:\n      context: ../..\n      dockerfile: binary/Containerfile\n"
-                    f"      args:\n        # the packages it runs, each a feature of the binary, and nothing else's\n"
-                    f'        FEATURES: "{",".join(self.features())}"')
-        return (f"image: {self.tag}\n    build:\n      context: ../..\n      dockerfile: Containerfile\n      args:\n"
-                f"        # the packages it runs and what they bring beyond the core, and nothing else's\n"
-                f'        PACKAGES: "{",".join(self.packages)}"\n'
-                f'        EXTRAS: "{",".join(self.extras)}"\n'
-                f'        SIMULATOR: "{"yes" if self.simulator else "no"}"')
-
-    def mounts(self) -> str:
-        """The trees mounted over what the image copies, so a code change needs a restart and no rebuild — the
-        agent tree entry by entry as the image keeps it (`agent.tree.kept`), the domains, the simulator's own. The
-        binary's image is compiled, so a code change is a rebuild, and only the domains are mounted over it."""
-        if self.binary:
-            return "\n      - ../../domains:/app/domains:ro"
-        lines = [f"\n      - ../../agent/{rel}:/app/agent/{rel}:ro" for rel in kept(self.packages, KERNEL)]
-        lines.append("\n      - ../../domains:/app/domains:ro")
-        if self.simulator:
-            lines.append("\n      - ../../simulation:/app/simulation:ro")
-        return "".join(lines)
-
-
-def _extras(packages, series: bool, *also: str) -> tuple[str, ...]:
-    declared = declared_extras()
-    return tuple(sorted({extra_of(p) for p in packages if extra_of(p) in declared} | ({SERIES} if series else set())
-                        | set(also)))
+        """The service's image and the build that makes it, its own: the binary, handed the features to build it with."""
+        return (f"image: {self.tag}\n    build:\n      context: ../..\n      dockerfile: binary/Containerfile\n"
+                f"      args:\n        # the packages it runs, each a feature of the binary, and nothing else's\n"
+                f'        FEATURES: "{",".join(self.features())}"')
 
 
 def image_of(world: str, agent_id: str, series: bool) -> Image:
     """`agent_id`'s own image: every package it loads and every package whose crate those depend on, each a feature
     the binary is built with."""
     packages = tuple(_with_crates(packages_of(reading.boot(world_dir(world), agent_id))))
-    return Image(f"orexis-{world}-{agent_id}:local", packages, (), binary=True)
+    return Image(f"orexis-{world}-{agent_id}:local", packages)
 
 
 def _with_crates(named, root: Path = KERNEL) -> list[str]:
@@ -179,12 +141,6 @@ def _with_crates(named, root: Path = KERNEL) -> list[str]:
         paths = [(crate / d["path"]).resolve() for d in declared.values() if isinstance(d, dict) and "path" in d]
         todo += [p.relative_to(root).as_posix() for p in paths if p != root and (p / "ontology.ttl").is_file()]
     return sorted(seen)
-
-
-def simulator_image(world: str) -> Image:
-    """The simulator's own image: the packages of the agent tree its code imports, and its extra."""
-    packages = tuple(closed(sorted(imported(tree_sources(REPO_ROOT / "simulation"), set(tree_packages(KERNEL))))))
-    return Image(f"orexis-{world}-simulation:local", packages, _extras(packages, False, SIMULATION), simulator=True)
 
 
 #  THE CLIENT THE SIMULATOR CONNECTS AS: whichever hosts the systems no one built.
@@ -282,10 +238,12 @@ def translating(world: str, agent_id: str) -> Translating | None:
 
 
 def _simulator(world: str, read: set[Path], client: str, host: str, plain: int) -> str:
-    image = simulator_image(world)
     return f"""
   simulation:
-    {image.build()}
+    image: orexis-{world}-simulation:local
+    build:
+      context: ../..
+      dockerfile: simulation/Containerfile
     command: ["python", "-m", "simulation", "/app/world/{world}"]
     environment:
       MQTT_HOST: "{host}"
@@ -296,7 +254,7 @@ def _simulator(world: str, read: set[Path], client: str, host: str, plain: int) 
     network_mode: host
     userns_mode: "keep-id:uid=10001,gid=10001"
     restart: unless-stopped
-    volumes:{_documents(world, read)}{image.mounts()}
+    volumes:{_documents(world, read)}{_SIMULATOR_TREES}
 """
 
 
@@ -401,15 +359,15 @@ def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, st
       # its own secrets, whole: its credentials, its certificate, and every document only it is handed — written
       # by onboarding and by hand, never committed, and mounted into THIS container alone
       - {mine}:/app/world/{world}/{SECRETS}/{agent_id}:ro{certificates}
-      {_TREES_BINARY if image.binary else _TREES}{image.mounts()}
+      {_TREES}
+      - ../../domains:/app/domains:ro
 """
 
 
 #  WHAT A SERVICE IS HANDED OF THE TREES, said above the mounts.
-_TREES = """# The trees, mounted so a code change needs a restart rather than a rebuild — the SAME entries its
-      # image keeps, the kernel and its own packages and no other's, which `tests/test_layout.py` holds
-      # to `agent.tree.kept`."""
-_TREES_BINARY = """# The domains, mounted over the image's copy so a changed document needs a restart; the binary and the
+_SIMULATOR_TREES = ("\n      - ../../agent:/app/agent:ro\n      - ../../documents:/app/documents:ro\n      - ../../domains:/app/domains:ro"
+                     "\n      - ../../simulation:/app/simulation:ro")
+_TREES = """# The domains, mounted over the image's copy so a changed document needs a restart; the binary and the
       # tree's documents are its image's, so a change to the agent is a rebuild."""
 
 

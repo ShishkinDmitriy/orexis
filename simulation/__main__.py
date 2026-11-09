@@ -14,7 +14,7 @@ import queue
 import time
 from pathlib import Path
 
-from agent import clock
+from documents import clock
 
 from .simulator import Simulator
 

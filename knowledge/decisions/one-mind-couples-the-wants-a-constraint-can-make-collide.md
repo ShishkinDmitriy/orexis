@@ -115,7 +115,7 @@ preconditions from the present ground, where the aversion's rows are the collisi
 make: 32 on the shared grid, none on disjoint grids. An instance meets a row's terms through a filling
 the reach admits that binds both, the pick of the parcel into the van. Per pass, in the derivation,
 since the reach begins at the present; 17 ms a pass on the dispatcher and one query on a holder with
-no aversion ([constraint](/domain/planning/constraint.md), `agent/planning/couplings.py`).*
+no aversion ([constraint](/domain/planning/constraint.md), `agent/planning/src/couplings.rs`).*
 
 **A constraint is its own kind, and the difference from a desire is modality.** The bundle had the
 desire and the precondition and nothing between: a desire is what the agent wants of the world, a

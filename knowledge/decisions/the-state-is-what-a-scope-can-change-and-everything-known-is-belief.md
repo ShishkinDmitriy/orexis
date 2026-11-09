@@ -30,8 +30,8 @@ Three kernel kinds sort what an agent knows, and to the sovereign they looked li
   an observation, a prediction or a possible world is not beneath it and reaches none of them
   ([an-observation-is-a-percept-and-the-mind-reads-only-beliefs](/decisions/an-observation-is-a-percept-and-the-mind-reads-only-beliefs.md)).
 - **`orexis:StateGraph`**, beneath it: the part a plan can change. A ground speaks for it
-  (`agent/planning/world_at.py`), a possible world forks it, an effect and a transition rewrite it,
-  a prediction supersedes it, a peer may say it (`agent/speech/heard.py`) and the executor checks a
+  (`agent/planning/src/world_at.rs`), a possible world forks it, an effect and a transition rewrite it,
+  a prediction supersedes it, a peer may say it (`agent/speech/src/heard.rs`) and the executor checks a
   landing against it. The world authors it per document (`<> a orexis:StateGraph` in every
   `state.ttl`), and a domain subclasses it (the market's calls, rounds, bids, claims, presentations).
 - **`orexis:PublicGraph`**, on another axis: what every agent of a world reads. The ontology, the
@@ -114,7 +114,7 @@ them were answering the second and third questions with a class.
 
 **Provenance is already there.** Every catalogue row carries `orexis:arrivedBy` and
 `orexis:ownedBy`. The boot already finds the world's shared documents by provenance, not by kind
-(what arrived asserted and nobody owns, `agent/runtime.py`).
+(what arrived asserted and nobody owns, `agent/src/runtime.rs`).
 
 # What was refused
 

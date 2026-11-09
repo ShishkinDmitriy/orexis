@@ -131,7 +131,7 @@ Read on the branch tip that carries #919 (`bb4b4a12`, 2026-10-07); nothing of th
 is built, and nothing here was run on a bench.
 
 - **A peer cannot say a prediction.** `heard` refuses a document any of whose graphs is not a kind
-  beneath `orexis:StateGraph` (`agent/speech/heard.py`): a peer reports what IS. A route said as
+  beneath `orexis:StateGraph` (`agent/speech/src/heard.rs`): a peer reports what IS. A route said as
   state would be copied into the present ground, which is false — the van is not yet where its route
   goes — so a route the agent lost to becomes an `orexis:ForecastGraph` only by this decision, and
   #923 argues the refusal it relaxes.

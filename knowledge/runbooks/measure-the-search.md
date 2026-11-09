@@ -8,6 +8,9 @@ description: >-
   row names what ran and where.
 ---
 
+> **The figures below, and every command and test file this page names, are the retired Python agent's.** They are kept as the
+> record of what was measured; none of those commands runs any more. What runs is `agent/planning/tests/bench.rs`, whose cases are the same puzzles held to the same plans.
+
 # Why these cases are the bench
 
 A hanoi puzzle and a courier delivery are all search: no bus, no sensors, no containers — one

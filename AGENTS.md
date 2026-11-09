@@ -565,7 +565,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 
 - **An inference concludes and never deletes, and a transition changes the state, triggered once by
   each arrival of testimony** — an inference's revisions live in a graph derived from its source and go when it
-  goes, SHACL's draft adopted as it stands (`agent/belief/revise.py`); a transition deletes and
+  goes, SHACL's draft adopted as it stands (`agent/belief/src/revise.rs`); a transition deletes and
   inserts in the agent's own state, in `sh:order` groups as an effect does, never in testimony, and
   is told from an inference by whether its result depends on what it replaces
   (a-transition-changes-the-state-and-an-inference-only-concludes).
@@ -633,7 +633,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   a-transition-changes-the-state-and-an-inference-only-concludes).
 - **A figure an agent holds about itself is a stance, a triple about the self in its self graph,
   read there alone, and the package's constant holds where none is stated** — the patience, both
-  budgets and the horizon, each declared by its reader's package and read through `agent/stance.py`;
+  budgets and the horizon, each declared by its reader's package and read through `agent/src/stance.rs`;
   never a flag or a common belief, and a grace or a metrics window is none
   (a-stance-is-the-agents-word-about-itself). A figure about what a role is OVER is the role's: an
   observer's silent and stuck limits, the observer shape's `sh:defaultValue` where it states none.
@@ -861,7 +861,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   each package a Cargo feature, every text parsed once and bound on its algebra, a package held alone by its
   snapshot cases as it lands, an agent running in Rust once its roles' packages all are, world by world, and a
   society mixing the two in between, a ported package frozen but for fixes in both until its last Python user moves,
-  and the Python agent retired whole when the last world runs on the binary; what waits is a
+  and the Python agent retired whole when the last world ran on the binary (2026-11-09); what waits is a
   Tokio task and the mind one thread owning the store, the scopes searched in parallel; onboarding stays Python
   and boots the binary to check a world; a Rust core under Python and the reasoning as Rust code were refused
   (the-agent-moves-to-rust-one-package-at-a-time).
@@ -954,11 +954,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A question is answered and every other act is kept, and FIPA names the acts** — a question is the model's
   query and writes nothing, a statement of any other act is kept; a performative term on every statement kind, FIPA's semantics, an envelope and a
   protocol engine were refused, a protocol being what the actions' preconditions allow (a-question-is-answered-and-every-other-act-is-kept).
-- **The core is the kernel's dependencies, a package brings its own in a `dependencies.txt` beside its ontology,
-  and each agent's image holds only what it runs** — the file is the package's extra, named for its directory,
-  and a package with none is the core's; `orexis-compose` builds `orexis-<world>-<agent>:local` with the agent's
-  packages, those their code imports and what they bring, and mounts the same entries (`agent.tree.kept`); a
-  distribution per package and one image carrying everything were refused (a-package-brings-its-own-dependencies).
+- **Each agent's image holds only what it runs** — `orexis-compose` builds `orexis-<world>-<agent>:local` with a feature of the binary for each
+  package the agent loads and each whose crate those depend on; one image carrying everything was refused (a-package-brings-its-own-dependencies).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
   `crlfile` makes OpenSSL demand a CRL from the issuer on every handshake, so a config naming an
   absent file or a CRL past its `nextUpdate` refuses the whole society and not the one agent; and
@@ -983,7 +980,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
    outside planning the one name imported is `Planner` — and each package's layout test holds it to
    that. Which packages an agent runs is the [roles](knowledge/domain/kernel/role.md) its self graph
    says it plays, each of a class the package whose ontology declares it serves.
-   `agent/runtime.py` is the container that assembles them all. **A domain is documents and no
+   `agent/src/runtime.rs` is the container that assembles them all. **A domain is documents and no
    code an agent runs**: `domains/<name>/` holds a vocabulary, its actions and its rules, and a world imports it
    with `owl:imports`; its one module of code, `ui/index.tsx` with the selects beside it, is how it is drawn in the history view, which no agent loads
    (a-replay-is-the-history-drawn-by-the-package-that-decides-it). Adding a way of acting is a node in a domain's `actions.ttl` — a
@@ -1141,8 +1138,8 @@ pytest -q -m ""        # the walks too, as CI runs them on every pull request.
 pytest -q tests        # the four files that read the whole tree: knowledge, layout, store, projects
 pytest infra -q -n0    # 8 more, against the RUNNING broker and store — see below.
                        # -n0 is REQUIRED: they rewrite one acl.conf in place. It refuses without it.
-lint-imports           # onboarding may import agent, never the reverse
-cargo test             # THE RUST AGENT, ported one package at a time beside the Python one: its crates' tests
+lint-imports           # nothing the simulator's image holds may import onboarding
+cargo test             # THE AGENT: its crates' tests
 cargo clippy --all-targets -- -D warnings && cargo fmt --check   # and what CI's `rust` job refuses besides
 ```
 
@@ -1169,12 +1166,11 @@ it and grant exactly what its wiring implies, so adding an agent and re-running 
 is the whole of deploying one. They stay separately callable because rotating one service's
 credentials should not touch the other's.
 
-**Its code is in `onboarding/`, beside `agent/` and outside it, and that absence is asserted.**
-`orexis-influx` reads the admin token, which opens every bucket and which no agent may ever hold,
-so the surest guarantee is that the code using it is absent from the image. What keeps onboarding
-out of an agent image is the `Containerfile` not naming it — `tests/test_layout.py` fails if a
-`COPY onboarding/` appears — and `lint-imports` holds the direction: onboarding may import agent,
-agent may never import onboarding. `orexis-influx` and `orexis-mqtt` need infra up;
+**Its code is in `onboarding/`, and no image holds it.** `orexis-influx` reads the admin token, which opens every bucket and
+which no agent may ever hold, so the surest guarantee is that the code using it is absent from every image: the binary's is
+compiled from `agent/` and `binary/`, the simulator's `simulation/Containerfile` names no `onboarding/`, which
+`tests/test_layout.py` holds, and `lint-imports` holds the direction, `simulation/` and `documents/` never importing
+onboarding. `orexis-influx` and `orexis-mqtt` need infra up;
 `orexis-mqtt` must run before the broker will start at all, since its ACL is generated and
 mosquitto refuses anonymous clients. It then **reloads** the broker itself (SIGHUP, not a
 restart — connected agents keep their sessions), so adding an agent or a world still interrupts

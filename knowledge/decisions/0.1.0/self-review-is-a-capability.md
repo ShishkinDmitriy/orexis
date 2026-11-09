@@ -18,7 +18,7 @@ it and no second one in sight.
 Two things were wrong with that, and they turned out to be the same thing.
 
 **It had a capability's shape and the kernel's location.** 24 of the kernel ontology's 71 terms
-belonged to self-review — enough to break `agent/ontology.py`'s own stated invariant that the
+belonged to self-review — enough to break `documents/ontology.py`'s own stated invariant that the
 kernel vocabulary is what *every* agent has. Nothing else in the kernel is optional; this was.
 
 **And it is exactly the case rule 2 describes.** Reviewing your own settings by rules the packages

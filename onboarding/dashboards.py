@@ -51,10 +51,10 @@ import argparse
 import json
 import logging
 
-from agent.ontology import local_of
-from agent.runtime import every_package
-from agent.series import METRICS
-from agent.store import graphs_of, rows
+from documents.ontology import local_of
+from documents.world import every_package
+from .series import METRICS
+from documents.store import graphs_of, rows
 from . import installation, reading
 from .reported import FIELD, REPORTED, Reported
 from .worlds import REPO_ROOT

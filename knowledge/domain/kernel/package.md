@@ -25,7 +25,7 @@ exports that act alone.
 | `agent/speech/` | a peer's document heard, the agent's own said |
 | `agent/transport/` | reaching the society; MQTT is the member that ships |
 
-`agent/runtime.py` is the container that assembles them, and the kernel's `orexis:` vocabulary
+`agent/src/runtime.rs` is the container that assembles them, and the kernel's `orexis:` vocabulary
 (`agent/ontology.ttl`) keeps only what packages meet at: an action, an agent, the graph kinds.
 
 # How a package is loaded
@@ -57,7 +57,7 @@ loaded or not.
 **A transport is no role.** It is loaded where a loaded role needs bytes and the society wires a bus
 — the MQTT member for an observer one of whose sensors publishes on a topic, or a speaker that
 listens to one; the HTTP member for an observer one of whose sensors is a thing with a form —
-asked over the world's common beliefs and the self (`TRANSPORTS` in `agent/runtime.py`). That is the
+asked over the world's common beliefs and the self (`TRANSPORTS` in `agent/src/runtime.rs`). That is the
 one derivation left, since which bus reaches a device is wiring and not a choice. History and metrics
 are loaded from the environment.
 

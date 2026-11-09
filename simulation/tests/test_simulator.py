@@ -13,10 +13,13 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from agent.sensing.ontology import STUCK_AFTER_TERM, default_of
+from documents.store import document, rows
 from simulation.simulator import JITTER, PLACES, Simulator
 
-STUCK_AFTER = default_of(STUCK_AFTER_TERM)          # where the observer role states none, the observer shape's default
+_SENSING = Path(__file__).resolve().parents[2] / "agent" / "sensing" / "ontology.ttl"
+_DEFAULT_Q = """
+SELECT ?default WHERE { ?shape sh:targetClass sensing:Observer ; sh:property ?p . ?p sh:path sensing:stuckAfter ; sh:defaultValue ?default }"""
+STUCK_AFTER = int(float(rows(document(_SENSING), _DEFAULT_Q, [_SENSING.as_uri()])[0]["default"]))          # where the observer role states none, the observer shape's default
 
 WORLD = Path(__file__).resolve().parents[2] / "world" / "greenhouse"
 NOW = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)

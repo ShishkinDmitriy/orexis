@@ -35,7 +35,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 #  The trees this repository's own distribution ships. An import of one is an import of
 #  `orexis` itself and not a dependency on anything third-party.
-OWN_TREES = {"agent", "onboarding", "simulation"}
+OWN_TREES = {"documents", "onboarding", "simulation"}
 
 
 def normalise(name: str) -> str:
@@ -92,8 +92,6 @@ def _specs(specs) -> set[str]:
 
 def extras(pyproject: Path) -> dict[str, set[str]]:
     """Each extra the distribution declares and what it brings, read off its unit's own file."""
-    from agent.tree import dependency_files
-
     out = {}
     for name, path in dependency_files(pyproject).items():
         lines = [line.split("#", 1)[0].strip() for line in (REPO_ROOT / path).read_text().splitlines()]
@@ -101,34 +99,35 @@ def extras(pyproject: Path) -> dict[str, set[str]]:
     return out
 
 
-#  THE KERNEL: `agent/*.py`, beside the packages. Its series writer is a unit of its own, since it imports
-#  its client only where a store is named, and the root conftest is the runner's.
-KERNEL = REPO_ROOT / "agent"
-SERIES = KERNEL / "series.py"
+#  WHAT BOTH PROGRAMS SHARE: the core is its imports, and each program brings the rest as its extra.
+CORE = REPO_ROOT / "documents"
+DEPENDENCIES = "dependencies.txt"
+
+
+def dependency_files(pyproject: Path) -> dict[str, str]:
+    """Each extra the distribution declares, by the one file it is read from."""
+    config = tomllib.loads(pyproject.read_text())["tool"]["setuptools"]["dynamic"]["optional-dependencies"]
+    return {name: entry["file"][0] for name, entry in config.items()}
 
 
 def units() -> dict[str, tuple[list[Path], str]]:
-    """Every unit that may bring a library of its own, by the extra it would bring it as, with its sources and
-    where its dependency file is: each package of `agent/`, its directory with `/` read as `-` and the file
-    beside its ontology; the series writer, beside `series.py`; the simulator and onboarding, at their roots."""
-    from agent.runtime import every_package, extra_of
-    from agent.tree import DEPENDENCIES
+    """Each program that may bring a library of its own, by its extra, with its sources and its dependency file."""
+    return {tree: (sources(REPO_ROOT / tree), f"{tree}/{DEPENDENCIES}") for tree in ("simulation", "onboarding")}
 
-    out = {extra_of(package): (sources(KERNEL / package), f"agent/{package}/{DEPENDENCIES}") for package in every_package()}
-    out["series"] = ([SERIES], "agent/series.dependencies.txt")
-    for tree in ("simulation", "onboarding"):
-        out[tree] = (sources(REPO_ROOT / tree), f"{tree}/{DEPENDENCIES}")
-    return out
+
+def test_no_python_is_left_in_the_agent():
+    """The agent is the binary, and a `.py` under `agent/` is a second agent starting."""
+    assert not [p for p in (REPO_ROOT / "agent").rglob("*.py") if "__pycache__" not in p.parts]
 
 
 def test_the_core_declares_exactly_what_the_kernel_imports():
     """The direction that catches most is `unused`: a dependency stops being needed when the last import
     of it goes, and nothing about deleting a line of Python makes anyone open the pyproject. The core is
-    the kernel's alone, so an agent loading no package that brings a library installs nothing else."""
-    kernel = [p for p in KERNEL.glob("*.py") if p != SERIES and p.name != "conftest.py"]
-    assert kernel, "the kernel's glob stopped matching"
+    what the two programs share, so either installs nothing of the other's."""
+    kernel = sorted(CORE.glob("*.py"))
+    assert kernel, "the core's glob stopped matching"
     want, have = needed(kernel), declared(REPO_ROOT / "pyproject.toml")
-    assert have == want, ("the core is out of step with what the kernel, agent/*.py, imports.\n"
+    assert have == want, ("the core is out of step with what documents/*.py imports.\n"
                           f"  missing: {sorted(want - have) or 'none'}\n  unused:  {sorted(have - want) or 'none'}")
 
 
@@ -136,8 +135,7 @@ def test_every_unit_brings_exactly_what_it_imports_beyond_the_core_as_its_own_ex
     """A package that needs a library declares it as its extra, and only it does: an extra holds what its
     unit imports beyond the core, both ways, and a unit that needs nothing beyond the core has none."""
     core, declared_extras, found = declared(REPO_ROOT / "pyproject.toml"), extras(REPO_ROOT / "pyproject.toml"), units()
-    assert {"transport-mqtt", "series", "belief", "simulation", "onboarding"} <= set(found), sorted(found)
-    from agent.tree import dependency_files
+    assert {"simulation", "onboarding"} <= set(found), sorted(found)
 
     files = dependency_files(REPO_ROOT / "pyproject.toml")
     wrong = {}
@@ -156,9 +154,7 @@ def test_every_unit_brings_exactly_what_it_imports_beyond_the_core_as_its_own_ex
 
 def test_a_developers_install_carries_every_units_extra():
     """`dev` installs every unit's extra, so a developer's environment and CI run every test of every
-    package; the image installs only the extras of the packages its agent loads."""
-    from agent.tree import dependency_files
-
+    program."""
     files = dependency_files(REPO_ROOT / "pyproject.toml")
     dev = [line.split("#", 1)[0].strip() for line in (REPO_ROOT / files["dev"]).read_text().splitlines()]
     carried = {name for spec in dev if normalise(spec).startswith("orexis[")

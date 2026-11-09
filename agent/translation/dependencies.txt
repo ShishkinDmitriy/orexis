@@ -1,2 +1,0 @@
-#  what translation brings beyond the core: the model's client, which retries an overloaded API and names its failures
-anthropic>=0.60

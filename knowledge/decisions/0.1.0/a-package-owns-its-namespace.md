@@ -25,7 +25,7 @@ sensing, actuation, the mqtt transport. The trees under `vocabulary/` went furth
 `review:reviewIntervalS` — declared by a package, spelled as though the kernel owned them. An ontology
 that declares an IRI and then defines nothing under it is an ontology in name only.
 
-`agent/ontology.py` explained the split, and its explanation was the tell:
+`documents/ontology.py` explained the split, and its explanation was the tell:
 
 > The hardware layer keeps namespaces of its own … It can afford this **precisely because no
 > runtime code names these terms**: an agent never queries a pin, so `term()` and
@@ -164,12 +164,12 @@ than assumed.
   their terms into SPARQL text heavily would be "the same size of change for less benefit". Both
   halves missed the point. The size was not in the SPARQL text at all — that form is the one a
   rename can see — it was in the six forms that name a term some other way and fail silently. And
-  the benefit was not legibility but a bounded kernel: the kernel vocabulary (`agent/ontology.py`
+  the benefit was not legibility but a bounded kernel: the kernel vocabulary (`documents/ontology.py`
   then, `packages/orexis-agent-progression/ontology.py` since #452) claims everything in it
   is true of every agent, and 102 terms were making that false. See
   [every-term-in-its-own-house](/decisions/every-term-in-its-own-house.md).
 - ~~**`vocabulary/` packages ship no Python**, so they have no `terms.py` to hold an `NS` and
-  their namespaces stay as constants in `agent/ontology.py`.~~ Closed: nothing in the kernel
+  their namespaces stay as constants in `documents/ontology.py`.~~ Closed: nothing in the kernel
   ever read those constants — only the sovereign's generators — so they are
   `onboarding/namespaces.py`'s now, where they are consumed, and the kernel names no package's
   namespace at all. A knowledge-only part still has no `terms.py`, and needs none.

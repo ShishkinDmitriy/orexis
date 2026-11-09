@@ -15,7 +15,7 @@ An event is what one [signal](/domain/kernel/signal.md) emission hands every han
 dataclass instance, `PlanPublished(plan, want, desire, …)`, `IntentionResolved(intention, want,
 outcome)`, `Observed(property, value, at, …)`. Its class belongs to the package that says it and
 lives in `agent/<package>/events.py`, beside nothing else, so what a package says is read in one
-module; the runtime's own two, a graph written and a pass, are in `agent/runtime.py`. It carries
+module; the runtime's own two, a graph written and a pass, are in `agent/src/runtime.rs`. It carries
 every fact a handler needs, read by the emitter where it already stands, so the executor adopts
 from a `PlanPublished` without asking the Planner anything.
 

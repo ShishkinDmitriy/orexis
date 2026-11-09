@@ -7,38 +7,22 @@ description = "Orexis — a market society of agents that bid for a scarce resou
 requires-python = ">=3.10"
 dynamic = ["optional-dependencies"]
 
-# `orexis` is the agent, the operator's tools and the simulator — the three trees at the repo
-# root — and one distribution. Every name below is imported by one of them, and
-# tests/test_projects.py holds this list to exactly what those trees import, both ways.
+# `orexis` is what is left in Python: the operator's tools, the simulator and what they share. The agent is `binary/`.
+# Every name below is imported by one of them, and tests/test_projects.py holds this list to exactly what those trees
+# import, both ways.
 dependencies = [
-    #  THE CORE'S, AND NOTHING ELSE: the store's engine, and rdflib where a shape is compiled or a graph
-    #  compared — what `agent/*.py`, the kernel, imports. A package that needs a library of its own brings
-    #  it as an extra below, named for its directory, so an agent that loads no such package installs none
-    #  of it (knowledge/decisions/a-package-brings-its-own-dependencies.md).
+    #  THE CORE'S: the store's engine, and rdflib where a graph is compared.
     "pyoxigraph",
     "rdflib>=7",
 ]
 
-#  ONE EXTRA PER UNIT THAT BRINGS A LIBRARY OF ITS OWN, read from the unit's own file: a package of `agent/`
-#  says what it brings in a `dependencies.txt` beside its ontology, and is the core's where it has none; its
-#  extra is its directory, `/` read as `-`. Beside the packages: `series`, the kernel's writer of history and
-#  metrics, whose client is imported only where a store is named; the simulator; onboarding, the operator's
-#  tools; and `dev`. tests/test_projects.py holds each file to exactly what its unit imports beyond the core,
-#  and every unit with something beyond the core to a file, and `orexis-compose` builds each agent's image
-#  with the extras of the packages it loads (knowledge/decisions/a-package-brings-its-own-dependencies.md).
+#  ONE EXTRA PER PROGRAM THAT BRINGS A LIBRARY OF ITS OWN, read from its own file.
 [tool.setuptools.dynamic.optional-dependencies]
-belief = { file = ["agent/belief/dependencies.txt"] }
-transport-mqtt = { file = ["agent/transport/mqtt/dependencies.txt"] }
-translation = { file = ["agent/translation/dependencies.txt"] }
-series = { file = ["agent/series.dependencies.txt"] }
 simulation = { file = ["simulation/dependencies.txt"] }
 onboarding = { file = ["onboarding/dependencies.txt"] }
 dev = { file = ["dev.dependencies.txt"] }
 
 [project.scripts]
-# The agent. One process, one agent, told only its own id.
-orexis-agent = "agent.runtime:main"
-
 # ONBOARDING — everything between a ratified world and a society that can be started. The
 # umbrella runs the four below; they stay separately callable because rotating one service's
 # credentials should not touch the other's.
@@ -67,15 +51,14 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-# The four roots at the repo top, and nothing else: the agent, the operator's tools, the
-# simulator and the translator. A domain and a world are documents, read from where they are and never installed.
+# The three roots at the repo top, and nothing else: what the tools and the simulator share, and each of them. A domain and a world are documents, read from where they are and never installed.
 where = ["."]
-include = ["agent*", "onboarding*", "simulation*"]
+include = ["documents*", "onboarding*", "simulation*"]
 
 [tool.pytest.ini_options]
-# The agent's own suites, the simulator's and each world's, which live beside what they test.
+# The simulator's suite and what each world still holds in Python, beside what they test.
 # `tests/` holds the four files that read the whole tree, run by the gates by name.
-testpaths = ["agent", "simulation", "world"]
+testpaths = ["simulation", "world"]
 
 # `importlib` is the mode pytest recommends and the one that does not derive a module name from
 # a path; it stops inserting directories into sys.path, which is why `pythonpath` is here.
@@ -134,10 +117,10 @@ filterwarnings = ["ignore:'count' is passed as positional argument:DeprecationWa
 # holds the series store's admin token must be absent from what an agent can import.
 #
 #   .venv/bin/lint-imports
-root_packages = ["onboarding", "agent", "simulation"]
+root_packages = ["onboarding", "documents", "simulation"]
 
 [[tool.importlinter.contracts]]
-name = "The agent never reaches for the operator's tools"
+name = "Nothing the simulator's image holds reaches for the operator's tools"
 type = "forbidden"
-source_modules = ["agent", "simulation"]
+source_modules = ["documents", "simulation"]
 forbidden_modules = ["onboarding"]
