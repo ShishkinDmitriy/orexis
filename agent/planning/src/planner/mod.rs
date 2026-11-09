@@ -642,7 +642,6 @@ impl<'a> Planner<'a> {
             self.read = Some((texts, read_anywhere(beliefs, at)?));
         }
         let read = self.read.as_ref().and_then(|(_, r)| r.clone());
-        let mut walking = walking;
         let mut all: Vec<String> = scopes.all().into_iter().collect();
         if all.is_empty() {
             all.push(UNSCOPED.to_string());
@@ -658,7 +657,7 @@ impl<'a> Planner<'a> {
                 &scopes,
                 read.as_ref(),
                 &flights,
-                &mut walking,
+                &walking,
                 &mut searched,
                 at,
             );
@@ -677,7 +676,8 @@ impl<'a> Planner<'a> {
         Ok(written)
     }
 
-    /// One scope's part of the pass, in its imaginarium; the plans published.
+    /// One scope's part of the pass, in its imaginarium; the plans published. NOTHING ANOTHER SCOPE DID THIS PASS IS
+    /// READ HERE: no action of one writes a fact a want of another reads, so what is walking is as the pass began.
     #[allow(clippy::too_many_arguments)]
     fn pass_in(
         &mut self,
@@ -686,7 +686,7 @@ impl<'a> Planner<'a> {
         scopes: &Scopes,
         read: Option<&BTreeSet<String>>,
         flights: &Flights,
-        walking: &mut BTreeSet<String>,
+        walking: &BTreeSet<String>,
         searched: &mut BTreeSet<String>,
         at: DateTime,
     ) -> Result<Vec<String>, Error> {
@@ -854,6 +854,7 @@ impl<'a> Planner<'a> {
             memo.selects.clear();
             let shapes = shapes(store, &mut memo)?;
             let mut kept: BTreeMap<String, Vec<String>> = BTreeMap::new();
+            let mut here = BTreeSet::new();
             let reopening: BTreeSet<String> = if flights.is_empty() {
                 BTreeSet::new()
             } else {
@@ -876,14 +877,15 @@ impl<'a> Planner<'a> {
                     at,
                 };
                 self.search(store, &want, self.budget, &scoped, &mut memo)?;
-                searched.insert(want.clone());
+                here.insert(want.clone());
                 self.reconsider(store, &want, &flights, &mut kept)?;
             }
             self.lap("search");
             let mut unwalked: BTreeSet<String> = walking.clone();
-            for w in reopening.intersection(searched) {
+            for w in reopening.intersection(&here) {
                 unwalked.remove(w);
             }
+            searched.extend(here);
             let handed = publish_plan(store, beliefs, &self.uri, &unwalked, &kept)?;
             self.mark_kept(&handed)?;
             let published = self.said_published(store, &handed, &present, &scope, &mut memo, at)?;
@@ -899,7 +901,6 @@ impl<'a> Planner<'a> {
                 let imagined = imagined(store, &scope, &mut memo)?;
                 self.watch.emit(&imagined);
             }
-            *walking = self.walking()?;
             Ok(handed)
         }
     }
