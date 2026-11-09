@@ -325,7 +325,7 @@ mkdir -p ~/.config/systemd/user/podman-restart.service.d
 cat > ~/.config/systemd/user/podman-restart.service.d/unless-stopped.conf <<'UNIT'
 [Service]
 ExecStart=
-ExecStart=/usr/bin/podman $LOGGING start --all --filter restart-policy=always --filter restart-policy=unless-stopped
+ExecStart=-/usr/bin/podman $LOGGING start --all --filter restart-policy=always --filter restart-policy=unless-stopped
 ExecStop=
 ExecStop=/usr/bin/podman $LOGGING stop --all --filter restart-policy=always --filter restart-policy=unless-stopped
 UNIT
