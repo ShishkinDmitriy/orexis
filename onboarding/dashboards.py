@@ -19,7 +19,7 @@ subdirectory per world. With `foldersFromFilesStructure`, Grafana shows a folder
 world removed from disk simply stops having one.
 
 Vocabulary: nothing new. The panels are built from what each sensor `sosa:observes`, the bucket
-name comes from `onboarding.influx` and the measurement and the tags from `agent.sensing.events` —
+name comes from `onboarding.influx` and the measurement and the tags from sensing's `events.rs` —
 sensing's, since sensing contributes the observation — so the dashboard cannot disagree with where
 the agent writes or under what name. A sensor and a subject go by the local names of their IRIs
 (`tag_of`), as sensing tags them; keyed by a stated `orexis:localId` instead, the greenhouse — whose
@@ -27,18 +27,16 @@ devices the society names by their topics — read as observing nothing and got 
 dashboard (#885).
 
 **Steps have no panel yet.** Execution writes a step taken and how it ended under
-`agent.execution.events.MEASUREMENT`, tagged by action, want and parameter. A panel for them would
+execution's `MEASUREMENT` (`agent/execution/src/events.rs`), tagged by action, want and parameter. A panel for them would
 be keyed on the actions an agent may take — read off the world's action graphs, as sensors are
 here — and draw `taken` and `landed` as events rather than a line, which is a panel type and a
 query shape this module does not build.
 
 **A DASHBOARD PER PACKAGE draws the agents' health** (`<package>.json`), for a world that is
-`onboarding:monitored` and for no other: what each package reports, learnt by importing the
-packages' `events.py` and reading every event class that names a measurement — and the runtime's
-own, in `agent.runtime` — so no list of metrics is kept here and adding an event that reports draws
-it. One for the runtime and one for each package some agent of the world loads that reports, each
-linked to the others by the tags they share; a ROW PER MEASUREMENT, in the order the package declares
-its events, each panel described by the event's own docstring; the AGENT is every dashboard's
+`onboarding:monitored` and for no other: what each package reports, as `reported.REPORTED` states it — the
+binary has no registry to ask, so an event added to a package's `events.rs` is drawn once it is added there. One for the runtime and one for each package some agent of the world loads that reports, each
+linked to the others by the tags they share; a ROW PER MEASUREMENT, in the order the table states
+its events, each panel described by the table's `about`; the AGENT is every dashboard's
 variable, picking whose bucket every panel reads, carried from one dashboard to the next. A counted
 event is a panel of how many and of each flag, summed per window, and one per value, drawing its
 mean, its max and its sum; its levels are a panel per unit, their last per window — each field of a
@@ -50,17 +48,15 @@ See knowledge/domain/onboarding/onboarding.md.
 from __future__ import annotations
 
 import argparse
-import importlib
 import json
 import logging
 
-from agent import runtime as the_runtime
-from agent.metrics import FLAG, LEVEL, VALUE, counted, fields_of, measurement, reported
-from agent.runtime import KERNEL, every_package
-from agent.sensing.events import FIELD, measurement_of, tag_of
+from agent.ontology import local_of
+from agent.runtime import every_package
 from agent.series import METRICS
 from agent.store import graphs_of, rows
 from . import installation, reading
+from .reported import FIELD, REPORTED, Reported
 from .worlds import REPO_ROOT
 from .worlds import world_dir, worlds
 
@@ -131,7 +127,7 @@ def _unit_of(unit_iri: str | None) -> str:
 def _flux(bucket: str, sensor_id: str, measurement: str) -> str:
     """One sensor's series, and nothing else in the bucket.
 
-    The measurement is the observed property's, asked of `agent.sensing.history` — the writer — so the
+    The measurement is the observed property's, the property's local name as sensing writes it, so the
     panel and the point cannot name it two ways; the terrace's test holds the two together.
     Filtered on the `sensor` tag rather than grouped by it. A bucket holds every property its
     agent records — a board sending soil moisture and air humidity sends two fractions in the
@@ -247,9 +243,9 @@ def render(world: str) -> dict:
     ranges = _ranges_by_subject(store)
 
     panels, y, pid = [], 0, 1
-    for row in sorted(sensors, key=lambda r: (tag_of(r["subject"]), tag_of(r["sensor"]))):
+    for row in sorted(sensors, key=lambda r: (local_of(r["subject"]), local_of(r["sensor"]))):
         bucket = bucket_name(world, row["agentId"])
-        sensor_id, subject_id = tag_of(row["sensor"]), tag_of(row["subject"])
+        sensor_id, subject_id = local_of(row["sensor"]), local_of(row["subject"])
         unit = _unit_of(row.get("unit"))
         prop = row["property"].rsplit("/", 1)[-1].rsplit("#", 1)[-1]
         stated = ranges.get((row["subject"], row["property"]), {})
@@ -259,7 +255,7 @@ def render(world: str) -> dict:
                 f"Bands: {told}. Both come from the world, never from this file.")
 
         panels.append(_sensor_panel(f"{subject_id} — {prop}", bucket, sensor_id,
-                                    measurement_of(row["property"]), unit, stated,
+                                    local_of(row["property"]), unit, stated,
                                     y=y, h=8, panel_id=pid, desc=desc))
         pid += 1
         y += 8
@@ -280,21 +276,12 @@ def render(world: str) -> dict:
 AGENT_VARIABLE = "agent"
 
 
-def reporting(world: str) -> list[tuple[str, list[type]]]:
-    """What the agents of `world` report, by who reports it: the runtime's own, then each package
-    some agent of the world loads whose `events.py` has an event that reports, in the order an agent
-    loads them — read off the event classes themselves, so this file names no metric."""
-    #  WHAT AN AGENT RUNS IS ITS ROLES', declared in its own self graph, which a world's store does not
-    #  hold — so each agent is booted as its container boots it, and the packages are those SOME agent
-    #  of the world loads.
+def reporting(world: str) -> list[tuple[str, tuple[Reported, ...]]]:
+    """What the world's agents report, the runtime's first and then, in the order an agent loads them, each package
+    some agent of the world loads (`reported.REPORTED`). What an agent runs is its roles', declared in its own self
+    graph, so each agent is booted as its container boots it."""
     loaded = reading.loaded(world_dir(world))
-    out = [("runtime", reported(the_runtime))]
-    for package in every_package():
-        if package in loaded and (KERNEL / package / "events.py").exists():
-            said = reported(importlib.import_module("agent." + package.replace("/", ".") + ".events"))
-            if said:
-                out.append((package, said))
-    return out
+    return [(package, said) for package, said in REPORTED.items() if package == "runtime" or package in loaded]
 
 
 def _metric_flux(bucket: str, measurement: str, fields: tuple[str, ...] = (), fn: str = "last") -> str:
@@ -307,23 +294,22 @@ def _metric_flux(bucket: str, measurement: str, fields: tuple[str, ...] = (), fn
             f"  |> aggregateWindow(every: v.windowPeriod, fn: {fn}, createEmpty: false)")
 
 
-def _drawn(bucket: str, event: type) -> list[tuple[str, list[str], str, str]]:
+def _drawn(bucket: str, event: Reported) -> list[tuple[str, list[str], str, str]]:
     """The panels one event class is drawn in, as (title, queries, unit, description): its levels, a
     panel per unit; then, where it is counted, how many and its flags; then a panel per value."""
-    name, out = measurement(event), []
-    about = " ".join((event.__doc__ or "").split())
-    flags, levels = fields_of(event, FLAG), fields_of(event, LEVEL)
+    name, out = event.measurement, []
+    about, flags, levels = event.about, event.flags, event.levels
     for unit, these in (("none", [f for f in levels if not f.endswith("_s")]), ("s", [f for f in levels if f.endswith("_s")])):
         if these:
             out.append((", ".join(these), [_metric_flux(bucket, name, tuple(these))], unit,
                         f"{about} As each stood last in a window."))
-    if not counted(event):
+    if not event.counted:
         return out
     out.append(("how many" + (f", {', '.join(flags)}" if flags else ""),
                 [_metric_flux(bucket, name, ("count", *flags), fn="sum")], "none",
                 f"{about} How many happened per window" + (f", and of them how many were {', '.join(flags)}"
                                                            if flags else "") + "."))
-    for value in fields_of(event, VALUE):
+    for value in event.values:
         out.append((value,
                     [_metric_flux(bucket, name, (f"{value}_mean",), fn="mean"),
                      _metric_flux(bucket, name, (f"{value}_max",), fn="max"),
@@ -368,12 +354,12 @@ def render_health(world: str) -> list[tuple[str, dict]]:
     for package, reported in reporting(world):
         panels, y, pid = [], 0, 1
         for event in reported:
-            panels.append({"id": pid, "type": "row", "title": measurement(event), "collapsed": False,
+            panels.append({"id": pid, "type": "row", "title": event.measurement, "collapsed": False,
                            "gridPos": {"h": 1, "w": 24, "x": 0, "y": y}, "panels": []})
             pid, y = pid + 1, y + 1
             drawn = _drawn(bucket, event)
             for i, (title, queries, unit, desc) in enumerate(drawn):
-                panels.append(_health_panel(f"{measurement(event)} — {title}", queries, unit, x=8 * (i % 3),
+                panels.append(_health_panel(f"{event.measurement} — {title}", queries, unit, x=8 * (i % 3),
                                             y=y + 7 * (i // 3), panel_id=pid,
                                             desc=desc + f" Said by {package}'s own events, never by this file."))
                 pid += 1

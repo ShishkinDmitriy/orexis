@@ -1221,9 +1221,8 @@ def test_an_agents_image_holds_the_packages_it_loads_and_those_they_import_and_w
     terrace = compose.image_of("terrace", "terrace", series=True)
     assert terrace.tag == "orexis-terrace-terrace:local" and "planning" not in terrace.packages
     assert {"sensing", "transport/mqtt", "translation", "belief"} <= set(terrace.packages)
-    assert terrace.extras == ("belief", "series", "translation", "transport-mqtt")
     hanoi = compose.image_of("hanoi", "hanoi", series=False)
-    assert hanoi.packages == ("belief", "execution", "planning") and hanoi.extras == ("belief",), "planning imports belief"
+    assert hanoi.packages == ("belief", "planning"), "planning's crate depends on belief's"
     simulator = compose.simulator_image("greenhouse")
     assert simulator.packages == ("sensing",) and simulator.extras == ("simulation",) and simulator.simulator
     assert terrace.binary and hanoi.binary and not simulator.binary, "an agent whose packages are all ported is the binary's"

@@ -1,13 +1,10 @@
 """The history of the lane, viewed: the courier's road drawn by the courier's scene, and on it what coordination, planning and
 execution decided, each drawn by its own package (`onboarding/history/`) from the rows its queries answer over a journal
-and observations. Held on a journal written by the packages' own event classes and points written by hand, one of each
-kind, rendered by the page's own components under Node with no browser; and on one walk that keeps each courier's
-journal and records its observations through the head-on meeting, and replays it, the two couriers seen by each other
-where each is fixed and agreeing who won. Every drawing is held to the contract by TypeScript's own check."""
+and observations. Held on a journal kept under `journals/`, one event of each kind, and points written by hand, rendered by the page's
+own components under Node with no browser. Every drawing is held to the contract by TypeScript's own check."""
 
 from __future__ import annotations
 
-import importlib.util
 import json
 import re
 import subprocess
@@ -18,13 +15,6 @@ from pathlib import Path
 import pyoxigraph as ox
 import pytest
 
-from agent.coordination.events import ASKED, FORESEEN, SAID, Concluded, Conflict, Held
-from agent.coordination.holdings import Holding
-from agent.execution.events import StepAnswered, StepTaken
-from agent.journal import Journal, install as keep, literal, mint
-from agent.planning.events import PlanPublished
-from agent.speech.events import Heard, Said
-from agent.series import HISTORY, install
 from onboarding import reading
 from onboarding.history import (data, drawings, entries, headless, kept, page, queries, recorder, recording, run_of,
                                thinned)
@@ -64,36 +54,6 @@ def _observed(measurement, feature, sensor, value, t):
     return {"measurement": measurement, "tags": {"feature": feature, "sensor": sensor}, "fields": {"value": float(value)}, "time": _at(t)}
 
 
-def _n(name: str) -> ox.NamedNode:
-    return ox.NamedNode(L + name)
-
-
-def _t(s, p, o) -> ox.Triple:
-    return ox.Triple(s, p, o)
-
-
-def _drive(step: str, plan: str, to_x: int, then: str | None = None) -> list[ox.Triple]:
-    """A drive of van A to (`to_x`, 1), a step of `plan`, as a plan graph states it."""
-    s = _n(step)
-    out = [_t(s, ox.NamedNode(EXECUTION + "partOf"), _n(plan)), _t(s, ox.NamedNode(PLANNING + "fills"), ox.NamedNode(COURIER + "Drive")),
-           _t(s, ox.NamedNode(COURIER + "van"), _n("van_a")), _t(s, ox.NamedNode(COURIER + "toX"), literal(to_x)),
-           _t(s, ox.NamedNode(COURIER + "toY"), literal(1)), _t(s, ox.NamedNode(PLANNING + "spent"), literal(1.0))]
-    return out + ([_t(s, ox.NamedNode(EXECUTION + "then"), _n(then))] if then else [])
-
-
-def _act(step: str, plan: str, to_x: int) -> tuple[str, tuple]:
-    act = L + step + ".act"
-    said = (_t(ox.NamedNode(act), ox.NamedNode(EXECUTION + "of"), _n(step)),
-            _t(ox.NamedNode(act), ox.NamedNode(EXECUTION + "taken"), literal(True)),
-            *_drive(step, plan, to_x), _t(_n("intention"), ox.NamedNode(EXECUTION + "pursues"), _n("w")))
-    return act, said
-
-
-def _holding(thing: str, x: int, start=None, end=None, taken=False) -> Holding:
-    return Holding(L + thing, ((COURIER + "x", literal(x)), (COURIER + "y", literal(1)), (str(_TYPE.value), ox.NamedNode(COURIER + "Van"))),
-                   start, end, taken)
-
-
 #  ONE AGENT'S RUN, an event of each kind in its journal and a point of each kind it observed: its van fixed at (0, 1)
 #  and then (1, 1); van B heard two cells on, and then beyond the receiver's range; a plan of two drives, the first taken
 #  and answered; van A asked with at (1, 1), van B said at (2, 1) and foreseen at two places, each for a window ending at
@@ -103,32 +63,17 @@ _OBSERVED = [
     _observed("RelativeColumn", "contact_b", "receiver_b_column", 2, 0), _observed("RelativeRow", "contact_b", "receiver_b_row", 0, 0),
     _observed("Column", "van_a", "fix_a_column", 1, 30), _observed("Row", "van_a", "fix_a_row", 1, 30),
     _observed("RelativeColumn", "contact_b", "receiver_b_column", 5, 30), _observed("RelativeRow", "contact_b", "receiver_b_row", 0, 30)]
-_PLAN = (_t(_n("p"), _TYPE, ox.NamedNode(PLANNING + "Plan")), _t(_n("p"), ox.NamedNode(PLANNING + "for"), _n("w")),
-         *_drive("p.0", "p", 1, then="p.1"), *_drive("p.1", "p", 2))
-_ACT = _act("p.0", "p", 1)
-_EVENTS = [
-    PlanPublished(L + "p", L + "w", at=_at(0), said=_PLAN),
-    StepTaken(L + "p.0", _at(0), act=_ACT[0], said=_ACT[1]),
-    Held(_at(0), FORESEEN, L + "courier_b", L + "c", (_holding("van_b.at.2.1", 2, _at(0), _at(20)), _holding("van_b.at.3.1", 3, _at(0), _at(20)))),
-    Held(_at(0), ASKED, L + "courier_b", L + "c", (_holding("van_a", 1, _at(0), None, True),)),
-    Held(_at(0), SAID, L + "courier_b", L + "c", (_holding("van_b", 2, None, _at(20)),)),
-    Concluded(_at(0), (Conflict(L + "courier_a.courier_b.c", L + "courier_b", L + "c", True, True, 0, L + "courier_a"),)),
-    StepAnswered(L + "p.0", _at(30), landed=True, act=_ACT[0], said=_ACT[1]),
-    Held(_at(30), FORESEEN, L + "courier_b", L + "c"),
-    Said(L + "q", (L + "courier_b",), _at(0), (COORDINATION + "QuestionGraph",), (_t(_n("q"), ox.NamedNode(COORDINATION + "asks"), _n("courier_a")),)),
-    Heard(L + "a", _at(10), (COORDINATION + "AnswerGraph",)),
-]
 
 
-def _journal(events) -> Journal:
-    journal = Journal()
-    for event in events:
-        journal.record(node := mint(), event.statements(node), event.at)
-    return journal
+def _journal(agent: str) -> ox.Store:
+    """The journal `agent` kept, as `journals/` holds it: the entries the binary's journal writes, one named graph each."""
+    store = ox.Store()
+    store.load(path=str(Path(__file__).parent / "journals" / f"{agent}.nq"), format=ox.RdfFormat.N_QUADS)
+    return store
 
 
 def _drawn(world, journals=None, points=None):
-    journals = journals or {"courier_a": _journal(_EVENTS).store}
+    journals = journals or {"courier_a": _journal("courier_a")}
     points = points if points is not None else {"courier_a": _OBSERVED}
     return data("lane", run_of(world, journals, points), queries(drawings(LANE)))
 
@@ -182,8 +127,7 @@ def test_two_agents_shown_together_are_each_drawn_in_their_own_colour_on_one_sce
     """Courier B's run beside courier A's: its own van fixed at (3, 1), asking with it. Shown together, one scene holds
     both vans and each agent's layers, each mark in the colour of the agent that kept it; shown alone, the other's go."""
     b_points = [_observed("Column", "van_b", "fix_b_column", 3, 0), _observed("Row", "van_b", "fix_b_row", 1, 0)]
-    b = _journal([Held(_at(0), ASKED, L + "courier_a", L + "c", (_holding("van_b", 3, None, None, True),))])
-    journals = {"courier_a": _journal(_EVENTS).store, "courier_b": b.store}
+    journals = {"courier_a": _journal("courier_a"), "courier_b": _journal("courier_b")}
     points = {"courier_a": _OBSERVED, "courier_b": b_points}
     together = _pane(world, 0, journals, points, ("courier_a", "courier_b"))
     alone = _pane(world, 0, journals, points, ("courier_b",))
@@ -196,9 +140,9 @@ def test_two_agents_shown_together_are_each_drawn_in_their_own_colour_on_one_sce
 
 
 def test_a_journal_is_read_since_an_instant_entry_by_entry():
-    journal = _journal(_EVENTS)
-    assert {q.graph_name for q in entries(journal.store)} == set(journal.store.named_graphs())
-    later = {q.graph_name for q in entries(journal.store, _at(10))}
+    journal = _journal("courier_a")
+    assert {q.graph_name for q in entries(journal)} == set(journal.named_graphs())
+    later = {q.graph_name for q in entries(journal, _at(10))}
     assert len(later) == 3, "the answer heard at ten seconds; the verdict and the empty set, said at thirty"
 
 
@@ -250,59 +194,3 @@ def test_live_the_page_and_its_data_are_served_on_the_loopback_and_say_they_are_
 
 # ------------------------------------------------------------------ a walk, recorded and replayed
 
-_spec = importlib.util.spec_from_file_location("lane_harness", Path(__file__).with_name("test_lane.py"))
-_lane = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_lane)
-
-
-@pytest.mark.walk
-def test_the_head_on_meeting_is_recorded_and_replayed_with_each_courier_seeing_the_other_and_both_agreeing_who_won(
-        monkeypatch, tmp_path, world):
-    """The lane's two couriers driving at each other, each keeping a journal and recording its observations, walked until
-    both have concluded who won their draw; replayed at the last instant, each pane holds its own van as fixed and the
-    other as seen where the other is fixed, and the conflict won by the same courier in both."""
-    path = tmp_path / "head_on.jsonl"
-    journals = {courier: Journal(now=lambda: NOW) for courier in ("courier_a", "courier_b")}
-    for courier, journal in journals.items():
-        install(HISTORY, recorder(path, courier), courier)
-        keep(journal, courier)
-
-    def won() -> dict[str, set]:
-        return {a: {r["w"].value for r in j.store.query(
-            "SELECT ?w WHERE { ?c <http://example.org/orexis/coordination#wonBy> ?w }", use_default_graph_as_union=True)}
-            for a, j in journals.items()}
-    try:
-        bus, time = _lane._lane(monkeypatch, _lane.variant(tmp_path, "head_on", _lane._HEAD_ON))
-        bus.simulator.open()
-        bus.simulator.step(_lane.NOW)
-        for runtime in bus.runtimes.values():
-            runtime.run(passes=1, poll_s=0)
-        for _ in range(20):
-            if len(won()) == 2 and all(won().values()):
-                break
-            time["at"] += timedelta(seconds=_lane.CADENCE_S)
-            bus.simulator.step(time["at"])
-            for runtime in bus.runtimes.values():
-                runtime.run(passes=1, poll_s=0)
-        else:
-            raise AssertionError("no draw won within twenty ticks")
-    finally:
-        for courier in ("courier_a", "courier_b"):
-            install(HISTORY, None, courier)
-            keep(None, courier)
-    assert len(set().union(*won().values())) == 1, f"both agree who won: {won()}"
-    spoken = {(r["k"].value.rsplit("#", 1)[-1], r["t"].value.rsplit("#", 1)[-1]) for j in journals.values() for r in j.store.query(
-        "SELECT ?k ?t WHERE { ?e a ?k ; <http://example.org/orexis/speech#statement> ?g . ?g a ?t }",
-        use_default_graph_as_union=True)}
-    assert {(k, t) for k in ("Said", "Heard") for t in ("QuestionGraph", "AnswerGraph", "CommitmentGraph", "RevealGraph")} <= spoken, \
-        f"the exchange, said by one and heard by the other, each kind of it: {sorted(spoken)}"
-    stores, points = {a: j.store for a, j in journals.items()}, recording(path)
-    last = len(_drawn(world, stores, points)["instants"]) - 1
-    a, b = (_pane(world, last, stores, points, (agent,)) for agent in ("courier_a", "courier_b"))
-    fixed = {name: (x, y) for name, x, y in [*_marks(a, "data-fixed"), *_marks(b, "data-fixed")]}
-    assert set(fixed) == {"van_a", "van_b"}
-    seen = {name: (x, y) for name, x, y in [*_marks(a, "data-seen"), *_marks(b, "data-seen")] if name in fixed}
-    assert seen == fixed, f"each sees the other where the other is fixed: {seen} against {fixed}"
-    assert any(e.get("data-order") for pane in (a, b) for e in pane.iter()), "a plan is drawn"
-    assert json.loads(re.search(r'<script id="data" type="application/json">(.*?)</script>',
-                                page(_drawn(world, stores, points), drawings(LANE)), re.S).group(1))["agents"] == ["courier_a", "courier_b"]

@@ -1,0 +1,14 @@
+<urn:uuid:aa4b6537-7a2b-4da9-acb0-e8aa162c5e7c> <http://www.w3.org/ns/prov#atTime> "2026-01-01T12:15:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <urn:uuid:aa4b6537-7a2b-4da9-acb0-e8aa162c5e7c> .
+<urn:uuid:aa4b6537-7a2b-4da9-acb0-e8aa162c5e7c> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/orexis/execution#StepFailed> <urn:uuid:aa4b6537-7a2b-4da9-acb0-e8aa162c5e7c> .
+<http://example.org/orexis/world/greenhouse#plan.0> <http://example.org/orexis/planning#fills> <http://example.org/orexis/climate#Dosing> <urn:uuid:aa4b6537-7a2b-4da9-acb0-e8aa162c5e7c> .
+<http://example.org/orexis/world/greenhouse#plan.0.act> <http://example.org/orexis/execution#taken> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> <urn:uuid:aa4b6537-7a2b-4da9-acb0-e8aa162c5e7c> .
+<http://example.org/orexis/world/greenhouse#plan.0.act> <http://example.org/orexis/execution#of> <http://example.org/orexis/world/greenhouse#plan.0> <urn:uuid:aa4b6537-7a2b-4da9-acb0-e8aa162c5e7c> .
+<urn:uuid:aa4b6537-7a2b-4da9-acb0-e8aa162c5e7c> <http://example.org/orexis/execution#act> <http://example.org/orexis/world/greenhouse#plan.0.act> <urn:uuid:aa4b6537-7a2b-4da9-acb0-e8aa162c5e7c> .
+<urn:uuid:aa4b6537-7a2b-4da9-acb0-e8aa162c5e7c> <http://example.org/orexis/execution#landed> "false"^^<http://www.w3.org/2001/XMLSchema#boolean> <urn:uuid:aa4b6537-7a2b-4da9-acb0-e8aa162c5e7c> .
+<urn:uuid:aa4b6537-7a2b-4da9-acb0-e8aa162c5e7c> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/orexis/execution#StepAnswered> <urn:uuid:aa4b6537-7a2b-4da9-acb0-e8aa162c5e7c> .
+<urn:uuid:22acfbc4-6b7c-406d-b779-69106e0b350e> <http://www.w3.org/ns/prov#atTime> "2026-01-01T12:05:00Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> <urn:uuid:22acfbc4-6b7c-406d-b779-69106e0b350e> .
+<http://example.org/orexis/world/greenhouse#plan.0> <http://example.org/orexis/planning#fills> <http://example.org/orexis/climate#Dosing> <urn:uuid:22acfbc4-6b7c-406d-b779-69106e0b350e> .
+<http://example.org/orexis/world/greenhouse#plan.0.act> <http://example.org/orexis/execution#taken> "true"^^<http://www.w3.org/2001/XMLSchema#boolean> <urn:uuid:22acfbc4-6b7c-406d-b779-69106e0b350e> .
+<http://example.org/orexis/world/greenhouse#plan.0.act> <http://example.org/orexis/execution#of> <http://example.org/orexis/world/greenhouse#plan.0> <urn:uuid:22acfbc4-6b7c-406d-b779-69106e0b350e> .
+<urn:uuid:22acfbc4-6b7c-406d-b779-69106e0b350e> <http://example.org/orexis/execution#act> <http://example.org/orexis/world/greenhouse#plan.0.act> <urn:uuid:22acfbc4-6b7c-406d-b779-69106e0b350e> .
+<urn:uuid:22acfbc4-6b7c-406d-b779-69106e0b350e> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.org/orexis/execution#StepTaken> <urn:uuid:22acfbc4-6b7c-406d-b779-69106e0b350e> .
