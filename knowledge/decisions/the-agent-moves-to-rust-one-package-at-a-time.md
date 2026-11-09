@@ -186,9 +186,14 @@ agent is one watch per agent, handed to every part: history and metrics heard ev
 signal's `connected` was always the question whether anybody watches, and an event is made exactly where it was. No
 crate names another's, since the binary is the container that assembles them all.
 
-**What cannot change the result runs in parallel.** Each scope's imaginarium is a store of its own, so the
-scopes are searched at once and their plans taken in scope order. Laying grounds is per scope and about
-two-thirds of the greenhouse's planning. A reader of the store, a chat's query or the journal's server, reads
+**What cannot change the result runs apart, and the mind waits for none of it.** Each scope's imaginarium is a
+store of its own, and no action of one scope writes a fact a want of another reads, so a scope reads nothing
+another did and a plan found in one is concatenated with the rest. Scopes meet in two places, both the mind's: a
+plan published into the beliefs, and a step refined, whose want is minted there and searched where it is placed.
+Waiting for every scope and taking their plans in scope order was the first plan here and was refused
+(2026-11-09): it held the mind for the slowest scope to keep an order independence makes meaningless. Until scopes
+run on threads of their own they run one after another, reading what is walking as the pass began. Laying grounds
+is per scope and about two-thirds of the greenhouse's planning. A reader of the store, a chat's query or the journal's server, reads
 a snapshot of it, beside a pass and without waiting for one.
 
 **The clock is handed in.** A walk or a bench runs in the world's time, so the binary reads time through

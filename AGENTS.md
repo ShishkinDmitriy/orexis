@@ -862,7 +862,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   snapshot cases as it lands, an agent running in Rust once its roles' packages all are, world by world, and a
   society mixing the two in between, a ported package frozen but for fixes in both until its last Python user moves,
   and the Python agent retired whole when the last world ran on the binary (2026-11-09); what waits is a
-  Tokio task and the mind one thread owning the store, the scopes searched in parallel; onboarding stays Python
+  Tokio task and the mind one thread owning the store, each scope searched apart and waited for by nothing; onboarding stays Python
   and boots the binary to check a world; a Rust core under Python and the reasoning as Rust code were refused
   (the-agent-moves-to-rust-one-package-at-a-time).
 - **A world the simulator plays is held on the binary by a replay of what the simulator published to the Python
