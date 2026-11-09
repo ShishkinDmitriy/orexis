@@ -36,7 +36,7 @@ if [ -r /etc/mosquitto/broker.key ]; then
         /etc/mosquitto/broker.key /run/mosquitto/broker.key
 fi
 
-/usr/sbin/mosquitto -c /etc/mosquitto/mosquitto.conf &
+/usr/local/sbin/mosquitto -c /etc/mosquitto/mosquitto.conf &
 broker=$!
 
 # HUP is the one that matters: `orexis-mqtt` regenerates passwd and acl.conf, and mosquitto
