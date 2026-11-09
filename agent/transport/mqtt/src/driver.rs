@@ -13,11 +13,13 @@
 //! **THE MEMBER BRINGS ITSELF UP, AND THE THREAD IS THE CONTAINER'S**: `connect` makes a client per broker the
 //! environment names — `MQTT_BROKERS`, each broker's IRI and its url, `MQTT_USERNAME` and `MQTT_PASSWORD`, and
 //! `MQTT_CA`, `MQTT_CERT` and `MQTT_KEY` for a url that is `mqtts` — and refuses without a broker or a credential
-//! rather than guess one. A message arrives on a client's own thread and goes to the member's inbox, which the part
+//! rather than guess one. A message arrives on a session's task and goes to the member's inbox, which the part
 //! hands the one executing thread as a job. **A TOPIC GOES OVER A BROKER THE AGENT SHARES WITH THE CLIENT IT IS
 //! ABOUT**, and a member of one client sends everything over it, as a test's does.
 
 use std::collections::BTreeSet;
+use std::future::Future;
+use std::pin::Pin;
 use std::time::Duration;
 
 use oxsdatatypes::DateTime;
@@ -159,6 +161,9 @@ pub trait Client {
 
 pub use orexis::transport::{Inbox, Message};
 
+/// A session's listening, for the part to run as a task once it starts.
+pub type Listening = Pin<Box<dyn Future<Output = ()> + Send>>;
+
 /// One agent's side of the bus: what the container needs of this transport, answered from the world in MQTT4SSN's
 /// words, over the clients the container connected — by the IRI of the broker each is connected to, or one client
 /// standing for them all (`None`).
@@ -167,6 +172,8 @@ pub struct Mqtt<'a> {
     pub me: String,
     pub clients: Vec<(Option<String>, Box<dyn Client + 'a>)>,
     pub inbox: Inbox,
+    /// What the sessions connected are yet to listen for, taken by the part as it starts.
+    pub listening: Vec<Listening>,
     /// A person's prose heard on a chat's topic, for the part to hand translation once it lets the member go.
     pub prose: Vec<orexis::transport::Prose>,
     unreachable: BTreeSet<String>,
@@ -187,6 +194,7 @@ impl<'a> Mqtt<'a> {
             me: me.to_string(),
             clients,
             inbox: Inbox::default(),
+            listening: Vec::new(),
             prose: Vec::new(),
             unreachable: BTreeSet::new(),
         }
@@ -591,14 +599,15 @@ pub fn sessions(me: &str, env: &dyn Fn(&str) -> Option<String>) -> Result<Vec<Se
     Ok(out)
 }
 
-/// A session over rumqttc, its event loop on a thread of its own handing every message to the inbox.
+/// A session over rumqttc: the mind publishes through its blocking client and the event loop is a task, handing every
+/// message to the inbox.
 pub struct Rumqtt {
     client: rumqttc::Client,
 }
 
 impl Rumqtt {
-    /// The session up, every message it receives left in `inbox`.
-    pub fn connect(session: &Session, inbox: Inbox) -> Result<Self, Error> {
+    /// The session up, and what listens on it, every message it receives left in `inbox`.
+    pub fn connect(session: &Session, inbox: Inbox) -> Result<(Self, Listening), Error> {
         let mut options = rumqttc::MqttOptions::new(&session.client_id, &session.host, session.port);
         options.set_credentials(session.username.clone(), session.password.clone().unwrap_or_default());
         options.set_keep_alive(Duration::from_secs(30));
@@ -610,18 +619,21 @@ impl Rumqtt {
                 client_auth: Some((read(cert)?, read(key)?)),
             }));
         }
-        let (client, mut connection) = rumqttc::Client::new(options, 64);
+        //  THE CONNECTION'S OWN RUNTIME GOES, AND ITS EVENT LOOP IS POLLED AMONG THE PROCESS'S TASKS.
+        let (client, connection) = rumqttc::Client::new(options, 64);
+        let mut events = connection.eventloop;
         let broker = local_of(&session.broker);
-        std::thread::spawn(move || {
-            for event in connection.iter() {
-                match event {
+        let listening = Box::pin(async move {
+            loop {
+                match events.poll().await {
                     Ok(rumqttc::Event::Incoming(rumqttc::Packet::Publish(p))) => {
                         inbox.deliver(&p.topic, &p.payload, None)
                     }
                     Ok(_) => {}
+                    Err(rumqttc::ConnectionError::RequestsDone) => break,
                     Err(e) => {
                         log::warn!("{broker}: {e}; reconnecting");
-                        std::thread::sleep(Duration::from_secs(1));
+                        tokio::time::sleep(Duration::from_secs(1)).await;
                     }
                 }
             }
@@ -638,7 +650,7 @@ impl Rumqtt {
                 ""
             }
         );
-        Ok(Rumqtt { client })
+        Ok((Rumqtt { client }, listening))
     }
 }
 
@@ -664,7 +676,8 @@ impl Client for Rumqtt {
 pub fn connect<'a>(beliefs: &'a Store, me: &str, env: &dyn Fn(&str) -> Option<String>) -> Result<Mqtt<'a>, Error> {
     let mut member = Mqtt::new(beliefs, me, Vec::new());
     for session in sessions(me, env)? {
-        let client = Rumqtt::connect(&session, member.inbox.clone())?;
+        let (client, listening) = Rumqtt::connect(&session, member.inbox.clone())?;
+        member.listening.push(listening);
         member.clients.push((Some(session.broker.clone()), Box::new(client)));
     }
     Ok(member)

@@ -38,6 +38,7 @@ impl<'a> Transport<'a> {
 
 impl Part for Transport<'_> {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
+        self.member.borrow().inbox.wakes(starting.wake());
         starting.every(self.member.borrow().every, POLL);
         Ok(())
     }
