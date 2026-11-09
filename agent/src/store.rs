@@ -1018,7 +1018,11 @@ mod tests {
             store.ask(&format!("ASK {{ <urn:once:{i}> ?p ?o }}"), &[]).unwrap();
         }
         let (parsed, run) = store.statements();
-        assert_eq!((parsed, run), (once + 1, 2 * once), "the text still asked was parsed the once");
+        assert_eq!(
+            (parsed, run),
+            (once + 1, 2 * once),
+            "the text still asked was parsed the once"
+        );
         assert_eq!(store.queries.lock().unwrap().len(), KEPT.get());
     }
 
