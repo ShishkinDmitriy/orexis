@@ -172,7 +172,7 @@ fn allotment_on(ticks: bool, walk: impl FnOnce(&mut Market<'_, '_>)) {
             assemble_seen(
                 store,
                 name,
-                std::sync::Arc::new(clock.clone()),
+                Arc::new(clock.clone()),
                 &loaded,
                 None,
                 Wiring {

@@ -15,6 +15,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::num::NonZeroUsize;
+use std::ops::Deref;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
@@ -49,7 +50,7 @@ fn parsed_cache<T>() -> Parsed<T> {
 #[derive(Clone)]
 pub struct Store(Arc<Held>);
 
-impl std::ops::Deref for Store {
+impl Deref for Store {
     type Target = Held;
 
     fn deref(&self) -> &Held {

@@ -571,7 +571,7 @@ impl<'a> Translator<'a> {
     /// A document the agent says to a person in a chat of its: rendered and sent through the chat's channel — the
     /// person's own chat with the agent first, a group they are in only where they have none.
     pub fn told(&mut self, to: &str, payload: &[u8]) -> Result<(), Error> {
-        let store = &self.beliefs.clone();
+        let store = &self.beliefs;
         let theirs: Vec<Chat> = chats_of(store)?
             .into_iter()
             .filter(|c| c.people.iter().any(|(p, _)| p == to))

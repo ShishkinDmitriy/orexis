@@ -932,7 +932,7 @@ impl<'a> Planner<'a> {
         memo: &mut Memo,
         at: DateTime,
     ) -> Result<Vec<PlanPublished>, Error> {
-        let beliefs = &self.beliefs.clone();
+        let beliefs = &self.beliefs;
         let mut out = Vec::new();
         for plan in handed {
             let found = beliefs.rows(&bind(PURSUES_Q, &[("plan", Value::iri(plan.as_str()))])?, &[])?;

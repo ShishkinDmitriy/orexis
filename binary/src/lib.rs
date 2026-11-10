@@ -206,7 +206,7 @@ pub fn foresee<'a>(
 #[cfg(feature = "execution")]
 pub fn take<'a>(
     store: &'a Store,
-    clock: std::sync::Arc<dyn Clock>,
+    clock: Arc<dyn Clock>,
     execution: &orexis_execution::create::Execution<'a>,
     send: Option<orexis_execution::create::Commands<'a>>,
     say: Option<orexis_execution::create::Sayings<'a>>,
@@ -242,7 +242,7 @@ pub struct Wiring<'a> {
     #[cfg(feature = "email")]
     pub email: Option<orexis_email::driver::Email>,
     #[cfg(feature = "translation")]
-    pub model: Option<std::sync::Arc<dyn orexis_translation::model::Model>>,
+    pub model: Option<Arc<dyn orexis_translation::model::Model>>,
     #[cfg(feature = "mqtt")]
     pub mqtt: Option<orexis_mqtt::driver::Mqtt<'a>>,
     #[cfg(not(feature = "mqtt"))]
@@ -259,7 +259,7 @@ pub type Parts<'a> = Vec<(String, Box<dyn Part + 'a>)>;
 pub fn assemble<'a>(
     store: &'a Store,
     agent: &str,
-    clock: std::sync::Arc<dyn Clock>,
+    clock: Arc<dyn Clock>,
     loaded: &[String],
     budget: Option<usize>,
 ) -> Result<Parts<'a>, Error> {
@@ -270,7 +270,7 @@ pub fn assemble<'a>(
 pub fn assemble_wired<'a>(
     store: &'a Store,
     agent: &str,
-    clock: std::sync::Arc<dyn Clock>,
+    clock: Arc<dyn Clock>,
     loaded: &[String],
     budget: Option<usize>,
     wiring: Wiring<'a>,
@@ -295,7 +295,7 @@ pub struct Seen<'a> {
 pub fn assemble_seen<'a>(
     store: &'a Store,
     agent: &str,
-    clock: std::sync::Arc<dyn Clock>,
+    clock: Arc<dyn Clock>,
     loaded: &[String],
     budget: Option<usize>,
     wiring: Wiring<'a>,
@@ -400,7 +400,7 @@ pub fn assemble_seen<'a>(
     let translation = if holds("translation") {
         let model = model.or_else(|| {
             orexis_translation::model::Anthropic::from_environ(&|n| std::env::var(n).ok())
-                .map(|m| std::sync::Arc::new(m) as std::sync::Arc<dyn orexis_translation::model::Model>)
+                .map(|m| Arc::new(m) as Arc<dyn orexis_translation::model::Model>)
         });
         let mut translator = orexis_translation::create::Translator::new(store, &me, model);
         translator.journal = journal_store;

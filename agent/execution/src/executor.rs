@@ -1527,7 +1527,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_committed_plan_stands_at_its_head() {
-        let (b, i, clock) = (store(), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         assert!(x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().is_some());
         let standing = x.standing().unwrap();
@@ -1542,7 +1542,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_plan_from_another_store_is_brought_in_whole_and_adopted_by_reference() {
-        let (b, i, clock) = (store(), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let intention = x.commit(Some(&a_plan(3, PLAN)), PLAN, WANT).unwrap().unwrap();
         let steps = |g: &str| i.rows("SELECT ?s WHERE { ?s a execution:Step }", &[g]).unwrap().len();
@@ -1559,7 +1559,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_second_plan_inside_the_patience_is_absorbed() {
-        let (b, i, clock) = (store(), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         assert!(x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().is_some());
         assert!(
@@ -1571,7 +1571,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn past_the_patience_a_new_plan_supersedes_the_old() {
-        let (b, i, clock) = (store(), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let first = x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().unwrap();
         clock.advance(DEFAULT_PATIENCE_S + 1.0);
@@ -1586,7 +1586,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_resolved_commitment_stays_among_the_intentions() {
-        let (b, i, clock) = (store(), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let intention = x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().unwrap();
         x.resolve(&intention, "done").unwrap();
@@ -1602,14 +1602,14 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn an_empty_plan_is_an_answer_and_not_a_commitment() {
-        let (b, i, clock) = (store(), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         assert!(x.commit(Some(&store()), PLAN, WANT).unwrap().is_none());
     }
 
     #[test]
     fn a_committed_plan_is_taken_step_by_step_and_resolved_done() {
-        let (b, i, clock) = (store(), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let intention = x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().unwrap();
         assert_eq!(
@@ -1637,7 +1637,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_step_waits_for_its_instant() {
-        let (b, i, clock) = (store(), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let source = a_plan(1, PLAN);
         let later = after(3600.0);
@@ -1654,7 +1654,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_step_that_cannot_be_taken_fails_the_intention() {
-        let (b, i, clock) = (store(), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         x.take = Some(Box::new(|_, _| Err(Error::Evaluation("no valve answers".into()))));
         let intention = x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().unwrap();
@@ -1667,7 +1667,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_step_that_predicts_something_waits_for_the_world_to_answer() {
-        let (b, i, clock) = (beliefs(PEG_A), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let intention = x.commit(Some(&predicting_move(2, PLAN)), PLAN, WANT).unwrap().unwrap();
         x.tick(now()).unwrap();
@@ -1711,7 +1711,7 @@ GRAPH <http://example.org/test#catalogue> {{
                 isoformat(now())
             ))
             .unwrap();
-        let (i, clock) = (store(), std::sync::Arc::new(Manual::at(now())));
+        let (i, clock) = (store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         x.commit(Some(&source), PLAN, WANT).unwrap();
         x.tick(now()).unwrap();
@@ -1754,7 +1754,7 @@ GRAPH <http://example.org/test#catalogue> {{
   GRAPH <http://example.org/test#catalogue> {{ <http://example.org/test#actions> a orexis:ActionGraph }} }}"
         ))
         .unwrap();
-        let (i, clock) = (store(), std::sync::Arc::new(Manual::at(now())));
+        let (i, clock) = (store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let source = predicting_move(1, PLAN);
         source
@@ -1772,7 +1772,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_fictive_executor_is_the_world_of_its_own_steps() {
-        let (b, i, clock) = (beliefs(PEG_A), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         x.all_fictive = true;
         let intention = x.commit(Some(&predicting_move(1, PLAN)), PLAN, WANT).unwrap().unwrap();
@@ -1785,7 +1785,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_world_that_does_not_answer_by_the_patience_fails_the_intention() {
-        let (b, i, clock) = (beliefs(PEG_A), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let intention = x.commit(Some(&predicting_move(1, PLAN)), PLAN, WANT).unwrap().unwrap();
         x.tick(now()).unwrap();
@@ -1799,7 +1799,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn the_patience_is_the_agents_stance_where_its_self_graph_states_one() {
-        let (i, clock) = (store(), std::sync::Arc::new(Manual::at(now())));
+        let (i, clock) = (store(), Arc::new(Manual::at(now())));
         let plain = beliefs(PEG_A);
         assert_eq!(
             Executor::new(&plain, AGENT, Some(&i), None, clock.clone())
@@ -1828,7 +1828,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn the_patience_runs_from_the_latest_landing_where_the_plan_states_one() {
-        let (b, i, clock) = (beliefs(PEG_A), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let source = predicting_move(1, PLAN);
         let latest = after(600.0);
@@ -1854,7 +1854,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_step_is_not_held_to_the_world_before_it_lands() {
-        let (b, i, clock) = (beliefs(PEG_B), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (beliefs(PEG_B), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let source = predicting_move(1, PLAN);
         let later = after(3600.0);
@@ -1875,7 +1875,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_step_taken_late_lands_late_by_as_much() {
-        let (b, i, clock) = (beliefs(PEG_A), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let source = predicting_move(1, PLAN);
         source
@@ -1900,7 +1900,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_second_plan_for_a_want_is_walked_by_steps_of_its_own() {
-        let (b, i, clock) = (beliefs(PEG_A), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let first = x.commit(Some(&predicting_move(1, PLAN)), PLAN, WANT).unwrap().unwrap();
         x.tick(now()).unwrap();
@@ -1939,7 +1939,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_committed_steps_window_closes_a_patience_past_its_latest_landing() {
-        let (b, i, clock) = (beliefs(PEG_A), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
         let plan = placed(predicting_move(1, PLAN));
         plan.update(&format!(
             "INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:notAfter \"{}\"^^xsd:dateTime }} }}",
@@ -1963,7 +1963,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_committed_step_is_a_belief_over_its_landing_window() {
-        let (b, i, clock) = (beliefs(PEG_A), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         x.commit(Some(&placed(predicting_move(2, PLAN))), PLAN, WANT).unwrap();
         let windows = windows(&b);
@@ -1997,7 +1997,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_window_closes_when_the_world_answers_and_an_ended_one_is_swept() {
-        let (b, i, clock) = (beliefs(PEG_A), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         x.commit(Some(&predicting_move(2, PLAN)), PLAN, WANT).unwrap();
         assert_eq!(windows(&b).len(), 2);
@@ -2030,7 +2030,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn an_intention_that_ends_closes_every_window_it_opened() {
-        let (b, i, clock) = (beliefs(PEG_A), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let intention = x
             .commit(Some(&placed(predicting_move(2, PLAN))), PLAN, WANT)
@@ -2049,7 +2049,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_plan_replacing_an_intentions_untaken_steps_waits_for_it_to_end_after_its_step_in_flight() {
-        let (b, i, clock) = (beliefs(PEG_A), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let first = x.commit(Some(&predicting_move(2, PLAN)), PLAN, WANT).unwrap().unwrap();
         assert_eq!(x.tick(now()).unwrap(), [format!("{PLAN}.0")]);
@@ -2087,7 +2087,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_plan_adopted_with_no_reconsideration_behind_it_waits_for_nothing() {
-        let (b, i, clock) = (beliefs(PEG_A), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         x.commit(Some(&predicting_move(2, PLAN)), PLAN, WANT).unwrap();
         x.tick(now()).unwrap();
@@ -2102,7 +2102,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_head_the_judge_blocks_is_not_taken_and_its_intention_fails() {
-        let (b, i, clock) = (store(), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         x.taking = Some(Box::new(|_, _| Ok(true)));
         let intention = x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().unwrap();
@@ -2131,9 +2131,8 @@ GRAPH <http://example.org/test#catalogue> {{
     const FILLS: &str = "http://example.org/orexis/planning#fills";
 
     /// Every event the executor says, kept in a journal as the history part keeps them.
-    fn heard(x: &mut Executor<'_>) -> std::sync::Arc<orexis::journal::Journal> {
-        let journal =
-            std::sync::Arc::new(orexis::journal::Journal::new(None, 600.0, std::sync::Arc::new(now)).unwrap());
+    fn heard(x: &mut Executor<'_>) -> Arc<orexis::journal::Journal> {
+        let journal = Arc::new(orexis::journal::Journal::new(None, 600.0, Arc::new(now)).unwrap());
         let kept = journal.clone();
         x.watch.connect(move |event, entry| {
             if let Some(triples) = event.statements(entry) {
@@ -2191,7 +2190,7 @@ SELECT ?kind ?taken ?landed ?failed ?action ?disk ?to ?want WHERE {{ GRAPH ?e {{
 
     #[test]
     fn a_step_taken_carries_its_act_its_step_as_the_plan_states_it_and_its_want() {
-        let (b, i, clock) = (beliefs(PEG_A), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let journal = heard(&mut x);
         x.commit(Some(&filled_move()), PLAN, WANT).unwrap();
@@ -2205,7 +2204,7 @@ SELECT ?kind ?taken ?landed ?failed ?action ?disk ?to ?want WHERE {{ GRAPH ?e {{
 
     #[test]
     fn a_step_taken_and_answered_is_said_taken_and_then_landed() {
-        let (b, i, clock) = (beliefs(PEG_A), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let journal = heard(&mut x);
         x.commit(Some(&filled_move()), PLAN, WANT).unwrap();
@@ -2225,7 +2224,7 @@ SELECT ?kind ?taken ?landed ?failed ?action ?disk ?to ?want WHERE {{ GRAPH ?e {{
 
     #[test]
     fn a_step_the_world_does_not_answer_by_the_patience_has_failed_and_says_how_late() {
-        let (b, i, clock) = (beliefs(PEG_A), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let journal = heard(&mut x);
         let verdicts = std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));
@@ -2263,7 +2262,7 @@ SELECT ?kind ?taken ?landed ?failed ?action ?disk ?to ?want WHERE {{ GRAPH ?e {{
 
     #[test]
     fn a_step_that_could_not_be_taken_says_so_and_fails_its_intention_an_incident() {
-        let (b, i, clock) = (beliefs(PEG_A), store(), std::sync::Arc::new(Manual::at(now())));
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         x.take = Some(Box::new(|_, _| Err(Error::Evaluation("no valve answers".into()))));
         let journal = heard(&mut x);

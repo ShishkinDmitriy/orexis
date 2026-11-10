@@ -95,7 +95,7 @@ fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_to_the
         vec![(None, Box::new(broker.clone()))],
     );
     let inbox = member.inbox.clone();
-    let clock = std::sync::Arc::new(Manual::at(now));
+    let clock = Arc::new(Manual::at(now));
     let wiring = Wiring {
         mqtt: Some(member),
         ..Wiring::default()

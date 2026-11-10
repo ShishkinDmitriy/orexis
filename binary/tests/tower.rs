@@ -117,7 +117,7 @@ fn two_disks(store: &Store) {
 #[test]
 fn the_runtime_concludes_what_each_disk_is_on_from_where_it_stands() {
     let store = store();
-    let clock = std::sync::Arc::new(Still);
+    let clock = Arc::new(Still);
     let loaded = booted(&store, tree(), &world(), "mover", now()).unwrap();
     for package in ["belief", "planning", "execution"] {
         assert!(loaded.iter().any(|p| p == package), "{package}: {loaded:?}");
@@ -138,7 +138,7 @@ fn the_runtime_concludes_what_each_disk_is_on_from_where_it_stands() {
 #[test]
 fn the_puzzle_is_planned_above_and_carried_out_by_the_van_below() {
     let store = store();
-    let clock = std::sync::Arc::new(Ticking(Mutex::new(now())));
+    let clock = Arc::new(Ticking(Mutex::new(now())));
     let loaded = booted(&store, tree(), &world(), "mover", clock.now()).unwrap();
     two_disks(&store);
     let mut parts = assemble(&store, "mover", clock.clone(), &loaded, None).unwrap();
@@ -201,7 +201,7 @@ fn the_last_window_is_written_as_the_process_stops() {
     );
     let mut wiring = orexis_agent::Wiring::default();
     wiring.watching.metrics = Some(orexis_metrics::Window::new(sink, 3600.0, Some("tower"), Some("mover")));
-    let clock = std::sync::Arc::new(Still);
+    let clock = Arc::new(Still);
     let (mut parts, seen) = orexis_agent::assemble_seen(&store, "mover", clock.clone(), &loaded, None, wiring).unwrap();
     {
         let lent: Vec<(String, &mut dyn Part)> = parts
