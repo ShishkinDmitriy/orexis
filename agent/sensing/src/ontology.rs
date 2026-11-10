@@ -19,6 +19,14 @@ use orexis::ontology::GRAPH_PREFIX;
 pub const SENSING: &str = "http://example.org/orexis/sensing#";
 /// The graph a percept is kept in.
 pub const OBSERVATION_GRAPH: &str = "http://example.org/orexis/sensing#ObservationGraph";
+/// Percepts said for belief to revise, and belief's words they are said in.
+pub const PERCEIVED: &str = "http://example.org/orexis/sensing#Perceived";
+pub const REVISES: &str = "http://example.org/orexis/belief#revises";
+pub const INTO: &str = "http://example.org/orexis/belief#into";
+/// What sensing does once a percept is revised, and what starts it: belief's revision pass, in belief's words.
+pub const OBSERVING: &str = "http://example.org/orexis/sensing#Observing";
+pub const OBSERVING_TRIGGER: &str = "http://example.org/orexis/sensing#ObservingTrigger";
+pub const REVISED_SOURCE: &str = "http://example.org/orexis/belief#revised";
 /// A time a sensor fell silent, kept for good.
 pub const SILENCE_GRAPH: &str = "http://example.org/orexis/sensing#SilenceGraph";
 /// An observer role's limits: cadences, and readings.

@@ -14,17 +14,19 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use oxigraph::model::NamedNode;
 use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::ontology::BELIEF;
-use orexis::runtime::{Part, Pass, Starting};
+use orexis::runtime::{Heard, Part, Pass, Starting};
 use orexis::store::{Store, Within};
 
 use crate::Deliberator;
-use crate::ontology::REVISION_GRAPH;
+use crate::ontology::{INTO, REVISES, REVISING, REVISING_TRIGGER, REVISION_GRAPH};
 
 const HEARD: usize = 0;
+const REVISE: usize = 1;
 
 /// Belief's part: its deliberator, shared with whoever links to it — a clone is the same part, as a linked part holds it.
 #[derive(Clone)]
@@ -54,6 +56,17 @@ impl Belief {
     }
 }
 
+impl Belief {
+    /// Revise `graphs` as an activity, triggered by them.
+    fn revising(&self, graphs: &[String], kind: &str, pass: &mut Pass<'_>) -> Result<(), Error> {
+        let triggers: Vec<NamedNode> = graphs.iter().filter_map(|g| NamedNode::new(g.as_str()).ok()).collect();
+        let activity = pass.begin(REVISING, &triggers);
+        let revised = self.revise(graphs, kind, pass.now);
+        pass.end(activity);
+        revised
+    }
+}
+
 impl Part for Belief {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         //  EVERY BELIEF NOT YET REVISED, but the common ones: the world's documents were concluded on at genesis.
@@ -67,6 +80,7 @@ impl Part for Belief {
         }
         self.revise(&due, BELIEF, starting.now())?;
         starting.on(BELIEF, HEARD);
+        starting.hears(REVISING_TRIGGER, REVISE);
         Ok(())
     }
 
@@ -75,7 +89,23 @@ impl Part for Belief {
     }
 
     fn heard(&mut self, _job: usize, graph: &str, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
-        self.revise(&[graph.to_string()], BELIEF, pass.now)?;
+        self.revising(&[graph.to_string()], BELIEF, pass)?;
+        Ok(Vec::new())
+    }
+
+    fn watch(&self) -> Option<orexis::events::Watch> {
+        Some(self.deliberator.borrow().watch.clone())
+    }
+
+    /// What belief's policy does of a trigger: revise each graph it names, its revisions of the kind it names.
+    fn heard_event(&mut self, _job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        let graphs: Vec<String> = event.all(REVISES).iter().map(|g| g.as_str().to_string()).collect();
+        let Some(kind) = event.named(INTO).map(|k| k.as_str().to_string()) else {
+            return Ok(Vec::new());
+        };
+        if !graphs.is_empty() {
+            self.revising(&graphs, &kind, pass)?;
+        }
         Ok(Vec::new())
     }
 }
