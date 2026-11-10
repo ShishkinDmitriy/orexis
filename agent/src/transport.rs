@@ -1,16 +1,22 @@
 //! THE TRANSPORT FAMILY'S CONTRACT, as `agent/transport/transport.py` keeps what is the same of every member: a
 //! member's task or thread leaves what it receives in an INBOX for the one executing thread to handle, ringing the mind awake, and a CHANNEL IS THE
 //! TRANSPORT'S — a member carries bytes on a topic, a chat, a mailbox or a url and knows nothing of what they mean. For a
-//! `speech:Chat`'s channel a member says `Prose`, which translation hears when the parts are linked, and sends prose
-//! back as a `Carrier`, so no member imports translation and translation imports no member.
+//! `speech:Chat`'s channel a member keeps a person's words as an `orexis:ProseGraph` (`kept`) and says
+//! `orexis:ProseKept`, which translation's ontology puts beneath its trigger, and sends prose back as a `Carrier`, so no
+//! member imports translation and translation imports no member.
 
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, OnceLock};
 
+use oxigraph::model::{GraphName, Literal, NamedNode, Quad, Term};
 use oxsdatatypes::DateTime;
 
 use crate::Error;
+use crate::document::Document;
+use crate::events::{Event, mint};
+use crate::ontology::{OREXIS, RECEIVED};
 use crate::runtime::Wake;
+use crate::store::Store;
 
 /// A message on a channel, and the instant it arrived where whoever handed it knows one — a network thread knows none
 /// of the agent's timeline, so it is stamped with the instant of the pass that handles it.
@@ -67,6 +73,112 @@ pub struct Prose {
     pub addressed: Option<bool>,
     pub message: Option<String>,
 }
+
+/// A PERSON'S WORDS KEPT: the prose graph a transport keeps of `prose`, the agent `me`'s own and arrived from outside,
+/// before anything is made of them; the graph's name.
+pub fn kept(store: &Store, me: &str, prose: &Prose) -> Result<String, Error> {
+    let tail = mint();
+    let tail = tail
+        .as_str()
+        .rsplit(['/', ':', '#'])
+        .next()
+        .unwrap_or_default()
+        .to_string();
+    let local = me.rsplit(['/', '#']).next().unwrap_or(me);
+    let graph = NamedNode::new(format!("http://example.org/orexis/graph/prose/{local}/{tail}"))
+        .map_err(|e| Error::Evaluation(e.to_string()))?;
+    let into = GraphName::NamedNode(graph.clone());
+    let word = |w: &str| NamedNode::new_unchecked(format!("{OREXIS}{w}"));
+    let text = |t: &str| Term::Literal(Literal::new_simple_literal(t));
+    let mut quads = vec![Quad::new(
+        graph.clone(),
+        NamedNode::new_unchecked(RDF_TYPE),
+        word("ProseGraph"),
+        GraphName::DefaultGraph,
+    )];
+    let mut say = |p: NamedNode, o: Term| quads.push(Quad::new(graph.clone(), p, o, into.clone()));
+    say(word("text"), text(&prose.text));
+    if let Ok(channel) = NamedNode::new(prose.channel.as_str()) {
+        say(word("channel"), Term::NamedNode(channel));
+    }
+    if let Some(sender) = &prose.sender {
+        say(word("sender"), text(sender));
+    }
+    if let Some(addressed) = prose.addressed {
+        say(word("addressed"), Term::Literal(Literal::from(addressed)));
+    }
+    if let Some(message) = &prose.message {
+        say(word("message"), text(message));
+    }
+    if let Some(at) = prose.at {
+        say(NamedNode::new_unchecked(AT_TIME), Term::Literal(Literal::from(at)));
+    }
+    store.put_document(&Document::of_quads(quads), Some(me), None, Some(RECEIVED), true)?;
+    Ok(graph.as_str().to_string())
+}
+
+/// The words a prose graph keeps, as they were handed to `kept`.
+pub fn prose_of(store: &Store, graph: &str) -> Result<Option<Prose>, Error> {
+    let g = NamedNode::new(graph).map_err(|e| Error::Evaluation(e.to_string()))?;
+    let subject = g.clone();
+    let value = |predicate: &str| -> Option<Term> {
+        store
+            .engine()
+            .quads_for_pattern(
+                Some(subject.as_ref().into()),
+                Some(NamedNode::new_unchecked(predicate).as_ref()),
+                None,
+                Some(g.as_ref().into()),
+            )
+            .flatten()
+            .next()
+            .map(|q| q.object)
+    };
+    let literal = |predicate: &str| match value(predicate) {
+        Some(Term::Literal(l)) => Some(l.value().to_string()),
+        _ => None,
+    };
+    let Some(text) = literal(&format!("{OREXIS}text")) else {
+        return Ok(None);
+    };
+    let channel = match value(&format!("{OREXIS}channel")) {
+        Some(Term::NamedNode(n)) => n.as_str().to_string(),
+        _ => String::new(),
+    };
+    Ok(Some(Prose {
+        channel,
+        sender: literal(&format!("{OREXIS}sender")),
+        text,
+        at: literal(AT_TIME).and_then(|t| t.parse().ok()),
+        addressed: literal(&format!("{OREXIS}addressed")).map(|a| a == "true"),
+        message: literal(&format!("{OREXIS}message")),
+    }))
+}
+
+/// A transport kept a person's words: the prose graph, for whoever above the transports hears it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ProseKept {
+    pub prose: String,
+}
+
+impl Event for ProseKept {
+    fn kind(&self) -> Option<&'static str> {
+        Some(PROSE_KEPT)
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        NamedNode::new(self.prose.as_str())
+            .map(|p| vec![(PROSE, Term::NamedNode(p))])
+            .unwrap_or_default()
+    }
+}
+
+const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+const AT_TIME: &str = "http://www.w3.org/ns/prov#atTime";
+/// A person's words kept, as the event it is said as, and what it names.
+pub const PROSE_KEPT: &str = "http://example.org/orexis#ProseKept";
+pub const PROSE: &str = "http://example.org/orexis#prose";
+pub const PROSE_GRAPH: &str = "http://example.org/orexis#ProseGraph";
 
 /// Whoever hears a person's prose: the graphs it wrote in answer.
 pub type Hears<'a> = Box<dyn FnMut(&Prose) -> Result<Vec<String>, Error> + 'a>;

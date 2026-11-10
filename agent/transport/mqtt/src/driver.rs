@@ -188,6 +188,11 @@ fn no_wildcard(pattern: &str) -> bool {
 }
 
 impl<'a> Mqtt<'a> {
+    /// The store the member keeps what it carries in.
+    pub fn beliefs(&self) -> &Store {
+        &self.beliefs
+    }
+
     pub fn new(beliefs: &'a Store, me: &str, clients: Vec<(Option<String>, Box<dyn Client + 'a>)>) -> Self {
         Mqtt {
             beliefs: beliefs.clone(),

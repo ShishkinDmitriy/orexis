@@ -37,10 +37,10 @@ use orexis::clock::isoformat;
 use orexis::document::Document;
 use orexis::events::{Watch, round6};
 use orexis::ontology::local_of;
-use orexis::runtime::{Part, Pass, Starting};
+use orexis::runtime::{Heard, Part, Pass, Starting};
 use orexis::series::Reader;
 use orexis::store::Store;
-use orexis::transport::{Carrier, Prose};
+use orexis::transport::{Carrier, PROSE, Prose, prose_of};
 
 use crate::briefing::briefing;
 use crate::chat::{Chat, chats_of, named};
@@ -750,6 +750,11 @@ impl<'a> Translator<'a> {
 
 const BACK: usize = 0;
 const STILL: usize = 1;
+const TRANSLATE: usize = 2;
+
+/// What translation does as an activity, and what starts it.
+const TRANSLATING: &str = "http://example.org/orexis/translation#Translating";
+const TRANSLATING_TRIGGER: &str = "http://example.org/orexis/translation#TranslatingTrigger";
 
 /// Translation's part: the translator, shared with whoever links to it, and what was handed back for the pass.
 pub struct Translation<'a> {
@@ -769,7 +774,28 @@ impl<'a> Translation<'a> {
 impl Part for Translation<'_> {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         starting.every(WRITING_S, STILL);
+        starting.hears(TRANSLATING_TRIGGER, TRANSLATE);
         Ok(())
+    }
+
+    fn watch(&self) -> Option<Watch> {
+        Some(self.translator.borrow().watch.clone())
+    }
+
+    /// What translation's policy does of a trigger: read the person's words it names back, and hear them.
+    fn heard_event(&mut self, _job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        let Some(graph) = event.named(PROSE).cloned() else {
+            return Ok(Vec::new());
+        };
+        let store = self.translator.borrow().beliefs.clone();
+        let Some(prose) = prose_of(&store, graph.as_str())? else {
+            return Ok(Vec::new());
+        };
+        let at = prose.at.unwrap_or(pass.now);
+        let activity = pass.begin(TRANSLATING, std::slice::from_ref(&graph));
+        let written = self.translator.borrow_mut().heard(&prose, at);
+        pass.end(activity);
+        written
     }
 
     fn run(&mut self, job: usize, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {

@@ -9,7 +9,7 @@ use std::rc::Rc;
 
 use orexis::Error;
 use orexis::runtime::{Part, Pass, Starting};
-use orexis::transport::{Hears, Message};
+use orexis::transport::{Message, ProseKept, kept};
 
 use crate::driver::Telegram;
 
@@ -18,25 +18,21 @@ const HANDLE: usize = 1;
 const HOLDER: &str = "transport/telegram";
 
 /// The member's part: the member, shared, and the messages handed to the pass.
-pub struct Transport<'a> {
+pub struct Transport {
     pub member: Rc<RefCell<Telegram>>,
-    /// Whoever hears the prose a chat's message is: translation, linked — handed it once the member is let go, since
-    /// translation carries its answer back through the member.
-    pub prose: Option<Hears<'a>>,
     pending: VecDeque<Message>,
 }
 
-impl<'a> Transport<'a> {
+impl Transport {
     pub fn new(member: Telegram) -> Self {
         Transport {
             member: Rc::new(RefCell::new(member)),
-            prose: None,
             pending: VecDeque::new(),
         }
     }
 }
 
-impl Part for Transport<'_> {
+impl Part for Transport {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         self.member.borrow().inbox.wakes(starting.wake());
         starting.every(self.member.borrow().every, POLL);
@@ -59,10 +55,16 @@ impl Part for Transport<'_> {
                     &message.payload,
                     message.at.unwrap_or(pass.now),
                 )?;
-                match (prose, self.prose.as_mut()) {
-                    (Some(prose), Some(hears)) => hears(&prose),
-                    _ => Ok(Vec::new()),
-                }
+                let Some(prose) = prose else {
+                    return Ok(Vec::new());
+                };
+                //  A PERSON'S WORDS are kept, and said kept, for whoever translates.
+                let graph = {
+                    let member = self.member.borrow();
+                    kept(member.beliefs(), &member.me, &prose)?
+                };
+                pass.emit(&ProseKept { prose: graph.clone() });
+                Ok(vec![graph])
             }
         }
     }
