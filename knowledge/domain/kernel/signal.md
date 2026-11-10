@@ -27,6 +27,13 @@ belief revises what is written and prediction answers an observation — and a p
 hear every signal there is (`signals_of`): metrics and history, which is how neither imports a
 package nor any package them.
 
+# Being replaced
+
+Signals are what the binary's links connect, and the links are going: a package will hear the events
+beneath its trigger class through its [policy](/domain/kernel/policy.md), with nothing connected between
+parts, and this page will go with the last signal (#1119,
+[packages-meet-by-events-policies-and-activities](/decisions/packages-meet-by-events-policies-and-activities.md)).
+
 # What it is not
 
 **A fact.** A signal is not stored. What happened is in the store — the plan, the intention's outcome,

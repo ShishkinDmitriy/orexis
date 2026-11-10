@@ -1,7 +1,8 @@
 ---
 type: Decision
 title: Planning and execution meet at the store, signal each other, and the mind starts itself
-status: accepted
+status: superseded-in-part
+superseded-by: packages-meet-by-events-policies-and-activities
 timestamp: 2026-09-29T15:00:00Z
 description: >-
   The sovereign's choices of 2026-09-29, the mind's half of a-package-starts-itself. The Planner

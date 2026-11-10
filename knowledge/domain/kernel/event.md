@@ -3,11 +3,20 @@ type: Domain Concept
 title: Event
 term: http://example.org/orexis#Event
 description: >-
-  What a signal carries - an instance of a class the package declares in its events.py, saying
-  whole what happened, so a handler asks nobody. Its class may name a metric and mark which fields
-  are reported; it may be history, as a point or as triples in the package's words. Made only where
-  somebody hears.
+  What happened, at an instant - an instance of a class its package declares, never the cause of
+  another event. A policy hearing it may start an activity, whose start and end are events too. Its
+  class may name a metric and mark which fields are reported; it may be history, as a point or as
+  triples in the package's words. Made only where somebody hears.
 ---
+
+# An instant, heard by policies
+
+An event has no duration: it is a `prov:InstantaneousEvent`, said once at the instant it happened. It
+never triggers another event. A [policy](/domain/kernel/policy.md) hears it and decides whether to start
+an [activity](/domain/kernel/activity.md), and an activity's start and end are events in their turn; a
+more specific event may be said at the same instant, naming the one it specifies. Hearing by policy is
+not built yet: today a [signal](/domain/kernel/signal.md) carries an event to whoever was linked
+([packages-meet-by-events-policies-and-activities](/decisions/packages-meet-by-events-policies-and-activities.md)).
 
 # What it is
 
