@@ -6,12 +6,24 @@
 //! plan graph whole as the beliefs hold it, and a want nothing reaches, `planning:WantUnreachable`, beneath
 //! `orexis:Incident`. A want's name is on no metric: what a want reports is tagged by the DESIRE it was derived under.
 
-use oxigraph::model::{NamedNode, Triple};
+use oxigraph::model::{Literal, NamedNode, Term, Triple};
 use oxsdatatypes::DateTime;
 
 use orexis::events::{Event, Mark, Number, node, triple, typed};
 
 pub const PLANNING: &str = "http://example.org/orexis/planning#";
+
+/// EXECUTION'S WORDS, which planning, the higher package, says its events to execution in: its trigger is what these
+/// events are beneath, by planning's ontology, and these are what each is about.
+const ADOPTS: &str = "http://example.org/orexis/execution#adopts";
+const PURSUES: &str = "http://example.org/orexis/execution#pursues";
+const ENDS_AFTER: &str = "http://example.org/orexis/execution#endsAfter";
+const OUTCOME: &str = "http://example.org/orexis/execution#outcome";
+const DERIVED_FROM: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
+
+fn named(iri: &str) -> Term {
+    NamedNode::new_unchecked(iri).into()
+}
 
 fn term(name: &str) -> String {
     format!("{PLANNING}{name}")
@@ -26,6 +38,8 @@ pub struct PlanPublished {
     pub plan: String,
     pub want: String,
     pub desire: Option<String>,
+    /// The desire itself, the want derived from it.
+    pub derived_from: Option<String>,
     pub scope: Option<String>,
     pub passes: Option<f64>,
     pub weighed: Option<f64>,
@@ -66,6 +80,64 @@ impl Event for PlanPublished {
 
     fn at(&self) -> Option<DateTime> {
         self.at
+    }
+
+    fn kind(&self) -> Option<&'static str> {
+        Some("http://example.org/orexis/planning#PlanPublished")
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        let mut about = vec![(ADOPTS, named(&self.plan)), (PURSUES, named(&self.want))];
+        about.extend(self.derived_from.as_deref().map(|d| (DERIVED_FROM, named(d))));
+        about
+    }
+}
+
+/// A walking want the present meets, at `at`: its unbegun intentions end `reached`. Said to execution; kept in no
+/// journal yet, as a start and an end are not.
+#[derive(Clone, Debug, PartialEq)]
+pub struct WantReached {
+    pub want: String,
+    pub at: DateTime,
+}
+
+impl Event for WantReached {
+    fn at(&self) -> Option<DateTime> {
+        Some(self.at)
+    }
+
+    fn kind(&self) -> Option<&'static str> {
+        Some("http://example.org/orexis/planning#WantReached")
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        vec![
+            (PURSUES, named(&self.want)),
+            (OUTCOME, Literal::new_simple_literal("reached").into()),
+        ]
+    }
+}
+
+/// A walking plan whose untaken steps a reconsideration replaced, at `at`: its intention ends after `head`, its step in
+/// flight, and the plan replacing it pursues `by`. Said to execution; kept in no journal yet.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PlanSuperseded {
+    pub head: String,
+    pub by: String,
+    pub at: Option<DateTime>,
+}
+
+impl Event for PlanSuperseded {
+    fn at(&self) -> Option<DateTime> {
+        self.at
+    }
+
+    fn kind(&self) -> Option<&'static str> {
+        Some("http://example.org/orexis/planning#PlanSuperseded")
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        vec![(ENDS_AFTER, named(&self.head)), (PURSUES, named(&self.by))]
     }
 }
 

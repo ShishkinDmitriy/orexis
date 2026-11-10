@@ -371,6 +371,13 @@ impl<'a> Planner<'a> {
                 walked: walked.clone(),
                 by: want.to_string(),
             });
+            if self.watch.connected() {
+                self.watch.emit(&crate::events::PlanSuperseded {
+                    head: flight.head.clone(),
+                    by: want.to_string(),
+                    at: self.watch.at(),
+                });
+            }
         }
         Ok(())
     }

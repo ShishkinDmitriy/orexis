@@ -4,16 +4,18 @@
 //! `unreachable` where some stand that nothing this agent holds reaches. A desire held keeps it holding, since a
 //! desire asks at every instant.
 //!
-//! LINKED by whoever assembles the parts, as `link` connects the Python part's signals: the Planner is shared, so the
-//! executor can ask it of a head about to be taken, and `heard` is told of each pass before its holding is decided —
-//! what it published, reached and reconsidered — as the executor adopts, ends and supersedes by them.
+//! WHAT A PASS DID IS SAID, not handed: a plan published, a want reached and a plan superseded are events beneath
+//! execution's trigger, which execution's policy hears once the pass's job is done. Whether anything walks what it
+//! publishes is the agent's roles' to say — one beneath `execution:Executor` — and the Planner is shared only so the
+//! executor can ask it of a head about to be taken, until a hearer may hold a reader of the store (#1119).
 
 use std::cell::RefCell;
 use std::rc::Rc;
 
 use orexis::Error;
+use orexis::ontology::SELF_GRAPH;
 use orexis::runtime::{MET, PLANNED, Part, Pass, Starting, UNREACHABLE};
-use orexis::store::Store;
+use orexis::store::{Store, Within, iri};
 
 use crate::Planner;
 use crate::admit::local_of;
@@ -21,15 +23,14 @@ use crate::ontology::PLANNING_ACTIVITY;
 
 const PLAN: usize = 0;
 
-/// Whoever hears what a pass did, handed the Planner after it: the graphs it wrote in answer.
-pub type Heard<'a> = Box<dyn FnMut(&Planner<'a>) -> Result<Vec<String>, Error> + 'a>;
+/// Whoever walks what planning publishes: a role of this class, or one beneath it.
+const EXECUTOR: &str = "http://example.org/orexis/execution#Executor";
+const ROLES_Q: &str = "SELECT DISTINCT ?kind WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind }";
 
-/// Planning's part: its Planner, shared with whoever links to it, whether any part walks what it publishes, and who
-/// hears each pass.
+/// Planning's part: its Planner, and whether any part walks what it publishes.
 pub struct Planning<'a> {
     pub planner: Rc<RefCell<Planner<'a>>>,
     pub walked: bool,
-    pub heard: Option<Heard<'a>>,
 }
 
 impl<'a> Planning<'a> {
@@ -37,8 +38,7 @@ impl<'a> Planning<'a> {
     pub fn new(beliefs: &'a Store, agent: &str, budget: Option<usize>) -> Result<Self, Error> {
         Ok(Planning {
             planner: Rc::new(RefCell::new(Planner::new(beliefs, agent, budget)?)),
-            walked: false,
-            heard: None,
+            walked: walks(beliefs)?,
         })
     }
 
@@ -87,19 +87,34 @@ impl<'a> Planning<'a> {
     }
 }
 
+/// Whether the self plays a role beneath `execution:Executor`, read off its self graph: what it publishes is walked.
+fn walks(beliefs: &Store) -> Result<bool, Error> {
+    let selves = beliefs.graphs_of(&[SELF_GRAPH], &Within::default())?;
+    let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
+    for row in beliefs.rows(ROLES_Q, &selves)? {
+        if let Some(kind) = iri(&row, "kind")
+            && beliefs.closed(&kind)?.iter().any(|c| c == EXECUTOR)
+        {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
 impl Part for Planning<'_> {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         starting.every(0.0, PLAN);
         Ok(())
     }
 
+    fn watch(&self) -> Option<orexis::events::Watch> {
+        Some(self.planner.borrow().watch.clone())
+    }
+
     fn run(&mut self, _job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
         //  EVERY PASS FOR NOW, TRIGGERED BY NOTHING: a policy deciding when to plan is #1119's sixth step.
         let activity = pass.begin(PLANNING_ACTIVITY, &[]);
-        let mut written = self.planner.borrow_mut().plan(pass.now)?;
-        if let Some(heard) = self.heard.as_mut() {
-            written.extend(heard(&self.planner.borrow())?);
-        }
+        let written = self.planner.borrow_mut().plan(pass.now)?;
         self.keep(pass)?;
         pass.lap("plan");
         pass.end(activity);

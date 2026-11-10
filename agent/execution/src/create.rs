@@ -2,8 +2,15 @@
 //! pass, after planning. A walk at the instant and over the intentions the last one stood at is skipped, since it
 //! finds nothing new; a walk that took a step, or ended an intention, asks for the next pass at once.
 //!
-//! LINKED by whoever assembles the parts: planning hands it what a pass published, reached and reconsidered, and
-//! answers `taking` (#916); belief, where the agent deliberates, raises `soon` where a pass revised the present, and
+//! ITS POLICY HEARS `execution:Trigger`, beneath which a higher package's ontology puts its events, and reads what each
+//! is about in execution's words: a plan to adopt (`execution:adopts`, pursuing `execution:pursues`, the want derived
+//! from `prov:wasDerivedFrom`), a step in flight an intention ends after (`execution:endsAfter`, replaced by a plan
+//! pursuing `execution:pursues`), or a want whose unbegun intentions end (`execution:pursues`, `execution:outcome`).
+//! Planning's plan published, want reached and plan superseded are beneath it, so planning and execution meet by
+//! events and the store.
+//!
+//! LINKED by whoever assembles the parts: planning answers `taking` (#916), until a hearer may hold a reader of the
+//! store (#1119); belief, where the agent deliberates, raises `soon` where a pass revised the present, and
 //! a walk is queued, once, however many revisions say so before it runs. A TRANSPORT, linked, is handed each command a
 //! step's implementation sends, order by order (`taker`); a step whose command answers nothing is not taken (#869).
 //! And speech, linked, is handed each document a step's implementation says, with the agents it is to.
@@ -16,7 +23,7 @@ use oxsdatatypes::DateTime;
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::Clock;
-use orexis::runtime::{Part, Pass, Starting};
+use orexis::runtime::{Heard, Part, Pass, Starting};
 use orexis::store::Store;
 
 use serde_json::Value as Json;
@@ -24,7 +31,7 @@ use serde_json::Value as Json;
 use crate::command::command;
 use crate::executor::Take;
 use crate::implementation::operations;
-use crate::ontology::{COMMAND, SAYING};
+use crate::ontology::{ADOPTS, COMMAND, DERIVED_FROM, ENDS_AFTER, OUTCOME, PURSUES, SAYING, TRIGGER};
 use crate::says::says;
 use crate::{Executor, Said};
 
@@ -90,6 +97,7 @@ SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:BeliefGraph .
 
 const PASS: usize = 0;
 const WALK: usize = 1;
+const TRIGGERED: usize = 2;
 
 /// Execution's part: its executor, shared with whoever links to it.
 pub struct Execution<'a> {
@@ -155,7 +163,34 @@ impl Execution<'_> {
 impl Part for Execution<'_> {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         starting.every(0.0, PASS);
+        starting.hears(TRIGGER, TRIGGERED);
         Ok(())
+    }
+
+    /// What execution's policy does of a trigger: adopt the plan it names, end after the step in flight it names, or
+    /// end the unbegun intentions pursuing the want it names, as its outcome says.
+    fn heard_event(&mut self, _job: usize, event: &Heard, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        let mut executor = self.executor.borrow_mut();
+        let want = event.named(PURSUES).map(|w| w.as_str().to_string());
+        if let (Some(plan), Some(want)) = (event.named(ADOPTS), want.as_ref()) {
+            if let Some(desire) = event.named(DERIVED_FROM) {
+                executor
+                    .desires
+                    .insert(want.clone(), orexis::ontology::local_of(desire.as_str()));
+            }
+            return executor.adopt(plan.as_str(), want);
+        }
+        if let Some(head) = event.named(ENDS_AFTER) {
+            return executor.supersede_after(head.as_str(), want.as_deref());
+        }
+        let outcome = event.about.iter().find_map(|(p, t)| match t {
+            oxigraph::model::Term::Literal(l) if p == OUTCOME => Some(l.value().to_string()),
+            _ => None,
+        });
+        match (want, outcome) {
+            (Some(want), Some(outcome)) => executor.end_for(&want, &outcome),
+            _ => Ok(Vec::new()),
+        }
     }
 
     fn run(&mut self, job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
@@ -180,6 +215,10 @@ impl Part for Execution<'_> {
         let mut written = std::mem::take(&mut executor.written);
         written.append(&mut self.said.borrow_mut());
         Ok(written)
+    }
+
+    fn watch(&self) -> Option<orexis::events::Watch> {
+        Some(self.executor.borrow().watch.clone())
     }
 
     fn submitted(&mut self) -> Vec<usize> {

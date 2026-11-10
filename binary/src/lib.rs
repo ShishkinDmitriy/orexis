@@ -149,37 +149,14 @@ pub fn built(package: &str) -> bool {
         || (package == "transport/email" && cfg!(feature = "email"))
 }
 
-/// Link planning's part to execution's, as the Python parts' `link` connects their signals: what a pass reached
-/// ends the unbegun intentions pursuing it, what it reconsidered ends after its step in flight, and what it
-/// published is adopted, in the order the Python Planner says them; and a head about to be taken is asked of the
-/// Planner, which says where the present no longer admits it (#916). Whatever walks what planning publishes makes
-/// it hold the agent while something is walked.
+/// Hand execution planning's judgment of a head about to be taken: the Planner says where the present no longer
+/// admits it (#916). The one link left between them — what a pass published, reached and reconsidered execution
+/// hears as events — until a hearer may hold a reader of the store and the judgment is asked as an event (#1119).
 #[cfg(all(feature = "planning", feature = "execution"))]
-pub fn link<'a>(
-    planning: &mut orexis_planning::create::Planning<'a>,
+pub fn judge<'a>(
+    planning: &orexis_planning::create::Planning<'a>,
     execution: &orexis_execution::create::Execution<'a>,
 ) {
-    planning.walked = true;
-    let executor = execution.executor.clone();
-    planning.heard = Some(Box::new(move |planner| {
-        let mut executor = executor.borrow_mut();
-        let mut written = Vec::new();
-        for published in &planner.published {
-            if let Some(desire) = &published.desire {
-                executor.desires.insert(published.want.clone(), desire.clone());
-            }
-        }
-        for want in &planner.reached {
-            written.extend(executor.end_for(want, "reached")?);
-        }
-        for replaced in &planner.superseded {
-            written.extend(executor.supersede_after(&replaced.head, Some(&replaced.by))?);
-        }
-        for (plan, want) in &planner.handed {
-            written.extend(executor.adopt(plan, want)?);
-        }
-        Ok(written)
-    }));
     let planner = planning.planner.clone();
     execution.executor.borrow_mut().taking = Some(Box::new(move |step, at| planner.borrow_mut().check(step, at)));
 }
@@ -371,7 +348,7 @@ pub fn assemble_seen<'a>(
         None
     };
     #[cfg(feature = "planning")]
-    let mut planning = if holds("planning") {
+    let planning = if holds("planning") {
         Some(orexis_planning::create::Planning::new(store, agent, budget)?)
     } else {
         None
@@ -549,8 +526,8 @@ pub fn assemble_seen<'a>(
         take(store, clock, execution, send, say);
     }
     #[cfg(all(feature = "planning", feature = "execution"))]
-    if let (Some(planning), Some(execution)) = (planning.as_mut(), execution.as_ref()) {
-        link(planning, execution);
+    if let (Some(planning), Some(execution)) = (planning.as_ref(), execution.as_ref()) {
+        judge(planning, execution);
     }
     #[cfg(all(feature = "belief", feature = "execution"))]
     if let (Some(belief), Some(execution)) = (belief.as_ref(), execution.as_ref()) {

@@ -216,6 +216,9 @@ execution:StepAnswered a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "
 execution:Walking a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Walking" ;
     rdfs:comment "A walk of the intentions, an activity execution's part begins and ends: every head due taken, every step answered or out of patience (packages-meet-by-events-policies-and-activities)." .
 
+execution:Trigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Trigger" ;
+    rdfs:comment "What execution's policy hears: an event a higher package's ontology puts beneath it, saying in execution's words what it is about - a plan to adopt (`execution:adopts`, pursuing `execution:pursues`), a step in flight an intention ends after (`execution:endsAfter`), or a want whose unbegun intentions end (`execution:pursues`, `execution:outcome`). Execution names no word above it (knowledge/domain/kernel/policy.md)." .
+
 execution:IntentionResolved a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Intention resolved" ;
     rdfs:comment "An intention ended, carrying it as it ended — the want it pursued, its `execution:outcome`." .
 

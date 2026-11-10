@@ -31,7 +31,7 @@ use std::time::Duration;
 
 use oxsdatatypes::DateTime;
 
-use oxigraph::model::NamedNode;
+use oxigraph::model::{NamedNode, Term};
 
 use crate::Error;
 use crate::activity::{Activity, Ended, Started};
@@ -253,6 +253,12 @@ pub trait Part {
         Vec::new()
     }
 
+    /// The watch the part says its events to, where it says any: the runtime listens on that one, so what a part says
+    /// is heard by the parts that listen whoever assembled them.
+    fn watch(&self) -> Option<Watch> {
+        None
+    }
+
     fn stop(&mut self) {}
 }
 
@@ -262,6 +268,18 @@ pub struct Heard {
     pub node: NamedNode,
     pub kind: String,
     pub activity: Option<(NamedNode, String)>,
+    /// What it is about, each under the predicate that says its part (`Event::about`).
+    pub about: Vec<(String, Term)>,
+}
+
+impl Heard {
+    /// The first thing it is about under `predicate`, where it names a node there.
+    pub fn named(&self, predicate: &str) -> Option<&NamedNode> {
+        self.about.iter().find_map(|(p, t)| match t {
+            Term::NamedNode(n) if p == predicate => Some(n),
+            _ => None,
+        })
+    }
 }
 
 struct Timer {
@@ -332,6 +350,9 @@ impl<'p> Runtime<'p> {
             tasks: None,
         };
         started();
+        if let Some(watch) = runtime.parts.iter().find_map(|(_, part)| part.watch()) {
+            runtime.watch = watch;
+        }
         for (i, (_, part)) in runtime.parts.iter_mut().enumerate() {
             let mut starting = Starting {
                 timers: Vec::new(),
@@ -420,6 +441,7 @@ impl<'p> Runtime<'p> {
                     node: named.clone(),
                     kind: kind.to_string(),
                     activity: event.activity().map(|(a, k)| (a.clone(), k.to_string())),
+                    about: event.about().into_iter().map(|(p, t)| (p.to_string(), t)).collect(),
                 });
             }
         });

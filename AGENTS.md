@@ -493,7 +493,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   `execution:retracts`, the engine fills them, compares the present to them and writes a fictive
   step from them; a JSON literal of triples in a triplestore could be queried, abbreviated and
   compared by nothing (#759, a-steps-prediction-is-two-graphs-it-names).
-- **Planning and execution meet at the store and signal each other** — a plan is published once
+- **Planning and execution meet at the store and by events** — what a pass published, reached and superseded are
+  planning's events beneath `execution:Trigger`, said in execution's words, and a plan is published once
   and an intention adopts it by reference; a plan begun is walked to its end, unless a
   reconsideration replaces its untaken steps, and then it ends after its step in flight
   (planning-and-execution-meet-at-the-store).

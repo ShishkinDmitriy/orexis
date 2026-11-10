@@ -101,6 +101,13 @@ pub trait Event: Any {
     fn activity(&self) -> Option<(&NamedNode, &'static str)> {
         None
     }
+
+    /// What it is about, each under the predicate that says its part, in the words of whoever hears it: a plan
+    /// published names the plan an intention would adopt and the want it pursues. Names, never facts to act on — a
+    /// policy reads what holds now from the beliefs.
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        Vec::new()
+    }
 }
 
 /// Whether an event marking `marks` is counted: it marks values or flags, or tags alone.

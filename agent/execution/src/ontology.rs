@@ -4,6 +4,18 @@ pub const EXECUTION: &str = "http://example.org/orexis/execution#";
 /// A walk of the intentions, as the activity it is.
 pub const WALKING: &str = "http://example.org/orexis/execution#Walking";
 
+/// WHAT EXECUTION'S POLICY HEARS: every event beneath it, put there by the ontology of whichever package says it, and
+/// what it is about said in the words below.
+pub const TRIGGER: &str = "http://example.org/orexis/execution#Trigger";
+/// What a trigger is about: the plan an intention would adopt, the want it pursues, the step in flight one ends after,
+/// and how an intention ends.
+pub const ADOPTS: &str = "http://example.org/orexis/execution#adopts";
+pub const PURSUES: &str = "http://example.org/orexis/execution#pursues";
+pub const ENDS_AFTER: &str = "http://example.org/orexis/execution#endsAfter";
+pub const OUTCOME: &str = "http://example.org/orexis/execution#outcome";
+/// The desire a want was derived under, PROV's word, for what the executor's events are tagged by.
+pub const DERIVED_FROM: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
+
 /// A step an intention committed to, as a belief over its landing window, and the window's two lengths.
 pub const COMMITTED_STEP_GRAPH: &str = "http://example.org/orexis/execution#CommittedStepGraph";
 pub const LANDS_WITHIN_S: &str = "http://example.org/orexis/execution#landsWithinS";

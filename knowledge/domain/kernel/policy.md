@@ -6,7 +6,7 @@ description: >-
   calls for an activity and start one if so. The trigger is a class each package declares, and the
   events beneath it are put there by whichever ontology is higher, so a lower package never names a
   higher one's word. The judgment is code reading the store; who listens to what is the vocabulary's.
-  Not built yet (#1119).
+  Execution's is built; the others are #1119's.
 ---
 
 # What it is
@@ -30,8 +30,11 @@ whichever of the two ontologies is the higher package's: belief is beneath plann
 ontology puts belief's event of a belief changed beneath planning's trigger; planning is above
 execution, so planning's ontology puts its own event of a want reached beneath execution's trigger.
 Either way the lower package names nothing above it, and which package wakes to what is read off the
-vocabulary rather than wired in the binary. The trigger classes are declared as their policies are
-built (#1119).
+vocabulary rather than wired in the binary. Execution's is built: `execution:Trigger`, with planning's
+`planning:PlanPublished`, `planning:WantReached` and `planning:PlanSuperseded` beneath it, each naming
+what it is about under execution's own predicates - the plan an intention would adopt
+(`execution:adopts`), the want pursued (`execution:pursues`), the step in flight an intention ends
+after (`execution:endsAfter`). The others are declared as their policies are built (#1119).
 
 **An addressed event, by who asked for it.** A timer alarms for the part that set it, and a request
 to plan is planning's alone. Put beneath a trigger class, every package's timer would wake every
