@@ -17,7 +17,7 @@
 
 use std::collections::BTreeSet;
 
-use oxigraph::model::Literal;
+use oxigraph::model::{Literal, NamedNode};
 use oxsdatatypes::DateTime;
 
 use orexis::Error;
@@ -25,19 +25,20 @@ use orexis::bind::{Value, bind};
 use orexis::clock::{instant, isoformat, seconds_of};
 use orexis::events::{Watch, round6};
 use orexis::ontology::{BELIEF, DERIVED, local_of};
-use orexis::runtime::{Part, Pass, Starting};
+use orexis::runtime::{Heard, Part, Pass, Starting};
 use orexis::store::{Store, Within, iri, value};
 
 use crate::cadence::cadence_of;
-use crate::events::{Doubted, Observed, Silence, tag_of};
+use crate::events::{Doubted, Observed, Perceived, Silence, tag_of};
 use crate::missed::missed;
-use crate::ontology::{OBSERVATION_GRAPH, SILENCE_GRAPH, silence_graph};
+use crate::ontology::{OBSERVATION_GRAPH, OBSERVING, OBSERVING_TRIGGER, REVISED_SOURCE, SILENCE_GRAPH, silence_graph};
 
 /// HOW OFTEN SENSING ASKS WHAT HAS FALLEN DUE, in seconds of the one timeline.
 pub const EVERY_S: f64 = 60.0;
 
 const ASK: usize = 0;
 const HEARD: usize = 1;
+const OBSERVE: usize = 2;
 
 /// THE SENSORS KEPT SILENT NOW: each silence graph holding, its end not yet said by a reading.
 const SILENT_Q: &str = "SELECT DISTINCT ?sensor WHERE { ?sensor sensing:silentSince ?since }";
@@ -64,27 +65,24 @@ const MADE_Q: &str = "SELECT ?t WHERE { $percept sosa:resultTime ?t } LIMIT 1";
 
 const STUCK_Q: &str = "SELECT DISTINCT ?sensor WHERE { ?sensor sensing:stuckOn ?number }";
 
-/// What sensing hands belief to revise: the graphs, the kind their revisions are to be, and the instant.
-pub type Revises<'a> = Box<dyn FnMut(&[String], &str, DateTime) -> Result<(), Error> + 'a>;
-
 /// Sensing's part.
-pub struct Sensing<'a> {
+pub struct Sensing {
     beliefs: Store,
     me: String,
-    /// Belief's revision, beneath, where the agent is linked to a deliberator.
-    pub revise: Option<Revises<'a>>,
+    /// The percepts a restart found unrevised, said at the first ask, once anybody hears.
+    due: Vec<String>,
     /// Whoever watches the agent.
     pub watch: Watch,
     /// The sensors doubted at the last ask.
     doubts: BTreeSet<String>,
 }
 
-impl<'a> Sensing<'a> {
-    pub fn new(beliefs: &'a Store, agent: &str) -> Result<Self, Error> {
+impl Sensing {
+    pub fn new(beliefs: &Store, agent: &str) -> Result<Self, Error> {
         Ok(Sensing {
             beliefs: beliefs.clone(),
             me: me_of(beliefs, agent)?,
-            revise: None,
+            due: Vec::new(),
             watch: Watch::default(),
             doubts: BTreeSet::new(),
         })
@@ -223,10 +221,10 @@ impl<'a> Sensing<'a> {
         Ok(())
     }
 
-    fn revised(&mut self, graphs: &[String], at: DateTime) -> Result<(), Error> {
-        match self.revise.as_mut() {
-            Some(revise) if !graphs.is_empty() => revise(graphs, OBSERVATION_GRAPH, at),
-            _ => Ok(()),
+    /// Say `graphs` were perceived, for belief to revise.
+    pub fn perceived(&self, graphs: Vec<String>) {
+        if !graphs.is_empty() {
+            self.watch.emit(&Perceived { graphs });
         }
     }
 }
@@ -246,38 +244,65 @@ fn me_of(beliefs: &Store, agent: &str) -> Result<String, Error> {
         .ok_or_else(|| Error::Evaluation(format!("no agent with localId '{agent}' in this store")))
 }
 
-impl Part for Sensing<'_> {
+impl Part for Sensing {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         starting.every(EVERY_S, ASK);
-        if self.revise.is_some()
-            && let Some(cat) = self.beliefs.catalogue()?
-        {
-            let unrevised: Vec<String> = self
+        if let Some(cat) = self.beliefs.catalogue()? {
+            self.due = self
                 .beliefs
                 .rows(&bind(UNREVISED_Q, &[("cat", Value::iri(cat))])?, &[])?
                 .iter()
                 .filter_map(|r| iri(r, "g"))
                 .collect();
-            self.revised(&unrevised, starting.now())?;
         }
-        if self.revise.is_some() || self.watch.connected() {
-            starting.on(OBSERVATION_GRAPH, HEARD);
-        }
+        starting.on(OBSERVATION_GRAPH, HEARD);
+        starting.hears(OBSERVING_TRIGGER, OBSERVE);
         Ok(())
     }
 
     fn run(&mut self, job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
         match job {
-            ASK => self.ask(pass.now),
+            ASK => {
+                //  WHAT A RESTART FOUND UNREVISED is said at the first ask: said at start, nobody heard it yet.
+                let due = std::mem::take(&mut self.due);
+                self.perceived(due);
+                self.ask(pass.now)
+            }
             _ => Ok(Vec::new()),
         }
     }
 
-    fn heard(&mut self, _job: usize, graph: &str, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
-        self.revised(&[graph.to_string()], pass.now)?;
-        if self.watch.connected() {
-            self.observation(graph)?;
+    fn heard(&mut self, _job: usize, graph: &str, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        self.perceived(vec![graph.to_string()]);
+        Ok(Vec::new())
+    }
+
+    fn watch(&self) -> Option<orexis::events::Watch> {
+        Some(self.watch.clone())
+    }
+
+    /// What sensing's policy does of a revision pass: say each percept it revised as the observation it is.
+    fn heard_event(&mut self, _job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        if !self.watch.connected() {
+            return Ok(Vec::new());
         }
+        let revised = event.all(REVISED_SOURCE);
+        if revised.is_empty() {
+            return Ok(Vec::new());
+        }
+        let percepts = self.beliefs.graphs_of(&[OBSERVATION_GRAPH], &Within::default())?;
+        let observed: Vec<NamedNode> = revised
+            .into_iter()
+            .filter(|g| percepts.iter().any(|p| p == g.as_str()))
+            .cloned()
+            .collect();
+        if observed.is_empty() {
+            return Ok(Vec::new());
+        }
+        let activity = pass.begin(OBSERVING, &observed);
+        let said = observed.iter().try_for_each(|g| self.observation(g.as_str()));
+        pass.end(activity);
+        said?;
         Ok(Vec::new())
     }
 }
@@ -363,29 +388,44 @@ mod tests {
     }
 
     #[test]
-    fn linked_to_belief_it_hands_in_each_observation_with_this_layers_kind() {
+    fn it_says_each_percept_for_belief_to_revise_into_this_layers_kind() {
         let store = pot();
         let before = received(&store, ME, PROBE, br#"{"value": 0.2}"#, now()).unwrap();
-        type Handed = Rc<RefCell<Vec<(Vec<String>, String)>>>;
-        let handed: Handed = Rc::new(RefCell::new(Vec::new()));
-        let into = handed.clone();
+        type Said = Rc<RefCell<Vec<Vec<(String, String)>>>>;
+        let said: Said = Rc::new(RefCell::new(Vec::new()));
+        let into = said.clone();
         let clock = Manual::at(plus(now(), CADENCE));
         let mut part = Sensing::new(&store, "keeper").unwrap();
-        part.revise = Some(Box::new(move |graphs, kind, _| {
-            into.borrow_mut().push((graphs.to_vec(), kind.to_string()));
-            Ok(())
-        }));
+        part.watch.connect(move |event, _| {
+            if let Some(p) = orexis::events::as_of::<Perceived>(event) {
+                into.borrow_mut().push(
+                    orexis::events::Event::about(p)
+                        .into_iter()
+                        .map(|(k, t)| (k.to_string(), t.to_string()))
+                        .collect(),
+                );
+            }
+        });
+        let about = |graphs: &[String]| {
+            let mut about: Vec<(String, String)> = graphs
+                .iter()
+                .map(|g| (crate::ontology::REVISES.to_string(), format!("<{g}>")))
+                .collect();
+            about.push((crate::ontology::INTO.to_string(), format!("<{OBSERVATION_GRAPH}>")));
+            about
+        };
         {
             let parts: Vec<(String, &mut dyn Part)> = vec![("sensing".into(), &mut part)];
-            Runtime::new(&store, "keeper", &clock, parts).unwrap();
+            let mut runtime = Runtime::new(&store, "keeper", &clock, parts).unwrap();
+            runtime.drain(orexis::clock::Clock::now(&clock)).unwrap();
         }
         assert_eq!(
-            *handed.borrow(),
-            [(before, OBSERVATION_GRAPH.to_string())],
-            "the one nothing was concluded of, at start"
+            *said.borrow(),
+            [about(&before)],
+            "the one nothing was concluded of, at the first ask"
         );
         let written = received(&store, ME, PROBE, br#"{"value": 0.22}"#, plus(now(), 2.0 * CADENCE)).unwrap();
-        part.revised(&written, plus(now(), 2.0 * CADENCE)).unwrap();
-        assert_eq!(handed.borrow().last(), Some(&(written, OBSERVATION_GRAPH.to_string())));
+        part.perceived(written.clone());
+        assert_eq!(said.borrow().last(), Some(&about(&written)));
     }
 }

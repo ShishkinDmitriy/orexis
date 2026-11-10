@@ -15,6 +15,11 @@ pub const DELIBERATOR: &str = "http://example.org/orexis/belief#Deliberator";
 pub const REVISED: &str = "http://example.org/orexis/belief#Revised";
 pub const REVISED_SOURCE: &str = "http://example.org/orexis/belief#revised";
 pub const CHANGED: &str = "http://example.org/orexis/belief#changed";
+/// What belief does as an activity, and what starts it: each graph to revise, and the kind its revisions are to be.
+pub const REVISING: &str = "http://example.org/orexis/belief#Revising";
+pub const REVISING_TRIGGER: &str = "http://example.org/orexis/belief#RevisingTrigger";
+pub const REVISES: &str = "http://example.org/orexis/belief#revises";
+pub const INTO: &str = "http://example.org/orexis/belief#into";
 pub const DERIVED_FROM: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
 
 /// Where the revisions of `source` — what the rules conclude of it — are kept.

@@ -2,6 +2,7 @@
 @prefix belief: <http://example.org/orexis/belief#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -150,3 +151,21 @@ belief:revised a owl:ObjectProperty ; rdfs:domain belief:Revised ; rdfs:label "r
 
 belief:changed a owl:ObjectProperty ; rdfs:domain belief:Revised ; rdfs:label "changed" ;
     rdfs:comment "A state of the agent's own a revision pass's transitions changed." .
+
+#  WHAT BELIEF DOES OVER A STRETCH OF TIME, a `prov:Activity`, and its trigger: an event a package above belief puts
+#  beneath it, in its own ontology and in belief's words, starts a revising (knowledge/domain/kernel/policy.md).
+
+belief:Trigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Trigger" ;
+    rdfs:comment "Belief's trigger, abstract: an event beneath it is beneath the one trigger below, and nothing is put beneath it alone." .
+
+belief:Revising a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Revising" ;
+    rdfs:comment "A revision pass over the graphs written since the last, and the transitions their arrival triggers: started for a belief graph written, heard by kind, and for an event beneath the revising trigger. It ends saying `belief:Revised`." .
+
+belief:RevisingTrigger a owl:Class ; rdfs:subClassOf belief:Trigger ; rdfs:label "Revising trigger" ;
+    rdfs:comment "What starts a revising besides a belief graph written: an event naming each graph to revise (`belief:revises`) and the kind its revisions are to be (`belief:into`) - a percept, whose revisions are sensing's own kind, since no reader of the mind is handed what is concluded of a percept." .
+
+belief:revises a owl:ObjectProperty ; rdfs:domain belief:RevisingTrigger ; rdfs:label "revises" ;
+    rdfs:comment "A graph a revising is to revise." .
+
+belief:into a owl:ObjectProperty ; rdfs:domain belief:RevisingTrigger ; rdfs:label "into" ;
+    rdfs:comment "The graph class the revisions a revising makes are classified as." .

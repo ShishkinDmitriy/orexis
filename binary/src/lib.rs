@@ -161,14 +161,6 @@ pub fn judge<'a>(
     execution.executor.borrow_mut().taking = Some(Box::new(move |step, at| planner.borrow_mut().check(step, at)));
 }
 
-/// Link sensing's part to belief's, as the Python part's `link` takes belief's: every percept sensing writes, and at
-/// start each one nothing was concluded of, is revised by belief's deliberator into sensing's own kind (#944).
-#[cfg(all(feature = "belief", feature = "sensing"))]
-pub fn observe<'a>(belief: &orexis_belief::create::Belief, sensing: &mut orexis_sensing::create::Sensing<'a>) {
-    let belief = belief.clone();
-    sensing.revise = Some(Box::new(move |graphs, kind, at| belief.revise(graphs, kind, at)));
-}
-
 /// Link planning's part to prediction's, as the Python planner takes the predictor's `foresee` at link: every pass
 /// the flows are integrated from each ground as the grounds are laid (#1000), through the kernel's `Foresight`,
 /// neither package importing the other.
@@ -346,10 +338,6 @@ pub fn assemble_seen<'a>(
     } else {
         None
     };
-    #[cfg(all(feature = "belief", feature = "sensing"))]
-    if let (Some(belief), Some(sensing)) = (belief.as_ref(), sensing.as_mut()) {
-        observe(belief, sensing);
-    }
     #[cfg(feature = "prediction")]
     let prediction = holds("prediction").then(orexis_prediction::create::Prediction::default);
     #[cfg(all(feature = "planning", feature = "prediction"))]

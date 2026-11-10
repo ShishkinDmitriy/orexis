@@ -10,10 +10,13 @@
 
 use std::collections::BTreeMap;
 
+use oxigraph::model::{NamedNode, Term};
 use oxsdatatypes::DateTime;
 
 use orexis::events::{Event, Field, Mark, Number, Point};
 use orexis::ontology::local_of;
+
+use crate::ontology::{INTO, OBSERVATION_GRAPH, PERCEIVED, REVISES};
 
 pub const FIELD: &str = "value";
 pub const RAW: &str = "raw";
@@ -187,5 +190,29 @@ mod tests {
         said.sensor_id = None;
         said.feature_id = None;
         assert!(said.point().unwrap().tags.is_empty());
+    }
+}
+
+/// Percepts written that nothing was concluded of yet: said for belief to revise, beneath its revising trigger by
+/// sensing's ontology and in belief's words, the revisions to be sensing's own kind.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Perceived {
+    pub graphs: Vec<String>,
+}
+
+impl Event for Perceived {
+    fn kind(&self) -> Option<&'static str> {
+        Some(PERCEIVED)
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        let mut about: Vec<(&'static str, Term)> = self
+            .graphs
+            .iter()
+            .filter_map(|g| NamedNode::new(g.as_str()).ok())
+            .map(|g| (REVISES, Term::NamedNode(g)))
+            .collect();
+        about.push((INTO, Term::NamedNode(NamedNode::new_unchecked(OBSERVATION_GRAPH))));
+        about
     }
 }

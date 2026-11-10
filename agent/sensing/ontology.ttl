@@ -1,4 +1,5 @@
 @prefix : <http://example.org/orexis/sensing#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix belief: <http://example.org/orexis/belief#> .
 @prefix ssn: <http://www.w3.org/ns/ssn/> .
@@ -6,6 +7,7 @@
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix ssn-system: <http://www.w3.org/ns/ssn/systems/> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -322,3 +324,21 @@
 # observes nothing or is mounted on nothing reports to no agent, and a range whose bounds cannot be
 # compared judges no state. Each says what it is, and onboarding refuses a world any of them reports.
 
+
+#  WHAT SENSING SAYS AND DOES between a percept and belief: sensing is above belief, so its ontology puts its percepts
+#  beneath belief's revising trigger, said in belief's words, and belief's revision pass beneath its own observing
+#  trigger, read in belief's words (knowledge/domain/kernel/policy.md).
+
+sensing:Perceived a owl:Class ; rdfs:subClassOf orexis:Event , belief:RevisingTrigger ; rdfs:label "Perceived" ;
+    rdfs:comment "Percepts written that nothing was concluded of yet - a reading arrived, or one a restart found unrevised: said to belief as the graphs it revises (`belief:revises`) into sensing's own kind (`belief:into sensing:ObservationGraph`), since no reader of the mind is handed what is concluded of a percept." .
+
+sensing:Trigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Trigger" ;
+    rdfs:comment "Sensing's trigger, abstract: an event beneath it is beneath the one trigger below." .
+
+sensing:Observing a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Observing" ;
+    rdfs:comment "Saying each percept a revision pass concluded of as the observation it is, with how long after the percept before it it came." .
+
+sensing:ObservingTrigger a owl:Class ; rdfs:subClassOf sensing:Trigger ; rdfs:label "Observing trigger" ;
+    rdfs:comment "What starts an observing: belief's revision pass, beneath it here, naming the percepts it revised (`belief:revised`)." .
+
+belief:Revised rdfs:subClassOf sensing:ObservingTrigger .
