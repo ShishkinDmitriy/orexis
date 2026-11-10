@@ -84,3 +84,7 @@ pub fn laid_root(me: &str) -> String {
 pub fn laid_graph(me: &str, peer: &str, constraint: &str, n: usize) -> String {
     format!("{}{}/{}/{n}", laid_root(me), local_of(peer), local_of(constraint))
 }
+
+/// A draw won, as the event it is said as, and planning's word for the wants it names.
+pub const DRAW_WON: &str = "http://example.org/orexis/coordination#DrawWon";
+pub const REOPENS: &str = "http://example.org/orexis/planning#reopens";

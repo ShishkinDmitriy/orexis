@@ -14,14 +14,15 @@ use std::rc::Rc;
 
 use orexis::Error;
 use orexis::ontology::SELF_GRAPH;
-use orexis::runtime::{MET, PLANNED, Part, Pass, Starting, UNREACHABLE};
+use orexis::runtime::{Heard, MET, PLANNED, Part, Pass, Starting, UNREACHABLE};
 use orexis::store::{Store, Within, iri};
 
 use crate::Planner;
 use crate::admit::local_of;
-use crate::ontology::PLANNING_ACTIVITY;
+use crate::ontology::{PLANNING_ACTIVITY, PLANNING_TRIGGER, REOPENS};
 
 const PLAN: usize = 0;
+const REOPEN: usize = 1;
 
 /// Whoever walks what planning publishes: a role of this class, or one beneath it.
 const EXECUTOR: &str = "http://example.org/orexis/execution#Executor";
@@ -104,7 +105,18 @@ fn walks(beliefs: &Store) -> Result<bool, Error> {
 impl Part for Planning<'_> {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         starting.every(0.0, PLAN);
+        starting.hears(PLANNING_TRIGGER, REOPEN);
         Ok(())
+    }
+
+    /// What planning's policy does of a trigger: keep the walking wants it names to search again, and ask for a pass.
+    fn heard_event(&mut self, _job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        let wants: Vec<String> = event.all(REOPENS).iter().map(|w| w.as_str().to_string()).collect();
+        if !wants.is_empty() {
+            self.planner.borrow_mut().reopen(wants);
+            pass.again();
+        }
+        Ok(Vec::new())
     }
 
     fn watch(&self) -> Option<orexis::events::Watch> {
