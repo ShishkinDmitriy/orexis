@@ -487,6 +487,7 @@ fn the_history_part_marks_an_event_of_a_class_beneath_incident_and_no_other() {
         plan: "http://example.org/test#plan".into(),
         want: "http://example.org/test#want".into(),
         desire: None,
+        derived_from: None,
         scope: None,
         passes: None,
         weighed: None,

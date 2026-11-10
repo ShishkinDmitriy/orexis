@@ -213,8 +213,36 @@ execution:StepTaken a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Ste
 execution:StepAnswered a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Step answered" ;
     rdfs:comment "The verdict on an act: the present came to hold what its step predicted (`execution:landed` true), or the patience ran out on it, or the want it was kept below ended undone — and then an `execution:StepFailed` too." .
 
+#  WHAT EXECUTION DOES OVER A STRETCH OF TIME, each a `prov:Activity` its policy starts, and each with a trigger of its
+#  own: the events a higher package's ontology puts beneath that trigger start that activity and no other, and every
+#  activity is a span to whoever traces the agent (knowledge/domain/kernel/policy.md).
+
+execution:Trigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Trigger" ;
+    rdfs:comment "Execution's trigger, abstract: an event beneath it is beneath one of the triggers below, each of one activity, and nothing is put beneath it alone. Execution names no word above it; a higher package's events say what they are about in execution's words (knowledge/domain/kernel/policy.md)." .
+
 execution:Walking a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Walking" ;
-    rdfs:comment "A walk of the intentions, an activity execution's part begins and ends: every head due taken, every step answered or out of patience (packages-meet-by-events-policies-and-activities)." .
+    rdfs:comment "A walk of the intentions: every head due taken, every step answered or out of patience (packages-meet-by-events-policies-and-activities)." .
+
+execution:WalkingTrigger a owl:Class ; rdfs:subClassOf execution:Trigger ; rdfs:label "Walking trigger" ;
+    rdfs:comment "What starts a walk. Nothing is beneath it yet: a walk is started by the pass's timer and by belief's word that the present changed, until that word is an event (#1119)." .
+
+execution:Adopting a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Adopting" ;
+    rdfs:comment "An intention adopting a plan: the plan's steps tagged as the intention's, and each written as a committed step." .
+
+execution:AdoptingTrigger a owl:Class ; rdfs:subClassOf execution:Trigger ; rdfs:label "Adopting trigger" ;
+    rdfs:comment "What starts an adopting: an event naming the plan an intention adopts (`execution:adopts`), the want it pursues (`execution:pursues`) and the desire that want was derived from (`prov:wasDerivedFrom`)." .
+
+execution:Superseding a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Superseding" ;
+    rdfs:comment "Ending an intention after its step in flight, since a plan replaced its untaken steps (knowledge/domain/execution/commitment.md)." .
+
+execution:SupersedingTrigger a owl:Class ; rdfs:subClassOf execution:Trigger ; rdfs:label "Superseding trigger" ;
+    rdfs:comment "What starts a superseding: an event naming the step in flight an intention ends after (`execution:endsAfter`) and the want the replacing plan pursues (`execution:pursues`)." .
+
+execution:Resolving a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Resolving" ;
+    rdfs:comment "Ending the unbegun intentions that pursue a want, with an outcome." .
+
+execution:ResolvingTrigger a owl:Class ; rdfs:subClassOf execution:Trigger ; rdfs:label "Resolving trigger" ;
+    rdfs:comment "What starts a resolving: an event naming the want (`execution:pursues`) and the outcome its unbegun intentions end with (`execution:outcome`)." .
 
 execution:IntentionResolved a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Intention resolved" ;
     rdfs:comment "An intention ended, carrying it as it ended — the want it pursued, its `execution:outcome`." .

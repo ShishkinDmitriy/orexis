@@ -305,11 +305,15 @@ fn beaten(top: &orexis::store::Row) -> Result<bool, Error> {
 /// The local name of the desire `want` was derived under in `store`, or None — for a want the world authored, or a
 /// step kept below.
 fn desire_of(store: &Store, want: &str) -> Result<Option<String>, Error> {
+    Ok(derived_from(store, want)?.map(|d| local_of(&d)))
+}
+
+/// The desire `want` was derived under in `store`, or None.
+fn derived_from(store: &Store, want: &str) -> Result<Option<String>, Error> {
     Ok(store
         .rows(&bind(DESIRE_OF_Q, &[("want", Value::iri(want))])?, &[])?
         .first()
-        .and_then(|r| iri(r, "d"))
-        .map(|d| local_of(&d)))
+        .and_then(|r| iri(r, "d")))
 }
 
 /// What the imaginarium of `scope` holds now.
@@ -832,7 +836,11 @@ impl<'a> Planner<'a> {
                 .iter()
                 .filter_map(|r| iri(r, "for"))
                 .collect();
-            self.reached.extend(met_now.intersection(walking).cloned());
+            for met in met_now.intersection(walking) {
+                if self.reached.insert(met.clone()) && self.watch.connected() {
+                    self.watch.emit(&crate::events::WantReached { want: met.clone(), at });
+                }
+            }
             let reached: BTreeSet<String> = met_now.difference(walking).cloned().collect();
             let opens: BTreeMap<String, DateTime> = walking
                 .iter()
@@ -970,6 +978,7 @@ impl<'a> Planner<'a> {
             out.push(PlanPublished {
                 plan: plan.clone(),
                 desire: desire_of(store, &want)?,
+                derived_from: derived_from(store, &want)?,
                 scope: Some(local_of(scope)),
                 passes: Some(tally.map_or(0, |(_, n)| n) as f64),
                 weighed: Some(spent(store, &want, memo)? as f64),

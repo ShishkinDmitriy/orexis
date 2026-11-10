@@ -30,7 +30,9 @@ such an agent does not yet end, since a plan published counts as walked (#928).
   `reached`, when planning says its want is met; **`end_at`** ends one `failed`, when planning says the
   head about to be taken is blocked; **`supersede_after`** ends one `superseded` once its step in flight is answered,
   when a reconsideration replaced the rest ([commitment](/domain/execution/commitment.md)), closing the
-  untaken steps' windows at once; every intention that ends is an event planning hears
+  untaken steps' windows at once. `adopt`, `end_for` and `supersede_after` are each an activity - adopting, resolving,
+  superseding - that execution's policy starts for an event beneath the activity's trigger, which names in execution's words what it is about: planning's plan published, want reached and plan superseded, put
+  there by planning's ontology, so no link hands them over ([policy](/domain/kernel/policy.md)); every intention that ends is an event planning hears
   ([planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
 - **`tick(now)`** hands every standing intention whose head [step](/domain/execution/step.md) is due
   — `execution:notBefore` past — to the queue, and for a head already taken asks whether the world

@@ -28,15 +28,17 @@ since #1118, nothing that decides.
 happened, and that is all an event is. A more specific event may be said at the same instant, naming the one it
 specifies (`orexis:specifies`): a message arrived, and at that instant a reading of a sensor arrived.
 
-**A policy decides, and what it starts is an activity.** Each package declares a trigger class and hears the events
-beneath it ([policy](/domain/kernel/policy.md)); it judges, reading the store, whether they call for anything, and starts
-an [activity](/domain/kernel/activity.md) if they do. An activity takes time. Its start and its end are events, triggered
+**A policy decides, and what it starts is an activity.** Each activity a package declares, a `prov:Activity`, has a trigger
+class of its own beneath the package's abstract one, and the package hears the events beneath each
+([policy](/domain/kernel/policy.md)); it judges, reading the store, whether they call for anything, and starts that
+[activity](/domain/kernel/activity.md) if they do, so `planning:Planning` is started by `planning:PlanningTrigger` and a
+package with three activities declares three triggers. Every activity is a span. An activity takes time. Its start and its end are events, triggered
 by and naming what started it, and those events may trigger other packages. What happens inside it is said as events
 within it.
 
 **Who hears what is the vocabulary's, and the higher ontology says it.** An event is beneath a package's trigger by an
 `rdfs:subClassOf` axiom in whichever of the two packages is higher, so planning's ontology puts belief's change beneath
-planning's trigger and its own reached want beneath execution's, and no lower package names a word above it. A timer's
+planning's trigger and its own reached want beneath execution's resolving trigger, and no lower package names a word above it. A timer's
 alarm and a request to plan are addressed to one part, and are no class's.
 
 **An event names what happened and carries no facts to act on.** What a policy decides it reads from the beliefs, which
@@ -115,5 +117,11 @@ writes what the person stated and says `translation:Conversed`.
   event named where it is said rather than where the journal keeps it (#1121 does).
 - **Exactly where time changes what planning concludes** is assumed to be the start of a ground; a forecast's end is to
   be checked before planning stops running each pass, and the poll stays as a ceiling until it is.
+- **A plan is heard published, not its graph written**: execution adopts on `planning:PlanPublished`, which names the
+  plan and the want, rather than on the graph's kind, which would make execution read planning's words to find the
+  want (#1119 step 4).
+- **The check of a head stays a call until a hearer can hold the store**: the watch's hearers live as long as the
+  process, and the Planner borrows the store, so planning cannot answer `execution:Taking` from one; it is asked so
+  once the store is shared (#1119 step 7), the one link left between the two.
 - **A head asked and never answered**: an executor with no planner in a test must not wait for an answer nobody gives,
   so saying `execution:Taking` answers whether anybody hears it.
