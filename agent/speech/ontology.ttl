@@ -2,6 +2,7 @@
 @prefix speech: <http://example.org/orexis/speech#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
@@ -110,3 +111,15 @@
     rdfs:label "channel" ;
     rdfs:comment "What a chat's prose goes through: a thing of the carrier's own vocabulary, whose type is the carrier - a topic of the bus, a contact point with an email, later a chat of a messaging service. Speech names no carrier; the translator picks one by the channel's type, and onboarding names a topic `chats/<chat>` and grants it to the translator and to every client acting on behalf of a participant." .
 
+
+#  WHAT SPEECH DOES OVER A STRETCH OF TIME, a `prov:Activity`, and its trigger: an event a package above speech puts
+#  beneath it, in its own ontology and in speech's words, starts a speaking (knowledge/domain/kernel/policy.md).
+
+speech:Trigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Trigger" ;
+    rdfs:comment "Speech's trigger, abstract: an event beneath it is beneath the one trigger below." .
+
+speech:Speaking a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Speaking" ;
+    rdfs:comment "Telling statements the agent already believes it said to the agents they are to: each read back from the store as it was said - its graph, the kinds it says it is and its period - and told through whoever reaches a peer." .
+
+speech:SpeakingTrigger a owl:Class ; rdfs:subClassOf speech:Trigger ; rdfs:label "Speaking trigger" ;
+    rdfs:comment "What starts a speaking: an event naming each statement to tell (`speech:statement`), which whoever says it has already written with speech's `said`, and each agent it is to (`speech:to`). The event names them; the statements are in the store." .

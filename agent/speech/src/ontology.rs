@@ -3,6 +3,11 @@
 
 pub const SPEECH: &str = "http://example.org/orexis/speech#";
 pub const STATEMENT_GRAPH: &str = "http://example.org/orexis/speech#StatementGraph";
+/// What speech does as an activity, what starts it, and what that names: each statement, each agent it is to.
+pub const SPEAKING: &str = "http://example.org/orexis/speech#Speaking";
+pub const SPEAKING_TRIGGER: &str = "http://example.org/orexis/speech#SpeakingTrigger";
+pub const STATEMENT: &str = "http://example.org/orexis/speech#statement";
+pub const TO: &str = "http://example.org/orexis/speech#to";
 pub const EXTRACTION: &str = "http://example.org/orexis/speech#Extraction";
 
 /// Where what the extractions conclude of `statement` is kept: a belief derived from it.

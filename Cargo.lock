@@ -874,6 +874,7 @@ dependencies = [
  "getrandom 0.3.4",
  "log",
  "orexis",
+ "orexis-speech",
  "oxigraph",
  "oxsdatatypes",
  "sha2",

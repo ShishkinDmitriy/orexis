@@ -44,7 +44,10 @@ entity it names is what started the activity. And belief's `belief:Revised` is b
 their revisions are (`belief:revises`, `belief:into`), and `belief:Revised` is beneath its own
 `sensing:ObservingTrigger`, so a percept is said as an observation once it is revised. Coordination's
 `coordination:DrawWon` is beneath `planning:PlanningTrigger`, naming the walking wants to plan again
-(`planning:reopens`). The others are declared as their policies are built (#1119).
+(`planning:reopens`), and its `coordination:Told` beneath `speech:SpeakingTrigger`, naming statements
+it already believes it said (`speech:statement`) and the peer (`speech:to`): the event names them, and
+speech reads each back from the store as it was said. The others are declared as their policies are built
+(#1119).
 
 **An addressed event, by who asked for it.** A timer alarms for the part that set it, and a request
 to plan is planning's alone. Put beneath a trigger class, every package's timer would wake every

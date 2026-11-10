@@ -222,3 +222,6 @@
 
 coordination:DrawWon a owl:Class ; rdfs:subClassOf orexis:Event , planning:PlanningTrigger ; rdfs:label "Draw won" ;
     rdfs:comment "A draw the agent concluded it has won: said to planning as the walking wants whose plans change a value on the key of the constraint the draw was over (`planning:reopens`), since its plan yielded while the draw stood undecided and winning makes no world of it impossible, only slower." .
+
+coordination:Told a owl:Class ; rdfs:subClassOf orexis:Event , speech:SpeakingTrigger ; rdfs:label "Told" ;
+    rdfs:comment "A question or an answer said to a peer, already believed as the agent's own statements by speech's `said`: said to speech, beneath its speaking trigger since coordination is above speech, as the statements (`speech:statement`) and the peer they are to (`speech:to`)." .
