@@ -801,6 +801,8 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
         assert "INFLUX_HISTORY_URL" in text, path
         monitored = METRICS in told[path.parent.name]
         assert ("INFLUX_METRICS_URL" in text) == ("influx-metrics.env" in text) == (compose.INTERVAL_KEY in text) == monitored, path
+        # the tracer is told where metrics are: both are the admins' instrumentation, opted into by the world
+        assert ("OTLP_ENDPOINT" in text) == monitored, path
         assert not re.search(r"\bINFLUX_(URL|ORG|BUCKET|TOKEN)\b", text), path
 
 
@@ -846,9 +848,13 @@ def test_history_is_served_by_one_store_and_metrics_by_one_or_by_none(tmp_path, 
     (lambda text: text + '\n:second a onboarding:Model ; schema:url "https://elsewhere" .\n',
      "second: is a model beside http://example.org/orexis/installation#model"),
     (lambda text: text.replace('"https://api.anthropic.com"', '"http://api.anthropic.com"'), "model: a model answers at one https:// url"),
+    (lambda text: text + '\n:second a onboarding:Tracer ; schema:url "http://localhost:4319" ; onboarding:image "i" .\n',
+     "tracer: is a tracer beside http://example.org/orexis/installation#second"),
+    (lambda text: text.replace('"docker.io/grafana/tempo:2.6.1" .', '"docker.io/grafana/tempo:2.6.1" , "tempo:3" .'),
+     "tracer: a tracer runs one image"),
 ], ids=["two-stores", "no-organisation", "two-images", "a-view-in-the-clear", "a-store-over-tls", "two-retentions",
         "a-retention-in-words", "a-window-in-words", "two-pools", "a-pool-for-nothing", "a-pool-url-with-no-port",
-        "two-models", "a-model-in-the-clear"])
+        "two-models", "a-model-in-the-clear", "two-tracers", "a-tracer-of-two-images"])
 def test_what_the_installation_states_is_held_to_its_requirements(tmp_path, monkeypatch, edit, said):
     """`installation.py` refused each of these by hand, in a reader of its own for each; each is a
     shape of onboarding's own now, judged once as the document is read, so every tool reading the

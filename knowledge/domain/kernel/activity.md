@@ -41,7 +41,8 @@ are said the same way wherever it ran.
 
 The journal keeps the starts and ends with every other event, so the history view can draw an
 activity as the stretch between them. A tracing sink on the watch turns the same events into spans -
-an activity a span, an activity inside another a child span, the events that triggered it the span's
-links - so the dependencies between packages can be seen. No package imports the tracing; it hears the
+an activity a span, an activity inside another a child span, an event said within it an event on the
+span, and what triggered it the span's attributes, until a trigger's generation names the activity
+that made it and can be a link - so the dependencies between packages can be seen (`agent/spans/`). No package imports the tracing; it hears the
 events as history and metrics do
 ([packages-meet-by-events-policies-and-activities](/decisions/packages-meet-by-events-policies-and-activities.md)).
