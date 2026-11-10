@@ -140,10 +140,12 @@ pub fn present(beliefs: &Store, revised: &[String], changed: &[String]) -> Resul
 impl Execution<'_> {
     fn walk(&mut self, pass: &mut Pass<'_>) -> Result<(), Error> {
         self.queued = false;
+        let activity = pass.begin(crate::ontology::WALKING, &[]);
         let mut executor = self.executor.borrow_mut();
         if executor.walk(pass.now)? > 0 {
             pass.again();
         }
+        pass.end(activity);
         self.walked_at = Some(pass.now);
         self.since = executor.intentions.len()?;
         Ok(())

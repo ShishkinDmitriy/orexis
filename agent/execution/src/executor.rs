@@ -2132,10 +2132,9 @@ GRAPH <http://example.org/test#catalogue> {{
         let journal =
             std::sync::Arc::new(orexis::journal::Journal::new(None, 600.0, std::sync::Arc::new(now)).unwrap());
         let kept = journal.clone();
-        x.watch.connect(move |event| {
-            let entry = orexis::events::mint();
-            if let Some(triples) = event.statements(&entry) {
-                kept.record(&entry, triples, event.at(), false).unwrap();
+        x.watch.connect(move |event, entry| {
+            if let Some(triples) = event.statements(entry) {
+                kept.record(entry, triples, event.at(), false).unwrap();
             }
         });
         journal
@@ -2228,7 +2227,7 @@ SELECT ?kind ?taken ?landed ?failed ?action ?disk ?to ?want WHERE {{ GRAPH ?e {{
         let journal = heard(&mut x);
         let verdicts = std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));
         let kept = verdicts.clone();
-        x.watch.connect(move |e| {
+        x.watch.connect(move |e, _| {
             if let Some(v) = orexis::events::as_of::<StepAnswered>(e) {
                 kept.borrow_mut().push(v.clone());
             }

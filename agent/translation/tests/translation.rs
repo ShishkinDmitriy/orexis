@@ -923,7 +923,7 @@ fn a_conversation_says_what_it_spent_and_what_was_written_called_and_answered_wh
     let spent: Rc<RefCell<Vec<Translated>>> = Rc::default();
     let conversed: Rc<RefCell<Vec<Conversed>>> = Rc::default();
     let (a, b) = (spent.clone(), conversed.clone());
-    watch.connect(move |e| {
+    watch.connect(move |e, _| {
         if let Some(t) = as_of::<Translated>(e) {
             a.borrow_mut().push(t.clone());
         }

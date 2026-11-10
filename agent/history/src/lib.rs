@@ -1,7 +1,7 @@
 //! HISTORY, as `agent/history/create.py` writes it: created where a history sink is loaded or a journal is kept, it
 //! hears every event the agent's parts say and writes what each answers, one at a time as they happen — the point it
 //! answers to the history sink, which the series store draws, and the triples it states to the journal, as an entry
-//! named by a node minted for it, an incident where the entry's class is beneath `orexis:Incident` in the agent's
+//! named by the name it was said under, an incident where the entry's class is beneath `orexis:Incident` in the agent's
 //! vocabulary. An event answering neither is passed over. A store that refuses is said in the log and costs the agent
 //! nothing.
 
@@ -11,7 +11,7 @@ use std::sync::Arc;
 use oxigraph::model::Term;
 
 use orexis::Error;
-use orexis::events::{RDF_TYPE, Watch, mint};
+use orexis::events::{RDF_TYPE, Watch};
 use orexis::journal::Journal;
 use orexis::ontology::BELIEF;
 use orexis::runtime::{Part, Pass};
@@ -45,12 +45,12 @@ impl History {
     /// The part, hearing every event `watch` is said, writing points to `sink` and triples to `journal`, each an
     /// incident where its class is one of `incidents`.
     pub fn new(watch: &Watch, sink: Option<Sink>, journal: Option<Arc<Journal>>, incidents: BTreeSet<String>) -> Self {
-        watch.connect(move |event| {
+        watch.connect(move |event, named| {
             if let (Some(sink), Some(point)) = (sink.as_ref(), event.point()) {
                 sink.write(&[point]);
             }
             if let Some(journal) = journal.as_ref() {
-                let node = mint();
+                let node = named.clone();
                 if let Some(triples) = event.statements(&node) {
                     let incident = triples.iter().any(|t| {
                         t.subject == node.clone().into()

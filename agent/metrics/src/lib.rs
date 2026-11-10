@@ -204,7 +204,7 @@ impl Metrics {
     pub fn new(window: Window, watch: &Watch) -> Self {
         let window = Rc::new(RefCell::new(window));
         let heard = window.clone();
-        watch.connect(move |event| {
+        watch.connect(move |event, _| {
             let mut window = heard.borrow_mut();
             window.tally(event);
             if event.metric() == Some(PASS_METRIC) && window.due() {

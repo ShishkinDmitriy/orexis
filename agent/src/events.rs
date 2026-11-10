@@ -91,6 +91,16 @@ pub trait Event: Any {
     fn at(&self) -> Option<DateTime> {
         None
     }
+
+    /// The class it is an instance of, for a part hearing events by class: None where nothing may hear it so.
+    fn kind(&self) -> Option<&'static str> {
+        None
+    }
+
+    /// The activity it starts or ends, and that activity's class, where it is a start or an end.
+    fn activity(&self) -> Option<(&NamedNode, &'static str)> {
+        None
+    }
 }
 
 /// Whether an event marking `marks` is counted: it marks values or flags, or tags alone.
@@ -100,9 +110,10 @@ pub fn counted(marks: &[(&'static str, Mark)]) -> bool {
     valued || tags
 }
 
-type Hearer = Rc<dyn Fn(&dyn Event)>;
+type Hearer = Rc<dyn Fn(&dyn Event, &NamedNode)>;
 
-/// Whoever watches one agent: every event its parts say, heard by each hearer connected, at once, on the one thread —
+/// Whoever watches one agent: every event its parts say, named as it is said and heard by each hearer connected, at
+/// once, on the one thread, so the journal keeps it and a later event names it by one IRI —
 /// and the instant the pass stands at, which the runtime says as each drain begins, for an event said by a part that
 /// is handed no pass, so nothing reads the clock for it.
 #[derive(Clone, Default)]
@@ -119,8 +130,8 @@ impl Watch {
         self.1.set(Some(at));
     }
 
-    /// Call `hearer` with every event said from here on.
-    pub fn connect(&self, hearer: impl Fn(&dyn Event) + 'static) {
+    /// Call `hearer` with every event said from here on, and the name it was said under.
+    pub fn connect(&self, hearer: impl Fn(&dyn Event, &NamedNode) + 'static) {
         self.0.borrow_mut().push(Rc::new(hearer));
     }
 
@@ -129,12 +140,17 @@ impl Watch {
         !self.0.borrow().is_empty()
     }
 
-    /// Say `event` to every hearer.
-    pub fn emit(&self, event: &dyn Event) {
+    /// Say `event` to every hearer, under a name minted for it: the name, where anybody heard.
+    pub fn emit(&self, event: &dyn Event) -> Option<NamedNode> {
         let hearers: Vec<Hearer> = self.0.borrow().clone();
-        for hearer in hearers {
-            hearer(event);
+        if hearers.is_empty() {
+            return None;
         }
+        let named = mint();
+        for hearer in hearers {
+            hearer(event, &named);
+        }
+        Some(named)
     }
 }
 
@@ -290,10 +306,10 @@ mod tests {
         assert!(!watch.connected());
         let heard = Rc::new(RefCell::new(Vec::new()));
         let kept = heard.clone();
-        watch.connect(move |e| kept.borrow_mut().push(e.metric()));
+        watch.connect(move |e, named| kept.borrow_mut().push((e.metric(), named.clone())));
         assert!(watch.connected());
-        watch.emit(&Counted);
-        assert_eq!(*heard.borrow(), [Some("counted")]);
+        let named = watch.emit(&Counted).expect("somebody heard");
+        assert_eq!(*heard.borrow(), [(Some("counted"), named)]);
         assert!(as_of::<Counted>(&Counted).is_some());
     }
 

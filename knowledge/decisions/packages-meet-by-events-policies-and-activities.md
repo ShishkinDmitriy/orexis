@@ -110,8 +110,9 @@ writes what the person stated and says `translation:Conversed`.
 
 # Seams left open
 
-- **Spans need an event's name before the journal keeps it.** The history part mints an entry's IRI as it writes, and
-  `orexis:triggeredBy` needs it when the next activity starts, so the IRI is minted where the event is said.
+- **A trigger is an entity, and a span's link is the entity's generation.** PROV makes a start's trigger the thing an
+  event was about (`prov:entity`), so a tracer links a span to the event that generated that thing, which needs the
+  event named where it is said rather than where the journal keeps it (#1121 does).
 - **Exactly where time changes what planning concludes** is assumed to be the start of a ground; a forecast's end is to
   be checked before planning stops running each pass, and the poll stays as a ceiling until it is.
 - **A head asked and never answered**: an executor with no planner in a test must not wait for an answer nobody gives,
