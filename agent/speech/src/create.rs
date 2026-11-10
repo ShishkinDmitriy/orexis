@@ -13,18 +13,19 @@ use orexis::bind::{Value, bind};
 use orexis::document::Document;
 use orexis::events::Watch;
 use orexis::ontology::RECEIVED;
-use orexis::runtime::{Part, Pass, Starting};
+use orexis::runtime::{Heard as HeardEvent, Part, Pass, Starting};
 use orexis::store::{Store, iri};
-use oxigraph::model::{NamedNode, Triple};
+use oxigraph::model::{BlankNode, GraphName, NamedNode, Quad, Triple};
 
 use crate::events::{Heard, Said};
 
 use crate::extract::extract;
-use crate::ontology::STATEMENT_GRAPH;
+use crate::ontology::{SPEAKING, SPEAKING_TRIGGER, STATEMENT, STATEMENT_GRAPH, TO};
 use crate::said::said;
 
 const STATED: usize = 0;
 const EXTRACTED: usize = 1;
+const SPEAK: usize = 2;
 
 /// EVERY STATEMENT NOTHING WAS EXTRACTED FROM YET: one no graph says it was derived from.
 const UNEXTRACTED_Q: &str = "
@@ -32,6 +33,13 @@ SELECT ?g WHERE { GRAPH $cat { ?g a speech:StatementGraph FILTER NOT EXISTS { ?b
 
 /// HOW A STATEMENT ARRIVED, and THE KINDS IT SAYS IT IS: what is said of it.
 const ARRIVAL_Q: &str = "SELECT ?arrival WHERE { GRAPH $cat { $graph orexis:arrivedBy ?arrival } }";
+/// A STATEMENT'S PERIOD, as it was said.
+const PERIOD_Q: &str = "
+SELECT ?start ?end WHERE { GRAPH $cat { $graph dcterms:temporal ?p OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } LIMIT 1";
+const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+const TEMPORAL: &str = "http://purl.org/dc/terms/temporal";
+const START: &str = "http://example.org/orexis#start";
+const END: &str = "http://example.org/orexis#end";
 const KINDS_Q: &str = "
 SELECT ?k WHERE { GRAPH $cat { $graph a ?k FILTER(?k NOT IN (speech:StatementGraph, orexis:Graph)) } } ORDER BY ?k";
 
@@ -76,9 +84,15 @@ impl Speaker<'_> {
     /// Believe `document` as the agent said it, and tell it to every agent it is `to`; the graphs believed.
     pub fn say(&self, document: &Document, to: &[String]) -> Result<Vec<String>, Error> {
         let written = said(&self.beliefs, &self.me, document)?;
+        self.tell_said(document, &written, to)?;
+        Ok(written)
+    }
+
+    /// Say that the statements `written` were said to `to`, and tell `document` to each.
+    fn tell_said(&self, document: &Document, written: &[String], to: &[String]) -> Result<(), Error> {
         let watch = self.watch.borrow().clone();
         if watch.connected() {
-            for graph in &written {
+            for graph in written {
                 let (kinds, said) = described(&self.beliefs, graph)?;
                 watch.emit(&Said {
                     statement: graph.clone(),
@@ -95,8 +109,84 @@ impl Speaker<'_> {
                 tell(agent, &payload)?;
             }
         }
-        Ok(written)
+        Ok(())
     }
+}
+
+/// THE STATEMENTS `graphs` AS THEY WERE SAID, read back from the store: each graph's contents, the kinds it says it
+/// is - the most specific, since the store wrote every kind each is beneath and the statement kind beside them - and
+/// its period, where it says one.
+pub fn document_of(beliefs: &Store, graphs: &[String]) -> Result<Document, Error> {
+    let mut quads = Vec::new();
+    let Some(cat) = beliefs.catalogue()? else {
+        return Ok(Document::of_quads(quads));
+    };
+    let rdf_type = NamedNode::new_unchecked(RDF_TYPE);
+    for graph in graphs {
+        let g = NamedNode::new(graph.as_str()).map_err(|e| Error::Evaluation(e.to_string()))?;
+        quads.extend(
+            beliefs
+                .engine()
+                .quads_for_pattern(None, None, None, Some(g.as_ref().into()))
+                .flatten(),
+        );
+        let kinds: Vec<String> = beliefs
+            .rows(
+                &bind(
+                    KINDS_Q,
+                    &[("cat", Value::iri(cat.as_str())), ("graph", Value::iri(graph))],
+                )?,
+                &[],
+            )?
+            .iter()
+            .filter_map(|r| iri(r, "k"))
+            .collect();
+        let mut beneath = Vec::new();
+        for kind in &kinds {
+            beneath.push(beliefs.closed(kind)?);
+        }
+        for (i, kind) in kinds.iter().enumerate() {
+            let above_another = kinds
+                .iter()
+                .enumerate()
+                .any(|(j, other)| j != i && other != kind && beneath[j].contains(kind));
+            if !above_another {
+                quads.push(Quad::new(
+                    g.clone(),
+                    rdf_type.clone(),
+                    NamedNode::new_unchecked(kind.as_str()),
+                    GraphName::DefaultGraph,
+                ));
+            }
+        }
+        let periods = beliefs.rows(
+            &bind(
+                PERIOD_Q,
+                &[("cat", Value::iri(cat.as_str())), ("graph", Value::iri(graph))],
+            )?,
+            &[],
+        )?;
+        if let Some(row) = periods.first() {
+            let p = BlankNode::default();
+            quads.push(Quad::new(
+                g.clone(),
+                NamedNode::new_unchecked(TEMPORAL),
+                p.clone(),
+                GraphName::DefaultGraph,
+            ));
+            for (key, predicate) in [("start", START), ("end", END)] {
+                if let Some(value) = row.get(key) {
+                    quads.push(Quad::new(
+                        p.clone(),
+                        NamedNode::new_unchecked(predicate),
+                        value.clone(),
+                        GraphName::DefaultGraph,
+                    ));
+                }
+            }
+        }
+    }
+    Ok(Document::of_quads(quads))
 }
 
 /// Speech's part: the speaker, and the beliefs extracted at start for the pass to hand on.
@@ -151,6 +241,7 @@ impl Part for Speech<'_> {
             }
         }
         starting.on(STATEMENT_GRAPH, STATED);
+        starting.hears(SPEAKING_TRIGGER, SPEAK);
         Ok(())
     }
 
@@ -173,6 +264,25 @@ impl Part for Speech<'_> {
             });
         }
         extract(&self.beliefs, graph)
+    }
+
+    fn watch(&self) -> Option<Watch> {
+        Some(self.speaker.watch.borrow().clone())
+    }
+
+    /// What speech's policy does of a trigger: tell each statement it names, as it was said, to each agent it names.
+    fn heard_event(&mut self, _job: usize, event: &HeardEvent, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        let statements: Vec<NamedNode> = event.all(STATEMENT).into_iter().cloned().collect();
+        let to: Vec<String> = event.all(TO).iter().map(|a| a.as_str().to_string()).collect();
+        if statements.is_empty() || to.is_empty() {
+            return Ok(Vec::new());
+        }
+        let graphs: Vec<String> = statements.iter().map(|s| s.as_str().to_string()).collect();
+        let activity = pass.begin(SPEAKING, &statements);
+        let told = document_of(&self.beliefs, &graphs).and_then(|d| self.speaker.tell_said(&d, &graphs, &to));
+        pass.end(activity);
+        told?;
+        Ok(Vec::new())
     }
 
     fn submitted(&mut self) -> Vec<usize> {

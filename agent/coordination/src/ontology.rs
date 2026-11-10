@@ -88,3 +88,8 @@ pub fn laid_graph(me: &str, peer: &str, constraint: &str, n: usize) -> String {
 /// A draw won, as the event it is said as, and planning's word for the wants it names.
 pub const DRAW_WON: &str = "http://example.org/orexis/coordination#DrawWon";
 pub const REOPENS: &str = "http://example.org/orexis/planning#reopens";
+
+/// What was said to a peer, as the event it is said as, and speech's words for what it names.
+pub const TOLD: &str = "http://example.org/orexis/coordination#Told";
+pub const STATEMENT: &str = "http://example.org/orexis/speech#statement";
+pub const TO: &str = "http://example.org/orexis/speech#to";

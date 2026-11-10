@@ -458,13 +458,6 @@ pub fn assemble_seen<'a>(
             Ok(())
         }));
     }
-    #[cfg(all(feature = "speech", feature = "coordination"))]
-    if let (Some(speech), Some(coordination)) = (speech.as_ref(), coordination.as_mut()) {
-        let speaker = speech.speaker.clone();
-        coordination.say = Some(Box::new(move |peer, document| {
-            speaker.say(document, &[peer.to_string()])
-        }));
-    }
     #[cfg(feature = "execution")]
     if let Some(execution) = execution.as_ref() {
         #[allow(unused_mut)]

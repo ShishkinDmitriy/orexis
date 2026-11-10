@@ -1,5 +1,6 @@
-//! COORDINATION'S PART, as `agent/coordination/create.py` makes it (a-package-starts-itself). LINKED, it holds
-//! whoever says what it asks and answers — speech. A draw it has won is said as `coordination:DrawWon`, beneath
+//! COORDINATION'S PART, as `agent/coordination/create.py` makes it (a-package-starts-itself). What it asks
+//! and answers it believes it said by speech's `said`, beneath it, and says as `coordination:Told` beneath speech's
+//! speaking trigger, so speech tells it. A draw it has won is said as `coordination:DrawWon`, beneath
 //! planning's trigger, naming in planning's words the walking wants to plan again. STARTED, it mints the agent's secret where it holds none; answers every question heard as it
 //! arrives; concludes its conflicts and lays what it yields to as each question or answer arrives; and every pass asks
 //! the peers in range, concludes and lays again — after planning and execution, so what it says of its future is what
@@ -24,7 +25,7 @@ use oxsdatatypes::DateTime;
 use crate::answer::answer;
 use crate::ask::ask;
 use crate::conclude::{conclude, conflicts, wins};
-use crate::events::{ASKED, Concluded, DrawWon, FORESEEN, Held, SAID};
+use crate::events::{ASKED, Concluded, DrawWon, FORESEEN, Held, SAID, Told};
 use crate::holdings::{heard, walking_over};
 use crate::lay::{laid, lay};
 use crate::mint::mint;
@@ -36,14 +37,10 @@ const QUESTIONED: usize = 1;
 const ANSWERED: usize = 2;
 const MINTED: usize = 3;
 
-/// Whoever says a document to a peer: the peer and the document; the graphs believed of it.
-pub type Says<'a> = Box<dyn FnMut(&str, &Document) -> Result<Vec<String>, Error> + 'a>;
-
 /// Coordination's part.
-pub struct Coordination<'a> {
+pub struct Coordination {
     beliefs: Store,
     me: String,
-    pub say: Option<Says<'a>>,
     pending: Vec<String>,
     /// Whoever watches the agent.
     pub watch: Watch,
@@ -52,12 +49,11 @@ pub struct Coordination<'a> {
     concluded: Option<Vec<crate::events::Conflict>>,
 }
 
-impl<'a> Coordination<'a> {
-    pub fn new(beliefs: &'a Store, me: &str) -> Self {
+impl Coordination {
+    pub fn new(beliefs: &Store, me: &str) -> Self {
         Coordination {
             beliefs: beliefs.clone(),
             me: me.to_string(),
-            say: None,
             pending: Vec::new(),
             watch: Watch::default(),
             told: BTreeMap::new(),
@@ -66,9 +62,6 @@ impl<'a> Coordination<'a> {
     }
 
     fn said(&mut self, peer: &str, document: &Document, at: DateTime) -> Result<Vec<String>, Error> {
-        if self.say.is_none() {
-            return Ok(Vec::new());
-        }
         if self.watch.connected() {
             let scratch = Store::new(Arc::new(self.beliefs.namespaces().clone()))?;
             scratch
@@ -98,9 +91,6 @@ impl<'a> Coordination<'a> {
                 });
             }
         }
-        let Some(say) = self.say.as_mut() else {
-            return Ok(Vec::new());
-        };
         let graphs: Vec<String> = document.kinds().into_keys().collect();
         log::info!(
             "{}: says {} to {}",
@@ -112,7 +102,12 @@ impl<'a> Coordination<'a> {
                 .join(", "),
             local_of(peer)
         );
-        say(peer, document)
+        let statements = orexis_speech::said::said(&self.beliefs, &self.me, document)?;
+        self.watch.emit(&Told {
+            statements: statements.clone(),
+            to: peer.to_string(),
+        });
+        Ok(statements)
     }
 
     /// Say `event` where what it says differs from what was last said of the same set.
@@ -174,7 +169,7 @@ impl<'a> Coordination<'a> {
     }
 }
 
-impl Part for Coordination<'_> {
+impl Part for Coordination {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         self.pending.extend(mint(&self.beliefs, &self.me)?);
         starting.on(QUESTION_GRAPH, QUESTIONED);

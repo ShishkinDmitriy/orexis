@@ -13,7 +13,7 @@ use oxsdatatypes::DateTime;
 use orexis::events::{Event, RDF_TYPE, boolean, instant, integer, mint, node, triple, typed};
 
 use crate::holdings::Holding;
-use crate::ontology::{COORDINATION, DRAW_WON, REOPENS};
+use crate::ontology::{COORDINATION, DRAW_WON, REOPENS, STATEMENT, TO, TOLD};
 
 pub const ASKED: &str = "asked";
 pub const SAID: &str = "said";
@@ -140,5 +140,33 @@ impl Event for DrawWon {
             .filter_map(|w| NamedNode::new(w.as_str()).ok())
             .map(|w| (REOPENS, Term::NamedNode(w)))
             .collect()
+    }
+}
+
+/// What coordination said to a peer, already believed as the agent's own statements: said to speech, beneath its
+/// speaking trigger by coordination's ontology and in speech's words, as the statements (`speech:statement`) and the
+/// peer they are to (`speech:to`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Told {
+    pub statements: Vec<String>,
+    pub to: String,
+}
+
+impl Event for Told {
+    fn kind(&self) -> Option<&'static str> {
+        Some(TOLD)
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        let mut about: Vec<(&'static str, Term)> = self
+            .statements
+            .iter()
+            .filter_map(|s| NamedNode::new(s.as_str()).ok())
+            .map(|s| (STATEMENT, Term::NamedNode(s)))
+            .collect();
+        if let Ok(peer) = NamedNode::new(self.to.as_str()) {
+            about.push((TO, Term::NamedNode(peer)));
+        }
+        about
     }
 }
