@@ -122,7 +122,7 @@ pub type Hears<'a> = Box<dyn FnMut(&Revised) -> Result<(), Error> + 'a>;
 
 /// The pass over what was written since the last one, within a budget.
 pub struct Deliberator<'a> {
-    beliefs: &'a Store,
+    beliefs: Store,
     pub id: String,
     pub budget: usize,
     /// Rule executions one source's revision may spend in a pass.
@@ -144,7 +144,7 @@ impl<'a> Deliberator<'a> {
             None => stance(beliefs, BUDGET_TERM)?.map_or(BUDGET, |b| b as usize),
         };
         let mut deliberator = Deliberator {
-            beliefs,
+            beliefs: beliefs.clone(),
             id: agent.to_string(),
             budget,
             per_source: revise::BUDGET,
@@ -200,7 +200,7 @@ impl<'a> Deliberator<'a> {
                 };
                 let share = (left as usize).min(self.per_source);
                 let kind = self.queue[i].1.kind.clone();
-                let used = revise(self.beliefs, &source, &read, share, &kind)?;
+                let used = revise(&self.beliefs, &source, &read, share, &kind)?;
                 done.push(source.clone());
                 spent += used;
                 left -= used as i64;
@@ -208,14 +208,14 @@ impl<'a> Deliberator<'a> {
                     //  CUT IN ITS REVISION: the arrivals after it wait for its transitions — where it triggers any.
                     let arrival = &mut self.queue[i].1;
                     arrival.read = Some(read);
-                    waiting = waiting || !trigger(self.beliefs, &source, 0, arrival.done)?.finished;
+                    waiting = waiting || !trigger(&self.beliefs, &source, 0, arrival.done)?.finished;
                     i += 1;
                     continue;
                 }
                 self.queue[i].1.revised = true;
             }
             let budget = if waiting { 0 } else { left.max(0) as usize };
-            let triggered = trigger(self.beliefs, &source, budget, self.queue[i].1.done)?;
+            let triggered = trigger(&self.beliefs, &source, budget, self.queue[i].1.done)?;
             spent += triggered.spent;
             left -= triggered.spent as i64;
             if triggered.spent > 0 && !done.contains(&source) {
@@ -299,7 +299,7 @@ impl<'a> Deliberator<'a> {
             return Ok(());
         }
         if let Some(cat) = self.beliefs.catalogue()? {
-            say_settled(self.beliefs, &cat, &revision_graph(source), settled)?;
+            say_settled(&self.beliefs, &cat, &revision_graph(source), settled)?;
         }
         arrival.said = !settled;
         Ok(())

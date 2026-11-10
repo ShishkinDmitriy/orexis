@@ -168,7 +168,7 @@ pub type Listening = Pin<Box<dyn Future<Output = ()> + Send>>;
 /// words, over the clients the container connected — by the IRI of the broker each is connected to, or one client
 /// standing for them all (`None`).
 pub struct Mqtt<'a> {
-    beliefs: &'a Store,
+    beliefs: Store,
     pub me: String,
     pub clients: Vec<(Option<String>, Box<dyn Client + 'a>)>,
     pub inbox: Inbox,
@@ -190,7 +190,7 @@ fn no_wildcard(pattern: &str) -> bool {
 impl<'a> Mqtt<'a> {
     pub fn new(beliefs: &'a Store, me: &str, clients: Vec<(Option<String>, Box<dyn Client + 'a>)>) -> Self {
         Mqtt {
-            beliefs,
+            beliefs: beliefs.clone(),
             me: me.to_string(),
             clients,
             inbox: Inbox::default(),
@@ -262,7 +262,7 @@ impl<'a> Mqtt<'a> {
 
     /// Every sensor the agent reads that publishes on a topic, with each pattern naming it.
     fn topics(&self) -> Result<Vec<(String, String)>, Error> {
-        let mine = sensors(self.beliefs)?;
+        let mine = sensors(&self.beliefs)?;
         if mine.is_empty() {
             return Ok(Vec::new());
         }
@@ -325,7 +325,7 @@ impl<'a> Mqtt<'a> {
             .iter()
             .any(|p| matches(p, topic))
         {
-            return Ok(heard(self.beliefs, &self.me, payload)?
+            return Ok(heard(&self.beliefs, &self.me, payload)?
                 .into_iter()
                 .map(|g| (None, g))
                 .collect());
@@ -354,7 +354,7 @@ impl<'a> Mqtt<'a> {
         }
         let mut written = Vec::new();
         for sensor in mine {
-            for graph in received(self.beliefs, &self.me, &sensor, payload, at)? {
+            for graph in received(&self.beliefs, &self.me, &sensor, payload, at)? {
                 written.push((Some(sensor.clone()), graph));
             }
         }
@@ -366,7 +366,7 @@ impl<'a> Mqtt<'a> {
     pub fn nudge(&mut self, now: DateTime) -> Result<Vec<String>, Error> {
         let mine: BTreeSet<String> = self.topics()?.into_iter().map(|(s, _)| s).collect();
         let mut asked: Vec<String> = Vec::new();
-        for (sensor, _) in lapsed(self.beliefs, now)? {
+        for (sensor, _) in lapsed(&self.beliefs, now)? {
             if mine.contains(&sensor) && !asked.contains(&sensor) {
                 asked.push(sensor);
             }

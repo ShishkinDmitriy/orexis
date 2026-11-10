@@ -69,7 +69,7 @@ impl<'a> Planner<'a> {
             self.blocked.push(step.to_string());
             return Ok(true);
         }
-        let beliefs = self.beliefs;
+        let beliefs = &self.beliefs;
         let head = beliefs.rows(&bind(HEAD_Q, &[("step", Value::iri(step))])?, &[])?;
         let Some(action) = head.first().and_then(|r| iri(r, "action")) else {
             return Ok(false);
@@ -130,7 +130,7 @@ impl<'a> Planner<'a> {
         if !self.holds_a_constraint()? {
             return Ok(None);
         }
-        let beliefs = self.beliefs;
+        let beliefs = &self.beliefs;
         let change = beliefs.rows(&bind(CHANGE_Q, &[("step", Value::iri(step))])?, &[])?;
         let change = change.first();
         let retracts = quads_of(beliefs, change.and_then(|r| iri(r, "retracts")))?;

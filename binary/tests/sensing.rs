@@ -95,12 +95,12 @@ fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_to_the
         vec![(None, Box::new(broker.clone()))],
     );
     let inbox = member.inbox.clone();
-    let clock = Manual::at(now);
+    let clock = Arc::new(Manual::at(now));
     let wiring = Wiring {
         mqtt: Some(member),
         ..Wiring::default()
     };
-    let (mut parts, _) = assemble_seen(&store, "fern", &clock, &loaded, None, wiring).unwrap();
+    let (mut parts, _) = assemble_seen(&store, "fern", clock.clone(), &loaded, None, wiring).unwrap();
     {
         let lent: Vec<(String, &mut dyn Part)> = parts
             .iter_mut()

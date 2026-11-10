@@ -7,7 +7,7 @@
 //! `now` lands where the world's clock stands; a paced clock with no epoch starts at the process's own start.
 
 use std::str::FromStr;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use oxsdatatypes::{DateTime, DayTimeDuration};
@@ -21,6 +21,17 @@ pub trait Clock: Send + Sync {
     /// How long to actually sleep for `seconds` of the agent's time.
     fn real_delay(&self, seconds: f64) -> Duration {
         Duration::from_secs_f64(seconds.max(0.0))
+    }
+}
+
+/// A clock shared is the clock: whoever holds the handle reads the one timeline, for as long as it holds it.
+impl<C: Clock + ?Sized> Clock for Arc<C> {
+    fn now(&self) -> DateTime {
+        (**self).now()
+    }
+
+    fn real_delay(&self, seconds: f64) -> Duration {
+        (**self).real_delay(seconds)
     }
 }
 

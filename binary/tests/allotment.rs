@@ -172,7 +172,7 @@ fn allotment_on(ticks: bool, walk: impl FnOnce(&mut Market<'_, '_>)) {
             assemble_seen(
                 store,
                 name,
-                &clock,
+                Arc::new(clock.clone()),
                 &loaded,
                 None,
                 Wiring {

@@ -44,7 +44,7 @@ pub type Reopens<'a> = Box<dyn FnMut(BTreeSet<String>) + 'a>;
 
 /// Coordination's part.
 pub struct Coordination<'a> {
-    beliefs: &'a Store,
+    beliefs: Store,
     me: String,
     pub say: Option<Says<'a>>,
     pub reopen: Option<Reopens<'a>>,
@@ -59,7 +59,7 @@ pub struct Coordination<'a> {
 impl<'a> Coordination<'a> {
     pub fn new(beliefs: &'a Store, me: &str) -> Self {
         Coordination {
-            beliefs,
+            beliefs: beliefs.clone(),
             me: me.to_string(),
             say: None,
             reopen: None,
@@ -131,7 +131,7 @@ impl<'a> Coordination<'a> {
 
     /// Conclude the conflicts and lay what the agent yields to; a draw won reopens what it decides.
     fn yielded(&mut self, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
-        let (store, me, at) = (self.beliefs, self.me.clone(), pass.now);
+        let (store, me, at) = (&self.beliefs.clone(), self.me.clone(), pass.now);
         let before = wins(store, &me)?;
         let mut written = conclude(store, &me, at)?;
         if self.watch.connected() {
@@ -181,7 +181,7 @@ impl<'a> Coordination<'a> {
 
 impl Part for Coordination<'_> {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
-        self.pending.extend(mint(self.beliefs, &self.me)?);
+        self.pending.extend(mint(&self.beliefs, &self.me)?);
         starting.on(QUESTION_GRAPH, QUESTIONED);
         starting.on(ANSWER_GRAPH, ANSWERED);
         starting.every(0.0, PASS);
@@ -193,7 +193,7 @@ impl Part for Coordination<'_> {
             MINTED => Ok(std::mem::take(&mut self.pending)),
             PASS => {
                 let mut written = Vec::new();
-                for (peer, document) in ask(self.beliefs, &self.me, pass.now)? {
+                for (peer, document) in ask(&self.beliefs, &self.me, pass.now)? {
                     written.extend(self.said(&peer, &document, pass.now)?);
                 }
                 written.extend(self.yielded(pass)?);
@@ -206,7 +206,7 @@ impl Part for Coordination<'_> {
     fn heard(&mut self, job: usize, graph: &str, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
         let mut written = Vec::new();
         if job == QUESTIONED
-            && let Some((peer, document)) = answer(self.beliefs, &self.me, graph, pass.now)?
+            && let Some((peer, document)) = answer(&self.beliefs, &self.me, graph, pass.now)?
         {
             written.extend(self.said(&peer, &document, pass.now)?);
         }

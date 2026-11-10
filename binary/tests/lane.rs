@@ -351,7 +351,7 @@ fn replayed_keeping(
         let (parts, seen) = orexis_agent::assemble_seen(
             store,
             name,
-            &clock,
+            Arc::new(clock.clone()),
             &loaded,
             None,
             Wiring {

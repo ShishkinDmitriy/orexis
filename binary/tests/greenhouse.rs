@@ -108,11 +108,11 @@ struct Grower<'a> {
     broker: Broker,
 }
 
-fn grower<'a>(store: &'a Store, clock: &'a Ticking) -> Grower<'a> {
+fn grower<'a>(store: &'a Store, clock: &Arc<Ticking>) -> Grower<'a> {
     grower_watched(store, clock, orexis_agent::Watching::default())
 }
 
-fn grower_watched<'a>(store: &'a Store, clock: &'a Ticking, watching: orexis_agent::Watching) -> Grower<'a> {
+fn grower_watched<'a>(store: &'a Store, clock: &Arc<Ticking>, watching: orexis_agent::Watching) -> Grower<'a> {
     let loaded = booted(store, tree(), &world(), "grower", noon()).unwrap();
     for package in [
         "belief",
@@ -132,7 +132,7 @@ fn grower_watched<'a>(store: &'a Store, clock: &'a Ticking, watching: orexis_age
         watching,
         ..Wiring::default()
     };
-    let (parts, seen) = assemble_seen(store, "grower", clock, &loaded, None, wiring).unwrap();
+    let (parts, seen) = assemble_seen(store, "grower", clock.clone(), &loaded, None, wiring).unwrap();
     Grower {
         parts,
         seen,
@@ -184,7 +184,7 @@ fn pump(dose: i64) -> (String, Json, bool) {
 
 #[test]
 fn the_grower_listens_to_the_instruments_of_the_bed_it_acts_for() {
-    let (store, clock) = (store(), Ticking(Mutex::new(noon())));
+    let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(noon()))));
     let mut g = grower(&store, &clock);
     let broker = g.broker.clone();
     let _runtime = runtime(&store, &clock, &mut g.parts);
@@ -197,7 +197,7 @@ fn the_grower_listens_to_the_instruments_of_the_bed_it_acts_for() {
 
 #[test]
 fn a_reading_is_written_and_the_bed_believed_dry() {
-    let (store, clock) = (store(), Ticking(Mutex::new(noon())));
+    let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(noon()))));
     let mut g = grower(&store, &clock);
     let inbox = g.inbox.clone();
     let mut runtime = runtime(&store, &clock, &mut g.parts);
@@ -217,7 +217,7 @@ fn a_reading_is_written_and_the_bed_believed_dry() {
 
 #[test]
 fn a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_reading_answers_it() {
-    let (store, clock) = (store(), Ticking(Mutex::new(noon())));
+    let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(noon()))));
     let mut g = grower(&store, &clock);
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     let seen = std::mem::take(&mut g.seen);
@@ -269,7 +269,7 @@ fn foreseen(seen: &Seen<'_>) -> Vec<(DateTime, String)> {
 
 #[test]
 fn a_committed_dose_is_a_flow_the_beds_prediction_accumulates() {
-    let (store, clock) = (store(), Ticking(Mutex::new(noon())));
+    let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(noon()))));
     let mut g = grower(&store, &clock);
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     let seen = std::mem::take(&mut g.seen);
@@ -323,7 +323,7 @@ fn a_committed_dose_is_a_flow_the_beds_prediction_accumulates() {
 
 #[test]
 fn a_cold_bed_is_heated_for_as_long_as_the_gap_takes() {
-    let (store, clock) = (store(), Ticking(Mutex::new(noon())));
+    let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(noon()))));
     let mut g = grower(&store, &clock);
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     let mut runtime = runtime(&store, &clock, &mut g.parts);
@@ -338,7 +338,7 @@ fn a_cold_bed_is_heated_for_as_long_as_the_gap_takes() {
 
 #[test]
 fn a_cold_dry_bed_is_two_wants_planned_apart() {
-    let (store, clock) = (store(), Ticking(Mutex::new(noon())));
+    let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(noon()))));
     let mut g = grower(&store, &clock);
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     let seen = std::mem::take(&mut g.seen);
@@ -372,7 +372,7 @@ fn a_cold_dry_bed_is_two_wants_planned_apart() {
 
 #[test]
 fn a_foreseen_crossing_is_planned_ahead_and_dosed_when_it_arrives() {
-    let (store, clock) = (store(), Ticking(Mutex::new(noon())));
+    let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(noon()))));
     let mut g = grower(&store, &clock);
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     let seen = std::mem::take(&mut g.seen);
@@ -412,7 +412,7 @@ SELECT ?kind ?at ?action ?valve ?subject ?taken ?landed WHERE { GRAPH ?e {
 #[test]
 fn history_holds_every_reading_and_the_journal_the_dose_published_taken_and_landed() {
     use orexis::events::{Field, Point};
-    let (store, clock) = (store(), Ticking(Mutex::new(noon())));
+    let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(noon()))));
     let written: Rc<RefCell<Vec<Point>>> = Rc::default();
     let kept = written.clone();
     let sink = orexis::series::Sink::new(
@@ -525,7 +525,7 @@ fn history_holds_every_reading_and_the_journal_the_dose_published_taken_and_land
 /// as a stop writes it: every window written, as `_unanswered` in `world/greenhouse/tests/test_greenhouse.py` has them.
 fn unanswered() -> (Vec<Vec<orexis::events::Point>>, Broker) {
     use orexis::events::Point;
-    let (store, clock) = (store(), Ticking(Mutex::new(noon())));
+    let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(noon()))));
     let writes: Rc<RefCell<Vec<Vec<Point>>>> = Rc::default();
     let kept = writes.clone();
     let sink = orexis::series::Sink::new(

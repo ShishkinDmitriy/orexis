@@ -124,7 +124,7 @@ fn a_day_in_the_greenhouse_sends_the_commands_the_python_grower_sent() {
     let mut parts = assemble_wired(
         &store,
         "grower",
-        &clock,
+        Arc::new(clock.clone()),
         &loaded,
         None,
         Wiring {

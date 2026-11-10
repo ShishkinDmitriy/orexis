@@ -94,7 +94,7 @@ pub fn check(
             .map(|(c, rows)| (c, rows.into_iter().collect()))
             .collect();
     }
-    let clock = orexis::clock::Manual::at(now);
+    let clock: Arc<dyn Clock> = Arc::new(orexis::clock::Manual::at(now));
     #[allow(unused_variables)]
     let me = orexis::boot::selves(&store)?.into_iter().next().unwrap_or_default();
     let wiring = Wiring {
@@ -115,7 +115,7 @@ pub fn check(
         email: Some(orexis_email::driver::Email::new(&store, &me, Arc::new(Unreachable))),
         ..Wiring::default()
     };
-    assemble_seen(&store, agent, &clock, &checked.loaded, None, wiring)?;
+    assemble_seen(&store, agent, clock, &checked.loaded, None, wiring)?;
     Ok(checked)
 }
 
@@ -206,7 +206,7 @@ pub fn foresee<'a>(
 #[cfg(feature = "execution")]
 pub fn take<'a>(
     store: &'a Store,
-    clock: &'a dyn Clock,
+    clock: Arc<dyn Clock>,
     execution: &orexis_execution::create::Execution<'a>,
     send: Option<orexis_execution::create::Commands<'a>>,
     say: Option<orexis_execution::create::Sayings<'a>>,
@@ -236,13 +236,13 @@ pub struct Watching {
 pub struct Wiring<'a> {
     pub watching: Watching,
     #[cfg(feature = "http")]
-    pub http: Option<orexis_http::driver::Http<'a>>,
+    pub http: Option<orexis_http::driver::Http>,
     #[cfg(feature = "telegram")]
-    pub telegram: Option<orexis_telegram::driver::Telegram<'a>>,
+    pub telegram: Option<orexis_telegram::driver::Telegram>,
     #[cfg(feature = "email")]
-    pub email: Option<orexis_email::driver::Email<'a>>,
+    pub email: Option<orexis_email::driver::Email>,
     #[cfg(feature = "translation")]
-    pub model: Option<std::sync::Arc<dyn orexis_translation::model::Model>>,
+    pub model: Option<Arc<dyn orexis_translation::model::Model>>,
     #[cfg(feature = "mqtt")]
     pub mqtt: Option<orexis_mqtt::driver::Mqtt<'a>>,
     #[cfg(not(feature = "mqtt"))]
@@ -259,7 +259,7 @@ pub type Parts<'a> = Vec<(String, Box<dyn Part + 'a>)>;
 pub fn assemble<'a>(
     store: &'a Store,
     agent: &str,
-    clock: &'a dyn Clock,
+    clock: Arc<dyn Clock>,
     loaded: &[String],
     budget: Option<usize>,
 ) -> Result<Parts<'a>, Error> {
@@ -270,7 +270,7 @@ pub fn assemble<'a>(
 pub fn assemble_wired<'a>(
     store: &'a Store,
     agent: &str,
-    clock: &'a dyn Clock,
+    clock: Arc<dyn Clock>,
     loaded: &[String],
     budget: Option<usize>,
     wiring: Wiring<'a>,
@@ -295,7 +295,7 @@ pub struct Seen<'a> {
 pub fn assemble_seen<'a>(
     store: &'a Store,
     agent: &str,
-    clock: &'a dyn Clock,
+    clock: Arc<dyn Clock>,
     loaded: &[String],
     budget: Option<usize>,
     wiring: Wiring<'a>,
@@ -355,7 +355,7 @@ pub fn assemble_seen<'a>(
     };
     #[cfg(feature = "execution")]
     let execution = if holds("execution") {
-        Some(orexis_execution::create::Execution::new(store, agent, clock)?)
+        Some(orexis_execution::create::Execution::new(store, agent, clock.clone())?)
     } else {
         None
     };
@@ -400,7 +400,7 @@ pub fn assemble_seen<'a>(
     let translation = if holds("translation") {
         let model = model.or_else(|| {
             orexis_translation::model::Anthropic::from_environ(&|n| std::env::var(n).ok())
-                .map(|m| std::sync::Arc::new(m) as std::sync::Arc<dyn orexis_translation::model::Model>)
+                .map(|m| Arc::new(m) as Arc<dyn orexis_translation::model::Model>)
         });
         let mut translator = orexis_translation::create::Translator::new(store, &me, model);
         translator.journal = journal_store;
@@ -523,7 +523,7 @@ pub fn assemble_seen<'a>(
                 Ok(())
             }));
         }
-        take(store, clock, execution, send, say);
+        take(store, clock.clone(), execution, send, say);
     }
     #[cfg(all(feature = "planning", feature = "execution"))]
     if let (Some(planning), Some(execution)) = (planning.as_ref(), execution.as_ref()) {
@@ -615,6 +615,6 @@ pub fn assemble_seen<'a>(
     }
     //  WHAT WATCHES THE AGENT, last, so it is stopped first and writes the last window.
     parts.extend(watchers);
-    let _ = (store, agent, clock, budget, holds);
+    let _ = (store, agent, &clock, budget, holds);
     Ok((parts, seen))
 }

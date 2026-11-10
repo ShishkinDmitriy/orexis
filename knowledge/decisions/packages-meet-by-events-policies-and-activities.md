@@ -121,7 +121,8 @@ writes what the person stated and says `translation:Conversed`.
   plan and the want, rather than on the graph's kind, which would make execution read planning's words to find the
   want (#1119 step 4).
 - **The check of a head stays a call until a hearer can hold the store**: the watch's hearers live as long as the
-  process, and the Planner borrows the store, so planning cannot answer `execution:Taking` from one; it is asked so
-  once the store is shared (#1119 step 7), the one link left between the two.
+  process, and the Planner, which holds the store as a shared handle since step 7's first slice, still borrows what its
+  links lend it - prediction's foresight - so planning cannot answer `execution:Taking` from one; it is asked so once
+  those links are events too (#1119 steps 5 and 7), the one link left between the two.
 - **A head asked and never answered**: an executor with no planner in a test must not wait for an answer nobody gives,
   so saying `execution:Taking` answers whether anybody hears it.

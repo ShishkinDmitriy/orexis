@@ -133,7 +133,7 @@ fn walk(world: &Path, fixture: &str) -> (Drives, BTreeMap<String, (i64, i64)>) {
     let (mut parts, seen) = assemble_seen(
         &store,
         "courier_a",
-        &clock,
+        Arc::new(clock.clone()),
         &loaded,
         None,
         Wiring {

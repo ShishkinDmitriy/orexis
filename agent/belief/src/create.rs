@@ -33,7 +33,7 @@ const BELIEF_Q: &str = "ASK { GRAPH $cat { $g a orexis:BeliefGraph } }";
 /// Belief's part: its deliberator, shared with whoever links to it — a clone is the same part, as a linked part holds it.
 #[derive(Clone)]
 pub struct Belief<'a> {
-    beliefs: &'a Store,
+    beliefs: Store,
     pub deliberator: Rc<RefCell<Deliberator<'a>>>,
     /// The instant the part last stood at, for an arrival a restart queued with nothing said beside it.
     at: Rc<Cell<Option<DateTime>>>,
@@ -42,7 +42,7 @@ pub struct Belief<'a> {
 impl<'a> Belief<'a> {
     pub fn new(beliefs: &'a Store, agent: &str) -> Result<Self, Error> {
         Ok(Belief {
-            beliefs,
+            beliefs: beliefs.clone(),
             deliberator: Rc::new(RefCell::new(Deliberator::new(beliefs, agent, None)?)),
             at: Rc::new(Cell::new(None)),
         })
@@ -63,7 +63,7 @@ impl<'a> Belief<'a> {
 
     /// What a part linked to this one tells it was written mid-act: revised now where it is a belief.
     pub fn hears(&self) -> impl FnMut(&str) -> Result<(), Error> + 'a {
-        let (beliefs, deliberator, at) = (self.beliefs, self.deliberator.clone(), self.at.clone());
+        let (beliefs, deliberator, at) = (self.beliefs.clone(), self.deliberator.clone(), self.at.clone());
         move |graph| {
             let Some(cat) = beliefs.catalogue()? else {
                 return Ok(());
@@ -77,7 +77,7 @@ impl<'a> Belief<'a> {
                 return Ok(());
             }
             let part = Belief {
-                beliefs,
+                beliefs: beliefs.clone(),
                 deliberator: deliberator.clone(),
                 at: at.clone(),
             };

@@ -314,7 +314,7 @@ pub struct Runtime<'p> {
     laps: Option<Laps>,
     /// RAISED TO STOP THE RUN, by a signal the process was sent: the run ends before its next pass, `unfinished`, so
     /// whoever runs it stops every part and the last window is written.
-    pub halt: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
+    pub halt: Option<Arc<std::sync::atomic::AtomicBool>>,
     wake: Wake,
     /// WHAT WAITS ON THE OUTSIDE, there once a part asks for a task; a run with none builds nothing.
     tasks: Option<tokio::runtime::Runtime>,

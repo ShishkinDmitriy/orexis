@@ -19,7 +19,7 @@ const HOLDER: &str = "transport/telegram";
 
 /// The member's part: the member, shared, and the messages handed to the pass.
 pub struct Transport<'a> {
-    pub member: Rc<RefCell<Telegram<'a>>>,
+    pub member: Rc<RefCell<Telegram>>,
     /// Whoever hears the prose a chat's message is: translation, linked — handed it once the member is let go, since
     /// translation carries its answer back through the member.
     pub prose: Option<Hears<'a>>,
@@ -27,7 +27,7 @@ pub struct Transport<'a> {
 }
 
 impl<'a> Transport<'a> {
-    pub fn new(member: Telegram<'a>) -> Self {
+    pub fn new(member: Telegram) -> Self {
         Transport {
             member: Rc::new(RefCell::new(member)),
             prose: None,

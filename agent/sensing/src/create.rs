@@ -69,7 +69,7 @@ pub type Revises<'a> = Box<dyn FnMut(&[String], &str, DateTime) -> Result<(), Er
 
 /// Sensing's part.
 pub struct Sensing<'a> {
-    beliefs: &'a Store,
+    beliefs: Store,
     me: String,
     /// Belief's revision, beneath, where the agent is linked to a deliberator.
     pub revise: Option<Revises<'a>>,
@@ -82,7 +82,7 @@ pub struct Sensing<'a> {
 impl<'a> Sensing<'a> {
     pub fn new(beliefs: &'a Store, agent: &str) -> Result<Self, Error> {
         Ok(Sensing {
-            beliefs,
+            beliefs: beliefs.clone(),
             me: me_of(beliefs, agent)?,
             revise: None,
             watch: Watch::default(),
@@ -107,7 +107,7 @@ impl<'a> Sensing<'a> {
     }
 
     fn missed(&self, now: DateTime) -> Result<(Vec<String>, BTreeSet<String>), Error> {
-        let beliefs = self.beliefs;
+        let beliefs = &self.beliefs;
         let found = missed(beliefs, now)?;
         let silent: BTreeSet<String> = found.iter().map(|(s, _)| s.clone()).collect();
         let holding = beliefs.graphs_of(&[SILENCE_GRAPH], &Within::at(now))?;
@@ -177,7 +177,7 @@ impl<'a> Sensing<'a> {
 
     /// Say the observation `graph` holds, with how long after the percept before it it came.
     fn observation(&self, graph: &str) -> Result<(), Error> {
-        let beliefs = self.beliefs;
+        let beliefs = &self.beliefs;
         let mut read = vec![graph.to_string()];
         read.extend(beliefs.revisions_of(&[graph], OBSERVATION_GRAPH)?);
         let read: Vec<&str> = read.iter().map(String::as_str).collect();

@@ -40,9 +40,9 @@ impl Clock for Ticking {
 }
 
 /// Boot `agent` of `world` and run it until nothing holds it or `passes` are spent: the outcome.
-fn run(store: &Store, world: &Path, agent: &str, clock: &Ticking, passes: usize, budget: Option<usize>) -> String {
+fn run(store: &Store, world: &Path, agent: &str, clock: &Arc<Ticking>, passes: usize, budget: Option<usize>) -> String {
     let loaded = booted(store, tree(), world, agent, clock.now()).unwrap();
-    let mut parts = assemble(store, agent, clock, &loaded, budget).unwrap();
+    let mut parts = assemble(store, agent, clock.clone(), &loaded, budget).unwrap();
     let lent: Vec<(String, &mut dyn Part)> = parts
         .iter_mut()
         .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
@@ -96,7 +96,7 @@ fn stands(store: &Store) -> Vec<(String, i64, i64)> {
 
 #[test]
 fn the_parcel_is_delivered_in_eight_steps_and_the_runtime_stops() {
-    let (store, clock) = (store(), Ticking(Mutex::new(now())));
+    let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(now()))));
     assert_eq!(run(&store, &world("courier"), "courier", &clock, 400, None), MET);
     assert_eq!(
         count(&store, ACTS_Q),
@@ -113,14 +113,14 @@ fn the_parcel_is_delivered_in_eight_steps_and_the_runtime_stops() {
 
 #[test]
 fn a_budget_that_cuts_the_search_short_is_finished_by_the_passes_after() {
-    let (store, clock) = (store(), Ticking(Mutex::new(now())));
+    let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(now()))));
     assert_eq!(run(&store, &world("courier"), "courier", &clock, 200, Some(16)), MET);
     assert_eq!(count(&store, ACTS_Q), 8);
 }
 
 #[test]
 fn walked_the_drivers_one_plan_moves_both_parcels_and_leaves_the_driver_aboard_van_b() {
-    let (store, clock) = (store(), Ticking(Mutex::new(now())));
+    let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(now()))));
     assert_eq!(
         run(&store, &world("driver"), "dispatcher", &clock, 120, None),
         UNFINISHED,
@@ -166,7 +166,7 @@ fn metered_courier(watched: bool) -> (usize, usize, String, std::collections::BT
         }
     }
     let store = store();
-    let clock = Counting(Mutex::new((now(), 0)));
+    let clock = Arc::new(Counting(Mutex::new((now(), 0))));
     let loaded = booted(&store, tree(), &world("courier"), "courier", clock.now()).unwrap();
     let written: std::rc::Rc<std::cell::RefCell<Vec<orexis::events::Point>>> = Default::default();
     let kept = written.clone();
@@ -182,7 +182,8 @@ fn metered_courier(watched: bool) -> (usize, usize, String, std::collections::BT
         );
         wiring.watching.metrics = Some(orexis_metrics::Window::new(sink, 0.0, Some("courier"), Some("courier")));
     }
-    let (mut parts, seen) = orexis_agent::assemble_seen(&store, "courier", &clock, &loaded, Some(128), wiring).unwrap();
+    let (mut parts, seen) =
+        orexis_agent::assemble_seen(&store, "courier", clock.clone(), &loaded, Some(128), wiring).unwrap();
     let outcome = {
         let lent: Vec<(String, &mut dyn Part)> = parts
             .iter_mut()

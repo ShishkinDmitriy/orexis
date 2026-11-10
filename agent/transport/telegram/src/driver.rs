@@ -229,8 +229,8 @@ fn text_of(value: &Json) -> String {
 }
 
 /// One agent's bot: polled for what is written to it, told what the agent says.
-pub struct Telegram<'a> {
-    beliefs: &'a Store,
+pub struct Telegram {
+    beliefs: Store,
     pub me: String,
     pub api: Api,
     pub every: f64,
@@ -239,10 +239,10 @@ pub struct Telegram<'a> {
     unknown: BTreeSet<String>,
 }
 
-impl<'a> Telegram<'a> {
-    pub fn new(beliefs: &'a Store, me: &str, token: &str, url: &str, call: Call) -> Self {
+impl Telegram {
+    pub fn new(beliefs: &Store, me: &str, token: &str, url: &str, call: Call) -> Self {
         Telegram {
-            beliefs,
+            beliefs: beliefs.clone(),
             me: me.to_string(),
             api: Api {
                 url: url.trim_end_matches('/').to_string(),
@@ -261,7 +261,7 @@ impl<'a> Telegram<'a> {
     }
 
     /// The bot brought up from the environment: refused where it holds no token.
-    pub fn connect(beliefs: &'a Store, me: &str, env: &dyn Fn(&str) -> Option<String>) -> Result<Self, Error> {
+    pub fn connect(beliefs: &Store, me: &str, env: &dyn Fn(&str) -> Option<String>) -> Result<Self, Error> {
         let token = env("TELEGRAM_BOT_TOKEN").filter(|t| !t.is_empty()).ok_or_else(|| {
             Error::Evaluation(
                 "no TELEGRAM_BOT_TOKEN in the environment — this agent speaks through a bot and holds no token for it; \
@@ -373,7 +373,7 @@ impl<'a> Telegram<'a> {
     }
 }
 
-impl Carrier for Telegram<'_> {
+impl Carrier for Telegram {
     fn say_to(&mut self, channel: &str, text: &str, reply: Option<&str>) -> bool {
         let mut body = json!({"text": text});
         if let Some(reply) = reply.and_then(|r| r.parse::<i64>().ok()) {
@@ -439,7 +439,7 @@ mod tests {
         stand_in(&Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/worlds/a_chat_on_telegram.trig"))
     }
 
-    fn bot(store: &Store) -> (Telegram<'_>, Arc<Mutex<Vec<Json>>>, Calls) {
+    fn bot(store: &Store) -> (Telegram, Arc<Mutex<Vec<Json>>>, Calls) {
         let updates: Arc<Mutex<Vec<Json>>> = Arc::default();
         let (call, calls) = api(updates.clone());
         let mut bot = Telegram::new(store, &format!("{TEST}keeper"), "123:abc", TELEGRAM_URL, call);
