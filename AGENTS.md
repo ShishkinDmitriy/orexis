@@ -494,7 +494,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   step from them; a JSON literal of triples in a triplestore could be queried, abbreviated and
   compared by nothing (#759, a-steps-prediction-is-two-graphs-it-names).
 - **Planning and execution meet at the store and by events** — what a pass published, reached and superseded are
-  planning's events beneath `execution:Trigger`, said in execution's words, and a plan is published once
+  planning's events beneath execution's adopting, superseding and resolving triggers, said in execution's words, and a plan is published once
   and an intention adopts it by reference; a plan begun is walked to its end, unless a
   reconsideration replaces its untaken steps, and then it ends after its step in flight
   (planning-and-execution-meet-at-the-store).
@@ -790,9 +790,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   unreachable; a clock that does not tick is a test's mistake.
 - **A package starts itself, and the runtime is a lifecycle container** — each part says what it
   does by jobs it submits, kinds it hears and timers it asks for (a-package-starts-itself).
-- **An event is an instant and triggers no event; a package's policy hears the events beneath its trigger class and
-  starts an activity, whose start and end are events** — who hears what is said by the higher ontology, the links
-  between parts go, and "process" stays the OS's word (packages-meet-by-events-policies-and-activities, #1119, not built).
+- **An event is an instant and triggers no event; each activity has a trigger class of its own, whose events a package's
+  policy hears to start it, and an activity's start and end are events and it is a span** — who hears what is said by the
+  higher ontology, the links between parts go, and "process" stays the OS's word (packages-meet-by-events-policies-and-activities, #1119).
 - **A process is the AGENT with the id it was told, never whatever carries that id.**
 - **The store says once which agent it is, and a text asks rather than being told** — the world
   authors `<agent> a orexis:Self` in the agent's self graph, the boot checks it against the told id

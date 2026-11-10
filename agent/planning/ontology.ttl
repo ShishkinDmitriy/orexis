@@ -399,13 +399,16 @@ planning:refines a owl:ObjectProperty ; rdfs:domain planning:Want ;
 planning:Planning a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Planning" ;
     rdfs:comment "A pass of the Planner, an activity planning's part begins and ends: from finding the scopes to publishing what the searches found (packages-meet-by-events-policies-and-activities)." .
 
-planning:PlanPublished a owl:Class ; rdfs:subClassOf orexis:Event , execution:Trigger ; rdfs:label "Plan published" ;
-    rdfs:comment "A plan handed down for execution, carrying the plan graph as the beliefs held it: the want it is for, its steps chained by `execution:then`, the action each fills and every value it takes. Beneath execution's trigger, since planning is the higher package: said to it as the plan an intention would adopt (`execution:adopts`), the want it pursues (`execution:pursues`) and the desire that want was derived from (`prov:wasDerivedFrom`)." .
+planning:PlanningTrigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Planning trigger" ;
+    rdfs:comment "What starts a planning. Nothing is beneath it yet: a pass is started by the pass's timer and by belief's word that a belief changed, until that word is belief's event and planning's ontology puts it here (#1119)." .
 
-planning:WantReached a owl:Class ; rdfs:subClassOf orexis:Event , execution:Trigger ; rdfs:label "Want reached" ;
+planning:PlanPublished a owl:Class ; rdfs:subClassOf orexis:Event , execution:AdoptingTrigger ; rdfs:label "Plan published" ;
+    rdfs:comment "A plan handed down for execution, carrying the plan graph as the beliefs held it: the want it is for, its steps chained by `execution:then`, the action each fills and every value it takes. Beneath execution's adopting trigger, since planning is the higher package: said to it as the plan an intention would adopt (`execution:adopts`), the want it pursues (`execution:pursues`) and the desire that want was derived from (`prov:wasDerivedFrom`)." .
+
+planning:WantReached a owl:Class ; rdfs:subClassOf orexis:Event , execution:ResolvingTrigger ; rdfs:label "Want reached" ;
     rdfs:comment "A pass found a walking want met in the present: said to execution as the want (`execution:pursues`) whose unbegun intentions end `reached` (`execution:outcome`)." .
 
-planning:PlanSuperseded a owl:Class ; rdfs:subClassOf orexis:Event , execution:Trigger ; rdfs:label "Plan superseded" ;
+planning:PlanSuperseded a owl:Class ; rdfs:subClassOf orexis:Event , execution:SupersedingTrigger ; rdfs:label "Plan superseded" ;
     rdfs:comment "A reconsideration replaced a walking plan's untaken steps with a joint plan: said to execution as the step in flight its intention ends after (`execution:endsAfter`) and the want the replacing plan pursues (`execution:pursues`) (knowledge/domain/execution/commitment.md)." .
 
 planning:WantUnreachable a owl:Class ; rdfs:subClassOf orexis:Incident ; rdfs:label "Want unreachable" ;

@@ -1,12 +1,15 @@
 //! EXECUTION'S TERMS that code names, as `agent/execution/ontology.py` names them.
 
 pub const EXECUTION: &str = "http://example.org/orexis/execution#";
-/// A walk of the intentions, as the activity it is.
+/// EXECUTION'S ACTIVITIES, and the trigger of each: an event a higher package's ontology puts beneath a trigger starts
+/// that activity, and what it is about is said in the words below.
 pub const WALKING: &str = "http://example.org/orexis/execution#Walking";
-
-/// WHAT EXECUTION'S POLICY HEARS: every event beneath it, put there by the ontology of whichever package says it, and
-/// what it is about said in the words below.
-pub const TRIGGER: &str = "http://example.org/orexis/execution#Trigger";
+pub const ADOPTING: &str = "http://example.org/orexis/execution#Adopting";
+pub const ADOPTING_TRIGGER: &str = "http://example.org/orexis/execution#AdoptingTrigger";
+pub const SUPERSEDING: &str = "http://example.org/orexis/execution#Superseding";
+pub const SUPERSEDING_TRIGGER: &str = "http://example.org/orexis/execution#SupersedingTrigger";
+pub const RESOLVING: &str = "http://example.org/orexis/execution#Resolving";
+pub const RESOLVING_TRIGGER: &str = "http://example.org/orexis/execution#ResolvingTrigger";
 /// What a trigger is about: the plan an intention would adopt, the want it pursues, the step in flight one ends after,
 /// and how an intention ends.
 pub const ADOPTS: &str = "http://example.org/orexis/execution#adopts";

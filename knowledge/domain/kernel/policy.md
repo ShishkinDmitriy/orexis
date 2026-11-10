@@ -2,10 +2,10 @@
 type: Domain Concept
 title: Policy
 description: >-
-  How a package decides to act - whenever an event of its trigger class happens, judge whether it
-  calls for an activity and start one if so. The trigger is a class each package declares, and the
-  events beneath it are put there by whichever ontology is higher, so a lower package never names a
-  higher one's word. The judgment is code reading the store; who listens to what is the vocabulary's.
+  How a package decides to act - whenever an event of an activity's trigger class happens, judge
+  whether it calls for that activity and start it if so. Each activity has a trigger class of its own,
+  and the events beneath it are put there by whichever ontology is higher, so a lower package never
+  names a higher one's word. The judgment is code reading the store; who listens to what is the vocabulary's.
   Execution's is built; the others are #1119's.
 ---
 
@@ -23,18 +23,21 @@ what holds now from the beliefs.
 
 # What it hears
 
-**A broadcast event, by its package's trigger class.** Each package declares one class of events
-beneath `orexis:Event`, its trigger, and listens for it alone. An event is beneath it by an
+**A broadcast event, by an activity's trigger class.** Each package declares an abstract trigger
+beneath `orexis:Event` and, beneath it, one trigger per activity it declares, named for the activity:
+`planning:PlanningTrigger` starts `planning:Planning`. A package with several activities hears several
+triggers, and an event beneath one starts that activity and no other. An event is beneath it by an
 `rdfs:subClassOf` axiom, and the boot's closure makes it so, as for every kind. The axiom lives in
 whichever of the two ontologies is the higher package's: belief is beneath planning, so planning's
 ontology puts belief's event of a belief changed beneath planning's trigger; planning is above
 execution, so planning's ontology puts its own event of a want reached beneath execution's trigger.
 Either way the lower package names nothing above it, and which package wakes to what is read off the
-vocabulary rather than wired in the binary. Execution's is built: `execution:Trigger`, with planning's
-`planning:PlanPublished`, `planning:WantReached` and `planning:PlanSuperseded` beneath it, each naming
-what it is about under execution's own predicates - the plan an intention would adopt
-(`execution:adopts`), the want pursued (`execution:pursues`), the step in flight an intention ends
-after (`execution:endsAfter`). The others are declared as their policies are built (#1119).
+vocabulary rather than wired in the binary. Execution's are built: planning's `planning:PlanPublished` is
+beneath `execution:AdoptingTrigger`, `planning:PlanSuperseded` beneath `execution:SupersedingTrigger`
+and `planning:WantReached` beneath `execution:ResolvingTrigger`, each naming what it is about under
+execution's own predicates - the plan an intention would adopt (`execution:adopts`), the want pursued
+(`execution:pursues`), the step in flight an intention ends after (`execution:endsAfter`) - and the
+entity it names is what started the activity. The others are declared as their policies are built (#1119).
 
 **An addressed event, by who asked for it.** A timer alarms for the part that set it, and a request
 to plan is planning's alone. Put beneath a trigger class, every package's timer would wake every
