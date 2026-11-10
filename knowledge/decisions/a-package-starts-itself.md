@@ -1,7 +1,8 @@
 ---
 type: Decision
 title: A package starts itself, and the runtime is a lifecycle container
-status: accepted
+status: superseded-in-part
+superseded-by: packages-meet-by-events-policies-and-activities
 timestamp: 2026-09-29T12:00:00Z
 description: >-
   The sovereign's ruling of 2026-09-29, on reading #853. The runtime stops deciding what a

@@ -17,7 +17,9 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [action](/domain/kernel/action.md) - One way of acting as one node: what it takes, its precondition, its effect, its implementation, its cost.
 * [runtime](/domain/kernel/runtime.md) - Boots a world into a store, then runs pass by pass, and stops when nothing is held or wanted.
 * [part](/domain/kernel/part.md) - What a package contributes to a running agent: created, linked to the others, started, stopped last-first.
-* [event](/domain/kernel/event.md) - What a signal carries: a class its package declares, said whole; it may mark what is reported and answer a history point.
+* [event](/domain/kernel/event.md) - What happened, at an instant: a class its package declares, never the cause of another event; it may mark what is reported.
+* [policy](/domain/kernel/policy.md) - Whenever an event of its package's trigger class happens, judge whether to start an activity; the higher ontology says who hears what.
+* [activity](/domain/kernel/activity.md) - What a package does over a stretch, started by a policy; its start and end are events, and a tracer draws it as a span.
 * [level](/domain/kernel/level.md) - A reported field that is the state now, read by its store's owner and written as it last stood in a window.
 * [forecast](/domain/kernel/forecast.md) - Anyone's word about a stretch ahead, one kind holding during it; a received hour and a committed step, told apart by provenance.
 * [signal](/domain/kernel/signal.md) - A package's own word for what just happened, on its object, carrying one event; connected when parts link, never stored.
