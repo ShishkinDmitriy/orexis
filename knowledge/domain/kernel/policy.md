@@ -23,14 +23,15 @@ what holds now from the beliefs.
 
 # What it hears
 
-**A broadcast event, by its package's trigger class.** Each package declares one class of events,
-`planning:Trigger`, `execution:Trigger`, beneath `orexis:Event`, and listens for it alone. An event
-is beneath it by an `rdfs:subClassOf` axiom, and the boot's closure makes it so, as for every kind.
-The axiom lives in whichever of the two ontologies is the higher package's: belief is beneath
-planning, so planning's ontology says `belief:BeliefChanged rdfs:subClassOf planning:Trigger`; planning
-is above execution, so planning's ontology says `planning:WantReached rdfs:subClassOf
-execution:Trigger`. Either way the lower package names nothing above it, and which package wakes to
-what is read off the vocabulary rather than wired in the binary.
+**A broadcast event, by its package's trigger class.** Each package declares one class of events
+beneath `orexis:Event`, its trigger, and listens for it alone. An event is beneath it by an
+`rdfs:subClassOf` axiom, and the boot's closure makes it so, as for every kind. The axiom lives in
+whichever of the two ontologies is the higher package's: belief is beneath planning, so planning's
+ontology puts belief's event of a belief changed beneath planning's trigger; planning is above
+execution, so planning's ontology puts its own event of a want reached beneath execution's trigger.
+Either way the lower package names nothing above it, and which package wakes to what is read off the
+vocabulary rather than wired in the binary. The trigger classes are declared as their policies are
+built (#1119).
 
 **An addressed event, by who asked for it.** A timer alarms for the part that set it, and a request
 to plan is planning's alone. Put beneath a trigger class, every package's timer would wake every

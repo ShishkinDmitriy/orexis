@@ -14,7 +14,7 @@ description: >-
 An [event](/domain/kernel/event.md) has no duration; an activity has nothing else. It begins when a
 [policy](/domain/kernel/policy.md) decides that the events it heard call for it, runs for as long as
 the work takes, and ends. PROV's word is the one meant: an activity is a `prov:Activity`, of a class
-its package declares beneath it - `planning:Planning`, `planning:Searching`, `execution:Walking`.
+its package declares beneath it - `planning:Planning`, a pass of the Planner, and `execution:Walking`.
 
 Its start and its end are instants, and PROV's own: a `prov:Start` and a `prov:End`, each an event
 said as the activity starts and ends, reached from it by `prov:qualifiedStart` and `prov:qualifiedEnd`
