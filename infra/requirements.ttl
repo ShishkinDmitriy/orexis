@@ -13,7 +13,7 @@
 #  (onboarding/ontology.ttl) and the limits are the installation's template's: `infra/compose.yaml` runs one
 #  series store and one series view, so there is one of each, with one url, one image and, for the
 #  store, one organisation; the store answers over http and the view over https, which is how the
-#  template serves them; a model, where the installation names one, answers at one https url; history is
+#  template serves them; a tracer, where named, is one, at one http url with one image; a model, where the installation names one, answers at one https url; history is
 #  served by a store, since every agent writes it, where metrics may
 #  be served by none; a purpose is kept one number of days and a window of it is one number of
 #  seconds; and there is one pool to allocate each kind of listener from — a broker, an agent's journal —
@@ -39,6 +39,16 @@
     sh:sparql [
         sh:message "is a series view beside {?other}: `infra/compose.yaml` runs one" ;
         sh:select """SELECT $this ?other WHERE { ?other a onboarding:SeriesView . FILTER (STR(?other) < STR($this)) }""" ] .
+
+[] a sh:NodeShape ;
+    sh:targetClass onboarding:Tracer ;
+    sh:property [ sh:path schema:url ; sh:minCount 1 ; sh:maxCount 1 ; sh:pattern "^http://" ;
+                  sh:message "a tracer answers at one http:// url: an agent is told one, and the template serves it plain" ] ,
+                [ sh:path onboarding:image ; sh:minCount 1 ; sh:maxCount 1 ;
+                  sh:message "a tracer runs one image, pinned" ] ;
+    sh:sparql [
+        sh:message "is a tracer beside {?other}: `infra/compose.yaml` runs one" ;
+        sh:select """SELECT $this ?other WHERE { ?other a onboarding:Tracer . FILTER (STR(?other) < STR($this)) }""" ] .
 
 [] a sh:NodeShape ;
     sh:targetClass onboarding:Model ;

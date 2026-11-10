@@ -35,6 +35,11 @@ no model has no agent translate, and a world with one that does is refused, as a
 where metrics are served by no store. Where an agent's Telegram bot answers is the world's deployment
 graph's, `<bot> schema:url`, told to the agent as `TELEGRAM_URL`.
 
+It says **where an agent's activities are sent as spans**: one `onboarding:Tracer` with a `schema:url`
+and an image, Tempo, told to each agent of a monitored world as `OTLP_ENDPOINT`. Spans are the admins'
+instrumentation as metrics are, so the same opt-in tells them; an installation naming no tracer traces
+no agent, and refuses nothing.
+
 A world says of its deployment graph, too, what its agents' [journals](/domain/kernel/journal.md) count as an
 incident beside their vocabulary: from which level a log line is one, `<> onboarding:incidentLevel "ERROR"`, and an
 event class more, `<> onboarding:incident coordination:Concluded`, each told to every agent of it as environment.
@@ -80,7 +85,7 @@ into `world/<name>/secrets/` and mounted into one container.
 # What is built
 
 `onboarding:DeploymentGraph` is declared in onboarding's vocabulary (`onboarding/ontology.ttl`)
-beside the installation's words — `onboarding:SeriesStore`, `onboarding:SeriesView`,
+beside the installation's words — `onboarding:SeriesStore`, `onboarding:SeriesView`, `onboarding:Tracer`,
 `onboarding:organisation`, `onboarding:image`, `onboarding:allocatesFrom`, `onboarding:allocatesFor`,
 `onboarding:journal`, `onboarding:incidentLevel`, `onboarding:incident`, `onboarding:serves`,
 `onboarding:retentionDays` and `onboarding:intervalSeconds`, the two `onboarding:SeriesPurpose`s,
