@@ -161,14 +161,6 @@ pub fn judge<'a>(
     execution.executor.borrow_mut().taking = Some(Box::new(move |step, at| planner.borrow_mut().check(step, at)));
 }
 
-/// Link execution's part to belief's, as the Python executor's `on_write` tells the runtime: every graph the executor
-/// writes as the world is revised as it is written, before its walk goes on. A pass that revised the present is heard,
-/// not linked: `belief:Revised` is beneath execution's walking trigger.
-#[cfg(all(feature = "belief", feature = "execution"))]
-pub fn hear(belief: &orexis_belief::create::Belief, execution: &orexis_execution::create::Execution<'_>) {
-    execution.executor.borrow_mut().on_write = Some(Box::new(belief.hears()));
-}
-
 /// Link sensing's part to belief's, as the Python part's `link` takes belief's: every percept sensing writes, and at
 /// start each one nothing was concluded of, is revised by belief's deliberator into sensing's own kind (#944).
 #[cfg(all(feature = "belief", feature = "sensing"))]
@@ -517,10 +509,6 @@ pub fn assemble_seen<'a>(
     #[cfg(all(feature = "planning", feature = "execution"))]
     if let (Some(planning), Some(execution)) = (planning.as_ref(), execution.as_ref()) {
         judge(planning, execution);
-    }
-    #[cfg(all(feature = "belief", feature = "execution"))]
-    if let (Some(belief), Some(execution)) = (belief.as_ref(), execution.as_ref()) {
-        hear(belief, execution);
     }
     #[cfg(feature = "belief")]
     if let Some(belief) = belief.as_ref() {

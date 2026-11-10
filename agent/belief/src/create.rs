@@ -11,13 +11,12 @@
 //! before its walk goes on, as Python's `runtime.wrote` hands them on at once; a part cannot reach the runtime while
 //! it runs.
 
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use oxsdatatypes::DateTime;
 
 use orexis::Error;
-use orexis::bind::{Value, bind};
 use orexis::ontology::BELIEF;
 use orexis::runtime::{Part, Pass, Starting};
 use orexis::store::{Store, Within};
@@ -27,16 +26,11 @@ use crate::ontology::REVISION_GRAPH;
 
 const HEARD: usize = 0;
 
-/// WHETHER A GRAPH IS A BELIEF, by the catalogue.
-const BELIEF_Q: &str = "ASK { GRAPH $cat { $g a orexis:BeliefGraph } }";
-
 /// Belief's part: its deliberator, shared with whoever links to it — a clone is the same part, as a linked part holds it.
 #[derive(Clone)]
 pub struct Belief {
     beliefs: Store,
     pub deliberator: Rc<RefCell<Deliberator>>,
-    /// The instant the part last stood at, for an arrival a restart queued with nothing said beside it.
-    at: Rc<Cell<Option<DateTime>>>,
 }
 
 impl Belief {
@@ -44,14 +38,12 @@ impl Belief {
         Ok(Belief {
             beliefs: beliefs.clone(),
             deliberator: Rc::new(RefCell::new(Deliberator::new(beliefs, agent, None)?)),
-            at: Rc::new(Cell::new(None)),
         })
     }
 
     /// Revise `graphs` beside what the world states and apply the transitions each triggers, now — their revisions
     /// classified `kind`.
     pub fn revise(&self, graphs: &[String], kind: &str, at: DateTime) -> Result<(), Error> {
-        self.at.set(Some(at));
         let stated = self.beliefs.graphs_of(&[BELIEF], &Within::common())?;
         let mut deliberator = self.deliberator.borrow_mut();
         for graph in graphs {
@@ -59,30 +51,6 @@ impl Belief {
         }
         deliberator.deliberate(at)?;
         Ok(())
-    }
-
-    /// What a part linked to this one tells it was written mid-act: revised now where it is a belief.
-    pub fn hears(&self) -> impl FnMut(&str) -> Result<(), Error> + 'static {
-        let (beliefs, deliberator, at) = (self.beliefs.clone(), self.deliberator.clone(), self.at.clone());
-        move |graph| {
-            let Some(cat) = beliefs.catalogue()? else {
-                return Ok(());
-            };
-            let belief = beliefs.ask(
-                &bind(BELIEF_Q, &[("cat", Value::iri(cat)), ("g", Value::iri(graph))])?,
-                &[],
-            )?;
-            let Some(now) = at.get() else { return Ok(()) };
-            if !belief {
-                return Ok(());
-            }
-            let part = Belief {
-                beliefs: beliefs.clone(),
-                deliberator: deliberator.clone(),
-                at: at.clone(),
-            };
-            part.revise(&[graph.to_string()], BELIEF, now)
-        }
     }
 }
 
@@ -149,19 +117,14 @@ mod tests {
             let parts: Vec<(String, &mut dyn Part)> = vec![("belief".into(), &mut part)];
             Runtime::new(&store, "urn:test:me", &clock, parts).unwrap();
         }
-        let mut told = part.hears();
         store
             .update(&format!(
                 "INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <urn:test:nothing> a orexis:BeliefGraph }} }}"
             ))
             .unwrap();
-        told("urn:test:nothing").unwrap();
-        told("urn:test:unclassified").unwrap();
-        assert_eq!(
-            *heard.borrow(),
-            ["urn:test:nothing"],
-            "each pass says what it revised, and a belief alone"
-        );
+        part.revise(&["urn:test:nothing".to_string()], BELIEF, snapshots::now())
+            .unwrap();
+        assert_eq!(*heard.borrow(), ["urn:test:nothing"], "each pass says what it revised");
     }
 
     #[test]
