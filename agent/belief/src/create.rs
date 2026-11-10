@@ -32,15 +32,15 @@ const BELIEF_Q: &str = "ASK { GRAPH $cat { $g a orexis:BeliefGraph } }";
 
 /// Belief's part: its deliberator, shared with whoever links to it — a clone is the same part, as a linked part holds it.
 #[derive(Clone)]
-pub struct Belief<'a> {
+pub struct Belief {
     beliefs: Store,
-    pub deliberator: Rc<RefCell<Deliberator<'a>>>,
+    pub deliberator: Rc<RefCell<Deliberator>>,
     /// The instant the part last stood at, for an arrival a restart queued with nothing said beside it.
     at: Rc<Cell<Option<DateTime>>>,
 }
 
-impl<'a> Belief<'a> {
-    pub fn new(beliefs: &'a Store, agent: &str) -> Result<Self, Error> {
+impl Belief {
+    pub fn new(beliefs: &Store, agent: &str) -> Result<Self, Error> {
         Ok(Belief {
             beliefs: beliefs.clone(),
             deliberator: Rc::new(RefCell::new(Deliberator::new(beliefs, agent, None)?)),
@@ -62,7 +62,7 @@ impl<'a> Belief<'a> {
     }
 
     /// What a part linked to this one tells it was written mid-act: revised now where it is a belief.
-    pub fn hears(&self) -> impl FnMut(&str) -> Result<(), Error> + 'a {
+    pub fn hears(&self) -> impl FnMut(&str) -> Result<(), Error> + 'static {
         let (beliefs, deliberator, at) = (self.beliefs.clone(), self.deliberator.clone(), self.at.clone());
         move |graph| {
             let Some(cat) = beliefs.catalogue()? else {
@@ -86,7 +86,7 @@ impl<'a> Belief<'a> {
     }
 }
 
-impl Part for Belief<'_> {
+impl Part for Belief {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         //  EVERY BELIEF NOT YET REVISED, but the common ones: the world's documents were concluded on at genesis.
         let mut skip = self.beliefs.graphs_of(&[REVISION_GRAPH], &Within::default())?;
@@ -140,10 +140,11 @@ mod tests {
         let mut part = Belief::new(&store, "urn:test:me").unwrap();
         let heard = Rc::new(RefCell::new(Vec::new()));
         let into = heard.clone();
-        part.deliberator.borrow_mut().revised = Some(Box::new(move |r| {
-            into.borrow_mut().extend(r.graphs.clone());
-            Ok(())
-        }));
+        part.deliberator.borrow().watch.connect(move |event, _| {
+            if let Some(r) = orexis::events::as_of::<crate::deliberator::Revised>(event) {
+                into.borrow_mut().extend(r.graphs.clone());
+            }
+        });
         {
             let parts: Vec<(String, &mut dyn Part)> = vec![("belief".into(), &mut part)];
             Runtime::new(&store, "urn:test:me", &clock, parts).unwrap();

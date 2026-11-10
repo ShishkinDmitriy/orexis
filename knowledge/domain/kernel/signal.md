@@ -12,8 +12,8 @@ description: >-
 
 A signal says that something happened, so that whoever is connected can act now: the Planner publishes
 a plan and the executor adopts it; the executor ends an intention and planning plans again; the
-deliberator revises the present and the executor walks. It is an attribute of the package's own object —
-`planner.plan_published`, `executor.intention_resolved`, `deliberator.revised` — so the package that
+transport hands translation a person's prose. It is an attribute of the package's own object —
+`planner.plan_published`, `executor.intention_resolved` — so the package that
 says it owns the word, and the kernel holds only the mechanism (`agent/lifecycle.py`). What it carries
 is one [event](/domain/kernel/event.md). Emitting one calls every connected handler at once, on the
 runtime's one thread, and answers what they wrote.

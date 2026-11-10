@@ -36,7 +36,8 @@ object that says it: the Planner's `plan_published`, and the executor adopts the
 executor's `intention_resolved`, and the Planner plans again at once; the executor's `taking`, and
 the Planner checks the head about to be taken; the Planner's
 `want_reached`, `step_blocked` and `reconsidered`, and the executor ends an intention early; the deliberator's
-`revised`, and the executor walks, since what it waits on is the present. The runtime makes every
+`revised`, and the executor walks, since what it waits on is the present - since #1119 belief's `belief:Revised`, heard
+beneath execution's walking trigger. The runtime makes every
 [part](/domain/kernel/part.md) first, then links them, then starts them, so planning's part connects
 its Planner to the executor however the two were ordered; a connection points down, as an import
 does. The one signal the runtime owns is a graph written, heard by kind. A signal is not stored:

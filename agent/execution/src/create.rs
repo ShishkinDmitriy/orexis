@@ -10,8 +10,8 @@
 //! want reached are beneath the three, so planning and execution meet by events and the store.
 //!
 //! LINKED by whoever assembles the parts: planning answers `taking` (#916), until a hearer may hold a reader of the
-//! store (#1119); belief, where the agent deliberates, raises `soon` where a pass revised the present, and
-//! a walk is queued, once, however many revisions say so before it runs. A TRANSPORT, linked, is handed each command a
+//! store (#1119). Belief's revision pass is heard beneath the walking trigger, in belief's words, and where it changed
+//! the present a walk is queued, once, however many revisions say so before it runs. A TRANSPORT, linked, is handed each command a
 //! step's implementation sends, order by order (`taker`); a step whose command answers nothing is not taken (#869).
 //! And speech, linked, is handed each document a step's implementation says, with the agents it is to.
 
@@ -33,8 +33,8 @@ use crate::command::command;
 use crate::executor::Take;
 use crate::implementation::operations;
 use crate::ontology::{
-    ADOPTING, ADOPTING_TRIGGER, ADOPTS, COMMAND, DERIVED_FROM, ENDS_AFTER, OUTCOME, PURSUES, RESOLVING,
-    RESOLVING_TRIGGER, SAYING, SUPERSEDING, SUPERSEDING_TRIGGER,
+    ADOPTING, ADOPTING_TRIGGER, ADOPTS, CHANGED, COMMAND, DERIVED_FROM, ENDS_AFTER, OUTCOME, PURSUES, RESOLVING,
+    RESOLVING_TRIGGER, REVISED_SOURCE, SAYING, SUPERSEDING, SUPERSEDING_TRIGGER, WALKING_TRIGGER,
 };
 use crate::says::says;
 use crate::{Executor, Said};
@@ -104,6 +104,7 @@ const WALK: usize = 1;
 const ADOPT: usize = 2;
 const SUPERSEDE: usize = 3;
 const RESOLVE: usize = 4;
+const REVISED: usize = 5;
 
 /// Execution's part: its executor, shared with whoever links to it.
 pub struct Execution<'a> {
@@ -172,12 +173,29 @@ impl Part for Execution<'_> {
         starting.hears(ADOPTING_TRIGGER, ADOPT);
         starting.hears(SUPERSEDING_TRIGGER, SUPERSEDE);
         starting.hears(RESOLVING_TRIGGER, RESOLVE);
+        starting.hears(WALKING_TRIGGER, REVISED);
         Ok(())
     }
 
     /// What execution's policy does of a trigger: the activity it is the trigger of, begun with the entity the event
     /// names as what triggered it, and ended once done. An event naming less than its activity needs starts nothing.
     fn heard_event(&mut self, job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        //  A WALK IS QUEUED where what was heard changed the present, which alone answers a step: the walk is the
+        //  activity, started when it runs.
+        if job == REVISED {
+            let names = |p: &str| {
+                event
+                    .all(p)
+                    .into_iter()
+                    .map(|n| n.as_str().to_string())
+                    .collect::<Vec<_>>()
+            };
+            let beliefs = self.executor.borrow().beliefs.clone();
+            if present(&beliefs, &names(REVISED_SOURCE), &names(CHANGED))? {
+                self.soon.set(true);
+            }
+            return Ok(Vec::new());
+        }
         let want = event.named(PURSUES).cloned();
         let (kind, trigger) = match job {
             ADOPT => (ADOPTING, event.named(ADOPTS)),
