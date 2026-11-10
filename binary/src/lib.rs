@@ -465,11 +465,6 @@ pub fn assemble_seen<'a>(
             speaker.say(document, &[peer.to_string()])
         }));
     }
-    #[cfg(all(feature = "planning", feature = "coordination"))]
-    if let (Some(planning), Some(coordination)) = (planning.as_ref(), coordination.as_mut()) {
-        let planner = planning.planner.clone();
-        coordination.reopen = Some(Box::new(move |wants| planner.borrow_mut().reopen(wants)));
-    }
     #[cfg(feature = "execution")]
     if let Some(execution) = execution.as_ref() {
         #[allow(unused_mut)]

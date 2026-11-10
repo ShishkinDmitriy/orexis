@@ -216,3 +216,9 @@
 :conflict a owl:ObjectProperty ; rdfs:domain :Concluded ; rdfs:range :Conflict ;
     rdfs:label "conflict" ;
     rdfs:comment "One conflict concluded." .
+
+#  WHAT COORDINATION SAYS TO PLANNING, beneath planning's trigger since coordination is above planning, in planning's
+#  words (knowledge/domain/kernel/policy.md).
+
+coordination:DrawWon a owl:Class ; rdfs:subClassOf orexis:Event , planning:PlanningTrigger ; rdfs:label "Draw won" ;
+    rdfs:comment "A draw the agent concluded it has won: said to planning as the walking wants whose plans change a value on the key of the constraint the draw was over (`planning:reopens`), since its plan yielded while the draw stood undecided and winning makes no world of it impossible, only slower." .

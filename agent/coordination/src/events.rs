@@ -13,7 +13,7 @@ use oxsdatatypes::DateTime;
 use orexis::events::{Event, RDF_TYPE, boolean, instant, integer, mint, node, triple, typed};
 
 use crate::holdings::Holding;
-use crate::ontology::COORDINATION;
+use crate::ontology::{COORDINATION, DRAW_WON, REOPENS};
 
 pub const ASKED: &str = "asked";
 pub const SAID: &str = "said";
@@ -118,5 +118,27 @@ impl Event for Concluded {
 
     fn at(&self) -> Option<DateTime> {
         Some(self.at)
+    }
+}
+
+/// A draw the agent concluded it has won: said to planning, beneath its planning trigger by coordination's ontology and
+/// in planning's words, as the walking wants to plan again (`planning:reopens`) - its walking plan yielded while the
+/// draw stood undecided, and winning makes no world of it impossible, only slower.
+#[derive(Clone, Debug, PartialEq)]
+pub struct DrawWon {
+    pub wants: Vec<String>,
+}
+
+impl Event for DrawWon {
+    fn kind(&self) -> Option<&'static str> {
+        Some(DRAW_WON)
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        self.wants
+            .iter()
+            .filter_map(|w| NamedNode::new(w.as_str()).ok())
+            .map(|w| (REOPENS, Term::NamedNode(w)))
+            .collect()
     }
 }

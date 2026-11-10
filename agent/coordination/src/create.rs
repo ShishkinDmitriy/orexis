@@ -1,6 +1,6 @@
 //! COORDINATION'S PART, as `agent/coordination/create.py` makes it (a-package-starts-itself). LINKED, it holds
-//! whoever says what it asks and answers — speech — and whoever plans — the Planner, to reopen the walking wants a draw
-//! it has won decides. STARTED, it mints the agent's secret where it holds none; answers every question heard as it
+//! whoever says what it asks and answers — speech. A draw it has won is said as `coordination:DrawWon`, beneath
+//! planning's trigger, naming in planning's words the walking wants to plan again. STARTED, it mints the agent's secret where it holds none; answers every question heard as it
 //! arrives; concludes its conflicts and lays what it yields to as each question or answer arrives; and every pass asks
 //! the peers in range, concludes and lays again — after planning and execution, so what it says of its future is what
 //! the pass left walking. A draw the agent concludes it has WON reopens the walking wants whose plans change a value
@@ -24,7 +24,7 @@ use oxsdatatypes::DateTime;
 use crate::answer::answer;
 use crate::ask::ask;
 use crate::conclude::{conclude, conflicts, wins};
-use crate::events::{ASKED, Concluded, FORESEEN, Held, SAID};
+use crate::events::{ASKED, Concluded, DrawWon, FORESEEN, Held, SAID};
 use crate::holdings::{heard, walking_over};
 use crate::lay::{laid, lay};
 use crate::mint::mint;
@@ -39,15 +39,11 @@ const MINTED: usize = 3;
 /// Whoever says a document to a peer: the peer and the document; the graphs believed of it.
 pub type Says<'a> = Box<dyn FnMut(&str, &Document) -> Result<Vec<String>, Error> + 'a>;
 
-/// Whoever plans: the wants to reopen.
-pub type Reopens<'a> = Box<dyn FnMut(BTreeSet<String>) + 'a>;
-
 /// Coordination's part.
 pub struct Coordination<'a> {
     beliefs: Store,
     me: String,
     pub say: Option<Says<'a>>,
-    pub reopen: Option<Reopens<'a>>,
     pending: Vec<String>,
     /// Whoever watches the agent.
     pub watch: Watch,
@@ -62,7 +58,6 @@ impl<'a> Coordination<'a> {
             beliefs: beliefs.clone(),
             me: me.to_string(),
             say: None,
-            reopen: None,
             pending: Vec::new(),
             watch: Watch::default(),
             told: BTreeMap::new(),
@@ -164,15 +159,15 @@ impl<'a> Coordination<'a> {
         for constraint in &won {
             wants.extend(walking_over(store, constraint)?);
         }
-        if !wants.is_empty()
-            && let Some(reopen) = self.reopen.as_mut()
-        {
+        if !wants.is_empty() {
             log::info!(
                 "{}: won a draw, so asks that {} be planned again",
                 local_of(&me),
                 wants.iter().map(|w| local_of(w)).collect::<Vec<_>>().join(", ")
             );
-            reopen(wants);
+            self.watch.emit(&DrawWon {
+                wants: wants.into_iter().collect(),
+            });
             pass.again();
         }
         Ok(written)
@@ -186,6 +181,10 @@ impl Part for Coordination<'_> {
         starting.on(ANSWER_GRAPH, ANSWERED);
         starting.every(0.0, PASS);
         Ok(())
+    }
+
+    fn watch(&self) -> Option<Watch> {
+        Some(self.watch.clone())
     }
 
     fn run(&mut self, job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
