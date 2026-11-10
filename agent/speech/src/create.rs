@@ -65,7 +65,7 @@ pub type Tells<'a> = Box<dyn FnMut(&str, &[u8]) -> Result<(), Error> + 'a>;
 
 /// What says a document and tells it: shared by the part and whoever says through it.
 pub struct Speaker<'a> {
-    beliefs: &'a Store,
+    beliefs: Store,
     pub me: String,
     pub tell: RefCell<Option<Tells<'a>>>,
     /// Whoever watches the agent, and the instant the pass stands at.
@@ -75,11 +75,11 @@ pub struct Speaker<'a> {
 impl Speaker<'_> {
     /// Believe `document` as the agent said it, and tell it to every agent it is `to`; the graphs believed.
     pub fn say(&self, document: &Document, to: &[String]) -> Result<Vec<String>, Error> {
-        let written = said(self.beliefs, &self.me, document)?;
+        let written = said(&self.beliefs, &self.me, document)?;
         let watch = self.watch.borrow().clone();
         if watch.connected() {
             for graph in &written {
-                let (kinds, said) = described(self.beliefs, graph)?;
+                let (kinds, said) = described(&self.beliefs, graph)?;
                 watch.emit(&Said {
                     statement: graph.clone(),
                     to: to.to_vec(),
@@ -102,7 +102,7 @@ impl Speaker<'_> {
 /// Speech's part: the speaker, and the beliefs extracted at start for the pass to hand on.
 pub struct Speech<'a> {
     pub speaker: Rc<Speaker<'a>>,
-    beliefs: &'a Store,
+    beliefs: Store,
     pending: Vec<String>,
 }
 
@@ -110,12 +110,12 @@ impl<'a> Speech<'a> {
     pub fn new(beliefs: &'a Store, me: &str) -> Self {
         Speech {
             speaker: Rc::new(Speaker {
-                beliefs,
+                beliefs: beliefs.clone(),
                 me: me.to_string(),
                 tell: RefCell::new(None),
                 watch: RefCell::new(Watch::default()),
             }),
-            beliefs,
+            beliefs: beliefs.clone(),
             pending: Vec::new(),
         }
     }
@@ -147,7 +147,7 @@ impl Part for Speech<'_> {
                 .filter_map(|r| iri(r, "g"))
                 .collect();
             for statement in unextracted {
-                self.pending.extend(extract(self.beliefs, &statement)?);
+                self.pending.extend(extract(&self.beliefs, &statement)?);
             }
         }
         starting.on(STATEMENT_GRAPH, STATED);
@@ -164,7 +164,7 @@ impl Part for Speech<'_> {
     fn heard(&mut self, _job: usize, graph: &str, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
         let watch = self.speaker.watch.borrow().clone();
         if watch.connected() && self.arrival(graph)?.as_deref() == Some(RECEIVED) {
-            let (kinds, said) = described(self.beliefs, graph)?;
+            let (kinds, said) = described(&self.beliefs, graph)?;
             watch.emit(&Heard {
                 statement: graph.to_string(),
                 at: Some(pass.now),
@@ -172,7 +172,7 @@ impl Part for Speech<'_> {
                 said,
             });
         }
-        extract(self.beliefs, graph)
+        extract(&self.beliefs, graph)
     }
 
     fn submitted(&mut self) -> Vec<usize> {

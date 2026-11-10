@@ -240,8 +240,8 @@ fn terrace(
         watching,
         ..Wiring::default()
     };
-    let clock = Manual::at(noon());
-    let (mut parts, seen) = assemble_seen(&t.store, "terrace", &clock, &loaded, None, wiring).unwrap();
+    let clock = std::sync::Arc::new(Manual::at(noon()));
+    let (mut parts, seen) = assemble_seen(&t.store, "terrace", clock.clone(), &loaded, None, wiring).unwrap();
     assert!(parts.iter().any(|(p, _)| p == "translation"));
     let lent: Vec<(String, &mut dyn Part)> = parts
         .iter_mut()

@@ -16,16 +16,16 @@ const HANDLE: usize = 0;
 const HOLDER: &str = "transport/http";
 
 /// The member's part: the member, a poll job per sensor, and the bodies handed to the pass.
-pub struct Transport<'a> {
-    pub member: Http<'a>,
+pub struct Transport {
+    pub member: Http,
     /// Each poll job's sensor, its job the index after `HANDLE`.
     polled: Vec<String>,
     once: Vec<usize>,
     pending: VecDeque<Message>,
 }
 
-impl<'a> Transport<'a> {
-    pub fn new(member: Http<'a>) -> Self {
+impl Transport {
+    pub fn new(member: Http) -> Self {
         Transport {
             member,
             polled: Vec::new(),
@@ -35,7 +35,7 @@ impl<'a> Transport<'a> {
     }
 }
 
-impl Part for Transport<'_> {
+impl Part for Transport {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         self.member.inbox.wakes(starting.wake());
         for sensor in self.member.open()? {
@@ -76,7 +76,7 @@ impl Part for Transport<'_> {
     }
 }
 
-impl Transport<'_> {
+impl Transport {
     fn member_beliefs(&self) -> &orexis::store::Store {
         self.member.beliefs()
     }

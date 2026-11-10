@@ -87,7 +87,7 @@ impl<'a> Planner<'a> {
 
     /// Whether this agent holds any constraint — the one thing a walking want can be reopened by.
     pub(super) fn holds_a_constraint(&self) -> Result<bool, Error> {
-        let held = graphs(self.beliefs, &[CONSTRAINT_GRAPH])?;
+        let held = graphs(&self.beliefs, &[CONSTRAINT_GRAPH])?;
         Ok(!self
             .beliefs
             .rows(
@@ -181,7 +181,7 @@ impl<'a> Planner<'a> {
                 continue;
             }
             let chain: Vec<String> = self
-                .chain(self.beliefs, &flight.plan)?
+                .chain(&self.beliefs, &flight.plan)?
                 .into_iter()
                 .map(|(s, _)| s)
                 .collect();
@@ -213,8 +213,8 @@ impl<'a> Planner<'a> {
                         return Ok(None);
                     };
                     let change = (
-                        quads_of(self.beliefs, row.and_then(|r| iri(r, "retracts")))?,
-                        quads_of(self.beliefs, row.and_then(|r| iri(r, "adds")))?,
+                        quads_of(&self.beliefs, row.and_then(|r| iri(r, "retracts")))?,
+                        quads_of(&self.beliefs, row.and_then(|r| iri(r, "adds")))?,
                     );
                     changes.push(change.clone());
                     let (base, applying) = match (&before, &world) {
@@ -319,7 +319,7 @@ impl<'a> Planner<'a> {
         let mut queues: BTreeMap<String, Vec<Said>> = BTreeMap::new();
         for walked in &reopened {
             let Some(flight) = flights.get(walked) else { continue };
-            let steps = self.chain(self.beliefs, &flight.plan)?;
+            let steps = self.chain(&self.beliefs, &flight.plan)?;
             let at = steps.iter().position(|(s, _)| *s == flight.head).unwrap_or(steps.len());
             let from = (at + usize::from(flight.in_flight)).min(steps.len());
             queues.insert(walked.clone(), steps[from..].iter().map(|(_, s)| s.clone()).collect());

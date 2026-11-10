@@ -69,7 +69,7 @@ pub type Revises<'a> = Box<dyn FnMut(&[String], &str, DateTime) -> Result<(), Er
 
 /// Sensing's part.
 pub struct Sensing<'a> {
-    beliefs: &'a Store,
+    beliefs: Store,
     me: String,
     /// Belief's revision, beneath, where the agent is linked to a deliberator.
     pub revise: Option<Revises<'a>>,
@@ -82,7 +82,7 @@ pub struct Sensing<'a> {
 impl<'a> Sensing<'a> {
     pub fn new(beliefs: &'a Store, agent: &str) -> Result<Self, Error> {
         Ok(Sensing {
-            beliefs,
+            beliefs: beliefs.clone(),
             me: me_of(beliefs, agent)?,
             revise: None,
             watch: Watch::default(),
@@ -107,7 +107,7 @@ impl<'a> Sensing<'a> {
     }
 
     fn missed(&self, now: DateTime) -> Result<(Vec<String>, BTreeSet<String>), Error> {
-        let beliefs = self.beliefs;
+        let beliefs = &self.beliefs.clone();
         let found = missed(beliefs, now)?;
         let silent: BTreeSet<String> = found.iter().map(|(s, _)| s.clone()).collect();
         let holding = beliefs.graphs_of(&[SILENCE_GRAPH], &Within::at(now))?;
@@ -177,7 +177,7 @@ impl<'a> Sensing<'a> {
 
     /// Say the observation `graph` holds, with how long after the percept before it it came.
     fn observation(&self, graph: &str) -> Result<(), Error> {
-        let beliefs = self.beliefs;
+        let beliefs = &self.beliefs.clone();
         let mut read = vec![graph.to_string()];
         read.extend(beliefs.revisions_of(&[graph], OBSERVATION_GRAPH)?);
         let read: Vec<&str> = read.iter().map(String::as_str).collect();
@@ -319,7 +319,7 @@ mod tests {
         let silent_after = default_of(SILENT_AFTER_TERM).unwrap() as f64;
         let later = plus(now(), CADENCE * (1.0 + GRACE + silent_after));
         let since = plus(now(), CADENCE * (1.0 + GRACE));
-        let clock = Manual::at(later);
+        let clock = std::sync::Arc::new(Manual::at(later));
         let mut part = Sensing::new(&store, "keeper").unwrap();
         let written = {
             let parts: Vec<(String, &mut dyn Part)> = vec![("sensing".into(), &mut part)];
@@ -369,7 +369,7 @@ mod tests {
         type Handed = Rc<RefCell<Vec<(Vec<String>, String)>>>;
         let handed: Handed = Rc::new(RefCell::new(Vec::new()));
         let into = handed.clone();
-        let clock = Manual::at(plus(now(), CADENCE));
+        let clock = std::sync::Arc::new(Manual::at(plus(now(), CADENCE)));
         let mut part = Sensing::new(&store, "keeper").unwrap();
         part.revise = Some(Box::new(move |graphs, kind, _| {
             into.borrow_mut().push((graphs.to_vec(), kind.to_string()));

@@ -411,7 +411,7 @@ fn called(c: &Conversation, name: &str, inputs: &Json, mind: &dyn Mind, back: &S
 /// What translation holds across passes, shared with whoever links to it: the model, the carriers, what is being
 /// thought in which chat, and what the model's threads handed back.
 pub struct Translator<'a> {
-    beliefs: &'a Store,
+    beliefs: Store,
     pub me: String,
     pub model: Option<Arc<dyn Model>>,
     pub carriers: Vec<Rc<RefCell<dyn Carrier + 'a>>>,
@@ -431,7 +431,7 @@ impl<'a> Translator<'a> {
     pub fn new(beliefs: &'a Store, me: &str, model: Option<Arc<dyn Model>>) -> Self {
         let (tx, rx) = channel();
         Translator {
-            beliefs,
+            beliefs: beliefs.clone(),
             me: me.to_string(),
             model,
             carriers: Vec::new(),
@@ -448,7 +448,7 @@ impl<'a> Translator<'a> {
 
     /// A person's words on a chat's channel: answered, or made a statement, off the mind's thread.
     pub fn heard(&mut self, prose: &Prose, now: DateTime) -> Result<Vec<String>, Error> {
-        let store = self.beliefs;
+        let store = &self.beliefs.clone();
         let Some(chat) = chats_of(store)?.into_iter().find(|c| c.channel == prose.channel) else {
             return Ok(Vec::new());
         };
@@ -571,7 +571,7 @@ impl<'a> Translator<'a> {
     /// A document the agent says to a person in a chat of its: rendered and sent through the chat's channel — the
     /// person's own chat with the agent first, a group they are in only where they have none.
     pub fn told(&mut self, to: &str, payload: &[u8]) -> Result<(), Error> {
-        let store = self.beliefs;
+        let store = &self.beliefs.clone();
         let theirs: Vec<Chat> = chats_of(store)?
             .into_iter()
             .filter(|c| c.people.iter().any(|(p, _)| p == to))
@@ -697,10 +697,10 @@ impl<'a> Translator<'a> {
     fn done(&mut self, back: Back) -> Result<Vec<String>, Error> {
         match back {
             Back::Keep(payload) => {
-                let written = orexis_speech::heard::heard(self.beliefs, &self.me, &payload)?;
+                let written = orexis_speech::heard::heard(&self.beliefs, &self.me, &payload)?;
                 let mut out = written.clone();
                 for statement in &written {
-                    out.extend(believe(self.beliefs, statement)?);
+                    out.extend(believe(&self.beliefs, statement)?);
                 }
                 log::info!("{} heard a statement from a person", local_of(&self.me));
                 Ok(out)
@@ -740,7 +740,7 @@ impl<'a> Translator<'a> {
                 answer,
             } => {
                 let _ = answer.send(
-                    statement_of(self.beliefs, &stating, &inputs, &person, &prose, at).map_err(|e| e.to_string()),
+                    statement_of(&self.beliefs, &stating, &inputs, &person, &prose, at).map_err(|e| e.to_string()),
                 );
                 Ok(Vec::new())
             }

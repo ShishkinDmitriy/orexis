@@ -24,6 +24,17 @@ pub trait Clock: Send + Sync {
     }
 }
 
+/// A clock shared is the clock: whoever holds the handle reads the one timeline, for as long as it holds it.
+impl<C: Clock + ?Sized> Clock for std::sync::Arc<C> {
+    fn now(&self) -> DateTime {
+        (**self).now()
+    }
+
+    fn real_delay(&self, seconds: f64) -> Duration {
+        (**self).real_delay(seconds)
+    }
+}
+
 /// The wall's clock at a pace, from an epoch: what a deployed agent reads.
 pub struct Paced {
     pace: f64,

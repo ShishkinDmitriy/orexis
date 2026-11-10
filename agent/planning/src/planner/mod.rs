@@ -185,7 +185,7 @@ type Said = (String, Vec<(String, String)>);
 /// One agent's planning: the pass, one want's search, and one iteration of it, each a method that sequences the
 /// package's acts and reads the store between them. What the Python copy signals, a caller reads off the fields.
 pub struct Planner<'a> {
-    pub beliefs: &'a Store,
+    pub beliefs: Store,
     pub id: String,
     pub uri: String,
     pub budget: usize,
@@ -594,7 +594,7 @@ impl<'a> Planner<'a> {
                 ))
             })?;
         Ok(Planner {
-            beliefs,
+            beliefs: beliefs.clone(),
             id: agent_id.to_string(),
             uri,
             budget,
@@ -619,7 +619,7 @@ impl<'a> Planner<'a> {
     /// and the plans published. The graphs written in the beliefs — the plans published and the wants that keep a
     /// step below.
     pub fn plan(&mut self, at: DateTime) -> Result<Vec<String>, Error> {
-        let beliefs = self.beliefs;
+        let beliefs = &self.beliefs.clone();
         let scopes = find_scopes(beliefs)?
             .ok_or_else(|| Error::Evaluation("the store holds no scope graph — scope_actions has not run".into()))?;
         let walking = self.walking()?;
@@ -694,7 +694,7 @@ impl<'a> Planner<'a> {
         searched: &mut BTreeSet<String>,
         at: DateTime,
     ) -> Result<Vec<String>, Error> {
-        let beliefs = self.beliefs;
+        let beliefs = &self.beliefs.clone();
         let flights = flights.clone();
         let scope = scope.to_string();
         let unscoped = scope == UNSCOPED;
@@ -932,7 +932,7 @@ impl<'a> Planner<'a> {
         memo: &mut Memo,
         at: DateTime,
     ) -> Result<Vec<PlanPublished>, Error> {
-        let beliefs = self.beliefs;
+        let beliefs = &self.beliefs.clone();
         let mut out = Vec::new();
         for plan in handed {
             let found = beliefs.rows(&bind(PURSUES_Q, &[("plan", Value::iri(plan.as_str()))])?, &[])?;
@@ -1069,7 +1069,7 @@ impl<'a> Planner<'a> {
         let mut minted = Vec::new();
         for r in self.beliefs.rows(&bind(KEPT_DUE_Q, &[("now", instant(at))])?, &[])? {
             let Some(step) = iri(&r, "step") else { continue };
-            if let Some(want) = refine(self.beliefs, &self.uri, &step, at)? {
+            if let Some(want) = refine(&self.beliefs, &self.uri, &step, at)? {
                 minted.extend(
                     self.beliefs
                         .rows(REFINED_Q, &[])?
@@ -1093,7 +1093,7 @@ impl<'a> Planner<'a> {
 
     /// Whether the agent holds any desire.
     pub fn holds_a_desire(&self) -> Result<bool, Error> {
-        let desires = graphs(self.beliefs, &[DESIRE])?;
+        let desires = graphs(&self.beliefs, &[DESIRE])?;
         Ok(!self
             .beliefs
             .rows("SELECT ?d WHERE { ?d a planning:Desire } LIMIT 1", &strs(&desires))?
@@ -1108,11 +1108,11 @@ impl<'a> Planner<'a> {
     /// Every constraint this agent holds that its present violates, as (constraint, rows), asked of a throwaway
     /// imaginarium over the whole store. Writes nothing to the beliefs.
     pub fn contradictions(&self, at: DateTime) -> Result<Vec<(String, BTreeSet<Violation>)>, Error> {
-        let scopes = find_scopes(self.beliefs)?
+        let scopes = find_scopes(&self.beliefs)?
             .ok_or_else(|| Error::Evaluation("the store holds no scope graph — scope_actions has not run".into()))?;
         let store = Store::new(Arc::new(self.beliefs.namespaces().clone()))?;
         let mut memo = Memo::default();
-        prepare_ground(self.beliefs, &store, None, Some(&scopes))?;
+        prepare_ground(&self.beliefs, &store, None, Some(&scopes))?;
         let laid = lay_ground(&store, at, &Laying::default())?;
         let present = laid
             .first()

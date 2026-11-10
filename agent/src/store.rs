@@ -44,8 +44,21 @@ fn parsed_cache<T>() -> Parsed<T> {
     Mutex::new(LruCache::new(KEPT))
 }
 
+/// THE AGENT'S STORE, a handle: cloned, it is the same store, so whoever holds one holds it for as long as it lives and
+/// borrows nothing - as the engine's own handle is.
+#[derive(Clone)]
+pub struct Store(Arc<Held>);
+
+impl std::ops::Deref for Store {
+    type Target = Held;
+
+    fn deref(&self) -> &Held {
+        &self.0
+    }
+}
+
 /// The engine, the namespaces every text may speak, and what has been parsed.
-pub struct Store {
+pub struct Held {
     engine: Engine,
     namespaces: Arc<Namespaces>,
     queries: Parsed<PreparedSparqlQuery>,
@@ -134,7 +147,7 @@ SELECT DISTINCT ?super WHERE {
 impl Store {
     /// An empty store, in memory, speaking `namespaces`.
     pub fn new(namespaces: Arc<Namespaces>) -> Result<Self, Error> {
-        Ok(Store {
+        Ok(Store(Arc::new(Held {
             engine: Engine::new().map_err(|e| Error::Evaluation(e.to_string()))?,
             namespaces,
             queries: parsed_cache(),
@@ -143,13 +156,13 @@ impl Store {
             parsed: AtomicUsize::new(0),
             run: AtomicUsize::new(0),
             updated: AtomicUsize::new(0),
-        })
+        })))
     }
 
     /// A store on disk at `path`, opened or made, speaking `namespaces`: a volume an agent lives in.
     #[cfg(feature = "volume")]
     pub fn open(path: &std::path::Path, namespaces: Arc<Namespaces>) -> Result<Self, Error> {
-        Ok(Store {
+        Ok(Store(Arc::new(Held {
             engine: Engine::open(path).map_err(|e| Error::Evaluation(e.to_string()))?,
             namespaces,
             queries: parsed_cache(),
@@ -158,7 +171,7 @@ impl Store {
             parsed: AtomicUsize::new(0),
             run: AtomicUsize::new(0),
             updated: AtomicUsize::new(0),
-        })
+        })))
     }
 
     /// The engine itself, for a reader of quads.

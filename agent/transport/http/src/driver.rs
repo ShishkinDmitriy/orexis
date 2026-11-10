@@ -85,8 +85,8 @@ pub fn get() -> Client {
 }
 
 /// One agent's side of the web, answered from the world in the Thing Description's words.
-pub struct Http<'a> {
-    beliefs: &'a Store,
+pub struct Http {
+    beliefs: Store,
     pub me: String,
     pub inbox: Inbox,
     pub client: Client,
@@ -102,11 +102,11 @@ fn strs(names: &[String]) -> Vec<&str> {
     names.iter().map(String::as_str).collect()
 }
 
-impl<'a> Http<'a> {
+impl Http {
     /// The member over `client`, each fetch on a thread of its own.
-    pub fn new(beliefs: &'a Store, me: &str, client: Client) -> Self {
+    pub fn new(beliefs: &Store, me: &str, client: Client) -> Self {
         Http {
-            beliefs,
+            beliefs: beliefs.clone(),
             me: me.to_string(),
             inbox: Inbox::default(),
             client,
@@ -118,15 +118,15 @@ impl<'a> Http<'a> {
     }
 
     /// The store the member reads the world off.
-    pub fn beliefs(&self) -> &'a Store {
-        self.beliefs
+    pub fn beliefs(&self) -> &Store {
+        &self.beliefs
     }
 
     /// The sensors of the agent's this member reads.
     pub fn open(&self) -> Result<Vec<String>, Error> {
-        let stated = common(self.beliefs)?;
+        let stated = common(&self.beliefs)?;
         let mut out = Vec::new();
-        for sensor in observed(self.beliefs)? {
+        for sensor in observed(&self.beliefs)? {
             if self.beliefs.ask(
                 &bind(FORM_Q, &[("sensor", Value::iri(sensor.as_str()))])?,
                 &strs(&stated),
@@ -148,7 +148,7 @@ impl<'a> Http<'a> {
 
     /// Whether this member reaches `device`.
     pub fn reaches(&self, device: &str) -> Result<bool, Error> {
-        let stated = common(self.beliefs)?;
+        let stated = common(&self.beliefs)?;
         self.beliefs.ask(
             &bind("ASK { $device td:hasForm ?form }", &[("device", Value::iri(device))])?,
             &strs(&stated),
@@ -160,7 +160,7 @@ impl<'a> Http<'a> {
         if self.fetching.lock().unwrap().contains(sensor) {
             return Ok(());
         }
-        let stated = common(self.beliefs)?;
+        let stated = common(&self.beliefs)?;
         let targets: Vec<String> = self
             .beliefs
             .rows(&bind(TARGET_Q, &[("sensor", Value::iri(sensor))])?, &strs(&stated))?
@@ -205,7 +205,7 @@ impl<'a> Http<'a> {
     /// What `channel`, a sensor of this member's, read: handed to sensing's `received`, each graph written answered
     /// with the sensor.
     pub fn handle(&self, channel: &str, payload: &[u8], at: DateTime) -> Result<Vec<(String, String)>, Error> {
-        Ok(received(self.beliefs, &self.me, channel, payload, at)?
+        Ok(received(&self.beliefs, &self.me, channel, payload, at)?
             .into_iter()
             .map(|graph| (channel.to_string(), graph))
             .collect())
@@ -229,7 +229,7 @@ mod tests {
         stand_in(&Path::new(env!("CARGO_MANIFEST_DIR")).join("../http/tests/worlds/a_forecast_for_a_balcony.trig"))
     }
 
-    fn member(store: &Store) -> (Http<'_>, Arc<Mutex<Vec<String>>>) {
+    fn member(store: &Store) -> (Http, Arc<Mutex<Vec<String>>>) {
         let asked: Arc<Mutex<Vec<String>>> = Arc::default();
         let kept = asked.clone();
         let mut member = Http::new(

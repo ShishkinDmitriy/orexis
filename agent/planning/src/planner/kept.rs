@@ -35,7 +35,7 @@ const OUTCOMES_Q: &str = r#"SELECT ?o WHERE { GRAPH $plan { ?p a planning:Plan ;
 impl<'a> Planner<'a> {
     /// The steps of `plan` in `store`, in the order walked, each with the action it fills and its filling.
     pub(super) fn chain(&self, store: &Store, plan: &str) -> Result<Vec<(String, Said)>, Error> {
-        let actions = graphs(self.beliefs, &[ACTION])?;
+        let actions = graphs(&self.beliefs, &[ACTION])?;
         let mut said: BTreeMap<String, (String, BTreeMap<String, String>)> = BTreeMap::new();
         let mut after: BTreeMap<String, String> = BTreeMap::new();
         for r in store.rows(&bind(CHAIN_Q, &[("plan", Value::iri(plan))])?, &[])? {
@@ -87,14 +87,14 @@ impl<'a> Planner<'a> {
 
     /// Say of every step of a plan published that a bridge keeps below that it is `execution:keptBelow`.
     pub(super) fn mark_kept(&self, handed: &[String]) -> Result<(), Error> {
-        let actions = graphs(self.beliefs, &[ACTION])?;
+        let actions = graphs(&self.beliefs, &[ACTION])?;
         for plan in handed {
             for r in self.beliefs.rows(
                 &bind(FICTIVE_STEPS_Q, &[("plan", Value::iri(plan.as_str()))])?,
                 &strs(&actions),
             )? {
                 let Some(step) = iri(&r, "step") else { continue };
-                if keeps(self.beliefs, &step)? {
+                if keeps(&self.beliefs, &step)? {
                     self.beliefs.update(&format!(
                         "INSERT DATA {{ GRAPH <{plan}> {{ <{step}> execution:keptBelow true }} }}"
                     ))?;

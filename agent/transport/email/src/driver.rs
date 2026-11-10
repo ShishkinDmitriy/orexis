@@ -105,8 +105,8 @@ impl Mailbox for Remote {
 }
 
 /// One agent's mailbox: polled for what is written to it, told what the agent says.
-pub struct Email<'a> {
-    beliefs: &'a Store,
+pub struct Email {
+    beliefs: Store,
     pub me: String,
     pub box_: Arc<dyn Mailbox>,
     pub every: f64,
@@ -116,10 +116,10 @@ pub struct Email<'a> {
     unknown: BTreeSet<String>,
 }
 
-impl<'a> Email<'a> {
-    pub fn new(beliefs: &'a Store, me: &str, box_: Arc<dyn Mailbox>) -> Self {
+impl Email {
+    pub fn new(beliefs: &Store, me: &str, box_: Arc<dyn Mailbox>) -> Self {
         Email {
-            beliefs,
+            beliefs: beliefs.clone(),
             me: me.to_string(),
             box_,
             every: POLL_S,
@@ -133,7 +133,7 @@ impl<'a> Email<'a> {
     }
 
     /// The mailbox brought up from the environment: refused where it names none.
-    pub fn connect(beliefs: &'a Store, me: &str, env: &dyn Fn(&str) -> Option<String>) -> Result<Self, Error> {
+    pub fn connect(beliefs: &Store, me: &str, env: &dyn Fn(&str) -> Option<String>) -> Result<Self, Error> {
         let needed = ["MAIL_ADDRESS", "MAIL_PASSWORD", "MAIL_IMAP_HOST", "MAIL_SMTP_HOST"];
         let found: Vec<String> = needed.iter().filter_map(|k| env(k).filter(|v| !v.is_empty())).collect();
         let [address, password, imap, smtp] = found.as_slice() else {
@@ -208,7 +208,7 @@ impl<'a> Email<'a> {
     }
 }
 
-impl Carrier for Email<'_> {
+impl Carrier for Email {
     fn say_to(&mut self, channel: &str, text: &str, _reply: Option<&str>) -> bool {
         let Ok(common) = self.common() else { return false };
         let common: Vec<&str> = common.iter().map(String::as_str).collect();
@@ -268,7 +268,7 @@ mod tests {
         stand_in(&Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/worlds/a_chat_by_email.trig"))
     }
 
-    fn mail(store: &Store) -> (Email<'_>, Arc<Box_>) {
+    fn mail(store: &Store) -> (Email, Arc<Box_>) {
         let box_ = Arc::new(Box_::default());
         let mut mail = Email::new(store, &format!("{TEST}keeper"), box_.clone());
         mail.spawn = Box::new(|work| work());

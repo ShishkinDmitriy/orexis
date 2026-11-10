@@ -202,7 +202,7 @@ fn the_mover_loads_planning_and_nothing_else() {
 fn the_plan_is_the_seven_textbook_moves_at_a_cost_the_estimate_does_not_exceed() {
     let store = store();
     boot(&store);
-    let clock = Manual::at(now());
+    let clock = std::sync::Arc::new(Manual::at(now()));
     let (outcome, planning) = ran(&store, 64, &clock, 20);
     assert_eq!(outcome, PLANNED);
     let (spent, moves) = plan(&store);
@@ -233,7 +233,7 @@ fn the_plan_is_the_seven_textbook_moves_at_a_cost_the_estimate_does_not_exceed()
 fn a_budget_that_cuts_the_search_short_is_finished_by_the_passes_after() {
     let store = store();
     boot(&store);
-    let clock = Ticking(Mutex::new(now()));
+    let clock = std::sync::Arc::new(Ticking(Mutex::new(now())));
     let (outcome, _) = ran(&store, 20, &clock, 12);
     assert_eq!(outcome, PLANNED);
     assert_eq!(plan(&store), (7.0, textbook()));
@@ -244,7 +244,7 @@ fn a_budget_that_cuts_the_search_short_is_finished_by_the_passes_after() {
 fn a_lived_in_volume_keeps_the_plan_and_does_not_search_again() {
     let path = std::env::temp_dir().join(format!("orexis-hanoi-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&path);
-    let clock = Ticking(Mutex::new(now()));
+    let clock = std::sync::Arc::new(Ticking(Mutex::new(now())));
     {
         let store = Store::open(&path, Arc::new(Namespaces::of_tree(tree()).unwrap())).unwrap();
         boot(&store);
@@ -281,7 +281,7 @@ fn metered(interval_s: f64) -> Vec<Vec<orexis::events::Point>> {
     use orexis::events::Point;
     let store = store();
     let loaded = boot(&store);
-    let clock = Ticking(Mutex::new(now()));
+    let clock = std::sync::Arc::new(Ticking(Mutex::new(now())));
     let writes: std::rc::Rc<std::cell::RefCell<Vec<Vec<Point>>>> = Default::default();
     let kept = writes.clone();
     let sink = orexis::series::Sink::new(
@@ -300,7 +300,8 @@ fn metered(interval_s: f64) -> Vec<Vec<orexis::events::Point>> {
         },
         ..Default::default()
     };
-    let (mut parts, seen) = orexis_agent::assemble_seen(&store, "hanoi", &clock, &loaded, Some(20), wiring).unwrap();
+    let (mut parts, seen) =
+        orexis_agent::assemble_seen(&store, "hanoi", clock.clone(), &loaded, Some(20), wiring).unwrap();
     {
         let lent: Vec<(String, &mut dyn Part)> = parts
             .iter_mut()
@@ -418,7 +419,7 @@ fn every_search_and_the_publishing_are_tallied_into_one_window_and_never_by_the_
 fn a_plan_published_is_kept_in_the_journal_with_its_steps_in_the_words_of_the_domain() {
     let store = store();
     let loaded = boot(&store);
-    let clock = Ticking(Mutex::new(now()));
+    let clock = std::sync::Arc::new(Ticking(Mutex::new(now())));
     let journal = Arc::new(orexis::journal::Journal::new(None, 600.0, Arc::new(now)).unwrap());
     let wiring = orexis_agent::Wiring {
         watching: orexis_agent::Watching {
@@ -427,7 +428,8 @@ fn a_plan_published_is_kept_in_the_journal_with_its_steps_in_the_words_of_the_do
         },
         ..Default::default()
     };
-    let (mut parts, seen) = orexis_agent::assemble_seen(&store, "hanoi", &clock, &loaded, Some(400), wiring).unwrap();
+    let (mut parts, seen) =
+        orexis_agent::assemble_seen(&store, "hanoi", clock.clone(), &loaded, Some(400), wiring).unwrap();
     {
         let lent: Vec<(String, &mut dyn Part)> = parts
             .iter_mut()
@@ -468,7 +470,7 @@ fn the_history_part_marks_an_event_of_a_class_beneath_incident_and_no_other() {
     let store = store();
     let loaded = boot(&store);
     let journal = Arc::new(orexis::journal::Journal::new(None, 600.0, Arc::new(now)).unwrap());
-    let clock = Manual::at(now());
+    let clock = std::sync::Arc::new(Manual::at(now()));
     let wiring = orexis_agent::Wiring {
         watching: orexis_agent::Watching {
             journal: Some(journal.clone()),
@@ -476,7 +478,7 @@ fn the_history_part_marks_an_event_of_a_class_beneath_incident_and_no_other() {
         },
         ..Default::default()
     };
-    let (_parts, seen) = orexis_agent::assemble_seen(&store, "hanoi", &clock, &loaded, Some(1), wiring).unwrap();
+    let (_parts, seen) = orexis_agent::assemble_seen(&store, "hanoi", clock.clone(), &loaded, Some(1), wiring).unwrap();
     let unreachable: &dyn Event = &WantUnreachable {
         want: "http://example.org/test#want".into(),
         desire: None,

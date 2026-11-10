@@ -51,7 +51,7 @@ pub type Sayings<'a> = Box<dyn FnMut(&[String], &orexis::document::Document) -> 
 /// as though the device had run.
 pub fn taker<'a>(
     beliefs: &'a Store,
-    clock: &'a dyn Clock,
+    clock: std::sync::Arc<dyn Clock>,
     mut send: Option<Commands<'a>>,
     mut say: Option<Sayings<'a>>,
 ) -> Take<'a> {
@@ -119,7 +119,7 @@ pub struct Execution<'a> {
 }
 
 impl<'a> Execution<'a> {
-    pub fn new(beliefs: &'a Store, agent: &str, clock: &'a dyn Clock) -> Result<Self, Error> {
+    pub fn new(beliefs: &Store, agent: &str, clock: std::sync::Arc<dyn Clock>) -> Result<Self, Error> {
         Ok(Execution {
             executor: Rc::new(RefCell::new(Executor::new(beliefs, agent, None, None, clock)?)),
             soon: Rc::new(Cell::new(false)),

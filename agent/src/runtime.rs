@@ -628,7 +628,7 @@ mod tests {
     #[test]
     fn an_arrival_from_a_task_ends_the_minds_wait() {
         let store = Store::new(crate::snapshots::namespaces()).unwrap();
-        let clock = Manual::at("2026-11-09T12:00:00Z".parse().unwrap());
+        let clock = std::sync::Arc::new(Manual::at("2026-11-09T12:00:00Z".parse().unwrap()));
         let mut part = Waiting {
             inbox: Inbox::default(),
             passes: 0,
@@ -658,7 +658,7 @@ mod tests {
             }
         }
         let store = Store::new(crate::snapshots::namespaces()).unwrap();
-        let clock = Manual::at("2026-11-09T12:00:00Z".parse().unwrap());
+        let clock = std::sync::Arc::new(Manual::at("2026-11-09T12:00:00Z".parse().unwrap()));
         let mut part = Idle;
         let parts: Vec<(String, &mut dyn Part)> = vec![("idle".to_string(), &mut part)];
         assert!(
@@ -704,7 +704,7 @@ mod tests {
     #[test]
     fn an_activitys_start_is_heard_by_class_under_the_name_it_was_said_with() {
         let store = Store::new(crate::snapshots::namespaces()).unwrap();
-        let clock = Manual::at("2026-11-10T12:00:00Z".parse().unwrap());
+        let clock = std::sync::Arc::new(Manual::at("2026-11-10T12:00:00Z".parse().unwrap()));
         let heard = Rc::new(RefCell::new(Vec::new()));
         let said: Rc<RefCell<Vec<NamedNode>>> = Rc::default();
         let (mut begins, mut hears) = (Begins, Hears(heard.clone()));
@@ -728,7 +728,7 @@ mod tests {
     #[test]
     fn nobody_listening_connects_nothing() {
         let store = Store::new(crate::snapshots::namespaces()).unwrap();
-        let clock = Manual::at("2026-11-10T12:00:00Z".parse().unwrap());
+        let clock = std::sync::Arc::new(Manual::at("2026-11-10T12:00:00Z".parse().unwrap()));
         let mut begins = Begins;
         let parts: Vec<(String, &mut dyn Part)> = vec![("begins".into(), &mut begins)];
         let mut runtime = Runtime::new(&store, "urn:test:me", &clock, parts).unwrap();

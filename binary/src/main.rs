@@ -144,7 +144,7 @@ fn opened(path: Option<&Path>) -> Result<Option<oxigraph::store::Store>, Error> 
     }
 }
 
-fn run(args: &Args, clock: &'static Paced, journal: Arc<Journal>, halt: Arc<AtomicBool>) -> Result<String, Error> {
+fn run(args: &Args, clock: Arc<Paced>, journal: Arc<Journal>, halt: Arc<AtomicBool>) -> Result<String, Error> {
     let tree = PathBuf::from(env("OREXIS_TREE").unwrap_or_else(|| TREE.to_string()));
     let namespaces = Arc::new(Namespaces::of_tree(&tree)?);
     let store = match &args.volume {
@@ -184,12 +184,12 @@ fn run(args: &Args, clock: &'static Paced, journal: Arc<Journal>, halt: Arc<Atom
         },
         ..Wiring::default()
     };
-    let (mut parts, seen) = orexis_agent::assemble_seen(&store, &args.agent, clock, &loaded, None, wiring)?;
+    let (mut parts, seen) = orexis_agent::assemble_seen(&store, &args.agent, clock.clone(), &loaded, None, wiring)?;
     let lent: Vec<(String, &mut dyn Part)> = parts
         .iter_mut()
         .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
         .collect();
-    let mut runtime = Runtime::new(&store, &args.agent, clock, lent)?;
+    let mut runtime = Runtime::new(&store, &args.agent, &clock, lent)?;
     runtime.watch = seen.watch.clone();
     runtime.halt = Some(halt);
     let outcome = runtime.run(args.passes, 1.0);
@@ -255,20 +255,18 @@ fn main() {
             }
         }
     }
-    static CLOCK: OnceLock<Paced> = OnceLock::new();
     let clock = match Paced::from_env() {
-        Ok(c) => CLOCK.get_or_init(|| c),
+        Ok(c) => Arc::new(c),
         Err(e) => {
             eprintln!("{e}");
             std::process::exit(3);
         }
     };
     let kept = match opened(args.journal.as_deref()).and_then(|store| {
-        let mut kept = Journal::new(
-            store,
-            journal::window_s(&env),
-            Arc::new(|| CLOCK.get().map_or_else(oxsdatatypes::DateTime::now, Clock::now)),
-        )?;
+        let mut kept = Journal::new(store, journal::window_s(&env), {
+            let clock = clock.clone();
+            Arc::new(move || clock.now())
+        })?;
         kept.incident_level = journal::incident_level(&env);
         kept.incidents = journal::incidents(&env);
         Ok(Arc::new(kept))
