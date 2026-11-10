@@ -428,6 +428,7 @@ fn history_holds_every_reading_and_the_journal_the_dose_published_taken_and_land
         journal: Some(journal.clone()),
         history: Some(sink),
         metrics: None,
+        traces: None,
     };
     let mut g = grower_watched(&store, &clock, watching);
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());

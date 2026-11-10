@@ -239,7 +239,8 @@ pub fn take<'a>(
     }
 }
 
-/// WHAT WATCHES THE AGENT, where the deployment keeps any of it: the journal, the history sink and the metrics window.
+/// WHAT WATCHES THE AGENT, where the deployment keeps any of it: the journal, the history sink, the metrics window and
+/// the tracer, which hears every activity as a span.
 /// The history part is made where a journal is kept or a history sink is loaded, and the metrics part where a metrics
 /// window is, as the Python runtime makes its watchers; each hears every event the parts say.
 #[derive(Default)]
@@ -247,6 +248,8 @@ pub struct Watching {
     pub journal: Option<Arc<Journal>>,
     pub history: Option<Sink>,
     pub metrics: Option<orexis_metrics::Window>,
+    /// The tracer's OTLP endpoint.
+    pub traces: Option<String>,
 }
 
 /// What the agent's bus is, where a test hands one: the MQTT member over a client of its own, the HTTP member over a
@@ -356,6 +359,9 @@ pub fn assemble_seen<'a>(
     }
     if let Some(window) = watching.metrics {
         watchers.push(("metrics".into(), Box::new(orexis_metrics::Metrics::new(window, &watch))));
+    }
+    if let Some(endpoint) = &watching.traces {
+        orexis_spans::connect(&watch, agent, orexis_spans::post(endpoint));
     }
     let holds = |package: &str| loaded.iter().any(|p| p == package);
     #[cfg(feature = "belief")]
