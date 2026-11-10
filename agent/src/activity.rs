@@ -1,6 +1,8 @@
-//! AN ACTIVITY: what a package does over a stretch of time, begun by its policy for the events that triggered it, and
-//! said as two events of the kernel's, its start and its end (packages-meet-by-events-policies-and-activities). Where it
-//! runs is not its question; what it is, is a class its package declares beneath `prov:Activity`.
+//! AN ACTIVITY: what a package does over a stretch of time, begun by its policy, and said as two events that are PROV's
+//! own, its `prov:Start` and its `prov:End` (packages-meet-by-events-policies-and-activities). A start's TRIGGERS are
+//! what PROV says they are, entities - the graph that changed, the step that fell due - and never the event heard, so
+//! an event triggers no event. Where it runs is not its question; what it is, is a class its package declares beneath
+//! `prov:Activity`.
 //!
 //! Neither event states journal triples yet: a pass begins planning and a walk every second, and kept for good they
 //! would be most of a journal. They reach the watch, where a tracer hears them as spans (#1119).
@@ -12,10 +14,10 @@ use oxsdatatypes::DateTime;
 
 use crate::events::{Event, mint, round6};
 
-/// An activity's start, an instant: the event `orexis:Started`.
-pub const STARTED: &str = "http://example.org/orexis#Started";
-/// An activity's end, an instant: the event `orexis:Ended`.
-pub const ENDED: &str = "http://example.org/orexis#Ended";
+/// An activity's start, an instant: PROV's.
+pub const STARTED: &str = "http://www.w3.org/ns/prov#Start";
+/// An activity's end, an instant: PROV's.
+pub const ENDED: &str = "http://www.w3.org/ns/prov#End";
 
 /// An activity begun and not yet ended: its name, its class, and when it began in real time.
 #[derive(Debug)]
@@ -41,12 +43,12 @@ impl Activity {
     }
 }
 
-/// An activity started at `at`, by every event in `triggered_by`.
+/// An activity started at `at`, by every entity in `triggers` (`prov:entity`).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Started {
     pub activity: NamedNode,
     pub kind: &'static str,
-    pub triggered_by: Vec<NamedNode>,
+    pub triggers: Vec<NamedNode>,
     pub at: DateTime,
 }
 

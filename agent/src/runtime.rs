@@ -176,14 +176,15 @@ pub struct Pass<'r> {
 }
 
 impl Pass<'_> {
-    /// Begin an activity of `kind`, triggered by the events `triggered_by` names, and say that it started.
-    pub fn begin(&mut self, kind: &'static str, triggered_by: &[NamedNode]) -> Activity {
+    /// Begin an activity of `kind`, triggered by the entities `triggers` names - what the events heard were about -
+    /// and say that it started.
+    pub fn begin(&mut self, kind: &'static str, triggers: &[NamedNode]) -> Activity {
         let activity = Activity::begin(kind);
         if self.watch.connected() {
             self.watch.emit(&Started {
                 activity: activity.node.clone(),
                 kind,
-                triggered_by: triggered_by.to_vec(),
+                triggers: triggers.to_vec(),
                 at: self.now,
             });
         }

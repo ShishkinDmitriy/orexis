@@ -16,12 +16,15 @@ An [event](/domain/kernel/event.md) has no duration; an activity has nothing els
 the work takes, and ends. PROV's word is the one meant: an activity is a `prov:Activity`, of a class
 its package declares beneath it - `planning:Planning`, `planning:Searching`, `execution:Walking`.
 
-Its start and its end are instants, so each is an event, said as the activity starts and ends:
-`orexis:Started`, beneath `prov:Start`, naming the activity and `orexis:triggeredBy` every event the
-policy started it for, and `orexis:Ended`, beneath `prov:End`. Because they are events, the start or
-the end of one activity may be what triggers another. An event said while it runs - a want derived,
-a search ended, a step taken - names it as the activity it happened `orexis:within`. Several events
-may start one activity: two readings revised in one pass start one planning.
+Its start and its end are instants, and PROV's own: a `prov:Start` and a `prov:End`, each an event
+said as the activity starts and ends, reached from it by `prov:qualifiedStart` and `prov:qualifiedEnd`
+and stamped `prov:atTime`. A start names its triggers as PROV does, by `prov:entity`: not the event
+heard but the thing it was about - the belief graph that changed, the plan written, the step whose
+landing fell due. So no event triggers an event, and the one that brought a trigger is reached through
+that entity, whose generation it was. A start or an end may be what another package's policy hears. An
+event said while the activity runs - a want derived, a search ended, a step taken - names it, as PROV's
+generations and usages name theirs by `prov:activity`. Several triggers may start one activity: two
+readings revised in one pass start one planning.
 
 An activity may hold others. Planning a pass holds one search per scope, each started and ended
 inside it, and once the scopes run apart the searches overlap in time while the planning that started

@@ -114,18 +114,6 @@ orexis:Event
     rdfs:label "Event" ;
     rdfs:comment "Something a part of an agent says happened, at its `prov:atTime`: an entry of the agent's journal, a named graph holding the event and what the agent held of what it is about, in the words of the package that says it — a plan published, a step taken, a conflict concluded — or a line of its log. Watched and never believed: the journal is a store of its own, and nothing an agent reads is handed it. Packages meet at this word, so the kernel keeps it; each package's events are classes beneath it in its own ontology." .
 
-orexis:Started
-    a owl:Class ;
-    rdfs:subClassOf orexis:Event , prov:Start ;
-    rdfs:label "Started" ;
-    rdfs:comment "An activity's start, an instant: the event a part says as its policy begins an activity, naming the activity and every event that triggered it, so another package may be triggered by it in turn (packages-meet-by-events-policies-and-activities)." .
-
-orexis:Ended
-    a owl:Class ;
-    rdfs:subClassOf orexis:Event , prov:End ;
-    rdfs:label "Ended" ;
-    rdfs:comment "An activity's end, an instant: the event a part says as an activity it began ends, naming it, with the real seconds it took." .
-
 orexis:Incident
     a owl:Class ;
     rdfs:subClassOf orexis:Event ;
