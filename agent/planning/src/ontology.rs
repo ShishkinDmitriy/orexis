@@ -3,6 +3,8 @@
 use orexis::ontology::{BELIEF, RECORD};
 
 pub const PLANNING: &str = "http://example.org/orexis/planning#";
+/// A pass of the Planner, as the activity it is.
+pub const PLANNING_ACTIVITY: &str = "http://example.org/orexis/planning#Planning";
 
 pub const DESIRE: &str = "http://example.org/orexis/planning#DesireGraph";
 pub const WANT: &str = "http://example.org/orexis/planning#WantGraph";

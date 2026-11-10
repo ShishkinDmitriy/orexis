@@ -17,6 +17,7 @@
 //! - [`ontology`]: the kernel's terms code may name (rule 1: a T-Box term, never an instance);
 //! - [`snapshots`]: the case runner, holding a store to its `.trig` and `.diff` and writing the diff on request.
 
+pub mod activity;
 pub mod bind;
 pub mod boot;
 pub mod clock;

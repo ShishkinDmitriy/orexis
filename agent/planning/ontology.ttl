@@ -396,6 +396,9 @@ planning:refines a owl:ObjectProperty ; rdfs:domain planning:Want ;
 
 #  WHAT THE PLANNER SAYS HAPPENED, as the journal keeps it (`events.py`): each an `orexis:Event`.
 
+planning:Planning a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Planning" ;
+    rdfs:comment "A pass of the Planner, an activity planning's part begins and ends: from finding the scopes to publishing what the searches found (packages-meet-by-events-policies-and-activities)." .
+
 planning:PlanPublished a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Plan published" ;
     rdfs:comment "A plan handed down for execution, carrying the plan graph as the beliefs held it: the want it is for, its steps chained by `execution:then`, the action each fills and every value it takes." .
 

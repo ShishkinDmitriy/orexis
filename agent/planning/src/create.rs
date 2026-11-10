@@ -17,6 +17,7 @@ use orexis::store::Store;
 
 use crate::Planner;
 use crate::admit::local_of;
+use crate::ontology::PLANNING_ACTIVITY;
 
 const PLAN: usize = 0;
 
@@ -93,12 +94,15 @@ impl Part for Planning<'_> {
     }
 
     fn run(&mut self, _job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        //  EVERY PASS FOR NOW, TRIGGERED BY NOTHING: a policy deciding when to plan is #1119's sixth step.
+        let activity = pass.begin(PLANNING_ACTIVITY, &[]);
         let mut written = self.planner.borrow_mut().plan(pass.now)?;
         if let Some(heard) = self.heard.as_mut() {
             written.extend(heard(&self.planner.borrow())?);
         }
         self.keep(pass)?;
         pass.lap("plan");
+        pass.end(activity);
         Ok(written)
     }
 }

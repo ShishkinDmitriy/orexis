@@ -1,6 +1,8 @@
 //! EXECUTION'S TERMS that code names, as `agent/execution/ontology.py` names them.
 
 pub const EXECUTION: &str = "http://example.org/orexis/execution#";
+/// A walk of the intentions, as the activity it is.
+pub const WALKING: &str = "http://example.org/orexis/execution#Walking";
 
 /// A step an intention committed to, as a belief over its landing window, and the window's two lengths.
 pub const COMMITTED_STEP_GRAPH: &str = "http://example.org/orexis/execution#CommittedStepGraph";

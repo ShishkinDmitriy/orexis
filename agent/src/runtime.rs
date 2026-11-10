@@ -13,19 +13,28 @@
 //! and the member's part queues a job per message when the runtime asks what it `submitted`, so a message is handled
 //! on the one thread the store is written from.
 //!
+//! A PART HEARS AN EVENT BY ITS CLASS (`hears`), the class and every class the vocabulary puts beneath it, after the
+//! job that said it, in the order said; and A PASS BEGINS AND ENDS AN ACTIVITY, saying its start and its end
+//! (packages-meet-by-events-policies-and-activities).
+//!
 //! WHAT WAITS IS A TASK, AND THE MIND WAITS FOR AN ARRIVAL: a part asks for a `task` as it starts, which holds no part
 //! and writes no belief, and runs among the tasks of the process, built the first time one is asked for. What arrives
 //! rings the `Wake`, so a pass that moved nothing waits the poll or the next arrival, whichever comes first; a timer
 //! still falls due only at a pass, so the poll stays as their ceiling (the-agent-moves-to-rust-one-package-at-a-time).
 
-use std::collections::{BTreeMap, VecDeque};
+use std::cell::RefCell;
+use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::future::Future;
+use std::rc::Rc;
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::Duration;
 
 use oxsdatatypes::DateTime;
 
+use oxigraph::model::NamedNode;
+
 use crate::Error;
+use crate::activity::{Activity, Ended, Started};
 use crate::clock::{Clock, seconds};
 use crate::events::{Event, Laps, Mark, Number, Watch, round6};
 use crate::store::Store;
@@ -102,6 +111,7 @@ impl Wake {
 pub struct Starting<'c> {
     timers: Vec<(f64, usize)>,
     hears: Vec<(String, usize)>,
+    events: Vec<(String, usize)>,
     clock: &'c dyn Clock,
     wake: &'c Wake,
     tasks: &'c mut Option<tokio::runtime::Runtime>,
@@ -116,6 +126,12 @@ impl Starting<'_> {
     /// Run the part's `job` for every graph of `kind` written, handed the graph (`Part::heard`).
     pub fn on(&mut self, kind: &str, job: usize) {
         self.hears.push((kind.to_string(), job));
+    }
+
+    /// Run the part's `job` for every event of `class` said, or of a class the vocabulary puts beneath it, handed the
+    /// event (`Part::heard_event`).
+    pub fn hears(&mut self, class: &str, job: usize) {
+        self.events.push((class.to_string(), job));
     }
 
     /// Run the part's `job` at the first pass and again every `seconds` of the one timeline after — every pass where
@@ -156,9 +172,36 @@ pub struct Pass<'r> {
     outcome: &'r mut Option<String>,
     again: &'r mut bool,
     laps: &'r mut Option<Laps>,
+    watch: &'r Watch,
 }
 
 impl Pass<'_> {
+    /// Begin an activity of `kind`, triggered by the events `triggered_by` names, and say that it started.
+    pub fn begin(&mut self, kind: &'static str, triggered_by: &[NamedNode]) -> Activity {
+        let activity = Activity::begin(kind);
+        if self.watch.connected() {
+            self.watch.emit(&Started {
+                activity: activity.node.clone(),
+                kind,
+                triggered_by: triggered_by.to_vec(),
+                at: self.now,
+            });
+        }
+        activity
+    }
+
+    /// End `activity`, and say that it ended.
+    pub fn end(&mut self, activity: Activity) {
+        if self.watch.connected() {
+            self.watch.emit(&Ended {
+                activity: activity.node.clone(),
+                kind: activity.kind,
+                at: self.now,
+                duration_s: activity.took(),
+            });
+        }
+    }
+
     /// Mark the end of a part of the pass, for the pass's event, where anybody watches.
     pub fn lap(&mut self, part: &str) {
         if let Some(laps) = self.laps.as_mut() {
@@ -199,12 +242,25 @@ pub trait Part {
         Ok(Vec::new())
     }
 
+    /// Run `job` for `event`, said and of a class the part hears; the graphs written in turn.
+    fn heard_event(&mut self, _job: usize, _event: &Heard, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        Ok(Vec::new())
+    }
+
     /// The jobs the part queued since it was last asked, to run in this drain after those queued before them.
     fn submitted(&mut self) -> Vec<usize> {
         Vec::new()
     }
 
     fn stop(&mut self) {}
+}
+
+/// An event as a part hears it: the name it was said under, its class, and the activity it starts or ends.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Heard {
+    pub node: NamedNode,
+    pub kind: String,
+    pub activity: Option<(NamedNode, String)>,
 }
 
 struct Timer {
@@ -223,6 +279,13 @@ pub struct Runtime<'p> {
     timers: Vec<Timer>,
     /// (part, kind, job): who hears a kind of graph written, in the order they asked.
     hears: Vec<(usize, String, usize)>,
+    /// (part, class, job): who hears an event of a class, in the order they asked.
+    listens: Vec<(usize, String, usize)>,
+    /// What the watch said since the runtime last looked, once anybody listens.
+    said: Rc<RefCell<VecDeque<Heard>>>,
+    listening: bool,
+    /// Every class each class said is beneath, asked once.
+    closed: HashMap<String, Vec<String>>,
     jobs: VecDeque<(usize, usize)>,
     held: BTreeMap<String, ()>,
     outcome: Option<String>,
@@ -253,6 +316,10 @@ impl<'p> Runtime<'p> {
             parts,
             timers: Vec::new(),
             hears: Vec::new(),
+            listens: Vec::new(),
+            said: Rc::default(),
+            listening: false,
+            closed: HashMap::new(),
             jobs: VecDeque::new(),
             held: BTreeMap::new(),
             outcome: None,
@@ -268,6 +335,7 @@ impl<'p> Runtime<'p> {
             let mut starting = Starting {
                 timers: Vec::new(),
                 hears: Vec::new(),
+                events: Vec::new(),
                 clock,
                 wake: &runtime.wake,
                 tasks: &mut runtime.tasks,
@@ -276,6 +344,9 @@ impl<'p> Runtime<'p> {
             runtime
                 .hears
                 .extend(starting.hears.into_iter().map(|(kind, job)| (i, kind, job)));
+            runtime
+                .listens
+                .extend(starting.events.into_iter().map(|(class, job)| (i, class, job)));
             runtime
                 .timers
                 .extend(starting.timers.into_iter().map(|(seconds, job)| Timer {
@@ -297,6 +368,7 @@ impl<'p> Runtime<'p> {
     /// the order they asked, the same way: the graphs written.
     pub fn drain(&mut self, now: DateTime) -> Result<Vec<String>, Error> {
         self.watch.stand(now);
+        self.listen();
         let mut written = Vec::new();
         self.queue_submitted();
         self.run_jobs(now, &mut written)?;
@@ -323,12 +395,67 @@ impl<'p> Runtime<'p> {
                 outcome: &mut self.outcome,
                 again: &mut self.again,
                 laps: &mut self.laps,
+                watch: &self.watch,
             };
             let wrote = self.parts[part].1.run(job, &mut pass)?;
             self.queue_submitted();
             self.wrote(now, wrote, written)?;
+            self.tell(now, written)?;
         }
         Ok(())
+    }
+
+    /// Hear what the watch says from here on, where any part listens for an event — the watch the runtime has as
+    /// its first drain begins, which whoever runs it may have replaced since it was made.
+    fn listen(&mut self) {
+        if self.listening || self.listens.is_empty() {
+            return;
+        }
+        self.listening = true;
+        let said = self.said.clone();
+        self.watch.connect(move |event, named| {
+            if let Some(kind) = event.kind() {
+                said.borrow_mut().push_back(Heard {
+                    node: named.clone(),
+                    kind: kind.to_string(),
+                    activity: event.activity().map(|(a, k)| (a.clone(), k.to_string())),
+                });
+            }
+        });
+    }
+
+    /// Tell every part listening what was said, in the order said, and what it says in turn.
+    fn tell(&mut self, now: DateTime, written: &mut Vec<String>) -> Result<(), Error> {
+        loop {
+            let Some(event) = self.said.borrow_mut().pop_front() else {
+                return Ok(());
+            };
+            if !self.closed.contains_key(&event.kind) {
+                let closed = self.beliefs.closed(&event.kind)?;
+                self.closed.insert(event.kind.clone(), closed);
+            }
+            let classes = &self.closed[&event.kind];
+            let due: Vec<(usize, usize)> = self
+                .listens
+                .iter()
+                .filter(|(_, class, _)| classes.contains(class))
+                .map(|(part, _, job)| (*part, *job))
+                .collect();
+            for (part, job) in due {
+                let mut pass = Pass {
+                    now,
+                    agent: &self.id,
+                    held: &mut self.held,
+                    outcome: &mut self.outcome,
+                    again: &mut self.again,
+                    laps: &mut self.laps,
+                    watch: &self.watch,
+                };
+                let wrote = self.parts[part].1.heard_event(job, &event, &mut pass)?;
+                self.queue_submitted();
+                self.wrote(now, wrote, written)?;
+            }
+        }
     }
 
     /// Say that `graphs` were written, so whoever listens for their kinds hears it now, and what they write in turn.
@@ -349,6 +476,7 @@ impl<'p> Runtime<'p> {
                         outcome: &mut self.outcome,
                         again: &mut self.again,
                         laps: &mut self.laps,
+                        watch: &self.watch,
                     };
                     answered.extend(self.parts[part].1.heard(job, &graph, &mut pass)?);
                     self.queue_submitted();
@@ -476,7 +604,7 @@ mod tests {
 
     #[test]
     fn an_arrival_from_a_task_ends_the_minds_wait() {
-        let store = Store::new(Arc::new(crate::namespaces::Namespaces::default())).unwrap();
+        let store = Store::new(crate::snapshots::namespaces()).unwrap();
         let clock = Manual::at("2026-11-09T12:00:00Z".parse().unwrap());
         let mut part = Waiting {
             inbox: Inbox::default(),
@@ -506,7 +634,7 @@ mod tests {
                 Ok(Vec::new())
             }
         }
-        let store = Store::new(Arc::new(crate::namespaces::Namespaces::default())).unwrap();
+        let store = Store::new(crate::snapshots::namespaces()).unwrap();
         let clock = Manual::at("2026-11-09T12:00:00Z".parse().unwrap());
         let mut part = Idle;
         let parts: Vec<(String, &mut dyn Part)> = vec![("idle".to_string(), &mut part)];
@@ -515,6 +643,76 @@ mod tests {
                 .unwrap()
                 .tasks
                 .is_none()
+        );
+    }
+
+    const STEP: &str = "http://example.org/test#Stepping";
+
+    /// Begins and ends an activity at every pass.
+    struct Begins;
+    impl Part for Begins {
+        fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
+            starting.every(0.0, 0);
+            Ok(())
+        }
+        fn run(&mut self, _job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+            let activity = pass.begin(STEP, &[]);
+            pass.end(activity);
+            Ok(Vec::new())
+        }
+    }
+
+    /// Hears every event beneath `orexis:Event`'s kernel classes it is told of: here, a start.
+    struct Hears(Rc<RefCell<Vec<Heard>>>);
+    impl Part for Hears {
+        fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
+            starting.hears(crate::activity::STARTED, 0);
+            Ok(())
+        }
+        fn run(&mut self, _job: usize, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+            Ok(Vec::new())
+        }
+        fn heard_event(&mut self, _job: usize, event: &Heard, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+            self.0.borrow_mut().push(event.clone());
+            Ok(Vec::new())
+        }
+    }
+
+    #[test]
+    fn an_activitys_start_is_heard_by_class_under_the_name_it_was_said_with() {
+        let store = Store::new(crate::snapshots::namespaces()).unwrap();
+        let clock = Manual::at("2026-11-10T12:00:00Z".parse().unwrap());
+        let heard = Rc::new(RefCell::new(Vec::new()));
+        let said: Rc<RefCell<Vec<NamedNode>>> = Rc::default();
+        let (mut begins, mut hears) = (Begins, Hears(heard.clone()));
+        let parts: Vec<(String, &mut dyn Part)> = vec![("begins".into(), &mut begins), ("hears".into(), &mut hears)];
+        let mut runtime = Runtime::new(&store, "urn:test:me", &clock, parts).unwrap();
+        let watch = Watch::default();
+        let kept = said.clone();
+        watch.connect(move |event, named| {
+            if event.kind() == Some(crate::activity::STARTED) {
+                kept.borrow_mut().push(named.clone());
+            }
+        });
+        runtime.watch = watch;
+        runtime.drain(clock.now()).unwrap();
+        let heard = heard.borrow();
+        assert_eq!(heard.len(), 1, "one start, and the end is no start: {heard:?}");
+        assert_eq!(heard[0].node, said.borrow()[0], "heard under the name it was said with");
+        assert_eq!(heard[0].activity.as_ref().map(|(_, k)| k.as_str()), Some(STEP));
+    }
+
+    #[test]
+    fn nobody_listening_connects_nothing() {
+        let store = Store::new(crate::snapshots::namespaces()).unwrap();
+        let clock = Manual::at("2026-11-10T12:00:00Z".parse().unwrap());
+        let mut begins = Begins;
+        let parts: Vec<(String, &mut dyn Part)> = vec![("begins".into(), &mut begins)];
+        let mut runtime = Runtime::new(&store, "urn:test:me", &clock, parts).unwrap();
+        runtime.drain(clock.now()).unwrap();
+        assert!(
+            !runtime.watch.connected(),
+            "an emitter that asks whether anybody watches is still told no"
         );
     }
 }
