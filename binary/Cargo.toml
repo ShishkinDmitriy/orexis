@@ -46,6 +46,7 @@ orexis-telegram = { path = "../agent/transport/telegram", optional = true }
 orexis-email = { path = "../agent/transport/email", optional = true }
 orexis-history = { path = "../agent/history" }
 orexis-metrics = { path = "../agent/metrics" }
+orexis-spans = { path = "../agent/spans" }
 oxsdatatypes = "0.2"
 oxigraph.workspace = true
 log = "0.4"

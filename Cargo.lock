@@ -844,6 +844,7 @@ dependencies = [
  "orexis-planning",
  "orexis-prediction",
  "orexis-sensing",
+ "orexis-spans",
  "orexis-speech",
  "orexis-telegram",
  "orexis-translation",
@@ -989,6 +990,18 @@ dependencies = [
  "oxigraph",
  "oxsdatatypes",
  "serde_json",
+]
+
+[[package]]
+name = "orexis-spans"
+version = "0.2.0"
+dependencies = [
+ "log",
+ "orexis",
+ "oxigraph",
+ "oxsdatatypes",
+ "serde_json",
+ "ureq",
 ]
 
 [[package]]

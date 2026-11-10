@@ -171,11 +171,16 @@ fn run(args: &Args, clock: &'static Paced, journal: Arc<Journal>, halt: Arc<Atom
         log::info!("{} writes its metrics every {interval}s", args.agent);
         orexis_metrics::Window::new(sink, interval, Some(&world_name(&args.world)), Some(&args.agent))
     });
+    let traces = orexis_spans::from_environment(&env);
+    if let Some(endpoint) = &traces {
+        log::info!("{} says its activities as spans to {endpoint}", args.agent);
+    }
     let wiring = Wiring {
         watching: Watching {
             journal: Some(journal),
             history: sinks.remove(HISTORY),
             metrics,
+            traces,
         },
         ..Wiring::default()
     };
