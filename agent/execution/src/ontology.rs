@@ -4,6 +4,10 @@ pub const EXECUTION: &str = "http://example.org/orexis/execution#";
 /// EXECUTION'S ACTIVITIES, and the trigger of each: an event a higher package's ontology puts beneath a trigger starts
 /// that activity, and what it is about is said in the words below.
 pub const WALKING: &str = "http://example.org/orexis/execution#Walking";
+pub const WALKING_TRIGGER: &str = "http://example.org/orexis/execution#WalkingTrigger";
+/// What belief's revision pass names, in belief's words, which execution - above it - reads.
+pub const REVISED_SOURCE: &str = "http://example.org/orexis/belief#revised";
+pub const CHANGED: &str = "http://example.org/orexis/belief#changed";
 pub const ADOPTING: &str = "http://example.org/orexis/execution#Adopting";
 pub const ADOPTING_TRIGGER: &str = "http://example.org/orexis/execution#AdoptingTrigger";
 pub const SUPERSEDING: &str = "http://example.org/orexis/execution#Superseding";

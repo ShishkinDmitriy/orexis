@@ -1,5 +1,6 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix execution: <http://example.org/orexis/execution#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
@@ -224,7 +225,9 @@ execution:Walking a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Walk
     rdfs:comment "A walk of the intentions: every head due taken, every step answered or out of patience (packages-meet-by-events-policies-and-activities)." .
 
 execution:WalkingTrigger a owl:Class ; rdfs:subClassOf execution:Trigger ; rdfs:label "Walking trigger" ;
-    rdfs:comment "What starts a walk. Nothing is beneath it yet: a walk is started by the pass's timer and by belief's word that the present changed, until that word is an event (#1119)." .
+    rdfs:comment "What starts a walk besides the pass's timer: belief's revision pass, beneath it here, since execution is above belief and reads its words. The policy judges whether the pass changed the present - a transition changed a state, or a source revised is a belief of the agent's - and walks only then, since nothing else answers a step." .
+
+belief:Revised rdfs:subClassOf execution:WalkingTrigger .
 
 execution:Adopting a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Adopting" ;
     rdfs:comment "An intention adopting a plan: the plan's steps tagged as the intention's, and each written as a committed step." .

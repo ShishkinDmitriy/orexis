@@ -11,6 +11,10 @@ pub const SETTLED: &str = "http://example.org/orexis/belief#settled";
 pub const BUDGET_TERM: &str = "http://example.org/orexis/belief#budget";
 /// The role a deliberator plays.
 pub const DELIBERATOR: &str = "http://example.org/orexis/belief#Deliberator";
+/// A revision pass, as the event it is said as, and what it names: each source it revised, each state it changed.
+pub const REVISED: &str = "http://example.org/orexis/belief#Revised";
+pub const REVISED_SOURCE: &str = "http://example.org/orexis/belief#revised";
+pub const CHANGED: &str = "http://example.org/orexis/belief#changed";
 pub const DERIVED_FROM: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
 
 /// Where the revisions of `source` — what the rules conclude of it — are kept.

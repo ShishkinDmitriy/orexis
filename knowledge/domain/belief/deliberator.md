@@ -30,8 +30,8 @@ peer's document, the executor a fictive step — says `changed(graph)`, and noth
 applies the [transitions](/domain/belief/transition.md) it triggers (`trigger`) — every one, where it
 is testimony, and none where it is the agent's own — so what is concluded
 of an arrival is there before anything changes the state on it. Both spend from one budget of rule
-executions across the pass, and it answers what it spent; and it says by `revised` which graphs it
-revised or transitioned on, which the executor hears to walk. The
+executions across the pass, and it answers what it spent; and it says `belief:Revised`, naming which graphs it
+revised or transitioned on and which states it changed, which execution hears beneath its walking trigger to walk. The
 [runtime](/domain/kernel/runtime.md) calls it where a pass needs the conclusions: after what the
 transport delivered, before the planner.
 

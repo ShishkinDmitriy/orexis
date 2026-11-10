@@ -280,6 +280,17 @@ impl Heard {
             _ => None,
         })
     }
+
+    /// Every node it is about under `predicate`, in the order said.
+    pub fn all(&self, predicate: &str) -> Vec<&NamedNode> {
+        self.about
+            .iter()
+            .filter_map(|(p, t)| match t {
+                Term::NamedNode(n) if p == predicate => Some(n),
+                _ => None,
+            })
+            .collect()
+    }
 }
 
 struct Timer {

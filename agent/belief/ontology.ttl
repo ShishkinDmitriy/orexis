@@ -138,3 +138,15 @@ sh:RulesGraph rdfs:subClassOf orexis:Graph .
     rdfs:comment """An agent that revises what it believes by the rules it holds: the role whose
     part is the deliberator, one concept with it. Declared, never derived; a role beneath this
     one — the observer's, a market host's — loads this package with its own.""" .
+
+#  WHAT BELIEF SAYS HAPPENED: an `orexis:Event`, in belief's own words, which a package above it reads and puts
+#  beneath its own trigger (knowledge/domain/kernel/policy.md).
+
+belief:Revised a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Revised" ;
+    rdfs:comment "A revision pass: the sources it revised or transitioned on (`belief:revised`) and the states of the agent's own its transitions changed (`belief:changed`). Names, never what was concluded: whoever hears it reads the beliefs." .
+
+belief:revised a owl:ObjectProperty ; rdfs:domain belief:Revised ; rdfs:label "revised" ;
+    rdfs:comment "A source a revision pass revised or transitioned on." .
+
+belief:changed a owl:ObjectProperty ; rdfs:domain belief:Revised ; rdfs:label "changed" ;
+    rdfs:comment "A state of the agent's own a revision pass's transitions changed." .

@@ -18,6 +18,7 @@
 
 use std::time::Instant;
 
+use oxigraph::model::{NamedNode, Term};
 use oxsdatatypes::DateTime;
 
 use orexis::Error;
@@ -27,7 +28,7 @@ use orexis::ontology::{BELIEF, RECORD};
 use orexis::stance::stance;
 use orexis::store::{Store, Within, iri};
 
-use crate::ontology::{BUDGET_TERM, REVISION_GRAPH, SETTLED, revision_graph};
+use crate::ontology::{BUDGET_TERM, CHANGED, REVISED, REVISED_SOURCE, REVISION_GRAPH, SETTLED, revision_graph};
 use crate::revise::{self, revise, say_settled};
 use crate::trigger::trigger;
 
@@ -55,6 +56,24 @@ pub struct Revised {
 impl Event for Revised {
     fn metric(&self) -> Option<&'static str> {
         Some("revise")
+    }
+
+    fn kind(&self) -> Option<&'static str> {
+        Some(REVISED)
+    }
+
+    /// Every source it revised or transitioned on (`belief:revised`) and every state of the agent's its transitions
+    /// changed (`belief:changed`), in belief's own words: whoever hears it is above belief and reads them.
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        let named = |p: &'static str, gs: &[String]| {
+            gs.iter()
+                .filter_map(|g| NamedNode::new(g.as_str()).ok())
+                .map(move |n| (p, Term::NamedNode(n)))
+                .collect::<Vec<_>>()
+        };
+        let mut about = named(REVISED_SOURCE, &self.graphs);
+        about.extend(named(CHANGED, &self.changed));
+        about
     }
 
     fn marks(&self) -> Vec<(&'static str, Mark)> {
@@ -117,11 +136,8 @@ impl Arrival {
     }
 }
 
-/// Whoever hears a pass revised.
-pub type Hears<'a> = Box<dyn FnMut(&Revised) -> Result<(), Error> + 'a>;
-
 /// The pass over what was written since the last one, within a budget.
-pub struct Deliberator<'a> {
+pub struct Deliberator {
     beliefs: Store,
     pub id: String,
     pub budget: usize,
@@ -129,16 +145,14 @@ pub struct Deliberator<'a> {
     pub per_source: usize,
     /// Source to where it stands, in the order changes arrived.
     queue: Vec<(String, Arrival)>,
-    /// What a pass revised or transitioned on, for whoever is interested in the present changing.
-    pub revised: Option<Hears<'a>>,
     /// Whoever watches the agent.
     pub watch: Watch,
 }
 
-impl<'a> Deliberator<'a> {
+impl Deliberator {
     /// The beliefs and the one identifier a process is told. The budget is the agent's stance, `BUDGET` where it
     /// states none — or the caller's.
-    pub fn new(beliefs: &'a Store, agent: &str, budget: Option<usize>) -> Result<Self, Error> {
+    pub fn new(beliefs: &Store, agent: &str, budget: Option<usize>) -> Result<Self, Error> {
         let budget = match budget {
             Some(b) => b,
             None => stance(beliefs, BUDGET_TERM)?.map_or(BUDGET, |b| b as usize),
@@ -149,7 +163,6 @@ impl<'a> Deliberator<'a> {
             budget,
             per_source: revise::BUDGET,
             queue: Vec::new(),
-            revised: None,
             watch: Watch::default(),
         };
         for source in deliberator.unsettled()? {
@@ -250,9 +263,6 @@ impl<'a> Deliberator<'a> {
                 cut: self.queue.len(),
                 duration_s: (started.elapsed().as_secs_f64() * 1e6).round() / 1e6,
             };
-            if let Some(hears) = self.revised.as_mut() {
-                hears(&revised)?;
-            }
             if self.watch.connected() {
                 self.watch.emit(&revised);
                 let held = self.held()?;
@@ -461,15 +471,16 @@ mod tests {
     #[test]
     fn nothing_changed_spends_nothing_and_says_nothing() {
         let store = revise_case("a_reading_below_its_range_is_concluded_below");
-        let heard = std::cell::RefCell::new(0);
+        let heard = std::rc::Rc::new(std::cell::Cell::new(0));
         let mut deliberator = Deliberator::new(&store, snapshots::AGENT, None).unwrap();
-        deliberator.revised = Some(Box::new(|_| {
-            *heard.borrow_mut() += 1;
-            Ok(())
-        }));
+        let into = heard.clone();
+        deliberator.watch.connect(move |event, _| {
+            if orexis::events::as_of::<Revised>(event).is_some() {
+                into.set(into.get() + 1);
+            }
+        });
         assert_eq!(deliberator.deliberate(snapshots::now()).unwrap(), 0);
-        drop(deliberator);
-        assert_eq!(*heard.borrow(), 0);
+        assert_eq!(heard.get(), 0);
     }
 
     #[test]

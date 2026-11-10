@@ -37,7 +37,10 @@ beneath `execution:AdoptingTrigger`, `planning:PlanSuperseded` beneath `executio
 and `planning:WantReached` beneath `execution:ResolvingTrigger`, each naming what it is about under
 execution's own predicates - the plan an intention would adopt (`execution:adopts`), the want pursued
 (`execution:pursues`), the step in flight an intention ends after (`execution:endsAfter`) - and the
-entity it names is what started the activity. The others are declared as their policies are built (#1119).
+entity it names is what started the activity. And belief's `belief:Revised` is beneath
+`execution:WalkingTrigger`, by execution's ontology, said in belief's own words (`belief:revised`,
+`belief:changed`), which execution, above belief, reads. The others are declared as their policies are
+built (#1119).
 
 **An addressed event, by who asked for it.** A timer alarms for the part that set it, and a request
 to plan is planning's alone. Put beneath a trigger class, every package's timer would wake every
