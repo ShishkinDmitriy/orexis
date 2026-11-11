@@ -1,6 +1,6 @@
 //! THE MQTT TRANSPORT'S PART, as `agent/transport/mqtt/create.py` and the family's `Transport.start` make it
 //! (a-package-starts-itself): started, it subscribes what the world implies, asks after its sensors' missing readings
-//! every `NUDGE_S` of the timeline, and holds the agent running, since what it senses goes on arriving whatever is
+//! when one falls due (`Mqtt::nudge_until`) and waits until then, and holds the agent running, since what it senses goes on arriving whatever is
 //! wanted. Every message a session's task receives waits in the member's inbox and is handed to the one executing
 //! thread as a job that handles it — sensing writing a percept per sensor it is for, whose arrival the runtime tells
 //! whoever listens. A document the agent said it hears said, beneath its telling trigger, and tells each agent it is
@@ -18,7 +18,8 @@ use orexis_speech::create::document_of;
 use orexis_speech::ontology::{STATEMENT, TO};
 use oxigraph::model::NamedNode;
 
-use crate::driver::{Message, Mqtt, NUDGE_S};
+use crate::driver::{Message, Mqtt};
+use oxsdatatypes::DateTime;
 
 /// The commands a command graph keeps, in the order kept: each actuator and its payload.
 fn commands_of(store: &orexis::store::Store, graph: &str) -> Result<Vec<(String, serde_json::Value)>, Error> {
@@ -78,21 +79,28 @@ const PAYLOAD: &str = "http://example.org/orexis/execution#payload";
 const HOLDER: &str = "transport/mqtt";
 
 /// The member's part: the member, shared with whoever links to it, and the messages handed to the pass.
-pub struct Transport<'a> {
-    pub member: Rc<RefCell<Mqtt<'a>>>,
+pub struct Transport {
+    pub member: Rc<RefCell<Mqtt>>,
     pending: VecDeque<Message>,
+    /// Whether to nudge at the next pass whatever is due: the first, and one after a message arrived, which may move
+    /// when a reading next falls due.
+    nudge: bool,
+    /// When the member asks after its sensors next, as the last nudge said.
+    next: Option<DateTime>,
 }
 
-impl<'a> Transport<'a> {
-    pub fn new(member: Mqtt<'a>) -> Self {
+impl Transport {
+    pub fn new(member: Mqtt) -> Self {
         Transport {
             member: Rc::new(RefCell::new(member)),
             pending: VecDeque::new(),
+            nudge: true,
+            next: None,
         }
     }
 }
 
-impl Part for Transport<'_> {
+impl Part for Transport {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         //  THE SESSIONS LISTEN BEFORE THE MEMBER SUBSCRIBES: a subscription waits in a queue only they empty.
         let listening = {
@@ -104,7 +112,7 @@ impl Part for Transport<'_> {
             starting.task(session)?;
         }
         self.member.borrow_mut().open()?;
-        starting.every(NUDGE_S, NUDGE);
+        starting.every(0.0, NUDGE);
         starting.hears(CARRYING_TRIGGER, CARRY);
         starting.hears(TELLING_TRIGGER, TELL);
         starting.hears(ACTUATING_TRIGGER, ACTUATE);
@@ -154,13 +162,22 @@ impl Part for Transport<'_> {
             NUDGE => {
                 //  A MEMBER KEEPS THE AGENT RUNNING: what it senses goes on arriving whatever is wanted.
                 pass.hold(HOLDER);
-                self.member.borrow_mut().nudge(pass.now)?;
+                //  THE MEMBER'S POLICY: ask after its sensors when a reading has fallen due, or a message arrived
+                //  since, and otherwise wait until one falls due.
+                if self.nudge || self.next.is_some_and(|next| next <= pass.now) {
+                    self.nudge = false;
+                    self.next = self.member.borrow_mut().nudge_until(pass.now)?;
+                }
+                if let Some(next) = self.next {
+                    pass.wake_at(next);
+                }
                 Ok(Vec::new())
             }
             HANDLE => {
                 let Some(message) = self.pending.pop_front() else {
                     return Ok(Vec::new());
                 };
+                self.nudge = true;
                 let (written, heard, store, me) = {
                     let mut member = self.member.borrow_mut();
                     let written = member.handle(&message.topic, &message.payload, message.at.unwrap_or(pass.now))?;

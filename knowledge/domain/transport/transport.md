@@ -63,8 +63,9 @@ refuses to guess one, and holds a client per broker. A world may have any number
 MQTT4SSN says which each client `isConnectedToBroker`: a sensor's topic is subscribed to on every
 broker the agent shares with the sensor's client, its own on every broker it is connected to, and a
 command or a document goes out on the first broker it shares with whoever it is for. Started, it
-asks every minute of the timeline after its sensors' missing readings, telling each such board to
-sense now.
+asks after its sensors' missing readings as one falls due, telling each such board to sense now, a
+minute later again while a board it told stays silent, and otherwise waits for the next reading to fall
+due ([sensing](/domain/sensing/sensing.md)'s `next_lapse`).
 
 A peer's document travels the same way: the member hears speech's `speech:Said` beneath its
 `mqtt:TellingTrigger`, reads the document back from the store, and `tell` publishes it on the topic each recipient listens to,

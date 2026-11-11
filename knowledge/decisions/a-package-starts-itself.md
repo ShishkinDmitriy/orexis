@@ -38,7 +38,7 @@ the package's name and knows no word of what it does.
 - `every(seconds, job)` runs a job at the first pass and every so many seconds of the one
   timeline after. The runtime does the waiting and the package says what it waits for, which is
   the principle "the layer that waits does the waiting" kept rather than broken: MQTT asks
-  after its sensors' missing readings every minute, HTTP polls each sensor at its
+  after its sensors' missing readings as one falls due (`wake_at`, since #1119), HTTP polls each sensor at its
   `ssn-system:Frequency`, sensing asks after silence every minute.
 - ~~`gauge(read)` reports what a package samples at a metrics window's end~~ — retired by
   [metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md):

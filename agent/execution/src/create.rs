@@ -9,9 +9,10 @@
 //! want's unbegun intentions (`execution:pursues`, `execution:outcome`). Planning's plan published, plan superseded and
 //! want reached are beneath the three, so planning and execution meet by events and the store.
 //!
-//! LINKED by whoever assembles the parts: planning answers `taking` (#916), until a hearer may hold a reader of the
-//! store (#1119). Belief's revision pass is heard beneath the walking trigger, in belief's words, and where it changed
-//! the present a walk is queued, once, however many revisions say so before it runs. A STEP IS TAKEN order by order
+//! A HEAD ABOUT TO BE TAKEN IS ASKED where the executor `asks`: said `execution:HeadAsked`, and taken or failed when an
+//! event beneath the walking trigger answers it (`execution:head`, `execution:blocked`), which planning says (#916).
+//! Belief's revision pass is heard beneath the walking trigger too, in belief's words, and where it changed the present
+//! a walk is queued, once, however many revisions say so before it runs. A STEP IS TAKEN order by order
 //! (`taker`): each order's commands sized from the present, kept as an `execution:CommandGraph` and said
 //! `execution:Commanded`, which a transport's ontology puts beneath its trigger and sends; and each document said,
 //! kept by speech's `said` and said `execution:Told`, which execution's ontology puts beneath speech's speaking
@@ -36,6 +37,7 @@ use oxigraph::model::{GraphName, Literal, NamedNode, Quad, Term};
 use serde_json::Value as Json;
 
 use crate::command::command;
+use crate::events::{BLOCKED, HEAD};
 use crate::executor::Take;
 use crate::implementation::operations;
 use crate::ontology::{
@@ -53,17 +55,18 @@ use crate::{Executor, Said};
 /// command or saying reaches nothing; a command that answers nothing is a step NOT taken (#869), since the present held
 /// nothing it sizes from and recording it taken would have the intention wait out its patience as though the device
 /// had run.
-pub fn taker<'a>(
-    beliefs: &'a Store,
+pub fn taker(
+    beliefs: Store,
     me: &str,
     clock: Arc<dyn Clock>,
     watch: Watch,
     commands: bool,
     says_to: bool,
     kept: Rc<RefCell<Vec<String>>>,
-) -> Take<'a> {
+) -> Take {
     let me = me.to_string();
     Box::new(move |said: &Said, _intention: &str| {
+        let beliefs = &beliefs;
         let action = said.get("fills").cloned().unwrap_or_default();
         let ops = operations(beliefs, &action)?;
         let mut orders: Vec<f64> = ops
@@ -203,8 +206,8 @@ const RESOLVE: usize = 4;
 const REVISED: usize = 5;
 
 /// Execution's part: its executor, shared with whoever links to it.
-pub struct Execution<'a> {
-    pub executor: Rc<RefCell<Executor<'a>>>,
+pub struct Execution {
+    pub executor: Rc<RefCell<Executor>>,
     /// Raised by whoever saw the present change: a walk is queued.
     pub soon: Rc<Cell<bool>>,
     queued: bool,
@@ -216,7 +219,7 @@ pub struct Execution<'a> {
     pub said: Rc<RefCell<Vec<String>>>,
 }
 
-impl<'a> Execution<'a> {
+impl Execution {
     pub fn new(beliefs: &Store, agent: &str, clock: Arc<dyn Clock>) -> Result<Self, Error> {
         Ok(Execution {
             executor: Rc::new(RefCell::new(Executor::new(beliefs, agent, None, None, clock)?)),
@@ -248,7 +251,14 @@ pub fn present(beliefs: &Store, revised: &[String], changed: &[String]) -> Resul
     Ok(!beliefs.rows(&text, &[])?.is_empty())
 }
 
-impl Execution<'_> {
+impl Execution {
+    /// What the executor and the taker wrote since the runtime was last handed it.
+    fn handed(&mut self) -> Vec<String> {
+        let mut written = std::mem::take(&mut self.executor.borrow_mut().written);
+        written.append(&mut self.said.borrow_mut());
+        written
+    }
+
     fn walk(&mut self, pass: &mut Pass<'_>) -> Result<(), Error> {
         self.queued = false;
         let activity = pass.begin(crate::ontology::WALKING, &[]);
@@ -263,7 +273,7 @@ impl Execution<'_> {
     }
 }
 
-impl Part for Execution<'_> {
+impl Part for Execution {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         starting.every(0.0, PASS);
         starting.hears(ADOPTING_TRIGGER, ADOPT);
@@ -279,6 +289,20 @@ impl Part for Execution<'_> {
         //  A WALK IS QUEUED where what was heard changed the present, which alone answers a step: the walk is the
         //  activity, started when it runs.
         if job == REVISED {
+            //  A HEAD ASKED IS ANSWERED beneath the same trigger: taken or failed now, and walked on from, since a
+            //  fictive step taken is answered at once.
+            if let Some(head) = event.named(HEAD) {
+                let blocked = event.about.iter().any(|(p, t)| {
+                    p == BLOCKED && matches!(t, oxigraph::model::Term::Literal(l) if l.value() == "true")
+                });
+                let activity = pass.begin(crate::ontology::WALKING, std::slice::from_ref(&event.node));
+                if self.executor.borrow_mut().judged(head.as_str(), blocked)? {
+                    pass.again();
+                }
+                pass.end(activity);
+                self.soon.set(true);
+                return Ok(self.handed());
+            }
             let names = |p: &str| {
                 event
                     .all(p)
@@ -358,14 +382,11 @@ impl Part for Execution<'_> {
             //  would mark `execute` over the sensing and revision before it.
             pass.lap("execute");
         }
-        let mut executor = self.executor.borrow_mut();
-        if executor.resolved != self.resolved {
-            self.resolved = executor.resolved;
+        if self.executor.borrow().resolved != self.resolved {
+            self.resolved = self.executor.borrow().resolved;
             pass.again();
         }
-        let mut written = std::mem::take(&mut executor.written);
-        written.append(&mut self.said.borrow_mut());
-        Ok(written)
+        Ok(self.handed())
     }
 
     fn watch(&self) -> Option<orexis::events::Watch> {

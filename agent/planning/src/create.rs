@@ -6,8 +6,9 @@
 //!
 //! WHAT A PASS DID IS SAID, not handed: a plan published, a want reached and a plan superseded are events beneath
 //! execution's trigger, which execution's policy hears once the pass's job is done. Whether anything walks what it
-//! publishes is the agent's roles' to say — one beneath `execution:Executor` — and the Planner is shared only so the
-//! executor can ask it of a head about to be taken, until a hearer may hold a reader of the store (#1119).
+//! publishes is the agent's roles' to say — one beneath `execution:Executor` — and a head execution asks
+//! about as it is taken (`execution:HeadAsked`) is checked and answered, `planning:HeadChecked` beneath execution's
+//! walking trigger (#916).
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -19,10 +20,17 @@ use orexis::store::{Store, Within, iri};
 
 use crate::Planner;
 use crate::admit::local_of;
+use crate::events::HeadChecked;
 use crate::ontology::{PLANNING_ACTIVITY, PLANNING_TRIGGER, REOPENS};
 
 const PLAN: usize = 0;
 const REOPEN: usize = 1;
+const CHECK: usize = 2;
+
+/// A head execution asks about as it is taken, and what that says: the head and the instant.
+const HEAD_ASKED: &str = "http://example.org/orexis/execution#HeadAsked";
+const HEAD: &str = "http://example.org/orexis/execution#head";
+const AT_TIME: &str = "http://www.w3.org/ns/prov#atTime";
 
 /// Whoever walks what planning publishes: a role of this class, or one beneath it.
 const EXECUTOR: &str = "http://example.org/orexis/execution#Executor";
@@ -118,12 +126,35 @@ impl Part for Planning {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         starting.every(0.0, PLAN);
         starting.hears(PLANNING_TRIGGER, REOPEN);
+        starting.hears(HEAD_ASKED, CHECK);
         Ok(())
     }
 
     /// What planning's policy does of a trigger: plan at the pass, keeping the walking wants it names to search
     /// again; and ask for the pass at once where it names any.
-    fn heard_event(&mut self, _job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn heard_event(&mut self, job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        //  A HEAD ASKED IS CHECKED against the present at the instant it is taken, and answered: no planning, and
+        //  no trigger of one.
+        if job == CHECK {
+            let Some(head) = event.named(HEAD) else {
+                return Ok(Vec::new());
+            };
+            let at = event
+                .about
+                .iter()
+                .find_map(|(p, t)| match t {
+                    oxigraph::model::Term::Literal(l) if p == AT_TIME => l.value().parse().ok(),
+                    _ => None,
+                })
+                .unwrap_or(pass.now);
+            let blocked = self.planner.borrow_mut().check(head.as_str(), at)?;
+            pass.emit(&HeadChecked {
+                head: head.as_str().to_string(),
+                blocked,
+                at,
+            });
+            return Ok(Vec::new());
+        }
         self.triggers.push(event.node.clone());
         let wants: Vec<String> = event.all(REOPENS).iter().map(|w| w.as_str().to_string()).collect();
         if !wants.is_empty() {

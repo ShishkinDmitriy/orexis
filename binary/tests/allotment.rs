@@ -213,7 +213,7 @@ fn allotment_on(ticks: bool, walk: impl FnOnce(&mut Market<'_, '_>)) {
 struct Market<'a, 'r> {
     stores: &'a [Store],
     runtimes: Vec<Runtime<'r>>,
-    seen: Vec<Seen<'a>>,
+    seen: Vec<Seen>,
     clock: Ticking,
     carried: Rc<RefCell<Carried>>,
 }

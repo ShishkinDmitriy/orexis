@@ -419,6 +419,9 @@ planning:WantReached a owl:Class ; rdfs:subClassOf orexis:Event , execution:Reso
 planning:PlanSuperseded a owl:Class ; rdfs:subClassOf orexis:Event , execution:SupersedingTrigger ; rdfs:label "Plan superseded" ;
     rdfs:comment "A reconsideration replaced a walking plan's untaken steps with a joint plan: said to execution as the step in flight its intention ends after (`execution:endsAfter`) and the want the replacing plan pursues (`execution:pursues`) (knowledge/domain/execution/commitment.md)." .
 
+planning:HeadChecked a owl:Class ; rdfs:subClassOf orexis:Event , execution:WalkingTrigger ; rdfs:label "Head checked" ;
+    rdfs:comment "A head execution asked about (`execution:HeadAsked`), checked against the present as it is taken: said to execution as the head (`execution:head`) and whether it is blocked (`execution:blocked`), beneath its walking trigger, since planning is the higher package (#916)." .
+
 planning:WantUnreachable a owl:Class ; rdfs:subClassOf orexis:Incident ; rdfs:label "Want unreachable" ;
     rdfs:comment "A want standing that nothing the agent holds reaches, no search cut short and nothing walking it." .
 

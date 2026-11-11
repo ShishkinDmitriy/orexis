@@ -9,7 +9,8 @@
 //! holds of them as it stands, copied, so the journal is read without the beliefs. On the metrics, a want's name is on
 //! no point: the desire it was derived under is.
 
-use oxigraph::model::{NamedNode, Term, Triple};
+use oxigraph::model::vocab::xsd;
+use oxigraph::model::{Literal, NamedNode, Term, Triple};
 use oxsdatatypes::DateTime;
 
 use orexis::events::{Event, Mark, Number, boolean, node, triple, typed};
@@ -19,6 +20,12 @@ use crate::ontology::EXECUTION;
 /// An intention ended, and a step recorded taken: each heard by whoever is above execution, by its class.
 pub const INTENTION_RESOLVED: &str = "http://example.org/orexis/execution#IntentionResolved";
 pub const STEP_TAKEN: &str = "http://example.org/orexis/execution#StepTaken";
+/// A head about to be taken, asked of whoever is above execution: the head, and the instant it is taken at.
+pub const HEAD_ASKED: &str = "http://example.org/orexis/execution#HeadAsked";
+pub const HEAD: &str = "http://example.org/orexis/execution#head";
+/// What an answer to a head asked says of it, beneath execution's walking trigger: blocked, or not.
+pub const BLOCKED: &str = "http://example.org/orexis/execution#blocked";
+pub const AT_TIME: &str = "http://www.w3.org/ns/prov#atTime";
 const INTENTION_OF: &str = "http://example.org/orexis/execution#intention";
 const ACT_OF: &str = "http://example.org/orexis/execution#act";
 
@@ -137,6 +144,33 @@ impl Event for StepTaken {
         let mut out = vec![typed(entry.clone(), &term("StepTaken"))];
         out.extend(about(entry, &self.about));
         Some(out)
+    }
+
+    fn at(&self) -> Option<DateTime> {
+        Some(self.at)
+    }
+}
+
+/// A head about to be taken at `at`, asked: no history, since what is kept is the act it becomes or the failure it
+/// ends in, and heard by whoever judges a head by its class.
+#[derive(Clone, Debug, PartialEq)]
+pub struct HeadAsked {
+    pub step: String,
+    pub at: DateTime,
+}
+
+impl Event for HeadAsked {
+    fn kind(&self) -> Option<&'static str> {
+        Some(HEAD_ASKED)
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        let mut out = named(HEAD, Some(&self.step));
+        out.push((
+            AT_TIME,
+            Term::Literal(Literal::new_typed_literal(self.at.to_string(), xsd::DATE_TIME)),
+        ));
+        out
     }
 
     fn at(&self) -> Option<DateTime> {
