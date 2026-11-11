@@ -66,7 +66,8 @@ command or a document goes out on the first broker it shares with whoever it is 
 asks every minute of the timeline after its sensors' missing readings, telling each such board to
 sense now.
 
-A peer's document travels the same way: `tell` publishes it on the topic the recipient listens to,
+A peer's document travels the same way: the member hears speech's `speech:Said` beneath its
+`mqtt:TellingTrigger`, reads the document back from the store, and `tell` publishes it on the topic each recipient listens to,
 and one arriving is handed to [speech](/domain/speech/speech.md)'s `heard`; a document to a person is
 not the bus's, and is passed over in silence. A chat's topic carries prose both ways, each message
 `{"from": …, "text": …}`, and the member skips its own when the broker hands it back.

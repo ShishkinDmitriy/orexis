@@ -40,7 +40,10 @@ use orexis::ontology::local_of;
 use orexis::runtime::{Heard, Part, Pass, Starting};
 use orexis::series::Reader;
 use orexis::store::Store;
+use orexis_speech::create::document_of;
+use orexis_speech::ontology::{STATEMENT, TO};
 use orexis_speech::prose::{KEPT, Prose, ProseKept, WritingAnnounced, prose_of, received, written};
+use oxigraph::model::NamedNode;
 
 use crate::briefing::briefing;
 use crate::chat::{Chat, chats_of, named};
@@ -565,7 +568,7 @@ impl Translator {
 
     /// A document the agent says to a person in a chat of its: rendered and sent through the chat's channel — the
     /// person's own chat with the agent first, a group they are in only where they have none.
-    pub fn told(&mut self, to: &str, payload: &[u8]) -> Result<(), Error> {
+    pub fn told(&mut self, to: &str, doc: &Document) -> Result<(), Error> {
         let store = &self.beliefs;
         let theirs: Vec<Chat> = chats_of(store)?
             .into_iter()
@@ -578,17 +581,6 @@ impl Translator {
             .cloned()
         else {
             return Ok(());
-        };
-        let doc = match Document::of(payload) {
-            Ok(doc) => doc,
-            Err(e) => {
-                log::warn!(
-                    "{}: what was said to {} is no document: {e}",
-                    local_of(&self.me),
-                    local_of(to)
-                );
-                return Ok(());
-            }
         };
         let Some(model) = self.model.clone() else {
             log::warn!(
@@ -607,7 +599,7 @@ impl Translator {
         let text = format!(
             "To: {name}\nFrom: {}, a software agent\nStatement:\n{}",
             local_of(&self.me),
-            rendered(store, &doc, &prefixes_of(store, &self.me))?
+            rendered(store, doc, &prefixes_of(store, &self.me))?
         );
         let (back, channel) = (self.tx.clone(), chat.channel.clone());
         let render = move || {
@@ -740,6 +732,9 @@ const TRANSLATE: usize = 2;
 /// What translation does as an activity, and what starts it.
 const TRANSLATING: &str = "http://example.org/orexis/translation#Translating";
 const TRANSLATING_TRIGGER: &str = "http://example.org/orexis/translation#TranslatingTrigger";
+const PHRASE: usize = 3;
+const PHRASING: &str = "http://example.org/orexis/translation#Phrasing";
+const PHRASING_TRIGGER: &str = "http://example.org/orexis/translation#PhrasingTrigger";
 
 /// Translation's part: the translator, shared with whoever links to it, and what was handed back for the pass.
 pub struct Translation {
@@ -756,10 +751,33 @@ impl Translation {
     }
 }
 
+impl Translation {
+    /// What translation's policy does of a document the agent said: phrased for each person it is to in a chat of
+    /// theirs, read back from the store as it was said; an agent it is to is no person, and is passed over.
+    fn phrase(&mut self, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        let graphs: Vec<String> = event.all(STATEMENT).iter().map(|g| g.as_str().to_string()).collect();
+        let to: Vec<String> = event.all(TO).iter().map(|a| a.as_str().to_string()).collect();
+        if graphs.is_empty() || to.is_empty() {
+            return Ok(Vec::new());
+        }
+        let store = self.translator.borrow().beliefs.clone();
+        let doc = document_of(&store, &graphs)?;
+        let statements: Vec<NamedNode> = event.all(STATEMENT).into_iter().cloned().collect();
+        let activity = pass.begin(PHRASING, &statements);
+        let phrased = to
+            .iter()
+            .try_for_each(|person| self.translator.borrow_mut().told(person, &doc));
+        pass.end(activity);
+        phrased?;
+        Ok(Vec::new())
+    }
+}
+
 impl Part for Translation {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         starting.every(WRITING_S, STILL);
         starting.hears(TRANSLATING_TRIGGER, TRANSLATE);
+        starting.hears(PHRASING_TRIGGER, PHRASE);
         Ok(())
     }
 
@@ -769,7 +787,10 @@ impl Part for Translation {
 
     /// What translation's policy does of a trigger: read the words it names back, and hear them where they are a
     /// person's; the agent's own it kept itself, for a transport to carry.
-    fn heard_event(&mut self, _job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn heard_event(&mut self, job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        if job == PHRASE {
+            return self.phrase(event, pass);
+        }
         let Some(graph) = event.named(KEPT).cloned() else {
             return Ok(Vec::new());
         };

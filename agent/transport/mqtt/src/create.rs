@@ -3,7 +3,8 @@
 //! every `NUDGE_S` of the timeline, and holds the agent running, since what it senses goes on arriving whatever is
 //! wanted. Every message a session's task receives waits in the member's inbox and is handed to the one executing
 //! thread as a job that handles it — sensing writing a percept per sensor it is for, whose arrival the runtime tells
-//! whoever listens. The executor's commands reach the member through whoever links the parts, sharing it.
+//! whoever listens. A document the agent said it hears said, beneath its telling trigger, and tells each agent it is
+//! to that listens on the bus. The executor's commands reach the member through whoever links the parts, sharing it.
 
 use std::cell::RefCell;
 use std::collections::VecDeque;
@@ -12,6 +13,10 @@ use std::rc::Rc;
 use orexis::Error;
 use orexis::runtime::{Heard, Part, Pass, Starting};
 use orexis_speech::prose::{ProseKept, carry, kept};
+
+use orexis_speech::create::document_of;
+use orexis_speech::ontology::{STATEMENT, TO};
+use oxigraph::model::NamedNode;
 
 use crate::driver::{Message, Mqtt, NUDGE_S};
 
@@ -22,6 +27,9 @@ const CARRY: usize = 2;
 /// What the member does as an activity, and what starts it.
 const CARRYING: &str = "http://example.org/orexis/mqtt#Carrying";
 const CARRYING_TRIGGER: &str = "http://example.org/orexis/mqtt#CarryingTrigger";
+const TELL: usize = 3;
+const TELLING: &str = "http://example.org/orexis/mqtt#Telling";
+const TELLING_TRIGGER: &str = "http://example.org/orexis/mqtt#TellingTrigger";
 
 /// Who holds the agent running.
 const HOLDER: &str = "transport/mqtt";
@@ -55,14 +63,33 @@ impl Part for Transport<'_> {
         self.member.borrow_mut().open()?;
         starting.every(NUDGE_S, NUDGE);
         starting.hears(CARRYING_TRIGGER, CARRY);
+        starting.hears(TELLING_TRIGGER, TELL);
         Ok(())
     }
 
-    /// What the member's policy does of its trigger: the agent's own words carried where they are on a channel it
-    /// carries.
-    fn heard_event(&mut self, _job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    /// What the member's policy does of its triggers: the agent's own words carried where they are on a channel it
+    /// carries, and a document the agent said told to each agent it is to that listens on the bus, read back from the
+    /// store as it was said.
+    fn heard_event(&mut self, job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
         let store = self.member.borrow().beliefs().clone();
-        carry(&store, &mut *self.member.borrow_mut(), event, pass, CARRYING)?;
+        match job {
+            TELL => {
+                let graphs: Vec<String> = event.all(STATEMENT).iter().map(|g| g.as_str().to_string()).collect();
+                let to = event.all(TO);
+                if graphs.is_empty() || to.is_empty() {
+                    return Ok(Vec::new());
+                }
+                let payload = document_of(&store, &graphs)?.trig()?;
+                let statements: Vec<NamedNode> = event.all(STATEMENT).into_iter().cloned().collect();
+                let activity = pass.begin(TELLING, &statements);
+                let told = to
+                    .iter()
+                    .try_for_each(|agent| self.member.borrow_mut().tell(agent.as_str(), &payload).map(|_| ()));
+                pass.end(activity);
+                told?;
+            }
+            _ => carry(&store, &mut *self.member.borrow_mut(), event, pass, CARRYING)?,
+        }
         Ok(Vec::new())
     }
 

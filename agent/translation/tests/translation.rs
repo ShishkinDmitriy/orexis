@@ -19,6 +19,7 @@ use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
 use orexis::runtime::{Heard, Part, Pass, Runtime, Starting};
 use orexis::store::{Store, Within, iri, value};
+use orexis_speech::events::{Said, Statement};
 use orexis_speech::prose::{Carrier, PROSE_GRAPH, PROSE_KEPT, Prose, ProseKept, WRITING_ANNOUNCED, carry, kept};
 use orexis_translation::briefing::briefing;
 use orexis_translation::chat::chats_of;
@@ -465,6 +466,8 @@ struct Member<'s> {
     store: &'s Store,
     bot: Rc<RefCell<Bot>>,
     kept: Vec<String>,
+    /// Documents said, to say said at the next pass, as speech says them.
+    said: Vec<Said>,
 }
 
 impl Part for Member<'_> {
@@ -484,11 +487,18 @@ impl Part for Member<'_> {
         for prose in &kept {
             pass.emit(&ProseKept { prose: prose.clone() });
         }
+        for said in std::mem::take(&mut self.said) {
+            pass.emit(&said);
+        }
         Ok(kept)
     }
 
     fn submitted(&mut self) -> Vec<usize> {
-        if self.kept.is_empty() { Vec::new() } else { vec![0] }
+        if self.kept.is_empty() && self.said.is_empty() {
+            Vec::new()
+        } else {
+            vec![0]
+        }
     }
 }
 
@@ -599,6 +609,7 @@ impl<'s> Seeker<'s> {
                 store,
                 bot: bot.clone(),
                 kept: Vec::new(),
+                said: Vec::new(),
             },
             bot,
             clock: Manual::at(now()),
@@ -627,6 +638,25 @@ impl<'s> Seeker<'s> {
             reply: None,
         };
         self.member.kept.push(kept(self.store, &me(), &prose).unwrap());
+        self.pass();
+    }
+
+    /// The agent says `document` to `to`, kept as speech keeps it and said said, as speech says it.
+    fn say(&mut self, document: &[u8], to: &str) {
+        let doc = orexis::document::Document::of(document).unwrap();
+        let graphs = orexis_speech::said::said(self.store, &me(), &doc).unwrap();
+        self.member.said.push(Said {
+            statements: graphs
+                .into_iter()
+                .map(|graph| Statement {
+                    graph,
+                    kinds: Vec::new(),
+                    said: Vec::new(),
+                })
+                .collect(),
+            to: vec![format!("{V}{to}")],
+            at: Some(now()),
+        });
         self.pass();
     }
 
@@ -1155,12 +1185,7 @@ fn what_the_agent_says_to_a_person_is_rendered_and_sent_through_their_chat() {
     let statement = b"@prefix : <http://example.org/orexis/world/viewing#> .\n\
 <urn:x:asked> { :flat_7 :viewingAsked \"weekday evenings\" . }\n\
 <urn:x:asked> a <http://example.org/orexis/speech#StatementGraph> .\n";
-    s.part
-        .translator
-        .borrow_mut()
-        .told(&format!("{V}clara"), statement)
-        .unwrap();
-    s.pass();
+    s.say(statement, "clara");
     let (system, text, _) = asked.lock().unwrap()[0].clone();
     let text = text[0].as_str().unwrap().to_string();
     assert_eq!(system, [SAY_SYSTEM]);
@@ -1177,11 +1202,7 @@ fn what_the_agent_says_to_a_person_is_rendered_and_sent_through_their_chat() {
         [(format!("{V}clara_telegram"), words.to_string())],
         "her own chat, not the household's group"
     );
-    s.part
-        .translator
-        .borrow_mut()
-        .told(&format!("{V}keeper"), statement)
-        .unwrap();
+    s.say(statement, "keeper");
     assert_eq!(
         asked.lock().unwrap().len(),
         1,

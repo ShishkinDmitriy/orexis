@@ -86,3 +86,11 @@ translation:TranslatingTrigger a owl:Class ; rdfs:subClassOf translation:Trigger
     rdfs:comment "What starts a translating: speech's `speech:ProseKept`, beneath it here, naming the prose graph a transport kept (`speech:kept`)." .
 
 speech:ProseKept rdfs:subClassOf translation:TranslatingTrigger .
+
+translation:Phrasing a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Phrasing" ;
+    rdfs:comment "Phrasing a document the agent said for a person it was said to, in a chat of theirs: the model asked to write the message, off the mind; the words come back as a job of their own, and are kept for the transport that carries the chat's channel." .
+
+translation:PhrasingTrigger a owl:Class ; rdfs:subClassOf translation:Trigger ; rdfs:label "Phrasing trigger" ;
+    rdfs:comment "What starts a phrasing: speech's `speech:Said`, beneath it here, naming each statement of the document (`speech:statement`) and each it is to (`speech:to`). The policy phrases it for each that is a person in a chat of the agent's, and passes over an agent." .
+
+speech:Said rdfs:subClassOf translation:PhrasingTrigger .
