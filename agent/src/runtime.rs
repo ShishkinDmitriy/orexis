@@ -1010,11 +1010,11 @@ impl Runtime {
         for part in 0..shared.senders.len() {
             shared.send(part, Message::Free);
         }
+        //  ONE RECEIVER, so a task that woke and finished between the run's looks is still a change it sees.
+        let mut seen = self.busy.0.subscribe();
         loop {
-            let busy = self.busy.clone();
-            let halted = self.halted.clone();
             let began = std::time::Instant::now();
-            self.tasks.block_on(async move { busy.idle().await });
+            self.tasks.block_on(async { drop(seen.wait_for(|n| *n == 0).await) });
             Self::checked(&shared)?;
             self.passed(&shared, began.elapsed().as_secs_f64())?;
             if self.halted() {
@@ -1025,11 +1025,11 @@ impl Runtime {
                 log::info!("{}: nothing holds it", self.id);
                 return Ok(Self::outcome(&shared));
             }
-            let busy = self.busy.clone();
+            let halted = self.halted.clone();
             let halt = self.halt.clone();
-            self.tasks.block_on(async move {
+            self.tasks.block_on(async {
                 tokio::select! {
-                    _ = busy.active() => {}
+                    _ = seen.changed() => {}
                     _ = halted.notified() => {}
                 }
             });

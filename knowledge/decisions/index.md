@@ -107,11 +107,6 @@ Time in the search: an instant, a stretch, a graph holding during a period, a pr
 * [a-root-holds-always-and-an-outdated-graph-is-dropped](/decisions/a-root-holds-always-and-an-outdated-graph-is-dropped.md) - A root is authored at genesis into a graph with no period; everything sourced at a time has one, and one sweep drops the outdated.
 * [the-agent-keeps-one-timeline-and-its-clock-may-run-fast](/decisions/the-agent-keeps-one-timeline-and-its-clock-may-run-fast.md) - One timeline for every instant and stretch; a compressed world paces the runtime's clock, and the mind never learns a unit.
 * [the-drift-is-sensings-and-its-result-is-predictions](/decisions/the-drift-is-sensings-and-its-result-is-predictions.md) - Sensing runs every drift and writes predictions, graphs holding during windows typed with bands; the core reads them and runs no rule.
-* [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md) - A plan is published once and adopted by reference; a package owns its signals; the mind starts itself; an intention may end early.
-* [packages-meet-by-events-policies-and-activities](/decisions/packages-meet-by-events-policies-and-activities.md) - An event is an instant; a policy hears its package's trigger and starts an activity, whose start and end are events. Links between parts go.
-* [the-agent-is-a-runtime-of-tasks](/decisions/the-agent-is-a-runtime-of-tasks.md) - The agent's body is a Tokio runtime; each package's policy a task; a graph has one writing package; tests run single-threaded.
-* [a-package-starts-itself](/decisions/a-package-starts-itself.md) - The runtime is a lifecycle container: each package starts itself by jobs, kinds heard and timers; one thread runs them; packages meet at the store.
-* [metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md) - Every signal carries an event its package declares, marking what is reported; metrics and history parts hear every signal, and nothing imports them.
 * [an-observation-is-concluded-from-the-number-a-sensor-gave](/decisions/an-observation-is-concluded-from-the-number-a-sensor-gave.md) - Sensing keeps a sensor's number; rules conclude what it observes and its quantity, through a calibration the agent believes.
 * [a-forecast-is-a-series-a-sensor-reads](/decisions/a-forecast-is-a-series-a-sensor-reads.md) - A weather service is a sensor reading a series; sensing writes a graph per stretch; HTTP by its Thing Description; the location stays secret.
 * [a-landing-is-a-band-and-a-world-holds-over-a-period](/decisions/a-landing-is-a-band-and-a-world-holds-over-a-period.md) - An action's landing is a band, least and most; a possible world holds over its path's summed period; the executor gives up past the latest.
@@ -124,6 +119,16 @@ Time in the search: an instant, a stretch, a graph holding during a period, a pr
 * [a-drift-toward-the-surroundings-is-one-link-and-no-physics](/decisions/a-drift-toward-the-surroundings-is-one-link-and-no-physics.md) - A sample exchanges heat with what surrounds it: one link, a stated rate, the sign of the gap, no physics; the drift says when it crosses.
 * [a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md) - A scope joins predicates on keys read per filling off the public graphs; the greenhouse's pump and heater are two scopes.
 * [one-function-mints-every-want](/decisions/one-function-mints-every-want.md) - A desire is one; its met-test's violations are the instances in trouble, clustered by scope into wants; packages write instances and predictions, never wants.
+
+# The mind — the runtime and how packages meet
+
+The agent's body: parts as tasks, the events they hear, and what the store carries between them.
+
+* [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md) - A plan is published once and adopted by reference; a package owns its signals; the mind starts itself; an intention may end early.
+* [packages-meet-by-events-policies-and-activities](/decisions/packages-meet-by-events-policies-and-activities.md) - An event is an instant; a policy hears its package's trigger and starts an activity, whose start and end are events. Links between parts go.
+* [the-agent-is-a-runtime-of-tasks](/decisions/the-agent-is-a-runtime-of-tasks.md) - The agent's body is a Tokio runtime; each package's policy a task; a graph has one writing package; tests run single-threaded.
+* [a-package-starts-itself](/decisions/a-package-starts-itself.md) - The runtime is a lifecycle container: each package starts itself by jobs, kinds heard and timers; one thread runs them; packages meet at the store.
+* [metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md) - Every signal carries an event its package declares, marking what is reported; metrics and history parts hear every signal, and nothing imports them.
 
 # The market
 
