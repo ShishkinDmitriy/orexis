@@ -142,6 +142,9 @@ impl Part for Planning {
     fn run(&mut self, _job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
         let reached = self.next.is_some_and(|next| next <= pass.now);
         if !self.due && !reached && self.triggers.is_empty() {
+            if let Some(next) = self.next {
+                pass.wake_at(next);
+            }
             pass.lap("plan");
             return Ok(Vec::new());
         }
@@ -151,6 +154,9 @@ impl Part for Planning {
         let written = self.planner.borrow_mut().plan(pass.now)?;
         self.keep(pass)?;
         self.next = self.planner.borrow().next_ground(pass.now)?;
+        if let Some(next) = self.next {
+            pass.wake_at(next);
+        }
         pass.lap("plan");
         pass.end(activity);
         Ok(written)

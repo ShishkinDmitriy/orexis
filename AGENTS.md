@@ -1035,7 +1035,8 @@ belief revises what is written, planning plans where its policy says so and publ
 a transport listens or polls, sensing asks after what has fallen due, prediction answers an
 observation — each through jobs it submits, timers it asks for and the events it hears beneath its
 triggers, no part linked to another (a-package-starts-itself, packages-meet-by-events-policies-and-activities). A pass drains every job queued,
-then what is due; the run ends when nothing holds the agent. A search is bounded by a budget in the
+then what is due, and the mind then waits for an arrival or the soonest instant a timer or a part (`wake_at`) says is
+due, polling nothing; the run ends when nothing holds the agent. A search is bounded by a budget in the
 unit it spends and continued by the next pass. The executor's two doors, `tick` and `drain`, are
 what its walk and a test call.
 

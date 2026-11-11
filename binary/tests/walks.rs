@@ -153,7 +153,8 @@ fn walked_the_drivers_one_plan_moves_both_parcels_and_leaves_the_driver_aboard_v
     }
 }
 
-/// The courier at 128 candidates for twelve passes on a clock that ticks per read, with a metrics window written every
+/// The courier at 128 candidates for forty passes on a clock that ticks per read, enough for a drive to land now that an idle
+/// pass reads it twice, with a metrics window written every
 /// pass or none: how often the clock was read, how many points were written, how the run ended, and what was measured.
 fn metered_courier(watched: bool) -> (usize, usize, String, std::collections::BTreeSet<String>) {
     struct Counting(Mutex<(DateTime, usize)>);
@@ -191,7 +192,7 @@ fn metered_courier(watched: bool) -> (usize, usize, String, std::collections::BT
             .collect();
         let mut runtime = Runtime::new(&store, "courier", &clock, lent).unwrap();
         runtime.watch = seen.watch.clone();
-        let outcome = runtime.run(Some(12), 0.0).unwrap();
+        let outcome = runtime.run(Some(40), 0.0).unwrap();
         runtime.stop();
         outcome
     };

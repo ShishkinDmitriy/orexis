@@ -18,7 +18,7 @@ use orexis::Error;
 use orexis::document::Document;
 use orexis::events::Watch;
 use orexis::ontology::local_of;
-use orexis::runtime::{Part, Pass, Starting};
+use orexis::runtime::{Heard, Part, Pass, Starting};
 use orexis::store::Store;
 use oxsdatatypes::DateTime;
 
@@ -29,8 +29,8 @@ use crate::events::{ASKED, Concluded, DrawWon, FORESEEN, Held, SAID, Told};
 use crate::holdings::{heard, walking_over};
 use crate::lay::{laid, lay};
 use crate::mint::mint;
-use crate::ontology::COORDINATION;
 use crate::ontology::{ANSWER_GRAPH, QUESTION_GRAPH};
+use crate::ontology::{COORDINATING, COORDINATING_TRIGGER, COORDINATION};
 
 const PASS: usize = 0;
 const QUESTIONED: usize = 1;
@@ -47,6 +47,13 @@ pub struct Coordination {
     /// What was last said of each set, so a set is said where it changed.
     told: BTreeMap<(String, String, String), Vec<crate::holdings::Holding>>,
     concluded: Option<Vec<crate::events::Conflict>>,
+    /// The events heard beneath its trigger since it last coordinated.
+    triggers: Vec<oxigraph::model::NamedNode>,
+    /// Whether it has coordinated yet, when it last asked anything, and the instant a patience running calls for it
+    /// next, while it is asking or in conflict.
+    started: bool,
+    asked: Option<DateTime>,
+    next: Option<DateTime>,
 }
 
 impl Coordination {
@@ -58,6 +65,10 @@ impl Coordination {
             watch: Watch::default(),
             told: BTreeMap::new(),
             concluded: None,
+            triggers: Vec::new(),
+            started: false,
+            asked: None,
+            next: None,
         }
     }
 
@@ -108,6 +119,27 @@ impl Coordination {
             to: peer.to_string(),
         });
         Ok(statements)
+    }
+
+    /// When to coordinate again with nothing heard: a quarter patience on while the agent asked within the last two
+    /// patiences or stands in a conflict, since a question expires and a peer turns silent by the patience alone.
+    fn wait(&mut self, asking: bool, now: DateTime) -> Result<(), Error> {
+        let patience = crate::ask::patience(&self.beliefs)?;
+        self.started = true;
+        if asking {
+            self.asked = Some(now);
+        }
+        let recent = self
+            .asked
+            .and_then(|l| l.checked_add_day_time_duration(orexis::clock::seconds(2.0 * patience)))
+            .is_some_and(|until| now <= until);
+        let engaged = recent || !conflicts(&self.beliefs, &self.me)?.is_empty();
+        self.next = if engaged {
+            now.checked_add_day_time_duration(orexis::clock::seconds(patience / 4.0))
+        } else {
+            None
+        };
+        Ok(())
     }
 
     /// Say `event` where what it says differs from what was last said of the same set.
@@ -175,7 +207,14 @@ impl Part for Coordination {
         starting.on(QUESTION_GRAPH, QUESTIONED);
         starting.on(ANSWER_GRAPH, ANSWERED);
         starting.every(0.0, PASS);
+        starting.hears(COORDINATING_TRIGGER, PASS);
         Ok(())
+    }
+
+    /// What coordination's policy does of a trigger: coordinate at the pass.
+    fn heard_event(&mut self, _job: usize, event: &Heard, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        self.triggers.push(event.node.clone());
+        Ok(Vec::new())
     }
 
     fn watch(&self) -> Option<Watch> {
@@ -186,11 +225,29 @@ impl Part for Coordination {
         match job {
             MINTED => Ok(std::mem::take(&mut self.pending)),
             PASS => {
+                //  COORDINATION'S POLICY: coordinate where a trigger was heard since, at the first pass, or where a
+                //  patience it is waiting on may have run; and otherwise nothing.
+                let due = !self.started || self.next.is_some_and(|n| n <= pass.now);
+                if !due && self.triggers.is_empty() {
+                    if let Some(next) = self.next {
+                        pass.wake_at(next);
+                    }
+                    return Ok(Vec::new());
+                }
+                let triggers = std::mem::take(&mut self.triggers);
+                let activity = pass.begin(COORDINATING, &triggers);
                 let mut written = Vec::new();
-                for (peer, document) in ask(&self.beliefs, &self.me, pass.now)? {
+                let asked = ask(&self.beliefs, &self.me, pass.now)?;
+                let asking = !asked.is_empty();
+                for (peer, document) in asked {
                     written.extend(self.said(&peer, &document, pass.now)?);
                 }
                 written.extend(self.yielded(pass)?);
+                self.wait(asking, pass.now)?;
+                if let Some(next) = self.next {
+                    pass.wake_at(next);
+                }
+                pass.end(activity);
                 Ok(written)
             }
             _ => Ok(Vec::new()),

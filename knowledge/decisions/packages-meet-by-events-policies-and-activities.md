@@ -115,8 +115,9 @@ writes what the person stated and says `translation:Conversed`.
 - **A trigger is an entity, and a span's link is the entity's generation.** PROV makes a start's trigger the thing an
   event was about (`prov:entity`), so a tracer links a span to the event that generated that thing, which needs the
   event named where it is said rather than where the journal keeps it (#1121 does).
-- **Exactly where time changes what planning concludes** is assumed to be the start of a ground; a forecast's end is to
-  be checked before planning stops running each pass, and the poll stays as a ceiling until it is.
+- **Exactly where time changes what planning concludes** is taken to be the start of a ground, a forecast's end among
+  them where it takes back what it added: planning plans there with nothing heard (#1119 step 6). A belief of the
+  present whose period ends with no ground there, a percept past its grace, plans nothing until something is said.
 - **A plan is heard published, not its graph written**: execution adopts on `planning:PlanPublished`, which names the
   plan and the want, rather than on the graph's kind, which would make execution read planning's words to find the
   want (#1119 step 4).

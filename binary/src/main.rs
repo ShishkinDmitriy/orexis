@@ -149,6 +149,9 @@ fn opened(path: Option<&Path>) -> Result<Option<oxigraph::store::Store>, Error> 
     }
 }
 
+/// The longest the mind waits with nothing arriving and nothing due: a guard, not a poll.
+const LONGEST_S: f64 = 3600.0;
+
 fn run(args: &Args, clock: Arc<Paced>, journal: Arc<Journal>, halt: Arc<AtomicBool>) -> Result<String, Error> {
     let tree = PathBuf::from(env("OREXIS_TREE").unwrap_or_else(|| TREE.to_string()));
     let namespaces = Arc::new(Namespaces::of_tree(&tree)?);
@@ -196,8 +199,20 @@ fn run(args: &Args, clock: Arc<Paced>, journal: Arc<Journal>, halt: Arc<AtomicBo
         .collect();
     let mut runtime = Runtime::new(&store, &args.agent, &clock, lent)?;
     runtime.watch = seen.watch.clone();
+    //  A SIGNAL ENDS THE MIND'S WAIT, which may be long now that nothing polls: the flag is raised and the wake rung.
+    if let Ok(mut signals) =
+        signal_hook::iterator::Signals::new([signal_hook::consts::SIGTERM, signal_hook::consts::SIGINT])
+    {
+        let (wake, raised) = (runtime.wake(), halt.clone());
+        std::thread::spawn(move || {
+            for _ in signals.forever() {
+                raised.store(true, std::sync::atomic::Ordering::Relaxed);
+                wake.ring();
+            }
+        });
+    }
     runtime.halt = Some(halt);
-    let outcome = runtime.run(args.passes, 1.0);
+    let outcome = runtime.run(args.passes, LONGEST_S);
     if let Err(e) = &outcome {
         //  AN ERROR ESCAPING A PASS is an incident: said at ERROR, it keeps the journal's window before it.
         log::error!("{}: a pass failed, and the agent stops: {e}", args.agent);
