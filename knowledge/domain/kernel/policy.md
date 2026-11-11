@@ -6,7 +6,7 @@ description: >-
   whether it calls for that activity and start it if so. Each activity has a trigger class of its own,
   and the events beneath it are put there by whichever ontology is higher, so a lower package never
   names a higher one's word. The judgment is code reading the store; who listens to what is the vocabulary's.
-  Execution's is built; the others are #1119's.
+  Execution's and planning's are built; the others are #1119's.
 ---
 
 # What it is
@@ -14,8 +14,9 @@ description: >-
 Event storming's "whenever this happens, then that": the step between an
 [event](/domain/kernel/event.md) and an [activity](/domain/kernel/activity.md). An event never starts
 another event. A policy hears it and decides, and what it decides is to start an activity or to do
-nothing. Planning's policy hears that a belief changed and asks whether the graph crosses into any
-imaginarium; where it crosses into none, nothing is planned and nothing is said.
+nothing. Planning's policy hears that a belief changed and plans; where no trigger was heard, nothing is
+planned and nothing is said. Judging whether the changed graph crosses into any imaginarium, so that a
+change crossing into none plans nothing either, is #1119's still.
 
 A policy is the package's own and reads the store as any of its acts does. Hearing an event does not
 carry the facts it acts on: the event says that something happened and names it, and the policy reads
@@ -57,7 +58,12 @@ phrases it for each person in a chat; each reads the statements back from the st
 Execution's step taken says `execution:Commanded`, naming the command graph it kept, beneath `mqtt:ActuatingTrigger`
 by the transport's ontology, since a transport is above every package it carries bytes for; and `execution:Told`,
 like coordination's, beneath `speech:SpeakingTrigger` by execution's.
-The others are declared as their policies are built (#1119).
+Planning's is built: belief's `belief:Revised` and execution's `execution:IntentionResolved` and
+`execution:StepTaken` are beneath `planning:PlanningTrigger` by planning's ontology - a step taken, since
+the want below a refined step is kept once the step is taken - and planning plans at the
+pass after one is heard, beside the two things that happen with nothing said: the present reaching the next
+ground the last planning laid, and a search the budget cut short going on. A pass that heard none of them plans
+nothing. The others are declared as their policies are built (#1119).
 
 **An addressed event, by who asked for it.** A timer alarms for the part that set it, and a request
 to plan is planning's alone. Put beneath a trigger class, every package's timer would wake every

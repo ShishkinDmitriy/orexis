@@ -9,12 +9,26 @@
 //! holds of them as it stands, copied, so the journal is read without the beliefs. On the metrics, a want's name is on
 //! no point: the desire it was derived under is.
 
-use oxigraph::model::{NamedNode, Triple};
+use oxigraph::model::{NamedNode, Term, Triple};
 use oxsdatatypes::DateTime;
 
 use orexis::events::{Event, Mark, Number, boolean, node, triple, typed};
 
 use crate::ontology::EXECUTION;
+
+/// An intention ended, and a step recorded taken: each heard by whoever is above execution, by its class.
+pub const INTENTION_RESOLVED: &str = "http://example.org/orexis/execution#IntentionResolved";
+pub const STEP_TAKEN: &str = "http://example.org/orexis/execution#StepTaken";
+const INTENTION_OF: &str = "http://example.org/orexis/execution#intention";
+const ACT_OF: &str = "http://example.org/orexis/execution#act";
+
+/// `iri` as what an event is about under `predicate`, where it is one.
+fn named(predicate: &'static str, iri: Option<&String>) -> Vec<(&'static str, Term)> {
+    iri.and_then(|i| NamedNode::new(i.as_str()).ok())
+        .map(|n| (predicate, Term::NamedNode(n)))
+        .into_iter()
+        .collect()
+}
 
 fn term(name: &str) -> String {
     format!("{EXECUTION}{name}")
@@ -34,6 +48,14 @@ pub struct IntentionResolved {
 impl Event for IntentionResolved {
     fn metric(&self) -> Option<&'static str> {
         Some("intention")
+    }
+
+    fn kind(&self) -> Option<&'static str> {
+        Some(INTENTION_RESOLVED)
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        named(INTENTION_OF, Some(&self.intention))
     }
 
     fn marks(&self) -> Vec<(&'static str, Mark)> {
@@ -93,6 +115,14 @@ pub struct StepTaken {
 impl Event for StepTaken {
     fn metric(&self) -> Option<&'static str> {
         Some("act")
+    }
+
+    fn kind(&self) -> Option<&'static str> {
+        Some(STEP_TAKEN)
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        named(ACT_OF, self.about.act.as_ref())
     }
 
     fn marks(&self) -> Vec<(&'static str, Mark)> {

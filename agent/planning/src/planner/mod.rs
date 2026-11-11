@@ -574,6 +574,10 @@ fn of_scope(
     Ok(mine)
 }
 
+/// THE EARLIEST GROUND BEGINNING AFTER `$at`, off an imaginarium's catalogue.
+const NEXT_GROUND_Q: &str = "SELECT (MIN(?start) AS ?start) WHERE { GRAPH $cat {
+  ?g a planning:GroundGraph ; dcterms:temporal ?period . ?period orexis:start ?start . FILTER (?start > $at) } }";
+
 impl Planner {
     /// The beliefs, the one identifier a process is told, and how much a search may spend — the agent's stance,
     /// `planning:budget` off its self graph, where the caller hands none, and `BUDGET` where it states none.
@@ -1089,6 +1093,24 @@ impl Planner {
             out.extend(find_wants(store, at, &Finding::default())?);
         }
         Ok(out.into_iter().collect())
+    }
+
+    /// The earliest instant after `at` a ground the last pass laid begins, in any imaginarium: where the present
+    /// reaches it, the world the derivation stands in has moved though nothing arrived.
+    pub fn next_ground(&self, at: DateTime) -> Result<Option<DateTime>, Error> {
+        let mut next: Option<DateTime> = None;
+        for store in self.imaginaria.values() {
+            let Some(cat) = store.catalogue()? else { continue };
+            let text = bind(NEXT_GROUND_Q, &[("cat", Value::iri(cat)), ("at", instant(at))])?;
+            for row in store.rows(&text, &[])? {
+                if let Some(start) = value(&row, "start").and_then(|s| s.parse::<DateTime>().ok())
+                    && next.is_none_or(|n| start < n)
+                {
+                    next = Some(start);
+                }
+            }
+        }
+        Ok(next)
     }
 
     /// Whether the agent holds any desire.
