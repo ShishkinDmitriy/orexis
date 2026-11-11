@@ -6,9 +6,7 @@
 //! whoever listens. A document the agent said it hears said, beneath its telling trigger, and tells each agent it is
 //! to that listens on the bus. The executor's commands reach the member through whoever links the parts, sharing it.
 
-use std::cell::RefCell;
 use std::collections::VecDeque;
-use std::rc::Rc;
 
 use orexis::Error;
 use orexis::runtime::{Heard, Part, Pass, Starting};
@@ -80,7 +78,7 @@ const HOLDER: &str = "transport/mqtt";
 
 /// The member's part: the member, shared with whoever links to it, and the messages handed to the pass.
 pub struct Transport {
-    pub member: Rc<RefCell<Mqtt>>,
+    pub member: Mqtt,
     pending: VecDeque<Message>,
     /// Whether to nudge at the next pass whatever is due: the first, and one after a message arrived, which may move
     /// when a reading next falls due.
@@ -92,7 +90,7 @@ pub struct Transport {
 impl Transport {
     pub fn new(member: Mqtt) -> Self {
         Transport {
-            member: Rc::new(RefCell::new(member)),
+            member,
             pending: VecDeque::new(),
             nudge: true,
             next: None,
@@ -104,14 +102,14 @@ impl Part for Transport {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         //  THE SESSIONS LISTEN BEFORE THE MEMBER SUBSCRIBES: a subscription waits in a queue only they empty.
         let listening = {
-            let mut member = self.member.borrow_mut();
+            let member = &mut self.member;
             member.inbox.wakes(starting.wake());
             std::mem::take(&mut member.listening)
         };
         for session in listening {
             starting.task(session)?;
         }
-        self.member.borrow_mut().open()?;
+        self.member.open()?;
         starting.every(0.0, NUDGE);
         starting.hears(CARRYING_TRIGGER, CARRY);
         starting.hears(TELLING_TRIGGER, TELL);
@@ -123,7 +121,7 @@ impl Part for Transport {
     /// carries, and a document the agent said told to each agent it is to that listens on the bus, read back from the
     /// store as it was said.
     fn heard_event(&mut self, job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
-        let store = self.member.borrow().beliefs().clone();
+        let store = self.member.beliefs().clone();
         match job {
             TELL => {
                 let graphs: Vec<String> = event.all(STATEMENT).iter().map(|g| g.as_str().to_string()).collect();
@@ -136,7 +134,7 @@ impl Part for Transport {
                 let activity = pass.begin(TELLING, &statements);
                 let told = to
                     .iter()
-                    .try_for_each(|agent| self.member.borrow_mut().tell(agent.as_str(), &payload).map(|_| ()));
+                    .try_for_each(|agent| self.member.tell(agent.as_str(), &payload).map(|_| ()));
                 pass.end(activity);
                 told?;
             }
@@ -148,11 +146,11 @@ impl Part for Transport {
                 let activity = pass.begin(ACTUATING, std::slice::from_ref(&graph));
                 let sent = commands
                     .iter()
-                    .try_for_each(|(actuator, payload)| self.member.borrow_mut().command(actuator, payload));
+                    .try_for_each(|(actuator, payload)| self.member.command(actuator, payload));
                 pass.end(activity);
                 sent?;
             }
-            _ => carry(&store, &mut *self.member.borrow_mut(), event, pass, CARRYING)?,
+            _ => carry(&store, &mut self.member, event, pass, CARRYING)?,
         }
         Ok(Vec::new())
     }
@@ -166,7 +164,7 @@ impl Part for Transport {
                 //  since, and otherwise wait until one falls due.
                 if self.nudge || self.next.is_some_and(|next| next <= pass.now) {
                     self.nudge = false;
-                    self.next = self.member.borrow_mut().nudge_until(pass.now)?;
+                    self.next = self.member.nudge_until(pass.now)?;
                 }
                 if let Some(next) = self.next {
                     pass.wake_at(next);
@@ -179,7 +177,7 @@ impl Part for Transport {
                 };
                 self.nudge = true;
                 let (written, heard, store, me) = {
-                    let mut member = self.member.borrow_mut();
+                    let member = &mut self.member;
                     let written = member.handle(&message.topic, &message.payload, message.at.unwrap_or(pass.now))?;
                     let (store, me) = (member.beliefs().clone(), member.me.clone());
                     (written, std::mem::take(&mut member.prose), store, me)
@@ -198,13 +196,13 @@ impl Part for Transport {
     }
 
     fn submitted(&mut self) -> Vec<usize> {
-        let arrived = self.member.borrow().inbox.take();
+        let arrived = self.member.inbox.take();
         let n = arrived.len();
         self.pending.extend(arrived);
         vec![HANDLE; n]
     }
 
     fn stop(&mut self) {
-        self.member.borrow_mut().stop();
+        self.member.stop();
     }
 }

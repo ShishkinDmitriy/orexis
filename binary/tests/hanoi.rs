@@ -13,7 +13,7 @@ use orexis::boot::{TREE, packages_of};
 use orexis::clock::{Clock, Manual, instant};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::{BELIEF, PLAN, SELF_GRAPH};
-use orexis::runtime::{PLANNED, Part, Runtime};
+use orexis::runtime::{Lent, PLANNED, Part, Runtime};
 use orexis::store::{Store, Within, iri, value};
 use orexis_agent::booted;
 use orexis_planning::create::Planning;
@@ -135,14 +135,19 @@ fn own(store: &Store) -> Vec<String> {
 }
 
 /// One run of the mover over `store` at `budget`: the outcome, and the planning part left.
-fn ran<'s>(store: &'s Store, budget: usize, clock: &'s dyn Clock, passes: usize) -> (String, Planning) {
-    let mut planning = Planning::new(store, "hanoi", Some(budget)).unwrap();
+fn ran<C: Clock + Clone + 'static>(store: &Store, budget: usize, clock: &C, passes: usize) -> (String, Planning) {
+    let planning = Arc::new(Mutex::new(Planning::new(store, "hanoi", Some(budget)).unwrap()));
     let outcome = {
-        let parts: Vec<(String, &mut dyn Part)> = vec![("planning".into(), &mut planning)];
-        let mut runtime = Runtime::new(store, "hanoi", clock, parts).unwrap();
+        let parts: Vec<(String, Box<dyn Part>)> = vec![("planning".into(), Lent::of(&planning))];
+        let mut runtime = Runtime::new(store, "hanoi", Arc::new(clock.clone()), parts).unwrap();
         assert_eq!(runtime.parts(), ["planning"]);
         runtime.run(Some(passes), 0.0).unwrap()
     };
+    let planning = Arc::try_unwrap(planning)
+        .ok()
+        .expect("the runtime let the part go")
+        .into_inner()
+        .unwrap();
     (outcome, planning)
 }
 
@@ -208,7 +213,7 @@ fn the_plan_is_the_seven_textbook_moves_at_a_cost_the_estimate_does_not_exceed()
     let (spent, moves) = plan(&store);
     assert_eq!((spent, moves), (7.0, textbook()));
     let estimates: Vec<f64> = {
-        let planner = planning.planner.borrow();
+        let planner = &planning.planner;
         let im = planner.imaginaria.values().next().unwrap();
         im.rows(ESTIMATE_Q, &[])
             .unwrap()
@@ -262,7 +267,7 @@ fn a_lived_in_volume_keeps_the_plan_and_does_not_search_again() {
     let (outcome, planning) = ran(&store, 64, &clock, 20);
     assert_eq!(outcome, PLANNED);
     assert!(
-        planning.planner.borrow().imaginaria.values().all(|im| im
+        planning.planner.imaginaria.values().all(|im| im
             .graphs_of(&[orexis_planning::ontology::POSSIBLE_GRAPH], &Within::default())
             .unwrap()
             .is_empty()),
@@ -282,13 +287,13 @@ fn metered(interval_s: f64) -> Vec<Vec<orexis::events::Point>> {
     let store = store();
     let loaded = boot(&store);
     let clock = Arc::new(Ticking(Mutex::new(now())));
-    let writes: std::rc::Rc<std::cell::RefCell<Vec<Vec<Point>>>> = Default::default();
+    let writes: std::sync::Arc<std::sync::Mutex<Vec<Vec<Point>>>> = Default::default();
     let kept = writes.clone();
     let sink = orexis::series::Sink::new(
         "METRICS",
         "hanoi-hanoi-metrics",
         Box::new(move |_, points| {
-            kept.borrow_mut().push(points.to_vec());
+            kept.lock().unwrap().push(points.to_vec());
             Ok(())
         }),
     );
@@ -300,19 +305,21 @@ fn metered(interval_s: f64) -> Vec<Vec<orexis::events::Point>> {
         },
         ..Default::default()
     };
-    let (mut parts, seen) =
-        orexis_agent::assemble_seen(&store, "hanoi", clock.clone(), &loaded, Some(20), wiring).unwrap();
+    let (parts, seen) = orexis_agent::assemble_seen(&store, "hanoi", clock.clone(), &loaded, Some(20), wiring).unwrap();
     {
-        let lent: Vec<(String, &mut dyn Part)> = parts
-            .iter_mut()
-            .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
-            .collect();
-        let mut runtime = Runtime::new(&store, "hanoi", &clock, lent).unwrap();
+        let lent = parts;
+        let mut runtime = Runtime::new(&store, "hanoi", clock.clone(), lent).unwrap();
         runtime.watch = seen.watch.clone();
         assert_eq!(runtime.run(Some(12), 0.0).unwrap(), PLANNED);
         runtime.stop();
     }
-    writes.borrow().iter().filter(|w| !w.is_empty()).cloned().collect()
+    writes
+        .lock()
+        .unwrap()
+        .iter()
+        .filter(|w| !w.is_empty())
+        .cloned()
+        .collect()
 }
 
 fn float(point: &orexis::events::Point, field: &str) -> f64 {
@@ -428,14 +435,11 @@ fn a_plan_published_is_kept_in_the_journal_with_its_steps_in_the_words_of_the_do
         },
         ..Default::default()
     };
-    let (mut parts, seen) =
+    let (parts, seen) =
         orexis_agent::assemble_seen(&store, "hanoi", clock.clone(), &loaded, Some(400), wiring).unwrap();
     {
-        let lent: Vec<(String, &mut dyn Part)> = parts
-            .iter_mut()
-            .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
-            .collect();
-        let mut runtime = Runtime::new(&store, "hanoi", &clock, lent).unwrap();
+        let lent = parts;
+        let mut runtime = Runtime::new(&store, "hanoi", clock.clone(), lent).unwrap();
         runtime.watch = seen.watch.clone();
         runtime.run(Some(1), 0.0).unwrap();
         runtime.stop();

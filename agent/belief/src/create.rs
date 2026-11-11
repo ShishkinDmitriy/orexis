@@ -11,9 +11,6 @@
 //! before its walk goes on, as Python's `runtime.wrote` hands them on at once; a part cannot reach the runtime while
 //! it runs.
 
-use std::cell::RefCell;
-use std::rc::Rc;
-
 use oxigraph::model::NamedNode;
 use oxsdatatypes::DateTime;
 
@@ -29,25 +26,24 @@ const HEARD: usize = 0;
 const REVISE: usize = 1;
 
 /// Belief's part: its deliberator, shared with whoever links to it — a clone is the same part, as a linked part holds it.
-#[derive(Clone)]
 pub struct Belief {
     beliefs: Store,
-    pub deliberator: Rc<RefCell<Deliberator>>,
+    pub deliberator: Deliberator,
 }
 
 impl Belief {
     pub fn new(beliefs: &Store, agent: &str) -> Result<Self, Error> {
         Ok(Belief {
             beliefs: beliefs.clone(),
-            deliberator: Rc::new(RefCell::new(Deliberator::new(beliefs, agent, None)?)),
+            deliberator: Deliberator::new(beliefs, agent, None)?,
         })
     }
 
     /// Revise `graphs` beside what the world states and apply the transitions each triggers, now — their revisions
     /// classified `kind`.
-    pub fn revise(&self, graphs: &[String], kind: &str, at: DateTime) -> Result<(), Error> {
+    pub fn revise(&mut self, graphs: &[String], kind: &str, at: DateTime) -> Result<(), Error> {
         let stated = self.beliefs.graphs_of(&[BELIEF], &Within::common())?;
-        let mut deliberator = self.deliberator.borrow_mut();
+        let deliberator = &mut self.deliberator;
         for graph in graphs {
             deliberator.changed(graph, Some(stated.clone()), kind);
         }
@@ -58,7 +54,7 @@ impl Belief {
 
 impl Belief {
     /// Revise `graphs` as an activity, triggered by them.
-    fn revising(&self, graphs: &[String], kind: &str, pass: &mut Pass<'_>) -> Result<(), Error> {
+    fn revising(&mut self, graphs: &[String], kind: &str, pass: &mut Pass<'_>) -> Result<(), Error> {
         let triggers: Vec<NamedNode> = graphs.iter().filter_map(|g| NamedNode::new(g.as_str()).ok()).collect();
         let activity = pass.begin(REVISING, &triggers);
         let revised = self.revise(graphs, kind, pass.now);
@@ -94,7 +90,7 @@ impl Part for Belief {
     }
 
     fn watch(&self) -> Option<orexis::events::Watch> {
-        Some(self.deliberator.borrow().watch.clone())
+        Some(self.deliberator.watch.clone())
     }
 
     /// What belief's policy does of a trigger: revise each graph it names, its revisions of the kind it names.
@@ -120,6 +116,7 @@ mod tests {
     use orexis::snapshots;
 
     use super::*;
+    use std::sync::{Arc, Mutex};
 
     fn bare() -> Store {
         let store = Store::new(snapshots::namespaces()).unwrap();
@@ -134,27 +131,33 @@ mod tests {
     #[test]
     fn its_part_hears_beliefs_written_and_says_each_pass_revised() {
         let store = bare();
-        let clock = Manual::at(snapshots::now());
-        let mut part = Belief::new(&store, "urn:test:me").unwrap();
-        let heard = Rc::new(RefCell::new(Vec::new()));
+        let clock = std::sync::Arc::new(Manual::at(snapshots::now()));
+        let part = std::sync::Arc::new(std::sync::Mutex::new(Belief::new(&store, "urn:test:me").unwrap()));
+        let heard = Arc::new(Mutex::new(Vec::new()));
         let into = heard.clone();
-        part.deliberator.borrow().watch.connect(move |event, _| {
+        part.lock().unwrap().deliberator.watch.connect(move |event, _| {
             if let Some(r) = orexis::events::as_of::<crate::deliberator::Revised>(event) {
-                into.borrow_mut().extend(r.graphs.clone());
+                into.lock().unwrap().extend(r.graphs.clone());
             }
         });
         {
-            let parts: Vec<(String, &mut dyn Part)> = vec![("belief".into(), &mut part)];
-            Runtime::new(&store, "urn:test:me", &clock, parts).unwrap();
+            let parts: Vec<(String, Box<dyn Part>)> = vec![("belief".into(), orexis::runtime::Lent::of(&part))];
+            Runtime::new(&store, "urn:test:me", clock.clone(), parts).unwrap();
         }
         store
             .update(&format!(
                 "INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <urn:test:nothing> a orexis:BeliefGraph }} }}"
             ))
             .unwrap();
-        part.revise(&["urn:test:nothing".to_string()], BELIEF, snapshots::now())
+        part.lock()
+            .unwrap()
+            .revise(&["urn:test:nothing".to_string()], BELIEF, snapshots::now())
             .unwrap();
-        assert_eq!(*heard.borrow(), ["urn:test:nothing"], "each pass says what it revised");
+        assert_eq!(
+            *heard.lock().unwrap(),
+            ["urn:test:nothing"],
+            "each pass says what it revised"
+        );
     }
 
     #[test]
@@ -182,10 +185,10 @@ mod tests {
         store
             .update(&format!("INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ {rows} }} }}"))
             .unwrap();
-        let part = Belief::new(&store, "urn:test:me").unwrap();
+        let mut part = Belief::new(&store, "urn:test:me").unwrap();
         part.revise(&["urn:test:reading".to_string()], BELIEF, snapshots::now())
             .unwrap();
-        assert!(part.deliberator.borrow().pending().is_empty());
+        assert!(part.deliberator.pending().is_empty());
         let mut deliberator = Deliberator::new(&store, "urn:test:me", Some(0)).unwrap();
         let stated = store.graphs_of(&[BELIEF], &Within::common()).unwrap();
         assert_eq!(stated, ["urn:test:world"], "the common beliefs alone stand beside it");

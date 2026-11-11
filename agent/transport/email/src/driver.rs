@@ -33,7 +33,7 @@ pub trait Mailbox: Send + Sync {
 }
 
 /// What runs a poll: on a thread of its own, or at once in a test.
-pub type Spawn = Box<dyn Fn(Box<dyn FnOnce() + Send>)>;
+pub type Spawn = Box<dyn Fn(Box<dyn FnOnce() + Send>) + Send + Sync>;
 
 /// The plain text of a message, or none where it carries none: its first plain part that is no attachment, and never
 /// a page of HTML.

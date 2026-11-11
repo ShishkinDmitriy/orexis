@@ -10,9 +10,6 @@
 //! about as it is taken (`execution:HeadAsked`) is checked and answered, `planning:HeadChecked` beneath execution's
 //! walking trigger (#916).
 
-use std::cell::RefCell;
-use std::rc::Rc;
-
 use orexis::Error;
 use orexis::ontology::SELF_GRAPH;
 use orexis::runtime::{Heard, MET, PLANNED, Part, Pass, Starting, UNREACHABLE};
@@ -39,7 +36,7 @@ const ROLES_Q: &str = "SELECT DISTINCT ?kind WHERE { ?me a orexis:Self ; orexis:
 /// Planning's part: its Planner, whether any part walks what it publishes, and what its policy has heard since it
 /// last planned.
 pub struct Planning {
-    pub planner: Rc<RefCell<Planner>>,
+    pub planner: Planner,
     pub walked: bool,
     /// The events heard beneath its trigger since it last planned, which the planning names as what triggered it.
     triggers: Vec<oxigraph::model::NamedNode>,
@@ -53,7 +50,7 @@ impl Planning {
     /// The part, its budget the agent's stance unless the caller sizes one.
     pub fn new(beliefs: &Store, agent: &str, budget: Option<usize>) -> Result<Self, Error> {
         Ok(Planning {
-            planner: Rc::new(RefCell::new(Planner::new(beliefs, agent, budget)?)),
+            planner: Planner::new(beliefs, agent, budget)?,
             walked: walks(beliefs)?,
             triggers: Vec::new(),
             due: true,
@@ -64,7 +61,7 @@ impl Planning {
     /// Hold the agent, or let it go and say how the wanting ended.
     fn keep(&mut self, pass: &mut Pass<'_>) -> Result<(), Error> {
         let who = "planning";
-        let planner = self.planner.borrow();
+        let planner = &self.planner;
         let standing = planner.standing(pass.now)?;
         let walking = planner.walking()?;
         let desire = planner.holds_a_desire()?;
@@ -89,7 +86,6 @@ impl Planning {
             return Ok(());
         }
         if planner.exhausted()? {
-            drop(planner);
             self.due = true;
             pass.again();
             pass.hold(who);
@@ -147,7 +143,7 @@ impl Part for Planning {
                     _ => None,
                 })
                 .unwrap_or(pass.now);
-            let blocked = self.planner.borrow_mut().check(head.as_str(), at)?;
+            let blocked = self.planner.check(head.as_str(), at)?;
             pass.emit(&HeadChecked {
                 head: head.as_str().to_string(),
                 blocked,
@@ -158,14 +154,14 @@ impl Part for Planning {
         self.triggers.push(event.node.clone());
         let wants: Vec<String> = event.all(REOPENS).iter().map(|w| w.as_str().to_string()).collect();
         if !wants.is_empty() {
-            self.planner.borrow_mut().reopen(wants);
+            self.planner.reopen(wants);
             pass.again();
         }
         Ok(Vec::new())
     }
 
     fn watch(&self) -> Option<orexis::events::Watch> {
-        Some(self.planner.borrow().watch.clone())
+        Some(self.planner.watch.clone())
     }
 
     /// PLANNING'S POLICY: plan where a trigger was heard since the last planning, the present reached the next ground
@@ -182,9 +178,9 @@ impl Part for Planning {
         self.due = false;
         let triggers = std::mem::take(&mut self.triggers);
         let activity = pass.begin(PLANNING_ACTIVITY, &triggers);
-        let written = self.planner.borrow_mut().plan(pass.now)?;
+        let written = self.planner.plan(pass.now)?;
         self.keep(pass)?;
-        self.next = self.planner.borrow().next_ground(pass.now)?;
+        self.next = self.planner.next_ground(pass.now)?;
         if let Some(next) = self.next {
             pass.wake_at(next);
         }

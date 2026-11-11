@@ -6,10 +6,8 @@
 //! documents copied without its `secrets/`, the place and the chat written as a clone's own would hold them, and every
 //! member over a stand-in, so nothing reaches the network.
 
-use std::cell::RefCell;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 use serde_json::{Value as Json, json};
@@ -20,7 +18,7 @@ use orexis::clock::{Manual, instant};
 use orexis::events::{Field, Point};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::{BELIEF, FORECAST, SELF_GRAPH};
-use orexis::runtime::{Part, Runtime, UNFINISHED};
+use orexis::runtime::{Runtime, UNFINISHED};
 use orexis::store::{Store, Within, iri, value};
 use orexis_agent::{Watching, Wiring, assemble_seen, booted};
 use orexis_mqtt::driver::{Client, Mqtt};
@@ -99,16 +97,16 @@ fn copy(from: &Path, to: &Path, skipped: &[&str]) {
 
 /// What the agent subscribes to and publishes over MQTT.
 #[derive(Clone, Default)]
-struct Broker(Rc<RefCell<(Vec<String>, Vec<String>)>>);
+struct Broker(Arc<Mutex<(Vec<String>, Vec<String>)>>);
 
 impl Client for Broker {
     fn subscribe(&mut self, pattern: &str) -> Result<(), Error> {
-        self.0.borrow_mut().0.push(pattern.to_string());
+        self.0.lock().unwrap().0.push(pattern.to_string());
         Ok(())
     }
 
     fn publish(&mut self, topic: &str, _payload: &[u8], _retain: bool) -> Result<(), Error> {
-        self.0.borrow_mut().1.push(topic.to_string());
+        self.0.lock().unwrap().1.push(topic.to_string());
         Ok(())
     }
 }
@@ -188,7 +186,7 @@ fn terrace(
     api: &Api,
     model: Option<Arc<dyn Model>>,
     watching: Watching,
-    walk: impl FnOnce(&Terrace, &mut Runtime<'_>, &Manual, &orexis_mqtt::driver::Inbox),
+    walk: impl FnOnce(&Terrace, &mut Runtime, &Manual, &orexis_mqtt::driver::Inbox),
 ) {
     let t = Terrace {
         store: store(),
@@ -241,13 +239,10 @@ fn terrace(
         ..Wiring::default()
     };
     let clock = Arc::new(Manual::at(noon()));
-    let (mut parts, seen) = assemble_seen(&t.store, "terrace", clock.clone(), &loaded, None, wiring).unwrap();
+    let (parts, seen) = assemble_seen(&t.store, "terrace", clock.clone(), &loaded, None, wiring).unwrap();
     assert!(parts.iter().any(|(p, _)| p == "translation"));
-    let lent: Vec<(String, &mut dyn Part)> = parts
-        .iter_mut()
-        .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
-        .collect();
-    let mut runtime = Runtime::new(&t.store, "terrace", &clock, lent).unwrap();
+    let lent = parts;
+    let mut runtime = Runtime::new(&t.store, "terrace", clock.clone(), lent).unwrap();
     runtime.watch = seen.watch.clone();
     walk(&t, &mut runtime, &clock, &inbox);
     runtime.stop();
@@ -285,7 +280,7 @@ fn the_agent_listens_on_the_boards_one_topic_alone_and_one_message_is_five_obser
         Watching::default(),
         |t, runtime, _, inbox| {
             assert_eq!(
-                t.broker.0.borrow().0,
+                t.broker.0.lock().unwrap().0,
                 [READINGS],
                 "the board's readings; its chat is on Telegram"
             );
@@ -337,7 +332,7 @@ fn the_agent_listens_on_the_boards_one_topic_alone_and_one_message_is_five_obser
                 "under the bed's floor, and nothing else"
             );
             assert!(
-                t.broker.0.borrow().1.is_empty(),
+                t.broker.0.lock().unwrap().1.is_empty(),
                 "nothing is wanted, so nothing is sent"
             );
             assert!(
@@ -382,19 +377,19 @@ fn a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving() {
                     "moisture_sensor_terrace"
                 ]
             );
-            assert!(t.broker.0.borrow().1.is_empty(), "nothing is sent");
+            assert!(t.broker.0.lock().unwrap().1.is_empty(), "nothing is sent");
         },
     );
 }
 
-fn history() -> (Watching, Rc<RefCell<Vec<Point>>>) {
-    let written: Rc<RefCell<Vec<Point>>> = Rc::default();
+fn history() -> (Watching, Arc<Mutex<Vec<Point>>>) {
+    let written: Arc<Mutex<Vec<Point>>> = Arc::default();
     let kept = written.clone();
     let sink = orexis::series::Sink::new(
         "HISTORY",
         "terrace-terrace",
         Box::new(move |_, points| {
-            kept.borrow_mut().extend(points.iter().cloned());
+            kept.lock().unwrap().extend(points.iter().cloned());
             Ok(())
         }),
     );
@@ -415,7 +410,7 @@ fn each_reading_reaches_the_series_under_its_own_property() {
         inbox.deliver(READINGS, MESSAGE.as_bytes(), Some(noon()));
         runtime.drain(noon()).unwrap();
     });
-    let written = written.borrow();
+    let written = written.lock().unwrap();
     let mut points: Vec<(String, String, Field)> = written
         .iter()
         .map(|p| {
@@ -491,7 +486,8 @@ fn an_alarm_is_two_points_in_the_history_and_a_step_not_a_slope() {
         runtime.drain(noon()).unwrap();
     });
     let mut soil: Vec<(oxsdatatypes::DateTime, Field)> = written
-        .borrow()
+        .lock()
+        .unwrap()
         .iter()
         .filter(|p| p.measurement == "SoilMoisture")
         .map(|p| (p.time.unwrap(), p.fields["value"].clone()))
@@ -506,13 +502,13 @@ fn an_alarm_is_two_points_in_the_history_and_a_step_not_a_slope() {
 #[test]
 fn every_metric_the_terrace_writes_is_an_observers_and_no_planners() {
     let world = variant("metrics", false, false);
-    let written: Rc<RefCell<Vec<Point>>> = Rc::default();
+    let written: Arc<Mutex<Vec<Point>>> = Arc::default();
     let kept = written.clone();
     let sink = orexis::series::Sink::new(
         "METRICS",
         "terrace-terrace-metrics",
         Box::new(move |_, points| {
-            kept.borrow_mut().extend(points.iter().cloned());
+            kept.lock().unwrap().extend(points.iter().cloned());
             Ok(())
         }),
     );
@@ -532,7 +528,8 @@ fn every_metric_the_terrace_writes_is_an_observers_and_no_planners() {
         }
     });
     let wanted: std::collections::BTreeSet<(String, String)> = written
-        .borrow()
+        .lock()
+        .unwrap()
         .iter()
         .flat_map(|p| {
             p.fields
@@ -625,7 +622,7 @@ fn the_sovereign_says_through_the_agents_own_bot_that_the_probe_is_defective_and
                     .filter(|m| m.get("text").is_some())
                     .count()
             };
-            let say = |runtime: &mut Runtime<'_>, text: &str, inputs: Json, n: usize| {
+            let say = |runtime: &mut Runtime, text: &str, inputs: Json, n: usize| {
                 *model.inputs.lock().unwrap() = inputs;
                 api.updates.lock().unwrap().push(
                 json!({"update_id": 7 + n, "message": {"chat": {"id": 4242, "type": "private"}, "from": {"id": 1}, "text": text}}),
@@ -642,7 +639,7 @@ fn the_sovereign_says_through_the_agents_own_bot_that_the_probe_is_defective_and
                 }
                 panic!("no answer to {text:?}");
             };
-            let soil = |runtime: &mut Runtime<'_>, at| {
+            let soil = |runtime: &mut Runtime, at| {
                 inbox.deliver(READINGS, MESSAGE.as_bytes(), Some(at));
                 clock.set(at);
                 runtime.run(Some(1), 0.0).unwrap();

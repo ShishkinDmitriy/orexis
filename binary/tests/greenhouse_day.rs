@@ -6,10 +6,8 @@
 //! the closed loop for as long as the commands agree, since a reading answers the command before it; where the
 //! binary sent another, the digest differs and the replay says so.
 
-use std::cell::RefCell;
 use std::fs;
 use std::path::Path;
-use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 use oxsdatatypes::DateTime;
@@ -20,7 +18,7 @@ use orexis::Error;
 use orexis::boot::TREE;
 use orexis::clock::{Clock, instant, isoformat};
 use orexis::namespaces::Namespaces;
-use orexis::runtime::{Part, Runtime};
+use orexis::runtime::Runtime;
 use orexis::store::Store;
 use orexis_agent::{Wiring, assemble_wired, booted};
 use orexis_mqtt::driver::{Client, Mqtt, dumps};
@@ -41,7 +39,7 @@ impl Clock for Standing {
 /// Every command the grower sends, with the instant it was sent.
 struct Bus {
     clock: Standing,
-    commands: Rc<RefCell<Vec<(String, String, Json)>>>,
+    commands: Arc<Mutex<Vec<(String, String, Json)>>>,
 }
 
 impl Client for Bus {
@@ -52,7 +50,8 @@ impl Client for Bus {
     fn publish(&mut self, topic: &str, payload: &[u8], _retain: bool) -> Result<(), Error> {
         let payload = serde_json::from_slice(payload).map_err(|e| Error::Evaluation(e.to_string()))?;
         self.commands
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .push((isoformat(self.clock.now()), topic.to_string(), payload));
         Ok(())
     }
@@ -114,14 +113,14 @@ fn a_day_in_the_greenhouse_sends_the_commands_the_python_grower_sent() {
     let store = Store::new(Arc::new(Namespaces::of_tree(tree).unwrap())).unwrap();
     let clock = Standing(Arc::new(Mutex::new(readings[0].0)));
     let loaded = booted(&store, tree, &world, "grower", clock.now()).unwrap();
-    let commands = Rc::new(RefCell::new(Vec::new()));
+    let commands = Arc::new(Mutex::new(Vec::new()));
     let bus = Bus {
         clock: clock.clone(),
         commands: commands.clone(),
     };
     let member = Mqtt::new(&store, &format!("{GH}grower"), vec![(None, Box::new(bus))]);
     let inbox = member.inbox.clone();
-    let mut parts = assemble_wired(
+    let parts = assemble_wired(
         &store,
         "grower",
         Arc::new(clock.clone()),
@@ -133,11 +132,8 @@ fn a_day_in_the_greenhouse_sends_the_commands_the_python_grower_sent() {
         },
     )
     .unwrap();
-    let lent: Vec<(String, &mut dyn Part)> = parts
-        .iter_mut()
-        .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
-        .collect();
-    let mut runtime = Runtime::new(&store, "grower", &clock, lent).unwrap();
+    let lent = parts;
+    let mut runtime = Runtime::new(&store, "grower", Arc::new(clock.clone()), lent).unwrap();
     for (at, topic, payload) in &readings {
         *clock.0.lock().unwrap() = *at;
         if !topic.is_empty() {
@@ -146,7 +142,7 @@ fn a_day_in_the_greenhouse_sends_the_commands_the_python_grower_sent() {
         runtime.run(Some(1), 0.0).unwrap();
     }
     runtime.stop();
-    let sent = commands.borrow().clone();
+    let sent = commands.lock().unwrap().clone();
     assert!(
         sent.iter().any(|(_, topic, _)| topic == "actuators/pump/command"),
         "the bed was dosed in a day"

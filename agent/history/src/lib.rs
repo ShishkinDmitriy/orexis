@@ -75,15 +75,14 @@ impl Part for History {
 
 #[cfg(test)]
 mod tests {
-    use std::cell::RefCell;
     use std::collections::BTreeMap;
-    use std::rc::Rc;
 
     use oxigraph::model::{NamedNode, Triple};
     use oxsdatatypes::DateTime;
 
     use super::*;
     use orexis::events::{Event, Field, Point, typed};
+    use std::sync::{Arc, Mutex};
 
     struct Unreachable;
     impl Event for Unreachable {
@@ -116,13 +115,13 @@ mod tests {
     #[test]
     fn an_event_of_a_class_beneath_incident_is_marked_and_no_other_and_a_point_goes_to_the_sink() {
         let journal = Arc::new(Journal::new(None, 600.0, Arc::new(DateTime::now)).unwrap());
-        let written = Rc::new(RefCell::new(0));
+        let written = Arc::new(Mutex::new(0));
         let counted = written.clone();
         let sink = Sink::new(
             "HISTORY",
             "h",
             Box::new(move |_, points| {
-                *counted.borrow_mut() += points.len();
+                *counted.lock().unwrap() += points.len();
                 Ok(())
             }),
         );
@@ -145,6 +144,6 @@ mod tests {
             body.contains("WantUnreachable") && !body.contains("PlanPublished"),
             "{body}"
         );
-        assert_eq!(*written.borrow(), 1, "the one event that is a point");
+        assert_eq!(*written.lock().unwrap(), 1, "the one event that is a point");
     }
 }

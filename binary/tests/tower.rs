@@ -15,7 +15,7 @@ use orexis::clock::{Clock, instant};
 use orexis::hash::hash_named_graph;
 use orexis::namespaces::Namespaces;
 use orexis::ontology::{BELIEF, SELF_GRAPH};
-use orexis::runtime::{MET, Part, Runtime};
+use orexis::runtime::{MET, Runtime};
 use orexis::store::{Store, Within, iri, value};
 use orexis_agent::{assemble, booted};
 
@@ -122,12 +122,9 @@ fn the_runtime_concludes_what_each_disk_is_on_from_where_it_stands() {
     for package in ["belief", "planning", "execution"] {
         assert!(loaded.iter().any(|p| p == package), "{package}: {loaded:?}");
     }
-    let mut parts = assemble(&store, "mover", clock.clone(), &loaded, None).unwrap();
-    let lent: Vec<(String, &mut dyn Part)> = parts
-        .iter_mut()
-        .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
-        .collect();
-    let runtime = Runtime::new(&store, "mover", &clock, lent).unwrap();
+    let parts = assemble(&store, "mover", clock.clone(), &loaded, None).unwrap();
+    let lent = parts;
+    let runtime = Runtime::new(&store, "mover", clock.clone(), lent).unwrap();
     assert_eq!(runtime.parts(), ["belief", "planning", "execution"]);
     assert_eq!(
         on(&store),
@@ -141,12 +138,9 @@ fn the_puzzle_is_planned_above_and_carried_out_by_the_van_below() {
     let clock = Arc::new(Ticking(Mutex::new(now())));
     let loaded = booted(&store, tree(), &world(), "mover", clock.now()).unwrap();
     two_disks(&store);
-    let mut parts = assemble(&store, "mover", clock.clone(), &loaded, None).unwrap();
-    let lent: Vec<(String, &mut dyn Part)> = parts
-        .iter_mut()
-        .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
-        .collect();
-    let mut runtime = Runtime::new(&store, "mover", &clock, lent).unwrap();
+    let parts = assemble(&store, "mover", clock.clone(), &loaded, None).unwrap();
+    let lent = parts;
+    let mut runtime = Runtime::new(&store, "mover", clock.clone(), lent).unwrap();
     let outcome = runtime.run(Some(120), 0.0).unwrap();
     runtime.stop();
     assert_eq!(outcome, MET);
@@ -189,32 +183,30 @@ fn the_puzzle_is_planned_above_and_carried_out_by_the_van_below() {
 fn the_last_window_is_written_as_the_process_stops() {
     let store = store();
     let loaded = booted(&store, tree(), &world(), "mover", now()).unwrap();
-    let written: std::rc::Rc<std::cell::RefCell<Vec<orexis::events::Point>>> = Default::default();
+    let written: std::sync::Arc<std::sync::Mutex<Vec<orexis::events::Point>>> = Default::default();
     let kept = written.clone();
     let sink = orexis::series::Sink::new(
         "METRICS",
         "m",
         Box::new(move |_, points| {
-            kept.borrow_mut().extend(points.iter().cloned());
+            kept.lock().unwrap().extend(points.iter().cloned());
             Ok(())
         }),
     );
     let mut wiring = orexis_agent::Wiring::default();
     wiring.watching.metrics = Some(orexis_metrics::Window::new(sink, 3600.0, Some("tower"), Some("mover")));
     let clock = Arc::new(Still);
-    let (mut parts, seen) = orexis_agent::assemble_seen(&store, "mover", clock.clone(), &loaded, None, wiring).unwrap();
+    let (parts, seen) = orexis_agent::assemble_seen(&store, "mover", clock.clone(), &loaded, None, wiring).unwrap();
     {
-        let lent: Vec<(String, &mut dyn Part)> = parts
-            .iter_mut()
-            .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
-            .collect();
-        let mut runtime = Runtime::new(&store, "mover", &clock, lent).unwrap();
+        let lent = parts;
+        let mut runtime = Runtime::new(&store, "mover", clock.clone(), lent).unwrap();
         runtime.watch = seen.watch.clone();
         runtime.run(Some(1), 0.0).unwrap();
         runtime.stop();
     }
     let by: BTreeMap<String, orexis::events::Point> = written
-        .borrow()
+        .lock()
+        .unwrap()
         .iter()
         .map(|p| (p.measurement.clone(), p.clone()))
         .collect();
@@ -227,5 +219,5 @@ fn the_last_window_is_written_as_the_process_stops() {
     for m in ["planner", "imaginarium", "search", "revise", "revisions", "intentions"] {
         assert!(by.contains_key(m), "{m} in {:?}", by.keys());
     }
-    assert!(written.borrow().iter().all(|p| p.tags["world"] == "tower"));
+    assert!(written.lock().unwrap().iter().all(|p| p.tags["world"] == "tower"));
 }

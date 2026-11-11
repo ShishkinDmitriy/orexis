@@ -2,16 +2,14 @@
 //! the governed board's one message is three observations, the agent watches and keeps running, and a cadence it would
 //! set goes to the board's own command topic, retained.
 
-use std::cell::RefCell;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use orexis::Error;
 use orexis::boot::TREE;
 use orexis::clock::{Manual, instant};
 use orexis::namespaces::Namespaces;
-use orexis::runtime::{Part, Runtime, UNFINISHED};
+use orexis::runtime::{Runtime, UNFINISHED};
 use orexis::store::{Store, Within, iri, value};
 use orexis_agent::{Wiring, assemble_seen, booted};
 use orexis_mqtt::driver::{Client, Mqtt};
@@ -24,17 +22,18 @@ const MESSAGE: &str = r#"{"moisture": 0.41, "temperature": 21.5, "humidity": 0.5
 type Asked = (Vec<String>, Vec<(String, String, bool)>);
 
 #[derive(Clone, Default)]
-struct Broker(Rc<RefCell<Asked>>);
+struct Broker(Arc<Mutex<Asked>>);
 
 impl Client for Broker {
     fn subscribe(&mut self, pattern: &str) -> Result<(), Error> {
-        self.0.borrow_mut().0.push(pattern.to_string());
+        self.0.lock().unwrap().0.push(pattern.to_string());
         Ok(())
     }
 
     fn publish(&mut self, topic: &str, payload: &[u8], retain: bool) -> Result<(), Error> {
         self.0
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .1
             .push((topic.to_string(), String::from_utf8_lossy(payload).into_owned(), retain));
         Ok(())
@@ -100,14 +99,11 @@ fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_to_the
         mqtt: Some(member),
         ..Wiring::default()
     };
-    let (mut parts, _) = assemble_seen(&store, "fern", clock.clone(), &loaded, None, wiring).unwrap();
+    let (parts, _) = assemble_seen(&store, "fern", clock.clone(), &loaded, None, wiring).unwrap();
     {
-        let lent: Vec<(String, &mut dyn Part)> = parts
-            .iter_mut()
-            .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
-            .collect();
-        let mut runtime = Runtime::new(&store, "fern", &clock, lent).unwrap();
-        assert_eq!(broker.0.borrow().0, ["sensors/moisture_sensor_fern/reading"]);
+        let lent = parts;
+        let mut runtime = Runtime::new(&store, "fern", clock.clone(), lent).unwrap();
+        assert_eq!(broker.0.lock().unwrap().0, ["sensors/moisture_sensor_fern/reading"]);
         inbox.deliver("sensors/moisture_sensor_fern/reading", MESSAGE.as_bytes(), Some(now));
         assert_eq!(runtime.run(Some(2), 0.0).unwrap(), UNFINISHED);
         runtime.stop();
@@ -135,7 +131,7 @@ fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_to_the
             .map(|(k, v)| (k.to_string(), *v))
             .collect()
     );
-    assert!(broker.0.borrow().1.is_empty());
+    assert!(broker.0.lock().unwrap().1.is_empty());
     let store2 = self::store();
     booted(&store2, tree(), &world(), "fern", now).unwrap();
     let cadence = Broker::default();
@@ -146,7 +142,7 @@ fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_to_the
     );
     assert!(member.set_cadence(&format!("{W}moisture_sensor_fern"), 10).unwrap());
     assert_eq!(
-        cadence.0.borrow().1,
+        cadence.0.lock().unwrap().1,
         [(
             "sensors/moisture_sensor_fern/command".to_string(),
             r#"{"sleep_s": 10}"#.to_string(),

@@ -6,11 +6,9 @@
 //! the same documents told each other at the same instants, and the same winners concluded. A replay is the closed
 //! loop for as long as the drives agree, since the fixes answer the drives before them.
 
-use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 use oxsdatatypes::DateTime;
@@ -21,7 +19,7 @@ use orexis::boot::TREE;
 use orexis::clock::{Clock, instant, isoformat};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
-use orexis::runtime::{Part, Runtime};
+use orexis::runtime::Runtime;
 use orexis::store::{Store, Within, iri};
 use orexis_agent::{Wiring, booted};
 use orexis_mqtt::driver::{Client, Inbox, Mqtt};
@@ -57,7 +55,7 @@ struct Carried {
 /// One courier's side of the bus.
 struct Bus {
     clock: Standing,
-    carried: Rc<RefCell<Carried>>,
+    carried: Arc<Mutex<Carried>>,
 }
 
 impl Client for Bus {
@@ -67,7 +65,7 @@ impl Client for Bus {
 
     fn publish(&mut self, topic: &str, payload: &[u8], _retain: bool) -> Result<(), Error> {
         let at = isoformat(self.clock.now());
-        let mut carried = self.carried.borrow_mut();
+        let mut carried = self.carried.lock().unwrap();
         if topic.starts_with("agents/") {
             let text = String::from_utf8_lossy(payload);
             let kinds: Vec<&str> = KINDS.iter().copied().filter(|k| text.contains(k)).collect();
@@ -317,7 +315,7 @@ fn replayed_keeping(
     let namespaces = Arc::new(Namespaces::of_tree(tree()).unwrap());
     let stores = [Store::new(namespaces.clone()).unwrap(), Store::new(namespaces).unwrap()];
     let clock = Standing(Arc::new(Mutex::new(walk.steps[0].0)));
-    let carried = Rc::new(RefCell::new(Carried {
+    let carried = Arc::new(Mutex::new(Carried {
         dropping: dropping.map(str::to_string),
         ..Carried::default()
     }));
@@ -341,7 +339,8 @@ fn replayed_keeping(
         };
         let member = Mqtt::new(store, &format!("{L}{name}"), vec![(None, Box::new(bus))]);
         carried
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .inboxes
             .insert(name.to_string(), member.inbox.clone());
         let watching = orexis_agent::Watching {
@@ -364,14 +363,13 @@ fn replayed_keeping(
         watches.push(seen.watch.clone());
         all_parts.push(parts);
     }
-    let inboxes: Vec<Inbox> = names.iter().map(|n| carried.borrow().inboxes[*n].clone()).collect();
-    let mut runtimes: Vec<Runtime<'_>> = Vec::new();
+    let inboxes: Vec<Inbox> = names
+        .iter()
+        .map(|n| carried.lock().unwrap().inboxes[*n].clone())
+        .collect();
+    let mut runtimes: Vec<Runtime> = Vec::new();
     for ((parts, store), name) in all_parts.iter_mut().zip(&stores).zip(names) {
-        let lent: Vec<(String, &mut dyn Part)> = parts
-            .iter_mut()
-            .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
-            .collect();
-        let mut runtime = Runtime::new(store, name, &clock, lent).unwrap();
+        let mut runtime = Runtime::new(store, name, Arc::new(clock.clone()), std::mem::take(parts)).unwrap();
         runtime.watch = watches[runtimes.len()].clone();
         runtimes.push(runtime);
     }
@@ -389,7 +387,7 @@ fn replayed_keeping(
     for runtime in &mut runtimes {
         runtime.stop();
     }
-    let carried = carried.borrow();
+    let carried = carried.lock().unwrap();
     assert_eq!(
         carried.commands, walk.commands,
         "{name}: the drives, against the Python couriers'"

@@ -11,7 +11,7 @@ use oxsdatatypes::{DateTime, DayTimeDuration};
 use orexis::boot::TREE;
 use orexis::clock::{Clock, instant};
 use orexis::namespaces::Namespaces;
-use orexis::runtime::{MET, Part, Runtime, UNFINISHED};
+use orexis::runtime::{MET, Runtime, UNFINISHED};
 use orexis::store::{Store, iri, value};
 use orexis_agent::{assemble, booted};
 
@@ -42,12 +42,9 @@ impl Clock for Ticking {
 /// Boot `agent` of `world` and run it until nothing holds it or `passes` are spent: the outcome.
 fn run(store: &Store, world: &Path, agent: &str, clock: &Arc<Ticking>, passes: usize, budget: Option<usize>) -> String {
     let loaded = booted(store, tree(), world, agent, clock.now()).unwrap();
-    let mut parts = assemble(store, agent, clock.clone(), &loaded, budget).unwrap();
-    let lent: Vec<(String, &mut dyn Part)> = parts
-        .iter_mut()
-        .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
-        .collect();
-    let mut runtime = Runtime::new(store, agent, clock, lent).unwrap();
+    let parts = assemble(store, agent, clock.clone(), &loaded, budget).unwrap();
+    let lent = parts;
+    let mut runtime = Runtime::new(store, agent, clock.clone(), lent).unwrap();
     let outcome = runtime.run(Some(passes), 0.0).unwrap();
     runtime.stop();
     outcome
@@ -169,7 +166,7 @@ fn metered_courier(watched: bool) -> (usize, usize, String, std::collections::BT
     let store = store();
     let clock = Arc::new(Counting(Mutex::new((now(), 0))));
     let loaded = booted(&store, tree(), &world("courier"), "courier", clock.now()).unwrap();
-    let written: std::rc::Rc<std::cell::RefCell<Vec<orexis::events::Point>>> = Default::default();
+    let written: std::sync::Arc<std::sync::Mutex<Vec<orexis::events::Point>>> = Default::default();
     let kept = written.clone();
     let mut wiring = orexis_agent::Wiring::default();
     if watched {
@@ -177,28 +174,25 @@ fn metered_courier(watched: bool) -> (usize, usize, String, std::collections::BT
             "METRICS",
             "m",
             Box::new(move |_, points| {
-                kept.borrow_mut().extend(points.iter().cloned());
+                kept.lock().unwrap().extend(points.iter().cloned());
                 Ok(())
             }),
         );
         wiring.watching.metrics = Some(orexis_metrics::Window::new(sink, 0.0, Some("courier"), Some("courier")));
     }
-    let (mut parts, seen) =
+    let (parts, seen) =
         orexis_agent::assemble_seen(&store, "courier", clock.clone(), &loaded, Some(128), wiring).unwrap();
     let outcome = {
-        let lent: Vec<(String, &mut dyn Part)> = parts
-            .iter_mut()
-            .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
-            .collect();
-        let mut runtime = Runtime::new(&store, "courier", &clock, lent).unwrap();
+        let lent = parts;
+        let mut runtime = Runtime::new(&store, "courier", clock.clone(), lent).unwrap();
         runtime.watch = seen.watch.clone();
         let outcome = runtime.run(Some(40), 0.0).unwrap();
         runtime.stop();
         outcome
     };
     let reads = clock.0.lock().unwrap().1;
-    let measured = written.borrow().iter().map(|p| p.measurement.clone()).collect();
-    let count = written.borrow().len();
+    let measured = written.lock().unwrap().iter().map(|p| p.measurement.clone()).collect();
+    let count = written.lock().unwrap().len();
     (reads, count, outcome, measured)
 }
 

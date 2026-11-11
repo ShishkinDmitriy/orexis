@@ -21,9 +21,7 @@
 //! of what the chat reads among it — the conversation runs on a thread of its own, and what comes of it is handed back
 //! as a job; a statement is held to its words' bounds by a job the model's thread waits on.
 
-use std::cell::RefCell;
 use std::collections::{BTreeMap, VecDeque};
-use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::mpsc::{Receiver, Sender, SyncSender, channel, sync_channel};
 use std::time::{Duration, Instant};
@@ -738,14 +736,14 @@ const PHRASING_TRIGGER: &str = "http://example.org/orexis/translation#PhrasingTr
 
 /// Translation's part: the translator, shared with whoever links to it, and what was handed back for the pass.
 pub struct Translation {
-    pub translator: Rc<RefCell<Translator>>,
+    pub translator: Translator,
     pending: VecDeque<Back>,
 }
 
 impl Translation {
     pub fn new(translator: Translator) -> Self {
         Translation {
-            translator: Rc::new(RefCell::new(translator)),
+            translator,
             pending: VecDeque::new(),
         }
     }
@@ -760,13 +758,11 @@ impl Translation {
         if graphs.is_empty() || to.is_empty() {
             return Ok(Vec::new());
         }
-        let store = self.translator.borrow().beliefs.clone();
+        let store = self.translator.beliefs.clone();
         let doc = document_of(&store, &graphs)?;
         let statements: Vec<NamedNode> = event.all(STATEMENT).into_iter().cloned().collect();
         let activity = pass.begin(PHRASING, &statements);
-        let phrased = to
-            .iter()
-            .try_for_each(|person| self.translator.borrow_mut().told(person, &doc));
+        let phrased = to.iter().try_for_each(|person| self.translator.told(person, &doc));
         pass.end(activity);
         phrased?;
         Ok(Vec::new())
@@ -782,7 +778,7 @@ impl Part for Translation {
     }
 
     fn watch(&self) -> Option<Watch> {
-        Some(self.translator.borrow().watch.clone())
+        Some(self.translator.watch.clone())
     }
 
     /// What translation's policy does of a trigger: read the words it names back, and hear them where they are a
@@ -794,7 +790,7 @@ impl Part for Translation {
         let Some(graph) = event.named(KEPT).cloned() else {
             return Ok(Vec::new());
         };
-        let store = self.translator.borrow().beliefs.clone();
+        let store = self.translator.beliefs.clone();
         if !received(&store, graph.as_str())? {
             return Ok(Vec::new());
         }
@@ -803,7 +799,7 @@ impl Part for Translation {
         };
         let at = prose.at.unwrap_or(pass.now);
         let activity = pass.begin(TRANSLATING, std::slice::from_ref(&graph));
-        let written = self.translator.borrow_mut().heard(&prose, at);
+        let written = self.translator.heard(&prose, at);
         pass.end(activity);
         written
     }
@@ -811,18 +807,18 @@ impl Part for Translation {
     fn run(&mut self, job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
         match job {
             STILL => {
-                self.translator.borrow().still_writing();
+                self.translator.still_writing();
                 Ok(Vec::new())
             }
             _ => match self.pending.pop_front() {
-                Some(back) => self.translator.borrow_mut().done(back, pass.now),
+                Some(back) => self.translator.done(back, pass.now),
                 None => Ok(Vec::new()),
             },
         }
     }
 
     fn submitted(&mut self) -> Vec<usize> {
-        let arrived = self.translator.borrow().arrived();
+        let arrived = self.translator.arrived();
         let n = arrived.len();
         self.pending.extend(arrived);
         vec![BACK; n]

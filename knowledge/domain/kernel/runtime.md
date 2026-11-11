@@ -63,9 +63,14 @@ written, planning plans where its policy hears a trigger, the present reaches th
 present, a transport listens or polls, sensing asks every minute what has
 fallen due, prediction answers every observation written. The runtime offers `submit` a job from any
 thread, `every` so many seconds of the one timeline, `on` a kind of graph written, `hears` an event's class,
-heard beneath it by the vocabulary's closure ([policy](/domain/kernel/policy.md)), `hold` and `release` the agent, `again`, `wake_at` the instant a part is next due with nothing heard, and `lap`, a part of the pass; between passes the mind waits for an arrival or the soonest instant a timer or a part is due, and polls nothing; it runs
-every job and handler on its one thread, knows no package's words, keeps the parts in `parts` and
-stops them last-first. Where the environment names a series store it creates the part that writes
+heard beneath it by the vocabulary's closure ([policy](/domain/kernel/policy.md)), `hold` and `release` the agent, `again`, `wake_at` the instant a part is next due with nothing heard, and `lap`, a part of the pass. Each part is a
+TASK of a Tokio runtime with a mailbox of its own: run free, as an agent runs, it waits for an event beneath its
+trigger, a graph of a kind it hears, an arrival or the soonest instant it is due, handles it and runs its due
+timers, its policy among them, on the runtime's workers beside the other parts, and polls nothing; run by passes, as
+a test runs, the runtime ticks the parts in turn on one thread, each after nothing is busy, and what a part queues
+waits for the end of the pass, so a test proves one order
+([the-agent-is-a-runtime-of-tasks](/decisions/the-agent-is-a-runtime-of-tasks.md)). It knows no package's words,
+keeps the parts in `parts` and stops them last-first. Where the environment names a series store it creates the part that writes
 it too, metrics or history, last, so it hears every other part
 ([metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md))
 ([a-package-starts-itself](/decisions/a-package-starts-itself.md),
@@ -73,7 +78,7 @@ it too, metrics or history, last, so it hears every other part
 A transport package is created only where the process is told to connect; a test hands a member it
 brought up.
 
-**`run` is a loop of passes, and it stops when nobody holds the agent.** A pass drains the packages'
+**`run` stops when nobody holds the agent**, run free or by passes. A pass drains the packages'
 jobs — what was queued and what their writes set off — then what is due: the
 [planner](/domain/planning/planner.md)'s pass, which publishes its plans for the
 [executor](/domain/execution/executor.md) to adopt, then the executor's walk, which for a fictive action

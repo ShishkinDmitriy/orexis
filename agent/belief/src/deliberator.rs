@@ -471,16 +471,16 @@ mod tests {
     #[test]
     fn nothing_changed_spends_nothing_and_says_nothing() {
         let store = revise_case("a_reading_below_its_range_is_concluded_below");
-        let heard = std::rc::Rc::new(std::cell::Cell::new(0));
+        let heard = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let mut deliberator = Deliberator::new(&store, snapshots::AGENT, None).unwrap();
         let into = heard.clone();
         deliberator.watch.connect(move |event, _| {
             if orexis::events::as_of::<Revised>(event).is_some() {
-                into.set(into.get() + 1);
+                into.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             }
         });
         assert_eq!(deliberator.deliberate(snapshots::now()).unwrap(), 0);
-        assert_eq!(heard.get(), 0);
+        assert_eq!(heard.load(std::sync::atomic::Ordering::SeqCst), 0);
     }
 
     #[test]

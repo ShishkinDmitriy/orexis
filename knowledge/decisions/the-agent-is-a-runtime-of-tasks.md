@@ -9,7 +9,7 @@ description: >-
   beneath its trigger and its own due instant, and starts its activities; a long computation leaves the workers for the
   blocking pool. One thread owning the store gives way to one writing package per graph, each update a transaction of its
   own, and a package that reads across several queries copies first; the order the tests prove is the single-threaded
-  runtime's, with time paused. Refused - one ordered queue on the mind, the same tasks on the mind's thread alone in
+  runtime's, ticking the parts in turn. Refused - one ordered queue on the mind, the same tasks on the mind's thread alone in
   production, and a lock around the store.
 ---
 
@@ -63,10 +63,12 @@ prepares its imaginarium, since the engine has no snapshot a reader may hold.
 **A long computation leaves the workers.** A task that computes for seconds - a scope's search - runs it on the
 blocking pool (`spawn_blocking`), owning what it searches, so the sessions and the other policies keep their workers.
 
-**The order the tests prove is the single-threaded runtime's.** A test runs the same tasks on Tokio's current-thread
-runtime with time paused, so it advances only when every task waits, as a test's nought wait does today, and a replay
-gives the same digest every run. Production may interleave two sayers otherwise; what it may not do is break a graph's
-one writer, which no interleaving can.
+**The order the tests prove is the single-threaded runtime's.** A test runs the same tasks BY PASSES on Tokio's
+current-thread runtime: the runtime ticks each part in turn and waits until nothing is busy before ticking the next,
+no task arms a timer, since the test sets its clock, and two rules keep the order one queue gave - what a part
+queues while the parts are ticked runs at the end of the pass, and the graphs a call wrote are told before the
+events it said - so a replay gives the same digest every run, and the Python couriers' drives still. Production may
+interleave two sayers otherwise; what it may not do is break a graph's one writer, which no interleaving can.
 
 **The run ends when nobody holds the agent**, the holders a registry the tasks share, as `hold` and `release` are
 today, and a signal raises the halt every task's wait hears.

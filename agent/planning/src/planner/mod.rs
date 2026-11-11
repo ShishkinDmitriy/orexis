@@ -17,9 +17,8 @@ mod kept;
 mod reconsider;
 mod search;
 
-use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use oxigraph::model::{NamedNode, Quad, Term, Triple};
@@ -216,7 +215,7 @@ pub struct Planner {
     /// How long each part of the pass in progress took, where anybody watches.
     laps: Option<Laps>,
     /// Each want searched and not yet published: when it was first searched, and in how many passes.
-    searches: RefCell<BTreeMap<String, (Instant, usize)>>,
+    searches: Mutex<BTreeMap<String, (Instant, usize)>>,
 }
 
 impl Planner {
@@ -610,7 +609,7 @@ impl Planner {
             published: Vec::new(),
             watch: Watch::default(),
             laps: None,
-            searches: RefCell::new(BTreeMap::new()),
+            searches: Mutex::new(BTreeMap::new()),
             blocked: Vec::new(),
             superseded: Vec::new(),
             doomed: BTreeMap::new(),
@@ -674,7 +673,7 @@ impl Planner {
         }
         self.asked.clear();
         //  A WANT NO LONGER SEARCHED — reached, withdrawn, or walked — takes its tally with it.
-        self.searches.borrow_mut().retain(|w, _| searched.contains(w));
+        self.searches.lock().unwrap().retain(|w, _| searched.contains(w));
         if let Some(laps) = self.laps.take() {
             self.watch.emit(&Planned {
                 wants: Some(searched.len() as f64),
@@ -943,7 +942,7 @@ impl Planner {
             let Some(want) = found.first().and_then(|r| iri(r, "want")) else {
                 continue;
             };
-            let tally = self.searches.borrow_mut().remove(&want);
+            let tally = self.searches.lock().unwrap().remove(&want);
             let spent_by = store
                 .rows(&bind(PLAN_OF_Q, &[("want", Value::iri(want.as_str()))])?, &[])?
                 .first()
@@ -1031,7 +1030,8 @@ impl Planner {
         scope: Option<&str>,
     ) -> Result<(), Error> {
         self.searches
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .entry(want.to_string())
             .or_insert((started, 0))
             .1 += 1;

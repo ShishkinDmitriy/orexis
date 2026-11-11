@@ -70,7 +70,7 @@ walk of its own. Coordination's `coordination:CoordinatingTrigger` has belief's 
 `planning:PlanPublished` and execution's `execution:StepTaken` and `execution:IntentionResolved` beneath it by
 coordination's ontology, and besides those it coordinates a quarter patience on while it asked within two
 patiences or stands in a conflict, since a question expires and a peer turns silent by the patience alone. Each says
-the instant it is next due (`wake_at`), and the mind waits for that or an arrival
+the instant it is next due (`wake_at`), and its task waits for that or a message
 ([runtime](/domain/kernel/runtime.md)).
 
 **An addressed event, by who asked for it.** A timer alarms for the part that set it, and a request

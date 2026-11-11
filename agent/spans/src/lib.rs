@@ -9,9 +9,7 @@
 //! until it answers again. A start's triggers are entities, so they are the span's attributes, not its links: a link
 //! wants the span that generated the entity, which no event says yet.
 
-use std::cell::RefCell;
-use std::rc::Rc;
-use std::sync::mpsc;
+use std::sync::{Arc, Mutex, mpsc};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use oxigraph::model::NamedNode;
@@ -25,7 +23,7 @@ use orexis::runtime::Passed;
 pub const ENDPOINT: &str = "OTLP_ENDPOINT";
 
 /// How a pass's spans reach the tracer: the body of one POST.
-pub type Send = Box<dyn Fn(String)>;
+pub type Send = Box<dyn Fn(String) + std::marker::Send + Sync>;
 
 /// An activity begun and not ended.
 struct Open {
@@ -145,13 +143,13 @@ impl Tracer {
 
 /// Trace every activity `watch` hears said, for the agent `agent`, each pass's spans handed to `send`.
 pub fn connect(watch: &Watch, agent: &str, send: Send) {
-    let tracer = Rc::new(RefCell::new(Tracer {
+    let tracer = Arc::new(Mutex::new(Tracer {
         agent: agent.to_string(),
         open: Vec::new(),
         done: Vec::new(),
         send,
     }));
-    watch.connect(move |event, _| tracer.borrow_mut().heard(event));
+    watch.connect(move |event, _| tracer.lock().unwrap().heard(event));
 }
 
 /// What the environment says of the tracer: its endpoint, or None where it names none.
@@ -227,9 +225,9 @@ mod tests {
     #[test]
     fn a_pass_is_one_trace_and_an_activity_begun_inside_another_is_its_child() {
         let watch = Watch::default();
-        let sent: Rc<RefCell<Vec<String>>> = Rc::default();
+        let sent: Arc<Mutex<Vec<String>>> = Arc::default();
         let kept = sent.clone();
-        connect(&watch, "fern", Box::new(move |b| kept.borrow_mut().push(b)));
+        connect(&watch, "fern", Box::new(move |b| kept.lock().unwrap().push(b)));
         let (planning, searching) = (Activity::begin(PLANNING), Activity::begin(SEARCHING));
         watch.emit(&started(&planning, &[TRIGGER]));
         watch.emit(&started(&searching, &[]));
@@ -241,7 +239,7 @@ mod tests {
             quads: None,
             uptime_s: 1.0,
         });
-        let sent = sent.borrow();
+        let sent = sent.lock().unwrap();
         assert_eq!(sent.len(), 1, "one POST for the pass");
         let body: Value = serde_json::from_str(&sent[0]).unwrap();
         let spans = body["resourceSpans"][0]["scopeSpans"][0]["spans"].as_array().unwrap();
@@ -265,16 +263,16 @@ mod tests {
     #[test]
     fn a_pass_that_began_no_activity_sends_nothing() {
         let watch = Watch::default();
-        let sent: Rc<RefCell<Vec<String>>> = Rc::default();
+        let sent: Arc<Mutex<Vec<String>>> = Arc::default();
         let kept = sent.clone();
-        connect(&watch, "fern", Box::new(move |b| kept.borrow_mut().push(b)));
+        connect(&watch, "fern", Box::new(move |b| kept.lock().unwrap().push(b)));
         watch.emit(&Passed {
             duration_s: 0.1,
             laps: Vec::new(),
             quads: None,
             uptime_s: 1.0,
         });
-        assert!(sent.borrow().is_empty());
+        assert!(sent.lock().unwrap().is_empty());
     }
 
     #[test]

@@ -5,14 +5,14 @@
 
 use std::path::Path;
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use orexis::Error;
 use orexis::boot::{Booting, boot};
 use orexis::clock::Clock;
 use orexis::events::Watch;
 use orexis::journal::Journal;
-use orexis::runtime::Part;
+use orexis::runtime::{Lent, Part};
 use orexis::series::Sink;
 use orexis::store::Store;
 
@@ -153,16 +153,16 @@ pub fn built(package: &str) -> bool {
 /// planning's `planning:HeadChecked` answers where the present no longer admits it (#916). No link: a flag, since an
 /// executor with nobody to answer must not wait for an answer.
 #[cfg(all(feature = "planning", feature = "execution"))]
-pub fn judge(execution: &orexis_execution::create::Execution) {
-    execution.executor.borrow_mut().asks = true;
+pub fn judge(execution: &mut orexis_execution::create::Execution) {
+    execution.executor.asks = true;
 }
 
 /// Hand the planner prediction's foresight, as it is handed the store and the clock: a pure function that integrates
 /// the flows from each ground as the grounds are laid (#1000), through the kernel's `Foresight`, so neither package
 /// imports the other. It shares nothing with prediction's part, which holds no state, so it is no link.
 #[cfg(all(feature = "planning", feature = "prediction"))]
-pub fn foresee(planning: &orexis_planning::create::Planning, prediction: &orexis_prediction::create::Prediction) {
-    planning.planner.borrow_mut().foresee = Some(prediction.offered());
+pub fn foresee(planning: &mut orexis_planning::create::Planning, prediction: &orexis_prediction::create::Prediction) {
+    planning.planner.foresee = Some(prediction.offered());
 }
 
 /// Give execution's part the taker of an agent that carries out its steps, where anything carries them — a transport
@@ -173,21 +173,20 @@ pub fn foresee(planning: &orexis_planning::create::Planning, prediction: &orexis
 pub fn take(
     store: &Store,
     clock: Arc<dyn Clock>,
-    execution: &orexis_execution::create::Execution,
+    execution: &mut orexis_execution::create::Execution,
     me: &str,
     watch: Watch,
     commands: bool,
     says: bool,
 ) {
     if commands || says {
-        execution.executor.borrow_mut().take = Some(orexis_execution::create::taker(
+        execution.executor.take = Some(orexis_execution::create::taker(
             store.clone(),
             me,
             clock,
             watch,
             commands,
             says,
-            execution.said.clone(),
         ));
     }
 }
@@ -251,21 +250,44 @@ pub fn assemble_wired(
     budget: Option<usize>,
     wiring: Wiring,
 ) -> Result<Parts, Error> {
-    Ok(assemble_seen(store, agent, clock, loaded, budget, wiring)?.0)
+    Ok(assembled(store, agent, clock, loaded, budget, wiring, false)?.0)
 }
 
-/// What a test reads of the parts once they are lent to the runtime: the planner and the executor they share, and the
-/// watch every part says its events to, which the runtime is handed too.
+/// What a TEST reads of the parts once they are handed to the runtime: planning's and execution's parts LENT to it
+/// (`Lent`), which no agent's assembly does, and the watch every part says its events to, which the runtime is handed
+/// too.
 #[derive(Default)]
 pub struct Seen {
     pub watch: Watch,
     #[cfg(feature = "planning")]
-    pub planner: Option<std::rc::Rc<std::cell::RefCell<orexis_planning::Planner>>>,
+    pub planning: Option<Arc<Mutex<orexis_planning::create::Planning>>>,
     #[cfg(feature = "execution")]
-    pub executor: Option<std::rc::Rc<std::cell::RefCell<orexis_execution::Executor>>>,
+    pub execution: Option<Arc<Mutex<orexis_execution::create::Execution>>>,
 }
 
-/// `assemble_wired`, and what a test reads of the parts.
+impl Seen {
+    /// Planning's part, lent: where planning is loaded.
+    #[cfg(feature = "planning")]
+    pub fn planning(&self) -> std::sync::MutexGuard<'_, orexis_planning::create::Planning> {
+        self.planning
+            .as_ref()
+            .expect("planning loaded")
+            .lock()
+            .expect("a part nobody poisoned")
+    }
+
+    /// Execution's part, lent: where execution is loaded.
+    #[cfg(feature = "execution")]
+    pub fn execution(&self) -> std::sync::MutexGuard<'_, orexis_execution::create::Execution> {
+        self.execution
+            .as_ref()
+            .expect("execution loaded")
+            .lock()
+            .expect("a part nobody poisoned")
+    }
+}
+
+/// `assemble_wired`, and what a TEST reads of the parts: planning's and execution's lent to the runtime.
 pub fn assemble_seen(
     store: &Store,
     agent: &str,
@@ -273,6 +295,31 @@ pub fn assemble_seen(
     loaded: &[String],
     budget: Option<usize>,
     wiring: Wiring,
+) -> Result<(Parts, Seen), Error> {
+    assembled(store, agent, clock, loaded, budget, wiring, true)
+}
+
+/// `assemble_wired`, and the watch every part says its events to: what an agent runs, each part its task's alone.
+pub fn assemble_watched(
+    store: &Store,
+    agent: &str,
+    clock: Arc<dyn Clock>,
+    loaded: &[String],
+    budget: Option<usize>,
+    wiring: Wiring,
+) -> Result<(Parts, Watch), Error> {
+    let (parts, seen) = assembled(store, agent, clock, loaded, budget, wiring, false)?;
+    Ok((parts, seen.watch))
+}
+
+fn assembled(
+    store: &Store,
+    agent: &str,
+    clock: Arc<dyn Clock>,
+    loaded: &[String],
+    budget: Option<usize>,
+    wiring: Wiring,
+    lend: bool,
 ) -> Result<(Parts, Seen), Error> {
     #[allow(unused_mut)]
     let mut seen = Seen::default();
@@ -316,19 +363,22 @@ pub fn assemble_seen(
     }
     let holds = |package: &str| loaded.iter().any(|p| p == package);
     #[cfg(feature = "belief")]
-    let belief = if holds("belief") {
+    #[allow(unused_mut)]
+    let mut belief = if holds("belief") {
         Some(orexis_belief::create::Belief::new(store, agent)?)
     } else {
         None
     };
     #[cfg(feature = "planning")]
-    let planning = if holds("planning") {
+    #[allow(unused_mut)]
+    let mut planning = if holds("planning") {
         Some(orexis_planning::create::Planning::new(store, agent, budget)?)
     } else {
         None
     };
     #[cfg(feature = "execution")]
-    let execution = if holds("execution") {
+    #[allow(unused_mut)]
+    let mut execution = if holds("execution") {
         Some(orexis_execution::create::Execution::new(store, agent, clock.clone())?)
     } else {
         None
@@ -342,7 +392,7 @@ pub fn assemble_seen(
     #[cfg(feature = "prediction")]
     let prediction = holds("prediction").then(orexis_prediction::create::Prediction::default);
     #[cfg(all(feature = "planning", feature = "prediction"))]
-    if let (Some(planning), Some(prediction)) = (planning.as_ref(), prediction.as_ref()) {
+    if let (Some(planning), Some(prediction)) = (planning.as_mut(), prediction.as_ref()) {
         foresee(planning, prediction);
     }
     #[cfg(feature = "mqtt")]
@@ -363,7 +413,8 @@ pub fn assemble_seen(
     let _ = wiring;
     let me = orexis::boot::selves(store)?.into_iter().next().unwrap_or_default();
     #[cfg(feature = "speech")]
-    let speech = holds("speech").then(|| orexis_speech::create::Speech::new(store, &me));
+    #[allow(unused_mut)]
+    let mut speech = holds("speech").then(|| orexis_speech::create::Speech::new(store, &me));
     #[cfg(feature = "coordination")]
     let mut coordination = holds("coordination").then(|| orexis_coordination::create::Coordination::new(store, &me));
     #[cfg(feature = "translation")]
@@ -409,7 +460,7 @@ pub fn assemble_seen(
         None
     };
     #[cfg(feature = "execution")]
-    if let Some(execution) = execution.as_ref() {
+    if let Some(execution) = execution.as_mut() {
         #[cfg(feature = "mqtt")]
         let commands = transport.is_some();
         #[cfg(not(feature = "mqtt"))]
@@ -421,40 +472,32 @@ pub fn assemble_seen(
         take(store, clock.clone(), execution, &me, watch.clone(), commands, says);
     }
     #[cfg(all(feature = "planning", feature = "execution"))]
-    if let (Some(_), Some(execution)) = (planning.as_ref(), execution.as_ref()) {
+    if let (Some(_), Some(execution)) = (planning.as_ref(), execution.as_mut()) {
         judge(execution);
     }
     #[cfg(feature = "belief")]
-    if let Some(belief) = belief.as_ref() {
-        belief.deliberator.borrow_mut().watch = watch.clone();
+    if let Some(belief) = belief.as_mut() {
+        belief.deliberator.watch = watch.clone();
     }
     #[cfg(feature = "planning")]
-    if let Some(planning) = planning.as_ref() {
-        planning.planner.borrow_mut().watch = watch.clone();
+    if let Some(planning) = planning.as_mut() {
+        planning.planner.watch = watch.clone();
     }
     #[cfg(feature = "execution")]
-    if let Some(execution) = execution.as_ref() {
-        execution.executor.borrow_mut().watch = watch.clone();
+    if let Some(execution) = execution.as_mut() {
+        execution.executor.watch = watch.clone();
     }
     #[cfg(feature = "sensing")]
     if let Some(sensing) = sensing.as_mut() {
         sensing.watch = watch.clone();
     }
     #[cfg(feature = "speech")]
-    if let Some(speech) = speech.as_ref() {
-        *speech.speaker.watch.borrow_mut() = watch.clone();
+    if let Some(speech) = speech.as_mut() {
+        speech.speaker.watch = watch.clone();
     }
     #[cfg(feature = "coordination")]
     if let Some(coordination) = coordination.as_mut() {
         coordination.watch = watch.clone();
-    }
-    #[cfg(feature = "planning")]
-    {
-        seen.planner = planning.as_ref().map(|p| p.planner.clone());
-    }
-    #[cfg(feature = "execution")]
-    {
-        seen.executor = execution.as_ref().map(|e| e.executor.clone());
     }
     #[cfg(feature = "belief")]
     if let Some(belief) = belief {
@@ -462,11 +505,23 @@ pub fn assemble_seen(
     }
     #[cfg(feature = "planning")]
     if let Some(planning) = planning {
-        parts.push(("planning".into(), Box::new(planning)));
+        if lend {
+            let planning = Arc::new(Mutex::new(planning));
+            parts.push(("planning".into(), Lent::of(&planning)));
+            seen.planning = Some(planning);
+        } else {
+            parts.push(("planning".into(), Box::new(planning)));
+        }
     }
     #[cfg(feature = "execution")]
     if let Some(execution) = execution {
-        parts.push(("execution".into(), Box::new(execution)));
+        if lend {
+            let execution = Arc::new(Mutex::new(execution));
+            parts.push(("execution".into(), Lent::of(&execution)));
+            seen.execution = Some(execution);
+        } else {
+            parts.push(("execution".into(), Box::new(execution)));
+        }
     }
     #[cfg(feature = "sensing")]
     if let Some(sensing) = sensing {
@@ -506,6 +561,6 @@ pub fn assemble_seen(
     }
     //  WHAT WATCHES THE AGENT, last, so it is stopped first and writes the last window.
     parts.extend(watchers);
-    let _ = (store, agent, &clock, budget, holds);
+    let _ = (store, agent, &clock, budget, holds, lend);
     Ok((parts, seen))
 }

@@ -41,7 +41,7 @@ const ID_Q: &str = "SELECT ?id WHERE { $chat a telegram:Chat ; telegram:chatId ?
 /// The Bot API as the driver calls it: a method's URL and its JSON body, answered with JSON.
 pub type Call = Arc<dyn Fn(&str, &Json) -> Result<Json, String> + Send + Sync>;
 /// What runs a poll: on a thread of its own, or at once in a test.
-pub type Spawn = Box<dyn Fn(Box<dyn FnOnce() + Send>)>;
+pub type Spawn = Box<dyn Fn(Box<dyn FnOnce() + Send>) + Send + Sync>;
 
 /// The API as a deployed agent calls it.
 pub fn post() -> Call {
