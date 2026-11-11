@@ -37,5 +37,4 @@ pub trait Foresight {
 pub type Placed<'p> = dyn Fn(&str, &str) -> bool + 'p;
 
 /// The predictor's offer, taken at link: the foresight from `now`, off `beliefs`, None where no key is moved by a flow.
-pub type Foresees<'a> =
-    Box<dyn Fn(&Store, DateTime, Option<&Placed<'_>>) -> Result<Option<Box<dyn Foresight>>, Error> + 'a>;
+pub type Foresees = Box<dyn Fn(&Store, DateTime, Option<&Placed<'_>>) -> Result<Option<Box<dyn Foresight>>, Error>>;

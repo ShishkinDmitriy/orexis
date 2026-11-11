@@ -184,7 +184,7 @@ type Said = (String, Vec<(String, String)>);
 
 /// One agent's planning: the pass, one want's search, and one iteration of it, each a method that sequences the
 /// package's acts and reads the store between them. What the Python copy signals, a caller reads off the fields.
-pub struct Planner<'a> {
+pub struct Planner {
     pub beliefs: Store,
     pub id: String,
     pub uri: String,
@@ -208,7 +208,7 @@ pub struct Planner<'a> {
     /// The wants a role above planning asked to have reopened, until the next pass reopens them.
     pub asked: BTreeSet<String>,
     /// THE PREDICTOR'S FORESIGHT, where the agent plays one: taken at link and asked at every pass, never imported.
-    pub foresee: Option<Foresees<'a>>,
+    pub foresee: Option<Foresees>,
     /// The plans the last pass published, said whole with the desire each want was derived under.
     pub published: Vec<PlanPublished>,
     /// Whoever watches the agent.
@@ -219,7 +219,7 @@ pub struct Planner<'a> {
     searches: RefCell<BTreeMap<String, (Instant, usize)>>,
 }
 
-impl Planner<'_> {
+impl Planner {
     /// What the texts the last pass evaluated read, None where one of them could read anything.
     pub fn read(&self) -> Option<&BTreeSet<String>> {
         self.read.as_ref().and_then(|(_, r)| r.as_ref())
@@ -574,10 +574,10 @@ fn of_scope(
     Ok(mine)
 }
 
-impl<'a> Planner<'a> {
+impl Planner {
     /// The beliefs, the one identifier a process is told, and how much a search may spend — the agent's stance,
     /// `planning:budget` off its self graph, where the caller hands none, and `BUDGET` where it states none.
-    pub fn new(beliefs: &'a Store, agent_id: &str, budget: Option<usize>) -> Result<Self, Error> {
+    pub fn new(beliefs: &Store, agent_id: &str, budget: Option<usize>) -> Result<Self, Error> {
         let budget = match budget {
             Some(b) => b,
             None => orexis::stance::stance(beliefs, BUDGET_TERM)?.map_or(BUDGET, |n| n as usize),
@@ -1174,7 +1174,7 @@ mod tests {
             .unwrap()
     }
 
-    fn imagined<'p>(planner: &'p Planner<'_>) -> &'p Store {
+    fn imagined(planner: &Planner) -> &Store {
         assert_eq!(planner.imaginaria.len(), 1, "one scope");
         planner.imaginaria.values().next().unwrap()
     }
@@ -1332,7 +1332,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         value(&store.rows(text, &[]).unwrap()[0], "n").unwrap().parse().unwrap()
     }
 
-    fn possible(planner: &Planner<'_>) -> BTreeSet<String> {
+    fn possible(planner: &Planner) -> BTreeSet<String> {
         imagined(planner)
             .graphs_of(&[POSSIBLE_GRAPH], &Within::default())
             .unwrap()
@@ -1340,11 +1340,11 @@ SELECT (COUNT(?x) AS ?n) WHERE {
             .collect()
     }
 
-    fn steps(planner: &Planner<'_>) -> usize {
+    fn steps(planner: &Planner) -> usize {
         count(imagined(planner), STEPS_Q)
     }
 
-    fn outcome(planner: &Planner<'_>) -> String {
+    fn outcome(planner: &Planner) -> String {
         local_of(&iri(&imagined(planner).rows(OUTCOME_Q, &[]).unwrap()[0], "o").unwrap())
     }
 
@@ -1861,7 +1861,7 @@ SELECT ?step ?fills ?of (COUNT(?before) AS ?n) WHERE {
                 OPTIONAL { ?before execution:then+ ?step } } }
 GROUP BY ?step ?fills ?of ORDER BY ?n";
 
-    fn walked(beliefs: &Store) -> Planner<'_> {
+    fn walked(beliefs: &Store) -> Planner {
         let mut planner = Planner::new(beliefs, snapshots::AGENT, None).unwrap();
         planner.plan(snapshots::now()).unwrap();
         planner

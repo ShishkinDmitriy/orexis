@@ -32,7 +32,7 @@ ORDER BY ?step"#;
 
 const OUTCOMES_Q: &str = r#"SELECT ?o WHERE { GRAPH $plan { ?p a planning:Plan ; planning:outcome ?o } }"#;
 
-impl<'a> Planner<'a> {
+impl Planner {
     /// The steps of `plan` in `store`, in the order walked, each with the action it fills and its filling.
     pub(super) fn chain(&self, store: &Store, plan: &str) -> Result<Vec<(String, Said)>, Error> {
         let actions = graphs(&self.beliefs, &[ACTION])?;

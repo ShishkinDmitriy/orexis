@@ -57,13 +57,13 @@ a role declared after birth reaches only a fresh volume.
 
 **A package's part is created, linked and started.** Every package the agent loads — each a
 declared role calls for, and each transport a loaded role needs — that has a `create` module makes a
-[part](/domain/kernel/part.md) of the runtime; when all exist, each links to the others, connecting
-its [signals](/domain/kernel/signal.md) to what lies beneath it; then each starts and says what it
-does: belief revises what is written, planning plans every pass, execution walks what is due and
-whenever the deliberator revises, a transport listens or polls, sensing asks every minute what has
+[part](/domain/kernel/part.md) of the runtime, each handed the one watch every part says its
+[events](/domain/kernel/event.md) to; then each starts and says what it does: belief revises what is
+written, planning plans every pass, execution walks what is due and whenever a revision changed the
+present, a transport listens or polls, sensing asks every minute what has
 fallen due, prediction answers every observation written. The runtime offers `submit` a job from any
-thread, `every` so many seconds of the one timeline, `on` a kind of graph written — a signal it
-owns, beside a pass — `hold` and `release` the agent, `again`, and `lap`, a part of the pass; it runs
+thread, `every` so many seconds of the one timeline, `on` a kind of graph written, `hears` an event's class,
+heard beneath it by the vocabulary's closure ([policy](/domain/kernel/policy.md)), `hold` and `release` the agent, `again`, and `lap`, a part of the pass; it runs
 every job and handler on its one thread, knows no package's words, keeps the parts in `parts` and
 stops them last-first. Where the environment names a series store it creates the part that writes
 it too, metrics or history, last, so it hears every other part

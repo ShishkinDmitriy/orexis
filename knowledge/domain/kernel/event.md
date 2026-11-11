@@ -14,21 +14,20 @@ description: >-
 An event has no duration: it is a `prov:InstantaneousEvent`, said once at the instant it happened. It
 never triggers another event. A [policy](/domain/kernel/policy.md) hears it and decides whether to start
 an [activity](/domain/kernel/activity.md), and an activity's start and end are events in their turn; a
-more specific event may be said at the same instant, naming the one it specifies. Hearing by policy is
-not built yet: today a [signal](/domain/kernel/signal.md) carries an event to whoever was linked
+more specific event may be said at the same instant, naming the one it specifies
 ([packages-meet-by-events-policies-and-activities](/decisions/packages-meet-by-events-policies-and-activities.md)).
 
 # What it is
 
-An event is what one [signal](/domain/kernel/signal.md) emission hands every handler: a frozen
-dataclass instance, `PlanPublished(plan, want, desire, …)`, `IntentionResolved(intention, want,
-outcome)`, `Observed(property, value, at, …)`. Its class belongs to the package that says it and
-lives in `agent/<package>/events.py`, beside nothing else, so what a package says is read in one
-module; the runtime's own two, a graph written and a pass, are in `agent/src/runtime.rs`. It carries
-every fact a handler needs, read by the emitter where it already stands, so the executor adopts
-from a `PlanPublished` without asking the Planner anything.
+An event is what a part says to the agent's one watch: a value, `PlanPublished`, `IntentionResolved`,
+`Observed`, whose class belongs to the package that says it and lives in its `events.rs`, so what a
+package says is read in one module; the runtime's own, a graph written and a pass, are in
+`agent/src/runtime.rs`. Every hearer of the watch hears it at once, on the one thread - the journal,
+the series and the tracer - and where its class is beneath a part's trigger the runtime hands it to
+that part's [policy](/domain/kernel/policy.md), by what it is about: the entities it NAMES, never their
+content, which the policy reads from the store, written there before the event was said.
 
-An event costing a read is made only where the signal is heard: the emitter asks `connected` first.
+An event costing a read is made only where it is heard: the emitter asks `connected` first.
 
 # What its class may say
 

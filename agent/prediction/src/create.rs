@@ -29,7 +29,7 @@ impl Prediction {
     }
 
     /// The offer the planner takes at link.
-    pub fn offered<'a>(&self) -> Foresees<'a> {
+    pub fn offered(&self) -> Foresees {
         Box::new(|beliefs, now, placed| Prediction.foresee(beliefs, now, placed))
     }
 }

@@ -153,22 +153,16 @@ pub fn built(package: &str) -> bool {
 /// admits it (#916). The one link left between them — what a pass published, reached and reconsidered execution
 /// hears as events — until a hearer may hold a reader of the store and the judgment is asked as an event (#1119).
 #[cfg(all(feature = "planning", feature = "execution"))]
-pub fn judge<'a>(
-    planning: &orexis_planning::create::Planning<'a>,
-    execution: &orexis_execution::create::Execution<'a>,
-) {
+pub fn judge<'a>(planning: &orexis_planning::create::Planning, execution: &orexis_execution::create::Execution<'a>) {
     let planner = planning.planner.clone();
     execution.executor.borrow_mut().taking = Some(Box::new(move |step, at| planner.borrow_mut().check(step, at)));
 }
 
-/// Link planning's part to prediction's, as the Python planner takes the predictor's `foresee` at link: every pass
-/// the flows are integrated from each ground as the grounds are laid (#1000), through the kernel's `Foresight`,
-/// neither package importing the other.
+/// Hand the planner prediction's foresight, as it is handed the store and the clock: a pure function that integrates
+/// the flows from each ground as the grounds are laid (#1000), through the kernel's `Foresight`, so neither package
+/// imports the other. It shares nothing with prediction's part, which holds no state, so it is no link.
 #[cfg(all(feature = "planning", feature = "prediction"))]
-pub fn foresee<'a>(
-    planning: &orexis_planning::create::Planning<'a>,
-    prediction: &orexis_prediction::create::Prediction,
-) {
+pub fn foresee(planning: &orexis_planning::create::Planning, prediction: &orexis_prediction::create::Prediction) {
     planning.planner.borrow_mut().foresee = Some(prediction.offered());
 }
 
@@ -267,7 +261,7 @@ pub fn assemble_wired<'a>(
 pub struct Seen<'a> {
     pub watch: Watch,
     #[cfg(feature = "planning")]
-    pub planner: Option<std::rc::Rc<std::cell::RefCell<orexis_planning::Planner<'a>>>>,
+    pub planner: Option<std::rc::Rc<std::cell::RefCell<orexis_planning::Planner>>>,
     #[cfg(feature = "execution")]
     pub executor: Option<std::rc::Rc<std::cell::RefCell<orexis_execution::Executor<'a>>>>,
     #[cfg(not(any(feature = "planning", feature = "execution")))]

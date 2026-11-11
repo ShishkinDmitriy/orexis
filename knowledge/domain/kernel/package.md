@@ -67,8 +67,8 @@ declares no role is read by none but as a transport; `agent/tests/test_roles.py`
 both, and every role both ways — declared, loaded and its part created; undeclared, absent.
 
 Once loaded, a package **starts itself**: `agent/<package>/create.py` exports `create(runtime)`, which
-makes the package's [part](/domain/kernel/part.md); the parts are linked to each other, then started,
-each saying what its package does by jobs, timers and [signals](/domain/kernel/signal.md), and the
+makes the package's [part](/domain/kernel/part.md); the parts are started, each saying what its package
+does by jobs, timers and the [events](/domain/kernel/event.md) it hears beneath its triggers, and the
 runtime calls them knowing no word of what they do ([a-package-starts-itself](/decisions/a-package-starts-itself.md),
 [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
 
