@@ -14,9 +14,8 @@
 //! agent. The window is written when a pass ends on the first pass by which it has run its length, so a window holds
 //! whole passes, and as the part stops, since a stop is an exit.
 
-use std::cell::RefCell;
 use std::collections::BTreeMap;
-use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use oxsdatatypes::DateTime;
@@ -98,15 +97,15 @@ pub struct Window {
     levels: BTreeMap<Key, BTreeMap<String, Field>>,
     opened: f64,
     /// The real monotonic clock in seconds, and the wall a flush is stamped by — a test's own, so it never sleeps.
-    pub monotonic: Box<dyn Fn() -> f64>,
-    pub wall: Box<dyn Fn() -> DateTime>,
+    pub monotonic: Box<dyn Fn() -> f64 + Send + Sync>,
+    pub wall: Box<dyn Fn() -> DateTime + Send + Sync>,
 }
 
 impl Window {
     /// A window over `sink`, its points tagged with `world` and `agent`.
     pub fn new(sink: Sink, interval_s: f64, world: Option<&str>, agent: Option<&str>) -> Self {
         let started = Instant::now();
-        let monotonic: Box<dyn Fn() -> f64> = Box::new(move || started.elapsed().as_secs_f64());
+        let monotonic: Box<dyn Fn() -> f64 + Send + Sync> = Box::new(move || started.elapsed().as_secs_f64());
         let who = [("world", world), ("agent", agent)]
             .iter()
             .filter_map(|(k, v)| v.map(|v| (k.to_string(), v.to_string())))
@@ -196,16 +195,16 @@ impl Window {
 
 /// The metrics part: every reported event tallied, the window written after the pass that ends it and as it stops.
 pub struct Metrics {
-    pub window: Rc<RefCell<Window>>,
+    pub window: Arc<Mutex<Window>>,
 }
 
 impl Metrics {
     /// The part, hearing every event `watch` is said.
     pub fn new(window: Window, watch: &Watch) -> Self {
-        let window = Rc::new(RefCell::new(window));
+        let window = Arc::new(Mutex::new(window));
         let heard = window.clone();
         watch.connect(move |event, _| {
-            let mut window = heard.borrow_mut();
+            let mut window = heard.lock().unwrap();
             window.tally(event);
             if event.metric() == Some(PASS_METRIC) && window.due() {
                 window.flush();
@@ -221,15 +220,13 @@ impl Part for Metrics {
     }
 
     fn stop(&mut self) {
-        self.window.borrow_mut().flush();
+        self.window.lock().unwrap().flush();
     }
 }
 
 #[cfg(test)]
 mod tests {
     //! The window, held to what `agent/metrics/tests/test_window.py` holds the Python one to.
-
-    use std::cell::Cell;
 
     use super::*;
 
@@ -277,19 +274,19 @@ mod tests {
         }
     }
 
-    fn window(written: Rc<RefCell<Vec<Point>>>) -> (Window, Rc<Cell<f64>>) {
-        let real = Rc::new(Cell::new(1000.0));
+    fn window(written: Arc<Mutex<Vec<Point>>>) -> (Window, Arc<Mutex<f64>>) {
+        let real = Arc::new(Mutex::new(1000.0));
         let at = real.clone();
         let sink = Sink::new(
             "METRICS",
             "m",
             Box::new(move |_, points| {
-                written.borrow_mut().extend(points.iter().cloned());
+                written.lock().unwrap().extend(points.iter().cloned());
                 Ok(())
             }),
         );
         let mut w = Window::new(sink, 60.0, Some("hanoi"), Some("mover"));
-        w.monotonic = Box::new(move || at.get());
+        w.monotonic = Box::new(move || *at.lock().unwrap());
         w.wall = Box::new(|| orexis::clock::instant("2030-06-01T08:00:00+00:00").unwrap());
         w.reopen();
         (w, real)
@@ -297,14 +294,17 @@ mod tests {
 
     #[test]
     fn an_event_is_tallied_and_written_once_a_window() {
-        let written = Rc::new(RefCell::new(Vec::new()));
+        let written = Arc::new(Mutex::new(Vec::new()));
         let (mut w, real) = window(written.clone());
         w.tally(&tried("Exhausted", Some(0.5), 20.0, true));
         w.tally(&tried("Exhausted", Some(1.5), 20.0, false));
         w.tally(&tried("Satisfied", Some(0.25), 7.0, false));
-        real.set(1059.0);
-        assert!(!w.due() && written.borrow().is_empty(), "a window is sixty seconds");
-        real.set(1060.0);
+        *real.lock().unwrap() = 1059.0;
+        assert!(
+            !w.due() && written.lock().unwrap().is_empty(),
+            "a window is sixty seconds"
+        );
+        *real.lock().unwrap() = 1060.0;
         assert!(w.due());
         let points: BTreeMap<String, Point> = w.flush().into_iter().map(|p| (p.tags["outcome"].clone(), p)).collect();
         let f = |x: f64| Field::Float(x);
@@ -333,13 +333,13 @@ mod tests {
                 ])
             );
         }
-        assert_eq!(written.borrow().len(), 2);
+        assert_eq!(written.lock().unwrap().len(), 2);
         assert!(!w.due() && w.flush().is_empty(), "the next window opened empty");
     }
 
     #[test]
     fn a_level_is_written_as_it_last_stood_in_its_type_and_only_in_a_window_that_said_it() {
-        let (mut w, _) = window(Rc::new(RefCell::new(Vec::new())));
+        let (mut w, _) = window(Arc::new(Mutex::new(Vec::new())));
         w.tally(&Held("hanoi", Number::Int(20)));
         w.tally(&Held("hanoi", Number::Int(7)));
         w.tally(&Held("courier", Number::Float(2.5)));

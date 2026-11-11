@@ -1,37 +1,37 @@
-//! THE RUNTIME: one agent's process, a lifecycle container for its packages' parts, run pass by pass — as
-//! `agent/runtime.py`'s `Runtime` runs them (a-package-starts-itself). A part is started, asks for what it waits for
-//! — so far a timer, `every` so many seconds of the one timeline — and is run when that falls due; a pass runs every
-//! part due, in the order of the pass, on the one thread, the mind. The run ends when nothing holds the agent, as the
-//! last to let go said: `met`, `planned` or `unreachable`; or when the passes ran out, `unfinished`.
+//! THE RUNTIME: one agent's body, a Tokio runtime its packages' parts run on, each part a task of its own
+//! (the-agent-is-a-runtime-of-tasks). A part is started, asks for what it waits for - a timer, `every` so many seconds
+//! of the one timeline, a kind of graph written, an event's class - and its task runs it when that comes. The run ends
+//! when nothing holds the agent, as the last to let go said: `met`, `planned` or `unreachable`; or when the passes ran
+//! out, `unfinished`.
 //!
-//! A PART HEARS A KIND OF GRAPH WRITTEN (`on`), as Python's `runtime.on` offers it: every graph a job answers it
-//! wrote is told to each part listening for a kind the catalogue says it is, and what that part writes in turn is
-//! told the same way — how a package answers another's work with neither naming the other. And A PART QUEUES A JOB
-//! (`submitted`), which runs after the jobs queued before it in the same drain, as Python's `submit` queues one.
+//! A PART HEARS A KIND OF GRAPH WRITTEN (`on`): every graph a job answers it wrote is sent to each part listening for a
+//! kind the catalogue says it is, and what that part writes in turn is sent the same way. A PART HEARS AN EVENT BY ITS
+//! CLASS (`hears`), the class and every class the vocabulary puts beneath it, in the order its sayer said them; and A
+//! PART BEGINS AND ENDS AN ACTIVITY, saying its start and its end (packages-meet-by-events-policies-and-activities). A
+//! PART QUEUES A JOB (`submitted`), run by its own task after the message that queued it.
 //!
-//! A TRANSPORT'S THREAD HANDS THE PASS WHAT ARRIVED through the member's inbox: what a client received waits there,
-//! and the member's part queues a job per message when the runtime asks what it `submitted`, so a message is handled
-//! on the one thread the store is written from.
+//! RUN FREE (`run(None, …)`), each task waits for a message - an event, a graph, an arrival its `Wake` rang - or for
+//! the soonest instant it is due, a timer or what it said by `wake_at`, at the clock's pace; it handles what came, then
+//! runs its due timers, its policy among them. The parts run on the runtime's workers at once, and a graph has one
+//! writing package, so no two meet on it.
 //!
-//! A PART HEARS AN EVENT BY ITS CLASS (`hears`), the class and every class the vocabulary puts beneath it, after the
-//! job that said it, in the order said; and A PASS BEGINS AND ENDS AN ACTIVITY, saying its start and its end
-//! (packages-meet-by-events-policies-and-activities).
-//!
-//! WHAT WAITS IS A TASK, AND THE MIND WAITS FOR AN ARRIVAL: a part asks for a `task` as it starts, which holds no part
-//! and writes no belief, and runs among the tasks of the process, built the first time one is asked for. What arrives
-//! rings the `Wake`, so a pass waits for the next arrival or the soonest instant a timer falls due or a part said it is
-//! next due at (`wake_at`), whichever comes first, and polls nothing (the-agent-moves-to-rust-one-package-at-a-time).
+//! RUN BY PASSES (`run(Some(n), …)`, `drain`), what a test does, the runtime ticks each part in turn, in the order the
+//! parts were handed, and waits until nothing is busy before ticking the next: a part's policy runs after everything
+//! the parts before it said has been heard, as one ordered pass ran them, so a test proves one order. Between passes it
+//! waits for an arrival or the soonest instant anything is due, never longer than the longest it is told, nought in a
+//! test that sets its clock itself.
 
-use std::cell::RefCell;
-use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::collections::{BTreeMap, HashMap};
 use std::future::Future;
-use std::rc::Rc;
-use std::sync::{Arc, Condvar, Mutex};
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use oxsdatatypes::DateTime;
 
 use oxigraph::model::{NamedNode, Term};
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
+use tokio::sync::{Notify, watch};
 
 use crate::Error;
 use crate::activity::{Activity, Ended, Started};
@@ -39,17 +39,14 @@ use crate::clock::{Clock, seconds};
 use crate::events::{Event, Laps, Mark, Number, Watch, round6};
 use crate::store::Store;
 
-/// How a run ends.
 pub const MET: &str = "met";
 pub const PLANNED: &str = "planned";
 pub const UNREACHABLE: &str = "unreachable";
 pub const UNFINISHED: &str = "unfinished";
 
-/// The measurement a pass is reported under, which the metrics part writes its window after.
 pub const PASS_METRIC: &str = "pass";
 
-/// A pass, in real seconds, whole and by part — the jobs queued run to the last (`drain`), planning, walking; a part
-/// a pass does not reach is not in it — with how large the belief base is, in quads, and how long the process has run.
+/// A pass, or a stretch of the run with something busy, and how long it took: by part, where a part marked laps.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Passed {
     pub duration_s: f64,
@@ -76,33 +73,86 @@ impl Event for Passed {
     }
 }
 
-/// When the process began, for how long it has run.
 fn started() -> std::time::Instant {
     static STARTED: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
     *STARTED.get_or_init(std::time::Instant::now)
 }
 
-/// What ends the mind's wait: rung from any thread or task, and remembered until the mind next waits, so an arrival
-/// during a pass is not slept through.
+thread_local! {
+    /// THE EVENTS A PART SAID DURING THE CALL IN PROGRESS on this thread, sent once the call returned and its graphs
+    /// were told: a part's graphs are heard before its events, as one queue told them.
+    static SAID: std::cell::RefCell<Option<Vec<Heard>>> = const { std::cell::RefCell::new(None) };
+}
+
+/// Run `call`, holding back what it says until it returns.
+fn holding<T>(call: impl FnOnce() -> T) -> (T, Vec<Heard>) {
+    let outer = SAID.with(|said| said.borrow_mut().replace(Vec::new()));
+    let out = call();
+    let said = SAID
+        .with(|said| std::mem::replace(&mut *said.borrow_mut(), outer))
+        .unwrap_or_default();
+    (out, said)
+}
+
+/// What a part's task is sent.
+enum Message {
+    /// Run the due timers at the instant a pass stands at.
+    Tick(DateTime),
+    /// Something arrived for the part, which it says it `submitted`.
+    Arrived,
+    Graph(usize, String),
+    Event(usize, Heard),
+    /// Wait for itself from now on: run free.
+    Free,
+    Stop,
+}
+
+/// HOW MANY MESSAGES ARE SENT AND NOT YET HANDLED, across every part: nought is idle.
+#[derive(Clone)]
+struct Busy(Arc<watch::Sender<usize>>);
+
+impl Busy {
+    fn new() -> Self {
+        Busy(Arc::new(watch::channel(0).0))
+    }
+
+    fn up(&self) {
+        self.0.send_modify(|n| *n += 1);
+    }
+
+    fn down(&self) {
+        self.0.send_modify(|n| *n = n.saturating_sub(1));
+    }
+
+    async fn idle(&self) {
+        let mut rx = self.0.subscribe();
+        let _ = rx.wait_for(|n| *n == 0).await;
+    }
+
+    async fn active(&self) {
+        let mut rx = self.0.subscribe();
+        let _ = rx.wait_for(|n| *n > 0).await;
+    }
+}
+
+/// What ends a part's wait - or the run's, for whoever stops it from outside - when something arrived.
 #[derive(Clone, Default)]
-pub struct Wake(Arc<(Mutex<bool>, Condvar)>);
+pub struct Wake {
+    to: Option<(UnboundedSender<Message>, Busy)>,
+    halt: Option<Arc<Notify>>,
+}
 
 impl Wake {
     /// Something arrived.
     pub fn ring(&self) {
-        let (rung, ringing) = &*self.0;
-        if let Ok(mut rung) = rung.lock() {
-            *rung = true;
-            ringing.notify_one();
+        if let Some((to, busy)) = &self.to {
+            busy.up();
+            if to.send(Message::Arrived).is_err() {
+                busy.down();
+            }
         }
-    }
-
-    /// Wait until rung, or `longest` passed.
-    fn wait(&self, longest: Duration) {
-        let (rung, ringing) = &*self.0;
-        let Ok(guard) = rung.lock() else { return };
-        if let Ok((mut guard, _)) = ringing.wait_timeout_while(guard, longest, |rung| !*rung) {
-            *guard = false;
+        if let Some(halt) = &self.halt {
+            halt.notify_one();
         }
     }
 }
@@ -114,11 +164,11 @@ pub struct Starting<'c> {
     events: Vec<(String, usize)>,
     clock: &'c dyn Clock,
     wake: &'c Wake,
-    tasks: &'c mut Option<tokio::runtime::Runtime>,
+    tasks: &'c tokio::runtime::Handle,
 }
 
 impl Starting<'_> {
-    /// The instant the part starts at, read off the one timeline — a tick in a test, so read only where needed.
+    /// The instant the part starts at, read off the one timeline - a tick in a test, so read only where needed.
     pub fn now(&self) -> DateTime {
         self.clock.now()
     }
@@ -134,50 +184,152 @@ impl Starting<'_> {
         self.events.push((class.to_string(), job));
     }
 
-    /// Run the part's `job` at the first pass and again every `seconds` of the one timeline after — every pass where
-    /// `seconds` is nought.
+    /// Run the part's `job` at the first pass and again every `seconds` of the one timeline after - at every pass, and
+    /// after whatever the part handled, where `seconds` is nought.
     pub fn every(&mut self, seconds: f64, job: usize) {
         self.timers.push((seconds, job));
     }
 
-    /// What ends the mind's wait, for whatever hands it an arrival.
+    /// What ends the part's wait, for whatever hands it an arrival.
     pub fn wake(&self) -> Wake {
         self.wake.clone()
     }
 
     /// Run `work` among the process's tasks, from now until it ends or the process does. It waits on the outside and
-    /// hands the mind what arrived: it holds no part and writes no belief.
+    /// hands the part what arrived: it holds no part and writes no belief.
     pub fn task(&mut self, work: impl Future<Output = ()> + Send + 'static) -> Result<(), Error> {
-        if self.tasks.is_none() {
-            let built = tokio::runtime::Builder::new_multi_thread()
-                .worker_threads(1)
-                .thread_name("orexis-tasks")
-                .enable_all()
-                .build()
-                .map_err(|e| Error::Evaluation(format!("the tasks could not start: {e}")))?;
-            *self.tasks = Some(built);
-        }
-        if let Some(tasks) = self.tasks.as_ref() {
-            tasks.spawn(work);
-        }
+        self.tasks.spawn(work);
         Ok(())
     }
 }
 
-/// What a part is handed when it runs: the instant the pass stands at, and the agent's life to keep or let go.
+/// WHAT EVERY PART'S TASK SHARES: the store, the clock, who holds the agent, where each part is sent to and what it
+/// listens for.
+struct Shared {
+    beliefs: Store,
+    id: String,
+    clock: Arc<dyn Clock>,
+    held: Mutex<BTreeMap<String, ()>>,
+    outcome: Mutex<Option<String>>,
+    /// (part, kind, job): who hears a kind of graph written.
+    hears: Vec<(usize, String, usize)>,
+    /// (part, class, job): who hears an event of a class.
+    listens: Vec<(usize, String, usize)>,
+    /// Every class each class said is beneath, asked once.
+    closed: Mutex<HashMap<String, Vec<String>>>,
+    senders: Vec<UnboundedSender<Message>>,
+    busy: Busy,
+    watch: Watch,
+    laps: Mutex<Option<Laps>>,
+    /// Run by passes: the runtime ticks the parts and waits between passes; free, each task waits for itself.
+    free: AtomicBool,
+    /// By passes, while the parts are ticked: what a part queues waits for the end of the pass, as a queue ran it.
+    ticking: AtomicBool,
+    again: AtomicBool,
+    /// The instant the pass in progress stands at, by passes: what every message is handled at, so nothing reads the
+    /// clock for it.
+    at: Mutex<Option<DateTime>>,
+    /// The soonest instant a part said it is next due, or a timer falls due, this pass.
+    soonest: Mutex<Option<DateTime>>,
+    /// What the parts wrote since the pass began.
+    written: Mutex<Vec<String>>,
+    error: Mutex<Option<Error>>,
+}
+
+impl Shared {
+    fn send(&self, part: usize, message: Message) {
+        self.busy.up();
+        if self.senders[part].send(message).is_err() {
+            self.busy.down();
+        }
+    }
+
+    fn sooner(&self, at: DateTime) {
+        let mut soonest = self.soonest.lock().expect("a soonest nobody poisoned");
+        if soonest.is_none_or(|s| at < s) {
+            *soonest = Some(at);
+        }
+    }
+
+    fn failed(&self, error: Error) {
+        let mut kept = self.error.lock().expect("an error nobody poisoned");
+        if kept.is_none() {
+            *kept = Some(error);
+        }
+    }
+
+    /// Say that `graphs` were written, to every part listening for a kind the catalogue says each is.
+    fn wrote(&self, graphs: Vec<String>) -> Result<(), Error> {
+        for graph in graphs {
+            if !self.hears.is_empty() {
+                let kinds = self.kinds(&graph)?;
+                for (part, kind, job) in &self.hears {
+                    if kinds.contains(kind) {
+                        self.send(*part, Message::Graph(*job, graph.clone()));
+                    }
+                }
+            }
+            self.written.lock().expect("a list nobody poisoned").push(graph);
+        }
+        Ok(())
+    }
+
+    /// Every kind the catalogue says `graph` is.
+    fn kinds(&self, graph: &str) -> Result<Vec<String>, Error> {
+        let Some(cat) = self.beliefs.catalogue()? else {
+            return Ok(Vec::new());
+        };
+        let text = crate::bind::bind(
+            "SELECT ?k WHERE { GRAPH $cat { $g a ?k } }",
+            &[
+                ("cat", crate::bind::Value::iri(cat)),
+                ("g", crate::bind::Value::iri(graph)),
+            ],
+        )?;
+        Ok(self
+            .beliefs
+            .rows(&text, &[])?
+            .iter()
+            .filter_map(|r| crate::store::iri(r, "k"))
+            .collect())
+    }
+
+    /// Send `event` to every part hearing a class it is beneath.
+    fn tell(&self, event: Heard) {
+        let classes = {
+            let mut closed = self.closed.lock().expect("a closure nobody poisoned");
+            if !closed.contains_key(&event.kind) {
+                match self.beliefs.closed(&event.kind) {
+                    Ok(c) => {
+                        closed.insert(event.kind.clone(), c);
+                    }
+                    Err(e) => {
+                        drop(closed);
+                        self.failed(e);
+                        return;
+                    }
+                }
+            }
+            closed[&event.kind].clone()
+        };
+        for (part, class, job) in &self.listens {
+            if classes.contains(class) {
+                self.send(*part, Message::Event(*job, event.clone()));
+            }
+        }
+    }
+}
+
+/// What a part is handed when it runs: the instant it stands at, and the agent's life to keep or let go.
 pub struct Pass<'r> {
     pub now: DateTime,
     pub agent: &'r str,
-    held: &'r mut BTreeMap<String, ()>,
-    outcome: &'r mut Option<String>,
-    again: &'r mut bool,
-    laps: &'r mut Option<Laps>,
-    watch: &'r Watch,
+    shared: &'r Shared,
     soonest: &'r mut Option<DateTime>,
 }
 
 impl Pass<'_> {
-    /// The part is next due at `at`, with nothing heard: the mind waits no longer than that.
+    /// The part is next due at `at`, with nothing heard: its task waits no longer than that.
     pub fn wake_at(&mut self, at: DateTime) {
         if self.soonest.is_none_or(|s| at < s) {
             *self.soonest = Some(at);
@@ -188,8 +340,8 @@ impl Pass<'_> {
     /// and say that it started.
     pub fn begin(&mut self, kind: &'static str, triggers: &[NamedNode]) -> Activity {
         let activity = Activity::begin(kind);
-        if self.watch.connected() {
-            self.watch.emit(&Started {
+        if self.shared.watch.connected() {
+            self.shared.watch.emit(&Started {
                 activity: activity.node.clone(),
                 kind,
                 triggers: triggers.to_vec(),
@@ -201,13 +353,13 @@ impl Pass<'_> {
 
     /// Say `event` happened, to whoever watches the agent.
     pub fn emit(&self, event: &dyn crate::events::Event) {
-        self.watch.emit(event);
+        self.shared.watch.emit(event);
     }
 
     /// End `activity`, and say that it ended.
     pub fn end(&mut self, activity: Activity) {
-        if self.watch.connected() {
-            self.watch.emit(&Ended {
+        if self.shared.watch.connected() {
+            self.shared.watch.emit(&Ended {
                 activity: activity.node.clone(),
                 kind: activity.kind,
                 at: self.now,
@@ -218,32 +370,37 @@ impl Pass<'_> {
 
     /// Mark the end of a part of the pass, for the pass's event, where anybody watches.
     pub fn lap(&mut self, part: &str) {
-        if let Some(laps) = self.laps.as_mut() {
+        if let Some(laps) = self.shared.laps.lock().expect("laps nobody poisoned").as_mut() {
             laps.lap(part);
         }
     }
 
     /// `who` keeps the agent running.
     pub fn hold(&mut self, who: &str) {
-        self.held.insert(who.to_string(), ());
+        self.shared
+            .held
+            .lock()
+            .expect("holders nobody poisoned")
+            .insert(who.to_string(), ());
     }
 
     /// `who` no longer keeps the agent running, and says how its part ended.
     pub fn release(&mut self, who: &str, outcome: Option<&str>) {
-        self.held.remove(who);
+        self.shared.held.lock().expect("holders nobody poisoned").remove(who);
         if let Some(outcome) = outcome {
-            *self.outcome = Some(outcome.to_string());
+            *self.shared.outcome.lock().expect("an outcome nobody poisoned") = Some(outcome.to_string());
         }
     }
 
-    /// Pass once more at once, without waiting the poll.
+    /// Run the parts' timers once more at once: by passes, the next pass without waiting; free, every part now.
     pub fn again(&mut self) {
-        *self.again = true;
+        self.shared.again.store(true, Ordering::SeqCst);
     }
 }
 
-/// A package's part: started once, run when what it asked for falls due, stopped at the end, the last first.
-pub trait Part {
+/// A package's part: started once, run by its own task when what it asked for comes, stopped at the end, the last
+/// first.
+pub trait Part: Send {
     fn start(&mut self, _starting: &mut Starting) -> Result<(), Error> {
         Ok(())
     }
@@ -261,7 +418,7 @@ pub trait Part {
         Ok(Vec::new())
     }
 
-    /// The jobs the part queued since it was last asked, to run in this drain after those queued before them.
+    /// The jobs the part queued since it was last asked, to run after the message that queued them.
     fn submitted(&mut self) -> Vec<usize> {
         Vec::new()
     }
@@ -306,315 +463,592 @@ impl Heard {
     }
 }
 
+/// A PART LENT, for whoever keeps it between runs and reads or changes it in between - a test: the runtime runs it
+/// through the handle, as it runs a part it owns.
+pub struct Lent<P>(pub Arc<Mutex<P>>);
+
+impl<P: Part> Lent<P> {
+    pub fn of(part: &Arc<Mutex<P>>) -> Box<dyn Part>
+    where
+        P: 'static,
+    {
+        Box::new(Lent(part.clone()))
+    }
+}
+
+impl<P: Part> Part for Lent<P> {
+    fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
+        self.0.lock().expect("a part nobody poisoned").start(starting)
+    }
+    fn run(&mut self, job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        self.0.lock().expect("a part nobody poisoned").run(job, pass)
+    }
+    fn heard(&mut self, job: usize, graph: &str, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        self.0.lock().expect("a part nobody poisoned").heard(job, graph, pass)
+    }
+    fn heard_event(&mut self, job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        self.0
+            .lock()
+            .expect("a part nobody poisoned")
+            .heard_event(job, event, pass)
+    }
+    fn submitted(&mut self) -> Vec<usize> {
+        self.0.lock().expect("a part nobody poisoned").submitted()
+    }
+    fn watch(&self) -> Option<Watch> {
+        self.0.lock().expect("a part nobody poisoned").watch()
+    }
+    fn stop(&mut self) {
+        self.0.lock().expect("a part nobody poisoned").stop()
+    }
+}
+
 struct Timer {
     seconds: f64,
     due: Option<DateTime>,
-    part: usize,
     job: usize,
 }
 
-/// One agent's process over its beliefs, its parts lent to it in the order a pass runs them.
-pub struct Runtime<'p> {
-    pub beliefs: &'p Store,
-    pub id: String,
-    clock: &'p dyn Clock,
-    parts: Vec<(String, &'p mut dyn Part)>,
+/// ONE PART'S TASK: the part, its timers, and when it said it is next due.
+struct Running {
+    part: Box<dyn Part>,
     timers: Vec<Timer>,
-    /// (part, kind, job): who hears a kind of graph written, in the order they asked.
-    hears: Vec<(usize, String, usize)>,
-    /// (part, class, job): who hears an event of a class, in the order they asked.
-    listens: Vec<(usize, String, usize)>,
-    /// What the watch said since the runtime last looked, once anybody listens.
-    said: Rc<RefCell<VecDeque<Heard>>>,
-    listening: bool,
-    /// Every class each class said is beneath, asked once.
-    closed: HashMap<String, Vec<String>>,
-    jobs: VecDeque<(usize, usize)>,
-    held: BTreeMap<String, ()>,
-    outcome: Option<String>,
-    again: bool,
-    /// The soonest instant a part said it is next due at, this pass.
     soonest: Option<DateTime>,
-    /// WHOEVER WATCHES THE AGENT, hearing each pass where anybody does.
-    pub watch: Watch,
-    laps: Option<Laps>,
-    /// RAISED TO STOP THE RUN, by a signal the process was sent: the run ends before its next pass, `unfinished`, so
-    /// whoever runs it stops every part and the last window is written.
-    pub halt: Option<Arc<std::sync::atomic::AtomicBool>>,
-    wake: Wake,
-    /// WHAT WAITS ON THE OUTSIDE, there once a part asks for a task; a run with none builds nothing.
-    tasks: Option<tokio::runtime::Runtime>,
 }
 
-impl<'p> Runtime<'p> {
-    /// The runtime of `id` over `beliefs`, reading the one timeline off `clock`, its parts each started.
-    pub fn new(
-        beliefs: &'p Store,
-        id: &str,
-        clock: &'p dyn Clock,
-        parts: Vec<(String, &'p mut dyn Part)>,
-    ) -> Result<Self, Error> {
-        let mut runtime = Runtime {
-            beliefs,
-            id: id.to_string(),
-            clock,
-            parts,
-            timers: Vec::new(),
-            hears: Vec::new(),
-            listens: Vec::new(),
-            said: Rc::default(),
-            listening: false,
-            closed: HashMap::new(),
-            jobs: VecDeque::new(),
-            held: BTreeMap::new(),
-            outcome: None,
-            again: false,
-            soonest: None,
-            watch: Watch::default(),
-            laps: None,
-            halt: None,
-            wake: Wake::default(),
-            tasks: None,
-        };
-        started();
-        if let Some(watch) = runtime.parts.iter().find_map(|(_, part)| part.watch()) {
-            runtime.watch = watch;
-        }
-        for (i, (_, part)) in runtime.parts.iter_mut().enumerate() {
-            let mut starting = Starting {
-                timers: Vec::new(),
-                hears: Vec::new(),
-                events: Vec::new(),
-                clock,
-                wake: &runtime.wake,
-                tasks: &mut runtime.tasks,
-            };
-            part.start(&mut starting)?;
-            runtime
-                .hears
-                .extend(starting.hears.into_iter().map(|(kind, job)| (i, kind, job)));
-            runtime
-                .listens
-                .extend(starting.events.into_iter().map(|(class, job)| (i, class, job)));
-            runtime
-                .timers
-                .extend(starting.timers.into_iter().map(|(seconds, job)| Timer {
-                    seconds,
-                    due: None,
-                    part: i,
-                    job,
-                }));
-        }
-        Ok(runtime)
+impl Running {
+    fn pass<'r>(&'r mut self, shared: &'r Shared, now: DateTime) -> (&'r mut Box<dyn Part>, Pass<'r>) {
+        (
+            &mut self.part,
+            Pass {
+                now,
+                agent: &shared.id,
+                shared,
+                soonest: &mut self.soonest,
+            },
+        )
     }
 
-    /// What ends the mind's wait, for whoever stops the run from outside it.
-    pub fn wake(&self) -> Wake {
-        self.wake.clone()
+    /// Run `job`, then whatever the part queued, and say what each wrote.
+    fn job(&mut self, shared: &Shared, job: usize, now: DateTime) -> Result<(), Error> {
+        self.call(shared, now, |part, pass| part.run(job, pass))?;
+        self.submitted(shared, now)
     }
 
-    /// The packages whose parts run, in the order a pass runs them.
-    pub fn parts(&self) -> Vec<&str> {
-        self.parts.iter().map(|(p, _)| p.as_str()).collect()
-    }
-
-    /// Run every job queued, and what their writes set off, until none is left; then every part due at `now`, in
-    /// the order they asked, the same way: the graphs written.
-    pub fn drain(&mut self, now: DateTime) -> Result<Vec<String>, Error> {
-        self.watch.stand(now);
-        self.listen();
-        let mut written = Vec::new();
-        self.queue_submitted();
-        self.run_jobs(now, &mut written)?;
-        if let Some(laps) = self.laps.as_mut() {
-            laps.lap("drain");
+    /// One call of the part: the graphs it wrote told, then the events it said.
+    fn call(
+        &mut self,
+        shared: &Shared,
+        now: DateTime,
+        call: impl FnOnce(&mut Box<dyn Part>, &mut Pass<'_>) -> Result<Vec<String>, Error>,
+    ) -> Result<(), Error> {
+        let (wrote, said) = holding(|| {
+            let (part, mut pass) = self.pass(shared, now);
+            call(part, &mut pass)
+        });
+        let told = wrote.and_then(|wrote| shared.wrote(wrote));
+        for heard in said {
+            shared.tell(heard);
         }
-        for timer in &mut self.timers {
+        told
+    }
+
+    fn submitted(&mut self, shared: &Shared, now: DateTime) -> Result<(), Error> {
+        //  BY PASSES, WHAT A PART QUEUES WHILE THE PARTS ARE TICKED runs once every part was: the end of the pass.
+        if shared.ticking.load(Ordering::SeqCst) {
+            return Ok(());
+        }
+        loop {
+            let jobs = self.part.submitted();
+            if jobs.is_empty() {
+                return Ok(());
+            }
+            for job in jobs {
+                self.call(shared, now, |part, pass| part.run(job, pass))?;
+            }
+        }
+    }
+
+    /// Run every timer due at `now`, each set due again `seconds` on.
+    fn tick(&mut self, shared: &Shared, now: DateTime) -> Result<(), Error> {
+        self.submitted(shared, now)?;
+        for t in 0..self.timers.len() {
+            let timer = &mut self.timers[t];
             if timer.due.is_some_and(|due| now < due) {
                 continue;
             }
             timer.due = Some(now.checked_add_day_time_duration(seconds(timer.seconds)).unwrap_or(now));
-            self.jobs.push_back((timer.part, timer.job));
-        }
-        self.run_jobs(now, &mut written)?;
-        Ok(written)
-    }
-
-    fn run_jobs(&mut self, now: DateTime, written: &mut Vec<String>) -> Result<(), Error> {
-        while let Some((part, job)) = self.jobs.pop_front() {
-            let mut pass = Pass {
-                now,
-                agent: &self.id,
-                held: &mut self.held,
-                outcome: &mut self.outcome,
-                again: &mut self.again,
-                laps: &mut self.laps,
-                watch: &self.watch,
-                soonest: &mut self.soonest,
-            };
-            let wrote = self.parts[part].1.run(job, &mut pass)?;
-            self.queue_submitted();
-            self.wrote(now, wrote, written)?;
-            self.tell(now, written)?;
+            let job = timer.job;
+            self.job(shared, job, now)?;
         }
         Ok(())
     }
 
-    /// Hear what the watch says from here on, where any part listens for an event — the watch the runtime has as
-    /// its first drain begins, which whoever runs it may have replaced since it was made.
-    fn listen(&mut self) {
-        if self.listening || self.listens.is_empty() {
-            return;
-        }
-        self.listening = true;
-        let said = self.said.clone();
-        self.watch.connect(move |event, named| {
-            if let Some(kind) = event.kind() {
-                said.borrow_mut().push_back(Heard {
-                    node: named.clone(),
-                    kind: kind.to_string(),
-                    activity: event.activity().map(|(a, k)| (a.clone(), k.to_string())),
-                    about: event.about().into_iter().map(|(p, t)| (p.to_string(), t)).collect(),
-                });
+    fn handle(&mut self, shared: &Shared, message: Message) -> Result<bool, Error> {
+        let free = shared.free.load(Ordering::SeqCst);
+        let at = *shared.at.lock().expect("an instant nobody poisoned");
+        let now = match (free, at) {
+            (false, Some(at)) => at,
+            _ => shared.clock.now(),
+        };
+        match message {
+            Message::Tick(at) => {
+                self.soonest = None;
+                self.tick(shared, at)?;
+                self.report(shared);
+                return Ok(true);
             }
-        });
+            Message::Stop => {
+                self.part.stop();
+                return Ok(false);
+            }
+            Message::Free => return Ok(true),
+            Message::Arrived => self.submitted(shared, now)?,
+            Message::Graph(job, graph) => {
+                self.call(shared, now, |part, pass| part.heard(job, &graph, pass))?;
+                self.submitted(shared, now)?;
+            }
+            Message::Event(job, event) => {
+                self.call(shared, now, |part, pass| part.heard_event(job, &event, pass))?;
+                self.submitted(shared, now)?;
+            }
+        }
+        //  RUN FREE, A PART'S POLICY DECIDES AFTER WHAT IT HANDLED: its timers due, those of nought among them.
+        if free {
+            self.soonest = None;
+            self.tick(shared, now)?;
+        }
+        self.report(shared);
+        Ok(true)
     }
 
-    /// Tell every part listening what was said, in the order said, and what it says in turn.
-    fn tell(&mut self, now: DateTime, written: &mut Vec<String>) -> Result<(), Error> {
+    /// Say when the part is next due, by passes to the runtime.
+    fn report(&self, shared: &Shared) {
+        if let Some(due) = self.due() {
+            shared.sooner(due);
+        }
+    }
+
+    /// The soonest instant the part is due: what it said, or a timer of more than nought.
+    fn due(&self) -> Option<DateTime> {
+        self.timers
+            .iter()
+            .filter(|t| t.seconds > 0.0)
+            .filter_map(|t| t.due)
+            .chain(self.soonest)
+            .reduce(|a, b| if b < a { b } else { a })
+    }
+
+    async fn run(mut self, shared: Arc<Shared>, mut inbox: UnboundedReceiver<Message>) {
         loop {
-            let Some(event) = self.said.borrow_mut().pop_front() else {
-                return Ok(());
+            let wait = if shared.free.load(Ordering::SeqCst) {
+                self.due().map(|due| {
+                    let ahead = due
+                        .checked_sub(shared.clock.now())
+                        .map_or(0.0, crate::clock::seconds_of);
+                    shared.clock.real_delay(ahead.max(0.0))
+                })
+            } else {
+                None
             };
-            if !self.closed.contains_key(&event.kind) {
-                let closed = self.beliefs.closed(&event.kind)?;
-                self.closed.insert(event.kind.clone(), closed);
-            }
-            let classes = &self.closed[&event.kind];
-            let due: Vec<(usize, usize)> = self
-                .listens
-                .iter()
-                .filter(|(_, class, _)| classes.contains(class))
-                .map(|(part, _, job)| (*part, *job))
-                .collect();
-            for (part, job) in due {
-                let mut pass = Pass {
-                    now,
-                    agent: &self.id,
-                    held: &mut self.held,
-                    outcome: &mut self.outcome,
-                    again: &mut self.again,
-                    laps: &mut self.laps,
-                    watch: &self.watch,
-                    soonest: &mut self.soonest,
-                };
-                let wrote = self.parts[part].1.heard_event(job, &event, &mut pass)?;
-                self.queue_submitted();
-                self.wrote(now, wrote, written)?;
-            }
-        }
-    }
-
-    /// Say that `graphs` were written, so whoever listens for their kinds hears it now, and what they write in turn.
-    fn wrote(&mut self, now: DateTime, graphs: Vec<String>, written: &mut Vec<String>) -> Result<(), Error> {
-        for graph in graphs {
-            let mut answered = Vec::new();
-            if !self.hears.is_empty() {
-                let kinds = self.kinds(&graph)?;
-                for h in 0..self.hears.len() {
-                    let (part, kind, job) = self.hears[h].clone();
-                    if !kinds.contains(&kind) {
-                        continue;
+            let message = match wait {
+                Some(wait) => tokio::select! {
+                    m = inbox.recv() => m,
+                    _ = tokio::time::sleep(wait) => {
+                        shared.busy.up();
+                        Some(Message::Tick(shared.clock.now()))
                     }
-                    let mut pass = Pass {
-                        now,
-                        agent: &self.id,
-                        held: &mut self.held,
-                        outcome: &mut self.outcome,
-                        again: &mut self.again,
-                        laps: &mut self.laps,
-                        watch: &self.watch,
-                        soonest: &mut self.soonest,
-                    };
-                    answered.extend(self.parts[part].1.heard(job, &graph, &mut pass)?);
-                    self.queue_submitted();
+                },
+                None => inbox.recv().await,
+            };
+            let Some(message) = message else { return };
+            let going = match self.handle(&shared, message) {
+                Ok(going) => going,
+                Err(e) => {
+                    shared.failed(e);
+                    true
+                }
+            };
+            if shared.free.load(Ordering::SeqCst) && shared.again.swap(false, Ordering::SeqCst) {
+                let now = shared.clock.now();
+                for part in 0..shared.senders.len() {
+                    shared.send(part, Message::Tick(now));
                 }
             }
-            written.push(graph);
-            self.wrote(now, answered, written)?;
+            shared.busy.down();
+            if !going {
+                return;
+            }
         }
-        Ok(())
+    }
+}
+
+/// One agent's process over its beliefs: its parts, each started, waiting to be run as tasks.
+pub struct Runtime {
+    pub beliefs: Store,
+    pub id: String,
+    clock: Arc<dyn Clock>,
+    names: Vec<String>,
+    /// What the parts were started with, until the first run makes them tasks.
+    pending: Option<Pending>,
+    shared: Option<Arc<Shared>>,
+    joins: Vec<tokio::task::JoinHandle<()>>,
+    busy: Busy,
+    /// WHOEVER WATCHES THE AGENT, hearing each pass where anybody does: the one the first run finds here.
+    pub watch: Watch,
+    /// RAISED TO STOP THE RUN, by a signal the process was sent: the run ends before its next pass, `unfinished`, so
+    /// whoever runs it stops every part and the last window is written.
+    pub halt: Option<Arc<AtomicBool>>,
+    halted: Arc<Notify>,
+    tasks: tokio::runtime::Runtime,
+}
+
+struct Pending {
+    running: Vec<Running>,
+    inboxes: Vec<UnboundedReceiver<Message>>,
+    senders: Vec<UnboundedSender<Message>>,
+    hears: Vec<(usize, String, usize)>,
+    listens: Vec<(usize, String, usize)>,
+}
+
+impl Runtime {
+    /// The runtime of `id` over `beliefs`, reading the one timeline off `clock`, its parts each started, on ONE thread:
+    /// what a test runs, by passes, so it proves one order.
+    pub fn new(
+        beliefs: &Store,
+        id: &str,
+        clock: Arc<dyn Clock>,
+        parts: Vec<(String, Box<dyn Part>)>,
+    ) -> Result<Self, Error> {
+        let tasks = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .map_err(|e| Error::Evaluation(format!("the tasks could not start: {e}")))?;
+        Self::on(tasks, beliefs, id, clock, parts)
     }
 
-    /// Every kind the catalogue says `graph` is.
-    fn kinds(&self, graph: &str) -> Result<Vec<String>, Error> {
-        let Some(cat) = self.beliefs.catalogue()? else {
-            return Ok(Vec::new());
+    /// The runtime of `id`, its parts each a task on `workers` threads of their own beside the blocking pool: what an
+    /// agent runs.
+    pub fn threaded(
+        workers: usize,
+        beliefs: &Store,
+        id: &str,
+        clock: Arc<dyn Clock>,
+        parts: Vec<(String, Box<dyn Part>)>,
+    ) -> Result<Self, Error> {
+        let tasks = tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(workers.max(1))
+            .thread_name("orexis-tasks")
+            .enable_all()
+            .build()
+            .map_err(|e| Error::Evaluation(format!("the tasks could not start: {e}")))?;
+        Self::on(tasks, beliefs, id, clock, parts)
+    }
+
+    fn on(
+        tasks: tokio::runtime::Runtime,
+        beliefs: &Store,
+        id: &str,
+        clock: Arc<dyn Clock>,
+        parts: Vec<(String, Box<dyn Part>)>,
+    ) -> Result<Self, Error> {
+        started();
+        let busy = Busy::new();
+        let mut watch = Watch::default();
+        if let Some(found) = parts.iter().find_map(|(_, part)| part.watch()) {
+            watch = found;
+        }
+        let mut pending = Pending {
+            running: Vec::new(),
+            inboxes: Vec::new(),
+            senders: Vec::new(),
+            hears: Vec::new(),
+            listens: Vec::new(),
         };
-        let text = crate::bind::bind(
-            "SELECT ?k WHERE { GRAPH $cat { $g a ?k } }",
-            &[
-                ("cat", crate::bind::Value::iri(cat)),
-                ("g", crate::bind::Value::iri(graph)),
-            ],
-        )?;
-        Ok(self
-            .beliefs
-            .rows(&text, &[])?
-            .iter()
-            .filter_map(|r| crate::store::iri(r, "k"))
-            .collect())
+        let mut names = Vec::new();
+        let handle = tasks.handle().clone();
+        for (i, (name, mut part)) in parts.into_iter().enumerate() {
+            let (to, inbox) = unbounded_channel();
+            let wake = Wake {
+                to: Some((to.clone(), busy.clone())),
+                halt: None,
+            };
+            let mut starting = Starting {
+                timers: Vec::new(),
+                hears: Vec::new(),
+                events: Vec::new(),
+                clock: clock.as_ref(),
+                wake: &wake,
+                tasks: &handle,
+            };
+            part.start(&mut starting)?;
+            pending
+                .hears
+                .extend(starting.hears.into_iter().map(|(kind, job)| (i, kind, job)));
+            pending
+                .listens
+                .extend(starting.events.into_iter().map(|(class, job)| (i, class, job)));
+            let timers = starting
+                .timers
+                .into_iter()
+                .map(|(seconds, job)| Timer {
+                    seconds,
+                    due: None,
+                    job,
+                })
+                .collect();
+            pending.running.push(Running {
+                part,
+                timers,
+                soonest: None,
+            });
+            pending.inboxes.push(inbox);
+            pending.senders.push(to);
+            names.push(name);
+        }
+        Ok(Runtime {
+            beliefs: beliefs.clone(),
+            id: id.to_string(),
+            clock,
+            names,
+            pending: Some(pending),
+            shared: None,
+            joins: Vec::new(),
+            busy,
+            watch,
+            halt: None,
+            halted: Arc::new(Notify::new()),
+            tasks,
+        })
     }
 
-    fn queue_submitted(&mut self) {
-        for (i, (_, part)) in self.parts.iter_mut().enumerate() {
-            self.jobs.extend(part.submitted().into_iter().map(|job| (i, job)));
+    /// What ends the run's wait, for whoever stops the run from outside it.
+    pub fn wake(&self) -> Wake {
+        Wake {
+            to: None,
+            halt: Some(self.halted.clone()),
         }
     }
 
-    /// Pass after pass until nobody holds the agent, ending as the last to let go said, or `passes` ran out. A pass
-    /// waits for the next arrival or the soonest instant anything is due, unless a part asked to go again, and never
-    /// longer than `longest_s` real seconds: nought in a test, which steps the clock itself.
+    /// The parts it runs, in the order it ticks them.
+    pub fn parts(&self) -> Vec<&str> {
+        self.names.iter().map(String::as_str).collect()
+    }
+
+    /// The parts made tasks, the first time anything runs: the watch found here is the one every task says to, and
+    /// what it hears is told to the parts listening.
+    fn spawned(&mut self) -> Arc<Shared> {
+        if let Some(shared) = &self.shared {
+            return shared.clone();
+        }
+        let pending = self.pending.take().expect("parts pending until they are spawned");
+        let shared = Arc::new(Shared {
+            beliefs: self.beliefs.clone(),
+            id: self.id.clone(),
+            clock: self.clock.clone(),
+            held: Mutex::new(BTreeMap::new()),
+            outcome: Mutex::new(None),
+            hears: pending.hears,
+            listens: pending.listens,
+            closed: Mutex::new(HashMap::new()),
+            senders: pending.senders,
+            busy: self.busy.clone(),
+            watch: self.watch.clone(),
+            laps: Mutex::new(None),
+            free: AtomicBool::new(false),
+            ticking: AtomicBool::new(false),
+            again: AtomicBool::new(false),
+            at: Mutex::new(None),
+            soonest: Mutex::new(None),
+            written: Mutex::new(Vec::new()),
+            error: Mutex::new(None),
+        });
+        if !shared.listens.is_empty() {
+            let weak = Arc::downgrade(&shared);
+            self.watch.connect(move |event, named| {
+                if let (Some(kind), Some(shared)) = (event.kind(), weak.upgrade()) {
+                    let heard = Heard {
+                        node: named.clone(),
+                        kind: kind.to_string(),
+                        activity: event.activity().map(|(a, k)| (a.clone(), k.to_string())),
+                        about: event.about().into_iter().map(|(p, t)| (p.to_string(), t)).collect(),
+                    };
+                    let held = SAID.with(|said| match said.borrow_mut().as_mut() {
+                        Some(held) => {
+                            held.push(heard.clone());
+                            true
+                        }
+                        None => false,
+                    });
+                    if !held {
+                        shared.tell(heard);
+                    }
+                }
+            });
+        }
+        for (running, inbox) in pending.running.into_iter().zip(pending.inboxes) {
+            let task = shared.clone();
+            self.joins.push(self.tasks.spawn(running.run(task, inbox)));
+        }
+        self.shared = Some(shared.clone());
+        shared
+    }
+
+    fn checked(shared: &Shared) -> Result<(), Error> {
+        match shared.error.lock().expect("an error nobody poisoned").take() {
+            Some(e) => Err(e),
+            None => Ok(()),
+        }
+    }
+
+    /// One pass at `now`: each part ticked in turn, each after nothing is busy. The graphs written.
+    pub fn drain(&mut self, now: DateTime) -> Result<Vec<String>, Error> {
+        let shared = self.spawned();
+        self.watch.stand(now);
+        shared.written.lock().expect("a list nobody poisoned").clear();
+        let busy = self.busy.clone();
+        let parts = shared.senders.len();
+        let ticking = shared.clone();
+        *shared.at.lock().expect("an instant nobody poisoned") = Some(now);
+        self.tasks.block_on(async move {
+            busy.idle().await;
+            if let Some(laps) = ticking.laps.lock().expect("laps nobody poisoned").as_mut() {
+                laps.lap("drain");
+            }
+            ticking.ticking.store(true, Ordering::SeqCst);
+            for part in 0..parts {
+                ticking.send(part, Message::Tick(now));
+                busy.idle().await;
+                if ticking.error.lock().expect("an error nobody poisoned").is_some() {
+                    break;
+                }
+            }
+            ticking.ticking.store(false, Ordering::SeqCst);
+            //  WHAT THE PARTS QUEUED WHILE TICKED, each part's in turn.
+            for part in 0..parts {
+                ticking.send(part, Message::Arrived);
+                busy.idle().await;
+            }
+        });
+        Self::checked(&shared)?;
+        Ok(std::mem::take(
+            &mut *shared.written.lock().expect("a list nobody poisoned"),
+        ))
+    }
+
+    fn halted(&self) -> bool {
+        self.halt.as_ref().is_some_and(|h| h.load(Ordering::Relaxed))
+    }
+
+    fn held(shared: &Shared) -> bool {
+        !shared.held.lock().expect("holders nobody poisoned").is_empty()
+    }
+
+    fn outcome(shared: &Shared) -> String {
+        shared
+            .outcome
+            .lock()
+            .expect("an outcome nobody poisoned")
+            .clone()
+            .unwrap_or_else(|| MET.to_string())
+    }
+
+    /// Until nobody holds the agent, ending as the last to let go said, or `passes` ran out. BY PASSES, each pass ticks
+    /// every part and then waits for the next arrival or the soonest instant anything is due, unless a part asked to go
+    /// again, never longer than `longest_s` real seconds: nought in a test, which steps the clock itself. FREE (no
+    /// passes), one pass starts every part and each task then waits for itself; the run waits until nobody holds the
+    /// agent or it is halted.
     pub fn run(&mut self, passes: Option<usize>, longest_s: f64) -> Result<String, Error> {
+        let Some(passes) = passes else {
+            return self.free();
+        };
         let mut n = 0;
-        while passes.is_none_or(|p| n < p) {
-            if self
-                .halt
-                .as_ref()
-                .is_some_and(|h| h.load(std::sync::atomic::Ordering::Relaxed))
-            {
+        while n < passes {
+            if self.halted() {
                 log::info!("{}: stopped, after {n} pass(es)", self.id);
                 return Ok(UNFINISHED.to_string());
             }
             n += 1;
             let now = self.clock.now();
-            //  THE PASS BEGINS BEFORE ITS LAPS DO, so the first part carries no gap between two reads.
             let began = std::time::Instant::now();
-            self.laps = self.watch.connected().then(Laps::default);
-            self.again = false;
-            self.soonest = None;
+            let shared = self.spawned();
+            *shared.laps.lock().expect("laps nobody poisoned") = self.watch.connected().then(Laps::default);
+            shared.again.store(false, Ordering::SeqCst);
+            *shared.soonest.lock().expect("a soonest nobody poisoned") = None;
             self.drain(now)?;
-            self.passed(began.elapsed().as_secs_f64())?;
-            if self.held.is_empty() {
+            self.passed(&shared, began.elapsed().as_secs_f64())?;
+            if !Self::held(&shared) {
                 log::info!("{}: nothing holds it, after {n} pass(es)", self.id);
-                return Ok(self.outcome.clone().unwrap_or_else(|| MET.to_string()));
+                return Ok(Self::outcome(&shared));
             }
-            if !self.again {
-                self.wake.wait(self.until_due(now, began.elapsed(), longest_s));
+            if !shared.again.load(Ordering::SeqCst) {
+                let wait = self.until_due(&shared, now, began.elapsed(), longest_s);
+                let busy = self.busy.clone();
+                let halted = self.halted.clone();
+                self.tasks.block_on(async move {
+                    tokio::select! {
+                        _ = tokio::time::sleep(wait) => {}
+                        _ = busy.active() => {}
+                        _ = halted.notified() => {}
+                    }
+                });
             }
         }
         Ok(UNFINISHED.to_string())
     }
 
-    /// How long the mind waits with nothing arriving: until the soonest a timer falls due or a part said it is next
-    /// due, in real seconds at the clock's pace, and never longer than `longest_s`.
-    fn until_due(&self, now: DateTime, took: Duration, longest_s: f64) -> Duration {
+    /// Run free: one pass, then every task waits for itself, and the run for nobody holding the agent.
+    fn free(&mut self) -> Result<String, Error> {
+        let now = self.clock.now();
+        let began = std::time::Instant::now();
+        let shared = self.spawned();
+        *shared.laps.lock().expect("laps nobody poisoned") = self.watch.connected().then(Laps::default);
+        self.drain(now)?;
+        shared.free.store(true, Ordering::SeqCst);
+        self.passed(&shared, began.elapsed().as_secs_f64())?;
+        //  EACH TASK NOW WAITS FOR ITSELF, told so at once.
+        for part in 0..shared.senders.len() {
+            shared.send(part, Message::Free);
+        }
+        loop {
+            let busy = self.busy.clone();
+            let halted = self.halted.clone();
+            let began = std::time::Instant::now();
+            self.tasks.block_on(async move { busy.idle().await });
+            Self::checked(&shared)?;
+            self.passed(&shared, began.elapsed().as_secs_f64())?;
+            if self.halted() {
+                log::info!("{}: stopped", self.id);
+                return Ok(UNFINISHED.to_string());
+            }
+            if !Self::held(&shared) {
+                log::info!("{}: nothing holds it", self.id);
+                return Ok(Self::outcome(&shared));
+            }
+            let busy = self.busy.clone();
+            let halt = self.halt.clone();
+            self.tasks.block_on(async move {
+                tokio::select! {
+                    _ = busy.active() => {}
+                    _ = halted.notified() => {}
+                }
+            });
+            if halt.is_some_and(|h| h.load(Ordering::Relaxed)) {
+                log::info!("{}: stopped", self.id);
+                return Ok(UNFINISHED.to_string());
+            }
+            *shared.laps.lock().expect("laps nobody poisoned") = self.watch.connected().then(Laps::default);
+        }
+    }
+
+    /// How long the run waits between passes with nothing arriving: until the soonest a part is due, in real seconds at
+    /// the clock's pace, and never longer than `longest_s`.
+    fn until_due(&self, shared: &Shared, now: DateTime, took: Duration, longest_s: f64) -> Duration {
         let longest = Duration::from_secs_f64(longest_s);
         if longest.is_zero() {
             return longest;
         }
-        let timers = self.timers.iter().filter(|t| t.seconds > 0.0).filter_map(|t| t.due);
-        let Some(soonest) = timers.chain(self.soonest).reduce(|a, b| if b < a { b } else { a }) else {
+        let Some(soonest) = *shared.soonest.lock().expect("a soonest nobody poisoned") else {
             return longest;
         };
         //  FROM THE INSTANT THE PASS STOOD AT, less the real time it took: a wait reads no clock.
@@ -623,8 +1057,10 @@ impl<'p> Runtime<'p> {
     }
 
     /// Say the pass, where anybody watches.
-    fn passed(&mut self, took: f64) -> Result<(), Error> {
-        let Some(laps) = self.laps.take() else { return Ok(()) };
+    fn passed(&self, shared: &Shared, took: f64) -> Result<(), Error> {
+        let Some(laps) = shared.laps.lock().expect("laps nobody poisoned").take() else {
+            return Ok(());
+        };
         let quads = i64::try_from(self.beliefs.len()?).ok();
         self.watch.emit(&Passed {
             duration_s: round6(took),
@@ -635,11 +1071,27 @@ impl<'p> Runtime<'p> {
         Ok(())
     }
 
-    /// Stop every part, the last first.
+    /// Stop every part, the last first, each after the one after it.
     pub fn stop(&mut self) {
-        for (_, part) in self.parts.iter_mut().rev() {
-            part.stop();
-        }
+        let Some(shared) = self.shared.clone() else {
+            if let Some(pending) = self.pending.as_mut() {
+                for running in pending.running.iter_mut().rev() {
+                    running.part.stop();
+                }
+            }
+            return;
+        };
+        let busy = self.busy.clone();
+        let joins = std::mem::take(&mut self.joins);
+        self.tasks.block_on(async move {
+            let mut joins: Vec<_> = joins.into_iter().enumerate().collect();
+            joins.reverse();
+            for (part, join) in joins {
+                shared.send(part, Message::Stop);
+                let _ = join.await;
+            }
+            let _ = busy;
+        });
     }
 }
 
@@ -649,10 +1101,10 @@ mod tests {
     use crate::clock::Manual;
     use crate::transport::Inbox;
 
-    /// Holds the agent for one pass and lets go at the second; a task delivers a message soon after it starts.
+    /// Holds the agent at its first run and lets go at the second; a task delivers a message soon after it starts.
     struct Waiting {
         inbox: Inbox,
-        passes: usize,
+        runs: usize,
     }
 
     impl Part for Waiting {
@@ -667,8 +1119,8 @@ mod tests {
         }
 
         fn run(&mut self, _job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
-            self.passes += 1;
-            if self.passes == 1 {
+            self.runs += 1;
+            if self.runs == 1 {
                 pass.hold("waiting");
             } else {
                 pass.release("waiting", None);
@@ -677,19 +1129,36 @@ mod tests {
         }
     }
 
+    fn manual(at: &str) -> Arc<dyn Clock> {
+        Arc::new(Manual::at(at.parse().unwrap()))
+    }
+
+    fn one(name: &str, part: impl Part + 'static) -> Vec<(String, Box<dyn Part>)> {
+        vec![(name.to_string(), Box::new(part))]
+    }
+
     #[test]
-    fn an_arrival_from_a_task_ends_the_minds_wait() {
+    fn run_free_an_arrival_from_a_task_runs_the_part_at_once() {
         let store = Store::new(crate::snapshots::namespaces()).unwrap();
-        let clock = Manual::at("2026-11-09T12:00:00Z".parse().unwrap());
-        let mut part = Waiting {
+        let part = Waiting {
             inbox: Inbox::default(),
-            passes: 0,
+            runs: 0,
         };
-        let parts: Vec<(String, &mut dyn Part)> = vec![("waiting".to_string(), &mut part)];
-        let mut runtime = Runtime::new(&store, "urn:test:me", &clock, parts).unwrap();
+        let mut runtime = Runtime::threaded(
+            2,
+            &store,
+            "urn:test:me",
+            manual("2026-11-09T12:00:00Z"),
+            one("waiting", part),
+        )
+        .unwrap();
         let began = std::time::Instant::now();
         assert_eq!(runtime.run(None, 60.0).unwrap(), MET);
-        assert!(began.elapsed() < Duration::from_secs(30), "the poll was slept out");
+        assert!(
+            began.elapsed() < Duration::from_secs(30),
+            "the arrival was slept through"
+        );
+        runtime.stop();
     }
 
     /// Holds the agent, and says it is next due a fifth of a second on.
@@ -710,10 +1179,7 @@ mod tests {
     #[test]
     fn a_pass_waits_until_the_soonest_a_part_is_due_and_no_longer() {
         let store = Store::new(crate::snapshots::namespaces()).unwrap();
-        let clock = Manual::at("2026-11-11T12:00:00Z".parse().unwrap());
-        let mut part = Due;
-        let parts: Vec<(String, &mut dyn Part)> = vec![("due".to_string(), &mut part)];
-        let mut runtime = Runtime::new(&store, "urn:test:me", &clock, parts).unwrap();
+        let mut runtime = Runtime::new(&store, "urn:test:me", manual("2026-11-11T12:00:00Z"), one("due", Due)).unwrap();
         let began = std::time::Instant::now();
         assert_eq!(runtime.run(Some(2), 60.0).unwrap(), UNFINISHED);
         let took = began.elapsed();
@@ -724,33 +1190,40 @@ mod tests {
         assert!(took < Duration::from_secs(30), "it waited the longest out: {took:?}");
     }
 
-    #[test]
-    fn a_ring_during_a_pass_is_not_slept_through() {
-        let wake = Wake::default();
-        wake.ring();
-        let began = std::time::Instant::now();
-        wake.wait(Duration::from_secs(60));
-        assert!(began.elapsed() < Duration::from_secs(30));
+    /// Lets go once its task has run free to the instant it said it is due.
+    struct Wakes {
+        runs: Arc<Mutex<usize>>,
+    }
+    impl Part for Wakes {
+        fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
+            starting.every(0.0, 0);
+            Ok(())
+        }
+        fn run(&mut self, _job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+            let mut runs = self.runs.lock().unwrap();
+            *runs += 1;
+            if *runs < 3 {
+                pass.hold("wakes");
+                pass.wake_at(pass.now.checked_add_day_time_duration(seconds(0.1)).unwrap());
+            } else {
+                pass.release("wakes", None);
+            }
+            Ok(Vec::new())
+        }
     }
 
     #[test]
-    fn a_run_with_no_task_builds_none() {
-        struct Idle;
-        impl Part for Idle {
-            fn run(&mut self, _job: usize, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
-                Ok(Vec::new())
-            }
-        }
+    fn run_free_a_task_wakes_itself_at_the_instant_it_said() {
         let store = Store::new(crate::snapshots::namespaces()).unwrap();
-        let clock = Manual::at("2026-11-09T12:00:00Z".parse().unwrap());
-        let mut part = Idle;
-        let parts: Vec<(String, &mut dyn Part)> = vec![("idle".to_string(), &mut part)];
-        assert!(
-            Runtime::new(&store, "urn:test:me", &clock, parts)
-                .unwrap()
-                .tasks
-                .is_none()
-        );
+        let runs = Arc::new(Mutex::new(0));
+        let clock: Arc<dyn Clock> = Arc::new(crate::clock::Paced::wall());
+        let part = Wakes { runs: runs.clone() };
+        let mut runtime = Runtime::threaded(2, &store, "urn:test:me", clock, one("wakes", part)).unwrap();
+        let began = std::time::Instant::now();
+        assert_eq!(runtime.run(None, 60.0).unwrap(), MET);
+        assert!(began.elapsed() >= Duration::from_millis(150), "it did not wait");
+        assert!(began.elapsed() < Duration::from_secs(30), "it waited too long");
+        assert_eq!(*runs.lock().unwrap(), 3);
     }
 
     const STEP: &str = "http://example.org/test#Stepping";
@@ -770,7 +1243,7 @@ mod tests {
     }
 
     /// Hears every event beneath `orexis:Event`'s kernel classes it is told of: here, a start.
-    struct Hears(Rc<RefCell<Vec<Heard>>>);
+    struct Hears(Arc<Mutex<Vec<Heard>>>);
     impl Part for Hears {
         fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
             starting.hears(crate::activity::STARTED, 0);
@@ -780,7 +1253,7 @@ mod tests {
             Ok(Vec::new())
         }
         fn heard_event(&mut self, _job: usize, event: &Heard, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
-            self.0.borrow_mut().push(event.clone());
+            self.0.lock().unwrap().push(event.clone());
             Ok(Vec::new())
         }
     }
@@ -788,38 +1261,85 @@ mod tests {
     #[test]
     fn an_activitys_start_is_heard_by_class_under_the_name_it_was_said_with() {
         let store = Store::new(crate::snapshots::namespaces()).unwrap();
-        let clock = Manual::at("2026-11-10T12:00:00Z".parse().unwrap());
-        let heard = Rc::new(RefCell::new(Vec::new()));
-        let said: Rc<RefCell<Vec<NamedNode>>> = Rc::default();
-        let (mut begins, mut hears) = (Begins, Hears(heard.clone()));
-        let parts: Vec<(String, &mut dyn Part)> = vec![("begins".into(), &mut begins), ("hears".into(), &mut hears)];
-        let mut runtime = Runtime::new(&store, "urn:test:me", &clock, parts).unwrap();
+        let clock = manual("2026-11-10T12:00:00Z");
+        let heard = Arc::new(Mutex::new(Vec::new()));
+        let said: Arc<Mutex<Vec<NamedNode>>> = Arc::default();
+        let parts: Vec<(String, Box<dyn Part>)> = vec![
+            ("begins".into(), Box::new(Begins)),
+            ("hears".into(), Box::new(Hears(heard.clone()))),
+        ];
+        let mut runtime = Runtime::new(&store, "urn:test:me", clock.clone(), parts).unwrap();
         let watch = Watch::default();
         let kept = said.clone();
         watch.connect(move |event, named| {
             if event.kind() == Some(crate::activity::STARTED) {
-                kept.borrow_mut().push(named.clone());
+                kept.lock().unwrap().push(named.clone());
             }
         });
         runtime.watch = watch;
         runtime.drain(clock.now()).unwrap();
-        let heard = heard.borrow();
+        let heard = heard.lock().unwrap();
         assert_eq!(heard.len(), 1, "one start, and the end is no start: {heard:?}");
-        assert_eq!(heard[0].node, said.borrow()[0], "heard under the name it was said with");
+        assert_eq!(
+            heard[0].node,
+            said.lock().unwrap()[0],
+            "heard under the name it was said with"
+        );
         assert_eq!(heard[0].activity.as_ref().map(|(_, k)| k.as_str()), Some(STEP));
     }
 
     #[test]
     fn nobody_listening_connects_nothing() {
         let store = Store::new(crate::snapshots::namespaces()).unwrap();
-        let clock = Manual::at("2026-11-10T12:00:00Z".parse().unwrap());
-        let mut begins = Begins;
-        let parts: Vec<(String, &mut dyn Part)> = vec![("begins".into(), &mut begins)];
-        let mut runtime = Runtime::new(&store, "urn:test:me", &clock, parts).unwrap();
+        let clock = manual("2026-11-10T12:00:00Z");
+        let mut runtime = Runtime::new(&store, "urn:test:me", clock.clone(), one("begins", Begins)).unwrap();
         runtime.drain(clock.now()).unwrap();
         assert!(
             !runtime.watch.connected(),
             "an emitter that asks whether anybody watches is still told no"
+        );
+    }
+
+    /// Says an activity's start to whoever hears it, and the hearer writes it down: by passes, the part after it is
+    /// ticked only once the start was heard.
+    #[test]
+    fn by_passes_a_part_is_ticked_after_everything_the_parts_before_it_said_was_heard() {
+        struct Order(Arc<Mutex<Vec<&'static str>>>, &'static str);
+        impl Part for Order {
+            fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
+                starting.every(0.0, 0);
+                starting.hears(crate::activity::STARTED, 1);
+                Ok(())
+            }
+            fn run(&mut self, _job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+                self.0.lock().unwrap().push(self.1);
+                if self.1 == "first" {
+                    let activity = pass.begin(STEP, &[]);
+                    pass.end(activity);
+                }
+                Ok(Vec::new())
+            }
+            fn heard_event(&mut self, _job: usize, _event: &Heard, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+                self.0.lock().unwrap().push(if self.1 == "first" {
+                    "first heard"
+                } else {
+                    "second heard"
+                });
+                Ok(Vec::new())
+            }
+        }
+        let store = Store::new(crate::snapshots::namespaces()).unwrap();
+        let clock = manual("2026-11-11T12:00:00Z");
+        let seen = Arc::new(Mutex::new(Vec::new()));
+        let parts: Vec<(String, Box<dyn Part>)> = vec![
+            ("first".into(), Box::new(Order(seen.clone(), "first"))),
+            ("second".into(), Box::new(Order(seen.clone(), "second"))),
+        ];
+        let mut runtime = Runtime::new(&store, "urn:test:me", clock.clone(), parts).unwrap();
+        runtime.drain(clock.now()).unwrap();
+        assert_eq!(
+            *seen.lock().unwrap(),
+            ["first", "first heard", "second heard", "second"]
         );
     }
 }

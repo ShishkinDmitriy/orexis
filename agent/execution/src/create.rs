@@ -18,8 +18,6 @@
 //! kept by speech's `said` and said `execution:Told`, which execution's ontology puts beneath speech's speaking
 //! trigger. A step whose command answers nothing is not taken (#869).
 
-use std::cell::{Cell, RefCell};
-use std::rc::Rc;
 use std::sync::Arc;
 
 use oxsdatatypes::DateTime;
@@ -51,19 +49,11 @@ use crate::{Executor, Said};
 /// The taker of an agent that carries out its steps, as Python's `_take` takes a step: the action's implementation,
 /// order by order, each command sized from the present at the clock's instant, kept and said `execution:Commanded` where
 /// the agent `commands` — has a transport to send it — and each document it says kept by speech and said
-/// `execution:Told` where the agent `says`, the statements kept handed on through `said`. A step whose action carries no
-/// command or saying reaches nothing; a command that answers nothing is a step NOT taken (#869), since the present held
+/// `execution:Told` where the agent `says`, the statements kept returned, for the executor to hand on with what it wrote. A step whose action
+/// carries no command or saying reaches nothing, `None`; a command that answers nothing is a step NOT taken (#869), since the present held
 /// nothing it sizes from and recording it taken would have the intention wait out its patience as though the device
 /// had run.
-pub fn taker(
-    beliefs: Store,
-    me: &str,
-    clock: Arc<dyn Clock>,
-    watch: Watch,
-    commands: bool,
-    says_to: bool,
-    kept: Rc<RefCell<Vec<String>>>,
-) -> Take {
+pub fn taker(beliefs: Store, me: &str, clock: Arc<dyn Clock>, watch: Watch, commands: bool, says_to: bool) -> Take {
     let me = me.to_string();
     Box::new(move |said: &Said, _intention: &str| {
         let beliefs = &beliefs;
@@ -77,8 +67,9 @@ pub fn taker(
         orders.sort_by(f64::total_cmp);
         orders.dedup();
         if orders.is_empty() {
-            return Ok(false);
+            return Ok(None);
         }
+        let mut kept = Vec::new();
         let now = clock.now();
         for order in orders {
             let sent = command(beliefs, said, Some(order), now)?;
@@ -99,11 +90,11 @@ pub fn taker(
                         statements: statements.clone(),
                         to: agents,
                     });
-                    kept.borrow_mut().extend(statements);
+                    kept.extend(statements);
                 }
             }
         }
-        Ok(true)
+        Ok(Some(kept))
     })
 }
 
@@ -207,28 +198,24 @@ const REVISED: usize = 5;
 
 /// Execution's part: its executor, shared with whoever links to it.
 pub struct Execution {
-    pub executor: Rc<RefCell<Executor>>,
+    pub executor: Executor,
     /// Raised by whoever saw the present change: a walk is queued.
-    pub soon: Rc<Cell<bool>>,
+    pub soon: Arc<std::sync::atomic::AtomicBool>,
     queued: bool,
     walked_at: Option<DateTime>,
     since: usize,
     resolved: usize,
-    /// What whoever was linked wrote as a step was taken — the statements speech kept of what a step said — for the
-    /// pass to hand on with what the executor wrote.
-    pub said: Rc<RefCell<Vec<String>>>,
 }
 
 impl Execution {
     pub fn new(beliefs: &Store, agent: &str, clock: Arc<dyn Clock>) -> Result<Self, Error> {
         Ok(Execution {
-            executor: Rc::new(RefCell::new(Executor::new(beliefs, agent, None, None, clock)?)),
-            soon: Rc::new(Cell::new(false)),
+            executor: Executor::new(beliefs, agent, None, None, clock)?,
+            soon: Arc::new(std::sync::atomic::AtomicBool::new(false)),
             queued: false,
             walked_at: None,
             since: usize::MAX,
             resolved: 0,
-            said: Rc::new(RefCell::new(Vec::new())),
         })
     }
 }
@@ -254,15 +241,13 @@ pub fn present(beliefs: &Store, revised: &[String], changed: &[String]) -> Resul
 impl Execution {
     /// What the executor and the taker wrote since the runtime was last handed it.
     fn handed(&mut self) -> Vec<String> {
-        let mut written = std::mem::take(&mut self.executor.borrow_mut().written);
-        written.append(&mut self.said.borrow_mut());
-        written
+        std::mem::take(&mut self.executor.written)
     }
 
     fn walk(&mut self, pass: &mut Pass<'_>) -> Result<(), Error> {
         self.queued = false;
         let activity = pass.begin(crate::ontology::WALKING, &[]);
-        let mut executor = self.executor.borrow_mut();
+        let executor = &mut self.executor;
         if executor.walk(pass.now)? > 0 {
             pass.again();
         }
@@ -296,11 +281,11 @@ impl Part for Execution {
                     p == BLOCKED && matches!(t, oxigraph::model::Term::Literal(l) if l.value() == "true")
                 });
                 let activity = pass.begin(crate::ontology::WALKING, std::slice::from_ref(&event.node));
-                if self.executor.borrow_mut().judged(head.as_str(), blocked)? {
+                if self.executor.judged(head.as_str(), blocked)? {
                     pass.again();
                 }
                 pass.end(activity);
-                self.soon.set(true);
+                self.soon.store(true, std::sync::atomic::Ordering::SeqCst);
                 return Ok(self.handed());
             }
             let names = |p: &str| {
@@ -310,9 +295,9 @@ impl Part for Execution {
                     .map(|n| n.as_str().to_string())
                     .collect::<Vec<_>>()
             };
-            let beliefs = self.executor.borrow().beliefs.clone();
+            let beliefs = self.executor.beliefs.clone();
             if present(&beliefs, &names(REVISED_SOURCE), &names(CHANGED))? {
-                self.soon.set(true);
+                self.soon.store(true, std::sync::atomic::Ordering::SeqCst);
             }
             return Ok(Vec::new());
         }
@@ -331,7 +316,7 @@ impl Part for Execution {
             _ => None,
         });
         let activity = pass.begin(kind, std::slice::from_ref(&trigger));
-        let mut executor = self.executor.borrow_mut();
+        let executor = &mut self.executor;
         let want = want.map(|w| w.as_str().to_string());
         let wrote = match (job, want) {
             (ADOPT, Some(want)) => {
@@ -349,7 +334,6 @@ impl Part for Execution {
             },
             _ => Ok(Vec::new()),
         };
-        drop(executor);
         pass.end(activity);
         wrote
     }
@@ -365,7 +349,7 @@ impl Part for Execution {
             //  THE DUE INSTANT IS HELD TO THE CLOCK, not to the pass's instant: a walk reads the clock as it goes, so
             //  a landing may have come since the pass began.
             let (held, due) = {
-                let executor = self.executor.borrow();
+                let executor = &self.executor;
                 let due = match executor.next_due {
                     Some(d) => d <= pass.now || d <= executor.clock.now(),
                     None => false,
@@ -375,26 +359,26 @@ impl Part for Execution {
             if self.walked_at.is_none() || self.since != held || due {
                 self.walk(pass)?;
             }
-            if let Some(due) = self.executor.borrow().next_due {
+            if let Some(due) = self.executor.next_due {
                 pass.wake_at(due);
             }
             //  THE PASS'S LAP IS MARKED HERE AND ONLY HERE: a walk a revision queued, run among the drain's jobs,
             //  would mark `execute` over the sensing and revision before it.
             pass.lap("execute");
         }
-        if self.executor.borrow().resolved != self.resolved {
-            self.resolved = self.executor.borrow().resolved;
+        if self.executor.resolved != self.resolved {
+            self.resolved = self.executor.resolved;
             pass.again();
         }
         Ok(self.handed())
     }
 
     fn watch(&self) -> Option<orexis::events::Watch> {
-        Some(self.executor.borrow().watch.clone())
+        Some(self.executor.watch.clone())
     }
 
     fn submitted(&mut self) -> Vec<usize> {
-        if !self.soon.replace(false) || self.queued {
+        if !self.soon.swap(false, std::sync::atomic::Ordering::SeqCst) || self.queued {
             return Vec::new();
         }
         self.queued = true;

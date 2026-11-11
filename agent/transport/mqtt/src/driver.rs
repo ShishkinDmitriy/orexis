@@ -153,7 +153,7 @@ fn quoted(text: &str) -> String {
 }
 
 /// One session with a broker, as the driver uses it: subscribe and publish.
-pub trait Client {
+pub trait Client: Send {
     fn subscribe(&mut self, pattern: &str) -> Result<(), Error>;
     fn publish(&mut self, topic: &str, payload: &[u8], retain: bool) -> Result<(), Error>;
     /// Whatever the session holds open, closed.
@@ -747,15 +747,14 @@ mod tests {
     //! test_driver.py` holds it: what the agent subscribes to, whose a message is, where a command goes and as what,
     //! how a message becomes observations through sensing — and MQTT's own filter matching.
 
-    use std::cell::RefCell;
     use std::collections::BTreeMap;
     use std::path::{Path, PathBuf};
-    use std::rc::Rc;
 
     use orexis::clock::seconds;
     use orexis::snapshots::{ME, now, stand_in, stand_in_with};
 
     use super::*;
+    use std::sync::{Arc, Mutex};
 
     const TEST: &str = "http://example.org/test#";
     const OBSERVED: &str = "http://example.org/orexis/graph/observed/keeper/";
@@ -769,17 +768,21 @@ mod tests {
     }
 
     #[derive(Clone, Default)]
-    struct Fake(Rc<RefCell<Asked>>);
+    struct Fake(Arc<Mutex<Asked>>);
 
     impl Client for Fake {
         fn subscribe(&mut self, pattern: &str) -> Result<(), Error> {
-            self.0.borrow_mut().subscribed.push(pattern.to_string());
+            self.0.lock().unwrap().subscribed.push(pattern.to_string());
             Ok(())
         }
 
         fn publish(&mut self, topic: &str, payload: &[u8], retain: bool) -> Result<(), Error> {
             let payload = String::from_utf8_lossy(payload).into_owned();
-            self.0.borrow_mut().published.push((topic.to_string(), payload, retain));
+            self.0
+                .lock()
+                .unwrap()
+                .published
+                .push((topic.to_string(), payload, retain));
             Ok(())
         }
     }
@@ -827,7 +830,7 @@ mod tests {
             "one board, one topic, two sensors"
         );
         assert_eq!(
-            client.0.borrow().subscribed,
+            client.0.lock().unwrap().subscribed,
             ["sensors/board/reading"],
             "the lamp's is the neighbour's"
         );
@@ -840,7 +843,7 @@ mod tests {
         assert!(driver.set_cadence(&t("thermo"), 60).unwrap());
         driver.sense_now(&t("hygro")).unwrap();
         assert_eq!(
-            client.0.borrow().published,
+            client.0.lock().unwrap().published,
             [
                 sent("sensors/board/command", r#"{"sleep_s": 60}"#, true),
                 sent("sensors/board/command", r#"{"sense": true}"#, false)
@@ -854,9 +857,9 @@ mod tests {
         let (mut driver, client) = bus(&store);
         driver.handle("sensors/board/reading", BOARD_MESSAGE, now()).unwrap();
         driver.nudge(plus(60.0)).unwrap();
-        assert!(client.0.borrow().published.is_empty());
+        assert!(client.0.lock().unwrap().published.is_empty());
         driver.nudge(plus(300.0)).unwrap();
-        let published = client.0.borrow().published.clone();
+        let published = client.0.lock().unwrap().published.clone();
         assert!(!published.is_empty());
         assert!(
             published
@@ -877,7 +880,7 @@ mod tests {
         driver.handle("sensors/board/reading", BOARD_MESSAGE, now()).unwrap();
         let due = driver.nudge_until(plus(60.0)).unwrap().expect("a reading falls due");
         assert!(due > plus(60.0), "not yet");
-        assert!(client.0.borrow().published.is_empty());
+        assert!(client.0.lock().unwrap().published.is_empty());
         let late = plus(300.0);
         assert!(due <= late);
         assert_eq!(
@@ -888,7 +891,7 @@ mod tests {
             ),
             "told to sense, and asked again a minute on"
         );
-        assert!(!client.0.borrow().published.is_empty());
+        assert!(!client.0.lock().unwrap().published.is_empty());
     }
 
     #[test]
@@ -900,7 +903,7 @@ mod tests {
             .handle("sensors/board/reading", BOARD_MESSAGE, plus(180.0))
             .unwrap();
         driver.nudge(plus(300.0)).unwrap();
-        assert!(client.0.borrow().published.is_empty());
+        assert!(client.0.lock().unwrap().published.is_empty());
     }
 
     #[test]
@@ -909,7 +912,7 @@ mod tests {
         let (mut driver, client) = bus(&store);
         assert!(!driver.set_cadence(&t("photometer"), 60).unwrap());
         driver.sense_now(&t("probe")).unwrap();
-        assert!(client.0.borrow().published.is_empty());
+        assert!(client.0.lock().unwrap().published.is_empty());
     }
 
     #[test]
@@ -1056,18 +1059,25 @@ GRAPH :world {
             ],
         );
         mqtt.open().unwrap();
-        assert_eq!(here.0.borrow().subscribed, ["sensors/board/reading"]);
-        assert!(there.0.borrow().subscribed.is_empty());
+        assert_eq!(here.0.lock().unwrap().subscribed, ["sensors/board/reading"]);
+        assert!(there.0.lock().unwrap().subscribed.is_empty());
         assert!(mqtt.actuate(&t("board"), &serde_json::json!({"dose_ml": 250})).unwrap());
         assert!(mqtt.tell(&t("peer"), b"{}").unwrap());
-        let topics = |f: &Fake| f.0.borrow().published.iter().map(|p| p.0.clone()).collect::<Vec<_>>();
+        let topics = |f: &Fake| {
+            f.0.lock()
+                .unwrap()
+                .published
+                .iter()
+                .map(|p| p.0.clone())
+                .collect::<Vec<_>>()
+        };
         assert_eq!(topics(&here), ["sensors/board/command"]);
         assert_eq!(topics(&there), ["agents/peer/inbox"]);
         let alone_client = Fake::default();
         let mut alone = Mqtt::new(&store, ME, vec![(Some(t("broker")), Box::new(alone_client.clone()))]);
         assert!(!alone.tell(&t("peer"), b"{}").unwrap());
         assert!(!alone.tell(&t("peer"), b"{}").unwrap());
-        assert!(alone_client.0.borrow().published.is_empty());
+        assert!(alone_client.0.lock().unwrap().published.is_empty());
     }
 
     #[test]
@@ -1094,7 +1104,7 @@ GRAPH :world {
                 .unwrap()
         );
         assert_eq!(
-            client.0.borrow().published,
+            client.0.lock().unwrap().published,
             [sent("sensors/board/command", r#"{"dose_ml": 250}"#, false)]
         );
     }
@@ -1108,7 +1118,7 @@ GRAPH :world {
         assert!(!driver.actuate(&t("probe"), &dose).unwrap());
         assert!(!driver.tell(&t("probe"), b"{}").unwrap());
         assert!(!driver.actuate(&t("nobody"), &dose).unwrap());
-        assert!(client.0.borrow().published.is_empty());
+        assert!(client.0.lock().unwrap().published.is_empty());
     }
 
     /// THE KEEPER AND A PEER, each listening on a topic of its own for what the other says.
@@ -1128,7 +1138,7 @@ GRAPH :world {
         assert!(mqtt.open().unwrap().contains(&"agents/keeper/inbox".to_string()));
         assert!(mqtt.tell(&t("peer"), b"<urn:g> { }").unwrap());
         assert_eq!(
-            client.0.borrow().published,
+            client.0.lock().unwrap().published,
             [sent("agents/peer/inbox", "<urn:g> { }", false)]
         );
         assert!(
@@ -1218,7 +1228,7 @@ GRAPH :world {
         );
         assert!(mqtt.say_to(&t("anna_topic"), "the fern is dry", None));
         assert_eq!(
-            client.0.borrow().published.last().unwrap(),
+            client.0.lock().unwrap().published.last().unwrap(),
             &(
                 "chats/keeper_and_anna".to_string(),
                 format!(r#"{{"from": "{}", "text": "the fern is dry"}}"#, t("keeper")),

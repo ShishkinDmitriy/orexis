@@ -15,12 +15,11 @@
 //! never the agent's (`Laps`).
 
 use std::any::Any;
-use std::cell::{Cell, RefCell};
 use std::collections::BTreeMap;
 use std::collections::hash_map::RandomState;
 use std::hash::{BuildHasher, Hasher};
-use std::rc::Rc;
 use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use oxigraph::model::vocab::xsd;
@@ -117,39 +116,39 @@ pub fn counted(marks: &[(&'static str, Mark)]) -> bool {
     valued || tags
 }
 
-type Hearer = Rc<dyn Fn(&dyn Event, &NamedNode)>;
+type Hearer = Arc<dyn Fn(&dyn Event, &NamedNode) + Send + Sync>;
 
 /// Whoever watches one agent: every event its parts say, named as it is said and heard by each hearer connected, at
-/// once, on the one thread, so the journal keeps it and a later event names it by one IRI —
-/// and the instant the pass stands at, which the runtime says as each drain begins, for an event said by a part that
+/// once, on the thread of the part that said it, so the journal keeps it and a later event names it by one IRI —
+/// and the instant the pass stands at, which the runtime says as each pass begins, for an event said by a part that
 /// is handed no pass, so nothing reads the clock for it.
 #[derive(Clone, Default)]
-pub struct Watch(Rc<RefCell<Vec<Hearer>>>, Rc<Cell<Option<DateTime>>>);
+pub struct Watch(Arc<Mutex<Vec<Hearer>>>, Arc<Mutex<Option<DateTime>>>);
 
 impl Watch {
     /// The instant the pass in progress stands at.
     pub fn at(&self) -> Option<DateTime> {
-        self.1.get()
+        *self.1.lock().expect("an instant nobody poisoned")
     }
 
     /// Say the instant the pass stands at.
     pub fn stand(&self, at: DateTime) {
-        self.1.set(Some(at));
+        *self.1.lock().expect("an instant nobody poisoned") = Some(at);
     }
 
     /// Call `hearer` with every event said from here on, and the name it was said under.
-    pub fn connect(&self, hearer: impl Fn(&dyn Event, &NamedNode) + 'static) {
-        self.0.borrow_mut().push(Rc::new(hearer));
+    pub fn connect(&self, hearer: impl Fn(&dyn Event, &NamedNode) + Send + Sync + 'static) {
+        self.0.lock().expect("hearers nobody poisoned").push(Arc::new(hearer));
     }
 
     /// Whether anybody watches.
     pub fn connected(&self) -> bool {
-        !self.0.borrow().is_empty()
+        !self.0.lock().expect("hearers nobody poisoned").is_empty()
     }
 
     /// Say `event` to every hearer, under a name minted for it: the name, where anybody heard.
     pub fn emit(&self, event: &dyn Event) -> Option<NamedNode> {
-        let hearers: Vec<Hearer> = self.0.borrow().clone();
+        let hearers: Vec<Hearer> = self.0.lock().expect("hearers nobody poisoned").clone();
         if hearers.is_empty() {
             return None;
         }
@@ -163,7 +162,7 @@ impl Watch {
 
 impl std::fmt::Debug for Watch {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Watch({} connected)", self.0.borrow().len())
+        write!(f, "Watch({} connected)", self.0.lock().map(|h| h.len()).unwrap_or(0))
     }
 }
 
@@ -311,12 +310,12 @@ mod tests {
     fn a_watch_hears_what_is_said_where_anybody_connected_and_says_so() {
         let watch = Watch::default();
         assert!(!watch.connected());
-        let heard = Rc::new(RefCell::new(Vec::new()));
+        let heard = Arc::new(Mutex::new(Vec::new()));
         let kept = heard.clone();
-        watch.connect(move |e, named| kept.borrow_mut().push((e.metric(), named.clone())));
+        watch.connect(move |e, named| kept.lock().unwrap().push((e.metric(), named.clone())));
         assert!(watch.connected());
         let named = watch.emit(&Counted).expect("somebody heard");
-        assert_eq!(*heard.borrow(), [(Some("counted"), named)]);
+        assert_eq!(*heard.lock().unwrap(), [(Some("counted"), named)]);
         assert!(as_of::<Counted>(&Counted).is_some());
     }
 

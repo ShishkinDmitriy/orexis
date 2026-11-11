@@ -22,7 +22,7 @@ more specific event may be said at the same instant, naming the one it specifies
 An event is what a part says to the agent's one watch: a value, `PlanPublished`, `IntentionResolved`,
 `Observed`, whose class belongs to the package that says it and lives in its `events.rs`, so what a
 package says is read in one module; the runtime's own, a graph written and a pass, are in
-`agent/src/runtime.rs`. Every hearer of the watch hears it at once, on the one thread - the journal,
+`agent/src/runtime.rs`. Every hearer of the watch hears it at once, on the thread of the part that said it - the journal,
 the series and the tracer - and where its class is beneath a part's trigger the runtime hands it to
 that part's [policy](/domain/kernel/policy.md), by what it is about: the entities it NAMES, never their
 content, which the policy reads from the store, written there before the event was said.

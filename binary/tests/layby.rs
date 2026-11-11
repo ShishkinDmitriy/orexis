@@ -5,11 +5,9 @@
 //! everything stands at the end: a replay is the closed loop for as long as the drives agree, since the fix answers
 //! the drive before it, and where the binary drove elsewhere the drives differ and the replay says so.
 
-use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 use oxsdatatypes::DateTime;
@@ -20,7 +18,7 @@ use orexis::boot::TREE;
 use orexis::clock::{Clock, instant, isoformat};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
-use orexis::runtime::{Part, Runtime};
+use orexis::runtime::Runtime;
 use orexis::store::{Store, Within, iri, value};
 use orexis_agent::{Wiring, assemble_seen, booted};
 use orexis_mqtt::driver::{Client, Mqtt};
@@ -46,7 +44,7 @@ type Drives = Vec<(String, i64, i64)>;
 /// Every drive the courier sends, with the instant it was sent.
 struct Bus {
     clock: Standing,
-    drives: Rc<RefCell<Vec<(String, i64, i64)>>>,
+    drives: Arc<Mutex<Vec<(String, i64, i64)>>>,
 }
 
 impl Client for Bus {
@@ -62,7 +60,10 @@ impl Client for Bus {
             payload["to"]["x"].as_i64().unwrap(),
             payload["to"]["y"].as_i64().unwrap(),
         );
-        self.drives.borrow_mut().push((at[11..19].to_string(), cell.0, cell.1));
+        self.drives
+            .lock()
+            .unwrap()
+            .push((at[11..19].to_string(), cell.0, cell.1));
         Ok(())
     }
 }
@@ -123,14 +124,14 @@ fn walk(world: &Path, fixture: &str) -> (Drives, BTreeMap<String, (i64, i64)>) {
     let store = Store::new(Arc::new(Namespaces::of_tree(tree()).unwrap())).unwrap();
     let clock = Standing(Arc::new(Mutex::new(steps[0].0)));
     let loaded = booted(&store, tree(), world, "courier_a", clock.now()).unwrap();
-    let drives = Rc::new(RefCell::new(Vec::new()));
+    let drives = Arc::new(Mutex::new(Vec::new()));
     let bus = Bus {
         clock: clock.clone(),
         drives: drives.clone(),
     };
     let member = Mqtt::new(&store, &format!("{L}courier_a"), vec![(None, Box::new(bus))]);
     let inbox = member.inbox.clone();
-    let (mut parts, seen) = assemble_seen(
+    let (parts, seen) = assemble_seen(
         &store,
         "courier_a",
         Arc::new(clock.clone()),
@@ -142,26 +143,23 @@ fn walk(world: &Path, fixture: &str) -> (Drives, BTreeMap<String, (i64, i64)>) {
         },
     )
     .unwrap();
-    let lent: Vec<(String, &mut dyn Part)> = parts
-        .iter_mut()
-        .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
-        .collect();
-    let mut runtime = Runtime::new(&store, "courier_a", &clock, lent).unwrap();
+    let lent = parts;
+    let mut runtime = Runtime::new(&store, "courier_a", Arc::new(clock.clone()), lent).unwrap();
     for (n, (when, published)) in steps.iter().enumerate() {
         *clock.0.lock().unwrap() = *when;
         for (topic, payload) in published {
             inbox.deliver(topic, payload.as_bytes(), Some(*when));
         }
         runtime.run(Some(1), 0.0).unwrap();
-        if n > 0 && seen.executor.as_ref().unwrap().borrow().walking().unwrap().is_empty() {
+        if n > 0 && seen.execution().executor.walking().unwrap().is_empty() {
             break;
         }
     }
-    let walking = seen.executor.as_ref().unwrap().borrow().walking().unwrap();
+    let walking = seen.execution().executor.walking().unwrap();
     assert!(walking.is_empty(), "the plan was walked to its end: {walking:?}");
     runtime.stop();
     let believed = at(&store);
-    let sent = drives.borrow().clone();
+    let sent = drives.lock().unwrap().clone();
     (sent, believed)
 }
 

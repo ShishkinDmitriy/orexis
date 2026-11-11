@@ -6,9 +6,6 @@
 //! it into a belief graph, which the runtime then hands whoever revises beliefs. A statement written before the part
 //! started — a volume lived in — is extracted from at start where nothing was.
 
-use std::cell::RefCell;
-use std::rc::Rc;
-
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::document::Document;
@@ -74,7 +71,7 @@ pub struct Speaker {
     beliefs: Store,
     pub me: String,
     /// Whoever watches the agent, and the instant the pass stands at.
-    pub watch: RefCell<Watch>,
+    pub watch: Watch,
 }
 
 impl Speaker {
@@ -87,7 +84,7 @@ impl Speaker {
 
     /// Say that the statements `written` were said to `to`, for whoever carries them to each.
     fn tell_said(&self, written: &[String], to: &[String]) -> Result<(), Error> {
-        let watch = self.watch.borrow().clone();
+        let watch = self.watch.clone();
         if !watch.connected() {
             return Ok(());
         }
@@ -187,7 +184,7 @@ pub fn document_of(beliefs: &Store, graphs: &[String]) -> Result<Document, Error
 
 /// Speech's part: the speaker, and the beliefs extracted at start for the pass to hand on.
 pub struct Speech {
-    pub speaker: Rc<Speaker>,
+    pub speaker: Speaker,
     beliefs: Store,
     pending: Vec<String>,
 }
@@ -195,11 +192,11 @@ pub struct Speech {
 impl Speech {
     pub fn new(beliefs: &Store, me: &str) -> Self {
         Speech {
-            speaker: Rc::new(Speaker {
+            speaker: Speaker {
                 beliefs: beliefs.clone(),
                 me: me.to_string(),
-                watch: RefCell::new(Watch::default()),
-            }),
+                watch: Watch::default(),
+            },
             beliefs: beliefs.clone(),
             pending: Vec::new(),
         }
@@ -248,7 +245,7 @@ impl Part for Speech {
     }
 
     fn heard(&mut self, _job: usize, graph: &str, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
-        let watch = self.speaker.watch.borrow().clone();
+        let watch = self.speaker.watch.clone();
         if watch.connected() && self.arrival(graph)?.as_deref() == Some(RECEIVED) {
             let (kinds, said) = described(&self.beliefs, graph)?;
             watch.emit(&Heard {
@@ -262,7 +259,7 @@ impl Part for Speech {
     }
 
     fn watch(&self) -> Option<Watch> {
-        Some(self.speaker.watch.borrow().clone())
+        Some(self.speaker.watch.clone())
     }
 
     /// What speech's policy does of a trigger: tell each statement it names, as it was said, to each agent it names.
@@ -296,15 +293,16 @@ mod tests {
 
     use super::*;
     use crate::said::tests::{T, me, quads, store};
+    use std::sync::{Arc, Mutex};
 
     #[test]
     fn its_part_believes_what_was_said_and_says_it_said_to_each_agent() {
         let store = store();
         let part = Speech::new(&store, &me());
-        let heard = Rc::new(RefCell::new(Vec::new()));
+        let heard = Arc::new(Mutex::new(Vec::new()));
         let into = heard.clone();
-        part.speaker.watch.borrow().connect(move |event, _| {
-            into.borrow_mut().push((event.kind(), event.about()));
+        part.speaker.watch.connect(move |event, _| {
+            into.lock().unwrap().push((event.kind(), event.about()));
         });
         let round = format!("{T}round");
         let to = [format!("{T}rose"), format!("{T}fern")];
@@ -316,7 +314,7 @@ mod tests {
         );
         let node = |s: &str| oxigraph::model::Term::NamedNode(NamedNode::new(s).unwrap());
         assert_eq!(
-            *heard.borrow(),
+            *heard.lock().unwrap(),
             [(
                 Some(crate::ontology::SAID),
                 vec![(STATEMENT, node(&round)), (TO, node(&to[0])), (TO, node(&to[1]))]

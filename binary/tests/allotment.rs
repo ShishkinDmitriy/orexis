@@ -5,10 +5,8 @@
 //! process on one bus that hands each what another tells it, on one clock every read of which moves it on by a second,
 //! as the Python test's does.
 
-use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
-use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 use oxsdatatypes::{DateTime, DayTimeDuration};
@@ -19,7 +17,7 @@ use orexis::boot::TREE;
 use orexis::clock::{Clock, instant, isoformat};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
-use orexis::runtime::{Part, Runtime};
+use orexis::runtime::Runtime;
 use orexis::store::{Store, Within, value};
 use orexis_agent::{Seen, Wiring, assemble_seen, booted};
 use orexis_mqtt::driver::{Client, Inbox, Mqtt};
@@ -87,12 +85,12 @@ impl Carried {
 struct Bus {
     name: &'static str,
     clock: Ticking,
-    carried: Rc<RefCell<Carried>>,
+    carried: Arc<Mutex<Carried>>,
 }
 
 impl Client for Bus {
     fn subscribe(&mut self, pattern: &str) -> Result<(), Error> {
-        let mut carried = self.carried.borrow_mut();
+        let mut carried = self.carried.lock().unwrap();
         carried
             .patterns
             .entry(self.name.to_string())
@@ -102,7 +100,7 @@ impl Client for Bus {
     }
 
     fn publish(&mut self, topic: &str, payload: &[u8], _retain: bool) -> Result<(), Error> {
-        let mut carried = self.carried.borrow_mut();
+        let mut carried = self.carried.lock().unwrap();
         carried
             .stamped
             .push((self.clock.at(), topic.to_string(), payload.to_vec()));
@@ -141,19 +139,19 @@ fn facts(store: &Store, predicate: &str) -> BTreeSet<(String, String)> {
 }
 
 /// The allotment's three agents, booted at noon on the first of January, and driven pass by pass.
-fn allotment(walk: impl FnOnce(&mut Market<'_, '_>)) {
+fn allotment(walk: impl FnOnce(&mut Market<'_>)) {
     allotment_on(true, walk);
 }
 
 /// `allotment`, on a clock that ticks at every read or stands where the walk sets it.
-fn allotment_on(ticks: bool, walk: impl FnOnce(&mut Market<'_, '_>)) {
+fn allotment_on(ticks: bool, walk: impl FnOnce(&mut Market<'_>)) {
     let namespaces = Arc::new(Namespaces::of_tree(tree()).unwrap());
     let stores: Vec<Store> = NAMES.iter().map(|_| Store::new(namespaces.clone()).unwrap()).collect();
     let clock = Ticking(
         Arc::new(Mutex::new(instant("2026-01-01T12:00:00+00:00").unwrap())),
         ticks,
     );
-    let carried = Rc::new(RefCell::new(Carried::default()));
+    let carried = Arc::new(Mutex::new(Carried::default()));
     let world = world();
     let mut assembled = Vec::new();
     for (store, name) in stores.iter().zip(NAMES) {
@@ -165,7 +163,8 @@ fn allotment_on(ticks: bool, walk: impl FnOnce(&mut Market<'_, '_>)) {
         };
         let member = Mqtt::new(store, &format!("{AL}{name}"), vec![(None, Box::new(bus))]);
         carried
-            .borrow_mut()
+            .lock()
+            .unwrap()
             .inboxes
             .insert(name.to_string(), member.inbox.clone());
         assembled.push(
@@ -184,17 +183,14 @@ fn allotment_on(ticks: bool, walk: impl FnOnce(&mut Market<'_, '_>)) {
         );
     }
     let mut seen = Vec::new();
-    let mut runtimes: Vec<Runtime<'_>> = Vec::new();
+    let mut runtimes: Vec<Runtime> = Vec::new();
     for ((parts, s), (store, name)) in assembled
         .iter_mut()
         .map(|(p, s)| (p, std::mem::take(s)))
         .zip(stores.iter().zip(NAMES))
     {
-        let lent: Vec<(String, &mut dyn Part)> = parts
-            .iter_mut()
-            .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
-            .collect();
-        runtimes.push(Runtime::new(store, name, &clock, lent).unwrap());
+        let lent = parts;
+        runtimes.push(Runtime::new(store, name, Arc::new(clock.clone()), std::mem::take(lent)).unwrap());
         seen.push(s);
     }
     let mut market = Market {
@@ -210,15 +206,15 @@ fn allotment_on(ticks: bool, walk: impl FnOnce(&mut Market<'_, '_>)) {
     }
 }
 
-struct Market<'a, 'r> {
+struct Market<'a> {
     stores: &'a [Store],
-    runtimes: Vec<Runtime<'r>>,
+    runtimes: Vec<Runtime>,
     seen: Vec<Seen>,
     clock: Ticking,
-    carried: Rc<RefCell<Carried>>,
+    carried: Arc<Mutex<Carried>>,
 }
 
-impl<'a> Market<'a, '_> {
+impl<'a> Market<'a> {
     fn index(name: &str) -> usize {
         NAMES.iter().position(|n| *n == name).unwrap()
     }
@@ -229,7 +225,7 @@ impl<'a> Market<'a, '_> {
 
     /// The board's reading, delivered to one grower at the instant the clock stands at.
     fn read(&self, name: &str, payload: &str) {
-        let inbox = self.carried.borrow().inboxes[name].clone();
+        let inbox = self.carried.lock().unwrap().inboxes[name].clone();
         inbox.deliver(READINGS, payload.as_bytes(), Some(self.clock.at()));
     }
 
@@ -254,17 +250,16 @@ impl<'a> Market<'a, '_> {
         self.runtimes[Self::index(name)].run(Some(1), 0.0).unwrap();
     }
 
-    fn planner(&self, name: &str) -> std::cell::Ref<'_, orexis_planning::Planner> {
-        self.seen[Self::index(name)].planner.as_ref().unwrap().borrow()
+    fn planning(&self, name: &str) -> std::sync::MutexGuard<'_, orexis_planning::create::Planning> {
+        self.seen[Self::index(name)].planning()
     }
 
     fn commands(&self) -> Vec<(String, Json)> {
-        self.carried.borrow().commands()
+        self.carried.lock().unwrap().commands()
     }
 
     fn walking(&self, name: &str) -> Vec<String> {
-        let executor = self.seen[Self::index(name)].executor.as_ref().unwrap();
-        executor.borrow().walking().unwrap()
+        self.seen[Self::index(name)].execution().executor.walking().unwrap()
     }
 }
 
@@ -285,7 +280,7 @@ fn a_dry_plot_is_watered_by_a_claim_bought_on_the_supplier_s_venue() {
         m.read("rose_grower", r#"{"rose_moisture": 0.2}"#);
         m.read("fern_grower", r#"{"fern_moisture": 0.45}"#);
         m.run();
-        let told = m.carried.borrow().told("supplier");
+        let told = m.carried.lock().unwrap().told("supplier");
         assert!(!told.is_empty(), "the dry grower called for a round");
         assert!(
             facts(m.store("rose_grower"), "open").contains(&pair("water", "true")),
@@ -433,7 +428,7 @@ fn a_plot_that_dries_below_its_floor_is_watered_with_bought_water() {
             m.walking("rose_grower").is_empty(),
             "the simulator's reading answered the presentation"
         );
-        let carried = m.carried.borrow();
+        let carried = m.carried.lock().unwrap();
         let said = |(at, topic, payload): &(DateTime, String, Vec<u8>)| {
             let text = String::from_utf8_lossy(payload);
             if topic.starts_with("actuators/") {
@@ -518,7 +513,8 @@ fn a_grower_s_world_is_hashed_within_what_the_market_s_texts_read() {
         m.read("rose_grower", r#"{"rose_moisture": 0.45}"#);
         m.pass("rose_grower");
         {
-            let planner = m.planner("rose_grower");
+            let planning = m.planning("rose_grower");
+            let planner = &planning.planner;
             let read = planner
                 .read()
                 .expect("the growers' read set is readable: no text of the allotment reads anything");
@@ -534,7 +530,8 @@ fn a_grower_s_world_is_hashed_within_what_the_market_s_texts_read() {
         m.clock.on(600);
         m.read("rose_grower", r#"{"rose_moisture": 0.45}"#);
         m.pass("rose_grower");
-        let planner = m.planner("rose_grower");
+        let planning = m.planning("rose_grower");
+        let planner = &planning.planner;
         assert!(
             !planner.rerooted.is_empty() && planner.rerooted.iter().all(|p| *p == "ground"),
             "the same reading at a new instant is the present the last pass stood in, not a surprise: {:?}",
@@ -558,7 +555,8 @@ fn the_present_reading_and_its_foreseen_prediction_are_one_way_of_failing() {
         m.pass("rose_grower");
         let text = "SELECT ?g ?s ?e WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . \
                     ?g a planning:WantGraph ; dcterms:temporal ?p . ?p orexis:start ?s OPTIONAL { ?p orexis:end ?e } } }";
-        let planner = m.planner("rose_grower");
+        let planning = m.planning("rose_grower");
+        let planner = &planning.planner;
         let wants: Vec<_> = planner
             .imaginaria
             .values()
@@ -597,7 +595,7 @@ fn the_present_reading_and_its_foreseen_prediction_are_one_way_of_failing() {
 #[test]
 fn each_agent_listens_on_its_own_topic_and_the_growers_on_their_probes() {
     allotment(|m| {
-        let mut patterns = m.carried.borrow().patterns.clone();
+        let mut patterns = m.carried.lock().unwrap().patterns.clone();
         patterns.values_mut().for_each(|p| p.sort());
         let expected: BTreeMap<String, Vec<String>> = [
             ("supplier", vec!["agents/supplier/inbox"]),

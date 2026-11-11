@@ -22,7 +22,7 @@ pub const PURPOSES: [&str; 2] = [HISTORY, METRICS];
 const KEYS: [&str; 4] = ["URL", "ORG", "BUCKET", "TOKEN"];
 
 /// How a batch of points reaches a bucket: the client's own call, refused with why.
-pub type Write = Box<dyn Fn(&str, &[Point]) -> Result<(), String>>;
+pub type Write = Box<dyn Fn(&str, &[Point]) -> Result<(), String> + Send + Sync>;
 /// How a Flux query of the bucket is answered: each record as its columns, each value as Python's client reads it and
 /// `str` says it, or why not. Shared with the model's thread, which reads the past off it.
 pub type Read = Arc<dyn Fn(&str) -> Result<Vec<BTreeMap<String, String>>, String> + Send + Sync>;
@@ -351,11 +351,9 @@ pub fn line(point: &Point) -> String {
 mod tests {
     //! The sink, held to what `agent/tests/test_series.py` holds the Python one to.
 
-    use std::cell::RefCell;
-    use std::rc::Rc;
-
     use super::*;
     use crate::clock::instant;
+    use std::sync::Mutex;
 
     fn named(purpose: &str, bucket: &str) -> Vec<(String, String)> {
         [
@@ -384,19 +382,19 @@ mod tests {
 
     #[test]
     fn a_sink_writes_what_it_is_handed_to_its_bucket_and_nothing_handed_is_nothing_written() {
-        let written = Rc::new(RefCell::new(Vec::new()));
+        let written = Arc::new(Mutex::new(Vec::new()));
         let kept = written.clone();
         let sink = Sink::new(
             HISTORY,
             "b",
             Box::new(move |bucket, points| {
-                kept.borrow_mut().push((bucket.to_string(), points.to_vec()));
+                kept.lock().unwrap().push((bucket.to_string(), points.to_vec()));
                 Ok(())
             }),
         );
         assert_eq!(sink.write(&[point()]), 1);
         assert_eq!(sink.write(&[]), 0);
-        assert_eq!(*written.borrow(), [("b".to_string(), vec![point()])]);
+        assert_eq!(*written.lock().unwrap(), [("b".to_string(), vec![point()])]);
     }
 
     #[test]

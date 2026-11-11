@@ -3,9 +3,7 @@
 //! a poll's thread received waits in the member's inbox and is handed to the one executing thread as a job that says
 //! it as prose. The agent's own words for a channel it carries it hears said kept, beneath its trigger, and sends.
 
-use std::cell::RefCell;
 use std::collections::VecDeque;
-use std::rc::Rc;
 
 use orexis::Error;
 use orexis::runtime::{Heard, Part, Pass, Starting};
@@ -25,14 +23,14 @@ const HOLDER: &str = "transport/telegram";
 
 /// The member's part: the member, shared, and the messages handed to the pass.
 pub struct Transport {
-    pub member: Rc<RefCell<Telegram>>,
+    pub member: Telegram,
     pending: VecDeque<Message>,
 }
 
 impl Transport {
     pub fn new(member: Telegram) -> Self {
         Transport {
-            member: Rc::new(RefCell::new(member)),
+            member,
             pending: VecDeque::new(),
         }
     }
@@ -40,8 +38,8 @@ impl Transport {
 
 impl Part for Transport {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
-        self.member.borrow().inbox.wakes(starting.wake());
-        starting.every(self.member.borrow().every, POLL);
+        self.member.inbox.wakes(starting.wake());
+        starting.every(self.member.every, POLL);
         starting.hears(CARRYING_TRIGGER, CARRY);
         Ok(())
     }
@@ -49,8 +47,8 @@ impl Part for Transport {
     /// What the member's policy does of its trigger: the agent's own words carried where they are on a channel it
     /// carries, and the agent shown writing.
     fn heard_event(&mut self, _job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
-        let store = self.member.borrow().beliefs().clone();
-        carry(&store, &mut *self.member.borrow_mut(), event, pass, CARRYING)?;
+        let store = self.member.beliefs().clone();
+        carry(&store, &mut self.member, event, pass, CARRYING)?;
         Ok(Vec::new())
     }
 
@@ -58,24 +56,22 @@ impl Part for Transport {
         pass.hold(HOLDER);
         match job {
             POLL => {
-                self.member.borrow().poll();
+                self.member.poll();
                 Ok(Vec::new())
             }
             _ => {
                 let Some(message) = self.pending.pop_front() else {
                     return Ok(Vec::new());
                 };
-                let prose = self.member.borrow_mut().handle(
-                    &message.topic,
-                    &message.payload,
-                    message.at.unwrap_or(pass.now),
-                )?;
+                let prose = self
+                    .member
+                    .handle(&message.topic, &message.payload, message.at.unwrap_or(pass.now))?;
                 let Some(prose) = prose else {
                     return Ok(Vec::new());
                 };
                 //  A PERSON'S WORDS are kept, and said kept, for whoever translates.
                 let graph = {
-                    let member = self.member.borrow();
+                    let member = &self.member;
                     kept(member.beliefs(), &member.me, &prose)?
                 };
                 pass.emit(&ProseKept { prose: graph.clone() });
@@ -85,7 +81,7 @@ impl Part for Transport {
     }
 
     fn submitted(&mut self) -> Vec<usize> {
-        let arrived = self.member.borrow().inbox.take();
+        let arrived = self.member.inbox.take();
         let n = arrived.len();
         self.pending.extend(arrived);
         vec![HANDLE; n]

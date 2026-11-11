@@ -4,9 +4,7 @@
 //! back, and in a group an agent answering when named and keeping silent otherwise. The model is a stand-in that answers
 //! what the test says, and the conversation runs on the test's own thread.
 
-use std::cell::RefCell;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 use oxsdatatypes::DateTime;
@@ -17,7 +15,7 @@ use orexis::clock::{Manual, instant};
 use orexis::events::{Watch, as_of};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
-use orexis::runtime::{Heard, Part, Pass, Runtime, Starting};
+use orexis::runtime::{Heard, Lent, Part, Pass, Runtime, Starting};
 use orexis::store::{Store, Within, iri, value};
 use orexis_speech::events::{Said, Statement};
 use orexis_speech::prose::{Carrier, PROSE_GRAPH, PROSE_KEPT, Prose, ProseKept, WRITING_ANNOUNCED, carry, kept};
@@ -462,15 +460,15 @@ impl Carrier for Bot {
 
 /// The bot as a transport's part: a person's words kept and said kept at the next pass, and what the agent says
 /// carried, as a member hears it beneath its trigger.
-struct Member<'s> {
-    store: &'s Store,
-    bot: Rc<RefCell<Bot>>,
+struct Member {
+    store: Store,
+    bot: Arc<Mutex<Bot>>,
     kept: Vec<String>,
     /// Documents said, to say said at the next pass, as speech says them.
     said: Vec<Said>,
 }
 
-impl Part for Member<'_> {
+impl Part for Member {
     fn start(&mut self, starting: &mut Starting) -> Result<(), orexis::Error> {
         starting.hears(PROSE_KEPT, 1);
         starting.hears(WRITING_ANNOUNCED, 1);
@@ -478,7 +476,7 @@ impl Part for Member<'_> {
     }
 
     fn heard_event(&mut self, _job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, orexis::Error> {
-        carry(self.store, &mut *self.bot.borrow_mut(), event, pass, CARRYING)?;
+        carry(&self.store, &mut *self.bot.lock().unwrap(), event, pass, CARRYING)?;
         Ok(Vec::new())
     }
 
@@ -591,33 +589,33 @@ fn results(messages: &[Json]) -> Vec<String> {
 /// The seeker's translation, its runtime and its bot: a person's words written on a channel run the pass that hears them.
 struct Seeker<'s> {
     store: &'s Store,
-    part: Translation,
-    member: Member<'s>,
-    bot: Rc<RefCell<Bot>>,
-    clock: Manual,
+    part: Arc<Mutex<Translation>>,
+    member: Arc<Mutex<Member>>,
+    bot: Arc<Mutex<Bot>>,
+    clock: Arc<Manual>,
 }
 
 impl<'s> Seeker<'s> {
     fn new(store: &'s Store) -> Self {
         let mut translator = Translator::new(store, &me(), None);
         translator.inline = true;
-        let bot = Rc::new(RefCell::new(Bot::default()));
+        let bot = Arc::new(Mutex::new(Bot::default()));
         Seeker {
             store,
-            part: Translation::new(translator),
-            member: Member {
-                store,
+            part: Arc::new(Mutex::new(Translation::new(translator))),
+            member: Arc::new(Mutex::new(Member {
+                store: store.clone(),
                 bot: bot.clone(),
                 kept: Vec::new(),
                 said: Vec::new(),
-            },
+            })),
             bot,
-            clock: Manual::at(now()),
+            clock: Arc::new(Manual::at(now())),
         }
     }
 
     fn model(&self, model: StandIn) {
-        self.part.translator.borrow_mut().model = Some(Arc::new(model));
+        self.part.lock().unwrap().translator.model = Some(Arc::new(model));
     }
 
     fn write(
@@ -637,7 +635,11 @@ impl<'s> Seeker<'s> {
             message: message.map(str::to_string),
             reply: None,
         };
-        self.member.kept.push(kept(self.store, &me(), &prose).unwrap());
+        self.member
+            .lock()
+            .unwrap()
+            .kept
+            .push(kept(self.store, &me(), &prose).unwrap());
         self.pass();
     }
 
@@ -645,7 +647,7 @@ impl<'s> Seeker<'s> {
     fn say(&mut self, document: &[u8], to: &str) {
         let doc = orexis::document::Document::of(document).unwrap();
         let graphs = orexis_speech::said::said(self.store, &me(), &doc).unwrap();
-        self.member.said.push(Said {
+        self.member.lock().unwrap().said.push(Said {
             statements: graphs
                 .into_iter()
                 .map(|graph| Statement {
@@ -661,16 +663,16 @@ impl<'s> Seeker<'s> {
     }
 
     fn pass(&mut self) {
-        let parts: Vec<(String, &mut dyn Part)> = vec![
-            ("translation".into(), &mut self.part),
-            ("transport/telegram".into(), &mut self.member),
+        let parts: Vec<(String, Box<dyn Part>)> = vec![
+            ("translation".into(), Lent::of(&self.part)),
+            ("transport/telegram".into(), Lent::of(&self.member)),
         ];
-        let mut runtime = Runtime::new(self.store, "seeker", &self.clock, parts).unwrap();
+        let mut runtime = Runtime::new(self.store, "seeker", self.clock.clone(), parts).unwrap();
         runtime.drain(now()).unwrap();
     }
 
     fn said(&self) -> Vec<(String, String)> {
-        self.bot.borrow().said.clone()
+        self.bot.lock().unwrap().said.clone()
     }
 
     fn believed(&self) -> Vec<(String, String)> {
@@ -1014,21 +1016,21 @@ fn a_conversation_says_what_it_spent_and_what_was_written_called_and_answered_wh
     let store = seeker();
     let mut s = Seeker::new(&store);
     let watch = Watch::default();
-    let spent: Rc<RefCell<Vec<Translated>>> = Rc::default();
-    let conversed: Rc<RefCell<Vec<Conversed>>> = Rc::default();
+    let spent: Arc<Mutex<Vec<Translated>>> = Arc::default();
+    let conversed: Arc<Mutex<Vec<Conversed>>> = Arc::default();
     let (a, b) = (spent.clone(), conversed.clone());
     watch.connect(move |e, _| {
         if let Some(t) = as_of::<Translated>(e) {
-            a.borrow_mut().push(t.clone());
+            a.lock().unwrap().push(t.clone());
         }
         if let Some(c) = as_of::<Conversed>(e) {
-            b.borrow_mut().push(c.clone());
+            b.lock().unwrap().push(c.clone());
         }
     });
-    s.part.translator.borrow_mut().watch = watch;
+    s.part.lock().unwrap().translator.watch = watch;
     s.model(StandIn::new(vec![viewings()], "Nothing yet.").0);
     s.write("clara_telegram", "anything for the studio?", None, None, None);
-    let spent = spent.borrow();
+    let spent = spent.lock().unwrap();
     assert_eq!(spent.len(), 1);
     assert_eq!(
         (spent[0].act.as_deref(), spent[0].outcome.as_deref(), spent[0].requests),
@@ -1039,7 +1041,7 @@ fn a_conversation_says_what_it_spent_and_what_was_written_called_and_answered_wh
         Some(0.0),
         "a stand-in spends nothing, and says so"
     );
-    let conversed = conversed.borrow();
+    let conversed = conversed.lock().unwrap();
     assert_eq!(conversed.len(), 1);
     assert_eq!(
         (
@@ -1068,7 +1070,7 @@ fn a_conversation_ends_in_words_by_its_last_turn_and_a_model_writing_none_has_fa
         s.said(),
         [(format!("{V}clara_telegram"), "I could not find out.".to_string())]
     );
-    s.bot.borrow_mut().said.clear();
+    s.bot.lock().unwrap().said.clear();
     s.model(StandIn::new(vec![], "").0);
     s.write("clara_telegram", "what is the forecast?", None, None, None);
     assert_eq!(
@@ -1113,7 +1115,7 @@ fn in_a_group_an_agent_answers_when_named_keeps_silent_when_another_is_and_says_
             "I am looking at two flats.".to_string()
         )]
     );
-    s.bot.borrow_mut().said.clear();
+    s.bot.lock().unwrap().said.clear();
     let (model, asked) = StandIn::new(vec![], SILENT);
     s.model(model);
     s.write(
@@ -1163,7 +1165,7 @@ fn in_a_group_words_that_tag_or_reply_to_the_agent_are_its_own_and_its_answer_re
     );
     let (system, _, offered) = asked.lock().unwrap()[0].clone();
     assert!(system[0] == CONVERSE_SYSTEM && offered == ["state"]);
-    assert_eq!(s.bot.borrow().replies, [Some("42".to_string())]);
+    assert_eq!(s.bot.lock().unwrap().replies, [Some("42".to_string())]);
     s.write(
         "household_telegram",
         "seeker, and you?",
@@ -1172,7 +1174,10 @@ fn in_a_group_words_that_tag_or_reply_to_the_agent_are_its_own_and_its_answer_re
         Some("43"),
     );
     assert_eq!(asked.lock().unwrap().len(), 2);
-    assert_eq!(s.bot.borrow().replies, [Some("42".to_string()), Some("43".to_string())]);
+    assert_eq!(
+        s.bot.lock().unwrap().replies,
+        [Some("42".to_string()), Some("43".to_string())]
+    );
 }
 
 #[test]
@@ -1217,12 +1222,12 @@ fn the_person_sees_the_agent_writing_from_the_words_heard_to_the_answer_said() {
     s.model(StandIn::new(vec![viewings()], "The seeker has nothing to say yet.").0);
     s.write("clara_telegram", "what are you doing?", None, None, None);
     assert_eq!(
-        s.bot.borrow().writing,
+        s.bot.lock().unwrap().writing,
         [format!("{V}clara_telegram")],
         "shown before the model is asked"
     );
     assert!(
-        s.part.translator.borrow().writing.is_empty(),
+        s.part.lock().unwrap().translator.writing.is_empty(),
         "and shown no more once the answer is said"
     );
     s.model(StandIn::new(vec![], SILENT).0);
@@ -1234,7 +1239,7 @@ fn the_person_sees_the_agent_writing_from_the_words_heard_to_the_answer_said() {
         None,
     );
     assert_eq!(
-        s.bot.borrow().writing,
+        s.bot.lock().unwrap().writing,
         [format!("{V}clara_telegram")],
         "unaddressed in a group it shows nothing"
     );
@@ -1255,8 +1260,8 @@ fn a_model_that_fails_says_so_in_the_chat_where_the_agent_was_addressed() {
             "seeker could not answer: its model would not answer (HTTP Error 401: Unauthorized).".to_string()
         )]
     );
-    assert!(s.part.translator.borrow().writing.is_empty());
-    s.bot.borrow_mut().said.clear();
+    assert!(s.part.lock().unwrap().translator.writing.is_empty());
+    s.bot.lock().unwrap().said.clear();
     let (mut model, _) = StandIn::new(vec![], "");
     model.fails = Some(Failure::Refused("401".into()));
     s.model(model);

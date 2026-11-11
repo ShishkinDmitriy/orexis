@@ -200,9 +200,10 @@ WHERE  { GRAPH $intentions { $intention execution:by $step } }";
 /// the step's own IRI under `step` — what a taker is handed.
 pub type Said = BTreeMap<String, String>;
 
-/// A taker: handed the step's rows and its intention, refusing where the step could not be taken, and answering
-/// whether anything reached the world — where nothing did, the step is said in the log as the executor alone says it.
-pub type Take = Box<dyn FnMut(&Said, &str) -> Result<bool, Error>>;
+/// A taker: handed the step's rows and its intention, refusing where the step could not be taken, and answering what
+/// it kept where anything reached the world — where nothing did, `None`, and the step is said in the log as the
+/// executor alone says it.
+pub type Take = Box<dyn FnMut(&Said, &str) -> Result<Option<Vec<String>>, Error> + Send>;
 
 /// One commitment not resolved: what it pursues, where it has got to, and when it was adopted.
 #[derive(Clone, Debug, PartialEq)]
@@ -1256,12 +1257,16 @@ impl Executor {
         if fictive {
             return self.fictive(said, intention);
         }
-        let reached = match self.take.as_mut() {
-            Some(take) => take(said, intention)?,
-            None => false,
-        };
-        if !reached {
-            self.say(said, intention);
+        match self
+            .take
+            .as_mut()
+            .map(|take| take(said, intention))
+            .transpose()?
+            .flatten()
+        {
+            //  WHAT THE TAKER KEPT of what the step said goes with what the executor wrote.
+            Some(kept) => self.written.extend(kept),
+            None => self.say(said, intention),
         }
         Ok(())
     }
@@ -2272,11 +2277,11 @@ SELECT ?kind ?taken ?landed ?failed ?action ?disk ?to ?want WHERE {{ GRAPH ?e {{
         let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let journal = heard(&mut x);
-        let verdicts = std::rc::Rc::new(std::cell::RefCell::new(Vec::new()));
+        let verdicts = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
         let kept = verdicts.clone();
         x.watch.connect(move |e, _| {
             if let Some(v) = orexis::events::as_of::<StepAnswered>(e) {
-                kept.borrow_mut().push(v.clone());
+                kept.lock().unwrap().push(v.clone());
             }
         });
         x.commit(Some(&filled_move()), PLAN, WANT).unwrap();
@@ -2293,7 +2298,7 @@ SELECT ?kind ?taken ?landed ?failed ?action ?disk ?to ?want WHERE {{ GRAPH ?e {{
                 ["StepAnswered", "true", "false", "true"]
             ]
         );
-        let verdict = verdicts.borrow()[0].clone();
+        let verdict = verdicts.lock().unwrap()[0].clone();
         assert_eq!(
             (
                 verdict.landed,

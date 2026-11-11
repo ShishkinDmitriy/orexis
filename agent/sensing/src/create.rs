@@ -313,9 +313,7 @@ mod tests {
     //! the timeline what has fallen due, whether or not anything arrived, keeps each silence until a reading ends
     //! it, and hands belief each observation nothing was concluded of, with this layer's kind.
 
-    use std::cell::RefCell;
     use std::path::Path;
-    use std::rc::Rc;
 
     use orexis::clock::{Manual, instant as parse, seconds};
     use orexis::runtime::Runtime;
@@ -325,6 +323,7 @@ mod tests {
     use super::*;
     use crate::ontology::{SILENT_AFTER_TERM, default_of};
     use crate::received::{GRACE, received};
+    use std::sync::{Arc, Mutex};
 
     const PROBE: &str = "http://example.org/test#probe";
     const CADENCE: f64 = 900.0;
@@ -344,16 +343,20 @@ mod tests {
         let silent_after = default_of(SILENT_AFTER_TERM).unwrap() as f64;
         let later = plus(now(), CADENCE * (1.0 + GRACE + silent_after));
         let since = plus(now(), CADENCE * (1.0 + GRACE));
-        let clock = Manual::at(later);
-        let mut part = Sensing::new(&store, "keeper").unwrap();
+        let clock = std::sync::Arc::new(Manual::at(later));
+        let part = std::sync::Arc::new(std::sync::Mutex::new(Sensing::new(&store, "keeper").unwrap()));
         let written = {
-            let parts: Vec<(String, &mut dyn Part)> = vec![("sensing".into(), &mut part)];
-            let mut runtime = Runtime::new(&store, "keeper", &clock, parts).unwrap();
+            let parts: Vec<(String, Box<dyn Part>)> = vec![("sensing".into(), orexis::runtime::Lent::of(&part))];
+            let mut runtime = Runtime::new(&store, "keeper", clock.clone(), parts).unwrap();
             runtime.drain(later).unwrap()
         };
         assert_eq!(written.len(), 1, "the ask runs at the first pass: {written:?}");
         let silence = written[0].clone();
-        assert_eq!(part.ask(later).unwrap(), Vec::<String>::new(), "kept once");
+        assert_eq!(
+            part.lock().unwrap().ask(later).unwrap(),
+            Vec::<String>::new(),
+            "kept once"
+        );
         let mut restarted = Sensing::new(&store, "keeper").unwrap();
         assert_eq!(
             restarted.ask(later).unwrap(),
@@ -391,14 +394,14 @@ mod tests {
     fn it_says_each_percept_for_belief_to_revise_into_this_layers_kind() {
         let store = pot();
         let before = received(&store, ME, PROBE, br#"{"value": 0.2}"#, now()).unwrap();
-        type Said = Rc<RefCell<Vec<Vec<(String, String)>>>>;
-        let said: Said = Rc::new(RefCell::new(Vec::new()));
+        type Said = Arc<Mutex<Vec<Vec<(String, String)>>>>;
+        let said: Said = Arc::new(Mutex::new(Vec::new()));
         let into = said.clone();
-        let clock = Manual::at(plus(now(), CADENCE));
-        let mut part = Sensing::new(&store, "keeper").unwrap();
-        part.watch.connect(move |event, _| {
+        let clock = std::sync::Arc::new(Manual::at(plus(now(), CADENCE)));
+        let part = std::sync::Arc::new(std::sync::Mutex::new(Sensing::new(&store, "keeper").unwrap()));
+        part.lock().unwrap().watch.connect(move |event, _| {
             if let Some(p) = orexis::events::as_of::<Perceived>(event) {
-                into.borrow_mut().push(
+                into.lock().unwrap().push(
                     orexis::events::Event::about(p)
                         .into_iter()
                         .map(|(k, t)| (k.to_string(), t.to_string()))
@@ -415,17 +418,17 @@ mod tests {
             about
         };
         {
-            let parts: Vec<(String, &mut dyn Part)> = vec![("sensing".into(), &mut part)];
-            let mut runtime = Runtime::new(&store, "keeper", &clock, parts).unwrap();
-            runtime.drain(orexis::clock::Clock::now(&clock)).unwrap();
+            let parts: Vec<(String, Box<dyn Part>)> = vec![("sensing".into(), orexis::runtime::Lent::of(&part))];
+            let mut runtime = Runtime::new(&store, "keeper", clock.clone(), parts).unwrap();
+            runtime.drain(orexis::clock::Clock::now(&*clock)).unwrap();
         }
         assert_eq!(
-            *said.borrow(),
+            *said.lock().unwrap(),
             [about(&before)],
             "the one nothing was concluded of, at the first ask"
         );
         let written = received(&store, ME, PROBE, br#"{"value": 0.22}"#, plus(now(), 2.0 * CADENCE)).unwrap();
-        part.perceived(written.clone());
-        assert_eq!(said.borrow().last(), Some(&about(&written)));
+        part.lock().unwrap().perceived(written.clone());
+        assert_eq!(said.lock().unwrap().last(), Some(&about(&written)));
     }
 }

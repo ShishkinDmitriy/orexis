@@ -37,7 +37,7 @@ SELECT ?property ?value WHERE {
 /// What fetches a URI's body, or says why not.
 pub type Client = Arc<dyn Fn(&str) -> Result<Vec<u8>, String> + Send + Sync>;
 /// What runs a fetch: on a thread of its own, or at once in a test.
-pub type Spawn = Box<dyn Fn(Box<dyn FnOnce() + Send>)>;
+pub type Spawn = Box<dyn Fn(Box<dyn FnOnce() + Send>) + Send + Sync>;
 
 /// The URI a template names with its simple `{name}` variables filled from `values`, each percent-encoded; None where
 /// one names a value that is not there.

@@ -14,7 +14,7 @@ use crate::store::Store;
 pub type GraphsAt<'g> = dyn FnMut(DateTime) -> Result<Vec<String>, Error> + 'g;
 
 /// The integration of every key the agent foresees, advanced ground by ground.
-pub trait Foresight {
+pub trait Foresight: Send + Sync {
     /// The last instant any key is looked at.
     fn horizon(&self) -> DateTime;
 
@@ -37,4 +37,5 @@ pub trait Foresight {
 pub type Placed<'p> = dyn Fn(&str, &str) -> bool + 'p;
 
 /// The predictor's offer, taken at link: the foresight from `now`, off `beliefs`, None where no key is moved by a flow.
-pub type Foresees = Box<dyn Fn(&Store, DateTime, Option<&Placed<'_>>) -> Result<Option<Box<dyn Foresight>>, Error>>;
+pub type Foresees =
+    Box<dyn Fn(&Store, DateTime, Option<&Placed<'_>>) -> Result<Option<Box<dyn Foresight>>, Error> + Send + Sync>;

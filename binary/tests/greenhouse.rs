@@ -5,10 +5,8 @@
 //! reading's transition answers it. The broker is a fake client: what is subscribed to and published is what is held.
 //! And its history and journal: every reading a point in the series, and the dose published, taken and landed.
 
-use std::cell::RefCell;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 
 use oxsdatatypes::{DateTime, DayTimeDuration};
@@ -19,7 +17,7 @@ use orexis::boot::TREE;
 use orexis::clock::{Clock, instant, seconds};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
-use orexis::runtime::{Part, Runtime, UNFINISHED};
+use orexis::runtime::{Runtime, UNFINISHED};
 use orexis::store::{Store, Within, iri, value};
 use orexis_agent::{Seen, Wiring, assemble_seen, booted};
 use orexis_mqtt::driver::{Client, Inbox, Mqtt};
@@ -64,18 +62,18 @@ impl Clock for Ticking {
 
 /// What the grower subscribes to and publishes, and nothing else of MQTT.
 #[derive(Clone, Default)]
-struct Broker(Rc<RefCell<Asked>>);
+struct Broker(Arc<Mutex<Asked>>);
 
 /// The patterns subscribed to, and what was published: the topic, the document and whether it is retained.
 type Asked = (Vec<String>, Vec<(String, Json, bool)>);
 
 impl Broker {
     fn subscribed(&self) -> Vec<String> {
-        self.0.borrow().0.clone()
+        self.0.lock().unwrap().0.clone()
     }
 
     fn published(&self) -> Vec<(String, Json, bool)> {
-        self.0.borrow().1.clone()
+        self.0.lock().unwrap().1.clone()
     }
 
     fn topics(&self) -> Vec<String> {
@@ -85,13 +83,13 @@ impl Broker {
 
 impl Client for Broker {
     fn subscribe(&mut self, pattern: &str) -> Result<(), Error> {
-        self.0.borrow_mut().0.push(pattern.to_string());
+        self.0.lock().unwrap().0.push(pattern.to_string());
         Ok(())
     }
 
     fn publish(&mut self, topic: &str, payload: &[u8], retain: bool) -> Result<(), Error> {
         let payload = serde_json::from_slice(payload).map_err(|e| Error::Evaluation(e.to_string()))?;
-        self.0.borrow_mut().1.push((topic.to_string(), payload, retain));
+        self.0.lock().unwrap().1.push((topic.to_string(), payload, retain));
         Ok(())
     }
 }
@@ -141,12 +139,8 @@ fn grower_watched(store: &Store, clock: &Arc<Ticking>, watching: orexis_agent::W
     }
 }
 
-fn runtime<'a: 'p, 'p>(store: &'a Store, clock: &'a Ticking, parts: &'p mut orexis_agent::Parts) -> Runtime<'p> {
-    let lent: Vec<(String, &mut dyn Part)> = parts
-        .iter_mut()
-        .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
-        .collect();
-    Runtime::new(store, "grower", clock, lent).unwrap()
+fn runtime(store: &Store, clock: &Arc<Ticking>, parts: &mut orexis_agent::Parts) -> Runtime {
+    Runtime::new(store, "grower", clock.clone(), std::mem::take(parts)).unwrap()
 }
 
 fn reading(inbox: &Inbox, payload: &str, at: DateTime) {
@@ -154,7 +148,7 @@ fn reading(inbox: &Inbox, payload: &str, at: DateTime) {
 }
 
 fn walking(seen: &Seen) -> Vec<String> {
-    seen.executor.as_ref().unwrap().borrow().walking().unwrap()
+    seen.execution().executor.walking().unwrap()
 }
 
 /// What the grower holds of the bed — its soil and its air, in climate's words — read where the mind reads it.
@@ -251,7 +245,8 @@ SELECT ?start ?state WHERE {
 ORDER BY ?start";
 
 fn foreseen(seen: &Seen) -> Vec<(DateTime, String)> {
-    let planner = seen.planner.as_ref().unwrap().borrow();
+    let mut planner_part = seen.planning();
+    let planner = &mut planner_part.planner;
     let mut out: Vec<(DateTime, String)> = planner
         .imaginaria
         .values()
@@ -350,7 +345,8 @@ fn a_cold_dry_bed_is_two_wants_planned_apart() {
     topics.sort();
     assert_eq!(topics, ["actuators/heater/command", "actuators/pump/command"]);
     {
-        let planner = seen.planner.as_ref().unwrap().borrow();
+        let mut planner_part = seen.planning();
+        let planner = &mut planner_part.planner;
         assert_eq!(
             planner.imaginaria.len(),
             2,
@@ -366,7 +362,7 @@ fn a_cold_dry_bed_is_two_wants_planned_apart() {
     }
     assert_eq!(walking(&seen).len(), 2);
     assert_eq!(runtime.run(Some(1), 0.0).unwrap(), UNFINISHED);
-    assert!(seen.planner.as_ref().unwrap().borrow().blocked.is_empty());
+    assert!(seen.planning().planner.blocked.is_empty());
     assert_eq!(walking(&seen).len(), 2);
 }
 
@@ -413,13 +409,13 @@ SELECT ?kind ?at ?action ?valve ?subject ?taken ?landed WHERE { GRAPH ?e {
 fn history_holds_every_reading_and_the_journal_the_dose_published_taken_and_landed() {
     use orexis::events::{Field, Point};
     let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(noon()))));
-    let written: Rc<RefCell<Vec<Point>>> = Rc::default();
+    let written: Arc<Mutex<Vec<Point>>> = Arc::default();
     let kept = written.clone();
     let sink = orexis::series::Sink::new(
         "HISTORY",
         "greenhouse-grower",
         Box::new(move |_, points| {
-            kept.borrow_mut().extend(points.iter().cloned());
+            kept.lock().unwrap().extend(points.iter().cloned());
             Ok(())
         }),
     );
@@ -446,7 +442,8 @@ fn history_holds_every_reading_and_the_journal_the_dose_published_taken_and_land
     }
     assert!(walking(&seen).is_empty(), "the dose landed");
     let observed: Vec<(String, Field, Option<DateTime>)> = written
-        .borrow()
+        .lock()
+        .unwrap()
         .iter()
         .map(|p| (p.measurement.clone(), p.fields["value"].clone(), p.time))
         .collect();
@@ -465,13 +462,15 @@ fn history_holds_every_reading_and_the_journal_the_dose_published_taken_and_land
     );
     assert!(
         written
-            .borrow()
+            .lock()
+            .unwrap()
             .iter()
             .all(|p| p.fields.get("raw") == p.fields.get("value") && p.fields.len() == 2),
         "this world scales no sensor, so the raw count is the reading, said twice"
     );
     let tags: Vec<(String, String)> = written
-        .borrow()
+        .lock()
+        .unwrap()
         .iter()
         .map(|p| (p.tags["sensor"].clone(), p.tags["feature"].clone()))
         .collect();
@@ -526,13 +525,13 @@ fn history_holds_every_reading_and_the_journal_the_dose_published_taken_and_land
 fn unanswered() -> (Vec<Vec<orexis::events::Point>>, Broker) {
     use orexis::events::Point;
     let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(noon()))));
-    let writes: Rc<RefCell<Vec<Vec<Point>>>> = Rc::default();
+    let writes: Arc<Mutex<Vec<Vec<Point>>>> = Arc::default();
     let kept = writes.clone();
     let sink = orexis::series::Sink::new(
         "METRICS",
         "greenhouse-grower-metrics",
         Box::new(move |_, points| {
-            kept.borrow_mut().push(points.to_vec());
+            kept.lock().unwrap().push(points.to_vec());
             Ok(())
         }),
     );
@@ -560,7 +559,13 @@ fn unanswered() -> (Vec<Vec<orexis::events::Point>>, Broker) {
         runtime.run(Some(1), 0.0).unwrap();
         runtime.stop();
     }
-    let windows = writes.borrow().iter().filter(|w| !w.is_empty()).cloned().collect();
+    let windows = writes
+        .lock()
+        .unwrap()
+        .iter()
+        .filter(|w| !w.is_empty())
+        .cloned()
+        .collect();
     (windows, broker)
 }
 

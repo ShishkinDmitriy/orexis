@@ -20,7 +20,7 @@ use orexis::boot::TREE;
 use orexis::clock::{Clock, Paced};
 use orexis::journal::{self, Journal};
 use orexis::namespaces::Namespaces;
-use orexis::runtime::{MET, PLANNED, Part, Runtime, UNREACHABLE};
+use orexis::runtime::{MET, PLANNED, Runtime, UNREACHABLE};
 use orexis::series::{self, HISTORY, METRICS};
 use orexis::store::Store;
 use orexis_agent::{Watching, Wiring};
@@ -192,14 +192,12 @@ fn run(args: &Args, clock: Arc<Paced>, journal: Arc<Journal>, halt: Arc<AtomicBo
         },
         ..Wiring::default()
     };
-    let (mut parts, seen) = orexis_agent::assemble_seen(&store, &args.agent, clock.clone(), &loaded, None, wiring)?;
-    let lent: Vec<(String, &mut dyn Part)> = parts
-        .iter_mut()
-        .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
-        .collect();
-    let mut runtime = Runtime::new(&store, &args.agent, &clock, lent)?;
-    runtime.watch = seen.watch.clone();
-    //  A SIGNAL ENDS THE MIND'S WAIT, which may be long now that nothing polls: the flag is raised and the wake rung.
+    let (parts, watch) = orexis_agent::assemble_watched(&store, &args.agent, clock.clone(), &loaded, None, wiring)?;
+    //  THE AGENT'S BODY IS A RUNTIME OF TASKS, a worker a core (the-agent-is-a-runtime-of-tasks).
+    let workers = std::thread::available_parallelism().map_or(1, |n| n.get());
+    let mut runtime = Runtime::threaded(workers, &store, &args.agent, clock.clone(), parts)?;
+    runtime.watch = watch;
+    //  A SIGNAL ENDS THE RUN'S WAIT, which may be long now that nothing polls: the flag is raised and the wake rung.
     if let Ok(mut signals) =
         signal_hook::iterator::Signals::new([signal_hook::consts::SIGTERM, signal_hook::consts::SIGINT])
     {
