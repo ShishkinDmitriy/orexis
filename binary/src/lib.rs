@@ -407,22 +407,6 @@ pub fn assemble_seen<'a>(
     } else {
         None
     };
-    //  WHAT CARRIES A CHAT, in the order of a pass: a topic of the bus first, then the agent's own bot, then its mailbox.
-    #[cfg(all(feature = "translation", feature = "mqtt"))]
-    if let (Some(translation), Some(transport)) = (translation.as_ref(), transport.as_ref()) {
-        let carrier: std::rc::Rc<std::cell::RefCell<dyn orexis::transport::Carrier + 'a>> = transport.member.clone();
-        translation.translator.borrow_mut().carriers.push(carrier);
-    }
-    #[cfg(all(feature = "translation", feature = "telegram"))]
-    if let (Some(translation), Some(bot)) = (translation.as_ref(), bot.as_ref()) {
-        let carrier: std::rc::Rc<std::cell::RefCell<dyn orexis::transport::Carrier + 'a>> = bot.member.clone();
-        translation.translator.borrow_mut().carriers.push(carrier);
-    }
-    #[cfg(all(feature = "translation", feature = "email"))]
-    if let (Some(translation), Some(mailbox)) = (translation.as_ref(), mailbox.as_ref()) {
-        let carrier: std::rc::Rc<std::cell::RefCell<dyn orexis::transport::Carrier + 'a>> = mailbox.member.clone();
-        translation.translator.borrow_mut().carriers.push(carrier);
-    }
     //  WHAT SPEECH TELLS, every member that reaches the peer told it, and translation, which says it to a person.
     #[cfg(feature = "speech")]
     if let Some(speech) = speech.as_ref() {

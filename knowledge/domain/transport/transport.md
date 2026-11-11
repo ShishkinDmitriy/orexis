@@ -27,9 +27,12 @@ told (`tell_to`), which it sends where it reaches the recipient. Several are hel
 bytes on a channel — a topic, a url, a Telegram chat, a mailbox — and none of it means anything to
 the member: a channel a sensor observes is sensing's, one an agent listens on is speech's, and the
 channel of a [chat](/domain/speech/chat.md) the agent is in is a person's prose, the
-[translator](/domain/translation/translator.md)'s. For that row a member says `prose`, a signal
-carrying the channel, who wrote where the channel tells, and the words, and sends words back by
-`say_to`; so a member imports no translation and translation imports no member
+[translator](/domain/translation/translator.md)'s. For that row a member keeps a person's words as
+a `speech:ProseGraph` - the channel, who wrote where the channel tells, and the words - and says
+`speech:ProseKept`, speech's words, since a chat is and every member is above speech; translation keeps the agent's answer the same way and says the same event, which
+each member hears beneath its own carrying trigger and sends by `say_to` where it carries the channel,
+the graph's provenance telling a person's words from the agent's
+([policy](/domain/kernel/policy.md)); so a member imports no translation and translation imports no member
 ([an-agent-translates-for-itself](/decisions/an-agent-translates-for-itself.md)).
 
 Whether a member is loaded at all is not asked of it, since asking would import it. A transport is
@@ -45,7 +48,7 @@ topic is its word.
 
 # The member that ships: MQTT
 
-It adopts MQTT4SSN as it stands and declares no word of its own. A sensor
+It adopts MQTT4SSN as it stands and declares no word of its own but its trigger. A sensor
 `mqtt4ssn:observesTopic` a topic, a board `mqtt4ssn:listensToTopic` another, and a topic is named
 by the `mqtt4ssn:hasFilterPattern` of the filters that match it: the agent subscribes by the
 pattern and publishes a command to a pattern with no wildcard. No society states a filter: onboarding
@@ -98,4 +101,4 @@ Its words are its own ontology's (`agent/transport/telegram/ontology.ttl`).
 The agent's own mailbox, named by `MAIL_ADDRESS` and the rest, over `imaplib` and `smtplib`. Started,
 it polls the unseen messages every half minute; a message's channel is its sender's address, matched to
 the `schema:ContactPoint` whose `schema:email` it is, and `say_to` sends to that address. It declares no
-word of its own.
+word of its own but its trigger.

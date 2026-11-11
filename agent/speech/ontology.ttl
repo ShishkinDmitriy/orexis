@@ -107,9 +107,9 @@
     rdfs:label "participant" ;
     rdfs:comment "Who is in a chat: an agent of the society, or a person it speaks with. The translator reads the agent's statements to a person off the inbox the person listens on, and publishes what the person says on the agent's inbox." .
 
-:channel a owl:ObjectProperty ; rdfs:domain :Chat ;
+:channel a owl:ObjectProperty ;
     rdfs:label "channel" ;
-    rdfs:comment "What a chat's prose goes through: a thing of the carrier's own vocabulary, whose type is the carrier - a topic of the bus, a contact point with an email, later a chat of a messaging service. Speech names no carrier; the translator picks one by the channel's type, and onboarding names a topic `chats/<chat>` and grants it to the translator and to every client acting on behalf of a participant." .
+    rdfs:comment "What a chat's prose goes through, said of the chat and of the words kept on it (`speech:ProseGraph`) or announced being written (`speech:WritingAnnounced`): a thing of the carrier's own vocabulary, whose type is the carrier - a topic of the bus, a contact point with an email, later a chat of a messaging service. Speech names no carrier; the translator picks one by the channel's type, and onboarding names a topic `chats/<chat>` and grants it to the translator and to every client acting on behalf of a participant." .
 
 
 #  WHAT SPEECH DOES OVER A STRETCH OF TIME, a `prov:Activity`, and its trigger: an event a package above speech puts
@@ -123,3 +123,35 @@ speech:Speaking a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Speaki
 
 speech:SpeakingTrigger a owl:Class ; rdfs:subClassOf speech:Trigger ; rdfs:label "Speaking trigger" ;
     rdfs:comment "What starts a speaking: an event naming each statement to tell (`speech:statement`), which whoever says it has already written with speech's `said`, and each agent it is to (`speech:to`). The event names them; the statements are in the store." .
+
+#  WORDS ON A CHAT'S CHANNEL, KEPT: speech's, since a chat is, and what every member that carries a chat's channel -
+#  above speech, as the MQTT member hands speech what it hears - and translation meet at. A person's are kept as they arrived, before anything was made of them, and
+#  the agent's own before any member carries them; which they are is provenance, never the kind.
+
+speech:ProseGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Prose graph" ;
+    rdfs:comment "Words on a channel, of the agent's own: a person's, kept by the transport that carried them and arrived from outside (`orexis:Received`), or the agent's, kept by translation before any transport carries them (`orexis:Recorded`). The channel (`speech:channel`), the text (`speech:text`), who said them where the channel tells (`speech:sender`), whether they were for this agent where the carrier tells (`speech:addressed`), the carrier's id of them (`speech:message`), the carrier's id of the words they answer (`speech:repliesTo`) and when (`prov:atTime`). No belief and handed to no reader of the mind: what is believed of a person's is what translation makes of them." .
+
+speech:ProseKept a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Prose kept" ;
+    rdfs:comment "Words on a channel were kept as a prose graph (`speech:kept`): a person's by a transport, for whoever above the transports puts this beneath its trigger, or the agent's own by translation, for each transport, which puts this beneath its own. Whoever hears it judges by the graph's provenance whether the words are its to act on." .
+
+speech:WritingAnnounced a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Writing announced" ;
+    rdfs:comment "The agent said, at this instant, that it is writing words on a channel (`speech:channel`) still to be kept: said by translation while an answer is thought, again every few seconds until it is said, for each transport that can show it on the channel, which puts this beneath its own trigger." .
+
+speech:kept a owl:ObjectProperty ; rdfs:domain speech:ProseKept ; rdfs:range speech:ProseGraph ; rdfs:label "kept" ;
+    rdfs:comment "The prose graph an event is about." .
+
+
+speech:text a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "text" ;
+    rdfs:comment "Words on a channel, as written." .
+
+speech:sender a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "sender" ;
+    rdfs:comment "Who wrote a person's words, as the channel tells it." .
+
+speech:addressed a owl:DatatypeProperty ; rdfs:range xsd:boolean ; rdfs:label "addressed" ;
+    rdfs:comment "Whether a person's words were for this agent, as the carrier tells it: true where they tagged or replied to the agent's own account, false where someone else's and not it." .
+
+speech:message a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "message" ;
+    rdfs:comment "The carrier's id of a person's words, which an answer may reply to." .
+
+speech:repliesTo a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "replies to" ;
+    rdfs:comment "The carrier's id of a person's words that the agent's words answer, where the carrier threads a reply." .

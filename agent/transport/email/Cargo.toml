@@ -11,6 +11,7 @@ path = "src/lib.rs"
 
 [dependencies]
 orexis = { path = "../.." }
+orexis-speech = { path = "../../speech" }
 oxigraph.workspace = true
 oxsdatatypes = "0.2"
 log = "0.4"

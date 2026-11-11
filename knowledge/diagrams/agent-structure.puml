@@ -25,7 +25,7 @@ skinparam frame {
 
 frame "transport" {
   component "MQTT · HTTP · Telegram · email member" as TR
-  folder "orexis:ProseGraph\na person's words, kept as they came" as prs #FFFCF2
+  folder "speech:ProseGraph\na person's words, kept as they came" as prs #FFFCF2
 }
 
 frame "sensing" {
@@ -97,7 +97,7 @@ RT  --> self
 RT  --> des
 RT  --> rules
 TR  --> prs : a person's words
-TR  --> TRL : orexis:ProseKept
+TR  --> TRL : speech:ProseKept
 TRL --> SP : a statement
 TR  --> SEN : bytes
 TR  --> SP : a document

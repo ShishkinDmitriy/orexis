@@ -14,5 +14,6 @@ pub mod events;
 pub mod extract;
 pub mod heard;
 pub mod ontology;
+pub mod prose;
 pub mod said;
 pub mod statements;

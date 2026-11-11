@@ -46,8 +46,12 @@ their revisions are (`belief:revises`, `belief:into`), and `belief:Revised` is b
 `coordination:DrawWon` is beneath `planning:PlanningTrigger`, naming the walking wants to plan again
 (`planning:reopens`), and its `coordination:Told` beneath `speech:SpeakingTrigger`, naming statements
 it already believes it said (`speech:statement`) and the peer (`speech:to`): the event names them, and
-speech reads each back from the store as it was said. And the kernel's `orexis:ProseKept`, said by a
-transport that kept a person's words as an `orexis:ProseGraph`, is beneath `translation:TranslatingTrigger`.
+speech reads each back from the store as it was said. And speech's `speech:ProseKept`, said by a
+transport that kept a person's words as a `speech:ProseGraph`, is beneath `translation:TranslatingTrigger`;
+translation keeps its own answer the same way and says the same event, which each transport's ontology puts
+beneath its own carrying trigger (`telegram:CarryingTrigger`, with `speech:WritingAnnounced` for the agent shown writing),
+and each judges by the graph's provenance whose words they are: a person's are translation's, the agent's the
+carrier's.
 The others are declared as their policies are built (#1119).
 
 **An addressed event, by who asked for it.** A timer alarms for the part that set it, and a request

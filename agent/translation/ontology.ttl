@@ -74,7 +74,7 @@ translation:answered a owl:DatatypeProperty ;
     rdfs:comment "What a tool answered the model, cut where it ran long, which it then says." .
 
 #  WHAT TRANSLATION DOES OVER A STRETCH OF TIME, a `prov:Activity`, and its trigger: a person's words a transport kept,
-#  the kernel's event, which translation - above every transport - puts beneath it (knowledge/domain/kernel/policy.md).
+#  speech's event, which translation - above every transport and speech - puts beneath it (knowledge/domain/kernel/policy.md).
 
 translation:Trigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Trigger" ;
     rdfs:comment "Translation's trigger, abstract: an event beneath it is beneath the one trigger below." .
@@ -83,6 +83,6 @@ translation:Translating a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label
     rdfs:comment "Hearing a person's words a transport kept: which chat they are in and who said them, whether they were for this agent, and the model asked what they say, off the mind; its answer comes back as a job of its own." .
 
 translation:TranslatingTrigger a owl:Class ; rdfs:subClassOf translation:Trigger ; rdfs:label "Translating trigger" ;
-    rdfs:comment "What starts a translating: the kernel's `orexis:ProseKept`, beneath it here, naming the prose graph a transport kept (`orexis:prose`)." .
+    rdfs:comment "What starts a translating: speech's `speech:ProseKept`, beneath it here, naming the prose graph a transport kept (`speech:kept`)." .
 
-orexis:ProseKept rdfs:subClassOf translation:TranslatingTrigger .
+speech:ProseKept rdfs:subClassOf translation:TranslatingTrigger .

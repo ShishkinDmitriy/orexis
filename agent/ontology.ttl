@@ -250,30 +250,3 @@ orexis:ForecastGraph
     rdfs:subClassOf orexis:BeliefGraph ;
     rdfs:label "Forecast graph" ;
     rdfs:comment "A FORECAST: anyone's word about what will hold over a stretch ahead, as a graph holding during that stretch — a weather service's hour, which sensing writes from a series; a committed step, the executor's word about its own act over its landing window (`execution:CommittedStepGraph`, beneath this); a peer's route heard. The predictor's own foresight is none: it is the grounds, the flows integrated where each is laid, and writes no graph here (knowledge/domain/prediction/prediction.md, #1000). One kind, since the planner needs one thing of it, that it holds later, and that is a fact about the timeline and not about a class of beings: who said it is provenance, `orexis:arrivedBy` and `prov:wasDerivedFrom`, and finds each author its own (foresight-is-derived-where-the-model-is-the-agents-and-asked-for-where-it-is-anothers, #992). A belief: what the agent holds of a stretch ahead, laid into the ground of its period where its period begins (#987) and never into the present; and the executor answers a step over the readings, never over what was foreseen." .
-
-#  A PERSON'S WORDS, AS A TRANSPORT KEPT THEM: what every member that carries a chat's channel and translation meet at,
-#  so the kernel keeps it, as it keeps the forecast. Kept as they arrived, before anything was made of them.
-
-orexis:ProseGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Prose graph" ;
-    rdfs:comment "A person's words on a channel, kept by the transport that carried them, of the agent's own and arrived from outside: the channel (`orexis:channel`), the text (`orexis:text`), who said them where the channel tells (`orexis:sender`), whether they were for this agent where the carrier tells (`orexis:addressed`), the carrier's id of them (`orexis:message`) and when (`prov:atTime`). No belief and handed to no reader of the mind: what is believed of them is what translation makes of them." .
-
-orexis:ProseKept a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Prose kept" ;
-    rdfs:comment "A transport kept a person's words as a prose graph (`orexis:prose`), for whoever above the transports puts this beneath its trigger." .
-
-orexis:prose a owl:ObjectProperty ; rdfs:domain orexis:ProseKept ; rdfs:range orexis:ProseGraph ; rdfs:label "prose" ;
-    rdfs:comment "The prose graph an event is about." .
-
-orexis:channel a owl:ObjectProperty ; rdfs:label "channel" ;
-    rdfs:comment "The channel's node in the world that a person's words arrived on." .
-
-orexis:text a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "text" ;
-    rdfs:comment "A person's words, as written." .
-
-orexis:sender a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "sender" ;
-    rdfs:comment "Who wrote a person's words, as the channel tells it." .
-
-orexis:addressed a owl:DatatypeProperty ; rdfs:range xsd:boolean ; rdfs:label "addressed" ;
-    rdfs:comment "Whether a person's words were for this agent, as the carrier tells it: true where they tagged or replied to the agent's own account, false where someone else's and not it." .
-
-orexis:message a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "message" ;
-    rdfs:comment "The carrier's id of a person's words, which an answer may reply to." .

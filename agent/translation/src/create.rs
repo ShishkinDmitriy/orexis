@@ -40,7 +40,7 @@ use orexis::ontology::local_of;
 use orexis::runtime::{Heard, Part, Pass, Starting};
 use orexis::series::Reader;
 use orexis::store::Store;
-use orexis::transport::{Carrier, PROSE, Prose, prose_of};
+use orexis_speech::prose::{KEPT, Prose, ProseKept, WritingAnnounced, prose_of, received, written};
 
 use crate::briefing::briefing;
 use crate::chat::{Chat, chats_of, named};
@@ -117,7 +117,6 @@ enum Back {
     /// Words to say on a chat's channel, replying to the message named.
     Said {
         channel: String,
-        chat: String,
         words: String,
         reply: Option<String>,
     },
@@ -285,7 +284,6 @@ fn converse(c: Conversation, model: &dyn Model, mind: &dyn Mind, back: &Sender<B
                     let words = format!("{} could not answer: {}.", c.me, why_not(&e));
                     let _ = back.send(Back::Said {
                         channel: c.channel.clone(),
-                        chat: c.chat.clone(),
                         words,
                         reply: c.reply.clone(),
                     });
@@ -369,7 +367,6 @@ fn converse(c: Conversation, model: &dyn Model, mind: &dyn Mind, back: &Sender<B
     if !words.is_empty() && words != SILENT {
         let _ = back.send(Back::Said {
             channel: c.channel.clone(),
-            chat: c.chat.clone(),
             words,
             reply: c.reply.clone(),
         });
@@ -410,11 +407,10 @@ fn called(c: &Conversation, name: &str, inputs: &Json, mind: &dyn Mind, back: &S
 
 /// What translation holds across passes, shared with whoever links to it: the model, the carriers, what is being
 /// thought in which chat, and what the model's threads handed back.
-pub struct Translator<'a> {
+pub struct Translator {
     beliefs: Store,
     pub me: String,
     pub model: Option<Arc<dyn Model>>,
-    pub carriers: Vec<Rc<RefCell<dyn Carrier + 'a>>>,
     /// Whether a conversation runs on the mind's own thread, as a test runs it, or a thread of its own.
     pub inline: bool,
     /// Each chat with an answer still being thought, and how many.
@@ -427,14 +423,13 @@ pub struct Translator<'a> {
     rx: Receiver<Back>,
 }
 
-impl<'a> Translator<'a> {
-    pub fn new(beliefs: &'a Store, me: &str, model: Option<Arc<dyn Model>>) -> Self {
+impl Translator {
+    pub fn new(beliefs: &Store, me: &str, model: Option<Arc<dyn Model>>) -> Self {
         let (tx, rx) = channel();
         Translator {
             beliefs: beliefs.clone(),
             me: me.to_string(),
             model,
-            carriers: Vec::new(),
             inline: false,
             writing: BTreeMap::new(),
             journal: None,
@@ -614,7 +609,7 @@ impl<'a> Translator<'a> {
             local_of(&self.me),
             rendered(store, &doc, &prefixes_of(store, &self.me))?
         );
-        let (back, channel, iri) = (self.tx.clone(), chat.channel.clone(), chat.iri.clone());
+        let (back, channel) = (self.tx.clone(), chat.channel.clone());
         let render = move || {
             let began = Instant::now();
             match model.ask(SAY_SYSTEM, &text) {
@@ -632,7 +627,6 @@ impl<'a> Translator<'a> {
                     if !words.is_empty() {
                         let _ = back.send(Back::Said {
                             channel,
-                            chat: iri,
                             words,
                             reply: None,
                         });
@@ -658,12 +652,11 @@ impl<'a> Translator<'a> {
         self.show(&chat.channel);
     }
 
+    /// Say the agent is writing on `channel`, for the transport that can show it there.
     fn show(&self, channel: &str) {
-        for carrier in &self.carriers {
-            if carrier.borrow_mut().writing_in(channel) {
-                return;
-            }
-        }
+        self.watch.emit(&WritingAnnounced {
+            channel: channel.to_string(),
+        });
     }
 
     /// Every chat with an answer still being thought, shown again.
@@ -673,19 +666,19 @@ impl<'a> Translator<'a> {
         }
     }
 
-    /// `words` through the chat's channel, by the first carrier that carries it.
-    pub fn say(&self, channel: &str, chat: &str, words: &str, reply: Option<&str>) -> bool {
-        for carrier in &self.carriers {
-            if carrier.borrow_mut().say_to(channel, words, reply) {
-                return true;
-            }
-        }
-        log::warn!(
-            "{}: nothing carries {}'s channel, so what was said there goes nowhere",
-            local_of(&self.me),
-            local_of(chat)
-        );
-        false
+    /// `words` for the chat's channel, kept as the agent's own and said kept, for the transport that carries the
+    /// channel; the prose graph written.
+    pub fn say(&self, channel: &str, words: &str, reply: Option<&str>, at: DateTime) -> Result<String, Error> {
+        let prose = Prose {
+            channel: channel.to_string(),
+            text: words.to_string(),
+            at: Some(at),
+            reply: reply.map(str::to_string),
+            ..Prose::default()
+        };
+        let graph = written(&self.beliefs, &self.me, &prose)?;
+        self.watch.emit(&ProseKept { prose: graph.clone() });
+        Ok(graph)
     }
 
     /// Everything the model's threads handed back since the last ask, oldest first.
@@ -694,7 +687,7 @@ impl<'a> Translator<'a> {
     }
 
     /// One thing handed back, done on the mind's thread: the graphs written.
-    fn done(&mut self, back: Back) -> Result<Vec<String>, Error> {
+    fn done(&mut self, back: Back, at: DateTime) -> Result<Vec<String>, Error> {
         match back {
             Back::Keep(payload) => {
                 let written = orexis_speech::heard::heard(&self.beliefs, &self.me, &payload)?;
@@ -705,15 +698,7 @@ impl<'a> Translator<'a> {
                 log::info!("{} heard a statement from a person", local_of(&self.me));
                 Ok(out)
             }
-            Back::Said {
-                channel,
-                chat,
-                words,
-                reply,
-            } => {
-                self.say(&channel, &chat, &words, reply.as_deref());
-                Ok(Vec::new())
-            }
+            Back::Said { channel, words, reply } => Ok(vec![self.say(&channel, &words, reply.as_deref(), at)?]),
             Back::Ended(chat) => {
                 if let Some(entry) = self.writing.get_mut(&chat) {
                     entry.1 -= 1;
@@ -757,13 +742,13 @@ const TRANSLATING: &str = "http://example.org/orexis/translation#Translating";
 const TRANSLATING_TRIGGER: &str = "http://example.org/orexis/translation#TranslatingTrigger";
 
 /// Translation's part: the translator, shared with whoever links to it, and what was handed back for the pass.
-pub struct Translation<'a> {
-    pub translator: Rc<RefCell<Translator<'a>>>,
+pub struct Translation {
+    pub translator: Rc<RefCell<Translator>>,
     pending: VecDeque<Back>,
 }
 
-impl<'a> Translation<'a> {
-    pub fn new(translator: Translator<'a>) -> Self {
+impl Translation {
+    pub fn new(translator: Translator) -> Self {
         Translation {
             translator: Rc::new(RefCell::new(translator)),
             pending: VecDeque::new(),
@@ -771,7 +756,7 @@ impl<'a> Translation<'a> {
     }
 }
 
-impl Part for Translation<'_> {
+impl Part for Translation {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         starting.every(WRITING_S, STILL);
         starting.hears(TRANSLATING_TRIGGER, TRANSLATE);
@@ -782,12 +767,16 @@ impl Part for Translation<'_> {
         Some(self.translator.borrow().watch.clone())
     }
 
-    /// What translation's policy does of a trigger: read the person's words it names back, and hear them.
+    /// What translation's policy does of a trigger: read the words it names back, and hear them where they are a
+    /// person's; the agent's own it kept itself, for a transport to carry.
     fn heard_event(&mut self, _job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
-        let Some(graph) = event.named(PROSE).cloned() else {
+        let Some(graph) = event.named(KEPT).cloned() else {
             return Ok(Vec::new());
         };
         let store = self.translator.borrow().beliefs.clone();
+        if !received(&store, graph.as_str())? {
+            return Ok(Vec::new());
+        }
         let Some(prose) = prose_of(&store, graph.as_str())? else {
             return Ok(Vec::new());
         };
@@ -798,14 +787,14 @@ impl Part for Translation<'_> {
         written
     }
 
-    fn run(&mut self, job: usize, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn run(&mut self, job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
         match job {
             STILL => {
                 self.translator.borrow().still_writing();
                 Ok(Vec::new())
             }
             _ => match self.pending.pop_front() {
-                Some(back) => self.translator.borrow_mut().done(back),
+                Some(back) => self.translator.borrow_mut().done(back, pass.now),
                 None => Ok(Vec::new()),
             },
         }
