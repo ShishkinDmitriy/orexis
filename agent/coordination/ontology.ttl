@@ -4,6 +4,8 @@
 @prefix speech: <http://example.org/orexis/speech#> .
 @prefix planning: <http://example.org/orexis/planning#> .
 @prefix execution: <http://example.org/orexis/execution#> .
+@prefix belief: <http://example.org/orexis/belief#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -219,6 +221,17 @@
 
 #  WHAT COORDINATION SAYS TO PLANNING, beneath planning's trigger since coordination is above planning, in planning's
 #  words (knowledge/domain/kernel/policy.md).
+
+coordination:Coordinating a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Coordinating" ;
+    rdfs:comment "Coordination's part asking the peers in range, concluding its conflicts and laying what it yields to, started by its trigger or by a patience running while it is asking or in conflict (packages-meet-by-events-policies-and-activities)." .
+
+coordination:CoordinatingTrigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Coordinating trigger" ;
+    rdfs:comment "What starts a coordinating: a belief revised, since a peer comes in range by what the agent senses; and a plan published, a step taken and an intention resolved, since what the agent holds is what it walks. Each beneath it by coordination's ontology, coordination being above belief, planning and execution." .
+
+belief:Revised rdfs:subClassOf coordination:CoordinatingTrigger .
+planning:PlanPublished rdfs:subClassOf coordination:CoordinatingTrigger .
+execution:StepTaken rdfs:subClassOf coordination:CoordinatingTrigger .
+execution:IntentionResolved rdfs:subClassOf coordination:CoordinatingTrigger .
 
 coordination:DrawWon a owl:Class ; rdfs:subClassOf orexis:Event , planning:PlanningTrigger ; rdfs:label "Draw won" ;
     rdfs:comment "A draw the agent concluded it has won: said to planning as the walking wants whose plans change a value on the key of the constraint the draw was over (`planning:reopens`), since its plan yielded while the draw stood undecided and winning makes no world of it impossible, only slower." .

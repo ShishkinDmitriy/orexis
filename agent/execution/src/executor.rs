@@ -237,11 +237,13 @@ pub struct Executor<'a> {
     pub resolved: usize,
     /// When the next thing not yet due is, as the last tick found it.
     pub next_due: Option<DateTime>,
+    /// Whether the last tick answered or failed a step taken, which moves an intention on with nothing handed over.
+    moved: bool,
     /// Whoever watches the agent.
     pub watch: Watch,
     /// The desire each want adopted was derived under, as planning said it published the plan.
     pub desires: BTreeMap<String, String>,
-    clock: Arc<dyn Clock>,
+    pub clock: Arc<dyn Clock>,
     replaced: BTreeMap<String, Vec<String>>,
     work: VecDeque<(String, String)>,
     inflight: BTreeSet<String>,
@@ -325,6 +327,7 @@ impl<'a> Executor<'a> {
             written: Vec::new(),
             resolved: 0,
             next_due: None,
+            moved: false,
             watch: Watch::default(),
             desires: BTreeMap::new(),
             clock,
@@ -863,6 +866,7 @@ impl<'a> Executor<'a> {
     /// predicted. The steps handed over; what is not yet due is `next_due`.
     pub fn tick(&mut self, now: DateTime) -> Result<Vec<String>, Error> {
         self.sweep(now)?;
+        self.moved = false;
         let mut due = Vec::new();
         let mut soonest: Option<DateTime> = None;
         let mut wake_at = |when: DateTime| {
@@ -925,6 +929,7 @@ impl<'a> Executor<'a> {
             } else if self.answered(adds.as_deref(), retracts.as_deref())? {
                 self.verdict(&intention, &step, &r, now, true, false)?;
                 self.advance(&intention, &step, Some(now))?;
+                self.moved = true;
             } else if below.contains(&None) {
                 continue;
             } else if !below.is_empty() && !below.contains(&Some("done".to_string())) {
@@ -936,6 +941,7 @@ impl<'a> Executor<'a> {
                 );
                 self.verdict(&intention, &step, &r, now, false, false)?;
                 self.resolve(&intention, "failed")?;
+                self.moved = true;
             } else if now >= given_up {
                 log::warn!(
                     "{}: the world did not answer {} by {} — {} fails",
@@ -946,11 +952,14 @@ impl<'a> Executor<'a> {
                 );
                 self.verdict(&intention, &step, &r, now, false, true)?;
                 self.resolve(&intention, "failed")?;
+                self.moved = true;
             } else {
                 wake_at(given_up);
             }
         }
-        self.next_due = soonest;
+        //  A TICK THAT MOVED AN INTENTION ON is due again at once: the head it moved to is handed over only by a
+        //  tick after it, which the next pass's walk runs.
+        self.next_due = if self.moved { Some(now) } else { soonest };
         Ok(due)
     }
 
@@ -1007,7 +1016,8 @@ impl<'a> Executor<'a> {
     }
 
     /// Tick and drain until nothing more happens at this instant: how many steps were taken. A head moved along in
-    /// one tick is handed over only by the next, so the walk ends on two ticks in a row that hand nothing over.
+    /// one tick is handed over only by the next, so the walk ends on two ticks in a row that hand nothing over, and
+    /// the instant the last says is due is the soonest anything waits — at once where it moved an intention on.
     pub fn walk(&mut self, now: DateTime) -> Result<usize, Error> {
         let (mut taken, mut idle, mut now) = (0, 0, now);
         while idle < 2 {

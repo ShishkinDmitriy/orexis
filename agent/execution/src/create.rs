@@ -334,11 +334,25 @@ impl Part for Execution<'_> {
         if job == WALK {
             self.walk(pass)?;
         } else {
-            //  OVER THE INTENTIONS THE LAST WALK STOOD AT: nothing written to them since, as Python reads it off the
-            //  store's length — a plan that replaced another leaves as many standing, and is walked at once.
-            let held = self.executor.borrow().intentions.len()?;
-            if self.walked_at != Some(pass.now) || self.since != held {
+            //  EXECUTION'S POLICY AT THE PASS: walk where the instant the last walk said is due has come — a head
+            //  due, a landing to look at, a patience run out — or the intentions were written since it, as Python
+            //  read it off the store's length, a plan that replaced another leaving as many standing; and otherwise
+            //  nothing, since what else answers a step is a revision of the present, which queues a walk of its own.
+            //  THE DUE INSTANT IS HELD TO THE CLOCK, not to the pass's instant: a walk reads the clock as it goes, so
+            //  a landing may have come since the pass began.
+            let (held, due) = {
+                let executor = self.executor.borrow();
+                let due = match executor.next_due {
+                    Some(d) => d <= pass.now || d <= executor.clock.now(),
+                    None => false,
+                };
+                (executor.intentions.len()?, due)
+            };
+            if self.walked_at.is_none() || self.since != held || due {
                 self.walk(pass)?;
+            }
+            if let Some(due) = self.executor.borrow().next_due {
+                pass.wake_at(due);
             }
             //  THE PASS'S LAP IS MARKED HERE AND ONLY HERE: a walk a revision queued, run among the drain's jobs,
             //  would mark `execute` over the sensing and revision before it.

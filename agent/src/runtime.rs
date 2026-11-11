@@ -19,8 +19,8 @@
 //!
 //! WHAT WAITS IS A TASK, AND THE MIND WAITS FOR AN ARRIVAL: a part asks for a `task` as it starts, which holds no part
 //! and writes no belief, and runs among the tasks of the process, built the first time one is asked for. What arrives
-//! rings the `Wake`, so a pass that moved nothing waits the poll or the next arrival, whichever comes first; a timer
-//! still falls due only at a pass, so the poll stays as their ceiling (the-agent-moves-to-rust-one-package-at-a-time).
+//! rings the `Wake`, so a pass waits for the next arrival or the soonest instant a timer falls due or a part said it is
+//! next due at (`wake_at`), whichever comes first, and polls nothing (the-agent-moves-to-rust-one-package-at-a-time).
 
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap, VecDeque};
@@ -173,9 +173,17 @@ pub struct Pass<'r> {
     again: &'r mut bool,
     laps: &'r mut Option<Laps>,
     watch: &'r Watch,
+    soonest: &'r mut Option<DateTime>,
 }
 
 impl Pass<'_> {
+    /// The part is next due at `at`, with nothing heard: the mind waits no longer than that.
+    pub fn wake_at(&mut self, at: DateTime) {
+        if self.soonest.is_none_or(|s| at < s) {
+            *self.soonest = Some(at);
+        }
+    }
+
     /// Begin an activity of `kind`, triggered by the entities `triggers` names - what the events heard were about -
     /// and say that it started.
     pub fn begin(&mut self, kind: &'static str, triggers: &[NamedNode]) -> Activity {
@@ -325,6 +333,8 @@ pub struct Runtime<'p> {
     held: BTreeMap<String, ()>,
     outcome: Option<String>,
     again: bool,
+    /// The soonest instant a part said it is next due at, this pass.
+    soonest: Option<DateTime>,
     /// WHOEVER WATCHES THE AGENT, hearing each pass where anybody does.
     pub watch: Watch,
     laps: Option<Laps>,
@@ -359,6 +369,7 @@ impl<'p> Runtime<'p> {
             held: BTreeMap::new(),
             outcome: None,
             again: false,
+            soonest: None,
             watch: Watch::default(),
             laps: None,
             halt: None,
@@ -395,6 +406,11 @@ impl<'p> Runtime<'p> {
                 }));
         }
         Ok(runtime)
+    }
+
+    /// What ends the mind's wait, for whoever stops the run from outside it.
+    pub fn wake(&self) -> Wake {
+        self.wake.clone()
     }
 
     /// The packages whose parts run, in the order a pass runs them.
@@ -434,6 +450,7 @@ impl<'p> Runtime<'p> {
                 again: &mut self.again,
                 laps: &mut self.laps,
                 watch: &self.watch,
+                soonest: &mut self.soonest,
             };
             let wrote = self.parts[part].1.run(job, &mut pass)?;
             self.queue_submitted();
@@ -489,6 +506,7 @@ impl<'p> Runtime<'p> {
                     again: &mut self.again,
                     laps: &mut self.laps,
                     watch: &self.watch,
+                    soonest: &mut self.soonest,
                 };
                 let wrote = self.parts[part].1.heard_event(job, &event, &mut pass)?;
                 self.queue_submitted();
@@ -516,6 +534,7 @@ impl<'p> Runtime<'p> {
                         again: &mut self.again,
                         laps: &mut self.laps,
                         watch: &self.watch,
+                        soonest: &mut self.soonest,
                     };
                     answered.extend(self.parts[part].1.heard(job, &graph, &mut pass)?);
                     self.queue_submitted();
@@ -554,9 +573,9 @@ impl<'p> Runtime<'p> {
     }
 
     /// Pass after pass until nobody holds the agent, ending as the last to let go said, or `passes` ran out. A pass
-    /// that moved nothing waits the poll or the next arrival, unless a part asked to go again. THE POLL IS REAL SECONDS, as the Python
-    /// runtime sleeps it: divided by a fast clock's pace, a courier at pace 30 passed 119 times where it passes 14.
-    pub fn run(&mut self, passes: Option<usize>, poll_s: f64) -> Result<String, Error> {
+    /// waits for the next arrival or the soonest instant anything is due, unless a part asked to go again, and never
+    /// longer than `longest_s` real seconds: nought in a test, which steps the clock itself.
+    pub fn run(&mut self, passes: Option<usize>, longest_s: f64) -> Result<String, Error> {
         let mut n = 0;
         while passes.is_none_or(|p| n < p) {
             if self
@@ -573,6 +592,7 @@ impl<'p> Runtime<'p> {
             let began = std::time::Instant::now();
             self.laps = self.watch.connected().then(Laps::default);
             self.again = false;
+            self.soonest = None;
             self.drain(now)?;
             self.passed(began.elapsed().as_secs_f64())?;
             if self.held.is_empty() {
@@ -580,10 +600,26 @@ impl<'p> Runtime<'p> {
                 return Ok(self.outcome.clone().unwrap_or_else(|| MET.to_string()));
             }
             if !self.again {
-                self.wake.wait(Duration::from_secs_f64(poll_s));
+                self.wake.wait(self.until_due(now, began.elapsed(), longest_s));
             }
         }
         Ok(UNFINISHED.to_string())
+    }
+
+    /// How long the mind waits with nothing arriving: until the soonest a timer falls due or a part said it is next
+    /// due, in real seconds at the clock's pace, and never longer than `longest_s`.
+    fn until_due(&self, now: DateTime, took: Duration, longest_s: f64) -> Duration {
+        let longest = Duration::from_secs_f64(longest_s);
+        if longest.is_zero() {
+            return longest;
+        }
+        let timers = self.timers.iter().filter(|t| t.seconds > 0.0).filter_map(|t| t.due);
+        let Some(soonest) = timers.chain(self.soonest).reduce(|a, b| if b < a { b } else { a }) else {
+            return longest;
+        };
+        //  FROM THE INSTANT THE PASS STOOD AT, less the real time it took: a wait reads no clock.
+        let ahead = soonest.checked_sub(now).map_or(0.0, crate::clock::seconds_of).max(0.0);
+        self.clock.real_delay(ahead).saturating_sub(took).min(longest)
     }
 
     /// Say the pass, where anybody watches.
@@ -654,6 +690,38 @@ mod tests {
         let began = std::time::Instant::now();
         assert_eq!(runtime.run(None, 60.0).unwrap(), MET);
         assert!(began.elapsed() < Duration::from_secs(30), "the poll was slept out");
+    }
+
+    /// Holds the agent, and says it is next due a fifth of a second on.
+    struct Due;
+    impl Part for Due {
+        fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
+            starting.every(0.0, 0);
+            Ok(())
+        }
+        fn run(&mut self, _job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+            pass.hold("due");
+            let at = pass.now.checked_add_day_time_duration(seconds(0.2)).unwrap();
+            pass.wake_at(at);
+            Ok(Vec::new())
+        }
+    }
+
+    #[test]
+    fn a_pass_waits_until_the_soonest_a_part_is_due_and_no_longer() {
+        let store = Store::new(crate::snapshots::namespaces()).unwrap();
+        let clock = Manual::at("2026-11-11T12:00:00Z".parse().unwrap());
+        let mut part = Due;
+        let parts: Vec<(String, &mut dyn Part)> = vec![("due".to_string(), &mut part)];
+        let mut runtime = Runtime::new(&store, "urn:test:me", &clock, parts).unwrap();
+        let began = std::time::Instant::now();
+        assert_eq!(runtime.run(Some(2), 60.0).unwrap(), UNFINISHED);
+        let took = began.elapsed();
+        assert!(
+            took >= Duration::from_millis(150),
+            "it did not wait for the instant: {took:?}"
+        );
+        assert!(took < Duration::from_secs(30), "it waited the longest out: {took:?}");
     }
 
     #[test]

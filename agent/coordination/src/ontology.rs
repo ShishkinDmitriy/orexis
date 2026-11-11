@@ -86,6 +86,8 @@ pub fn laid_graph(me: &str, peer: &str, constraint: &str, n: usize) -> String {
 }
 
 /// A draw won, as the event it is said as, and planning's word for the wants it names.
+pub const COORDINATING: &str = "http://example.org/orexis/coordination#Coordinating";
+pub const COORDINATING_TRIGGER: &str = "http://example.org/orexis/coordination#CoordinatingTrigger";
 pub const DRAW_WON: &str = "http://example.org/orexis/coordination#DrawWon";
 pub const REOPENS: &str = "http://example.org/orexis/planning#reopens";
 
