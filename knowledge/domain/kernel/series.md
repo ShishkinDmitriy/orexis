@@ -5,7 +5,7 @@ description: >-
   What a person watches of an agent and the agent never reads - its history, what happened, and
   its metrics, the admins' instrumentation of how it is doing - each written by a sink that knows
   nothing of what it writes, to a store the agent is told of by purpose. Both are what the packages'
-  events say, written by a part that hears every signal; metrics are optional at every level and
+  events say, written by a part that hears every event; metrics are optional at every level and
   aggregated to one point a minute.
 ---
 
@@ -58,7 +58,7 @@ History, told by purpose (#825), written by the history part (`agent/history/`).
 `onboarding/series.py`: it imports nothing of the agent, and a sink per purpose is loaded where
 `INFLUX_HISTORY_URL`, `_ORG`, `_BUCKET` and `_TOKEN` are all set — none set is no sink, some set is
 none too, said in the log. Where one is loaded the runtime creates the history part with the
-others; linked, it hears every signal and writes the point each event answers, so no package asks
+others; it hears every event on the watch and writes the point each event answers, so no package asks
 for a sink and none imports `agent.series`
 ([metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md)).
 
@@ -79,7 +79,7 @@ for a sink and none imports `agent.series`
   the journal's now; a bucket written before keeps them as they were written.
 
 Metrics, written by the metrics part (`agent/metrics/`), created where a metrics sink is loaded and
-linked to every signal. Its metamodel is the one thing a package imports of it: an event's class
+hearing every event. Its metamodel is the one thing a package imports of it: an event's class
 names its `metric` and marks its fields `Tag`, `Value`, `Flag` or `Level`. Where no metrics sink is
 loaded, no metrics part hears anything, and an event only it would hear is never made.
 

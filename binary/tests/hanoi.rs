@@ -135,7 +135,7 @@ fn own(store: &Store) -> Vec<String> {
 }
 
 /// One run of the mover over `store` at `budget`: the outcome, and the planning part left.
-fn ran<'s>(store: &'s Store, budget: usize, clock: &'s dyn Clock, passes: usize) -> (String, Planning<'s>) {
+fn ran<'s>(store: &'s Store, budget: usize, clock: &'s dyn Clock, passes: usize) -> (String, Planning) {
     let mut planning = Planning::new(store, "hanoi", Some(budget)).unwrap();
     let outcome = {
         let parts: Vec<(String, &mut dyn Part)> = vec![("planning".into(), &mut planning)];

@@ -31,7 +31,7 @@ it adopts. A second plan for one want never shares a step's name with the first,
 renaming went with the copy.
 
 **A package owns its signals, and they are connected when the parts are linked.** A
-[signal](/domain/kernel/signal.md) says something just happened, and it is an attribute of the
+signal says something just happened, and it is an attribute of the
 object that says it: the Planner's `plan_published`, and the executor adopts the plan; the
 executor's `intention_resolved`, and the Planner plans again at once; the executor's `taking`, and
 the Planner checks the head about to be taken; the Planner's

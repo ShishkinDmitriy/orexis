@@ -13,12 +13,12 @@ description: >-
 The [runtime](/domain/kernel/runtime.md) makes a part for every [package](/domain/kernel/package.md)
 the agent loads that has a `create` module — each a declared [role](/domain/kernel/role.md) calls
 for — in the order a pass runs them, belief first and the planner before the executor, and keeps
-them by package (`runtime.parts`). When all exist it calls `link(parts)` on each, so a part connects
-its own [signals](/domain/kernel/signal.md) to what lies beneath it and hears theirs — nothing need
-exist before anything else, which one phase of starting could not promise. Then `start(runtime)` on
-each: the jobs it submits, the timers it asks for, the kinds of graph written it hears. `stop()`,
-the last first, when the run ends. A part with nothing to link or to stop has no such method.
+them by package (`runtime.parts`), each handed the one watch every part says its
+[events](/domain/kernel/event.md) to. Then `start` on each: the jobs it submits, the timers it asks for,
+the kinds of graph written it hears and the trigger classes whose events it hears
+([policy](/domain/kernel/policy.md)). `stop()`, the last first, when the run ends. No part is linked to
+another: what one says, another hears beneath its trigger, reading what it names from the store.
 
-What a part holds is its package's own object — the Planner, the executor, the deliberator — and its
-signals are that object's; the part only wires and starts it
+What a part holds is its package's own object — the Planner, the executor, the deliberator — and the
+events it says are that object's; the part only starts it
 ([a-package-starts-itself](/decisions/a-package-starts-itself.md)).

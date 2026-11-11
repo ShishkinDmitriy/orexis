@@ -50,7 +50,7 @@ WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
 
 const HOLDS_CONSTRAINT_Q: &str = r#"SELECT ?c WHERE { $holder planning:holds ?c . ?c a planning:Constraint } LIMIT 1"#;
 
-impl<'a> Planner<'a> {
+impl Planner {
     /// Ask that each of `wants` an intention walks be searched again in the next pass.
     pub fn reopen(&mut self, wants: impl IntoIterator<Item = String>) {
         self.asked.extend(wants);

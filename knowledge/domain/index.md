@@ -22,12 +22,11 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [activity](/domain/kernel/activity.md) - What a package does over a stretch, started by a policy; its start and end are events, and a tracer draws it as a span.
 * [level](/domain/kernel/level.md) - A reported field that is the state now, read by its store's owner and written as it last stood in a window.
 * [forecast](/domain/kernel/forecast.md) - Anyone's word about a stretch ahead, one kind holding during it; a received hour and a committed step, told apart by provenance.
-* [signal](/domain/kernel/signal.md) - A package's own word for what just happened, on its object, carrying one event; connected when parts link, never stored.
 * [modality](/domain/kernel/modality.md) - What a graph asserts — is, will be, would be, wanted, owed, doing — carried as its kind on the catalogue.
 * [inference](/domain/kernel/inference.md) - The boot materialises the subclass closure, so a reader asks what a thing is and walks no path.
 * [package](/domain/kernel/package.md) - A directory of `agent/` owning a concern and its words, importing only what lies beneath it.
 * [sovereign](/domain/kernel/sovereign.md) - Whoever writes a world's documents: picks the ranges and values, never an act. Outside the society.
-* [series](/domain/kernel/series.md) - What a person watches and the agent never reads: observations and metrics, both what the packages' events say, written by a part hearing every signal.
+* [series](/domain/kernel/series.md) - What a person watches and the agent never reads: observations and metrics, both what the packages' events say, written by a part hearing every event.
 * [journal](/domain/kernel/journal.md) - An agent's own triplestore of what happened: its events in RDF kept for good, its log kept for a window unless an incident keeps it.
 
 # Sensing — bytes become observations, and observations subject beliefs

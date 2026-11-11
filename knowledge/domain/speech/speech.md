@@ -37,11 +37,10 @@ An [action](/domain/kernel/action.md) that tells somebody something has an `exec
 operations of its [implementation](/domain/execution/implementation.md), a CONSTRUCT run over the present
 when a [step](/domain/execution/step.md) filling it is taken; an IRI its result says is
 `execution:to` an agent is a graph, what it says of that IRI is the graph's content, and its kind
-and period are the rows. Taking the step is the executor's `said` [signal](/domain/kernel/signal.md),
-which speech's part, linked to execution's, hears: it keeps the document as said — and extracts from it,
-as from what it hears — and hands it, for each agent it is to, to the
-[transport](/domain/transport/transport.md) reaching the peer, which publishes it on the topic the peer
-listens to.
+and period are the rows. Taking the step keeps the document as said, by speech's `said`, and says
+`execution:Told`, which speech hears beneath its speaking trigger; it extracts from the document, as from
+what it hears, and says `speech:Said`, which the [transport](/domain/transport/transport.md) reaching the
+peer hears and publishes on the topic the peer listens to.
 
 What the agent says and hears are [events](/domain/kernel/event.md) of speech's: `speech:Said`, a document said,
 naming each of its statements and every agent it was told to, and `speech:Heard` for each statement heard, carrying

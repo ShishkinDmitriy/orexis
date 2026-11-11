@@ -55,7 +55,7 @@ fn violations(world: &Store, text: &str) -> BTreeSet<String> {
     }
 }
 
-impl<'a> Planner<'a> {
+impl Planner {
     /// Check `step`, a head about to be handed to its taker at `at`, against the present: BLOCKED, and true, where its
     /// action's precondition admits it no more, where the world it lands in violates a constraint the world before
     /// does not, or where a world of its plan was foreseen impossible after it. A step kept below is not checked.

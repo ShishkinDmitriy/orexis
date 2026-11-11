@@ -254,7 +254,7 @@ impl<'a> Market<'a, '_> {
         self.runtimes[Self::index(name)].run(Some(1), 0.0).unwrap();
     }
 
-    fn planner(&self, name: &str) -> std::cell::Ref<'_, orexis_planning::Planner<'a>> {
+    fn planner(&self, name: &str) -> std::cell::Ref<'_, orexis_planning::Planner> {
         self.seen[Self::index(name)].planner.as_ref().unwrap().borrow()
     }
 

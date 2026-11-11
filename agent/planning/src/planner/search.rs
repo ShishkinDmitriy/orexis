@@ -50,7 +50,7 @@ WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                       OPTIONAL { $weighing planning:remaining ?r } OPTIONAL { $weighing planning:late ?l }
                       OPTIONAL { $weighing planning:violation ?v . ?v ?p ?x } } }"#;
 
-impl<'a> Planner<'a> {
+impl Planner {
     /// Plan for `want` from the ground holding at its instant, spending at most `budget` candidates beyond what its
     /// search spent before, and write the plan, whatever the search concluded.
     pub fn search(

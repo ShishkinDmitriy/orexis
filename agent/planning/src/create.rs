@@ -29,14 +29,14 @@ const EXECUTOR: &str = "http://example.org/orexis/execution#Executor";
 const ROLES_Q: &str = "SELECT DISTINCT ?kind WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind }";
 
 /// Planning's part: its Planner, and whether any part walks what it publishes.
-pub struct Planning<'a> {
-    pub planner: Rc<RefCell<Planner<'a>>>,
+pub struct Planning {
+    pub planner: Rc<RefCell<Planner>>,
     pub walked: bool,
 }
 
-impl<'a> Planning<'a> {
+impl Planning {
     /// The part, its budget the agent's stance unless the caller sizes one.
-    pub fn new(beliefs: &'a Store, agent: &str, budget: Option<usize>) -> Result<Self, Error> {
+    pub fn new(beliefs: &Store, agent: &str, budget: Option<usize>) -> Result<Self, Error> {
         Ok(Planning {
             planner: Rc::new(RefCell::new(Planner::new(beliefs, agent, budget)?)),
             walked: walks(beliefs)?,
@@ -102,7 +102,7 @@ fn walks(beliefs: &Store) -> Result<bool, Error> {
     Ok(false)
 }
 
-impl Part for Planning<'_> {
+impl Part for Planning {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         starting.every(0.0, PLAN);
         starting.hears(PLANNING_TRIGGER, REOPEN);

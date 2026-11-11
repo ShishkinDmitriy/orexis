@@ -83,7 +83,7 @@ writes what the person stated and says `translation:Conversed`.
 
 # What was refused
 
-- **Signals connected when the parts are linked.** A [signal](/domain/kernel/signal.md) is a handler on a package's
+- **Signals connected when the parts are linked.** A signal is a handler on a package's
   object, and connecting it means the binary holds both packages and an `Rc` to each: the callback after planning's
   pass does execution's work inside planning's. An event heard by class leaves nothing to link.
 - **Events as the watch's alone.** They already say everything a link carries - a plan published, an intention
@@ -120,9 +120,10 @@ writes what the person stated and says `translation:Conversed`.
 - **A plan is heard published, not its graph written**: execution adopts on `planning:PlanPublished`, which names the
   plan and the want, rather than on the graph's kind, which would make execution read planning's words to find the
   want (#1119 step 4).
-- **The check of a head stays a call until a hearer can hold the store**: the watch's hearers live as long as the
-  process, and the Planner, which holds the store as a shared handle since step 7's first slice, still borrows what its
-  links lend it - prediction's foresight - so planning cannot answer `execution:Taking` from one; it is asked so once
-  those links are events too (#1119 steps 5 and 7), the one link left between the two.
+- **The check of a head stays a call, the one link left between two parts**: since step 5 the Planner borrows
+  nothing - prediction's foresight is an offer of a pure function, handed at assembly as the clock is, and no link -
+  but the walk asks before it takes the head, and an event is told to its hearers only after the job that said it,
+  so planning's answer to `execution:Taking` would arrive after the walk had to decide. The take moves into a job of
+  its own when it is asked so (#1119 step 7).
 - **A head asked and never answered**: an executor with no planner in a test must not wait for an answer nobody gives,
   so saying `execution:Taking` answers whether anybody hears it.
