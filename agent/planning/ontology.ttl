@@ -9,6 +9,7 @@
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix : <http://example.org/orexis/planning#> .
 @prefix prediction: <http://example.org/orexis/prediction#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
@@ -400,7 +401,11 @@ planning:Planning a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Plan
     rdfs:comment "A pass of the Planner, an activity planning's part begins and ends: from finding the scopes to publishing what the searches found (packages-meet-by-events-policies-and-activities)." .
 
 planning:PlanningTrigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Planning trigger" ;
-    rdfs:comment "What starts a planning besides the pass's timer: coordination's draw won, beneath it by coordination's ontology, naming the walking wants to plan again (`planning:reopens`). Belief's word that a belief changed comes here when the pass stops running every second (#1119)." .
+    rdfs:comment "What starts a planning, besides the present reaching the next ground the last one laid and a search the budget cut short going on: belief's revision, execution's intention resolved, and execution's step taken, since a refined step's want below is kept once the step is taken, each beneath it by planning's ontology since planning is above both; and coordination's draw won, beneath it by coordination's ontology, naming the walking wants to plan again (`planning:reopens`)." .
+
+belief:Revised rdfs:subClassOf planning:PlanningTrigger .
+execution:IntentionResolved rdfs:subClassOf planning:PlanningTrigger .
+execution:StepTaken rdfs:subClassOf planning:PlanningTrigger .
 
 planning:reopens a owl:ObjectProperty ; rdfs:domain planning:PlanningTrigger ; rdfs:range planning:Want ; rdfs:label "reopens" ;
     rdfs:comment "A walking want a planning is to search again from the ground its step in flight lands in, its untaken steps reopened (knowledge/domain/execution/commitment.md)." .

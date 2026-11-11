@@ -1,5 +1,5 @@
-//! THE PLANNING PACKAGE'S PART, as `agent/planning/create.py` makes it: its Planner, planning every pass once
-//! started, and after each pass holding the agent or letting it go, saying how the wanting ended — `met` where no
+//! THE PLANNING PACKAGE'S PART, as `agent/planning/create.py` made it: its Planner, planning at a pass where its policy
+//! says so — a trigger heard, the present at the next ground the last planning laid, or a search cut short — and after each planning holding the agent or letting it go, saying how the wanting ended — `met` where no
 //! want stands and nothing walks, `planned` where every want has a plan published and no part walks one,
 //! `unreachable` where some stand that nothing this agent holds reaches. A desire held keeps it holding, since a
 //! desire asks at every instant.
@@ -28,10 +28,17 @@ const REOPEN: usize = 1;
 const EXECUTOR: &str = "http://example.org/orexis/execution#Executor";
 const ROLES_Q: &str = "SELECT DISTINCT ?kind WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind }";
 
-/// Planning's part: its Planner, and whether any part walks what it publishes.
+/// Planning's part: its Planner, whether any part walks what it publishes, and what its policy has heard since it
+/// last planned.
 pub struct Planning {
     pub planner: Rc<RefCell<Planner>>,
     pub walked: bool,
+    /// The events heard beneath its trigger since it last planned, which the planning names as what triggered it.
+    triggers: Vec<oxigraph::model::NamedNode>,
+    /// Whether to plan at the next pass whatever was heard: the first, and one after a search the budget cut short.
+    due: bool,
+    /// The instant the next ground the last planning laid begins, where it laid one.
+    next: Option<oxsdatatypes::DateTime>,
 }
 
 impl Planning {
@@ -40,11 +47,14 @@ impl Planning {
         Ok(Planning {
             planner: Rc::new(RefCell::new(Planner::new(beliefs, agent, budget)?)),
             walked: walks(beliefs)?,
+            triggers: Vec::new(),
+            due: true,
+            next: None,
         })
     }
 
     /// Hold the agent, or let it go and say how the wanting ended.
-    fn keep(&self, pass: &mut Pass<'_>) -> Result<(), Error> {
+    fn keep(&mut self, pass: &mut Pass<'_>) -> Result<(), Error> {
         let who = "planning";
         let planner = self.planner.borrow();
         let standing = planner.standing(pass.now)?;
@@ -71,6 +81,8 @@ impl Planning {
             return Ok(());
         }
         if planner.exhausted()? {
+            drop(planner);
+            self.due = true;
             pass.again();
             pass.hold(who);
             return Ok(());
@@ -109,8 +121,10 @@ impl Part for Planning {
         Ok(())
     }
 
-    /// What planning's policy does of a trigger: keep the walking wants it names to search again, and ask for a pass.
+    /// What planning's policy does of a trigger: plan at the pass, keeping the walking wants it names to search
+    /// again; and ask for the pass at once where it names any.
     fn heard_event(&mut self, _job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        self.triggers.push(event.node.clone());
         let wants: Vec<String> = event.all(REOPENS).iter().map(|w| w.as_str().to_string()).collect();
         if !wants.is_empty() {
             self.planner.borrow_mut().reopen(wants);
@@ -123,11 +137,20 @@ impl Part for Planning {
         Some(self.planner.borrow().watch.clone())
     }
 
+    /// PLANNING'S POLICY: plan where a trigger was heard since the last planning, the present reached the next ground
+    /// it laid, or it is due whatever was heard; and otherwise nothing, the agent held or let go as it last was.
     fn run(&mut self, _job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
-        //  EVERY PASS FOR NOW, TRIGGERED BY NOTHING: a policy deciding when to plan is #1119's sixth step.
-        let activity = pass.begin(PLANNING_ACTIVITY, &[]);
+        let reached = self.next.is_some_and(|next| next <= pass.now);
+        if !self.due && !reached && self.triggers.is_empty() {
+            pass.lap("plan");
+            return Ok(Vec::new());
+        }
+        self.due = false;
+        let triggers = std::mem::take(&mut self.triggers);
+        let activity = pass.begin(PLANNING_ACTIVITY, &triggers);
         let written = self.planner.borrow_mut().plan(pass.now)?;
         self.keep(pass)?;
+        self.next = self.planner.borrow().next_ground(pass.now)?;
         pass.lap("plan");
         pass.end(activity);
         Ok(written)

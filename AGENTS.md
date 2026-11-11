@@ -1031,7 +1031,7 @@ peer's document. See
 
 **A package starts itself, and a pass drains, on one thread.** The runtime creates a part of every
 package the agent's roles load that has a `create` module, in the order a pass runs them, then starts them, and knows no word of what they do:
-belief revises what is written, planning plans every pass and publishes, execution adopts and walks,
+belief revises what is written, planning plans where its policy says so and publishes, execution adopts and walks,
 a transport listens or polls, sensing asks after what has fallen due, prediction answers an
 observation — each through jobs it submits, timers it asks for and the events it hears beneath its
 triggers, no part linked to another (a-package-starts-itself, packages-meet-by-events-policies-and-activities). A pass drains every job queued,

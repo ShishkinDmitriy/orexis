@@ -59,7 +59,7 @@ a role declared after birth reaches only a fresh volume.
 declared role calls for, and each transport a loaded role needs — that has a `create` module makes a
 [part](/domain/kernel/part.md) of the runtime, each handed the one watch every part says its
 [events](/domain/kernel/event.md) to; then each starts and says what it does: belief revises what is
-written, planning plans every pass, execution walks what is due and whenever a revision changed the
+written, planning plans where its policy hears a trigger, the present reaches the next ground it laid, or a search was cut short, execution walks what is due and whenever a revision changed the
 present, a transport listens or polls, sensing asks every minute what has
 fallen due, prediction answers every observation written. The runtime offers `submit` a job from any
 thread, `every` so many seconds of the one timeline, `on` a kind of graph written, `hears` an event's class,
