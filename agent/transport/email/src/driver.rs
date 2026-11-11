@@ -117,6 +117,11 @@ pub struct Email {
 }
 
 impl Email {
+    /// The store the member keeps what it carries in.
+    pub fn beliefs(&self) -> &Store {
+        &self.beliefs
+    }
+
     pub fn new(beliefs: &Store, me: &str, box_: Arc<dyn Mailbox>) -> Self {
         Email {
             beliefs: beliefs.clone(),

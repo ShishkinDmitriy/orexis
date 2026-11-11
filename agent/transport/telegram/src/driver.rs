@@ -240,6 +240,11 @@ pub struct Telegram {
 }
 
 impl Telegram {
+    /// The store the member keeps what it carries in.
+    pub fn beliefs(&self) -> &Store {
+        &self.beliefs
+    }
+
     pub fn new(beliefs: &Store, me: &str, token: &str, url: &str, call: Call) -> Self {
         Telegram {
             beliefs: beliefs.clone(),

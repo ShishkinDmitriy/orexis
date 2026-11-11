@@ -11,6 +11,7 @@ use std::rc::Rc;
 
 use orexis::Error;
 use orexis::runtime::{Part, Pass, Starting};
+use orexis::transport::{ProseKept, kept};
 
 use crate::driver::{Message, Mqtt, NUDGE_S};
 
@@ -23,8 +24,6 @@ const HOLDER: &str = "transport/mqtt";
 /// The member's part: the member, shared with whoever links to it, and the messages handed to the pass.
 pub struct Transport<'a> {
     pub member: Rc<RefCell<Mqtt<'a>>>,
-    /// Whoever hears a person's prose on a chat's topic: translation, linked — handed it once the member is let go.
-    pub prose: Option<orexis::transport::Hears<'a>>,
     pending: VecDeque<Message>,
 }
 
@@ -32,7 +31,6 @@ impl<'a> Transport<'a> {
     pub fn new(member: Mqtt<'a>) -> Self {
         Transport {
             member: Rc::new(RefCell::new(member)),
-            prose: None,
             pending: VecDeque::new(),
         }
     }
@@ -66,16 +64,18 @@ impl Part for Transport<'_> {
                 let Some(message) = self.pending.pop_front() else {
                     return Ok(Vec::new());
                 };
-                let (written, heard) = {
+                let (written, heard, store, me) = {
                     let mut member = self.member.borrow_mut();
                     let written = member.handle(&message.topic, &message.payload, message.at.unwrap_or(pass.now))?;
-                    (written, std::mem::take(&mut member.prose))
+                    let (store, me) = (member.beliefs().clone(), member.me.clone());
+                    (written, std::mem::take(&mut member.prose), store, me)
                 };
                 let mut written: Vec<String> = written.into_iter().map(|(_, graph)| graph).collect();
-                if let Some(hears) = self.prose.as_mut() {
-                    for prose in &heard {
-                        written.extend(hears(prose)?);
-                    }
+                //  A PERSON'S WORDS ON A CHAT'S TOPIC are kept, and said kept, for whoever translates.
+                for prose in &heard {
+                    let graph = kept(&store, &me, prose)?;
+                    pass.emit(&ProseKept { prose: graph.clone() });
+                    written.push(graph);
                 }
                 Ok(written)
             }

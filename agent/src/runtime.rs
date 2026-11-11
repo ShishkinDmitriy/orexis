@@ -191,6 +191,11 @@ impl Pass<'_> {
         activity
     }
 
+    /// Say `event` happened, to whoever watches the agent.
+    pub fn emit(&self, event: &dyn crate::events::Event) {
+        self.watch.emit(event);
+    }
+
     /// End `activity`, and say that it ended.
     pub fn end(&mut self, activity: Activity) {
         if self.watch.connected() {

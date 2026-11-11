@@ -46,8 +46,9 @@ their revisions are (`belief:revises`, `belief:into`), and `belief:Revised` is b
 `coordination:DrawWon` is beneath `planning:PlanningTrigger`, naming the walking wants to plan again
 (`planning:reopens`), and its `coordination:Told` beneath `speech:SpeakingTrigger`, naming statements
 it already believes it said (`speech:statement`) and the peer (`speech:to`): the event names them, and
-speech reads each back from the store as it was said. The others are declared as their policies are built
-(#1119).
+speech reads each back from the store as it was said. And the kernel's `orexis:ProseKept`, said by a
+transport that kept a person's words as an `orexis:ProseGraph`, is beneath `translation:TranslatingTrigger`.
+The others are declared as their policies are built (#1119).
 
 **An addressed event, by who asked for it.** A timer alarms for the part that set it, and a request
 to plan is planning's alone. Put beneath a trigger class, every package's timer would wake every

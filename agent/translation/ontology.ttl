@@ -3,6 +3,7 @@
 @prefix speech: <http://example.org/orexis/speech#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
@@ -71,3 +72,17 @@ translation:handed a owl:DatatypeProperty ;
 translation:answered a owl:DatatypeProperty ;
     rdfs:label "answered" ;
     rdfs:comment "What a tool answered the model, cut where it ran long, which it then says." .
+
+#  WHAT TRANSLATION DOES OVER A STRETCH OF TIME, a `prov:Activity`, and its trigger: a person's words a transport kept,
+#  the kernel's event, which translation - above every transport - puts beneath it (knowledge/domain/kernel/policy.md).
+
+translation:Trigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Trigger" ;
+    rdfs:comment "Translation's trigger, abstract: an event beneath it is beneath the one trigger below." .
+
+translation:Translating a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Translating" ;
+    rdfs:comment "Hearing a person's words a transport kept: which chat they are in and who said them, whether they were for this agent, and the model asked what they say, off the mind; its answer comes back as a job of its own." .
+
+translation:TranslatingTrigger a owl:Class ; rdfs:subClassOf translation:Trigger ; rdfs:label "Translating trigger" ;
+    rdfs:comment "What starts a translating: the kernel's `orexis:ProseKept`, beneath it here, naming the prose graph a transport kept (`orexis:prose`)." .
+
+orexis:ProseKept rdfs:subClassOf translation:TranslatingTrigger .

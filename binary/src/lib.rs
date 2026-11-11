@@ -388,7 +388,7 @@ pub fn assemble_seen<'a>(
         None
     };
     #[cfg(feature = "telegram")]
-    let mut bot = if holds("transport/telegram") {
+    let bot = if holds("transport/telegram") {
         let member = match telegram {
             Some(member) => member,
             None => orexis_telegram::driver::Telegram::connect(store, &me, &|n| std::env::var(n).ok())?,
@@ -398,7 +398,7 @@ pub fn assemble_seen<'a>(
         None
     };
     #[cfg(feature = "email")]
-    let mut mailbox = if holds("transport/email") {
+    let mailbox = if holds("transport/email") {
         let member = match email {
             Some(member) => member,
             None => orexis_email::driver::Email::connect(store, &me, &|n| std::env::var(n).ok())?,
@@ -409,34 +409,19 @@ pub fn assemble_seen<'a>(
     };
     //  WHAT CARRIES A CHAT, in the order of a pass: a topic of the bus first, then the agent's own bot, then its mailbox.
     #[cfg(all(feature = "translation", feature = "mqtt"))]
-    if let (Some(translation), Some(transport)) = (translation.as_ref(), transport.as_mut()) {
+    if let (Some(translation), Some(transport)) = (translation.as_ref(), transport.as_ref()) {
         let carrier: std::rc::Rc<std::cell::RefCell<dyn orexis::transport::Carrier + 'a>> = transport.member.clone();
         translation.translator.borrow_mut().carriers.push(carrier);
-        let translator = translation.translator.clone();
-        transport.prose = Some(Box::new(move |prose| {
-            let at = prose.at.unwrap_or_else(oxsdatatypes::DateTime::now);
-            translator.borrow_mut().heard(prose, at)
-        }));
     }
     #[cfg(all(feature = "translation", feature = "telegram"))]
-    if let (Some(translation), Some(bot)) = (translation.as_ref(), bot.as_mut()) {
+    if let (Some(translation), Some(bot)) = (translation.as_ref(), bot.as_ref()) {
         let carrier: std::rc::Rc<std::cell::RefCell<dyn orexis::transport::Carrier + 'a>> = bot.member.clone();
         translation.translator.borrow_mut().carriers.push(carrier);
-        let translator = translation.translator.clone();
-        bot.prose = Some(Box::new(move |prose| {
-            let at = prose.at.unwrap_or_else(oxsdatatypes::DateTime::now);
-            translator.borrow_mut().heard(prose, at)
-        }));
     }
     #[cfg(all(feature = "translation", feature = "email"))]
-    if let (Some(translation), Some(mailbox)) = (translation.as_ref(), mailbox.as_mut()) {
+    if let (Some(translation), Some(mailbox)) = (translation.as_ref(), mailbox.as_ref()) {
         let carrier: std::rc::Rc<std::cell::RefCell<dyn orexis::transport::Carrier + 'a>> = mailbox.member.clone();
         translation.translator.borrow_mut().carriers.push(carrier);
-        let translator = translation.translator.clone();
-        mailbox.prose = Some(Box::new(move |prose| {
-            let at = prose.at.unwrap_or_else(oxsdatatypes::DateTime::now);
-            translator.borrow_mut().heard(prose, at)
-        }));
     }
     //  WHAT SPEECH TELLS, every member that reaches the peer told it, and translation, which says it to a person.
     #[cfg(feature = "speech")]
