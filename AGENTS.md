@@ -865,8 +865,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   each package a Cargo feature, every text kept parsed up to a cap and its values bound into the text, a package held alone by its
   snapshot cases as it lands, an agent running in Rust once its roles' packages all are, world by world, and a
   society mixing the two in between, a ported package frozen but for fixes in both until its last Python user moves,
-  and the Python agent retired whole when the last world ran on the binary (2026-11-09); what waits is a
-  Tokio task and the mind one thread owning the store, each scope searched apart and waited for by nothing; onboarding stays Python
+  and the Python agent retired whole when the last world ran on the binary (2026-11-09); the agent's body is a
+  Tokio runtime, each package's policy a task, each scope searched apart and waited for by nothing (the-agent-is-a-runtime-of-tasks); onboarding stays Python
   and boots the binary to check a world; a Rust core under Python and the reasoning as Rust code were refused
   (the-agent-moves-to-rust-one-package-at-a-time).
 - **A world the simulator plays is held on the binary by a replay of what the simulator published to the Python
@@ -1036,7 +1036,10 @@ a transport listens or polls, sensing asks after what has fallen due, prediction
 observation — each through jobs it submits, timers it asks for and the events it hears beneath its
 triggers, no part linked to another (a-package-starts-itself, packages-meet-by-events-policies-and-activities). A pass drains every job queued,
 then what is due, and the mind then waits for an arrival or the soonest instant a timer or a part (`wake_at`) says is
-due, polling nothing; the run ends when nothing holds the agent. A search is bounded by a budget in the
+due, polling nothing; the run ends when nothing holds the agent. **That pass is going**: the agent's body becomes a
+multi-threaded Tokio runtime, each package's policy a task awaiting its trigger and its due instant, a graph with one
+writing package, a long search on the blocking pool, and the tests on the single-threaded runtime with time paused
+(the-agent-is-a-runtime-of-tasks, #1119 step 8). A search is bounded by a budget in the
 unit it spends and continued by the next pass. The executor's two doors, `tick` and `drain`, are
 what its walk and a test call.
 

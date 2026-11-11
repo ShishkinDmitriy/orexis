@@ -1,7 +1,8 @@
 ---
 type: Decision
 title: The agent moves to Rust one package at a time, and the documents do not change
-status: accepted
+status: superseded-in-part
+superseded-by: the-agent-is-a-runtime-of-tasks
 timestamp: 2026-11-04T22:00:00Z
 description: >-
   The sovereign's ruling of 2026-11-04, with 0.2.0 tagged, that the agent moves to Rust - for speed on the
@@ -154,7 +155,9 @@ every agent, reading back the store it wrote to hold the requirements to and to 
 world is booted once, by the agent that will run it. The simulator,
 the operator's tools and the history view stay as they are.
 
-**What waits is a task, and the mind is one thread.** Today the runtime polls: a pass that moved
+**What waits is a task, and the mind is one thread** - superseded by
+[the-agent-is-a-runtime-of-tasks](/decisions/the-agent-is-a-runtime-of-tasks.md): every policy is a task, and a graph
+has one writing package where one thread owned the store. Today the runtime polls: a pass that moved
 nothing sleeps a second and looks again, so a reading waits up to that second and an idle agent wakes every
 one. Each transport, the model's call and the journal's server has a thread of its own, and so does the
 executor, twice. In Rust, everything that waits on the network or the clock is a Tokio task:
