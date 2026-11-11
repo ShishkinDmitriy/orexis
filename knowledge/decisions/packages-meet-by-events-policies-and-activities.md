@@ -1,7 +1,8 @@
 ---
 type: Decision
 title: Packages meet by events, policies and activities - an event is an instant, a policy decides, an activity takes time
-status: accepted
+status: superseded-in-part
+superseded-by: the-agent-is-a-runtime-of-tasks
 timestamp: 2026-11-10T12:00:00Z
 description: >-
   The sovereign's ruling of 2026-11-10, event-storming the agent. An event is an instant and never triggers another;
@@ -93,7 +94,8 @@ writes what the person stated and says `translation:Conversed`.
   timer alarmed, a part asked, or why an activity started. A graph written stays, as one event among the others.
 - **An event triggering an event.** A chain of events with no decision in it is a decision nobody owns; the policy is
   where it is owned, and where a package can decline.
-- **Each handler a Tokio task.** The parts hold the store borrowed and their objects shared, so they are not `Send`; a
+- **Each handler a Tokio task** - since overturned by
+  [the-agent-is-a-runtime-of-tasks](/decisions/the-agent-is-a-runtime-of-tasks.md), which answers these premises. The parts hold the store borrowed and their objects shared, so they are not `Send`; a
   search does not yield and would stall the sessions on its worker; and jobs run in the order they came is what lets a
   snapshot case and a digest hold the binary to one result. A task is where an activity waits, never where the store is
   written.

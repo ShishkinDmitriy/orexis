@@ -74,8 +74,9 @@ asks the writer one line and asks no reader anything.
 **A hash and not a counter.** A counter on the row is optimistic locking's version, and a writer that
 forgets to bump it leaves a number nothing can check, since the number says nothing of the content. A
 hash says what the graph holds, so a forgotten stamp is a mismatch a test can see. The locking half of
-optimistic locking — refusing a writer whose read went stale — has no work here: one thread runs every
-part, so no two writers meet.
+optimistic locking — refusing a writer whose read went stale — has no work here: a graph has one writing
+package, so no two writers meet on it ([the-agent-is-a-runtime-of-tasks](/decisions/the-agent-is-a-runtime-of-tasks.md);
+until then one thread ran every part).
 
 **Nothing reads the past of a belief.** The series holds what was believed when; the belief base holds
 what is believed now, and a graph's name stands for it.
