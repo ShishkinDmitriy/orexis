@@ -27,7 +27,7 @@ devices the society names by their topics — read as observing nothing and got 
 dashboard (#885).
 
 **Steps have no panel yet.** Execution writes a step taken and how it ended under
-execution's `MEASUREMENT` (`agent/execution/src/events.rs`), tagged by action, want and parameter. A panel for them would
+execution's `MEASUREMENT` (`orexis-execution/src/events.rs`), tagged by action, want and parameter. A panel for them would
 be keyed on the actions an agent may take — read off the world's action graphs, as sensors are
 here — and draw `taken` and `landed` as events rather than a line, which is a panel type and a
 query shape this module does not build.

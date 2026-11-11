@@ -33,8 +33,8 @@ and then an image of its own for each agent.
 engine and rdflib — and nothing else.
 
 **A package says what it brings in a file beside it**, `dependencies.txt` next to its ontology, and the root
-pyproject reads each such file as the package's extra, named for its directory: `agent/transport/mqtt/` is
-`orexis[transport-mqtt]`, `agent/belief/` is `orexis[belief]`. A package with no file is the core's and brings
+pyproject reads each such file as the package's extra, named for its directory: `orexis-transport-mqtt/` is
+`orexis[transport-mqtt]`, `orexis-belief/` is `orexis[belief]`. A package with no file is the core's and brings
 nothing. Three units beside the packages do the same: the kernel's series writer, `series.dependencies.txt`
 beside `series.py`, whose client is imported only where a store is named; the simulator; and onboarding, which
 runs every package's code and so carries belief's. `dev.dependencies.txt` carries every extra, so a developer's

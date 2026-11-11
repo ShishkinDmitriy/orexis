@@ -23,7 +23,7 @@ has **participants**, `speech:participant`: an agent of the society and a person
 one **channel**, `speech:channel`: a thing of the carrier's own vocabulary, whose type says the carrier
 and which speech does not name — a `mqtt4ssn:Topic` is the bus, a `schema:ContactPoint` with a
 `schema:email` is mail, a `telegram:Chat` with the id the Bot API names it by is Telegram, in the
-Telegram member's own words (`agent/transport/telegram/ontology.ttl`). A chat may hold several agents
+Telegram member's own words (`orexis-transport-telegram/ontology.ttl`). A chat may hold several agents
 and several people: a group. A conversation
 is one exchange inside a chat; the chat stands for as long as the world states it, as a sensor's topic
 does.

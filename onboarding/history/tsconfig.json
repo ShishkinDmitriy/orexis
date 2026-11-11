@@ -21,5 +21,5 @@
       "preact-render-to-string": ["node_modules/preact-render-to-string"]
     }
   },
-  "include": ["core/**/*", "../../agent/*/ui/index.tsx", "../../domains/*/ui/index.tsx", "../../world/*/ui/index.tsx"]
+  "include": ["core/**/*", "../../orexis-*/ui/index.tsx", "../../domains/*/ui/index.tsx", "../../world/*/ui/index.tsx"]
 }

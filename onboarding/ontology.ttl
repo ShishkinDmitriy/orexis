@@ -9,7 +9,7 @@
 #  THE KINDS OF DOCUMENT ONBOARDING READS AND NO AGENT DOES (a-documents-kind-says-who-reads-it).
 #  A kind says who reads a document, and every reader loads only the kinds it reads: the agent's
 #  boot passes over a graph whose kind its T-Box does not declare. These are declared here, beside
-#  the code that reads them and outside `agent/`, which the image does not copy — so no agent's
+#  the code that reads them and outside the crates, which the image does not copy — so no agent's
 #  vocabulary can say what they are, and its ignorance of them is structural rather than a list of
 #  file names kept out of its filesystem.
 

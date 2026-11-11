@@ -7,7 +7,7 @@ description: >-
   possible worlds, ordered by what a path spent plus what the want's estimate says is left, and
   the plans handed to the executor - and the role of an agent that runs it. The one name the rest
   of the tree imports from planning; every act it sequences starts in the store and ends in it.
-  `agent/planning/src/planner/mod.rs`.
+  `orexis-planning/src/planner/mod.rs`.
 ---
 
 # Who runs it

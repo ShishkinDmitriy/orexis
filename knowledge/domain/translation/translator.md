@@ -20,7 +20,7 @@ description: >-
 
 A **translator** is an agent that stands in its own [chats](/domain/speech/chat.md), declared in its
 self graph as any [role](/domain/kernel/role.md) is. It is a [speaker](/domain/speech/speaker.md)
-too, so what a person states is kept as any peer's document. Its part, `agent/translation/src/create.rs`,
+too, so what a person states is kept as any peer's document. Its part, `orexis-translation/src/create.rs`,
 is linked to every transport member that says `prose` and to speech's `told`, and holds the language
 model at the one run-time edge where a model translates
 ([an-agent-translates-for-itself](/decisions/an-agent-translates-for-itself.md)). The model's call

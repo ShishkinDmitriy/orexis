@@ -1,15 +1,31 @@
-# THE RUST AGENT, ported one package at a time beside the Python one
-# (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md). Each package is a crate in its
-# own directory of `agent/`, beside its ontology and its Python, so both read the same documents.
+# THE AGENT, in Rust (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md). Each package is a crate of
+# its own at the root, `orexis-<package>/`, beside its ontology and its documents; the kernel is `orexis/` and the
+# binary `orexis-agent/`. A crate names another by the workspace's dependency, never by its path.
 [workspace]
 resolver = "3"
-members = ["agent", "agent/belief", "agent/coordination", "agent/execution", "agent/history", "agent/metrics", "agent/spans", "agent/planning", "agent/prediction", "agent/sensing", "agent/speech", "agent/translation", "agent/transport/http", "agent/transport/mqtt", "agent/transport/telegram", "agent/transport/email", "binary"]
+members = ["orexis", "orexis-*"]
 
 [workspace.package]
 edition = "2024"
 license = "MIT"
 
 [workspace.dependencies]
+orexis = { path = "orexis" }
+orexis-belief = { path = "orexis-belief" }
+orexis-coordination = { path = "orexis-coordination" }
+orexis-execution = { path = "orexis-execution" }
+orexis-history = { path = "orexis-history" }
+orexis-metrics = { path = "orexis-metrics" }
+orexis-planning = { path = "orexis-planning" }
+orexis-prediction = { path = "orexis-prediction" }
+orexis-sensing = { path = "orexis-sensing" }
+orexis-spans = { path = "orexis-spans" }
+orexis-speech = { path = "orexis-speech" }
+orexis-translation = { path = "orexis-translation" }
+orexis-transport-email = { path = "orexis-transport-email" }
+orexis-transport-http = { path = "orexis-transport-http" }
+orexis-transport-mqtt = { path = "orexis-transport-mqtt" }
+orexis-transport-telegram = { path = "orexis-transport-telegram" }
 oxigraph = { version = "0.5", default-features = false }
 
 # THE ENGINE OPTIMISED IN A TEST BUILD: a day of the greenhouse spends nearly all its time in oxigraph and spargebra,

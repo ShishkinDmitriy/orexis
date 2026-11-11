@@ -15,7 +15,7 @@ description: >-
 
 # What was true (on main at d4dfd6f0)
 
-Parts meet two ways. They read and write the store, and they are LINKED: `binary/src/lib.rs` hands planning a callback
+Parts meet two ways. They read and write the store, and they are LINKED: `orexis-agent/src/lib.rs` hands planning a callback
 that reads the Planner's fields after each pass and calls the executor's `end_for`, `supersede_after` and `adopt`, hands
 the executor a `taking` that borrows the Planner, and hands belief a `revised` that raises execution's `soon`. Fourteen
 `Rc<RefCell<…>>` hold the parts' objects so the links can reach them. Planning, execution and coordination ask for

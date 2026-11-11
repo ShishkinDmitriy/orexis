@@ -67,7 +67,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
 
-from documents.world import EMAIL, KERNEL, SECRETS, TELEGRAM, documents, known, packages_of, world_of
+from documents.world import EMAIL, SECRETS, TREE, directory_of, package_of, TELEGRAM, documents, known, packages_of, world_of
 from .series import HISTORY, METRICS
 from documents.store import document, graphs_of, kinds_in, rows, whose
 from . import installation, reading
@@ -105,7 +105,7 @@ INTERVAL_KEY = "METRICS_INTERVAL_S"
 
 @dataclass(frozen=True)
 class Image:
-    """What one agent's container is built from: the packages of `agent/` it holds, each a feature of the binary."""
+    """What one agent's container is built from: the packages it holds, each a feature of the binary."""
     tag: str
     packages: tuple[str, ...]
 
@@ -116,7 +116,7 @@ class Image:
 
     def build(self) -> str:
         """The service's image and the build that makes it, its own: the binary, handed the features to build it with."""
-        return (f"image: {self.tag}\n    build:\n      context: ../..\n      dockerfile: binary/Containerfile\n"
+        return (f"image: {self.tag}\n    build:\n      context: ../..\n      dockerfile: orexis-agent/Containerfile\n"
                 f"      args:\n        # the packages it runs, each a feature of the binary, and nothing else's\n"
                 f'        FEATURES: "{",".join(self.features())}"')
 
@@ -128,18 +128,16 @@ def image_of(world: str, agent_id: str, series: bool) -> Image:
     return Image(f"orexis-{world}-{agent_id}:local", packages)
 
 
-def _with_crates(named, root: Path = KERNEL) -> list[str]:
-    """`named` with every package whose crate they depend on, by the path each `Cargo.toml` states, and theirs."""
+def _with_crates(named) -> list[str]:
+    """`named` with every package whose crate they depend on, by the crate each `Cargo.toml` names, and theirs."""
     seen, todo = set(), list(named)
     while todo:
         package = todo.pop()
         if package in seen:
             continue
         seen.add(package)
-        crate = root / package
-        declared = tomllib.loads((crate / "Cargo.toml").read_text())["dependencies"]
-        paths = [(crate / d["path"]).resolve() for d in declared.values() if isinstance(d, dict) and "path" in d]
-        todo += [p.relative_to(root).as_posix() for p in paths if p != root and (p / "ontology.ttl").is_file()]
+        declared = tomllib.loads((directory_of(package) / "Cargo.toml").read_text())["dependencies"]
+        todo += [p for crate in declared if (p := package_of(crate)) and (TREE / crate / "ontology.ttl").is_file()]
     return sorted(seen)
 
 
@@ -368,8 +366,10 @@ def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, st
 
 
 #  WHAT A SERVICE IS HANDED OF THE TREES, said above the mounts.
-_SIMULATOR_TREES = ("\n      - ../../agent:/app/agent:ro\n      - ../../documents:/app/documents:ro\n      - ../../domains:/app/domains:ro"
-                     "\n      - ../../simulation:/app/simulation:ro")
+#  The crates by name, as its image copies them: a mount of a glob is no mount.
+_SIMULATOR_TREES = "".join(f"\n      - ../../{tree}:/app/{tree}:ro" for tree in [
+    *sorted(p.name for p in TREE.iterdir() if (p / "Cargo.toml").is_file() and p.name.split("-")[0] == "orexis"),
+    "documents", "domains", "simulation"])
 _TREES = """# The domains, mounted over the image's copy so a changed document needs a restart; the binary and the
       # tree's documents are its image's, so a change to the agent is a rebuild."""
 

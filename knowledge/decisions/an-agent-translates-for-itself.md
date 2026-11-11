@@ -45,7 +45,7 @@ sovereign read it and ruled on three things:
 
 # What was decided
 
-**Translation is a package of the agent**, `agent/translation/`, loaded where the self plays
+**Translation is a package of the agent**, `orexis-translation/`, loaded where the self plays
 `translation:Translator`, a role beneath `speech:Speaker`, since what a person states is kept as a
 statement through speech's own `heard` and what the agent says to a person reaches translation by
 speech's own `told`. Each translating agent holds the model's key, `infra/secrets/model.env`, mounted

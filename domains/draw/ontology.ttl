@@ -14,7 +14,7 @@
 #  A fair coin between two agents with no third party and no shared store, by commit and reveal (Blum): each
 #  COMMITS to a number by saying its hash, and once it has heard the peer's commitment REVEALS the number; each
 #  checks the peer's reveal against the peer's commitment, and both compute the winner from the two numbers.
-#  What it decides is a conflict of the coordination package's (agent/coordination/), and it says the outcome
+#  What it decides is a conflict of the coordination package's (orexis-coordination/), and it says the outcome
 #  in that package's word, `coordination:wonBy`, so the package reads who goes first and names no domain; a
 #  world imports this to have its agents draw, and could import another way of deciding instead
 #  (two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it, knowledge/domain/draw/draw.md).

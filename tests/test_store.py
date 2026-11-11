@@ -40,7 +40,7 @@ def _shipped(tree: str, *suffixes: str) -> list[Path]:
 # one of these globs and took cases off this guard without failing anything; a guard that quietly
 # stops guarding is worse than none, so each group is asserted non-empty below.
 _GROUPS = {
-    "agent": _shipped("agent", ".ttl"),
+    "crates": sorted(p for c in REPO_ROOT.glob("orexis*") if (c / "Cargo.toml").is_file() for p in _shipped(c.name, ".ttl")),
     "documents": _shipped("documents", ".py"),
     "onboarding": _shipped("onboarding", ".py"),
     "simulation": _shipped("simulation", ".py"),

@@ -95,7 +95,7 @@ is a variable and the sum runs over every parcel; the derivation writes a derive
 narrowed met-test, and `weigh` reads the want's own node before the desire's as it always did. A
 select that names no `$this` — hanoi's disks astray — or a want about several instances points at the
 desire's node as before. The derivation's table holds two wants under one desire to two figures,
-three and two (`agent/planning/tests/derive_wants/two_parcels_two_estimates.trig`), and the dispatcher's
+three and two (`orexis-planning/tests/derive_wants/two_parcels_two_estimates.trig`), and the dispatcher's
 test holds each want's figure to the van alone's.
 
 Measured, alternated in one session ([measure-the-search](/runbooks/measure-the-search.md)): each

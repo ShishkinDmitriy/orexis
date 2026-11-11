@@ -835,19 +835,19 @@ dependencies = [
  "orexis",
  "orexis-belief",
  "orexis-coordination",
- "orexis-email",
  "orexis-execution",
  "orexis-history",
- "orexis-http",
  "orexis-metrics",
- "orexis-mqtt",
  "orexis-planning",
  "orexis-prediction",
  "orexis-sensing",
  "orexis-spans",
  "orexis-speech",
- "orexis-telegram",
  "orexis-translation",
+ "orexis-transport-email",
+ "orexis-transport-http",
+ "orexis-transport-mqtt",
+ "orexis-transport-telegram",
  "oxigraph",
  "oxsdatatypes",
  "serde_json",
@@ -882,21 +882,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "orexis-email"
-version = "0.2.0"
-dependencies = [
- "imap",
- "lettre",
- "log",
- "mail-parser",
- "orexis",
- "orexis-speech",
- "oxigraph",
- "oxsdatatypes",
- "rustls 0.23.46",
-]
-
-[[package]]
 name = "orexis-execution"
 version = "0.2.0"
 dependencies = [
@@ -920,39 +905,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "orexis-http"
-version = "0.2.0"
-dependencies = [
- "log",
- "orexis",
- "orexis-sensing",
- "oxsdatatypes",
- "regex",
- "ureq",
-]
-
-[[package]]
 name = "orexis-metrics"
 version = "0.2.0"
 dependencies = [
  "log",
  "orexis",
  "oxsdatatypes",
-]
-
-[[package]]
-name = "orexis-mqtt"
-version = "0.2.0"
-dependencies = [
- "log",
- "orexis",
- "orexis-sensing",
- "orexis-speech",
- "oxigraph",
- "oxsdatatypes",
- "rumqttc",
- "serde_json",
- "tokio",
 ]
 
 [[package]]
@@ -1018,19 +976,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "orexis-telegram"
-version = "0.2.0"
-dependencies = [
- "log",
- "orexis",
- "orexis-speech",
- "oxigraph",
- "oxsdatatypes",
- "serde_json",
- "ureq",
-]
-
-[[package]]
 name = "orexis-translation"
 version = "0.2.0"
 dependencies = [
@@ -1044,6 +989,61 @@ dependencies = [
  "spargebra",
  "ureq",
  "uuid",
+]
+
+[[package]]
+name = "orexis-transport-email"
+version = "0.2.0"
+dependencies = [
+ "imap",
+ "lettre",
+ "log",
+ "mail-parser",
+ "orexis",
+ "orexis-speech",
+ "oxigraph",
+ "oxsdatatypes",
+ "rustls 0.23.46",
+]
+
+[[package]]
+name = "orexis-transport-http"
+version = "0.2.0"
+dependencies = [
+ "log",
+ "orexis",
+ "orexis-sensing",
+ "oxsdatatypes",
+ "regex",
+ "ureq",
+]
+
+[[package]]
+name = "orexis-transport-mqtt"
+version = "0.2.0"
+dependencies = [
+ "log",
+ "orexis",
+ "orexis-sensing",
+ "orexis-speech",
+ "oxigraph",
+ "oxsdatatypes",
+ "rumqttc",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "orexis-transport-telegram"
+version = "0.2.0"
+dependencies = [
+ "log",
+ "orexis",
+ "orexis-speech",
+ "oxigraph",
+ "oxsdatatypes",
+ "serde_json",
+ "ureq",
 ]
 
 [[package]]

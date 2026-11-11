@@ -26,7 +26,7 @@ and planning's bridge reader pass over it as they pass over a [transition](/doma
 # How it is run
 
 Speech runs every extraction over one statement and the world's documents beside it
-(`agent/speech/src/extract.rs`), when the statement is written, heard or said: the agent believes the round
+(`orexis-speech/src/extract.rs`), when the statement is written, heard or said: the agent believes the round
 it opened as its bidders believe the round they heard, by one path. What they construct goes into one
 belief graph derived from the statement (`prov:wasDerivedFrom`), the agent's own, arrived
 `orexis:Derived`, holding over the statement's period, and gone when it is said again or forgotten. The

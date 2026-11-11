@@ -68,7 +68,7 @@ pytest -q tests                 # layout and knowledge read every world: a docum
 pytest -q && lint-imports && ./tools/validate-okf.sh knowledge
 ```
 
-Write `binary/tests/<name>.rs` as `binary/tests/hanoi.rs` does — boot the world, run it, assert the claim — and break it on purpose once
+Write `orexis-agent/tests/<name>.rs` as `orexis-agent/tests/hanoi.rs` does — boot the world, run it, assert the claim — and break it on purpose once
 so it is a guard. Hand it no budget: it then searches at the one the self graph states, as the container will, and lowering
 that figure is one way to break it. `orexis-onboard <name>` is the full onboarding and needs the series store and the broker up;
 on a bench without them, the compose generator and the tests above are what hold the draft.

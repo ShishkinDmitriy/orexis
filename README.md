@@ -70,7 +70,8 @@ and [`reflection-is-genesis-run-again-over-the-series`](knowledge/decisions/refl
 ## Layout
 
 ```
-agent/         Agent 0.2.0 — the store and the runtime, and the packages beside them: belief
+orexis*/       Agent 0.2.0, a crate each — `orexis/` the store and the runtime, `orexis-agent/` the binary, and
+               the packages beside them, `orexis-<package>/`: belief
                (revision by SHACL rules), sensing (bytes to an observation), prediction (when
                a reading changes range), planning (desires, wants, the search), execution
                (intentions and how a step is taken), speech (a peer's document) and the MQTT
@@ -269,7 +270,7 @@ agent must not be able to talk a board into sleeping through a drought.
 
 ```bash
 pip install -e ".[dev]"
-pytest -q                    # agent/ and world/ — each world's own tests among them
+pytest -q                    # simulation/ and world/ — each world's own tests among them
 pytest -q tests              # the four files that read the whole tree
 lint-imports                 # onboarding may import agent, never the reverse
 ```

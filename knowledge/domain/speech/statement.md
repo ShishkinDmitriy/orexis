@@ -21,7 +21,7 @@ description: >-
 An **statement** is a graph of a document, as a peer or the agent said it. A document names its
 graphs and says in its default graph what each one is, as a world's files do; but a world's file is
 asserted and a statement is testimony, so `heard` and `said` keep every graph of a document as an
-statement (`agent/speech/src/statements.rs`). It is the speech package's kind, beneath `orexis:Graph` alone,
+statement (`orexis-speech/src/statements.rs`). It is the speech package's kind, beneath `orexis:Graph` alone,
 as sensing keeps an [observation](/domain/sensing/observation.md): no reader of the mind is handed one.
 
 # What it may say it is

@@ -1,10 +1,27 @@
-# THE SIMULATOR'S IMAGE, the one Python a world runs: the agent is `binary/Containerfile`. It reads a world as an agent
+# THE SIMULATOR'S IMAGE, the one Python a world runs: the agent is `orexis-agent/Containerfile`. It reads a world as an agent
 # would, so it holds the packages' documents and none of their code; and never onboarding, whose tools hold the admin token.
 FROM docker.io/library/python:3.13-slim AS source
 WORKDIR /src
-COPY agent/ agent/
-RUN find agent -type d -name tests -prune -exec rm -rf {} + \
- && find agent -type f ! -name '*.ttl' ! -name '*.trig' -delete
+# EVERY CRATE BY NAME, since a COPY of a glob lays their contents flat; tests/test_layout.py holds the list to the tree.
+COPY orexis/ tree/orexis/
+COPY orexis-agent/ tree/orexis-agent/
+COPY orexis-belief/ tree/orexis-belief/
+COPY orexis-coordination/ tree/orexis-coordination/
+COPY orexis-execution/ tree/orexis-execution/
+COPY orexis-history/ tree/orexis-history/
+COPY orexis-metrics/ tree/orexis-metrics/
+COPY orexis-planning/ tree/orexis-planning/
+COPY orexis-prediction/ tree/orexis-prediction/
+COPY orexis-sensing/ tree/orexis-sensing/
+COPY orexis-spans/ tree/orexis-spans/
+COPY orexis-speech/ tree/orexis-speech/
+COPY orexis-translation/ tree/orexis-translation/
+COPY orexis-transport-email/ tree/orexis-transport-email/
+COPY orexis-transport-http/ tree/orexis-transport-http/
+COPY orexis-transport-mqtt/ tree/orexis-transport-mqtt/
+COPY orexis-transport-telegram/ tree/orexis-transport-telegram/
+RUN find tree -type d -name tests -prune -exec rm -rf {} + \
+ && find tree -type f ! -name '*.ttl' ! -name '*.trig' -delete
 
 FROM docker.io/library/python:3.13-slim
 
@@ -18,7 +35,7 @@ COPY pyproject.toml pyproject.toml
 COPY simulation/dependencies.txt simulation/dependencies.txt
 RUN pip install "setuptools>=68" && pip install -e ".[simulation]"
 
-COPY --from=source /src/agent/ agent/
+COPY --from=source /src/tree/ ./
 COPY documents/ documents/
 COPY domains/ domains/
 COPY simulation/ simulation/

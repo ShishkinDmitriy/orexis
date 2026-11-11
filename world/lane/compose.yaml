@@ -59,7 +59,23 @@ services:
       - ./society.derived.ttl:/app/world/lane/society.derived.ttl:ro
       - ./society.ttl:/app/world/lane/society.ttl:ro
       - ./world.ttl:/app/world/lane/world.ttl:ro
-      - ../../agent:/app/agent:ro
+      - ../../orexis:/app/orexis:ro
+      - ../../orexis-agent:/app/orexis-agent:ro
+      - ../../orexis-belief:/app/orexis-belief:ro
+      - ../../orexis-coordination:/app/orexis-coordination:ro
+      - ../../orexis-execution:/app/orexis-execution:ro
+      - ../../orexis-history:/app/orexis-history:ro
+      - ../../orexis-metrics:/app/orexis-metrics:ro
+      - ../../orexis-planning:/app/orexis-planning:ro
+      - ../../orexis-prediction:/app/orexis-prediction:ro
+      - ../../orexis-sensing:/app/orexis-sensing:ro
+      - ../../orexis-spans:/app/orexis-spans:ro
+      - ../../orexis-speech:/app/orexis-speech:ro
+      - ../../orexis-translation:/app/orexis-translation:ro
+      - ../../orexis-transport-email:/app/orexis-transport-email:ro
+      - ../../orexis-transport-http:/app/orexis-transport-http:ro
+      - ../../orexis-transport-mqtt:/app/orexis-transport-mqtt:ro
+      - ../../orexis-transport-telegram:/app/orexis-transport-telegram:ro
       - ../../documents:/app/documents:ro
       - ../../domains:/app/domains:ro
       - ../../simulation:/app/simulation:ro
@@ -68,7 +84,7 @@ services:
     image: orexis-lane-courier_a:local
     build:
       context: ../..
-      dockerfile: binary/Containerfile
+      dockerfile: orexis-agent/Containerfile
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
         FEATURES: "belief,coordination,execution,mqtt,planning,sensing,speech"
@@ -122,7 +138,7 @@ services:
     image: orexis-lane-courier_b:local
     build:
       context: ../..
-      dockerfile: binary/Containerfile
+      dockerfile: orexis-agent/Containerfile
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
         FEATURES: "belief,coordination,execution,mqtt,planning,sensing,speech"

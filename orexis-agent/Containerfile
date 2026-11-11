@@ -1,0 +1,68 @@
+# THE BINARY'S IMAGE, one per agent whose every package is ported: the binary built with the features its roles
+# load, the tree's documents it boots from, and nothing else — no interpreter, no package manager, no shell
+# (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md). `orexis-compose` writes each such service's
+# build with its features; the world is mounted read-only beside the domains, as for the Python image.
+#
+#   cd world/<name> && podman compose build
+#
+# THE COPY LIST IS THE BOUNDARY here as in the root Containerfile: `onboarding/` is absent because it is not named
+# below, and tests/test_layout.py holds this file to that as well.
+
+# ── the binary ──────────────────────────────────────────────────────────────────────────────────
+# RocksDB, the volume's store, is C++ bound through bindgen, so the build stage carries a C++ compiler and libclang.
+FROM docker.io/library/rust:1-slim-bookworm AS build
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends clang libclang-dev g++ make \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /src
+COPY Cargo.toml Cargo.toml
+COPY Cargo.lock Cargo.lock
+# EVERY CRATE BY NAME, since a COPY of a glob lays their contents flat; tests/test_layout.py holds the list to the tree.
+COPY orexis/ orexis/
+COPY orexis-agent/ orexis-agent/
+COPY orexis-belief/ orexis-belief/
+COPY orexis-coordination/ orexis-coordination/
+COPY orexis-execution/ orexis-execution/
+COPY orexis-history/ orexis-history/
+COPY orexis-metrics/ orexis-metrics/
+COPY orexis-planning/ orexis-planning/
+COPY orexis-prediction/ orexis-prediction/
+COPY orexis-sensing/ orexis-sensing/
+COPY orexis-spans/ orexis-spans/
+COPY orexis-speech/ orexis-speech/
+COPY orexis-translation/ orexis-translation/
+COPY orexis-transport-email/ orexis-transport-email/
+COPY orexis-transport-http/ orexis-transport-http/
+COPY orexis-transport-mqtt/ orexis-transport-mqtt/
+COPY orexis-transport-telegram/ orexis-transport-telegram/
+ARG FEATURES=""
+RUN --mount=type=cache,target=/src/target \
+    --mount=type=cache,target=/usr/local/cargo/registry \
+    cargo build --release --locked -p orexis-agent --no-default-features --features "volume,${FEATURES}" \
+ && cp target/release/orexis-agent /orexis-agent
+
+# What the boot reads of the tree: each package's vocabulary and documents, beside the kernel's, and no code.
+RUN mkdir -p /out/tree /out/state /out/journal \
+ && find orexis orexis-* -path '*/tests' -prune -o \( -name '*.ttl' -o -name '*.trig' \) -print \
+    | tar -cf - -T - | tar -xf - -C /out/tree \
+ && chown -R 10001:10001 /out/state /out/journal
+
+# ── the image ───────────────────────────────────────────────────────────────────────────────────
+# glibc and libstdc++, which RocksDB links, and nothing to run but the binary.
+FROM gcr.io/distroless/cc-debian12
+
+WORKDIR /app
+COPY --from=build /orexis-agent /usr/local/bin/orexis-agent
+COPY --from=build /out/tree/ /app/
+# its volumes' mount points, the agent's own, so a volume created on them is the agent's to write
+COPY --from=build /out/state /app/state
+COPY --from=build /out/journal /app/journal
+COPY domains/ /app/domains/
+ENV OREXIS_TREE=/app
+
+# An agent runs as nobody in particular, the same uid the Python image runs as, so a volume it lived in stays its own.
+USER 10001:10001
+
+# No default command: the compose file says which agent this container is.

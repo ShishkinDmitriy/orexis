@@ -25,7 +25,7 @@ is a [transition](/domain/belief/transition.md), which changes a state once and 
 arrival's revision settles. An [action](/domain/kernel/action.md)'s [effect](/domain/planning/effect.md)
 is one too, applied once, by a search, to the world a step leaves.
 
-`revise` (`agent/belief/src/revise.rs`) runs a rules graph's **default rule set**, every global rule
+`revise` (`orexis-belief/src/revise.rs`) runs a rules graph's **default rule set**, every global rule
 in it — one not linked to a shape by `sh:rule`, since a shape rule runs per focus node and
 nothing here has one — layer by layer over an **evaluation graph**: what the caller hands as
 standing beside the source, the source itself, and what has been concluded of it so far.

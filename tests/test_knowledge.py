@@ -192,12 +192,16 @@ def test_an_index_entry_is_a_claim_not_an_abstract():
     )
 
 
+#  THE AGENT'S CRATES at the root, each a top-level directory a document names: `orexis/` and every `orexis-*/`.
+_CRATES = tuple(f"{p.name}/" for p in sorted(REPO_ROOT.iterdir()) if (p / "Cargo.toml").is_file()
+                and p.name.split("-")[0] == "orexis")
+
 # --- the bundle against the tree ---------------------------------------------------------------
 
 # Prose names paths constantly, and a rename sees none of them. Only backticked things that look
 # like a repo path are checked: a leading known top-level directory, or a `packages/...` segment.
 # A trailing `/` is a directory, `<name>` is a placeholder and matches any single segment.
-_TOP = ("agent/", "agent_old/", "packages/", "onboarding/", "tests/", "infra/", "tools/", "firmware/", "world/")
+_TOP = (*_CRATES, "agent_old/", "packages/", "onboarding/", "tests/", "infra/", "tools/", "firmware/", "world/")
 _PATH = re.compile(r"`((?:" + "|".join(re.escape(t) for t in _TOP) + r")[A-Za-z0-9_./<>*-]*)`")
 #  A PROCEDURE NAMES ITS PATHS IN FENCED COMMANDS AS OFTEN AS IN BACKTICKS — `pytest world/<name>`
 #  on its own line — so a skill or a role is read for a path wherever one stands, not only between
@@ -286,11 +290,16 @@ def _concrete(spec: str) -> str:
 
 #  THE TREES AGENT 0.1.0 WAS, retired on 2026-09-26: a record narrating them names a path that
 #  existed when it was written, and every one of them is history now, not a stale rename.
-_RETIRED_TREES = ("agent_old/", "packages/", "assembly/")
+_RETIRED_TREES = ("agent_old/", "packages/", "assembly/",
+                  #  AND THE TWO TREES THE RUST AGENT FLATTENED (2026-11-12), `agent/` and `binary/`: every path of theirs
+                  #  that a crate at the root still holds was rewritten to it, so what is left names what was.
+                  "agent/", "binary/")
 #  AND THE PYTHON AGENT, retired whole once every world ran on the binary: nothing under `agent/` is Python any more, so
 #  a `.py` there, or a world's test that booted it, is a record narrating what was, `tests/test_projects.py` holding the
 #  tree to it.
-_RETIRED_PYTHON = re.compile(r"agent/.*\.py$|world/conftest\.py$|world/[^/]+/tests/")
+#  A CRATE HOLDS NO `.py` EITHER, so one under a crate's name is 0.1.0's or the retired agent's module narrated: the
+#  package `orexis` was Python's before it was the kernel's crate.
+_RETIRED_PYTHON = re.compile(r"(agent|orexis[\w-]*)/.*\.py$|world/conftest\.py$|world/[^/]+/tests/")
 
 
 def test_no_document_names_a_path_that_is_not_there():
@@ -530,7 +539,7 @@ def _vocabulary_files(*names: str, retired: bool = True) -> list[Path]:
     """Every project Turtle file a word may be declared in: the agent's packages, onboarding's
     kinds, the domains, the worlds and the retired 0.1.0 vocabulary — or, given `names`, only the
     files so named."""
-    found = [*sorted(p for p in (REPO_ROOT / "agent").rglob("*.ttl") if "tests" not in p.parts),
+    found = [*sorted(p for c in _CRATES for p in (REPO_ROOT / c).rglob("*.ttl") if "tests" not in p.parts),
              *sorted((REPO_ROOT / "onboarding").glob("*.ttl")),
              *sorted((REPO_ROOT / "domains").rglob("*.ttl")), *sorted((REPO_ROOT / "world").rglob("*.ttl")),
              *(sorted(RETIRED.rglob("*.ttl")) if retired else [])]
@@ -1023,8 +1032,7 @@ def test_the_agent_structure_draws_every_graph_kind_and_no_other():
     from documents.store import NAMESPACES
 
     g = rdflib.Graph()
-    sources = [REPO_ROOT / "agent" / "ontology.ttl", *sorted((REPO_ROOT / "agent").glob("*/ontology.ttl")),
-               *sorted((REPO_ROOT / "agent").glob("*/*/ontology.ttl"))]
+    sources = sorted(REPO_ROOT.glob("orexis*/ontology.ttl"))
     for path in sources:
         g.parse(path, format="turtle")
     short = lambda c: next(f"{n}:{str(c)[len(i):]}" for n, i in NAMESPACES.items() if str(c).startswith(i))

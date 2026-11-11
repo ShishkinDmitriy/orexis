@@ -1,4 +1,4 @@
-# The build context is the repo root, because the image needs `agent/` (which carries the
+# The build context is the repo root, because the image needs the crates, `orexis/` and `orexis-*/` (which carry the
 # packages) and `domains/`. These are the parts it never needs, and
 # sending them is pure cost on a Pi.
 #

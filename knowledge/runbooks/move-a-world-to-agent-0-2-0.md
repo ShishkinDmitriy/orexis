@@ -34,7 +34,7 @@ The terrace is the example; put another world's name and its agent's id in their
 cd ~/projects/orexis && git pull
 source .venv/bin/activate && pip install -e ".[dev]"
 
-# 1. The image: `orexis-agent` is the 0.2.0 runtime now, and the image carries agent/ and domains/.
+# 1. The image: `orexis-agent` is the 0.2.0 runtime now, and the image carries the crates' documents and domains/.
 #    Each agent's compose service builds its own, with the extras its packages bring.
 cd world/terrace && podman compose build && cd ../..
 

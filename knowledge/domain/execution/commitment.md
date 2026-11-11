@@ -117,7 +117,7 @@ Why this and not the alternatives — the elder plan as the younger's ground, co
 afterwards — is [one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md);
 how planning and execution say these things to each other is
 [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md).
-The derivation's half of the first trigger is held by `agent/planning/tests/derive_wants/a_coupled_arrival_reopens_the_walking_want.trig`
+The derivation's half of the first trigger is held by `orexis-planning/tests/derive_wants/a_coupled_arrival_reopens_the_walking_want.trig`
 and of the second by `agent/planning/tests/test_derive_wants.py`; the arrivals on a world that
 answers its drives — a parcel, and a peer's van foreseen or seen — by `world/lane/tests/test_one_mind.py`; and what
 a reconsideration costs, and what asking the second trigger costs, is in

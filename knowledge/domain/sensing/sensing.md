@@ -8,7 +8,7 @@ description: >-
   the one before it, the latest holding until the next reading is due and a grace past it - and a
   sensor's last few, as deep as its rules read. Its rules conclude what a reading is of, its quantity
   and whether its sensor is stuck. It says when a sensor has gone silent - it predicts nothing, holds
-  nothing of a subject, and names no transport. `agent/sensing/`.
+  nothing of a subject, and names no transport. `orexis-sensing/`.
 ---
 
 # What it does

@@ -1,5 +1,5 @@
 """What a world's documents say, read as the agent reads them: the part of a boot the operator's tools and the simulator
-still do in Python. The agent itself is `binary/`; `onboarding.reading.boot` asks it for the store it will run on, and what
+still do in Python. The agent itself is `orexis-agent/`; `onboarding.reading.boot` asks it for the store it will run on, and what
 is here is what is asked BEFORE an agent exists or with none in it — a world read whole, which documents a boot takes, which
 packages a role loads."""
 
@@ -19,7 +19,32 @@ from .store import (answer, classify, close_catalogue, closed, document, forget_
 log = logging.getLogger("documents")
 
 
-KERNEL = Path(__file__).resolve().parent.parent / "agent"
+#  THE TREE, the repo's root: a crate per package beside the kernel's, `orexis/`, each named for its package —
+#  `transport/mqtt` is `orexis-transport-mqtt/` (`directory_of`).
+TREE = Path(__file__).resolve().parent.parent
+
+KERNEL = TREE / "orexis"
+
+
+def directory_of(package: str) -> Path:
+    """A package's directory, a crate of the tree: `transport/mqtt` is `orexis-transport-mqtt`."""
+    return TREE / f"{KERNEL.name}-{package.replace('/', '-')}"
+
+
+def package_of(directory: str) -> str | None:
+    """The package a directory of the tree is, where it is one: `orexis-transport-mqtt` is `transport/mqtt`."""
+    prefix = KERNEL.name + "-"
+    return directory[len(prefix):].replace("-", "/", 1) if directory.startswith(prefix) else None
+
+
+def in_a_crate(path) -> bool:
+    """Whether `path` is a document of the agent's tree: in the kernel's crate or a package's, never a domain's or a
+    world's beside them."""
+    try:
+        top = Path(path).resolve().relative_to(TREE).parts[0]
+    except (ValueError, IndexError):
+        return False
+    return top == KERNEL.name or package_of(top) is not None
 
 ONTOLOGY = OREXIS + "OntologyGraph"
 
@@ -38,7 +63,7 @@ SECRETS = "secrets"
 
 BELIEFS = "beliefs"
 
-#  A PACKAGE IS A DIRECTORY OF `agent/` HOLDING AN `ontology.ttl` — rule 2's package, found by
+#  A PACKAGE IS A CRATE OF THE TREE HOLDING AN `ontology.ttl` — rule 2's package, found by
 #  looking and never listed: the roles it serves are declared there, and so is every word it owns.
 #  It is named by its directory, which is what `packages_of` answers and `parts` is keyed by.
 VOCABULARY = "ontology.ttl"
@@ -57,7 +82,7 @@ PASS = ("belief", "planning", "execution", "sensing", "prediction", "speech", "t
 
 #  A SENSOR OF THE AGENT'S: one an observer role it plays reads (`sensing:sensor`), DECLARED, so
 #  nothing here walks where a sensor is mounted; onboarding holds the declaration to the world
-#  (`agent/sensing/ontology.ttl`'s observer shape). The one relation the transports read a sensor as
+#  (`orexis-sensing/ontology.ttl`'s observer shape). The one relation the transports read a sensor as
 #  the agent's by, the MQTT driver's and the HTTP driver's, and named here for the patterns below.
 MINE = "?me orexis:plays/sensing:sensor ?sensor ."
 
@@ -137,23 +162,22 @@ def documents(world: Path, packages=None, agent: str | None = None) -> list[Path
 
 def _documents_of(packages) -> list[Path]:
     """Every document in the directories of `packages`, their tests' cases apart."""
-    return [p for package in packages for p in sorted((KERNEL / package).rglob("*"))
-            if p.suffix in DOCUMENTS and "tests" not in p.relative_to(KERNEL / package).parts]
+    return [p for package in packages for p in sorted(directory_of(package).rglob("*"))
+            if p.suffix in DOCUMENTS and "tests" not in p.relative_to(directory_of(package)).parts]
 
 @cache
 def every_package() -> tuple[str, ...]:
-    """Every package of the tree — each directory of `agent/` but the kernel's own holding an
-    `ontology.ttl`, its tests' apart — in the order a pass runs their parts (`PASS`), and any
+    """Every package of the tree — each crate beside the kernel holding an
+    `ontology.ttl` — in the order a pass runs their parts (`PASS`), and any
     package that order does not name after, by its name. Found by looking, never listed."""
-    found = {p.parent.relative_to(KERNEL).as_posix() for p in KERNEL.rglob(VOCABULARY)
-             if p.parent != KERNEL and "tests" not in p.relative_to(KERNEL).parts}
+    found = {package for d in TREE.iterdir() if (d / VOCABULARY).is_file() and (package := package_of(d.name))}
     return tuple(sorted(found, key=lambda package: (PASS.index(package) if package in PASS else len(PASS), package)))
 
 @cache
 def _declared_kinds() -> frozenset[str]:
     """Every class a package's ontology declares, read apart, as `_vocabularies` reads the roles."""
     return frozenset(q.subject.value for package in every_package()
-                     for q in document(KERNEL / package / VOCABULARY).quads_for_pattern(
+                     for q in document(directory_of(package) / VOCABULARY).quads_for_pattern(
                          None, ox.NamedNode(_TYPE), ox.NamedNode(_CLASS), None)
                      if isinstance(q.subject, ox.NamedNode))
 
@@ -169,7 +193,7 @@ def _vocabularies() -> tuple[dict[str, str], dict[str, frozenset[str]]]:
     above: dict[str, set[str]] = {}
     declared: dict[str, str] = {}
     for package in every_package():
-        doc = document(KERNEL / package / VOCABULARY)
+        doc = document(directory_of(package) / VOCABULARY)
         for q in doc.quads_for_pattern(None, ox.NamedNode(_SUBCLASS), None, None):
             if isinstance(q.subject, ox.NamedNode) and isinstance(q.object, ox.NamedNode):
                 above.setdefault(q.subject.value, set()).add(q.object.value)
@@ -262,7 +286,7 @@ def _put_documents(store: ox.Store, world: Path, others: frozenset[str] = frozen
     own, passed = _put(store, world, read_with_imports(documents(world)), [])
     _owned(store, own)
     for path, _doc, graph, kinds in passed:
-        expected = others & set(kinds) or (KERNEL in Path(path).resolve().parents and set(kinds) & _declared_kinds())
+        expected = others & set(kinds) or (in_a_crate(path) and set(kinds) & _declared_kinds())
         log.log(logging.DEBUG if expected else logging.INFO,
                 "passed over %s: %s is no kind this agent reads", graph, ", ".join(sorted(kinds)))
 
