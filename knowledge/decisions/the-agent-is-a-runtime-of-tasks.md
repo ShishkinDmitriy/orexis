@@ -31,8 +31,14 @@ leaned on a fourth:
 3. jobs run in the order they came is what lets a snapshot case and a digest hold the binary to one result;
 4. one thread runs every part, so no two writers meet.
 
-The first is gone (step 7). The second is answered by where a computation runs, below. The third and fourth are the
-cost this record pays, and says how.
+**The one thread was Python's.** The Python agent ran every part on one thread, and the port kept it: a ported
+package was held to the Python agent's results, and a replay to what that agent sent, command for command, so the
+binary ran its jobs in the order the Python signals fired. The Python agent was retired on 2026-11-09, and nothing is
+held to its order any more; what one thread bought was that sameness, and Tokio offers the agent what Python's runtime
+could not - workers, a blocking pool and paused time in a test.
+
+The first premise is gone (step 7). The second is answered by where a computation runs, below. The third and fourth
+are the cost this record pays, and says how.
 
 # What was decided
 
