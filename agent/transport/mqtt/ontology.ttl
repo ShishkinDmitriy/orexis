@@ -43,3 +43,14 @@ mqtt:CarryingTrigger a owl:Class ; rdfs:subClassOf mqtt:Trigger ; rdfs:label "Ca
     rdfs:comment "What starts a carrying: speech's `speech:ProseKept`, beneath it here, naming the prose graph whose words it carries where they are the agent's own (`speech:kept`). The policy judges by the graph's provenance: a person's words it kept itself are translation's." .
 
 speech:ProseKept rdfs:subClassOf mqtt:CarryingTrigger .
+
+#  AND A DOCUMENT THE AGENT SAID, speech's `speech:Said`, which the member - above speech - puts beneath its telling
+#  trigger, since a peer is reached over the bus.
+
+mqtt:Telling a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Telling" ;
+    rdfs:comment "Publishing a document the agent said to each agent it is to that listens on a topic of the bus, the document read back from the store as it was said." .
+
+mqtt:TellingTrigger a owl:Class ; rdfs:subClassOf mqtt:Trigger ; rdfs:label "Telling trigger" ;
+    rdfs:comment "What starts a telling: speech's `speech:Said`, beneath it here, naming each statement of the document (`speech:statement`) and each agent it is to (`speech:to`). The policy tells it to each that listens on the bus, and passes over a person in silence." .
+
+speech:Said rdfs:subClassOf mqtt:TellingTrigger .

@@ -51,7 +51,9 @@ transport that kept a person's words as a `speech:ProseGraph`, is beneath `trans
 translation keeps its own answer the same way and says the same event, which each transport's ontology puts
 beneath its own carrying trigger (`telegram:CarryingTrigger`, with `speech:WritingAnnounced` for the agent shown writing),
 and each judges by the graph's provenance whose words they are: a person's are translation's, the agent's the
-carrier's.
+carrier's. And speech's `speech:Said`, a document the agent said, naming its statements and each it is to, is
+beneath `mqtt:TellingTrigger`, which tells it to each agent on the bus, and `translation:PhrasingTrigger`, which
+phrases it for each person in a chat; each reads the statements back from the store as speech said them.
 The others are declared as their policies are built (#1119).
 
 **An addressed event, by who asked for it.** A timer alarms for the part that set it, and a request

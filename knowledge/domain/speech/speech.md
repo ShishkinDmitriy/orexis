@@ -43,8 +43,11 @@ as from what it hears — and hands it, for each agent it is to, to the
 [transport](/domain/transport/transport.md) reaching the peer, which publishes it on the topic the peer
 listens to.
 
-Each statement said and each heard is an [event](/domain/kernel/event.md) of speech's, `speech:Said` with every
-agent it was told to and `speech:Heard`, carrying the statement whole, which the agent's
+What the agent says and hears are [events](/domain/kernel/event.md) of speech's: `speech:Said`, a document said,
+naming each of its statements and every agent it was told to, and `speech:Heard` for each statement heard, carrying
+the statement whole. `speech:Said` is how a document leaves: speech tells no transport, and the MQTT member and
+translation each put it beneath a trigger of their own and read the statements back from the store
+([policy](/domain/kernel/policy.md)). The agent's
 [journal](/domain/kernel/journal.md) keeps: the exchange between two agents is read there, in the words they spoke it
 in, and drawn in the [history view](/domain/onboarding/history-view.md) as a status and lines of the log. Which peer a
 statement heard came from is not said, for the reason below.

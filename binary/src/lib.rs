@@ -407,26 +407,6 @@ pub fn assemble_seen<'a>(
     } else {
         None
     };
-    //  WHAT SPEECH TELLS, every member that reaches the peer told it, and translation, which says it to a person.
-    #[cfg(feature = "speech")]
-    if let Some(speech) = speech.as_ref() {
-        #[cfg(feature = "mqtt")]
-        let member = transport.as_ref().map(|t| t.member.clone());
-        #[cfg(feature = "translation")]
-        let translator = translation.as_ref().map(|t| t.translator.clone());
-        *speech.speaker.tell.borrow_mut() = Some(Box::new(move |to, document| {
-            #[cfg(feature = "mqtt")]
-            if let Some(member) = member.as_ref() {
-                member.borrow_mut().tell(to, document)?;
-            }
-            #[cfg(feature = "translation")]
-            if let Some(translator) = translator.as_ref() {
-                translator.borrow_mut().told(to, document)?;
-            }
-            let _ = (to, document);
-            Ok(())
-        }));
-    }
     #[cfg(feature = "execution")]
     if let Some(execution) = execution.as_ref() {
         #[allow(unused_mut)]

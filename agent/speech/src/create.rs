@@ -1,5 +1,6 @@
 //! SPEECH'S PART, as `agent/speech/create.py` makes it (a-package-starts-itself): it says what a step said, as the
-//! agent said it (`said`), and tells each agent it is to through whoever is linked to reach a peer — a transport. What
+//! agent said it (`said`), and says `speech:Said`, naming the statements and each agent they are to, which whoever
+//! reaches a peer — a transport — or a person — translation — puts beneath a trigger of its own. What
 //! a peer says to it, `heard` keeps, called by the transport. STARTED, IT EXTRACTS WHAT IS BELIEVED OF EVERY STATEMENT
 //! WRITTEN (#958): it hears its own kind, heard or said alike, and `extract` writes what the extractions conclude of
 //! it into a belief graph, which the runtime then hands whoever revises beliefs. A statement written before the part
@@ -17,7 +18,7 @@ use orexis::runtime::{Heard as HeardEvent, Part, Pass, Starting};
 use orexis::store::{Store, iri};
 use oxigraph::model::{BlankNode, GraphName, NamedNode, Quad, Triple};
 
-use crate::events::{Heard, Said};
+use crate::events::{Heard, Said, Statement};
 
 use crate::extract::extract;
 use crate::ontology::{SPEAKING, SPEAKING_TRIGGER, STATEMENT, STATEMENT_GRAPH, TO};
@@ -68,47 +69,42 @@ fn described(beliefs: &Store, graph: &str) -> Result<(Vec<String>, Vec<Triple>),
     Ok((kinds, said))
 }
 
-/// Whoever reaches a peer: the agent a document is for, and the document's bytes.
-pub type Tells<'a> = Box<dyn FnMut(&str, &[u8]) -> Result<(), Error> + 'a>;
-
-/// What says a document and tells it: shared by the part and whoever says through it.
-pub struct Speaker<'a> {
+/// What says a document: shared by the part and whoever says through it.
+pub struct Speaker {
     beliefs: Store,
     pub me: String,
-    pub tell: RefCell<Option<Tells<'a>>>,
     /// Whoever watches the agent, and the instant the pass stands at.
     pub watch: RefCell<Watch>,
 }
 
-impl Speaker<'_> {
-    /// Believe `document` as the agent said it, and tell it to every agent it is `to`; the graphs believed.
+impl Speaker {
+    /// Believe `document` as the agent said it, and say it said to every agent it is `to`; the graphs believed.
     pub fn say(&self, document: &Document, to: &[String]) -> Result<Vec<String>, Error> {
         let written = said(&self.beliefs, &self.me, document)?;
-        self.tell_said(document, &written, to)?;
+        self.tell_said(&written, to)?;
         Ok(written)
     }
 
-    /// Say that the statements `written` were said to `to`, and tell `document` to each.
-    fn tell_said(&self, document: &Document, written: &[String], to: &[String]) -> Result<(), Error> {
+    /// Say that the statements `written` were said to `to`, for whoever carries them to each.
+    fn tell_said(&self, written: &[String], to: &[String]) -> Result<(), Error> {
         let watch = self.watch.borrow().clone();
-        if watch.connected() {
-            for graph in written {
-                let (kinds, said) = described(&self.beliefs, graph)?;
-                watch.emit(&Said {
-                    statement: graph.clone(),
-                    to: to.to_vec(),
-                    at: watch.at(),
-                    kinds,
-                    said,
-                });
-            }
+        if !watch.connected() {
+            return Ok(());
         }
-        if let Some(tell) = self.tell.borrow_mut().as_mut() {
-            let payload = document.trig()?;
-            for agent in to {
-                tell(agent, &payload)?;
-            }
+        let mut statements = Vec::new();
+        for graph in written {
+            let (kinds, said) = described(&self.beliefs, graph)?;
+            statements.push(Statement {
+                graph: graph.clone(),
+                kinds,
+                said,
+            });
         }
+        watch.emit(&Said {
+            statements,
+            to: to.to_vec(),
+            at: watch.at(),
+        });
         Ok(())
     }
 }
@@ -190,19 +186,18 @@ pub fn document_of(beliefs: &Store, graphs: &[String]) -> Result<Document, Error
 }
 
 /// Speech's part: the speaker, and the beliefs extracted at start for the pass to hand on.
-pub struct Speech<'a> {
-    pub speaker: Rc<Speaker<'a>>,
+pub struct Speech {
+    pub speaker: Rc<Speaker>,
     beliefs: Store,
     pending: Vec<String>,
 }
 
-impl<'a> Speech<'a> {
-    pub fn new(beliefs: &'a Store, me: &str) -> Self {
+impl Speech {
+    pub fn new(beliefs: &Store, me: &str) -> Self {
         Speech {
             speaker: Rc::new(Speaker {
                 beliefs: beliefs.clone(),
                 me: me.to_string(),
-                tell: RefCell::new(None),
                 watch: RefCell::new(Watch::default()),
             }),
             beliefs: beliefs.clone(),
@@ -211,7 +206,7 @@ impl<'a> Speech<'a> {
     }
 }
 
-impl Speech<'_> {
+impl Speech {
     fn arrival(&self, graph: &str) -> Result<Option<String>, Error> {
         let Some(cat) = self.beliefs.catalogue()? else {
             return Ok(None);
@@ -227,7 +222,7 @@ impl Speech<'_> {
     }
 }
 
-impl Part for Speech<'_> {
+impl Part for Speech {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         if let Some(cat) = self.beliefs.catalogue()? {
             let unextracted: Vec<String> = self
@@ -279,7 +274,7 @@ impl Part for Speech<'_> {
         }
         let graphs: Vec<String> = statements.iter().map(|s| s.as_str().to_string()).collect();
         let activity = pass.begin(SPEAKING, &statements);
-        let told = document_of(&self.beliefs, &graphs).and_then(|d| self.speaker.tell_said(&d, &graphs, &to));
+        let told = self.speaker.tell_said(&graphs, &to);
         pass.end(activity);
         told?;
         Ok(Vec::new())
@@ -303,23 +298,30 @@ mod tests {
     use crate::said::tests::{T, me, quads, store};
 
     #[test]
-    fn its_part_believes_what_was_said_and_tells_each_agent() {
+    fn its_part_believes_what_was_said_and_says_it_said_to_each_agent() {
         let store = store();
         let part = Speech::new(&store, &me());
-        let told = Rc::new(RefCell::new(Vec::new()));
-        let into = told.clone();
-        *part.speaker.tell.borrow_mut() = Some(Box::new(move |to, _| {
-            into.borrow_mut().push(to.to_string());
-            Ok(())
-        }));
+        let heard = Rc::new(RefCell::new(Vec::new()));
+        let into = heard.clone();
+        part.speaker.watch.borrow().connect(move |event, _| {
+            into.borrow_mut().push((event.kind(), event.about()));
+        });
         let round = format!("{T}round");
         let to = [format!("{T}rose"), format!("{T}fern")];
         assert_eq!(
             part.speaker
                 .say(&Document::of_quads(quads(&round, "open")), &to)
                 .unwrap(),
-            [round]
+            std::slice::from_ref(&round)
         );
-        assert_eq!(*told.borrow(), to);
+        let node = |s: &str| oxigraph::model::Term::NamedNode(NamedNode::new(s).unwrap());
+        assert_eq!(
+            *heard.borrow(),
+            [(
+                Some(crate::ontology::SAID),
+                vec![(STATEMENT, node(&round)), (TO, node(&to[0])), (TO, node(&to[1]))]
+            )],
+            "one telling, naming its statement and each agent it is to"
+        );
     }
 }

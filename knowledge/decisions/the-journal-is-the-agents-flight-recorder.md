@@ -44,8 +44,8 @@ holdings in the words a question carries them in, a conflict under its own name.
 journal stamps its `prov:atTime`. So a plan's steps are read back in their chain and a step by its own IRI, which is
 what planning and execution meet at.
 
-**What two agents said to each other is history too.** Speech journals each statement the agent said, with every
-agent it was told to (`speech:Said`), and each a peer said to it (`speech:Heard`), the statement carried whole and the
+**What two agents said to each other is history too.** Speech journals each document the agent said, its statements
+and every agent it was told to (`speech:Said`), and each a peer said to it (`speech:Heard`), the statement carried whole and the
 kind it says it is beside it — a question, an answer, a commitment, in the words of whoever spoke it. Coordination
 journals what it held and concluded, and what it asked and answered is speech's to say; a commitment and a reveal are
 steps, which execution journals.

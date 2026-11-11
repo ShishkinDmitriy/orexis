@@ -8,6 +8,8 @@ pub const SPEAKING: &str = "http://example.org/orexis/speech#Speaking";
 pub const SPEAKING_TRIGGER: &str = "http://example.org/orexis/speech#SpeakingTrigger";
 pub const STATEMENT: &str = "http://example.org/orexis/speech#statement";
 pub const TO: &str = "http://example.org/orexis/speech#to";
+/// A document the agent said, as the event it is said as.
+pub const SAID: &str = "http://example.org/orexis/speech#Said";
 pub const EXTRACTION: &str = "http://example.org/orexis/speech#Extraction";
 
 /// Where what the extractions conclude of `statement` is kept: a belief derived from it.
