@@ -2,7 +2,7 @@
 type: Domain Concept
 title: Package
 description: >-
-  A directory of `crates/` that owns a concern and the words for it — belief, sensing, prediction,
+  A crate, `orexis-<package>/`, that owns a concern and the words for it — belief, sensing, prediction,
   planning, execution, speech, the MQTT transport — with its own namespace in its own
   `ontology.ttl`, importing only what lies beneath it. A domain is its counterpart outside the
   code - documents and no Python.
@@ -17,21 +17,21 @@ exports that act alone.
 
 | package | concern |
 |---|---|
-| `crates/orexis-belief/` | revision: the rules a store holds, run over what was written |
-| `crates/orexis-sensing/` | an instrument's bytes become an observation |
-| `crates/orexis-prediction/` | when a reading will change range |
-| `crates/orexis-planning/` | desires and wants, the search, the plan |
-| `crates/orexis-execution/` | intentions, taking a step, the world's answer |
-| `crates/orexis-speech/` | a peer's document heard, the agent's own said |
-| `crates/orexis-transport-<member>/` | reaching the society, a crate per member: MQTT, HTTP, Telegram, email |
+| `orexis-belief/` | revision: the rules a store holds, run over what was written |
+| `orexis-sensing/` | an instrument's bytes become an observation |
+| `orexis-prediction/` | when a reading will change range |
+| `orexis-planning/` | desires and wants, the search, the plan |
+| `orexis-execution/` | intentions, taking a step, the world's answer |
+| `orexis-speech/` | a peer's document heard, the agent's own said |
+| `orexis-transport-<member>/` | reaching the society, a crate per member: MQTT, HTTP, Telegram, email |
 
-`crates/orexis/src/runtime.rs` is the container that assembles them, and the kernel's `orexis:` vocabulary
-(`crates/orexis/ontology.ttl`) keeps only what packages meet at: an action, an agent, the graph kinds.
+`orexis/src/runtime.rs` is the container that assembles them, and the kernel's `orexis:` vocabulary
+(`orexis/ontology.ttl`) keeps only what packages meet at: an action, an agent, the graph kinds.
 
 # How a package is loaded
 
-**Only for a [role](/domain/kernel/role.md) the agent is declared in.** A package is a crate of
-`crates/` holding an `ontology.ttl`, named for it (`transport/mqtt` is `crates/orexis-transport-mqtt/`), found by looking and never listed, and that ontology declares the
+**Only for a [role](/domain/kernel/role.md) the agent is declared in.** A package is a crate at the
+repo's root holding an `ontology.ttl`, named for it (`transport/mqtt` is `orexis-transport-mqtt/`), found by looking and never listed, and that ontology declares the
 roles the package serves, beneath `orexis:Role`:
 
 | package | its role | an agent in it |
@@ -57,7 +57,7 @@ loaded or not.
 **A transport is no role.** It is loaded where a loaded role needs bytes and the society wires a bus
 — the MQTT member for an observer one of whose sensors publishes on a topic, or a speaker that
 listens to one; the HTTP member for an observer one of whose sensors is a thing with a form —
-asked over the world's common beliefs and the self (`TRANSPORTS` in `crates/orexis/src/runtime.rs`). That is the
+asked over the world's common beliefs and the self (`TRANSPORTS` in `orexis/src/runtime.rs`). That is the
 one derivation left, since which bus reaches a device is wiring and not a choice. History and metrics
 are loaded from the environment.
 

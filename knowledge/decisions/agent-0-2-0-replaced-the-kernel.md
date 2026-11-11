@@ -14,7 +14,7 @@ description: >-
 
 0.1.0 was a kernel of three layer packages, capabilities granted by premises, a choir of extension
 points, a keeper walking an intention ledger and a market of signed claims across some twenty-five
-distributions. Agent 0.2.0 was built beside it in `crates/`: one store whose catalogue says what
+distributions. Agent 0.2.0 was built beside it in `agent/`: one store whose catalogue says what
 every graph is, belief revision by SHACL rules, sensing and prediction as packages, a planner that
 searches possible worlds in an imaginarium, an executor holding the world to each step's
 prediction, speech between agents as documents, and domains of files where 0.1.0 had capability

@@ -4,7 +4,7 @@
 (knowledge/decisions/a-documents-kind-says-who-reads-it.md). An agent's boot passes over a graph
 whose kind its T-Box does not declare. Onboarding's own kinds — the hardware `orexis-firmware`
 interpolates into a board's config.h, and the deployment — are declared in `ontology.ttl` beside
-this module and outside `crates/`, so no agent's vocabulary can say what they are and the import
+this module and outside the crates, so no agent's vocabulary can say what they are and the import
 direction holds: onboarding may import the agent, never the reverse.
 
 So onboarding does not borrow the agent's boot whole, which is what once made the hardware public
@@ -72,7 +72,7 @@ import pyshacl
 import rdflib
 
 from documents.ontology import local_of
-from documents.world import (EMAIL, TREE, MQTT, ONTOLOGY, SPEAKER, TELEGRAM, documents, known, packages_of, read_with_imports,
+from documents.world import (EMAIL, in_a_crate, MQTT, ONTOLOGY, SPEAKER, TELEGRAM, documents, known, packages_of, read_with_imports,
                            roles_of, selves, world_of)
 from documents.store import (NAMESPACES, DocumentRefused, answer, catalogue_of, close_catalogue, closed, document, graphs_of, kinds_in, put_document,
                          rdflib_view, rows, whose)
@@ -368,7 +368,7 @@ _AGENTS_Q = "SELECT ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id } ORDER B
 #  the self: mounted on what it acts for, on a sample it carries (a contact, #1003), on a sample of it that
 #  nothing carries, or on a place containing it. A carried sample reports where it is carried, not to what
 #  it stands for: a receiver standing for the other van is the carrying van's (#1004). The converse of the
-#  observer shape (crates/orexis-sensing/requirements.ttl), which refuses a sensor a role reads that does not
+#  observer shape (orexis-sensing/requirements.ttl), which refuses a sensor a role reads that does not
 #  report to it; between them a declaration and the world it is made in say one thing. A SENSOR, typed: a
 #  contact a van carries is hosted by it too, and is no sensor.
 _UNREAD_Q = """
@@ -429,7 +429,7 @@ def _refusals(here: Path, beliefs: ox.Store, broken: list[str]) -> list[str]:
             #  A PACKAGE'S DOCUMENT FOR A READER THE AGENT DOES NOT LOAD is passed over, as its requirements are: a
             #  kind only a package above declares, which an agent playing none of its roles holds no word of. A
             #  world's document is held to its loaded packages still.
-            if TREE in Path(path).resolve().parents:
+            if in_a_crate(path):
                 everyone = everyone if everyone is not None else world(here)
                 if known(everyone, kinds):
                     continue

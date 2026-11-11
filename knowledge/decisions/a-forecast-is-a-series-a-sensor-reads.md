@@ -33,7 +33,7 @@ first answered a series sensor as due and the container nudged the transport; no
 started, asks the runtime to fetch each of its sensors at once and every `ssn-system:Frequency`
 after, and the runtime does the waiting.
 
-**The service is reached by its Thing Description.** The HTTP member (`crates/orexis-transport-http/`)
+**The service is reached by its Thing Description.** The HTTP member (`orexis-transport-http/`)
 adopts the W3C WoT Thing Description as MQTT's adopts MQTT4SSN: it declares no word, the sensor
 is also a `td:Thing`, and its `td:hasForm` is an `hctl:Form` whose `hctl:hasTarget` is a URI
 template. The template's variables are filled from the `schema:geo` of what the sensor is hosted

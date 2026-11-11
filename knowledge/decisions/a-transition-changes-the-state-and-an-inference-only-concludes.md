@@ -78,11 +78,11 @@ timestamp: 2026-10-10T12:00:00Z
 > of one order are about two properties, so nothing reads differently. **A step is a move where the
 > world it makes differs from the one it found**, where a delete template made it one whatever it
 > matched: an effect putting back what it took passed time as the declared wait does, and is now no
-> move (`crates/orexis-planning/tests/plans/an_effect_putting_back_what_it_takes_is_no_move.trig`). **The
+> move (`orexis-planning/tests/plans/an_effect_putting_back_what_it_takes_is_no_move.trig`). **The
 > belief base keeps the two CONSTRUCTs**: a transition there deletes from whichever of the agent's
 > derived state graphs holds a triple, several graphs, and the engine's update deletes from the one
 > it is `WITH` — until the agent's own state is one graph (#953, slice 3), and with it one order
-> reading one state, as `crates/orexis-belief/tests/trigger/` still holds there.
+> reading one state, as `orexis-belief/tests/trigger/` still holds there.
 
 > **Amended 2026-10-11 (#953, slice 3): the target is a belief.** `orexis:StateGraph` folded into
 > `orexis:BeliefGraph`, so the state graph `trigger` prepares for an arrival is a belief the agent
@@ -102,20 +102,20 @@ change triples, and each has found its own way around rules that cannot.
 
 # What the tree held, read on 2026-10-10
 
-- **Revision only adds.** `crates/orexis-belief/src/revise.rs` runs SHACL 1.2's inference rules as the draft
+- **Revision only adds.** `orexis-belief/src/revise.rs` runs SHACL 1.2's inference rules as the draft
   says: `sh:construct`, layer by layer to a fixpoint, what is inferred being what the evaluation
   graph does not already hold, written into the source's revision graph, and replaced only by the
   source being rewritten. [Revision](/domain/belief/revision.md) says it: "a rule states what it adds
   and nothing about what it removes".
-- **An action's effect already deletes.** `crates/orexis-planning/src/take.rs` runs an effect's rules: a
+- **An action's effect already deletes.** `orexis-planning/src/take.rs` runs an effect's rules: a
   `sh:SPARQLRule` whose `sh:construct` is what it adds or whose second text, then planning's word, is a
   `DELETE … WHERE`, grouped by `sh:order`, every rule of one order reading the same world, its deletions
   applied before its additions and a later order reading what the earlier made, each run once,
   scoped to the world it changes and naming no graph. pySHACL would run the same rules to a
   fixpoint, "the opposite shape" ([a-plan-is-a-path-of-graph-diffs](/decisions/a-plan-is-a-path-of-graph-diffs.md)).
 - **Everything else that changes a triple is Python.** Prediction rewrote a key's forecasts until #1000
-  made its foresight the grounds' (`crates/orexis-prediction/src/foresee.rs`); the executor closes a committed step by
-  forgetting it (`crates/orexis-execution/src/executor.rs`); and slice 1's `believe` replaced a subject belief.
+  made its foresight the grounds' (`orexis-prediction/src/foresee.rs`); the executor closes a committed step by
+  forgetting it (`orexis-execution/src/executor.rs`); and slice 1's `believe` replaced a subject belief.
 - **The two kinds were already told apart in AGENTS.md, by package rather than by what they do**:
   "the effect deletes because a possible world is where taking something away is the point; the
   never-delete rule is belief revision's".

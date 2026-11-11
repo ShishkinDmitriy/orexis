@@ -22,7 +22,7 @@ description: >-
 
 Every agent's image installed one list: `pyoxigraph`, `rdflib`, `pyparsing`, `paho-mqtt`,
 `influxdb-client`, `cryptography` and `python-dotenv` — the MQTT client in an agent on no bus, and onboarding's
-own libraries in every agent — and copied the whole of `crates/`, so an observer's container held the planner.
+own libraries in every agent — and copied the whole of `agent/`, so an observer's container held the planner.
 Telegram, email, HTTP and the model client had been written on the standard library so as to add nothing, which
 was a habit and no rule. The sovereign asked for a core with a minimal set, a package allowed to bring its own,
 and then an image of its own for each agent.
@@ -33,8 +33,8 @@ and then an image of its own for each agent.
 engine and rdflib — and nothing else.
 
 **A package says what it brings in a file beside it**, `dependencies.txt` next to its ontology, and the root
-pyproject reads each such file as the package's extra, named for its directory: `crates/orexis-transport-mqtt/` is
-`orexis[transport-mqtt]`, `crates/orexis-belief/` is `orexis[belief]`. A package with no file is the core's and brings
+pyproject reads each such file as the package's extra, named for its directory: `orexis-transport-mqtt/` is
+`orexis[transport-mqtt]`, `orexis-belief/` is `orexis[belief]`. A package with no file is the core's and brings
 nothing. Three units beside the packages do the same: the kernel's series writer, `series.dependencies.txt`
 beside `series.py`, whose client is imported only where a store is named; the simulator; and onboarding, which
 runs every package's code and so carries belief's. `dev.dependencies.txt` carries every extra, so a developer's

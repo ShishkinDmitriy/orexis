@@ -96,7 +96,7 @@ once. In a group it says whom the words were for, as Telegram tells it: words ta
 replying to one of its messages are addressed to the agent, words tagging or replying to someone else
 and not it are not, and which account is the bot's own it asks the API (`getMe`) rather than any
 document. `say_to` posts `sendMessage` with the chat's id, as a reply to the message the agent answers.
-Its words are its own ontology's (`crates/orexis-transport-telegram/ontology.ttl`).
+Its words are its own ontology's (`orexis-transport-telegram/ontology.ttl`).
 
 # The member that ships: email
 

@@ -113,8 +113,8 @@ domain the agent acts in, abstracted from how any sensor is wired.
 # What the tree held, read on 2026-10-09
 
 - **One observation per sensor, replaced in place.** A sensor's latest observation is one node,
-  `observation_by(sensor)` in `crates/orexis-sensing/src/ontology.rs`, in one graph the next reading replaces
-  whole (`crates/orexis-sensing/src/received.rs`). Its sides are revisions of that graph.
+  `observation_by(sensor)` in `orexis-sensing/src/ontology.rs`, in one graph the next reading replaces
+  whole (`orexis-sensing/src/received.rs`). Its sides are revisions of that graph.
 - **The mind reads that node directly.** The greenhouse's desire (`world/greenhouse/desires.ttl`)
   and both allotment growers walk `orexis:actsFor` back along `sosa:hasFeatureOfInterest` to it and
   ask `sensing:below`. The dose, the heat and the market's claim-and-dose
@@ -124,7 +124,7 @@ domain the agent acts in, abstracted from how any sensor is wired.
   `sensing:inside` on it, and the command sizes the dose from its `sosa:hasSimpleResult`. The soil's
   drying (`domains/actuation/flows.ttl`) takes its rate from the reading's number, and rain
   (`domains/climate/flows.ttl`) from a forecast observation's band. Prediction
-  (`crates/orexis-prediction/src/foresee.rs`) reads the observation in hand and answers a predicted
+  (`orexis-prediction/src/foresee.rs`) reads the observation in hand and answers a predicted
   `sosa:Observation` at each crossing, which the rules judge in the ground the planner lays there (#1000).
 - **Planning's and execution's code name no SOSA word.** They are generic over triples; the reading
   enters them through the domains' texts alone.
@@ -135,7 +135,7 @@ domain the agent acts in, abstracted from how any sensor is wired.
 - **The world's hash takes an IRI by identity** and only a blank node by its content
   (`agent/hash_named_graph.py`), so anything the mind reads needs a name that does not change with
   every reading.
-- **A rule concludes beside its source and never deletes** (`crates/orexis-belief/src/revise.rs`), and what
+- **A rule concludes beside its source and never deletes** (`orexis-belief/src/revise.rs`), and what
   replaces a conclusion is its source rewritten.
 - **The stack already had the row this skipped.** [the-agent-stack-is-a-second-axis](/decisions/the-agent-stack-is-a-second-axis.md)
   draws translation, then BRF — "what counts as a belief change" — then the mind. The tree wired

@@ -149,7 +149,7 @@ that reach nothing, so a document that will not parse, a self stated twice or a 
 refused before anything is granted, against the documents and secrets the container will be handed; and what the
 requirements are held to is what that agent will believe, booted once, by the agent that will run (`reading.boot`).
 Its verdict says beside the store whether the agent holds a desire and what of its world as posed its constraints
-call impossible. The `rust` job holds every shipped world to it (`crates/orexis-agent/tests/check.rs`).
+call impossible. The `rust` job holds every shipped world to it (`orexis-agent/tests/check.rs`).
 
 # What it reads that no agent does
 
@@ -173,5 +173,5 @@ says so at DEBUG; a kind no reader declares is still said at INFO where it is pa
 
 `orexis-influx` holds the admin token that opens every bucket, which no agent may ever hold. The
 surest guarantee is that the code using it is absent from the image: `onboarding/` sits beside
-`crates/`, the Containerfile does not copy it, a layout test fails if it ever does, and
+the crates, the Containerfile does not copy it, a layout test fails if it ever does, and
 `lint-imports` holds the direction — onboarding may import the agent, never the reverse.

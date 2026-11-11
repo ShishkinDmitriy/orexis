@@ -21,7 +21,7 @@ rectangle "podman build,\nthen up --force-recreate" as B #EAF5EA
 rectangle "a fresh belief volume\nwhat it believed is lost" as V #FBE9E7
 rectangle "orexis-onboard, then up -d" as O #EAF5EA
 
-C --> R : crates/ or domains/ code
+C --> R : a crate or domains/ code
 C --> R : world.ttl · society.ttl\na range, a rate, a scaling, a venue
 C --> B : pyproject.toml
 C --> V : the agent's own documents\na role, a sensor it reads, a stance,\na desire, a want, its state

@@ -85,7 +85,7 @@ the world imports, the world's own, and every package's layer. Each is a module 
 exporting what the contract in `onboarding/history/core/index.ts` says, imported as `@orexis/ui`:
 
 ```sparql
-# crates/orexis-coordination/ui/Concluded.rq
+# orexis-coordination/ui/Concluded.rq
 SELECT ?e ?at ?c ?peer ?standing WHERE { GRAPH ?e {
   ?e a coordination:Concluded ; prov:atTime ?at .
   OPTIONAL { ?e coordination:conflict ?c . ?c coordination:with ?peer ; coordination:standing ?standing } } }

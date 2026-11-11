@@ -234,7 +234,7 @@ Two mechanisms avoid it, and they are not interchangeable:
 - **updates** take no such argument and must say it in the text — `USING <g>` is to
   `DELETE/INSERT … WHERE` what `FROM` is to `SELECT`. Every `rules.ru` carries them now.
 
-`tests/test_provenance.py` fails any `SELECT` in `crates/` or `onboarding/` that narrows itself to
+`tests/test_provenance.py` fails any `SELECT` in `agent/` or `onboarding/` that narrows itself to
 one public graph. It reads string literals via `ast` rather than grepping, so the prose
 explaining all this cannot trip it.
 

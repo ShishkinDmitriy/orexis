@@ -50,7 +50,7 @@ a wrong assertion but an absent one, and green either way.
 
 **Every deferred import in shipped code resolves**, checked by
 `tests/test_deferred_imports.py::test_every_deferred_import_resolves`. It walks the AST of
-`crates/`, `packages/` and `onboarding/`, collects every `Import` and `ImportFrom` inside a
+`agent/`, `packages/` and `onboarding/`, collects every `Import` and `ImportFrom` inside a
 function body, and resolves each module and each imported name — a name that is an attribute, or
 a submodule not yet loaded, which is the distinction a first draft got wrong and reported
 thirteen false positives on.

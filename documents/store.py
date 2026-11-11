@@ -96,7 +96,7 @@ _CATALOGUES = f"SELECT ?g WHERE {{ GRAPH ?g {{ ?g a <{CATALOGUE}> }} }}"
 # What keeps a discovered label honest is `agent.loader`'s refusal of one label bound to two
 # IRIs anywhere in the tree — which is the whole of what the old "an external vocabulary is not
 # a package's to bind" argument needed, and it holds without the kernel naming the vocabulary.
-# `orexis:` arrives the discovered way too, from the kernel's own `crates/orexis/ontology.ttl`.
+# `orexis:` arrives the discovered way too, from the kernel's own `orexis/ontology.ttl`.
 #
 # Assembled eagerly, at import. A malformed or missing ontology is then an error the moment the
 # store is imported rather than the first time a query runs, which is the failure that used to
@@ -118,8 +118,8 @@ _KERNEL = {
 }
 
 #  EVERY NAMESPACE THIS TREE DECLARES, found by looking at the tree — never listed, and never
-#  asked of anything outside it. `crates/orexis/**/ontology.ttl` is where a word of ours is declared:
-#  `crates/orexis/ontology.ttl` for the kernel's and `crates/orexis-planning/ontology.ttl` for
+#  asked of anything outside it. `orexis/**/ontology.ttl` is where a word of ours is declared:
+#  `orexis/ontology.ttl` for the kernel's and `orexis-planning/ontology.ttl` for
 #  the layer's, and a subtree that arrives as its own distribution brings its own.
 #
 #  IT USED TO ASK A LOADER THAT SCANNED SOMEWHERE ELSE. The 0.1.0 assembly walked `packages/` and
@@ -133,21 +133,22 @@ _KERNEL = {
 #  spellings are valid SPARQL, so no engine could report it.
 #
 #  `orexis:` IS DECLARED BY THE LAYERS RATHER THAN BY ITS OWN FILE, and that is a gap rather
-#  than a design: `crates/` has no `.ttl`, because the one that sat there turned out to
+#  than a design: `orexis/` has no `.ttl`, because the one that sat there turned out to
 #  declare twenty-seven `execution:` terms and not one `orexis:` one, and went to the layer
 #  whose words they are. The kernel's own T-Box — what `planning:WantGraph` IS, what it is
 #  beneath — is not in this tree at all yet; it arrives with genesis, and until then a case
 #  declares the axioms it needs. So the label survives here only because both layers' files
 #  bind it in their own `@prefix` lines. True today, and nothing would say so if a layer
 #  stopped.
-_TREE = Path(__file__).resolve().parent.parent / "crates"
+_TREE = Path(__file__).resolve().parent.parent
 _ANY_PREFIX = re.compile(r"@prefix\s+([A-Za-z][\w.-]*):\s*<([^>]*)>")
 
 
 def _declared() -> dict[str, str]:
     out: dict[str, str] = {}
     origin: dict[str, Path] = {}
-    for path in sorted(_TREE.rglob("*.ttl")):
+    #  THE CRATES ALONE, `orexis/` and each `orexis-*/`: a domain or a world beside them speaks its own prefixes.
+    for path in sorted(p for crate in _TREE.glob("orexis*") if crate.is_dir() for p in crate.rglob("*.ttl")):
         for label, iri in _ANY_PREFIX.findall(path.read_text()):
             if (prior := out.get(label)) is not None and prior != iri:
                 raise RuntimeError(

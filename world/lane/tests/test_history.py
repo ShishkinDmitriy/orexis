@@ -35,8 +35,8 @@ def world():
 
 def test_the_lane_is_drawn_by_the_courier_s_scene_and_by_each_package_s_own_layer():
     assert [p.relative_to(REPO).as_posix() for p in drawings(LANE)] == [
-        "domains/courier/ui/index.tsx", "crates/orexis-coordination/ui/index.tsx", "crates/orexis-execution/ui/index.tsx", "crates/orexis-planning/ui/index.tsx",
-        "crates/orexis-speech/ui/index.tsx"]
+        "domains/courier/ui/index.tsx", "orexis-coordination/ui/index.tsx", "orexis-execution/ui/index.tsx", "orexis-planning/ui/index.tsx",
+        "orexis-speech/ui/index.tsx"]
 
 
 def test_every_drawing_holds_to_the_contract_the_core_states():

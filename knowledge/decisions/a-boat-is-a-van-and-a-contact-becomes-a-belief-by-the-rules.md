@@ -57,7 +57,7 @@ corridor a canal; the dispatcher is replaced with boats.
   writes its effect into the agent's own state when taken, and no command leaves the agent. The
   simulator (`simulation/simulator.py`) plays sensors with a `sim:Model` and answers two commands, a
   dose and a heating; it holds no position of anything.
-- **Sensing reads one number per sensor at a JSON pointer** (`crates/orexis-sensing/src/pipeline.rs`, `_number`),
+- **Sensing reads one number per sensor at a JSON pointer** (`orexis-sensing/src/pipeline.rs`, `_number`),
   or an array of `{value, age_s}` readings of one sensor; a percept's result is `xsd:decimal`; the rules
   conclude what it is OF from what hosts the sensor (`ofRule`, `sosa:isHostedBy`), and the requirement
   alone follows a `sosa:Sample` to what it `isSampleOf`. A transition is handed its arrival and no

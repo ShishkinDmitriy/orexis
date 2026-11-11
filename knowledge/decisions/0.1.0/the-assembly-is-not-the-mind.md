@@ -7,7 +7,7 @@ description: >-
   edit; the second was already open to any package but published no contract, so an answerer
   with the wrong parameters was logged and skipped. Decided that both become ONE mechanism —
   a named extension point, filled with `@contributes` — that it lives in `assembly/` beside
-  `crates/` rather than inside a BDI engine, and that a point publishes the signature that fills
+  `agent/` rather than inside a BDI engine, and that a point publishes the signature that fills
   it.
 status: superseded
 superseded-by: agent-0-2-0-replaced-the-kernel
@@ -36,7 +36,7 @@ The consequences were asymmetric and both wrong:
   and stepped over — a module silently not participating. Measured across every multi-answerer
   hook, all fourteen agreed, which is discipline holding a line nothing checked.
 
-And all of it sat in `crates/`, which is meant to be a BDI engine: belief, desire, intention, act,
+And all of it sat in `agent/`, which is meant to be a BDI engine: belief, desire, intention, act,
 plan. How a build is assembled from packages is not one of those.
 
 # What is decided
@@ -49,8 +49,8 @@ same idea at two moments: the loader asks package modules (**push**, at assembly
 `Module` instances (**pull**, at runtime). Same decorator, same term-space, different audience —
 and the audience is decided by *where the decorated function lives*, so nothing declares it.
 
-**`assembly/`, beside `crates/` and `onboarding/`.** It owns finding packages, the choir
-mechanism, and the extension vocabulary in its own namespace. `crates/` keeps the BDI extension
+**`assembly/`, beside `agent/` and `onboarding/`.** It owns finding packages, the choir
+mechanism, and the extension vocabulary in its own namespace. `agent/` keeps the BDI extension
 points it owns — `orexis:desires`, `orexis:take` (since #523 every action is its own point), `orexis:size` — and stops owning the machinery.
 `lint-imports` gains the direction: **assembly ← agent ← onboarding**.
 
@@ -103,7 +103,7 @@ extension mechanism beside the choir rather than the same one.
 
 # What the six filenames became
 
-Three, and they belong to the two ROOTS rather than to any package. `assembly/` and `crates/` are
+Three, and they belong to the two ROOTS rather than to any package. `assembly/` and `agent/` are
 not packages — they are what packages are assembled onto — and neither may be imported to be
 asked, since `assembly` importing `agent` is the one direction `lint-imports` forbids outright.
 So the loader knows their layout by name, which is honest, because their layout is the loader's

@@ -39,7 +39,7 @@ agent know, and what does it see?
   cell is authored there, and a contact out of range is placed one past the far corner of the cells,
   where no cell is, which is how it came to be believed nowhere by geometry.
 - **The simulator refuses a drive to a cell the world does not state**, and reads the cells for it.
-- **A constraint's footprint is read over the reach** (`crates/orexis-planning/src/couplings.rs`): the delete-free
+- **A constraint's footprint is read over the reach** (`orexis-planning/src/couplings.rs`): the delete-free
   fixpoint of the effects over their preconditions, finite over the terms a store holds, closing in
   seven rounds on the courier's 4x4; two vans on disjoint grids were two wants because no reachable
   cell was both vans'.

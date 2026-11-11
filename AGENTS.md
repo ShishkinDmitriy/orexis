@@ -411,7 +411,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **The planning package is a star, not a chain** — the `Planner` sequences the acts, an act calls
   no other act, and what one needs of another's work it reads off the rows the other wrote.
 - **A module named for an act exports that act alone**, and **public means tested** — outside
-  `crates/orexis-planning/` the one name imported is `Planner`.
+  `orexis-planning/` the one name imported is `Planner`.
 - **The imaginarium outlives the pass, and the present is identified in it by hash** — `reroot`
   keeps the cone under the match and drops the rest; a surprise matches nothing; a name is never
   trusted, so of two worlds holding the present's hash the one with the larger cone is the match
@@ -566,7 +566,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 
 - **An inference concludes and never deletes, and a transition changes the state, triggered once by
   each arrival of testimony** — an inference's revisions live in a graph derived from its source and go when it
-  goes, SHACL's draft adopted as it stands (`crates/orexis-belief/src/revise.rs`); a transition deletes and
+  goes, SHACL's draft adopted as it stands (`orexis-belief/src/revise.rs`); a transition deletes and
   inserts in the agent's own state, in `sh:order` groups as an effect does, never in testimony, and
   is told from an inference by whether its result depends on what it replaces
   (a-transition-changes-the-state-and-an-inference-only-concludes).
@@ -611,7 +611,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   `sensing:previous`, the latest holding until the next is due and a grace past it and every older one
   ended where the next began; it keeps a sensor's last `sensing:stuckAfter` and nothing sweeps the rest
   but it; `missed` answers which sensors are silent, their latest ended a limit of cadences ago, asking
-  `cadence.lapsed` as the transport does; `crates/orexis-prediction/` accumulates the flows' rates from the
+  `cadence.lapsed` as the transport does; `orexis-prediction/` accumulates the flows' rates from the
   latest, speaking sensing's kind and importing none of its code (#944).
 - **A silence is computed and kept, as what sensing knows of its sensor** — `missed` answers it from the latest
   percept's end, the cadence and the role's limit; the first ask that finds one keeps a `sensing:SilenceGraph`
@@ -634,7 +634,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   a-transition-changes-the-state-and-an-inference-only-concludes).
 - **A figure an agent holds about itself is a stance, a triple about the self in its self graph,
   read there alone, and the package's constant holds where none is stated** — the patience, both
-  budgets and the horizon, each declared by its reader's package and read through `crates/orexis/src/stance.rs`;
+  budgets and the horizon, each declared by its reader's package and read through `orexis/src/stance.rs`;
   never a flag or a common belief, and a grace or a metrics window is none
   (a-stance-is-the-agents-word-about-itself). A figure about what a role is OVER is the role's: an
   observer's silent and stuck limits, the observer shape's `sh:defaultValue` where it states none.
@@ -872,7 +872,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A world the simulator plays is held on the binary by a replay of what the simulator published to the Python
   agent, and the binary must send what that agent sent** — a reading answers the command before it, so the replay is
   the closed loop for as long as the commands agree; the simulator stays Python, and the greenhouse's day, the
-  layby's walks, the lane's and the allotment's are `crates/orexis-agent/tests/fixtures/`, held to the day bench's digest, the
+  layby's walks, the lane's and the allotment's are `orexis-agent/tests/fixtures/`, held to the day bench's digest, the
   walks' drives and, for minds on one bus, every document they told each other and who each concluded won.
 - **A broker's address is the world's to assert or the installation's to allocate, and the agent's
   to be told** — asserted wins, derived completes, a collision is refused (#827, #823); a world may
@@ -936,7 +936,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   looping model as the routine, a world spawned unratified and an agent amending its own documents were
   refused (the-model-compiles-a-routine-and-is-called-back-at-its-edges, #1033 to #1036).
 - **A world runs no process, so an agent translates its own chats** — `translation:Translator`, beneath the
-  speaker, loads `crates/orexis-translation/`, the model's key and each carrier's secret mounted into that agent's
+  speaker, loads `orexis-translation/`, the model's key and each carrier's secret mounted into that agent's
   container alone, the call off the pass and submitted back as a job; a translator as a process of the world
   and a manager agent speaking for the others were refused, and a bot per agent lifted the account record's
   refusal of one (an-agent-translates-for-itself, translator).
@@ -977,8 +977,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
    `"supplier"`, `"sensors/fern/moisture"`, a world's `:world` node are not. The single exception
    is the one identifier a process is handed at boot: its own agent id. Everything else is
    discovered from the documents. See [capability-packages](knowledge/decisions/capability-packages.md).
-2. **A package is a crate of `crates/`, flat and named for it — `transport/mqtt` is `crates/orexis-transport-mqtt/`,
-   the kernel `crates/orexis/` and the binary `crates/orexis-agent/` — and a term lives in the namespace of the package that
+2. **A package is a crate at the repo's root, flat and named for it — `transport/mqtt` is `orexis-transport-mqtt/`,
+   the kernel `orexis/` and the binary `orexis-agent/` — and a term lives in the namespace of the package that
    owns the concept.** belief, sensing, prediction, planning, execution, speech, coordination and the MQTT
    transport each declare their words in their own `ontology.ttl`, beside the code that reads
    them; the kernel's `orexis:` keeps only what packages meet at. A package imports what lies
@@ -986,7 +986,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
    outside planning the one name imported is `Planner` — and each package's layout test holds it to
    that. Which packages an agent runs is the [roles](knowledge/domain/kernel/role.md) its self graph
    says it plays, each of a class the package whose ontology declares it serves.
-   `crates/orexis/src/runtime.rs` is the container that assembles them all. **A domain is documents and no
+   `orexis/src/runtime.rs` is the container that assembles them all. **A domain is documents and no
    code an agent runs**: `domains/<name>/` holds a vocabulary, its actions and its rules, and a world imports it
    with `owl:imports`; its one module of code, `ui/index.tsx` with the selects beside it, is how it is drawn in the history view, which no agent loads
    (a-replay-is-the-history-drawn-by-the-package-that-decides-it). Adding a way of acting is a node in a domain's `actions.ttl` — a
@@ -1142,7 +1142,7 @@ orexis-firmware <world>      # a board's config.h, from the world it belongs to
 orexis-infra-certs           # INFRA, not onboarding — the services' certs and whom they trust
 orexis-infra-compose         # INFRA — infra/compose.yaml, from infra/installation.ttl
 cd world/<world> && podman compose up -d      # one container per agent
-podman compose build                           # each agent's binary, by its packages' features: after any change to crates/ or crates/orexis-agent/
+podman compose build                           # each agent's binary, by its packages' features: after any change to a crate, orexis*/
 pytest -q              # what testpaths names, walks left out: a few minutes. No infra needed.
 pytest -q -m ""        # the walks too, as CI runs them on every pull request.
 pytest -q tests        # the four files that read the whole tree: knowledge, layout, store, projects
@@ -1178,7 +1178,7 @@ credentials should not touch the other's.
 
 **Its code is in `onboarding/`, and no image holds it.** `orexis-influx` reads the admin token, which opens every bucket and
 which no agent may ever hold, so the surest guarantee is that the code using it is absent from every image: the binary's is
-compiled from `crates/` and `crates/orexis-agent/`, the simulator's `simulation/Containerfile` names no `onboarding/`, which
+compiled from the crates, `orexis/` and each `orexis-*/`, the simulator's `simulation/Containerfile` names no `onboarding/`, which
 `tests/test_layout.py` holds, and `lint-imports` holds the direction, `simulation/` and `documents/` never importing
 onboarding. `orexis-influx` and `orexis-mqtt` need infra up;
 `orexis-mqtt` must run before the broker will start at all, since its ACL is generated and
@@ -1291,7 +1291,7 @@ hand-rolled walk was once refused for exactly that reason. See
   every possible world against every ended period in `take`'s candidate read, 24 ms a call where
   joined within the group it costs 0.3; and a `{ SELECT (COUNT …) }` joined into a read was evaluated
   again per row, 16 of the frontier's 19 ms, where asked apart it costs 0.7. Both grow with the cone, so
-  they hid on small searches: five disks took 72 s and take 3.4 (`crates/orexis-planning/tests/bench/`).
+  they hid on small searches: five disks took 72 s and take 3.4 (`orexis-planning/tests/bench/`).
 - **A `BIND` inside a `UNION` branch cannot see a variable bound outside the union.** The
   branches are evaluated on their own and joined with the surrounding pattern afterwards, so
   the tidy form — state the preamble once, then `{ … } UNION { … }` — leaves every outer

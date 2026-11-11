@@ -17,7 +17,7 @@ timestamp: 2026-08-27T00:00:00Z
 # What was true before
 
 `bytes ─[codec]→ document ─[pointer]→ raw value ─[scaling]→ quantity ─[observations]→ the
-sensed graph` — every stage of the reading pipeline lived in `crates/`, and every caller of it
+sensed graph` — every stage of the reading pipeline lived in `agent/`, and every caller of it
 was `packages/orexis-capability-sensing/module.py` or one of the pipeline's own plug-ins
 (`packages/orexis-codec-json`, `packages/orexis-scaling-identity`, `packages/orexis-transport-mqtt`). The kernel
 also read the result back: `agent/readings.rq`, run by `regions.py` to give the desire

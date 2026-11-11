@@ -78,7 +78,7 @@ and landings; an intention at the step it stands at; each observation with its r
 when the next is due. Each [part](/domain/kernel/part.md) answers its own, duck-typed as `link`,
 `start` and `stop` are and as an event answers its `point`: sensing accounts for its observations,
 planning for its wants and plans, execution for its intentions, and a part with nothing to say has
-no such method. The account part — an `account` package of `crates/`, beside `history/` and `metrics/`, created
+no such method. The account part — an `account` package of `agent/`, beside `history/` and `metrics/`, created
 where the world names a chat — hears the runtime's pass, asks every part, and publishes the text
 retained on the agent's own account topic when it differs from the last. Retained, so a gateway
 that restarts finds every agent's latest without asking anybody; on change, so a quiet agent costs
@@ -193,7 +193,7 @@ asks often sets Haiku.
 Three issues, to be filed in this order, each with its definition of done; #862 is the fourth and
 already stands:
 
-1. *Let an agent give an account of itself* — the kernel word, an `account` package of `crates/`, each part's
+1. *Let an agent give an account of itself* — the kernel word, an `account` package of `agent/`, each part's
    `account()` in its package's words, published retained on change. Done when the greenhouse's
    grower publishes an account a person can read, tested against a fixture store per part.
 2. *A chat gateway per world* — the `chat/` tree and `orexis-chat <world>`, Telegram over its Bot

@@ -7,7 +7,7 @@ REFLECTION READS THE SERIES AND THE JOURNAL, AND NEVER THE BELIEFS (reflection-i
 the-journal-is-the-agents-flight-recorder). This tool opens no belief volume and imports nothing that reads one: it
 asks the agent's two buckets — its history, every observation, and its metrics, what each pass searched, reached,
 exhausted and failed — with the admin-side token the installation holds, which is why it lives beside the onboarding
-commands and outside `crates/`; and the agent's journal for every step taken and answered, at the endpoint the
+commands and outside the crates; and the agent's journal for every step taken and answered, at the endpoint the
 installation allocated it (`installation.journal`), or, for an agent that has stopped, its journal's store opened
 read-only (`--journal`), which is safe once nothing writes it. A step read from the journal is handed to the
 questions as the point it was before the journal kept it, measured `Step`, so the questions read one shape. It answers the SEASON and never the present: what an

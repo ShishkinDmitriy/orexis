@@ -131,7 +131,7 @@ Read on the branch tip that carries #919 (`bb4b4a12`, 2026-10-07); nothing of th
 is built, and nothing here was run on a bench.
 
 - **A peer cannot say a prediction.** `heard` refuses a document any of whose graphs is not a kind
-  beneath `orexis:StateGraph` (`crates/orexis-speech/src/heard.rs`): a peer reports what IS. A route said as
+  beneath `orexis:StateGraph` (`orexis-speech/src/heard.rs`): a peer reports what IS. A route said as
   state would be copied into the present ground, which is false — the van is not yet where its route
   goes — so a route the agent lost to becomes an `orexis:ForecastGraph` only by this decision, and
   #923 argues the refusal it relaxes.
@@ -147,7 +147,7 @@ is built, and nothing here was run on a bench.
 - **A step predicts its own effect** since #919 (built on this branch, PR #924 open): before it, a
   plan taken across a laid route carried the other van's next cell in every drive, and a fictive drive
   wrote where the other van went into this agent's beliefs. Measured in the #568 prototype and pinned
-  by `a_step_lands_across_a_prediction_it_does_not_touch` under `crates/orexis-planning/tests/plans/` and
+  by `a_step_lands_across_a_prediction_it_does_not_touch` under `orexis-planning/tests/plans/` and
   by `agent/planning/tests/test_wait.py`.
 - **The constraint is the dispatcher's, in the avoided state's form** — a `planning:unmetWhen` select
   over `courier:at` whose rows are two vans on one cell. Both agents of a two-van world would hold that

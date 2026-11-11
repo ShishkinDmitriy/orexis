@@ -143,7 +143,7 @@ are built under it (#642, #643, #639, #632).
 
 # Amended 2026-09-24: in Agent 0.2.0 a prediction is a number per stretch
 
-The set of bands stands for the 0.1.0 tree. In `crates/orexis-sensing/` a prediction carries the
+The set of bands stands for the 0.1.0 tree. In `orexis-sensing/` a prediction carries the
 number the drift gives, one prediction per stretch between the instants the reading changes
 range, and the side of it is a [revision](/domain/belief/revision.md) the rules sensing registers
 conclude; the widening set is what the rules would conclude of each stretch, and no band is

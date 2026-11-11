@@ -105,7 +105,7 @@ INTERVAL_KEY = "METRICS_INTERVAL_S"
 
 @dataclass(frozen=True)
 class Image:
-    """What one agent's container is built from: the packages of `crates/` it holds, each a feature of the binary."""
+    """What one agent's container is built from: the packages it holds, each a feature of the binary."""
     tag: str
     packages: tuple[str, ...]
 
@@ -116,7 +116,7 @@ class Image:
 
     def build(self) -> str:
         """The service's image and the build that makes it, its own: the binary, handed the features to build it with."""
-        return (f"image: {self.tag}\n    build:\n      context: ../..\n      dockerfile: crates/orexis-agent/Containerfile\n"
+        return (f"image: {self.tag}\n    build:\n      context: ../..\n      dockerfile: orexis-agent/Containerfile\n"
                 f"      args:\n        # the packages it runs, each a feature of the binary, and nothing else's\n"
                 f'        FEATURES: "{",".join(self.features())}"')
 
@@ -366,8 +366,10 @@ def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, st
 
 
 #  WHAT A SERVICE IS HANDED OF THE TREES, said above the mounts.
-_SIMULATOR_TREES = ("\n      - ../../agent:/app/agent:ro\n      - ../../documents:/app/documents:ro\n      - ../../domains:/app/domains:ro"
-                     "\n      - ../../simulation:/app/simulation:ro")
+#  The crates by name, as its image copies them: a mount of a glob is no mount.
+_SIMULATOR_TREES = "".join(f"\n      - ../../{tree}:/app/{tree}:ro" for tree in [
+    *sorted(p.name for p in TREE.iterdir() if (p / "Cargo.toml").is_file() and p.name.split("-")[0] == "orexis"),
+    "documents", "domains", "simulation"])
 _TREES = """# The domains, mounted over the image's copy so a changed document needs a restart; the binary and the
       # tree's documents are its image's, so a change to the agent is a rebuild."""
 

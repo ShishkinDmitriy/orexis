@@ -65,7 +65,7 @@ a patient. Three things a role has, a type cannot:
   is the sensors it reads: `:fern_agent orexis:plays [ a sensing:Observer ; sensing:sensor :probe ]`.
   Which sensors report to an agent is then declared, where today it is derived: a sensor hosted by
   what the agent acts for, by a sample of it, or by a place containing it (the observer's shape in
-  `crates/orexis-sensing/ontology.ttl`). Derived, a probe moved into a pot the agent acts for became its
+  `orexis-sensing/ontology.ttl`). Derived, a probe moved into a pot the agent acts for became its
   sensor without anyone saying so, which is the premise-derived loading the role record refused, one
   level down. A role with nothing to point at, a predictor or a planner, carries none, and a role's
   shape says what it needs: the host's asks for its venue, the observer's for a sensor.

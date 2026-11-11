@@ -23,7 +23,7 @@ THE PACKAGE THAT DECIDES A THING DRAWS IT (a-replay-is-the-history-drawn-by-the-
 is what every world shares and names no package's word: the instants, the agents to show — together on one scene, or
 side by side — and the log (`core/`). Everything drawn is a `ui/index.tsx` beside the code or the documents it draws, its
 queries beside it — a domain's SCENE, the ground its world stands on (`domains/courier/ui/index.tsx`, the road and its
-vans), and a package's LAYER, what it decided drawn on whatever scene there is (`crates/orexis-coordination/ui/index.tsx`, the
+vans), and a package's LAYER, what it decided drawn on whatever scene there is (`orexis-coordination/ui/index.tsx`, the
 holdings and the conflicts) — each Preact components in TSX, held by `npm run check` to the contract `core/index.ts`
 states. esbuild bundles them with Preact into the one page (`build.mjs`), which opens offline.
 
@@ -49,7 +49,7 @@ from pathlib import Path
 import pyoxigraph as ox
 
 from documents.ontology import local_of
-from documents.world import TREE, documents, read_with_imports
+from documents.world import TREE, documents, in_a_crate, read_with_imports
 from ..series import HISTORY, Sink
 
 from .. import installation, reading
@@ -77,10 +77,10 @@ def drawings(here: Path) -> list[Path]:
     each package's layer — in that order, so a layer stands on the scenes."""
     here = Path(here).resolve()
     read_ = {p.parent for p, _ in read_with_imports(documents(here))}
-    out = sorted(d / DRAWING for d in read_ - {here} if (d / DRAWING).exists() and not d.is_relative_to(PACKAGES))
+    out = sorted(d / DRAWING for d in read_ - {here} if (d / DRAWING).exists() and not in_a_crate(d))
     if (here / DRAWING).exists():
         out.append(here / DRAWING)
-    return out + sorted(PACKAGES.glob(f"*/{DRAWING}"))
+    return out + sorted(p for p in PACKAGES.glob(f"orexis*/{DRAWING}") if in_a_crate(p))
 
 
 def queries(drawings_: list[Path]) -> dict[str, str]:

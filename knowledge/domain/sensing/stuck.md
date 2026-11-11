@@ -27,7 +27,7 @@ jitters by at least a count and that jitter is what a stuck one lacks.
 Sensing keeps a sensor's last `sensing:stuckAfter` [percepts](/domain/sensing/observation.md) — the
 figure the [observer](/domain/sensing/observer.md) role reading it states, six where it states none — and **a rule says
 the sensor stuck when every one of them gave one number**: `:probe sensing:stuckOn 2412`, the number
-it is stuck on, concluded in the revision of the percept arriving (`crates/orexis-sensing/rules.ttl`). It
+it is stuck on, concluded in the revision of the percept arriving (`orexis-sensing/rules.ttl`). It
 holds while that percept does, so the first reading whose number differs ends it — the kept percepts
 no longer agree — and so does a silence, since a silent sensor has no percept holding. Nothing counts
 a run and nothing carries one onto the present: the premise is the percepts themselves, and the rule

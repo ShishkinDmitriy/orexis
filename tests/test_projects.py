@@ -116,8 +116,10 @@ def units() -> dict[str, tuple[list[Path], str]]:
 
 
 def test_no_python_is_left_in_the_agent():
-    """The agent is the binary, and a `.py` under `crates/` is a second agent starting."""
-    assert not [p for p in (REPO_ROOT / "crates").rglob("*.py") if "__pycache__" not in p.parts]
+    """The agent is the binary, and a `.py` in a crate is a second agent starting."""
+    crates = [c for c in REPO_ROOT.glob("orexis*") if (c / "Cargo.toml").is_file()]
+    assert crates, "no crate found at the root — this test is not looking"
+    assert not [p for c in crates for p in c.rglob("*.py") if "__pycache__" not in p.parts]
 
 
 def test_the_core_declares_exactly_what_the_kernel_imports():

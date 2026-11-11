@@ -12,7 +12,7 @@ description: >-
 
 No agent is told there is a conflict. Each reads the answers it said and the answers it heard: one that
 carries a [holding](/domain/coordination/holding.md), under a constraint both hold, is a conflict with that
-peer, read by the same rule by both (`crates/orexis-coordination/src/conclude.rs`). Two answers between the same pair under
+peer, read by the same rule by both (`orexis-coordination/src/conclude.rs`). Two answers between the same pair under
 one constraint are one conflict, named for the pair and the constraint, so both name it alike and draw once.
 It is written into a belief of the agent's own, derived, which the [draw](/domain/draw/draw.md)'s actions
 read.
@@ -51,7 +51,7 @@ beside that, and the first to plan again says holdings that leave the other's wa
 # What each lays
 
 Yielding is laying the peer's holdings as [forecasts](/domain/kernel/forecast.md) of the peer's thing, the
-agent's own and received, so the grounds take them in where each begins (`crates/orexis-coordination/src/lay.rs`):
+agent's own and received, so the grounds take them in where each begins (`orexis-coordination/src/lay.rs`):
 
 - **undecided**, both lay all of the other's, so each plans as if yielding and safety never waits on the draw;
 - **lost**, the loser lays all of the winner's, for as long as the conflict stands - and of a silent peer, the

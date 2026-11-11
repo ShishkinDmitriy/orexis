@@ -28,4 +28,4 @@ an action nobody carries out comes to.
 
 The executor reads it to tell whether a step is fictive; the runtime reads it to take a step,
 order by order, keeping what each command answers for the transport to send and believing, revising
-and saying what each saying makes (`crates/orexis-execution/src/implementation.rs`).
+and saying what each saying makes (`orexis-execution/src/implementation.rs`).

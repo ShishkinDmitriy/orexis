@@ -162,4 +162,4 @@ names it: pay-as-bid, uniform price.
   side effect of a rename.
 - **Nothing checks a candidate term against the codebase's own vocabulary.** That omission is what
   made this record need amending within a day of being written. A grep for a proposed word across
-  `crates/` would have surfaced `provider(family)` immediately; nothing prompts anyone to run it.
+  `agent/` would have surfaced `provider(family)` immediately; nothing prompts anyone to run it.

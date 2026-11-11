@@ -107,4 +107,4 @@ more than one, by the terms it names and the key it carries, and hands each sear
 that are its own: a heat lamp's heating of a cold frame is admitted in the frame's search and not
 in the bed's air's, though the action is in both; and two beds each with a pump are two wants under one desire, one
 per imaginarium ([a-scope-is-a-predicate-on-a-key](/decisions/a-scope-is-a-predicate-on-a-key.md)). The cases in
-`crates/orexis-planning/tests/scope_actions/` hold the function to a snapshot of what it writes.
+`orexis-planning/tests/scope_actions/` hold the function to a snapshot of what it writes.

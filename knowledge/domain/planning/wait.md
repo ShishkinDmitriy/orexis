@@ -12,7 +12,7 @@ description: >-
 The agent choosing to do nothing while what it foresees comes about: a van standing a cell short
 while a peer's van crosses ahead, a grower letting the forecast rain fill the butt before watering.
 Every world has it, so it belongs to no domain. It is an [action](/domain/kernel/action.md) like any other, a node in
-`crates/orexis-planning/wait.ttl`, an `orexis:ActionGraph` the planning package keeps beside its ontology
+`orexis-planning/wait.ttl`, an `orexis:ActionGraph` the planning package keeps beside its ontology
 and every agent reads at boot as it reads the package's other documents, and the node states its
 cost and nothing else: no precondition, no effect, no landing, no implementation. Each absence is
 read by the kernel for this one node. The page binds no `term:`, since the wait is an individual
@@ -27,7 +27,7 @@ in. A ground is a world — the present with the predictions applied, holding ov
 none of them changes — and a world's identity is its hash within what is read
 ([cone](/domain/planning/cone.md)). A later ground that differs only by a reading's number, the
 subject's state unchanged, is a ground of its own but the same place to the search, and a wait landing there would reach
-the world it left, so `crates/orexis-planning/src/next_ground.rs` walks the grounds and returns the first whose
+the world it left, so `orexis-planning/src/next_ground.rs` walks the grounds and returns the first whose
 identity differs. It coins nothing: merging such grounds into one was tried and refused, since a
 ground's boundaries are also read as instants — where a want holds, where it is reached — and the
 foreseen crossing of #858 read reached before its instant. So a single wait spans every stretch in which nothing

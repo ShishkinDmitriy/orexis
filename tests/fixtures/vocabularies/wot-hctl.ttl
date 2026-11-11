@@ -1,7 +1,7 @@
 #  W3C WoT Hypermedia Controls ontology — https://www.w3.org/2019/wot/hypermedia — vendored here on 2026-09-28
 #  from that IRI (Accept: text/turtle), unchanged, under the W3C Software and Document License, so that a
 #  page binding one of its terms is checked against what it actually declares. The HTTP transport
-#  member speaks it as it stands (crates/orexis-transport-http/).
+#  member speaks it as it stands (orexis-transport-http/).
 
 @prefix : <https://www.w3.org/2019/wot/hypermedia#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .

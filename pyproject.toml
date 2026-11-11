@@ -7,7 +7,7 @@ description = "Orexis — a market society of agents that bid for a scarce resou
 requires-python = ">=3.10"
 dynamic = ["optional-dependencies"]
 
-# `orexis` is what is left in Python: the operator's tools, the simulator and what they share. The agent is `crates/orexis-agent/`.
+# `orexis` is what is left in Python: the operator's tools, the simulator and what they share. The agent is `orexis-agent/`.
 # Every name below is imported by one of them, and tests/test_projects.py holds this list to exactly what those trees
 # import, both ways.
 dependencies = [

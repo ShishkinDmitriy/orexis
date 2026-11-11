@@ -106,7 +106,7 @@ package, not a family with members (the
 kept for capabilities; see the struck seam below):
 
 - **`packages/orexis-agent-reactive/`** — the queue and the one loop that drains it. NEW,
-  not moved: nothing in `crates/` was this. The author's definition is sharper than the
+  not moved: nothing in `agent/` was this. The author's definition is sharper than the
   "execution — the acts and the actor path" the superseded record sketched and wins: reactive
   "should contain only queue and constantly executing it". It imports nothing of ours.
 - **`packages/orexis-agent-progression/`** — the intention ledger and the keeper, the
@@ -157,7 +157,7 @@ job is to carry that across the gap cannot be the layer that forgets it.
   (the-mind-is-not-a-package): the CONTAINER builds the mind for every agent, so an agent
   PROCESS holds all three layers — what became need-shaped is what a package's import drags
   in at assembly, which is what the measured bullet always measured.
-- **What remains at the root** is `assembly/` and whatever shell of `crates/` survives #452 —
+- **What remains at the root** is `assembly/` and whatever shell of `agent/` survives #452 —
   the container the author asked for at the start. Whether that shell is a package too, or the
   one thing that is nobody's package because it is what asks, is #452's to discover.
 - ~~**Family names are the implementing change's** (#451, #452), under the tree's own convention

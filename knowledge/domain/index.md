@@ -24,7 +24,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [forecast](/domain/kernel/forecast.md) - Anyone's word about a stretch ahead, one kind holding during it; a received hour and a committed step, told apart by provenance.
 * [modality](/domain/kernel/modality.md) - What a graph asserts — is, will be, would be, wanted, owed, doing — carried as its kind on the catalogue.
 * [inference](/domain/kernel/inference.md) - The boot materialises the subclass closure, so a reader asks what a thing is and walks no path.
-* [package](/domain/kernel/package.md) - A directory of `crates/` owning a concern and its words, importing only what lies beneath it.
+* [package](/domain/kernel/package.md) - A crate, `orexis-<package>/`, owning a concern and its words, importing only what lies beneath it.
 * [sovereign](/domain/kernel/sovereign.md) - Whoever writes a world's documents: picks the ranges and values, never an act. Outside the society.
 * [series](/domain/kernel/series.md) - What a person watches and the agent never reads: observations and metrics, both what the packages' events say, written by a part hearing every event.
 * [journal](/domain/kernel/journal.md) - An agent's own triplestore of what happened: its events in RDF kept for good, its log kept for a window unless an incident keeps it.

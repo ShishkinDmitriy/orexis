@@ -27,8 +27,8 @@ timestamp: 2026-10-11T18:00:00Z
 # Context
 
 Every belief graph is changed in place today. A transition deletes the state before from whichever of
-the agent's derived beliefs holds it (`crates/orexis-belief/src/trigger.rs`); a fictive step takes its retractions
-out of the beliefs that hold them and puts its additions where they stood (`crates/orexis-execution/src/executor.rs`,
+the agent's derived beliefs holds it (`orexis-belief/src/trigger.rs`); a fictive step takes its retractions
+out of the beliefs that hold them and puts its additions where they stood (`orexis-execution/src/executor.rs`,
 #960); a peer saying a document again replaces its graphs under the same names (`heard`, `said`); and
 the state graph of an arrival is written into again by a later arrival of the same name. The name stays
 and the content under it moves.
