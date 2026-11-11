@@ -338,6 +338,7 @@ impl Telegram {
             at: Some(at),
             addressed: said.get("addressed").and_then(Json::as_bool),
             message: said.get("message").and_then(Json::as_str).map(str::to_string),
+            reply: None,
         }))
     }
 

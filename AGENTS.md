@@ -947,8 +947,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   `beside` were built and refused as hardcoding what the vocabulary already bounds
   (a-person-states-what-the-chat-allows-in-the-worlds-words, translator).
 - **A channel is the transport's, and what points at it says which row reads it** — a sensor's is sensing's,
-  a listened topic speech's, a chat's translation's; a member says `prose` and answers `say_to`, so translation
-  imports no member and no member translation, and Telegram and email are members beside MQTT and HTTP
+  a listened topic speech's, a chat's translation's; a member keeps a person's words as an `orexis:ProseGraph` and says
+  `orexis:ProseKept`, translation keeps its own words the same way, and each hears the event beneath its trigger and
+  acts on the words whose provenance is its to act on, so translation imports no member and no member translation, and Telegram and email are members beside MQTT and HTTP
   (an-agent-translates-for-itself, transport).
 - **A chat is who speaks with whom through what, and the channel's type is the carrier** — `speech:Chat` with
   its participants and one channel, a topic, a contact point with an email or a `telegram:Chat`, speech naming

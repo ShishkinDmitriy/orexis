@@ -17,9 +17,9 @@ use orexis::clock::{Manual, instant};
 use orexis::events::{Watch, as_of};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
-use orexis::runtime::{Part, Runtime};
+use orexis::runtime::{Heard, Part, Pass, Runtime, Starting};
 use orexis::store::{Store, Within, iri, value};
-use orexis::transport::{Carrier, Prose};
+use orexis::transport::{Carrier, PROSE_KEPT, Prose, ProseKept, WRITING, carry, kept};
 use orexis_translation::briefing::briefing;
 use orexis_translation::chat::chats_of;
 use orexis_translation::create::{CONVERSE_SYSTEM, SAY_SYSTEM, SILENT, TURNS, Translation, Translator, UNADDRESSED};
@@ -459,6 +459,41 @@ impl Carrier for Bot {
     }
 }
 
+/// The bot as a transport's part: a person's words kept and said kept at the next pass, and what the agent says
+/// carried, as a member hears it beneath its trigger.
+struct Member<'s> {
+    store: &'s Store,
+    bot: Rc<RefCell<Bot>>,
+    kept: Vec<String>,
+}
+
+impl Part for Member<'_> {
+    fn start(&mut self, starting: &mut Starting) -> Result<(), orexis::Error> {
+        starting.hears(PROSE_KEPT, 1);
+        starting.hears(WRITING, 1);
+        Ok(())
+    }
+
+    fn heard_event(&mut self, _job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, orexis::Error> {
+        carry(self.store, &mut *self.bot.borrow_mut(), event, pass, CARRYING)?;
+        Ok(Vec::new())
+    }
+
+    fn run(&mut self, _job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, orexis::Error> {
+        let kept = std::mem::take(&mut self.kept);
+        for prose in &kept {
+            pass.emit(&ProseKept { prose: prose.clone() });
+        }
+        Ok(kept)
+    }
+
+    fn submitted(&mut self) -> Vec<usize> {
+        if self.kept.is_empty() { Vec::new() } else { vec![0] }
+    }
+}
+
+const CARRYING: &str = "http://example.org/orexis/telegram#Carrying";
+
 /// What the stand-in was asked: each turn's system blocks, its messages and the names of the tools offered.
 type Asked = Arc<Mutex<Vec<(Vec<String>, Vec<Json>, Vec<String>)>>>;
 
@@ -546,7 +581,8 @@ fn results(messages: &[Json]) -> Vec<String> {
 /// The seeker's translation, its runtime and its bot: a person's words written on a channel run the pass that hears them.
 struct Seeker<'s> {
     store: &'s Store,
-    part: Translation<'s>,
+    part: Translation,
+    member: Member<'s>,
     bot: Rc<RefCell<Bot>>,
     clock: Manual,
 }
@@ -556,10 +592,14 @@ impl<'s> Seeker<'s> {
         let mut translator = Translator::new(store, &me(), None);
         translator.inline = true;
         let bot = Rc::new(RefCell::new(Bot::default()));
-        translator.carriers.push(bot.clone());
         Seeker {
             store,
             part: Translation::new(translator),
+            member: Member {
+                store,
+                bot: bot.clone(),
+                kept: Vec::new(),
+            },
             bot,
             clock: Manual::at(now()),
         }
@@ -584,13 +624,17 @@ impl<'s> Seeker<'s> {
             at: Some(now()),
             addressed,
             message: message.map(str::to_string),
+            reply: None,
         };
-        self.part.translator.borrow_mut().heard(&prose, now()).unwrap();
+        self.member.kept.push(kept(self.store, &me(), &prose).unwrap());
         self.pass();
     }
 
     fn pass(&mut self) {
-        let parts: Vec<(String, &mut dyn Part)> = vec![("translation".into(), &mut self.part)];
+        let parts: Vec<(String, &mut dyn Part)> = vec![
+            ("translation".into(), &mut self.part),
+            ("transport/telegram".into(), &mut self.member),
+        ];
         let mut runtime = Runtime::new(self.store, "seeker", &self.clock, parts).unwrap();
         runtime.drain(now()).unwrap();
     }
@@ -620,6 +664,16 @@ impl<'s> Seeker<'s> {
     fn statements(&self) -> Vec<String> {
         self.store.graphs_of(&[STATEMENT], &Within::default()).unwrap()
     }
+}
+
+/// Every named graph the store holds.
+fn graphs(store: &Store) -> std::collections::BTreeSet<String> {
+    store
+        .engine()
+        .named_graphs()
+        .flatten()
+        .map(|g| g.to_string().trim_matches(['<', '>']).to_string())
+        .collect()
 }
 
 fn offer() -> Json {
@@ -888,7 +942,7 @@ fn a_question_is_answered_by_as_many_queries_as_it_needs_and_writes_nothing() {
         None,
         None,
     );
-    let before = store.len().unwrap();
+    let before = graphs(&store);
     let (model, asked) = StandIn::new(
         vec![viewings()],
         "Kastanienallee on Tuesday at 18:00; nothing yet for the studio.",
@@ -912,7 +966,17 @@ fn a_question_is_answered_by_as_many_queries_as_it_needs_and_writes_nothing() {
             "Kastanienallee on Tuesday at 18:00; nothing yet for the studio.".to_string()
         )
     );
-    assert_eq!(store.len().unwrap(), before, "a question writes nothing");
+    let prose: std::collections::BTreeSet<String> = store
+        .graphs_of(&[&format!("{O}ProseGraph")], &Within::default())
+        .unwrap()
+        .into_iter()
+        .collect();
+    let new: std::collections::BTreeSet<String> = graphs(&store).difference(&before).cloned().collect();
+    assert_eq!(
+        (new.len(), new.is_subset(&prose)),
+        (2, true),
+        "a question writes nothing but the words kept, the person's and the agent's"
+    );
 }
 
 #[test]

@@ -62,7 +62,9 @@ the agent is in is translation's. A member says a person's words as `prose` and 
 `say_to`; translation hears every member's `prose` and keeps every member that sends, and imports
 none of them, as no member imports translation. Telegram and email became members beside MQTT and
 HTTP, loaded where a translator speaks through a bot or is in a chat by mail; the MQTT member carries
-a chat's topic as well as a board's and a peer's.
+a chat's topic as well as a board's and a peer's. Since #1119 the words go both ways as an `orexis:ProseGraph`
+kept and an `orexis:ProseKept` said, each side hearing it beneath its own trigger
+([policy](/domain/kernel/policy.md)), where translation's `prose` handler and its list of senders were links.
 
 **A bot per agent.** Each agent speaks through a `telegram:Bot` of its own, so a group of several
 agents is several bots, each its agent's, and a person writes to the one they mean. The account record

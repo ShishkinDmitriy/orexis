@@ -10,13 +10,18 @@ use std::collections::VecDeque;
 use std::rc::Rc;
 
 use orexis::Error;
-use orexis::runtime::{Part, Pass, Starting};
-use orexis::transport::{ProseKept, kept};
+use orexis::runtime::{Heard, Part, Pass, Starting};
+use orexis::transport::{ProseKept, carry, kept};
 
 use crate::driver::{Message, Mqtt, NUDGE_S};
 
 const NUDGE: usize = 0;
 const HANDLE: usize = 1;
+const CARRY: usize = 2;
+
+/// What the member does as an activity, and what starts it.
+const CARRYING: &str = "http://example.org/orexis/mqtt#Carrying";
+const CARRYING_TRIGGER: &str = "http://example.org/orexis/mqtt#CarryingTrigger";
 
 /// Who holds the agent running.
 const HOLDER: &str = "transport/mqtt";
@@ -49,7 +54,16 @@ impl Part for Transport<'_> {
         }
         self.member.borrow_mut().open()?;
         starting.every(NUDGE_S, NUDGE);
+        starting.hears(CARRYING_TRIGGER, CARRY);
         Ok(())
+    }
+
+    /// What the member's policy does of its trigger: the agent's own words carried where they are on a channel it
+    /// carries.
+    fn heard_event(&mut self, _job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        let store = self.member.borrow().beliefs().clone();
+        carry(&store, &mut *self.member.borrow_mut(), event, pass, CARRYING)?;
+        Ok(Vec::new())
     }
 
     fn run(&mut self, job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {

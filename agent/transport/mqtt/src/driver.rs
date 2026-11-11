@@ -228,6 +228,7 @@ impl<'a> Mqtt<'a> {
             at: Some(at),
             addressed: None,
             message: None,
+            reply: None,
         })
     }
 

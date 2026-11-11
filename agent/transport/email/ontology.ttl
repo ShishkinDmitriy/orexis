@@ -1,9 +1,27 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix email: <http://example.org/orexis/email#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
-#  OREXIS EMAIL TRANSPORT. It declares no word of its own: a mailbox it reaches is a `schema:ContactPoint` with a
+#  OREXIS EMAIL TRANSPORT. It declares no word of the mail of its own, only its trigger: a mailbox it reaches is a `schema:ContactPoint` with a
 #  `schema:email`, schema.org's words, and which row reads it is what points at it — the channel of a `speech:Chat`
 #  is a person's prose, translation's. The agent's own mailbox — its address, its credential, its servers — is
 #  `secrets/<agent>/mail.env`, environment and never a graph.
+
+#  WHAT THE MEMBER DOES OVER A STRETCH OF TIME, a `prov:Activity`, and its trigger: the agent's own words translation
+#  kept for a channel, the kernel's event, which the member - above the kernel - puts beneath it
+#  (knowledge/domain/kernel/policy.md).
+
+email:Trigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Trigger" ;
+    rdfs:comment "The email transport's trigger, abstract: an event beneath it is beneath the one trigger below." .
+
+email:Carrying a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Carrying" ;
+    rdfs:comment "Sending the agent's own words a prose graph keeps on their channel, where the email member carries it, as a reply where the words name one and the carrier threads it." .
+
+email:CarryingTrigger a owl:Class ; rdfs:subClassOf email:Trigger ; rdfs:label "Carrying trigger" ;
+    rdfs:comment "What starts a carrying: the kernel's `orexis:ProseKept`, beneath it here, naming the prose graph whose words it carries where they are the agent's own (`orexis:prose`). The policy judges by the graph's provenance: a person's words it kept itself are translation's." .
+
+orexis:ProseKept rdfs:subClassOf email:CarryingTrigger .

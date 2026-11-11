@@ -2,8 +2,10 @@
 //! member's task or thread leaves what it receives in an INBOX for the one executing thread to handle, ringing the mind awake, and a CHANNEL IS THE
 //! TRANSPORT'S — a member carries bytes on a topic, a chat, a mailbox or a url and knows nothing of what they mean. For a
 //! `speech:Chat`'s channel a member keeps a person's words as an `orexis:ProseGraph` (`kept`) and says
-//! `orexis:ProseKept`, which translation's ontology puts beneath its trigger, and sends prose back as a `Carrier`, so no
-//! member imports translation and translation imports no member.
+//! `orexis:ProseKept`, which translation's ontology puts beneath its trigger; translation keeps the agent's own words
+//! the same way (`written`) and says the same event, which each member's ontology puts beneath its own trigger, and the
+//! member that carries the channel sends them as a `Carrier`. Which words are whose is the graph's provenance
+//! (`received`), so no member imports translation and translation imports no member.
 
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -12,10 +14,11 @@ use oxigraph::model::{GraphName, Literal, NamedNode, Quad, Term};
 use oxsdatatypes::DateTime;
 
 use crate::Error;
+use crate::bind::{Value, bind};
 use crate::document::Document;
 use crate::events::{Event, mint};
-use crate::ontology::{OREXIS, RECEIVED};
-use crate::runtime::Wake;
+use crate::ontology::{OREXIS, RECEIVED, RECORDED};
+use crate::runtime::{Heard, Pass, Wake};
 use crate::store::Store;
 
 /// A message on a channel, and the instant it arrived where whoever handed it knows one — a network thread knows none
@@ -63,8 +66,9 @@ impl Inbox {
 /// A person's words on a channel at `at`: the channel's node in the world, the person who said them where the channel
 /// tells, and the text. Where the carrier tells whom the words were for, `addressed` says so — true where they tagged
 /// or replied to this agent's own account, false where they tagged or replied to someone else and not it — and
-/// `message` is the carrier's id of the words, which an answer may reply to.
-#[derive(Clone, Debug, PartialEq)]
+/// `message` is the carrier's id of the words, which an answer may reply to. The agent's own words name the carrier's
+/// id of the words they answer by `reply`, where the carrier threads one.
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Prose {
     pub channel: String,
     pub sender: Option<String>,
@@ -72,11 +76,38 @@ pub struct Prose {
     pub at: Option<DateTime>,
     pub addressed: Option<bool>,
     pub message: Option<String>,
+    pub reply: Option<String>,
 }
 
 /// A PERSON'S WORDS KEPT: the prose graph a transport keeps of `prose`, the agent `me`'s own and arrived from outside,
 /// before anything is made of them; the graph's name.
 pub fn kept(store: &Store, me: &str, prose: &Prose) -> Result<String, Error> {
+    keep(store, me, prose, RECEIVED)
+}
+
+/// THE AGENT'S OWN WORDS KEPT: the prose graph translation keeps of `prose`, the agent `me`'s own act, before any
+/// transport carries them; the graph's name.
+pub fn written(store: &Store, me: &str, prose: &Prose) -> Result<String, Error> {
+    keep(store, me, prose, RECORDED)
+}
+
+/// Whether the words a prose graph keeps arrived from outside, a person's, rather than the agent's own.
+pub fn received(store: &Store, graph: &str) -> Result<bool, Error> {
+    let Some(cat) = store.catalogue()? else {
+        return Ok(false);
+    };
+    let text = bind(
+        "ASK { GRAPH $cat { $graph orexis:arrivedBy $received } }",
+        &[
+            ("cat", Value::iri(cat.as_str())),
+            ("graph", Value::iri(graph)),
+            ("received", Value::iri(RECEIVED)),
+        ],
+    )?;
+    store.ask(&text, &[])
+}
+
+fn keep(store: &Store, me: &str, prose: &Prose, arrived: &str) -> Result<String, Error> {
     let tail = mint();
     let tail = tail
         .as_str()
@@ -110,10 +141,13 @@ pub fn kept(store: &Store, me: &str, prose: &Prose) -> Result<String, Error> {
     if let Some(message) = &prose.message {
         say(word("message"), text(message));
     }
+    if let Some(reply) = &prose.reply {
+        say(word("repliesTo"), text(reply));
+    }
     if let Some(at) = prose.at {
         say(NamedNode::new_unchecked(AT_TIME), Term::Literal(Literal::from(at)));
     }
-    store.put_document(&Document::of_quads(quads), Some(me), None, Some(RECEIVED), true)?;
+    store.put_document(&Document::of_quads(quads), Some(me), None, Some(arrived), true)?;
     Ok(graph.as_str().to_string())
 }
 
@@ -152,10 +186,12 @@ pub fn prose_of(store: &Store, graph: &str) -> Result<Option<Prose>, Error> {
         at: literal(AT_TIME).and_then(|t| t.parse().ok()),
         addressed: literal(&format!("{OREXIS}addressed")).map(|a| a == "true"),
         message: literal(&format!("{OREXIS}message")),
+        reply: literal(&format!("{OREXIS}repliesTo")),
     }))
 }
 
-/// A transport kept a person's words: the prose graph, for whoever above the transports hears it.
+/// Words on a channel were kept: the prose graph, a person's for whoever above the transports hears it, the agent's own
+/// for the transport that carries the channel.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ProseKept {
     pub prose: String,
@@ -173,17 +209,61 @@ impl Event for ProseKept {
     }
 }
 
+/// WHAT A MEMBER'S POLICY DOES OF ITS CARRYING TRIGGER, `trigger`'s activity `kind`: the agent's own words a prose graph
+/// keeps sent on their channel, where this member carries it, and a person's left for whoever translates; or the agent
+/// shown writing on a channel, where the member can show it there.
+pub fn carry(
+    store: &Store,
+    carrier: &mut dyn Carrier,
+    event: &Heard,
+    pass: &mut Pass<'_>,
+    kind: &'static str,
+) -> Result<(), Error> {
+    if let Some(graph) = event.named(PROSE) {
+        if received(store, graph.as_str())? {
+            return Ok(());
+        }
+        let Some(prose) = prose_of(store, graph.as_str())? else {
+            return Ok(());
+        };
+        let activity = pass.begin(kind, std::slice::from_ref(graph));
+        carrier.say_to(&prose.channel, &prose.text, prose.reply.as_deref());
+        pass.end(activity);
+    } else if let Some(channel) = event.named(CHANNEL) {
+        carrier.writing_in(channel.as_str());
+    }
+    Ok(())
+}
+
+/// The agent is writing on `channel`, for the transport that can show it there.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Writing {
+    pub channel: String,
+}
+
+impl Event for Writing {
+    fn kind(&self) -> Option<&'static str> {
+        Some(WRITING)
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        NamedNode::new(self.channel.as_str())
+            .map(|c| vec![(CHANNEL, Term::NamedNode(c))])
+            .unwrap_or_default()
+    }
+}
+
 const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 const AT_TIME: &str = "http://www.w3.org/ns/prov#atTime";
 /// A person's words kept, as the event it is said as, and what it names.
 pub const PROSE_KEPT: &str = "http://example.org/orexis#ProseKept";
 pub const PROSE: &str = "http://example.org/orexis#prose";
 pub const PROSE_GRAPH: &str = "http://example.org/orexis#ProseGraph";
+/// The agent writing on a channel, as the event it is said as, and what it names.
+pub const WRITING: &str = "http://example.org/orexis#Writing";
+pub const CHANNEL: &str = "http://example.org/orexis#channel";
 
-/// Whoever hears a person's prose: the graphs it wrote in answer.
-pub type Hears<'a> = Box<dyn FnMut(&Prose) -> Result<Vec<String>, Error> + 'a>;
-
-/// A member that carries a chat's channel: prose out on it, and the agent shown writing there.
+/// A member that carries a chat's channel: the agent's own words out on it, and the agent shown writing there.
 pub trait Carrier {
     /// Prose out on `channel`, as a reply to the message `reply` names where the carrier threads one. Whether anything
     /// was SENT: a member that does not carry the channel sends nothing.
