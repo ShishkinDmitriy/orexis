@@ -498,12 +498,13 @@ impl<'a> Mqtt<'a> {
         false
     }
 
-    /// The topic name the sensor's board takes commands on: a pattern with no wildcard. None, said in the log, where
-    /// the board listens nowhere or every pattern is a wildcard.
-    fn command_topic(&self, sensor: &str) -> Result<Option<String>, Error> {
+    /// The topic name the sensor's board takes commands on: a pattern with no wildcard. None, said in the log once per
+    /// sensor, where the board listens nowhere or every pattern is a wildcard: said at every nudge, a minute's five
+    /// silent sensors were five incidents a minute, each keeping the log's window in the journal.
+    fn command_topic(&mut self, sensor: &str) -> Result<Option<String>, Error> {
         let patterns = self.patterns(COMMANDS_Q, &[("sensor", Value::iri(sensor))])?;
         let name = patterns.iter().find(|p| no_wildcard(p)).cloned();
-        if name.is_none() {
+        if name.is_none() && self.unreachable.insert(sensor.to_string()) {
             log::warn!(
                 "{}: its board listens on {}, and none is a topic name to publish to",
                 local_of(sensor),
