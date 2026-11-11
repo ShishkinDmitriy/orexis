@@ -1808,8 +1808,8 @@ def test_the_docs_only_name_terms_that_exist(doc):
 #  today; it held nine retired identifiers as well while the principles narrated what WAS, until the
 #  narration moved to the commit messages that already carried it. Retiring a name AGENTS.md uses is
 #  adding it here or rewording the line, and either is a choice.
-#  THE LAST FOUR ARE THE PYTHON AGENT'S, retired whole: a principle names what its argument was measured on.
-_NAMED_AS_HISTORY = {"HOURS", "MINUTES", "footprint._triples_in", "step_blocked",
+#  THE LAST THREE ARE THE PYTHON AGENT'S, retired whole: a principle names what its argument was measured on.
+_NAMED_AS_HISTORY = {"HOURS", "MINUTES", "footprint._triples_in",
                      "test_two_couriers_silent_to_each_other_both_yield_and_still_part", "test_wants.py"}
 
 
