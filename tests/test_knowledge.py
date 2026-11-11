@@ -297,7 +297,9 @@ _RETIRED_TREES = ("agent_old/", "packages/", "assembly/",
 #  AND THE PYTHON AGENT, retired whole once every world ran on the binary: nothing under `agent/` is Python any more, so
 #  a `.py` there, or a world's test that booted it, is a record narrating what was, `tests/test_projects.py` holding the
 #  tree to it.
-_RETIRED_PYTHON = re.compile(r"agent/.*\.py$|world/conftest\.py$|world/[^/]+/tests/")
+#  A CRATE HOLDS NO `.py` EITHER, so one under a crate's name is 0.1.0's or the retired agent's module narrated: the
+#  package `orexis` was Python's before it was the kernel's crate.
+_RETIRED_PYTHON = re.compile(r"(agent|orexis[\w-]*)/.*\.py$|world/conftest\.py$|world/[^/]+/tests/")
 
 
 def test_no_document_names_a_path_that_is_not_there():
