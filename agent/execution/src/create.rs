@@ -9,7 +9,7 @@
 //! want's unbegun intentions (`execution:pursues`, `execution:outcome`). Planning's plan published, plan superseded and
 //! want reached are beneath the three, so planning and execution meet by events and the store.
 //!
-//! A HEAD ABOUT TO BE TAKEN IS ASKED where the executor `asks`: said `execution:Taking`, and taken or failed when an
+//! A HEAD ABOUT TO BE TAKEN IS ASKED where the executor `asks`: said `execution:HeadAsked`, and taken or failed when an
 //! event beneath the walking trigger answers it (`execution:head`, `execution:blocked`), which planning says (#916).
 //! Belief's revision pass is heard beneath the walking trigger too, in belief's words, and where it changed the present
 //! a walk is queued, once, however many revisions say so before it runs. A STEP IS TAKEN order by order

@@ -21,7 +21,7 @@ use crate::ontology::EXECUTION;
 pub const INTENTION_RESOLVED: &str = "http://example.org/orexis/execution#IntentionResolved";
 pub const STEP_TAKEN: &str = "http://example.org/orexis/execution#StepTaken";
 /// A head about to be taken, asked of whoever is above execution: the head, and the instant it is taken at.
-pub const TAKING: &str = "http://example.org/orexis/execution#Taking";
+pub const HEAD_ASKED: &str = "http://example.org/orexis/execution#HeadAsked";
 pub const HEAD: &str = "http://example.org/orexis/execution#head";
 /// What an answer to a head asked says of it, beneath execution's walking trigger: blocked, or not.
 pub const BLOCKED: &str = "http://example.org/orexis/execution#blocked";
@@ -154,14 +154,14 @@ impl Event for StepTaken {
 /// A head about to be taken at `at`, asked: no history, since what is kept is the act it becomes or the failure it
 /// ends in, and heard by whoever judges a head by its class.
 #[derive(Clone, Debug, PartialEq)]
-pub struct Taking {
+pub struct HeadAsked {
     pub step: String,
     pub at: DateTime,
 }
 
-impl Event for Taking {
+impl Event for HeadAsked {
     fn kind(&self) -> Option<&'static str> {
-        Some(TAKING)
+        Some(HEAD_ASKED)
     }
 
     fn about(&self) -> Vec<(&'static str, Term)> {

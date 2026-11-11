@@ -7,7 +7,7 @@
 //! WHAT A PASS DID IS SAID, not handed: a plan published, a want reached and a plan superseded are events beneath
 //! execution's trigger, which execution's policy hears once the pass's job is done. Whether anything walks what it
 //! publishes is the agent's roles' to say — one beneath `execution:Executor` — and a head execution asks
-//! about as it is taken (`execution:Taking`) is checked and answered, `planning:HeadChecked` beneath execution's
+//! about as it is taken (`execution:HeadAsked`) is checked and answered, `planning:HeadChecked` beneath execution's
 //! walking trigger (#916).
 
 use std::cell::RefCell;
@@ -28,7 +28,7 @@ const REOPEN: usize = 1;
 const CHECK: usize = 2;
 
 /// A head execution asks about as it is taken, and what that says: the head and the instant.
-const TAKING: &str = "http://example.org/orexis/execution#Taking";
+const HEAD_ASKED: &str = "http://example.org/orexis/execution#HeadAsked";
 const HEAD: &str = "http://example.org/orexis/execution#head";
 const AT_TIME: &str = "http://www.w3.org/ns/prov#atTime";
 
@@ -126,7 +126,7 @@ impl Part for Planning {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         starting.every(0.0, PLAN);
         starting.hears(PLANNING_TRIGGER, REOPEN);
-        starting.hears(TAKING, CHECK);
+        starting.hears(HEAD_ASKED, CHECK);
         Ok(())
     }
 

@@ -499,7 +499,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   reconsideration replaces its untaken steps, and then it ends after its step in flight
   (planning-and-execution-meet-at-the-store).
 - **Every head is checked when it is taken, and the precondition stays planning's to ask** — the
-  executor says `execution:Taking` and holds the head in flight, planning asks the present and answers by
+  executor says `execution:HeadAsked` and holds the head in flight, planning asks the present and answers by
   `planning:HeadChecked`, and nothing asks once a pass; execution reading `planning:precondition` itself was refused, a lower layer speaking
   a higher one's word and a second reader of one text, and two heads each admitted alone but not
   together are the constraint's to couple, not the check's (#916) — **and a head is taken only into a

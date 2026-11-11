@@ -13,7 +13,7 @@
 //! answers it or its intention ends, and swept when its window has ended. A STEP IN FLIGHT IS NEVER CANCELLED
 //! (#905): planning ends an intention by `end_for`, `end_at` and `supersede_after`, and the plan that replaced one
 //! waits for it. EVERY HEAD IS CHECKED WHEN IT IS TAKEN, and not here (#916): where the executor `asks`, a head due is
-//! said `execution:Taking` and stays in flight until `judged` hears the answer, and a head blocked ends its intention
+//! said `execution:HeadAsked` and stays in flight until `judged` hears the answer, and a head blocked ends its intention
 //! `failed` and is not taken.
 //!
 //! WHAT IT SAYS HAPPENED goes to whoever watches the agent (`events`), made only where somebody does: a step taken,
@@ -38,7 +38,7 @@ use orexis::ontology::{BELIEF, DERIVED, OREXIS, RECORDED, local_of};
 use orexis::stance::stance;
 use orexis::store::{Row, Store, Within, instant, iri, value};
 
-use crate::events::{About, IntentionResolved, StepAnswered, StepTaken, Taking, Walked};
+use crate::events::{About, HeadAsked, IntentionResolved, StepAnswered, StepTaken, Walked};
 use crate::implementation::operations;
 use crate::ontology::{
     ADDS_GRAPH, ANSWERED_WITHIN_S, COMMITTED_STEP_GRAPH, EXECUTION, FICTIVE, INTENTION, INTENTION_GRAPH,
@@ -227,7 +227,7 @@ pub struct Executor {
     pub all_fictive: bool,
     /// The taker, the seam to real code; none says the step in the log.
     pub take: Option<Take>,
-    /// Whether a head about to be taken is ASKED first: said `execution:Taking`, and taken or failed when the answer
+    /// Whether a head about to be taken is ASKED first: said `execution:HeadAsked`, and taken or failed when the answer
     /// is heard (`judged`). Not asked, and every head is taken as it is due.
     pub asks: bool,
     /// The heads asked and not yet answered, each with its intention.
@@ -1058,7 +1058,7 @@ impl Executor {
             //  THE HEAD IS ASKED, NOT TAKEN: it stays in flight, so no tick hands it over again, until the answer
             //  is heard and `judged` takes it or fails it.
             self.asked.insert(step.to_string(), intention.to_string());
-            self.watch.emit(&Taking {
+            self.watch.emit(&HeadAsked {
                 step: step.to_string(),
                 at: taken_at,
             });

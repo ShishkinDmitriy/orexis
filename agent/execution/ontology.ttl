@@ -228,11 +228,11 @@ execution:Walking a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Walk
 execution:WalkingTrigger a owl:Class ; rdfs:subClassOf execution:Trigger ; rdfs:label "Walking trigger" ;
     rdfs:comment "What starts a walk besides the pass's timer: belief's revision pass, beneath it here, since execution is above belief and reads its words, and an answer to a head asked, naming the head (`execution:head`) and whether it is blocked (`execution:blocked`). Of a revision pass the policy judges whether it changed the present - a transition changed a state, or a source revised is a belief of the agent's - and walks only then, since nothing else answers a step; an answer takes the head or fails it, and walks on." .
 
-execution:Taking a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Taking" ;
+execution:HeadAsked a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Head asked" ;
     rdfs:comment "A head about to be taken, asked of whoever judges it: the head (`execution:head`) and the instant it is taken at (`prov:atTime`). It stays in flight until an event beneath the walking trigger answers it. No history: what is kept is the act it becomes or the failure it ends in." .
 
 execution:head a owl:ObjectProperty ; rdfs:range execution:Step ; rdfs:label "head" ;
-    rdfs:comment "The step a taking, or the answer to one, is about: the head of its intention, due." .
+    rdfs:comment "The step a head asked, or the answer to it, is about: the head of its intention, due." .
 
 execution:blocked a owl:DatatypeProperty ; rdfs:range xsd:boolean ; rdfs:label "blocked" ;
     rdfs:comment "Whether a head asked is blocked: true, and it ends its intention `failed` untaken; false, and it is taken." .

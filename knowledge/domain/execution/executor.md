@@ -41,7 +41,7 @@ such an agent does not yet end, since a plan published counts as walked (#928).
 
 # Taking a step
 
-First the executor says the head is about to be taken, `execution:Taking`, and holds it in flight;
+First the executor says the head is about to be taken, `execution:HeadAsked`, and holds it in flight;
 planning checks it against the present and answers, `planning:HeadChecked`: where the action's
 precondition no longer admits the step's own filling, planning says it blocked and `judged` ends the
 intention before anything is handed over, so no act is recorded

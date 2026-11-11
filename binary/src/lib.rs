@@ -149,7 +149,7 @@ pub fn built(package: &str) -> bool {
         || (package == "transport/email" && cfg!(feature = "email"))
 }
 
-/// Have execution ask of a head about to be taken, where planning is loaded to answer: it says `execution:Taking`, and
+/// Have execution ask of a head about to be taken, where planning is loaded to answer: it says `execution:HeadAsked`, and
 /// planning's `planning:HeadChecked` answers where the present no longer admits it (#916). No link: a flag, since an
 /// executor with nobody to answer must not wait for an answer.
 #[cfg(all(feature = "planning", feature = "execution"))]
