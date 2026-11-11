@@ -86,6 +86,7 @@ frame "execution" {
   folder "execution:IntentionGraph\nthe plans adopted" as int
   folder "execution:CommittedStepGraph\na step adopted, over its landing window" as cs
   folder "execution:AddsGraph · execution:RetractsGraph\nwhat a published step predicts" as diff
+  folder "execution:CommandGraph\na step's commands, sized as it was taken" as cmd #FFFCF2
 }
 
 ' ───────────────────────── who writes what ─────────────────────────
@@ -121,7 +122,8 @@ PL  --> plan
 PL  --> diff
 EX  --> int
 EX  --> cs
-EX  --> TR : a command
+EX  --> cmd
+EX  --> TR : execution:Commanded
 
 ' ───────────────────────── who reads what ─────────────────────────
 

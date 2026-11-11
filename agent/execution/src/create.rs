@@ -11,9 +11,11 @@
 //!
 //! LINKED by whoever assembles the parts: planning answers `taking` (#916), until a hearer may hold a reader of the
 //! store (#1119). Belief's revision pass is heard beneath the walking trigger, in belief's words, and where it changed
-//! the present a walk is queued, once, however many revisions say so before it runs. A TRANSPORT, linked, is handed each command a
-//! step's implementation sends, order by order (`taker`); a step whose command answers nothing is not taken (#869).
-//! And speech, linked, is handed each document a step's implementation says, with the agents it is to.
+//! the present a walk is queued, once, however many revisions say so before it runs. A STEP IS TAKEN order by order
+//! (`taker`): each order's commands sized from the present, kept as an `execution:CommandGraph` and said
+//! `execution:Commanded`, which a transport's ontology puts beneath its trigger and sends; and each document said,
+//! kept by speech's `said` and said `execution:Told`, which execution's ontology puts beneath speech's speaking
+//! trigger. A step whose command answers nothing is not taken (#869).
 
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
@@ -24,8 +26,12 @@ use oxsdatatypes::DateTime;
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::Clock;
+use orexis::document::Document;
+use orexis::events::{Event, Watch, mint};
+use orexis::ontology::RECORDED;
 use orexis::runtime::{Heard, Part, Pass, Starting};
 use orexis::store::Store;
+use oxigraph::model::{GraphName, Literal, NamedNode, Quad, Term};
 
 use serde_json::Value as Json;
 
@@ -33,29 +39,30 @@ use crate::command::command;
 use crate::executor::Take;
 use crate::implementation::operations;
 use crate::ontology::{
-    ADOPTING, ADOPTING_TRIGGER, ADOPTS, CHANGED, COMMAND, DERIVED_FROM, ENDS_AFTER, OUTCOME, PURSUES, RESOLVING,
-    RESOLVING_TRIGGER, REVISED_SOURCE, SAYING, SUPERSEDING, SUPERSEDING_TRIGGER, WALKING_TRIGGER,
+    ACTUATOR, ADOPTING, ADOPTING_TRIGGER, ADOPTS, CHANGED, COMMAND, COMMAND_GRAPH, COMMANDED, COMMANDS, DERIVED_FROM,
+    ENDS_AFTER, OUTCOME, PAYLOAD, PURSUES, RESOLVING, RESOLVING_TRIGGER, REVISED_SOURCE, SAYING, SPEECH_STATEMENT,
+    SPEECH_TO, SUPERSEDING, SUPERSEDING_TRIGGER, TOLD, WALKING_TRIGGER,
 };
 use crate::says::says;
 use crate::{Executor, Said};
 
-/// Whoever sends a step's command to the device: the actuator and the payload, as a transport's `command` takes them.
-pub type Commands<'a> = Box<dyn FnMut(&str, &Json) -> Result<(), Error> + 'a>;
-
-/// Whoever says a step's document to the agents it is to, as speech's `say` takes them.
-pub type Sayings<'a> = Box<dyn FnMut(&[String], &orexis::document::Document) -> Result<(), Error> + 'a>;
-
-/// The taker a transport links, as Python's `_take` takes a step: the action's implementation, order by order, each
-/// command sized from the present at the clock's instant and handed to `send`. A step whose action carries no command
-/// or saying reaches nothing and is said in the log; a command that answers nothing is a step NOT taken (#869),
-/// since the present held nothing it sizes from and recording it taken would have the intention wait out its patience
-/// as though the device had run.
+/// The taker of an agent that carries out its steps, as Python's `_take` takes a step: the action's implementation,
+/// order by order, each command sized from the present at the clock's instant, kept and said `execution:Commanded` where
+/// the agent `commands` — has a transport to send it — and each document it says kept by speech and said
+/// `execution:Told` where the agent `says`, the statements kept handed on through `said`. A step whose action carries no
+/// command or saying reaches nothing; a command that answers nothing is a step NOT taken (#869), since the present held
+/// nothing it sizes from and recording it taken would have the intention wait out its patience as though the device
+/// had run.
 pub fn taker<'a>(
     beliefs: &'a Store,
+    me: &str,
     clock: Arc<dyn Clock>,
-    mut send: Option<Commands<'a>>,
-    mut say: Option<Sayings<'a>>,
+    watch: Watch,
+    commands: bool,
+    says_to: bool,
+    kept: Rc<RefCell<Vec<String>>>,
 ) -> Take<'a> {
+    let me = me.to_string();
     Box::new(move |said: &Said, _intention: &str| {
         let action = said.get("fills").cloned().unwrap_or_default();
         let ops = operations(beliefs, &action)?;
@@ -78,20 +85,109 @@ pub fn taker<'a>(
                     orexis::ontology::local_of(&action)
                 )));
             }
-            if let Some(send) = send.as_mut() {
-                for (actuator, payload) in &sent {
-                    send(actuator, payload)?;
-                }
+            if commands && !sent.is_empty() {
+                let graph = commanded(beliefs, &me, &sent)?;
+                watch.emit(&Commanded { commands: graph });
             }
-            if let Some(say) = say.as_mut() {
+            if says_to {
                 for (agents, document) in says(beliefs, said, Some(order), now)? {
-                    say(&agents, &document)?;
+                    let statements = orexis_speech::said::said(beliefs, &me, &document)?;
+                    watch.emit(&Told {
+                        statements: statements.clone(),
+                        to: agents,
+                    });
+                    kept.borrow_mut().extend(statements);
                 }
             }
         }
         Ok(true)
     })
 }
+
+/// THE COMMANDS ONE ORDER OF A STEP SENDS, kept as the agent's own act before any transport sends them: an
+/// `execution:CommandGraph` of one node per command, its actuator and its payload; the graph's name.
+pub fn commanded(store: &Store, me: &str, sent: &[(String, Json)]) -> Result<String, Error> {
+    let tail = |n: &NamedNode| {
+        n.as_str()
+            .rsplit(['/', ':', '#'])
+            .next()
+            .unwrap_or_default()
+            .to_string()
+    };
+    let local = me.rsplit(['/', '#']).next().unwrap_or(me);
+    let graph = NamedNode::new(format!(
+        "http://example.org/orexis/graph/command/{local}/{}",
+        tail(&mint())
+    ))
+    .map_err(|e| Error::Evaluation(e.to_string()))?;
+    let into = GraphName::NamedNode(graph.clone());
+    let mut quads = vec![Quad::new(
+        graph.clone(),
+        NamedNode::new_unchecked(RDF_TYPE),
+        NamedNode::new_unchecked(COMMAND_GRAPH),
+        GraphName::DefaultGraph,
+    )];
+    for (actuator, payload) in sent {
+        let node = NamedNode::new_unchecked(format!("{}#{}", graph.as_str(), tail(&mint())));
+        let actuator = NamedNode::new(actuator.as_str()).map_err(|e| Error::Evaluation(e.to_string()))?;
+        quads.push(Quad::new(
+            node.clone(),
+            NamedNode::new_unchecked(ACTUATOR),
+            actuator,
+            into.clone(),
+        ));
+        quads.push(Quad::new(
+            node,
+            NamedNode::new_unchecked(PAYLOAD),
+            Literal::new_simple_literal(payload.to_string()),
+            into.clone(),
+        ));
+    }
+    store.put_document(&Document::of_quads(quads), Some(me), None, Some(RECORDED), true)?;
+    Ok(graph.as_str().to_string())
+}
+
+/// A step's commands at one order were kept: the command graph, for the transport that sends them.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Commanded {
+    pub commands: String,
+}
+
+impl Event for Commanded {
+    fn kind(&self) -> Option<&'static str> {
+        Some(COMMANDED)
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        NamedNode::new(self.commands.as_str())
+            .map(|g| vec![(COMMANDS, Term::NamedNode(g))])
+            .unwrap_or_default()
+    }
+}
+
+/// A step said statements the agent now believes it said, to the agents named: in speech's words, for speech to tell.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Told {
+    pub statements: Vec<String>,
+    pub to: Vec<String>,
+}
+
+impl Event for Told {
+    fn kind(&self) -> Option<&'static str> {
+        Some(TOLD)
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        let named = |p: &'static str, iri: &str| NamedNode::new(iri).ok().map(|n| (p, Term::NamedNode(n)));
+        self.statements
+            .iter()
+            .filter_map(|s| named(SPEECH_STATEMENT, s))
+            .chain(self.to.iter().filter_map(|a| named(SPEECH_TO, a)))
+            .collect()
+    }
+}
+
+const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 
 /// WHETHER ANY OF SOME GRAPHS IS THE PRESENT: a belief of the agent's, by the catalogue.
 const PRESENT_Q: &str = "

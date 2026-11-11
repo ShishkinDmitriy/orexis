@@ -54,3 +54,16 @@ mqtt:TellingTrigger a owl:Class ; rdfs:subClassOf mqtt:Trigger ; rdfs:label "Tel
     rdfs:comment "What starts a telling: speech's `speech:Said`, beneath it here, naming each statement of the document (`speech:statement`) and each agent it is to (`speech:to`). The policy tells it to each that listens on the bus, and passes over a person in silence." .
 
 speech:Said rdfs:subClassOf mqtt:TellingTrigger .
+
+#  AND A STEP'S COMMANDS, execution's `execution:Commanded`, which the member - above execution, as it is above every
+#  package it carries bytes for - puts beneath its actuating trigger.
+
+@prefix execution: <http://example.org/orexis/execution#> .
+
+mqtt:Actuating a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Actuating" ;
+    rdfs:comment "Publishing each command a command graph keeps on the topic its actuator listens to, where the MQTT member reaches the actuator; not retained, since a command is an act." .
+
+mqtt:ActuatingTrigger a owl:Class ; rdfs:subClassOf mqtt:Trigger ; rdfs:label "Actuating trigger" ;
+    rdfs:comment "What starts an actuating: execution's `execution:Commanded`, beneath it here, naming the command graph a step's order kept (`execution:commands`). The policy sends each command whose actuator the member reaches, and passes over the rest." .
+
+execution:Commanded rdfs:subClassOf mqtt:ActuatingTrigger .

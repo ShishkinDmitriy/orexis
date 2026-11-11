@@ -172,20 +172,30 @@ pub fn foresee<'a>(
     planning.planner.borrow_mut().foresee = Some(prediction.offered());
 }
 
-/// Link execution's part to whoever carries a step out, as the Python executor's `commanded` is connected to every
-/// transport and its `said` to speech: a step's implementation is taken order by order, each command sized from the
-/// present and sent where the member reaches the actuator, and each document it says kept by speech and told — the
-/// statements speech kept handed on with what the executor wrote.
+/// Give execution's part the taker of an agent that carries out its steps, where anything carries them — a transport
+/// to send a step's commands, speech to say its documents: each command kept and said `execution:Commanded` where
+/// a transport is loaded, each document kept and said `execution:Told` where speech is, the statements kept handed on
+/// with what the executor wrote. Nothing is linked: the transport and speech hear the events beneath their triggers.
 #[cfg(feature = "execution")]
 pub fn take<'a>(
     store: &'a Store,
     clock: Arc<dyn Clock>,
     execution: &orexis_execution::create::Execution<'a>,
-    send: Option<orexis_execution::create::Commands<'a>>,
-    say: Option<orexis_execution::create::Sayings<'a>>,
+    me: &str,
+    watch: Watch,
+    commands: bool,
+    says: bool,
 ) {
-    if send.is_some() || say.is_some() {
-        execution.executor.borrow_mut().take = Some(orexis_execution::create::taker(store, clock, send, say));
+    if commands || says {
+        execution.executor.borrow_mut().take = Some(orexis_execution::create::taker(
+            store,
+            me,
+            clock,
+            watch,
+            commands,
+            says,
+            execution.said.clone(),
+        ));
     }
 }
 
@@ -409,27 +419,15 @@ pub fn assemble_seen<'a>(
     };
     #[cfg(feature = "execution")]
     if let Some(execution) = execution.as_ref() {
-        #[allow(unused_mut)]
-        let mut send: Option<orexis_execution::create::Commands<'a>> = None;
-        #[allow(unused_mut)]
-        let mut say: Option<orexis_execution::create::Sayings<'a>> = None;
         #[cfg(feature = "mqtt")]
-        if let Some(transport) = transport.as_ref() {
-            let member = transport.member.clone();
-            send = Some(Box::new(move |actuator, payload| {
-                member.borrow_mut().command(actuator, payload)
-            }));
-        }
+        let commands = transport.is_some();
+        #[cfg(not(feature = "mqtt"))]
+        let commands = false;
         #[cfg(feature = "speech")]
-        if let Some(speech) = speech.as_ref() {
-            let (speaker, said) = (speech.speaker.clone(), execution.said.clone());
-            say = Some(Box::new(move |agents, document| {
-                let kept = speaker.say(document, agents)?;
-                said.borrow_mut().extend(kept);
-                Ok(())
-            }));
-        }
-        take(store, clock.clone(), execution, send, say);
+        let says = speech.is_some();
+        #[cfg(not(feature = "speech"))]
+        let says = false;
+        take(store, clock.clone(), execution, &me, watch.clone(), commands, says);
     }
     #[cfg(all(feature = "planning", feature = "execution"))]
     if let (Some(planning), Some(execution)) = (planning.as_ref(), execution.as_ref()) {
