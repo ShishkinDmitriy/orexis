@@ -20,6 +20,42 @@ use oxigraph::model::NamedNode;
 
 use crate::driver::{Message, Mqtt, NUDGE_S};
 
+/// The commands a command graph keeps, in the order kept: each actuator and its payload.
+fn commands_of(store: &orexis::store::Store, graph: &str) -> Result<Vec<(String, serde_json::Value)>, Error> {
+    let g = NamedNode::new(graph).map_err(|e| Error::Evaluation(e.to_string()))?;
+    let engine = store.engine();
+    let mut out = Vec::new();
+    for q in engine
+        .quads_for_pattern(
+            None,
+            Some(NamedNode::new_unchecked(ACTUATOR).as_ref()),
+            None,
+            Some(g.as_ref().into()),
+        )
+        .flatten()
+    {
+        let oxigraph::model::Term::NamedNode(actuator) = q.object else {
+            continue;
+        };
+        let payload = engine
+            .quads_for_pattern(
+                Some(q.subject.as_ref()),
+                Some(NamedNode::new_unchecked(PAYLOAD).as_ref()),
+                None,
+                Some(g.as_ref().into()),
+            )
+            .flatten()
+            .find_map(|p| match p.object {
+                oxigraph::model::Term::Literal(l) => serde_json::from_str(l.value()).ok(),
+                _ => None,
+            });
+        if let Some(payload) = payload {
+            out.push((actuator.as_str().to_string(), payload));
+        }
+    }
+    Ok(out)
+}
+
 const NUDGE: usize = 0;
 const HANDLE: usize = 1;
 const CARRY: usize = 2;
@@ -30,6 +66,13 @@ const CARRYING_TRIGGER: &str = "http://example.org/orexis/mqtt#CarryingTrigger";
 const TELL: usize = 3;
 const TELLING: &str = "http://example.org/orexis/mqtt#Telling";
 const TELLING_TRIGGER: &str = "http://example.org/orexis/mqtt#TellingTrigger";
+const ACTUATE: usize = 4;
+const ACTUATING: &str = "http://example.org/orexis/mqtt#Actuating";
+const ACTUATING_TRIGGER: &str = "http://example.org/orexis/mqtt#ActuatingTrigger";
+/// What a step's commands are kept as, in execution's words, which the member reads.
+const COMMANDS: &str = "http://example.org/orexis/execution#commands";
+const ACTUATOR: &str = "http://example.org/orexis/execution#actuator";
+const PAYLOAD: &str = "http://example.org/orexis/execution#payload";
 
 /// Who holds the agent running.
 const HOLDER: &str = "transport/mqtt";
@@ -64,6 +107,7 @@ impl Part for Transport<'_> {
         starting.every(NUDGE_S, NUDGE);
         starting.hears(CARRYING_TRIGGER, CARRY);
         starting.hears(TELLING_TRIGGER, TELL);
+        starting.hears(ACTUATING_TRIGGER, ACTUATE);
         Ok(())
     }
 
@@ -87,6 +131,18 @@ impl Part for Transport<'_> {
                     .try_for_each(|agent| self.member.borrow_mut().tell(agent.as_str(), &payload).map(|_| ()));
                 pass.end(activity);
                 told?;
+            }
+            ACTUATE => {
+                let Some(graph) = event.named(COMMANDS).cloned() else {
+                    return Ok(Vec::new());
+                };
+                let commands = commands_of(&store, graph.as_str())?;
+                let activity = pass.begin(ACTUATING, std::slice::from_ref(&graph));
+                let sent = commands
+                    .iter()
+                    .try_for_each(|(actuator, payload)| self.member.borrow_mut().command(actuator, payload));
+                pass.end(activity);
+                sent?;
             }
             _ => carry(&store, &mut *self.member.borrow_mut(), event, pass, CARRYING)?,
         }

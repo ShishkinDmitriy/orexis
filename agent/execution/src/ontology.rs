@@ -41,6 +41,16 @@ pub const STEP_CLASS: &str = "http://example.org/orexis/execution#Step";
 
 pub const COMMAND: &str = "http://example.org/orexis/execution#Command";
 pub const SAYING: &str = "http://example.org/orexis/execution#Saying";
+/// The commands one order of a step sends, kept, and the event that says so.
+pub const COMMAND_GRAPH: &str = "http://example.org/orexis/execution#CommandGraph";
+pub const ACTUATOR: &str = "http://example.org/orexis/execution#actuator";
+pub const PAYLOAD: &str = "http://example.org/orexis/execution#payload";
+pub const COMMANDED: &str = "http://example.org/orexis/execution#Commanded";
+pub const COMMANDS: &str = "http://example.org/orexis/execution#commands";
+/// What a step said, as the event it is said as, in speech's words, which speech hears beneath its trigger.
+pub const TOLD: &str = "http://example.org/orexis/execution#Told";
+pub const SPEECH_STATEMENT: &str = "http://example.org/orexis/speech#statement";
+pub const SPEECH_TO: &str = "http://example.org/orexis/speech#to";
 pub const FICTIVE: &str = "http://example.org/orexis/execution#Fictive";
 
 const GRAPH: &str = "http://example.org/orexis/graph/";

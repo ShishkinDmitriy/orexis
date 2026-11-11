@@ -27,5 +27,5 @@ an action nobody carries out comes to.
 # Where it is read
 
 The executor reads it to tell whether a step is fictive; the runtime reads it to take a step,
-order by order, sending what each command answers through the transport and believing, revising
-and telling what each saying makes (`agent/execution/src/implementation.rs`).
+order by order, keeping what each command answers for the transport to send and believing, revising
+and saying what each saying makes (`agent/execution/src/implementation.rs`).

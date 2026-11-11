@@ -47,10 +47,11 @@ blocked and `end_at` ends the intention before anything is handed over, so no ac
 ([precondition](/domain/planning/precondition.md), #916). Then, in one order, read off the action's
 [implementation](/domain/execution/implementation.md):
 
-1. an operation that reaches the world is carried out by a [signal](/domain/kernel/signal.md) of the
-   executor's: an `execution:Command`'s payload by `commanded`, which execution's part hands the
-   transport reaching the device, an `execution:Saying`'s document by `said`, for speech to believe and
-   tell — order by order, each answered before the next;
+1. an operation that reaches the world is kept and said in an [event](/domain/kernel/event.md) of the
+   executor's: an `execution:Command`'s payloads as an `execution:CommandGraph`, said
+   `execution:Commanded`, which the transport reaching the device hears beneath its own trigger, and an
+   `execution:Saying`'s document kept by speech's `said` and said `execution:Told`, beneath speech's
+   speaking trigger, for speech to tell — order by order ([policy](/domain/kernel/policy.md));
 2. a step marked `execution:keptBelow` is not taken fictively: it waits until planning has written
    the want that keeps it one level down, `execution:keptBy`, and is taken by recording that want
    `execution:refinedBy` on the act and waiting on it ([refinement](/domain/planning/refinement.md));

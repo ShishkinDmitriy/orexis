@@ -1,6 +1,7 @@
 @prefix orexis: <http://example.org/orexis#> .
 @prefix execution: <http://example.org/orexis/execution#> .
 @prefix belief: <http://example.org/orexis/belief#> .
+@prefix speech: <http://example.org/orexis/speech#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
@@ -86,11 +87,11 @@ execution:takenAt a owl:DatatypeProperty ; rdfs:domain execution:Act ; rdfs:rang
 
 execution:Command a owl:Class ; rdfs:subClassOf execution:Operation ;
     rdfs:label "Command" ;
-    rdfs:comment "An operation sending a device a command: an `sh:select` run over the present beliefs when the step is taken, with the step's parameters as `$tokens` and `$now` and the agent asked as `?me a orexis:Self`, answering `?actuator` and `?payload`, the JSON document the device is sent. How much to pour or how long to heat is sized here from the situation as it is, never by the search, and the container sends each answer through the transport that reaches the actuator." .
+    rdfs:comment "An operation sending a device a command: an `sh:select` run over the present beliefs when the step is taken, with the step's parameters as `$tokens` and `$now` and the agent asked as `?me a orexis:Self`, answering `?actuator` and `?payload`, the JSON document the device is sent. How much to pour or how long to heat is sized here from the situation as it is, never by the search, and each answer is kept in an `execution:CommandGraph` and said `execution:Commanded`, for the transport that reaches the actuator." .
 
 execution:Saying a owl:Class ; rdfs:subClassOf execution:Operation ;
     rdfs:label "Saying" ;
-    rdfs:comment "An operation telling a peer something: an `sh:construct` run over the present beliefs when the step is taken, with the step's parameters as `$tokens` and `$now` and the agent asked as `?me a orexis:Self`, whose result is one or more DOCUMENTS. A graph is an IRI the result says is `execution:to` an agent; what the result says of that IRI and what hangs off it through blank nodes is the graph's content, but for its kind (an `rdf:type` the vocabulary puts beneath `orexis:Graph`), its period (`dcterms:temporal`) and the agents it is to, which are the rows about it. The agent believes what it said, and the container sends each document to each agent it is to through the transport; several sayings of one order are merged by graph." .
+    rdfs:comment "An operation telling a peer something: an `sh:construct` run over the present beliefs when the step is taken, with the step's parameters as `$tokens` and `$now` and the agent asked as `?me a orexis:Self`, whose result is one or more DOCUMENTS. A graph is an IRI the result says is `execution:to` an agent; what the result says of that IRI and what hangs off it through blank nodes is the graph's content, but for its kind (an `rdf:type` the vocabulary puts beneath `orexis:Graph`), its period (`dcterms:temporal`) and the agents it is to, which are the rows about it. The agent believes what it said, kept by speech's `said` and said `execution:Told`, which speech tells each agent it is to; several sayings of one order are merged by graph." .
 
 execution:Fictive a owl:Class ; rdfs:subClassOf execution:Operation ;
     rdfs:label "Fictive" ;
@@ -246,6 +247,30 @@ execution:Resolving a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Re
 
 execution:ResolvingTrigger a owl:Class ; rdfs:subClassOf execution:Trigger ; rdfs:label "Resolving trigger" ;
     rdfs:comment "What starts a resolving: an event naming the want (`execution:pursues`) and the outcome its unbegun intentions end with (`execution:outcome`)." .
+
+#  WHAT A STEP TAKEN SENDS AND SAYS, each kept before it leaves and said in an event that names it: its commands, which
+#  a transport - above execution, as it is above every package it carries bytes for - puts beneath its own trigger,
+#  and its documents, in speech's words, which execution - above speech - puts beneath speech's trigger.
+
+execution:CommandGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Command graph" ;
+    rdfs:comment "The commands one order of a step sends, sized from the present as the step is taken (`execution:Command`) and kept as the agent's own act (`orexis:Recorded`) before any transport sends them: a node per command, the actuator it is for (`execution:actuator`) and the JSON document the device is sent (`execution:payload`). No belief, and handed to no reader of the mind." .
+
+execution:actuator a owl:ObjectProperty ; rdfs:label "actuator" ;
+    rdfs:comment "The actuator a command is for." .
+
+execution:payload a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "payload" ;
+    rdfs:comment "The JSON document a command sends its actuator, as the command's text sized it." .
+
+execution:Commanded a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Commanded" ;
+    rdfs:comment "A step's commands at one order were kept as a command graph (`execution:commands`), for whichever transport reaches each actuator, which puts this beneath its own trigger." .
+
+execution:commands a owl:ObjectProperty ; rdfs:domain execution:Commanded ; rdfs:range execution:CommandGraph ; rdfs:label "commands" ;
+    rdfs:comment "The command graph an event is about." .
+
+execution:Told a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Told" ;
+    rdfs:comment "A step said a document, kept by speech's `said` as statements the agent believes it said: the event names each (`speech:statement`) and each agent it is to (`speech:to`), in speech's words, and speech reads each back from the store as it was said." .
+
+execution:Told rdfs:subClassOf speech:SpeakingTrigger .
 
 execution:IntentionResolved a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Intention resolved" ;
     rdfs:comment "An intention ended, carrying it as it ended — the want it pursued, its `execution:outcome`." .

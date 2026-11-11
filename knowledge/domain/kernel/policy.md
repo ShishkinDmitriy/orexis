@@ -54,6 +54,9 @@ and each judges by the graph's provenance whose words they are: a person's are t
 carrier's. And speech's `speech:Said`, a document the agent said, naming its statements and each it is to, is
 beneath `mqtt:TellingTrigger`, which tells it to each agent on the bus, and `translation:PhrasingTrigger`, which
 phrases it for each person in a chat; each reads the statements back from the store as speech said them.
+Execution's step taken says `execution:Commanded`, naming the command graph it kept, beneath `mqtt:ActuatingTrigger`
+by the transport's ontology, since a transport is above every package it carries bytes for; and `execution:Told`,
+like coordination's, beneath `speech:SpeakingTrigger` by execution's.
 The others are declared as their policies are built (#1119).
 
 **An addressed event, by who asked for it.** A timer alarms for the part that set it, and a request
