@@ -57,11 +57,32 @@ pub fn post() -> Call {
             Ok(r) => r,
             //  THE API ANSWERS A REFUSAL IN JSON, `ok` false with its description.
             Err(ureq::Error::Status(_, r)) => r,
-            Err(e) => return Err(e.to_string()),
+            Err(e) => return Err(hidden(&e.to_string())),
         };
-        let text = response.into_string().map_err(|e| e.to_string())?;
+        let text = response.into_string().map_err(|e| hidden(&e.to_string()))?;
         serde_json::from_str(&text).map_err(|e| e.to_string())
     })
+}
+
+/// `text` with the token cut out of every Bot API url in it: a client's error names the url it called, and the token
+/// is a path segment of it (`/bot<token>/<method>`), so said as it stands the error would hand the bot to anyone who
+/// reads the log or the journal.
+pub fn hidden(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(at) = rest.find("/bot") {
+        let (before, after) = rest.split_at(at + 4);
+        out.push_str(before);
+        let end = after
+            .find(|c: char| c == '/' || c.is_whitespace() || c == '"' || c == ')')
+            .unwrap_or(after.len());
+        if end > 0 {
+            out.push_str("<token>");
+        }
+        rest = &after[end..];
+    }
+    out.push_str(rest);
+    out
 }
 
 /// What the bot knows of itself and its polling, shared with the polling thread.
@@ -401,6 +422,19 @@ mod tests {
     use std::path::Path;
 
     use super::*;
+
+    #[test]
+    fn a_bot_api_url_in_an_error_says_no_token() {
+        assert_eq!(
+            hidden("https://api.telegram.org/bot123:ABC-def_g/getUpdates: Connection Failed: timed out"),
+            "https://api.telegram.org/bot<token>/getUpdates: Connection Failed: timed out"
+        );
+        assert_eq!(hidden("no url here"), "no url here");
+        assert_eq!(
+            hidden("https://x/bot42:k and https://x/bot42:k/sendMessage"),
+            "https://x/bot<token> and https://x/bot<token>/sendMessage"
+        );
+    }
     use orexis::snapshots::{now, stand_in};
 
     const TEST: &str = "http://example.org/test#";
