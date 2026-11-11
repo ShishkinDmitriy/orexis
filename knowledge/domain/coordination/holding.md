@@ -13,7 +13,7 @@ description: >-
 
 A constraint's select joins two subjects on some of their predicates - the courier's *no two vans at one
 position* joins two vans on their column and their row - and those predicates are its **key**, what two
-agents can both want. It is read by parsing the text (`agent/coordination/src/holdings.rs`): every predicate
+agents can both want. It is read by parsing the text (`crates/orexis-coordination/src/holdings.rs`): every predicate
 whose object is a variable some other subject's pattern also ends in. A constraint that joins nothing has no
 key, and nothing is asked under it.
 

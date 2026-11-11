@@ -13,7 +13,7 @@ description: >-
 A requirement is a package's word about what a document using its terms must say: a sensor
 observes a property and is mounted on something, an observer role reads a sensor, a desire carries
 one of its two tests. It is a SHACL shape, and the package or domain owning the words ships it in a
-`requirements.ttl` beside its `ontology.ttl`, as `agent/sensing/requirements.ttl` and
+`requirements.ttl` beside its `ontology.ttl`, as `crates/orexis-sensing/requirements.ttl` and
 `domains/market/requirements.ttl` do. A domain imports it from its ontology, as it imports its
 actions and rules. A world whose words are its own ships its requirements the same way, a
 `requirements.ttl` beside its `world.ttl`, and they are held exactly as a package's are: a word is

@@ -3,7 +3,7 @@ type: Decision
 title: One tree and one mechanic, and the family is the directory above
 description: >-
   There were two package systems that looked alike and lived apart — vocabulary/ at the root
-  and capability trees under agent/ — split by who loads the Python, which is invisible in a
+  and capability trees under crates/ — split by who loads the Python, which is invisible in a
   listing. They are one tree now, packages/<family>/<name>/, and the family is the parent
   directory, so Package.kind distinguishes a plant from a part instead of saying "vocabulary"
   eleven times. The cost is that the layout no longer shows which Python a runtime loads, so
@@ -85,7 +85,7 @@ filesystem with slashes; the grouping was there and only the vocabulary half was
 visibility. What carries the boundary now:
 
 - `lint-imports`: `packages` may not import `onboarding`. Four listed trees collapsed to one line.
-- the `Containerfile`: it names `agent/` and `packages/` and not `onboarding/`, and
+- the `Containerfile`: it names `crates/` and `packages/` and not `onboarding/`, and
   `tests/test_layout.py` fails if that changes.
 
 Both were always the real enforcement — the directory was a reminder. The reminder is gone, so

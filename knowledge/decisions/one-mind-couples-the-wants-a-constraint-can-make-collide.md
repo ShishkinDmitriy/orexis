@@ -115,7 +115,7 @@ preconditions from the present ground, where the aversion's rows are the collisi
 make: 32 on the shared grid, none on disjoint grids. An instance meets a row's terms through a filling
 the reach admits that binds both, the pick of the parcel into the van. Per pass, in the derivation,
 since the reach begins at the present; 17 ms a pass on the dispatcher and one query on a holder with
-no aversion ([constraint](/domain/planning/constraint.md), `agent/planning/src/couplings.rs`).*
+no aversion ([constraint](/domain/planning/constraint.md), `crates/orexis-planning/src/couplings.rs`).*
 
 **A constraint is its own kind, and the difference from a desire is modality.** The bundle had the
 desire and the precondition and nothing between: a desire is what the agent wants of the world, a
@@ -142,7 +142,7 @@ of `planning:Desire`, since the one thing that differs is what a row means.
   refuses a world posed that way. Two vans posed on one cell no longer mint a want a drive parts: that
   was physics repaired as a preference. A prohibition the agent MAY enter and must leave stays a
   desire — an aversion, `planning:unmetWhen`, repaired when entered, weighed in grounds and never in
-  possible worlds (`agent/planning/tests/plans/an_aversions_want_is_repaired_by_a_step.trig`).
+  possible worlds (`crates/orexis-planning/tests/plans/an_aversions_want_is_repaired_by_a_step.trig`).
 
   *Built 2026-10-05 (#902) as a desire's bound — the aversion weighed in every possible world and a
   world whose rows its parent's lacked refused, never-newly-enter, the 0.1.0 law's pruning at

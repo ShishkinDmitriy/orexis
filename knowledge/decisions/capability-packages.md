@@ -53,7 +53,7 @@ A **package** is a directory, and the tree it sits in says what kind it is:
 
 | | |
 |---|---|
-| ~~`packages/core/<name>/`~~ | **GONE.** The base vocabulary was a family of exactly one, forever, that every other package layers on and nothing can remove. That is not a package; it is the base, and it lives in `agent/` beside the code that reads it |
+| ~~`packages/core/<name>/`~~ | **GONE.** The base vocabulary was a family of exactly one, forever, that every other package layers on and nothing can remove. That is not a package; it is the base, and it lives in `crates/` beside the code that reads it |
 | `packages/orexis-capability-<name>/` | what an agent can **do**. The extendable axis |
 | `packages/orexis-transport-<name>/` | how a device is **reached**. Deliberately not a capability |
 | `packages/orexis-part-*/` and the plant, bus and tool families | the things a world names, and the vocabularies they layer on |
@@ -63,7 +63,7 @@ A package may also declare a **namespace of its own**, in its `ontology.ttl`, an
 this record: the prefix map used to be a kernel constant, which made a namespace the one thing a
 package could not have without editing the kernel.
 
-**AMENDED.** This paragraph used to say that two of the three sat inside `agent/` and one did
+**AMENDED.** This paragraph used to say that two of the three sat inside `crates/` and one did
 not, because a capability's Python is loaded by an agent runtime and vocabulary is shared with
 onboarding. The reasoning was sound and the arrangement is gone: there is ONE tree now, and the
 family is the parent directory. What has not changed is the fact underneath — onboarding reads a

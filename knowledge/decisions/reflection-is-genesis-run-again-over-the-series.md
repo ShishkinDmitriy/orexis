@@ -109,8 +109,8 @@ Two consequences follow, and both bind.
 would need and cannot get from the series is a GAP IN WHAT THE AGENT REPORTS, never a licence to read
 the beliefs. Measured on this tree, two of the five questions above already find one:
 
-- `agent/sensing/src/events.rs` writes an observation's point with one field, `value`, which
-  `agent/sensing/src/create.rs` reads off `sosa:hasSimpleResult` — the reading, after the scaling and the
+- `crates/orexis-sensing/src/events.rs` writes an observation's point with one field, `value`, which
+  `crates/orexis-sensing/src/create.rs` reads off `sosa:hasSimpleResult` — the reading, after the scaling and the
   calibration the world states. The raw count (`sensing:rawResult`) is on no point. So "a raw count
   that has not moved for days" cannot be asked of the history today, and "past a calibration point"
   can only be asked of the reading, which a past-the-point count makes read past 1.0 — askable, but
@@ -118,7 +118,7 @@ the beliefs. Measured on this tree, two of the five questions above already find
   history must gain.
 - Sensing says `sensing:stuckSince` and `sensing:silentSince` in the agent's state graphs, and reports
   on the metrics one level, `silence`, how MANY sensors are silent now (`Silence` in
-  `agent/sensing/src/events.rs`); nothing says which, and a sensor said stuck is on no metric and no point.
+  `crates/orexis-sensing/src/events.rs`); nothing says which, and a sensor said stuck is on no metric and no point.
   A reflection asking which probe went quiet can infer it from the gaps in that probe's history, which
   is the honest reading; a flag per sensor is the second gap.
 
@@ -175,7 +175,7 @@ nothing, which is the claim.
 # What it emits
 
 An issue for the first tool: an operator command, beside the onboarding commands and outside
-`agent/` as they are, that gathers one agent's figures from its history and metrics buckets into a
+`crates/` as they are, that gathers one agent's figures from its history and metrics buckets into a
 report answering the fixed questions above, model-less, measured on the simulated greenhouse at a
 fast pace (`OREXIS_TIME_PACE`, which `documents/clock.py` reads) so a season is an afternoon. Its
 done-when carries consequence A's two gaps — the raw count on the observation's point, and a sensor

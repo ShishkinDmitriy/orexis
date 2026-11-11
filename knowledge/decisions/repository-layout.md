@@ -15,7 +15,7 @@ timestamp: 2026-08-07T00:00:00Z
 
 ```
 pyproject.toml   Containerfile
-agent/                       the runtime, and the model it reads
+crates/                       the runtime, and the model it reads
 packages/orexis-capability-<name>/   what an agent can DO — discovered
 packages/orexis-transport-<name>/     how a device is REACHED — discovered
 onboarding/                  the sovereign's tools
@@ -64,7 +64,7 @@ So the split went, and the intent became two things that fail when violated:
 
 The image is two directories and neither is onboarding. Measured on the built image at the time:
 `/app/onboarding` does not exist and `import onboarding` raises `ModuleNotFoundError`. They were
-`agent/` and `vocabulary/` then and are `agent/` and `packages/` now — the count is what the
+`crates/` and `vocabulary/` then and are `crates/` and `packages/` now — the count is what the
 boundary test asserts, not the names.
 
 # Why capabilities lived inside the agent and the vocabulary did not — AMENDED
@@ -87,7 +87,7 @@ the boundary test trivial. See
 
 # Why there is no `agent/kernel/`
 
-Symmetry was proposed — `agent/{kernel,capabilities,transports}`, three peer trees — and refused,
+Symmetry was proposed — `crates/{kernel,capabilities,transports}`, three peer trees — and refused,
 because the symmetry would be false. `packages/orexis-capability-*/` and `packages/orexis-transport-*/` are **discovered**: the
 loader globs them, anything dropped in is found, nothing lists them. A kernel is what those
 discovered trees **import**. One is a trunk, the others are places to graft onto, and presenting
@@ -100,9 +100,9 @@ reintroduced the word `kernel` with a new meaning days after the base vocabulary
 meant.
 
 The argument above has outlived its example and got stronger. *A kernel is what those discovered
-trees import* — and the base vocabulary has since come back into `agent/`, so the kernel is now
+trees import* — and the base vocabulary has since come back into `crates/`, so the kernel is now
 literally the one thing not discovered. `agent/kernel/` is still not wanted, for the reason
-stated: `agent/` **is** the kernel, and a subdirectory of that name would say it is only part
+stated: `crates/` **is** the kernel, and a subdirectory of that name would say it is only part
 of one.
 
 # Naming
@@ -126,7 +126,7 @@ part — and that is the same rule applied further: see
 
 **The first half did not survive.** `packages/core/orexis` was the base vocabulary, and having no
 Python turned out not to be what it had in common with `plant/water` at all: `water` is a domain
-a world may swap, and the base is what every swap is expressed in. It is `agent/`'s now, and its
+a world may swap, and the base is what every swap is expressed in. It is `crates/`'s now, and its
 Python — `terms.py`'s equivalent — was always next door.
 
 # Seams left open
@@ -153,7 +153,7 @@ Python — `terms.py`'s equivalent — was always next door.
   reason this seam never weighed: what landed (#452) is not a shared core for onboarding's sake
   but the kernel's own layering — three packages in the one tree, `packages/orexis-agent-reactive/`,
   `packages/orexis-agent-progression/` and `packages/orexis-agent-deliberation/`, each
-  importing only the layers beneath it, with `agent/` left as the container that assembles
+  importing only the layers beneath it, with `crates/` left as the container that assembles
   them. A floor beneath the three was built first (#457, refused) and dissolved into them:
   the store engine went to progression, the lowest layer that persists, and the belief and
   desire modalities to deliberation. What made a distribution boundary worth having was

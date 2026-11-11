@@ -1,0 +1,18 @@
+# HISTORY: every event that is a point written to the history series, and every event that states triples kept in the
+# journal, as it happens — ported from `agent/history/*.py` beside it, knowing no package's words.
+[package]
+name = "orexis-history"
+version = "0.2.0"
+edition.workspace = true
+license.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+orexis = { workspace = true }
+oxigraph.workspace = true
+log = "0.4"
+
+[dev-dependencies]
+oxsdatatypes = "0.2"

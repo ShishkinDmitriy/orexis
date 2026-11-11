@@ -106,7 +106,7 @@ it for open expectations):
   in its own namespace, parsed and evaluated by its own module, which answers the hook for
   observation-backed wants — a reading against the aim, and the reading is sensing's whole
   subject. The content reaches the kernel through the hook's RETURN VALUE and nothing else:
-  no kernel loader learns the file exists, no `agent/` import crosses into `packages/`.
+  no kernel loader learns the file exists, no `crates/` import crosses into `packages/`.
 - **Still declared per KIND, still nothing compiled**: `sensing:measureOf
   sosa:ObservableProperty` says "a want about an observable property is measured by this
   SELECT"; the module resolves a desire by asking the store what its `ssn:forProperty` object

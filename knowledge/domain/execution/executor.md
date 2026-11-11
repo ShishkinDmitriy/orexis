@@ -6,7 +6,7 @@ description: >-
   The owner of the intentions - it commits the plans a pass hands down, takes each step when it
   falls due, and moves an intention only when the world answers what the step predicted - and the
   role of an agent that runs it. Two doors, `tick` for time and `drain` for taking, called on one
-  thread by the runtime and by a test alike. `agent/execution/src/executor.rs`.
+  thread by the runtime and by a test alike. `crates/orexis-execution/src/executor.rs`.
 ---
 
 # Who runs it

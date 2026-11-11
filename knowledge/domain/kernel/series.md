@@ -54,7 +54,7 @@ other testimony.
 
 # What is built
 
-History, told by purpose (#825), written by the history part (`agent/history/`). The sink is
+History, told by purpose (#825), written by the history part (`crates/orexis-history/`). The sink is
 `onboarding/series.py`: it imports nothing of the agent, and a sink per purpose is loaded where
 `INFLUX_HISTORY_URL`, `_ORG`, `_BUCKET` and `_TOKEN` are all set — none set is no sink, some set is
 none too, said in the log. Where one is loaded the runtime creates the history part with the
@@ -78,7 +78,7 @@ for a sink and none imports `agent.series`
 - **Execution's** step taken and answered were points measured `Step` until 2026-10-26, and are
   the journal's now; a bucket written before keeps them as they were written.
 
-Metrics, written by the metrics part (`agent/metrics/`), created where a metrics sink is loaded and
+Metrics, written by the metrics part (`crates/orexis-metrics/`), created where a metrics sink is loaded and
 hearing every event. Its metamodel is the one thing a package imports of it: an event's class
 names its `metric` and marks its fields `Tag`, `Value`, `Flag` or `Level`. Where no metrics sink is
 loaded, no metrics part hears anything, and an event only it would hear is never made.

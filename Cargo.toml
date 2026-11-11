@@ -1,15 +1,31 @@
-# THE RUST AGENT, ported one package at a time beside the Python one
-# (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md). Each package is a crate in its
-# own directory of `agent/`, beside its ontology and its Python, so both read the same documents.
+# THE AGENT, in Rust (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md). Each package is a crate of
+# its own, `crates/<crate>/`, beside its ontology and its documents; the kernel is `crates/orexis/` and the binary
+# `crates/orexis-agent/`. A crate names another by the workspace's dependency, never by its path.
 [workspace]
 resolver = "3"
-members = ["agent", "agent/belief", "agent/coordination", "agent/execution", "agent/history", "agent/metrics", "agent/spans", "agent/planning", "agent/prediction", "agent/sensing", "agent/speech", "agent/translation", "agent/transport/http", "agent/transport/mqtt", "agent/transport/telegram", "agent/transport/email", "binary"]
+members = ["crates/*"]
 
 [workspace.package]
 edition = "2024"
 license = "MIT"
 
 [workspace.dependencies]
+orexis = { path = "crates/orexis" }
+orexis-belief = { path = "crates/orexis-belief" }
+orexis-coordination = { path = "crates/orexis-coordination" }
+orexis-execution = { path = "crates/orexis-execution" }
+orexis-history = { path = "crates/orexis-history" }
+orexis-metrics = { path = "crates/orexis-metrics" }
+orexis-planning = { path = "crates/orexis-planning" }
+orexis-prediction = { path = "crates/orexis-prediction" }
+orexis-sensing = { path = "crates/orexis-sensing" }
+orexis-spans = { path = "crates/orexis-spans" }
+orexis-speech = { path = "crates/orexis-speech" }
+orexis-translation = { path = "crates/orexis-translation" }
+orexis-transport-email = { path = "crates/orexis-transport-email" }
+orexis-transport-http = { path = "crates/orexis-transport-http" }
+orexis-transport-mqtt = { path = "crates/orexis-transport-mqtt" }
+orexis-transport-telegram = { path = "crates/orexis-transport-telegram" }
 oxigraph = { version = "0.5", default-features = false }
 
 # THE ENGINE OPTIMISED IN A TEST BUILD: a day of the greenhouse spends nearly all its time in oxigraph and spargebra,

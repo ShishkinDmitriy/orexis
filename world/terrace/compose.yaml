@@ -43,7 +43,7 @@ services:
     image: orexis-terrace-terrace:local
     build:
       context: ../..
-      dockerfile: binary/Containerfile
+      dockerfile: crates/orexis-agent/Containerfile
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
         FEATURES: "belief,http,mqtt,prediction,sensing,speech,telegram,translation"

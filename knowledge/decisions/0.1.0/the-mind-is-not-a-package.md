@@ -5,7 +5,7 @@ description: >-
   Three granted packages held the mind — desire, intention, deliberation — while the STORES
   they read were built for every agent unconditionally, three lines above the modules in
   `Agent.__init__`. A modality nobody may write is not a modality. All three dissolve into
-  `agent/`, the base vocabulary comes back with them (a family of exactly one is not a family),
+  `crates/`, the base vocabulary comes back with them (a family of exactly one is not a family),
   and the kernel stops being discovered: it is what discovers. What this buys is a sentence that
   was said long before it was true — every package is optional — as a contract `lint-imports`
   keeps and a test proves against an empty tree.
@@ -219,7 +219,7 @@ member is argued rather than imagined.
 
 # Seams left open
 
-- **`agent/` is large**, and that was accepted rather than overlooked: cohesion was the point,
+- **`crates/` is large**, and that was accepted rather than overlooked: cohesion was the point,
   and the boundaries that enforce anything (`lint-imports`, the `Containerfile` COPY list) got
   sharper. The tree never distinguished a 200-line file from a 600-line one. **Overturned** by
   [a-layer-is-a-distribution](/decisions/0.1.0/a-layer-is-a-distribution.md), which is what the

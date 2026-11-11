@@ -1,0 +1,22 @@
+# THE TELEGRAM TRANSPORT: an agent's own bot over the Bot API — ported from `agent/transport/telegram/*.py` beside it,
+# held to what its suite asks (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md).
+[package]
+name = "orexis-transport-telegram"
+version = "0.2.0"
+edition.workspace = true
+license.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+orexis = { workspace = true }
+orexis-speech = { workspace = true }
+oxigraph.workspace = true
+oxsdatatypes = "0.2"
+serde_json = "1"
+ureq = "2"
+log = "0.4"
+
+[dev-dependencies]
+orexis = { workspace = true, features = ["snapshots"] }

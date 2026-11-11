@@ -1,7 +1,7 @@
 apiVersion: 1
 
 # Auto-wires Grafana to Tempo, where each agent of a monitored world sends its activities as spans
-# (agent/spans). Inside the infra project's network, so 3200 is published to nobody; no credential,
+# (crates/orexis-spans/). Inside the infra project's network, so 3200 is published to nobody; no credential,
 # since nothing but Grafana can reach it to read.
 datasources:
   - name: Tempo

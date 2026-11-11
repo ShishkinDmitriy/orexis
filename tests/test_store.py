@@ -40,7 +40,7 @@ def _shipped(tree: str, *suffixes: str) -> list[Path]:
 # one of these globs and took cases off this guard without failing anything; a guard that quietly
 # stops guarding is worse than none, so each group is asserted non-empty below.
 _GROUPS = {
-    "agent": _shipped("agent", ".ttl"),
+    "crates": _shipped("crates", ".ttl"),
     "documents": _shipped("documents", ".py"),
     "onboarding": _shipped("onboarding", ".py"),
     "simulation": _shipped("simulation", ".py"),

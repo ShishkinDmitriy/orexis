@@ -47,7 +47,7 @@ by their rows alone, and no filter is asked of either, which #902 measured a qua
 The constraint's own weighing stands beside with its rows, so what the world violates can be read.
 Nothing compares a child to its parent: possibility is a fact about the world, not about the step
 that reached it, so a world that keeps a violation the present already has is as impossible as one
-that enters it. The cases are `agent/planning/tests/expand/a_fork_that_violates_a_constraint_is_impossible.trig`
+that enters it. The cases are `crates/orexis-planning/tests/expand/a_fork_that_violates_a_constraint_is_impossible.trig`
 and `a_fork_that_keeps_the_presents_violation_is_impossible_too.trig`; what it does on the
 lane's one-mind poses, and what it costs a world, is in [measure-the-search](/runbooks/measure-the-search.md).
 
@@ -60,7 +60,7 @@ actions could violate it — and sets about mending nothing; `Planner.contradict
 rows to whoever asks, and `orexis-onboard` refuses a world posed that way before anything is granted
 (`onboarding/reading.py`, `contradicted`). A prohibition the agent may break and then has to mend
 is not a constraint at all but the aversion [desire](/domain/planning/desire.md) describes, and the
-suite keeps one being mended in `agent/planning/tests/plans/an_aversions_want_is_repaired_by_a_step.trig`.
+suite keeps one being mended in `crates/orexis-planning/tests/plans/an_aversions_want_is_repaired_by_a_step.trig`.
 The courier's two-vans rule was authored as that, in a world since retired, until this page said which it
 was, and two vans posed on one cell minted a want a drive satisfied: physics mended as a preference.
 
@@ -99,7 +99,7 @@ worlds whose places are finite terms
 ([the-grid-is-infinite-and-a-position-is-two-coordinates](/decisions/the-grid-is-infinite-and-a-position-is-two-coordinates.md)).
 
 The reach begins at the present, so this is read PER PASS in the derivation and never at boot
-(`agent/planning/src/couplings.rs`); a holder with no constraint pays one query and couples nothing,
+(`crates/orexis-planning/src/couplings.rs`); a holder with no constraint pays one query and couples nothing,
 and what the rest pay is in [measure-the-search](/runbooks/measure-the-search.md).
 
 # What coupling does
@@ -115,7 +115,7 @@ apart exactly as [a-parcel-astray-is-a-want-of-its-own](/decisions/a-parcel-astr
 left them. A coupled cluster that takes in an instance a walking want is about reopens that want,
 the first trigger of soft [commitment](/domain/execution/commitment.md); the second is the
 constraint marking a world of the walking plan impossible once a belief has changed the grounds.
-`agent/planning/tests/derive_wants/two_parcels_a_constraint_joins_are_one_want.trig`
+`crates/orexis-planning/tests/derive_wants/two_parcels_a_constraint_joins_are_one_want.trig`
 holds the derivation to it; `world/lane/tests/test_one_mind.py` holds a world to the joint ten-step
 plan and to the product it costs. The argument, and what was refused in its place, is
 [one-mind-couples-the-wants-a-constraint-can-make-collide](/decisions/one-mind-couples-the-wants-a-constraint-can-make-collide.md).

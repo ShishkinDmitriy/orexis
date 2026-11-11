@@ -15,7 +15,7 @@ description: >-
 # What was true (measured 2026-10-08, on main at e99731d0)
 
 **The one identifier a process is told was threaded by hand into every text that mentioned the
-agent.** 37 `$me` tokens in 14 files under `agent/`, `domains/` and `world/` — 27 of them in 21
+agent.** 37 `$me` tokens in 14 files under `crates/`, `domains/` and `world/` — 27 of them in 21
 query texts, the rest in the prose describing them: the five premises, the three readings of the
 agent's sensors (the premises', the MQTT driver's, the HTTP driver's), sensing's limits, the
 planner's subject, and every precondition, effect, command and saying of the actuation, climate

@@ -27,13 +27,13 @@ three root trees and none between the kernel's own modules, so `agent/act.py` im
 The kernel is 32 Python files, 8,093 lines counting its ontology and rules, in one import space.
 
 [the-mind-is-not-a-package](/decisions/0.1.0/the-mind-is-not-a-package.md) saw this and accepted it:
-"`agent/` is large, and that was accepted rather than overlooked: cohesion was the point." This
+"`crates/` is large, and that was accepted rather than overlooked: cohesion was the point." This
 record overturns that seam — the acceptance, not the ruling it was a seam of.
 
 # What was decided
 
 **The kernel splits along its own layering, and each layer becomes a root distribution beside
-`assembly/`.** Four trees where `agent/` was one:
+`assembly/`.** Four trees where `crates/` was one:
 
 - **the stores beneath everything** — `documents/store.py`, `agent/beliefs.py`, `agent/graphs.py`,
   `agent/desire.py`, `agent/intentions.py`: the modalities every layer meets at, importing no

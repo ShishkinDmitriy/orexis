@@ -35,7 +35,7 @@ It is three parts, and only the first is the tool's:
   thing on the scene.
 - **A layer** — a package's drawing of what it decided, once per agent shown and in that agent's colour: on the scene
   where `place` says — coordination's holdings, planning's path, execution's step in flight — and, what is no place, as
-  a status under the scene — a conflict standing, the latest statement said and heard — each in `agent/<package>/ui/`
+  a status under the scene — a conflict standing, the latest statement said and heard — each in `crates/orexis-<package>/ui/`
   beside the events it reads. A layer that is no place, as speech's, draws nothing on the scene.
 
 A scene and a layer are Preact components in TSX, exported as `scene` or `layer` from `ui/index.tsx`, reading their

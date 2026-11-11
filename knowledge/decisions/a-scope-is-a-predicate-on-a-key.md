@@ -186,7 +186,7 @@ Refused:
 What two beds in ONE scope come to is one want, as before: the property places both witnesses
 there and the key is not asked. Two wants with one met-test would be one plan found twice, since
 the shape cannot tell the beds apart — which is the whole reason the key is beside the shape.
-`agent/planning/tests/derive_wants/two_beds_two_pumps_are_two_wants.trig` and
+`crates/orexis-planning/tests/derive_wants/two_beds_two_pumps_are_two_wants.trig` and
 `two_beds_in_one_scope_are_one_want.trig` hold the derivation to both;
 `world/greenhouse/tests/test_two_beds.py` holds the world to both pumps commanded in one pass and
 nothing blocked in the next.

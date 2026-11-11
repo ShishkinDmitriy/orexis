@@ -271,7 +271,7 @@ deaf is the draw's restarts, as before.
 
 **A foreseen place is a thing of its own, and it holds from now on.** Each place a reach gives is laid as a node
 standing for the peer's thing there, so a constraint comparing two things' values - two vans at one position, one
-tool held by two robots (`agent/coordination/tests/lay/`) - keeps the agent off it; one counting or summing things
+tool held by two robots (`crates/orexis-coordination/tests/lay/`) - keeps the agent off it; one counting or summing things
 would count every place as another thing, far too cautious, which is the resource with no key below. And no place
 says when the peer could reach it: every one holds from the sighting for the lookahead's window, whichever
 the peer could reach first, which is cautious - save where the agent's own step in flight lands, which is never

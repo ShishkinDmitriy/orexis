@@ -56,16 +56,16 @@ in either language.
 # What was decided
 
 **One binary per agent, each package a Cargo feature.** `orexis-compose` builds an agent's binary with the
-features its roles load, from `binary/Containerfile`, for every agent whose packages are all crates (`compose.ported`), as it builds an image with the extras today
+features its roles load, from `crates/orexis-agent/Containerfile`, for every agent whose packages are all crates (`compose.ported`), as it builds an image with the extras today
 ([a-package-brings-its-own-dependencies](/decisions/a-package-brings-its-own-dependencies.md)). A package
 an agent does not run is then compiled out rather than merely left uninstalled. The image holds the
 binary and the CA certificates, and the world is mounted read-only. That leaves no interpreter, no
-package manager and no shell. The binary is its own crate, `binary/`, beside `agent/` and not in it: every entry of `agent/` that is no
+package manager and no shell. The binary is its own crate, `crates/orexis-agent/`, beside `crates/` and not in it: every entry of `crates/` that is no
 package is kept in each Python agent's image (`agent/tree.py`). Its volume is RocksDB, as pyoxigraph keeps one, so an
 agent moving to the binary keeps the beliefs it has lived in.
 
 **Each package is a crate of its own, in its own directory, and the features are the binary's.** The kernel
-is `agent/Cargo.toml` and planning `agent/planning/Cargo.toml`, beside the package's ontology and its Python,
+is `crates/orexis/Cargo.toml` and planning `crates/orexis-planning/Cargo.toml`, beside the package's ontology and its Python,
 and a package's crate depends on the crates beneath it alone. So the compiler holds the rule that a package
 imports what lies beneath it and never above, as `lint-imports` and the layout test hold it in Python. Features
 in one crate were refused: a module of sensing calling planning would compile in every build with both on
@@ -90,11 +90,11 @@ leaves: a store in, the function run, the store out. A ported function runs the 
 around it and no Python beside it, and leaves the same store, so `revise`, `take` and `weigh` are each
 checked as they land, not at the end.
 
-**The diff is Python's to write and the crate's to read.** `agent/src/snapshots.rs` loads a case as
+**The diff is Python's to write and the crate's to read.** `crates/orexis/src/snapshots.rs` loads a case as
 `agent/conftest.py` does, applies its diff by line number and compares every quad, blank nodes by their
 shape, and regenerates nothing: two writers of one canonical form would drift. So what a diff records, the
 Rust copy reproduces exactly, and the graph hash shows what that costs: a digest is Python's `repr` of the
-canonical facts, hashed, and `agent/src/hash.rs` spells each tuple, string and float as `repr` does, so the
+canonical facts, hashed, and `crates/orexis/src/hash.rs` spells each tuple, string and float as `repr` does, so the
 four `hash_named_graph` cases pass on both. The same holds for every literal a ported act writes, since a
 case compares terms and not values: an instant is spelled as Python's `isoformat` spells it, `+00:00` and not
 `Z`, and a parameter's value reaches a rule text as Python's binder hands it. And so does an ORDER no document
@@ -103,14 +103,14 @@ of a violation row and of a want's key, and the engine hands quads back in no or
 each store they are copied through. So a case is loaded as `put_graph` loads it, through a store of its own, and
 the shapes are merged as rdflib's `Graph` merges them, each subject's predicates in the order first met. A filling is
 asked as a chain of OPTIONALs in the order rdflib's algebra holds a precondition's patterns, each block reordered by
-`reorderTriples`, and the chain's order decides which rows bind, so `agent/planning/src/footprint/patterns.rs` orders
+`reorderTriples`, and the chain's order decides which rows bind, so `crates/orexis-planning/src/footprint/patterns.rs` orders
 them as rdflib does; read in the order written, seven of the eleven shipped agents' scopes came out otherwise. The
 spelling and the order are free to change once the Python agent is retired and the diffs are the crate's to
 write. What the two parsers READ differs in one place, and no shipped text meets it: the engine's parser
 translates a sequence or an inverse of plain predicates into triples, as SPARQL's algebra says, where rdflib
 keeps the path, so `?x :p/a :C` reads the class in the crate and every type in Python. And a parser may refuse
 what the other lets pass: `$tank` and `?tank` are one variable to SPARQL, so an effect's `BIND($tank AS ?tank)`
-is refused by the engine's and passed by rdflib's, and `agent/planning/src/footprint.rs` reads a token as a
+is refused by the engine's and passed by rdflib's, and `crates/orexis-planning/src/footprint.rs` reads a token as a
 variable of its own name.
 
 **An agent runs in Rust once every package its roles load is ported.** Inside one agent the packages share
@@ -144,7 +144,7 @@ package. So the two copies never drift apart, and nobody pays for a feature twic
 that both runners read, so they hold either copy to the same store.
 
 **When the last world runs on the binary, the Python agent is retired whole.** The commit before its deletion
-is tagged as the last Python release, as 0.1.0's tree was retired, and `agent/` holds the Rust agent alone. Done on 2026-11-09: what the operator's tools and the simulator still read a world with
+is tagged as the last Python release, as 0.1.0's tree was retired, and `crates/` holds the Rust agent alone. Done on 2026-11-09: what the operator's tools and the simulator still read a world with
 is `documents/`, a package of its own since the simulator's image may hold no onboarding code.
 The snapshot cases outlive it, being files and not Python.
 

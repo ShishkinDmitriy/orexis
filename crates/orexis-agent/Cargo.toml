@@ -1,0 +1,57 @@
+# THE BINARY: one agent, booted from a world's files and run until nothing is left to pursue, each package a
+# feature, so a package an agent does not run is compiled out
+# (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md).
+[package]
+name = "orexis-agent"
+version = "0.2.0"
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "orexis-agent"
+path = "src/main.rs"
+
+[lib]
+path = "src/lib.rs"
+
+[features]
+default = ["belief", "planning", "execution", "sensing", "prediction", "speech", "coordination", "translation", "mqtt", "http", "telegram", "email"]
+belief = ["dep:orexis-belief"]
+planning = ["dep:orexis-planning"]
+execution = ["dep:orexis-execution"]
+sensing = ["dep:orexis-sensing"]
+prediction = ["dep:orexis-prediction"]
+mqtt = ["dep:orexis-transport-mqtt"]
+speech = ["dep:orexis-speech"]
+coordination = ["dep:orexis-coordination", "speech"]
+translation = ["dep:orexis-translation", "speech"]
+http = ["dep:orexis-transport-http"]
+telegram = ["dep:orexis-transport-telegram", "speech"]
+email = ["dep:orexis-transport-email", "speech"]
+volume = ["orexis/volume", "oxigraph/rocksdb"]
+
+[dependencies]
+orexis = { workspace = true, features = ["journal", "series"] }
+orexis-belief = { workspace = true, optional = true }
+orexis-planning = { workspace = true, optional = true }
+orexis-execution = { workspace = true, optional = true }
+orexis-sensing = { workspace = true, optional = true }
+orexis-prediction = { workspace = true, optional = true }
+orexis-transport-mqtt = { workspace = true, optional = true }
+orexis-speech = { workspace = true, optional = true }
+orexis-coordination = { workspace = true, optional = true }
+orexis-translation = { workspace = true, optional = true }
+orexis-transport-http = { workspace = true, optional = true }
+orexis-transport-telegram = { workspace = true, optional = true }
+orexis-transport-email = { workspace = true, optional = true }
+orexis-history = { workspace = true }
+orexis-metrics = { workspace = true }
+orexis-spans = { workspace = true }
+oxsdatatypes = "0.2"
+oxigraph.workspace = true
+log = "0.4"
+signal-hook = "0.3"
+serde_json = "1"
+
+[dev-dependencies]
+sha2 = "0.11"

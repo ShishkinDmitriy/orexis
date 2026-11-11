@@ -24,7 +24,7 @@ CONTAINERFILE = REPO_ROOT / "simulation" / "Containerfile"
 
 #  What the simulator legitimately runs: itself, what it reads a world with, the domains its worlds import and
 #  the packages' documents.
-ALLOWED_TREES = {"agent", "documents", "domains", "simulation"}
+ALLOWED_TREES = {"crates", "documents", "domains", "simulation"}
 
 #  Never in an agent image. `orexis-influx` reads the admin token, which opens every bucket in the
 #  store and which no agent may ever hold; the surest guarantee is that the code using it is
@@ -44,7 +44,7 @@ def copied_paths() -> list[str]:
     return out
 
 
-BINARY_CONTAINERFILE = REPO_ROOT / "binary" / "Containerfile"
+BINARY_CONTAINERFILE = REPO_ROOT / "crates" / "orexis-agent" / "Containerfile"
 
 
 def test_the_binarys_image_copies_only_the_tree_it_builds_and_the_domains():
@@ -54,7 +54,7 @@ def test_the_binarys_image_copies_only_the_tree_it_builds_and_the_domains():
               if line.strip().upper().startswith("COPY ") and "--from=" not in line]
     trees = {p.split("/")[0].strip("./") for paths in copied for p in paths if not p.startswith("--")}
     assert copied, f"no COPY lines found in {BINARY_CONTAINERFILE} — this test is not looking"
-    assert trees <= {"agent", "binary", "domains", "Cargo.toml", "Cargo.lock"}, trees
+    assert trees <= {"crates", "domains", "Cargo.toml", "Cargo.lock"}, trees
 
 
 def test_the_image_copies_something():
@@ -492,7 +492,7 @@ def test_onboarding_refuses_an_agent_declaring_no_role(tmp_path, monkeypatch):
 
 def test_onboarding_refuses_a_world_an_agent_of_which_does_not_boot_on_the_binary(monkeypatch):
     """Each agent the world states is booted on the binary with `--check`, and one it refuses refuses the world, said
-    by the binary's own last line; the rust job holds the binary to every shipped world (`binary/tests/check.rs`)."""
+    by the binary's own last line; the rust job holds the binary to every shipped world (`crates/orexis-agent/tests/check.rs`)."""
     import subprocess
 
     from onboarding import reading
@@ -1231,7 +1231,7 @@ def test_every_committed_service_mounts_what_its_image_keeps_and_builds_what_its
     build is handed are its agent's, as onboarding reads them."""
     import yaml
 
-    declared = set(tomllib.loads((REPO_ROOT / "binary" / "Cargo.toml").read_text())["features"])
+    declared = set(tomllib.loads((REPO_ROOT / "crates" / "orexis-agent" / "Cargo.toml").read_text())["features"])
     checked = 0
     for path in sorted((REPO_ROOT / "world").glob("*/compose.yaml")):
         for name, service in yaml.safe_load(path.read_text())["services"].items():
@@ -1240,8 +1240,8 @@ def test_every_committed_service_mounts_what_its_image_keeps_and_builds_what_its
                 #  the binary's: built with features it declares, and handed no tree of the agent's, which it compiled
                 features = set(build["args"]["FEATURES"].split(","))
                 assert features and features <= declared, (path.parent.name, name, features - declared)
-                assert build["dockerfile"] == "binary/Containerfile", (path.parent.name, name)
-                assert not [v for v in service["volumes"] if v.startswith("../../agent/")], (path.parent.name, name)
+                assert build["dockerfile"] == "crates/orexis-agent/Containerfile", (path.parent.name, name)
+                assert not [v for v in service["volumes"] if v.startswith("../../crates/")], (path.parent.name, name)
                 checked += 1
                 continue
             if build and "simulation" in service.get("command", []):
@@ -1773,9 +1773,9 @@ def test_the_docs_only_name_terms_that_exist(doc):
     leaves no dangling reference for a reader to trip over."""
     import rdflib
 
-    sources = sorted(p for p in [*REPO_ROOT.glob("agent/**/*.ttl"), *REPO_ROOT.glob("onboarding/*.ttl"),
+    sources = sorted(p for p in [*REPO_ROOT.glob("crates/**/*.ttl"), *REPO_ROOT.glob("onboarding/*.ttl"),
                                  *REPO_ROOT.glob("domains/*/*.ttl"), *REPO_ROOT.glob("tests/fixtures/vocabularies/*.ttl")]
-                     if not (p.is_relative_to(REPO_ROOT / "agent") and "tests" in p.parts))
+                     if not (p.is_relative_to(REPO_ROOT / "crates") and "tests" in p.parts))
     #  THE PROJECT'S NAMESPACES AND THE VENDORED ONES: a standard no file here declares — schema,
     #  SSN-System — is not this census's to check, and a term of it is not held.
     vendored = {iri for path in REPO_ROOT.glob("tests/fixtures/vocabularies/*.ttl")
@@ -1928,7 +1928,7 @@ def test_what_a_world_counts_as_an_incident_reaches_its_agents_and_what_is_no_le
 
 # --- a PERSON, in a chat with an agent that translates ----------------------------------------------
 
-_VIEWING = REPO_ROOT / "agent" / "translation" / "tests" / "world"
+_VIEWING = REPO_ROOT / "crates" / "orexis-translation" / "tests" / "world"
 
 
 def _viewing(society=lambda text: text, deployment=lambda text: text) -> dict:

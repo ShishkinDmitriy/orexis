@@ -99,7 +99,7 @@ infrastructure rather than with the code.
 - ~~**The BRF is implicit.**~~ In 0.1.0, `packages/orexis-agent-deliberation/reviser.py` is the row: every reactive path marks a
   want there and the pass runs on the mind's own thread (#392). What it DECIDES is still thin —
   dedupe by want, and nothing else — but where it decides is one place now. In Agent 0.2.0 the
-  row is `agent/belief/`: a change is written as any belief is, and the rules conclude its
+  row is `crates/orexis-belief/`: a change is written as any belief is, and the rules conclude its
   [revisions](/domain/belief/revision.md) beside it. What it decides is
   nothing — any belief is accepted — and that is the decision.
 - **`sensor_unreachable(...)` is not modelled.** The freshness want covers not-knowing, which is

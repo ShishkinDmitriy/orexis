@@ -47,7 +47,7 @@ agent wrote down what it just wrote down. It never needed an IRI to say so.
 
 # The rows are not retired, and the audit is why
 
-They looked identical from the kernel: eighteen declarations, no consumer in `agent/`,
+They looked identical from the kernel: eighteen declarations, no consumer in `crates/`,
 `packages/` or `onboarding/`. **The reader is in `assembly/`** — `extension_rows()` parses every
 ontology for `orexis:row`, and three tests consume it. One of them,
 `test_a_reactive_hook_never_reaches_the_planner`, holds a delivered message out of the search on

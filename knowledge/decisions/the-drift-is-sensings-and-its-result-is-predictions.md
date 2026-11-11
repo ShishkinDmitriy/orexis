@@ -185,7 +185,7 @@ a dose land.
 # Amended 2026-09-24: in Agent 0.2.0 the result is the crossings, and the drift is prediction's
 
 In 0.2.0 the drift is no longer sensing's: it is `prediction:Drift`, the one word of
-`agent/prediction/`, a package of its own above sensing, since the sovereign asked that sensing
+`crates/orexis-prediction/`, a package of its own above sensing, since the sovereign asked that sensing
 observe and say when a sensor has gone silent and predict nothing. What `predict` comes to there
 is the calculation of when the reading changes range — every crossing of a range bound bisected
 between the ladder's rungs — and one prediction per stretch, carrying a number rather than a

@@ -12,7 +12,7 @@ description: >-
 
 The answerer looks for the named constraint among those its self holds (`planning:holds`); where it holds
 none of that name it says nothing, as a distributed constraint problem passes values only along the
-constraints that link two agents (`agent/coordination/src/answer.rs`).
+constraints that link two agents (`crates/orexis-coordination/src/answer.rs`).
 
 # Only what meets
 

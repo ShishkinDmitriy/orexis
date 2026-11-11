@@ -58,7 +58,7 @@ The question turned out to have two halves, and only one of them is about the mi
 # What the tree held, read on 2026-10-09
 
 - **A reading carries no uncertainty at all.** It is a point, `sosa:hasSimpleResult`, and its side
-  was a strict comparison in `agent/sensing/rules.ttl` (`FILTER(?value < ?low)`). A probe reading
+  was a strict comparison in `crates/orexis-sensing/rules.ttl` (`FILTER(?value < ?low)`). A probe reading
   0.249 against the terrace bed's floor of 0.25 was below exactly as a noiseless probe would be.
 - **A prediction carries worst-case bands**, the corridor, built by interval arithmetic over the
   flows' rate ranges; an expected value for an uncertain forecast was refused in

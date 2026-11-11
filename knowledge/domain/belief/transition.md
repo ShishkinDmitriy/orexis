@@ -38,7 +38,7 @@ it states. Every rule of an action's [effect](/domain/planning/effect.md) is one
 
 # One machine, two doors, three runners
 
-`agent/belief/src/transition.rs` reads an update with rdflib's update grammar and sorts the rules by
+`crates/orexis-belief/src/transition.rs` reads an update with rdflib's update grammar and sorts the rules by
 `sh:order`, an absent order nought. It has two doors, by how many graphs a rule changes:
 
 - **One graph: the engine's own update.** `run` hands the engine the text itself, `WITH` the graph it
@@ -143,7 +143,7 @@ then `WITH` the working state, so what it deletes is taken out of both and what 
 both: the runner's target is the ground being laid, and the present is never written
 to. So a bed believed dry and resting at 0.3001 is foreseen dry, the hold reaching the foresight, and
 a ground that comes to hold what the one before held is still no period
-(`agent/planning/tests/foreseen/a_crossing_is_judged_in_the_ground_laid_there_and_a_recovery_within_the_hour.trig`).
+(`crates/orexis-planning/tests/foreseen/a_crossing_is_judged_in_the_ground_laid_there_and_a_recovery_within_the_hour.trig`).
 No budget is spent there: a ground holds what its predictions make of it, whole, or it is no ground.
 
 # Once, in turn, within a budget

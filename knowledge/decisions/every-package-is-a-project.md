@@ -17,7 +17,7 @@ timestamp: 2026-08-27T19:00:00Z
 
 One distribution. The root's `[tool.setuptools.packages.find]` claimed `packages*` along with the
 other three trees, an `__init__.py` at `packages/` and at each of four families made every level
-a regular package, and one `dependencies` list served `assembly/`, `agent/`, `onboarding/` and all
+a regular package, and one `dependencies` list served `assembly/`, `crates/`, `onboarding/` and all
 twenty-one packages at once. A package that needed something third-party declared an **extra on
 the root**, named for the capability that needed it, and imported it inside `provides()`.
 
@@ -41,7 +41,7 @@ which is the argument for this change more than any principle is:
   import is deferred inside a function, so it failed only when that branch ran — the same shape
   as the deferred import that crash-looped every agent for four merges
   ([a-deferred-import-is-code-no-test-runs](/decisions/0.1.0/a-deferred-import-is-code-no-test-runs.md)).
-- **`rdflib`** is imported directly in nine places across `assembly/`, `agent/` and
+- **`rdflib`** is imported directly in nine places across `assembly/`, `crates/` and
   `onboarding/`, and was declared nowhere. It arrived only as a transitive of `pyshacl`, which is
   free to drop it or re-pin it at any release.
 - **`pyoxigraph`** is imported by `packages/orexis-capability-sensing/module.py`, and was declared by the
@@ -95,7 +95,7 @@ one thing pip *can* manage and the loader never could: who needs what.
 # What did not change
 
 - **The image boundary.** `onboarding/` still ships inside the `orexis` distribution beside
-  `agent/`, and what keeps it out of an image is still the `Containerfile` not naming the tree,
+  `crates/`, and what keeps it out of an image is still the `Containerfile` not naming the tree,
   with `lint-imports` holding the direction. Twenty-two distributions are a dependency graph, not
   a boundary, and reading them as one would repeat the exact mistake
   [repository-layout](/decisions/repository-layout.md) corrected.

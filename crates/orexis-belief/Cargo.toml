@@ -1,0 +1,22 @@
+# BELIEF: what the agent concludes and how its state changes — for now the transition's one machine, which
+# planning applies an action's effect by — ported from `agent/belief/*.py` beside it
+# (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md).
+[package]
+name = "orexis-belief"
+version = "0.2.0"
+edition.workspace = true
+license.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+orexis = { workspace = true }
+oxigraph.workspace = true
+spargebra = "0.4"
+regex = "1"
+log = "0.4"
+oxsdatatypes = "0.2"
+
+[dev-dependencies]
+orexis = { workspace = true, features = ["snapshots"] }

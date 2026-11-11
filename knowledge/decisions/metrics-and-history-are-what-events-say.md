@@ -45,7 +45,7 @@ whether anything is connected before making an event that costs a read, so where
 nothing is read or timed — which is what `metrics.recording()` guarded, now said by the one thing
 that knows.
 
-**The class says what is reported, in the metrics' metamodel and nothing else.** `agent/metrics/`
+**The class says what is reported, in the metrics' metamodel and nothing else.** `crates/orexis-metrics/`
 declares four marks — `Tag`, `Value`, `Flag`, and `Level` ([level](/domain/kernel/level.md)) — and a
 class naming its `metric` marks its fields with them; an unmarked field, a want or a plan, is the
 event's and never the metric's. A package imports the marks and nothing more of metrics.
@@ -54,7 +54,7 @@ event's and never the metric's. A package imports the marks and nothing more of 
 that decides the thing: sensing's observation, execution's step taken and the verdict on it.
 
 **Two parts watch every part.** Where the environment names a store, the runtime creates
-`agent/metrics/` or `agent/history/` like any package's part; linked, each connects to every signal
+`crates/orexis-metrics/` or `crates/orexis-history/` like any package's part; linked, each connects to every signal
 of every part and of the runtime, one tallying and writing the window at the end of a pass, the
 other writing each point as it is heard. Neither imports a package, and no package imports
 `agent.series`.

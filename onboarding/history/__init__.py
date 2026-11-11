@@ -23,7 +23,7 @@ THE PACKAGE THAT DECIDES A THING DRAWS IT (a-replay-is-the-history-drawn-by-the-
 is what every world shares and names no package's word: the instants, the agents to show — together on one scene, or
 side by side — and the log (`core/`). Everything drawn is a `ui/index.tsx` beside the code or the documents it draws, its
 queries beside it — a domain's SCENE, the ground its world stands on (`domains/courier/ui/index.tsx`, the road and its
-vans), and a package's LAYER, what it decided drawn on whatever scene there is (`agent/coordination/ui/index.tsx`, the
+vans), and a package's LAYER, what it decided drawn on whatever scene there is (`crates/orexis-coordination/ui/index.tsx`, the
 holdings and the conflicts) — each Preact components in TSX, held by `npm run check` to the contract `core/index.ts`
 states. esbuild bundles them with Preact into the one page (`build.mjs`), which opens offline.
 
@@ -49,7 +49,7 @@ from pathlib import Path
 import pyoxigraph as ox
 
 from documents.ontology import local_of
-from documents.world import KERNEL, documents, read_with_imports
+from documents.world import TREE, documents, read_with_imports
 from ..series import HISTORY, Sink
 
 from .. import installation, reading
@@ -61,7 +61,7 @@ from ..worlds import world_dir, worlds
 log = logging.getLogger("history")
 
 HERE = Path(__file__).parent
-PACKAGES = KERNEL
+PACKAGES = TREE
 DRAWING = "ui/index.tsx"
 _XSD = "http://www.w3.org/2001/XMLSchema#"
 _NUMBERS = {_XSD + t for t in ("integer", "decimal", "double", "float", "int", "long")}

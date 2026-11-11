@@ -15,7 +15,7 @@ description: >-
 
 # What was true (on main at b8805ccf)
 
-The runtime (`agent/src/runtime.rs`) runs every part on one thread. A pass drains one queue of jobs in the order they
+The runtime (`crates/orexis/src/runtime.rs`) runs every part on one thread. A pass drains one queue of jobs in the order they
 were queued - each package's timers, the graphs written that a part hears by kind, the events said that a part hears
 beneath its trigger - and then waits for an arrival or the soonest instant a part said it is due. Since #1119 steps 1
 to 7 every part decides by its policy, no part links to another, and no part borrows anything. What already waits on

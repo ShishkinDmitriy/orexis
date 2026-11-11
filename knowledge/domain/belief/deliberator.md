@@ -8,7 +8,7 @@ description: >-
   in turn and then applies the transitions it triggers, within one budget of rule executions, and a
   graph the budget cut short is continued by the next pass, across a restart too. It searches
   nothing - finding a plan is the planner's.
-  `agent/belief/src/deliberator.rs`.
+  `crates/orexis-belief/src/deliberator.rs`.
 ---
 
 # Who runs it

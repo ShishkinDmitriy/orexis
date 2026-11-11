@@ -10,7 +10,7 @@ description: >-
 
 # What it is
 
-`agent/speech/` is the translation row for a peer's word, beside [sensing](/domain/sensing/sensing.md)'s
+`crates/orexis-speech/` is the translation row for a peer's word, beside [sensing](/domain/sensing/sensing.md)'s
 for an instrument's. A message from a peer is a speech act and not an observation
 ([the-agent-stack-is-a-second-axis](/decisions/the-agent-stack-is-a-second-axis.md)), and in
 Agent 0.2.0 it is already a document when it arrives: its graphs are named, and its default graph

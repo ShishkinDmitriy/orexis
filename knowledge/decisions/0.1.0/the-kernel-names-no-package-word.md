@@ -220,7 +220,7 @@ case the loose ruling had. RDF is *read together with* the packages' RDF into on
 kernel's shapes and a package's shapes are the same document to pySHACL — so a kernel shape naming
 a package predicate is closer to two packages agreeing on a word than to one calling the other. It
 loses anyway: what an agent validates against is the union, but what the repository promises is
-that `agent/` stands alone, and a promise that holds only when everything happens to be loaded is
+that `crates/` stands alone, and a promise that holds only when everything happens to be loaded is
 not the promise that was made.
 
 **"Let the count be the rule — everything is debt, ratchet to zero, and stop there."** Half right,

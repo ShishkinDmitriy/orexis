@@ -67,7 +67,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
 
-from documents.world import EMAIL, KERNEL, SECRETS, TELEGRAM, documents, known, packages_of, world_of
+from documents.world import EMAIL, SECRETS, TREE, directory_of, package_of, TELEGRAM, documents, known, packages_of, world_of
 from .series import HISTORY, METRICS
 from documents.store import document, graphs_of, kinds_in, rows, whose
 from . import installation, reading
@@ -105,7 +105,7 @@ INTERVAL_KEY = "METRICS_INTERVAL_S"
 
 @dataclass(frozen=True)
 class Image:
-    """What one agent's container is built from: the packages of `agent/` it holds, each a feature of the binary."""
+    """What one agent's container is built from: the packages of `crates/` it holds, each a feature of the binary."""
     tag: str
     packages: tuple[str, ...]
 
@@ -116,7 +116,7 @@ class Image:
 
     def build(self) -> str:
         """The service's image and the build that makes it, its own: the binary, handed the features to build it with."""
-        return (f"image: {self.tag}\n    build:\n      context: ../..\n      dockerfile: binary/Containerfile\n"
+        return (f"image: {self.tag}\n    build:\n      context: ../..\n      dockerfile: crates/orexis-agent/Containerfile\n"
                 f"      args:\n        # the packages it runs, each a feature of the binary, and nothing else's\n"
                 f'        FEATURES: "{",".join(self.features())}"')
 
@@ -128,18 +128,16 @@ def image_of(world: str, agent_id: str, series: bool) -> Image:
     return Image(f"orexis-{world}-{agent_id}:local", packages)
 
 
-def _with_crates(named, root: Path = KERNEL) -> list[str]:
-    """`named` with every package whose crate they depend on, by the path each `Cargo.toml` states, and theirs."""
+def _with_crates(named) -> list[str]:
+    """`named` with every package whose crate they depend on, by the crate each `Cargo.toml` names, and theirs."""
     seen, todo = set(), list(named)
     while todo:
         package = todo.pop()
         if package in seen:
             continue
         seen.add(package)
-        crate = root / package
-        declared = tomllib.loads((crate / "Cargo.toml").read_text())["dependencies"]
-        paths = [(crate / d["path"]).resolve() for d in declared.values() if isinstance(d, dict) and "path" in d]
-        todo += [p.relative_to(root).as_posix() for p in paths if p != root and (p / "ontology.ttl").is_file()]
+        declared = tomllib.loads((directory_of(package) / "Cargo.toml").read_text())["dependencies"]
+        todo += [p for crate in declared if (p := package_of(crate)) and (TREE / crate / "ontology.ttl").is_file()]
     return sorted(seen)
 
 

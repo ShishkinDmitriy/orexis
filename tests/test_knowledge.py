@@ -197,7 +197,7 @@ def test_an_index_entry_is_a_claim_not_an_abstract():
 # Prose names paths constantly, and a rename sees none of them. Only backticked things that look
 # like a repo path are checked: a leading known top-level directory, or a `packages/...` segment.
 # A trailing `/` is a directory, `<name>` is a placeholder and matches any single segment.
-_TOP = ("agent/", "agent_old/", "packages/", "onboarding/", "tests/", "infra/", "tools/", "firmware/", "world/")
+_TOP = ("crates/", "crates/", "crates/orexis-agent/", "agent_old/", "packages/", "onboarding/", "tests/", "infra/", "tools/", "firmware/", "world/")
 _PATH = re.compile(r"`((?:" + "|".join(re.escape(t) for t in _TOP) + r")[A-Za-z0-9_./<>*-]*)`")
 #  A PROCEDURE NAMES ITS PATHS IN FENCED COMMANDS AS OFTEN AS IN BACKTICKS — `pytest world/<name>`
 #  on its own line — so a skill or a role is read for a path wherever one stands, not only between
@@ -287,7 +287,7 @@ def _concrete(spec: str) -> str:
 #  THE TREES AGENT 0.1.0 WAS, retired on 2026-09-26: a record narrating them names a path that
 #  existed when it was written, and every one of them is history now, not a stale rename.
 _RETIRED_TREES = ("agent_old/", "packages/", "assembly/")
-#  AND THE PYTHON AGENT, retired whole once every world ran on the binary: nothing under `agent/` is Python any more, so
+#  AND THE PYTHON AGENT, retired whole once every world ran on the binary: nothing under `crates/` is Python any more, so
 #  a `.py` there, or a world's test that booted it, is a record narrating what was, `tests/test_projects.py` holding the
 #  tree to it.
 _RETIRED_PYTHON = re.compile(r"agent/.*\.py$|world/conftest\.py$|world/[^/]+/tests/")
@@ -384,7 +384,7 @@ def test_no_document_names_a_path_that_is_not_there():
         # domain/world: a runbook step. `world/orchard/` is what the reader is being told to
         # CREATE, so its absence is the precondition.
         "world/orchard/world.ttl",
-        # The base vocabulary lived here until it came into `agent/` — a family of exactly one
+        # The base vocabulary lived here until it came into `crates/` — a family of exactly one
         # is not a family. Five records narrate that arrangement in the past tense: the table
         # row capability-packages struck through, the term count every-term-in-its-own-house
         # took at the time, pins-and-wires' 205-line file, the naming section of
@@ -420,7 +420,7 @@ def test_no_document_names_a_path_that_is_not_there():
         "agent/desire.py",
         "agent/intentions.py",
         "agent/ontology.py",
-        # a-layer-is-a-package-and-need-loads-it (#452): the kernel's own modules left `agent/`
+        # a-layer-is-a-package-and-need-loads-it (#452): the kernel's own modules left `crates/`
         # for the three layer packages. The layering records, the mind's record and the act,
         # plan and intention records name the files where they were when each was written.
         "agent/act.py",
@@ -439,7 +439,7 @@ def test_no_document_names_a_path_that_is_not_there():
     }
     #  THE ROOT DOCUMENTS TOO. `README.md` and `AGENTS.md` name paths exactly as a record does,
     #  and nothing was looking: the README described `packages/core/`, a tree that came into
-    #  `agent/`, and a Fuseki endpoint removed with the shared store, while AGENTS.md cited
+    #  `crates/`, and a Fuseki endpoint removed with the shared store, while AGENTS.md cited
     #  `tests/test_goals.py` — renamed to `test_desires.py` by the goal-is-a-desire ruling, in
     #  the very file that tells everyone which guard pins what.
     #  AND THE SKILLS AND THE ROLES. `.claude/skills/*/SKILL.md` and `.claude/agents/*.md` tell a
@@ -530,7 +530,7 @@ def _vocabulary_files(*names: str, retired: bool = True) -> list[Path]:
     """Every project Turtle file a word may be declared in: the agent's packages, onboarding's
     kinds, the domains, the worlds and the retired 0.1.0 vocabulary — or, given `names`, only the
     files so named."""
-    found = [*sorted(p for p in (REPO_ROOT / "agent").rglob("*.ttl") if "tests" not in p.parts),
+    found = [*sorted(p for p in (REPO_ROOT / "crates").rglob("*.ttl") if "tests" not in p.parts),
              *sorted((REPO_ROOT / "onboarding").glob("*.ttl")),
              *sorted((REPO_ROOT / "domains").rglob("*.ttl")), *sorted((REPO_ROOT / "world").rglob("*.ttl")),
              *(sorted(RETIRED.rglob("*.ttl")) if retired else [])]
@@ -556,7 +556,7 @@ def _declared(retired: bool = True) -> set[str]:
     and an individual is declared by the world that holds it rather than by an ontology.
 
     The kernel is reached through the loader rather than through a path. It used to be
-    `packages/core/orexis/` and is `agent/` now, so a `packages/**` glob alone would stop
+    `packages/core/orexis/` and is `crates/` now, so a `packages/**` glob alone would stop
     covering it — silently as far as this function is concerned, and loudly one line later,
     since every `orexis:` term a page names would read as undeclared.
     """
@@ -1023,8 +1023,7 @@ def test_the_agent_structure_draws_every_graph_kind_and_no_other():
     from documents.store import NAMESPACES
 
     g = rdflib.Graph()
-    sources = [REPO_ROOT / "agent" / "ontology.ttl", *sorted((REPO_ROOT / "agent").glob("*/ontology.ttl")),
-               *sorted((REPO_ROOT / "agent").glob("*/*/ontology.ttl"))]
+    sources = sorted((REPO_ROOT / "crates").glob("*/ontology.ttl"))
     for path in sources:
         g.parse(path, format="turtle")
     short = lambda c: next(f"{n}:{str(c)[len(i):]}" for n, i in NAMESPACES.items() if str(c).startswith(i))
