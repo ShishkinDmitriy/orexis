@@ -12,8 +12,9 @@
 //! prediction into the beliefs. A COMMITTED STEP is a belief over its landing window (#849), closed when the world
 //! answers it or its intention ends, and swept when its window has ended. A STEP IN FLIGHT IS NEVER CANCELLED
 //! (#905): planning ends an intention by `end_for`, `end_at` and `supersede_after`, and the plan that replaced one
-//! waits for it. EVERY HEAD IS CHECKED WHEN IT IS TAKEN, and not here (#916): `taking` asks whoever judges, and a
-//! head it blocks ends its intention `failed` and is not taken.
+//! waits for it. EVERY HEAD IS CHECKED WHEN IT IS TAKEN, and not here (#916): where the executor `asks`, a head due is
+//! said `execution:Taking` and stays in flight until `judged` hears the answer, and a head blocked ends its intention
+//! `failed` and is not taken.
 //!
 //! WHAT IT SAYS HAPPENED goes to whoever watches the agent (`events`), made only where somebody does: a step taken,
 //! a step answered, an intention resolved, and how many stand after a walk.
@@ -37,7 +38,7 @@ use orexis::ontology::{BELIEF, DERIVED, OREXIS, RECORDED, local_of};
 use orexis::stance::stance;
 use orexis::store::{Row, Store, Within, instant, iri, value};
 
-use crate::events::{About, IntentionResolved, StepAnswered, StepTaken, Walked};
+use crate::events::{About, IntentionResolved, StepAnswered, StepTaken, Taking, Walked};
 use crate::implementation::operations;
 use crate::ontology::{
     ADDS_GRAPH, ANSWERED_WITHIN_S, COMMITTED_STEP_GRAPH, EXECUTION, FICTIVE, INTENTION, INTENTION_GRAPH,
@@ -201,10 +202,7 @@ pub type Said = BTreeMap<String, String>;
 
 /// A taker: handed the step's rows and its intention, refusing where the step could not be taken, and answering
 /// whether anything reached the world — where nothing did, the step is said in the log as the executor alone says it.
-pub type Take<'a> = Box<dyn FnMut(&Said, &str) -> Result<bool, Error> + 'a>;
-
-/// Whoever judges a head about to be taken at an instant: true where it is BLOCKED.
-pub type Taking<'a> = Box<dyn FnMut(&str, DateTime) -> Result<bool, Error> + 'a>;
+pub type Take = Box<dyn FnMut(&Said, &str) -> Result<bool, Error>>;
 
 /// One commitment not resolved: what it pursues, where it has got to, and when it was adopted.
 #[derive(Clone, Debug, PartialEq)]
@@ -216,7 +214,7 @@ pub struct Standing {
 }
 
 /// One agent's intentions, and what carries them out.
-pub struct Executor<'a> {
+pub struct Executor {
     pub beliefs: Store,
     pub intentions: Store,
     pub id: String,
@@ -228,9 +226,12 @@ pub struct Executor<'a> {
     /// Every step taken by writing its own prediction, the shorthand for a pure simulation.
     pub all_fictive: bool,
     /// The taker, the seam to real code; none says the step in the log.
-    pub take: Option<Take<'a>>,
-    /// Whoever judges a head about to be taken; none, and every head is taken.
-    pub taking: Option<Taking<'a>>,
+    pub take: Option<Take>,
+    /// Whether a head about to be taken is ASKED first: said `execution:Taking`, and taken or failed when the answer
+    /// is heard (`judged`). Not asked, and every head is taken as it is due.
+    pub asks: bool,
+    /// The heads asked and not yet answered, each with its intention.
+    asked: BTreeMap<String, String>,
     /// The graphs written as the world, in the order written, for the part to hand the runtime.
     pub written: Vec<String>,
     /// How many intentions were resolved, for the caller to ask for another pass.
@@ -304,7 +305,7 @@ fn named(iri: &str) -> Result<NamedNode, Error> {
     NamedNode::new(iri).map_err(|e| Error::Evaluation(e.to_string()))
 }
 
-impl<'a> Executor<'a> {
+impl Executor {
     /// The executor of `agent` over `beliefs`, its intentions a graph of the belief base unless `intentions` is
     /// another store, as a case may hand; `holder` the agent whose graphs they are, where the caller knows it.
     pub fn new(
@@ -323,7 +324,8 @@ impl<'a> Executor<'a> {
             patience_s: stance(beliefs, PATIENCE_S)?.unwrap_or(DEFAULT_PATIENCE_S),
             all_fictive: false,
             take: None,
-            taking: None,
+            asks: false,
+            asked: BTreeMap::new(),
             written: Vec::new(),
             resolved: 0,
             next_due: None,
@@ -1052,19 +1054,41 @@ impl<'a> Executor<'a> {
 
     fn take_step(&mut self, intention: &str, step: &str) -> Result<bool, Error> {
         let taken_at = self.clock.now();
-        if let Some(judge) = self.taking.as_mut()
-            && judge(step, taken_at)?
-        {
+        if self.asks {
+            //  THE HEAD IS ASKED, NOT TAKEN: it stays in flight, so no tick hands it over again, until the answer
+            //  is heard and `judged` takes it or fails it.
+            self.asked.insert(step.to_string(), intention.to_string());
+            self.watch.emit(&Taking {
+                step: step.to_string(),
+                at: taken_at,
+            });
+            return Ok(false);
+        }
+        self.carry_out(intention, step, taken_at)
+    }
+
+    /// The answer to a head asked: BLOCKED, and the head ends `failed` as it was about to be taken; otherwise it is
+    /// taken now. Whether it was taken; a step not asked, or answered already, is nothing.
+    pub fn judged(&mut self, step: &str, blocked: bool) -> Result<bool, Error> {
+        let Some(intention) = self.asked.remove(step) else {
+            return Ok(false);
+        };
+        if blocked {
             self.end_at(step, "failed")?;
             log::info!(
                 "{}: {} was not taken — {} ended as it was about to be",
                 self.id,
                 local_of(step),
-                short(intention)
+                short(&intention)
             );
             self.inflight.remove(step);
             return Ok(false);
         }
+        let taken_at = self.clock.now();
+        self.carry_out(&intention, step, taken_at)
+    }
+
+    fn carry_out(&mut self, intention: &str, step: &str, taken_at: DateTime) -> Result<bool, Error> {
         let said = self.step_of(step)?;
         let refined = self.kept_by(step)?;
         let outcome = match refined {
@@ -1473,7 +1497,7 @@ GRAPH <http://example.org/test#catalogue> {{
             .unwrap();
     }
 
-    fn resolved(x: &Executor<'_>, intention: &str) -> Vec<String> {
+    fn resolved(x: &Executor, intention: &str) -> Vec<String> {
         x.intentions
             .rows(
                 &format!("SELECT ?o WHERE {{ <{intention}> execution:outcome ?o }}"),
@@ -1485,7 +1509,7 @@ GRAPH <http://example.org/test#catalogue> {{
             .collect()
     }
 
-    fn acts(x: &Executor<'_>) -> Vec<(String, DateTime, DateTime)> {
+    fn acts(x: &Executor) -> Vec<(String, DateTime, DateTime)> {
         x.intentions
             .rows(
                 "SELECT ?a ?taken ?at ?done WHERE { ?a a execution:Act ; execution:taken ?taken ; execution:takenAt ?at ; execution:doneAt ?done } ORDER BY ?a",
@@ -1670,7 +1694,7 @@ GRAPH <http://example.org/test#catalogue> {{
         let intention = x.commit(Some(&predicting_move(2, PLAN)), PLAN, WANT).unwrap().unwrap();
         x.tick(now()).unwrap();
         assert_eq!(x.drain().unwrap(), 1);
-        let head = |x: &Executor<'_>| x.standing().unwrap()[0].at.clone().unwrap();
+        let head = |x: &Executor| x.standing().unwrap()[0].at.clone().unwrap();
         assert_eq!(head(&x), format!("{PLAN}.0"), "taken, and still the head");
         assert!(x.tick(now()).unwrap().is_empty());
         assert_eq!(head(&x), format!("{PLAN}.0"));
@@ -2099,15 +2123,38 @@ GRAPH <http://example.org/test#catalogue> {{
     }
 
     #[test]
-    fn a_head_the_judge_blocks_is_not_taken_and_its_intention_fails() {
+    fn a_head_asked_waits_for_its_answer_and_one_blocked_is_not_taken_and_its_intention_fails() {
         let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
-        x.taking = Some(Box::new(|_, _| Ok(true)));
+        x.asks = true;
         let intention = x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().unwrap();
-        x.tick(now()).unwrap();
-        assert_eq!(x.drain().unwrap(), 0, "blocked as it was about to be taken");
+        let head = format!("{PLAN}.0");
+        assert_eq!(x.tick(now()).unwrap(), std::slice::from_ref(&head));
+        assert_eq!(x.drain().unwrap(), 0, "asked, not taken");
+        assert!(
+            x.tick(now()).unwrap().is_empty(),
+            "a head asked is not handed over again"
+        );
+        assert!(
+            !x.judged("http://example.org/test#other", true).unwrap(),
+            "nothing asked of it"
+        );
+        assert!(!x.judged(&head, true).unwrap(), "blocked as it was about to be taken");
         assert_eq!(resolved(&x, &intention), ["failed"]);
         assert!(acts(&x).is_empty(), "no act is recorded of a step not taken");
+    }
+
+    #[test]
+    fn a_head_asked_and_admitted_is_taken() {
+        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
+        let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
+        x.asks = true;
+        x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap();
+        x.tick(now()).unwrap();
+        x.drain().unwrap();
+        assert!(acts(&x).is_empty());
+        assert!(x.judged(&format!("{PLAN}.0"), false).unwrap());
+        assert_eq!(acts(&x).len(), 1);
     }
 
     #[test]
@@ -2129,7 +2176,7 @@ GRAPH <http://example.org/test#catalogue> {{
     const FILLS: &str = "http://example.org/orexis/planning#fills";
 
     /// Every event the executor says, kept in a journal as the history part keeps them.
-    fn heard(x: &mut Executor<'_>) -> Arc<orexis::journal::Journal> {
+    fn heard(x: &mut Executor) -> Arc<orexis::journal::Journal> {
         let journal = Arc::new(orexis::journal::Journal::new(None, 600.0, Arc::new(now)).unwrap());
         let kept = journal.clone();
         x.watch.connect(move |event, entry| {

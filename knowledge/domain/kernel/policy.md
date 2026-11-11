@@ -40,7 +40,8 @@ execution's own predicates - the plan an intention would adopt (`execution:adopt
 (`execution:pursues`), the step in flight an intention ends after (`execution:endsAfter`) - and the
 entity it names is what started the activity. And belief's `belief:Revised` is beneath
 `execution:WalkingTrigger`, by execution's ontology, said in belief's own words (`belief:revised`,
-`belief:changed`), which execution, above belief, reads. Sensing, above belief too, does both: its
+`belief:changed`), which execution, above belief, reads; and planning's `planning:HeadChecked` is beneath it
+too, answering a head execution asked about (`execution:Taking`) by `execution:head` and `execution:blocked`. Sensing, above belief too, does both: its
 `sensing:Perceived` is beneath `belief:RevisingTrigger`, naming the percepts to revise and the kind
 their revisions are (`belief:revises`, `belief:into`), and `belief:Revised` is beneath its own
 `sensing:ObservingTrigger`, so a percept is said as an observation once it is revised. Coordination's

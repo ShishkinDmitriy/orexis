@@ -30,11 +30,12 @@ use orexis::bind::{Value, bind};
 use orexis::hash::py_float_repr;
 use orexis::ontology::{BELIEF, local_of};
 use orexis::store::{Store, Within, iri, value};
-use orexis_sensing::cadence::{lapsed, sensors};
+use orexis_sensing::cadence::{lapsed, next_lapse, sensors};
 use orexis_sensing::received::received;
 use orexis_speech::heard::heard;
 
-/// HOW OFTEN THE MEMBER ASKS AFTER ITS SENSORS' MISSING READINGS, in seconds of the one timeline.
+/// HOW SOON THE MEMBER ASKS A BOARD AGAIN that it told to sense and that has not answered, in seconds of the one
+/// timeline. Otherwise it asks when a reading next falls due (`cadence::next_lapse`).
 pub const NUDGE_S: f64 = 60.0;
 
 /// THE PATTERNS OF THE FILTERS THAT MATCH THE TOPIC A SENSOR'S BOARD LISTENS ON.
@@ -167,10 +168,10 @@ pub type Listening = Pin<Box<dyn Future<Output = ()> + Send>>;
 /// One agent's side of the bus: what the container needs of this transport, answered from the world in MQTT4SSN's
 /// words, over the clients the container connected — by the IRI of the broker each is connected to, or one client
 /// standing for them all (`None`).
-pub struct Mqtt<'a> {
+pub struct Mqtt {
     beliefs: Store,
     pub me: String,
-    pub clients: Vec<(Option<String>, Box<dyn Client + 'a>)>,
+    pub clients: Vec<(Option<String>, Box<dyn Client>)>,
     pub inbox: Inbox,
     /// What the sessions connected are yet to listen for, taken by the part as it starts.
     pub listening: Vec<Listening>,
@@ -187,13 +188,13 @@ fn no_wildcard(pattern: &str) -> bool {
     !pattern.contains('+') && !pattern.contains('#')
 }
 
-impl<'a> Mqtt<'a> {
+impl Mqtt {
     /// The store the member keeps what it carries in.
     pub fn beliefs(&self) -> &Store {
         &self.beliefs
     }
 
-    pub fn new(beliefs: &'a Store, me: &str, clients: Vec<(Option<String>, Box<dyn Client + 'a>)>) -> Self {
+    pub fn new(beliefs: &Store, me: &str, clients: Vec<(Option<String>, Box<dyn Client>)>) -> Self {
         Mqtt {
             beliefs: beliefs.clone(),
             me: me.to_string(),
@@ -367,8 +368,23 @@ impl<'a> Mqtt<'a> {
         Ok(written)
     }
 
-    /// Tell the board of every sensor of this member's whose reading has fallen due to sense now; the sensors asked.
-    /// Which readings have fallen due is sensing's to say (`cadence::lapsed`).
+    /// Tell the board of every sensor of this member's whose reading has fallen due to sense now, and say when to ask
+    /// again: a nudge later where a board was told, since it may not have heard, and otherwise when a reading next falls
+    /// due. Which readings have fallen due, and when one next will, is sensing's to say (`cadence`).
+    pub fn nudge_until(&mut self, now: DateTime) -> Result<Option<DateTime>, Error> {
+        let told = self.nudge(now)?;
+        let next = next_lapse(&self.beliefs, now)?;
+        if told.is_empty() {
+            return Ok(next);
+        }
+        let again = now
+            .checked_add_day_time_duration(orexis::clock::seconds(NUDGE_S))
+            .unwrap_or(now);
+        Ok(Some(next.map_or(again, |n| if n < again { n } else { again })))
+    }
+
+    /// Tell the board of every sensor of this member's whose reading has fallen due to sense now; the sensors whose
+    /// board was told. Which readings have fallen due is sensing's to say (`cadence::lapsed`).
     pub fn nudge(&mut self, now: DateTime) -> Result<Vec<String>, Error> {
         let mine: BTreeSet<String> = self.topics()?.into_iter().map(|(s, _)| s).collect();
         let mut asked: Vec<String> = Vec::new();
@@ -377,10 +393,13 @@ impl<'a> Mqtt<'a> {
                 asked.push(sensor);
             }
         }
-        for sensor in &asked {
-            self.sense_now(sensor)?;
+        let mut told = Vec::new();
+        for sensor in asked {
+            if self.sense_now(&sensor)? {
+                told.push(sensor);
+            }
         }
-        Ok(asked)
+        Ok(told)
     }
 
     /// Whether this member reaches `device`.
@@ -407,11 +426,11 @@ impl<'a> Mqtt<'a> {
     }
 
     /// Ask for a reading now, best-effort.
-    pub fn sense_now(&mut self, sensor: &str) -> Result<(), Error> {
-        if let Some(topic) = self.command_topic(sensor)? {
-            self.publish(sensor, &topic, &serde_json::json!({ "sense": true }), false)?;
+    pub fn sense_now(&mut self, sensor: &str) -> Result<bool, Error> {
+        match self.command_topic(sensor)? {
+            Some(topic) => self.publish(sensor, &topic, &serde_json::json!({ "sense": true }), false),
+            None => Ok(false),
         }
-        Ok(())
     }
 
     /// Publish a step's command on the topic the actuator listens to, or its board's; not retained, since a command is
@@ -680,7 +699,7 @@ impl Client for Rumqtt {
 }
 
 /// The agent's side of the bus, up from the environment: a rumqttc session per broker it names.
-pub fn connect<'a>(beliefs: &'a Store, me: &str, env: &dyn Fn(&str) -> Option<String>) -> Result<Mqtt<'a>, Error> {
+pub fn connect(beliefs: &Store, me: &str, env: &dyn Fn(&str) -> Option<String>) -> Result<Mqtt, Error> {
     let mut member = Mqtt::new(beliefs, me, Vec::new());
     for session in sessions(me, env)? {
         let (client, listening) = Rumqtt::connect(&session, member.inbox.clone())?;
@@ -690,7 +709,7 @@ pub fn connect<'a>(beliefs: &'a Store, me: &str, env: &dyn Fn(&str) -> Option<St
     Ok(member)
 }
 
-impl orexis_speech::prose::Carrier for Mqtt<'_> {
+impl orexis_speech::prose::Carrier for Mqtt {
     /// Prose out on the topic node `channel`, a chat's topic, by the one pattern naming it with no wildcard, as
     /// `{"from": the agent, "text": …}` so the agent knows its own when the broker hands it back; false where the
     /// channel is no topic of a chat this agent is in, or it is on no broker of this member's.
@@ -769,7 +788,7 @@ mod tests {
         Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/worlds/a_board_on_a_bus.trig")
     }
 
-    fn bus(store: &Store) -> (Mqtt<'_>, Fake) {
+    fn bus(store: &Store) -> (Mqtt, Fake) {
         let client = Fake::default();
         (Mqtt::new(store, ME, vec![(None, Box::new(client.clone()))]), client)
     }
@@ -844,6 +863,32 @@ mod tests {
                 .iter()
                 .all(|p| *p == sent("sensors/board/command", r#"{"sense": true}"#, false))
         );
+    }
+
+    #[test]
+    fn a_nudge_waits_for_the_next_reading_to_fall_due_and_asks_a_board_it_told_again_a_minute_on() {
+        let store = stand_in(&world());
+        let (mut driver, client) = bus(&store);
+        assert_eq!(
+            driver.nudge_until(now()).unwrap(),
+            None,
+            "nothing read, nothing falls due"
+        );
+        driver.handle("sensors/board/reading", BOARD_MESSAGE, now()).unwrap();
+        let due = driver.nudge_until(plus(60.0)).unwrap().expect("a reading falls due");
+        assert!(due > plus(60.0), "not yet");
+        assert!(client.0.borrow().published.is_empty());
+        let late = plus(300.0);
+        assert!(due <= late);
+        assert_eq!(
+            driver.nudge_until(late).unwrap(),
+            Some(
+                late.checked_add_day_time_duration(orexis::clock::seconds(NUDGE_S))
+                    .unwrap()
+            ),
+            "told to sense, and asked again a minute on"
+        );
+        assert!(!client.0.borrow().published.is_empty());
     }
 
     #[test]

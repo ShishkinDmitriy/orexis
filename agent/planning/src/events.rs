@@ -20,6 +20,8 @@ const PURSUES: &str = "http://example.org/orexis/execution#pursues";
 const ENDS_AFTER: &str = "http://example.org/orexis/execution#endsAfter";
 const OUTCOME: &str = "http://example.org/orexis/execution#outcome";
 const DERIVED_FROM: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
+const HEAD: &str = "http://example.org/orexis/execution#head";
+const BLOCKED: &str = "http://example.org/orexis/execution#blocked";
 
 fn named(iri: &str) -> Term {
     NamedNode::new_unchecked(iri).into()
@@ -138,6 +140,29 @@ impl Event for PlanSuperseded {
 
     fn about(&self) -> Vec<(&'static str, Term)> {
         vec![(ENDS_AFTER, named(&self.head)), (PURSUES, named(&self.by))]
+    }
+}
+
+/// A head execution asked about, checked against the present at `at`: blocked or not. Said to execution beneath its
+/// walking trigger; kept in no journal, since what is kept is the act or the failure execution makes of it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct HeadChecked {
+    pub head: String,
+    pub blocked: bool,
+    pub at: DateTime,
+}
+
+impl Event for HeadChecked {
+    fn at(&self) -> Option<DateTime> {
+        Some(self.at)
+    }
+
+    fn kind(&self) -> Option<&'static str> {
+        Some("http://example.org/orexis/planning#HeadChecked")
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        vec![(HEAD, named(&self.head)), (BLOCKED, Literal::from(self.blocked).into())]
     }
 }
 

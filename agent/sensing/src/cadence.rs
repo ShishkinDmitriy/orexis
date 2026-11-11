@@ -7,7 +7,8 @@
 //!
 //! **WHICH SENSORS ARE THE AGENT'S** (`sensors`): the ones an observer role it plays reads, declared in its self
 //! graph. **WHEN A CADENCE HAS LAPSED** (`lapsed`): the sensors whose latest percept's period has ended — one read
-//! and one owner, which `missed` asks and a transport beneath asks to nudge a board.
+//! and one owner, which `missed` asks and a transport beneath asks to nudge a board — and when one next will
+//! (`next_lapse`), which that transport waits for.
 
 use oxsdatatypes::DateTime;
 
@@ -33,6 +34,13 @@ SELECT ?sensor ?end WHERE {
   GRAPH ?g { ?obs sosa:madeBySensor ?sensor }
   FILTER NOT EXISTS { GRAPH ?h { ?later sensing:previous ?obs } GRAPH $cat { ?h a sensing:ObservationGraph } } }
 ORDER BY ?end ?sensor";
+
+/// THE SOONEST INSTANT A LATEST PERCEPT LAPSES, not yet come: the one a reading falls due and its grace runs out.
+const NEXT_LAPSE_Q: &str = "
+SELECT (MIN(?end) AS ?next) WHERE {
+  GRAPH $cat { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end >= $now) }
+  GRAPH ?g { ?obs sosa:madeBySensor ?sensor }
+  FILTER NOT EXISTS { GRAPH ?h { ?later sensing:previous ?obs } GRAPH $cat { ?h a sensing:ObservationGraph } } }";
 
 /// EVERY SENSOR THE AGENT READS: each an observer role it plays declares, in the self graph.
 const SENSORS_Q: &str =
@@ -100,6 +108,19 @@ pub fn lapsed(store: &Store, now: DateTime) -> Result<Vec<(String, DateTime)>, E
         }
     }
     Ok(out)
+}
+
+/// The soonest instant from `now` on that a sensor's latest percept ends and its cadence lapses, where one is yet to:
+/// when `lapsed` next answers anything new, so whoever asks it waits until then. Writes nothing.
+pub fn next_lapse(store: &Store, now: DateTime) -> Result<Option<DateTime>, Error> {
+    let Some(cat) = store.catalogue()? else {
+        return Ok(None);
+    };
+    let text = bind(NEXT_LAPSE_Q, &[("cat", Value::iri(cat)), ("now", instant(now))])?;
+    match store.rows(&text, &[])?.first().and_then(|r| value(r, "next")) {
+        Some(next) => Ok(Some(parse_instant(&next)?)),
+        None => Ok(None),
+    }
 }
 
 /// Every sensor the agent reads: each an observer role the self plays declares (`sensing:sensor`), in its self

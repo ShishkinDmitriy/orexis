@@ -101,18 +101,18 @@ fn store() -> Store {
 }
 
 /// The grower booted and assembled over the fake broker, its parts handed out for the runtime to lend.
-struct Grower<'a> {
-    parts: orexis_agent::Parts<'a>,
-    seen: Seen<'a>,
+struct Grower {
+    parts: orexis_agent::Parts,
+    seen: Seen,
     inbox: Inbox,
     broker: Broker,
 }
 
-fn grower<'a>(store: &'a Store, clock: &Arc<Ticking>) -> Grower<'a> {
+fn grower(store: &Store, clock: &Arc<Ticking>) -> Grower {
     grower_watched(store, clock, orexis_agent::Watching::default())
 }
 
-fn grower_watched<'a>(store: &'a Store, clock: &Arc<Ticking>, watching: orexis_agent::Watching) -> Grower<'a> {
+fn grower_watched(store: &Store, clock: &Arc<Ticking>, watching: orexis_agent::Watching) -> Grower {
     let loaded = booted(store, tree(), &world(), "grower", noon()).unwrap();
     for package in [
         "belief",
@@ -141,7 +141,7 @@ fn grower_watched<'a>(store: &'a Store, clock: &Arc<Ticking>, watching: orexis_a
     }
 }
 
-fn runtime<'a: 'p, 'p>(store: &'a Store, clock: &'a Ticking, parts: &'p mut orexis_agent::Parts<'a>) -> Runtime<'p> {
+fn runtime<'a: 'p, 'p>(store: &'a Store, clock: &'a Ticking, parts: &'p mut orexis_agent::Parts) -> Runtime<'p> {
     let lent: Vec<(String, &mut dyn Part)> = parts
         .iter_mut()
         .map(|(p, part)| (p.clone(), part.as_mut() as &mut dyn Part))
@@ -153,7 +153,7 @@ fn reading(inbox: &Inbox, payload: &str, at: DateTime) {
     inbox.deliver("sensors/bed_board/reading", payload.as_bytes(), Some(at));
 }
 
-fn walking(seen: &Seen<'_>) -> Vec<String> {
+fn walking(seen: &Seen) -> Vec<String> {
     seen.executor.as_ref().unwrap().borrow().walking().unwrap()
 }
 
@@ -250,7 +250,7 @@ SELECT ?start ?state WHERE {
   GRAPH ?g { <http://example.org/orexis/world/greenhouse#bed> <http://example.org/orexis/climate#soil> ?state } }
 ORDER BY ?start";
 
-fn foreseen(seen: &Seen<'_>) -> Vec<(DateTime, String)> {
+fn foreseen(seen: &Seen) -> Vec<(DateTime, String)> {
     let planner = seen.planner.as_ref().unwrap().borrow();
     let mut out: Vec<(DateTime, String)> = planner
         .imaginaria

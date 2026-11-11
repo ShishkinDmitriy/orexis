@@ -66,7 +66,8 @@ the percept and says `sensing:Observed` within it; belief's `Revising` concludes
 `belief:BeliefChanged`. Planning's policy finds the graph crossing into the soil's scope and starts `planning:Planning`
 triggered by it; inside, `planning:Searching` in the soil's scope ends with `planning:SearchEnded`, and the pass says
 `planning:PlanPublished`. Execution hears the plan's graph written and starts `execution:Walking`: the step is asked
-(`execution:Taking`), planning's policy answers in execution's words in the same drain, and the walk says
+(`execution:Taking`) and stays in flight, planning's policy answers in execution's words in the same drain
+(`planning:HeadChecked`, beneath the walking trigger), and execution takes it and says
 `execution:StepTaken`, sends the pump its command and sets a timer for the landing.
 
 **A timer.** At the landing the timer's task says `orexis:TimerAlarmed`, addressed to execution, whose policy starts
@@ -121,10 +122,10 @@ writes what the person stated and says `translation:Conversed`.
 - **A plan is heard published, not its graph written**: execution adopts on `planning:PlanPublished`, which names the
   plan and the want, rather than on the graph's kind, which would make execution read planning's words to find the
   want (#1119 step 4).
-- **The check of a head stays a call, the one link left between two parts**: since step 5 the Planner borrows
-  nothing - prediction's foresight is an offer of a pure function, handed at assembly as the clock is, and no link -
-  but the walk asks before it takes the head, and an event is told to its hearers only after the job that said it,
-  so planning's answer to `execution:Taking` would arrive after the walk had to decide. The take moves into a job of
-  its own when it is asked so (#1119 step 7).
-- **A head asked and never answered**: an executor with no planner in a test must not wait for an answer nobody gives,
-  so saying `execution:Taking` answers whether anybody hears it.
+- **The check of a head is an exchange of events, and the head waits in flight for it**: the walk says
+  `execution:Taking` and leaves the head in flight, so no tick hands it over again; planning checks it at the instant
+  it names and says `planning:HeadChecked` beneath execution's walking trigger, naming the head and whether it is
+  blocked; and execution takes it or fails it in that job and walks on, all in the drain that asked (#1119 step 7).
+- **A head asked and never answered** is not asked: an executor asks only where planning is loaded to answer
+  (`asks`, set as the parts are assembled, a flag and no link), since an executor with no planner in a test must not
+  wait for an answer nobody gives.

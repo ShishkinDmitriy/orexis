@@ -149,13 +149,12 @@ pub fn built(package: &str) -> bool {
         || (package == "transport/email" && cfg!(feature = "email"))
 }
 
-/// Hand execution planning's judgment of a head about to be taken: the Planner says where the present no longer
-/// admits it (#916). The one link left between them — what a pass published, reached and reconsidered execution
-/// hears as events — until a hearer may hold a reader of the store and the judgment is asked as an event (#1119).
+/// Have execution ask of a head about to be taken, where planning is loaded to answer: it says `execution:Taking`, and
+/// planning's `planning:HeadChecked` answers where the present no longer admits it (#916). No link: a flag, since an
+/// executor with nobody to answer must not wait for an answer.
 #[cfg(all(feature = "planning", feature = "execution"))]
-pub fn judge<'a>(planning: &orexis_planning::create::Planning, execution: &orexis_execution::create::Execution<'a>) {
-    let planner = planning.planner.clone();
-    execution.executor.borrow_mut().taking = Some(Box::new(move |step, at| planner.borrow_mut().check(step, at)));
+pub fn judge(execution: &orexis_execution::create::Execution) {
+    execution.executor.borrow_mut().asks = true;
 }
 
 /// Hand the planner prediction's foresight, as it is handed the store and the clock: a pure function that integrates
@@ -171,10 +170,10 @@ pub fn foresee(planning: &orexis_planning::create::Planning, prediction: &orexis
 /// a transport is loaded, each document kept and said `execution:Told` where speech is, the statements kept handed on
 /// with what the executor wrote. Nothing is linked: the transport and speech hear the events beneath their triggers.
 #[cfg(feature = "execution")]
-pub fn take<'a>(
-    store: &'a Store,
+pub fn take(
+    store: &Store,
     clock: Arc<dyn Clock>,
-    execution: &orexis_execution::create::Execution<'a>,
+    execution: &orexis_execution::create::Execution,
     me: &str,
     watch: Watch,
     commands: bool,
@@ -182,7 +181,7 @@ pub fn take<'a>(
 ) {
     if commands || says {
         execution.executor.borrow_mut().take = Some(orexis_execution::create::taker(
-            store,
+            store.clone(),
             me,
             clock,
             watch,
@@ -210,7 +209,7 @@ pub struct Watching {
 /// web of its own, the Telegram member over a Bot API of its own, the email member over a mailbox of its own, translation's model. None, and a member the agent
 /// loads is brought up from the environment. And what watches it.
 #[derive(Default)]
-pub struct Wiring<'a> {
+pub struct Wiring {
     pub watching: Watching,
     #[cfg(feature = "http")]
     pub http: Option<orexis_http::driver::Http>,
@@ -221,65 +220,63 @@ pub struct Wiring<'a> {
     #[cfg(feature = "translation")]
     pub model: Option<Arc<dyn orexis_translation::model::Model>>,
     #[cfg(feature = "mqtt")]
-    pub mqtt: Option<orexis_mqtt::driver::Mqtt<'a>>,
+    pub mqtt: Option<orexis_mqtt::driver::Mqtt>,
     #[cfg(not(feature = "mqtt"))]
-    pub mqtt: Option<std::marker::PhantomData<&'a ()>>,
+    pub mqtt: Option<()>,
 }
 
 /// The parts an agent runs, each named by its package, in the order a pass runs them.
-pub type Parts<'a> = Vec<(String, Box<dyn Part + 'a>)>;
+pub type Parts = Vec<(String, Box<dyn Part>)>;
 
 /// The parts of the packages `loaded` names, made, linked and in the order a pass runs them: belief, so its rules
 /// have concluded of a graph written before anything else hears it, then planning, then execution walking what it
 /// adopted, then sensing, prediction, speech and coordination, and the transport last. `budget` sizes planning's search where a caller states one; none reads the
 /// agent's stance.
-pub fn assemble<'a>(
-    store: &'a Store,
+pub fn assemble(
+    store: &Store,
     agent: &str,
     clock: Arc<dyn Clock>,
     loaded: &[String],
     budget: Option<usize>,
-) -> Result<Parts<'a>, Error> {
+) -> Result<Parts, Error> {
     assemble_wired(store, agent, clock, loaded, budget, Wiring::default())
 }
 
 /// `assemble`, over the bus `wiring` hands — a test's — where it hands one.
-pub fn assemble_wired<'a>(
-    store: &'a Store,
+pub fn assemble_wired(
+    store: &Store,
     agent: &str,
     clock: Arc<dyn Clock>,
     loaded: &[String],
     budget: Option<usize>,
-    wiring: Wiring<'a>,
-) -> Result<Parts<'a>, Error> {
+    wiring: Wiring,
+) -> Result<Parts, Error> {
     Ok(assemble_seen(store, agent, clock, loaded, budget, wiring)?.0)
 }
 
 /// What a test reads of the parts once they are lent to the runtime: the planner and the executor they share, and the
 /// watch every part says its events to, which the runtime is handed too.
 #[derive(Default)]
-pub struct Seen<'a> {
+pub struct Seen {
     pub watch: Watch,
     #[cfg(feature = "planning")]
     pub planner: Option<std::rc::Rc<std::cell::RefCell<orexis_planning::Planner>>>,
     #[cfg(feature = "execution")]
-    pub executor: Option<std::rc::Rc<std::cell::RefCell<orexis_execution::Executor<'a>>>>,
-    #[cfg(not(any(feature = "planning", feature = "execution")))]
-    pub none: Option<std::marker::PhantomData<&'a ()>>,
+    pub executor: Option<std::rc::Rc<std::cell::RefCell<orexis_execution::Executor>>>,
 }
 
 /// `assemble_wired`, and what a test reads of the parts.
-pub fn assemble_seen<'a>(
-    store: &'a Store,
+pub fn assemble_seen(
+    store: &Store,
     agent: &str,
     clock: Arc<dyn Clock>,
     loaded: &[String],
     budget: Option<usize>,
-    wiring: Wiring<'a>,
-) -> Result<(Parts<'a>, Seen<'a>), Error> {
+    wiring: Wiring,
+) -> Result<(Parts, Seen), Error> {
     #[allow(unused_mut)]
     let mut seen = Seen::default();
-    let mut parts: Parts<'a> = Vec::new();
+    let mut parts: Parts = Vec::new();
     let Wiring {
         watching,
         mqtt,
@@ -305,7 +302,7 @@ pub fn assemble_seen<'a>(
         watching.metrics.as_ref().map(|w| w.sink.reader()),
     );
     let watch = seen.watch.clone();
-    let mut watchers: Parts<'a> = Vec::new();
+    let mut watchers: Parts = Vec::new();
     if watching.journal.is_some() || watching.history.is_some() {
         let incidents = orexis_history::incidents(store)?;
         let history = orexis_history::History::new(&watch, watching.history, watching.journal, incidents);
@@ -424,8 +421,8 @@ pub fn assemble_seen<'a>(
         take(store, clock.clone(), execution, &me, watch.clone(), commands, says);
     }
     #[cfg(all(feature = "planning", feature = "execution"))]
-    if let (Some(planning), Some(execution)) = (planning.as_ref(), execution.as_ref()) {
-        judge(planning, execution);
+    if let (Some(_), Some(execution)) = (planning.as_ref(), execution.as_ref()) {
+        judge(execution);
     }
     #[cfg(feature = "belief")]
     if let Some(belief) = belief.as_ref() {
