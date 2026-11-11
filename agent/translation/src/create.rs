@@ -40,7 +40,7 @@ use orexis::ontology::local_of;
 use orexis::runtime::{Heard, Part, Pass, Starting};
 use orexis::series::Reader;
 use orexis::store::Store;
-use orexis::transport::{PROSE, Prose, ProseKept, Writing, prose_of, received, written};
+use orexis_speech::prose::{KEPT, Prose, ProseKept, WritingAnnounced, prose_of, received, written};
 
 use crate::briefing::briefing;
 use crate::chat::{Chat, chats_of, named};
@@ -654,7 +654,7 @@ impl Translator {
 
     /// Say the agent is writing on `channel`, for the transport that can show it there.
     fn show(&self, channel: &str) {
-        self.watch.emit(&Writing {
+        self.watch.emit(&WritingAnnounced {
             channel: channel.to_string(),
         });
     }
@@ -770,7 +770,7 @@ impl Part for Translation {
     /// What translation's policy does of a trigger: read the words it names back, and hear them where they are a
     /// person's; the agent's own it kept itself, for a transport to carry.
     fn heard_event(&mut self, _job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
-        let Some(graph) = event.named(PROSE).cloned() else {
+        let Some(graph) = event.named(KEPT).cloned() else {
             return Ok(Vec::new());
         };
         let store = self.translator.borrow().beliefs.clone();

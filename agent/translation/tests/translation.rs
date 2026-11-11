@@ -19,7 +19,7 @@ use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
 use orexis::runtime::{Heard, Part, Pass, Runtime, Starting};
 use orexis::store::{Store, Within, iri, value};
-use orexis::transport::{Carrier, PROSE_KEPT, Prose, ProseKept, WRITING, carry, kept};
+use orexis_speech::prose::{Carrier, PROSE_GRAPH, PROSE_KEPT, Prose, ProseKept, WRITING_ANNOUNCED, carry, kept};
 use orexis_translation::briefing::briefing;
 use orexis_translation::chat::chats_of;
 use orexis_translation::create::{CONVERSE_SYSTEM, SAY_SYSTEM, SILENT, TURNS, Translation, Translator, UNADDRESSED};
@@ -470,7 +470,7 @@ struct Member<'s> {
 impl Part for Member<'_> {
     fn start(&mut self, starting: &mut Starting) -> Result<(), orexis::Error> {
         starting.hears(PROSE_KEPT, 1);
-        starting.hears(WRITING, 1);
+        starting.hears(WRITING_ANNOUNCED, 1);
         Ok(())
     }
 
@@ -967,7 +967,7 @@ fn a_question_is_answered_by_as_many_queries_as_it_needs_and_writes_nothing() {
         )
     );
     let prose: std::collections::BTreeSet<String> = store
-        .graphs_of(&[&format!("{O}ProseGraph")], &Within::default())
+        .graphs_of(&[PROSE_GRAPH], &Within::default())
         .unwrap()
         .into_iter()
         .collect();

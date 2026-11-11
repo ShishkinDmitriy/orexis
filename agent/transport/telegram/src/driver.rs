@@ -27,7 +27,8 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::ontology::{BELIEF, local_of};
 use orexis::store::{Store, Within, iri, value};
-use orexis::transport::{Carrier, Inbox, Prose};
+use orexis::transport::Inbox;
+use orexis_speech::prose::{Carrier, Prose};
 
 pub const TELEGRAM_URL: &str = "https://api.telegram.org";
 pub const POLL_S: f64 = 3.0;

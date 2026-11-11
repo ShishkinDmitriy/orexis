@@ -11,7 +11,7 @@ use std::rc::Rc;
 
 use orexis::Error;
 use orexis::runtime::{Heard, Part, Pass, Starting};
-use orexis::transport::{ProseKept, carry, kept};
+use orexis_speech::prose::{ProseKept, carry, kept};
 
 use crate::driver::{Message, Mqtt, NUDGE_S};
 

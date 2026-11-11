@@ -175,7 +175,7 @@ pub struct Mqtt<'a> {
     /// What the sessions connected are yet to listen for, taken by the part as it starts.
     pub listening: Vec<Listening>,
     /// A person's prose heard on a chat's topic, for the part to hand translation once it lets the member go.
-    pub prose: Vec<orexis::transport::Prose>,
+    pub prose: Vec<orexis_speech::prose::Prose>,
     unreachable: BTreeSet<String>,
 }
 
@@ -207,7 +207,7 @@ impl<'a> Mqtt<'a> {
 
     /// A message on a chat's topic: `{"from": …, "text": …}` or bare text, the prose it is unless the agent itself said
     /// it.
-    fn prose_of(&self, channel: &str, payload: &[u8], at: DateTime) -> Option<orexis::transport::Prose> {
+    fn prose_of(&self, channel: &str, payload: &[u8], at: DateTime) -> Option<orexis_speech::prose::Prose> {
         let said: Json = serde_json::from_slice(payload)
             .ok()
             .filter(Json::is_object)
@@ -221,7 +221,7 @@ impl<'a> Mqtt<'a> {
         if from == Some(self.me.as_str()) || text.is_empty() {
             return None;
         }
-        Some(orexis::transport::Prose {
+        Some(orexis_speech::prose::Prose {
             channel: channel.to_string(),
             sender: from.filter(|f| f.starts_with("http")).map(str::to_string),
             text,
@@ -689,7 +689,7 @@ pub fn connect<'a>(beliefs: &'a Store, me: &str, env: &dyn Fn(&str) -> Option<St
     Ok(member)
 }
 
-impl orexis::transport::Carrier for Mqtt<'_> {
+impl orexis_speech::prose::Carrier for Mqtt<'_> {
     /// Prose out on the topic node `channel`, a chat's topic, by the one pattern naming it with no wildcard, as
     /// `{"from": the agent, "text": …}` so the agent knows its own when the broker hands it back; false where the
     /// channel is no topic of a chat this agent is in, or it is on no broker of this member's.
@@ -1131,7 +1131,7 @@ GRAPH :world {
 
     #[test]
     fn words_on_a_chats_topic_are_prose_and_nobodys_reading_and_prose_is_said_there_as_the_agents() {
-        use orexis::transport::Carrier;
+        use orexis_speech::prose::Carrier;
         let store = chat();
         let (mut mqtt, client) = bus(&store);
         assert!(mqtt.open().unwrap().contains(&"chats/keeper_and_anna".to_string()));

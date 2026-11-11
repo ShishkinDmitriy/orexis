@@ -1,4 +1,5 @@
 @prefix orexis: <http://example.org/orexis#> .
+@prefix speech: <http://example.org/orexis/speech#> .
 @prefix telegram: <http://example.org/orexis/telegram#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
@@ -26,7 +27,7 @@ telegram:userId a owl:DatatypeProperty ; rdfs:label "user id" ;
     rdfs:comment "The id the Bot API gives a person who writes, which tells two people in one group apart; a person's own, stated under `secrets/` where it is. A chat with one person needs none." .
 
 #  WHAT THE MEMBER DOES OVER A STRETCH OF TIME, a `prov:Activity`, and its trigger: the agent's own words translation
-#  kept for a channel, the kernel's event, which the member - above the kernel - puts beneath it
+#  kept for a channel, speech's event, which the member - above speech - puts beneath it
 #  (knowledge/domain/kernel/policy.md).
 
 telegram:Trigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Trigger" ;
@@ -36,7 +37,7 @@ telegram:Carrying a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Carr
     rdfs:comment "Sending the agent's own words a prose graph keeps on their channel, where the Telegram member carries it, as a reply where the words name one and the carrier threads it." .
 
 telegram:CarryingTrigger a owl:Class ; rdfs:subClassOf telegram:Trigger ; rdfs:label "Carrying trigger" ;
-    rdfs:comment "What starts a carrying: the kernel's `orexis:ProseKept`, beneath it here, naming the prose graph whose words it carries where they are the agent's own (`orexis:prose`), and `orexis:Writing`, naming the channel the agent is writing on (`orexis:channel`). The policy judges by the graph's provenance: a person's words it kept itself are translation's." .
+    rdfs:comment "What starts a carrying: speech's `speech:ProseKept`, beneath it here, naming the prose graph whose words it carries where they are the agent's own (`speech:kept`), and `speech:WritingAnnounced`, naming the channel the agent says it is writing on (`speech:channel`). The policy judges by the graph's provenance: a person's words it kept itself are translation's." .
 
-orexis:ProseKept rdfs:subClassOf telegram:CarryingTrigger .
-orexis:Writing rdfs:subClassOf telegram:CarryingTrigger .
+speech:ProseKept rdfs:subClassOf telegram:CarryingTrigger .
+speech:WritingAnnounced rdfs:subClassOf telegram:CarryingTrigger .

@@ -1,4 +1,5 @@
 @prefix orexis: <http://example.org/orexis#> .
+@prefix speech: <http://example.org/orexis/speech#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix email: <http://example.org/orexis/email#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
@@ -12,7 +13,7 @@
 #  `secrets/<agent>/mail.env`, environment and never a graph.
 
 #  WHAT THE MEMBER DOES OVER A STRETCH OF TIME, a `prov:Activity`, and its trigger: the agent's own words translation
-#  kept for a channel, the kernel's event, which the member - above the kernel - puts beneath it
+#  kept for a channel, speech's event, which the member - above speech - puts beneath it
 #  (knowledge/domain/kernel/policy.md).
 
 email:Trigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Trigger" ;
@@ -22,6 +23,6 @@ email:Carrying a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Carryin
     rdfs:comment "Sending the agent's own words a prose graph keeps on their channel, where the email member carries it, as a reply where the words name one and the carrier threads it." .
 
 email:CarryingTrigger a owl:Class ; rdfs:subClassOf email:Trigger ; rdfs:label "Carrying trigger" ;
-    rdfs:comment "What starts a carrying: the kernel's `orexis:ProseKept`, beneath it here, naming the prose graph whose words it carries where they are the agent's own (`orexis:prose`). The policy judges by the graph's provenance: a person's words it kept itself are translation's." .
+    rdfs:comment "What starts a carrying: speech's `speech:ProseKept`, beneath it here, naming the prose graph whose words it carries where they are the agent's own (`speech:kept`). The policy judges by the graph's provenance: a person's words it kept itself are translation's." .
 
-orexis:ProseKept rdfs:subClassOf email:CarryingTrigger .
+speech:ProseKept rdfs:subClassOf email:CarryingTrigger .

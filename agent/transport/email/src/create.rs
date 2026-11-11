@@ -9,7 +9,8 @@ use std::rc::Rc;
 
 use orexis::Error;
 use orexis::runtime::{Heard, Part, Pass, Starting};
-use orexis::transport::{Message, ProseKept, carry, kept};
+use orexis::transport::Message;
+use orexis_speech::prose::{ProseKept, carry, kept};
 
 use crate::driver::Email;
 
