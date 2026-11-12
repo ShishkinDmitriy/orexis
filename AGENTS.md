@@ -488,7 +488,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   instant a reading falls due it is due; asked `end < now` beside `end >= now`, the member woke itself at that
   instant for ever, which only a clock that never stands exactly there had hidden.
 - **A search the budget cut short is continued whatever else is walking** — with a plan walked beside it nothing
-  else asked for the next planning, and the want stood unplanned until something was heard (#1147).
+  else asked for the next planning, and the want stood unplanned until something was heard.
+- **A ground laid again under its name takes back its candidates with its facts and its weighings** — a candidate
+  is a filling the ground's facts admitted, and two plannings at one instant lay one name twice; left standing, a
+  drive to the neighbour of where the van had stood at boot was taken two minutes on from where it stood then, two
+  cells off, and the tower's puzzle was never walked home (#1147).
 
 ### Execution
 

@@ -105,6 +105,11 @@ WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                       ?x a planning:Weighing ; planning:weighs $world ; ?p ?o .
                       OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }";
 
+const UNADMIT_U: &str = "
+DELETE { GRAPH ?cat { ?c ?p ?o } }
+WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                      ?c a planning:Candidate ; planning:from $world ; ?p ?o } }";
+
 /// Build one ground world per period the agent can see, classified with its stretch; the graphs made, earliest
 /// first. In place: it lays the grounds into whichever store it is handed. Handed no foresight.
 pub fn lay_ground(store: &Store, now: DateTime, laying: &Laying<'_>) -> Result<Vec<String>, Error> {
@@ -763,11 +768,15 @@ fn fork(store: &Store, parent: &str, name: &str, added: &[Triple]) -> Result<Str
     Ok(name.to_string())
 }
 
-/// Take back a ground standing under the name this pass is about to lay under — its facts, its row and every
-/// weighing of it: the imaginarium outlives the pass, and a ground is named for its instant.
+/// Take back a ground standing under the name this pass is about to lay under — its facts, its row, every weighing
+/// of it and every candidate admitted in it: the imaginarium outlives the pass, and a ground is named for its
+/// instant. A CANDIDATE IS A FILLING THE GROUND'S FACTS ADMITTED, so laid again with other facts the ground admits
+/// others: left standing, a drive to the neighbour of where the van had stood was taken from where it stood now, two
+/// cells off, by the next search of the scope (#1147).
 fn relaid(store: &Store, name: &str) -> Result<(), Error> {
     store.forget_graph(name, Some(BELIEF))?;
-    store.update(&bind(UNWEIGH_U, &[("world", Value::iri(name))])?)
+    store.update(&bind(UNWEIGH_U, &[("world", Value::iri(name))])?)?;
+    store.update(&bind(UNADMIT_U, &[("world", Value::iri(name))])?)
 }
 
 /// A ground's name, for eyes: the instant it opens at.
@@ -811,6 +820,38 @@ mod tests {
     #[test]
     fn every_case_is_read_and_no_diff_is_orphaned() {
         snapshots::all_read(&cases(), 3);
+    }
+
+    /// A ground laid again under its name takes its candidates with it (#1147): what the ground's facts admitted is
+    /// not what it admits once they are others, and a candidate left standing is taken by the next search.
+    #[test]
+    fn a_ground_laid_again_at_its_instant_takes_back_the_candidates_admitted_in_it() {
+        let case = snapshots::cases_in(&cases()).into_iter().next().unwrap();
+        let store = snapshots::stand_in(&case);
+        let present = lay_ground(&store, snapshots::now(), &Laying::default()).unwrap()[0].clone();
+        let cat = store.catalogue().unwrap().unwrap();
+        let candidates = "SELECT ?c WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?c a planning:Candidate } }";
+        store
+            .update(&format!(
+                "INSERT DATA {{ GRAPH <{cat}> {{ <urn:test:candidate> a planning:Candidate ; planning:from <{present}> ; \
+                 planning:fills <urn:test:Action> ; planning:minted 1 . \
+                 <urn:test:elsewhere> a planning:Candidate ; planning:from <urn:test:world> ; planning:minted 2 }} }}"
+            ))
+            .unwrap();
+        assert_eq!(store.rows(candidates, &[]).unwrap().len(), 2);
+        let again = lay_ground(&store, snapshots::now(), &Laying::default()).unwrap()[0].clone();
+        assert_eq!(again, present, "a ground is named for its instant");
+        let left: Vec<String> = store
+            .rows(candidates, &[])
+            .unwrap()
+            .iter()
+            .filter_map(|r| orexis::store::iri(r, "c"))
+            .collect();
+        assert_eq!(
+            left,
+            ["urn:test:elsewhere"],
+            "the ground's own are gone, another world's stand"
+        );
     }
 
     /// The flows integrated from each ground as the grounds are laid (#1000): a ground at every crossing the
