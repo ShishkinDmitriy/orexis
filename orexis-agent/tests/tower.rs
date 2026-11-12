@@ -154,6 +154,69 @@ async fn the_puzzle_is_planned_above_and_carried_out_by_the_van_below() {
     );
 }
 
+/// How the two-disk puzzle ends where the packages are started in `order`: how the run ended, the instant it ended
+/// at, where everything stands, what each disk is on, and how many moves were kept below.
+type Walked = (
+    String,
+    String,
+    BTreeMap<String, (i64, i64)>,
+    BTreeSet<(String, String)>,
+    usize,
+);
+
+async fn walked(order: &[&str]) -> Walked {
+    use orexis::clock::Clock;
+    let store = store();
+    let loaded = booted(&store, tree(), &world(), "mover", now()).unwrap();
+    let mut sorted: Vec<&str> = loaded.iter().map(String::as_str).collect();
+    sorted.sort();
+    let mut asked = order.to_vec();
+    asked.sort();
+    assert_eq!(sorted, asked, "the order names every package the mover loads");
+    two_disks(&store);
+    let order: Vec<String> = order.iter().map(|p| p.to_string()).collect();
+    let clock = common::clock(now());
+    let wiring = orexis_agent::Wiring::default();
+    let running = orexis_agent::start(&store, "mover", clock.clone(), &order, None, wiring).unwrap();
+    assert_eq!(running.parts(), order);
+    let outcome = common::outcome(&running, 3600).await;
+    let ended = clock.now().to_string();
+    running.stop().await;
+    let at = store
+        .rows(AT_Q, &[])
+        .unwrap()
+        .iter()
+        .filter(|r| iri(r, "s").unwrap().starts_with(TOWER))
+        .map(|r| {
+            (
+                local(&iri(r, "s").unwrap()),
+                (
+                    value(r, "x").unwrap().parse().unwrap(),
+                    value(r, "y").unwrap().parse().unwrap(),
+                ),
+            )
+        })
+        .collect();
+    let refined = value(&store.rows(REFINED_Q, &[]).unwrap()[0], "n")
+        .unwrap()
+        .parse()
+        .unwrap();
+    (outcome, ended, at, on(&store), refined)
+}
+
+/// Planning and execution both begin on what belief revised, and neither waits for the other: whichever is started
+/// first, and so hears a revision first, the puzzle is walked home the same way and ends at the same instant. The one
+/// thing between them that needs an order, taking a head, is asked and answered.
+#[tokio::test(start_paused = true)]
+async fn the_puzzle_ends_the_same_whichever_of_planning_and_execution_hears_a_revision_first() {
+    let planning_first = walked(&["belief", "planning", "execution"]).await;
+    let execution_first = walked(&["belief", "execution", "planning"]).await;
+    assert_eq!(planning_first.0, MET);
+    assert_eq!(planning_first, execution_first);
+    let belief_last = walked(&["planning", "execution", "belief"]).await;
+    assert_eq!(planning_first, belief_last);
+}
+
 /// As `agent/metrics/tests/test_window.py`'s last case holds it: the mover, which plans, walks and deliberates, writes
 /// the window it was in as it stops — the one pass tallied, every level as it last stood — so the window holds every
 /// one of those three packages' figures, tagged with the world.

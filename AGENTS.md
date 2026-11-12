@@ -517,6 +517,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   and an intention adopts it by reference; a plan begun is walked to its end, unless a
   reconsideration replaces its untaken steps, and then it ends after its step in flight
   (planning-and-execution-meet-at-the-store).
+- **Two packages that begin on one event wait for neither, and the run is held the same whichever hears it first** —
+  planning and execution both begin on what belief revised, a chain either way leaving an executor with no planner or
+  a planner with no executor a second way in, so the tower is walked with each started first and ends alike at the
+  same instant; the one act that needs an order between them, taking a head, is asked and answered
+  (a-package-is-a-task-that-awaits-its-events).
 - **Every head is checked when it is taken, and the precondition stays planning's to ask** — the
   executor says `execution:HeadAsked` and holds the head in flight, planning asks the present and answers by
   `planning:HeadChecked`, and nothing asks once a pass; execution reading `planning:precondition` itself was refused, a lower layer speaking
