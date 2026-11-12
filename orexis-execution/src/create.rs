@@ -28,7 +28,7 @@ use orexis::clock::Clock;
 use orexis::document::Document;
 use orexis::events::{Event, Watch, mint};
 use orexis::ontology::RECORDED;
-use orexis::runtime::{Heard, Pass, Registers, Runtime, Seat, Starting, Woke};
+use orexis::runtime::{Heard, Pass, Runtime, Wait, Woke};
 use orexis::store::Store;
 use oxigraph::model::{GraphName, Literal, NamedNode, Quad, Term};
 
@@ -258,26 +258,20 @@ impl Execution {
     }
 }
 
-impl Execution {
-    /// EXECUTION REGISTERING ITSELF on a runtime, lent: whoever keeps the part reads it between runs.
-    pub fn registers(part: &Arc<Mutex<Self>>) -> Registers {
-        let part = part.clone();
-        Box::new(move |runtime| register(runtime, part))
-    }
-}
-
-/// Started, it says what it waits for, and hands the runtime its task.
-fn register(runtime: &mut Runtime, part: Arc<Mutex<Execution>>) -> Result<(), Error> {
-    let mut starting = runtime.starting("execution");
-    part.lock().expect("a part nobody poisoned").start(&mut starting)?;
-    runtime.register(starting, move |seat| policy(part, seat));
+/// THE PACKAGE STARTING ITSELF on a runtime: it says what ends its wait and spawns its task. The part is lent, so
+/// whoever keeps it reads it between runs.
+pub fn start(runtime: &mut Runtime, part: &Arc<Mutex<Execution>>) -> Result<(), Error> {
+    let part = part.clone();
+    let mut wait = runtime.wait("execution");
+    part.lock().expect("a part nobody poisoned").start(&mut wait)?;
+    runtime.spawn(wait, move |wait| policy(part, wait));
     Ok(())
 }
 
 /// EXECUTION'S TASK: it waits for the pass, an event beneath one of its triggers, or a walk it queued, and does what
 /// its policy says of each.
-async fn policy(part: Arc<Mutex<Execution>>, mut seat: Seat) {
-    while let Some((woke, mut pass)) = seat.next().await {
+async fn policy(part: Arc<Mutex<Execution>>, mut wait: Wait) {
+    while let Some((woke, mut pass)) = wait.next().await {
         let mut execution = part.lock().expect("a part nobody poisoned");
         let wrote = match woke {
             Woke::Due(tag) => execution.run(tag, &mut pass),
@@ -304,13 +298,13 @@ impl Execution {
         }
     }
 
-    fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
-        starting.says(&self.executor.watch);
-        starting.every(0.0, PASS);
-        starting.hears(ADOPTING_TRIGGER, ADOPT);
-        starting.hears(SUPERSEDING_TRIGGER, SUPERSEDE);
-        starting.hears(RESOLVING_TRIGGER, RESOLVE);
-        starting.hears(WALKING_TRIGGER, REVISED);
+    fn start(&mut self, wait: &mut Wait) -> Result<(), Error> {
+        self.executor.watch = wait.watch();
+        wait.every(0.0, PASS);
+        wait.hears(ADOPTING_TRIGGER, ADOPT);
+        wait.hears(SUPERSEDING_TRIGGER, SUPERSEDE);
+        wait.hears(RESOLVING_TRIGGER, RESOLVE);
+        wait.hears(WALKING_TRIGGER, REVISED);
         Ok(())
     }
 

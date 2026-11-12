@@ -122,9 +122,8 @@ fn the_runtime_concludes_what_each_disk_is_on_from_where_it_stands() {
     for package in ["belief", "planning", "execution"] {
         assert!(loaded.iter().any(|p| p == package), "{package}: {loaded:?}");
     }
-    let parts = assemble(&store, "mover", clock.clone(), &loaded, None).unwrap();
-    let lent = parts;
-    let runtime = Runtime::new(&store, "mover", clock.clone(), lent).unwrap();
+    let mut runtime = Runtime::new(&store, "mover", clock.clone()).unwrap();
+    assemble(&mut runtime, &loaded, None).unwrap();
     assert_eq!(runtime.parts(), ["belief", "planning", "execution"]);
     assert_eq!(
         on(&store),
@@ -138,9 +137,8 @@ fn the_puzzle_is_planned_above_and_carried_out_by_the_van_below() {
     let clock = Arc::new(Ticking(Mutex::new(now())));
     let loaded = booted(&store, tree(), &world(), "mover", clock.now()).unwrap();
     two_disks(&store);
-    let parts = assemble(&store, "mover", clock.clone(), &loaded, None).unwrap();
-    let lent = parts;
-    let mut runtime = Runtime::new(&store, "mover", clock.clone(), lent).unwrap();
+    let mut runtime = Runtime::new(&store, "mover", clock.clone()).unwrap();
+    assemble(&mut runtime, &loaded, None).unwrap();
     let outcome = runtime.run(Some(120), 0.0).unwrap();
     runtime.stop();
     assert_eq!(outcome, MET);
@@ -196,14 +194,11 @@ fn the_last_window_is_written_as_the_process_stops() {
     let mut wiring = orexis_agent::Wiring::default();
     wiring.watching.metrics = Some(orexis_metrics::Window::new(sink, 3600.0, Some("tower"), Some("mover")));
     let clock = Arc::new(Still);
-    let (parts, seen) = orexis_agent::assemble_seen(&store, "mover", clock.clone(), &loaded, None, wiring).unwrap();
-    {
-        let lent = parts;
-        let mut runtime = Runtime::new(&store, "mover", clock.clone(), lent).unwrap();
-        runtime.watch = seen.watch.clone();
-        runtime.run(Some(1), 0.0).unwrap();
-        runtime.stop();
-    }
+    let mut runtime = Runtime::new(&store, "mover", clock.clone()).unwrap();
+    orexis_agent::assemble_wired(&mut runtime, &loaded, None, wiring).unwrap();
+    runtime.run(Some(1), 0.0).unwrap();
+    runtime.stop();
+    drop(runtime);
     let by: BTreeMap<String, orexis::events::Point> = written
         .lock()
         .unwrap()

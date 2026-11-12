@@ -7,7 +7,7 @@ use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::foresight::{Foresees, Foresight, Placed};
-use orexis::runtime::Registers;
+use orexis::runtime::Runtime;
 use orexis::store::Store;
 
 use crate::foresee::foresee;
@@ -34,14 +34,9 @@ impl Prediction {
     }
 }
 
-impl Prediction {
-    /// PREDICTION REGISTERING ITSELF on a runtime: a task that waits for nothing but the run's end, since what it
-    /// offers is asked for where the grounds are laid.
-    pub fn registers() -> Registers {
-        Box::new(|runtime| {
-            let starting = runtime.starting("prediction");
-            runtime.register(starting, |mut seat| async move { while seat.next().await.is_some() {} });
-            Ok(())
-        })
-    }
+/// PREDICTION STARTING ITSELF on a runtime: a task that waits for nothing but the run's end, since what it offers is
+/// asked for where the grounds are laid.
+pub fn start(runtime: &mut Runtime) {
+    let wait = runtime.wait("prediction");
+    runtime.spawn(wait, |mut wait| async move { while wait.next().await.is_some() {} });
 }

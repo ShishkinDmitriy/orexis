@@ -14,7 +14,7 @@ use orexis::Error;
 use orexis::ontology::SELF_GRAPH;
 use std::sync::{Arc, Mutex};
 
-use orexis::runtime::{Heard, MET, PLANNED, Pass, Registers, Runtime, Seat, UNREACHABLE, Woke, long};
+use orexis::runtime::{Heard, MET, PLANNED, Pass, Runtime, UNREACHABLE, Wait, Woke, long};
 use orexis::store::{Store, Within, iri};
 
 use crate::Planner;
@@ -120,28 +120,22 @@ fn walks(beliefs: &Store) -> Result<bool, Error> {
     Ok(false)
 }
 
-impl Planning {
-    /// PLANNING REGISTERING ITSELF on a runtime, lent: whoever keeps the part reads it between runs.
-    pub fn registers(part: &Arc<Mutex<Self>>) -> Registers {
-        let part = part.clone();
-        Box::new(move |runtime| register(runtime, part))
-    }
-}
-
-/// What planning waits for - the pass, its trigger's events and a head asked - and its task.
-fn register(runtime: &mut Runtime, part: Arc<Mutex<Planning>>) -> Result<(), Error> {
-    let mut starting = runtime.starting("planning");
-    starting.every(0.0, PLAN);
-    starting.hears(PLANNING_TRIGGER, REOPEN);
-    starting.hears(HEAD_ASKED, CHECK);
-    starting.says(&part.lock().expect("a part nobody poisoned").planner.watch);
-    runtime.register(starting, move |seat| policy(part, seat));
+/// PLANNING STARTING ITSELF on a runtime: its wait ends on its trigger's events and a head asked, its policy decides
+/// after whatever it heard, and its task is spawned. The part is lent, so whoever keeps it reads it between runs.
+pub fn start(runtime: &mut Runtime, part: &Arc<Mutex<Planning>>) -> Result<(), Error> {
+    let part = part.clone();
+    let mut wait = runtime.wait("planning");
+    wait.every(0.0, PLAN);
+    wait.hears(PLANNING_TRIGGER, REOPEN);
+    wait.hears(HEAD_ASKED, CHECK);
+    part.lock().expect("a part nobody poisoned").planner.watch = wait.watch();
+    runtime.spawn(wait, move |wait| policy(part, wait));
     Ok(())
 }
 
-/// PLANNING'S TASK: it waits for the pass or an event beneath its trigger, and decides.
-async fn policy(part: Arc<Mutex<Planning>>, mut seat: Seat) {
-    while let Some((woke, mut pass)) = seat.next().await {
+/// PLANNING'S TASK: it waits for an event beneath its trigger or the instant it is next due, and decides.
+async fn policy(part: Arc<Mutex<Planning>>, mut wait: Wait) {
+    while let Some((woke, mut pass)) = wait.next().await {
         let mut planning = part.lock().expect("a part nobody poisoned");
         let wrote = match woke {
             Woke::Due(_) => planning.plan(&mut pass),

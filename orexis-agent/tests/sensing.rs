@@ -99,10 +99,9 @@ fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_to_the
         mqtt: Some(member),
         ..Wiring::default()
     };
-    let (parts, _) = assemble_seen(&store, "fern", clock.clone(), &loaded, None, wiring).unwrap();
+    let mut runtime = Runtime::new(&store, "fern", clock.clone()).unwrap();
+    let _ = assemble_seen(&mut runtime, &loaded, None, wiring).unwrap();
     {
-        let lent = parts;
-        let mut runtime = Runtime::new(&store, "fern", clock.clone(), lent).unwrap();
         assert_eq!(broker.0.lock().unwrap().0, ["sensors/moisture_sensor_fern/reading"]);
         inbox.deliver("sensors/moisture_sensor_fern/reading", MESSAGE.as_bytes(), Some(now));
         assert_eq!(runtime.run(Some(2), 0.0).unwrap(), UNFINISHED);

@@ -18,7 +18,7 @@ use orexis::Error;
 use orexis::document::Document;
 use orexis::events::Watch;
 use orexis::ontology::local_of;
-use orexis::runtime::{Heard, Pass, Registers, Runtime, Seat, Starting, Woke};
+use orexis::runtime::{Heard, Pass, Runtime, Wait, Woke};
 use orexis::store::Store;
 use oxsdatatypes::DateTime;
 
@@ -201,26 +201,20 @@ impl Coordination {
     }
 }
 
-impl Coordination {
-    /// COORDINATION REGISTERING ITSELF on a runtime, lent: whoever keeps the part reads it between runs.
-    pub fn registers(part: &Arc<Mutex<Self>>) -> Registers {
-        let part = part.clone();
-        Box::new(move |runtime| register(runtime, part))
-    }
-}
-
-/// Started, it says what it waits for, and hands the runtime its task.
-fn register(runtime: &mut Runtime, part: Arc<Mutex<Coordination>>) -> Result<(), Error> {
-    let mut starting = runtime.starting("coordination");
-    part.lock().expect("a part nobody poisoned").start(&mut starting)?;
-    runtime.register(starting, move |seat| policy(part, seat));
+/// THE PACKAGE STARTING ITSELF on a runtime: it says what ends its wait and spawns its task. The part is lent, so
+/// whoever keeps it reads it between runs.
+pub fn start(runtime: &mut Runtime, part: &Arc<Mutex<Coordination>>) -> Result<(), Error> {
+    let part = part.clone();
+    let mut wait = runtime.wait("coordination");
+    part.lock().expect("a part nobody poisoned").start(&mut wait)?;
+    runtime.spawn(wait, move |wait| policy(part, wait));
     Ok(())
 }
 
 /// COORDINATION'S TASK: it waits for the pass, a question or an answer written, or an event beneath its trigger, and
 /// does what its policy says of each.
-async fn policy(part: Arc<Mutex<Coordination>>, mut seat: Seat) {
-    while let Some((woke, mut pass)) = seat.next().await {
+async fn policy(part: Arc<Mutex<Coordination>>, mut wait: Wait) {
+    while let Some((woke, mut pass)) = wait.next().await {
         let mut coordination = part.lock().expect("a part nobody poisoned");
         let wrote = match woke {
             Woke::Due(tag) => coordination.run(tag, &mut pass),
@@ -247,13 +241,13 @@ impl Coordination {
         }
     }
 
-    fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
-        starting.says(&self.watch);
+    fn start(&mut self, wait: &mut Wait) -> Result<(), Error> {
+        self.watch = wait.watch();
         self.pending.extend(mint(&self.beliefs, &self.me)?);
-        starting.on(QUESTION_GRAPH, QUESTIONED);
-        starting.on(ANSWER_GRAPH, ANSWERED);
-        starting.every(0.0, PASS);
-        starting.hears(COORDINATING_TRIGGER, PASS);
+        wait.on(QUESTION_GRAPH, QUESTIONED);
+        wait.on(ANSWER_GRAPH, ANSWERED);
+        wait.every(0.0, PASS);
+        wait.hears(COORDINATING_TRIGGER, PASS);
         Ok(())
     }
 

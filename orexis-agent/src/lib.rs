@@ -12,7 +12,7 @@ use orexis::boot::{Booting, boot};
 use orexis::clock::Clock;
 use orexis::events::Watch;
 use orexis::journal::Journal;
-use orexis::runtime::Registers;
+use orexis::runtime::Runtime;
 use orexis::series::Sink;
 use orexis::store::Store;
 
@@ -55,8 +55,8 @@ pub struct Checked {
 }
 
 /// CHECK `agent` of `world` as its container would boot it, and run nothing: booted into a store in memory from the
-/// documents of `tree`, and every part its roles load made over members that reach nothing — no broker, no web, no bot
-/// and no model — so every text a part parses at its making is parsed. What it found, or why it would not boot; and,
+/// documents of `tree`, and every part its roles load made and started, on a runtime that is never run, over members
+/// that reach nothing — no broker, no web, no bot and no model — so every text a part parses at its making is parsed. What it found, or why it would not boot; and,
 /// where `boot` names a file, the store as booted, in N-Quads, before any part is made — which is what onboarding
 /// holds to the requirements, so the world is booted once, by the agent that will run it.
 /// `orexis-onboard` asks it of every agent before anything is granted, and `orexis-agent/tests/check.rs` of every world.
@@ -120,7 +120,8 @@ pub fn check(
         )),
         ..Wiring::default()
     };
-    assemble_seen(&store, agent, clock, &checked.loaded, None, wiring)?;
+    let mut runtime = Runtime::new(&store, agent, clock)?;
+    assemble_wired(&mut runtime, &checked.loaded, None, wiring)?;
     Ok(checked)
 }
 
@@ -229,39 +230,27 @@ pub struct Wiring {
     pub mqtt: Option<()>,
 }
 
-/// The parts an agent runs, each named by its package and registering itself on the runtime it is handed, in the
-/// order a pass runs them.
-pub type Parts = Vec<(String, Registers)>;
-
-/// The parts of the packages `loaded` names, made, linked and in the order a pass runs them: belief, so its rules
-/// have concluded of a graph written before anything else hears it, then planning, then execution walking what it
-/// adopted, then sensing, prediction, speech and coordination, and the transport last. `budget` sizes planning's search where a caller states one; none reads the
+/// The parts of the packages `loaded` names, made and each started on `runtime`, whose store, agent and clock they
+/// are over: belief first, then planning, execution, sensing, prediction, speech and coordination, and the transport
+/// last - the order a pass tells them the instant in, and no order between what each then does. `budget` sizes planning's search where a caller states one; none reads the
 /// agent's stance.
-pub fn assemble(
-    store: &Store,
-    agent: &str,
-    clock: Arc<dyn Clock>,
-    loaded: &[String],
-    budget: Option<usize>,
-) -> Result<Parts, Error> {
-    assemble_wired(store, agent, clock, loaded, budget, Wiring::default())
+pub fn assemble(runtime: &mut Runtime, loaded: &[String], budget: Option<usize>) -> Result<(), Error> {
+    assemble_wired(runtime, loaded, budget, Wiring::default())
 }
 
 /// `assemble`, over the bus `wiring` hands — a test's — where it hands one.
 pub fn assemble_wired(
-    store: &Store,
-    agent: &str,
-    clock: Arc<dyn Clock>,
+    runtime: &mut Runtime,
     loaded: &[String],
     budget: Option<usize>,
     wiring: Wiring,
-) -> Result<Parts, Error> {
-    Ok(assembled(store, agent, clock, loaded, budget, wiring, false)?.0)
+) -> Result<(), Error> {
+    assembled(runtime, loaded, budget, wiring, false).map(|_| ())
 }
 
-/// What a TEST reads of the parts once they registered on the runtime: planning's and execution's parts, each lent to
-/// its task, kept here too, which no agent's assembly does, and the watch every part says its events to, which the
-/// runtime is handed too.
+/// What a TEST reads of the parts once they started on the runtime: planning's and execution's parts, each lent to
+/// its task, kept here too, which no agent's assembly does, and the runtime's watch, which every part says its
+/// events to.
 #[derive(Default)]
 pub struct Seen {
     pub watch: Watch,
@@ -295,41 +284,28 @@ impl Seen {
 
 /// `assemble_wired`, and what a TEST reads of the parts: planning's and execution's lent to the runtime.
 pub fn assemble_seen(
-    store: &Store,
-    agent: &str,
-    clock: Arc<dyn Clock>,
+    runtime: &mut Runtime,
     loaded: &[String],
     budget: Option<usize>,
     wiring: Wiring,
-) -> Result<(Parts, Seen), Error> {
-    assembled(store, agent, clock, loaded, budget, wiring, true)
-}
-
-/// `assemble_wired`, and the watch every part says its events to: what an agent runs, each part its task's alone.
-pub fn assemble_watched(
-    store: &Store,
-    agent: &str,
-    clock: Arc<dyn Clock>,
-    loaded: &[String],
-    budget: Option<usize>,
-    wiring: Wiring,
-) -> Result<(Parts, Watch), Error> {
-    let (parts, seen) = assembled(store, agent, clock, loaded, budget, wiring, false)?;
-    Ok((parts, seen.watch))
+) -> Result<Seen, Error> {
+    assembled(runtime, loaded, budget, wiring, true)
 }
 
 fn assembled(
-    store: &Store,
-    agent: &str,
-    clock: Arc<dyn Clock>,
+    runtime: &mut Runtime,
     loaded: &[String],
     budget: Option<usize>,
     wiring: Wiring,
     lend: bool,
-) -> Result<(Parts, Seen), Error> {
+) -> Result<Seen, Error> {
+    let (store, agent, clock) = (runtime.beliefs.clone(), runtime.id.clone(), runtime.clock());
+    let (store, agent) = (&store, agent.as_str());
     #[allow(unused_mut)]
-    let mut seen = Seen::default();
-    let mut parts: Parts = Vec::new();
+    let mut seen = Seen {
+        watch: runtime.watch().clone(),
+        ..Seen::default()
+    };
     let Wiring {
         watching,
         mqtt,
@@ -355,18 +331,20 @@ fn assembled(
         watching.metrics.as_ref().map(|w| w.sink.reader()),
     );
     let watch = seen.watch.clone();
-    let mut watchers: Parts = Vec::new();
-    if watching.journal.is_some() || watching.history.is_some() {
+    let history = if watching.journal.is_some() || watching.history.is_some() {
         let incidents = orexis_history::incidents(store)?;
-        let history = orexis_history::History::new(&watch, watching.history, watching.journal, incidents);
-        watchers.push(("history".into(), history.registers()));
-    }
-    if let Some(window) = watching.metrics {
-        watchers.push((
-            "metrics".into(),
-            orexis_metrics::Metrics::new(window, &watch).registers(),
-        ));
-    }
+        Some(orexis_history::History::new(
+            &watch,
+            watching.history,
+            watching.journal,
+            incidents,
+        ))
+    } else {
+        None
+    };
+    let metrics = watching
+        .metrics
+        .map(|window| orexis_metrics::Metrics::new(window, &watch));
     if let Some(endpoint) = &watching.traces {
         orexis_spans::connect(&watch, agent, orexis_spans::post(endpoint));
     }
@@ -512,18 +490,12 @@ fn assembled(
     }
     #[cfg(feature = "belief")]
     if let Some(belief) = belief {
-        parts.push((
-            "belief".into(),
-            orexis_belief::create::Belief::registers(&Arc::new(Mutex::new(belief))),
-        ));
+        orexis_belief::create::start(runtime, &Arc::new(Mutex::new(belief)))?;
     }
     #[cfg(feature = "planning")]
     if let Some(planning) = planning {
         let planning = Arc::new(Mutex::new(planning));
-        parts.push((
-            "planning".into(),
-            orexis_planning::create::Planning::registers(&planning),
-        ));
+        orexis_planning::create::start(runtime, &planning)?;
         if lend {
             seen.planning = Some(planning);
         }
@@ -531,77 +503,55 @@ fn assembled(
     #[cfg(feature = "execution")]
     if let Some(execution) = execution {
         let execution = Arc::new(Mutex::new(execution));
-        parts.push((
-            "execution".into(),
-            orexis_execution::create::Execution::registers(&execution),
-        ));
+        orexis_execution::create::start(runtime, &execution)?;
         if lend {
             seen.execution = Some(execution);
         }
     }
     #[cfg(feature = "sensing")]
     if let Some(sensing) = sensing {
-        parts.push((
-            "sensing".into(),
-            orexis_sensing::create::Sensing::registers(&Arc::new(Mutex::new(sensing))),
-        ));
+        orexis_sensing::create::start(runtime, &Arc::new(Mutex::new(sensing)))?;
     }
     #[cfg(feature = "prediction")]
     if let Some(prediction) = prediction {
         let _ = prediction;
-        parts.push(("prediction".into(), orexis_prediction::create::Prediction::registers()));
+        orexis_prediction::create::start(runtime);
     }
     #[cfg(feature = "speech")]
     if let Some(speech) = speech {
-        parts.push((
-            "speech".into(),
-            orexis_speech::create::Speech::registers(&Arc::new(Mutex::new(speech))),
-        ));
+        orexis_speech::create::start(runtime, &Arc::new(Mutex::new(speech)))?;
     }
     #[cfg(feature = "translation")]
     if let Some(translation) = translation {
-        parts.push((
-            "translation".into(),
-            orexis_translation::create::Translation::registers(&Arc::new(Mutex::new(translation))),
-        ));
+        orexis_translation::create::start(runtime, &Arc::new(Mutex::new(translation)))?;
     }
     #[cfg(feature = "coordination")]
     if let Some(coordination) = coordination {
-        parts.push((
-            "coordination".into(),
-            orexis_coordination::create::Coordination::registers(&Arc::new(Mutex::new(coordination))),
-        ));
+        orexis_coordination::create::start(runtime, &Arc::new(Mutex::new(coordination)))?;
     }
     #[cfg(feature = "mqtt")]
     if let Some(transport) = transport {
-        parts.push((
-            "transport/mqtt".into(),
-            orexis_transport_mqtt::create::Transport::registers(&Arc::new(Mutex::new(transport))),
-        ));
+        orexis_transport_mqtt::create::start(runtime, &Arc::new(Mutex::new(transport)))?;
     }
     #[cfg(feature = "http")]
     if let Some(web) = web {
-        parts.push((
-            "transport/http".into(),
-            orexis_transport_http::create::Transport::registers(&Arc::new(Mutex::new(web))),
-        ));
+        orexis_transport_http::create::start(runtime, &Arc::new(Mutex::new(web)))?;
     }
     #[cfg(feature = "telegram")]
     if let Some(bot) = bot {
-        parts.push((
-            "transport/telegram".into(),
-            orexis_transport_telegram::create::Transport::registers(&Arc::new(Mutex::new(bot))),
-        ));
+        orexis_transport_telegram::create::start(runtime, &Arc::new(Mutex::new(bot)))?;
     }
     #[cfg(feature = "email")]
     if let Some(mailbox) = mailbox {
-        parts.push((
-            "transport/email".into(),
-            orexis_transport_email::create::Transport::registers(&Arc::new(Mutex::new(mailbox))),
-        ));
+        orexis_transport_email::create::start(runtime, &Arc::new(Mutex::new(mailbox)))?;
     }
     //  WHAT WATCHES THE AGENT, last, so it is stopped first and writes the last window.
-    parts.extend(watchers);
+    if let Some(history) = history {
+        history.start(runtime);
+    }
+    if let Some(metrics) = metrics {
+        metrics.start(runtime);
+    }
     let _ = (store, agent, &clock, budget, holds, lend);
-    Ok((parts, seen))
+    Ok(seen)
 }

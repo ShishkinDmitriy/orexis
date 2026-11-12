@@ -12,10 +12,10 @@ use serde_json::{Value as Json, json};
 
 use orexis::boot::{Booting, TREE, boot};
 use orexis::clock::{Manual, instant};
-use orexis::events::{Watch, as_of};
+use orexis::events::as_of;
 use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
-use orexis::runtime::{Heard, Pass, Registers, Runtime, Woke};
+use orexis::runtime::{Heard, Pass, Runtime, Woke};
 use orexis::store::{Store, Within, iri, value};
 use orexis_speech::events::{Said, Statement};
 use orexis_speech::prose::{Carrier, PROSE_GRAPH, PROSE_KEPT, Prose, ProseKept, WRITING_ANNOUNCED, carry, kept};
@@ -469,27 +469,24 @@ struct Member {
 }
 
 impl Member {
-    /// The member registering itself, lent: it waits for the agent's words kept or its writing announced, and for what
-    /// it queued.
-    fn registers(member: &Arc<Mutex<Self>>) -> Registers {
+    /// The member starting itself, lent: its wait ends on the agent's words kept or its writing announced, and on
+    /// what it queued.
+    fn start(runtime: &mut Runtime, member: &Arc<Mutex<Self>>) {
         let member = member.clone();
-        Box::new(move |runtime| {
-            let mut starting = runtime.starting("transport/telegram");
-            starting.hears(PROSE_KEPT, 1);
-            starting.hears(WRITING_ANNOUNCED, 1);
-            runtime.register(starting, move |mut seat| async move {
-                while let Some((woke, mut pass)) = seat.next().await {
-                    let mut member = member.lock().unwrap();
-                    let wrote = match woke {
-                        Woke::Event(_, event) => member.heard_event(&event, &mut pass),
-                        Woke::Arrived => Ok(member.queued(&mut pass)),
-                        _ => Ok(Vec::new()),
-                    };
-                    pass.done(wrote);
-                }
-            });
-            Ok(())
-        })
+        let mut wait = runtime.wait("transport/telegram");
+        wait.hears(PROSE_KEPT, 1);
+        wait.hears(WRITING_ANNOUNCED, 1);
+        runtime.spawn(wait, move |mut wait| async move {
+            while let Some((woke, mut pass)) = wait.next().await {
+                let mut member = member.lock().unwrap();
+                let wrote = match woke {
+                    Woke::Event(_, event) => member.heard_event(&event, &mut pass),
+                    Woke::Arrived => Ok(member.queued(&mut pass)),
+                    _ => Ok(Vec::new()),
+                };
+                pass.done(wrote);
+            }
+        });
     }
 
     fn heard_event(&mut self, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, orexis::Error> {
@@ -602,7 +599,11 @@ struct Seeker<'s> {
     member: Arc<Mutex<Member>>,
     bot: Arc<Mutex<Bot>>,
     clock: Arc<Manual>,
+    /// Who a test has hear what each pass's runtime says, on that runtime's watch.
+    hearer: Option<Hearer>,
 }
+
+type Hearer = Arc<dyn Fn(&dyn orexis::events::Event, &oxigraph::model::NamedNode) + Send + Sync>;
 
 impl<'s> Seeker<'s> {
     fn new(store: &'s Store) -> Self {
@@ -620,6 +621,7 @@ impl<'s> Seeker<'s> {
             })),
             bot,
             clock: Arc::new(Manual::at(now())),
+            hearer: None,
         }
     }
 
@@ -672,11 +674,12 @@ impl<'s> Seeker<'s> {
     }
 
     fn pass(&mut self) {
-        let parts = vec![
-            ("translation".to_string(), Translation::registers(&self.part)),
-            ("transport/telegram".to_string(), Member::registers(&self.member)),
-        ];
-        let mut runtime = Runtime::new(self.store, "seeker", self.clock.clone(), parts).unwrap();
+        let mut runtime = Runtime::new(self.store, "seeker", self.clock.clone()).unwrap();
+        if let Some(hearer) = self.hearer.clone() {
+            runtime.watch().connect(move |event, named| hearer(event, named));
+        }
+        orexis_translation::create::start(&mut runtime, &self.part).unwrap();
+        Member::start(&mut runtime, &self.member);
         runtime.drain(now()).unwrap();
     }
 
@@ -1024,19 +1027,17 @@ fn a_question_is_answered_by_as_many_queries_as_it_needs_and_writes_nothing() {
 fn a_conversation_says_what_it_spent_and_what_was_written_called_and_answered_where_it_is_heard() {
     let store = seeker();
     let mut s = Seeker::new(&store);
-    let watch = Watch::default();
     let spent: Arc<Mutex<Vec<Translated>>> = Arc::default();
     let conversed: Arc<Mutex<Vec<Conversed>>> = Arc::default();
     let (a, b) = (spent.clone(), conversed.clone());
-    watch.connect(move |e, _| {
+    s.hearer = Some(Arc::new(move |e, _| {
         if let Some(t) = as_of::<Translated>(e) {
             a.lock().unwrap().push(t.clone());
         }
         if let Some(c) = as_of::<Conversed>(e) {
             b.lock().unwrap().push(c.clone());
         }
-    });
-    s.part.lock().unwrap().translator.watch = watch;
+    }));
     s.model(StandIn::new(vec![viewings()], "Nothing yet.").0);
     s.write("clara_telegram", "anything for the studio?", None, None, None);
     let spent = spent.lock().unwrap();

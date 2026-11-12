@@ -20,7 +20,7 @@ use orexis::namespaces::Namespaces;
 use orexis::ontology::{BELIEF, FORECAST, SELF_GRAPH};
 use orexis::runtime::{Runtime, UNFINISHED};
 use orexis::store::{Store, Within, iri, value};
-use orexis_agent::{Watching, Wiring, assemble_seen, booted};
+use orexis_agent::{Watching, Wiring, assemble_wired, booted};
 use orexis_translation::model::{Answer, Failure, Model, Turn};
 use orexis_transport_mqtt::driver::{Client, Mqtt};
 
@@ -239,11 +239,9 @@ fn terrace(
         ..Wiring::default()
     };
     let clock = Arc::new(Manual::at(noon()));
-    let (parts, seen) = assemble_seen(&t.store, "terrace", clock.clone(), &loaded, None, wiring).unwrap();
-    assert!(parts.iter().any(|(p, _)| p == "translation"));
-    let lent = parts;
-    let mut runtime = Runtime::new(&t.store, "terrace", clock.clone(), lent).unwrap();
-    runtime.watch = seen.watch.clone();
+    let mut runtime = Runtime::new(&t.store, "terrace", clock.clone()).unwrap();
+    assemble_wired(&mut runtime, &loaded, None, wiring).unwrap();
+    assert!(runtime.parts().contains(&"translation"));
     walk(&t, &mut runtime, &clock, &inbox);
     runtime.stop();
 }

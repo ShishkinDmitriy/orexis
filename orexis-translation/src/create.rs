@@ -35,7 +35,7 @@ use orexis::clock::isoformat;
 use orexis::document::Document;
 use orexis::events::{Watch, round6};
 use orexis::ontology::local_of;
-use orexis::runtime::{Heard, Pass, Registers, Runtime, Seat, Starting, Woke};
+use orexis::runtime::{Heard, Pass, Runtime, Wait, Woke};
 use orexis::series::Reader;
 use orexis::store::Store;
 use orexis_speech::create::document_of;
@@ -769,26 +769,20 @@ impl Translation {
     }
 }
 
-impl Translation {
-    /// TRANSLATION REGISTERING ITSELF on a runtime, lent: whoever keeps the part reads it between runs.
-    pub fn registers(part: &Arc<Mutex<Self>>) -> Registers {
-        let part = part.clone();
-        Box::new(move |runtime| register(runtime, part))
-    }
-}
-
-/// Started, it says what it waits for, and hands the runtime its task.
-fn register(runtime: &mut Runtime, part: Arc<Mutex<Translation>>) -> Result<(), Error> {
-    let mut starting = runtime.starting("translation");
-    part.lock().expect("a part nobody poisoned").start(&mut starting)?;
-    runtime.register(starting, move |seat| policy(part, seat));
+/// THE PACKAGE STARTING ITSELF on a runtime: it says what ends its wait and spawns its task. The part is lent, so
+/// whoever keeps it reads it between runs.
+pub fn start(runtime: &mut Runtime, part: &Arc<Mutex<Translation>>) -> Result<(), Error> {
+    let part = part.clone();
+    let mut wait = runtime.wait("translation");
+    part.lock().expect("a part nobody poisoned").start(&mut wait)?;
+    runtime.spawn(wait, move |wait| policy(part, wait));
     Ok(())
 }
 
 /// TRANSLATION'S TASK: it waits for its writing timer, an event beneath one of its triggers, or what a model's thread
 /// handed back, and does what its policy says of each.
-async fn policy(part: Arc<Mutex<Translation>>, mut seat: Seat) {
-    while let Some((woke, mut pass)) = seat.next().await {
+async fn policy(part: Arc<Mutex<Translation>>, mut wait: Wait) {
+    while let Some((woke, mut pass)) = wait.next().await {
         let mut translation = part.lock().expect("a part nobody poisoned");
         let wrote = match woke {
             Woke::Due(tag) => translation.run(tag, &mut pass),
@@ -815,11 +809,11 @@ impl Translation {
         }
     }
 
-    fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
-        starting.says(&self.translator.watch);
-        starting.every(WRITING_S, STILL);
-        starting.hears(TRANSLATING_TRIGGER, TRANSLATE);
-        starting.hears(PHRASING_TRIGGER, PHRASE);
+    fn start(&mut self, wait: &mut Wait) -> Result<(), Error> {
+        self.translator.watch = wait.watch();
+        wait.every(WRITING_S, STILL);
+        wait.hears(TRANSLATING_TRIGGER, TRANSLATE);
+        wait.hears(PHRASING_TRIGGER, PHRASE);
         Ok(())
     }
 

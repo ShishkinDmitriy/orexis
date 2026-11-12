@@ -10,9 +10,10 @@ description: >-
   blocking pool. One thread owning the store gives way to one writing package per graph, each update a transaction of its
   own, and a package that reads across several queries copies first; the order the tests prove is the single-threaded
   runtime's, ticking the parts in turn. Refused - one ordered queue on the mind, the same tasks on the mind's thread alone in
-  production, and a lock around the store. Amended 2026-11-12 - a package registers itself and its task's loop is
-  its own, waiting on its seat; the kernel has no trait a package implements. Refused then - the runtime's loop over
-  a trait of callbacks, and registration found by the linker.
+  production, and a lock around the store. Amended 2026-11-12 - a package starts itself on the runtime and its task's loop
+  is its own; the kernel keeps no order between two packages, and a test's pass tells them the instant in turn. Refused then - the
+  runtime's loop over a trait of callbacks, a seat keeping the queue's order for the tests, and registration found by
+  the linker.
 ---
 
 # What was true (on main at b8805ccf)
@@ -92,18 +93,31 @@ As first built (#1142) the runtime kept the loop: one generic task per part, wri
 trait the package implemented - `start`, `run(job)`, `heard`, `heard_event`, `submitted`, `stop`. A package was
 callbacks, and its policy was polled; that is the one ordered queue this record refused, cut into a queue per part.
 
-**A package registers itself and owns its loop.** Its `create` module's `registers` says what the part waits for and
-hands the runtime a task; the task's loop is in the package, awaiting its seat (`Seat::next`), which answers what woke
-it - a timer due, a graph written, an event said, an arrival - and the `Pass` it is handled in. The kernel has no
-trait a package implements, and whoever assembles an agent collects registrations and nothing else. What the first
-paragraph of *What was decided* says goes stays in part: `Pass` is what a part woken is handed - the instant, the
-agent's life, `wake_at` - and `drain` is how a test ticks the seats; the job queue is gone, a part that queues work
-for itself keeping its own.
+**The runtime is a Tokio runtime and a watch, and a package starts itself on it.** Its `create` module's `start`
+takes a wait from the runtime, says on it what ends it - an event's class, a kind of graph written, a timer - takes
+the runtime's watch as where it says its events, and spawns its task. The task's loop is in the package, awaiting
+`Wait::next`, which answers what woke it and the `Pass` it is handled in. The kernel has no trait a package
+implements and no type a package registers by; whoever assembles an agent builds the runtime and calls each
+package's `start`. What the first paragraph of *What was decided* says goes stays in part: `Pass` is what a part
+woken is handed - the instant, the agent's life, `wake_at` - and `drain` is how a test says the instant; the job
+queue is gone, a part that queues work for itself keeping its own.
 
-**The seat is where the two ways of running meet.** Run free, its wait is a real one, ended by a message or the
-soonest instant the part is due; by passes it answers only what the runtime ticked, and holds back what a part
-queued for itself until every seat was ticked, so the order the tests prove is unchanged and no package knows which
-way it runs.
+**The kernel keeps no order between two packages; a test's pass still tells them the instant in turn.** Run free a
+package is woken by what triggers it and decides once nothing more waits for it. By passes the runtime says the
+instant: a pass tells each wait in turn, in the order the packages started, that it is now, waits until nothing is
+busy, and everything said in the pass is handled at that instant, so a test's clock is read once a pass. A policy
+decides when it is told the instant, and what it hears after that it decides on at the next pass; what a package
+queued for itself in a pass it does at the pass's end, once. Those two rules are what is left of *The order the
+tests prove*, as two branches of a wait and no longer a machine of steps, and the digests stood. Both were tried
+without and are kept because the worlds lean on them. A plan published is walked in the pass that published it only
+because planning started before execution; a plan that fails as it is taken is planned again a pass later, where
+with a policy deciding after every message it was planned again at once, in the present it failed in, for ever -
+which is how an agent running free behaves today (#1145); and a walk done after each thing heard, not once a
+pass, read a test's clock twice more a pass and the allotment's second round fell elsewhere. They go when #1145 is
+fixed and a test sets the clock instead of running passes. One rule of the
+queue's is kept for good, being about one package and not two: what a package says while it handles what woke it
+is heard once it has said what it wrote, its graphs before its events, so a hearer never starts on a sayer's
+half-written work.
 
 **A search runs in place** (`runtime::long`, Tokio's `block_in_place`): its worker hands its other tasks on, so the
 sessions and the other policies keep theirs. `spawn_blocking`, which this record named, needs the search to own what
@@ -113,6 +127,11 @@ Refused:
 
 - **The runtime's loop over a trait of callbacks** - what was built first. It made the kernel the place every
   package's shape was decided, and a part could wait for nothing the trait had no method for.
+- **A seat that kept the queue's order for the tests** - what was built second, the same day: a package registered a
+  boxed closure the runtime called in order, and its task waited on a seat whose steps replayed, by passes, the
+  order one queue ran them in. It cost the kernel a second way of running that no deployed agent ever ran; the
+  sovereign refused it, since the packages are independent and the one thing they share is where they say their
+  events.
 - **Registration found by the linker** (a distributed slice each crate submits to). A part is made from what only
   the assembler holds - a member a test hands, a budget, the model - so something must still name each package once;
   that is the binary's features, as before.

@@ -11,7 +11,7 @@ use orexis::bind::{Value, bind};
 use orexis::document::Document;
 use orexis::events::Watch;
 use orexis::ontology::RECEIVED;
-use orexis::runtime::{Heard as HeardEvent, Pass, Registers, Runtime, Seat, Starting, Woke};
+use orexis::runtime::{Heard as HeardEvent, Pass, Runtime, Wait, Woke};
 use orexis::store::{Store, iri};
 use oxigraph::model::{BlankNode, GraphName, NamedNode, Quad, Triple};
 use std::sync::{Arc, Mutex};
@@ -220,26 +220,20 @@ impl Speech {
     }
 }
 
-impl Speech {
-    /// SPEECH REGISTERING ITSELF on a runtime, lent: whoever keeps the part reads it between runs.
-    pub fn registers(part: &Arc<Mutex<Self>>) -> Registers {
-        let part = part.clone();
-        Box::new(move |runtime| register(runtime, part))
-    }
-}
-
-/// Started, it says what it waits for, and hands the runtime its task.
-fn register(runtime: &mut Runtime, part: Arc<Mutex<Speech>>) -> Result<(), Error> {
-    let mut starting = runtime.starting("speech");
-    part.lock().expect("a part nobody poisoned").start(&mut starting)?;
-    runtime.register(starting, move |seat| policy(part, seat));
+/// THE PACKAGE STARTING ITSELF on a runtime: it says what ends its wait and spawns its task. The part is lent, so
+/// whoever keeps it reads it between runs.
+pub fn start(runtime: &mut Runtime, part: &Arc<Mutex<Speech>>) -> Result<(), Error> {
+    let part = part.clone();
+    let mut wait = runtime.wait("speech");
+    part.lock().expect("a part nobody poisoned").start(&mut wait)?;
+    runtime.spawn(wait, move |wait| policy(part, wait));
     Ok(())
 }
 
 /// SPEECH'S TASK: it waits for a statement written, an event beneath its trigger, or what it extracted at its start,
 /// and does what its policy says of each.
-async fn policy(part: Arc<Mutex<Speech>>, mut seat: Seat) {
-    while let Some((woke, mut pass)) = seat.next().await {
+async fn policy(part: Arc<Mutex<Speech>>, mut wait: Wait) {
+    while let Some((woke, mut pass)) = wait.next().await {
         let mut speech = part.lock().expect("a part nobody poisoned");
         let wrote = match woke {
             Woke::Due(tag) => speech.run(tag, &mut pass),
@@ -266,8 +260,8 @@ impl Speech {
         }
     }
 
-    fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
-        starting.says(&self.speaker.watch);
+    fn start(&mut self, wait: &mut Wait) -> Result<(), Error> {
+        self.speaker.watch = wait.watch();
         if let Some(cat) = self.beliefs.catalogue()? {
             let unextracted: Vec<String> = self
                 .beliefs
@@ -279,8 +273,8 @@ impl Speech {
                 self.pending.extend(extract(&self.beliefs, &statement)?);
             }
         }
-        starting.on(STATEMENT_GRAPH, STATED);
-        starting.hears(SPEAKING_TRIGGER, SPEAK);
+        wait.on(STATEMENT_GRAPH, STATED);
+        wait.hears(SPEAKING_TRIGGER, SPEAK);
         Ok(())
     }
 

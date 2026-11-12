@@ -21,7 +21,7 @@ use std::time::Instant;
 use oxsdatatypes::DateTime;
 
 use orexis::events::{Event, Field, Mark, Number, Point, Watch, counted, round6};
-use orexis::runtime::{PASS_METRIC, Registers};
+use orexis::runtime::{PASS_METRIC, Runtime};
 use orexis::series::Sink;
 
 /// The window's length where the environment says none, and the key it is said under.
@@ -214,17 +214,14 @@ impl Metrics {
 }
 
 impl Metrics {
-    /// METRICS REGISTERING ITSELF on a runtime: a task that waits for the run's end, and writes the last window as it
+    /// METRICS STARTING ITSELF on a runtime: a task that waits for the run's end, and writes the last window as it
     /// stops; what it tallies it hears on the watch.
-    pub fn registers(self) -> Registers {
-        Box::new(move |runtime| {
-            let starting = runtime.starting("metrics");
-            runtime.register(starting, move |mut seat| async move {
-                while seat.next().await.is_some() {}
-                self.window.lock().unwrap().flush();
-            });
-            Ok(())
-        })
+    pub fn start(self, runtime: &mut Runtime) {
+        let wait = runtime.wait("metrics");
+        runtime.spawn(wait, move |mut wait| async move {
+            while wait.next().await.is_some() {}
+            self.window.lock().unwrap().flush();
+        });
     }
 }
 

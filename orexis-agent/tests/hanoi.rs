@@ -138,8 +138,8 @@ fn own(store: &Store) -> Vec<String> {
 fn ran<C: Clock + Clone + 'static>(store: &Store, budget: usize, clock: &C, passes: usize) -> (String, Planning) {
     let planning = Arc::new(Mutex::new(Planning::new(store, "hanoi", Some(budget)).unwrap()));
     let outcome = {
-        let parts = vec![("planning".to_string(), Planning::registers(&planning))];
-        let mut runtime = Runtime::new(store, "hanoi", Arc::new(clock.clone()), parts).unwrap();
+        let mut runtime = Runtime::new(store, "hanoi", Arc::new(clock.clone())).unwrap();
+        orexis_planning::create::start(&mut runtime, &planning).unwrap();
         assert_eq!(runtime.parts(), ["planning"]);
         runtime.run(Some(passes), 0.0).unwrap()
     };
@@ -305,14 +305,11 @@ fn metered(interval_s: f64) -> Vec<Vec<orexis::events::Point>> {
         },
         ..Default::default()
     };
-    let (parts, seen) = orexis_agent::assemble_seen(&store, "hanoi", clock.clone(), &loaded, Some(20), wiring).unwrap();
-    {
-        let lent = parts;
-        let mut runtime = Runtime::new(&store, "hanoi", clock.clone(), lent).unwrap();
-        runtime.watch = seen.watch.clone();
-        assert_eq!(runtime.run(Some(12), 0.0).unwrap(), PLANNED);
-        runtime.stop();
-    }
+    let mut runtime = Runtime::new(&store, "hanoi", clock.clone()).unwrap();
+    orexis_agent::assemble_wired(&mut runtime, &loaded, Some(20), wiring).unwrap();
+    assert_eq!(runtime.run(Some(12), 0.0).unwrap(), PLANNED);
+    runtime.stop();
+    drop(runtime);
     writes
         .lock()
         .unwrap()
@@ -435,15 +432,11 @@ fn a_plan_published_is_kept_in_the_journal_with_its_steps_in_the_words_of_the_do
         },
         ..Default::default()
     };
-    let (parts, seen) =
-        orexis_agent::assemble_seen(&store, "hanoi", clock.clone(), &loaded, Some(400), wiring).unwrap();
-    {
-        let lent = parts;
-        let mut runtime = Runtime::new(&store, "hanoi", clock.clone(), lent).unwrap();
-        runtime.watch = seen.watch.clone();
-        runtime.run(Some(1), 0.0).unwrap();
-        runtime.stop();
-    }
+    let mut runtime = Runtime::new(&store, "hanoi", clock.clone()).unwrap();
+    orexis_agent::assemble_wired(&mut runtime, &loaded, Some(400), wiring).unwrap();
+    runtime.run(Some(1), 0.0).unwrap();
+    runtime.stop();
+    drop(runtime);
     let text = "PREFIX planning: <http://example.org/orexis/planning#> PREFIX execution: <http://example.org/orexis/execution#>
 PREFIX hanoi: <http://example.org/orexis/hanoi#>
 SELECT ?step ?disk ?onto (COUNT(?before) AS ?order) WHERE {
@@ -482,7 +475,8 @@ fn the_history_part_marks_an_event_of_a_class_beneath_incident_and_no_other() {
         },
         ..Default::default()
     };
-    let (_parts, seen) = orexis_agent::assemble_seen(&store, "hanoi", clock.clone(), &loaded, Some(1), wiring).unwrap();
+    let mut runtime = Runtime::new(&store, "hanoi", clock.clone()).unwrap();
+    let seen = orexis_agent::assemble_seen(&mut runtime, &loaded, Some(1), wiring).unwrap();
     let unreachable: &dyn Event = &WantUnreachable {
         want: "http://example.org/test#want".into(),
         desire: None,

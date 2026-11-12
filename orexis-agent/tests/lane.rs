@@ -329,8 +329,7 @@ fn replayed_keeping(
     } else {
         Vec::new()
     };
-    let mut watches = Vec::new();
-    let mut all_parts = Vec::new();
+    let mut runtimes: Vec<Runtime> = Vec::new();
     for (store, name) in stores.iter().zip(names) {
         let loaded = booted(store, tree(), world, name, clock.now()).unwrap();
         let bus = Bus {
@@ -344,35 +343,22 @@ fn replayed_keeping(
             .inboxes
             .insert(name.to_string(), member.inbox.clone());
         let watching = orexis_agent::Watching {
-            journal: journals.get(watches.len()).cloned(),
+            journal: journals.get(runtimes.len()).cloned(),
             ..Default::default()
         };
-        let (parts, seen) = orexis_agent::assemble_seen(
-            store,
-            name,
-            Arc::new(clock.clone()),
-            &loaded,
-            None,
-            Wiring {
-                mqtt: Some(member),
-                watching,
-                ..Wiring::default()
-            },
-        )
-        .unwrap();
-        watches.push(seen.watch.clone());
-        all_parts.push(parts);
+        let mut runtime = Runtime::new(store, name, Arc::new(clock.clone())).unwrap();
+        let wiring = Wiring {
+            mqtt: Some(member),
+            watching,
+            ..Wiring::default()
+        };
+        orexis_agent::assemble_wired(&mut runtime, &loaded, None, wiring).unwrap();
+        runtimes.push(runtime);
     }
     let inboxes: Vec<Inbox> = names
         .iter()
         .map(|n| carried.lock().unwrap().inboxes[*n].clone())
         .collect();
-    let mut runtimes: Vec<Runtime> = Vec::new();
-    for ((parts, store), name) in all_parts.iter_mut().zip(&stores).zip(names) {
-        let mut runtime = Runtime::new(store, name, Arc::new(clock.clone()), std::mem::take(parts)).unwrap();
-        runtime.watch = watches[runtimes.len()].clone();
-        runtimes.push(runtime);
-    }
     for (when, published) in &walk.steps {
         *clock.0.lock().unwrap() = *when;
         for (topic, payload) in published {
