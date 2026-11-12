@@ -16,7 +16,7 @@ the container's `deliver`), subscribe to the agent's
 channels (`open`), turn a message into observations by calling sensing's `received` once per
 sensor it is for (`handle`), and send what a device may be told — a cadence, a sense-now, and the
 payload a step's command answers (`actuate`), say whether it `reaches` a sensor or an actuator,
-and **start itself** (`create::start`, on the runtime): its session's messages handed to its inbox, which
+and **start itself** (`create::start`, as every package does): its session's messages handed to its inbox, which
 wakes its part's task to handle them, what it listens on opened, what it does of its own accord scheduled, and
 the agent held running, since what it senses goes on arriving. A member is a [part](/domain/kernel/part.md) of its own:
 execution's part and speech's, linked to it, hand it a step's command (`command`) and a document

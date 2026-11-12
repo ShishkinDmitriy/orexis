@@ -7,8 +7,8 @@ use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::foresight::{Foresees, Foresight, Placed};
-use orexis::runtime::Runtime;
 use orexis::store::Store;
+use orexis::task::{Handed, Package, Task};
 
 use crate::foresee::foresee;
 
@@ -34,9 +34,11 @@ impl Prediction {
     }
 }
 
-/// PREDICTION STARTING ITSELF on a runtime: a task that waits for nothing but the run's end, since what it offers is
-/// asked for where the grounds are laid.
-pub fn start(runtime: &mut Runtime) {
-    let wait = runtime.wait("prediction");
-    runtime.spawn(wait, |mut wait| async move { while wait.next().await.is_some() {} });
+inventory::submit! { Package { name: "prediction", start } }
+
+/// PREDICTION'S START: its foresight offered, for whoever lays the grounds to take, and no task - what it offers is
+/// asked for where the grounds are laid, and it waits for nothing.
+fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+    handed.outside.hand::<Foresees>(Prediction.offered());
+    Ok(None)
 }

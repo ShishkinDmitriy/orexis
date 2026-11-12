@@ -6,6 +6,8 @@
 //! the closed loop for as long as the commands agree, since a reading answers the command before it; where the
 //! binary sent another, the digest differs and the replay says so.
 
+mod common;
+
 use std::fs;
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -18,27 +20,16 @@ use orexis::Error;
 use orexis::boot::TREE;
 use orexis::clock::{Clock, instant, isoformat};
 use orexis::namespaces::Namespaces;
-use orexis::runtime::Runtime;
 use orexis::store::Store;
-use orexis_agent::{Wiring, assemble_wired, booted};
+use orexis_agent::{Wiring, booted};
 use orexis_transport_mqtt::driver::{Client, Mqtt, dumps};
 
 const GH: &str = "http://example.org/orexis/world/greenhouse#";
 const DIGEST: &str = "7e9516c5e8e233ad";
 
-/// The one timeline, standing where the day stands: the bench's clock is read as often as anything likes.
-#[derive(Clone)]
-struct Standing(Arc<Mutex<DateTime>>);
-
-impl Clock for Standing {
-    fn now(&self) -> DateTime {
-        *self.0.lock().unwrap()
-    }
-}
-
 /// Every command the grower sends, with the instant it was sent.
 struct Bus {
-    clock: Standing,
+    clock: Arc<dyn Clock>,
     commands: Arc<Mutex<Vec<(String, String, Json)>>>,
 }
 
@@ -90,8 +81,8 @@ fn digest(commands: &[(String, String, Json)]) -> String {
     hash.iter().map(|b| format!("{b:02x}")).collect::<String>()[..16].to_string()
 }
 
-#[test]
-fn a_day_in_the_greenhouse_sends_the_commands_the_python_grower_sent() {
+#[tokio::test(start_paused = true)]
+async fn a_day_in_the_greenhouse_sends_the_commands_it_is_pinned_to() {
     let tree = Path::new(TREE);
     let world = tree.join("world/greenhouse");
     let day =
@@ -111,8 +102,8 @@ fn a_day_in_the_greenhouse_sends_the_commands_the_python_grower_sent() {
         .collect();
     assert_eq!(readings.len(), 144, "a reading every ten minutes for a day");
     let store = Store::new(Arc::new(Namespaces::of_tree(tree).unwrap())).unwrap();
-    let clock = Standing(Arc::new(Mutex::new(readings[0].0)));
-    let loaded = booted(&store, tree, &world, "grower", clock.now()).unwrap();
+    let clock: Arc<dyn Clock> = common::clock(readings[0].0);
+    let loaded = booted(&store, tree, &world, "grower", readings[0].0).unwrap();
     let commands = Arc::new(Mutex::new(Vec::new()));
     let bus = Bus {
         clock: clock.clone(),
@@ -120,20 +111,26 @@ fn a_day_in_the_greenhouse_sends_the_commands_the_python_grower_sent() {
     };
     let member = Mqtt::new(&store, &format!("{GH}grower"), vec![(None, Box::new(bus))]);
     let inbox = member.inbox.clone();
-    let mut runtime = Runtime::new(&store, "grower", Arc::new(clock.clone())).unwrap();
     let wiring = Wiring {
         mqtt: Some(member),
         ..Wiring::default()
     };
-    assemble_wired(&mut runtime, &loaded, None, wiring).unwrap();
+    let running = orexis_agent::start(&store, "grower", clock.clone(), &loaded, None, wiring).unwrap();
     for (at, topic, payload) in &readings {
-        *clock.0.lock().unwrap() = *at;
+        //  THE DAY RUNS TO EACH READING'S INSTANT, the grower doing what falls due on the way, and the reading arrives.
+        let ahead = orexis::clock::seconds_of(at.checked_sub(clock.now()).unwrap());
+        common::pass(&running, ahead.max(0.0)).await;
         if !topic.is_empty() {
             inbox.deliver(topic, payload.as_bytes(), Some(*at));
         }
-        runtime.run(Some(1), 0.0).unwrap();
+        common::settled(&running).await;
     }
-    runtime.stop();
+    running.stop().await;
+    if std::env::var("OREXIS_SHOW").is_ok() {
+        for (at, topic, payload) in commands.lock().unwrap().iter() {
+            eprintln!("SENT {at} {topic} {payload}");
+        }
+    }
     let sent = commands.lock().unwrap().clone();
     assert!(
         sent.iter().any(|(_, topic, _)| topic == "actuators/pump/command"),

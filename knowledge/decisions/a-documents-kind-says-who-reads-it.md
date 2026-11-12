@@ -26,7 +26,7 @@ timestamp: 2026-09-27T12:00:00Z
 
 # What was true (measured 2026-09-27, on main at 90e5b00b)
 
-**The boot reads everything.** `documents()` in `orexis/src/runtime.rs` takes the kernel's T-Box, every
+**The boot reads everything.** `documents()` in `orexis/src/boot.rs` takes the kernel's T-Box, every
 package's documents by `rglob`, and every document in the world's directory. Hanoi's mover, which
 senses nothing, predicts nothing and has no bus, reads eleven documents before its imports, and
 four of them are for things it never does: sensing's ontology and its three rules, prediction's
@@ -283,7 +283,7 @@ document and `said` the agent's own — so its premise is its callers' needs, th
 listening and execution's saying.
 
 **Where a premise is stated: the runtime, as an ASK per package** (`PREMISES` in
-`orexis/src/runtime.rs`), over the world's public graphs with the agent bound, T-Box terms only, so
+`orexis/src/boot.rs`), over the world's public graphs with the agent bound, T-Box terms only, so
 rule 1 holds. **Refused: each package's own document stating its premise**, read before the
 package is. It reads as the more self-describing choice, and it fails on speech first: speech's
 premise is in execution's words, which its layout test refuses it as the layer above, and in the
@@ -460,7 +460,7 @@ Every term above is gone, and the files.
 
 **What stands: one module per package.** A `metrics.py` in the package's directory holds everything the package
 reports — its gauges, each a select over a store it owns, and its events, called from its acts —
-and the runtime's own are in `orexis/src/runtime.rs`; adding a metric is editing that module. The
+and the run's own are in `orexis/src/task.rs`; adding a metric is editing that module. The
 dashboards learn what exists by importing the modules, since onboarding may import the agent and
 never the reverse. A package's module is imported where the package is loaded (#824). **A gauge
 still says which store it reads** — the lesson §6's amendment paid for: the imaginaria copy the

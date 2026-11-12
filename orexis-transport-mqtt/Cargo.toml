@@ -11,6 +11,8 @@ license.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
+inventory.workspace = true
+tokio.workspace = true
 orexis = { workspace = true }
 orexis-sensing = { workspace = true }
 orexis-speech = { workspace = true }
@@ -18,7 +20,6 @@ oxigraph.workspace = true
 oxsdatatypes = "0.2"
 serde_json = { version = "1", features = ["preserve_order"] }
 rumqttc = "0.24"
-tokio = { version = "1", features = ["time"] }
 log = "0.4"
 
 [dev-dependencies]

@@ -481,7 +481,14 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A `NOT EXISTS` is evaluated per row from its FIRST pattern, so the bound variable goes first**;
   an act that admits a world it already admits is idempotent by FILLING, not by name.
 - **A prologue goes at the head of a joined update, and the engine refuses one after `;`.**
-- **A read of the clock is a tick in a test** — a pass hands its own instant down.
+- **A world's test runs on Tokio's paused time, and a core's on a clock it sets** — the clocks that moved a second
+  at every read are gone, with the outcomes that depended on how often an agent asked the hour
+  (a-package-is-a-task-that-awaits-its-events).
+- **A percept has lapsed at the instant it ends, and a wait until now is no wait** — a period is half-open, so the
+  instant a reading falls due it is due; asked `end < now` beside `end >= now`, the member woke itself at that
+  instant for ever, which only a clock that never stands exactly there had hidden.
+- **A search the budget cut short is continued whatever else is walking** — with a plan walked beside it nothing
+  else asked for the next planning, and the want stood unplanned until something was heard (#1147).
 
 ### Execution
 
@@ -990,7 +997,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
    outside planning the one name imported is `Planner` — and each package's layout test holds it to
    that. Which packages an agent runs is the [roles](knowledge/domain/kernel/role.md) its self graph
    says it plays, each of a class the package whose ontology declares it serves.
-   `orexis/src/runtime.rs` is the container that assembles them all. **A domain is documents and no
+   Nothing assembles them: each registers itself, and `orexis/src/task.rs` is what one is handed. **A domain is documents and no
    code an agent runs**: `domains/<name>/` holds a vocabulary, its actions and its rules, and a world imports it
    with `owl:imports`; its one module of code, `ui/index.tsx` with the selects beside it, is how it is drawn in the history view, which no agent loads
    (a-replay-is-the-history-drawn-by-the-package-that-decides-it). Adding a way of acting is a node in a domain's `actions.ttl` — a
@@ -1034,22 +1041,24 @@ it takes a different path through translation — sensing for an instrument's by
 peer's document. See
 [the-agent-stack-is-a-second-axis](knowledge/decisions/the-agent-stack-is-a-second-axis.md).
 
-**A package starts itself, and each part is a task whose loop is the package's own.** A part is made of every
-package the agent's roles load that has a `create` module, and the package starts it on the runtime (`create::start`), spawning its task; the runtime is a Tokio runtime and the watch the packages say their events to, and knows no package and no word of what one does:
+**A package is one task, and nothing assembles it.** Each package the agent's roles load is one async function: it
+makes its core object - the planner, the executor, the deliberator - and loops, awaiting the events it hears beneath
+its triggers, a kind of graph written, an arrival or the clock, calling its core and saying what happened:
 belief revises what is written, planning plans where its policy says so and publishes, execution adopts and walks,
-a transport listens or polls, sensing asks after what has fallen due, prediction answers an
-observation — each through the timers it asks for, the graphs it hears written and the events it hears beneath its
-triggers, no part linked to another (a-package-starts-itself, packages-meet-by-events-policies-and-activities). **The agent's body is a
-multi-threaded Tokio runtime, each part a task** awaiting its wait (`Wait::next`) for an event beneath its trigger,
-a graph it hears, an arrival or its due instant (`wake_at`), polling nothing, and a graph has one writing package;
-**the kernel keeps no order between two packages, each woken by what triggers it**, its policy deciding once nothing more waits
-for it; a test runs the same tasks on one thread and says the instant, a pass telling each wait in turn that it is
-now, everything said in it handled at that instant, a policy deciding when it is told and what a package queued for itself done at the pass's end, which is all that walks a plan
-in the pass that published it; the run ends when nothing holds the agent, and a wait that
-answers nothing stops its part (the-agent-is-a-runtime-of-tasks, #1119 step 8). A part is lent
-to its task, so a test that keeps one reads it between runs; **the kernel has no trait a package implements and no type a package registers by, and whoever assembles an agent builds the runtime and has each package start itself on it**. A search is bounded by a budget in the
-unit it spends and continued by the next pass. The executor's two doors, `tick` and `drain`, are
-what its walk and a test call.
+a transport listens or polls, sensing asks after what has fallen due, prediction offers its foresight - no package
+linked to another (a-package-starts-itself, packages-meet-by-events-policies-and-activities). **It registers itself by
+the linker** (`orexis::task::Package`), and the binary starts each one its roles load, naming none beyond linking its
+crate. **What a task is handed is plain** (`orexis::task::Handed`): the store, the clock, THE EVENTS - where every
+package says what happened and subscribes to what it hears, the one thing packages share - and what reaches outside,
+the connectors a deployment makes from its environment and a test hands in. There is no runtime object, no pass and
+no order between two packages; what a task says while it handles what woke it is heard when it next waits, its
+graphs before its events, and a graph has one writing package. The run ends when nothing holds the agent
+(a-package-is-a-task-that-awaits-its-events, the-agent-is-a-runtime-of-tasks, #1119 step 8). **A unit test holds a
+package's core and never an async function; a world's test boots the agent on Tokio's paused time**, which runs
+ahead whenever every task is idle, feeds its bus and awaits what the scenario ends in - so everything an agent does
+of one thing happens at one instant, and a comparison that is wrong at exactly an instant is found
+(`orexis-agent/tests/common/mod.rs`). A search is bounded by a budget in the unit it spends and continued at the
+next instant. The executor's two doors, `tick` and `drain`, are what its walk and a test call.
 
 **One principle explains most of the shapes above: control the derivative, not the value.**
 Nothing here dictates an act — a cadence not a reading, a range not an aim, what is available

@@ -14,9 +14,9 @@ use orexis::Error;
 use orexis::events::{RDF_TYPE, Watch};
 use orexis::journal::Journal;
 use orexis::ontology::BELIEF;
-use orexis::runtime::Runtime;
 use orexis::series::Sink;
 use orexis::store::{Store, Within, iri};
+use orexis::task::{Handed, Package, Task};
 
 /// What the vocabulary says is an incident: every class beneath it, off the closure.
 const INCIDENTS_Q: &str = "SELECT DISTINCT ?c WHERE { ?c rdfs:subClassOf orexis:Incident }";
@@ -67,13 +67,30 @@ impl History {
     }
 }
 
-impl History {
-    /// HISTORY STARTING ITSELF on a runtime: a task that waits for nothing but the run's end, since what it keeps it
-    /// hears on the watch.
-    pub fn start(self, runtime: &mut Runtime) {
-        let wait = runtime.wait("history");
-        runtime.spawn(wait, |mut wait| async move { while wait.next().await.is_some() {} });
+/// What history keeps into, handed outside by whoever runs the agent: the history sink and the journal, where the
+/// deployment keeps either.
+#[derive(Default)]
+pub struct Keeps {
+    pub sink: Option<Sink>,
+    pub journal: Option<Arc<Journal>>,
+}
+
+inventory::submit! { Package { name: "history", start } }
+
+/// HISTORY'S START: where it is handed a sink or a journal it hears the watch from now on, and has no task - what
+/// it keeps it keeps as it is said.
+fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+    if let Some(keeps) = handed.outside.take::<Keeps>()
+        && (keeps.sink.is_some() || keeps.journal.is_some())
+    {
+        History::new(
+            handed.events.watch(),
+            keeps.sink,
+            keeps.journal,
+            incidents(&handed.store)?,
+        );
     }
+    Ok(None)
 }
 
 #[cfg(test)]

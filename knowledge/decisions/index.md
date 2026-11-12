@@ -126,6 +126,7 @@ The agent's body: parts as tasks, the events they hear, and what the store carri
 
 * [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md) - A plan is published once and adopted by reference; a package owns its signals; the mind starts itself; an intention may end early.
 * [packages-meet-by-events-policies-and-activities](/decisions/packages-meet-by-events-policies-and-activities.md) - An event is an instant; a policy hears its package's trigger and starts an activity, whose start and end are events. Links between parts go.
+* [a-package-is-a-task-that-awaits-its-events](/decisions/a-package-is-a-task-that-awaits-its-events.md) - A package is one async function awaiting its events and the clock, registered by the linker; tests await an event on paused time.
 * [the-agent-is-a-runtime-of-tasks](/decisions/the-agent-is-a-runtime-of-tasks.md) - The agent's body is a Tokio runtime; each package's policy a task; a graph has one writing package; tests run single-threaded.
 * [a-package-starts-itself](/decisions/a-package-starts-itself.md) - The runtime is a lifecycle container: each package starts itself by jobs, kinds heard and timers; one thread runs them; packages meet at the store.
 * [metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md) - Every signal carries an event its package declares, marking what is reported; metrics and history parts hear every signal, and nothing imports them.

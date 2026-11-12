@@ -12,6 +12,8 @@ license.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
+inventory.workspace = true
+tokio.workspace = true
 orexis = { workspace = true }
 orexis-speech = { workspace = true }
 oxigraph.workspace = true
@@ -24,4 +26,5 @@ ureq = "2"
 log = "0.4"
 
 [dev-dependencies]
+tokio = { workspace = true, features = ["test-util"] }
 orexis = { workspace = true, features = ["snapshots"] }

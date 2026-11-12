@@ -14,17 +14,16 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::ontology::SELF_GRAPH;
 use orexis_belief::ontology::{CHANGED, REVISED, REVISED_SOURCE};
-use std::sync::{Arc, Mutex};
 
-use orexis::runtime::{Heard, MET, PLANNED, Pass, Runtime, UNREACHABLE, Wait, Woke, long};
+use orexis::foresight::Foresees;
 use orexis::store::{Store, Within, iri};
+use orexis::task::{Handed, Heard, Hears, MET, PLANNED, Package, Task, Turn, UNREACHABLE, Woke, long};
 
 use crate::Planner;
 use crate::admit::local_of;
 use crate::events::HeadChecked;
 use crate::ontology::{PLANNING_ACTIVITY, PLANNING_TRIGGER, REOPENS};
 
-const PLAN: usize = 0;
 const REOPEN: usize = 1;
 const CHECK: usize = 2;
 
@@ -56,10 +55,14 @@ pub struct Planning {
     held: bool,
 }
 
-/// How the intention `$intention` ended, in execution's words.
+/// How the intention `$intention` ended where none of its steps was taken, in execution's words: it ended before the
+/// agent acted, so neither the world nor the hour is other than the plan was found in. One that failed after a step
+/// was taken - a landing waited out - is planned again, since time has passed.
 const OUTCOME_Q: &str = "
 SELECT ?o WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a execution:IntentionGraph }
-                  GRAPH ?g { $intention execution:outcome ?o } }";
+                  GRAPH ?g { $intention execution:outcome ?o .
+                             FILTER NOT EXISTS { $intention execution:step ?step .
+                                                 ?act execution:of ?step ; execution:taken true } } }";
 
 /// The graphs of `$revised` that are not the agent's own record of what it did: a belief that came to it.
 const NEWS_Q: &str = "
@@ -82,13 +85,13 @@ impl Planning {
     }
 
     /// Hold the agent, or let it go and say how the wanting ended.
-    fn keep(&mut self, pass: &mut Pass<'_>) -> Result<(), Error> {
+    fn keep(&mut self, pass: &mut Turn<'_>) -> Result<(), Error> {
         let who = "planning";
         let planner = &self.planner;
         let standing = planner.standing(pass.now)?;
         let walking = planner.walking()?;
         let desire = planner.holds_a_desire()?;
-        let settle = |pass: &mut Pass<'_>, outcome: &str| {
+        let settle = |pass: &mut Turn<'_>, outcome: &str| {
             if desire {
                 pass.hold(who);
             } else {
@@ -99,19 +102,21 @@ impl Planning {
             settle(pass, MET);
             return Ok(());
         }
+        let unplanned: Vec<&String> = standing.iter().filter(|w| !walking.contains(*w)).collect();
+        //  A SEARCH THE BUDGET CUT SHORT IS CONTINUED AT ONCE, whatever else is walking: with a plan walked beside
+        //  it, nothing else would ask for the next planning, and the want stood unplanned until something was heard.
+        if !unplanned.is_empty() && planner.exhausted()? {
+            self.due = true;
+            pass.again();
+            pass.hold(who);
+            return Ok(());
+        }
         if !walking.is_empty() && self.walked {
             pass.hold(who);
             return Ok(());
         }
-        let unplanned: Vec<&String> = standing.iter().filter(|w| !walking.contains(*w)).collect();
         if unplanned.is_empty() {
             settle(pass, PLANNED);
-            return Ok(());
-        }
-        if planner.exhausted()? {
-            self.due = true;
-            pass.again();
-            pass.hold(who);
             return Ok(());
         }
         log::error!(
@@ -141,36 +146,58 @@ fn walks(beliefs: &Store) -> Result<bool, Error> {
     Ok(false)
 }
 
-/// PLANNING STARTING ITSELF on a runtime: its wait ends on its trigger's events and a head asked, its policy decides
-/// after whatever it heard, and its task is spawned. The part is lent, so whoever keeps it reads it between runs.
-pub fn start(runtime: &mut Runtime, part: &Arc<Mutex<Planning>>) -> Result<(), Error> {
-    let part = part.clone();
-    let mut wait = runtime.wait("planning");
-    wait.every(0.0, PLAN);
-    wait.hears(PLANNING_TRIGGER, REOPEN);
-    wait.hears(HEAD_ASKED, CHECK);
-    part.lock().expect("a part nobody poisoned").planner.watch = wait.watch();
-    runtime.spawn(wait, move |wait| policy(part, wait));
-    Ok(())
+inventory::submit! { Package { name: "planning", start } }
+
+/// How many worlds planning's search may weigh a pass, where whoever runs the agent sizes it: none reads the agent's
+/// stance.
+pub struct Budget(pub usize);
+
+/// PLANNING'S START: its planner made, and its task, which hears its trigger's events and a head asked.
+fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+    let budget = handed.outside.take::<Budget>().map(|b| b.0);
+    let mut planning = Planning::new(&handed.store, &handed.id, budget)?;
+    planning.planner.watch = handed.events.watch().clone();
+    let mut hears = handed.events.hears();
+    hears.event(PLANNING_TRIGGER, REOPEN);
+    hears.event(HEAD_ASKED, CHECK);
+    Ok(Some(Box::pin(task(handed.clone(), planning, hears))))
 }
 
-/// PLANNING'S TASK: it waits for an event beneath its trigger or the instant it is next due, and decides.
-async fn policy(part: Arc<Mutex<Planning>>, mut wait: Wait) {
-    while let Some((woke, mut pass)) = wait.next().await {
-        let mut planning = part.lock().expect("a part nobody poisoned");
-        let wrote = match woke {
-            Woke::Due(_) => planning.plan(&mut pass),
-            Woke::Event(tag, event) => planning.heard_event(tag, &event, &mut pass),
-            _ => Ok(Vec::new()),
+/// PLANNING'S TASK: it decides as the run begins, then waits for an event beneath its trigger or the instant it is
+/// next due, and decides once nothing more waits to be heard.
+async fn task(handed: Handed, mut planning: Planning, mut hears: Hears) -> Result<(), Error> {
+    //  PREDICTION'S FORESIGHT, where the agent plays a predictor: offered at its start, taken as the run begins.
+    planning.planner.foresee = handed.outside.take::<Foresees>();
+    let mut heard = None;
+    let mut due = None;
+    loop {
+        let mut turn = handed.turn();
+        if let Some(Woke::Event(tag, event)) = heard.take() {
+            let wrote = planning.heard_event(tag, &event, &mut turn);
+            turn.done(wrote)?;
+        }
+        if hears.is_empty() {
+            let wrote = planning.plan(&mut turn);
+            turn.done(wrote)?;
+            due = turn.next();
+        }
+        heard = tokio::select! {
+            biased;
+            _ = handed.stopped() => break,
+            woke = hears.next() => match woke {
+                Some(woke) => Some(woke),
+                None => break,
+            },
+            _ = handed.sleep_until(due) => None,
         };
-        pass.done(wrote);
     }
+    Ok(())
 }
 
 impl Planning {
     /// What planning's policy does of a trigger: plan at the pass, keeping the walking wants it names to search
     /// again; and ask for the pass at once where it names any.
-    fn heard_event(&mut self, job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn heard_event(&mut self, job: usize, event: &Heard, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         //  A HEAD ASKED IS CHECKED against the present at the instant it is taken, and answered: no planning, and
         //  no trigger of one.
         if job == CHECK {
@@ -202,7 +229,6 @@ impl Planning {
         }
         if !wants.is_empty() {
             self.planner.reopen(wants);
-            pass.again();
         }
         Ok(Vec::new())
     }
@@ -233,7 +259,7 @@ impl Planning {
         Ok(!self.beliefs.rows(&text, &[])?.is_empty())
     }
 
-    /// Whether `event` says an intention ended `failed`, read off the intention's own row.
+    /// Whether `event` says an intention ended `failed` with no step of it taken, read off the intention's own rows.
     fn failed(&self, event: &Heard) -> Result<bool, Error> {
         let Some(intention) = event.named(INTENTION) else {
             return Ok(false);
@@ -250,7 +276,7 @@ impl Planning {
     /// it laid, or it is due whatever was heard; and otherwise nothing, the agent held or let go as it last was. A
     /// PLAN THAT FAILED IN THE PRESENT IT WAS FOUND IN IS NOT PLANNED AGAIN UNTIL NEWS IS HEARD (#1145): the search
     /// would find it again, and a step that fails as it is taken would be planned, taken and failed for ever.
-    fn plan(&mut self, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn plan(&mut self, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         let reached = self.next.is_some_and(|next| next <= pass.now);
         let again = !self.triggers.is_empty() && !self.held;
         if !self.due && !reached && !again {

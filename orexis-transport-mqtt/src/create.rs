@@ -7,10 +7,9 @@
 //! to that listens on the bus. The executor's commands reach the member through whoever links the parts, sharing it.
 
 use std::collections::VecDeque;
-use std::sync::{Arc, Mutex};
 
 use orexis::Error;
-use orexis::runtime::{Heard, Pass, Runtime, Wait, Woke};
+use orexis::task::{Arrived, Every, Handed, Heard, Hears, Package, Task, Turn, Woke, sooner};
 use orexis_speech::prose::{ProseKept, carry, kept};
 
 use orexis_speech::create::document_of;
@@ -99,35 +98,76 @@ impl Transport {
     }
 }
 
-/// THE PACKAGE STARTING ITSELF on a runtime: it says what ends its wait and spawns its task. The part is lent, so
-/// whoever keeps it reads it between runs.
-pub fn start(runtime: &mut Runtime, part: &Arc<Mutex<Transport>>) -> Result<(), Error> {
-    let part = part.clone();
-    let mut wait = runtime.wait("transport/mqtt");
-    part.lock().expect("a part nobody poisoned").start(&mut wait)?;
-    runtime.spawn(wait, move |wait| policy(part, wait));
-    Ok(())
+inventory::submit! { Package { name: "transport/mqtt", start } }
+
+/// THE PACKAGE'S START: its part made and started - what it hears, what it does every so often - and its task.
+fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+    let me = orexis::boot::selves(&handed.store)?
+        .into_iter()
+        .next()
+        .unwrap_or_default();
+    let member = match handed.outside.take::<crate::driver::Mqtt>() {
+        Some(member) => member,
+        None => crate::driver::connect(&handed.store, &me, &|name| std::env::var(name).ok())?,
+    };
+    let mut part = Transport::new(member);
+    let mut hears = handed.events.hears();
+    let arrived = handed.arrived();
+    let mut timers = Vec::new();
+    part.start(handed, &mut hears, &arrived, &mut timers)?;
+    Ok(Some(Box::pin(task(handed.clone(), part, hears, arrived, timers))))
 }
 
-/// THE MQTT MEMBER'S TASK: it waits for the pass, an event beneath one of its triggers, or a message a session
-/// received, and does what its policy says of each, until the run is over and it stops.
-async fn policy(part: Arc<Mutex<Transport>>, mut wait: Wait) {
-    while let Some((woke, mut pass)) = wait.next().await {
-        let mut transport = part.lock().expect("a part nobody poisoned");
-        let wrote = match woke {
-            Woke::Due(tag) => transport.run(tag, &mut pass),
-            Woke::Event(tag, event) => transport.heard_event(tag, &event, &mut pass),
-            Woke::Arrived => transport.queued(&mut pass),
-            _ => Ok(Vec::new()),
+/// THE PACKAGE'S TASK: it decides as the run begins, then waits for what it hears, an arrival or the instant it is
+/// next due; once nothing more waits to be heard it does what it queued for itself and what has fallen due.
+async fn task(
+    handed: Handed,
+    mut part: Transport,
+    mut hears: Hears,
+    mut arrived: Arrived,
+    mut timers: Vec<(Every, usize)>,
+) -> Result<(), Error> {
+    let mut heard = None;
+    let mut due = None;
+    loop {
+        let mut turn = handed.turn();
+        if let Some(Woke::Event(tag, event)) = heard.take() {
+            let wrote = part.heard_event(tag, &event, &mut turn);
+            turn.done(wrote)?;
+        }
+        if hears.is_empty() {
+            let wrote = part.queued(&mut turn);
+            turn.done(wrote)?;
+            for (every, tag) in &mut timers {
+                if every.due(turn.now) {
+                    let wrote = part.run(*tag, &mut turn);
+                    turn.done(wrote)?;
+                    let wrote = part.queued(&mut turn);
+                    turn.done(wrote)?;
+                }
+            }
+            due = timers
+                .iter()
+                .fold(turn.next(), |soonest, (every, _)| sooner(soonest, every.at()));
+        }
+        heard = tokio::select! {
+            biased;
+            _ = handed.stopped() => break,
+            woke = hears.next() => match woke {
+                Some(woke) => Some(woke),
+                None => break,
+            },
+            _ = arrived.wait() => None,
+            _ = handed.sleep_until(due) => None,
         };
-        pass.done(wrote);
     }
-    part.lock().expect("a part nobody poisoned").stop();
+    part.stop();
+    Ok(())
 }
 
 impl Transport {
     /// What it queued for itself, each in turn and what each wrote told, until nothing is left.
-    fn queued(&mut self, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn queued(&mut self, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         loop {
             let jobs = self.submitted();
             if jobs.is_empty() {
@@ -140,28 +180,35 @@ impl Transport {
         }
     }
 
-    fn start(&mut self, wait: &mut Wait) -> Result<(), Error> {
+    fn start(
+        &mut self,
+        handed: &Handed,
+        hears: &mut Hears,
+        arrived: &Arrived,
+        timers: &mut Vec<(Every, usize)>,
+    ) -> Result<(), Error> {
+        let _ = (&handed, &hears, &arrived, &timers);
         //  THE SESSIONS LISTEN BEFORE THE MEMBER SUBSCRIBES: a subscription waits in a queue only they empty.
         let listening = {
             let member = &mut self.member;
-            member.inbox.wakes(wait.wake());
+            member.inbox.wakes(arrived.wake());
             std::mem::take(&mut member.listening)
         };
         for session in listening {
-            wait.task(session)?;
+            tokio::spawn(session);
         }
         self.member.open()?;
-        wait.every(0.0, NUDGE);
-        wait.hears(CARRYING_TRIGGER, CARRY);
-        wait.hears(TELLING_TRIGGER, TELL);
-        wait.hears(ACTUATING_TRIGGER, ACTUATE);
+        timers.push((Every::new(0.0), NUDGE));
+        hears.event(CARRYING_TRIGGER, CARRY);
+        hears.event(TELLING_TRIGGER, TELL);
+        hears.event(ACTUATING_TRIGGER, ACTUATE);
         Ok(())
     }
 
     /// What the member's policy does of its triggers: the agent's own words carried where they are on a channel it
     /// carries, and a document the agent said told to each agent it is to that listens on the bus, read back from the
     /// store as it was said.
-    fn heard_event(&mut self, job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn heard_event(&mut self, job: usize, event: &Heard, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         let store = self.member.beliefs().clone();
         match job {
             TELL => {
@@ -196,7 +243,7 @@ impl Transport {
         Ok(Vec::new())
     }
 
-    fn run(&mut self, job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn run(&mut self, job: usize, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         match job {
             NUDGE => {
                 //  A MEMBER KEEPS THE AGENT RUNNING: what it senses goes on arriving whatever is wanted.

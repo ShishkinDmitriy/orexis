@@ -3,17 +3,19 @@
 //! each lands, and the run ending as the Python one does — and, as `agent/metrics/tests/test_window.py` holds it, a
 //! run whose metrics are written reads the agent's clock no more than one whose are not.
 
+mod common;
+
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
-use oxsdatatypes::{DateTime, DayTimeDuration};
+use oxsdatatypes::DateTime;
 
 use orexis::boot::TREE;
 use orexis::clock::{Clock, instant};
 use orexis::namespaces::Namespaces;
-use orexis::runtime::{MET, Runtime, UNFINISHED};
 use orexis::store::{Store, iri, value};
-use orexis_agent::{assemble, booted};
+use orexis::task::{MET, UNFINISHED};
+use orexis_agent::booted;
 
 fn tree() -> &'static Path {
     Path::new(TREE)
@@ -27,25 +29,13 @@ fn now() -> DateTime {
     instant("2026-01-01T12:00:00+00:00").unwrap()
 }
 
-/// A timeline that moves on a second at every read, as a running agent's does: a drive lands half a minute after it
-/// is taken, and held at one instant the run would never reach it.
-struct Ticking(Mutex<DateTime>);
-
-impl Clock for Ticking {
-    fn now(&self) -> DateTime {
-        let mut at = self.0.lock().unwrap();
-        *at = at.checked_add_day_time_duration(DayTimeDuration::new(1)).unwrap();
-        *at
-    }
-}
-
-/// Boot `agent` of `world` and run it until nothing holds it or `passes` are spent: the outcome.
-fn run(store: &Store, world: &Path, agent: &str, clock: &Arc<Ticking>, passes: usize, budget: Option<usize>) -> String {
-    let loaded = booted(store, tree(), world, agent, clock.now()).unwrap();
-    let mut runtime = Runtime::new(store, agent, clock.clone()).unwrap();
-    assemble(&mut runtime, &loaded, budget).unwrap();
-    let outcome = runtime.run(Some(passes), 0.0).unwrap();
-    runtime.stop();
+/// Boot `agent` of `world` and run it until nothing holds it or `within` seconds of its time are spent: the outcome.
+async fn run(store: &Store, world: &Path, agent: &str, within: u64, budget: Option<usize>) -> String {
+    let loaded = booted(store, tree(), world, agent, now()).unwrap();
+    let wiring = orexis_agent::Wiring::default();
+    let running = orexis_agent::start(store, agent, common::clock(now()), &loaded, budget, wiring).unwrap();
+    let outcome = common::outcome(&running, within).await;
+    running.stop().await;
     outcome
 }
 
@@ -90,10 +80,10 @@ fn stands(store: &Store) -> Vec<(String, i64, i64)> {
         .collect()
 }
 
-#[test]
-fn the_parcel_is_delivered_in_eight_steps_and_the_runtime_stops() {
-    let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(now()))));
-    assert_eq!(run(&store, &world("courier"), "courier", &clock, 400, None), MET);
+#[tokio::test(start_paused = true)]
+async fn the_parcel_is_delivered_in_eight_steps_and_the_runtime_stops() {
+    let store = store();
+    assert_eq!(run(&store, &world("courier"), "courier", 3600, None).await, MET);
     assert_eq!(
         count(&store, ACTS_Q),
         8,
@@ -107,18 +97,18 @@ fn the_parcel_is_delivered_in_eight_steps_and_the_runtime_stops() {
     assert_eq!(count(&store, WANTS_Q), 0, "the want was reached and withdrawn");
 }
 
-#[test]
-fn a_budget_that_cuts_the_search_short_is_finished_by_the_passes_after() {
-    let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(now()))));
-    assert_eq!(run(&store, &world("courier"), "courier", &clock, 200, Some(16)), MET);
+#[tokio::test(start_paused = true)]
+async fn a_budget_that_cuts_the_search_short_is_finished_by_the_passes_after() {
+    let store = store();
+    assert_eq!(run(&store, &world("courier"), "courier", 3600, Some(16)).await, MET);
     assert_eq!(count(&store, ACTS_Q), 8);
 }
 
-#[test]
-fn walked_the_drivers_one_plan_moves_both_parcels_and_leaves_the_driver_aboard_van_b() {
-    let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(now()))));
+#[tokio::test(start_paused = true)]
+async fn walked_the_drivers_one_plan_moves_both_parcels_and_leaves_the_driver_aboard_van_b() {
+    let store = store();
     assert_eq!(
-        run(&store, &world("driver"), "dispatcher", &clock, 120, None),
+        run(&store, &world("driver"), "dispatcher", 3600, None).await,
         UNFINISHED,
         "a desire holds the agent"
     );
@@ -152,19 +142,17 @@ fn walked_the_drivers_one_plan_moves_both_parcels_and_leaves_the_driver_aboard_v
 /// The courier at 128 candidates for forty passes on a clock that ticks per read, enough for a drive to land now that an idle
 /// pass reads it twice, with a metrics window written every
 /// pass or none: how often the clock was read, how many points were written, how the run ended, and what was measured.
-fn metered_courier(watched: bool) -> (usize, usize, String, std::collections::BTreeSet<String>) {
-    struct Counting(Mutex<(DateTime, usize)>);
+async fn metered_courier(watched: bool) -> (usize, usize, String, std::collections::BTreeSet<String>) {
+    struct Counting(orexis::clock::Elapsing, Mutex<usize>);
     impl Clock for Counting {
         fn now(&self) -> DateTime {
-            let mut at = self.0.lock().unwrap();
-            at.1 += 1;
-            at.0 = at.0.checked_add_day_time_duration(DayTimeDuration::new(1)).unwrap();
-            at.0
+            *self.1.lock().unwrap() += 1;
+            self.0.now()
         }
     }
     let store = store();
-    let clock = Arc::new(Counting(Mutex::new((now(), 0))));
-    let loaded = booted(&store, tree(), &world("courier"), "courier", clock.now()).unwrap();
+    let clock = Arc::new(Counting(orexis::clock::Elapsing::from(now()), Mutex::new(0)));
+    let loaded = booted(&store, tree(), &world("courier"), "courier", now()).unwrap();
     let written: std::sync::Arc<std::sync::Mutex<Vec<orexis::events::Point>>> = Default::default();
     let kept = written.clone();
     let mut wiring = orexis_agent::Wiring::default();
@@ -179,20 +167,18 @@ fn metered_courier(watched: bool) -> (usize, usize, String, std::collections::BT
         );
         wiring.watching.metrics = Some(orexis_metrics::Window::new(sink, 0.0, Some("courier"), Some("courier")));
     }
-    let mut runtime = Runtime::new(&store, "courier", clock.clone()).unwrap();
-    orexis_agent::assemble_wired(&mut runtime, &loaded, Some(128), wiring).unwrap();
-    let outcome = runtime.run(Some(40), 0.0).unwrap();
-    runtime.stop();
-    drop(runtime);
-    let reads = clock.0.lock().unwrap().1;
+    let running = orexis_agent::start(&store, "courier", clock.clone(), &loaded, Some(128), wiring).unwrap();
+    let outcome = common::outcome(&running, 3600).await;
+    running.stop().await;
+    let reads = *clock.1.lock().unwrap();
     let measured = written.lock().unwrap().iter().map(|p| p.measurement.clone()).collect();
     let count = written.lock().unwrap().len();
     (reads, count, outcome, measured)
 }
 
-#[test]
-fn a_timing_never_reads_the_agents_clock() {
-    let (without, with) = (metered_courier(false), metered_courier(true));
+#[tokio::test(start_paused = true)]
+async fn a_timing_never_reads_the_agents_clock() {
+    let (without, with) = (metered_courier(false).await, metered_courier(true).await);
     assert!(
         with.1 > 0 && without.1 == 0,
         "the sink was loaded for one run and not the other"

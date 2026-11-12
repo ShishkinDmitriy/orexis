@@ -5,6 +5,8 @@
 //! everything stands at the end: a replay is the closed loop for as long as the drives agree, since the fix answers
 //! the drive before it, and where the binary drove elsewhere the drives differ and the replay says so.
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -18,9 +20,8 @@ use orexis::boot::TREE;
 use orexis::clock::{Clock, instant, isoformat};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
-use orexis::runtime::Runtime;
 use orexis::store::{Store, Within, iri, value};
-use orexis_agent::{Wiring, assemble_seen, booted};
+use orexis_agent::{Wiring, booted};
 use orexis_transport_mqtt::driver::{Client, Mqtt};
 
 const L: &str = "http://example.org/orexis/world/layby#";
@@ -29,21 +30,12 @@ const L: &str = "http://example.org/orexis/world/layby#";
 const AT_Q: &str = "PREFIX courier: <http://example.org/orexis/courier#>
 SELECT ?s ?x ?y WHERE { ?s courier:x ?x ; courier:y ?y . FILTER(isIRI(?s)) FILTER NOT EXISTS { ?p courier:destination ?s } }";
 
-#[derive(Clone)]
-struct Standing(Arc<Mutex<DateTime>>);
-
-impl Clock for Standing {
-    fn now(&self) -> DateTime {
-        *self.0.lock().unwrap()
-    }
-}
-
 /// Each drive sent: the time of day it was sent at, and the cell it was to.
 type Drives = Vec<(String, i64, i64)>;
 
 /// Every drive the courier sends, with the instant it was sent.
 struct Bus {
-    clock: Standing,
+    clock: Arc<dyn Clock>,
     drives: Arc<Mutex<Vec<(String, i64, i64)>>>,
 }
 
@@ -119,11 +111,11 @@ fn at(store: &Store) -> BTreeMap<String, (i64, i64)> {
 }
 
 /// Walk the courier of `world` through `fixture`'s steps: the drives it sent and where it believes everything stands.
-fn walk(world: &Path, fixture: &str) -> (Drives, BTreeMap<String, (i64, i64)>) {
+async fn walk(world: &Path, fixture: &str) -> (Drives, BTreeMap<String, (i64, i64)>) {
     let steps = steps(fixture);
     let store = Store::new(Arc::new(Namespaces::of_tree(tree()).unwrap())).unwrap();
-    let clock = Standing(Arc::new(Mutex::new(steps[0].0)));
-    let loaded = booted(&store, tree(), world, "courier_a", clock.now()).unwrap();
+    let clock: Arc<dyn Clock> = common::clock(steps[0].0);
+    let loaded = booted(&store, tree(), world, "courier_a", steps[0].0).unwrap();
     let drives = Arc::new(Mutex::new(Vec::new()));
     let bus = Bus {
         clock: clock.clone(),
@@ -131,25 +123,27 @@ fn walk(world: &Path, fixture: &str) -> (Drives, BTreeMap<String, (i64, i64)>) {
     };
     let member = Mqtt::new(&store, &format!("{L}courier_a"), vec![(None, Box::new(bus))]);
     let inbox = member.inbox.clone();
-    let mut runtime = Runtime::new(&store, "courier_a", Arc::new(clock.clone())).unwrap();
     let wiring = Wiring {
         mqtt: Some(member),
         ..Wiring::default()
     };
-    let seen = assemble_seen(&mut runtime, &loaded, None, wiring).unwrap();
+    let running = orexis_agent::start(&store, "courier_a", clock.clone(), &loaded, None, wiring).unwrap();
+    //  THE WANTS THE COURIER IS WALKING, read off its intentions by an executor of the test's own.
+    let reader = orexis_execution::Executor::new(&store, "courier_a", None, None, clock.clone()).unwrap();
     for (n, (when, published)) in steps.iter().enumerate() {
-        *clock.0.lock().unwrap() = *when;
+        let ahead = orexis::clock::seconds_of(when.checked_sub(clock.now()).unwrap());
+        common::pass(&running, ahead.max(0.0)).await;
         for (topic, payload) in published {
             inbox.deliver(topic, payload.as_bytes(), Some(*when));
         }
-        runtime.run(Some(1), 0.0).unwrap();
-        if n > 0 && seen.execution().executor.walking().unwrap().is_empty() {
+        common::settled(&running).await;
+        if n > 0 && reader.walking().unwrap().is_empty() {
             break;
         }
     }
-    let walking = seen.execution().executor.walking().unwrap();
+    let walking = reader.walking().unwrap();
     assert!(walking.is_empty(), "the plan was walked to its end: {walking:?}");
-    runtime.stop();
+    running.stop().await;
     let believed = at(&store);
     let sent = drives.lock().unwrap().clone();
     (sent, believed)
@@ -163,9 +157,9 @@ fn believed(said: &[(&str, (i64, i64))]) -> BTreeMap<String, (i64, i64)> {
     said.iter().map(|(k, v)| (k.to_string(), *v)).collect()
 }
 
-#[test]
-fn the_van_is_driven_by_command_and_lands_where_the_fix_shows_it() {
-    let (sent, at) = walk(&repo().join("world/layby"), "layby.tsv");
+#[tokio::test(start_paused = true)]
+async fn the_van_is_driven_by_command_and_lands_where_the_fix_shows_it() {
+    let (sent, at) = walk(&repo().join("world/layby"), "layby.tsv").await;
     assert_eq!(
         sent,
         drives(&[
@@ -216,8 +210,8 @@ fn variant(name: &str, edits: &[(&str, &str, &str)]) -> PathBuf {
     world
 }
 
-#[test]
-fn a_thing_the_radar_sees_is_an_obstacle_and_the_plan_goes_round_it() {
+#[tokio::test(start_paused = true)]
+async fn a_thing_the_radar_sees_is_an_obstacle_and_the_plan_goes_round_it() {
     let world = variant(
         "detour",
         &[
@@ -240,7 +234,7 @@ fn a_thing_the_radar_sees_is_an_obstacle_and_the_plan_goes_round_it() {
             ("society.ttl", ":van_a , :van_b ,", ":van_a , :van_b , :tree ,"),
         ],
     );
-    let (sent, at) = walk(&world, "detour.tsv");
+    let (sent, at) = walk(&world, "detour.tsv").await;
     let _ = fs::remove_dir_all(world.parent().unwrap().parent().unwrap());
     assert_eq!(
         sent,

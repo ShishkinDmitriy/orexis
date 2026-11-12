@@ -18,7 +18,7 @@ description: >-
 
 # What was true (on main at b8805ccf)
 
-The runtime (`orexis/src/runtime.rs`) runs every part on one thread. A pass drains one queue of jobs in the order they
+The runtime (then a module of its own in the kernel, since `orexis/src/task.rs`) runs every part on one thread. A pass drains one queue of jobs in the order they
 were queued - each package's timers, the graphs written that a part hears by kind, the events said that a part hears
 beneath its trigger - and then waits for an arrival or the soonest instant a part said it is due. Since #1119 steps 1
 to 7 every part decides by its policy, no part links to another, and no part borrows anything. What already waits on
@@ -148,6 +148,12 @@ Refused:
   that is the binary's features, as before.
 - **A tag per subscription replaced by matching on an event's class.** A part hears a class and every class beneath
   it, so the class said is not the class asked for; the tag is how the part knows which of its triggers woke it.
+
+# Amended again, 2026-11-12
+
+[a-package-is-a-task-that-awaits-its-events](/decisions/a-package-is-a-task-that-awaits-its-events.md) takes the
+wait, the pass and the order the tests prove away, and lifts this record's refusal of registration found by the
+linker. Its tasks, its one writing package per graph and its search run in place stand.
 
 # What it amends
 

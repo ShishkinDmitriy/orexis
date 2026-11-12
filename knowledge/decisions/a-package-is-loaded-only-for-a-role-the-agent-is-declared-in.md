@@ -51,14 +51,14 @@ timestamp: 2026-10-08T12:00:00Z
 > ontology and nothing else. (3) **The parts are still made in one order** — belief, planning,
 > execution, sensing, prediction, speech, the transports — since a pass needs the deliberator to hear
 > a graph first and the planner to publish before the executor walks; that order is `PASS` in
-> `orexis/src/runtime.rs`, which orders what the roles load and decides none of it, a package it does not
+> `orexis/src/boot.rs`, which orders what the roles load and decides none of it, a package it does not
 > name loading after the rest. The terrace's agent and the sensing world's fern agent want nothing,
 > so by §5's planner need they are observers and predictors and no planner — their dashboards lose
 > the planner's and the executor's, which they never fed.
 
 # The question
 
-What an agent runs was not anybody's choice. `PREMISES` in `orexis/src/runtime.rs` holds one ASK per
+What an agent runs was not anybody's choice. `PREMISES` in `orexis/src/boot.rs` holds one ASK per
 package beyond the mind, read off the world's public graphs with the agent bound, and `MIND` —
 belief, planning and execution — is loaded for every agent whatever its world
 ([a-documents-kind-says-who-reads-it](/decisions/a-documents-kind-says-who-reads-it.md), #824). So a

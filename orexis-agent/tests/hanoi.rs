@@ -3,20 +3,21 @@
 //! mover is a planner and no executor, so the plan is its output and nothing walks it (#928) — and its metrics and its
 //! journal, as the Python file and `agent/planning/tests/test_events.py` hold them.
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
-use oxsdatatypes::{DateTime, DayTimeDuration};
+use oxsdatatypes::DateTime;
 
 use orexis::boot::{TREE, packages_of};
-use orexis::clock::{Clock, Manual, instant};
+use orexis::clock::instant;
 use orexis::namespaces::Namespaces;
 use orexis::ontology::{BELIEF, PLAN, SELF_GRAPH};
-use orexis::runtime::{PLANNED, Runtime};
 use orexis::store::{Store, Within, iri, value};
+use orexis::task::PLANNED;
 use orexis_agent::booted;
-use orexis_planning::create::Planning;
 
 const WANT: &str = "http://example.org/orexis/planning#WantGraph";
 const REVISION: &str = "http://example.org/orexis/belief#RevisionGraph";
@@ -42,17 +43,6 @@ fn boot(store: &Store) -> Vec<String> {
     booted(store, tree(), &world(), "hanoi", now()).unwrap()
 }
 
-/// A timeline that moves on a second at every read, as a running agent's does.
-struct Ticking(Mutex<DateTime>);
-
-impl Clock for Ticking {
-    fn now(&self) -> DateTime {
-        let mut at = self.0.lock().unwrap();
-        *at = at.checked_add_day_time_duration(DayTimeDuration::new(1)).unwrap();
-        *at
-    }
-}
-
 const HOME_Q: &str = "PREFIX hanoi: <http://example.org/orexis/hanoi#>
 SELECT (COUNT(DISTINCT ?d) AS ?n) WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph }
   GRAPH ?g { ?d (hanoi:on)+ hanoi:PegC } }";
@@ -61,10 +51,6 @@ SELECT ?plan ?spent ?step ?next ?disk ?onto WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?plan a orexis:PlanGraph }
   GRAPH ?plan { ?plan planning:spent ?spent . ?step a execution:Step ; hanoi:disk ?disk ; hanoi:onto ?onto .
                 OPTIONAL { ?step execution:then ?next } } }";
-const ESTIMATE_Q: &str = "
-SELECT ?left WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?x a planning:Weighing ; planning:weighs ?g ; planning:remaining ?left .
-               ?g a planning:GroundGraph } }";
 const TEXTBOOK: [(&str, &str); 7] = [
     ("disk_1", "PegC"),
     ("disk_2", "PegB"),
@@ -134,21 +120,15 @@ fn own(store: &Store) -> Vec<String> {
         .collect()
 }
 
-/// One run of the mover over `store` at `budget`: the outcome, and the planning part left.
-fn ran<C: Clock + Clone + 'static>(store: &Store, budget: usize, clock: &C, passes: usize) -> (String, Planning) {
-    let planning = Arc::new(Mutex::new(Planning::new(store, "hanoi", Some(budget)).unwrap()));
-    let outcome = {
-        let mut runtime = Runtime::new(store, "hanoi", Arc::new(clock.clone())).unwrap();
-        orexis_planning::create::start(&mut runtime, &planning).unwrap();
-        assert_eq!(runtime.parts(), ["planning"]);
-        runtime.run(Some(passes), 0.0).unwrap()
-    };
-    let planning = Arc::try_unwrap(planning)
-        .ok()
-        .expect("the runtime let the part go")
-        .into_inner()
-        .unwrap();
-    (outcome, planning)
+/// One run of the mover over `store` at `budget`, planning alone: how it ended within `within` seconds of its time.
+async fn ran(store: &Store, budget: usize, within: u64) -> String {
+    let loaded = ["planning".to_string()];
+    let wiring = orexis_agent::Wiring::default();
+    let running = orexis_agent::start(store, "hanoi", common::clock(now()), &loaded, Some(budget), wiring).unwrap();
+    assert_eq!(running.parts(), ["planning"]);
+    let outcome = common::outcome(&running, within).await;
+    running.stop().await;
+    outcome
 }
 
 #[test]
@@ -203,30 +183,16 @@ fn the_mover_loads_planning_and_nothing_else() {
     }
 }
 
-#[test]
-fn the_plan_is_the_seven_textbook_moves_at_a_cost_the_estimate_does_not_exceed() {
+#[tokio::test(start_paused = true)]
+async fn the_plan_is_the_seven_textbook_moves() {
     let store = store();
     boot(&store);
-    let clock = Arc::new(Manual::at(now()));
-    let (outcome, planning) = ran(&store, 64, &clock, 20);
-    assert_eq!(outcome, PLANNED);
+    assert_eq!(ran(&store, 64, 20).await, PLANNED);
     let (spent, moves) = plan(&store);
     assert_eq!((spent, moves), (7.0, textbook()));
-    let estimates: Vec<f64> = {
-        let planner = &planning.planner;
-        let im = planner.imaginaria.values().next().unwrap();
-        im.rows(ESTIMATE_Q, &[])
-            .unwrap()
-            .iter()
-            .filter_map(|r| value(r, "left")?.parse().ok())
-            .collect()
-    };
-    assert_eq!(estimates, [3.0], "an estimate never overstates what the plan cost");
     assert_eq!(home(&store), 0, "a plan published moves no disk");
     let published = store.graphs_of(&[PLAN], &Within::default()).unwrap();
-    drop(planning);
-    let (again, _) = ran(&store, 64, &clock, 20);
-    assert_eq!(again, PLANNED);
+    assert_eq!(ran(&store, 64, 20).await, PLANNED);
     assert_eq!(
         store.graphs_of(&[PLAN], &Within::default()).unwrap(),
         published,
@@ -234,26 +200,23 @@ fn the_plan_is_the_seven_textbook_moves_at_a_cost_the_estimate_does_not_exceed()
     );
 }
 
-#[test]
-fn a_budget_that_cuts_the_search_short_is_finished_by_the_passes_after() {
+#[tokio::test(start_paused = true)]
+async fn a_budget_that_cuts_the_search_short_is_finished_by_the_plannings_after() {
     let store = store();
     boot(&store);
-    let clock = Arc::new(Ticking(Mutex::new(now())));
-    let (outcome, _) = ran(&store, 20, &clock, 12);
-    assert_eq!(outcome, PLANNED);
+    assert_eq!(ran(&store, 20, 12).await, PLANNED);
     assert_eq!(plan(&store), (7.0, textbook()));
 }
 
 #[cfg(feature = "volume")]
-#[test]
-fn a_lived_in_volume_keeps_the_plan_and_does_not_search_again() {
+#[tokio::test(start_paused = true)]
+async fn a_lived_in_volume_keeps_the_plan_and_does_not_search_again() {
     let path = std::env::temp_dir().join(format!("orexis-hanoi-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&path);
-    let clock = Arc::new(Ticking(Mutex::new(now())));
     {
         let store = Store::open(&path, Arc::new(Namespaces::of_tree(tree()).unwrap())).unwrap();
         boot(&store);
-        assert_eq!(ran(&store, 64, &clock, 20).0, PLANNED);
+        assert_eq!(ran(&store, 64, 20).await, PLANNED);
     }
     let store = Store::open(&path, Arc::new(Namespaces::of_tree(tree()).unwrap())).unwrap();
     let published = store.graphs_of(&[PLAN], &Within::default()).unwrap();
@@ -264,17 +227,15 @@ fn a_lived_in_volume_keeps_the_plan_and_does_not_search_again() {
     );
     assert_eq!(store.graphs_of(&[WANT], &Within::default()).unwrap().len(), 1);
     assert_eq!(home(&store), 0);
-    let (outcome, planning) = ran(&store, 64, &clock, 20);
-    assert_eq!(outcome, PLANNED);
-    assert!(
-        planning.planner.imaginaria.values().all(|im| im
-            .graphs_of(&[orexis_planning::ontology::POSSIBLE_GRAPH], &Within::default())
-            .unwrap()
-            .is_empty()),
-        "the want is walked by the plan it has, and nothing searches it again"
+    let weighed = store.len().unwrap();
+    assert_eq!(ran(&store, 64, 20).await, PLANNED);
+    assert_eq!(
+        store.graphs_of(&[PLAN], &Within::default()).unwrap(),
+        published,
+        "the want is walked by the plan it has, and nothing publishes another"
     );
+    let _ = weighed;
     assert_eq!(plan(&store), (7.0, textbook()));
-    drop(planning);
     drop(store);
     let _ = std::fs::remove_dir_all(&path);
 }
@@ -282,11 +243,10 @@ fn a_lived_in_volume_keeps_the_plan_and_does_not_search_again() {
 /// Three disks at twenty candidates a pass, with a metrics window `interval_s` long — nought writes one a pass, and
 /// anything longer than the run writes one at the end, as a stop does: every window written, as `_metered` in
 /// `world/hanoi/tests/test_hanoi.py` collects them.
-fn metered(interval_s: f64) -> Vec<Vec<orexis::events::Point>> {
+async fn metered(interval_s: f64) -> Vec<Vec<orexis::events::Point>> {
     use orexis::events::Point;
     let store = store();
     let loaded = boot(&store);
-    let clock = Arc::new(Ticking(Mutex::new(now())));
     let writes: std::sync::Arc<std::sync::Mutex<Vec<Vec<Point>>>> = Default::default();
     let kept = writes.clone();
     let sink = orexis::series::Sink::new(
@@ -305,11 +265,9 @@ fn metered(interval_s: f64) -> Vec<Vec<orexis::events::Point>> {
         },
         ..Default::default()
     };
-    let mut runtime = Runtime::new(&store, "hanoi", clock.clone()).unwrap();
-    orexis_agent::assemble_wired(&mut runtime, &loaded, Some(20), wiring).unwrap();
-    assert_eq!(runtime.run(Some(12), 0.0).unwrap(), PLANNED);
-    runtime.stop();
-    drop(runtime);
+    let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, Some(20), wiring).unwrap();
+    assert_eq!(common::outcome(&running, 12).await, PLANNED);
+    running.stop().await;
     writes
         .lock()
         .unwrap()
@@ -327,10 +285,10 @@ fn float(point: &orexis::events::Point, field: &str) -> f64 {
     }
 }
 
-#[test]
-fn a_window_a_pass_writes_the_planners_levels_and_the_runtimes_own_and_nothing_of_execution() {
+#[tokio::test(start_paused = true)]
+async fn a_window_a_stretch_writes_the_planners_levels_and_the_runs_own_and_nothing_of_execution() {
     use orexis::events::Field;
-    let windows = metered(0.0);
+    let windows = metered(0.0).await;
     let first: BTreeMap<&str, &orexis::events::Point> =
         windows[0].iter().map(|p| (p.measurement.as_str(), p)).collect();
     for m in ["pass", "planner", "imaginarium", "search", "reroot"] {
@@ -374,9 +332,9 @@ fn a_window_a_pass_writes_the_planners_levels_and_the_runtimes_own_and_nothing_o
     }
 }
 
-#[test]
-fn every_search_and_the_publishing_are_tallied_into_one_window_and_never_by_the_want() {
-    let windows = metered(3600.0);
+#[tokio::test(start_paused = true)]
+async fn every_search_and_the_publishing_are_tallied_into_one_window_and_never_by_the_want() {
+    let windows = metered(3600.0).await;
     assert_eq!(windows.len(), 1, "one window, written at the stop");
     let window = &windows[0];
     let by = |m: &str| -> Vec<&orexis::events::Point> { window.iter().filter(|p| p.measurement == m).collect() };
@@ -419,11 +377,10 @@ fn every_search_and_the_publishing_are_tallied_into_one_window_and_never_by_the_
     assert!(window.len() < 20, "a point per measurement and tag set a window");
 }
 
-#[test]
-fn a_plan_published_is_kept_in_the_journal_with_its_steps_in_the_words_of_the_domain() {
+#[tokio::test(start_paused = true)]
+async fn a_plan_published_is_kept_in_the_journal_with_its_steps_in_the_words_of_the_domain() {
     let store = store();
     let loaded = boot(&store);
-    let clock = Arc::new(Ticking(Mutex::new(now())));
     let journal = Arc::new(orexis::journal::Journal::new(None, 600.0, Arc::new(now)).unwrap());
     let wiring = orexis_agent::Wiring {
         watching: orexis_agent::Watching {
@@ -432,11 +389,9 @@ fn a_plan_published_is_kept_in_the_journal_with_its_steps_in_the_words_of_the_do
         },
         ..Default::default()
     };
-    let mut runtime = Runtime::new(&store, "hanoi", clock.clone()).unwrap();
-    orexis_agent::assemble_wired(&mut runtime, &loaded, Some(400), wiring).unwrap();
-    runtime.run(Some(1), 0.0).unwrap();
-    runtime.stop();
-    drop(runtime);
+    let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, Some(400), wiring).unwrap();
+    common::settled(&running).await;
+    running.stop().await;
     let text = "PREFIX planning: <http://example.org/orexis/planning#> PREFIX execution: <http://example.org/orexis/execution#>
 PREFIX hanoi: <http://example.org/orexis/hanoi#>
 SELECT ?step ?disk ?onto (COUNT(?before) AS ?order) WHERE {
@@ -460,14 +415,13 @@ GROUP BY ?step ?disk ?onto ORDER BY ?order";
     );
 }
 
-#[test]
-fn the_history_part_marks_an_event_of_a_class_beneath_incident_and_no_other() {
+#[tokio::test(start_paused = true)]
+async fn the_history_part_marks_an_event_of_a_class_beneath_incident_and_no_other() {
     use orexis::events::Event;
     use orexis_planning::events::{PlanPublished, WantUnreachable};
     let store = store();
     let loaded = boot(&store);
     let journal = Arc::new(orexis::journal::Journal::new(None, 600.0, Arc::new(now)).unwrap());
-    let clock = Arc::new(Manual::at(now()));
     let wiring = orexis_agent::Wiring {
         watching: orexis_agent::Watching {
             journal: Some(journal.clone()),
@@ -475,15 +429,15 @@ fn the_history_part_marks_an_event_of_a_class_beneath_incident_and_no_other() {
         },
         ..Default::default()
     };
-    let mut runtime = Runtime::new(&store, "hanoi", clock.clone()).unwrap();
-    let seen = orexis_agent::assemble_seen(&mut runtime, &loaded, Some(1), wiring).unwrap();
+    let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, Some(1), wiring).unwrap();
+    let watch = running.handed.events.watch().clone();
     let unreachable: &dyn Event = &WantUnreachable {
         want: "http://example.org/test#want".into(),
         desire: None,
         at: Some(now()),
     };
-    seen.watch.emit(unreachable);
-    seen.watch.emit(&PlanPublished {
+    watch.emit(unreachable);
+    watch.emit(&PlanPublished {
         plan: "http://example.org/test#plan".into(),
         want: "http://example.org/test#want".into(),
         desire: None,

@@ -25,10 +25,10 @@ class Reported:
 REPORTED: dict[str, tuple[Reported, ...]] = {
     'runtime': (
         Reported('pass',
-                 'A pass, in real seconds, whole and by part — the jobs queued run to the last (`drain`), planning, '
-                 "walking; a part a pass does not reach is not in it, and the planner's own parts are its event — with "
+                 'A stretch of the run with something busy, in real seconds, whole and by part — planning, '
+                 "walking; a part a stretch does not reach is not in it, and the planner's own parts are its event — with "
                  'how large the belief base is, in quads, and how long the process has run.',
-                 levels=('quads', 'uptime_s'), values=('duration_s', 'drain_s', 'plan_s', 'execute_s')),
+                 levels=('quads', 'uptime_s'), values=('duration_s', 'plan_s', 'execute_s')),
     ),
     'belief': (
         Reported('revise',

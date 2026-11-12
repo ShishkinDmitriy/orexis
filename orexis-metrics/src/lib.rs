@@ -21,8 +21,8 @@ use std::time::Instant;
 use oxsdatatypes::DateTime;
 
 use orexis::events::{Event, Field, Mark, Number, Point, Watch, counted, round6};
-use orexis::runtime::{PASS_METRIC, Runtime};
 use orexis::series::Sink;
+use orexis::task::{Handed, PASS_METRIC, Package, Task};
 
 /// The window's length where the environment says none, and the key it is said under.
 pub const INTERVAL_S: f64 = 60.0;
@@ -213,16 +213,21 @@ impl Metrics {
     }
 }
 
-impl Metrics {
-    /// METRICS STARTING ITSELF on a runtime: a task that waits for the run's end, and writes the last window as it
-    /// stops; what it tallies it hears on the watch.
-    pub fn start(self, runtime: &mut Runtime) {
-        let wait = runtime.wait("metrics");
-        runtime.spawn(wait, move |mut wait| async move {
-            while wait.next().await.is_some() {}
-            self.window.lock().unwrap().flush();
-        });
-    }
+inventory::submit! { Package { name: "metrics", start } }
+
+/// METRICS' START: where it is handed a window it tallies what it hears on the watch from now on, and its task waits
+/// for the run's end and writes the last window.
+fn start(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
+    let Some(window) = handed.outside.take::<Window>() else {
+        return Ok(None);
+    };
+    let metrics = Metrics::new(window, handed.events.watch());
+    let handed = handed.clone();
+    Ok(Some(Box::pin(async move {
+        handed.stopped().await;
+        metrics.window.lock().unwrap().flush();
+        Ok(())
+    })))
 }
 
 #[cfg(test)]

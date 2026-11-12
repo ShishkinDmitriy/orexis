@@ -6,6 +6,8 @@
 //! documents copied without its `secrets/`, the place and the chat written as a clone's own would hold them, and every
 //! member over a stand-in, so nothing reaches the network.
 
+mod common;
+
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -14,13 +16,13 @@ use serde_json::{Value as Json, json};
 
 use orexis::Error;
 use orexis::boot::TREE;
-use orexis::clock::{Manual, instant};
+use orexis::clock::{Elapsing, instant};
 use orexis::events::{Field, Point};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::{BELIEF, FORECAST, SELF_GRAPH};
-use orexis::runtime::{Runtime, UNFINISHED};
 use orexis::store::{Store, Within, iri, value};
-use orexis_agent::{Watching, Wiring, assemble_wired, booted};
+use orexis::task::{Running, UNFINISHED};
+use orexis_agent::{Watching, Wiring, booted};
 use orexis_translation::model::{Answer, Failure, Model, Turn};
 use orexis_transport_mqtt::driver::{Client, Mqtt};
 
@@ -175,18 +177,25 @@ struct Terrace {
     asked: Arc<Mutex<Vec<String>>>,
 }
 
+/// Let the terrace's time run to `at`, the agent doing whatever falls due on the way.
+async fn until(running: &Running, clock: &Arc<Elapsing>, at: oxsdatatypes::DateTime) {
+    use orexis::clock::Clock;
+    let ahead = orexis::clock::seconds_of(at.checked_sub(clock.now()).unwrap());
+    common::pass(running, ahead.max(0.0)).await;
+}
+
 fn store() -> Store {
     Store::new(Arc::new(Namespaces::of_tree(tree()).unwrap())).unwrap()
 }
 
 /// Run the terrace of `world` through `walk`, its parts lent to a runtime on a clock standing where the walk sets it.
-fn terrace(
+async fn terrace(
     world: &Path,
     web: Option<&'static [u8]>,
     api: &Api,
     model: Option<Arc<dyn Model>>,
     watching: Watching,
-    walk: impl FnOnce(&Terrace, &mut Runtime, &Manual, &orexis_transport_mqtt::driver::Inbox),
+    walk: impl AsyncFnOnce(&Terrace, &Running, &Arc<Elapsing>, &orexis_transport_mqtt::driver::Inbox),
 ) {
     let t = Terrace {
         store: store(),
@@ -238,12 +247,11 @@ fn terrace(
         watching,
         ..Wiring::default()
     };
-    let clock = Arc::new(Manual::at(noon()));
-    let mut runtime = Runtime::new(&t.store, "terrace", clock.clone()).unwrap();
-    assemble_wired(&mut runtime, &loaded, None, wiring).unwrap();
-    assert!(runtime.parts().contains(&"translation"));
-    walk(&t, &mut runtime, &clock, &inbox);
-    runtime.stop();
+    let clock = common::clock(noon());
+    let running = orexis_agent::start(&t.store, "terrace", clock.clone(), &loaded, None, wiring).unwrap();
+    assert!(running.parts().contains(&"translation"));
+    walk(&t, &running, &clock, &inbox).await;
+    running.stop().await;
 }
 
 /// The agent's own beliefs of the present: no world's document, no self graph, no revision, no committed step and no
@@ -267,8 +275,8 @@ fn local(iri: &str) -> String {
     iri.rsplit(['#', '/']).next().unwrap().to_string()
 }
 
-#[test]
-fn the_agent_listens_on_the_boards_one_topic_alone_and_one_message_is_five_observations() {
+#[tokio::test(start_paused = true)]
+async fn the_agent_listens_on_the_boards_one_topic_alone_and_one_message_is_five_observations() {
     let world = variant("message", false, false);
     terrace(
         &world,
@@ -276,14 +284,14 @@ fn the_agent_listens_on_the_boards_one_topic_alone_and_one_message_is_five_obser
         &Api::default(),
         None,
         Watching::default(),
-        |t, runtime, _, inbox| {
+        async |t, runtime, _, inbox| {
             assert_eq!(
                 t.broker.0.lock().unwrap().0,
                 [READINGS],
                 "the board's readings; its chat is on Telegram"
             );
             inbox.deliver(READINGS, MESSAGE.as_bytes(), Some(noon()));
-            assert_eq!(runtime.run(Some(2), 0.0).unwrap(), UNFINISHED, "it watches for good");
+            assert_eq!(common::outcome(runtime, 1).await, UNFINISHED, "it watches for good");
             let observed = t.store.graphs_of(&[OBSERVATION], &Within::default()).unwrap();
             let observed: Vec<&str> = observed.iter().map(String::as_str).collect();
             let read: std::collections::BTreeMap<String, f64> = t
@@ -338,11 +346,12 @@ fn the_agent_listens_on_the_boards_one_topic_alone_and_one_message_is_five_obser
                 "a clone holds no place, so no forecast is asked for"
             );
         },
-    );
+    )
+    .await;
 }
 
-#[test]
-fn a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving() {
+#[tokio::test(start_paused = true)]
+async fn a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving() {
     let world = variant("quiet", false, false);
     terrace(
         &world,
@@ -350,11 +359,11 @@ fn a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving() {
         &Api::default(),
         None,
         Watching::default(),
-        |t, runtime, clock, inbox| {
+        async |t, runtime, clock, inbox| {
             inbox.deliver(READINGS, MESSAGE.as_bytes(), Some(noon()));
-            runtime.run(Some(1), 0.0).unwrap();
-            clock.set(plus(100.0 * 60.0));
-            runtime.run(Some(1), 0.0).unwrap();
+            common::settled(runtime).await;
+            until(runtime, clock, plus(100.0 * 60.0)).await;
+            common::settled(runtime).await;
             let silences = t.store.graphs_of(&[SILENCE], &Within::default()).unwrap();
             let silences: Vec<&str> = silences.iter().map(String::as_str).collect();
             let mut silent: Vec<String> = t
@@ -377,7 +386,8 @@ fn a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving() {
             );
             assert!(t.broker.0.lock().unwrap().1.is_empty(), "nothing is sent");
         },
-    );
+    )
+    .await;
 }
 
 fn history() -> (Watching, Arc<Mutex<Vec<Point>>>) {
@@ -400,14 +410,22 @@ fn history() -> (Watching, Arc<Mutex<Vec<Point>>>) {
     )
 }
 
-#[test]
-fn each_reading_reaches_the_series_under_its_own_property() {
+#[tokio::test(start_paused = true)]
+async fn each_reading_reaches_the_series_under_its_own_property() {
     let world = variant("series", false, false);
     let (watching, written) = history();
-    terrace(&world, None, &Api::default(), None, watching, |_, runtime, _, inbox| {
-        inbox.deliver(READINGS, MESSAGE.as_bytes(), Some(noon()));
-        runtime.drain(noon()).unwrap();
-    });
+    terrace(
+        &world,
+        None,
+        &Api::default(),
+        None,
+        watching,
+        async |_, runtime, _, inbox| {
+            inbox.deliver(READINGS, MESSAGE.as_bytes(), Some(noon()));
+            common::settled(runtime).await;
+        },
+    )
+    .await;
     let written = written.lock().unwrap();
     let mut points: Vec<(String, String, Field)> = written
         .iter()
@@ -474,15 +492,16 @@ fn each_reading_reaches_the_series_under_its_own_property() {
     );
 }
 
-#[test]
-fn an_alarm_is_two_points_in_the_history_and_a_step_not_a_slope() {
+#[tokio::test(start_paused = true)]
+async fn an_alarm_is_two_points_in_the_history_and_a_step_not_a_slope() {
     let world = variant("alarm", false, false);
     let (watching, written) = history();
-    terrace(&world, None, &Api::default(), None, watching, |_, runtime, _, inbox| {
+    terrace(&world, None, &Api::default(), None, watching, async |_, runtime, _, inbox| {
         let alarm = r#"{"moisture_raw": [{"value": 710, "age_s": 25}, {"value": 410, "age_s": 0}], "sensor": "moisture_sensor_terrace", "wake": "alarm"}"#;
         inbox.deliver(READINGS, alarm.as_bytes(), Some(noon()));
-        runtime.drain(noon()).unwrap();
-    });
+        common::settled(runtime).await;
+    })
+    .await;
     let mut soil: Vec<(oxsdatatypes::DateTime, Field)> = written
         .lock()
         .unwrap()
@@ -497,8 +516,8 @@ fn an_alarm_is_two_points_in_the_history_and_a_step_not_a_slope() {
     assert_eq!(soil, [(before, Field::Float(0.2)), (noon(), Field::Float(1.0))]);
 }
 
-#[test]
-fn every_metric_the_terrace_writes_is_an_observers_and_no_planners() {
+#[tokio::test(start_paused = true)]
+async fn every_metric_the_terrace_writes_is_an_observers_and_no_planners() {
     let world = variant("metrics", false, false);
     let written: Arc<Mutex<Vec<Point>>> = Arc::default();
     let kept = written.clone();
@@ -519,12 +538,20 @@ fn every_metric_the_terrace_writes_is_an_observers_and_no_planners() {
         )),
         ..Watching::default()
     };
-    terrace(&world, None, &Api::default(), None, watching, |_, runtime, _, inbox| {
-        for _ in 0..2 {
-            inbox.deliver(READINGS, MESSAGE.as_bytes(), Some(noon()));
-            runtime.run(Some(1), 0.0).unwrap();
-        }
-    });
+    terrace(
+        &world,
+        None,
+        &Api::default(),
+        None,
+        watching,
+        async |_, runtime, _, inbox| {
+            for _ in 0..2 {
+                inbox.deliver(READINGS, MESSAGE.as_bytes(), Some(noon()));
+                common::settled(runtime).await;
+            }
+        },
+    )
+    .await;
     let wanted: std::collections::BTreeSet<(String, String)> = written
         .lock()
         .unwrap()
@@ -540,7 +567,7 @@ fn every_metric_the_terrace_writes_is_an_observers_and_no_planners() {
         ("silence", "silent"),
         ("received", "interval_s_mean"),
         ("revisions", "revisions"),
-        ("pass", "drain_s_max"),
+        ("pass", "duration_s_max"),
     ] {
         assert!(
             wanted.contains(&(pair.0.to_string(), pair.1.to_string())),
@@ -553,8 +580,8 @@ fn every_metric_the_terrace_writes_is_an_observers_and_no_planners() {
     }
 }
 
-#[test]
-fn a_forecast_is_fetched_for_the_terraces_place_and_written_an_hour_a_graph() {
+#[tokio::test(start_paused = true)]
+async fn a_forecast_is_fetched_for_the_terraces_place_and_written_an_hour_a_graph() {
     let world = variant("forecast", true, false);
     terrace(
         &world,
@@ -562,9 +589,9 @@ fn a_forecast_is_fetched_for_the_terraces_place_and_written_an_hour_a_graph() {
         &Api::default(),
         None,
         Watching::default(),
-        |t, runtime, _, inbox| {
+        async |t, runtime, _, inbox| {
             inbox.deliver(READINGS, MESSAGE.as_bytes(), Some(noon()));
-            runtime.run(Some(2), 0.0).unwrap();
+            common::settled(runtime).await;
             assert_eq!(
                 *t.asked.lock().unwrap(),
                 [
@@ -592,11 +619,12 @@ fn a_forecast_is_fetched_for_the_terraces_place_and_written_an_hour_a_graph() {
                 "no forecast of the soil is written"
             );
         },
-    );
+    )
+    .await;
 }
 
-#[test]
-fn the_sovereign_says_through_the_agents_own_bot_that_the_probe_is_defective_and_its_next_number_is_no_reading() {
+#[tokio::test(start_paused = true)]
+async fn the_sovereign_says_through_the_agents_own_bot_that_the_probe_is_defective_and_its_next_number_is_no_reading() {
     let world = variant("sovereign", true, true);
     let api = Api::default();
     let answers: Arc<Mutex<Vec<String>>> = Arc::default();
@@ -611,7 +639,7 @@ fn the_sovereign_says_through_the_agents_own_bot_that_the_probe_is_defective_and
         &api,
         Some(shared),
         Watching::default(),
-        |t, runtime, clock, inbox| {
+        async |t, runtime, clock, inbox| {
             let texts = || {
                 api.sent
                     .lock()
@@ -620,7 +648,7 @@ fn the_sovereign_says_through_the_agents_own_bot_that_the_probe_is_defective_and
                     .filter(|m| m.get("text").is_some())
                     .count()
             };
-            let say = |runtime: &mut Runtime, text: &str, inputs: Json, n: usize| {
+            let say = async |runtime: &Running, text: &str, inputs: Json, n: usize| {
                 *model.inputs.lock().unwrap() = inputs;
                 api.updates.lock().unwrap().push(
                 json!({"update_id": 7 + n, "message": {"chat": {"id": 4242, "type": "private"}, "from": {"id": 1}, "text": text}}),
@@ -628,8 +656,8 @@ fn the_sovereign_says_through_the_agents_own_bot_that_the_probe_is_defective_and
                 //  THE BOT POLLS AS ITS TIMER FALLS DUE, the conversation runs on its own thread, and what it said is handed
                 //  back to a pass: passes run until the answer is sent.
                 for _ in 0..200 {
-                    clock.advance(3.0);
-                    runtime.run(Some(1), 0.0).unwrap();
+                    common::pass(runtime, 3.0).await;
+                    common::settled(runtime).await;
                     if answers.lock().unwrap().len() >= n && texts() >= n {
                         return;
                     }
@@ -637,10 +665,10 @@ fn the_sovereign_says_through_the_agents_own_bot_that_the_probe_is_defective_and
                 }
                 panic!("no answer to {text:?}");
             };
-            let soil = |runtime: &mut Runtime, at| {
+            let soil = async |runtime: &Running, at| {
+                until(runtime, clock, at).await;
                 inbox.deliver(READINGS, MESSAGE.as_bytes(), Some(at));
-                clock.set(at);
-                runtime.run(Some(1), 0.0).unwrap();
+                common::settled(runtime).await;
                 let observed = t.store.graphs_of(&[OBSERVATION], &Within::default()).unwrap();
                 let observed: Vec<&str> = observed.iter().map(String::as_str).collect();
                 let found = t
@@ -663,7 +691,7 @@ fn the_sovereign_says_through_the_agents_own_bot_that_the_probe_is_defective_and
                 "the probe shows strange numbers",
                 json!({"says": format!("<{PROBE}> sensing:defect \"it shows strange numbers\" .")}),
                 1,
-            );
+            ).await;
             assert_eq!(*answers.lock().unwrap(), ["kept: the agent believes it now"]);
             let said: Vec<Json> = api
                 .sent
@@ -679,7 +707,7 @@ fn the_sovereign_says_through_the_agents_own_bot_that_the_probe_is_defective_and
             );
             assert_eq!(said[0]["chat_id"], "4242", "answered through its own bot");
             assert_eq!(
-                soil(runtime, plus(60.0)),
+                soil(runtime, plus(60.0)).await,
                 (None, Some("it shows strange numbers".to_string())),
                 "kept, and no reading"
             );
@@ -688,14 +716,15 @@ fn the_sovereign_says_through_the_agents_own_bot_that_the_probe_is_defective_and
                 "the probe is fine again",
                 json!({"unsays": [format!("<{PROBE}> sensing:defect")]}),
                 2,
-            );
+            ).await;
             assert_eq!(answers.lock().unwrap().len(), 2);
             assert_eq!(answers.lock().unwrap()[1], "kept: the agent believes it now");
             assert_eq!(
-                soil(runtime, plus(20.0 * 60.0 + 60.0)),
+                soil(runtime, plus(20.0 * 60.0 + 60.0)).await,
                 (Some("0.2".to_string()), None),
                 "unsaid, a reading again"
             );
         },
-    );
+    )
+    .await;
 }

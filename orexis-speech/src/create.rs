@@ -11,10 +11,9 @@ use orexis::bind::{Value, bind};
 use orexis::document::Document;
 use orexis::events::Watch;
 use orexis::ontology::RECEIVED;
-use orexis::runtime::{Heard as HeardEvent, Pass, Runtime, Wait, Woke};
 use orexis::store::{Store, iri};
+use orexis::task::{Arrived, Every, Handed, Heard as HeardEvent, Hears, Package, Task, Turn, Woke, sooner};
 use oxigraph::model::{BlankNode, GraphName, NamedNode, Quad, Triple};
-use std::sync::{Arc, Mutex};
 
 use crate::events::{Heard, Said, Statement};
 
@@ -220,34 +219,78 @@ impl Speech {
     }
 }
 
-/// THE PACKAGE STARTING ITSELF on a runtime: it says what ends its wait and spawns its task. The part is lent, so
-/// whoever keeps it reads it between runs.
-pub fn start(runtime: &mut Runtime, part: &Arc<Mutex<Speech>>) -> Result<(), Error> {
-    let part = part.clone();
-    let mut wait = runtime.wait("speech");
-    part.lock().expect("a part nobody poisoned").start(&mut wait)?;
-    runtime.spawn(wait, move |wait| policy(part, wait));
-    Ok(())
+inventory::submit! { Package { name: "speech", start } }
+
+/// THE PACKAGE'S START: its part made and started - what it hears, what it does every so often - and its task.
+fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+    let me = orexis::boot::selves(&handed.store)?
+        .into_iter()
+        .next()
+        .unwrap_or_default();
+    let mut part = Speech::new(&handed.store, &me);
+    let mut hears = handed.events.hears();
+    let arrived = handed.arrived();
+    let mut timers = Vec::new();
+    part.start(handed, &mut hears, &arrived, &mut timers)?;
+    Ok(Some(Box::pin(task(handed.clone(), part, hears, arrived, timers))))
 }
 
-/// SPEECH'S TASK: it waits for a statement written, an event beneath its trigger, or what it extracted at its start,
-/// and does what its policy says of each.
-async fn policy(part: Arc<Mutex<Speech>>, mut wait: Wait) {
-    while let Some((woke, mut pass)) = wait.next().await {
-        let mut speech = part.lock().expect("a part nobody poisoned");
-        let wrote = match woke {
-            Woke::Due(tag) => speech.run(tag, &mut pass),
-            Woke::Graph(tag, graph) => speech.heard(tag, &graph, &mut pass),
-            Woke::Event(tag, event) => speech.heard_event(tag, &event, &mut pass),
-            Woke::Arrived => speech.queued(&mut pass),
+/// THE PACKAGE'S TASK: it decides as the run begins, then waits for what it hears, an arrival or the instant it is
+/// next due; once nothing more waits to be heard it does what it queued for itself and what has fallen due.
+async fn task(
+    handed: Handed,
+    mut part: Speech,
+    mut hears: Hears,
+    mut arrived: Arrived,
+    mut timers: Vec<(Every, usize)>,
+) -> Result<(), Error> {
+    let mut heard = None;
+    let mut due = None;
+    loop {
+        let mut turn = handed.turn();
+        match heard.take() {
+            Some(Woke::Event(tag, event)) => {
+                let wrote = part.heard_event(tag, &event, &mut turn);
+                turn.done(wrote)?;
+            }
+            Some(Woke::Graph(tag, graph)) => {
+                let wrote = part.heard(tag, &graph, &mut turn);
+                turn.done(wrote)?;
+            }
+            _ => {}
+        }
+        if hears.is_empty() {
+            let wrote = part.queued(&mut turn);
+            turn.done(wrote)?;
+            for (every, tag) in &mut timers {
+                if every.due(turn.now) {
+                    let wrote = part.run(*tag, &mut turn);
+                    turn.done(wrote)?;
+                    let wrote = part.queued(&mut turn);
+                    turn.done(wrote)?;
+                }
+            }
+            due = timers
+                .iter()
+                .fold(turn.next(), |soonest, (every, _)| sooner(soonest, every.at()));
+        }
+        heard = tokio::select! {
+            biased;
+            _ = handed.stopped() => break,
+            woke = hears.next() => match woke {
+                Some(woke) => Some(woke),
+                None => break,
+            },
+            _ = arrived.wait() => None,
+            _ = handed.sleep_until(due) => None,
         };
-        pass.done(wrote);
     }
+    Ok(())
 }
 
 impl Speech {
     /// What it queued for itself, each in turn and what each wrote told, until nothing is left.
-    fn queued(&mut self, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn queued(&mut self, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         loop {
             let jobs = self.submitted();
             if jobs.is_empty() {
@@ -260,8 +303,15 @@ impl Speech {
         }
     }
 
-    fn start(&mut self, wait: &mut Wait) -> Result<(), Error> {
-        self.speaker.watch = wait.watch();
+    fn start(
+        &mut self,
+        handed: &Handed,
+        hears: &mut Hears,
+        arrived: &Arrived,
+        timers: &mut Vec<(Every, usize)>,
+    ) -> Result<(), Error> {
+        let _ = (&handed, &hears, &arrived, &timers);
+        self.speaker.watch = handed.events.watch().clone();
         if let Some(cat) = self.beliefs.catalogue()? {
             let unextracted: Vec<String> = self
                 .beliefs
@@ -273,19 +323,19 @@ impl Speech {
                 self.pending.extend(extract(&self.beliefs, &statement)?);
             }
         }
-        wait.on(STATEMENT_GRAPH, STATED);
-        wait.hears(SPEAKING_TRIGGER, SPEAK);
+        hears.graph(STATEMENT_GRAPH, STATED);
+        hears.event(SPEAKING_TRIGGER, SPEAK);
         Ok(())
     }
 
-    fn run(&mut self, job: usize, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn run(&mut self, job: usize, _pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         match job {
             EXTRACTED => Ok(std::mem::take(&mut self.pending)),
             _ => Ok(Vec::new()),
         }
     }
 
-    fn heard(&mut self, _job: usize, graph: &str, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn heard(&mut self, _job: usize, graph: &str, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         let watch = self.speaker.watch.clone();
         if watch.connected() && self.arrival(graph)?.as_deref() == Some(RECEIVED) {
             let (kinds, said) = described(&self.beliefs, graph)?;
@@ -300,7 +350,7 @@ impl Speech {
     }
 
     /// What speech's policy does of a trigger: tell each statement it names, as it was said, to each agent it names.
-    fn heard_event(&mut self, _job: usize, event: &HeardEvent, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn heard_event(&mut self, _job: usize, event: &HeardEvent, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         let statements: Vec<NamedNode> = event.all(STATEMENT).into_iter().cloned().collect();
         let to: Vec<String> = event.all(TO).iter().map(|a| a.as_str().to_string()).collect();
         if statements.is_empty() || to.is_empty() {

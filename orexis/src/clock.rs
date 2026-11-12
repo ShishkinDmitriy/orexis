@@ -106,6 +106,32 @@ impl Clock for Paced {
     }
 }
 
+/// A CLOCK ON TOKIO'S TIME: an epoch, and what Tokio's clock has run since it was made. Where Tokio's time is paused,
+/// as a world's test pauses it, the timeline runs ahead whenever every task is idle, so a day takes moments.
+pub struct Elapsing {
+    epoch: DateTime,
+    began: tokio::time::Instant,
+}
+
+impl Elapsing {
+    /// From `epoch`, now.
+    pub fn from(epoch: DateTime) -> Self {
+        Elapsing {
+            epoch,
+            began: tokio::time::Instant::now(),
+        }
+    }
+}
+
+impl Clock for Elapsing {
+    fn now(&self) -> DateTime {
+        let ran = self.began.elapsed().as_secs_f64();
+        self.epoch
+            .checked_add_day_time_duration(microseconds(ran))
+            .unwrap_or(self.epoch)
+    }
+}
+
 /// A clock a test moves by hand: the instant it is set to, until it is set again.
 pub struct Manual(Mutex<DateTime>);
 

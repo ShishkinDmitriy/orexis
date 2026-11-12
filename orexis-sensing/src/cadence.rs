@@ -30,7 +30,7 @@ SELECT ?every ?unit WHERE {
 /// its previous, and a revision, of the same kind, holds no `sosa:madeBySensor` and is no match.
 const LAPSED_Q: &str = "
 SELECT ?sensor ?end WHERE {
-  GRAPH $cat { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end < $now) }
+  GRAPH $cat { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end <= $now) }
   GRAPH ?g { ?obs sosa:madeBySensor ?sensor }
   FILTER NOT EXISTS { GRAPH ?h { ?later sensing:previous ?obs } GRAPH $cat { ?h a sensing:ObservationGraph } } }
 ORDER BY ?end ?sensor";
@@ -38,7 +38,7 @@ ORDER BY ?end ?sensor";
 /// THE SOONEST INSTANT A LATEST PERCEPT LAPSES, not yet come: the one a reading falls due and its grace runs out.
 const NEXT_LAPSE_Q: &str = "
 SELECT (MIN(?end) AS ?next) WHERE {
-  GRAPH $cat { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end >= $now) }
+  GRAPH $cat { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end > $now) }
   GRAPH ?g { ?obs sosa:madeBySensor ?sensor }
   FILTER NOT EXISTS { GRAPH ?h { ?later sensing:previous ?obs } GRAPH $cat { ?h a sensing:ObservationGraph } } }";
 

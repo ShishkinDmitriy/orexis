@@ -47,8 +47,8 @@ the heating could fill until it came to speak the air's state (#944); the two ar
 
 **The clocks are the agent's own.** Nothing here times a second way: the bench connects to the
 runtime's `passed` and the Planner's `planned` exactly as the metrics part does, so what it reads
-is what a monitored agent reports — `Passed.duration_s` for the pass, `drain_s`, `plan_s` and
-`execute_s` for the runtime's parts, and `Planned`'s `ground_s`, `weigh_s`, `derive_s`,
+is what a monitored agent reports — `Passed.duration_s` for a stretch with something busy, `plan_s` and
+`execute_s` for its parts, and `Planned`'s `ground_s`, `weigh_s`, `derive_s`,
 `search_s` and `publish_s` for the Planner's. A bench with a clock of its own would drift from
 the dashboards, and the day the two disagreed nobody would know which to believe.
 

@@ -8,7 +8,7 @@ use std::sync::{Arc, Mutex, OnceLock};
 
 use oxsdatatypes::DateTime;
 
-use crate::runtime::Wake;
+use crate::task::Wake;
 
 /// A message on a channel, and the instant it arrived where whoever handed it knows one — a network thread knows none
 /// of the agent's timeline, so it is stamped with the instant of the pass that handles it.
