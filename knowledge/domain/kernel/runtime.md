@@ -65,7 +65,8 @@ trigger, the present reaches the next ground it laid, or a search was cut short,
 in the present it was found in until news is heard, execution walks what is due and whenever a revision changed the
 present, a transport listens or polls, sensing asks every minute what has fallen due, prediction offers its
 foresight. A task hears an event by its class, heard beneath it by the vocabulary's closure
-([policy](/domain/kernel/policy.md)), and a kind of graph written, in the order they were said; it waits also for
+([policy](/domain/kernel/policy.md)), and a kind of graph written — what one turn wrote of the kind told as one
+thing, so a message of several readings is perceived once and revised once — in the order they were said; it waits also for
 an arrival any thread rings and for the clock; and in a turn it may `hold` and `release` the agent, say by
 `wake_at` when it is next due, ask to decide `again` at the next instant, and mark a `lap`. What it says while it
 handles what woke it is heard when it next waits, its graphs before its events. No order holds between two

@@ -253,8 +253,8 @@ async fn task(
                 let wrote = part.heard_event(tag, &event, &mut turn);
                 turn.done(wrote)?;
             }
-            Some(Woke::Graph(tag, graph)) => {
-                let wrote = part.heard(tag, &graph, &mut turn);
+            Some(Woke::Graphs(tag, graphs)) => {
+                let wrote = part.heard(tag, &graphs, &mut turn);
                 turn.done(wrote)?;
             }
             _ => {}
@@ -335,18 +335,23 @@ impl Speech {
         }
     }
 
-    fn heard(&mut self, _job: usize, graph: &str, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+    /// The statements written together, each said heard where it was received, and each extracted.
+    fn heard(&mut self, _job: usize, graphs: &[String], pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         let watch = self.speaker.watch.clone();
-        if watch.connected() && self.arrival(graph)?.as_deref() == Some(RECEIVED) {
-            let (kinds, said) = described(&self.beliefs, graph)?;
-            watch.emit(&Heard {
-                statement: graph.to_string(),
-                at: Some(pass.now),
-                kinds,
-                said,
-            });
+        let mut written = Vec::new();
+        for graph in graphs {
+            if watch.connected() && self.arrival(graph)?.as_deref() == Some(RECEIVED) {
+                let (kinds, said) = described(&self.beliefs, graph)?;
+                watch.emit(&Heard {
+                    statement: graph.to_string(),
+                    at: Some(pass.now),
+                    kinds,
+                    said,
+                });
+            }
+            written.extend(extract(&self.beliefs, graph)?);
         }
-        extract(&self.beliefs, graph)
+        Ok(written)
     }
 
     /// What speech's policy does of a trigger: tell each statement it names, as it was said, to each agent it names.

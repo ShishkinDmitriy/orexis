@@ -235,8 +235,8 @@ async fn task(
                 let wrote = part.heard_event(tag, &event, &mut turn);
                 turn.done(wrote)?;
             }
-            Some(Woke::Graph(tag, graph)) => {
-                let wrote = part.heard(tag, &graph, &mut turn);
+            Some(Woke::Graphs(tag, graphs)) => {
+                let wrote = part.heard(tag, &graphs, &mut turn);
                 turn.done(wrote)?;
             }
             _ => {}
@@ -341,12 +341,16 @@ impl Coordination {
         }
     }
 
-    fn heard(&mut self, job: usize, graph: &str, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+    /// The questions or answers written together: each question answered, and what they make of the draws
+    /// concluded once.
+    fn heard(&mut self, job: usize, graphs: &[String], pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         let mut written = Vec::new();
-        if job == QUESTIONED
-            && let Some((peer, document)) = answer(&self.beliefs, &self.me, graph, pass.now)?
-        {
-            written.extend(self.said(&peer, &document, pass.now)?);
+        if job == QUESTIONED {
+            for graph in graphs {
+                if let Some((peer, document)) = answer(&self.beliefs, &self.me, graph, pass.now)? {
+                    written.extend(self.said(&peer, &document, pass.now)?);
+                }
+            }
         }
         written.extend(self.yielded(pass)?);
         Ok(written)

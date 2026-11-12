@@ -88,7 +88,7 @@ async fn task(handed: Handed, mut belief: Belief, mut hears: Hears) -> Result<()
         let Some(woke) = woke else { break };
         let mut turn = handed.turn();
         let wrote = match woke {
-            Woke::Graph(_, graph) => belief.revising(&[graph], BELIEF, &mut turn).map(|()| Vec::new()),
+            Woke::Graphs(_, graphs) => belief.revising(&graphs, BELIEF, &mut turn).map(|()| Vec::new()),
             Woke::Event(_, event) => belief.heard_event(&event, &mut turn),
         };
         turn.done(wrote)?;

@@ -489,6 +489,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   instant for ever, which only a clock that never stands exactly there had hidden.
 - **A search the budget cut short is continued whatever else is walking** — with a plan walked beside it nothing
   else asked for the next planning, and the want stood unplanned until something was heard.
+- **One happening is said once: what one turn wrote of a kind is told as one thing** — a message of three readings
+  was three percepts each perceived and revised apart, and whoever heard the first revision decided before the
+  rest was believed; told together, sensing says one `Perceived` and belief one `Revised` naming all three, and
+  seven committed steps adopted are one revision (a-package-is-a-task-that-awaits-its-events).
 - **A claim presented lands at the subject's next reading, as a dose does** — the presentation's effect is the
   soil moist, which only the probe's next reading shows; declared no landing, it failed a patience after it was
   taken and the grower bought, presented and was served again once a minute until the reading came, four doses

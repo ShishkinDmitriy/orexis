@@ -203,8 +203,8 @@ impl Busy {
 pub enum Woke {
     /// An event of a class it hears was said.
     Event(usize, Heard),
-    /// A graph of a kind it hears was written.
-    Graph(usize, String),
+    /// Graphs of a kind it hears were written, together: what one turn wrote of that kind.
+    Graphs(usize, Vec<String>),
 }
 
 struct Bus {
@@ -360,24 +360,34 @@ impl Events {
         }
     }
 
-    /// Say that `graphs` were written, to every task hearing a kind the catalogue says each is.
+    /// Say that `graphs` were written, to every task hearing a kind the catalogue says any of them is: WHAT ONE
+    /// TURN WROTE OF A KIND IS TOLD AS ONE THING, the graphs of it together in the order they were written. One
+    /// message of several readings is several percepts, and told one by one each was said and revised apart, so
+    /// whoever heard the first revision decided before the rest was believed.
     pub fn wrote(&self, graphs: Vec<String>) -> Result<(), Error> {
-        for graph in graphs {
-            let asked: Vec<(UnboundedSender<Woke>, String, usize)> = {
-                let hearers = self.0.hearers.read().expect("hearers nobody poisoned");
-                hearers
-                    .iter()
-                    .flat_map(|h| h.graphs.iter().map(|(kind, tag)| (h.to.clone(), kind.clone(), *tag)))
-                    .collect()
-            };
-            if asked.is_empty() {
-                continue;
-            }
-            let kinds = self.kinds(&graph)?;
-            for (to, kind, tag) in asked {
-                if kinds.contains(&kind) {
-                    self.send(&to, Woke::Graph(tag, graph.clone()));
-                }
+        let asked: Vec<(UnboundedSender<Woke>, String, usize)> = {
+            let hearers = self.0.hearers.read().expect("hearers nobody poisoned");
+            hearers
+                .iter()
+                .flat_map(|h| h.graphs.iter().map(|(kind, tag)| (h.to.clone(), kind.clone(), *tag)))
+                .collect()
+        };
+        if asked.is_empty() || graphs.is_empty() {
+            return Ok(());
+        }
+        let mut kinds = Vec::new();
+        for graph in &graphs {
+            kinds.push(self.kinds(graph)?);
+        }
+        for (to, kind, tag) in asked {
+            let of_kind: Vec<String> = graphs
+                .iter()
+                .zip(&kinds)
+                .filter(|(_, kinds)| kinds.contains(&kind))
+                .map(|(graph, _)| graph.clone())
+                .collect();
+            if !of_kind.is_empty() {
+                self.send(&to, Woke::Graphs(tag, of_kind));
             }
         }
         Ok(())
@@ -1099,6 +1109,34 @@ mod tests {
         running.wake().ring();
         assert_eq!(running.released().await.unwrap(), UNFINISHED);
         running.stop().await;
+    }
+
+    /// Three graphs written in one turn, two of a kind a task hears and one of another: the task is told the two
+    /// together, once, in the order they were written, and nothing of the third.
+    #[test]
+    fn what_one_turn_wrote_of_a_kind_is_told_as_one_thing() {
+        use crate::ontology::{BELIEF, CATALOGUE_GRAPH};
+        let store = Store::new(crate::snapshots::namespaces()).unwrap();
+        store
+            .update(&format!(
+                "INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph . \
+                 <urn:test:one> a orexis:BeliefGraph . <urn:test:other> a orexis:ActionGraph . \
+                 <urn:test:two> a orexis:BeliefGraph }} }}"
+            ))
+            .unwrap();
+        let events = Events::new(&store);
+        let mut hears = events.hears();
+        hears.graph(BELIEF, 3);
+        let written = ["urn:test:one", "urn:test:other", "urn:test:two"];
+        events.wrote(written.iter().map(|g| g.to_string()).collect()).unwrap();
+        assert_eq!(
+            hears.inbox.try_recv().ok(),
+            Some(Woke::Graphs(
+                3,
+                vec!["urn:test:one".to_string(), "urn:test:two".to_string()]
+            ))
+        );
+        assert!(hears.inbox.try_recv().is_err(), "told once");
     }
 
     #[test]
