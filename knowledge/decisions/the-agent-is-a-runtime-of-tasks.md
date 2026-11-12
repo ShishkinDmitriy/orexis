@@ -117,12 +117,14 @@ instead of running passes.
 **The pass had also paced a retry, and planning now does.** With a policy deciding after every message, a plan that
 fails as it is taken was planned again at once, in the present it failed in, for ever: run free, the greenhouse's
 dry bed with a silent probe published seventy plans in eight seconds, where a pass had made it one a pass without
-anyone saying so (#1145). Planning's policy now holds back: a want whose plan, published since news was last heard,
-has ended with the want still standing is not planned again until news is - a revision that changed a state or
-revised a belief that came to the agent, never its own record of what it did, a committed step among them
-(`orexis:Recorded`). Refused for it: a rule on what was heard alone, "what execution says of a plan is no trigger
-while no belief was revised", which also kept planning from laying the grounds a committed dose changes; and
-planning naming execution's events to tell a failure, a lower package speaking a higher one's word. And a run
+anyone saying so (#1145). Planning's policy now holds back: where an intention ends `failed` and no news was heard
+since its plan was published, the present is the one the plan was found in, and planning does not plan again until
+news is heard - a revision that changed a state or revised a belief that came to the agent, never its own record
+of what it did, a committed step among them (`orexis:Recorded`). How the intention ended is read off its own row,
+in execution's words, which planning speaks. Refused for it: "what execution says of a plan is no trigger while no
+belief was revised", which also kept planning from laying the grounds a committed dose changes; and telling a
+failure by the want standing again and not walking, which a plan walked to its end looks like too until planning
+weighs the want met - the courier, whose fictive steps revise nothing, was never let go. And a run
 halted while something is still busy now ends, where it waited for a rest that never came. One rule of the
 queue's is kept for good, being about one package and not two: what a package says while it handles what woke it
 is heard once it has said what it wrote, its graphs before its events, so a hearer never starts on a sayer's

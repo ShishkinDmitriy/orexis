@@ -425,7 +425,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A possible world is named by a mint number and the path to it is rows** — a name that joined
   its path collided once, needed escaping, grew with depth and was read back by nothing; the
   counter is the store's, so a cone kept across passes is never named over (#486).
-- **A plan that ended unreached in the present it was found in is not planned again until news is heard** — the
+- **A plan that failed in the present it was found in is not planned again until news is heard** — the
   search would find it again, and with no pass between two decisions a dose that could not be sized was planned,
   taken and failed seventy times in eight seconds; news is a revision that changed a state or revised a belief that
   came to the agent, never its own record of what it did (#1145, the-agent-is-a-runtime-of-tasks).
