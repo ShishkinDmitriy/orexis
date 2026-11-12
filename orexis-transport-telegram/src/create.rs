@@ -4,9 +4,10 @@
 //! it as prose. The agent's own words for a channel it carries it hears said kept, beneath its trigger, and sends.
 
 use std::collections::VecDeque;
+use std::sync::{Arc, Mutex};
 
 use orexis::Error;
-use orexis::runtime::{Heard, Part, Pass, Starting};
+use orexis::runtime::{Heard, Pass, Registers, Runtime, Seat, Starting, Woke};
 use orexis::transport::Message;
 use orexis_speech::prose::{ProseKept, carry, kept};
 
@@ -36,7 +37,52 @@ impl Transport {
     }
 }
 
-impl Part for Transport {
+impl Transport {
+    /// THE TELEGRAM MEMBER REGISTERING ITSELF on a runtime, lent: whoever keeps the part reads it between runs.
+    pub fn registers(part: &Arc<Mutex<Self>>) -> Registers {
+        let part = part.clone();
+        Box::new(move |runtime| register(runtime, part))
+    }
+}
+
+/// Started, it says what it waits for, and hands the runtime its task.
+fn register(runtime: &mut Runtime, part: Arc<Mutex<Transport>>) -> Result<(), Error> {
+    let mut starting = runtime.starting("transport/telegram");
+    part.lock().expect("a part nobody poisoned").start(&mut starting)?;
+    runtime.register(starting, move |seat| policy(part, seat));
+    Ok(())
+}
+
+/// THE TELEGRAM MEMBER'S TASK: it waits for its poll falling due, an event beneath its trigger, or a message a poll
+/// received, and does what its policy says of each.
+async fn policy(part: Arc<Mutex<Transport>>, mut seat: Seat) {
+    while let Some((woke, mut pass)) = seat.next().await {
+        let mut transport = part.lock().expect("a part nobody poisoned");
+        let wrote = match woke {
+            Woke::Due(tag) => transport.run(tag, &mut pass),
+            Woke::Event(tag, event) => transport.heard_event(tag, &event, &mut pass),
+            Woke::Arrived => transport.queued(&mut pass),
+            _ => Ok(Vec::new()),
+        };
+        pass.done(wrote);
+    }
+}
+
+impl Transport {
+    /// What it queued for itself, each in turn and what each wrote told, until nothing is left.
+    fn queued(&mut self, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        loop {
+            let jobs = self.submitted();
+            if jobs.is_empty() {
+                return Ok(Vec::new());
+            }
+            for job in jobs {
+                let wrote = self.run(job, pass)?;
+                pass.told(wrote)?;
+            }
+        }
+    }
+
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
         self.member.inbox.wakes(starting.wake());
         starting.every(self.member.every, POLL);

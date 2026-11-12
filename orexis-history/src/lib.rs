@@ -14,7 +14,7 @@ use orexis::Error;
 use orexis::events::{RDF_TYPE, Watch};
 use orexis::journal::Journal;
 use orexis::ontology::BELIEF;
-use orexis::runtime::{Part, Pass};
+use orexis::runtime::Registers;
 use orexis::series::Sink;
 use orexis::store::{Store, Within, iri};
 
@@ -67,9 +67,15 @@ impl History {
     }
 }
 
-impl Part for History {
-    fn run(&mut self, _job: usize, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
-        Ok(Vec::new())
+impl History {
+    /// HISTORY REGISTERING ITSELF on a runtime: a task that waits for nothing but the run's end, since what it keeps
+    /// it hears on the watch.
+    pub fn registers(self) -> Registers {
+        Box::new(|runtime| {
+            let starting = runtime.starting("history");
+            runtime.register(starting, |mut seat| async move { while seat.next().await.is_some() {} });
+            Ok(())
+        })
     }
 }
 

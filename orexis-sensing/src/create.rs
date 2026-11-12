@@ -16,6 +16,7 @@
 //! sensor doubted at the last ask and no longer, so the series' last word on it in a window is that it is fine.
 
 use std::collections::BTreeSet;
+use std::sync::{Arc, Mutex};
 
 use oxigraph::model::{Literal, NamedNode};
 use oxsdatatypes::DateTime;
@@ -25,7 +26,7 @@ use orexis::bind::{Value, bind};
 use orexis::clock::{instant, isoformat, seconds_of};
 use orexis::events::{Watch, round6};
 use orexis::ontology::{BELIEF, DERIVED, local_of};
-use orexis::runtime::{Heard, Part, Pass, Starting};
+use orexis::runtime::{Heard, Pass, Registers, Runtime, Seat, Starting, Woke};
 use orexis::store::{Store, Within, iri, value};
 
 use crate::cadence::cadence_of;
@@ -244,8 +245,40 @@ fn me_of(beliefs: &Store, agent: &str) -> Result<String, Error> {
         .ok_or_else(|| Error::Evaluation(format!("no agent with localId '{agent}' in this store")))
 }
 
-impl Part for Sensing {
+impl Sensing {
+    /// SENSING REGISTERING ITSELF on a runtime, lent: whoever keeps the part reads it between runs.
+    pub fn registers(part: &Arc<Mutex<Self>>) -> Registers {
+        let part = part.clone();
+        Box::new(move |runtime| register(runtime, part))
+    }
+}
+
+/// Started, it says what it waits for, and hands the runtime its task.
+fn register(runtime: &mut Runtime, part: Arc<Mutex<Sensing>>) -> Result<(), Error> {
+    let mut starting = runtime.starting("sensing");
+    part.lock().expect("a part nobody poisoned").start(&mut starting)?;
+    runtime.register(starting, move |seat| policy(part, seat));
+    Ok(())
+}
+
+/// SENSING'S TASK: it waits for its minute, a percept written, or a revision said, and does what its policy says of
+/// each.
+async fn policy(part: Arc<Mutex<Sensing>>, mut seat: Seat) {
+    while let Some((woke, mut pass)) = seat.next().await {
+        let mut sensing = part.lock().expect("a part nobody poisoned");
+        let wrote = match woke {
+            Woke::Due(tag) => sensing.run(tag, &mut pass),
+            Woke::Graph(tag, graph) => sensing.heard(tag, &graph, &mut pass),
+            Woke::Event(tag, event) => sensing.heard_event(tag, &event, &mut pass),
+            _ => Ok(Vec::new()),
+        };
+        pass.done(wrote);
+    }
+}
+
+impl Sensing {
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
+        starting.says(&self.watch);
         starting.every(EVERY_S, ASK);
         if let Some(cat) = self.beliefs.catalogue()? {
             self.due = self
@@ -275,10 +308,6 @@ impl Part for Sensing {
     fn heard(&mut self, _job: usize, graph: &str, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
         self.perceived(vec![graph.to_string()]);
         Ok(Vec::new())
-    }
-
-    fn watch(&self) -> Option<orexis::events::Watch> {
-        Some(self.watch.clone())
     }
 
     /// What sensing's policy does of a revision pass: say each percept it revised as the observation it is.
@@ -346,7 +375,7 @@ mod tests {
         let clock = std::sync::Arc::new(Manual::at(later));
         let part = std::sync::Arc::new(std::sync::Mutex::new(Sensing::new(&store, "keeper").unwrap()));
         let written = {
-            let parts: Vec<(String, Box<dyn Part>)> = vec![("sensing".into(), orexis::runtime::Lent::of(&part))];
+            let parts = vec![("sensing".to_string(), Sensing::registers(&part))];
             let mut runtime = Runtime::new(&store, "keeper", clock.clone(), parts).unwrap();
             runtime.drain(later).unwrap()
         };
@@ -418,7 +447,7 @@ mod tests {
             about
         };
         {
-            let parts: Vec<(String, Box<dyn Part>)> = vec![("sensing".into(), orexis::runtime::Lent::of(&part))];
+            let parts = vec![("sensing".to_string(), Sensing::registers(&part))];
             let mut runtime = Runtime::new(&store, "keeper", clock.clone(), parts).unwrap();
             runtime.drain(orexis::clock::Clock::now(&*clock)).unwrap();
         }

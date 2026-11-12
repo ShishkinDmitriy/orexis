@@ -13,7 +13,7 @@ use orexis::boot::{TREE, packages_of};
 use orexis::clock::{Clock, Manual, instant};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::{BELIEF, PLAN, SELF_GRAPH};
-use orexis::runtime::{Lent, PLANNED, Part, Runtime};
+use orexis::runtime::{PLANNED, Runtime};
 use orexis::store::{Store, Within, iri, value};
 use orexis_agent::booted;
 use orexis_planning::create::Planning;
@@ -138,7 +138,7 @@ fn own(store: &Store) -> Vec<String> {
 fn ran<C: Clock + Clone + 'static>(store: &Store, budget: usize, clock: &C, passes: usize) -> (String, Planning) {
     let planning = Arc::new(Mutex::new(Planning::new(store, "hanoi", Some(budget)).unwrap()));
     let outcome = {
-        let parts: Vec<(String, Box<dyn Part>)> = vec![("planning".into(), Lent::of(&planning))];
+        let parts = vec![("planning".to_string(), Planning::registers(&planning))];
         let mut runtime = Runtime::new(store, "hanoi", Arc::new(clock.clone()), parts).unwrap();
         assert_eq!(runtime.parts(), ["planning"]);
         runtime.run(Some(passes), 0.0).unwrap()

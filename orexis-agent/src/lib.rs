@@ -12,7 +12,7 @@ use orexis::boot::{Booting, boot};
 use orexis::clock::Clock;
 use orexis::events::Watch;
 use orexis::journal::Journal;
-use orexis::runtime::{Lent, Part};
+use orexis::runtime::Registers;
 use orexis::series::Sink;
 use orexis::store::Store;
 
@@ -229,8 +229,9 @@ pub struct Wiring {
     pub mqtt: Option<()>,
 }
 
-/// The parts an agent runs, each named by its package, in the order a pass runs them.
-pub type Parts = Vec<(String, Box<dyn Part>)>;
+/// The parts an agent runs, each named by its package and registering itself on the runtime it is handed, in the
+/// order a pass runs them.
+pub type Parts = Vec<(String, Registers)>;
 
 /// The parts of the packages `loaded` names, made, linked and in the order a pass runs them: belief, so its rules
 /// have concluded of a graph written before anything else hears it, then planning, then execution walking what it
@@ -258,9 +259,9 @@ pub fn assemble_wired(
     Ok(assembled(store, agent, clock, loaded, budget, wiring, false)?.0)
 }
 
-/// What a TEST reads of the parts once they are handed to the runtime: planning's and execution's parts LENT to it
-/// (`Lent`), which no agent's assembly does, and the watch every part says its events to, which the runtime is handed
-/// too.
+/// What a TEST reads of the parts once they registered on the runtime: planning's and execution's parts, each lent to
+/// its task, kept here too, which no agent's assembly does, and the watch every part says its events to, which the
+/// runtime is handed too.
 #[derive(Default)]
 pub struct Seen {
     pub watch: Watch,
@@ -358,10 +359,13 @@ fn assembled(
     if watching.journal.is_some() || watching.history.is_some() {
         let incidents = orexis_history::incidents(store)?;
         let history = orexis_history::History::new(&watch, watching.history, watching.journal, incidents);
-        watchers.push(("history".into(), Box::new(history)));
+        watchers.push(("history".into(), history.registers()));
     }
     if let Some(window) = watching.metrics {
-        watchers.push(("metrics".into(), Box::new(orexis_metrics::Metrics::new(window, &watch))));
+        watchers.push((
+            "metrics".into(),
+            orexis_metrics::Metrics::new(window, &watch).registers(),
+        ));
     }
     if let Some(endpoint) = &watching.traces {
         orexis_spans::connect(&watch, agent, orexis_spans::post(endpoint));
@@ -508,63 +512,93 @@ fn assembled(
     }
     #[cfg(feature = "belief")]
     if let Some(belief) = belief {
-        parts.push(("belief".into(), Box::new(belief)));
+        parts.push((
+            "belief".into(),
+            orexis_belief::create::Belief::registers(&Arc::new(Mutex::new(belief))),
+        ));
     }
     #[cfg(feature = "planning")]
     if let Some(planning) = planning {
+        let planning = Arc::new(Mutex::new(planning));
+        parts.push((
+            "planning".into(),
+            orexis_planning::create::Planning::registers(&planning),
+        ));
         if lend {
-            let planning = Arc::new(Mutex::new(planning));
-            parts.push(("planning".into(), Lent::of(&planning)));
             seen.planning = Some(planning);
-        } else {
-            parts.push(("planning".into(), Box::new(planning)));
         }
     }
     #[cfg(feature = "execution")]
     if let Some(execution) = execution {
+        let execution = Arc::new(Mutex::new(execution));
+        parts.push((
+            "execution".into(),
+            orexis_execution::create::Execution::registers(&execution),
+        ));
         if lend {
-            let execution = Arc::new(Mutex::new(execution));
-            parts.push(("execution".into(), Lent::of(&execution)));
             seen.execution = Some(execution);
-        } else {
-            parts.push(("execution".into(), Box::new(execution)));
         }
     }
     #[cfg(feature = "sensing")]
     if let Some(sensing) = sensing {
-        parts.push(("sensing".into(), Box::new(sensing)));
+        parts.push((
+            "sensing".into(),
+            orexis_sensing::create::Sensing::registers(&Arc::new(Mutex::new(sensing))),
+        ));
     }
     #[cfg(feature = "prediction")]
     if let Some(prediction) = prediction {
-        parts.push(("prediction".into(), Box::new(prediction)));
+        let _ = prediction;
+        parts.push(("prediction".into(), orexis_prediction::create::Prediction::registers()));
     }
     #[cfg(feature = "speech")]
     if let Some(speech) = speech {
-        parts.push(("speech".into(), Box::new(speech)));
+        parts.push((
+            "speech".into(),
+            orexis_speech::create::Speech::registers(&Arc::new(Mutex::new(speech))),
+        ));
     }
     #[cfg(feature = "translation")]
     if let Some(translation) = translation {
-        parts.push(("translation".into(), Box::new(translation)));
+        parts.push((
+            "translation".into(),
+            orexis_translation::create::Translation::registers(&Arc::new(Mutex::new(translation))),
+        ));
     }
     #[cfg(feature = "coordination")]
     if let Some(coordination) = coordination {
-        parts.push(("coordination".into(), Box::new(coordination)));
+        parts.push((
+            "coordination".into(),
+            orexis_coordination::create::Coordination::registers(&Arc::new(Mutex::new(coordination))),
+        ));
     }
     #[cfg(feature = "mqtt")]
     if let Some(transport) = transport {
-        parts.push(("transport/mqtt".into(), Box::new(transport)));
+        parts.push((
+            "transport/mqtt".into(),
+            orexis_transport_mqtt::create::Transport::registers(&Arc::new(Mutex::new(transport))),
+        ));
     }
     #[cfg(feature = "http")]
     if let Some(web) = web {
-        parts.push(("transport/http".into(), Box::new(web)));
+        parts.push((
+            "transport/http".into(),
+            orexis_transport_http::create::Transport::registers(&Arc::new(Mutex::new(web))),
+        ));
     }
     #[cfg(feature = "telegram")]
     if let Some(bot) = bot {
-        parts.push(("transport/telegram".into(), Box::new(bot)));
+        parts.push((
+            "transport/telegram".into(),
+            orexis_transport_telegram::create::Transport::registers(&Arc::new(Mutex::new(bot))),
+        ));
     }
     #[cfg(feature = "email")]
     if let Some(mailbox) = mailbox {
-        parts.push(("transport/email".into(), Box::new(mailbox)));
+        parts.push((
+            "transport/email".into(),
+            orexis_transport_email::create::Transport::registers(&Arc::new(Mutex::new(mailbox))),
+        ));
     }
     //  WHAT WATCHES THE AGENT, last, so it is stopped first and writes the last window.
     parts.extend(watchers);

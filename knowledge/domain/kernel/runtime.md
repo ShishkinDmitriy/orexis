@@ -55,22 +55,25 @@ closure, which is how an updated ontology or rule set reaches an agent that has 
 the agent owns are left as they are, since they are its beliefs now — the self graph among them, so
 a role declared after birth reaches only a fresh volume.
 
-**A package's part is created, linked and started.** Every package the agent loads — each a
+**A package's part registers itself, and its loop is its own.** Every package the agent loads — each a
 declared role calls for, and each transport a loaded role needs — that has a `create` module makes a
-[part](/domain/kernel/part.md) of the runtime, each handed the one watch every part says its
-[events](/domain/kernel/event.md) to; then each starts and says what it does: belief revises what is
+[part](/domain/kernel/part.md), each handed the one watch every part says its
+[events](/domain/kernel/event.md) to; then each registers on the runtime, saying what it waits for and handing
+its task, which does what the package does: belief revises what is
 written, planning plans where its policy hears a trigger, the present reaches the next ground it laid, or a search was cut short, execution walks what is due and whenever a revision changed the
 present, a transport listens or polls, sensing asks every minute what has
-fallen due, prediction answers every observation written. The runtime offers `submit` a job from any
-thread, `every` so many seconds of the one timeline, `on` a kind of graph written, `hears` an event's class,
-heard beneath it by the vocabulary's closure ([policy](/domain/kernel/policy.md)), `hold` and `release` the agent, `again`, `wake_at` the instant a part is next due with nothing heard, and `lap`, a part of the pass. Each part is a
-TASK of a Tokio runtime with a mailbox of its own: run free, as an agent runs, it waits for an event beneath its
-trigger, a graph of a kind it hears, an arrival or the soonest instant it is due, handles it and runs its due
-timers, its policy among them, on the runtime's workers beside the other parts, and polls nothing; run by passes, as
-a test runs, the runtime ticks the parts in turn on one thread, each after nothing is busy, and what a part queues
-waits for the end of the pass, so a test proves one order
-([the-agent-is-a-runtime-of-tasks](/decisions/the-agent-is-a-runtime-of-tasks.md)). It knows no package's words,
-keeps the parts in `parts` and stops them last-first. Where the environment names a series store it creates the part that writes
+fallen due, prediction offers its foresight. The runtime offers a part registering `every` so many seconds of
+the one timeline, `on` a kind of graph written, `hears` an event's class, heard beneath it by the vocabulary's
+closure ([policy](/domain/kernel/policy.md)), and a `wake` that any thread rings for an arrival; and a part woken
+`hold` and `release` the agent, `again`, `wake_at` the instant it is next due with nothing heard, and `lap`, a part
+of the pass. Each part's task is a TASK of a Tokio runtime, and its loop is the package's: it waits on its seat
+(`Seat::next`) and is answered what woke it. Run free, as an agent runs, the wait ends with an event beneath its
+trigger, a graph of a kind it hears, an arrival or the soonest instant it is due; it handles that and is then woken
+for its due timers, its policy among them, on the runtime's workers beside the other parts, and polls nothing; run
+by passes, as a test runs, the runtime ticks the seats in turn on one thread, each after nothing is busy, and what
+a part queued for itself waits for the end of the pass, so a test proves one order
+([the-agent-is-a-runtime-of-tasks](/decisions/the-agent-is-a-runtime-of-tasks.md)). It knows no package and no
+package's words, keeps the parts' names in `parts` and stops their tasks last-first. Where the environment names a series store it creates the part that writes
 it too, metrics or history, last, so it hears every other part
 ([metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md))
 ([a-package-starts-itself](/decisions/a-package-starts-itself.md),

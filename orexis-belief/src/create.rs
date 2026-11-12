@@ -16,7 +16,9 @@ use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::ontology::BELIEF;
-use orexis::runtime::{Heard, Part, Pass, Starting};
+use std::sync::{Arc, Mutex};
+
+use orexis::runtime::{Heard, Pass, Registers, Runtime, Seat, Woke};
 use orexis::store::{Store, Within};
 
 use crate::Deliberator;
@@ -63,8 +65,44 @@ impl Belief {
     }
 }
 
-impl Part for Belief {
-    fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
+impl Belief {
+    /// BELIEF REGISTERING ITSELF on a runtime, lent: whoever keeps the part reads it between runs.
+    pub fn registers(part: &Arc<Mutex<Self>>) -> Registers {
+        let part = part.clone();
+        Box::new(move |runtime| register(runtime, part))
+    }
+}
+
+/// Belief revises what the world authored as the agent's state, once, then waits for a belief written and its
+/// trigger's events.
+fn register(runtime: &mut Runtime, part: Arc<Mutex<Belief>>) -> Result<(), Error> {
+    let mut starting = runtime.starting("belief");
+    {
+        let mut belief = part.lock().expect("a part nobody poisoned");
+        belief.start(starting.now())?;
+        starting.says(&belief.deliberator.watch);
+    }
+    starting.on(BELIEF, HEARD);
+    starting.hears(REVISING_TRIGGER, REVISE);
+    runtime.register(starting, move |seat| policy(part, seat));
+    Ok(())
+}
+
+/// BELIEF'S TASK: it waits for a belief written, or an event beneath its trigger, and revises.
+async fn policy(part: Arc<Mutex<Belief>>, mut seat: Seat) {
+    while let Some((woke, mut pass)) = seat.next().await {
+        let mut belief = part.lock().expect("a part nobody poisoned");
+        let wrote = match woke {
+            Woke::Graph(_, graph) => belief.revising(&[graph], BELIEF, &mut pass).map(|()| Vec::new()),
+            Woke::Event(_, event) => belief.heard_event(&event, &mut pass),
+            _ => Ok(Vec::new()),
+        };
+        pass.done(wrote);
+    }
+}
+
+impl Belief {
+    fn start(&mut self, now: DateTime) -> Result<(), Error> {
         //  EVERY BELIEF NOT YET REVISED, but the common ones: the world's documents were concluded on at genesis.
         let mut skip = self.beliefs.graphs_of(&[REVISION_GRAPH], &Within::default())?;
         skip.extend(self.beliefs.graphs_of(&[BELIEF], &Within::common())?);
@@ -74,27 +112,11 @@ impl Part for Belief {
                 due.push(g);
             }
         }
-        self.revise(&due, BELIEF, starting.now())?;
-        starting.on(BELIEF, HEARD);
-        starting.hears(REVISING_TRIGGER, REVISE);
-        Ok(())
-    }
-
-    fn run(&mut self, _job: usize, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
-        Ok(Vec::new())
-    }
-
-    fn heard(&mut self, _job: usize, graph: &str, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
-        self.revising(&[graph.to_string()], BELIEF, pass)?;
-        Ok(Vec::new())
-    }
-
-    fn watch(&self) -> Option<orexis::events::Watch> {
-        Some(self.deliberator.watch.clone())
+        self.revise(&due, BELIEF, now)
     }
 
     /// What belief's policy does of a trigger: revise each graph it names, its revisions of the kind it names.
-    fn heard_event(&mut self, _job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn heard_event(&mut self, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
         let graphs: Vec<String> = event.all(REVISES).iter().map(|g| g.as_str().to_string()).collect();
         let Some(kind) = event.named(INTO).map(|k| k.as_str().to_string()) else {
             return Ok(Vec::new());
@@ -141,7 +163,7 @@ mod tests {
             }
         });
         {
-            let parts: Vec<(String, Box<dyn Part>)> = vec![("belief".into(), orexis::runtime::Lent::of(&part))];
+            let parts = vec![("belief".to_string(), Belief::registers(&part))];
             Runtime::new(&store, "urn:test:me", clock.clone(), parts).unwrap();
         }
         store

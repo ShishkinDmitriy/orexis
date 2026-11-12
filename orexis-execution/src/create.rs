@@ -18,7 +18,7 @@
 //! kept by speech's `said` and said `execution:Told`, which execution's ontology puts beneath speech's speaking
 //! trigger. A step whose command answers nothing is not taken (#869).
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use oxsdatatypes::DateTime;
 
@@ -28,7 +28,7 @@ use orexis::clock::Clock;
 use orexis::document::Document;
 use orexis::events::{Event, Watch, mint};
 use orexis::ontology::RECORDED;
-use orexis::runtime::{Heard, Part, Pass, Starting};
+use orexis::runtime::{Heard, Pass, Registers, Runtime, Seat, Starting, Woke};
 use orexis::store::Store;
 use oxigraph::model::{GraphName, Literal, NamedNode, Quad, Term};
 
@@ -258,8 +258,54 @@ impl Execution {
     }
 }
 
-impl Part for Execution {
+impl Execution {
+    /// EXECUTION REGISTERING ITSELF on a runtime, lent: whoever keeps the part reads it between runs.
+    pub fn registers(part: &Arc<Mutex<Self>>) -> Registers {
+        let part = part.clone();
+        Box::new(move |runtime| register(runtime, part))
+    }
+}
+
+/// Started, it says what it waits for, and hands the runtime its task.
+fn register(runtime: &mut Runtime, part: Arc<Mutex<Execution>>) -> Result<(), Error> {
+    let mut starting = runtime.starting("execution");
+    part.lock().expect("a part nobody poisoned").start(&mut starting)?;
+    runtime.register(starting, move |seat| policy(part, seat));
+    Ok(())
+}
+
+/// EXECUTION'S TASK: it waits for the pass, an event beneath one of its triggers, or a walk it queued, and does what
+/// its policy says of each.
+async fn policy(part: Arc<Mutex<Execution>>, mut seat: Seat) {
+    while let Some((woke, mut pass)) = seat.next().await {
+        let mut execution = part.lock().expect("a part nobody poisoned");
+        let wrote = match woke {
+            Woke::Due(tag) => execution.run(tag, &mut pass),
+            Woke::Event(tag, event) => execution.heard_event(tag, &event, &mut pass),
+            Woke::Arrived => execution.queued(&mut pass),
+            _ => Ok(Vec::new()),
+        };
+        pass.done(wrote);
+    }
+}
+
+impl Execution {
+    /// What it queued for itself, each in turn and what each wrote told, until nothing is left.
+    fn queued(&mut self, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        loop {
+            let jobs = self.submitted();
+            if jobs.is_empty() {
+                return Ok(Vec::new());
+            }
+            for job in jobs {
+                let wrote = self.run(job, pass)?;
+                pass.told(wrote)?;
+            }
+        }
+    }
+
     fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
+        starting.says(&self.executor.watch);
         starting.every(0.0, PASS);
         starting.hears(ADOPTING_TRIGGER, ADOPT);
         starting.hears(SUPERSEDING_TRIGGER, SUPERSEDE);
@@ -371,10 +417,6 @@ impl Part for Execution {
             pass.again();
         }
         Ok(self.handed())
-    }
-
-    fn watch(&self) -> Option<orexis::events::Watch> {
-        Some(self.executor.watch.clone())
     }
 
     fn submitted(&mut self) -> Vec<usize> {

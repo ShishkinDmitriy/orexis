@@ -15,7 +15,7 @@ use orexis::clock::{Manual, instant};
 use orexis::events::{Watch, as_of};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
-use orexis::runtime::{Heard, Lent, Part, Pass, Runtime, Starting};
+use orexis::runtime::{Heard, Pass, Registers, Runtime, Woke};
 use orexis::store::{Store, Within, iri, value};
 use orexis_speech::events::{Said, Statement};
 use orexis_speech::prose::{Carrier, PROSE_GRAPH, PROSE_KEPT, Prose, ProseKept, WRITING_ANNOUNCED, carry, kept};
@@ -468,19 +468,36 @@ struct Member {
     said: Vec<Said>,
 }
 
-impl Part for Member {
-    fn start(&mut self, starting: &mut Starting) -> Result<(), orexis::Error> {
-        starting.hears(PROSE_KEPT, 1);
-        starting.hears(WRITING_ANNOUNCED, 1);
-        Ok(())
+impl Member {
+    /// The member registering itself, lent: it waits for the agent's words kept or its writing announced, and for what
+    /// it queued.
+    fn registers(member: &Arc<Mutex<Self>>) -> Registers {
+        let member = member.clone();
+        Box::new(move |runtime| {
+            let mut starting = runtime.starting("transport/telegram");
+            starting.hears(PROSE_KEPT, 1);
+            starting.hears(WRITING_ANNOUNCED, 1);
+            runtime.register(starting, move |mut seat| async move {
+                while let Some((woke, mut pass)) = seat.next().await {
+                    let mut member = member.lock().unwrap();
+                    let wrote = match woke {
+                        Woke::Event(_, event) => member.heard_event(&event, &mut pass),
+                        Woke::Arrived => Ok(member.queued(&mut pass)),
+                        _ => Ok(Vec::new()),
+                    };
+                    pass.done(wrote);
+                }
+            });
+            Ok(())
+        })
     }
 
-    fn heard_event(&mut self, _job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, orexis::Error> {
+    fn heard_event(&mut self, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, orexis::Error> {
         carry(&self.store, &mut *self.bot.lock().unwrap(), event, pass, CARRYING)?;
         Ok(Vec::new())
     }
 
-    fn run(&mut self, _job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, orexis::Error> {
+    fn queued(&mut self, pass: &mut Pass<'_>) -> Vec<String> {
         let kept = std::mem::take(&mut self.kept);
         for prose in &kept {
             pass.emit(&ProseKept { prose: prose.clone() });
@@ -488,15 +505,7 @@ impl Part for Member {
         for said in std::mem::take(&mut self.said) {
             pass.emit(&said);
         }
-        Ok(kept)
-    }
-
-    fn submitted(&mut self) -> Vec<usize> {
-        if self.kept.is_empty() && self.said.is_empty() {
-            Vec::new()
-        } else {
-            vec![0]
-        }
+        kept
     }
 }
 
@@ -663,9 +672,9 @@ impl<'s> Seeker<'s> {
     }
 
     fn pass(&mut self) {
-        let parts: Vec<(String, Box<dyn Part>)> = vec![
-            ("translation".into(), Lent::of(&self.part)),
-            ("transport/telegram".into(), Lent::of(&self.member)),
+        let parts = vec![
+            ("translation".to_string(), Translation::registers(&self.part)),
+            ("transport/telegram".to_string(), Member::registers(&self.member)),
         ];
         let mut runtime = Runtime::new(self.store, "seeker", self.clock.clone(), parts).unwrap();
         runtime.drain(now()).unwrap();

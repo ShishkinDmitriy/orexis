@@ -10,7 +10,9 @@ description: >-
   blocking pool. One thread owning the store gives way to one writing package per graph, each update a transaction of its
   own, and a package that reads across several queries copies first; the order the tests prove is the single-threaded
   runtime's, ticking the parts in turn. Refused - one ordered queue on the mind, the same tasks on the mind's thread alone in
-  production, and a lock around the store.
+  production, and a lock around the store. Amended 2026-11-12 - a package registers itself and its task's loop is
+  its own, waiting on its seat; the kernel has no trait a package implements. Refused then - the runtime's loop over
+  a trait of callbacks, and registration found by the linker.
 ---
 
 # What was true (on main at b8805ccf)
@@ -83,6 +85,39 @@ today, and a signal raises the halt every task's wait hears.
   one core of four.
 - **A lock around the store.** It would make point 4 true by making every task wait for every other, which is the one
   queue again with a mutex for a queue.
+
+# Amended 2026-11-12: the loop is the package's, and the runtime knows no package
+
+As first built (#1142) the runtime kept the loop: one generic task per part, written in the kernel, calling a `Part`
+trait the package implemented - `start`, `run(job)`, `heard`, `heard_event`, `submitted`, `stop`. A package was
+callbacks, and its policy was polled; that is the one ordered queue this record refused, cut into a queue per part.
+
+**A package registers itself and owns its loop.** Its `create` module's `registers` says what the part waits for and
+hands the runtime a task; the task's loop is in the package, awaiting its seat (`Seat::next`), which answers what woke
+it - a timer due, a graph written, an event said, an arrival - and the `Pass` it is handled in. The kernel has no
+trait a package implements, and whoever assembles an agent collects registrations and nothing else. What the first
+paragraph of *What was decided* says goes stays in part: `Pass` is what a part woken is handed - the instant, the
+agent's life, `wake_at` - and `drain` is how a test ticks the seats; the job queue is gone, a part that queues work
+for itself keeping its own.
+
+**The seat is where the two ways of running meet.** Run free, its wait is a real one, ended by a message or the
+soonest instant the part is due; by passes it answers only what the runtime ticked, and holds back what a part
+queued for itself until every seat was ticked, so the order the tests prove is unchanged and no package knows which
+way it runs.
+
+**A search runs in place** (`runtime::long`, Tokio's `block_in_place`): its worker hands its other tasks on, so the
+sessions and the other policies keep theirs. `spawn_blocking`, which this record named, needs the search to own what
+it searches; it waits for the scopes to run free, the part of #1119 step 8 not yet built.
+
+Refused:
+
+- **The runtime's loop over a trait of callbacks** - what was built first. It made the kernel the place every
+  package's shape was decided, and a part could wait for nothing the trait had no method for.
+- **Registration found by the linker** (a distributed slice each crate submits to). A part is made from what only
+  the assembler holds - a member a test hands, a budget, the model - so something must still name each package once;
+  that is the binary's features, as before.
+- **A tag per subscription replaced by matching on an event's class.** A part hears a class and every class beneath
+  it, so the class said is not the class asked for; the tag is how the part knows which of its triggers woke it.
 
 # What it amends
 
