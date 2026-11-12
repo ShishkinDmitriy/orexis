@@ -11,9 +11,10 @@ use orexis::bind::{Value, bind};
 use orexis::document::Document;
 use orexis::events::Watch;
 use orexis::ontology::RECEIVED;
-use orexis::runtime::{Heard as HeardEvent, Part, Pass, Starting};
+use orexis::runtime::{Heard as HeardEvent, Pass, Runtime, Wait, Woke};
 use orexis::store::{Store, iri};
 use oxigraph::model::{BlankNode, GraphName, NamedNode, Quad, Triple};
+use std::sync::{Arc, Mutex};
 
 use crate::events::{Heard, Said, Statement};
 
@@ -219,8 +220,48 @@ impl Speech {
     }
 }
 
-impl Part for Speech {
-    fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
+/// THE PACKAGE STARTING ITSELF on a runtime: it says what ends its wait and spawns its task. The part is lent, so
+/// whoever keeps it reads it between runs.
+pub fn start(runtime: &mut Runtime, part: &Arc<Mutex<Speech>>) -> Result<(), Error> {
+    let part = part.clone();
+    let mut wait = runtime.wait("speech");
+    part.lock().expect("a part nobody poisoned").start(&mut wait)?;
+    runtime.spawn(wait, move |wait| policy(part, wait));
+    Ok(())
+}
+
+/// SPEECH'S TASK: it waits for a statement written, an event beneath its trigger, or what it extracted at its start,
+/// and does what its policy says of each.
+async fn policy(part: Arc<Mutex<Speech>>, mut wait: Wait) {
+    while let Some((woke, mut pass)) = wait.next().await {
+        let mut speech = part.lock().expect("a part nobody poisoned");
+        let wrote = match woke {
+            Woke::Due(tag) => speech.run(tag, &mut pass),
+            Woke::Graph(tag, graph) => speech.heard(tag, &graph, &mut pass),
+            Woke::Event(tag, event) => speech.heard_event(tag, &event, &mut pass),
+            Woke::Arrived => speech.queued(&mut pass),
+        };
+        pass.done(wrote);
+    }
+}
+
+impl Speech {
+    /// What it queued for itself, each in turn and what each wrote told, until nothing is left.
+    fn queued(&mut self, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        loop {
+            let jobs = self.submitted();
+            if jobs.is_empty() {
+                return Ok(Vec::new());
+            }
+            for job in jobs {
+                let wrote = self.run(job, pass)?;
+                pass.told(wrote)?;
+            }
+        }
+    }
+
+    fn start(&mut self, wait: &mut Wait) -> Result<(), Error> {
+        self.speaker.watch = wait.watch();
         if let Some(cat) = self.beliefs.catalogue()? {
             let unextracted: Vec<String> = self
                 .beliefs
@@ -232,8 +273,8 @@ impl Part for Speech {
                 self.pending.extend(extract(&self.beliefs, &statement)?);
             }
         }
-        starting.on(STATEMENT_GRAPH, STATED);
-        starting.hears(SPEAKING_TRIGGER, SPEAK);
+        wait.on(STATEMENT_GRAPH, STATED);
+        wait.hears(SPEAKING_TRIGGER, SPEAK);
         Ok(())
     }
 
@@ -256,10 +297,6 @@ impl Part for Speech {
             });
         }
         extract(&self.beliefs, graph)
-    }
-
-    fn watch(&self) -> Option<Watch> {
-        Some(self.speaker.watch.clone())
     }
 
     /// What speech's policy does of a trigger: tell each statement it names, as it was said, to each agent it names.

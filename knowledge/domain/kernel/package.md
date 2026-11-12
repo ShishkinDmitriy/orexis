@@ -66,10 +66,11 @@ directory with no `ontology.ttl` is no package and is read by no agent, and one 
 declares no role is read by none but as a transport; `agent/tests/test_roles.py` holds the tree to
 both, and every role both ways — declared, loaded and its part created; undeclared, absent.
 
-Once loaded, a package **starts itself**: `agent/<package>/create.py` exports `create(runtime)`, which
-makes the package's [part](/domain/kernel/part.md); the parts are started, each saying what its package
-does by jobs, timers and the [events](/domain/kernel/event.md) it hears beneath its triggers, and the
-runtime calls them knowing no word of what they do ([a-package-starts-itself](/decisions/a-package-starts-itself.md),
+Once loaded, a package **starts itself**: its crate's `create` module makes the package's
+[part](/domain/kernel/part.md) and spawns, on the runtime, the task that holds it — a loop of the
+package's own, woken by the [events](/domain/kernel/event.md) beneath its triggers, the kinds of graph
+written it asked to hear and its timers; the runtime knows no package and no word of what one
+does ([a-package-starts-itself](/decisions/a-package-starts-itself.md),
 [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
 
 A package's need of another is said by its role sitting beneath the other's — the observer beneath

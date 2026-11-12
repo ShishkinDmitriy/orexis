@@ -153,7 +153,8 @@ fn allotment_on(ticks: bool, walk: impl FnOnce(&mut Market<'_>)) {
     );
     let carried = Arc::new(Mutex::new(Carried::default()));
     let world = world();
-    let mut assembled = Vec::new();
+    let mut seen = Vec::new();
+    let mut runtimes: Vec<Runtime> = Vec::new();
     for (store, name) in stores.iter().zip(NAMES) {
         let loaded = booted(store, tree(), &world, name, clock.at()).unwrap();
         let bus = Bus {
@@ -167,31 +168,13 @@ fn allotment_on(ticks: bool, walk: impl FnOnce(&mut Market<'_>)) {
             .unwrap()
             .inboxes
             .insert(name.to_string(), member.inbox.clone());
-        assembled.push(
-            assemble_seen(
-                store,
-                name,
-                Arc::new(clock.clone()),
-                &loaded,
-                None,
-                Wiring {
-                    mqtt: Some(member),
-                    ..Wiring::default()
-                },
-            )
-            .unwrap(),
-        );
-    }
-    let mut seen = Vec::new();
-    let mut runtimes: Vec<Runtime> = Vec::new();
-    for ((parts, s), (store, name)) in assembled
-        .iter_mut()
-        .map(|(p, s)| (p, std::mem::take(s)))
-        .zip(stores.iter().zip(NAMES))
-    {
-        let lent = parts;
-        runtimes.push(Runtime::new(store, name, Arc::new(clock.clone()), std::mem::take(lent)).unwrap());
-        seen.push(s);
+        let mut runtime = Runtime::new(store, name, Arc::new(clock.clone())).unwrap();
+        let wiring = Wiring {
+            mqtt: Some(member),
+            ..Wiring::default()
+        };
+        seen.push(assemble_seen(&mut runtime, &loaded, None, wiring).unwrap());
+        runtimes.push(runtime);
     }
     let mut market = Market {
         stores: &stores,

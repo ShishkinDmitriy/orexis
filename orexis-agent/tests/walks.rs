@@ -42,9 +42,8 @@ impl Clock for Ticking {
 /// Boot `agent` of `world` and run it until nothing holds it or `passes` are spent: the outcome.
 fn run(store: &Store, world: &Path, agent: &str, clock: &Arc<Ticking>, passes: usize, budget: Option<usize>) -> String {
     let loaded = booted(store, tree(), world, agent, clock.now()).unwrap();
-    let parts = assemble(store, agent, clock.clone(), &loaded, budget).unwrap();
-    let lent = parts;
-    let mut runtime = Runtime::new(store, agent, clock.clone(), lent).unwrap();
+    let mut runtime = Runtime::new(store, agent, clock.clone()).unwrap();
+    assemble(&mut runtime, &loaded, budget).unwrap();
     let outcome = runtime.run(Some(passes), 0.0).unwrap();
     runtime.stop();
     outcome
@@ -180,16 +179,11 @@ fn metered_courier(watched: bool) -> (usize, usize, String, std::collections::BT
         );
         wiring.watching.metrics = Some(orexis_metrics::Window::new(sink, 0.0, Some("courier"), Some("courier")));
     }
-    let (parts, seen) =
-        orexis_agent::assemble_seen(&store, "courier", clock.clone(), &loaded, Some(128), wiring).unwrap();
-    let outcome = {
-        let lent = parts;
-        let mut runtime = Runtime::new(&store, "courier", clock.clone(), lent).unwrap();
-        runtime.watch = seen.watch.clone();
-        let outcome = runtime.run(Some(40), 0.0).unwrap();
-        runtime.stop();
-        outcome
-    };
+    let mut runtime = Runtime::new(&store, "courier", clock.clone()).unwrap();
+    orexis_agent::assemble_wired(&mut runtime, &loaded, Some(128), wiring).unwrap();
+    let outcome = runtime.run(Some(40), 0.0).unwrap();
+    runtime.stop();
+    drop(runtime);
     let reads = clock.0.lock().unwrap().1;
     let measured = written.lock().unwrap().iter().map(|p| p.measurement.clone()).collect();
     let count = written.lock().unwrap().len();

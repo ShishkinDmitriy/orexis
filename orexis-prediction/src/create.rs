@@ -7,7 +7,7 @@ use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::foresight::{Foresees, Foresight, Placed};
-use orexis::runtime::{Part, Pass};
+use orexis::runtime::Runtime;
 use orexis::store::Store;
 
 use crate::foresee::foresee;
@@ -34,8 +34,9 @@ impl Prediction {
     }
 }
 
-impl Part for Prediction {
-    fn run(&mut self, _job: usize, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
-        Ok(Vec::new())
-    }
+/// PREDICTION STARTING ITSELF on a runtime: a task that waits for nothing but the run's end, since what it offers is
+/// asked for where the grounds are laid.
+pub fn start(runtime: &mut Runtime) {
+    let wait = runtime.wait("prediction");
+    runtime.spawn(wait, |mut wait| async move { while wait.next().await.is_some() {} });
 }

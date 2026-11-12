@@ -98,9 +98,9 @@ fn store() -> Store {
     Store::new(Arc::new(Namespaces::of_tree(tree()).unwrap())).unwrap()
 }
 
-/// The grower booted and assembled over the fake broker, its parts handed out for the runtime to lend.
+/// The grower booted and assembled over the fake broker, its parts started on the runtime a test takes.
 struct Grower {
-    parts: orexis_agent::Parts,
+    runtime: Option<Runtime>,
     seen: Seen,
     inbox: Inbox,
     broker: Broker,
@@ -130,17 +130,14 @@ fn grower_watched(store: &Store, clock: &Arc<Ticking>, watching: orexis_agent::W
         watching,
         ..Wiring::default()
     };
-    let (parts, seen) = assemble_seen(store, "grower", clock.clone(), &loaded, None, wiring).unwrap();
+    let mut runtime = Runtime::new(store, "grower", clock.clone()).unwrap();
+    let seen = assemble_seen(&mut runtime, &loaded, None, wiring).unwrap();
     Grower {
-        parts,
+        runtime: Some(runtime),
         seen,
         inbox,
         broker,
     }
-}
-
-fn runtime(store: &Store, clock: &Arc<Ticking>, parts: &mut orexis_agent::Parts) -> Runtime {
-    Runtime::new(store, "grower", clock.clone(), std::mem::take(parts)).unwrap()
 }
 
 fn reading(inbox: &Inbox, payload: &str, at: DateTime) {
@@ -181,7 +178,7 @@ fn the_grower_listens_to_the_instruments_of_the_bed_it_acts_for() {
     let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(noon()))));
     let mut g = grower(&store, &clock);
     let broker = g.broker.clone();
-    let _runtime = runtime(&store, &clock, &mut g.parts);
+    let _runtime = g.runtime.take().unwrap();
     assert_eq!(
         broker.subscribed(),
         ["sensors/bed_board/reading"],
@@ -194,7 +191,7 @@ fn a_reading_is_written_and_the_bed_believed_dry() {
     let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(noon()))));
     let mut g = grower(&store, &clock);
     let inbox = g.inbox.clone();
-    let mut runtime = runtime(&store, &clock, &mut g.parts);
+    let mut runtime = g.runtime.take().unwrap();
     reading(&inbox, r#"{"moisture": 0.2}"#, noon());
     runtime.drain(noon()).unwrap();
     assert_eq!(
@@ -215,7 +212,7 @@ fn a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_reading_a
     let mut g = grower(&store, &clock);
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     let seen = std::mem::take(&mut g.seen);
-    let mut runtime = runtime(&store, &clock, &mut g.parts);
+    let mut runtime = g.runtime.take().unwrap();
     reading(&inbox, r#"{"temperature": 21.0}"#, noon());
     reading(&inbox, r#"{"moisture": 0.2}"#, noon());
     assert_eq!(runtime.run(Some(1), 0.0).unwrap(), UNFINISHED);
@@ -268,7 +265,7 @@ fn a_committed_dose_is_a_flow_the_beds_prediction_accumulates() {
     let mut g = grower(&store, &clock);
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     let seen = std::mem::take(&mut g.seen);
-    let mut runtime = runtime(&store, &clock, &mut g.parts);
+    let mut runtime = g.runtime.take().unwrap();
     reading(&inbox, r#"{"temperature": 21.0}"#, noon());
     reading(&inbox, r#"{"moisture": 0.2}"#, noon());
     runtime.run(Some(1), 0.0).unwrap();
@@ -321,7 +318,7 @@ fn a_cold_bed_is_heated_for_as_long_as_the_gap_takes() {
     let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(noon()))));
     let mut g = grower(&store, &clock);
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
-    let mut runtime = runtime(&store, &clock, &mut g.parts);
+    let mut runtime = g.runtime.take().unwrap();
     reading(&inbox, r#"{"moisture": 0.45}"#, noon());
     reading(&inbox, r#"{"temperature": 16.0}"#, noon());
     runtime.run(Some(1), 0.0).unwrap();
@@ -337,7 +334,7 @@ fn a_cold_dry_bed_is_two_wants_planned_apart() {
     let mut g = grower(&store, &clock);
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     let seen = std::mem::take(&mut g.seen);
-    let mut runtime = runtime(&store, &clock, &mut g.parts);
+    let mut runtime = g.runtime.take().unwrap();
     reading(&inbox, r#"{"temperature": 12.0}"#, noon());
     reading(&inbox, r#"{"moisture": 0.2}"#, noon());
     assert_eq!(runtime.run(Some(1), 0.0).unwrap(), UNFINISHED);
@@ -372,7 +369,7 @@ fn a_foreseen_crossing_is_planned_ahead_and_dosed_when_it_arrives() {
     let mut g = grower(&store, &clock);
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     let seen = std::mem::take(&mut g.seen);
-    let mut runtime = runtime(&store, &clock, &mut g.parts);
+    let mut runtime = g.runtime.take().unwrap();
     reading(&inbox, r#"{"temperature": 21.0}"#, noon());
     reading(&inbox, r#"{"moisture": 0.31}"#, noon());
     runtime.run(Some(2), 0.0).unwrap();
@@ -430,8 +427,7 @@ fn history_holds_every_reading_and_the_journal_the_dose_published_taken_and_land
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     let seen = std::mem::take(&mut g.seen);
     {
-        let mut runtime = runtime(&store, &clock, &mut g.parts);
-        runtime.watch = seen.watch.clone();
+        let mut runtime = g.runtime.take().unwrap();
         reading(&inbox, r#"{"temperature": 21.0}"#, noon());
         reading(&inbox, r#"{"moisture": 0.2}"#, noon());
         runtime.run(Some(1), 0.0).unwrap();
@@ -546,10 +542,8 @@ fn unanswered() -> (Vec<Vec<orexis::events::Point>>, Broker) {
     };
     let mut g = grower_watched(&store, &clock, watching);
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
-    let seen = std::mem::take(&mut g.seen);
     {
-        let mut runtime = runtime(&store, &clock, &mut g.parts);
-        runtime.watch = seen.watch.clone();
+        let mut runtime = g.runtime.take().unwrap();
         reading(&inbox, r#"{"temperature": 21.0}"#, noon());
         reading(&inbox, r#"{"moisture": 0.2}"#, noon());
         runtime.run(Some(1), 0.0).unwrap();

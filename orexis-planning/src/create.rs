@@ -12,7 +12,9 @@
 
 use orexis::Error;
 use orexis::ontology::SELF_GRAPH;
-use orexis::runtime::{Heard, MET, PLANNED, Part, Pass, Starting, UNREACHABLE};
+use std::sync::{Arc, Mutex};
+
+use orexis::runtime::{Heard, MET, PLANNED, Pass, Runtime, UNREACHABLE, Wait, Woke, long};
 use orexis::store::{Store, Within, iri};
 
 use crate::Planner;
@@ -118,14 +120,33 @@ fn walks(beliefs: &Store) -> Result<bool, Error> {
     Ok(false)
 }
 
-impl Part for Planning {
-    fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
-        starting.every(0.0, PLAN);
-        starting.hears(PLANNING_TRIGGER, REOPEN);
-        starting.hears(HEAD_ASKED, CHECK);
-        Ok(())
-    }
+/// PLANNING STARTING ITSELF on a runtime: its wait ends on its trigger's events and a head asked, its policy decides
+/// after whatever it heard, and its task is spawned. The part is lent, so whoever keeps it reads it between runs.
+pub fn start(runtime: &mut Runtime, part: &Arc<Mutex<Planning>>) -> Result<(), Error> {
+    let part = part.clone();
+    let mut wait = runtime.wait("planning");
+    wait.every(0.0, PLAN);
+    wait.hears(PLANNING_TRIGGER, REOPEN);
+    wait.hears(HEAD_ASKED, CHECK);
+    part.lock().expect("a part nobody poisoned").planner.watch = wait.watch();
+    runtime.spawn(wait, move |wait| policy(part, wait));
+    Ok(())
+}
 
+/// PLANNING'S TASK: it waits for an event beneath its trigger or the instant it is next due, and decides.
+async fn policy(part: Arc<Mutex<Planning>>, mut wait: Wait) {
+    while let Some((woke, mut pass)) = wait.next().await {
+        let mut planning = part.lock().expect("a part nobody poisoned");
+        let wrote = match woke {
+            Woke::Due(_) => planning.plan(&mut pass),
+            Woke::Event(tag, event) => planning.heard_event(tag, &event, &mut pass),
+            _ => Ok(Vec::new()),
+        };
+        pass.done(wrote);
+    }
+}
+
+impl Planning {
     /// What planning's policy does of a trigger: plan at the pass, keeping the walking wants it names to search
     /// again; and ask for the pass at once where it names any.
     fn heard_event(&mut self, job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
@@ -160,13 +181,9 @@ impl Part for Planning {
         Ok(Vec::new())
     }
 
-    fn watch(&self) -> Option<orexis::events::Watch> {
-        Some(self.planner.watch.clone())
-    }
-
     /// PLANNING'S POLICY: plan where a trigger was heard since the last planning, the present reached the next ground
     /// it laid, or it is due whatever was heard; and otherwise nothing, the agent held or let go as it last was.
-    fn run(&mut self, _job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn plan(&mut self, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
         let reached = self.next.is_some_and(|next| next <= pass.now);
         if !self.due && !reached && self.triggers.is_empty() {
             if let Some(next) = self.next {
@@ -178,7 +195,8 @@ impl Part for Planning {
         self.due = false;
         let triggers = std::mem::take(&mut self.triggers);
         let activity = pass.begin(PLANNING_ACTIVITY, &triggers);
-        let written = self.planner.plan(pass.now)?;
+        //  A SEARCH IS SECONDS: the tasks beside it keep their workers.
+        let written = long(|| self.planner.plan(pass.now))?;
         self.keep(pass)?;
         self.next = self.planner.next_ground(pass.now)?;
         if let Some(next) = self.next {

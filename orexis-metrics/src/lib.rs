@@ -20,9 +20,8 @@ use std::time::Instant;
 
 use oxsdatatypes::DateTime;
 
-use orexis::Error;
 use orexis::events::{Event, Field, Mark, Number, Point, Watch, counted, round6};
-use orexis::runtime::{PASS_METRIC, Part, Pass};
+use orexis::runtime::{PASS_METRIC, Runtime};
 use orexis::series::Sink;
 
 /// The window's length where the environment says none, and the key it is said under.
@@ -214,13 +213,15 @@ impl Metrics {
     }
 }
 
-impl Part for Metrics {
-    fn run(&mut self, _job: usize, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
-        Ok(Vec::new())
-    }
-
-    fn stop(&mut self) {
-        self.window.lock().unwrap().flush();
+impl Metrics {
+    /// METRICS STARTING ITSELF on a runtime: a task that waits for the run's end, and writes the last window as it
+    /// stops; what it tallies it hears on the watch.
+    pub fn start(self, runtime: &mut Runtime) {
+        let wait = runtime.wait("metrics");
+        runtime.spawn(wait, move |mut wait| async move {
+            while wait.next().await.is_some() {}
+            self.window.lock().unwrap().flush();
+        });
     }
 }
 

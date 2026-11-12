@@ -192,11 +192,11 @@ fn run(args: &Args, clock: Arc<Paced>, journal: Arc<Journal>, halt: Arc<AtomicBo
         },
         ..Wiring::default()
     };
-    let (parts, watch) = orexis_agent::assemble_watched(&store, &args.agent, clock.clone(), &loaded, None, wiring)?;
-    //  THE AGENT'S BODY IS A RUNTIME OF TASKS, a worker a core (the-agent-is-a-runtime-of-tasks).
+    //  THE AGENT'S BODY IS A RUNTIME OF TASKS, a worker a core (the-agent-is-a-runtime-of-tasks), and each package
+    //  its roles load starts itself on it.
     let workers = std::thread::available_parallelism().map_or(1, |n| n.get());
-    let mut runtime = Runtime::threaded(workers, &store, &args.agent, clock.clone(), parts)?;
-    runtime.watch = watch;
+    let mut runtime = Runtime::threaded(workers, &store, &args.agent, clock.clone())?;
+    orexis_agent::assemble_wired(&mut runtime, &loaded, None, wiring)?;
     //  A SIGNAL ENDS THE RUN'S WAIT, which may be long now that nothing polls: the flag is raised and the wake rung.
     if let Ok(mut signals) =
         signal_hook::iterator::Signals::new([signal_hook::consts::SIGTERM, signal_hook::consts::SIGINT])

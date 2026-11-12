@@ -4,9 +4,10 @@
 //! member's inbox and is handed to the one executing thread as a job that handles it.
 
 use std::collections::VecDeque;
+use std::sync::{Arc, Mutex};
 
 use orexis::Error;
-use orexis::runtime::{Part, Pass, Starting};
+use orexis::runtime::{Pass, Runtime, Wait, Woke};
 use orexis::transport::Message;
 use orexis_sensing::cadence::cadence_of;
 
@@ -35,13 +36,51 @@ impl Transport {
     }
 }
 
-impl Part for Transport {
-    fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
-        self.member.inbox.wakes(starting.wake());
+/// THE PACKAGE STARTING ITSELF on a runtime: it says what ends its wait and spawns its task. The part is lent, so
+/// whoever keeps it reads it between runs.
+pub fn start(runtime: &mut Runtime, part: &Arc<Mutex<Transport>>) -> Result<(), Error> {
+    let part = part.clone();
+    let mut wait = runtime.wait("transport/http");
+    part.lock().expect("a part nobody poisoned").start(&mut wait)?;
+    runtime.spawn(wait, move |wait| policy(part, wait));
+    Ok(())
+}
+
+/// THE HTTP MEMBER'S TASK: it waits for a sensor's poll falling due, or a body a fetch received, and does what its
+/// policy says of each.
+async fn policy(part: Arc<Mutex<Transport>>, mut wait: Wait) {
+    while let Some((woke, mut pass)) = wait.next().await {
+        let mut transport = part.lock().expect("a part nobody poisoned");
+        let wrote = match woke {
+            Woke::Due(tag) => transport.run(tag, &mut pass),
+            Woke::Arrived => transport.queued(&mut pass),
+            _ => Ok(Vec::new()),
+        };
+        pass.done(wrote);
+    }
+}
+
+impl Transport {
+    /// What it queued for itself, each in turn and what each wrote told, until nothing is left.
+    fn queued(&mut self, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        loop {
+            let jobs = self.submitted();
+            if jobs.is_empty() {
+                return Ok(Vec::new());
+            }
+            for job in jobs {
+                let wrote = self.run(job, pass)?;
+                pass.told(wrote)?;
+            }
+        }
+    }
+
+    fn start(&mut self, wait: &mut Wait) -> Result<(), Error> {
+        self.member.inbox.wakes(wait.wake());
         for sensor in self.member.open()? {
             let job = HANDLE + 1 + self.polled.len();
             match cadence_of(self.member_beliefs(), &sensor)? {
-                Some(every) => starting.every(every, job),
+                Some(every) => wait.every(every, job),
                 None => self.once.push(job),
             }
             self.polled.push(sensor);

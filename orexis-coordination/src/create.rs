@@ -12,13 +12,13 @@
 //! holdings it asked with, those it laid of each peer as said or foreseen, and every conflict as concluded.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use orexis::Error;
 use orexis::document::Document;
 use orexis::events::Watch;
 use orexis::ontology::local_of;
-use orexis::runtime::{Heard, Part, Pass, Starting};
+use orexis::runtime::{Heard, Pass, Runtime, Wait, Woke};
 use orexis::store::Store;
 use oxsdatatypes::DateTime;
 
@@ -201,13 +201,53 @@ impl Coordination {
     }
 }
 
-impl Part for Coordination {
-    fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
+/// THE PACKAGE STARTING ITSELF on a runtime: it says what ends its wait and spawns its task. The part is lent, so
+/// whoever keeps it reads it between runs.
+pub fn start(runtime: &mut Runtime, part: &Arc<Mutex<Coordination>>) -> Result<(), Error> {
+    let part = part.clone();
+    let mut wait = runtime.wait("coordination");
+    part.lock().expect("a part nobody poisoned").start(&mut wait)?;
+    runtime.spawn(wait, move |wait| policy(part, wait));
+    Ok(())
+}
+
+/// COORDINATION'S TASK: it waits for the pass, a question or an answer written, or an event beneath its trigger, and
+/// does what its policy says of each.
+async fn policy(part: Arc<Mutex<Coordination>>, mut wait: Wait) {
+    while let Some((woke, mut pass)) = wait.next().await {
+        let mut coordination = part.lock().expect("a part nobody poisoned");
+        let wrote = match woke {
+            Woke::Due(tag) => coordination.run(tag, &mut pass),
+            Woke::Graph(tag, graph) => coordination.heard(tag, &graph, &mut pass),
+            Woke::Event(tag, event) => coordination.heard_event(tag, &event, &mut pass),
+            Woke::Arrived => coordination.queued(&mut pass),
+        };
+        pass.done(wrote);
+    }
+}
+
+impl Coordination {
+    /// What it queued for itself, each in turn and what each wrote told, until nothing is left.
+    fn queued(&mut self, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        loop {
+            let jobs = self.submitted();
+            if jobs.is_empty() {
+                return Ok(Vec::new());
+            }
+            for job in jobs {
+                let wrote = self.run(job, pass)?;
+                pass.told(wrote)?;
+            }
+        }
+    }
+
+    fn start(&mut self, wait: &mut Wait) -> Result<(), Error> {
+        self.watch = wait.watch();
         self.pending.extend(mint(&self.beliefs, &self.me)?);
-        starting.on(QUESTION_GRAPH, QUESTIONED);
-        starting.on(ANSWER_GRAPH, ANSWERED);
-        starting.every(0.0, PASS);
-        starting.hears(COORDINATING_TRIGGER, PASS);
+        wait.on(QUESTION_GRAPH, QUESTIONED);
+        wait.on(ANSWER_GRAPH, ANSWERED);
+        wait.every(0.0, PASS);
+        wait.hears(COORDINATING_TRIGGER, PASS);
         Ok(())
     }
 
@@ -215,10 +255,6 @@ impl Part for Coordination {
     fn heard_event(&mut self, _job: usize, event: &Heard, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
         self.triggers.push(event.node.clone());
         Ok(Vec::new())
-    }
-
-    fn watch(&self) -> Option<Watch> {
-        Some(self.watch.clone())
     }
 
     fn run(&mut self, job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {

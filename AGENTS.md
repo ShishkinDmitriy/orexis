@@ -1030,18 +1030,20 @@ it takes a different path through translation — sensing for an instrument's by
 peer's document. See
 [the-agent-stack-is-a-second-axis](knowledge/decisions/the-agent-stack-is-a-second-axis.md).
 
-**A package starts itself, and each part is a task.** The runtime creates a part of every
-package the agent's roles load that has a `create` module, in the order a pass runs them, then starts them, and knows no word of what they do:
+**A package starts itself, and each part is a task whose loop is the package's own.** A part is made of every
+package the agent's roles load that has a `create` module, and the package starts it on the runtime (`create::start`), spawning its task; the runtime is a Tokio runtime and the watch the packages say their events to, and knows no package and no word of what one does:
 belief revises what is written, planning plans where its policy says so and publishes, execution adopts and walks,
 a transport listens or polls, sensing asks after what has fallen due, prediction answers an
-observation — each through jobs it submits, timers it asks for and the events it hears beneath its
+observation — each through the timers it asks for, the graphs it hears written and the events it hears beneath its
 triggers, no part linked to another (a-package-starts-itself, packages-meet-by-events-policies-and-activities). **The agent's body is a
-multi-threaded Tokio runtime, each part a task** with a mailbox of its own, waiting for an event beneath its trigger,
-a graph it hears, an arrival or its due instant (`wake_at`), polling nothing, and a graph has one writing package; a
-test runs the same tasks BY PASSES on one thread, each part ticked in turn after nothing is busy, what a part queues
-waiting for the end of the pass and a call's graphs told before its events, so the replays hold the order one queue
-gave; the run ends when nothing holds the agent (the-agent-is-a-runtime-of-tasks, #1119 step 8). A part holds its
-objects plainly, and a test that reads one after a run lends it (`Lent`). A search is bounded by a budget in the
+multi-threaded Tokio runtime, each part a task** awaiting its wait (`Wait::next`) for an event beneath its trigger,
+a graph it hears, an arrival or its due instant (`wake_at`), polling nothing, and a graph has one writing package;
+**the kernel keeps no order between two packages, each woken by what triggers it**, its policy deciding once nothing more waits
+for it; a test runs the same tasks on one thread and says the instant, a pass telling each wait in turn that it is
+now, everything said in it handled at that instant, a policy deciding when it is told and what a package queued for itself done at the pass's end, which is all that walks a plan
+in the pass that published it and paces one failing as it is taken (#1145); the run ends when nothing holds the agent, and a wait that
+answers nothing stops its part (the-agent-is-a-runtime-of-tasks, #1119 step 8). A part is lent
+to its task, so a test that keeps one reads it between runs; **the kernel has no trait a package implements and no type a package registers by, and whoever assembles an agent builds the runtime and has each package start itself on it**. A search is bounded by a budget in the
 unit it spends and continued by the next pass. The executor's two doors, `tick` and `drain`, are
 what its walk and a test call.
 

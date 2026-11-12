@@ -7,9 +7,10 @@
 //! to that listens on the bus. The executor's commands reach the member through whoever links the parts, sharing it.
 
 use std::collections::VecDeque;
+use std::sync::{Arc, Mutex};
 
 use orexis::Error;
-use orexis::runtime::{Heard, Part, Pass, Starting};
+use orexis::runtime::{Heard, Pass, Runtime, Wait, Woke};
 use orexis_speech::prose::{ProseKept, carry, kept};
 
 use orexis_speech::create::document_of;
@@ -98,22 +99,62 @@ impl Transport {
     }
 }
 
-impl Part for Transport {
-    fn start(&mut self, starting: &mut Starting) -> Result<(), Error> {
+/// THE PACKAGE STARTING ITSELF on a runtime: it says what ends its wait and spawns its task. The part is lent, so
+/// whoever keeps it reads it between runs.
+pub fn start(runtime: &mut Runtime, part: &Arc<Mutex<Transport>>) -> Result<(), Error> {
+    let part = part.clone();
+    let mut wait = runtime.wait("transport/mqtt");
+    part.lock().expect("a part nobody poisoned").start(&mut wait)?;
+    runtime.spawn(wait, move |wait| policy(part, wait));
+    Ok(())
+}
+
+/// THE MQTT MEMBER'S TASK: it waits for the pass, an event beneath one of its triggers, or a message a session
+/// received, and does what its policy says of each, until the run is over and it stops.
+async fn policy(part: Arc<Mutex<Transport>>, mut wait: Wait) {
+    while let Some((woke, mut pass)) = wait.next().await {
+        let mut transport = part.lock().expect("a part nobody poisoned");
+        let wrote = match woke {
+            Woke::Due(tag) => transport.run(tag, &mut pass),
+            Woke::Event(tag, event) => transport.heard_event(tag, &event, &mut pass),
+            Woke::Arrived => transport.queued(&mut pass),
+            _ => Ok(Vec::new()),
+        };
+        pass.done(wrote);
+    }
+    part.lock().expect("a part nobody poisoned").stop();
+}
+
+impl Transport {
+    /// What it queued for itself, each in turn and what each wrote told, until nothing is left.
+    fn queued(&mut self, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+        loop {
+            let jobs = self.submitted();
+            if jobs.is_empty() {
+                return Ok(Vec::new());
+            }
+            for job in jobs {
+                let wrote = self.run(job, pass)?;
+                pass.told(wrote)?;
+            }
+        }
+    }
+
+    fn start(&mut self, wait: &mut Wait) -> Result<(), Error> {
         //  THE SESSIONS LISTEN BEFORE THE MEMBER SUBSCRIBES: a subscription waits in a queue only they empty.
         let listening = {
             let member = &mut self.member;
-            member.inbox.wakes(starting.wake());
+            member.inbox.wakes(wait.wake());
             std::mem::take(&mut member.listening)
         };
         for session in listening {
-            starting.task(session)?;
+            wait.task(session)?;
         }
         self.member.open()?;
-        starting.every(0.0, NUDGE);
-        starting.hears(CARRYING_TRIGGER, CARRY);
-        starting.hears(TELLING_TRIGGER, TELL);
-        starting.hears(ACTUATING_TRIGGER, ACTUATE);
+        wait.every(0.0, NUDGE);
+        wait.hears(CARRYING_TRIGGER, CARRY);
+        wait.hears(TELLING_TRIGGER, TELL);
+        wait.hears(ACTUATING_TRIGGER, ACTUATE);
         Ok(())
     }
 

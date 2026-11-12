@@ -131,20 +131,12 @@ fn walk(world: &Path, fixture: &str) -> (Drives, BTreeMap<String, (i64, i64)>) {
     };
     let member = Mqtt::new(&store, &format!("{L}courier_a"), vec![(None, Box::new(bus))]);
     let inbox = member.inbox.clone();
-    let (parts, seen) = assemble_seen(
-        &store,
-        "courier_a",
-        Arc::new(clock.clone()),
-        &loaded,
-        None,
-        Wiring {
-            mqtt: Some(member),
-            ..Wiring::default()
-        },
-    )
-    .unwrap();
-    let lent = parts;
-    let mut runtime = Runtime::new(&store, "courier_a", Arc::new(clock.clone()), lent).unwrap();
+    let mut runtime = Runtime::new(&store, "courier_a", Arc::new(clock.clone())).unwrap();
+    let wiring = Wiring {
+        mqtt: Some(member),
+        ..Wiring::default()
+    };
+    let seen = assemble_seen(&mut runtime, &loaded, None, wiring).unwrap();
     for (n, (when, published)) in steps.iter().enumerate() {
         *clock.0.lock().unwrap() = *when;
         for (topic, payload) in published {

@@ -120,20 +120,12 @@ fn a_day_in_the_greenhouse_sends_the_commands_the_python_grower_sent() {
     };
     let member = Mqtt::new(&store, &format!("{GH}grower"), vec![(None, Box::new(bus))]);
     let inbox = member.inbox.clone();
-    let parts = assemble_wired(
-        &store,
-        "grower",
-        Arc::new(clock.clone()),
-        &loaded,
-        None,
-        Wiring {
-            mqtt: Some(member),
-            ..Wiring::default()
-        },
-    )
-    .unwrap();
-    let lent = parts;
-    let mut runtime = Runtime::new(&store, "grower", Arc::new(clock.clone()), lent).unwrap();
+    let mut runtime = Runtime::new(&store, "grower", Arc::new(clock.clone())).unwrap();
+    let wiring = Wiring {
+        mqtt: Some(member),
+        ..Wiring::default()
+    };
+    assemble_wired(&mut runtime, &loaded, None, wiring).unwrap();
     for (at, topic, payload) in &readings {
         *clock.0.lock().unwrap() = *at;
         if !topic.is_empty() {
