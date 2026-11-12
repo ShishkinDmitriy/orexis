@@ -66,9 +66,10 @@ pass after one is heard, beside the two things that happen with nothing said: th
 ground the last planning laid, and a search the budget cut short going on. A pass that heard none of them plans
 nothing. Execution walks at a pass only where its intentions were written since its last walk or the instant that
 walk said is due has come - a head due, a landing to look at, a patience run out - a revision of the present queuing a
-walk of its own. Coordination's `coordination:CoordinatingTrigger` has belief's `belief:Revised`, planning's
-`planning:PlanPublished` and execution's `execution:StepTaken` and `execution:IntentionResolved` beneath it by
-coordination's ontology, and besides those it coordinates a quarter patience on while it asked within two
+walk of its own. Coordination's `coordination:CoordinatingTrigger` has belief's `belief:Revised` and execution's
+`execution:IntentionAdopted`, `execution:StepTaken` and `execution:IntentionResolved` beneath it by
+coordination's ontology - nothing of planning's, since a holding is read off the intentions and a plan published
+changes none until execution adopts it - and besides those it coordinates a quarter patience on while it asked within two
 patiences or stands in a conflict, since a question expires and a peer turns silent by the patience alone. Each says
 the instant it is next due (`wake_at`), and its task waits for that or a message
 ([runtime](/domain/kernel/runtime.md)).

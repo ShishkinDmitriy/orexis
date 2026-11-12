@@ -226,10 +226,10 @@ coordination:Coordinating a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:lab
     rdfs:comment "Coordination's part asking the peers in range, concluding its conflicts and laying what it yields to, started by its trigger or by a patience running while it is asking or in conflict (packages-meet-by-events-policies-and-activities)." .
 
 coordination:CoordinatingTrigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Coordinating trigger" ;
-    rdfs:comment "What starts a coordinating: a belief revised, since a peer comes in range by what the agent senses; and a plan published, a step taken and an intention resolved, since what the agent holds is what it walks. Each beneath it by coordination's ontology, coordination being above belief, planning and execution." .
+    rdfs:comment "What starts a coordinating: a belief revised, since a peer comes in range by what the agent senses; and an intention adopted, a step taken and an intention resolved, since what the agent holds is read off its intentions, which those three change. Each beneath it by coordination's ontology, coordination being above belief and execution; a plan published is none, since it changes no holding until it is adopted." .
 
 belief:Revised rdfs:subClassOf coordination:CoordinatingTrigger .
-planning:PlanPublished rdfs:subClassOf coordination:CoordinatingTrigger .
+execution:IntentionAdopted rdfs:subClassOf coordination:CoordinatingTrigger .
 execution:StepTaken rdfs:subClassOf coordination:CoordinatingTrigger .
 execution:IntentionResolved rdfs:subClassOf coordination:CoordinatingTrigger .
 

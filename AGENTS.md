@@ -562,6 +562,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   that no longer meet are what yielding made of them, and ended there the laying stopped and two vans met
   in one cell; and a question holds over the asker's patience and is asked again, so an agent that does
   not see its peer is drawn in by its word.
+- **A package begins on the events of the package whose rows it reads** — coordination reads its holdings off the
+  intentions, which execution writes, so it begins on `execution:IntentionAdopted`, a step taken and an intention
+  resolved, and on nothing of planning's; begun on the plan published, it could ask its peers before execution had
+  adopted the plan, with the holdings of the plan before, and was not begun again until the first step was taken.
 - **A coordinator is a planner and an executor too** — a draw is joined only by committing and revealing,
   actions planning plans and execution takes, so the role is beneath all three it needs.
 - **Who won is asked, not triggered** — a peer's word is extracted into a belief of the agent's own,

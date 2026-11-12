@@ -36,6 +36,10 @@ it was kept below for ended undone. A plan that has begun is not ended because i
 An intention adopted for the plan that replaced another's untaken steps takes no step while that one
 stands, `execution:waitsFor` ([commitment](/domain/execution/commitment.md)).
 
+The executor says each end of it: `execution:IntentionAdopted` when a plan becomes an intention, and
+`execution:IntentionResolved` when it ends, each naming it by `execution:intention`. Whoever reads the intentions
+begins on those and on `execution:StepTaken`, never on the plan's publishing, which changes no intention.
+
 # What it holds the agent to
 
 Its [commitment](/domain/execution/commitment.md): the step in flight is never cancelled, and the plan
