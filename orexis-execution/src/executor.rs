@@ -38,7 +38,7 @@ use orexis::ontology::{BELIEF, DERIVED, OREXIS, RECORDED, local_of};
 use orexis::stance::stance;
 use orexis::store::{Row, Store, Within, instant, iri, value};
 
-use crate::events::{About, HeadAsked, IntentionResolved, StepAnswered, StepTaken, Walked};
+use crate::events::{About, HeadAsked, IntentionAdopted, IntentionResolved, StepAnswered, StepTaken, Walked};
 use crate::implementation::operations;
 use crate::ontology::{
     ADDS_GRAPH, ANSWERED_WITHIN_S, COMMITTED_STEP_GRAPH, EXECUTION, FICTIVE, INTENTION, INTENTION_GRAPH,
@@ -528,6 +528,13 @@ impl Executor {
                     self.graph,
                     waits.join(" ")
                 ))?;
+            }
+            if self.watch.connected() {
+                self.watch.emit(&IntentionAdopted {
+                    intention: intention.clone(),
+                    at: Some(self.clock.now()),
+                    said: self.described(&[intention]),
+                });
             }
         }
         Ok(intention)
@@ -1594,6 +1601,25 @@ GRAPH <http://example.org/test#catalogue> {{
             "a second plan was adopted"
         );
         assert_eq!(x.standing().unwrap().len(), 1);
+    }
+
+    /// Whoever reads the intentions begins on what the executor says of them: a plan adopted is said once, naming the
+    /// intention, and a plan absorbed, which adopts nothing, says nothing.
+    #[test]
+    fn an_adoption_is_said_once_and_an_absorbed_plan_says_nothing() {
+        use crate::events::IntentionAdopted;
+        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
+        let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
+        let said: Arc<std::sync::Mutex<Vec<String>>> = Default::default();
+        let kept = said.clone();
+        x.watch.connect(move |event, _| {
+            if let Some(adopted) = orexis::events::as_of::<IntentionAdopted>(event) {
+                kept.lock().unwrap().push(adopted.intention.clone());
+            }
+        });
+        let intention = x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().unwrap();
+        assert!(x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().is_none());
+        assert_eq!(*said.lock().unwrap(), [intention]);
     }
 
     #[test]

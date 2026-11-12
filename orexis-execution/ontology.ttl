@@ -281,6 +281,9 @@ execution:Told a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Told" ;
 
 execution:Told rdfs:subClassOf speech:SpeakingTrigger .
 
+execution:IntentionAdopted a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Intention adopted" ;
+    rdfs:comment "A plan adopted as an intention, carrying it as it was adopted: from here the agent holds what the plan's steps will change. A plan absorbed, one for a want whose intention stands younger than the patience, adopts nothing and says nothing." .
+
 execution:IntentionResolved a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Intention resolved" ;
     rdfs:comment "An intention ended, carrying it as it ended — the want it pursued, its `execution:outcome`." .
 
@@ -294,9 +297,9 @@ execution:act a owl:ObjectProperty ; rdfs:range execution:Act ;
     rdfs:label "act" ;
     rdfs:comment "The act a step's event is about." .
 
-execution:intention a owl:ObjectProperty ; rdfs:domain execution:IntentionResolved ; rdfs:range execution:Intention ;
+execution:intention a owl:ObjectProperty ; rdfs:range execution:Intention ;
     rdfs:label "intention" ;
-    rdfs:comment "The intention that ended." .
+    rdfs:comment "The intention an event is about: the one adopted, or the one that ended." .
 
 execution:landed a owl:DatatypeProperty ; rdfs:domain execution:StepAnswered ; rdfs:range xsd:boolean ;
     rdfs:label "landed" ;

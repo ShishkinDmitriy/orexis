@@ -3,8 +3,8 @@
 //! A STEP IS HISTORY TWICE, each an event in the journal in execution's words: `execution:StepTaken` when the executor
 //! records the act, and `execution:StepAnswered` at the landing verdict, `execution:landed` true where the present came
 //! to hold what the step predicted, false where the patience ran out or the want it was kept below ended undone — and
-//! then an `execution:StepFailed` too, beneath `orexis:Incident`. AN INTENTION ENDED is history too,
-//! `execution:IntentionResolved`, and an `execution:IntentionFailed`, an incident, where it failed. A step's event names
+//! then an `execution:StepFailed` too, beneath `orexis:Incident`. AN INTENTION ADOPTED is history too,
+//! `execution:IntentionAdopted`, and one ended, `execution:IntentionResolved`, and an `execution:IntentionFailed`, an incident, where it failed. A step's event names
 //! the act (`execution:act`), an intention's the intention (`execution:intention`), and each carries what the agent
 //! holds of them as it stands, copied, so the journal is read without the beliefs. On the metrics, a want's name is on
 //! no point: the desire it was derived under is.
@@ -17,7 +17,9 @@ use orexis::events::{Event, Mark, Number, boolean, node, triple, typed};
 
 use crate::ontology::EXECUTION;
 
-/// An intention ended, and a step recorded taken: each heard by whoever is above execution, by its class.
+/// An intention adopted, one ended, and a step recorded taken: each heard by whoever is above execution, by its
+/// class.
+pub const INTENTION_ADOPTED: &str = "http://example.org/orexis/execution#IntentionAdopted";
 pub const INTENTION_RESOLVED: &str = "http://example.org/orexis/execution#IntentionResolved";
 pub const STEP_TAKEN: &str = "http://example.org/orexis/execution#StepTaken";
 /// A head about to be taken, asked of whoever is above execution: the head, and the instant it is taken at.
@@ -39,6 +41,38 @@ fn named(predicate: &'static str, iri: Option<&String>) -> Vec<(&'static str, Te
 
 fn term(name: &str) -> String {
     format!("{EXECUTION}{name}")
+}
+
+/// A plan adopted as an intention: from here the agent holds what the plan's steps will change, which is what
+/// whoever is above execution reads off the intentions.
+#[derive(Clone, Debug, PartialEq)]
+pub struct IntentionAdopted {
+    pub intention: String,
+    pub at: Option<DateTime>,
+    pub said: Vec<Triple>,
+}
+
+impl Event for IntentionAdopted {
+    fn kind(&self) -> Option<&'static str> {
+        Some(INTENTION_ADOPTED)
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        named(INTENTION_OF, Some(&self.intention))
+    }
+
+    fn statements(&self, entry: &NamedNode) -> Option<Vec<Triple>> {
+        let mut out = vec![
+            typed(entry.clone(), &term("IntentionAdopted")),
+            triple(entry.clone(), &term("intention"), node(&self.intention)),
+        ];
+        out.extend(self.said.iter().cloned());
+        Some(out)
+    }
+
+    fn at(&self) -> Option<DateTime> {
+        self.at
+    }
 }
 
 /// An intention ended: the want it pursued and how, by the desire the want was derived under.
