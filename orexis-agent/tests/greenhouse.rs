@@ -634,3 +634,48 @@ fn a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_counted() {
     assert!(of(dosed, "doubted").is_empty(), "a sensor nobody doubts is on no point");
     assert_eq!(broker.published().len(), 1);
 }
+
+/// The dry bed dosed and never answered, and a day later the thermometer alone, the moisture probe silent: the dose
+/// planned then cannot be sized, so its step fails as it is taken. RUN FREE, where a policy decides after whatever
+/// it heard and no pass waits between two decisions, planning does not plan it again in the present it failed in
+/// (#1145): it was planned, taken and failed for as long as the agent ran.
+#[test]
+fn run_free_a_plan_that_fails_as_it_is_taken_is_not_planned_again_until_something_new_is_heard() {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    const PUBLISHED: &str = "http://example.org/orexis/planning#PlanPublished";
+    let (store, clock) = (store(), Arc::new(Ticking(Mutex::new(noon()))));
+    let mut g = grower(&store, &clock);
+    let published = Arc::new(Mutex::new(0));
+    let counted = published.clone();
+    g.seen.watch.connect(move |event, _| {
+        if event.kind() == Some(PUBLISHED) {
+            *counted.lock().unwrap() += 1;
+        }
+    });
+    let inbox = g.inbox.clone();
+    let mut runtime = g.runtime.take().unwrap();
+    reading(&inbox, r#"{"temperature": 21.0}"#, noon());
+    reading(&inbox, r#"{"moisture": 0.2}"#, noon());
+    runtime.run(Some(1), 0.0).unwrap();
+    assert_eq!(*published.lock().unwrap(), 1, "the dry bed's dose");
+    let later = plus(noon(), 86400.0);
+    clock.set(later);
+    reading(&inbox, r#"{"temperature": 21.0}"#, later);
+    let halt = Arc::new(AtomicBool::new(false));
+    runtime.halt = Some(halt.clone());
+    let wake = runtime.wake();
+    let stopping = std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_secs(8));
+        halt.store(true, Ordering::Relaxed);
+        wake.ring();
+    });
+    assert_eq!(runtime.run(None, 0.0).unwrap(), UNFINISHED);
+    stopping.join().unwrap();
+    runtime.stop();
+    let published = *published.lock().unwrap();
+    assert!(
+        published <= 3,
+        "{published} plans published: the dose that cannot be sized was planned again and again"
+    );
+    assert_eq!(g.broker.topics().len(), 1, "one dose commanded, the first");
+}

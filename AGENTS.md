@@ -425,6 +425,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A possible world is named by a mint number and the path to it is rows** — a name that joined
   its path collided once, needed escaping, grew with depth and was read back by nothing; the
   counter is the store's, so a cone kept across passes is never named over (#486).
+- **A plan that failed in the present it was found in is not planned again until news is heard** — the
+  search would find it again, and with no pass between two decisions a dose that could not be sized was planned,
+  taken and failed seventy times in eight seconds; news is a revision that changed a state or revised a belief that
+  came to the agent, never its own record of what it did (#1145, the-agent-is-a-runtime-of-tasks).
 - **A walking want is neither searched nor handed down again until a want a constraint couples to it
   arrives, a belief arrives that makes a world its untaken steps reach impossible, or a role above
   planning asks (`Planner.reopen`), and then only its untaken steps are reopened** — commitment is hard
@@ -1041,7 +1045,7 @@ a graph it hears, an arrival or its due instant (`wake_at`), polling nothing, an
 **the kernel keeps no order between two packages, each woken by what triggers it**, its policy deciding once nothing more waits
 for it; a test runs the same tasks on one thread and says the instant, a pass telling each wait in turn that it is
 now, everything said in it handled at that instant, a policy deciding when it is told and what a package queued for itself done at the pass's end, which is all that walks a plan
-in the pass that published it and paces one failing as it is taken (#1145); the run ends when nothing holds the agent, and a wait that
+in the pass that published it; the run ends when nothing holds the agent, and a wait that
 answers nothing stops its part (the-agent-is-a-runtime-of-tasks, #1119 step 8). A part is lent
 to its task, so a test that keeps one reads it between runs; **the kernel has no trait a package implements and no type a package registers by, and whoever assembles an agent builds the runtime and has each package start itself on it**. A search is bounded by a budget in the
 unit it spends and continued by the next pass. The executor's two doors, `tick` and `drain`, are

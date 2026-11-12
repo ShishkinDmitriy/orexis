@@ -11,7 +11,9 @@
 //! walking trigger (#916).
 
 use orexis::Error;
+use orexis::bind::{Value, bind};
 use orexis::ontology::SELF_GRAPH;
+use orexis_belief::ontology::{CHANGED, REVISED, REVISED_SOURCE};
 use std::sync::{Arc, Mutex};
 
 use orexis::runtime::{Heard, MET, PLANNED, Pass, Runtime, UNREACHABLE, Wait, Woke, long};
@@ -29,6 +31,7 @@ const CHECK: usize = 2;
 /// A head execution asks about as it is taken, and what that says: the head and the instant.
 const HEAD_ASKED: &str = "http://example.org/orexis/execution#HeadAsked";
 const HEAD: &str = "http://example.org/orexis/execution#head";
+const INTENTION: &str = "http://example.org/orexis/execution#intention";
 const AT_TIME: &str = "http://www.w3.org/ns/prov#atTime";
 
 /// Whoever walks what planning publishes: a role of this class, or one beneath it.
@@ -46,7 +49,22 @@ pub struct Planning {
     due: bool,
     /// The instant the next ground the last planning laid begins, where it laid one.
     next: Option<oxsdatatypes::DateTime>,
+    beliefs: Store,
+    /// Whether nothing new was heard since planning last published: the present is the one its plans were found in.
+    fresh: bool,
+    /// Whether a plan failed in the present it was found in: planning holds back until news is heard.
+    held: bool,
 }
+
+/// How the intention `$intention` ended, in execution's words.
+const OUTCOME_Q: &str = "
+SELECT ?o WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a execution:IntentionGraph }
+                  GRAPH ?g { $intention execution:outcome ?o } }";
+
+/// The graphs of `$revised` that are not the agent's own record of what it did: a belief that came to it.
+const NEWS_Q: &str = "
+SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:Graph .
+                               FILTER NOT EXISTS { ?g orexis:arrivedBy orexis:Recorded } } } LIMIT 1";
 
 impl Planning {
     /// The part, its budget the agent's stance unless the caller sizes one.
@@ -57,6 +75,9 @@ impl Planning {
             triggers: Vec::new(),
             due: true,
             next: None,
+            beliefs: beliefs.clone(),
+            fresh: false,
+            held: false,
         })
     }
 
@@ -174,6 +195,11 @@ impl Planning {
         }
         self.triggers.push(event.node.clone());
         let wants: Vec<String> = event.all(REOPENS).iter().map(|w| w.as_str().to_string()).collect();
+        if !wants.is_empty() || self.news(event)? {
+            (self.fresh, self.held) = (false, false);
+        } else if self.fresh && self.failed(event)? {
+            self.held = true;
+        }
         if !wants.is_empty() {
             self.planner.reopen(wants);
             pass.again();
@@ -181,11 +207,53 @@ impl Planning {
         Ok(Vec::new())
     }
 
+    /// Whether `event` is news to planning: a revision that changed a state, or revised a belief that is not the
+    /// agent's own record of what it did - a committed step the executor wrote of a plan is none. What execution
+    /// says of a plan is none either.
+    fn news(&self, event: &Heard) -> Result<bool, Error> {
+        if event.kind != REVISED {
+            return Ok(false);
+        }
+        if !event.all(CHANGED).is_empty() {
+            return Ok(true);
+        }
+        let revised = event.all(REVISED_SOURCE);
+        let Some(cat) = self.beliefs.catalogue()? else {
+            return Ok(!revised.is_empty());
+        };
+        if revised.is_empty() {
+            return Ok(false);
+        }
+        let graphs = revised
+            .iter()
+            .map(|g| format!("<{}>", g.as_str()))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let text = bind(NEWS_Q, &[("cat", Value::iri(cat)), ("revised", Value::Raw(graphs))])?;
+        Ok(!self.beliefs.rows(&text, &[])?.is_empty())
+    }
+
+    /// Whether `event` says an intention ended `failed`, read off the intention's own row.
+    fn failed(&self, event: &Heard) -> Result<bool, Error> {
+        let Some(intention) = event.named(INTENTION) else {
+            return Ok(false);
+        };
+        let text = bind(OUTCOME_Q, &[("intention", Value::iri(intention.as_str()))])?;
+        Ok(self
+            .beliefs
+            .rows(&text, &[])?
+            .iter()
+            .any(|r| orexis::store::value(r, "o").as_deref() == Some("failed")))
+    }
+
     /// PLANNING'S POLICY: plan where a trigger was heard since the last planning, the present reached the next ground
-    /// it laid, or it is due whatever was heard; and otherwise nothing, the agent held or let go as it last was.
+    /// it laid, or it is due whatever was heard; and otherwise nothing, the agent held or let go as it last was. A
+    /// PLAN THAT FAILED IN THE PRESENT IT WAS FOUND IN IS NOT PLANNED AGAIN UNTIL NEWS IS HEARD (#1145): the search
+    /// would find it again, and a step that fails as it is taken would be planned, taken and failed for ever.
     fn plan(&mut self, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
         let reached = self.next.is_some_and(|next| next <= pass.now);
-        if !self.due && !reached && self.triggers.is_empty() {
+        let again = !self.triggers.is_empty() && !self.held;
+        if !self.due && !reached && !again {
             if let Some(next) = self.next {
                 pass.wake_at(next);
             }
@@ -197,6 +265,9 @@ impl Planning {
         let activity = pass.begin(PLANNING_ACTIVITY, &triggers);
         //  A SEARCH IS SECONDS: the tasks beside it keep their workers.
         let written = long(|| self.planner.plan(pass.now))?;
+        if !self.planner.published.is_empty() {
+            self.fresh = true;
+        }
         self.keep(pass)?;
         self.next = self.planner.next_ground(pass.now)?;
         if let Some(next) = self.next {
