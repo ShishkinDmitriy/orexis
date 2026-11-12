@@ -61,6 +61,12 @@ is idle, so a day takes moments - feeds its bus, and awaits the event the scenar
 time pass and holds that none was said. There is no pass, so no test counts one, and a replay is pinned to what
 the tasks do.
 
+**One happening is said once.** What one turn wrote of a kind is told as one thing, the graphs together: a message
+of several readings is several percepts, which sensing says perceived together and belief revises together, saying
+so once. Told a graph at a time, each reading was perceived and revised apart, and whoever heard the first
+revision decided before the rest of the message was believed - the executor took a head its radar's reading, a
+moment on, would have refused. A package is a function of what happened, and what happened is the whole of it.
+
 **What a task says while it handles what woke it is heard when it next waits**, its graphs before its events, as
 before: a hearer never starts on a sayer's half-written work.
 

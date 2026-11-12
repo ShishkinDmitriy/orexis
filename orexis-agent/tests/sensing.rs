@@ -102,9 +102,31 @@ async fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_
     };
     let running = orexis_agent::start(&store, "fern", common::clock(now), &loaded, None, wiring).unwrap();
     assert_eq!(broker.0.lock().unwrap().0, ["sensors/moisture_sensor_fern/reading"]);
+    //  WHAT IS SAID OF THE MESSAGE: its three percepts perceived together and revised together, once each.
+    let said: Arc<Mutex<Vec<(String, usize)>>> = Arc::default();
+    let heard = said.clone();
+    running.handed.events.watch().connect(move |event, _| {
+        let kind = event.kind().unwrap_or_default();
+        if kind.ends_with("#Perceived") || kind.ends_with("#Revised") {
+            let sources = event
+                .about()
+                .iter()
+                .filter(|(p, _)| p.ends_with("#revises") || p.ends_with("#revised"))
+                .count();
+            heard
+                .lock()
+                .unwrap()
+                .push((kind.rsplit('#').next().unwrap().to_string(), sources));
+        }
+    });
     inbox.deliver("sensors/moisture_sensor_fern/reading", MESSAGE.as_bytes(), Some(now));
     assert_eq!(common::outcome(&running, 1).await, UNFINISHED);
     running.stop().await;
+    assert_eq!(
+        *said.lock().unwrap(),
+        [("Perceived".to_string(), 3), ("Revised".to_string(), 3)],
+        "one message is one perceiving and one revision, each of its three percepts"
+    );
     let observed = store.graphs_of(&[OBSERVATION], &Within::default()).unwrap();
     let observed: Vec<&str> = observed.iter().map(String::as_str).collect();
     let read: std::collections::BTreeMap<String, f64> = store

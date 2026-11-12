@@ -274,8 +274,8 @@ async fn task(
                 let wrote = part.heard_event(tag, &event, &mut turn);
                 turn.done(wrote)?;
             }
-            Some(Woke::Graph(tag, graph)) => {
-                let wrote = part.heard(tag, &graph, &mut turn);
+            Some(Woke::Graphs(tag, graphs)) => {
+                let wrote = part.heard(tag, &graphs, &mut turn);
                 turn.done(wrote)?;
             }
             _ => {}
@@ -348,8 +348,9 @@ impl Sensing {
         }
     }
 
-    fn heard(&mut self, _job: usize, graph: &str, _pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
-        self.perceived(vec![graph.to_string()]);
+    /// The percepts one message wrote, said together: belief revises them as one, and says so once.
+    fn heard(&mut self, _job: usize, graphs: &[String], _pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+        self.perceived(graphs.to_vec());
         Ok(Vec::new())
     }
 
