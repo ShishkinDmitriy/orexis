@@ -596,6 +596,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "inventory"
+version = "0.3.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6928282826c822ad91bf1c9a1cb90a30ba1c26770749929b4656cd6be829cd7c"
+dependencies = [
+ "rustversion",
+]
+
+[[package]]
 name = "itertools"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -814,6 +823,7 @@ checksum = "d05e27ee213611ffe7d6348b942e8f942b37114c00cc03cec254295a4a17852e"
 name = "orexis"
 version = "0.2.0"
 dependencies = [
+ "inventory",
  "log",
  "lru",
  "oxigraph",
@@ -831,6 +841,7 @@ dependencies = [
 name = "orexis-agent"
 version = "0.2.0"
 dependencies = [
+ "inventory",
  "log",
  "orexis",
  "orexis-belief",
@@ -853,18 +864,21 @@ dependencies = [
  "serde_json",
  "sha2",
  "signal-hook",
+ "tokio",
 ]
 
 [[package]]
 name = "orexis-belief"
 version = "0.2.0"
 dependencies = [
+ "inventory",
  "log",
  "orexis",
  "oxigraph",
  "oxsdatatypes",
  "regex",
  "spargebra",
+ "tokio",
 ]
 
 [[package]]
@@ -872,6 +886,7 @@ name = "orexis-coordination"
 version = "0.2.0"
 dependencies = [
  "getrandom 0.3.4",
+ "inventory",
  "log",
  "orexis",
  "orexis-speech",
@@ -879,6 +894,7 @@ dependencies = [
  "oxsdatatypes",
  "sha2",
  "spargebra",
+ "tokio",
 ]
 
 [[package]]
@@ -886,31 +902,37 @@ name = "orexis-execution"
 version = "0.2.0"
 dependencies = [
  "getrandom 0.3.4",
+ "inventory",
  "log",
  "orexis",
  "orexis-speech",
  "oxigraph",
  "oxsdatatypes",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]
 name = "orexis-history"
 version = "0.2.0"
 dependencies = [
+ "inventory",
  "log",
  "orexis",
  "oxigraph",
  "oxsdatatypes",
+ "tokio",
 ]
 
 [[package]]
 name = "orexis-metrics"
 version = "0.2.0"
 dependencies = [
+ "inventory",
  "log",
  "orexis",
  "oxsdatatypes",
+ "tokio",
 ]
 
 [[package]]
@@ -918,6 +940,7 @@ name = "orexis-planning"
 version = "0.2.0"
 dependencies = [
  "getrandom 0.3.4",
+ "inventory",
  "log",
  "orexis",
  "orexis-belief",
@@ -927,36 +950,42 @@ dependencies = [
  "regex",
  "sha2",
  "spargebra",
+ "tokio",
 ]
 
 [[package]]
 name = "orexis-prediction"
 version = "0.2.0"
 dependencies = [
+ "inventory",
  "log",
  "orexis",
  "orexis-belief",
  "orexis-sensing",
  "oxigraph",
  "oxsdatatypes",
+ "tokio",
 ]
 
 [[package]]
 name = "orexis-sensing"
 version = "0.2.0"
 dependencies = [
+ "inventory",
  "log",
  "orexis",
  "orexis-belief",
  "oxigraph",
  "oxsdatatypes",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]
 name = "orexis-spans"
 version = "0.2.0"
 dependencies = [
+ "inventory",
  "log",
  "orexis",
  "oxigraph",
@@ -969,16 +998,19 @@ dependencies = [
 name = "orexis-speech"
 version = "0.2.0"
 dependencies = [
+ "inventory",
  "log",
  "orexis",
  "oxigraph",
  "oxsdatatypes",
+ "tokio",
 ]
 
 [[package]]
 name = "orexis-translation"
 version = "0.2.0"
 dependencies = [
+ "inventory",
  "log",
  "orexis",
  "orexis-speech",
@@ -987,6 +1019,7 @@ dependencies = [
  "regex",
  "serde_json",
  "spargebra",
+ "tokio",
  "ureq",
  "uuid",
 ]
@@ -996,6 +1029,7 @@ name = "orexis-transport-email"
 version = "0.2.0"
 dependencies = [
  "imap",
+ "inventory",
  "lettre",
  "log",
  "mail-parser",
@@ -1004,17 +1038,20 @@ dependencies = [
  "oxigraph",
  "oxsdatatypes",
  "rustls 0.23.46",
+ "tokio",
 ]
 
 [[package]]
 name = "orexis-transport-http"
 version = "0.2.0"
 dependencies = [
+ "inventory",
  "log",
  "orexis",
  "orexis-sensing",
  "oxsdatatypes",
  "regex",
+ "tokio",
  "ureq",
 ]
 
@@ -1022,6 +1059,7 @@ dependencies = [
 name = "orexis-transport-mqtt"
 version = "0.2.0"
 dependencies = [
+ "inventory",
  "log",
  "orexis",
  "orexis-sensing",
@@ -1037,12 +1075,14 @@ dependencies = [
 name = "orexis-transport-telegram"
 version = "0.2.0"
 dependencies = [
+ "inventory",
  "log",
  "orexis",
  "orexis-speech",
  "oxigraph",
  "oxsdatatypes",
  "serde_json",
+ "tokio",
  "ureq",
 ]
 

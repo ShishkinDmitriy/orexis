@@ -184,6 +184,14 @@ impl Default for Laps {
 }
 
 impl Laps {
+    /// Laps from `mark`, where what they are of began before they were asked for.
+    pub fn since(mark: Instant) -> Self {
+        Laps {
+            spent: Vec::new(),
+            mark,
+        }
+    }
+
     /// The end of `part`: the seconds since the last mark added to it.
     pub fn lap(&mut self, part: &str) {
         let now = Instant::now();

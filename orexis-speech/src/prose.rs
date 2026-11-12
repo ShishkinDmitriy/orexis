@@ -13,8 +13,8 @@ use orexis::bind::{Value, bind};
 use orexis::document::Document;
 use orexis::events::{Event, mint};
 use orexis::ontology::{RECEIVED, RECORDED};
-use orexis::runtime::{Heard, Pass};
 use orexis::store::Store;
+use orexis::task::{Heard, Turn};
 
 const SPEECH: &str = "http://example.org/orexis/speech#";
 
@@ -171,7 +171,7 @@ pub fn carry(
     store: &Store,
     carrier: &mut dyn Carrier,
     event: &Heard,
-    pass: &mut Pass<'_>,
+    pass: &mut Turn<'_>,
     kind: &'static str,
 ) -> Result<(), Error> {
     if let Some(graph) = event.named(KEPT) {

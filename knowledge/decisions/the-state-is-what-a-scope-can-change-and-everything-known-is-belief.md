@@ -114,7 +114,7 @@ them were answering the second and third questions with a class.
 
 **Provenance is already there.** Every catalogue row carries `orexis:arrivedBy` and
 `orexis:ownedBy`. The boot already finds the world's shared documents by provenance, not by kind
-(what arrived asserted and nobody owns, `orexis/src/runtime.rs`).
+(what arrived asserted and nobody owns, `orexis/src/boot.rs`).
 
 # What was refused
 

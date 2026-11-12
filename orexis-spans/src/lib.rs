@@ -17,7 +17,7 @@ use serde_json::{Value, json};
 
 use orexis::activity::{Ended, Started};
 use orexis::events::{Event, Watch, as_of, mint};
-use orexis::runtime::Passed;
+use orexis::task::{Handed, Package, Passed, Task};
 
 /// Where the tracer is, told as environment: OTLP's HTTP endpoint, `/v1/traces` beneath it.
 pub const ENDPOINT: &str = "OTLP_ENDPOINT";
@@ -142,6 +142,19 @@ impl Tracer {
 }
 
 /// Trace every activity `watch` hears said, for the agent `agent`, each pass's spans handed to `send`.
+/// The tracer's OTLP endpoint, handed outside by whoever runs the agent, where the deployment traces it.
+pub struct Endpoint(pub String);
+
+inventory::submit! { Package { name: "spans", start } }
+
+/// THE TRACER'S START: where it is handed an endpoint it hears every activity on the watch as a span, and has no task.
+fn start(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
+    if let Some(Endpoint(endpoint)) = handed.outside.take::<Endpoint>() {
+        connect(handed.events.watch(), &handed.id, post(&endpoint));
+    }
+    Ok(None)
+}
+
 pub fn connect(watch: &Watch, agent: &str, send: Send) {
     let tracer = Arc::new(Mutex::new(Tracer {
         agent: agent.to_string(),

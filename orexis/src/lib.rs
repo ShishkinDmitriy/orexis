@@ -29,12 +29,12 @@ pub mod hash;
 pub mod journal;
 pub mod namespaces;
 pub mod ontology;
-pub mod runtime;
 pub mod series;
 #[cfg(any(test, feature = "snapshots"))]
 pub mod snapshots;
 pub mod stance;
 pub mod store;
+pub mod task;
 pub mod transport;
 
 pub use error::Error;

@@ -16,10 +16,8 @@ use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::ontology::BELIEF;
-use std::sync::{Arc, Mutex};
-
-use orexis::runtime::{Heard, Pass, Runtime, Wait, Woke};
 use orexis::store::{Store, Within};
+use orexis::task::{Handed, Heard, Hears, Package, Task, Turn, Woke};
 
 use crate::Deliberator;
 use crate::ontology::{INTO, REVISES, REVISING, REVISING_TRIGGER, REVISION_GRAPH};
@@ -56,7 +54,7 @@ impl Belief {
 
 impl Belief {
     /// Revise `graphs` as an activity, triggered by them.
-    fn revising(&mut self, graphs: &[String], kind: &str, pass: &mut Pass<'_>) -> Result<(), Error> {
+    fn revising(&mut self, graphs: &[String], kind: &str, pass: &mut Turn<'_>) -> Result<(), Error> {
         let triggers: Vec<NamedNode> = graphs.iter().filter_map(|g| NamedNode::new(g.as_str()).ok()).collect();
         let activity = pass.begin(REVISING, &triggers);
         let revised = self.revise(graphs, kind, pass.now);
@@ -65,33 +63,37 @@ impl Belief {
     }
 }
 
-/// BELIEF STARTING ITSELF on a runtime: it revises what the world authored as the agent's state, once, then its wait
-/// ends on a belief written and its trigger's events. The part is lent, so whoever keeps it reads it between runs.
-pub fn start(runtime: &mut Runtime, part: &Arc<Mutex<Belief>>) -> Result<(), Error> {
-    let part = part.clone();
-    let mut wait = runtime.wait("belief");
-    {
-        let mut belief = part.lock().expect("a part nobody poisoned");
-        belief.deliberator.watch = wait.watch();
-        belief.start(wait.now())?;
-    }
-    wait.on(BELIEF, HEARD);
-    wait.hears(REVISING_TRIGGER, REVISE);
-    runtime.spawn(wait, move |wait| policy(part, wait));
-    Ok(())
+inventory::submit! { Package { name: "belief", start } }
+
+/// BELIEF'S START: its deliberator made, what the world authored as the agent's state revised, once, and its task,
+/// which hears a belief written and its trigger's events.
+fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+    let mut belief = Belief::new(&handed.store, &handed.id)?;
+    belief.deliberator.watch = handed.events.watch().clone();
+    belief.start(handed.clock.now())?;
+    let mut hears = handed.events.hears();
+    hears.graph(BELIEF, HEARD);
+    hears.event(REVISING_TRIGGER, REVISE);
+    Ok(Some(Box::pin(task(handed.clone(), belief, hears))))
 }
 
 /// BELIEF'S TASK: it waits for a belief written, or an event beneath its trigger, and revises.
-async fn policy(part: Arc<Mutex<Belief>>, mut wait: Wait) {
-    while let Some((woke, mut pass)) = wait.next().await {
-        let mut belief = part.lock().expect("a part nobody poisoned");
-        let wrote = match woke {
-            Woke::Graph(_, graph) => belief.revising(&[graph], BELIEF, &mut pass).map(|()| Vec::new()),
-            Woke::Event(_, event) => belief.heard_event(&event, &mut pass),
-            _ => Ok(Vec::new()),
+async fn task(handed: Handed, mut belief: Belief, mut hears: Hears) -> Result<(), Error> {
+    loop {
+        let woke = tokio::select! {
+            biased;
+            _ = handed.stopped() => break,
+            woke = hears.next() => woke,
         };
-        pass.done(wrote);
+        let Some(woke) = woke else { break };
+        let mut turn = handed.turn();
+        let wrote = match woke {
+            Woke::Graph(_, graph) => belief.revising(&[graph], BELIEF, &mut turn).map(|()| Vec::new()),
+            Woke::Event(_, event) => belief.heard_event(&event, &mut turn),
+        };
+        turn.done(wrote)?;
     }
+    Ok(())
 }
 
 impl Belief {
@@ -109,7 +111,7 @@ impl Belief {
     }
 
     /// What belief's policy does of a trigger: revise each graph it names, its revisions of the kind it names.
-    fn heard_event(&mut self, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn heard_event(&mut self, event: &Heard, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         let graphs: Vec<String> = event.all(REVISES).iter().map(|g| g.as_str().to_string()).collect();
         let Some(kind) = event.named(INTO).map(|k| k.as_str().to_string()) else {
             return Ok(Vec::new());
@@ -125,9 +127,7 @@ impl Belief {
 mod tests {
     //! Belief's part, held as `agent/belief/tests/test_create.py` holds it.
 
-    use orexis::clock::Manual;
     use orexis::ontology::CATALOGUE_GRAPH;
-    use orexis::runtime::Runtime;
     use orexis::snapshots;
 
     use super::*;
@@ -146,26 +146,21 @@ mod tests {
     #[test]
     fn its_part_hears_beliefs_written_and_says_each_pass_revised() {
         let store = bare();
-        let clock = std::sync::Arc::new(Manual::at(snapshots::now()));
-        let part = std::sync::Arc::new(std::sync::Mutex::new(Belief::new(&store, "urn:test:me").unwrap()));
+        let mut part = Belief::new(&store, "urn:test:me").unwrap();
         let heard = Arc::new(Mutex::new(Vec::new()));
         let into = heard.clone();
-        let mut runtime = Runtime::new(&store, "urn:test:me", clock.clone()).unwrap();
-        runtime.watch().connect(move |event, _| {
+        part.deliberator.watch.connect(move |event, _| {
             if let Some(r) = orexis::events::as_of::<crate::deliberator::Revised>(event) {
                 into.lock().unwrap().extend(r.graphs.clone());
             }
         });
-        start(&mut runtime, &part).unwrap();
-        drop(runtime);
+        part.start(snapshots::now()).unwrap();
         store
             .update(&format!(
                 "INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <urn:test:nothing> a orexis:BeliefGraph }} }}"
             ))
             .unwrap();
-        part.lock()
-            .unwrap()
-            .revise(&["urn:test:nothing".to_string()], BELIEF, snapshots::now())
+        part.revise(&["urn:test:nothing".to_string()], BELIEF, snapshots::now())
             .unwrap();
         assert_eq!(
             *heard.lock().unwrap(),

@@ -22,8 +22,8 @@
 //! as a job; a statement is held to its words' bounds by a job the model's thread waits on.
 
 use std::collections::{BTreeMap, VecDeque};
+use std::sync::Arc;
 use std::sync::mpsc::{Receiver, Sender, SyncSender, channel, sync_channel};
-use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use oxigraph::store::Store as Engine;
@@ -35,9 +35,9 @@ use orexis::clock::isoformat;
 use orexis::document::Document;
 use orexis::events::{Watch, round6};
 use orexis::ontology::local_of;
-use orexis::runtime::{Heard, Pass, Runtime, Wait, Woke};
 use orexis::series::Reader;
 use orexis::store::Store;
+use orexis::task::{Arrived, Every, Handed, Heard, Hears, Package, Reads, Task, Turn, Woke, sooner};
 use orexis_speech::create::document_of;
 use orexis_speech::ontology::{STATEMENT, TO};
 use orexis_speech::prose::{KEPT, Prose, ProseKept, WritingAnnounced, prose_of, received, written};
@@ -752,7 +752,7 @@ impl Translation {
 impl Translation {
     /// What translation's policy does of a document the agent said: phrased for each person it is to in a chat of
     /// theirs, read back from the store as it was said; an agent it is to is no person, and is passed over.
-    fn phrase(&mut self, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn phrase(&mut self, event: &Heard, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         let graphs: Vec<String> = event.all(STATEMENT).iter().map(|g| g.as_str().to_string()).collect();
         let to: Vec<String> = event.all(TO).iter().map(|a| a.as_str().to_string()).collect();
         if graphs.is_empty() || to.is_empty() {
@@ -769,34 +769,84 @@ impl Translation {
     }
 }
 
-/// THE PACKAGE STARTING ITSELF on a runtime: it says what ends its wait and spawns its task. The part is lent, so
-/// whoever keeps it reads it between runs.
-pub fn start(runtime: &mut Runtime, part: &Arc<Mutex<Translation>>) -> Result<(), Error> {
-    let part = part.clone();
-    let mut wait = runtime.wait("translation");
-    part.lock().expect("a part nobody poisoned").start(&mut wait)?;
-    runtime.spawn(wait, move |wait| policy(part, wait));
-    Ok(())
+/// Handed outside by a test: the model is asked in the task's own turn and not on a thread of its own, so what it
+/// answers is handed back before the turn ends.
+pub struct Inline;
+
+inventory::submit! { Package { name: "translation", start } }
+
+/// THE PACKAGE'S START: its part made and started - what it hears, what it does every so often - and its task.
+fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+    let me = orexis::boot::selves(&handed.store)?
+        .into_iter()
+        .next()
+        .unwrap_or_default();
+    let model = handed.outside.take::<Arc<dyn crate::model::Model>>().or_else(|| {
+        crate::model::Anthropic::from_environ(&|name| std::env::var(name).ok())
+            .map(|m| Arc::new(m) as Arc<dyn crate::model::Model>)
+    });
+    let mut translator = Translator::new(&handed.store, &me, model);
+    translator.inline = handed.outside.take::<Inline>().is_some();
+    if let Some(reads) = handed.outside.take::<Reads>() {
+        (translator.journal, translator.history, translator.metrics) = (reads.journal, reads.history, reads.metrics);
+    }
+    let mut part = Translation::new(translator);
+    let mut hears = handed.events.hears();
+    let arrived = handed.arrived();
+    let mut timers = Vec::new();
+    part.start(handed, &mut hears, &arrived, &mut timers)?;
+    Ok(Some(Box::pin(task(handed.clone(), part, hears, arrived, timers))))
 }
 
-/// TRANSLATION'S TASK: it waits for its writing timer, an event beneath one of its triggers, or what a model's thread
-/// handed back, and does what its policy says of each.
-async fn policy(part: Arc<Mutex<Translation>>, mut wait: Wait) {
-    while let Some((woke, mut pass)) = wait.next().await {
-        let mut translation = part.lock().expect("a part nobody poisoned");
-        let wrote = match woke {
-            Woke::Due(tag) => translation.run(tag, &mut pass),
-            Woke::Event(tag, event) => translation.heard_event(tag, &event, &mut pass),
-            Woke::Arrived => translation.queued(&mut pass),
-            _ => Ok(Vec::new()),
+/// THE PACKAGE'S TASK: it decides as the run begins, then waits for what it hears, an arrival or the instant it is
+/// next due; once nothing more waits to be heard it does what it queued for itself and what has fallen due.
+async fn task(
+    handed: Handed,
+    mut part: Translation,
+    mut hears: Hears,
+    mut arrived: Arrived,
+    mut timers: Vec<(Every, usize)>,
+) -> Result<(), Error> {
+    let mut heard = None;
+    let mut due = None;
+    loop {
+        let mut turn = handed.turn();
+        if let Some(Woke::Event(tag, event)) = heard.take() {
+            let wrote = part.heard_event(tag, &event, &mut turn);
+            turn.done(wrote)?;
+        }
+        if hears.is_empty() {
+            let wrote = part.queued(&mut turn);
+            turn.done(wrote)?;
+            for (every, tag) in &mut timers {
+                if every.due(turn.now) {
+                    let wrote = part.run(*tag, &mut turn);
+                    turn.done(wrote)?;
+                    let wrote = part.queued(&mut turn);
+                    turn.done(wrote)?;
+                }
+            }
+            due = timers
+                .iter()
+                .fold(turn.next(), |soonest, (every, _)| sooner(soonest, every.at()));
+        }
+        heard = tokio::select! {
+            biased;
+            _ = handed.stopped() => break,
+            woke = hears.next() => match woke {
+                Some(woke) => Some(woke),
+                None => break,
+            },
+            _ = arrived.wait() => None,
+            _ = handed.sleep_until(due) => None,
         };
-        pass.done(wrote);
     }
+    Ok(())
 }
 
 impl Translation {
     /// What it queued for itself, each in turn and what each wrote told, until nothing is left.
-    fn queued(&mut self, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn queued(&mut self, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         loop {
             let jobs = self.submitted();
             if jobs.is_empty() {
@@ -809,17 +859,24 @@ impl Translation {
         }
     }
 
-    fn start(&mut self, wait: &mut Wait) -> Result<(), Error> {
-        self.translator.watch = wait.watch();
-        wait.every(WRITING_S, STILL);
-        wait.hears(TRANSLATING_TRIGGER, TRANSLATE);
-        wait.hears(PHRASING_TRIGGER, PHRASE);
+    fn start(
+        &mut self,
+        handed: &Handed,
+        hears: &mut Hears,
+        arrived: &Arrived,
+        timers: &mut Vec<(Every, usize)>,
+    ) -> Result<(), Error> {
+        let _ = (&handed, &hears, &arrived, &timers);
+        self.translator.watch = handed.events.watch().clone();
+        timers.push((Every::new(WRITING_S), STILL));
+        hears.event(TRANSLATING_TRIGGER, TRANSLATE);
+        hears.event(PHRASING_TRIGGER, PHRASE);
         Ok(())
     }
 
     /// What translation's policy does of a trigger: read the words it names back, and hear them where they are a
     /// person's; the agent's own it kept itself, for a transport to carry.
-    fn heard_event(&mut self, job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn heard_event(&mut self, job: usize, event: &Heard, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         if job == PHRASE {
             return self.phrase(event, pass);
         }
@@ -840,7 +897,7 @@ impl Translation {
         written
     }
 
-    fn run(&mut self, job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn run(&mut self, job: usize, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         match job {
             STILL => {
                 self.translator.still_writing();

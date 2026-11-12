@@ -11,17 +11,17 @@ use oxsdatatypes::DateTime;
 use serde_json::{Value as Json, json};
 
 use orexis::boot::{Booting, TREE, boot};
-use orexis::clock::{Manual, instant};
+use orexis::clock::{Elapsing, instant};
 use orexis::events::as_of;
 use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
-use orexis::runtime::{Heard, Pass, Runtime, Woke};
 use orexis::store::{Store, Within, iri, value};
+use orexis::task::{Heard, Outside, Package, Running, Turn as Handling, Wake, Woke};
 use orexis_speech::events::{Said, Statement};
 use orexis_speech::prose::{Carrier, PROSE_GRAPH, PROSE_KEPT, Prose, ProseKept, WRITING_ANNOUNCED, carry, kept};
 use orexis_translation::briefing::briefing;
 use orexis_translation::chat::chats_of;
-use orexis_translation::create::{CONVERSE_SYSTEM, SAY_SYSTEM, SILENT, TURNS, Translation, Translator, UNADDRESSED};
+use orexis_translation::create::{CONVERSE_SYSTEM, Inline, SAY_SYSTEM, SILENT, TURNS, UNADDRESSED};
 use orexis_translation::events::{Conversed, Translated};
 use orexis_translation::model::{Answer, Failure, Model, Turn};
 use orexis_translation::readable::{QUERY, ROWS, Readable, VOCABULARY};
@@ -468,33 +468,46 @@ struct Member {
     said: Vec<Said>,
 }
 
-impl Member {
-    /// The member starting itself, lent: its wait ends on the agent's words kept or its writing announced, and on
-    /// what it queued.
-    fn start(runtime: &mut Runtime, member: &Arc<Mutex<Self>>) {
-        let member = member.clone();
-        let mut wait = runtime.wait("transport/telegram");
-        wait.hears(PROSE_KEPT, 1);
-        wait.hears(WRITING_ANNOUNCED, 1);
-        runtime.spawn(wait, move |mut wait| async move {
-            while let Some((woke, mut pass)) = wait.next().await {
-                let mut member = member.lock().unwrap();
-                let wrote = match woke {
-                    Woke::Event(_, event) => member.heard_event(&event, &mut pass),
-                    Woke::Arrived => Ok(member.queued(&mut pass)),
-                    _ => Ok(Vec::new()),
-                };
-                pass.done(wrote);
-            }
-        });
-    }
+//  THE MEMBER'S TASK, registered as a package registers itself: it takes the member the test handed outside, hears
+//  the agent's words kept and its writing announced, and is rung for what the test queued on it.
+inventory::submit! { Package { name: "test/member", start: |handed| {
+    let member = handed.outside.take::<Arc<Mutex<Member>>>().expect("a member handed");
+    let mut hears = handed.events.hears();
+    hears.event(PROSE_KEPT, 1);
+    hears.event(WRITING_ANNOUNCED, 1);
+    let mut arrived = handed.arrived();
+    handed.outside.hand(arrived.wake());
+    let handed = handed.clone();
+    Ok(Some(Box::pin(async move {
+        loop {
+            let woke = tokio::select! {
+                biased;
+                _ = handed.stopped() => break,
+                woke = hears.next() => match woke {
+                    Some(woke) => Some(woke),
+                    None => break,
+                },
+                _ = arrived.wait() => None,
+            };
+            let mut turn = handed.turn();
+            let mut member = member.lock().unwrap();
+            let wrote = match woke {
+                Some(Woke::Event(_, event)) => member.heard_event(&event, &mut turn),
+                _ => Ok(member.queued(&mut turn)),
+            };
+            turn.done(wrote)?;
+        }
+        Ok(())
+    })))
+} } }
 
-    fn heard_event(&mut self, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, orexis::Error> {
+impl Member {
+    fn heard_event(&mut self, event: &Heard, pass: &mut Handling<'_>) -> Result<Vec<String>, orexis::Error> {
         carry(&self.store, &mut *self.bot.lock().unwrap(), event, pass, CARRYING)?;
         Ok(Vec::new())
     }
 
-    fn queued(&mut self, pass: &mut Pass<'_>) -> Vec<String> {
+    fn queued(&mut self, pass: &mut Handling<'_>) -> Vec<String> {
         let kept = std::mem::take(&mut self.kept);
         for prose in &kept {
             pass.emit(&ProseKept { prose: prose.clone() });
@@ -595,38 +608,85 @@ fn results(messages: &[Json]) -> Vec<String> {
 /// The seeker's translation, its runtime and its bot: a person's words written on a channel run the pass that hears them.
 struct Seeker<'s> {
     store: &'s Store,
-    part: Arc<Mutex<Translation>>,
+    /// The agent's tasks, on a Tokio runtime of the harness's own with its time paused: a test stays sync.
+    tasks: tokio::runtime::Runtime,
+    running: Option<Running>,
     member: Arc<Mutex<Member>>,
+    /// What rings the member for what the test queued on it.
+    wake: Wake,
     bot: Arc<Mutex<Bot>>,
-    clock: Arc<Manual>,
-    /// Who a test has hear what each pass's runtime says, on that runtime's watch.
+    /// The model the translator asks: whichever the test last set.
+    model: Arc<Switch>,
+    /// Who a test has hear what the agent says, connected at the next pass.
     hearer: Option<Hearer>,
+}
+
+/// A model that is whichever the test last set, since the translator is its task's alone.
+#[derive(Default)]
+struct Switch(Mutex<Option<Arc<dyn Model>>>);
+
+impl Switch {
+    fn now(&self) -> Arc<dyn Model> {
+        self.0.lock().unwrap().clone().expect("a model set")
+    }
+}
+
+impl Model for Switch {
+    fn name(&self) -> Option<String> {
+        self.0.lock().unwrap().as_ref().and_then(|m| m.name())
+    }
+
+    fn converse(&self, system: &[String], messages: &[Json], tools: &[Json], last: bool) -> Result<Turn, Failure> {
+        self.now().converse(system, messages, tools, last)
+    }
+
+    fn ask(&self, system: &str, text: &str) -> Result<Answer, Failure> {
+        self.now().ask(system, text)
+    }
 }
 
 type Hearer = Arc<dyn Fn(&dyn orexis::events::Event, &oxigraph::model::NamedNode) + Send + Sync>;
 
 impl<'s> Seeker<'s> {
     fn new(store: &'s Store) -> Self {
-        let mut translator = Translator::new(store, &me(), None);
-        translator.inline = true;
         let bot = Arc::new(Mutex::new(Bot::default()));
+        let member = Arc::new(Mutex::new(Member {
+            store: store.clone(),
+            bot: bot.clone(),
+            kept: Vec::new(),
+            said: Vec::new(),
+        }));
+        let model = Arc::new(Switch::default());
+        let tasks = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .start_paused(true)
+            .build()
+            .unwrap();
+        let outside = Outside::default();
+        outside.hand(member.clone());
+        outside.hand(model.clone() as Arc<dyn Model>);
+        outside.hand(Inline);
+        let names = ["translation".to_string(), "test/member".to_string()];
+        let running = {
+            let _entered = tasks.enter();
+            let clock = Arc::new(Elapsing::from(now()));
+            orexis::task::start(store, "seeker", clock, outside.clone(), &names).unwrap()
+        };
+        let wake = outside.take::<Wake>().expect("the member's wake");
         Seeker {
             store,
-            part: Arc::new(Mutex::new(Translation::new(translator))),
-            member: Arc::new(Mutex::new(Member {
-                store: store.clone(),
-                bot: bot.clone(),
-                kept: Vec::new(),
-                said: Vec::new(),
-            })),
+            tasks,
+            running: Some(running),
+            member,
+            wake,
             bot,
-            clock: Arc::new(Manual::at(now())),
+            model,
             hearer: None,
         }
     }
 
     fn model(&self, model: StandIn) {
-        self.part.lock().unwrap().translator.model = Some(Arc::new(model));
+        *self.model.0.lock().unwrap() = Some(Arc::new(model));
     }
 
     fn write(
@@ -673,14 +733,29 @@ impl<'s> Seeker<'s> {
         self.pass();
     }
 
+    /// Everything queued on the member and everything it sets off, handled: the member rung, and the agent settled.
     fn pass(&mut self) {
-        let mut runtime = Runtime::new(self.store, "seeker", self.clock.clone()).unwrap();
-        if let Some(hearer) = self.hearer.clone() {
-            runtime.watch().connect(move |event, named| hearer(event, named));
+        let running = self.running.as_ref().expect("an agent running");
+        if let Some(hearer) = self.hearer.take() {
+            running
+                .handed
+                .events
+                .watch()
+                .connect(move |event, named| hearer(event, named));
         }
-        orexis_translation::create::start(&mut runtime, &self.part).unwrap();
-        Member::start(&mut runtime, &self.member);
-        runtime.drain(now()).unwrap();
+        self.wake.ring();
+        self.tasks.block_on(running.settled()).unwrap();
+    }
+
+    /// Let `seconds` of the agent's time pass, and what falls due in them be done.
+    fn later(&mut self, seconds: f64) {
+        self.tasks.block_on(async {
+            tokio::time::sleep(std::time::Duration::from_secs_f64(seconds)).await;
+            for _ in 0..8 {
+                tokio::task::yield_now().await;
+            }
+        });
+        self.pass();
     }
 
     fn said(&self) -> Vec<(String, String)> {
@@ -1236,8 +1311,10 @@ fn the_person_sees_the_agent_writing_from_the_words_heard_to_the_answer_said() {
         [format!("{V}clara_telegram")],
         "shown before the model is asked"
     );
-    assert!(
-        s.part.lock().unwrap().translator.writing.is_empty(),
+    s.later(3.0 * orexis_translation::create::WRITING_S);
+    assert_eq!(
+        s.bot.lock().unwrap().writing.len(),
+        1,
         "and shown no more once the answer is said"
     );
     s.model(StandIn::new(vec![], SILENT).0);
@@ -1270,7 +1347,13 @@ fn a_model_that_fails_says_so_in_the_chat_where_the_agent_was_addressed() {
             "seeker could not answer: its model would not answer (HTTP Error 401: Unauthorized).".to_string()
         )]
     );
-    assert!(s.part.lock().unwrap().translator.writing.is_empty());
+    let shown = s.bot.lock().unwrap().writing.len();
+    s.later(3.0 * orexis_translation::create::WRITING_S);
+    assert_eq!(
+        s.bot.lock().unwrap().writing.len(),
+        shown,
+        "shown no more once it has answered"
+    );
     s.bot.lock().unwrap().said.clear();
     let (mut model, _) = StandIn::new(vec![], "");
     model.fails = Some(Failure::Refused("401".into()));

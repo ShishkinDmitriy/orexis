@@ -16,7 +16,6 @@
 //! sensor doubted at the last ask and no longer, so the series' last word on it in a window is that it is fine.
 
 use std::collections::BTreeSet;
-use std::sync::{Arc, Mutex};
 
 use oxigraph::model::{Literal, NamedNode};
 use oxsdatatypes::DateTime;
@@ -26,8 +25,8 @@ use orexis::bind::{Value, bind};
 use orexis::clock::{instant, isoformat, seconds_of};
 use orexis::events::{Watch, round6};
 use orexis::ontology::{BELIEF, DERIVED, local_of};
-use orexis::runtime::{Heard, Pass, Runtime, Wait, Woke};
 use orexis::store::{Store, Within, iri, value};
+use orexis::task::{Arrived, Every, Handed, Heard, Hears, Package, Task, Turn, Woke, sooner};
 
 use crate::cadence::cadence_of;
 use crate::events::{Doubted, Observed, Perceived, Silence, tag_of};
@@ -245,35 +244,71 @@ fn me_of(beliefs: &Store, agent: &str) -> Result<String, Error> {
         .ok_or_else(|| Error::Evaluation(format!("no agent with localId '{agent}' in this store")))
 }
 
-/// THE PACKAGE STARTING ITSELF on a runtime: it says what ends its wait and spawns its task. The part is lent, so
-/// whoever keeps it reads it between runs.
-pub fn start(runtime: &mut Runtime, part: &Arc<Mutex<Sensing>>) -> Result<(), Error> {
-    let part = part.clone();
-    let mut wait = runtime.wait("sensing");
-    part.lock().expect("a part nobody poisoned").start(&mut wait)?;
-    runtime.spawn(wait, move |wait| policy(part, wait));
+inventory::submit! { Package { name: "sensing", start } }
+
+/// THE PACKAGE'S START: its part made and started - what it hears, what it does every so often - and its task.
+fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+    let mut part = Sensing::new(&handed.store, &handed.id)?;
+    let mut hears = handed.events.hears();
+    let arrived = handed.arrived();
+    let mut timers = Vec::new();
+    part.start(handed, &mut hears, &arrived, &mut timers)?;
+    Ok(Some(Box::pin(task(handed.clone(), part, hears, arrived, timers))))
+}
+
+/// THE PACKAGE'S TASK: it decides as the run begins, then waits for what it hears, an arrival or the instant it is
+/// next due; once nothing more waits to be heard it does what it queued for itself and what has fallen due.
+async fn task(
+    handed: Handed,
+    mut part: Sensing,
+    mut hears: Hears,
+    mut arrived: Arrived,
+    mut timers: Vec<(Every, usize)>,
+) -> Result<(), Error> {
+    let mut heard = None;
+    let mut due = None;
+    loop {
+        let mut turn = handed.turn();
+        match heard.take() {
+            Some(Woke::Event(tag, event)) => {
+                let wrote = part.heard_event(tag, &event, &mut turn);
+                turn.done(wrote)?;
+            }
+            Some(Woke::Graph(tag, graph)) => {
+                let wrote = part.heard(tag, &graph, &mut turn);
+                turn.done(wrote)?;
+            }
+            _ => {}
+        }
+        if hears.is_empty() {
+            for (every, tag) in &mut timers {
+                if every.due(turn.now) {
+                    let wrote = part.run(*tag, &mut turn);
+                    turn.done(wrote)?;
+                }
+            }
+            due = timers
+                .iter()
+                .fold(turn.next(), |soonest, (every, _)| sooner(soonest, every.at()));
+        }
+        heard = tokio::select! {
+            biased;
+            _ = handed.stopped() => break,
+            woke = hears.next() => match woke {
+                Some(woke) => Some(woke),
+                None => break,
+            },
+            _ = arrived.wait() => None,
+            _ = handed.sleep_until(due) => None,
+        };
+    }
     Ok(())
 }
 
-/// SENSING'S TASK: it waits for its minute, a percept written, or a revision said, and does what its policy says of
-/// each.
-async fn policy(part: Arc<Mutex<Sensing>>, mut wait: Wait) {
-    while let Some((woke, mut pass)) = wait.next().await {
-        let mut sensing = part.lock().expect("a part nobody poisoned");
-        let wrote = match woke {
-            Woke::Due(tag) => sensing.run(tag, &mut pass),
-            Woke::Graph(tag, graph) => sensing.heard(tag, &graph, &mut pass),
-            Woke::Event(tag, event) => sensing.heard_event(tag, &event, &mut pass),
-            _ => Ok(Vec::new()),
-        };
-        pass.done(wrote);
-    }
-}
-
 impl Sensing {
-    fn start(&mut self, wait: &mut Wait) -> Result<(), Error> {
-        self.watch = wait.watch();
-        wait.every(EVERY_S, ASK);
+    /// What a restart finds unrevised: every percept nothing was concluded of, said at the first ask - said as it
+    /// starts, nobody would hear it yet.
+    fn unrevised(&mut self) -> Result<(), Error> {
         if let Some(cat) = self.beliefs.catalogue()? {
             self.due = self
                 .beliefs
@@ -282,12 +317,26 @@ impl Sensing {
                 .filter_map(|r| iri(r, "g"))
                 .collect();
         }
-        wait.on(OBSERVATION_GRAPH, HEARD);
-        wait.hears(OBSERVING_TRIGGER, OBSERVE);
         Ok(())
     }
 
-    fn run(&mut self, job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn start(
+        &mut self,
+        handed: &Handed,
+        hears: &mut Hears,
+        arrived: &Arrived,
+        timers: &mut Vec<(Every, usize)>,
+    ) -> Result<(), Error> {
+        let _ = (&handed, &hears, &arrived, &timers);
+        self.watch = handed.events.watch().clone();
+        timers.push((Every::new(EVERY_S), ASK));
+        self.unrevised()?;
+        hears.graph(OBSERVATION_GRAPH, HEARD);
+        hears.event(OBSERVING_TRIGGER, OBSERVE);
+        Ok(())
+    }
+
+    fn run(&mut self, job: usize, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         match job {
             ASK => {
                 //  WHAT A RESTART FOUND UNREVISED is said at the first ask: said at start, nobody heard it yet.
@@ -299,13 +348,13 @@ impl Sensing {
         }
     }
 
-    fn heard(&mut self, _job: usize, graph: &str, _pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn heard(&mut self, _job: usize, graph: &str, _pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         self.perceived(vec![graph.to_string()]);
         Ok(Vec::new())
     }
 
     /// What sensing's policy does of a revision pass: say each percept it revised as the observation it is.
-    fn heard_event(&mut self, _job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn heard_event(&mut self, _job: usize, event: &Heard, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         if !self.watch.connected() {
             return Ok(Vec::new());
         }
@@ -338,8 +387,7 @@ mod tests {
 
     use std::path::Path;
 
-    use orexis::clock::{Manual, instant as parse, seconds};
-    use orexis::runtime::Runtime;
+    use orexis::clock::{instant as parse, seconds};
     use orexis::snapshots::{ME, now, stand_in};
     use orexis::store::value;
 
@@ -366,20 +414,11 @@ mod tests {
         let silent_after = default_of(SILENT_AFTER_TERM).unwrap() as f64;
         let later = plus(now(), CADENCE * (1.0 + GRACE + silent_after));
         let since = plus(now(), CADENCE * (1.0 + GRACE));
-        let clock = std::sync::Arc::new(Manual::at(later));
-        let part = std::sync::Arc::new(std::sync::Mutex::new(Sensing::new(&store, "keeper").unwrap()));
-        let written = {
-            let mut runtime = Runtime::new(&store, "keeper", clock.clone()).unwrap();
-            start(&mut runtime, &part).unwrap();
-            runtime.drain(later).unwrap()
-        };
-        assert_eq!(written.len(), 1, "the ask runs at the first pass: {written:?}");
+        let mut part = Sensing::new(&store, "keeper").unwrap();
+        let written = part.ask(later).unwrap();
+        assert_eq!(written.len(), 1, "the first ask keeps the silence: {written:?}");
         let silence = written[0].clone();
-        assert_eq!(
-            part.lock().unwrap().ask(later).unwrap(),
-            Vec::<String>::new(),
-            "kept once"
-        );
+        assert_eq!(part.ask(later).unwrap(), Vec::<String>::new(), "kept once");
         let mut restarted = Sensing::new(&store, "keeper").unwrap();
         assert_eq!(
             restarted.ask(later).unwrap(),
@@ -420,10 +459,8 @@ mod tests {
         type Said = Arc<Mutex<Vec<Vec<(String, String)>>>>;
         let said: Said = Arc::new(Mutex::new(Vec::new()));
         let into = said.clone();
-        let clock = std::sync::Arc::new(Manual::at(plus(now(), CADENCE)));
-        let part = std::sync::Arc::new(std::sync::Mutex::new(Sensing::new(&store, "keeper").unwrap()));
-        let mut runtime = Runtime::new(&store, "keeper", clock.clone()).unwrap();
-        runtime.watch().connect(move |event, _| {
+        let mut part = Sensing::new(&store, "keeper").unwrap();
+        part.watch.connect(move |event, _| {
             if let Some(p) = orexis::events::as_of::<Perceived>(event) {
                 into.lock().unwrap().push(
                     orexis::events::Event::about(p)
@@ -441,16 +478,17 @@ mod tests {
             about.push((crate::ontology::INTO.to_string(), format!("<{OBSERVATION_GRAPH}>")));
             about
         };
-        start(&mut runtime, &part).unwrap();
-        runtime.drain(orexis::clock::Clock::now(&*clock)).unwrap();
-        drop(runtime);
+        part.unrevised().unwrap();
+        let events = orexis::task::Events::new(&store);
+        let mut turn = events.turn(plus(now(), CADENCE), "keeper");
+        part.run(ASK, &mut turn).unwrap();
         assert_eq!(
             *said.lock().unwrap(),
             [about(&before)],
             "the one nothing was concluded of, at the first ask"
         );
         let written = received(&store, ME, PROBE, br#"{"value": 0.22}"#, plus(now(), 2.0 * CADENCE)).unwrap();
-        part.lock().unwrap().perceived(written.clone());
+        part.perceived(written.clone());
         assert_eq!(said.lock().unwrap().last(), Some(&about(&written)));
     }
 }

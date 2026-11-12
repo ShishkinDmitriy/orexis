@@ -1,4 +1,4 @@
-//! `orexis-agent <world> <agent> [--volume PATH] [--journal PATH] [--passes N] [--check [--boot PATH]]`: one agent, booted from a
+//! `orexis-agent <world> <agent> [--volume PATH] [--journal PATH] [--check [--boot PATH]]`: one agent, booted from a
 //! world's files and run until nothing is left to pursue — exit 0 `met` or `planned`, 1 `unreachable`, 2 `unfinished`,
 //! and 143 where it was told to stop, as the Python runtime's `main` exits. With `--check` it runs nothing: booted in
 //! memory, its parts made over members that reach nothing, it exits 0 printing one line of JSON — the packages it
@@ -20,9 +20,9 @@ use orexis::boot::TREE;
 use orexis::clock::{Clock, Paced};
 use orexis::journal::{self, Journal};
 use orexis::namespaces::Namespaces;
-use orexis::runtime::{MET, PLANNED, Runtime, UNREACHABLE};
 use orexis::series::{self, HISTORY, METRICS};
 use orexis::store::Store;
+use orexis::task::{MET, PLANNED, UNREACHABLE};
 use orexis_agent::{Watching, Wiring};
 
 /// The log, to the standard error and into the journal once one is kept: every record at its level.
@@ -79,27 +79,18 @@ struct Args {
     agent: String,
     volume: Option<PathBuf>,
     journal: Option<PathBuf>,
-    passes: Option<usize>,
     check: bool,
     boot: Option<PathBuf>,
 }
 
 fn args() -> Result<Args, String> {
     let mut rest = std::env::args().skip(1);
-    let (mut positional, mut volume, mut journal, mut passes, mut check) = (Vec::new(), None, None, None, false);
+    let (mut positional, mut volume, mut journal, mut check) = (Vec::new(), None, None, false);
     let mut boot = None;
     while let Some(arg) = rest.next() {
         match arg.as_str() {
             "--volume" => volume = Some(PathBuf::from(rest.next().ok_or("--volume takes a path")?)),
             "--journal" => journal = Some(PathBuf::from(rest.next().ok_or("--journal takes a path")?)),
-            "--passes" => {
-                passes = Some(
-                    rest.next()
-                        .ok_or("--passes takes a number")?
-                        .parse()
-                        .map_err(|_| "--passes takes a number")?,
-                )
-            }
             "--check" => check = true,
             "--boot" => boot = Some(PathBuf::from(rest.next().ok_or("--boot takes a path")?)),
             other => positional.push(other.to_string()),
@@ -107,8 +98,7 @@ fn args() -> Result<Args, String> {
     }
     let [world, agent] = positional.as_slice() else {
         return Err(
-            "usage: orexis-agent <world> <agent> [--volume PATH] [--journal PATH] [--passes N] [--check [--boot PATH]]"
-                .into(),
+            "usage: orexis-agent <world> <agent> [--volume PATH] [--journal PATH] [--check [--boot PATH]]".into(),
         );
     };
     Ok(Args {
@@ -116,7 +106,6 @@ fn args() -> Result<Args, String> {
         agent: agent.clone(),
         volume,
         journal,
-        passes,
         check,
         boot,
     })
@@ -148,9 +137,6 @@ fn opened(path: Option<&Path>) -> Result<Option<oxigraph::store::Store>, Error> 
         None => Ok(None),
     }
 }
-
-/// The longest the mind waits with nothing arriving and nothing due: a guard, not a poll.
-const LONGEST_S: f64 = 3600.0;
 
 fn run(args: &Args, clock: Arc<Paced>, journal: Arc<Journal>, halt: Arc<AtomicBool>) -> Result<String, Error> {
     let tree = PathBuf::from(env("OREXIS_TREE").unwrap_or_else(|| TREE.to_string()));
@@ -192,31 +178,38 @@ fn run(args: &Args, clock: Arc<Paced>, journal: Arc<Journal>, halt: Arc<AtomicBo
         },
         ..Wiring::default()
     };
-    //  THE AGENT'S BODY IS A RUNTIME OF TASKS, a worker a core (the-agent-is-a-runtime-of-tasks), and each package
-    //  its roles load starts itself on it.
+    //  THE AGENT'S BODY IS A TOKIO RUNTIME, a worker a core, and each package its roles load is a task on it
+    //  (a-package-is-a-task-that-awaits-its-events).
     let workers = std::thread::available_parallelism().map_or(1, |n| n.get());
-    let mut runtime = Runtime::threaded(workers, &store, &args.agent, clock.clone())?;
-    orexis_agent::assemble_wired(&mut runtime, &loaded, None, wiring)?;
-    //  A SIGNAL ENDS THE RUN'S WAIT, which may be long now that nothing polls: the flag is raised and the wake rung.
-    if let Ok(mut signals) =
-        signal_hook::iterator::Signals::new([signal_hook::consts::SIGTERM, signal_hook::consts::SIGINT])
-    {
-        let (wake, raised) = (runtime.wake(), halt.clone());
-        std::thread::spawn(move || {
-            for _ in signals.forever() {
-                raised.store(true, std::sync::atomic::Ordering::Relaxed);
-                wake.ring();
-            }
-        });
-    }
-    runtime.halt = Some(halt);
-    let outcome = runtime.run(args.passes, LONGEST_S);
-    if let Err(e) = &outcome {
-        //  AN ERROR ESCAPING A PASS is an incident: said at ERROR, it keeps the journal's window before it.
-        log::error!("{}: a pass failed, and the agent stops: {e}", args.agent);
-    }
-    runtime.stop();
-    outcome
+    let tasks = tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(workers.max(1))
+        .thread_name("orexis-tasks")
+        .enable_all()
+        .build()
+        .map_err(|e| Error::Evaluation(format!("the tasks could not start: {e}")))?;
+    tasks.block_on(async {
+        let mut running = orexis_agent::start(&store, &args.agent, clock.clone(), &loaded, None, wiring)?;
+        //  A SIGNAL ENDS THE RUN'S WAIT, which may be long since nothing polls: the flag is raised and the wake rung.
+        if let Ok(mut signals) =
+            signal_hook::iterator::Signals::new([signal_hook::consts::SIGTERM, signal_hook::consts::SIGINT])
+        {
+            let (wake, raised) = (running.wake(), halt.clone());
+            std::thread::spawn(move || {
+                for _ in signals.forever() {
+                    raised.store(true, std::sync::atomic::Ordering::Relaxed);
+                    wake.ring();
+                }
+            });
+        }
+        running.halt = Some(halt);
+        let outcome = running.released().await;
+        if let Err(e) = &outcome {
+            //  AN ERROR ESCAPING A TASK is an incident: said at ERROR, it keeps the journal's window before it.
+            log::error!("{}: a task failed, and the agent stops: {e}", args.agent);
+        }
+        running.stop().await;
+        outcome
+    })
 }
 
 fn main() {

@@ -10,6 +10,8 @@ license.workspace = true
 path = "src/lib.rs"
 
 [dependencies]
+inventory.workspace = true
+tokio.workspace = true
 orexis = { workspace = true }
 oxigraph.workspace = true
 log = "0.4"

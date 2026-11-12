@@ -124,13 +124,13 @@ stuck sensor ([stuck](/domain/sensing/stuck.md)).
 
 # Prove it
 
-A test beside the world delivers a message on the sensor's topic and asserts the belief, as
-`world/greenhouse/tests/test_greenhouse.py` does:
+A test delivers a message on the sensor's topic, waits until the agent has done with it, and asserts the
+belief, as `orexis-agent/tests/greenhouse.rs` does:
 
-```python
-runtime.deliver("sensors/bed_board/reading", b'{"moisture": 0.2}', NOW)
-runtime.drain(NOW)
-assert _held(runtime.beliefs) == {("soil", "Dry")}
+```rust
+reading(&inbox, r#"{"moisture": 0.2}"#, noon());
+common::settled(&g.running).await;
+assert_eq!(held(&store), BTreeSet::from([pair("soil", "Dry")]));
 ```
 
 # After birth

@@ -2,16 +2,18 @@
 //! the governed board's one message is three observations, the agent watches and keeps running, and a cadence it would
 //! set goes to the board's own command topic, retained.
 
+mod common;
+
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 
 use orexis::Error;
 use orexis::boot::TREE;
-use orexis::clock::{Manual, instant};
+use orexis::clock::instant;
 use orexis::namespaces::Namespaces;
-use orexis::runtime::{Runtime, UNFINISHED};
 use orexis::store::{Store, Within, iri, value};
-use orexis_agent::{Wiring, assemble_seen, booted};
+use orexis::task::UNFINISHED;
+use orexis_agent::{Wiring, booted};
 use orexis_transport_mqtt::driver::{Client, Mqtt};
 
 const W: &str = "http://example.org/orexis/world/sensing#";
@@ -82,8 +84,8 @@ fn booted_from_its_directory_the_agent_holds_no_hardware() {
     );
 }
 
-#[test]
-fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_to_the_boards_command_topic() {
+#[tokio::test(start_paused = true)]
+async fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_to_the_boards_command_topic() {
     let store = store();
     let now = instant("2026-01-01T12:00:00+00:00").unwrap();
     let loaded = booted(&store, tree(), &world(), "fern", now).unwrap();
@@ -94,19 +96,15 @@ fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_to_the
         vec![(None, Box::new(broker.clone()))],
     );
     let inbox = member.inbox.clone();
-    let clock = Arc::new(Manual::at(now));
     let wiring = Wiring {
         mqtt: Some(member),
         ..Wiring::default()
     };
-    let mut runtime = Runtime::new(&store, "fern", clock.clone()).unwrap();
-    let _ = assemble_seen(&mut runtime, &loaded, None, wiring).unwrap();
-    {
-        assert_eq!(broker.0.lock().unwrap().0, ["sensors/moisture_sensor_fern/reading"]);
-        inbox.deliver("sensors/moisture_sensor_fern/reading", MESSAGE.as_bytes(), Some(now));
-        assert_eq!(runtime.run(Some(2), 0.0).unwrap(), UNFINISHED);
-        runtime.stop();
-    }
+    let running = orexis_agent::start(&store, "fern", common::clock(now), &loaded, None, wiring).unwrap();
+    assert_eq!(broker.0.lock().unwrap().0, ["sensors/moisture_sensor_fern/reading"]);
+    inbox.deliver("sensors/moisture_sensor_fern/reading", MESSAGE.as_bytes(), Some(now));
+    assert_eq!(common::outcome(&running, 1).await, UNFINISHED);
+    running.stop().await;
     let observed = store.graphs_of(&[OBSERVATION], &Within::default()).unwrap();
     let observed: Vec<&str> = observed.iter().map(String::as_str).collect();
     let read: std::collections::BTreeMap<String, f64> = store

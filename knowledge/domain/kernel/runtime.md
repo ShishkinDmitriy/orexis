@@ -3,15 +3,15 @@ type: Service
 title: Runtime
 description: >-
   The process of Agent 0.2.0: one agent, one world, booted from the world's files into a store
-  whose catalogue says what every graph is, then run as tasks its packages spawn on it, each woken
+  whose catalogue says what every graph is, then run as its packages' tasks, each woken
   by what triggers it, and stopped when no desire is held, no want stands and
   no intention walks, or, for a planner that is no executor, when every want standing has a plan
-  published; an agent holding a desire runs for good. `orexis/src/runtime.rs`.
+  published; an agent holding a desire runs for good. `orexis/src/task.rs`.
 ---
 
 # Runtime
 
-The runtime is what a container runs: `python -m agent.runtime world/<name> <agent-id>`, one
+The runtime is what a container runs: `orexis-agent world/<name> <agent-id>`, one
 process told one identifier and given one world. It has two acts.
 
 **`boot` reads documents, and each says what graph it is.** The kernel's T-Box
@@ -55,42 +55,38 @@ closure, which is how an updated ontology or rule set reaches an agent that has 
 the agent owns are left as they are, since they are its beliefs now — the self graph among them, so
 a role declared after birth reaches only a fresh volume.
 
-**The runtime is a Tokio runtime and a watch, and each package starts itself on it.** Every package the agent
-loads — each a declared role calls for, and each transport a loaded role needs — that has a `create` module makes a
-[part](/domain/kernel/part.md) and starts it (`create::start`): it takes a wait, spawns its task over it, and says
-its [events](/domain/kernel/event.md) to the runtime's watch, the one thing the packages share. The task does what
-the package does: belief revises what is
-written, planning plans where its policy hears a trigger, the present reaches the next ground it laid, or a search was cut short, and holds back a plan that failed in the present it was found in until news is heard, execution walks what is due and whenever a revision changed the
-present, a transport listens or polls, sensing asks every minute what has
-fallen due, prediction offers its foresight. A wait is ended by what the package says on it: `hears` an event's class, heard
-beneath it by the vocabulary's closure ([policy](/domain/kernel/policy.md)), `on` a kind of graph written, `every`
-so many seconds of the one timeline, and a `wake` that any thread rings for an arrival; and a part woken may
-`hold` and `release` the agent, ask for the instant `again`, say by `wake_at` the instant it is next due with
-nothing heard, and mark a `lap`. The loop is the package's: it awaits `Wait::next` and is answered what woke it,
-handles that, and is then woken for what it queued for itself and, once nothing more waits for it, for its timers
-due, its policy among them. The kernel keeps no order between two packages. Run free, as an agent runs, a wait also ends at
-the soonest instant its package is due, each message is handled at the instant the clock then reads, and the tasks
-run on the runtime's workers beside each other, polling nothing; run by passes, as a test runs, on one thread, the
-runtime says the instant — a pass tells each wait in turn that it is now, waiting until nothing is busy,
-everything said in the pass is handled at that instant, a policy decides when the pass tells it the instant, what it hears
-after that waiting for the next, and what a package queued for itself is done at the pass's end — so a test sets the time and the tasks are the same
-([the-agent-is-a-runtime-of-tasks](/decisions/the-agent-is-a-runtime-of-tasks.md)). The runtime knows no package
-and no package's words, keeps the names they started under in `parts` and stops their tasks last-first. Where the environment names a series store it creates the part that writes
-it too, metrics or history, last, so it hears every other part
+**Each package is a task, and the run is those tasks.** Every package the agent loads — each a declared role
+calls for, and each transport a loaded role needs — registered itself with the linker, and the binary starts each
+on a Tokio runtime (`orexis::task::start`): its start makes the package's [part](/domain/kernel/part.md) and
+answers its task. A task is handed the store, the clock, the events — where every package says its
+[events](/domain/kernel/event.md) and subscribes to what it hears, the one thing packages share — and what reaches
+outside. It does what the package does: belief revises what is written, planning plans where its policy hears a
+trigger, the present reaches the next ground it laid, or a search was cut short, and holds back a plan that failed
+in the present it was found in until news is heard, execution walks what is due and whenever a revision changed the
+present, a transport listens or polls, sensing asks every minute what has fallen due, prediction offers its
+foresight. A task hears an event by its class, heard beneath it by the vocabulary's closure
+([policy](/domain/kernel/policy.md)), and a kind of graph written, in the order they were said; it waits also for
+an arrival any thread rings and for the clock; and in a turn it may `hold` and `release` the agent, say by
+`wake_at` when it is next due, ask to decide `again` at the next instant, and mark a `lap`. What it says while it
+handles what woke it is heard when it next waits, its graphs before its events. No order holds between two
+packages, the tasks run on the runtime's workers beside each other, and nothing polls
+([a-package-is-a-task-that-awaits-its-events](/decisions/a-package-is-a-task-that-awaits-its-events.md)). The
+kernel knows no package and no package's words. What watches the agent — history, metrics, the tracer — starts
+first, where the deployment keeps a sink for it, so it hears every other package
 ([metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md))
 ([a-package-starts-itself](/decisions/a-package-starts-itself.md),
 [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
 A transport package is created only where the process is told to connect; a test hands a member it
 brought up.
 
-**`run` stops when nobody holds the agent**, run free or by passes. What moves the agent is what its
+**The run ends when nobody holds the agent.** What moves the agent is what its
 packages say: the [planner](/domain/planning/planner.md) publishes its plans, the
 [executor](/domain/execution/executor.md) hears them and adopts, and walks, which for a fictive action
 is the whole plan and for a real one is up to the first landing the world has not answered. A
 transport holds the agent, since what it senses goes on arriving: the terrace, which wants nothing,
-watches for good. Planning holds it while a desire is held or a want stands. A [desire](/domain/planning/desire.md) is universal, so an agent holding one is never done: a
-pass with nothing to do waits for the world to move, and so does one whose wants nothing
-reaches, since the world may yet open a way. A want is one-shot: a pass that weighs one met in
+watches for good. Planning holds it while a desire is held or a want stands. A [desire](/domain/planning/desire.md) is universal, so an agent holding one is never done: with
+nothing to do it waits for the world to move, and so does one whose wants nothing
+reaches, since the world may yet open a way. A want is one-shot: a planning that weighs one met in
 the present ground withdraws it, from the planner's imaginaria and from the beliefs, where a want
 a world authored lives. So an agent holding wants and no desire — the courier, the tower's mover —
 exits `met` once every want is reached and no intention walks. An agent that is a planner and no
@@ -101,14 +97,14 @@ every want standing has a plan published, which `walking` would otherwise count 
 `planned` exits nought, as `met` does: the agent did all it was declared for. Wants standing with
 nothing walking or planned is
 one of two things, told apart by the plan's `planning:outcome`: a search the budget cut short,
-`planning:Exhausted`, which the next pass continues, or nothing this agent holds reaching the
+`planning:Exhausted`, which the next planning continues, or nothing this agent holds reaching the
 want, which such an agent exits as unreachable rather than looping on.
 
 **A sensed world runs through its transport.** Where a loaded role needs the member — a speaker
 listens to a topic, or a sensor of an observer's publishes on one — the
-[transport](/domain/transport/transport.md) is imported and the runtime brings the member up from the environment and
-starts it: a message arrives on the member's thread and is submitted, and each pass drains it on
-the one executing thread — [sensing](/domain/sensing/sensing.md) writes the observation, the
+[transport](/domain/transport/transport.md) is loaded and brings its member up from the environment as it
+starts: a message arrives on the member's own thread or task, which rings the member's task, and what it hands on
+is heard in turn — [sensing](/domain/sensing/sensing.md) writes the observation, the
 [deliberator](/domain/belief/deliberator.md) runs the rules that conclude its side and the
 transitions that make its subject's state, the
 [planner](/domain/planning/planner.md) lays the grounds, integrating the

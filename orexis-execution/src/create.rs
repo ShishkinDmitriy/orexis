@@ -18,7 +18,7 @@
 //! kept by speech's `said` and said `execution:Told`, which execution's ontology puts beneath speech's speaking
 //! trigger. A step whose command answers nothing is not taken (#869).
 
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use oxsdatatypes::DateTime;
 
@@ -28,8 +28,8 @@ use orexis::clock::Clock;
 use orexis::document::Document;
 use orexis::events::{Event, Watch, mint};
 use orexis::ontology::RECORDED;
-use orexis::runtime::{Heard, Pass, Runtime, Wait, Woke};
 use orexis::store::Store;
+use orexis::task::{Handed, Heard, Hears, Package, Task, Turn, Woke};
 use oxigraph::model::{GraphName, Literal, NamedNode, Quad, Term};
 
 use serde_json::Value as Json;
@@ -244,7 +244,7 @@ impl Execution {
         std::mem::take(&mut self.executor.written)
     }
 
-    fn walk(&mut self, pass: &mut Pass<'_>) -> Result<(), Error> {
+    fn walk(&mut self, pass: &mut Turn<'_>) -> Result<(), Error> {
         self.queued = false;
         let activity = pass.begin(crate::ontology::WALKING, &[]);
         let executor = &mut self.executor;
@@ -258,34 +258,75 @@ impl Execution {
     }
 }
 
-/// THE PACKAGE STARTING ITSELF on a runtime: it says what ends its wait and spawns its task. The part is lent, so
-/// whoever keeps it reads it between runs.
-pub fn start(runtime: &mut Runtime, part: &Arc<Mutex<Execution>>) -> Result<(), Error> {
-    let part = part.clone();
-    let mut wait = runtime.wait("execution");
-    part.lock().expect("a part nobody poisoned").start(&mut wait)?;
-    runtime.spawn(wait, move |wait| policy(part, wait));
-    Ok(())
+inventory::submit! { Package { name: "execution", start } }
+
+/// EXECUTION'S START: its executor made, and its task, which hears the events beneath its triggers.
+fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+    let mut execution = Execution::new(&handed.store, &handed.id, handed.clock.clone())?;
+    execution.executor.watch = handed.events.watch().clone();
+    let mut hears = handed.events.hears();
+    hears.event(ADOPTING_TRIGGER, ADOPT);
+    hears.event(SUPERSEDING_TRIGGER, SUPERSEDE);
+    hears.event(RESOLVING_TRIGGER, RESOLVE);
+    hears.event(WALKING_TRIGGER, REVISED);
+    Ok(Some(Box::pin(task(handed.clone(), execution, hears))))
 }
 
-/// EXECUTION'S TASK: it waits for the pass, an event beneath one of its triggers, or a walk it queued, and does what
-/// its policy says of each.
-async fn policy(part: Arc<Mutex<Execution>>, mut wait: Wait) {
-    while let Some((woke, mut pass)) = wait.next().await {
-        let mut execution = part.lock().expect("a part nobody poisoned");
-        let wrote = match woke {
-            Woke::Due(tag) => execution.run(tag, &mut pass),
-            Woke::Event(tag, event) => execution.heard_event(tag, &event, &mut pass),
-            Woke::Arrived => execution.queued(&mut pass),
-            _ => Ok(Vec::new()),
-        };
-        pass.done(wrote);
+/// EXECUTION'S TASK: it decides as the run begins, then waits for an event beneath one of its triggers or the
+/// instant it is next due; once nothing more waits to be heard it does the walk it queued, once, and decides.
+async fn task(handed: Handed, mut execution: Execution, mut hears: Hears) -> Result<(), Error> {
+    //  WHO HEARS WHAT IT WOULD SAY, asked as the run begins, every package having started: a head is asked where
+    //  somebody answers, a command kept and said where somebody sends it, a document where somebody says it.
+    let events = &handed.events;
+    execution.executor.asks = events.heard(crate::events::HEAD_ASKED);
+    let (commands, says) = (events.heard(COMMANDED), events.heard(TOLD));
+    if commands || says {
+        let me = orexis::boot::selves(&handed.store)?
+            .into_iter()
+            .next()
+            .unwrap_or_default();
+        execution.executor.take = Some(taker(
+            handed.store.clone(),
+            &me,
+            handed.clock.clone(),
+            events.watch().clone(),
+            commands,
+            says,
+        ));
     }
+    let mut heard = None;
+    let mut due = None;
+    loop {
+        let mut turn = handed.turn();
+        if let Some(Woke::Event(tag, event)) = heard.take() {
+            let wrote = execution.heard_event(tag, &event, &mut turn);
+            turn.done(wrote)?;
+        }
+        if hears.is_empty() {
+            let wrote = execution.queued(&mut turn);
+            turn.done(wrote)?;
+            let wrote = execution.run(PASS, &mut turn);
+            turn.done(wrote)?;
+            let wrote = execution.queued(&mut turn);
+            turn.done(wrote)?;
+            due = turn.next();
+        }
+        heard = tokio::select! {
+            biased;
+            _ = handed.stopped() => break,
+            woke = hears.next() => match woke {
+                Some(woke) => Some(woke),
+                None => break,
+            },
+            _ = handed.sleep_until(due) => None,
+        };
+    }
+    Ok(())
 }
 
 impl Execution {
     /// What it queued for itself, each in turn and what each wrote told, until nothing is left.
-    fn queued(&mut self, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn queued(&mut self, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         loop {
             let jobs = self.submitted();
             if jobs.is_empty() {
@@ -298,19 +339,9 @@ impl Execution {
         }
     }
 
-    fn start(&mut self, wait: &mut Wait) -> Result<(), Error> {
-        self.executor.watch = wait.watch();
-        wait.every(0.0, PASS);
-        wait.hears(ADOPTING_TRIGGER, ADOPT);
-        wait.hears(SUPERSEDING_TRIGGER, SUPERSEDE);
-        wait.hears(RESOLVING_TRIGGER, RESOLVE);
-        wait.hears(WALKING_TRIGGER, REVISED);
-        Ok(())
-    }
-
     /// What execution's policy does of a trigger: the activity it is the trigger of, begun with the entity the event
     /// names as what triggered it, and ended once done. An event naming less than its activity needs starts nothing.
-    fn heard_event(&mut self, job: usize, event: &Heard, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn heard_event(&mut self, job: usize, event: &Heard, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         //  A WALK IS QUEUED where what was heard changed the present, which alone answers a step: the walk is the
         //  activity, started when it runs.
         if job == REVISED {
@@ -378,7 +409,7 @@ impl Execution {
         wrote
     }
 
-    fn run(&mut self, job: usize, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
+    fn run(&mut self, job: usize, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         if job == WALK {
             self.walk(pass)?;
         } else {
