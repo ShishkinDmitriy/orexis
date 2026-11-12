@@ -112,7 +112,6 @@ async fn the_agent_concludes_what_each_disk_is_on_from_where_it_stands() {
     );
 }
 
-#[ignore = "the second plan below is searched from where the van no longer stands (#1147)"]
 #[tokio::test(start_paused = true)]
 async fn the_puzzle_is_planned_above_and_carried_out_by_the_van_below() {
     let store = store();
