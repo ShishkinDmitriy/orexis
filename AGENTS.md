@@ -489,6 +489,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   instant for ever, which only a clock that never stands exactly there had hidden.
 - **A search the budget cut short is continued whatever else is walking** — with a plan walked beside it nothing
   else asked for the next planning, and the want stood unplanned until something was heard.
+- **A claim presented lands at the subject's next reading, as a dose does** — the presentation's effect is the
+  soil moist, which only the probe's next reading shows; declared no landing, it failed a patience after it was
+  taken and the grower bought, presented and was served again once a minute until the reading came, four doses
+  where one was owed, which a test that set its clock past the gap had hidden (#1148).
 - **A ground laid again under its name takes back its candidates with its facts and its weighings** — a candidate
   is a filling the ground's facts admitted, and two plannings at one instant lay one name twice; left standing, a
   drive to the neighbour of where the van had stood at boot was taken two minutes on from where it stood then, two
