@@ -110,11 +110,20 @@ decides when it is told the instant, and what it hears after that it decides on 
 queued for itself in a pass it does at the pass's end, once. Those two rules are what is left of *The order the
 tests prove*, as two branches of a wait and no longer a machine of steps, and the digests stood. Both were tried
 without and are kept because the worlds lean on them. A plan published is walked in the pass that published it only
-because planning started before execution; a plan that fails as it is taken is planned again a pass later, where
-with a policy deciding after every message it was planned again at once, in the present it failed in, for ever -
-which is how an agent running free behaves today (#1145); and a walk done after each thing heard, not once a
-pass, read a test's clock twice more a pass and the allotment's second round fell elsewhere. They go when #1145 is
-fixed and a test sets the clock instead of running passes. One rule of the
+because planning started before execution; and a walk done after each thing heard, not once a pass, read a test's
+clock twice more a pass and the allotment's second round fell elsewhere. They go when a test sets the clock
+instead of running passes.
+
+**The pass had also paced a retry, and planning now does.** With a policy deciding after every message, a plan that
+fails as it is taken was planned again at once, in the present it failed in, for ever: run free, the greenhouse's
+dry bed with a silent probe published seventy plans in eight seconds, where a pass had made it one a pass without
+anyone saying so (#1145). Planning's policy now holds back: a want whose plan, published since news was last heard,
+has ended with the want still standing is not planned again until news is - a revision that changed a state or
+revised a belief that came to the agent, never its own record of what it did, a committed step among them
+(`orexis:Recorded`). Refused for it: a rule on what was heard alone, "what execution says of a plan is no trigger
+while no belief was revised", which also kept planning from laying the grounds a committed dose changes; and
+planning naming execution's events to tell a failure, a lower package speaking a higher one's word. And a run
+halted while something is still busy now ends, where it waited for a rest that never came. One rule of the
 queue's is kept for good, being about one package and not two: what a package says while it handles what woke it
 is heard once it has said what it wrote, its graphs before its events, so a hearer never starts on a sayer's
 half-written work.

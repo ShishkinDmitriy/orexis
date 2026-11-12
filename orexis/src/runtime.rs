@@ -22,9 +22,9 @@
 //! wait in turn that it is now `now`, waiting until nothing is busy, and everything said in the pass is handled at
 //! that instant. BY PASSES A POLICY DECIDES WHEN THE PASS TELLS IT THE INSTANT: what a package hears after that it
 //! decides on at the next pass, so a plan published is walked in the pass that published it only because planning
-//! started before execution, and a plan that fails as it is taken is tried again a pass later; run free nothing
-//! paces that yet (#1145). What a package queued for itself in a pass it does at the pass's end, once. Between passes the runtime waits for an arrival or the soonest instant
-//! anything is due, never longer than the longest it is told, nought in a test that sets its clock itself.
+//! started before execution. What a package queued for itself in a pass it does at the pass's end, once. Between
+//! passes the runtime waits for an arrival or the soonest instant anything is due, never longer than the longest it
+//! is told, nought in a test that sets its clock itself.
 use std::collections::{BTreeMap, HashMap};
 use std::future::Future;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -978,7 +978,15 @@ impl Runtime {
         let mut seen = shared.busy.0.subscribe();
         loop {
             let began = std::time::Instant::now();
-            self.tasks.block_on(async { drop(seen.wait_for(|n| *n == 0).await) });
+            //  UNTIL NOTHING IS BUSY, OR THE RUN IS HALTED WHILE SOMETHING STILL IS: a signal stops an agent that
+            //  never comes to rest.
+            let halted = self.halted.clone();
+            self.tasks.block_on(async {
+                tokio::select! {
+                    _ = seen.wait_for(|n| *n == 0) => {}
+                    _ = halted.notified() => {}
+                }
+            });
             Self::checked(&shared)?;
             self.passed(&shared, began.elapsed().as_secs_f64())?;
             if self.halted() {

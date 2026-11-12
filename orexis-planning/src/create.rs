@@ -11,7 +11,9 @@
 //! walking trigger (#916).
 
 use orexis::Error;
+use orexis::bind::{Value, bind};
 use orexis::ontology::SELF_GRAPH;
+use orexis_belief::ontology::{CHANGED, REVISED, REVISED_SOURCE};
 use std::sync::{Arc, Mutex};
 
 use orexis::runtime::{Heard, MET, PLANNED, Pass, Runtime, UNREACHABLE, Wait, Woke, long};
@@ -46,7 +48,16 @@ pub struct Planning {
     due: bool,
     /// The instant the next ground the last planning laid begins, where it laid one.
     next: Option<oxsdatatypes::DateTime>,
+    beliefs: Store,
+    /// The wants planning published a plan for since it last heard news: the present is still the one those plans
+    /// were found in.
+    planned: Vec<String>,
 }
+
+/// The graphs of `$revised` that are not the agent's own record of what it did: a belief that came to it.
+const NEWS_Q: &str = "
+SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:Graph .
+                               FILTER NOT EXISTS { ?g orexis:arrivedBy orexis:Recorded } } } LIMIT 1";
 
 impl Planning {
     /// The part, its budget the agent's stance unless the caller sizes one.
@@ -57,6 +68,8 @@ impl Planning {
             triggers: Vec::new(),
             due: true,
             next: None,
+            beliefs: beliefs.clone(),
+            planned: Vec::new(),
         })
     }
 
@@ -174,6 +187,9 @@ impl Planning {
         }
         self.triggers.push(event.node.clone());
         let wants: Vec<String> = event.all(REOPENS).iter().map(|w| w.as_str().to_string()).collect();
+        if !wants.is_empty() || self.news(event)? {
+            self.planned.clear();
+        }
         if !wants.is_empty() {
             self.planner.reopen(wants);
             pass.again();
@@ -181,11 +197,53 @@ impl Planning {
         Ok(Vec::new())
     }
 
+    /// Whether `event` is news to planning: a revision that changed a state, or revised a belief that is not the
+    /// agent's own record of what it did - a committed step the executor wrote of a plan is none. What execution
+    /// says of a plan is none either.
+    fn news(&self, event: &Heard) -> Result<bool, Error> {
+        if event.kind != REVISED {
+            return Ok(false);
+        }
+        if !event.all(CHANGED).is_empty() {
+            return Ok(true);
+        }
+        let revised = event.all(REVISED_SOURCE);
+        let Some(cat) = self.beliefs.catalogue()? else {
+            return Ok(!revised.is_empty());
+        };
+        if revised.is_empty() {
+            return Ok(false);
+        }
+        let graphs = revised
+            .iter()
+            .map(|g| format!("<{}>", g.as_str()))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let text = bind(NEWS_Q, &[("cat", Value::iri(cat)), ("revised", Value::Raw(graphs))])?;
+        Ok(!self.beliefs.rows(&text, &[])?.is_empty())
+    }
+
+    /// Whether a plan published since news was last heard has ended with its want still standing: the present is
+    /// the one that plan was found in, so the search would find it again.
+    fn failed_here(&self, now: oxsdatatypes::DateTime) -> Result<bool, Error> {
+        if self.planned.is_empty() {
+            return Ok(false);
+        }
+        let (standing, walking) = (self.planner.standing(now)?, self.planner.walking()?);
+        Ok(self
+            .planned
+            .iter()
+            .any(|w| standing.contains(w) && !walking.contains(w)))
+    }
+
     /// PLANNING'S POLICY: plan where a trigger was heard since the last planning, the present reached the next ground
-    /// it laid, or it is due whatever was heard; and otherwise nothing, the agent held or let go as it last was.
+    /// it laid, or it is due whatever was heard; and otherwise nothing, the agent held or let go as it last was. A
+    /// PLAN THAT ENDED UNREACHED IN THE PRESENT IT WAS FOUND IN IS NOT PLANNED AGAIN UNTIL NEWS IS HEARD (#1145): the
+    /// search would find it again, and a step that fails as it is taken would be planned, taken and failed for ever.
     fn plan(&mut self, pass: &mut Pass<'_>) -> Result<Vec<String>, Error> {
         let reached = self.next.is_some_and(|next| next <= pass.now);
-        if !self.due && !reached && self.triggers.is_empty() {
+        let again = !self.triggers.is_empty() && !self.failed_here(pass.now)?;
+        if !self.due && !reached && !again {
             if let Some(next) = self.next {
                 pass.wake_at(next);
             }
@@ -197,6 +255,8 @@ impl Planning {
         let activity = pass.begin(PLANNING_ACTIVITY, &triggers);
         //  A SEARCH IS SECONDS: the tasks beside it keep their workers.
         let written = long(|| self.planner.plan(pass.now))?;
+        self.planned
+            .extend(self.planner.published.iter().map(|p| p.want.clone()));
         self.keep(pass)?;
         self.next = self.planner.next_ground(pass.now)?;
         if let Some(next) = self.next {

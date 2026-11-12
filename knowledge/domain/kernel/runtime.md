@@ -60,7 +60,7 @@ loads — each a declared role calls for, and each transport a loaded role needs
 [part](/domain/kernel/part.md) and starts it (`create::start`): it takes a wait, spawns its task over it, and says
 its [events](/domain/kernel/event.md) to the runtime's watch, the one thing the packages share. The task does what
 the package does: belief revises what is
-written, planning plans where its policy hears a trigger, the present reaches the next ground it laid, or a search was cut short, execution walks what is due and whenever a revision changed the
+written, planning plans where its policy hears a trigger, the present reaches the next ground it laid, or a search was cut short, and holds back a plan that failed in the present it was found in until news is heard, execution walks what is due and whenever a revision changed the
 present, a transport listens or polls, sensing asks every minute what has
 fallen due, prediction offers its foresight. A wait is ended by what the package says on it: `hears` an event's class, heard
 beneath it by the vocabulary's closure ([policy](/domain/kernel/policy.md)), `on` a kind of graph written, `every`
