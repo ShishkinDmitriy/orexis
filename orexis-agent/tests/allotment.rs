@@ -225,7 +225,6 @@ fn dose(valve: &str, ml: i64) -> (String, Json) {
     )
 }
 
-#[ignore = "the market over continuous time doses more than once and the replay is not answered (#1148)"]
 #[tokio::test(start_paused = true)]
 async fn a_dry_plot_is_watered_by_a_claim_bought_on_the_supplier_s_venue() {
     allotment(async |m| {
@@ -352,7 +351,6 @@ const KINDS: [&str; 5] = [
 /// supplier's venue and the supplier serving the claim, the simulator's next reading answering the grower — replayed
 /// from what the Python simulator published, on a clock that stands where the walk sets it, and held to the doses and
 /// the documents the Python agents sent at each instant.
-#[ignore = "the market over continuous time doses more than once and the replay is not answered (#1148)"]
 #[tokio::test(start_paused = true)]
 async fn a_plot_that_dries_below_its_floor_is_watered_with_bought_water() {
     let text =

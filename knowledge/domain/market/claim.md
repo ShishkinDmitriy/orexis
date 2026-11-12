@@ -22,7 +22,9 @@ bid.
    owes, and the one the host will serve against.
 2. **Presented** — `market:Presenting` says a presentation when the holder's subject's soil is
    believed dry; the claim is then `market:presented`, and the host's desire *no presented claim unserved*
-   reads unmet.
+   reads unmet. The presentation lands at the subject's next reading, within its sensor's cadence, as a
+   dose does, since only that reading can show the water served: until then the holder's want is walking
+   and it buys nothing more.
 3. **Served** — `market:Serving` sends the dose to the host's valve through its command and says
    the claim again with `market:discharged true` and `market:dischargedAt`.
 
