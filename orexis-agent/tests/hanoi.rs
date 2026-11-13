@@ -204,7 +204,7 @@ async fn the_plan_is_the_seven_textbook_moves() {
 async fn a_budget_that_cuts_the_search_short_is_finished_by_the_plannings_after() {
     let store = store();
     boot(&store);
-    assert_eq!(ran(&store, 20, 12).await, PLANNED);
+    assert_eq!(ran(&store, 20, 30).await, PLANNED);
     assert_eq!(plan(&store), (7.0, textbook()));
 }
 
@@ -266,7 +266,7 @@ async fn metered(interval_s: f64) -> Vec<Vec<orexis::events::Point>> {
         ..Default::default()
     };
     let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, Some(20), wiring).unwrap();
-    assert_eq!(common::outcome(&running, 12).await, PLANNED);
+    assert_eq!(common::outcome(&running, 30).await, PLANNED);
     running.stop().await;
     writes
         .lock()

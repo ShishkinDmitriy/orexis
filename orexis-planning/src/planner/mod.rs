@@ -39,7 +39,9 @@ use crate::find_wants::{Finding, find_wants};
 use crate::footprint::{actions_of, reads_of_shape, terms_of_shape, written};
 use crate::lay_ground::{Landed, Laying, lay_ground, lay_ground_foreseeing};
 use crate::memo::Memo;
-use crate::ontology::{BUDGET_TERM, CONSTRAINT_GRAPH, DESIRE, PLANNING, SCOPE_GRAPH, SHAPES, WANT};
+use crate::ontology::{
+    BUDGET_EVERY_TERM, BUDGET_TERM, CONSTRAINT_GRAPH, DESIRE, EXHAUSTED, PLANNING, SCOPE_GRAPH, SHAPES, WANT,
+};
 use crate::prepare_ground::prepare_ground;
 use crate::publish_plan::publish_plan;
 use crate::refine::refine;
@@ -150,6 +152,9 @@ SELECT (COUNT(?x) AS ?used) WHERE {
 
 /// THE CEILING ON WHAT A SEARCH MAY SPEND where the self graph states no `planning:budget`, in candidates weighed.
 pub const BUDGET: usize = 32;
+/// How long a budget is for, in the agent's seconds, where its self graph states none: a search the budget cut short
+/// is given another this long after, or sooner where its grounds changed.
+pub const BUDGET_EVERY_S: f64 = 10.0;
 
 /// THE WORLD OF A STORE THAT SCOPED NOTHING.
 pub const UNSCOPED: &str = "unscoped";
@@ -188,6 +193,11 @@ pub struct Planner {
     pub id: String,
     pub uri: String,
     pub budget: usize,
+    /// How long a budget is for, in the agent's seconds (`planning:budgetEveryS`).
+    pub every_s: f64,
+    /// Each want whose search the budget last cut short: when, and the grounds it was searched in, by hash. It is
+    /// searched again where the grounds differ or the budget's stretch has passed, and not before.
+    cut: BTreeMap<String, (DateTime, BTreeSet<String>)>,
     /// THE PLANNER'S IMAGINARIA, one per scope, kept from pass to pass and refreshed at every `plan`.
     pub imaginaria: BTreeMap<String, Store>,
     /// What the texts a pass evaluates read, remembered while the graphs they live in stand.
@@ -601,6 +611,8 @@ impl Planner {
             id: agent_id.to_string(),
             uri,
             budget,
+            every_s: orexis::stance::stance(beliefs, BUDGET_EVERY_TERM)?.unwrap_or(BUDGET_EVERY_S),
+            cut: BTreeMap::new(),
             imaginaria: BTreeMap::new(),
             read: None,
             handed: Vec::new(),
@@ -674,6 +686,7 @@ impl Planner {
         self.asked.clear();
         //  A WANT NO LONGER SEARCHED — reached, withdrawn, or walked — takes its tally with it.
         self.searches.lock().unwrap().retain(|w, _| searched.contains(w));
+        self.cut.retain(|w, _| searched.contains(w));
         if let Some(laps) = self.laps.take() {
             self.watch.emit(&Planned {
                 wants: Some(searched.len() as f64),
@@ -876,8 +889,27 @@ impl Planner {
                     .filter(|w| walking.contains(w))
                     .collect()
             };
+            let grounds: BTreeSet<String> = {
+                let c = cat(store, &mut memo)?;
+                store
+                    .rows(&bind(GROUND_HASHES_Q, &[("cat", c)])?, &[])?
+                    .iter()
+                    .filter_map(|r| value(r, "h"))
+                    .collect()
+            };
             for want in of_scope(store, &shapes, &self.uri, &scope, scopes, at)? {
                 if walking.contains(&want) && !reopening.contains(&want) {
+                    continue;
+                }
+                //  A BUDGET IS FOR A STRETCH OF THE AGENT'S TIME (`planning:budgetEveryS`): a search it cut short is given
+                //  another where its grounds differ from those it was cut short in, which is news, or that stretch has
+                //  passed, and not before. With no pass to pace it, every event heard handed the same search a fresh
+                //  budget, and the budget was no ceiling.
+                if let Some((when, seen)) = self.cut.get(&want)
+                    && *seen == grounds
+                    && orexis::clock::seconds_of(at.checked_sub(*when).unwrap_or_else(zero)) < self.every_s
+                {
+                    here.insert(want.clone());
                     continue;
                 }
                 let scoped = Searching {
@@ -888,6 +920,16 @@ impl Planner {
                     at,
                 };
                 self.search(store, &want, self.budget, &scoped, &mut memo)?;
+                let exhausted = store
+                    .rows(&bind(PLAN_OF_Q, &[("want", Value::iri(want.as_str()))])?, &[])?
+                    .first()
+                    .and_then(|r| iri(r, "outcome"))
+                    .is_some_and(|o| o == EXHAUSTED);
+                if exhausted {
+                    self.cut.insert(want.clone(), (at, grounds.clone()));
+                } else {
+                    self.cut.remove(&want);
+                }
                 here.insert(want.clone());
                 self.reconsider(store, &want, &flights, &mut kept)?;
             }
@@ -1053,6 +1095,14 @@ impl Planner {
             weighed: Some(weighed as f64),
         });
         Ok(())
+    }
+
+    /// When the earliest search the budget cut short is given its next budget, where one waits for it.
+    pub fn continues_at(&self) -> Option<DateTime> {
+        self.cut
+            .values()
+            .filter_map(|(when, _)| when.checked_add_day_time_duration(orexis::clock::seconds(self.every_s)))
+            .reduce(|a, b| if b < a { b } else { a })
     }
 
     /// Every want this agent is walking: pursued by a standing intention, or by a plan published and not yet adopted.
@@ -1563,6 +1613,42 @@ SELECT (COUNT(?x) AS ?n) WHERE {
             whole,
             "no candidate weighed twice, and none skipped"
         );
+    }
+
+    /// A budget is for a stretch of the agent's time: planned again at the instant it was cut short, in the same
+    /// grounds, a search is given no second budget; planned again once that stretch has passed, it is.
+    #[test]
+    fn a_search_cut_short_is_given_its_next_budget_only_when_the_stretch_has_passed() {
+        let store = snapshots::stand_in(&bench("three_disk_hanoi"));
+        let mut planner = Planner::new(&store, snapshots::AGENT, Some(20)).unwrap();
+        assert_eq!(
+            planner.every_s, BUDGET_EVERY_S,
+            "the package's figure, no stance being stated"
+        );
+        let said: Arc<Mutex<Vec<f64>>> = Default::default();
+        let kept = said.clone();
+        planner.watch.connect(move |event, _| {
+            if let Some(ended) = orexis::events::as_of::<SearchEnded>(event) {
+                kept.lock().unwrap().push(ended.weighed.unwrap_or(0.0));
+            }
+        });
+        let at = minutes(0);
+        planner.plan(at).unwrap();
+        assert!(planner.exhausted().unwrap());
+        assert_eq!(*said.lock().unwrap(), [20.0], "one search, to its budget");
+        let due = at
+            .checked_add_day_time_duration(orexis::clock::seconds(BUDGET_EVERY_S))
+            .unwrap();
+        assert_eq!(planner.continues_at(), Some(due));
+        planner.plan(at).unwrap();
+        assert_eq!(
+            said.lock().unwrap().len(),
+            1,
+            "no second search at the instant the first ran out"
+        );
+        assert_eq!(planner.continues_at(), Some(due), "and it is still due when it was");
+        planner.plan(due).unwrap();
+        assert_eq!(said.lock().unwrap().len(), 2, "and the next once it is due");
     }
 
     #[test]

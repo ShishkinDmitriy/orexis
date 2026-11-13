@@ -102,8 +102,13 @@ short was not continued while another plan was walking; a member woke itself for
 reading fell due, sensing saying it had not lapsed yet and that its lapse was now; a wait until now was taken for a
 wait; a hold meant for a plan that could not be taken also held back one whose landing was waited out. Each is
 fixed where it was. What is not yet held on the new shape is an issue of its own, and its tests are set aside
-until it is: the lane's two couriers (#1149), the unanswered dose's metrics (#1150), and two tests that read the
-planner between passes (#1151). The allotment's market (#1148) was closed in its documents: a claim presented
+until it is: the unanswered dose's metrics (#1150), and two tests that read the
+planner between passes (#1151). The lane's two couriers (#1149) are walked closed loop, the test playing the vans,
+since a replay holds two minds to another runtime's instants; and walked so, the pass turned out to have been two
+things nothing else was: the period of a budget, and the one judgment a policy made. With every event beginning a
+planning, one search was run to its budget nineteen times at the instant the couriers first heard each other. A
+budget is now for a stretch of the agent's time, planning's policy judges whether a revision is news, and belief
+says a state changed only where what is believed differs. The allotment's market (#1148) was closed in its documents: a claim presented
 declared no landing, so it failed a patience on and the grower bought again until its probe next read. The tower's puzzle (#1147) was the first
 closed: a ground is named for its instant, two plannings at one instant lay it twice, and laid again it kept the
 candidates its earlier facts had admitted, one of which a later search took.

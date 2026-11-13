@@ -487,8 +487,20 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A percept has lapsed at the instant it ends, and a wait until now is no wait** — a period is half-open, so the
   instant a reading falls due it is due; asked `end < now` beside `end >= now`, the member woke itself at that
   instant for ever, which only a clock that never stands exactly there had hidden.
-- **A search the budget cut short is continued whatever else is walking** — with a plan walked beside it nothing
-  else asked for the next planning, and the want stood unplanned until something was heard.
+- **A search the budget cut short is continued whatever else is walking, when its next budget is due** — with a
+  plan walked beside it nothing else asked for the next planning, and the want stood unplanned until something was
+  heard; and continued at once it was no ceiling, so a budget is for a stretch of the agent's time,
+  `planning:budgetEveryS`, the next given when that has passed or the grounds differ, which is news (budget).
+- **No change, no event: a state put back as it stood is not said changed** — a transition takes a fact out of the
+  state of the arrival before and puts it in the arrival's own, so the graphs differ at every reading; belief says
+  `belief:changed` only where what the state lost and what it gained differ, since a van's fix repeating its cell
+  began a planning every ten seconds.
+- **A policy judges, and hearing is not judging** — planning begins on a revision only where a state changed or a
+  belief that came to the agent was revised, never on a percept or its executor's own committed step; and where the
+  agent foresees, on every revision, since its flows read the latest reading's number and each committed step, and
+  with no planning after a dose was committed it woke at a ground the dose had taken away and read the want reached;
+  begun on every revision heard, a courier planned thirteen times at the instant it first heard its peer, three of
+  them for anything new (policy).
 - **One happening is said once: what one turn wrote of a kind is told as one thing** — a message of three readings
   was three percepts each perceived and revised apart, and whoever heard the first revision decided before the
   rest was believed; told together, sensing says one `Perceived` and belief one `Revised` naming all three, and
@@ -904,8 +916,17 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A world the simulator plays is held on the binary by a replay of what the simulator published to the Python
   agent, and the binary must send what that agent sent** — a reading answers the command before it, so the replay is
   the closed loop for as long as the commands agree; the simulator stays Python, and the greenhouse's day, the
-  layby's walks, the lane's and the allotment's are `orexis-agent/tests/fixtures/`, held to the day bench's digest, the
-  walks' drives and, for minds on one bus, every document they told each other and who each concluded won.
+  layby's walks and the allotment's are `orexis-agent/tests/fixtures/`, held to the day bench's digest and the
+  walks' drives.
+- **Two minds on one bus are walked closed loop, and held to what the world exists to prove** — the test plays the
+  vans as the simulator does, off the world's documents (`orexis-agent/tests/common/road.rs`), so each courier's own
+  drives decide what both are told, and a walk is held to who won, where the vans ended and the road's rules, no two
+  vans on one cell and no van on a hedge at any step; a replay of the Python couriers held them to the recorded
+  instant of every drive and document, which two minds that wait for no pass do not keep (#1149).
+- **A walk being looked into is traced, never guessed at** — `orexis-agent/tests/common/trace.rs` keeps every
+  activity with the events that triggered it and how long it took, every event said inside it and every document on
+  the bus, in the order said, so a cycle reads as a chain of line numbers; the lane's slowness was called a storm
+  between two agents until the trace showed one search run to its budget nineteen times at one instant.
 - **A broker's address is the world's to assert or the installation's to allocate, and the agent's
   to be told** — asserted wins, derived completes, a collision is refused (#827, #823); a world may
   have any number, each served apart, and only what makes an address ambiguous is refused (#821,

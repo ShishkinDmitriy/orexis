@@ -53,6 +53,8 @@ pub struct Planning {
     fresh: bool,
     /// Whether a plan failed in the present it was found in: planning holds back until news is heard.
     held: bool,
+    /// When a search the budget cut short is given its next budget, where one waits for it.
+    continues: Option<oxsdatatypes::DateTime>,
 }
 
 /// How the intention `$intention` ended where none of its steps was taken, in execution's words: it ended before the
@@ -69,6 +71,13 @@ const NEWS_Q: &str = "
 SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:Graph .
                                FILTER NOT EXISTS { ?g orexis:arrivedBy orexis:Recorded } } } LIMIT 1";
 
+/// Whether any of the graphs revised is a belief a search reads: no percept, which is no belief, and no forecast
+/// the agent recorded of its own act, the executor's committed step. What a step wrote of the world as the agent took
+/// it is recorded too, and is the present.
+const BELIEVED_Q: &str = "
+SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:BeliefGraph .
+                               FILTER NOT EXISTS { ?g a orexis:ForecastGraph ; orexis:arrivedBy orexis:Recorded } } } LIMIT 1";
+
 impl Planning {
     /// The part, its budget the agent's stance unless the caller sizes one.
     pub fn new(beliefs: &Store, agent: &str, budget: Option<usize>) -> Result<Self, Error> {
@@ -81,12 +90,15 @@ impl Planning {
             beliefs: beliefs.clone(),
             fresh: false,
             held: false,
+            continues: None,
         })
     }
 
     /// Hold the agent, or let it go and say how the wanting ended.
     fn keep(&mut self, pass: &mut Turn<'_>) -> Result<(), Error> {
         let who = "planning";
+        //  WHEN A SEARCH CUT SHORT IS NEXT DUE is this planning's to say, and nothing an earlier one said stands.
+        self.continues = None;
         let planner = &self.planner;
         let standing = planner.standing(pass.now)?;
         let walking = planner.walking()?;
@@ -103,11 +115,18 @@ impl Planning {
             return Ok(());
         }
         let unplanned: Vec<&String> = standing.iter().filter(|w| !walking.contains(*w)).collect();
-        //  A SEARCH THE BUDGET CUT SHORT IS CONTINUED AT ONCE, whatever else is walking: with a plan walked beside
-        //  it, nothing else would ask for the next planning, and the want stood unplanned until something was heard.
+        //  A SEARCH THE BUDGET CUT SHORT IS CONTINUED WHEN ITS NEXT BUDGET IS DUE, whatever else is walking: with a plan
+        //  walked beside it, nothing else would ask for the next planning, and the want stood unplanned until
+        //  something was heard. Continued at once, the budget was no ceiling.
         if !unplanned.is_empty() && planner.exhausted()? {
-            self.due = true;
-            pass.again();
+            self.continues = planner.continues_at();
+            match self.continues {
+                Some(at) => pass.wake_at(at),
+                None => {
+                    self.due = true;
+                    pass.again();
+                }
+            }
             pass.hold(who);
             return Ok(());
         }
@@ -220,9 +239,12 @@ impl Planning {
             });
             return Ok(Vec::new());
         }
-        self.triggers.push(event.node.clone());
         let wants: Vec<String> = event.all(REOPENS).iter().map(|w| w.as_str().to_string()).collect();
-        if !wants.is_empty() || self.news(event)? {
+        let news = self.news(event)?;
+        if !wants.is_empty() || self.calls(event)? {
+            self.triggers.push(event.node.clone());
+        }
+        if !wants.is_empty() || news {
             (self.fresh, self.held) = (false, false);
         } else if self.fresh && self.failed(event)? {
             self.held = true;
@@ -250,12 +272,43 @@ impl Planning {
         if revised.is_empty() {
             return Ok(false);
         }
+        //  WHERE THE AGENT FORESEES, A READING'S NUMBER IS READ: the flows are integrated from the latest, so a
+        //  percept revised is news though it changed no state - a reading a hair below its bound brought a foreseen
+        //  crossing to the present. Where it does not, nothing planning reads is in a percept.
+
         let graphs = revised
             .iter()
             .map(|g| format!("<{}>", g.as_str()))
             .collect::<Vec<_>>()
             .join(" ");
         let text = bind(NEWS_Q, &[("cat", Value::iri(cat)), ("revised", Value::Raw(graphs))])?;
+        Ok(!self.beliefs.rows(&text, &[])?.is_empty())
+    }
+
+    /// THE POLICY'S JUDGMENT: whether `event` calls for a planning. Every event beneath the trigger but a revision
+    /// was said to planning on purpose, and does. A revision does where it changed a state, or revised a belief a
+    /// search reads - a peer's places laid, the world as a step wrote it - never a percept, which is no belief, nor
+    /// the executor's own committed step, a forecast of what the plan already says. AND WHERE THE AGENT FORESEES, EVERY REVISION DOES: its flows are integrated from the latest
+    /// reading's number and over each committed step, so either moves the grounds ahead though no state changed -
+    /// with no planning after a dose was committed, planning woke at a ground the dose had taken away and read the
+    /// want reached.
+    fn calls(&self, event: &Heard) -> Result<bool, Error> {
+        if event.kind != REVISED || !event.all(CHANGED).is_empty() || self.planner.foresee.is_some() {
+            return Ok(true);
+        }
+        let revised = event.all(REVISED_SOURCE);
+        let Some(cat) = self.beliefs.catalogue()? else {
+            return Ok(!revised.is_empty());
+        };
+        if revised.is_empty() {
+            return Ok(false);
+        }
+        let graphs = revised
+            .iter()
+            .map(|g| format!("<{}>", g.as_str()))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let text = bind(BELIEVED_Q, &[("cat", Value::iri(cat)), ("revised", Value::Raw(graphs))])?;
         Ok(!self.beliefs.rows(&text, &[])?.is_empty())
     }
 
@@ -278,10 +331,14 @@ impl Planning {
     /// would find it again, and a step that fails as it is taken would be planned, taken and failed for ever.
     fn plan(&mut self, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         let reached = self.next.is_some_and(|next| next <= pass.now);
+        let reached = reached || self.continues.is_some_and(|at| at <= pass.now);
         let again = !self.triggers.is_empty() && !self.held;
         if !self.due && !reached && !again {
             if let Some(next) = self.next {
                 pass.wake_at(next);
+            }
+            if let Some(at) = self.continues {
+                pass.wake_at(at);
             }
             pass.lap("plan");
             return Ok(Vec::new());

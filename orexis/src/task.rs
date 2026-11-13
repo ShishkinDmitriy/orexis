@@ -848,6 +848,11 @@ impl Running {
         self.names.iter().map(String::as_str).collect()
     }
 
+    /// Whoever watches the agent: what a test or a tool connects to, to hear everything its packages say.
+    pub fn watch(&self) -> &Watch {
+        self.handed.events.watch()
+    }
+
     /// What ends the run's wait, for whoever halts the run from outside it.
     pub fn wake(&self) -> Wake {
         Wake {

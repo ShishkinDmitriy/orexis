@@ -43,4 +43,6 @@ pub const SATISFIED: &str = "http://example.org/orexis/planning#Satisfied";
 pub const NO_CANDIDATE: &str = "http://example.org/orexis/planning#NoCandidate";
 pub const EXHAUSTED: &str = "http://example.org/orexis/planning#Exhausted";
 pub const BUDGET_TERM: &str = "http://example.org/orexis/planning#budget";
+/// How long a budget is for, the agent's stance: a search the budget cut short is given another this long after.
+pub const BUDGET_EVERY_TERM: &str = "http://example.org/orexis/planning#budgetEveryS";
 pub const PLAN: &str = "http://example.org/orexis#PlanGraph";

@@ -59,12 +59,19 @@ phrases it for each person in a chat; each reads the statements back from the st
 Execution's step taken says `execution:Commanded`, naming the command graph it kept, beneath `mqtt:ActuatingTrigger`
 by the transport's ontology, since a transport is above every package it carries bytes for; and `execution:Told`,
 like coordination's, beneath `speech:SpeakingTrigger` by execution's.
-Planning's is built: belief's `belief:Revised` and execution's `execution:IntentionResolved` and
-`execution:StepTaken` are beneath `planning:PlanningTrigger` by planning's ontology - a step taken, since
-the want below a refined step is kept once the step is taken - and planning plans at the
-pass after one is heard, beside the two things that happen with nothing said: the present reaching the next
-ground the last planning laid, and a search the budget cut short going on. A pass that heard none of them plans
-nothing. Execution walks at a pass only where its intentions were written since its last walk or the instant that
+Planning's is built: belief's `belief:Revised` and execution's `execution:IntentionAdopted`,
+`execution:IntentionResolved` and `execution:StepTaken` are beneath `planning:PlanningTrigger` by planning's
+ontology - an intention adopted, since an adopted plan's refined steps are planned below; a step taken, since
+the want below a refined step is kept once the step is taken - and planning plans once
+one is heard that its policy judges to call for it. Every event beneath the trigger but a revision was said to
+planning on purpose, and does. A revision does where it changed a state (`belief:changed`) or revised a belief that
+came to the agent, a peer's places laid; a percept, which is no belief, and the executor's own committed step do not.
+And where the agent foresees, every revision does: its flows are integrated from the latest reading's number and
+over each committed step, so either moves the grounds ahead though no state changed. What ends the hold on a plan
+that failed as it was taken is a second judgment, news, and is as it was. Beside those it plans
+at the two things that happen with nothing said: the present reaching the next ground the last planning laid, and the
+next [budget](/domain/planning/budget.md) falling due for a search the last one cut short. Where none of them
+holds it plans nothing. Execution walks at a pass only where its intentions were written since its last walk or the instant that
 walk said is due has come - a head due, a landing to look at, a patience run out - a revision of the present queuing a
 walk of its own. Coordination's `coordination:CoordinatingTrigger` has belief's `belief:Revised` and execution's
 `execution:IntentionAdopted`, `execution:StepTaken` and `execution:IntentionResolved` beneath it by

@@ -191,7 +191,11 @@ planning:Exhausted a planning:Outcome ; rdfs:label "exhausted" ;
 
 planning:budget a owl:DatatypeProperty ; rdfs:domain orexis:Self ; rdfs:range xsd:integer ;
     rdfs:label "budget" ;
-    rdfs:comment "How many candidates one want's search may weigh in a pass — the ceiling on what a search spends, in the unit it spends; a search it cuts short ends `Exhausted` and is continued by the passes after. A stance: the agent states it of itself in its self graph, sized by its world's author from a measured cost per candidate, and the Planner reads it when it is made; where it states none, thirty-two (knowledge/domain/kernel/stance.md, knowledge/domain/planning/budget.md)." .
+    rdfs:comment "How many candidates one want's search may weigh in one planning — the ceiling on what a search spends, in the unit it spends; a search it cuts short ends `Exhausted` and is continued when its next budget is due (`planning:budgetEveryS`) or its grounds change. A stance: the agent states it of itself in its self graph, sized by its world's author from a measured cost per candidate, and the Planner reads it when it is made; where it states none, thirty-two (knowledge/domain/kernel/stance.md, knowledge/domain/planning/budget.md)." .
+
+planning:budgetEveryS a owl:DatatypeProperty ; rdfs:domain orexis:Self ; rdfs:range xsd:decimal ;
+    rdfs:label "budget every, in seconds" ;
+    rdfs:comment "How long a budget is for, in the agent's seconds: a search the budget cut short is given its next budget this long after it was cut short, or sooner where the grounds it is searched in differ from those it was cut short in, which is news. The pair makes the budget a rate, so many candidates per so many seconds; with no period, every event heard handed the same search a fresh budget and the ceiling bounded nothing. A stance: the agent states it of itself in its self graph, and the Planner reads it when it is made; where it states none, ten seconds (knowledge/domain/kernel/stance.md, knowledge/domain/planning/budget.md)." .
 
 planning:for a owl:ObjectProperty ;
     rdfs:label "for" ;
@@ -401,9 +405,10 @@ planning:Planning a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Plan
     rdfs:comment "A pass of the Planner, an activity planning's part begins and ends: from finding the scopes to publishing what the searches found (packages-meet-by-events-policies-and-activities)." .
 
 planning:PlanningTrigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Planning trigger" ;
-    rdfs:comment "What starts a planning, besides the present reaching the next ground the last one laid and a search the budget cut short going on: belief's revision, execution's intention resolved, and execution's step taken, since a refined step's want below is kept once the step is taken, each beneath it by planning's ontology since planning is above both; and coordination's draw won, beneath it by coordination's ontology, naming the walking wants to plan again (`planning:reopens`)." .
+    rdfs:comment "What starts a planning, besides the present reaching the next ground the last one laid and a search the budget cut short going on: belief's revision, where planning's policy judges it to call for one; execution's intention adopted, since an adopted plan's refined steps are planned below; its intention resolved; and its step taken, since a refined step's want below is kept once the step is taken, each beneath it by planning's ontology since planning is above both; and coordination's draw won, beneath it by coordination's ontology, naming the walking wants to plan again (`planning:reopens`)." .
 
 belief:Revised rdfs:subClassOf planning:PlanningTrigger .
+execution:IntentionAdopted rdfs:subClassOf planning:PlanningTrigger .
 execution:IntentionResolved rdfs:subClassOf planning:PlanningTrigger .
 execution:StepTaken rdfs:subClassOf planning:PlanningTrigger .
 
