@@ -625,11 +625,14 @@ pub fn sessions(me: &str, env: &dyn Fn(&str) -> Option<String>) -> Result<Vec<Se
     Ok(out)
 }
 
-/// A session over rumqttc: the mind publishes through its blocking client and the event loop is a task, handing every
-/// message to the inbox.
+/// A session over rumqttc: the mind publishes through its client, which queues a request and never waits, and the
+/// event loop is a task, handing every message to the inbox.
 pub struct Rumqtt {
-    client: rumqttc::Client,
+    client: rumqttc::AsyncClient,
 }
+
+/// How many requests a session queues for its event loop before one is refused.
+const REQUESTS: usize = 256;
 
 impl Rumqtt {
     /// The session up, and what listens on it, every message it receives left in `inbox`.
@@ -645,9 +648,10 @@ impl Rumqtt {
                 client_auth: Some((read(cert)?, read(key)?)),
             }));
         }
-        //  THE CONNECTION'S OWN RUNTIME GOES, AND ITS EVENT LOOP IS POLLED AMONG THE PROCESS'S TASKS.
-        let (client, connection) = rumqttc::Client::new(options, 64);
-        let mut events = connection.eventloop;
+        //  NO RUNTIME OF ITS OWN: the event loop is polled among the process's tasks. rumqttc's blocking client makes
+        //  a runtime with its connection, and this is called among those tasks, where dropping one panics - the
+        //  agent died as it connected, every boot, once its packages were started inside its runtime.
+        let (client, mut events) = rumqttc::AsyncClient::new(options, REQUESTS);
         let broker = local_of(&session.broker);
         let listening = Box::pin(async move {
             loop {
@@ -683,18 +687,18 @@ impl Rumqtt {
 impl Client for Rumqtt {
     fn subscribe(&mut self, pattern: &str) -> Result<(), Error> {
         self.client
-            .subscribe(pattern, rumqttc::QoS::AtLeastOnce)
+            .try_subscribe(pattern, rumqttc::QoS::AtLeastOnce)
             .map_err(|e| Error::Evaluation(format!("subscribing to {pattern}: {e}")))
     }
 
     fn publish(&mut self, topic: &str, payload: &[u8], retain: bool) -> Result<(), Error> {
         self.client
-            .publish(topic, rumqttc::QoS::AtLeastOnce, retain, payload.to_vec())
+            .try_publish(topic, rumqttc::QoS::AtLeastOnce, retain, payload.to_vec())
             .map_err(|e| Error::Evaluation(format!("publishing on {topic}: {e}")))
     }
 
     fn stop(&mut self) {
-        let _ = self.client.disconnect();
+        let _ = self.client.try_disconnect();
     }
 }
 
@@ -757,6 +761,28 @@ mod tests {
     use std::sync::{Arc, Mutex};
 
     const TEST: &str = "http://example.org/test#";
+
+    /// A session is made among the agent's tasks, where its packages are started, and is used and dropped there:
+    /// it brings no runtime of its own, which dropped among them panics. It queues what it is asked and waits for
+    /// no broker.
+    #[tokio::test]
+    async fn a_session_is_made_used_and_dropped_among_the_agents_tasks() {
+        let session = Session {
+            broker: format!("{TEST}broker"),
+            host: "localhost".into(),
+            port: 1,
+            client_id: "keeper".into(),
+            username: "keeper".into(),
+            password: None,
+            tls: None,
+        };
+        let (mut client, listening) = Rumqtt::connect(&session, Inbox::default()).unwrap();
+        client.subscribe("sensors/+/reading").unwrap();
+        client.publish("sensors/keeper/command", b"{}", false).unwrap();
+        client.stop();
+        drop(listening);
+        drop(client);
+    }
     const OBSERVED: &str = "http://example.org/orexis/graph/observed/keeper/";
     const BOARD_MESSAGE: &[u8] = br#"{"temperature": 21.5, "humidity": 0.61}"#;
 
