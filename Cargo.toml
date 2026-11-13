@@ -21,7 +21,8 @@ orexis-metrics = { path = "orexis-metrics" }
 orexis-planning = { path = "orexis-planning" }
 orexis-prediction = { path = "orexis-prediction" }
 orexis-sensing = { path = "orexis-sensing" }
-orexis-spans = { path = "orexis-spans" }
+orexis-span = { path = "orexis-span" }
+orexis-span-opentelemetry = { path = "orexis-span-opentelemetry" }
 orexis-speech = { path = "orexis-speech" }
 orexis-translation = { path = "orexis-translation" }
 orexis-transport-email = { path = "orexis-transport-email" }

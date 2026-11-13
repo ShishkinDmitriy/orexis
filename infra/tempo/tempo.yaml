@@ -1,7 +1,7 @@
 # Tempo for the agents' spans: one process, blocks on its own volume, read by Grafana on 3200.
 # Run by `infra/compose.yaml`, which `orexis-infra-compose` renders where infra/installation.ttl
 # names an onboarding:Tracer. Each agent of a monitored world POSTs a pass's trace to 4318
-# (orexis-spans/). Kept a week: spans are for seeing what triggered what lately, not a record —
+# (orexis-span-opentelemetry/). Kept a week: spans are for seeing what triggered what lately, not a record —
 # the journal is the record (knowledge/domain/kernel/journal.md).
 stream_over_http_enabled: true
 server:

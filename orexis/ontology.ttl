@@ -130,10 +130,16 @@ orexis:LogRecord
 
 orexis:keptBy
     a owl:ObjectProperty ;
-    rdfs:domain orexis:LogRecord ;
     rdfs:range orexis:Incident ;
     rdfs:label "kept by" ;
-    rdfs:comment "The incident a log record is kept for, past the window: it came in the minutes before it." .
+    rdfs:comment "The incident a log record or an activity is kept for, past the window: it came in the minutes before it." .
+
+orexis:tookS
+    a owl:DatatypeProperty ;
+    rdfs:domain prov:Activity ;
+    rdfs:range xsd:double ;
+    rdfs:label "took, in seconds" ;
+    rdfs:comment "How long an activity took, in real seconds: never the agent's, whose clock may stand still while it computes, so an activity's start and end may be one instant of it. Said on the activity's entry in the journal, beside PROV's `prov:startedAtTime` and `prov:endedAtTime`, which are the agent's." .
 
 orexis:logger
     a owl:DatatypeProperty ;

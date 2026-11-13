@@ -2,10 +2,11 @@
 //! beside its beliefs and apart from them — the events its packages say, kept for good, and its log, kept for the last
 //! minutes (the-journal-is-the-agents-flight-recorder).
 //!
-//! TWO KINDS OF ENTRY, each a named graph holding one node, named by it: an EVENT a package says, beneath
-//! `orexis:Event`, at its `prov:atTime`, kept for good; and a LOG RECORD, `orexis:LogRecord`, its logger, level and
-//! message, kept for the WINDOW (`JOURNAL_WINDOW_S`, ten minutes where nothing says) and swept after, unless an
-//! INCIDENT kept it: the minutes before one are kept for good beside it (`orexis:keptBy`).
+//! THREE KINDS OF ENTRY, each a named graph named by the node it is about: an EVENT a package says, beneath
+//! `orexis:Event`, at its `prov:atTime`, kept for good; a LOG RECORD, `orexis:LogRecord`, its logger, level and
+//! message; and an ACTIVITY a package did, a `prov:Activity`, with what started it and what it generated
+//! (`orexis-span/`). The last two are kept for the WINDOW (`JOURNAL_WINDOW_S`, ten minutes where nothing says) and
+//! swept after, unless an INCIDENT kept them: the minutes before one are kept for good beside it (`orexis:keptBy`).
 //!
 //! WHAT AN INCIDENT IS, IS THE VOCABULARY'S, AND WHICH ONES COUNT, THE DEPLOYMENT'S: an entry the history part hands
 //! as one, an entry of a class the deployment names (`JOURNAL_INCIDENTS`), and a log record from a level
@@ -33,6 +34,8 @@ pub const INCIDENT: &str = "http://example.org/orexis#Incident";
 pub const LOG_RECORD: &str = "http://example.org/orexis#LogRecord";
 pub const AT: &str = "http://www.w3.org/ns/prov#atTime";
 pub const KEPT_BY: &str = "http://example.org/orexis#keptBy";
+/// An activity a package did, kept as one entry when it ended: PROV's class. Kept for the window, as a log record is.
+pub const ACTIVITY: &str = "http://www.w3.org/ns/prov#Activity";
 const LOGGER: &str = "http://example.org/orexis#logger";
 const LEVEL: &str = "http://example.org/orexis#level";
 const MESSAGE: &str = "http://example.org/orexis#message";
@@ -141,6 +144,19 @@ impl Journal {
         Ok(())
     }
 
+    /// Add `triples` to the entry `entry`, already kept: what is learnt of it after it was — the graphs an activity
+    /// wrote, which its turn says once it has ended.
+    pub fn add(&self, entry: &NamedNode, triples: Vec<Triple>) -> Result<(), Error> {
+        let graph = GraphName::NamedNode(entry.clone());
+        self.store
+            .extend(
+                triples
+                    .into_iter()
+                    .map(|t| Quad::new(t.subject, t.predicate, t.object, graph.clone())),
+            )
+            .map_err(engine)
+    }
+
     /// Keep a log record — at the incident level or above an incident, keeping the window before it.
     pub fn remark(
         &self,
@@ -161,10 +177,10 @@ impl Journal {
         Ok(entry)
     }
 
-    /// Keep for good, beside `incident` at `at`, every log record of the window before it.
+    /// Keep for good, beside `incident` at `at`, every log record and every activity of the window before it.
     pub fn keep(&self, incident: &NamedNode, at: DateTime) -> Result<(), Error> {
         let text = format!(
-            "INSERT {{ GRAPH ?r {{ ?r <{KEPT_BY}> <{}> }} }} WHERE {{ GRAPH ?r {{ ?r a <{LOG_RECORD}> ; <{AT}> ?t }} \
+            "INSERT {{ GRAPH ?r {{ ?r <{KEPT_BY}> <{}> }} }} WHERE {{ VALUES ?c {{ <{LOG_RECORD}> <{ACTIVITY}> }} GRAPH ?r {{ ?r a ?c ; <{AT}> ?t }} \
              FILTER(?t >= {} && ?t <= {}) FILTER NOT EXISTS {{ GRAPH ?r {{ ?r <{KEPT_BY}> ?any }} }} }}",
             incident.as_str(),
             literal_of(less(at, self.window)),
@@ -178,11 +194,11 @@ impl Journal {
             .map_err(engine)
     }
 
-    /// Take out every log record the window has passed that no incident keeps; how many.
+    /// Take out every log record and every activity the window has passed that no incident keeps; how many.
     pub fn sweep(&self, now: Option<DateTime>) -> Result<usize, Error> {
         let now = now.unwrap_or_else(|| (self.now)());
         let text = format!(
-            "SELECT ?r WHERE {{ GRAPH ?r {{ ?r a <{LOG_RECORD}> ; <{AT}> ?t }} FILTER(?t < {}) \
+            "SELECT DISTINCT ?r WHERE {{ VALUES ?c {{ <{LOG_RECORD}> <{ACTIVITY}> }} GRAPH ?r {{ ?r a ?c ; <{AT}> ?t }} FILTER(?t < {}) \
              FILTER NOT EXISTS {{ GRAPH ?r {{ ?r <{KEPT_BY}> ?any }} }} }}",
             literal_of(less(now, self.window))
         );

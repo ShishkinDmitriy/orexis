@@ -31,7 +31,8 @@ use orexis_planning as _;
 use orexis_prediction as _;
 #[cfg(feature = "sensing")]
 use orexis_sensing as _;
-use orexis_spans as _;
+use orexis_span as _;
+use orexis_span_opentelemetry as _;
 #[cfg(feature = "speech")]
 use orexis_speech as _;
 #[cfg(feature = "translation")]
@@ -234,6 +235,10 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
         history: watching.history.as_ref().map(Sink::reader),
         metrics: watching.metrics.as_ref().map(|w| w.sink.reader()),
     });
+    //  WHAT THE AGENT DID, kept in the journal where it keeps one: every activity as it ends.
+    if let Some(journal) = &watching.journal {
+        outside.hand(orexis_span::Kept(journal.clone()));
+    }
     outside.hand(orexis_history::Keeps {
         sink: watching.history,
         journal: watching.journal,
@@ -242,7 +247,7 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
         outside.hand(window);
     }
     if let Some(endpoint) = watching.traces {
-        outside.hand(orexis_spans::Endpoint(endpoint));
+        outside.hand(orexis_span_opentelemetry::Endpoint(endpoint));
     }
     #[cfg(feature = "planning")]
     if let Some(budget) = budget {
@@ -285,7 +290,10 @@ pub fn start(
     budget: Option<usize>,
     wiring: Wiring,
 ) -> Result<Running, Error> {
-    let mut names: Vec<String> = ["history", "metrics", "spans"].iter().map(|n| n.to_string()).collect();
+    let mut names: Vec<String> = ["history", "span", "metrics", "span-opentelemetry"]
+        .iter()
+        .map(|n| n.to_string())
+        .collect();
     names.extend(loaded.iter().cloned());
     orexis::task::start(store, agent, clock, outside(wiring, budget), &names)
 }

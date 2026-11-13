@@ -1,0 +1,17 @@
+# SPAN: every activity the agent's packages begin and end, kept in its journal as it ends, with what started it and
+# what it generated, knowing no package's words. The hot record; what ships it to a tracer is a crate of its own.
+[package]
+name = "orexis-span"
+version = "0.2.0"
+edition.workspace = true
+license.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+inventory.workspace = true
+orexis = { workspace = true }
+oxigraph.workspace = true
+log = "0.4"
+oxsdatatypes = "0.2"
