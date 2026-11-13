@@ -539,15 +539,17 @@ def test_onboarding_refuses_a_declared_role_whose_needs_its_world_lacks(tmp_path
     assert f"me: {message}" in refused, refused
 
 
-def test_every_role_but_the_deliberators_states_a_need():
+def test_every_role_but_the_deliberators_and_the_recorders_states_a_need():
     """The deliberator needs nothing — an agent holding no rules may be declared one and revises
-    nothing — and every other role a package or the market declares has a need, so a role added with
-    none is a decision someone has to make here."""
+    nothing — and neither does the recorder, which writes down whatever its agent's packages say and
+    asks nothing of the world to do it; every other role a package or the market declares has a need,
+    so a role added with none is a decision someone has to make here."""
     from documents.world import _vocabularies
 
     targeted = {role for role, _ in NEEDS}
     roles = set(_vocabularies()[0]) | {"http://example.org/orexis/market#Host", "http://example.org/orexis/market#Bidder"}
-    assert roles - targeted == {"http://example.org/orexis/belief#Deliberator"}, sorted(roles - targeted)
+    needless = {"http://example.org/orexis/belief#Deliberator", "http://example.org/orexis/journal#Recorder"}
+    assert roles - targeted == needless, sorted(roles - targeted)
 
 
 def test_onboarding_refuses_a_sensor_reporting_to_an_agent_that_no_observer_role_of_its_reads(tmp_path):
