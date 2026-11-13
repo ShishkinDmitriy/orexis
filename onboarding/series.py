@@ -15,10 +15,9 @@ calls it once. A purpose the environment does not name has no sink, and the clie
 imported where a sink is made and nowhere else, so an agent with no store never loads it.
 
 THE PACKAGE THAT DECIDES A THING SHAPES IT, AND A PART WRITES IT
-(metrics-and-history-are-what-events-say). Sensing says an observation and execution a step taken
-and a landing verdict, each as an event answering its point — its measurement, its tags, its fields,
-its instant — and the history part (`orexis-history/`), hearing every signal, writes each to
-`sink(HISTORY)`. The metrics part (`orexis-metrics/`) tallies every reported event and writes the
+(metrics-and-history-are-what-events-say). An observation is a point — its measurement, its tags, its fields, its
+instant — written to `sink(HISTORY)` by what archives sensing's readings (`orexis-sensing-influxdb/`),
+and no event is one. The metrics part (`orexis-metrics/`) tallies every reported event and writes the
 window once a minute to `sink(METRICS)`. The runtime creates each only where its sink is loaded.
 This module sits beneath them all and imports nothing of theirs, nor anything of `agent`: a point
 is the client's own dict, handed through.

@@ -1,4 +1,4 @@
-//! SPAN, OVER OTLP: the half of the pair that keeps house. `orexis-span/` keeps every activity the agent's
+//! THE JOURNAL, OVER OTLP: the half of the pair that keeps house. `orexis-journal/` keeps every activity the agent's
 //! packages end in its journal; this ships them to whoever traces the agent, on a timer, reading them there and
 //! hearing nothing. It knows no package's words.
 //!
@@ -303,7 +303,7 @@ pub fn post(endpoint: &str) -> Send {
     })
 }
 
-inventory::submit! { Package { name: "span-otlp", start } }
+inventory::submit! { Package { name: "journal-otlp", start } }
 
 /// THE SHIPPER'S START: where it is handed a journal and an endpoint, its task; and none otherwise.
 fn start(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
@@ -367,7 +367,7 @@ mod tests {
         Arc::new(Journal::new(None, 600.0, Arc::new(|| at("2026-11-10T12:00:00Z"))).unwrap())
     }
 
-    /// An activity as `orexis-span/` keeps it.
+    /// An activity as `orexis-journal/` keeps it.
     fn kept(journal: &Journal, kind: &str, started_by: &[&NamedNode], inside: Option<&NamedNode>) -> NamedNode {
         let a = mint();
         let mut triples: Vec<Triple> = vec![

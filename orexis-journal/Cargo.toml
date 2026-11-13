@@ -1,0 +1,17 @@
+# THE JOURNAL, KEPT: every event the agent's packages say and every activity they end, written to the agent's journal
+# as it happens. The half of the pair that does the work; orexis-journal-otlp ships the activities to a tracer.
+[package]
+name = "orexis-journal"
+version = "0.2.0"
+edition.workspace = true
+license.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+inventory.workspace = true
+orexis = { workspace = true }
+oxigraph.workspace = true
+log = "0.4"
+oxsdatatypes = "0.2"

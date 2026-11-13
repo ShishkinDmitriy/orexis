@@ -1,8 +1,7 @@
-//! HISTORY: created where a journal is kept, it hears every event the agent's parts say and writes what each states,
-//! one at a time as they happen — the triples to the journal, as an entry named by the name it was said under, an
-//! incident where the entry's class is beneath `orexis:Incident` in the agent's vocabulary. An event stating nothing
-//! is passed over. A journal that refuses is said in the log and costs the agent nothing. A reading's point in the
-//! series is not history's: what archives sensing's readings writes it (`orexis-sensing-influxdb/`).
+//! THE EVENTS, KEPT: every event the agent's packages say that states triples is written to the journal as it is
+//! said, one at a time — an entry named by the name it was said under, an incident where the entry's class is
+//! beneath `orexis:Incident` in the agent's vocabulary. An event stating nothing is passed over. A journal that
+//! refuses is said in the log and costs the agent nothing.
 
 use std::collections::BTreeSet;
 use std::sync::Arc;
@@ -14,7 +13,6 @@ use orexis::events::{RDF_TYPE, Watch};
 use orexis::journal::Journal;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri};
-use orexis::task::{Handed, Package, Task};
 
 /// What the vocabulary says is an incident: every class beneath it, off the closure.
 const INCIDENTS_Q: &str = "SELECT DISTINCT ?c WHERE { ?c rdfs:subClassOf orexis:Incident }";
@@ -36,7 +34,7 @@ pub fn incidents(beliefs: &Store) -> Result<BTreeSet<String>, Error> {
         .collect())
 }
 
-/// The history part: no job of its own, only what it hears.
+/// What keeps the events: no job of its own, only what it hears.
 pub struct History;
 
 impl History {
@@ -58,23 +56,6 @@ impl History {
         });
         History
     }
-}
-
-/// What history keeps into, handed outside by whoever runs the agent: the journal, where the deployment keeps one.
-#[derive(Default)]
-pub struct Keeps {
-    pub journal: Option<Arc<Journal>>,
-}
-
-inventory::submit! { Package { name: "history", start } }
-
-/// HISTORY'S START: where it is handed a journal it hears the watch from now on, and has no task - what it keeps
-/// it keeps as it is said.
-fn start(handed: &Handed) -> Result<Option<Task>, Error> {
-    if let Some(journal) = handed.outside.take::<Keeps>().and_then(|keeps| keeps.journal) {
-        History::new(handed.events.watch(), journal, incidents(&handed.store)?);
-    }
-    Ok(None)
 }
 
 #[cfg(test)]

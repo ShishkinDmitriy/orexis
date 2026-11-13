@@ -40,7 +40,7 @@ holding one node, named by a UUID's URN so two agents' journals merge without re
 answers `statements(node)`: its class beneath `orexis:Event` in the package's ontology — `planning:PlanPublished`,
 `execution:StepTaken`, `coordination:Foreseen` — and what the agent held of what it is about, copied as it stands:
 the plan graph whole, the act and its step as the plan states it, every value it takes in the domain's words, the
-holdings in the words a question carries them in, a conflict under its own name. The history part writes it, the
+holdings in the words a question carries them in, a conflict under its own name. `orexis-journal/` writes it, the
 journal stamps its `prov:atTime`. So a plan's steps are read back in their chain and a step by its own IRI, which is
 what planning and execution meet at.
 
@@ -55,8 +55,8 @@ the window (`JOURNAL_WINDOW_S`, ten minutes where nothing says) and swept after 
 event of a class beneath `orexis:Incident` — `execution:StepFailed`, `execution:IntentionFailed`,
 `planning:WantUnreachable` — or a record at WARNING or above, which is how a present that violates a constraint, a
 sensor gone silent and an exception escaping a pass are said. **What an incident is, is the vocabulary's, and which
-count, the deployment's**: a package puts the classes of its events that are incidents beneath `orexis:Incident`, the
-history part reads them off the agent's T-Box, and a world's deployment graph may add classes (`onboarding:incident`)
+count, the deployment's**: a package puts the classes of its events that are incidents beneath `orexis:Incident`, 
+`orexis-journal/` reads them off the agent's T-Box, and a world's deployment graph may add classes (`onboarding:incident`)
 and raise or lower the level (`onboarding:incidentLevel`), told to the agent as environment. Keeping a journal is
 every agent's, and needs no role. An incident keeps every record of the window before it for good (`orexis:keptBy`). The history is
 the flight data, kept for good; the log the cockpit's voice, kept when something happened.

@@ -23,7 +23,8 @@ description: >-
 >
 > **And since 2026-11-13 no event is a point.** An observation's point is written by what archives sensing's
 > readings, `orexis-sensing-influxdb/`, on a timer: written as its event was said and again when archived, one point
-> had two writers. The history part keeps the journal alone ([series](/domain/kernel/series.md)).
+> had two writers. The history part keeps the journal alone ([series](/domain/kernel/series.md)), and is
+> `orexis-journal/` now, one crate with what keeps the activities.
 
 # What was true (on main at f05a205d)
 
