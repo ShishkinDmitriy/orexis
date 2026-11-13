@@ -26,6 +26,8 @@ use orexis_execution as _;
 use orexis_journal as _;
 #[cfg(feature = "journal")]
 use orexis_journal_otlp as _;
+#[cfg(feature = "journal")]
+use orexis_journal_oxigraph as _;
 use orexis_metrics as _;
 #[cfg(feature = "planning")]
 use orexis_planning as _;
@@ -192,6 +194,10 @@ pub struct Watching {
     /// The journal a recorder keeps: handed by whoever runs the agent, and kept by nobody where it plays none.
     #[cfg(feature = "journal")]
     pub journal: Option<Arc<orexis_journal::Journal>>,
+    /// The archive what the journal keeps for good is taken to, and how often, in the agent's seconds: none, and it
+    /// stays in the journal.
+    #[cfg(feature = "journal")]
+    pub archive: Option<(Arc<orexis_journal_oxigraph::Archive>, f64)>,
     /// The series store sensing's readings are archived to, and a chat reads the past from: none, and every reading
     /// stays in the agent's beliefs.
     pub history: Option<Sink>,
@@ -240,9 +246,13 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
         #[cfg(feature = "translation")]
         model,
     } = wiring;
-    //  WHAT A CHAT READS OF WHAT HAPPENED, where it reads it: the journal where it is, and the series as read.
+    //  WHAT A CHAT READS OF WHAT HAPPENED, where it reads it: the journal's archive where the agent keeps one and the
+    //  journal itself where it keeps none, and the series as read.
     #[cfg(feature = "journal")]
-    let journal = watching.journal.as_ref().map(|j| j.store.clone());
+    let journal = match (&watching.archive, &watching.journal) {
+        (Some((archive, _)), Some(_)) => Some(archive.store.clone()),
+        (_, journal) => journal.as_ref().map(|j| j.store.clone()),
+    };
     #[cfg(not(feature = "journal"))]
     let journal = None;
     outside.hand(Reads {
@@ -258,6 +268,15 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
             journal: journal.clone(),
             endpoint: tracing.endpoint,
             every_s: tracing.every_s,
+        });
+    }
+    //  AND WHAT IT KEEPS FOR GOOD, taken to its archive where the deployment keeps one.
+    #[cfg(feature = "journal")]
+    if let (Some((archive, every_s)), Some(journal)) = (watching.archive, &watching.journal) {
+        outside.hand(orexis_journal_oxigraph::Archives {
+            journal: journal.clone(),
+            archive,
+            every_s,
         });
     }
     #[cfg(feature = "planning")]
@@ -318,11 +337,12 @@ pub fn start(
     wiring: Wiring,
 ) -> Result<Running, Error> {
     //  THE JOURNAL FIRST, where the agent plays a recorder, so what the others say as they start is heard; and with
-    //  it what ships its activities. Then what the deployment watches with, and the packages the roles load.
+    //  it what archives it and what ships its activities. Then what the deployment watches with, and the packages the roles load.
     let recorder = loaded.iter().any(|p| p == JOURNAL);
     let mut names: Vec<String> = Vec::new();
     if recorder {
         names.push(JOURNAL.to_string());
+        names.push("journal-oxigraph".to_string());
         names.push("journal-otlp".to_string());
     }
     names.push("metrics".to_string());

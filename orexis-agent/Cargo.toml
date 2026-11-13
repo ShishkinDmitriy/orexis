@@ -16,8 +16,9 @@ path = "src/lib.rs"
 
 [features]
 default = ["journal", "belief", "planning", "execution", "sensing", "prediction", "speech", "coordination", "translation", "mqtt", "http", "telegram", "email"]
-# THE JOURNAL, for an agent that plays a recorder: the crate that keeps it and the one that ships its activities.
-journal = ["dep:orexis-journal", "dep:orexis-journal-otlp"]
+# THE JOURNAL, for an agent that plays a recorder: the crate that keeps it, the one that archives what lasts and the
+# one that ships its activities.
+journal = ["dep:orexis-journal", "dep:orexis-journal-oxigraph", "dep:orexis-journal-otlp"]
 belief = ["dep:orexis-belief"]
 planning = ["dep:orexis-planning"]
 execution = ["dep:orexis-execution"]
@@ -30,7 +31,7 @@ translation = ["dep:orexis-translation", "speech"]
 http = ["dep:orexis-transport-http"]
 telegram = ["dep:orexis-transport-telegram", "speech"]
 email = ["dep:orexis-transport-email", "speech"]
-volume = ["orexis/volume", "oxigraph/rocksdb", "orexis-journal?/volume"]
+volume = ["orexis/volume", "oxigraph/rocksdb", "orexis-journal-oxigraph?/volume"]
 
 [dependencies]
 inventory.workspace = true
@@ -51,6 +52,7 @@ orexis-transport-telegram = { workspace = true, optional = true }
 orexis-transport-email = { workspace = true, optional = true }
 orexis-journal = { workspace = true, optional = true, features = ["serve"] }
 orexis-journal-otlp = { workspace = true, optional = true }
+orexis-journal-oxigraph = { workspace = true, optional = true }
 orexis-metrics = { workspace = true }
 oxsdatatypes = "0.2"
 oxigraph.workspace = true

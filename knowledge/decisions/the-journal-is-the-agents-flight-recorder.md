@@ -134,8 +134,25 @@ whose role loads a package all the same, and loading by role is the one rule a n
 world forgetting the role has no recorder when one is wanted: this stands as a cost, taken; every world here declares
 the role of every agent, and a boot that fails before its self graph is read is journaled by nobody, where it was.
 
-Not yet changed by this: what the journal keeps and for how long. Events are still kept for good in it; splitting it
-into a hot journal and a cold store the readers ask is the step after.
+# Amended 2026-11-13, again: the journal is in memory and its archive is on disk
+
+The sovereign's rule for every package that keeps a record: one crate does the logic and writes the hot record, and
+another keeps house and ships it to a cold store the package picks. Sensing's readings already went that way, to the
+series store. The journal was the exception, written straight to its volume as each thing was said. So the journal
+is now in memory, and `orexis-journal-oxigraph/` takes what it keeps for good to an
+[archive](/domain/journal/archive.md) on the volume, every two seconds, at once on an incident and as the run ends.
+Readers of the past ask the archive.
+
+**Refused: events written straight to disk as the one exception.** It loses nothing when an agent is killed, where
+the archive loses up to two seconds. It was refused because it keeps two rules for one thing, and because a flight
+recorder's worst case, a failure, is an incident, which is archived at once. What it protected against is a kill
+with no incident before it.
+
+**Refused: a different kind of store for the events' archive.** The series store's tags cannot hold an event's
+identities, the reason this record gave for a triplestore at the start, so the cold store is a triplestore too, and
+an entry is the same graph in both.
+
+Left open: a mapping back from the archive into the journal. Nothing reads one yet.
 
 # Seams left open
 

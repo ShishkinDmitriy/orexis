@@ -848,6 +848,7 @@ dependencies = [
  "orexis-execution",
  "orexis-journal",
  "orexis-journal-otlp",
+ "orexis-journal-oxigraph",
  "orexis-metrics",
  "orexis-planning",
  "orexis-prediction",
@@ -923,6 +924,7 @@ dependencies = [
  "oxigraph",
  "oxsdatatypes",
  "tiny_http",
+ "tokio",
 ]
 
 [[package]]
@@ -938,6 +940,19 @@ dependencies = [
  "serde_json",
  "tokio",
  "ureq",
+]
+
+[[package]]
+name = "orexis-journal-oxigraph"
+version = "0.2.0"
+dependencies = [
+ "inventory",
+ "log",
+ "orexis",
+ "orexis-journal",
+ "oxigraph",
+ "oxsdatatypes",
+ "tokio",
 ]
 
 [[package]]

@@ -2,15 +2,17 @@
 type: Repository
 title: Journal
 description: >-
-  What happened to one agent, in RDF, in a triplestore of its own beside its beliefs and apart from them - every event
+  What happened to one agent, in RDF, in a triplestore of its own in memory, apart from its beliefs - every event
   its packages say, in their words, kept for good, and its log, kept for a window unless an incident keeps the minutes
-  before it - served read-only over the SPARQL protocol on the host's loopback. Watched and never believed.
+  before it. What is kept for good goes to its archive on disk. Watched and never believed.
 ---
 
 # What it is
 
-A [recorder](/domain/journal/recorder.md)'s **journal** is a store of its own (`orexis-journal/src/journal.rs`), on a volume beside the belief base's
-(`--journal`), or in memory where the process is told none. It holds three kinds of entry, each a named graph named
+A [recorder](/domain/journal/recorder.md)'s **journal** is a store of its own (`orexis-journal/src/journal.rs`), in
+memory, so saying a thing waits for no disk. What it keeps for good is taken to its
+[archive](/domain/journal/archive.md), on a volume beside the belief base's (`--journal`), and forgotten here; where
+the process is told no volume it stays here. It holds three kinds of entry, each a named graph named
 by the node it is about, a UUID's URN:
 
 - an **event** a package says, of a class beneath `orexis:Event` in that package's ontology, at its `prov:atTime`,
@@ -33,11 +35,12 @@ plays none keeps none.
 
 # How it is read
 
-The agent serves it at `http://127.0.0.1:<port>/sparql`, the SPARQL protocol's query alone: an update is refused. The
+The agent serves what happened at `http://127.0.0.1:<port>/sparql`, the SPARQL protocol's query alone: an update is
+refused. That path answers from the archive, and `/live/sparql` from the journal itself. The
 port is the installation's to allocate and the container's to be told, `JOURNAL_PORT`. Every entry is the default
 graph of a query asked there, and a pattern over a node several entries copy — a step, an act — is asked within one
 entry, `GRAPH ?e { … }`, or each copy answers it once more. `orexis-history` and `orexis-explain` are its readers; a
-stopped agent's journal is opened read-only off its volume, which nothing then writes.
+stopped agent's archive is opened read-only off its volume, which nothing then writes.
 
 It is the agent's own word about what it did, as the series is, so no reader of the mind is handed it and nothing in
 it reaches a plan ([the-journal-is-the-agents-flight-recorder](/decisions/the-journal-is-the-agents-flight-recorder.md)).

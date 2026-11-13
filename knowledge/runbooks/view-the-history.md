@@ -39,7 +39,7 @@ it follows the latest instant while *live* is ticked, and stays where it is put 
 
 # After an agent stopped
 
-A stopped agent's journal is read off its volume, opened read-only — safe, since nothing writes it any more:
+A stopped agent's journal is read from its [archive](/domain/journal/archive.md), off its volume, opened read-only — safe, since nothing writes it any more:
 
 ```bash
 podman volume inspect orexis-lane-courier_a-journal --format '{{.Mountpoint}}'

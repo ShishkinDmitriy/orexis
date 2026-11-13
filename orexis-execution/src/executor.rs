@@ -2208,7 +2208,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     /// Every event the executor says, kept in a journal as the history part keeps them.
     fn heard(x: &mut Executor) -> Arc<orexis_journal::journal::Journal> {
-        let journal = Arc::new(orexis_journal::journal::Journal::new(None, 600.0, Arc::new(now)).unwrap());
+        let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(now)).unwrap());
         let kept = journal.clone();
         x.watch.connect(move |event, entry| {
             if let Some(triples) = event.statements(entry) {

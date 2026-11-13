@@ -308,7 +308,7 @@ async fn walked(name: &str, world: &Path, home: &[(&str, Cell)], dropping: Optio
     let journals: Vec<Arc<orexis_journal::journal::Journal>> = if kept {
         names
             .iter()
-            .map(|_| Arc::new(orexis_journal::journal::Journal::new(None, 600.0, Arc::new(start)).unwrap()))
+            .map(|_| Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(start)).unwrap()))
             .collect()
     } else {
         Vec::new()

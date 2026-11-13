@@ -89,7 +89,7 @@ mod tests {
 
     #[test]
     fn an_event_of_a_class_beneath_incident_is_marked_and_no_other() {
-        let journal = Arc::new(Journal::new(None, 600.0, Arc::new(DateTime::now)).unwrap());
+        let journal = Arc::new(Journal::new(600.0, Arc::new(DateTime::now)).unwrap());
         let watch = Watch::default();
         let _history = History::new(
             &watch,

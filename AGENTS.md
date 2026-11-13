@@ -992,8 +992,13 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   generated was caused by it, so a cycle through four packages is a path, where the lane's was read off a tracer a
   test had to carry. **One crate does a thing and another keeps house**: the logic writes the hot record, and what
   ships it to a cold store, a tracer or the series, is a crate of its own that reads it there on a timer and marks
-  what the store accepted, named for the pair: `orexis-journal/` and `orexis-journal-otlp/`, `orexis-sensing/` and
+  what the store accepted, named for the pair: `orexis-journal/` with `orexis-journal-oxigraph/` and `orexis-journal-otlp/`, `orexis-sensing/` and
   `orexis-sensing-influxdb/`; the events and the activities were two crates writing one journal, and are one.
+- **The journal is in memory and its archive is on disk** — `orexis-journal-oxigraph/` takes what the journal keeps for
+  good to a triplestore on the agent's volume every two seconds, at once on an incident and as the run ends, and the
+  journal forgets it; readers of the past ask the archive, and the journal answers at `/live/sparql`. An agent killed
+  outright loses two seconds at most; events written straight to disk were refused as the one exception to the pair
+  (archive, the-journal-is-the-agents-flight-recorder).
 - **A pattern over a node several journal entries copy is asked within one entry** — every event copies the step or
   the plan it is about, and over the union of the entries each copy answered once more, 294 rows for three events.
 - **The history view is what the agents kept, drawn, and the package that decides a thing draws it** — a domain draws its

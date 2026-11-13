@@ -27,10 +27,11 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [package](/domain/kernel/package.md) - A crate, `orexis-<package>/`, owning a concern and its words, importing only what lies beneath it.
 * [sovereign](/domain/kernel/sovereign.md) - Whoever writes a world's documents: picks the ranges and values, never an act. Outside the society.
 * [series](/domain/kernel/series.md) - What a person watches and the agent never reads: observations and metrics, both what the packages' events say, written by a part hearing every event.
-* [journal](/domain/kernel/journal.md) - An agent's own triplestore of what happened: its events in RDF kept for good, its log kept for a window unless an incident keeps it.
+* [journal](/domain/kernel/journal.md) - An agent's own triplestore of what happened, in memory: its events in RDF, its log kept for a window unless an incident keeps it.
 
 # Journal — what happened, written down
 
+* [archive](/domain/journal/archive.md) - Where the journal puts what it keeps for good: a triplestore on disk, written every two seconds, read by whoever asks what happened.
 * [recorder](/domain/journal/recorder.md) - An agent that keeps a journal: the role `orexis-journal/` is loaded for, and without it nobody writes events down.
 
 # Sensing — bytes become observations, and observations subject beliefs

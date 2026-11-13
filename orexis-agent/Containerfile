@@ -27,6 +27,7 @@ COPY orexis-coordination/ orexis-coordination/
 COPY orexis-execution/ orexis-execution/
 COPY orexis-journal/ orexis-journal/
 COPY orexis-journal-otlp/ orexis-journal-otlp/
+COPY orexis-journal-oxigraph/ orexis-journal-oxigraph/
 COPY orexis-metrics/ orexis-metrics/
 COPY orexis-planning/ orexis-planning/
 COPY orexis-prediction/ orexis-prediction/

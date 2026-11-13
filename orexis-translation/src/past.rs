@@ -434,7 +434,7 @@ mod tests {
     #[test]
     fn the_journal_is_read_where_it_is_and_newest_first() {
         let at = instant("2026-11-02T21:00:00+00:00").unwrap();
-        let journal = Journal::new(None, 600.0, Arc::new(move || at)).unwrap();
+        let journal = Journal::new(600.0, Arc::new(move || at)).unwrap();
         let entry = NamedNode::new_unchecked("urn:uuid:one");
         journal
             .record(
