@@ -19,7 +19,7 @@ default = ["belief", "planning", "execution", "sensing", "prediction", "speech",
 belief = ["dep:orexis-belief"]
 planning = ["dep:orexis-planning"]
 execution = ["dep:orexis-execution"]
-sensing = ["dep:orexis-sensing"]
+sensing = ["dep:orexis-sensing", "dep:orexis-sensing-influxdb"]
 prediction = ["dep:orexis-prediction"]
 mqtt = ["dep:orexis-transport-mqtt"]
 speech = ["dep:orexis-speech"]
@@ -38,6 +38,7 @@ orexis-belief = { workspace = true, optional = true }
 orexis-planning = { workspace = true, optional = true }
 orexis-execution = { workspace = true, optional = true }
 orexis-sensing = { workspace = true, optional = true }
+orexis-sensing-influxdb = { workspace = true, optional = true }
 orexis-prediction = { workspace = true, optional = true }
 orexis-transport-mqtt = { workspace = true, optional = true }
 orexis-speech = { workspace = true, optional = true }

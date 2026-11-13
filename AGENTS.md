@@ -658,8 +658,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **Sensing observes and says when a sensor has gone silent, and prediction is a package of its
   own** — `received` writes one `sosa:Observation` per reading, a percept linked to the one before by
   `sensing:previous`, the latest holding until the next is due and a grace past it and every older one
-  ended where the next began; it keeps a sensor's last `sensing:stuckAfter` and nothing sweeps the rest
-  but it; `missed` answers which sensors are silent, their latest ended a limit of cadences ago, asking
+  ended where the next began; it keeps a sensor's last `sensing:stuckAfter` in the kind its rules read and files
+  an older one past, forgetting none, since how many its rules see is logic and what becomes of one done with is
+  housekeeping: `orexis-sensing-influxdb/` archives the past ones to the series store and has sensing forget what
+  the store took, where the deployment hands it one, and where it hands none they stay; `missed` answers which sensors are silent, their latest ended a limit of cadences ago, asking
   `cadence.lapsed` as the transport does; `orexis-prediction/` accumulates the flows' rates from the
   latest, speaking sensing's kind and importing none of its code (#944).
 - **A silence is computed and kept, as what sensing knows of its sensor** — `missed` answers it from the latest

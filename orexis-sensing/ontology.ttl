@@ -89,12 +89,23 @@
     to where it says one, and the percept before it (`previous`) — from its instant until the next
     reading's, the latest until the next is due and a grace past it; and what the rules concluded of
     that reading, in its revision, which sensing has revised into this kind too, since what is
-    concluded of what a sensor said is still what it said. A sensor's last `stuckAfter` are kept and
-    older ones forgotten. Named for what it holds. A PERCEPT and no state, beneath `orexis:Graph`
+    concluded of what a sensor said is still what it said. A sensor's last `stuckAfter` are of this
+    kind and an older one is past (`PastObservationGraph`). Named for what it holds. A PERCEPT and no state, beneath `orexis:Graph`
     alone: no reader of the mind is handed one, and what the mind reads of it is the subject belief a
     domain's transition makes when it arrives. SENSING'S, and no kernel kind: no sensing, no
     observations, so the readers at the boundary — prediction above, a domain's command or saying —
     name it in sensing's word, and what lies beneath asks sensing (#944).""" .
+
+:PastObservationGraph a owl:Class ;
+    rdfs:subClassOf orexis:Graph ;
+    rdfs:label "Past observation graph" ;
+    rdfs:comment """An observation graph, or the revision of one, that sensing has done reading: a
+    reading older than its sensor's last `stuckAfter`. Sensing files it here in place of forgetting it,
+    so what its rules read is still the kind they ask, `ObservationGraph`, and holds exactly the
+    readings they are about, while what becomes of a reading done with is nobody's logic: where the
+    agent has a series store, what archives it there removes it (`orexis-sensing-influxdb/`), and
+    where it has none it stays. Beneath `orexis:Graph` alone, as the kind it came from: no reader of
+    the mind is handed one.""" .
 
 :previous a owl:ObjectProperty , owl:FunctionalProperty ;
     rdfs:domain sosa:Observation ;
@@ -268,7 +279,7 @@
     rdfs:label "stuck after" ;
     rdfs:comment """How many of a sensor's readings may give the same number before its sensor is said
     stuck (`stuckOn`) — a count of READINGS, not of time (#944): `received` keeps that many of a
-    sensor's percepts and sensing's rule says the sensor stuck when every one kept gave one number, so
+    sensor's percepts in the kind the rule reads, an older one being past, and sensing's rule says the sensor stuck when every one kept gave one number, so
     a sensor that misses readings is said stuck later than one that never does. Stated on the observer
     role that reads the sensor; where it states none, the observer shape's default, six — twice the
     silence: a live instrument's count moves by a bit within a few readings even in still soil, and

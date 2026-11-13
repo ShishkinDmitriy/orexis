@@ -25,8 +25,8 @@ grace past it, and a new one ends the one before at its own instant. Where the p
 of readings, each with how many seconds before the message it was taken — a sentinel's alarm carries
 its watcher's last quiet sample before the reading that broke the window — each is an observation of
 its own in the chain, oldest first, an earlier one holding only until the next one's instant: a step
-in the history, not a slope. `received` keeps a sensor's last `sensing:stuckAfter` and forgets the
-oldest past them; it counts nothing and carries nothing onto the present.
+in the history, not a slope. `received` keeps a sensor's last `sensing:stuckAfter` in the kind its rules read and files the
+oldest past them as [past](/domain/sensing/observation.md); it counts nothing and carries nothing onto the present.
 
 **What the number is, the rules conclude** (`rules.ttl`), from the topology and what the world states
 of the sensor: at layer 0 the observation's feature of interest — what the sensor is hosted by, a sample

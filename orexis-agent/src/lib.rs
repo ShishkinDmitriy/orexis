@@ -31,6 +31,8 @@ use orexis_planning as _;
 use orexis_prediction as _;
 #[cfg(feature = "sensing")]
 use orexis_sensing as _;
+#[cfg(feature = "sensing")]
+use orexis_sensing_influxdb as _;
 use orexis_span as _;
 use orexis_span_otlp as _;
 #[cfg(feature = "speech")]
@@ -190,6 +192,14 @@ pub struct Watching {
     pub metrics: Option<orexis_metrics::Window>,
     /// Where the agent is traced, and how often it ships what its journal keeps.
     pub traces: Option<orexis_span_otlp::Tracing>,
+    /// Where the readings sensing has done with are archived, and how often: none, and they stay in its beliefs.
+    pub archive: Option<Archive>,
+}
+
+/// A series store past readings are archived to, and how often in the agent's seconds.
+pub struct Archive {
+    pub sink: Arc<Sink>,
+    pub every_s: f64,
 }
 
 /// What the agent's bus is, where a test hands one: the MQTT member over a client of its own, the HTTP member over a
@@ -251,6 +261,14 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
     if let Some(budget) = budget {
         outside.hand(orexis_planning::create::Budget(budget));
     }
+    //  AND THE READINGS SENSING HAS DONE WITH, archived where the deployment keeps a series store and left otherwise.
+    #[cfg(feature = "sensing")]
+    if let Some(archive) = watching.archive {
+        outside.hand(orexis_sensing_influxdb::Archives {
+            sink: archive.sink,
+            every_s: archive.every_s,
+        });
+    }
     outside.hand(orexis_history::Keeps {
         sink: watching.history,
         journal: watching.journal,
@@ -299,6 +317,8 @@ pub fn start(
         .iter()
         .map(|n| n.to_string())
         .collect();
+    #[cfg(feature = "sensing")]
+    names.push("sensing-influxdb".to_string());
     names.extend(loaded.iter().cloned());
     orexis::task::start(store, agent, clock, outside(wiring, budget), &names)
 }

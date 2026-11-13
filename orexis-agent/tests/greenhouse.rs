@@ -424,6 +424,7 @@ async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journa
         history: None,
         metrics: None,
         traces: None,
+        archive: None,
     };
     let g = grower_watched(&store, watching);
     reading(&g.inbox, r#"{"temperature": 21.0}"#, noon());
@@ -501,6 +502,66 @@ async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journa
     );
 }
 
+/// SENSING KEEPS WHAT ITS RULES READ AND FORGETS NOTHING; what becomes of a reading it has done with is the
+/// deployment's. Where the agent is handed a series store to archive to, the readings older than the probe's last few
+/// are written there and removed from its beliefs; where it is handed none, they stay where they lie.
+#[tokio::test(start_paused = true)]
+async fn readings_sensing_has_done_with_are_archived_where_there_is_a_store_and_stay_where_there_is_none() {
+    const OBSERVATION: &str = "http://example.org/orexis/sensing#ObservationGraph";
+    for archived in [true, false] {
+        let store = store();
+        let written: Arc<Mutex<Vec<orexis::events::Point>>> = Arc::default();
+        let kept = written.clone();
+        let sink = orexis::series::Sink::new(
+            "HISTORY",
+            "greenhouse-grower",
+            Box::new(move |_, points| {
+                kept.lock().unwrap().extend(points.iter().cloned());
+                Ok(())
+            }),
+        );
+        let watching = orexis_agent::Watching {
+            archive: archived.then(|| orexis_agent::Archive {
+                sink: Arc::new(sink),
+                every_s: 60.0,
+            }),
+            ..Default::default()
+        };
+        let g = grower_watched(&store, watching);
+        let readings = 12;
+        for n in 0..readings {
+            let at = plus(noon(), n as f64 * 600.0);
+            until(&g, at).await;
+            reading(
+                &g.inbox,
+                &format!(r#"{{"moisture": {}}}"#, 0.45 + n as f64 / 1000.0),
+                at,
+            );
+            common::settled(&g.running).await;
+        }
+        until(&g, plus(noon(), readings as f64 * 600.0)).await;
+        let read = store.graphs_of(&[OBSERVATION], &Within::default()).unwrap();
+        let past = orexis_sensing::past::past(&store).unwrap();
+        let points = written.lock().unwrap().clone();
+        if archived {
+            assert!(
+                past.is_empty(),
+                "every past reading was taken by the store and removed: {past:?}"
+            );
+            assert!(!points.is_empty(), "and is a point there");
+            assert!(points.iter().all(|p| p.measurement == "SoilMoisture"));
+            assert!(
+                points.iter().any(|p| p.time == Some(noon())),
+                "the first reading among them, long done with"
+            );
+        } else {
+            assert!(!past.is_empty(), "with no store, what sensing has done with stays");
+            assert!(points.is_empty());
+        }
+        assert!(!read.is_empty(), "and what sensing still reads is untouched either way");
+    }
+}
+
 #[tokio::test(start_paused = true)]
 async fn history_holds_every_reading_and_the_journal_the_dose_published_taken_and_landed() {
     use orexis::events::{Field, Point};
@@ -521,6 +582,7 @@ async fn history_holds_every_reading_and_the_journal_the_dose_published_taken_an
         history: Some(sink),
         metrics: None,
         traces: None,
+        archive: None,
     };
     let g = grower_watched(&store, watching);
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());

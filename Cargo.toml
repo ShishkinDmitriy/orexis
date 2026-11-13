@@ -21,6 +21,7 @@ orexis-metrics = { path = "orexis-metrics" }
 orexis-planning = { path = "orexis-planning" }
 orexis-prediction = { path = "orexis-prediction" }
 orexis-sensing = { path = "orexis-sensing" }
+orexis-sensing-influxdb = { path = "orexis-sensing-influxdb" }
 orexis-span = { path = "orexis-span" }
 orexis-span-otlp = { path = "orexis-span-otlp" }
 orexis-speech = { path = "orexis-speech" }
