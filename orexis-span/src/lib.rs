@@ -7,7 +7,8 @@
 //!     orexis:tookS 3.66 ;                                 # real seconds
 //!     prov:wasStartedBy <trigger> , <trigger> ;           # what its start names: an event, a graph, a step
 //!     dcterms:isPartOf <activity> .                       # the activity it was begun inside, where one was
-//! <event> prov:wasGeneratedBy <activity> ; a belief:Revised .   # each event said while it was open
+//! <event> prov:wasGeneratedBy <activity> ; a belief:Revised ;   # each event said while it was open,
+//!     prov:generatedAtTime "…" .                                #   and the instant it was said at
 //! <graph> prov:wasGeneratedBy <activity> .                      # each graph its turn wrote
 //! ```
 //!
@@ -38,6 +39,7 @@ pub const STARTED_AT: &str = "http://www.w3.org/ns/prov#startedAtTime";
 pub const ENDED_AT: &str = "http://www.w3.org/ns/prov#endedAtTime";
 pub const STARTED_BY: &str = "http://www.w3.org/ns/prov#wasStartedBy";
 pub const GENERATED_BY: &str = "http://www.w3.org/ns/prov#wasGeneratedBy";
+pub const GENERATED_AT: &str = "http://www.w3.org/ns/prov#generatedAtTime";
 pub const PART_OF: &str = "http://purl.org/dc/terms/isPartOf";
 pub const TOOK_S: &str = "http://example.org/orexis#tookS";
 
@@ -48,8 +50,8 @@ struct Open {
     triggers: Vec<NamedNode>,
     began: DateTime,
     parent: Option<NamedNode>,
-    /// Each event said while it was open, and the class it said it is, where it said one.
-    generated: Vec<(NamedNode, Option<&'static str>)>,
+    /// Each event said while it was open, the class it said it is, where it said one, and the instant it was said at.
+    generated: Vec<(NamedNode, Option<&'static str>, DateTime)>,
 }
 
 /// The activities open on each thread, innermost last.
@@ -92,7 +94,8 @@ impl Keeper {
                 log::warn!("the journal refused what an activity wrote: {e}");
             }
         } else if let Some(open) = self.open.get_mut(&thread).and_then(|o| o.last_mut()) {
-            open.generated.push((said.clone(), event.kind()));
+            let at = event.at().unwrap_or_else(|| self.journal.now());
+            open.generated.push((said.clone(), event.kind(), at));
         }
     }
 
@@ -111,8 +114,9 @@ impl Keeper {
         if let Some(parent) = open.parent {
             triples.push(triple(activity.clone(), PART_OF, parent));
         }
-        for (said, kind) in open.generated {
+        for (said, kind, at) in open.generated {
             triples.push(triple(said.clone(), GENERATED_BY, activity.clone()));
+            triples.push(triple(said.clone(), GENERATED_AT, instant(at)));
             if let Some(kind) = kind {
                 triples.push(typed(said, kind));
             }
