@@ -9,7 +9,7 @@ description: >-
 
 # What it is
 
-An agent's **journal** is a pyoxigraph store of its own (`orexis/src/journal.rs`), on a volume beside the belief base's
+A [recorder](/domain/journal/recorder.md)'s **journal** is a store of its own (`orexis-journal/src/journal.rs`), on a volume beside the belief base's
 (`--journal`), or in memory where the process is told none. It holds three kinds of entry, each a named graph named
 by the node it is about, a UUID's URN:
 
@@ -28,8 +28,8 @@ what led up to nothing goes. **What an incident is, is the vocabulary's**: an ev
 `planning:WantUnreachable` — which `orexis-journal/`, the crate that keeps the journal, reads off the agent's own T-Box. **Which count is the world's
 deployment's**: its deployment graph may add classes (`onboarding:incident`) and say from which level a log record is
 one (`onboarding:incidentLevel`, WARNING where it says nothing), told to the agent as `JOURNAL_INCIDENTS` and
-`JOURNAL_INCIDENT_LEVEL` and never believed. Keeping a journal is no [role](/domain/kernel/role.md): every agent keeps
-one, since whether it does changes no plan.
+`JOURNAL_INCIDENT_LEVEL` and never believed. Keeping a journal is a [role](/domain/kernel/role.md), the recorder's: an agent that
+plays none keeps none.
 
 # How it is read
 

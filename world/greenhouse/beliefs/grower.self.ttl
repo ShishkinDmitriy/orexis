@@ -1,5 +1,6 @@
 @prefix : <http://example.org/orexis/world/greenhouse#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix journal: <http://example.org/orexis/journal#> .
 @prefix planning: <http://example.org/orexis/planning#> .
 @prefix execution: <http://example.org/orexis/execution#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
@@ -19,3 +20,8 @@
                  [ a execution:Executor ] ,
                  [ a sensing:Observer ; sensing:sensor :moisture_probe , :thermometer ] ,
                  [ a prediction:Predictor ] .
+
+#  IT KEEPS A JOURNAL of what happened to it, so it is a recorder (knowledge/domain/journal/recorder.md): the
+#  history view and its own account of itself read what it kept. Without the role its packages say what happens
+#  and nobody writes it down.
+:grower orexis:plays [ a journal:Recorder ] .

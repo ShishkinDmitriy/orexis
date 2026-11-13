@@ -602,6 +602,7 @@ FOLDERS = {
     "onboarding": (f"{_O}/onboarding#",),
     "coordination": (f"{_O}/coordination#",),
     "draw": (f"{_O}/draw#",),
+    "journal": (f"{_O}/journal#",),
 }
 
 

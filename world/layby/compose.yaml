@@ -88,7 +88,7 @@ services:
       dockerfile: orexis-agent/Containerfile
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
-        FEATURES: "belief,execution,mqtt,planning,sensing,speech"
+        FEATURES: "belief,execution,journal,mqtt,planning,sensing,speech"
     command: ["orexis-agent", "/app/world/layby", "courier_a", "--volume", "/app/state", "--journal", "/app/journal"]
     environment:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,

@@ -1,5 +1,6 @@
 @prefix : <http://example.org/orexis/world/tower#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix journal: <http://example.org/orexis/journal#> .
 @prefix planning: <http://example.org/orexis/planning#> .
 @prefix execution: <http://example.org/orexis/execution#> .
 @prefix belief: <http://example.org/orexis/belief#> .
@@ -26,3 +27,8 @@
 #  (world.ttl) that keeps it to the nine cells this figure was measured on. The three disks as authored
 #  are not run by the gate.
 :mover planning:budget 256 .
+
+#  IT KEEPS A JOURNAL of what happened to it, so it is a recorder (knowledge/domain/journal/recorder.md): the
+#  history view and its own account of itself read what it kept. Without the role its packages say what happens
+#  and nobody writes it down.
+:mover orexis:plays [ a journal:Recorder ] .

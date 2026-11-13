@@ -10,7 +10,6 @@ use std::sync::Arc;
 use orexis::Error;
 use orexis::boot::{Booting, boot};
 use orexis::clock::Clock;
-use orexis::journal::Journal;
 use orexis::series::Sink;
 use orexis::store::Store;
 use orexis::task::{Outside, Reads, Running};
@@ -23,7 +22,9 @@ use orexis_belief as _;
 use orexis_coordination as _;
 #[cfg(feature = "execution")]
 use orexis_execution as _;
+#[cfg(feature = "journal")]
 use orexis_journal as _;
+#[cfg(feature = "journal")]
 use orexis_journal_otlp as _;
 use orexis_metrics as _;
 #[cfg(feature = "planning")]
@@ -180,12 +181,17 @@ pub fn built(package: &str) -> bool {
     inventory::iter::<orexis::task::Package>().any(|p| p.name == package)
 }
 
+/// The package an agent that plays a recorder loads: what keeps its journal.
+pub const JOURNAL: &str = "journal";
+
 /// WHAT WATCHES THE AGENT, where the deployment keeps any of it: the journal, the series store its readings are
-/// archived to, the metrics window and the tracer. The history part is made where a journal is kept and the metrics
-/// part where a metrics window is; each hears every event the parts say.
+/// archived to, the metrics window and the tracer. Each is used by the package it is for, where the agent loads it:
+/// the journal and the tracer where it plays a recorder, the metrics part where a metrics window is.
 #[derive(Default)]
 pub struct Watching {
-    pub journal: Option<Arc<Journal>>,
+    /// The journal a recorder keeps: handed by whoever runs the agent, and kept by nobody where it plays none.
+    #[cfg(feature = "journal")]
+    pub journal: Option<Arc<orexis_journal::Journal>>,
     /// The series store sensing's readings are archived to, and a chat reads the past from: none, and every reading
     /// stays in the agent's beliefs.
     pub history: Option<Sink>,
@@ -193,6 +199,7 @@ pub struct Watching {
     pub archive_every_s: Option<f64>,
     pub metrics: Option<orexis_metrics::Window>,
     /// Where the agent is traced, and how often it ships what its journal keeps.
+    #[cfg(feature = "journal")]
     pub traces: Option<orexis_journal_otlp::Tracing>,
 }
 
@@ -234,13 +241,18 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
         model,
     } = wiring;
     //  WHAT A CHAT READS OF WHAT HAPPENED, where it reads it: the journal where it is, and the series as read.
+    #[cfg(feature = "journal")]
+    let journal = watching.journal.as_ref().map(|j| j.store.clone());
+    #[cfg(not(feature = "journal"))]
+    let journal = None;
     outside.hand(Reads {
-        journal: watching.journal.as_ref().map(|j| j.store.clone()),
+        journal,
         history: watching.history.as_ref().map(Sink::reader),
         metrics: watching.metrics.as_ref().map(|w| w.sink.reader()),
     });
     //  WHAT THE AGENT DID, SHIPPED FROM ITS JOURNAL to whoever traces it: what is kept is what is sent, so with no
     //  journal, nothing.
+    #[cfg(feature = "journal")]
     if let (Some(tracing), Some(journal)) = (watching.traces, &watching.journal) {
         outside.hand(orexis_journal_otlp::Ships {
             journal: journal.clone(),
@@ -261,6 +273,7 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
         });
     }
     //  AND THE JOURNAL ITSELF, kept where the deployment keeps one: every event as it is said, every activity as it ends.
+    #[cfg(feature = "journal")]
     outside.hand(orexis_journal::Keeps {
         journal: watching.journal,
     });
@@ -304,12 +317,17 @@ pub fn start(
     budget: Option<usize>,
     wiring: Wiring,
 ) -> Result<Running, Error> {
-    let mut names: Vec<String> = ["journal", "metrics", "journal-otlp"]
-        .iter()
-        .map(|n| n.to_string())
-        .collect();
+    //  THE JOURNAL FIRST, where the agent plays a recorder, so what the others say as they start is heard; and with
+    //  it what ships its activities. Then what the deployment watches with, and the packages the roles load.
+    let recorder = loaded.iter().any(|p| p == JOURNAL);
+    let mut names: Vec<String> = Vec::new();
+    if recorder {
+        names.push(JOURNAL.to_string());
+        names.push("journal-otlp".to_string());
+    }
+    names.push("metrics".to_string());
     #[cfg(feature = "sensing")]
     names.push("sensing-influxdb".to_string());
-    names.extend(loaded.iter().cloned());
+    names.extend(loaded.iter().filter(|p| *p != JOURNAL).cloned());
     orexis::task::start(store, agent, clock, outside(wiring, budget), &names)
 }

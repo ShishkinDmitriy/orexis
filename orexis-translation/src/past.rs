@@ -402,7 +402,7 @@ mod tests {
 
     use super::*;
     use orexis::events::typed;
-    use orexis::journal::Journal;
+    use orexis_journal::journal::Journal;
 
     fn prefixes() -> Prefixes {
         [

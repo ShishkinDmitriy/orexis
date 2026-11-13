@@ -168,7 +168,12 @@ async fn walked(order: &[&str]) -> Walked {
     use orexis::clock::Clock;
     let store = store();
     let loaded = booted(&store, tree(), &world(), "mover", now()).unwrap();
-    let mut sorted: Vec<&str> = loaded.iter().map(String::as_str).collect();
+    //  THE RECORDER'S PACKAGE begins on no event and is handed no journal here, so no order is asked of it.
+    let mut sorted: Vec<&str> = loaded
+        .iter()
+        .map(String::as_str)
+        .filter(|p| *p != orexis_agent::JOURNAL)
+        .collect();
     sorted.sort();
     let mut asked = order.to_vec();
     asked.sort();

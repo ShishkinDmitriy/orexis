@@ -28,8 +28,8 @@ use oxigraph::model::{Literal, NamedNode};
 use serde_json::{Value, json};
 
 use orexis::events::triple;
-use orexis::journal::{ACTIVITY, Journal};
 use orexis::task::{Handed, Package, Task};
+use orexis_journal::journal::{ACTIVITY, Journal};
 
 /// Where the tracer is, told as environment: OTLP's HTTP endpoint, `/v1/traces` beneath it.
 pub const ENDPOINT: &str = "OTLP_ENDPOINT";
@@ -58,7 +58,7 @@ pub struct Ships {
 }
 
 fn rows(journal: &Journal, text: &str) -> Vec<BTreeMap<String, String>> {
-    let Ok((_, body)) = orexis::journal::answer(&journal.store, text) else {
+    let Ok((_, body)) = orexis_journal::journal::answer(&journal.store, text) else {
         return Vec::new();
     };
     let Ok(value) = serde_json::from_slice::<Value>(&body) else {

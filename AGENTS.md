@@ -56,7 +56,7 @@ If it is unavailable, the rules are short enough to follow by hand:
   a path that is not on disk.
 
 **`knowledge/domain/` is the shared dictionary, filed by the package that owns each word** —
-`kernel/`, `sensing/`, `transport/`, `belief/`, `prediction/`, `planning/`, `execution/`,
+`kernel/`, `journal/`, `sensing/`, `transport/`, `belief/`, `prediction/`, `planning/`, `execution/`,
 `speech/`, `coordination/`, `market/`, `actuation/`, `courier/`, `draw/`, `onboarding/` — and `tests/test_knowledge.py` holds a page to
 live terms in its folder's namespace, so retiring a term fails until its page follows. A record
 stays in `knowledge/decisions/` while something current cites it; 0.1.0's are filed under
@@ -979,8 +979,13 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   words of its own and a reader opening a live journal were refused (the-journal-is-the-agents-flight-recorder).
 - **What an incident is, is the vocabulary's, and which count, the deployment's** — a class beneath `orexis:Incident`
   in its package's ontology, read off the agent's T-Box, and what a world's deployment graph adds or sets the log's
-  level to, told as environment; an incident typed by code and a logger role were refused, since keeping a journal
-  changes no plan (the-journal-is-the-agents-flight-recorder).
+  level to, told as environment; an incident typed by code was refused, being a question nothing could ask
+  (the-journal-is-the-agents-flight-recorder).
+- **An agent keeps a journal where it plays a recorder, and the kernel knows no journal** — `journal:Recorder` loads
+  `orexis-journal/`, which holds the store too and is started before every other package; an agent that plays none
+  says what happens and nobody writes it down. Every agent kept one whatever it played, the one package loaded for no
+  role, and the role was first refused as changing no plan; the cost stands, a world that forgets the role having no
+  journal when one is wanted (recorder, the-journal-is-the-agents-flight-recorder).
 - **What the agent did is kept where it can be asked, and what caused what is a query** — `orexis-journal/` keeps the
   journal, every event as it is said and every activity as it ends as one entry of it, in PROV's words, with what started it and what it generated, an
   event said in it or a graph its turn wrote, for the journal's window; an activity started by what another
@@ -1048,7 +1053,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
    discovered from the documents. See [capability-packages](knowledge/decisions/capability-packages.md).
 2. **A package is a crate at the repo's root, flat and named for it — `transport/mqtt` is `orexis-transport-mqtt/`,
    the kernel `orexis/` and the binary `orexis-agent/` — and a term lives in the namespace of the package that
-   owns the concept.** belief, sensing, prediction, planning, execution, speech, coordination and the MQTT
+   owns the concept.** journal, belief, sensing, prediction, planning, execution, speech, coordination and the MQTT
    transport each declare their words in their own `ontology.ttl`, beside the code that reads
    them; the kernel's `orexis:` keeps only what packages meet at. A package imports what lies
    beneath it and never above — belief, planning and execution import nothing of prediction, and

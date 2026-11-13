@@ -30,9 +30,9 @@ use std::thread::ThreadId;
 use oxigraph::model::{NamedNode, Triple};
 use oxsdatatypes::DateTime;
 
+use crate::journal::{ACTIVITY, Journal};
 use orexis::activity::{Ended, Started, Wrote};
 use orexis::events::{Event, Watch, as_of, double, instant, triple, typed};
-use orexis::journal::{ACTIVITY, Journal};
 
 pub const STARTED_AT: &str = "http://www.w3.org/ns/prov#startedAtTime";
 pub const ENDED_AT: &str = "http://www.w3.org/ns/prov#endedAtTime";
@@ -161,7 +161,7 @@ mod tests {
     }
 
     fn rows(journal: &Journal, text: &str) -> Vec<String> {
-        let body = String::from_utf8(orexis::journal::answer(&journal.store, text).unwrap().1).unwrap();
+        let body = String::from_utf8(crate::journal::answer(&journal.store, text).unwrap().1).unwrap();
         body.split("\"value\":\"")
             .skip(1)
             .map(|v| v.split('"').next().unwrap().to_string())

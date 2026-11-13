@@ -272,7 +272,7 @@ struct Walked {
     commands: Vec<String>,
     won: BTreeMap<String, String>,
     parcels: BTreeMap<String, Cell>,
-    journals: Vec<Arc<orexis::journal::Journal>>,
+    journals: Vec<Arc<orexis_journal::journal::Journal>>,
 }
 
 impl Walked {
@@ -305,10 +305,10 @@ async fn walked(name: &str, world: &Path, home: &[(&str, Cell)], dropping: Optio
     //  to stop it after so many steps of the road.
     let traced = std::env::var("LANE_TRACE").ok().map(|_| trace::Trace::default());
     carried.lock().unwrap().trace = traced.clone();
-    let journals: Vec<Arc<orexis::journal::Journal>> = if kept {
+    let journals: Vec<Arc<orexis_journal::journal::Journal>> = if kept {
         names
             .iter()
-            .map(|_| Arc::new(orexis::journal::Journal::new(None, 600.0, Arc::new(start)).unwrap()))
+            .map(|_| Arc::new(orexis_journal::journal::Journal::new(None, 600.0, Arc::new(start)).unwrap()))
             .collect()
     } else {
         Vec::new()
@@ -575,9 +575,9 @@ async fn two_couriers_silent_to_each_other_both_yield_and_still_part() {
 
 /// As `world/lane/tests/test_history.py` holds the head-on meeting recorded: each courier's journal holds the exchange,
 /// each kind of it said by one and heard by the other, and the conflict won by the same courier in both.
-fn the_meeting_is_journaled_and_both_agree_who_won(journals: &[Arc<orexis::journal::Journal>]) {
-    let rows = |journal: &orexis::journal::Journal, text: &str| -> String {
-        String::from_utf8(orexis::journal::answer(&journal.store, text).unwrap().1).unwrap()
+fn the_meeting_is_journaled_and_both_agree_who_won(journals: &[Arc<orexis_journal::journal::Journal>]) {
+    let rows = |journal: &orexis_journal::journal::Journal, text: &str| -> String {
+        String::from_utf8(orexis_journal::journal::answer(&journal.store, text).unwrap().1).unwrap()
     };
     let won: Vec<String> = journals
         .iter()

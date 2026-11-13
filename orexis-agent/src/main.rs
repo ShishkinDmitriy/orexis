@@ -13,22 +13,52 @@
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::AtomicBool;
-use std::sync::{Arc, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock};
 
 use orexis::Error;
 use orexis::boot::TREE;
 use orexis::clock::{Clock, Paced};
-use orexis::journal::{self, Journal};
 use orexis::namespaces::Namespaces;
 use orexis::series::{self, HISTORY, METRICS};
 use orexis::store::Store;
 use orexis::task::{MET, PLANNED, UNREACHABLE};
 use orexis_agent::{Watching, Wiring};
 
-/// The log, to the standard error and into the journal once one is kept: every record at its level.
+/// What keeps a log record: the logger, the level and the message, as a journal remarks it.
+type Remark = Box<dyn Fn(&str, log::Level, &str) + Send + Sync>;
+
+/// The log, to the standard error and into the journal where the agent keeps one: every record at its level. Whether
+/// it keeps one is known only once its self graph is read, so what is said before is held (`early`) and handed to the
+/// journal as it is attached, or dropped where the agent plays no recorder.
 struct Logger {
     level: log::LevelFilter,
-    journal: OnceLock<Arc<Journal>>,
+    remark: OnceLock<Remark>,
+    early: Mutex<Option<Vec<(String, log::Level, String)>>>,
+}
+
+impl Logger {
+    /// Keep every record from here on by `remark`, and what was said before it first.
+    fn attach(&self, remark: Remark) {
+        for (logger, level, message) in self.early.lock().unwrap().take().unwrap_or_default() {
+            remark(&logger, level, &message);
+        }
+        let _ = self.remark.set(remark);
+    }
+
+    /// Nobody keeps the log: what was held is dropped, and nothing more is.
+    fn unkept(&self) {
+        self.early.lock().unwrap().take();
+    }
+}
+
+/// A log level as the log names it.
+fn level_name(level: log::Level) -> &'static str {
+    match level {
+        log::Level::Error => "ERROR",
+        log::Level::Warn => "WARNING",
+        log::Level::Info => "INFO",
+        log::Level::Debug | log::Level::Trace => "DEBUG",
+    }
 }
 
 /// The logger a record is kept under, as the Python packages name theirs: the package of its module.
@@ -58,14 +88,19 @@ impl log::Log for Logger {
         eprintln!(
             "{} {} {message}",
             logger_of(record.target()),
-            journal::level_name(record.level())
+            level_name(record.level())
         );
         //  THE JOURNAL SAYS NOTHING OF ITSELF, and keeps what is said from INFO on.
-        if record.level() <= log::Level::Info
-            && !record.target().starts_with("orexis::journal")
-            && let Some(journal) = self.journal.get()
-        {
-            let _ = journal.remark(&logger_of(record.target()), record.level(), &message, None);
+        if record.level() <= log::Level::Info && !record.target().starts_with("orexis_journal::journal") {
+            let logger = logger_of(record.target());
+            match self.remark.get() {
+                Some(remark) => remark(&logger, record.level(), &message),
+                None => {
+                    if let Some(early) = self.early.lock().unwrap().as_mut() {
+                        early.push((logger, record.level(), message));
+                    }
+                }
+            }
         }
     }
 
@@ -124,6 +159,7 @@ fn world_name(world: &Path) -> String {
         .unwrap_or_default()
 }
 
+#[cfg(feature = "journal")]
 fn opened(path: Option<&Path>) -> Result<Option<oxigraph::store::Store>, Error> {
     match path {
         #[cfg(feature = "volume")]
@@ -138,7 +174,34 @@ fn opened(path: Option<&Path>) -> Result<Option<oxigraph::store::Store>, Error> 
     }
 }
 
-fn run(args: &Args, clock: Arc<Paced>, journal: Arc<Journal>, halt: Arc<AtomicBool>) -> Result<String, Error> {
+/// THE JOURNAL OF AN AGENT THAT PLAYS A RECORDER: a store of its own, on disk where `--journal` says and in memory
+/// otherwise, its log kept from here on with what the boot said before, and served on the loopback where the
+/// environment names a port.
+#[cfg(feature = "journal")]
+fn journal(args: &Args, clock: &Arc<Paced>) -> Result<Arc<orexis_journal::Journal>, Error> {
+    use orexis_journal::journal;
+    let mut kept = journal::Journal::new(opened(args.journal.as_deref())?, journal::window_s(&env), {
+        let clock = clock.clone();
+        Arc::new(move || clock.now())
+    })?;
+    kept.incident_level = journal::incident_level(&env);
+    kept.incidents = journal::incidents(&env);
+    let kept = Arc::new(kept);
+    if let Some(logger) = LOGGER.get() {
+        let into = kept.clone();
+        logger.attach(Box::new(move |logger, level, message| {
+            let _ = into.remark(logger, level, message, None);
+        }));
+    }
+    if let Some(port) = env("JOURNAL_PORT").and_then(|p| p.parse().ok())
+        && let Err(e) = journal::serve(kept.clone(), "127.0.0.1", port)
+    {
+        log::warn!("{}: the journal cannot be served on {port}: {e}", args.agent);
+    }
+    Ok(kept)
+}
+
+fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, Error> {
     let tree = PathBuf::from(env("OREXIS_TREE").unwrap_or_else(|| TREE.to_string()));
     let namespaces = Arc::new(Namespaces::of_tree(&tree)?);
     let store = match &args.volume {
@@ -153,6 +216,17 @@ fn run(args: &Args, clock: Arc<Paced>, journal: Arc<Journal>, halt: Arc<AtomicBo
         None => Store::new(namespaces)?,
     };
     let loaded = orexis_agent::booted(&store, &tree, &args.world, &args.agent, clock.now())?;
+    //  A JOURNAL WHERE THE AGENT PLAYS A RECORDER, and none otherwise: its packages say what happens either way.
+    #[cfg(feature = "journal")]
+    let kept = if loaded.iter().any(|p| p == orexis_agent::JOURNAL) {
+        Some(journal(args, &clock)?)
+    } else {
+        log::info!("{} plays no recorder, and keeps no journal", args.agent);
+        None
+    };
+    if let Some(logger) = LOGGER.get() {
+        logger.unkept();
+    }
     let mut sinks = series::load(&env);
     let told: Vec<String> = sinks.keys().map(|p| p.to_lowercase()).collect();
     if told.is_empty() {
@@ -170,7 +244,9 @@ fn run(args: &Args, clock: Arc<Paced>, journal: Arc<Journal>, halt: Arc<AtomicBo
     let archive_every_s = Some(orexis_sensing_influxdb::interval(&env));
     #[cfg(not(feature = "sensing"))]
     let archive_every_s = None;
-    let traces = orexis_journal_otlp::from_environment(&env);
+    #[cfg(feature = "journal")]
+    let traces = orexis_journal_otlp::from_environment(&env).filter(|_| kept.is_some());
+    #[cfg(feature = "journal")]
     if let Some(tracing) = &traces {
         log::info!(
             "{} ships its activities as spans to {} every {}s",
@@ -181,10 +257,12 @@ fn run(args: &Args, clock: Arc<Paced>, journal: Arc<Journal>, halt: Arc<AtomicBo
     }
     let wiring = Wiring {
         watching: Watching {
-            journal: Some(journal),
+            #[cfg(feature = "journal")]
+            journal: kept.clone(),
             history: sinks.remove(HISTORY),
             archive_every_s,
             metrics,
+            #[cfg(feature = "journal")]
             traces,
         },
         ..Wiring::default()
@@ -198,7 +276,7 @@ fn run(args: &Args, clock: Arc<Paced>, journal: Arc<Journal>, halt: Arc<AtomicBo
         .enable_all()
         .build()
         .map_err(|e| Error::Evaluation(format!("the tasks could not start: {e}")))?;
-    tasks.block_on(async {
+    let outcome = tasks.block_on(async {
         let mut running = orexis_agent::start(&store, &args.agent, clock.clone(), &loaded, None, wiring)?;
         //  A SIGNAL ENDS THE RUN'S WAIT, which may be long since nothing polls: the flag is raised and the wake rung.
         if let Ok(mut signals) =
@@ -220,7 +298,12 @@ fn run(args: &Args, clock: Arc<Paced>, journal: Arc<Journal>, halt: Arc<AtomicBo
         }
         running.stop().await;
         outcome
-    })
+    });
+    #[cfg(feature = "journal")]
+    if let Some(kept) = &kept {
+        kept.flush();
+    }
+    outcome
 }
 
 fn main() {
@@ -231,7 +314,8 @@ fn main() {
     };
     let logger = LOGGER.get_or_init(|| Logger {
         level,
-        journal: OnceLock::new(),
+        remark: OnceLock::new(),
+        early: Mutex::new(Some(Vec::new())),
     });
     let _ = log::set_logger(logger).map(|()| log::set_max_level(level));
     let args = match args() {
@@ -284,33 +368,11 @@ fn main() {
             std::process::exit(3);
         }
     };
-    let kept = match opened(args.journal.as_deref()).and_then(|store| {
-        let mut kept = Journal::new(store, journal::window_s(&env), {
-            let clock = clock.clone();
-            Arc::new(move || clock.now())
-        })?;
-        kept.incident_level = journal::incident_level(&env);
-        kept.incidents = journal::incidents(&env);
-        Ok(Arc::new(kept))
-    }) {
-        Ok(kept) => kept,
-        Err(e) => {
-            eprintln!("{}: the journal would not open: {e}", args.agent);
-            std::process::exit(3);
-        }
-    };
-    let _ = logger.journal.set(kept.clone());
-    if let Some(port) = env("JOURNAL_PORT").and_then(|p| p.parse().ok())
-        && let Err(e) = journal::serve(kept.clone(), "127.0.0.1", port)
-    {
-        log::warn!("{}: the journal cannot be served on {port}: {e}", args.agent);
-    }
     let halt = Arc::new(AtomicBool::new(false));
     for signal in [signal_hook::consts::SIGTERM, signal_hook::consts::SIGINT] {
         let _ = signal_hook::flag::register(signal, halt.clone());
     }
-    let outcome = run(&args, clock, kept.clone(), halt.clone());
-    kept.flush();
+    let outcome = run(&args, clock, halt.clone());
     let halted = halt.load(std::sync::atomic::Ordering::Relaxed);
     match outcome {
         Ok(_) if halted => std::process::exit(128 + signal_hook::consts::SIGTERM),

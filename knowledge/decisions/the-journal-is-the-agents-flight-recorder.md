@@ -57,8 +57,8 @@ event of a class beneath `orexis:Incident` — `execution:StepFailed`, `executio
 sensor gone silent and an exception escaping a pass are said. **What an incident is, is the vocabulary's, and which
 count, the deployment's**: a package puts the classes of its events that are incidents beneath `orexis:Incident`, 
 `orexis-journal/` reads them off the agent's T-Box, and a world's deployment graph may add classes (`onboarding:incident`)
-and raise or lower the level (`onboarding:incidentLevel`), told to the agent as environment. Keeping a journal is
-every agent's, and needs no role. An incident keeps every record of the window before it for good (`orexis:keptBy`). The history is
+and raise or lower the level (`onboarding:incidentLevel`), told to the agent as environment. Keeping a journal was
+every agent's, and needed no role, until 2026-11-13 (amended below). An incident keeps every record of the window before it for good (`orexis:keptBy`). The history is
 the flight data, kept for good; the log the cockpit's voice, kept when something happened.
 
 **The journal is served read-only, on the host's loopback.** An agent runs on the host's network, so it serves its
@@ -99,6 +99,7 @@ instant. `orexis-explain` reads its steps from the journal the same way.
 - **A logger role**, an agent keeping a journal only where its self graph says it plays one. Whether an agent keeps a
   journal changes no plan, so it is no belief, and a role is one; and a world forgetting to declare it would leave an
   agent with no recorder on the day it was wanted. Every agent keeps one, as every agent writes its history.
+  *Overruled 2026-11-13, below.*
 - **An incident typed by code**, a step's event typed `orexis:Incident` where it did not land. What an incident is
   became a question nothing could ask; a class beneath `orexis:Incident` is one the T-Box answers, and the deployment
   can name another.
@@ -118,6 +119,23 @@ instant. `orexis-explain` reads its steps from the journal the same way.
   package, its components and its selects together
   ([a-replay-is-the-history-drawn-by-the-package-that-decides-it](/decisions/a-replay-is-the-history-drawn-by-the-package-that-decides-it.md)):
   a drawing ships its selects, and `things` is gone into them.
+
+# Amended 2026-11-13: keeping a journal is a role, and the journal is no part of the kernel
+
+The sovereign's ruling, made while the packages were being reduced to independent functions that share only the
+place they say events. A package is loaded for a role the agent plays and for nothing else, and the journal was the
+exception: its store was a module of the kernel, the binary opened it before the self graph was read, and every agent
+kept one whatever it played. So an agent keeps a journal where it plays a [recorder](/domain/journal/recorder.md),
+`journal:Recorder`, and the store, its window and its endpoint are `orexis-journal/`'s; the kernel keeps only that an
+event may state triples.
+
+The refusal above argued two things. That a role is a belief and a journal changes no plan: so is a translator's,
+whose role loads a package all the same, and loading by role is the one rule a new package can be held to. That a
+world forgetting the role has no recorder when one is wanted: this stands as a cost, taken; every world here declares
+the role of every agent, and a boot that fails before its self graph is read is journaled by nobody, where it was.
+
+Not yet changed by this: what the journal keeps and for how long. Events are still kept for good in it; splitting it
+into a hot journal and a cold store the readers ask is the step after.
 
 # Seams left open
 
