@@ -1,5 +1,5 @@
 # THE JOURNAL, KEPT: every event the agent's packages say and every activity they end, written to the agent's journal
-# as it happens. The half of the pair that does the work; orexis-journal-otlp ships the activities to a tracer.
+# in memory as it happens. The half that does the work; orexis-journal-oxigraph archives what lasts and orexis-journal-otlp ships the activities.
 [package]
 name = "orexis-journal"
 version = "0.2.0"
@@ -15,10 +15,9 @@ orexis = { workspace = true }
 oxigraph.workspace = true
 log = "0.4"
 oxsdatatypes = "0.2"
+tokio.workspace = true
 tiny_http = { version = "0.12", optional = true }
 
 [features]
 # THE JOURNAL'S ENDPOINT, served read-only on the host's loopback: the binary's.
 serve = ["dep:tiny_http"]
-# THE JOURNAL ON DISK, RocksDB as the beliefs' volume is: the binary's alone, a test's journal being in memory.
-volume = ["oxigraph/rocksdb"]

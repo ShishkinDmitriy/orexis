@@ -36,7 +36,7 @@ questions then have nothing to read, and the fifth answers from the history alon
 
 Every step taken and answered is read from the agent's [journal](/domain/kernel/journal.md), at the
 endpoint the installation allocated it, and handed to the questions as a `Step` point; an agent that is
-not running answers nothing there, and its stopped journal is read off its volume, opened read-only:
+not running answers nothing there, and the archive of its stopped journal is read off its volume, opened read-only:
 
 ```bash
 orexis-explain greenhouse grower --journal "$(podman volume inspect orexis-greenhouse-grower-journal --format '{{.Mountpoint}}')"

@@ -10,6 +10,7 @@ COPY orexis-coordination/ tree/orexis-coordination/
 COPY orexis-execution/ tree/orexis-execution/
 COPY orexis-journal/ tree/orexis-journal/
 COPY orexis-journal-otlp/ tree/orexis-journal-otlp/
+COPY orexis-journal-oxigraph/ tree/orexis-journal-oxigraph/
 COPY orexis-metrics/ tree/orexis-metrics/
 COPY orexis-planning/ tree/orexis-planning/
 COPY orexis-prediction/ tree/orexis-prediction/

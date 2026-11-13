@@ -157,7 +157,7 @@ mod tests {
     }
 
     fn journal() -> Arc<Journal> {
-        Arc::new(Journal::new(None, 600.0, Arc::new(|| at("2026-01-01T12:00:00+00:00"))).unwrap())
+        Arc::new(Journal::new(600.0, Arc::new(|| at("2026-01-01T12:00:00+00:00"))).unwrap())
     }
 
     fn rows(journal: &Journal, text: &str) -> Vec<String> {

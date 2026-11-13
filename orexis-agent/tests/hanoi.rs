@@ -381,7 +381,7 @@ async fn every_search_and_the_publishing_are_tallied_into_one_window_and_never_b
 async fn a_plan_published_is_kept_in_the_journal_with_its_steps_in_the_words_of_the_domain() {
     let store = store();
     let loaded = boot(&store);
-    let journal = Arc::new(orexis_journal::journal::Journal::new(None, 600.0, Arc::new(now)).unwrap());
+    let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(now)).unwrap());
     let wiring = orexis_agent::Wiring {
         watching: orexis_agent::Watching {
             journal: Some(journal.clone()),
@@ -421,7 +421,7 @@ async fn the_history_part_marks_an_event_of_a_class_beneath_incident_and_no_othe
     use orexis_planning::events::{PlanPublished, WantUnreachable};
     let store = store();
     let loaded = boot(&store);
-    let journal = Arc::new(orexis_journal::journal::Journal::new(None, 600.0, Arc::new(now)).unwrap());
+    let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(now)).unwrap());
     let wiring = orexis_agent::Wiring {
         watching: orexis_agent::Watching {
             journal: Some(journal.clone()),

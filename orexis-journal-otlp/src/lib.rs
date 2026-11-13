@@ -364,7 +364,7 @@ mod tests {
     }
 
     fn journal() -> Arc<Journal> {
-        Arc::new(Journal::new(None, 600.0, Arc::new(|| at("2026-11-10T12:00:00Z"))).unwrap())
+        Arc::new(Journal::new(600.0, Arc::new(|| at("2026-11-10T12:00:00Z"))).unwrap())
     }
 
     /// An activity as `orexis-journal/` keeps it.

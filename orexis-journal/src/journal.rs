@@ -2,6 +2,11 @@
 //! beside its beliefs and apart from them — the events its packages say, kept for good, and its log, kept for the last
 //! minutes (the-journal-is-the-agents-flight-recorder).
 //!
+//! IN MEMORY, THE HOT RECORD: what is said is written here and nowhere else, so saying a thing waits for no disk.
+//! What is kept for good is taken to the archive by the other half of the pair that keeps one, on a timer
+//! (`orexis-journal-oxigraph/`), which reads what lasts here (`lasting`) and has the journal forget what it took
+//! (`forget`). Where nothing archives, what lasts stays here.
+//!
 //! THREE KINDS OF ENTRY, each a named graph named by the node it is about: an EVENT a package says, beneath
 //! `orexis:Event`, at its `prov:atTime`, kept for good; a LOG RECORD, `orexis:LogRecord`, its logger, level and
 //! message; and an ACTIVITY a package did, a `prov:Activity`, with what started it and what it generated
@@ -12,9 +17,11 @@
 //! as one, an entry of a class the deployment names (`JOURNAL_INCIDENTS`), and a log record from a level
 //! (`JOURNAL_INCIDENT_LEVEL`, WARNING where nothing says). An incident's entry says so, `a orexis:Incident`.
 //!
-//! SERVED READ-ONLY over the SPARQL protocol (`serve`), on a thread of its own that reads the store and never writes it.
+//! SERVED READ-ONLY over the SPARQL protocol (`serve`), on a thread of its own that reads the stores it is handed
+//! and never writes them: the archive at `/sparql` where the agent keeps one, and the journal itself at `/live/sparql`.
 
 use std::collections::BTreeSet;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 
 use oxigraph::io::{RdfFormat, RdfSerializer};
@@ -50,12 +57,27 @@ pub const PORT: u16 = 7878;
 /// The agent's clock, read where an entry says no instant of its own.
 pub type Now = Arc<dyn Fn() -> DateTime + Send + Sync>;
 
-/// One agent's journal over a store of its own, keeping its log for `window` of the agent's seconds.
+/// An entry the journal keeps for good, as whoever archives it reads it: an event, or a log record or an activity an
+/// incident kept.
+pub struct Lasting {
+    pub entry: NamedNode,
+    /// What the entry says, in the graph it names.
+    pub quads: Vec<Quad>,
+    /// Whether the journal still needs it: a log record or an activity inside the window, which a later incident
+    /// keeps beside the ones before and which whoever ships the activities reads here.
+    pub needed: bool,
+}
+
+/// One agent's journal over a store of its own, in memory, keeping its log for `window` of the agent's seconds.
 pub struct Journal {
     pub store: Engine,
     window: f64,
     now: Now,
     swept: Mutex<Option<DateTime>>,
+    /// Whether anything was written since it was last asked (`news`).
+    changed: AtomicBool,
+    /// Told as an incident is kept, so what archives the journal need not wait for its timer.
+    pub incident: tokio::sync::Notify,
     /// From which level a log record is an incident.
     pub incident_level: log::Level,
     /// The classes the deployment counts as incidents besides the vocabulary.
@@ -85,16 +107,15 @@ fn less(at: DateTime, s: f64) -> DateTime {
 }
 
 impl Journal {
-    /// A journal over `store`, or one in memory, its window `window_s`, read off `now`.
-    pub fn new(store: Option<Engine>, window_s: f64, now: Now) -> Result<Self, Error> {
+    /// A journal in memory, its window `window_s`, read off `now`.
+    pub fn new(window_s: f64, now: Now) -> Result<Self, Error> {
         Ok(Journal {
-            store: match store {
-                Some(store) => store,
-                None => Engine::new().map_err(engine)?,
-            },
+            store: Engine::new().map_err(engine)?,
             window: window_s,
             now,
             swept: Mutex::new(None),
+            changed: AtomicBool::new(false),
+            incident: tokio::sync::Notify::new(),
             incident_level: log::Level::Warn,
             incidents: BTreeSet::new(),
         })
@@ -135,8 +156,10 @@ impl Journal {
                     .map(|t| Quad::new(t.subject, t.predicate, t.object, graph.clone())),
             )
             .map_err(engine)?;
+        self.changed.store(true, Ordering::Relaxed);
         if incident {
             self.keep(entry, at)?;
+            self.incident.notify_one();
         }
         let due = self
             .swept
@@ -152,6 +175,7 @@ impl Journal {
     /// Add `triples` to the entry `entry`, already kept: what is learnt of it after it was — the graphs an activity
     /// wrote, which its turn says once it has ended.
     pub fn add(&self, entry: &NamedNode, triples: Vec<Triple>) -> Result<(), Error> {
+        self.changed.store(true, Ordering::Relaxed);
         let graph = GraphName::NamedNode(entry.clone());
         self.store
             .extend(
@@ -228,10 +252,59 @@ impl Journal {
         Ok(gone.len())
     }
 
-    /// What is written reaches the disk, where the store is on one.
-    pub fn flush(&self) {
-        #[cfg(feature = "volume")]
-        let _ = self.store.flush();
+    /// Whether anything was written since this was last asked.
+    pub fn news(&self) -> bool {
+        self.changed.swap(false, Ordering::Relaxed)
+    }
+
+    /// Say there is news still: what was to be archived was refused, and is due again.
+    pub fn renew(&self) {
+        self.changed.store(true, Ordering::Relaxed);
+    }
+
+    /// EVERY ENTRY KEPT FOR GOOD, as whoever archives the journal reads it: each event, and each log record and
+    /// activity an incident kept, with what it says and whether the journal still needs it.
+    pub fn lasting(&self) -> Result<Vec<Lasting>, Error> {
+        let text = format!(
+            "SELECT DISTINCT ?r ?windowed ?t WHERE {{ GRAPH ?r {{ ?r <{AT}> ?t }} \
+             BIND(EXISTS {{ VALUES ?c {{ <{LOG_RECORD}> <{ACTIVITY}> }} GRAPH ?r {{ ?r a ?c }} }} AS ?windowed) \
+             FILTER(!?windowed || EXISTS {{ GRAPH ?r {{ ?r <{KEPT_BY}> ?any }} }}) }} ORDER BY ?t ?r"
+        );
+        let from = less((self.now)(), self.window);
+        let mut lasting = Vec::new();
+        if let QueryResults::Solutions(solutions) = SparqlEvaluator::new()
+            .parse_query(&text)
+            .map_err(engine)?
+            .on_store(&self.store)
+            .execute()
+            .map_err(engine)?
+        {
+            for solution in solutions {
+                let solution = solution.map_err(engine)?;
+                let Some(Term::NamedNode(entry)) = solution.get("r") else {
+                    continue;
+                };
+                let windowed = matches!(solution.get("windowed"), Some(Term::Literal(l)) if l.value() == "true");
+                let inside = matches!(solution.get("t"), Some(Term::Literal(l))
+                    if l.value().parse::<DateTime>().is_ok_and(|t| t >= from));
+                let quads = self
+                    .store
+                    .quads_for_pattern(None, None, None, Some(entry.as_ref().into()))
+                    .collect::<Result<Vec<_>, _>>()
+                    .map_err(engine)?;
+                lasting.push(Lasting {
+                    entry: entry.clone(),
+                    quads,
+                    needed: windowed && inside,
+                });
+            }
+        }
+        Ok(lasting)
+    }
+
+    /// Forget the entry `entry`: whoever archives the journal took it, and the journal needs it no more.
+    pub fn forget(&self, entry: &NamedNode) -> Result<(), Error> {
+        self.store.remove_named_graph(entry).map_err(engine)
     }
 }
 
@@ -303,10 +376,10 @@ pub fn answer(store: &Engine, text: &str) -> Result<(&'static str, Vec<u8>), Str
     }
 }
 
-/// Serve `journal` read-only over the SPARQL protocol at `http://<host>:<port>/sparql` — `GET ?query=`, or `POST` of
-/// `application/sparql-query` or a form — on a thread of its own; the port it listens on.
+/// Serve `stores` read-only over the SPARQL protocol, each at `http://<host>:<port><path>` — `GET ?query=`, or `POST`
+/// of `application/sparql-query` or a form — on a thread of its own; the port it listens on.
 #[cfg(feature = "serve")]
-pub fn serve(journal: Arc<Journal>, host: &str, port: u16) -> Result<u16, Error> {
+pub fn serve(stores: Vec<(&'static str, Engine)>, host: &str, port: u16) -> Result<u16, Error> {
     let server = tiny_http::Server::http((host, port)).map_err(engine)?;
     let bound = server.server_addr().to_ip().map_or(port, |a| a.port());
     std::thread::Builder::new()
@@ -340,16 +413,15 @@ pub fn serve(journal: Arc<Journal>, host: &str, port: u16) -> Result<u16, Error>
                 } else {
                     form(&query, "query")
                 };
-                let (status, kind, body) = if path != "/sparql" {
-                    (404, "text/plain", b"the journal answers at /sparql\n".to_vec())
-                } else {
-                    match text.filter(|t| !t.is_empty()) {
+                let (status, kind, body) = match stores.iter().find(|(at, _)| *at == path) {
+                    None => (404, "text/plain", b"the journal answers at /sparql\n".to_vec()),
+                    Some((_, store)) => match text.filter(|t| !t.is_empty()) {
                         None => (400, "text/plain", b"a query is asked as ?query= or a body\n".to_vec()),
-                        Some(text) => match answer(&journal.store, &text) {
+                        Some(text) => match answer(store, &text) {
                             Ok((kind, body)) => (200, kind, body),
                             Err(e) => (400, "text/plain", format!("{e}\n").into_bytes()),
                         },
-                    }
+                    },
                 };
                 let response = tiny_http::Response::from_data(body)
                     .with_status_code(status)
@@ -431,7 +503,7 @@ mod tests {
 
     #[test]
     fn an_event_is_kept_for_good_at_its_instant_in_a_graph_named_by_it() {
-        let journal = Journal::new(None, 600.0, standing("2026-01-01T12:00:00+00:00")).unwrap();
+        let journal = Journal::new(600.0, standing("2026-01-01T12:00:00+00:00")).unwrap();
         let entry = mint();
         journal
             .record(
@@ -463,7 +535,7 @@ mod tests {
 
     #[test]
     fn the_log_is_swept_past_its_window_and_an_incident_keeps_the_minutes_before_it() {
-        let journal = Journal::new(None, 600.0, standing("2026-01-01T12:00:00+00:00")).unwrap();
+        let journal = Journal::new(600.0, standing("2026-01-01T12:00:00+00:00")).unwrap();
         journal
             .remark(
                 "planning",
@@ -527,8 +599,72 @@ mod tests {
     }
 
     #[test]
+    fn what_lasts_is_each_event_and_what_an_incident_kept_and_the_log_inside_the_window_is_still_needed() {
+        let journal = Journal::new(600.0, standing("2026-01-01T12:00:00+00:00")).unwrap();
+        assert!(!journal.news(), "nothing was written yet");
+        let event = mint();
+        journal
+            .record(
+                &event,
+                vec![typed(event.clone(), "http://example.org/test#Happened")],
+                Some(at("2026-01-01T11:59:00+00:00")),
+                false,
+            )
+            .unwrap();
+        let old = journal
+            .remark(
+                "planning",
+                log::Level::Warn,
+                "long ago",
+                Some(at("2026-01-01T11:00:00+00:00")),
+            )
+            .unwrap();
+        let kept = journal
+            .remark(
+                "planning",
+                log::Level::Info,
+                "just before",
+                Some(at("2026-01-01T11:58:00+00:00")),
+            )
+            .unwrap();
+        let failed = journal
+            .remark(
+                "execution",
+                log::Level::Warn,
+                "a step did not land",
+                Some(at("2026-01-01T11:59:30+00:00")),
+            )
+            .unwrap();
+        journal
+            .remark(
+                "planning",
+                log::Level::Info,
+                "after",
+                Some(at("2026-01-01T11:59:40+00:00")),
+            )
+            .unwrap();
+        assert!(journal.news() && !journal.news(), "news is told once");
+        let lasting = journal.lasting().unwrap();
+        let found: Vec<(NamedNode, bool)> = lasting.iter().map(|l| (l.entry.clone(), l.needed)).collect();
+        assert_eq!(
+            found,
+            [
+                (old.clone(), false),
+                (kept, true),
+                (event.clone(), false),
+                (failed, true)
+            ],
+            "by instant: the event and the incident past the window are needed no more, the log no incident kept is not listed"
+        );
+        assert!(lasting[2].quads.iter().all(|q| q.graph_name == event.clone().into()) && lasting[2].quads.len() == 2);
+        journal.forget(&event).unwrap();
+        journal.forget(&old).unwrap();
+        assert_eq!(journal.lasting().unwrap().len(), 2);
+    }
+
+    #[test]
     fn a_class_the_deployment_counts_is_an_incident_though_the_vocabulary_says_nothing() {
-        let mut journal = Journal::new(None, 600.0, standing("2026-01-01T12:00:00+00:00")).unwrap();
+        let mut journal = Journal::new(600.0, standing("2026-01-01T12:00:00+00:00")).unwrap();
         journal.incidents =
             incidents(&|k| (k == "JOURNAL_INCIDENTS").then(|| "http://example.org/test#Bad".to_string()));
         let entry = mint();
@@ -561,7 +697,7 @@ mod tests {
 
     #[test]
     fn a_construct_is_answered_in_n_triples_and_a_select_in_the_results_json() {
-        let journal = Journal::new(None, 600.0, standing("2026-01-01T12:00:00+00:00")).unwrap();
+        let journal = Journal::new(600.0, standing("2026-01-01T12:00:00+00:00")).unwrap();
         journal.remark("runtime", log::Level::Info, "hello", None).unwrap();
         let (kind, _) = answer(&journal.store, "CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o }").unwrap();
         assert_eq!(kind, "application/n-triples");

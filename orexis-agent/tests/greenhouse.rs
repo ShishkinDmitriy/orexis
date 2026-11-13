@@ -411,6 +411,46 @@ SELECT ?kind ?at ?action ?valve ?subject ?taken ?landed WHERE { GRAPH ?e {
   ?e prov:atTime ?at . ?step planning:fills ?action ; ?v ?valve ; ?s ?subject .
   FILTER(STRENDS(STR(?v), \"#valve\") && STRENDS(STR(?s), \"#subject\")) } } ORDER BY ?at ?kind";
 
+/// WHAT LASTS IS TAKEN TO THE ARCHIVE, where the deployment keeps one: a stretch of the archiver's after a dry
+/// reading was walked, every event of it is in the archive and none in the journal, and the activities, which no
+/// incident kept, are the journal's alone, where what ships them reads them.
+#[tokio::test(start_paused = true)]
+async fn the_events_are_taken_to_the_archive_and_the_activities_stay_in_the_journal() {
+    let store = store();
+    let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(noon)).unwrap());
+    let archive = Arc::new(orexis_journal_oxigraph::Archive::new(None).unwrap());
+    let watching = orexis_agent::Watching {
+        journal: Some(journal.clone()),
+        history: None,
+        metrics: None,
+        traces: None,
+        archive: Some((archive.clone(), orexis_journal_oxigraph::INTERVAL_S)),
+        archive_every_s: None,
+    };
+    let g = grower_watched(&store, watching);
+    reading(&g.inbox, r#"{"temperature": 21.0}"#, noon());
+    reading(&g.inbox, r#"{"moisture": 0.2}"#, noon());
+    common::settled(&g.running).await;
+    assert_eq!(g.broker.topics(), ["actuators/pump/command"]);
+    until(&g, plus(noon(), orexis_journal_oxigraph::INTERVAL_S)).await;
+    let count = |engine: &oxigraph::store::Store, class: &str| -> usize {
+        let text = format!("SELECT DISTINCT ?e WHERE {{ GRAPH ?e {{ ?e a <{class}> }} }}");
+        let body = String::from_utf8(orexis_journal::journal::answer(engine, &text).unwrap().1).unwrap();
+        body.matches("\"type\":").count()
+    };
+    const PUBLISHED: &str = "http://example.org/orexis/planning#PlanPublished";
+    const TAKEN: &str = "http://example.org/orexis/execution#StepTaken";
+    const ACTIVITY: &str = "http://www.w3.org/ns/prov#Activity";
+    assert_eq!((count(&archive.store, PUBLISHED), count(&archive.store, TAKEN)), (1, 1));
+    assert_eq!(
+        (count(&journal.store, PUBLISHED), count(&journal.store, TAKEN)),
+        (0, 0),
+        "the journal forgot what the archive took"
+    );
+    assert!(count(&journal.store, ACTIVITY) > 0, "the activities are the journal's");
+    assert_eq!(count(&archive.store, ACTIVITY), 0, "and no incident kept one");
+}
+
 /// WHAT CAUSED WHAT IS ASKED OF THE JOURNAL: every activity is kept as it ends with what started it and what it
 /// generated, an event said in it or a graph its turn wrote, so one activity started by what another generated is a
 /// path. A dry reading is followed from its revision to the plan adopted and walked, package to package, by no
@@ -418,12 +458,13 @@ SELECT ?kind ?at ?action ?valve ?subject ?taken ?landed WHERE { GRAPH ?e {
 #[tokio::test(start_paused = true)]
 async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journal_keeps() {
     let store = store();
-    let journal = Arc::new(orexis_journal::journal::Journal::new(None, 600.0, Arc::new(noon)).unwrap());
+    let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(noon)).unwrap());
     let watching = orexis_agent::Watching {
         journal: Some(journal.clone()),
         history: None,
         metrics: None,
         traces: None,
+        archive: None,
         archive_every_s: None,
     };
     let g = grower_watched(&store, watching);
@@ -575,12 +616,13 @@ async fn history_holds_every_reading_and_the_journal_the_dose_published_taken_an
             Ok(())
         }),
     );
-    let journal = Arc::new(orexis_journal::journal::Journal::new(None, 600.0, Arc::new(noon)).unwrap());
+    let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(noon)).unwrap());
     let watching = orexis_agent::Watching {
         journal: Some(journal.clone()),
         history: Some(sink),
         metrics: None,
         traces: None,
+        archive: None,
         archive_every_s: None,
     };
     let g = grower_watched(&store, watching);

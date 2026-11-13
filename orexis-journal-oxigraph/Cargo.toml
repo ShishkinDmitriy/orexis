@@ -1,0 +1,25 @@
+# THE JOURNAL'S ARCHIVE: what orexis-journal keeps for good, taken on a timer out of the journal in memory into a
+# triplestore on disk, which is what a reader of the past is handed. The half of the pair that keeps house.
+[package]
+name = "orexis-journal-oxigraph"
+version = "0.2.0"
+edition.workspace = true
+license.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+inventory.workspace = true
+orexis = { workspace = true }
+orexis-journal = { workspace = true }
+oxigraph.workspace = true
+log = "0.4"
+tokio.workspace = true
+
+[dev-dependencies]
+oxsdatatypes = "0.2"
+
+[features]
+# THE ARCHIVE ON DISK, RocksDB as the beliefs' volume is: the binary's alone, a test's archive being in memory.
+volume = ["oxigraph/rocksdb"]
