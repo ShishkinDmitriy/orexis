@@ -1,5 +1,6 @@
 @prefix : <http://example.org/orexis/world/lane#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix journal: <http://example.org/orexis/journal#> .
 @prefix planning: <http://example.org/orexis/planning#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix coordination: <http://example.org/orexis/coordination#> .
@@ -13,3 +14,8 @@
                  [ a sensing:Observer ; sensing:stuckAfter 100000 ;
                    sensing:sensor :fix_b_column , :fix_b_row , :receiver_a_column , :receiver_a_row , :radar_2_column , :radar_2_row , :radar_4_column , :radar_4_row ] .
 :courier_b planning:budget 256 .
+
+#  IT KEEPS A JOURNAL of what happened to it, so it is a recorder (knowledge/domain/journal/recorder.md): the
+#  history view and its own account of itself read what it kept. Without the role its packages say what happens
+#  and nobody writes it down.
+:courier_b orexis:plays [ a journal:Recorder ] .

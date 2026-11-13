@@ -1,0 +1,19 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix journal: <http://example.org/orexis/journal#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix : <http://example.org/orexis/journal#> .
+
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  OREXIS JOURNAL.
+#  THE JOURNAL PACKAGE'S OWN WORD: the role it is loaded for. What an entry of the journal is said in — an event
+#  beneath `orexis:Event`, an incident beneath `orexis:Incident`, a log record, an activity's seconds — stays the
+#  kernel's, since every package's events are declared beneath those and the journal's readers ask by them.
+
+#  THE ROLE THIS PACKAGE SERVES (knowledge/domain/journal/recorder.md): an agent declared a recorder keeps a journal,
+#  and the boot loads this package for it and for nothing else. An agent declared none says what happens as any
+#  other does, and nobody writes it down.
+
+journal:Recorder a owl:Class ; rdfs:subClassOf orexis:Role ; rdfs:label "Recorder" ;
+    rdfs:comment "An agent that keeps a journal of what happened to it: every event its packages say and every activity they end, written as it happens. Declared, never derived; it changes nothing the agent plans or does." .

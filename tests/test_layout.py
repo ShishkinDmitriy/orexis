@@ -1236,8 +1236,9 @@ def test_an_agents_image_holds_the_packages_it_loads_and_those_they_import_and_w
     assert terrace.tag == "orexis-terrace-terrace:local" and "planning" not in terrace.packages
     assert {"sensing", "transport/mqtt", "translation", "belief"} <= set(terrace.packages)
     hanoi = compose.image_of("hanoi", "hanoi", series=False)
-    assert hanoi.packages == ("belief", "planning"), "planning's crate depends on belief's"
-    assert terrace.features() == ("belief", "http", "mqtt", "prediction", "sensing", "speech", "telegram", "translation")
+    assert hanoi.packages == ("belief", "journal", "planning"), "planning's crate depends on belief's; a recorder's"
+    assert terrace.features() == ("belief", "http", "journal", "mqtt", "prediction", "sensing", "speech", "telegram",
+                                  "translation")
 
 
 def test_every_committed_service_mounts_what_its_image_keeps_and_builds_what_its_agent_loads():

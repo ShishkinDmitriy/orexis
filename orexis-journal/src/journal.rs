@@ -1,4 +1,4 @@
-//! THE JOURNAL, as `agent/journal.py` keeps it: what happened to one agent, in RDF, in a triplestore of the agent's own
+//! THE JOURNAL: what happened to one agent, in RDF, in a triplestore of the agent's own
 //! beside its beliefs and apart from them — the events its packages say, kept for good, and its log, kept for the last
 //! minutes (the-journal-is-the-agents-flight-recorder).
 //!
@@ -24,9 +24,9 @@ use oxigraph::sparql::{QueryResults, SparqlEvaluator};
 use oxigraph::store::Store as Engine;
 use oxsdatatypes::DateTime;
 
-use crate::Error;
-use crate::clock::{isoformat, seconds};
-use crate::events::{RDF_TYPE, instant, mint, node, text, typed};
+use orexis::Error;
+use orexis::clock::{isoformat, seconds};
+use orexis::events::{RDF_TYPE, instant, mint, node, text, typed};
 
 pub const OREXIS: &str = "http://example.org/orexis#";
 pub const EVENT: &str = "http://example.org/orexis#Event";
@@ -142,7 +142,7 @@ impl Journal {
             .swept
             .lock()
             .unwrap()
-            .is_none_or(|last| crate::clock::seconds_of(at.checked_sub(last).unwrap_or_default()) >= SWEEP_S);
+            .is_none_or(|last| orexis::clock::seconds_of(at.checked_sub(last).unwrap_or_default()) >= SWEEP_S);
         if due {
             self.sweep(Some(at))?;
         }
@@ -305,7 +305,7 @@ pub fn answer(store: &Engine, text: &str) -> Result<(&'static str, Vec<u8>), Str
 
 /// Serve `journal` read-only over the SPARQL protocol at `http://<host>:<port>/sparql` — `GET ?query=`, or `POST` of
 /// `application/sparql-query` or a form — on a thread of its own; the port it listens on.
-#[cfg(feature = "journal")]
+#[cfg(feature = "serve")]
 pub fn serve(journal: Arc<Journal>, host: &str, port: u16) -> Result<u16, Error> {
     let server = tiny_http::Server::http((host, port)).map_err(engine)?;
     let bound = server.server_addr().to_ip().map_or(port, |a| a.port());
@@ -399,7 +399,7 @@ mod tests {
     //! The journal, held to what `agent/tests/test_journal.py` holds the Python one to.
 
     use super::*;
-    use crate::clock::instant as parse;
+    use orexis::clock::instant as parse;
 
     fn at(s: &str) -> DateTime {
         parse(s).unwrap()

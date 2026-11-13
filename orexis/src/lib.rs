@@ -9,7 +9,6 @@
 //! - [`boot`]: one agent's store from its world's documents, its self checked, its roles' packages read;
 //! - [`document`]: a file or a peer's bytes as a document that says what its graphs are, refused otherwise;
 //! - [`events`]: what a package says happened, said whole to whoever watches the agent;
-//! - [`journal`]: what happened to the agent, in a triplestore of its own, and its log for a window;
 //! - [`series`]: the points an event answers, written to the store the environment names for their purpose;
 //! - [`runtime`]: one agent's process, a lifecycle container for its packages' parts, run pass by pass;
 //! - [`transport`]: what is the same of every transport member — the inbox, a person's prose, what carries a chat;
@@ -26,7 +25,6 @@ pub mod error;
 pub mod events;
 pub mod foresight;
 pub mod hash;
-pub mod journal;
 pub mod namespaces;
 pub mod ontology;
 pub mod series;

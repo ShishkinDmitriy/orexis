@@ -15,3 +15,10 @@ orexis = { workspace = true }
 oxigraph.workspace = true
 log = "0.4"
 oxsdatatypes = "0.2"
+tiny_http = { version = "0.12", optional = true }
+
+[features]
+# THE JOURNAL'S ENDPOINT, served read-only on the host's loopback: the binary's.
+serve = ["dep:tiny_http"]
+# THE JOURNAL ON DISK, RocksDB as the beliefs' volume is: the binary's alone, a test's journal being in memory.
+volume = ["oxigraph/rocksdb"]

@@ -2207,8 +2207,8 @@ GRAPH <http://example.org/test#catalogue> {{
     const FILLS: &str = "http://example.org/orexis/planning#fills";
 
     /// Every event the executor says, kept in a journal as the history part keeps them.
-    fn heard(x: &mut Executor) -> Arc<orexis::journal::Journal> {
-        let journal = Arc::new(orexis::journal::Journal::new(None, 600.0, Arc::new(now)).unwrap());
+    fn heard(x: &mut Executor) -> Arc<orexis_journal::journal::Journal> {
+        let journal = Arc::new(orexis_journal::journal::Journal::new(None, 600.0, Arc::new(now)).unwrap());
         let kept = journal.clone();
         x.watch.connect(move |event, entry| {
             if let Some(triples) = event.statements(entry) {
@@ -2230,7 +2230,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     /// Each step event, in time order: its kind, the act's `taken`, the verdict's `landed`, whether it failed, the
     /// action the step fills, the values it takes and the want its intention pursues.
-    fn step_events(journal: &orexis::journal::Journal) -> Vec<Vec<String>> {
+    fn step_events(journal: &orexis_journal::journal::Journal) -> Vec<Vec<String>> {
         let text = format!(
             "PREFIX execution: <http://example.org/orexis/execution#> PREFIX prov: <http://www.w3.org/ns/prov#>
 SELECT ?kind ?taken ?landed ?failed ?action ?disk ?to ?want WHERE {{ GRAPH ?e {{
@@ -2240,7 +2240,7 @@ SELECT ?kind ?taken ?landed ?failed ?action ?disk ?to ?want WHERE {{ GRAPH ?e {{
   BIND(EXISTS {{ ?e a execution:StepFailed }} AS ?failed)
   FILTER(?kind IN (execution:StepTaken, execution:StepAnswered)) }} }} ORDER BY ?at ?kind"
         );
-        let (_, body) = orexis::journal::answer(&journal.store, &text).unwrap();
+        let (_, body) = orexis_journal::journal::answer(&journal.store, &text).unwrap();
         let json = String::from_utf8(body).unwrap();
         //  EACH BINDING'S VALUE, in the projected order, read off the results' JSON by hand.
         let mut out = Vec::new();
@@ -2348,7 +2348,7 @@ SELECT ?kind ?taken ?landed ?failed ?action ?disk ?to ?want WHERE {{ GRAPH ?e {{
         x.tick(after(DEFAULT_PATIENCE_S)).unwrap();
         let said: Vec<Vec<String>> = step_events(&journal).into_iter().map(|r| r[..4].to_vec()).collect();
         assert_eq!(said, [["StepTaken", "false", "-", "false"]]);
-        let (_, body) = orexis::journal::answer(
+        let (_, body) = orexis_journal::journal::answer(
             &journal.store,
             "PREFIX execution: <http://example.org/orexis/execution#>
 SELECT ?outcome WHERE { ?e a execution:IntentionResolved, execution:IntentionFailed ; execution:intention ?i .

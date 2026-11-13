@@ -1,5 +1,6 @@
 @prefix : <http://example.org/orexis/world/driver#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix journal: <http://example.org/orexis/journal#> .
 @prefix planning: <http://example.org/orexis/planning#> .
 @prefix execution: <http://example.org/orexis/execution#> .
 
@@ -21,3 +22,8 @@
 #  past planning's 32 and past 128 too. `tests/test_driver.py` boots this world with no budget of its
 #  own and finds the eleven-step plan in one pass at this figure, and walks it.
 :dispatcher planning:budget 256 .
+
+#  IT KEEPS A JOURNAL of what happened to it, so it is a recorder (knowledge/domain/journal/recorder.md): the
+#  history view and its own account of itself read what it kept. Without the role its packages say what happens
+#  and nobody writes it down.
+:dispatcher orexis:plays [ a journal:Recorder ] .

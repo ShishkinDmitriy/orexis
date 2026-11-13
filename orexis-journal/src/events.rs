@@ -8,9 +8,9 @@ use std::sync::Arc;
 
 use oxigraph::model::Term;
 
+use crate::journal::Journal;
 use orexis::Error;
 use orexis::events::{RDF_TYPE, Watch};
-use orexis::journal::Journal;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri};
 
@@ -98,7 +98,7 @@ mod tests {
         );
         watch.emit(&Unreachable);
         watch.emit(&Published);
-        let (_, body) = orexis::journal::answer(
+        let (_, body) = crate::journal::answer(
             &journal.store,
             "SELECT ?k WHERE { ?e a <http://example.org/orexis#Incident>, ?k FILTER(?k != <http://example.org/orexis#Incident>) }",
         )

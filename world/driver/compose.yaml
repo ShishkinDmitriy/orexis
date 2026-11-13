@@ -22,7 +22,7 @@ services:
       dockerfile: orexis-agent/Containerfile
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
-        FEATURES: "belief,execution,planning,speech"
+        FEATURES: "belief,execution,journal,planning,speech"
     command: ["orexis-agent", "/app/world/driver", "dispatcher", "--volume", "/app/state", "--journal", "/app/journal"]
     environment:
       # where each series it writes goes, and the org — the store the installation says serves each

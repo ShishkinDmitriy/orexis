@@ -29,6 +29,10 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [series](/domain/kernel/series.md) - What a person watches and the agent never reads: observations and metrics, both what the packages' events say, written by a part hearing every event.
 * [journal](/domain/kernel/journal.md) - An agent's own triplestore of what happened: its events in RDF kept for good, its log kept for a window unless an incident keeps it.
 
+# Journal — what happened, written down
+
+* [recorder](/domain/journal/recorder.md) - An agent that keeps a journal: the role `orexis-journal/` is loaded for, and without it nobody writes events down.
+
 # Sensing — bytes become observations, and observations subject beliefs
 
 * [scaling](/domain/sensing/scaling.md) - A rescale, a probe's count a moisture: two points the world states beside the sensor, applied by sensing's rule.

@@ -418,7 +418,7 @@ SELECT ?kind ?at ?action ?valve ?subject ?taken ?landed WHERE { GRAPH ?e {
 #[tokio::test(start_paused = true)]
 async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journal_keeps() {
     let store = store();
-    let journal = Arc::new(orexis::journal::Journal::new(None, 600.0, Arc::new(noon)).unwrap());
+    let journal = Arc::new(orexis_journal::journal::Journal::new(None, 600.0, Arc::new(noon)).unwrap());
     let watching = orexis_agent::Watching {
         journal: Some(journal.clone()),
         history: None,
@@ -432,7 +432,7 @@ async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journa
     common::settled(&g.running).await;
     assert_eq!(g.broker.topics(), ["actuators/pump/command"]);
     let body = String::from_utf8(
-        orexis::journal::answer(
+        orexis_journal::journal::answer(
             &journal.store,
             "PREFIX prov: <http://www.w3.org/ns/prov#>
              SELECT DISTINCT ?cause ?effect WHERE {
@@ -575,7 +575,7 @@ async fn history_holds_every_reading_and_the_journal_the_dose_published_taken_an
             Ok(())
         }),
     );
-    let journal = Arc::new(orexis::journal::Journal::new(None, 600.0, Arc::new(noon)).unwrap());
+    let journal = Arc::new(orexis_journal::journal::Journal::new(None, 600.0, Arc::new(noon)).unwrap());
     let watching = orexis_agent::Watching {
         journal: Some(journal.clone()),
         history: Some(sink),
@@ -640,7 +640,7 @@ async fn history_holds_every_reading_and_the_journal_the_dose_published_taken_an
             pair("thermometer", "bed")
         ]
     );
-    let (_, body) = orexis::journal::answer(&journal.store, DOSE_Q).unwrap();
+    let (_, body) = orexis_journal::journal::answer(&journal.store, DOSE_Q).unwrap();
     let body = String::from_utf8(body).unwrap();
     let mut dose = Vec::new();
     for row in body.split("{\"kind\"").skip(1) {

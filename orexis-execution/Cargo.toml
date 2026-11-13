@@ -23,3 +23,5 @@ serde_json = { version = "1", features = ["preserve_order"] }
 
 [dev-dependencies]
 orexis = { workspace = true, features = ["snapshots"] }
+# THE JOURNAL, for the cases that hold what an event states to what the journal answers of it: a test's alone.
+orexis-journal = { workspace = true }
