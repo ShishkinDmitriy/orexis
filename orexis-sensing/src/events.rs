@@ -46,20 +46,10 @@ pub struct Observed {
     pub defective: bool,
 }
 
-impl Event for Observed {
-    fn metric(&self) -> Option<&'static str> {
-        Some("received")
-    }
-
-    fn marks(&self) -> Vec<(&'static str, Mark)> {
-        vec![
-            ("sensor", Mark::Tag(self.sensor.clone())),
-            ("interval_s", Mark::Value(self.interval_s)),
-            ("cadence_s", Mark::Value(self.cadence_s)),
-        ]
-    }
-
-    fn point(&self) -> Option<Point> {
+impl Observed {
+    /// The point the observation is in the series: measured under its property's name, tagged for the SOSA roles.
+    /// Said by no event: what archives sensing's readings asks for it (`past::point`).
+    pub fn point(&self) -> Option<Point> {
         let mut tags = BTreeMap::new();
         if self.defective {
             tags.insert("defective".to_string(), "true".to_string());
@@ -80,6 +70,20 @@ impl Event for Observed {
             fields,
             time: Some(self.at),
         })
+    }
+}
+
+impl Event for Observed {
+    fn metric(&self) -> Option<&'static str> {
+        Some("received")
+    }
+
+    fn marks(&self) -> Vec<(&'static str, Mark)> {
+        vec![
+            ("sensor", Mark::Tag(self.sensor.clone())),
+            ("interval_s", Mark::Value(self.interval_s)),
+            ("cadence_s", Mark::Value(self.cadence_s)),
+        ]
     }
 
     fn at(&self) -> Option<DateTime> {

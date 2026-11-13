@@ -58,15 +58,17 @@ names one sensing no longer reads, and nothing about the past is carried onto th
 The one that leaves is not forgotten by sensing. It is filed in `sensing:PastObservationGraph`, with
 what was concluded of it, where no rule and no reader of sensing's looks: how many readings the rules
 see is sensing's logic, and what becomes of one done with is housekeeping. `orexis-sensing/src/past.rs`
-answers whoever keeps house which readings are past, the point each is in the
-[series](/domain/kernel/series.md), and forgets one when asked.
+answers whoever keeps house which readings it still reads and which are past, the point each is in the
+[series](/domain/kernel/series.md), and forgets a past one when asked.
 
-Where the agent is handed a series store to archive to, `orexis-sensing-influxdb/` asks, every
-`ARCHIVE_INTERVAL_S` of the agent's time, a minute where nothing says: it writes the past readings'
-points and has sensing forget what the store took, so a store that is away loses nothing and the
-beliefs grow by what it missed. Where the agent is handed none, a test or a world nobody monitors,
-every reading stays where it lies. An observation still reaches the series as it is observed, by the
-history part, so the series lags nothing: what waits for the archiving is the room in the beliefs.
+Where the agent is handed a series store, `orexis-sensing-influxdb/` asks, every `ARCHIVE_INTERVAL_S`
+of the agent's time, ten seconds where nothing says, and it alone writes a reading there. It writes
+the point of each reading the store has not yet taken, the latest among them, so the series lags a
+reading by that stretch at most; it remembers what the store took, so each is written once, and again
+only where its point has changed since. A past reading it has sensing forget once the store holds it,
+so a store that is away loses nothing and the beliefs grow by what it missed. Where the agent is
+handed none, a test or a world nobody monitors, every reading stays where it lies and none is a point
+anywhere.
 
 One thing made of it outlives it: the subject belief a domain's
 [transition](/domain/belief/transition.md) inserted when it arrived, which is not derived from it, and

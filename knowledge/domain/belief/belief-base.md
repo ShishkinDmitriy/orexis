@@ -39,8 +39,8 @@ per scope. Every [intention](/domain/execution/intention.md) and its acts are a 
 itself, the agent's own and nobody else's, so the volume keeps them. A [level](/domain/kernel/level.md)
 is read by the one object that holds its store.
 
-Each reading, and each step taken and how it ended, also goes to the agent's history bucket as a
-series point, for the panels to draw, and where the world is monitored a minute's metrics go to
+Each reading also goes to the agent's history bucket as a
+series point, for the panels to draw, each step taken and how it ended to its journal, and where the world is monitored a minute's metrics go to
 its metrics bucket. The series is watched, never believed: nothing reads it back into the store.
 
 # What a graph says of itself

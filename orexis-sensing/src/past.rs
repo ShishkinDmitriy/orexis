@@ -5,13 +5,13 @@
 //! where the agent has a series store, what archives a past reading there forgets it, and where it has none the
 //! reading stays where it lies.
 //!
-//! WHAT IS ASKED OF SENSING HERE, by whoever keeps house above it: which readings are past, the point each is in
-//! the series, and to forget one. The graphs are sensing's, and sensing's code is what removes them.
+//! WHAT IS ASKED OF SENSING HERE, by whoever keeps house above it: which readings it still reads and which are past,
+//! the point each is in the series, and to forget a past one. The graphs are sensing's, and sensing's code is what removes them.
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::instant;
-use orexis::events::{Event, Point, round6};
+use orexis::events::{Point, round6};
 use orexis::store::{Store, Within, iri, value};
 
 use crate::events::{Observed, tag_of};
@@ -88,8 +88,17 @@ pub(crate) fn shelve(store: &Store, graph: &str) -> Result<(), Error> {
 
 /// Every percept filed past, oldest first by name: the readings sensing has done with and nobody removed.
 pub fn past(store: &Store) -> Result<Vec<String>, Error> {
+    percepts(store, PAST_OBSERVATION_GRAPH)
+}
+
+/// Every percept sensing's rules still read, oldest first by name.
+pub fn read(store: &Store) -> Result<Vec<String>, Error> {
+    percepts(store, OBSERVATION_GRAPH)
+}
+
+fn percepts(store: &Store, kind: &str) -> Result<Vec<String>, Error> {
     let mut found = Vec::new();
-    for graph in store.graphs_of(&[PAST_OBSERVATION_GRAPH], &Within::default())? {
+    for graph in store.graphs_of(&[kind], &Within::default())? {
         //  A PERCEPT, and not what was concluded of one: a revision is derived from its percept, and goes with it.
         if !is_revision(store, &graph)? {
             found.push(graph);
@@ -109,9 +118,21 @@ fn is_revision(store: &Store, graph: &str) -> Result<bool, Error> {
     )
 }
 
-/// The point the past percept `graph` is in the series, as it was said when observed; None where it holds no reading.
+/// The point the percept `graph` is in the series, read or past; None where it holds no reading yet, or none at all.
 pub fn point(store: &Store, graph: &str) -> Result<Option<Point>, Error> {
-    Ok(observed(store, graph, PAST_OBSERVATION_GRAPH)?.and_then(|(o, _, _)| o.point()))
+    for kind in [OBSERVATION_GRAPH, PAST_OBSERVATION_GRAPH] {
+        if is_of(store, graph, kind)? {
+            return Ok(observed(store, graph, kind)?.and_then(|(o, _, _)| o.point()));
+        }
+    }
+    Ok(None)
+}
+
+fn is_of(store: &Store, graph: &str, kind: &str) -> Result<bool, Error> {
+    let Some(cat) = store.catalogue()? else {
+        return Ok(false);
+    };
+    store.ask(&format!("ASK {{ GRAPH <{cat}> {{ <{graph}> a <{kind}> }} }}"), &[])
 }
 
 /// Forget the past percept `graph`, and what was concluded of it.

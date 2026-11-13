@@ -76,11 +76,6 @@ pub trait Event: Any {
         Vec::new()
     }
 
-    /// The point it answers in the series of what happened, where it is one.
-    fn point(&self) -> Option<Point> {
-        None
-    }
-
     /// The triples it states in the journal of the entry `node`, where it is history.
     fn statements(&self, _node: &NamedNode) -> Option<Vec<Triple>> {
         None

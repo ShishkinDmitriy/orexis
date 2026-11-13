@@ -181,25 +181,20 @@ pub fn built(package: &str) -> bool {
     inventory::iter::<orexis::task::Package>().any(|p| p.name == package)
 }
 
-/// WHAT WATCHES THE AGENT, where the deployment keeps any of it: the journal, the history sink, the metrics window and
-/// the tracer, which hears every activity as a span.
-/// The history part is made where a journal is kept or a history sink is loaded, and the metrics part where a metrics
-/// window is, as the Python runtime makes its watchers; each hears every event the parts say.
+/// WHAT WATCHES THE AGENT, where the deployment keeps any of it: the journal, the series store its readings are
+/// archived to, the metrics window and the tracer. The history part is made where a journal is kept and the metrics
+/// part where a metrics window is; each hears every event the parts say.
 #[derive(Default)]
 pub struct Watching {
     pub journal: Option<Arc<Journal>>,
+    /// The series store sensing's readings are archived to, and a chat reads the past from: none, and every reading
+    /// stays in the agent's beliefs.
     pub history: Option<Sink>,
+    /// How often the readings are archived there, in the agent's seconds: none, and the archiver's own stretch.
+    pub archive_every_s: Option<f64>,
     pub metrics: Option<orexis_metrics::Window>,
     /// Where the agent is traced, and how often it ships what its journal keeps.
     pub traces: Option<orexis_span_otlp::Tracing>,
-    /// Where the readings sensing has done with are archived, and how often: none, and they stay in its beliefs.
-    pub archive: Option<Archive>,
-}
-
-/// A series store past readings are archived to, and how often in the agent's seconds.
-pub struct Archive {
-    pub sink: Arc<Sink>,
-    pub every_s: f64,
 }
 
 /// What the agent's bus is, where a test hands one: the MQTT member over a client of its own, the HTTP member over a
@@ -261,16 +256,15 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
     if let Some(budget) = budget {
         outside.hand(orexis_planning::create::Budget(budget));
     }
-    //  AND THE READINGS SENSING HAS DONE WITH, archived where the deployment keeps a series store and left otherwise.
+    //  AND SENSING'S READINGS, archived where the deployment keeps a series store and left in the beliefs otherwise.
     #[cfg(feature = "sensing")]
-    if let Some(archive) = watching.archive {
+    if let Some(sink) = watching.history {
         outside.hand(orexis_sensing_influxdb::Archives {
-            sink: archive.sink,
-            every_s: archive.every_s,
+            sink: Arc::new(sink),
+            every_s: watching.archive_every_s.unwrap_or(orexis_sensing_influxdb::INTERVAL_S),
         });
     }
     outside.hand(orexis_history::Keeps {
-        sink: watching.history,
         journal: watching.journal,
     });
     if let Some(window) = watching.metrics {

@@ -424,7 +424,7 @@ async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journa
         history: None,
         metrics: None,
         traces: None,
-        archive: None,
+        archive_every_s: None,
     };
     let g = grower_watched(&store, watching);
     reading(&g.inbox, r#"{"temperature": 21.0}"#, noon());
@@ -502,11 +502,11 @@ async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journa
     );
 }
 
-/// SENSING KEEPS WHAT ITS RULES READ AND FORGETS NOTHING; what becomes of a reading it has done with is the
-/// deployment's. Where the agent is handed a series store to archive to, the readings older than the probe's last few
-/// are written there and removed from its beliefs; where it is handed none, they stay where they lie.
+/// SENSING KEEPS WHAT ITS RULES READ AND FORGETS NOTHING; what becomes of a reading is the deployment's. Where the
+/// agent is handed a series store, every reading is written there once, the latest among them, and the ones sensing
+/// has done with are removed from its beliefs; where it is handed none, they stay where they lie.
 #[tokio::test(start_paused = true)]
-async fn readings_sensing_has_done_with_are_archived_where_there_is_a_store_and_stay_where_there_is_none() {
+async fn each_reading_is_archived_once_where_there_is_a_store_and_the_past_ones_stay_where_there_is_none() {
     const OBSERVATION: &str = "http://example.org/orexis/sensing#ObservationGraph";
     for archived in [true, false] {
         let store = store();
@@ -521,10 +521,7 @@ async fn readings_sensing_has_done_with_are_archived_where_there_is_a_store_and_
             }),
         );
         let watching = orexis_agent::Watching {
-            archive: archived.then(|| orexis_agent::Archive {
-                sink: Arc::new(sink),
-                every_s: 60.0,
-            }),
+            history: archived.then_some(sink),
             ..Default::default()
         };
         let g = grower_watched(&store, watching);
@@ -548,11 +545,13 @@ async fn readings_sensing_has_done_with_are_archived_where_there_is_a_store_and_
                 past.is_empty(),
                 "every past reading was taken by the store and removed: {past:?}"
             );
-            assert!(!points.is_empty(), "and is a point there");
             assert!(points.iter().all(|p| p.measurement == "SoilMoisture"));
-            assert!(
-                points.iter().any(|p| p.time == Some(noon())),
-                "the first reading among them, long done with"
+            let mut times: Vec<_> = points.iter().filter_map(|p| p.time).collect();
+            times.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            let each: Vec<_> = (0..readings).map(|n| plus(noon(), n as f64 * 600.0)).collect();
+            assert_eq!(
+                times, each,
+                "each reading once, the latest too, which sensing still reads"
             );
         } else {
             assert!(!past.is_empty(), "with no store, what sensing has done with stays");
@@ -582,7 +581,7 @@ async fn history_holds_every_reading_and_the_journal_the_dose_published_taken_an
         history: Some(sink),
         metrics: None,
         traces: None,
-        archive: None,
+        archive_every_s: None,
     };
     let g = grower_watched(&store, watching);
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
@@ -594,14 +593,17 @@ async fn history_holds_every_reading_and_the_journal_the_dose_published_taken_an
         until(&g, later).await;
         reading(&inbox, r#"{"moisture": 0.45}"#, later);
         common::settled(&g.running).await;
+        //  A READING REACHES THE SERIES WHEN IT IS NEXT ARCHIVED, a stretch of the archiver's on at the latest.
+        until(&g, plus(later, orexis_sensing_influxdb::INTERVAL_S)).await;
     }
     assert!(walking(&store).is_empty(), "the dose landed");
-    let observed: Vec<(String, Field, Option<DateTime>)> = written
+    let mut observed: Vec<(String, Field, Option<DateTime>)> = written
         .lock()
         .unwrap()
         .iter()
         .map(|p| (p.measurement.clone(), p.fields["value"].clone(), p.time))
         .collect();
+    observed.sort_by(|a, b| (&a.0, a.2).partial_cmp(&(&b.0, b.2)).unwrap());
     assert_eq!(
         observed,
         [
@@ -623,18 +625,19 @@ async fn history_holds_every_reading_and_the_journal_the_dose_published_taken_an
             .all(|p| p.fields.get("raw") == p.fields.get("value") && p.fields.len() == 2),
         "this world scales no sensor, so the raw count is the reading, said twice"
     );
-    let tags: Vec<(String, String)> = written
+    let mut tags: Vec<(String, String)> = written
         .lock()
         .unwrap()
         .iter()
         .map(|p| (p.tags["sensor"].clone(), p.tags["feature"].clone()))
         .collect();
+    tags.sort();
     assert_eq!(
         tags,
         [
-            pair("thermometer", "bed"),
             pair("moisture_probe", "bed"),
-            pair("moisture_probe", "bed")
+            pair("moisture_probe", "bed"),
+            pair("thermometer", "bed")
         ]
     );
     let (_, body) = orexis::journal::answer(&journal.store, DOSE_Q).unwrap();
