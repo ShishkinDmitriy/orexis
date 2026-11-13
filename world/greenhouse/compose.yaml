@@ -63,14 +63,13 @@ services:
       - ../../orexis-belief:/app/orexis-belief:ro
       - ../../orexis-coordination:/app/orexis-coordination:ro
       - ../../orexis-execution:/app/orexis-execution:ro
-      - ../../orexis-history:/app/orexis-history:ro
+      - ../../orexis-journal:/app/orexis-journal:ro
+      - ../../orexis-journal-otlp:/app/orexis-journal-otlp:ro
       - ../../orexis-metrics:/app/orexis-metrics:ro
       - ../../orexis-planning:/app/orexis-planning:ro
       - ../../orexis-prediction:/app/orexis-prediction:ro
       - ../../orexis-sensing:/app/orexis-sensing:ro
       - ../../orexis-sensing-influxdb:/app/orexis-sensing-influxdb:ro
-      - ../../orexis-span:/app/orexis-span:ro
-      - ../../orexis-span-otlp:/app/orexis-span-otlp:ro
       - ../../orexis-speech:/app/orexis-speech:ro
       - ../../orexis-translation:/app/orexis-translation:ro
       - ../../orexis-transport-email:/app/orexis-transport-email:ro

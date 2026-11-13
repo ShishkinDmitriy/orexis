@@ -16,14 +16,13 @@ orexis = { path = "orexis" }
 orexis-belief = { path = "orexis-belief" }
 orexis-coordination = { path = "orexis-coordination" }
 orexis-execution = { path = "orexis-execution" }
-orexis-history = { path = "orexis-history" }
+orexis-journal = { path = "orexis-journal" }
+orexis-journal-otlp = { path = "orexis-journal-otlp" }
 orexis-metrics = { path = "orexis-metrics" }
 orexis-planning = { path = "orexis-planning" }
 orexis-prediction = { path = "orexis-prediction" }
 orexis-sensing = { path = "orexis-sensing" }
 orexis-sensing-influxdb = { path = "orexis-sensing-influxdb" }
-orexis-span = { path = "orexis-span" }
-orexis-span-otlp = { path = "orexis-span-otlp" }
 orexis-speech = { path = "orexis-speech" }
 orexis-translation = { path = "orexis-translation" }
 orexis-transport-email = { path = "orexis-transport-email" }

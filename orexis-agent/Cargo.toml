@@ -47,10 +47,9 @@ orexis-translation = { workspace = true, optional = true }
 orexis-transport-http = { workspace = true, optional = true }
 orexis-transport-telegram = { workspace = true, optional = true }
 orexis-transport-email = { workspace = true, optional = true }
-orexis-history = { workspace = true }
+orexis-journal = { workspace = true }
+orexis-journal-otlp = { workspace = true }
 orexis-metrics = { workspace = true }
-orexis-span = { workspace = true }
-orexis-span-otlp = { workspace = true }
 oxsdatatypes = "0.2"
 oxigraph.workspace = true
 log = "0.4"

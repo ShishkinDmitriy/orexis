@@ -36,7 +36,7 @@ An event costing a read is made only where it is heard: the emitter asks `connec
   without knowing the package; an unmarked field is the event's alone
   ([series](/domain/kernel/series.md)).
 - **That it is history**, by answering `statements(node)`, its triples in its package's words, which
-  the history part keeps in the agent's [journal](/domain/kernel/journal.md) as an entry named by
+  `orexis-journal/` keeps in the agent's [journal](/domain/kernel/journal.md) as an entry named by
   `node`. No event is a point of the [series](/domain/kernel/series.md): an observation's is written
   by what archives it. Such an event is then a term too: its
   class is declared beneath `orexis:Event` in the package's ontology, its words beside it, and

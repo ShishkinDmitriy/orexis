@@ -5,7 +5,7 @@
 //! `prov:Activity`.
 //!
 //! Neither event states journal triples: a planning begins and a walk every second, and kept for good they would be
-//! most of a journal. They reach the watch, where `orexis-span/` hears them and keeps each activity ended as one entry
+//! most of a journal. They reach the watch, where `orexis-journal/` hears them and keeps each activity ended as one entry
 //! for the journal's window. AND WHAT A TURN WROTE IS SAID OF THE ACTIVITY THAT WROTE IT (`Wrote`), since a graph
 //! written is what starts whoever hears its kind, and nothing else says whose it was.
 

@@ -19,13 +19,13 @@ by the node it is about, a UUID's URN:
 - a **log record**, `orexis:LogRecord`, what the code said in the log — its `orexis:logger`, `orexis:level` and
   `orexis:message` — kept for the **window**, ten minutes where `JOURNAL_WINDOW_S` says nothing, and swept after.
 - an [**activity**](/domain/kernel/activity.md) a package did, a `prov:Activity`, written as it ends by
-  `orexis-span/`: that page says what the entry holds. Kept for the window too.
+  `orexis-journal/`: that page says what the entry holds. Kept for the window too.
 
 An **incident**, `orexis:Incident`, keeps the window before it: every log record and every activity of it is kept for good beside the
 incident (`orexis:keptBy`), and the incident's entry says it is one. So what led up to a failure is there to read, and
 what led up to nothing goes. **What an incident is, is the vocabulary's**: an event is one where its class is beneath
 `orexis:Incident` in its package's ontology — `execution:StepFailed`, a step that did not land, `execution:IntentionFailed`,
-`planning:WantUnreachable` — which the history part reads off the agent's own T-Box. **Which count is the world's
+`planning:WantUnreachable` — which `orexis-journal/`, the crate that keeps the journal, reads off the agent's own T-Box. **Which count is the world's
 deployment's**: its deployment graph may add classes (`onboarding:incident`) and say from which level a log record is
 one (`onboarding:incidentLevel`, WARNING where it says nothing), told to the agent as `JOURNAL_INCIDENTS` and
 `JOURNAL_INCIDENT_LEVEL` and never believed. Keeping a journal is no [role](/domain/kernel/role.md): every agent keeps

@@ -5,7 +5,7 @@
 //! THREE KINDS OF ENTRY, each a named graph named by the node it is about: an EVENT a package says, beneath
 //! `orexis:Event`, at its `prov:atTime`, kept for good; a LOG RECORD, `orexis:LogRecord`, its logger, level and
 //! message; and an ACTIVITY a package did, a `prov:Activity`, with what started it and what it generated
-//! (`orexis-span/`). The last two are kept for the WINDOW (`JOURNAL_WINDOW_S`, ten minutes where nothing says) and
+//! (`orexis-journal/`). The last two are kept for the WINDOW (`JOURNAL_WINDOW_S`, ten minutes where nothing says) and
 //! swept after, unless an INCIDENT kept them: the minutes before one are kept for good beside it (`orexis:keptBy`).
 //!
 //! WHAT AN INCIDENT IS, IS THE VOCABULARY'S, AND WHICH ONES COUNT, THE DEPLOYMENT'S: an entry the history part hands

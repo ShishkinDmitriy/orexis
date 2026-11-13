@@ -25,14 +25,13 @@ COPY orexis-agent/ orexis-agent/
 COPY orexis-belief/ orexis-belief/
 COPY orexis-coordination/ orexis-coordination/
 COPY orexis-execution/ orexis-execution/
-COPY orexis-history/ orexis-history/
+COPY orexis-journal/ orexis-journal/
+COPY orexis-journal-otlp/ orexis-journal-otlp/
 COPY orexis-metrics/ orexis-metrics/
 COPY orexis-planning/ orexis-planning/
 COPY orexis-prediction/ orexis-prediction/
 COPY orexis-sensing/ orexis-sensing/
 COPY orexis-sensing-influxdb/ orexis-sensing-influxdb/
-COPY orexis-span/ orexis-span/
-COPY orexis-span-otlp/ orexis-span-otlp/
 COPY orexis-speech/ orexis-speech/
 COPY orexis-translation/ orexis-translation/
 COPY orexis-transport-email/ orexis-transport-email/

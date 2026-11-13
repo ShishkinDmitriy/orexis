@@ -23,7 +23,8 @@ use orexis_belief as _;
 use orexis_coordination as _;
 #[cfg(feature = "execution")]
 use orexis_execution as _;
-use orexis_history as _;
+use orexis_journal as _;
+use orexis_journal_otlp as _;
 use orexis_metrics as _;
 #[cfg(feature = "planning")]
 use orexis_planning as _;
@@ -33,8 +34,6 @@ use orexis_prediction as _;
 use orexis_sensing as _;
 #[cfg(feature = "sensing")]
 use orexis_sensing_influxdb as _;
-use orexis_span as _;
-use orexis_span_otlp as _;
 #[cfg(feature = "speech")]
 use orexis_speech as _;
 #[cfg(feature = "translation")]
@@ -194,7 +193,7 @@ pub struct Watching {
     pub archive_every_s: Option<f64>,
     pub metrics: Option<orexis_metrics::Window>,
     /// Where the agent is traced, and how often it ships what its journal keeps.
-    pub traces: Option<orexis_span_otlp::Tracing>,
+    pub traces: Option<orexis_journal_otlp::Tracing>,
 }
 
 /// What the agent's bus is, where a test hands one: the MQTT member over a client of its own, the HTTP member over a
@@ -240,13 +239,10 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
         history: watching.history.as_ref().map(Sink::reader),
         metrics: watching.metrics.as_ref().map(|w| w.sink.reader()),
     });
-    //  WHAT THE AGENT DID, kept in the journal where it keeps one: every activity as it ends.
-    if let Some(journal) = &watching.journal {
-        outside.hand(orexis_span::Kept(journal.clone()));
-    }
-    //  AND SHIPPED FROM THERE to whoever traces the agent: what is kept is what is sent, so with no journal, nothing.
+    //  WHAT THE AGENT DID, SHIPPED FROM ITS JOURNAL to whoever traces it: what is kept is what is sent, so with no
+    //  journal, nothing.
     if let (Some(tracing), Some(journal)) = (watching.traces, &watching.journal) {
-        outside.hand(orexis_span_otlp::Ships {
+        outside.hand(orexis_journal_otlp::Ships {
             journal: journal.clone(),
             endpoint: tracing.endpoint,
             every_s: tracing.every_s,
@@ -264,7 +260,8 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
             every_s: watching.archive_every_s.unwrap_or(orexis_sensing_influxdb::INTERVAL_S),
         });
     }
-    outside.hand(orexis_history::Keeps {
+    //  AND THE JOURNAL ITSELF, kept where the deployment keeps one: every event as it is said, every activity as it ends.
+    outside.hand(orexis_journal::Keeps {
         journal: watching.journal,
     });
     if let Some(window) = watching.metrics {
@@ -307,7 +304,7 @@ pub fn start(
     budget: Option<usize>,
     wiring: Wiring,
 ) -> Result<Running, Error> {
-    let mut names: Vec<String> = ["history", "span", "metrics", "span-otlp"]
+    let mut names: Vec<String> = ["journal", "metrics", "journal-otlp"]
         .iter()
         .map(|n| n.to_string())
         .collect();

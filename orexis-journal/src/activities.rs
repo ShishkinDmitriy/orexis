@@ -1,4 +1,4 @@
-//! SPAN: what the agent did, kept where it can be asked. Every activity a package begins and ends is one entry of the
+//! THE ACTIVITIES, KEPT: what the agent did, where it can be asked. Every activity a package begins and ends is one entry of the
 //! agent's journal, written as it ends and named by the activity, in PROV's words:
 //!
 //! ```turtle
@@ -17,8 +17,8 @@
 //! Kept so, a storm of plannings at one instant was read off a test's own tracer for want of this.
 //!
 //! THE HOT RECORD, AND NOTHING ELSE: an activity is kept for the journal's window and swept after, as a log record
-//! is, unless an incident keeps the minutes before it. Sending the spans to a tracer, and keeping them longer, is
-//! another crate's, which reads them here. It knows no package's words: a class is whatever the event said it is.
+//! is, unless an incident keeps the minutes before it. Sending them to a tracer as spans, and keeping them longer, is
+//! another crate's, `orexis-journal-otlp/`, which reads them here. It knows no package's words: a class is whatever the event said it is.
 //!
 //! WHICH ACTIVITY AN EVENT IS SAID IN is told by the thread that says it: a task begins and ends an activity within
 //! one turn, on one thread, and two tasks' turns may run side by side.
@@ -33,7 +33,6 @@ use oxsdatatypes::DateTime;
 use orexis::activity::{Ended, Started, Wrote};
 use orexis::events::{Event, Watch, as_of, double, instant, triple, typed};
 use orexis::journal::{ACTIVITY, Journal};
-use orexis::task::{Handed, Package, Task};
 
 pub const STARTED_AT: &str = "http://www.w3.org/ns/prov#startedAtTime";
 pub const ENDED_AT: &str = "http://www.w3.org/ns/prov#endedAtTime";
@@ -134,20 +133,6 @@ pub fn connect(watch: &Watch, journal: Arc<Journal>) {
         open: HashMap::new(),
     }));
     watch.connect(move |event, said| keeper.lock().unwrap().heard(event, said));
-}
-
-/// The journal the activities are kept in, handed outside by whoever runs the agent, where the deployment keeps one.
-pub struct Kept(pub Arc<Journal>);
-
-inventory::submit! { Package { name: "span", start } }
-
-/// SPAN'S START: where it is handed a journal it hears every activity on the watch from now on, and has no task -
-/// what it keeps it keeps as it ends.
-fn start(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
-    if let Some(Kept(journal)) = handed.outside.take::<Kept>() {
-        connect(handed.events.watch(), journal);
-    }
-    Ok(None)
 }
 
 #[cfg(test)]

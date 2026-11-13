@@ -170,7 +170,7 @@ fn run(args: &Args, clock: Arc<Paced>, journal: Arc<Journal>, halt: Arc<AtomicBo
     let archive_every_s = Some(orexis_sensing_influxdb::interval(&env));
     #[cfg(not(feature = "sensing"))]
     let archive_every_s = None;
-    let traces = orexis_span_otlp::from_environment(&env);
+    let traces = orexis_journal_otlp::from_environment(&env);
     if let Some(tracing) = &traces {
         log::info!(
             "{} ships its activities as spans to {} every {}s",

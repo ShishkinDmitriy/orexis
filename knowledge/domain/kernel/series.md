@@ -39,7 +39,7 @@ two purposes may name one instance, by coincidence and not by design:
 The **sink** sits beneath every contributor and knows nothing of what it writes. A store that
 refuses a point is said in the log and costs the agent nothing. A point names no agent, since a
 bucket is one agent's; where one process runs several, as a world's test walks two couriers, a sink
-may be installed for one agent, and the history part asks for its own agent's first.
+may be installed for one agent, and whoever writes asks for its own agent's first.
 
 # Why it is told by purpose
 
@@ -59,7 +59,7 @@ History, told by purpose (#825), written by what archives sensing's readings
 `INFLUX_HISTORY_URL`, `_ORG`, `_BUCKET` and `_TOKEN` are all set — none set is no sink, some set is
 none too, said in the log. Where the history sink is loaded the archiver has a task: on a timer it writes the
 point of every [observation](/domain/sensing/observation.md) the store has not yet taken, so no event is a point
-and the history part writes none; until 2026-11-13 that part wrote each as its event was said and the archiver
+and what keeps the journal writes none; until 2026-11-13 it wrote each as its event was said and the archiver
 wrote it again, two writers of one point.
 
 - **Sensing's** point, the one an observation is, which sensing answers whoever archives it
