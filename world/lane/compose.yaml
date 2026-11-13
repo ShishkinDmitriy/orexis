@@ -69,6 +69,7 @@ services:
       - ../../orexis-planning:/app/orexis-planning:ro
       - ../../orexis-prediction:/app/orexis-prediction:ro
       - ../../orexis-sensing:/app/orexis-sensing:ro
+      - ../../orexis-sensing-influxdb:/app/orexis-sensing-influxdb:ro
       - ../../orexis-span:/app/orexis-span:ro
       - ../../orexis-span-otlp:/app/orexis-span-otlp:ro
       - ../../orexis-speech:/app/orexis-speech:ro

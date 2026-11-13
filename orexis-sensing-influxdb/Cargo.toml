@@ -1,0 +1,20 @@
+# SENSING, TO INFLUXDB: the readings sensing has done with, archived to the agent's series store on a timer and
+# removed from its beliefs once the store took them. The half of the pair that keeps house; orexis-sensing observes.
+[package]
+name = "orexis-sensing-influxdb"
+version = "0.2.0"
+edition.workspace = true
+license.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+inventory.workspace = true
+tokio.workspace = true
+orexis = { workspace = true }
+orexis-sensing = { workspace = true }
+log = "0.4"
+
+[dev-dependencies]
+oxsdatatypes = "0.2"

@@ -165,6 +165,11 @@ fn run(args: &Args, clock: Arc<Paced>, journal: Arc<Journal>, halt: Arc<AtomicBo
         log::info!("{} writes its metrics every {interval}s", args.agent);
         orexis_metrics::Window::new(sink, interval, Some(&world_name(&args.world)), Some(&args.agent))
     });
+    //  WHERE THE HISTORY BUCKET IS, sensing's readings are archived, and how often is the environment's to say.
+    #[cfg(feature = "sensing")]
+    let archive_every_s = Some(orexis_sensing_influxdb::interval(&env));
+    #[cfg(not(feature = "sensing"))]
+    let archive_every_s = None;
     let traces = orexis_span_otlp::from_environment(&env);
     if let Some(tracing) = &traces {
         log::info!(
@@ -178,6 +183,7 @@ fn run(args: &Args, clock: Arc<Paced>, journal: Arc<Journal>, halt: Arc<AtomicBo
         watching: Watching {
             journal: Some(journal),
             history: sinks.remove(HISTORY),
+            archive_every_s,
             metrics,
             traces,
         },

@@ -49,9 +49,26 @@ graph derived from it, and what a flow makes of it is a
 [prediction](/domain/prediction/prediction.md). Its revisions go when it is forgotten, because they
 were about it; its predictions go when the next reading of its sensor is predicted from.
 
-A sensor's last `sensing:stuckAfter` are kept, since the [stuck](/domain/sensing/stuck.md) rule reads
-that many, and the oldest past them is forgotten as each new one arrives. So the oldest kept names
-one that is gone, and nothing about the past is carried onto the present by its writer.
+A sensor's last `sensing:stuckAfter` are kept in this kind, since the [stuck](/domain/sensing/stuck.md)
+rule reads that many, and the oldest past them leaves it as each new one arrives. So the oldest kept
+names one sensing no longer reads, and nothing about the past is carried onto the present by its writer.
+
+# A reading sensing has done with is past, and forgotten by nobody's logic
+
+The one that leaves is not forgotten by sensing. It is filed in `sensing:PastObservationGraph`, with
+what was concluded of it, where no rule and no reader of sensing's looks: how many readings the rules
+see is sensing's logic, and what becomes of one done with is housekeeping. `orexis-sensing/src/past.rs`
+answers whoever keeps house which readings it still reads and which are past, the point each is in the
+[series](/domain/kernel/series.md), and forgets a past one when asked.
+
+Where the agent is handed a series store, `orexis-sensing-influxdb/` asks, every `ARCHIVE_INTERVAL_S`
+of the agent's time, ten seconds where nothing says, and it alone writes a reading there. It writes
+the point of each reading the store has not yet taken, the latest among them, so the series lags a
+reading by that stretch at most; it remembers what the store took, so each is written once, and again
+only where its point has changed since. A past reading it has sensing forget once the store holds it,
+so a store that is away loses nothing and the beliefs grow by what it missed. Where the agent is
+handed none, a test or a world nobody monitors, every reading stays where it lies and none is a point
+anywhere.
 
 One thing made of it outlives it: the subject belief a domain's
 [transition](/domain/belief/transition.md) inserted when it arrived, which is not derived from it, and

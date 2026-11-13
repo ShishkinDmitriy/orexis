@@ -19,6 +19,8 @@ use orexis::ontology::GRAPH_PREFIX;
 pub const SENSING: &str = "http://example.org/orexis/sensing#";
 /// The graph a percept is kept in.
 pub const OBSERVATION_GRAPH: &str = "http://example.org/orexis/sensing#ObservationGraph";
+/// The graph a percept sensing has done reading is filed in, and its revisions with it.
+pub const PAST_OBSERVATION_GRAPH: &str = "http://example.org/orexis/sensing#PastObservationGraph";
 /// Percepts said for belief to revise, and belief's words they are said in.
 pub const PERCEIVED: &str = "http://example.org/orexis/sensing#Perceived";
 pub const REVISES: &str = "http://example.org/orexis/belief#revises";

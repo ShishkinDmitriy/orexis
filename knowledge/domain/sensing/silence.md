@@ -5,7 +5,7 @@ term: http://example.org/orexis/sensing#SilenceGraph
 description: >-
   A time a sensor sent nothing past the limit its observer role allows, kept by sensing from the first
   minute it is found until the sensor reads again, and then for good - what sensing knows of a sensor's
-  outages, since the percepts a silence is computed from are forgotten. No reader of the mind is handed one.
+  outages, since the percepts a silence is computed from do not stay. No reader of the mind is handed one.
 ---
 
 # What it is

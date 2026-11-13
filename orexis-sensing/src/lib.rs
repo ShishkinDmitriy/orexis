@@ -16,5 +16,6 @@ pub mod create;
 pub mod events;
 pub mod missed;
 pub mod ontology;
+pub mod past;
 pub mod pipeline;
 pub mod received;

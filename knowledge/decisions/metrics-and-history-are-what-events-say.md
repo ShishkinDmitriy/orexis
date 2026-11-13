@@ -20,6 +20,10 @@ description: >-
 > package's words, which the history part keeps in the agent's journal
 > ([the-journal-is-the-agents-flight-recorder](/decisions/the-journal-is-the-agents-flight-recorder.md)). A step taken
 > and answered, below, is no point any more.
+>
+> **And since 2026-11-13 no event is a point.** An observation's point is written by what archives sensing's
+> readings, `orexis-sensing-influxdb/`, on a timer: written as its event was said and again when archived, one point
+> had two writers. The history part keeps the journal alone ([series](/domain/kernel/series.md)).
 
 # What was true (on main at f05a205d)
 

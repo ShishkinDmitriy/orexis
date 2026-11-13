@@ -189,8 +189,10 @@ pub fn received_by(
     let depth = limit_of(store, sensor, STUCK_AFTER_TERM)?.max(1) as usize;
     let mut newest_first: Vec<String> = written.iter().rev().cloned().collect();
     newest_first.extend(kept.iter().filter_map(|r| iri(r, "g")));
+    //  AN OLDER ONE IS FILED PAST, never forgotten here: what becomes of a reading sensing has done with is
+    //  housekeeping, and whoever archives it removes it (`past`).
     for old in newest_first.iter().skip(depth) {
-        store.forget_graph(old, Some(OBSERVATION_GRAPH))?;
+        crate::past::shelve(store, old)?;
     }
     let held: Vec<&String> = newest_first.iter().take(depth).collect();
     Ok(written.iter().filter(|g| held.contains(g)).cloned().collect())
@@ -353,7 +355,7 @@ pub(crate) mod tests {
     //! `received`, held as `agent/sensing/tests/test_received.py` holds it: one case per file, held to a patch of the
     //! store it leaves — and the chain, held by code: each percept names the one before it, a message's readings
     //! oldest first; the latest is the one holding now, every older one's period ended where its successor's
-    //! began; and a sensor's last `sensing:stuckAfter` are kept, the rest forgotten (#944).
+    //! began; and a sensor's last `sensing:stuckAfter` are kept, the rest filed past (#944).
 
     use std::path::{Path, PathBuf};
 
@@ -571,10 +573,28 @@ ORDER BY ?t";
             assert_eq!(pair[1].2.as_deref(), Some(pair[0].0.as_str()));
         }
         let oldest = chain[0].2.clone().expect("the oldest kept names one");
-        assert!(!chain.iter().any(|(o, _, _)| *o == oldest), "and it is forgotten");
+        assert!(!chain.iter().any(|(o, _, _)| *o == oldest), "and it is no longer read");
         assert_eq!(
             store.graphs_of(&[OBSERVATION_GRAPH], &Within::default()).unwrap().len(),
             stuck_after
+        );
+        //  AND THE REST ARE PAST, NOT GONE: filed in a kind of their own, for whoever archives them to remove.
+        let past = crate::past::past(&store).unwrap();
+        assert_eq!(
+            past.len(),
+            numbers.len() - stuck_after,
+            "every reading older than the last six"
+        );
+        crate::past::forget(&store, &past[0]).unwrap();
+        assert_eq!(
+            crate::past::past(&store).unwrap().len(),
+            past.len() - 1,
+            "until one is forgotten"
+        );
+        assert_eq!(
+            store.graphs_of(&[OBSERVATION_GRAPH], &Within::default()).unwrap().len(),
+            stuck_after,
+            "which takes nothing sensing reads"
         );
     }
 

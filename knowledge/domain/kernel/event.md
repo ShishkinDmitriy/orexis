@@ -5,8 +5,8 @@ term: http://example.org/orexis#Event
 description: >-
   What happened, at an instant - an instance of a class its package declares, never the cause of
   another event. A policy hearing it may start an activity, whose start and end are events too. Its
-  class may name a metric and mark which fields are reported; it may be history, as a point or as
-  triples in the package's words. Made only where somebody hears.
+  class may name a metric and mark which fields are reported; it may be history, as triples in the
+  package's words. Made only where somebody hears.
 ---
 
 # An instant, heard by policies
@@ -35,10 +35,10 @@ An event costing a read is made only where it is heard: the emitter asks `connec
   a `Tag`, a `Value`, a `Flag` or a [level](/domain/kernel/level.md) — which the metrics part tallies
   without knowing the package; an unmarked field is the event's alone
   ([series](/domain/kernel/series.md)).
-- **That it is history**, by answering `point()`, the series store's own dict, which the history part
-  writes to the [series](/domain/kernel/series.md) — an observation alone does — or `statements(node)`,
-  its triples in its package's words, which the history part keeps in the agent's
-  [journal](/domain/kernel/journal.md) as an entry named by `node`. Such an event is then a term too: its
+- **That it is history**, by answering `statements(node)`, its triples in its package's words, which
+  the history part keeps in the agent's [journal](/domain/kernel/journal.md) as an entry named by
+  `node`. No event is a point of the [series](/domain/kernel/series.md): an observation's is written
+  by what archives it. Such an event is then a term too: its
   class is declared beneath `orexis:Event` in the package's ontology, its words beside it, and
   `agent/tests/test_journal.py` holds every word an event writes to a declaration.
 

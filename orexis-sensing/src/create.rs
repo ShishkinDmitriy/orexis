@@ -23,13 +23,13 @@ use oxsdatatypes::DateTime;
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::{instant, isoformat, seconds_of};
-use orexis::events::{Watch, round6};
+use orexis::events::Watch;
 use orexis::ontology::{BELIEF, DERIVED, local_of};
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::{Arrived, Every, Handed, Heard, Hears, Package, Task, Turn, Woke, sooner};
 
 use crate::cadence::cadence_of;
-use crate::events::{Doubted, Observed, Perceived, Silence, tag_of};
+use crate::events::{Doubted, Perceived, Silence, tag_of};
 use crate::missed::missed;
 use crate::ontology::{OBSERVATION_GRAPH, OBSERVING, OBSERVING_TRIGGER, REVISED_SOURCE, SILENCE_GRAPH, silence_graph};
 
@@ -53,14 +53,6 @@ SELECT ?g WHERE {
 ORDER BY ?start ?g";
 
 /// WHAT AN OBSERVATION SAYS, read off the graph and what was concluded of it.
-const OBSERVED_Q: &str = "
-SELECT ?sensor ?feature ?property ?value ?scaled ?defect ?t ?raw ?previous WHERE {
-  ?o sosa:madeBySensor ?sensor ; sosa:resultTime ?t ; sosa:hasFeatureOfInterest ?feature ;
-     sosa:observedProperty ?property
-  OPTIONAL { ?o sosa:hasSimpleResult ?value } OPTIONAL { ?o sensing:scaledResult ?scaled }
-  OPTIONAL { ?o sensing:defect ?defect }
-  OPTIONAL { ?o sensing:rawResult ?raw } OPTIONAL { ?o sensing:previous ?previous } } LIMIT 1";
-
 const MADE_Q: &str = "SELECT ?t WHERE { $percept sosa:resultTime ?t } LIMIT 1";
 
 const STUCK_Q: &str = "SELECT DISTINCT ?sensor WHERE { ?sensor sensing:stuckOn ?number }";
@@ -176,22 +168,10 @@ impl Sensing {
     /// Say the observation `graph` holds, with how long after the percept before it it came.
     fn observation(&self, graph: &str) -> Result<(), Error> {
         let beliefs = &self.beliefs;
-        let mut read = vec![graph.to_string()];
-        read.extend(beliefs.revisions_of(&[graph], OBSERVATION_GRAPH)?);
-        let read: Vec<&str> = read.iter().map(String::as_str).collect();
-        let Some(o) = beliefs.rows(OBSERVED_Q, &read)?.into_iter().next() else {
+        let Some((mut observed, sensor, previous)) = crate::past::observed(beliefs, graph, OBSERVATION_GRAPH)? else {
             return Ok(());
         };
-        let number = |key: &str| value(&o, key).and_then(|v| v.parse::<f64>().ok());
-        let defective = o.contains_key("defect");
-        let Some(reading) = number("value").or_else(|| if defective { number("scaled") } else { None }) else {
-            return Ok(());
-        };
-        let (Some(sensor), Some(t)) = (iri(&o, "sensor"), value(&o, "t")) else {
-            return Ok(());
-        };
-        let at = instant(&t)?;
-        let before = match iri(&o, "previous") {
+        let before = match previous {
             Some(previous) => {
                 let all = beliefs.graphs_of(&[OBSERVATION_GRAPH], &Within::default())?;
                 let all: Vec<&str> = all.iter().map(String::as_str).collect();
@@ -203,21 +183,12 @@ impl Sensing {
             }
             None => None,
         };
-        let cadence = cadence_of(beliefs, &sensor)?;
-        self.watch.emit(&Observed {
-            observed_property: iri(&o, "property").unwrap_or_default(),
-            value: round6(reading),
-            at,
-            sensor: Some(tag_of(&sensor)),
-            sensor_id: Some(tag_of(&sensor)),
-            feature_id: iri(&o, "feature").map(|f| tag_of(&f)),
-            interval_s: before
-                .and_then(|b| at.checked_sub(b))
-                .map(|d| (seconds_of(d) * 1000.0).round() / 1000.0),
-            cadence_s: cadence,
-            raw: number("raw").map(round6),
-            defective,
-        });
+        let at = observed.at;
+        observed.cadence_s = cadence_of(beliefs, &sensor)?;
+        observed.interval_s = before
+            .and_then(|b| at.checked_sub(b))
+            .map(|d| (seconds_of(d) * 1000.0).round() / 1000.0);
+        self.watch.emit(&observed);
         Ok(())
     }
 

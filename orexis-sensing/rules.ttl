@@ -120,7 +120,7 @@
 
 #  STUCK (knowledge/domain/sensing/stuck.md, #462, #944): a sensor whose last `sensing:stuckAfter`
 #  readings all gave one number is stuck on it. A rule over the PERCEPTS KEPT — `received` keeps that
-#  many of a sensor's and forgets the rest — concluded in the revision of the percept arriving, so it
+#  many of a sensor's in this kind and files the rest past — concluded in the revision of the percept arriving, so it
 #  holds while that percept does and the next reading, differing, finds the kept ones no longer
 #  agree. The percepts before the one arriving are no testimony a revision is handed, so this rule
 #  reads them where they lie, by the kind sensing keeps them in, as it reads the limit off the observer
