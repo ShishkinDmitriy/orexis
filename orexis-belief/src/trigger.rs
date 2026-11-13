@@ -10,7 +10,9 @@
 //! forgotten. **ONCE, IN ORDER, WITHIN A BUDGET**: an order is applied whole, begun while any budget is left, and
 //! where the budget is spent before the last the answer says how many orders are done.
 
-use oxigraph::model::NamedNode;
+use std::collections::BTreeSet;
+
+use oxigraph::model::{NamedNode, Triple};
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
@@ -91,6 +93,10 @@ pub fn trigger(store: &Store, arrival: &str, budget: usize, done: usize) -> Resu
     let common = store.graphs_of(&[BELIEF], &Within::common())?;
     let mut spent = 0;
     let mut changed: Vec<String> = Vec::new();
+    //  WHAT THE STATE LOST AND WHAT IT GAINED, whichever graph each stood in: a transition takes a fact out of the
+    //  state of the arrival before and puts it in this arrival's own, so the graphs differ at every arrival, and
+    //  only these say whether what is believed does.
+    let (mut lost, mut gained): (BTreeSet<String>, BTreeSet<String>) = (BTreeSet::new(), BTreeSet::new());
     for (n, order) in orders.iter().enumerate().skip(done) {
         if spent >= budget {
             log::debug!(
@@ -120,6 +126,15 @@ pub fn trigger(store: &Store, arrival: &str, budget: usize, done: usize) -> Resu
         let change = asked(store, order, &reads, &[]);
         spent += change.executions;
         let state: Vec<&str> = state.iter().map(String::as_str).collect();
+        for t in &change.deleted {
+            let held = state.iter().any(|g| {
+                NamedNode::new(*g).is_ok_and(|name| store.engine().contains(&t.clone().in_graph(name)).unwrap_or(true))
+            });
+            if held {
+                lost.insert(t.to_string());
+            }
+        }
+        gained.extend(change.added.iter().map(Triple::to_string));
         for g in deleted_from(store, &change, &state)? {
             if !changed.contains(&g) {
                 changed.push(g);
@@ -145,11 +160,15 @@ pub fn trigger(store: &Store, arrival: &str, budget: usize, done: usize) -> Resu
             );
         }
     }
+    //  A STATE PUT BACK AS IT STOOD IS NO CHANGE: the graphs are stamped, since they were written, and none is said
+    //  changed, since whoever hears a state changed begins on it — a van's fix repeating its cell began a planning
+    //  every ten seconds.
+    let changed = stamped(store, &cat, changed)?;
     Ok(Triggered {
         spent,
         done: orders.len(),
         finished: true,
-        changed: stamped(store, &cat, changed)?,
+        changed: if lost == gained { Vec::new() } else { changed },
     })
 }
 

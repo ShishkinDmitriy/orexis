@@ -33,7 +33,8 @@ Each is declared by the package that reads it, in its own `ontology.ttl`, with d
 | term | what it bounds | read by | where none is stated |
 |---|---|---|---|
 | `execution:patienceS` | how long a commitment absorbs a second plan for its want, and how long past its latest landing a step may go unanswered | the [executor](/domain/execution/executor.md), when it is made | `DEFAULT_PATIENCE_S`, sixty seconds |
-| `planning:budget` | candidates one want's search may weigh in a pass | the [planner](/domain/planning/planner.md), when it is made | `BUDGET` in `orexis-planning/src/planner/mod.rs`, 32 |
+| `planning:budget` | candidates one want's search may weigh in one planning | the [planner](/domain/planning/planner.md), when it is made | `BUDGET` in `orexis-planning/src/planner/mod.rs`, 32 |
+| `planning:budgetEveryS` | seconds a budget is for: how long after a search was cut short it is given the next | the [planner](/domain/planning/planner.md), when it is made | `BUDGET_EVERY_S` beside it, ten seconds |
 | `belief:budget` | rule executions one pass of revision may spend | the [deliberator](/domain/belief/deliberator.md), when it is made | `BUDGET` in `orexis-belief/src/deliberator.rs`, 256 |
 | `prediction:horizonS` | seconds past an observation the flows are integrated | `foresee`, each pass | `HORIZON_S`, a day |
 
