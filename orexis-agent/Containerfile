@@ -45,10 +45,10 @@ RUN --mount=type=cache,target=/src/target \
  && cp target/release/orexis-agent /orexis-agent
 
 # What the boot reads of the tree: each package's vocabulary and documents, beside the kernel's, and no code.
-RUN mkdir -p /out/tree /out/state /out/journal \
+RUN mkdir -p /out/tree /out/volumes/state /out/volumes/journal \
  && find orexis orexis-* -path '*/tests' -prune -o \( -name '*.ttl' -o -name '*.trig' \) -print \
     | tar -cf - -T - | tar -xf - -C /out/tree \
- && chown -R 10001:10001 /out/state /out/journal
+ && chown -R 10001:10001 /out/volumes
 
 # ── the image ───────────────────────────────────────────────────────────────────────────────────
 # glibc and libstdc++, which RocksDB links, and nothing to run but the binary.
@@ -57,9 +57,9 @@ FROM gcr.io/distroless/cc-debian12
 WORKDIR /app
 COPY --from=build /orexis-agent /usr/local/bin/orexis-agent
 COPY --from=build /out/tree/ /app/
-# its volumes' mount points, the agent's own, so a volume created on them is the agent's to write
-COPY --from=build /out/state /app/state
-COPY --from=build /out/journal /app/journal
+# its volumes' mount points, the agent's own, so a volume created on them is the agent's to write: copied as
+# the entries of a directory, since a directory copied by name is made root's and only what is in it is owned
+COPY --from=build --chown=10001:10001 /out/volumes/ /app/
 COPY domains/ /app/domains/
 ENV OREXIS_TREE=/app
 
