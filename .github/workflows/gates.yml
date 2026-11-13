@@ -155,15 +155,19 @@ jobs:
     # (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md): its crates' format, clippy with every
     # warning refused, and their tests.
     runs-on: ubuntu-latest
-    # A COLD BUILD — a new lock or profile, so the cache holds nothing — compiles the engine optimised and RocksDB
-    # twice over, and ran 14 minutes; a warm one is a few.
+    # A COLD BUILD — a new lock or profile, so the cache main keeps (warm.yml) holds nothing for it — compiles the
+    # engine optimised and RocksDB twice over, and ran 14 minutes; a warm one is a few.
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
+      # THE BUILD MAIN KEPT (warm.yml): restored, and never saved from here, a pull request's cache being no other's.
       - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: rust
+          save-if: false
       - name: format
         run: cargo fmt --check
       - name: clippy
