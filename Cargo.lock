@@ -853,7 +853,7 @@ dependencies = [
  "orexis-prediction",
  "orexis-sensing",
  "orexis-span",
- "orexis-spans",
+ "orexis-span-opentelemetry",
  "orexis-speech",
  "orexis-translation",
  "orexis-transport-email",
@@ -994,7 +994,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "orexis-spans"
+name = "orexis-span-opentelemetry"
 version = "0.2.0"
 dependencies = [
  "inventory",

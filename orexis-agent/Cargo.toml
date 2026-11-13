@@ -49,7 +49,7 @@ orexis-transport-email = { workspace = true, optional = true }
 orexis-history = { workspace = true }
 orexis-metrics = { workspace = true }
 orexis-span = { workspace = true }
-orexis-spans = { workspace = true }
+orexis-span-opentelemetry = { workspace = true }
 oxsdatatypes = "0.2"
 oxigraph.workspace = true
 log = "0.4"

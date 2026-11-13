@@ -32,7 +32,7 @@ use orexis_prediction as _;
 #[cfg(feature = "sensing")]
 use orexis_sensing as _;
 use orexis_span as _;
-use orexis_spans as _;
+use orexis_span_opentelemetry as _;
 #[cfg(feature = "speech")]
 use orexis_speech as _;
 #[cfg(feature = "translation")]
@@ -247,7 +247,7 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
         outside.hand(window);
     }
     if let Some(endpoint) = watching.traces {
-        outside.hand(orexis_spans::Endpoint(endpoint));
+        outside.hand(orexis_span_opentelemetry::Endpoint(endpoint));
     }
     #[cfg(feature = "planning")]
     if let Some(budget) = budget {
@@ -290,7 +290,7 @@ pub fn start(
     budget: Option<usize>,
     wiring: Wiring,
 ) -> Result<Running, Error> {
-    let mut names: Vec<String> = ["history", "span", "metrics", "spans"]
+    let mut names: Vec<String> = ["history", "span", "metrics", "span-opentelemetry"]
         .iter()
         .map(|n| n.to_string())
         .collect();

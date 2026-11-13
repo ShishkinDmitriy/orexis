@@ -1,4 +1,4 @@
-//! SPANS: what the agent did, as a tracer draws it (packages-meet-by-events-policies-and-activities, #1119). Every
+//! SPAN, TO OPENTELEMETRY: what the agent did, as a tracer draws it (packages-meet-by-events-policies-and-activities, #1119). Every
 //! activity's `prov:Start` and `prov:End` the watch hears is a span; an activity begun inside another is its child, by
 //! the activities open when it began; every other event said while one is open is an event of the innermost; and each
 //! runtime pass is a trace, its root the pass itself, ended where the runtime says the pass.
@@ -145,7 +145,7 @@ impl Tracer {
 /// The tracer's OTLP endpoint, handed outside by whoever runs the agent, where the deployment traces it.
 pub struct Endpoint(pub String);
 
-inventory::submit! { Package { name: "spans", start } }
+inventory::submit! { Package { name: "span-opentelemetry", start } }
 
 /// THE TRACER'S START: where it is handed an endpoint it hears every activity on the watch as a span, and has no task.
 fn start(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
@@ -177,7 +177,7 @@ pub fn post(endpoint: &str) -> Send {
     let url = format!("{endpoint}/v1/traces");
     let (tx, rx) = mpsc::channel::<String>();
     std::thread::Builder::new()
-        .name("orexis-spans".into())
+        .name("orexis-span-opentelemetry".into())
         .spawn(move || {
             let agent = ureq::AgentBuilder::new().timeout(Duration::from_secs(2)).build();
             let mut refused = false;
