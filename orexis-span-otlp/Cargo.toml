@@ -1,7 +1,7 @@
-# SPAN, TO OPENTELEMETRY: what orexis-span keeps in the journal, shipped on a timer to whoever traces the agent as spans
+# SPAN, OVER OTLP: what orexis-span keeps in the journal, shipped on a timer to whoever traces the agent as spans
 # over OTLP's JSON, knowing no package's words (packages-meet-by-events-policies-and-activities).
 [package]
-name = "orexis-span-opentelemetry"
+name = "orexis-span-otlp"
 version = "0.2.0"
 edition.workspace = true
 license.workspace = true

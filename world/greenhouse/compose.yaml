@@ -69,7 +69,7 @@ services:
       - ../../orexis-prediction:/app/orexis-prediction:ro
       - ../../orexis-sensing:/app/orexis-sensing:ro
       - ../../orexis-span:/app/orexis-span:ro
-      - ../../orexis-span-opentelemetry:/app/orexis-span-opentelemetry:ro
+      - ../../orexis-span-otlp:/app/orexis-span-otlp:ro
       - ../../orexis-speech:/app/orexis-speech:ro
       - ../../orexis-translation:/app/orexis-translation:ro
       - ../../orexis-transport-email:/app/orexis-transport-email:ro

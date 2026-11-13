@@ -984,7 +984,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   generated was caused by it, so a cycle through four packages is a path, where the lane's was read off a tracer a
   test had to carry. **One crate does a thing and another keeps house**: the logic writes the hot record, and what
   ships it to a cold store, a tracer or the series, is a crate of its own that reads it there on a timer and marks
-  what the store accepted, named for the pair: `orexis-span/` and `orexis-span-opentelemetry/`.
+  what the store accepted, named for the pair: `orexis-span/` and `orexis-span-otlp/`.
 - **A pattern over a node several journal entries copy is asked within one entry** — every event copies the step or
   the plan it is about, and over the union of the entries each copy answered once more, 294 rows for three events.
 - **The history view is what the agents kept, drawn, and the package that decides a thing draws it** — a domain draws its

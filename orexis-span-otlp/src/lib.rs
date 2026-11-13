@@ -1,4 +1,4 @@
-//! SPAN, TO OPENTELEMETRY: the half of the pair that keeps house. `orexis-span/` keeps every activity the agent's
+//! SPAN, OVER OTLP: the half of the pair that keeps house. `orexis-span/` keeps every activity the agent's
 //! packages end in its journal; this ships them to whoever traces the agent, on a timer, reading them there and
 //! hearing nothing. It knows no package's words.
 //!
@@ -272,7 +272,7 @@ pub fn post(endpoint: &str) -> Send {
     })
 }
 
-inventory::submit! { Package { name: "span-opentelemetry", start } }
+inventory::submit! { Package { name: "span-otlp", start } }
 
 /// THE SHIPPER'S START: where it is handed a journal and an endpoint, its task; and none otherwise.
 fn start(handed: &Handed) -> Result<Option<Task>, orexis::Error> {

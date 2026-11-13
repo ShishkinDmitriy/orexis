@@ -467,14 +467,14 @@ async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journa
     //  generated what started it, and none sent twice.
     let sent: Arc<Mutex<Vec<String>>> = Arc::default();
     let got = sent.clone();
-    let send: orexis_span_opentelemetry::Send = Arc::new(move |body| {
+    let send: orexis_span_otlp::Send = Arc::new(move |body| {
         got.lock().unwrap().push(body);
         true
     });
     let tracer = "http://tracer.test:4318";
-    let shipped = orexis_span_opentelemetry::ship(&journal, "grower", tracer, &send);
+    let shipped = orexis_span_otlp::ship(&journal, "grower", tracer, &send);
     assert!(shipped > 0);
-    assert_eq!(orexis_span_opentelemetry::ship(&journal, "grower", tracer, &send), 0);
+    assert_eq!(orexis_span_otlp::ship(&journal, "grower", tracer, &send), 0);
     let body: serde_json::Value = serde_json::from_str(&sent.lock().unwrap()[0]).unwrap();
     let spans = body["resourceSpans"][0]["scopeSpans"][0]["spans"]
         .as_array()

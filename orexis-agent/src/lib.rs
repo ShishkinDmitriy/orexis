@@ -32,7 +32,7 @@ use orexis_prediction as _;
 #[cfg(feature = "sensing")]
 use orexis_sensing as _;
 use orexis_span as _;
-use orexis_span_opentelemetry as _;
+use orexis_span_otlp as _;
 #[cfg(feature = "speech")]
 use orexis_speech as _;
 #[cfg(feature = "translation")]
@@ -189,7 +189,7 @@ pub struct Watching {
     pub history: Option<Sink>,
     pub metrics: Option<orexis_metrics::Window>,
     /// Where the agent is traced, and how often it ships what its journal keeps.
-    pub traces: Option<orexis_span_opentelemetry::Tracing>,
+    pub traces: Option<orexis_span_otlp::Tracing>,
 }
 
 /// What the agent's bus is, where a test hands one: the MQTT member over a client of its own, the HTTP member over a
@@ -241,7 +241,7 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
     }
     //  AND SHIPPED FROM THERE to whoever traces the agent: what is kept is what is sent, so with no journal, nothing.
     if let (Some(tracing), Some(journal)) = (watching.traces, &watching.journal) {
-        outside.hand(orexis_span_opentelemetry::Ships {
+        outside.hand(orexis_span_otlp::Ships {
             journal: journal.clone(),
             endpoint: tracing.endpoint,
             every_s: tracing.every_s,
@@ -295,7 +295,7 @@ pub fn start(
     budget: Option<usize>,
     wiring: Wiring,
 ) -> Result<Running, Error> {
-    let mut names: Vec<String> = ["history", "span", "metrics", "span-opentelemetry"]
+    let mut names: Vec<String> = ["history", "span", "metrics", "span-otlp"]
         .iter()
         .map(|n| n.to_string())
         .collect();
