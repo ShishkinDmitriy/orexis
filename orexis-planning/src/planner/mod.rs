@@ -72,6 +72,11 @@ const REOPENING_Q: &str = r#"
 SELECT ?w WHERE { GRAPH ?g { ?w planning:reopens ?w }
   FILTER NOT EXISTS { GRAPH ?p { ?p a planning:Plan ; planning:for ?w ; planning:outcome planning:Satisfied } } }"#;
 
+const BESIDE_Q: &str = r#"SELECT DISTINCT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
+  VALUES ?kind { orexis:BeliefGraph planning:WantGraph planning:DesireGraph orexis:RecordGraph }
+  FILTER NOT EXISTS { ?g a planning:GroundGraph } FILTER NOT EXISTS { ?g a planning:PossibleGraph }
+  FILTER NOT EXISTS { ?g a planning:ChangeableGraph } FILTER NOT EXISTS { ?g a orexis:OntologyGraph } } }"#;
+
 const GROUND_HASHES_Q: &str = r#"SELECT ?h WHERE { GRAPH $cat { ?g a planning:GroundGraph ; orexis:hash ?h } }"#;
 
 const HASHES_Q: &str = r#"SELECT DISTINCT ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w orexis:hash ?h .
@@ -198,6 +203,8 @@ pub struct Planner {
     /// Each want whose search the budget last cut short: when, and the grounds it was searched in, by hash. It is
     /// searched again where the grounds differ or the budget's stretch has passed, and not before.
     cut: BTreeMap<String, (DateTime, BTreeSet<String>)>,
+    /// What each scope's worlds read beside their grounds, as the last planning left it: a digest, by scope.
+    beside: BTreeMap<String, u64>,
     /// THE PLANNER'S IMAGINARIA, one per scope, kept from pass to pass and refreshed at every `plan`.
     pub imaginaria: BTreeMap<String, Store>,
     /// What the texts a pass evaluates read, remembered while the graphs they live in stand.
@@ -233,6 +240,25 @@ impl Planner {
     pub fn read(&self) -> Option<&BTreeSet<String>> {
         self.read.as_ref().and_then(|(_, r)| r.as_ref())
     }
+}
+
+/// EVERYTHING A WORLD OF `store` READS BESIDE ITS GROUND, as one digest: every belief, want, desire and record the
+/// imaginarium holds but the grounds, the possible worlds and what is cut for them. A weighing reads the ground and
+/// this, so a ground is laid again as it stood only where this stands too (#1158). In this process alone: it is
+/// compared with the digest the planning before left, never kept.
+fn beside(store: &Store) -> Result<u64, Error> {
+    use std::hash::{Hash, Hasher};
+    let mut names: Vec<String> = store.rows(BESIDE_Q, &[])?.iter().filter_map(|r| iri(r, "g")).collect();
+    names.sort();
+    names.dedup();
+    let mut digest = std::collections::hash_map::DefaultHasher::new();
+    for name in names {
+        let mut quads: Vec<String> = store.quads(&name)?.iter().map(|q| q.to_string()).collect();
+        quads.sort();
+        name.hash(&mut digest);
+        quads.hash(&mut digest);
+    }
+    Ok(digest.finish())
 }
 
 fn strs(names: &[String]) -> Vec<&str> {
@@ -613,6 +639,7 @@ impl Planner {
             budget,
             every_s: orexis::stance::stance(beliefs, BUDGET_EVERY_TERM)?.unwrap_or(BUDGET_EVERY_S),
             cut: BTreeMap::new(),
+            beside: BTreeMap::new(),
             imaginaria: BTreeMap::new(),
             read: None,
             handed: Vec::new(),
@@ -781,6 +808,12 @@ impl Planner {
                 Some(foresee) => foresee(beliefs, at, if unscoped { None } else { Some(&placed) })?,
                 None => None,
             };
+            //  WHETHER WHAT A WORLD READS BESIDE ITS GROUND STANDS AS IT DID WHEN THE LAST PLANNING BEGAN: asked here,
+            //  the imaginarium refreshed and nothing of this planning written yet, and of the same moment of the
+            //  planning before, since laying cuts the changeable out of these graphs and the derivation writes wants
+            //  into them. So the planning after one that minted a want begins its searches again, once (#1158).
+            let stands = beside(store)?;
+            let as_stood = self.beside.insert(scope.clone(), stands) == Some(stands);
             let laid = lay_ground_foreseeing(
                 store,
                 at,
@@ -789,6 +822,7 @@ impl Planner {
                     landings: &landings,
                     landed: &landed,
                     actions: only.as_ref(),
+                    as_stood,
                 },
                 foresight.as_mut().map(|f| f.as_mut() as &mut dyn Foresight),
             )?;
@@ -1649,6 +1683,65 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         assert_eq!(planner.continues_at(), Some(due), "and it is still due when it was");
         planner.plan(due).unwrap();
         assert_eq!(said.lock().unwrap().len(), 2, "and the next once it is due");
+    }
+
+    /// Two plannings at one instant lay one ground twice. Laid again as it stood, with everything beside it
+    /// standing, the ground keeps what was weighed from it, so the search goes on from where the budget cut it. THE
+    /// PLANNING AFTER THE FIRST BEGINS AGAIN, ONCE: the first minted the want, which a weighing reads beside the
+    /// ground. From there every candidate is weighed once and none skipped (#1158).
+    #[test]
+    fn a_search_cut_short_keeps_what_it_weighed_when_planned_again_at_the_same_instant() {
+        let (whole, _) = weighed(&bench("three_disk_hanoi"), 128, true);
+        let store = snapshots::stand_in(&bench("three_disk_hanoi"));
+        let mut planner = Planner::new(&store, snapshots::AGENT, Some(20)).unwrap();
+        planner.every_s = 0.0;
+        let at = minutes(0);
+        let mut passes = Vec::new();
+        for _ in 0..4 {
+            planner.plan(at).unwrap();
+            passes.push((outcome(&planner), count(imagined(&planner), WEIGHED_Q)));
+        }
+        assert_eq!(passes[0], ("Exhausted".to_string(), 20));
+        assert_eq!(
+            passes[1],
+            ("Exhausted".to_string(), 20),
+            "begun again, the want being new beside the ground"
+        );
+        assert_eq!(passes[2], ("Exhausted".to_string(), 40), "and from there it goes on");
+        assert_eq!(passes[3].0, "Satisfied");
+        assert_eq!(passes[3].1, whole, "no candidate weighed twice, and none skipped");
+        assert_eq!(steps(&planner), 7);
+    }
+
+    /// And where something read beside the ground is other than it was, the ground laid again keeps nothing: a
+    /// weighing reads the ground and what is beside it.
+    #[test]
+    fn a_ground_laid_again_keeps_nothing_where_what_is_read_beside_it_changed() {
+        let store = snapshots::stand_in(&bench("three_disk_hanoi"));
+        let mut planner = Planner::new(&store, snapshots::AGENT, Some(20)).unwrap();
+        planner.every_s = 0.0;
+        let at = minutes(0);
+        planner.plan(at).unwrap();
+        planner.plan(at).unwrap();
+        planner.plan(at).unwrap();
+        assert_eq!(
+            count(imagined(&planner), WEIGHED_Q),
+            40,
+            "kept, while everything stands"
+        );
+        let desires = store.graphs_of(&[DESIRE], &Within::default()).unwrap();
+        store
+            .update(&format!(
+                "INSERT DATA {{ GRAPH <{}> {{ <urn:test:beside> <urn:test:says> <urn:test:something> }} }}",
+                desires[0]
+            ))
+            .unwrap();
+        planner.plan(at).unwrap();
+        assert_eq!(
+            count(imagined(&planner), WEIGHED_Q),
+            20,
+            "begun again: the first planning's twenty are gone, and twenty are weighed anew"
+        );
     }
 
     #[test]

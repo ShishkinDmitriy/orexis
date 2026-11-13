@@ -35,6 +35,16 @@ A surprise — a reading no world predicted, another agent moving — matches no
 goes whole. The present is identified among the imagined worlds, never asserted from one: a child
 is a prediction, and only the hash of what was observed says the world landed there.
 
+A ground laid again under its name as it stood is its own match. Two plannings at one instant lay one name
+twice, so no other world holds the present's hash; where the ground has the hash it stood at and everything a
+world reads beside it is as it was when the planning before began, what was imagined from it still hangs from
+it, its cone is kept and the present is the `ground` it was. The second condition is the planner's to say, a
+digest per scope of the beliefs, wants, desires and records its imaginarium holds beside the worlds, since the
+ground's hash says only its own facts and a weighing reads both. Where either differs the ground loses the
+weighings of it and the candidates admitted in it as it is laid, and a cone begins at a candidate, so nothing
+hangs from it. The planning after one that minted a want therefore begins its searches again, once: the want is
+new beside the ground.
+
 # What the hash reads
 
 Every world of an imaginarium is hashed within what is read: the predicates that an action's

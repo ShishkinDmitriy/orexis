@@ -54,6 +54,10 @@ pub struct Laying<'a> {
     pub landings: &'a [DateTime],
     pub landed: &'a [Landed],
     pub actions: Option<&'a BTreeSet<String>>,
+    /// Whether everything a world reads beside its ground stands as it did when the grounds were last laid: the
+    /// caller's to say, since a weighing reads the ground and what is beside it, and the ground's hash says only
+    /// its own. False where nothing says, and then a ground laid again keeps nothing.
+    pub as_stood: bool,
 }
 
 /// THE CHANGEABLE PART CUT FROM EVERY FORECAST.
@@ -105,6 +109,9 @@ WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                       ?x a planning:Weighing ; planning:weighs $world ; ?p ?o .
                       OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }";
 
+const STOOD_Q: &str =
+    "SELECT ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $ground orexis:hash ?h } } LIMIT 1";
+
 const UNADMIT_U: &str = "
 DELETE { GRAPH ?cat { ?c ?p ?o } }
 WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
@@ -133,7 +140,7 @@ pub fn lay_ground_foreseeing(
     split(store, laying.actions, now, gate.as_ref())?;
     let ahead = foreseen(store, now)?;
     let boundaries = ahead.len();
-    let here = present(store, now)?;
+    let (here, stood) = present(store, now)?;
     //  THE TRANSITIONS A PREDICTED OBSERVATION TRIGGERS, and the agent's own state they read and change as the
     //  grounds are laid, from the present's: asked only where the flows are integrated (#1000).
     let rules = if foresight.is_some() {
@@ -151,11 +158,14 @@ pub fn lay_ground_foreseeing(
     } else {
         whole(store, store.graphs_of(&[BELIEF], &Within::common())?)?
     };
+    let marks = marked(store, &here, laying.within)?;
+    settled(store, &here, stood, laying.as_stood)?;
     let mut ground = Ground {
         store,
+        as_stood: laying.as_stood,
         within: laying.within,
         landed: laying.landed,
-        marks: marked(store, &here, laying.within)?,
+        marks,
         made: vec![here.clone()],
         here,
         opened: vec![now],
@@ -299,6 +309,7 @@ fn own_state(store: &Store) -> Result<String, Error> {
 /// brings.
 struct Ground<'a> {
     store: &'a Store,
+    as_stood: bool,
     within: Option<&'a BTreeSet<String>>,
     landed: &'a [Landed],
     here: String,
@@ -339,7 +350,7 @@ impl Ground<'_> {
         }
         //  EVERYTHING BEGINNING AT ONE INSTANT IS ONE WORLD CHANGE, each retraction read against the ground
         //  standing before the instant.
-        let there = fork(store, &self.here, &name(at), &added)?;
+        let (there, stood) = fork(store, &self.here, &name(at), &added)?;
         let kept: HashSet<&Triple> = added.iter().collect();
         let into = named(&there)?;
         let gone: Vec<Quad> = retracted
@@ -352,6 +363,7 @@ impl Ground<'_> {
             self.arrived(&there, arrival)?;
         }
         let mark = marked(store, &there, self.within)?;
+        settled(store, &there, stood, self.as_stood)?;
         if mark == self.marks && !self.landing.contains(&at) {
             //  THE SAME GROUND UNDER ANOTHER NAME: this instant is not a period of its own.
             return store.forget_graph(&there, Some(BELIEF));
@@ -504,9 +516,9 @@ fn by_instant(
 }
 
 /// The agent's state as it stands, as a ground of its own: every changeable graph cut, but what begins later.
-fn present(store: &Store, now: DateTime) -> Result<String, Error> {
+fn present(store: &Store, now: DateTime) -> Result<(String, Option<String>), Error> {
     let name = name(now);
-    relaid(store, &name)?;
+    let stood = relaid(store, &name)?;
     let text = bind(PIECES_AHEAD_Q, &[("now", orexis::store::instant(now))])?;
     let ahead: HashSet<String> = store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "piece")).collect();
     let into = named(&name)?;
@@ -521,7 +533,7 @@ fn present(store: &Store, now: DateTime) -> Result<String, Error> {
                 .map(|q| Quad::new(q.subject, q.predicate, q.object, into.clone())),
         )?;
     }
-    Ok(name)
+    Ok((name, stood))
 }
 
 /// Cut out of every graph a search reads beside its worlds what the search can change, each into a
@@ -733,8 +745,8 @@ fn marked(store: &Store, ground: &str, within: Option<&BTreeSet<String>>) -> Res
 
 /// The ground one boundary past `parent`: its facts, less whatever stood under a key what is added there adds to,
 /// plus what is added — and which ground it came from, on its row.
-fn fork(store: &Store, parent: &str, name: &str, added: &[Triple]) -> Result<String, Error> {
-    relaid(store, name)?;
+fn fork(store: &Store, parent: &str, name: &str, added: &[Triple]) -> Result<(String, Option<String>), Error> {
+    let stood = relaid(store, name)?;
     let mut keys: Vec<(&NamedNode, &NamedNode)> = added
         .iter()
         .filter_map(|t| match &t.subject {
@@ -765,16 +777,36 @@ fn fork(store: &Store, parent: &str, name: &str, added: &[Triple]) -> Result<Str
         named(parent)?,
         named(&cat)?,
     )])?;
-    Ok(name.to_string())
+    Ok((name.to_string(), stood))
 }
 
-/// Take back a ground standing under the name this pass is about to lay under — its facts, its row, every weighing
-/// of it and every candidate admitted in it: the imaginarium outlives the pass, and a ground is named for its
-/// instant. A CANDIDATE IS A FILLING THE GROUND'S FACTS ADMITTED, so laid again with other facts the ground admits
-/// others: left standing, a drive to the neighbour of where the van had stood was taken from where it stood now, two
-/// cells off, by the next search of the scope (#1147).
-fn relaid(store: &Store, name: &str) -> Result<(), Error> {
+/// Take back the facts and the row of a ground standing under the name this pass is about to lay under, the
+/// imaginarium outliving the pass and a ground being named for its instant; the hash it stood at, where it stood.
+fn relaid(store: &Store, name: &str) -> Result<Option<String>, Error> {
+    let stood = store
+        .rows(&bind(STOOD_Q, &[("ground", Value::iri(name))])?, &[])?
+        .first()
+        .and_then(|r| orexis::store::value(r, "h"));
     store.forget_graph(name, Some(BELIEF))?;
+    Ok(stood)
+}
+
+/// What was worked out in a ground laid again under its name goes with it WHERE THE GROUND IS ANOTHER: every weighing
+/// of it and every candidate admitted in it. A CANDIDATE IS A FILLING THE GROUND'S FACTS ADMITTED, so laid again with
+/// other facts the ground admits others: left standing, a drive to the neighbour of where the van had stood was taken
+/// from where it stood now, two cells off, by the next search of the scope (#1147). AND LAID AGAIN AS IT STOOD, by
+/// its hash, WITH EVERYTHING READ BESIDE IT STANDING TOO (`beside`), IT KEEPS THEM: two plannings at one instant lay
+/// one name twice, and taken back whatever the ground held, a search the budget cut short began again from nothing at
+/// every planning of that instant (#1158). The ground's hash alone is not enough: a desire is weighed in the ground
+/// and what is beside it, and a supplier whose ground stood while a call arrived beside it kept reading no call.
+fn settled(store: &Store, name: &str, stood: Option<String>, beside: bool) -> Result<(), Error> {
+    let now = store
+        .rows(&bind(STOOD_Q, &[("ground", Value::iri(name))])?, &[])?
+        .first()
+        .and_then(|r| orexis::store::value(r, "h"));
+    if beside && stood.is_some() && now == stood {
+        return Ok(());
+    }
     store.update(&bind(UNWEIGH_U, &[("world", Value::iri(name))])?)?;
     store.update(&bind(UNADMIT_U, &[("world", Value::iri(name))])?)
 }
