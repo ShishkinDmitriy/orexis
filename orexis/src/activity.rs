@@ -4,8 +4,10 @@
 //! an event triggers no event. Where it runs is not its question; what it is, is a class its package declares beneath
 //! `prov:Activity`.
 //!
-//! Neither event states journal triples yet: a pass begins planning and a walk every second, and kept for good they
-//! would be most of a journal. They reach the watch, where a tracer hears them as spans (#1119).
+//! Neither event states journal triples: a planning begins and a walk every second, and kept for good they would be
+//! most of a journal. They reach the watch, where `orexis-span/` hears them and keeps each activity ended as one entry
+//! for the journal's window. AND WHAT A TURN WROTE IS SAID OF THE ACTIVITY THAT WROTE IT (`Wrote`), since a graph
+//! written is what starts whoever hears its kind, and nothing else says whose it was.
 
 use std::time::Instant;
 
@@ -88,3 +90,12 @@ impl Event for Ended {
         Some((&self.activity, self.kind))
     }
 }
+
+/// The graphs a task's turn wrote, said of the activity it ended last: what generated them.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Wrote {
+    pub by: NamedNode,
+    pub graphs: Vec<String>,
+}
+
+impl Event for Wrote {}

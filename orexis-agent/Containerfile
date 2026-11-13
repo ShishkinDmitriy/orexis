@@ -30,6 +30,7 @@ COPY orexis-metrics/ orexis-metrics/
 COPY orexis-planning/ orexis-planning/
 COPY orexis-prediction/ orexis-prediction/
 COPY orexis-sensing/ orexis-sensing/
+COPY orexis-span/ orexis-span/
 COPY orexis-spans/ orexis-spans/
 COPY orexis-speech/ orexis-speech/
 COPY orexis-translation/ orexis-translation/

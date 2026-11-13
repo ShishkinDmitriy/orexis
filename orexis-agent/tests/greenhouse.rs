@@ -411,6 +411,60 @@ SELECT ?kind ?at ?action ?valve ?subject ?taken ?landed WHERE { GRAPH ?e {
   ?e prov:atTime ?at . ?step planning:fills ?action ; ?v ?valve ; ?s ?subject .
   FILTER(STRENDS(STR(?v), \"#valve\") && STRENDS(STR(?s), \"#subject\")) } } ORDER BY ?at ?kind";
 
+/// WHAT CAUSED WHAT IS ASKED OF THE JOURNAL: every activity is kept as it ends with what started it and what it
+/// generated, an event said in it or a graph its turn wrote, so one activity started by what another generated is a
+/// path. A dry reading is followed from its revision to the plan adopted and walked, package to package, by no
+/// package's code.
+#[tokio::test(start_paused = true)]
+async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journal_keeps() {
+    let store = store();
+    let journal = Arc::new(orexis::journal::Journal::new(None, 600.0, Arc::new(noon)).unwrap());
+    let watching = orexis_agent::Watching {
+        journal: Some(journal.clone()),
+        history: None,
+        metrics: None,
+        traces: None,
+    };
+    let g = grower_watched(&store, watching);
+    reading(&g.inbox, r#"{"temperature": 21.0}"#, noon());
+    reading(&g.inbox, r#"{"moisture": 0.2}"#, noon());
+    common::settled(&g.running).await;
+    assert_eq!(g.broker.topics(), ["actuators/pump/command"]);
+    let body = String::from_utf8(
+        orexis::journal::answer(
+            &journal.store,
+            "PREFIX prov: <http://www.w3.org/ns/prov#>
+             SELECT DISTINCT ?cause ?effect WHERE {
+               GRAPH ?b { ?b prov:wasStartedBy ?x ; a ?effect } GRAPH ?a { ?x prov:wasGeneratedBy ?a . ?a a ?cause }
+               FILTER(?cause != prov:Activity && ?effect != prov:Activity) }",
+        )
+        .unwrap()
+        .1,
+    )
+    .unwrap();
+    let values: Vec<String> = body
+        .split("\"value\":\"")
+        .skip(1)
+        .map(|v| v.split('"').next().unwrap().rsplit('#').next().unwrap().to_string())
+        .collect();
+    let caused: BTreeSet<(String, String)> = values.chunks(2).map(|p| (p[0].clone(), p[1].clone())).collect();
+    //  BELIEF REVISED THE READING AND PLANNING BEGAN ON IT; planning published a plan and execution adopted it; the
+    //  adoption and the step taken in the walk each began a planning again; and the walk wrote the committed step
+    //  belief revised. What sensing takes in and what a command starts are begun by nothing an activity generated
+    //  yet, so the path has no link there.
+    let expected: BTreeSet<(String, String)> = [
+        ("Revising", "Planning"),
+        ("Planning", "Adopting"),
+        ("Adopting", "Planning"),
+        ("Walking", "Planning"),
+        ("Walking", "Revising"),
+    ]
+    .iter()
+    .map(|(a, b)| (a.to_string(), b.to_string()))
+    .collect();
+    assert_eq!(caused, expected);
+}
+
 #[tokio::test(start_paused = true)]
 async fn history_holds_every_reading_and_the_journal_the_dose_published_taken_and_landed() {
     use orexis::events::{Field, Point};

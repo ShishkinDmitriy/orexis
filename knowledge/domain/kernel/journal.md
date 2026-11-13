@@ -10,16 +10,21 @@ description: >-
 # What it is
 
 An agent's **journal** is a pyoxigraph store of its own (`orexis/src/journal.rs`), on a volume beside the belief base's
-(`--journal`), or in memory where the process is told none. It holds two kinds of entry, each a named graph holding
-one node, named by a UUID's URN:
+(`--journal`), or in memory where the process is told none. It holds three kinds of entry, each a named graph named
+by the node it is about, a UUID's URN:
 
 - an **event** a package says, of a class beneath `orexis:Event` in that package's ontology, at its `prov:atTime`,
   with what the agent held of what it is about — kept for good. This is the agent's history, beside the observations
   its [series](/domain/kernel/series.md) keeps.
 - a **log record**, `orexis:LogRecord`, what the code said in the log — its `orexis:logger`, `orexis:level` and
   `orexis:message` — kept for the **window**, ten minutes where `JOURNAL_WINDOW_S` says nothing, and swept after.
+- an [**activity**](/domain/kernel/activity.md), a `prov:Activity`, what a package did over a stretch — its class,
+  when it started and ended, how long it took in real seconds (`orexis:tookS`), what started it
+  (`prov:wasStartedBy`), the activity it was begun inside (`dcterms:isPartOf`), and what it generated, each event
+  said in it and each graph its turn wrote (`prov:wasGeneratedBy`) — written as it ends by `orexis-span/`, and kept
+  for the window as a log record is.
 
-An **incident**, `orexis:Incident`, keeps the window before it: every log record of it is kept for good beside the
+An **incident**, `orexis:Incident`, keeps the window before it: every log record and every activity of it is kept for good beside the
 incident (`orexis:keptBy`), and the incident's entry says it is one. So what led up to a failure is there to read, and
 what led up to nothing goes. **What an incident is, is the vocabulary's**: an event is one where its class is beneath
 `orexis:Incident` in its package's ontology — `execution:StepFailed`, a step that did not land, `execution:IntentionFailed`,

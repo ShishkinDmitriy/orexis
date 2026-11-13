@@ -973,6 +973,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   in its package's ontology, read off the agent's T-Box, and what a world's deployment graph adds or sets the log's
   level to, told as environment; an incident typed by code and a logger role were refused, since keeping a journal
   changes no plan (the-journal-is-the-agents-flight-recorder).
+- **What the agent did is kept where it can be asked, and what caused what is a query** — `orexis-span/` keeps every
+  activity as it ends as one entry of the journal, in PROV's words, with what started it and what it generated, an
+  event said in it or a graph its turn wrote, for the journal's window; an activity started by what another
+  generated was caused by it, so a cycle through four packages is a path, where the lane's was read off a tracer a
+  test had to carry. **One crate does a thing and another keeps house**: the logic writes the hot record, and what
+  ships it to a cold store, a tracer or the series, is a crate of its own that reads it there.
 - **A pattern over a node several journal entries copy is asked within one entry** — every event copies the step or
   the plan it is about, and over the union of the entries each copy answered once more, 294 rows for three events.
 - **The history view is what the agents kept, drawn, and the package that decides a thing draws it** — a domain draws its

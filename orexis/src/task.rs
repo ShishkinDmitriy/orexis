@@ -33,7 +33,7 @@ use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
 use tokio::sync::{Notify, watch};
 
 use crate::Error;
-use crate::activity::{Activity, Ended, Started};
+use crate::activity::{Activity, Ended, Started, Wrote};
 use crate::clock::Clock;
 use crate::events::{Event, Laps, Mark, Number, Watch, round6};
 use crate::store::Store;
@@ -259,6 +259,7 @@ impl Events {
             agent,
             events: self,
             next: None,
+            last: None,
         }
     }
 
@@ -578,18 +579,36 @@ pub struct Turn<'a> {
     pub agent: &'a str,
     events: &'a Events,
     next: Option<DateTime>,
+    /// The activity this turn ended last: what the graphs it wrote are said of.
+    last: Option<NamedNode>,
 }
 
 impl Turn<'_> {
     /// WHAT THE TASK DID OF WHAT WOKE IT: the graphs it wrote, told to whoever hears their kinds, before the events
     /// it said are.
     pub fn done(&mut self, wrote: Result<Vec<String>, Error>) -> Result<(), Error> {
-        self.events.wrote(wrote?)
+        let wrote = wrote?;
+        self.wrote(&wrote);
+        self.events.wrote(wrote)
+    }
+
+    /// Say whose `graphs` are, where anybody watches and an activity of this turn wrote them.
+    fn wrote(&self, graphs: &[String]) {
+        if let Some(by) = &self.last
+            && !graphs.is_empty()
+            && self.events.0.watch.connected()
+        {
+            self.events.0.watch.emit(&Wrote {
+                by: by.clone(),
+                graphs: graphs.to_vec(),
+            });
+        }
     }
 
     /// One thing done of several in this turn - what a package queued for itself, each in turn: the graphs it wrote
     /// told, then the events it said, before the next is done.
     pub fn told(&mut self, wrote: Vec<String>) -> Result<(), Error> {
+        self.wrote(&wrote);
         let told = self.events.wrote(wrote);
         let said = TURN
             .try_with(|turn| std::mem::take(&mut turn.borrow_mut().said))
@@ -644,6 +663,7 @@ impl Turn<'_> {
 
     /// End `activity`, and say that it ended.
     pub fn end(&mut self, activity: Activity) {
+        self.last = Some(activity.node.clone());
         if self.events.0.watch.connected() {
             self.events.0.watch.emit(&Ended {
                 activity: activity.node.clone(),
@@ -725,6 +745,7 @@ impl Handed {
             agent: &self.id,
             events: &self.events,
             next: None,
+            last: None,
         }
     }
 
