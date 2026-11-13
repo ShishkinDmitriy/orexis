@@ -32,7 +32,7 @@ use orexis_prediction as _;
 #[cfg(feature = "sensing")]
 use orexis_sensing as _;
 use orexis_span as _;
-use orexis_span_opentelemetry as _;
+use orexis_span_otlp as _;
 #[cfg(feature = "speech")]
 use orexis_speech as _;
 #[cfg(feature = "translation")]
@@ -188,8 +188,8 @@ pub struct Watching {
     pub journal: Option<Arc<Journal>>,
     pub history: Option<Sink>,
     pub metrics: Option<orexis_metrics::Window>,
-    /// The tracer's OTLP endpoint.
-    pub traces: Option<String>,
+    /// Where the agent is traced, and how often it ships what its journal keeps.
+    pub traces: Option<orexis_span_otlp::Tracing>,
 }
 
 /// What the agent's bus is, where a test hands one: the MQTT member over a client of its own, the HTTP member over a
@@ -239,19 +239,24 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
     if let Some(journal) = &watching.journal {
         outside.hand(orexis_span::Kept(journal.clone()));
     }
+    //  AND SHIPPED FROM THERE to whoever traces the agent: what is kept is what is sent, so with no journal, nothing.
+    if let (Some(tracing), Some(journal)) = (watching.traces, &watching.journal) {
+        outside.hand(orexis_span_otlp::Ships {
+            journal: journal.clone(),
+            endpoint: tracing.endpoint,
+            every_s: tracing.every_s,
+        });
+    }
+    #[cfg(feature = "planning")]
+    if let Some(budget) = budget {
+        outside.hand(orexis_planning::create::Budget(budget));
+    }
     outside.hand(orexis_history::Keeps {
         sink: watching.history,
         journal: watching.journal,
     });
     if let Some(window) = watching.metrics {
         outside.hand(window);
-    }
-    if let Some(endpoint) = watching.traces {
-        outside.hand(orexis_span_opentelemetry::Endpoint(endpoint));
-    }
-    #[cfg(feature = "planning")]
-    if let Some(budget) = budget {
-        outside.hand(orexis_planning::create::Budget(budget));
     }
     #[cfg(feature = "mqtt")]
     if let Some(member) = mqtt {
@@ -290,7 +295,7 @@ pub fn start(
     budget: Option<usize>,
     wiring: Wiring,
 ) -> Result<Running, Error> {
-    let mut names: Vec<String> = ["history", "span", "metrics", "span-opentelemetry"]
+    let mut names: Vec<String> = ["history", "span", "metrics", "span-otlp"]
         .iter()
         .map(|n| n.to_string())
         .collect();

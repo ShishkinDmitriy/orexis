@@ -1,7 +1,7 @@
-# SPAN, TO OPENTELEMETRY: every activity the agent begins and ends, sent to whoever traces it as a span over OTLP's JSON,
-# knowing no package's words (packages-meet-by-events-policies-and-activities).
+# SPAN, OVER OTLP: what orexis-span keeps in the journal, shipped on a timer to whoever traces the agent as spans
+# over OTLP's JSON, knowing no package's words (packages-meet-by-events-policies-and-activities).
 [package]
-name = "orexis-span-opentelemetry"
+name = "orexis-span-otlp"
 version = "0.2.0"
 edition.workspace = true
 license.workspace = true
@@ -16,6 +16,5 @@ oxigraph.workspace = true
 serde_json = "1"
 ureq = "2"
 log = "0.4"
-
-[dev-dependencies]
 oxsdatatypes = "0.2"
+tokio.workspace = true

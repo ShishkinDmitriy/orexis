@@ -463,6 +463,42 @@ async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journa
     .map(|(a, b)| (a.to_string(), b.to_string()))
     .collect();
     assert_eq!(caused, expected);
+    //  AND WHAT IS KEPT IS WHAT IS SHIPPED: the same activities as spans, a planning's linked to the revising that
+    //  generated what started it, and none sent twice.
+    let sent: Arc<Mutex<Vec<String>>> = Arc::default();
+    let got = sent.clone();
+    let send: orexis_span_otlp::Send = Arc::new(move |body| {
+        got.lock().unwrap().push(body);
+        true
+    });
+    let tracer = "http://tracer.test:4318";
+    let shipped = orexis_span_otlp::ship(&journal, "grower", tracer, &send);
+    assert!(shipped > 0);
+    assert_eq!(orexis_span_otlp::ship(&journal, "grower", tracer, &send), 0);
+    let body: serde_json::Value = serde_json::from_str(&sent.lock().unwrap()[0]).unwrap();
+    let spans = body["resourceSpans"][0]["scopeSpans"][0]["spans"]
+        .as_array()
+        .unwrap()
+        .clone();
+    assert_eq!(spans.len(), shipped);
+    let ids = |name: &str| -> BTreeSet<String> {
+        spans
+            .iter()
+            .filter(|s| s["name"] == name)
+            .map(|s| s["spanId"].as_str().unwrap().to_string())
+            .collect()
+    };
+    let revisings = ids("Revising");
+    assert!(
+        spans.iter().filter(|s| s["name"] == "Planning").any(|s| {
+            s["links"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|l| revisings.contains(l["spanId"].as_str().unwrap()))
+        }),
+        "a planning's span links to the revising that caused it"
+    );
 }
 
 #[tokio::test(start_paused = true)]
