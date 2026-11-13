@@ -1,0 +1,49 @@
+# THE RUST BUILD, KEPT WARM FOR THE GATES.
+#
+# The gates run on the pull request alone (gates.yml says why), and GitHub restores a cache only from the branch a
+# run is on or from the default branch. A cache one pull request's run saved is no other's, and nothing ran on main,
+# so every `rust` job began with "No cache found" and compiled the engine and RocksDB from nothing: about fourteen of
+# its twenty-three minutes, measured over three pull requests in a row.
+#
+# So main builds once per merge and keeps the result, and a pull request's `rust` job restores it. It BUILDS AND RUNS
+# NOTHING: the three builds the gate's steps need, clippy's, the tests' and the binary's with its volume, each with
+# `--no-run` or its like. What was merged was already held by the gates on its pull request; this proves nothing, so
+# it can fail without anything being wrong but the next pull request's build being cold.
+#
+# The two jobs share one cache by `shared-key`, and only this one saves it: a pull request's would be no use to the
+# next, and saving costs a minute.
+
+name: warm
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "orexis*/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/warm.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: warm
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: rust
+      - name: what clippy builds
+        run: cargo clippy --all-targets
+      - name: what the tests build
+        run: cargo test --no-run
+      - name: what the binary with its volume builds
+        run: cargo test -p orexis-agent --features volume --test hanoi --no-run
