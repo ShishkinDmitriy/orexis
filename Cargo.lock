@@ -1003,6 +1003,7 @@ dependencies = [
  "oxigraph",
  "oxsdatatypes",
  "serde_json",
+ "tokio",
  "ureq",
 ]
 

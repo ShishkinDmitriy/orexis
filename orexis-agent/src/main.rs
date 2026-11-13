@@ -166,8 +166,13 @@ fn run(args: &Args, clock: Arc<Paced>, journal: Arc<Journal>, halt: Arc<AtomicBo
         orexis_metrics::Window::new(sink, interval, Some(&world_name(&args.world)), Some(&args.agent))
     });
     let traces = orexis_span_opentelemetry::from_environment(&env);
-    if let Some(endpoint) = &traces {
-        log::info!("{} says its activities as spans to {endpoint}", args.agent);
+    if let Some(tracing) = &traces {
+        log::info!(
+            "{} ships its activities as spans to {} every {}s",
+            args.agent,
+            tracing.endpoint,
+            tracing.every_s
+        );
     }
     let wiring = Wiring {
         watching: Watching {

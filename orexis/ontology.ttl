@@ -134,6 +134,13 @@ orexis:keptBy
     rdfs:label "kept by" ;
     rdfs:comment "The incident a log record or an activity is kept for, past the window: it came in the minutes before it." .
 
+orexis:shippedTo
+    a owl:DatatypeProperty ;
+    rdfs:domain prov:Activity ;
+    rdfs:range xsd:string ;
+    rdfs:label "shipped to" ;
+    rdfs:comment "The cold store an activity kept in the journal was shipped to and accepted by, its address: said once per store, so each ships what it was not sent and none twice. An activity saying none for a store is still that store's to ship, until the journal's window sweeps it." .
+
 orexis:tookS
     a owl:DatatypeProperty ;
     rdfs:domain prov:Activity ;

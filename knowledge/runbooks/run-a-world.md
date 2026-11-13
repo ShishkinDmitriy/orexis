@@ -28,10 +28,11 @@ cp infra/admin.env.example infra/secrets/admin.env   # the admin token. Fill it 
 cd infra && podman compose up -d influxdb grafana tempo    # the broker needs its ACL first, below
 ```
 
-Each agent of a monitored world is told `OTLP_ENDPOINT` and sends Tempo one trace per pass, every
-[activity](/domain/kernel/activity.md) a span under it; in Grafana, Explore, the Tempo datasource,
-search by service name, which is the agent's id. An agent whose tracer is down logs it once and
-goes on.
+Each agent of a monitored world is told `OTLP_ENDPOINT` and ships Tempo what its journal keeps of its
+[activities](/domain/kernel/activity.md), every ten seconds of its time or as `OTLP_INTERVAL_S` says: an
+activity a span, one begun inside another its child, and what caused it a link to the span that did. In
+Grafana, Explore, the Tempo datasource, search by service name, which is the agent's id. An agent whose
+tracer is down logs it once and goes on, and ships what it still holds when the tracer answers.
 
 Where the series store is — its URL and org — and where a broker's ports are allocated from are
 stated in `infra/installation.ttl`, which says nothing secret; `infra/compose.yaml` is
