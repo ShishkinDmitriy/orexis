@@ -100,6 +100,11 @@ impl Journal {
         })
     }
 
+    /// The instant the journal stands at, as it stamps an entry given none.
+    pub fn now(&self) -> DateTime {
+        (self.now)()
+    }
+
     /// Keep the entry `node` — its `triples`, which say what it is — at `at`, or now: a graph named by it, its instant
     /// stamped. An `incident`, or an entry of a class the deployment counts as one, says so and keeps the window of log
     /// before it.
