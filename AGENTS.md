@@ -509,10 +509,15 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   soil moist, which only the probe's next reading shows; declared no landing, it failed a patience after it was
   taken and the grower bought, presented and was served again once a minute until the reading came, four doses
   where one was owed, which a test that set its clock past the gap had hidden (#1148).
-- **A ground laid again under its name takes back its candidates with its facts and its weighings** — a candidate
-  is a filling the ground's facts admitted, and two plannings at one instant lay one name twice; left standing, a
-  drive to the neighbour of where the van had stood at boot was taken two minutes on from where it stood then, two
-  cells off, and the tower's puzzle was never walked home (#1147).
+- **A ground laid again under its name takes back its candidates and its weighings, unless it and everything read
+  beside it stand as they did** — a candidate is a filling the ground's facts admitted, and two plannings at one
+  instant lay one name twice; left standing under other facts, a drive to the neighbour of where the van had stood
+  at boot was taken two minutes on from where it stood then, two cells off, and the tower's puzzle was never walked
+  home (#1147); taken back whatever the ground held, a search the budget cut short began again from nothing at
+  every planning of that instant (#1158); and kept by the ground's hash alone, a supplier whose ground stood while
+  a call arrived beside it went on reading no call, a weighing reading the ground and what is beside it. So the
+  planner digests what a scope's worlds read beside their grounds as each planning begins, and the ground keeps its
+  cone only where that and its own hash are as they were.
 
 ### Execution
 

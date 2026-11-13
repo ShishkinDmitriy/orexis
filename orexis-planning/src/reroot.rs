@@ -154,6 +154,22 @@ pub fn reroot(store: &Store, ground: &str) -> Result<Rerooting, Error> {
         store.update(&bind(RESTAMP_U, &marks)?)?;
         store.update(&bind(REPARENT_U, &marks)?)?;
     }
+    //  A GROUND LAID AGAIN UNDER ITS NAME AS IT STOOD IS ITS OWN MATCH (#1158): two plannings at one instant lay one
+    //  name twice, so no other world holds the present's hash, and what was imagined from the ground the first time
+    //  still hangs from it - `lay_ground` took back the candidates of a ground laid again as another, and a cone
+    //  begins at a candidate. Called a surprise, a search the budget cut short lost everything it had weighed.
+    let mut own = false;
+    if found.is_none() {
+        for laid in kept.clone() {
+            let cone: Vec<String> = store
+                .rows(&bind(CONE_Q, &[("match", at(&laid)), ("cat", cat.clone())])?, &[])?
+                .iter()
+                .filter_map(|r| iri(r, "w"))
+                .collect();
+            own = own || !cone.is_empty();
+            kept.extend(cone);
+        }
+    }
     let mut gone: Vec<String> = store
         .rows(&bind(MADE_Q, &[("cat", cat.clone())])?, &[])?
         .iter()
@@ -183,6 +199,7 @@ pub fn reroot(store: &Store, ground: &str) -> Result<Rerooting, Error> {
         store.update(&bind(DROP_ROWS_U, &[("cat", cat.clone())])?)?;
     }
     let present = match (&found, gone.is_empty()) {
+        (None, _) if own => "ground",
         (None, true) => "first",
         (None, false) => "surprise",
         (Some(_), _) if landed => "child",
