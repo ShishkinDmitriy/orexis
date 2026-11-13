@@ -18,11 +18,8 @@ by the node it is about, a UUID's URN:
   its [series](/domain/kernel/series.md) keeps.
 - a **log record**, `orexis:LogRecord`, what the code said in the log — its `orexis:logger`, `orexis:level` and
   `orexis:message` — kept for the **window**, ten minutes where `JOURNAL_WINDOW_S` says nothing, and swept after.
-- an [**activity**](/domain/kernel/activity.md), a `prov:Activity`, what a package did over a stretch — its class,
-  when it started and ended, how long it took in real seconds (`orexis:tookS`), what started it
-  (`prov:wasStartedBy`), the activity it was begun inside (`dcterms:isPartOf`), and what it generated, each event
-  said in it and each graph its turn wrote (`prov:wasGeneratedBy`) — written as it ends by `orexis-span/`, and kept
-  for the window as a log record is.
+- an [**activity**](/domain/kernel/activity.md) a package did, a `prov:Activity`, written as it ends by
+  `orexis-span/`: that page says what the entry holds. Kept for the window too.
 
 An **incident**, `orexis:Incident`, keeps the window before it: every log record and every activity of it is kept for good beside the
 incident (`orexis:keptBy`), and the incident's entry says it is one. So what led up to a failure is there to read, and
