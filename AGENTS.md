@@ -111,8 +111,11 @@ only about restatement, which is the thing that rots.
 
 **Durable knowledge goes in the bundle, never in a new README.** `domain/` says what a thing is
 and how to use it; `decisions/` says why a choice was made and which seams it leaves open. The
-existing READMEs (root, `firmware/*/`) are operational entry points and stay, but do
-not add more for design knowledge.
+READMEs (root, `firmware/*/`, and one in each crate) are entry points and stay, but do
+not add more for design knowledge. **A crate's README is an index card of its package**: what it
+does in a sentence, which role loads it, what starts it, the activities it starts and what each
+ends saying, and a link to its dictionary. It defines no word and argues nothing, and
+`tests/test_layout.py` holds it to every activity and every trigger its `ontology.ttl` declares.
 
 **Reconciling the bundle is part of the change, not follow-up.** After changing behaviour, grep
 `knowledge/` for claims the change made false and fix them in the same commit. A stale decision
