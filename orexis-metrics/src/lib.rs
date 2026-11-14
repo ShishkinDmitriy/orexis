@@ -213,7 +213,7 @@ impl Metrics {
     }
 }
 
-inventory::submit! { Package { name: "metrics", start } }
+inventory::submit! { Package { name: "metrics", documents: &[], start } }
 
 /// METRICS' START: where it is handed a window it tallies what it hears on the watch from now on, and its task waits
 /// for the run's end and writes the last window.

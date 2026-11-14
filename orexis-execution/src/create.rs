@@ -258,7 +258,7 @@ impl Execution {
     }
 }
 
-inventory::submit! { Package { name: "execution", start } }
+inventory::submit! { Package { name: "execution", documents: orexis::documents!("ontology.ttl"), start } }
 
 /// EXECUTION'S START: its executor made, and its task, which hears the events beneath its triggers.
 fn start(handed: &Handed) -> Result<Option<Task>, Error> {

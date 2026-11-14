@@ -773,7 +773,7 @@ impl Translation {
 /// answers is handed back before the turn ends.
 pub struct Inline;
 
-inventory::submit! { Package { name: "translation", start } }
+inventory::submit! { Package { name: "translation", documents: orexis::documents!("ontology.ttl"), start } }
 
 /// THE PACKAGE'S START: its part made and started - what it hears, what it does every so often - and its task.
 fn start(handed: &Handed) -> Result<Option<Task>, Error> {

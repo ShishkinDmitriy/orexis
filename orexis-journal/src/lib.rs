@@ -28,7 +28,7 @@ pub struct Keeps {
     pub journal: Option<Arc<Journal>>,
 }
 
-inventory::submit! { Package { name: "journal", start } }
+inventory::submit! { Package { name: "journal", documents: orexis::documents!("ontology.ttl"), start } }
 
 /// THE START: where it is handed a journal it hears the watch from now on, the events and the activities, and has
 /// no task.

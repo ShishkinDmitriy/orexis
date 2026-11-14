@@ -36,11 +36,11 @@ fn now() -> DateTime {
 }
 
 fn store() -> Store {
-    Store::new(Arc::new(Namespaces::of_tree(tree()).unwrap())).unwrap()
+    Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap()
 }
 
 fn boot(store: &Store) -> Vec<String> {
-    booted(store, tree(), &world(), "hanoi", now()).unwrap()
+    booted(store, &world(), "hanoi", now()).unwrap()
 }
 
 const HOME_Q: &str = "PREFIX hanoi: <http://example.org/orexis/hanoi#>
@@ -154,7 +154,7 @@ fn the_boot_says_what_each_graph_is() {
 fn the_mover_loads_planning_and_its_journal_and_nothing_else() {
     let store = store();
     assert_eq!(boot(&store), ["planning", "journal"], "a planner and a recorder");
-    assert_eq!(packages_of(&store, tree()).unwrap(), ["planning", "journal"]);
+    assert_eq!(packages_of(&store).unwrap(), ["planning", "journal"]);
     let absent = [
         "orexis-execution/ontology.ttl",
         "orexis-belief/ontology.ttl",
@@ -166,7 +166,8 @@ fn the_mover_loads_planning_and_its_journal_and_nothing_else() {
     ];
     let present = ["orexis/ontology.ttl", "orexis-planning/ontology.ttl"];
     let held = |p: &str| {
-        let uri = orexis::document::file_uri(&tree().join(p)).unwrap();
+        let (krate, name) = p.split_once('/').unwrap();
+        let uri = orexis::boot::brought_uri(krate, name);
         !store
             .rows(
                 &format!("SELECT ?p WHERE {{ GRAPH ?g {{ <{uri}> ?p ?o }} }} LIMIT 1"),
@@ -214,11 +215,11 @@ async fn a_lived_in_volume_keeps_the_plan_and_does_not_search_again() {
     let path = std::env::temp_dir().join(format!("orexis-hanoi-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&path);
     {
-        let store = Store::open(&path, Arc::new(Namespaces::of_tree(tree()).unwrap())).unwrap();
+        let store = Store::open(&path, Arc::new(Namespaces::linked().unwrap())).unwrap();
         boot(&store);
         assert_eq!(ran(&store, 64, 20).await, PLANNED);
     }
-    let store = Store::open(&path, Arc::new(Namespaces::of_tree(tree()).unwrap())).unwrap();
+    let store = Store::open(&path, Arc::new(Namespaces::linked().unwrap())).unwrap();
     let published = store.graphs_of(&[PLAN], &Within::default()).unwrap();
     boot(&store);
     assert!(

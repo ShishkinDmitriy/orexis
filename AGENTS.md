@@ -1041,6 +1041,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A question is answered and every other act is kept, and FIPA names the acts** — a question is the model's
   query and writes nothing, a statement of any other act is kept; a performative term on every statement kind, FIPA's semantics, an envelope and a
   protocol engine were refused, a protocol being what the actions' preconditions allow (a-question-is-answered-and-every-other-act-is-kept).
+- **A package brings its own documents, compiled into the binary beside its code, and the boot reads no tree of
+  crates** — its ontology, rules and actions are named in its registration (`orexis::documents!`) and put in the store
+  where a role loads it, so a binary holds the vocabulary of exactly the packages built into it; a role or a transport
+  whose package was built out is refused at boot; the image carried every crate's documents whatever the agent ran, and
+  a package was loaded by the kernel walking its directory (package).
 - **Each agent's image holds only what it runs** — `orexis-compose` builds `orexis-<world>-<agent>:local` with a feature of the binary for each
   package the agent loads and each whose crate those depend on; one image carrying everything was refused (a-package-brings-its-own-dependencies).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —

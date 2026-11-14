@@ -34,7 +34,7 @@ impl Prediction {
     }
 }
 
-inventory::submit! { Package { name: "prediction", start } }
+inventory::submit! { Package { name: "prediction", documents: orexis::documents!("ontology.ttl"), start } }
 
 /// PREDICTION'S START: its foresight offered, for whoever lays the grounds to take, and no task - what it offers is
 /// asked for where the grounds are laid, and it waits for nothing.

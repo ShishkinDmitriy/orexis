@@ -31,7 +31,7 @@ Nothing assembles them - each registers itself (`orexis/src/task.rs`) - and the 
 # How a package is loaded
 
 **Only for a [role](/domain/kernel/role.md) the agent is declared in.** A package is a crate at the
-repo's root holding an `ontology.ttl`, named for it (`transport/mqtt` is `orexis-transport-mqtt/`), found by looking and never listed, and that ontology declares the
+repo's root holding an `ontology.ttl`, named for it (`transport/mqtt` is `orexis-transport-mqtt/`), and that ontology declares the
 roles the package serves, beneath `orexis:Role`:
 
 | package | its role | an agent in it |
@@ -78,6 +78,15 @@ A package's need of another is said by its role sitting beneath the other's — 
 the deliberator, since an observation's sides are revisions — in the package's own ontology, so no
 package speaks a word above it and the runtime knows none of the needs
 ([a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md)).
+
+**It brings its own documents.** A package registers itself with the documents it brings — its `ontology.ttl`, and
+where it has them its rules and its actions — each a file of its crate compiled into the binary beside its code
+(`orexis::documents!` in the crate's registration). The boot puts in the store the documents of the packages the
+agent's roles load, and of no other; it reads no directory of crates, so a binary holds the vocabulary of exactly the
+packages built into it. A role the agent plays whose package was built out is refused at boot, and so is a transport
+it needs. A brought document's graph is named for its crate and file (`urn:orexis:orexis-sensing/rules.ttl`), a name
+for eyes. A crate's `requirements.ttl` is not brought: it is onboarding's, read off the disk by `orexis-onboard`, and
+no agent loads it. Onboarding, which is Python and compiles nothing, still finds each crate's documents by looking.
 
 # Whose a word is
 

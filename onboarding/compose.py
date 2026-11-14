@@ -371,7 +371,7 @@ _SIMULATOR_TREES = "".join(f"\n      - ../../{tree}:/app/{tree}:ro" for tree in 
     *sorted(p.name for p in TREE.iterdir() if (p / "Cargo.toml").is_file() and p.name.split("-")[0] == "orexis"),
     "documents", "domains", "simulation"])
 _TREES = """# The domains, mounted over the image's copy so a changed document needs a restart; the binary and the
-      # tree's documents are its image's, so a change to the agent is a rebuild."""
+      # documents its packages bring are in it, so a change to the agent is a rebuild."""
 
 
 def _broker(world: str, broker_iri: str, plain: int, tls: int | None) -> str:

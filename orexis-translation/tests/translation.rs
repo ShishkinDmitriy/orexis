@@ -10,7 +10,9 @@ use std::sync::{Arc, Mutex};
 use oxsdatatypes::DateTime;
 use serde_json::{Value as Json, json};
 
-use orexis::boot::{Booting, TREE, boot};
+use orexis::boot::{Booting, boot};
+//  LINKED FOR THE DOCUMENTS THEY BRING: the world's chats are carried by these, and the boot refuses a carrier the
+//  binary was built without.
 use orexis::clock::{Elapsing, instant};
 use orexis::events::as_of;
 use orexis::namespaces::Namespaces;
@@ -26,6 +28,9 @@ use orexis_translation::events::{Conversed, Translated};
 use orexis_translation::model::{Answer, Failure, Model, Turn};
 use orexis_translation::readable::{QUERY, ROWS, Readable, VOCABULARY};
 use orexis_translation::stated::{PROPERTY, Stating, believe, listing, rendered, statement_of, words};
+use orexis_transport_email as _;
+use orexis_transport_mqtt as _;
+use orexis_transport_telegram as _;
 
 const V: &str = "http://example.org/orexis/world/viewing#";
 const O: &str = "http://example.org/orexis#";
@@ -40,12 +45,10 @@ fn now() -> DateTime {
 }
 
 fn seeker() -> Store {
-    let tree = Path::new(TREE);
-    let store = Store::new(Arc::new(Namespaces::of_tree(tree).unwrap())).unwrap();
+    let store = Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap();
     boot(
         &store,
         &Booting {
-            tree,
             world: &world(),
             agent: "seeker",
         },
@@ -470,7 +473,7 @@ struct Member {
 
 //  THE MEMBER'S TASK, registered as a package registers itself: it takes the member the test handed outside, hears
 //  the agent's words kept and its writing announced, and is rung for what the test queued on it.
-inventory::submit! { Package { name: "test/member", start: |handed| {
+inventory::submit! { Package { name: "test/member", documents: &[], start: |handed| {
     let member = handed.outside.take::<Arc<Mutex<Member>>>().expect("a member handed");
     let mut hears = handed.events.hears();
     hears.event(PROSE_KEPT, 1);

@@ -35,7 +35,7 @@ impl Transport {
     }
 }
 
-inventory::submit! { Package { name: "transport/http", start } }
+inventory::submit! { Package { name: "transport/http", documents: orexis::documents!("ontology.ttl"), start } }
 
 /// THE PACKAGE'S START: its part made and started - what it hears, what it does every so often - and its task.
 fn start(handed: &Handed) -> Result<Option<Task>, Error> {

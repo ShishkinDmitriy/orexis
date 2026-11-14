@@ -152,7 +152,7 @@ pub struct Archives {
     pub every_s: f64,
 }
 
-inventory::submit! { Package { name: "journal-oxigraph", start } }
+inventory::submit! { Package { name: "journal-oxigraph", documents: &[], start } }
 
 /// THE ARCHIVER'S START: where it is handed a journal and an archive, its task; and none otherwise.
 fn start(handed: &Handed) -> Result<Option<Task>, Error> {

@@ -55,7 +55,7 @@ services:
       # by onboarding and by hand, never committed, and mounted into THIS container alone
       - ./secrets/dispatcher:/app/world/driver/secrets/dispatcher:ro
       # The domains, mounted over the image's copy so a changed document needs a restart; the binary and the
-      # tree's documents are its image's, so a change to the agent is a rebuild.
+      # documents its packages bring are in it, so a change to the agent is a rebuild.
       - ../../domains:/app/domains:ro
 
 volumes:

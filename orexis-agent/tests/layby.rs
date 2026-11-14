@@ -113,9 +113,9 @@ fn at(store: &Store) -> BTreeMap<String, (i64, i64)> {
 /// Walk the courier of `world` through `fixture`'s steps: the drives it sent and where it believes everything stands.
 async fn walk(world: &Path, fixture: &str) -> (Drives, BTreeMap<String, (i64, i64)>) {
     let steps = steps(fixture);
-    let store = Store::new(Arc::new(Namespaces::of_tree(tree()).unwrap())).unwrap();
+    let store = Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap();
     let clock: Arc<dyn Clock> = common::clock(steps[0].0);
-    let loaded = booted(&store, tree(), world, "courier_a", steps[0].0).unwrap();
+    let loaded = booted(&store, world, "courier_a", steps[0].0).unwrap();
     let drives = Arc::new(Mutex::new(Vec::new()));
     let bus = Bus {
         clock: clock.clone(),

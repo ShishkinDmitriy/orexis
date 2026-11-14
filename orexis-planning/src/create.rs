@@ -165,7 +165,7 @@ fn walks(beliefs: &Store) -> Result<bool, Error> {
     Ok(false)
 }
 
-inventory::submit! { Package { name: "planning", start } }
+inventory::submit! { Package { name: "planning", documents: orexis::documents!("ontology.ttl", "wait.ttl"), start } }
 
 /// How many worlds planning's search may weigh a pass, where whoever runs the agent sizes it: none reads the agent's
 /// stance.

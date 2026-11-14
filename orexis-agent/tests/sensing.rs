@@ -51,20 +51,13 @@ fn world() -> PathBuf {
 }
 
 fn store() -> Store {
-    Store::new(Arc::new(Namespaces::of_tree(tree()).unwrap())).unwrap()
+    Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap()
 }
 
 #[test]
 fn booted_from_its_directory_the_agent_holds_no_hardware() {
     let store = store();
-    booted(
-        &store,
-        tree(),
-        &world(),
-        "fern",
-        instant("2026-01-01T12:00:00+00:00").unwrap(),
-    )
-    .unwrap();
+    booted(&store, &world(), "fern", instant("2026-01-01T12:00:00+00:00").unwrap()).unwrap();
     let hardware = orexis::document::file_uri(&world().join("hardware.ttl")).unwrap();
     let held = store
         .rows(
@@ -88,7 +81,7 @@ fn booted_from_its_directory_the_agent_holds_no_hardware() {
 async fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_to_the_boards_command_topic() {
     let store = store();
     let now = instant("2026-01-01T12:00:00+00:00").unwrap();
-    let loaded = booted(&store, tree(), &world(), "fern", now).unwrap();
+    let loaded = booted(&store, &world(), "fern", now).unwrap();
     let broker = Broker::default();
     let member = Mqtt::new(
         &store,
@@ -152,7 +145,7 @@ async fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_
     );
     assert!(broker.0.lock().unwrap().1.is_empty());
     let store2 = self::store();
-    booted(&store2, tree(), &world(), "fern", now).unwrap();
+    booted(&store2, &world(), "fern", now).unwrap();
     let cadence = Broker::default();
     let mut member = Mqtt::new(
         &store2,

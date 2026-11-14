@@ -67,7 +67,7 @@ agent moving to the binary keeps the beliefs it has lived in.
 **AMENDED (2026-11-12): the crates are flat, at the repo's root.** The tree below nested, `agent/transport/mqtt/`, because
 Python imported by dots; Rust imports a crate by its name and never its directory, so the nesting carried nothing. Each
 package is `orexis-<package>/`, `transport/mqtt` being `orexis-transport-mqtt/`, the kernel `orexis/` and the binary
-`orexis-agent/`; a package keeps its name, and one rule maps it to its crate (`boot::directory_of`). Where this record says
+`orexis-agent/`; a package keeps its name, and one rule maps it to its crate (`boot::crate_of`). Where this record says
 `agent/` or `binary/` below, it narrates the tree as it was.
 
 **Each package is a crate of its own, in its own directory, and the features are the binary's.** The kernel

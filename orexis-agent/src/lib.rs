@@ -50,16 +50,10 @@ use orexis_transport_mqtt as _;
 #[cfg(feature = "telegram")]
 use orexis_transport_telegram as _;
 
-/// Boot `agent` of `world` into `store` from the documents of `tree`: the packages it loads, each one this binary
-/// holds — refused where it plays a role whose package this binary was built without.
-pub fn booted(
-    store: &Store,
-    tree: &Path,
-    world: &Path,
-    agent: &str,
-    now: oxsdatatypes::DateTime,
-) -> Result<Vec<String>, Error> {
-    let loaded = boot(store, &Booting { tree, world, agent })?;
+/// Boot `agent` of `world` into `store` from the world's documents and those its packages bring: the packages it
+/// loads, each one this binary holds — refused where it plays a role whose package this binary was built without.
+pub fn booted(store: &Store, world: &Path, agent: &str, now: oxsdatatypes::DateTime) -> Result<Vec<String>, Error> {
+    let loaded = boot(store, &Booting { world, agent })?;
     let held: Vec<&str> = loaded.iter().map(String::as_str).filter(|p| !built(p)).collect();
     if !held.is_empty() {
         return Err(Error::Evaluation(format!(
@@ -89,21 +83,15 @@ pub struct Checked {
 }
 
 /// CHECK `agent` of `world` as its container would boot it, and run nothing: booted into a store in memory from the
-/// documents of `tree`, and every part its roles load made and started, on a runtime that is never run, over members
+/// world's documents and its packages', and every part its roles load made and started, on a runtime that is never run, over members
 /// that reach nothing — no broker, no web, no bot and no model — so every text a part parses at its making is parsed. What it found, or why it would not boot; and,
 /// where `boot` names a file, the store as booted, in N-Quads, before any part is made — which is what onboarding
 /// holds to the requirements, so the world is booted once, by the agent that will run it.
 /// `orexis-onboard` asks it of every agent before anything is granted, and `orexis-agent/tests/check.rs` of every world.
-pub fn check(
-    tree: &Path,
-    world: &Path,
-    agent: &str,
-    now: oxsdatatypes::DateTime,
-    boot: Option<&Path>,
-) -> Result<Checked, Error> {
-    let namespaces = Arc::new(orexis::namespaces::Namespaces::of_tree(tree)?);
+pub fn check(world: &Path, agent: &str, now: oxsdatatypes::DateTime, boot: Option<&Path>) -> Result<Checked, Error> {
+    let namespaces = Arc::new(orexis::namespaces::Namespaces::linked()?);
     let store = Store::new(namespaces)?;
-    let loaded = booted(&store, tree, world, agent, now)?;
+    let loaded = booted(&store, world, agent, now)?;
     if let Some(path) = boot {
         let file = std::io::BufWriter::new(std::fs::File::create(path)?);
         store

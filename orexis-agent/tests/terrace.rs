@@ -185,7 +185,7 @@ async fn until(running: &Running, clock: &Arc<Elapsing>, at: oxsdatatypes::DateT
 }
 
 fn store() -> Store {
-    Store::new(Arc::new(Namespaces::of_tree(tree()).unwrap())).unwrap()
+    Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap()
 }
 
 /// Run the terrace of `world` through `walk`, its parts lent to a runtime on a clock standing where the walk sets it.
@@ -202,7 +202,7 @@ async fn terrace(
         broker: Broker::default(),
         asked: Arc::default(),
     };
-    let loaded = booted(&t.store, tree(), world, "terrace", noon()).unwrap();
+    let loaded = booted(&t.store, world, "terrace", noon()).unwrap();
     for package in [
         "belief",
         "sensing",

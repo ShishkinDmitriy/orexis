@@ -303,7 +303,7 @@ pub fn post(endpoint: &str) -> Send {
     })
 }
 
-inventory::submit! { Package { name: "journal-otlp", start } }
+inventory::submit! { Package { name: "journal-otlp", documents: &[], start } }
 
 /// THE SHIPPER'S START: where it is handed a journal and an endpoint, its task; and none otherwise.
 fn start(handed: &Handed) -> Result<Option<Task>, orexis::Error> {

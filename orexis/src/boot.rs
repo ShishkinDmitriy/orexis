@@ -1,8 +1,10 @@
-//! THE BOOT: one agent's store from the world's documents, as `agent/runtime.py`'s `boot` builds it. The kernel's
-//! T-Box and the world's documents go in, the vocabulary first and closed, so that what a graph is is the
+//! THE BOOT: one agent's store from the world's documents and the documents its packages bring. The kernel's
+//! T-Box, compiled into the kernel, and the world's documents, read off the disk, go in, the vocabulary first and closed, so that what a graph is is the
 //! vocabulary's to say and a graph of a kind it does not declare is passed over; then who the agent is, by the one
 //! identifier the process is told, and THE SELF, checked and never minted; then the packages its roles call for —
-//! each declared in its own ontology, read apart — and the world's graphs that say they are this agent's. A volume
+//! each declared in its own ontology, read apart — with the documents each loaded package brings, compiled into the
+//! binary beside its code (`task::Package::documents`), so the boot reads no tree of crates and a package built out
+//! of the binary brings nothing; and the world's graphs that say they are this agent's. A volume
 //! lived in forgets every common graph and reads the documents again, and keeps the agent's own.
 //!
 //! Writing the scopes is planning's, which the kernel names nothing of: whoever boots an agent that plans says so
@@ -22,23 +24,38 @@ use crate::ontology::{
     BELIEF, CATALOGUE_GRAPH, CLOSURE_GRAPH, DERIVED, GRAPH, ONTOLOGY, ROLE, SELF_GRAPH, SOCIETY_GRAPH, WORLD_GRAPH,
 };
 use crate::store::{Store, Within, iri};
+use crate::task::Package;
 
-/// The tree this kernel was built from: the repo's root, where its documents and its packages' are, unless a caller says
-/// another.
+/// The tree this kernel was built from: the repo's root, where a test finds the worlds and the cases. The boot reads
+/// nothing of it.
 pub const TREE: &str = env!("OREXIS_CRATES");
 
-/// THE KERNEL'S DIRECTORY of the tree, and every package's beside it.
+/// THE KERNEL'S CRATE, and every package's is named after it.
 const KERNEL: &str = "orexis";
 
-/// A PACKAGE'S DIRECTORY, a crate of the tree: `transport/mqtt` is `orexis-transport-mqtt`.
-pub fn directory_of(tree: &Path, package: &str) -> PathBuf {
-    tree.join(format!("{KERNEL}-{}", package.replace('/', "-")))
+/// THE KERNEL'S T-BOX, compiled in, as each package's documents are.
+const KERNEL_VOCABULARY: &str = include_str!("../ontology.ttl");
+
+/// A PACKAGE'S CRATE: `transport/mqtt` is `orexis-transport-mqtt`.
+pub fn crate_of(package: &str) -> String {
+    format!("{KERNEL}-{}", package.replace('/', "-"))
 }
 
-/// The package a directory of the tree is, where it is one: `orexis-transport-mqtt` is `transport/mqtt`.
-fn package_of(directory: &str) -> Option<String> {
-    let name = directory.strip_prefix(KERNEL)?.strip_prefix('-')?;
-    Some(name.replacen('-', "/", 1))
+/// THE NAME OF THE GRAPH A BROUGHT DOCUMENT IS: the file `name` of `krate`, which is no file where the agent runs, so
+/// it is named for the crate and the file and not for a place on a disk. A name is for eyes.
+pub fn brought_uri(krate: &str, name: &str) -> String {
+    format!("urn:orexis:{krate}/{name}")
+}
+
+/// The document `name` of `krate` as it was compiled in, with the path it is told apart by: never one under a world.
+fn brought(krate: &str, name: &str, text: &str) -> Result<(PathBuf, Document), Error> {
+    let doc = Document::brought(&format!("{krate}/{name}"), text, &brought_uri(krate, name))?;
+    Ok((PathBuf::from(krate).join(name), doc))
+}
+
+/// The package that registered itself as `name`, where this binary holds it.
+fn registered(name: &str) -> Option<&'static Package> {
+    inventory::iter::<Package>().find(|p| p.name == name)
 }
 
 const DOCUMENTS: [&str; 2] = ["ttl", "trig"];
@@ -67,6 +84,12 @@ const TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 const CLASS: &str = "http://www.w3.org/2002/07/owl#Class";
 
 const TERMS: &str = "http://example.org/orexis/";
+/// What the transports' patterns speak, declared with them: a transport built out of the binary brings no prefix,
+/// and whether the agent needs it is asked all the same, so that a needed one missing is refused.
+const SPOKEN: &str = "PREFIX sensing: <http://example.org/orexis/sensing#> \
+PREFIX speech: <http://example.org/orexis/speech#> PREFIX telegram: <http://example.org/orexis/telegram#> \
+PREFIX mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> PREFIX td: <https://www.w3.org/2019/wot/td#> \
+PREFIX schema: <https://schema.org/> ";
 const MINE: &str = "?me orexis:plays/sensing:sensor ?sensor .";
 const IN_A_CHAT: &str = "?chat speech:participant ?me ; speech:channel ?channel . ";
 
@@ -104,6 +127,7 @@ fn transports() -> Vec<(&'static str, Vec<(String, String)>)> {
 
 const ME_Q: &str = "SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id }";
 const DECLARED_Q: &str = "SELECT DISTINCT ?kind WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind }";
+const PLAYED_Q: &str = "SELECT ?role ?kind WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind }";
 const AGENTS_Q: &str = "SELECT DISTINCT ?a WHERE { ?a a orexis:Agent }";
 const SELVES_Q: &str = "SELECT DISTINCT ?self WHERE { GRAPH ?g { ?self a orexis:Self } } ORDER BY ?self";
 const ASSERTED_Q: &str =
@@ -114,9 +138,8 @@ SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
   { ?g orexis:arrivedBy orexis:Asserted FILTER NOT EXISTS { ?g orexis:ownedBy ?who } }
   UNION { VALUES ?g { $closure } ?g orexis:arrivedBy ?any } FILTER(?g != ?cat) } }";
 
-/// What the boot reads: the tree, the world, and the agent it was told to be.
+/// What the boot reads: the world, and the agent it was told to be.
 pub struct Booting<'a> {
-    pub tree: &'a Path,
     pub world: &'a Path,
     pub agent: &'a str,
 }
@@ -141,55 +164,34 @@ fn under(directory: &Path) -> Vec<PathBuf> {
     out
 }
 
-fn walk(directory: &Path, out: &mut Vec<PathBuf>) {
-    let Ok(entries) = fs::read_dir(directory) else { return };
-    let mut paths: Vec<PathBuf> = entries.filter_map(|e| e.ok().map(|e| e.path())).collect();
-    paths.sort();
-    for p in paths {
-        if p.is_dir() {
-            if p.file_name()
-                .is_some_and(|n| n != "tests" && n != "target" && n != "src")
-            {
-                walk(&p, out);
-            }
-        } else if is_document(&p) {
-            out.push(p);
-        }
-    }
-}
-
-/// Every package of the tree — each crate beside the kernel holding an `ontology.ttl` — in the order a pass runs their
-/// parts, and any the order does not name after, by its name.
-pub fn every_package(tree: &Path) -> Vec<String> {
-    let mut found: Vec<String> = fs::read_dir(tree)
-        .map(|entries| {
-            entries
-                .filter_map(|e| e.ok())
-                .filter(|e| e.path().join(VOCABULARY).is_file())
-                .filter_map(|e| package_of(&e.file_name().to_string_lossy()))
-                .collect::<BTreeSet<_>>()
-                .into_iter()
-                .collect()
-        })
-        .unwrap_or_default();
+/// Every package this binary holds that declares words — each registered with an `ontology.ttl` among the documents
+/// it brings — in the order a pass runs their parts, and any the order does not name after, by its name.
+pub fn every_package() -> Vec<String> {
+    let mut found: Vec<String> = inventory::iter::<Package>()
+        .filter(|p| p.documents.iter().any(|(name, _)| *name == VOCABULARY))
+        .map(|p| p.name.to_string())
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect();
     found.sort_by_key(|p| (PASS.iter().position(|q| q == p).unwrap_or(PASS.len()), p.clone()));
     found
 }
 
-/// Every document in the directories of `packages`, their tests' cases apart.
-fn documents_of(tree: &Path, packages: &[String]) -> Vec<PathBuf> {
+/// Every document the `packages` bring, each as its package compiled it in.
+fn documents_of(packages: &[String]) -> Result<Vec<(PathBuf, Document)>, Error> {
     let mut out = Vec::new();
     for package in packages {
-        walk(&directory_of(tree, package), &mut out);
+        for (name, text) in registered(package).map(|p| p.documents).unwrap_or_default() {
+            out.push(brought(&crate_of(package), name, text)?);
+        }
     }
-    out
+    Ok(out)
 }
 
-/// What a boot reads first: the kernel's T-Box, then the world's directory, the agent's own `secrets/<agent>/`, and
-/// `beliefs/`. Found by looking, never listed.
+/// What a boot reads first off the disk: the world's directory, the agent's own `secrets/<agent>/`, and `beliefs/`.
+/// Found by looking, never listed.
 fn documents(booting: &Booting<'_>) -> Vec<PathBuf> {
-    let mut out = vec![booting.tree.join(KERNEL).join(VOCABULARY)];
-    out.extend(under(booting.world));
+    let mut out = under(booting.world);
     out.extend(under(&booting.world.join(SECRETS).join(booting.agent)));
     out.extend(under(&booting.world.join(BELIEFS)));
     out
@@ -239,11 +241,15 @@ fn read_with_imports(paths: &[PathBuf]) -> Result<Vec<(PathBuf, Document)>, Erro
 /// every `rdfs:subClassOf` step the packages' ontologies state.
 type Vocabularies = (BTreeMap<String, String>, BTreeMap<String, BTreeSet<String>>);
 
-fn vocabularies(tree: &Path) -> Result<Vocabularies, Error> {
+fn vocabularies() -> Result<Vocabularies, Error> {
     let mut above: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     let mut declared: BTreeMap<String, String> = BTreeMap::new();
-    for package in every_package(tree) {
-        let doc = Document::read(&directory_of(tree, &package).join(VOCABULARY))?;
+    for package in every_package() {
+        let text = registered(&package)
+            .and_then(|p| p.documents.iter().find(|(name, _)| *name == VOCABULARY))
+            .map(|(_, text)| *text)
+            .unwrap_or_default();
+        let (_, doc) = brought(&crate_of(&package), VOCABULARY, text)?;
         for q in doc.quads() {
             let oxigraph::model::NamedOrBlankNode::NamedNode(s) = &q.subject else {
                 continue;
@@ -291,8 +297,8 @@ fn beneath(
 }
 
 /// Every role class the self plays — read off the self graph alone — that is beneath `orexis:Role`.
-pub fn roles_of(store: &Store, tree: &Path) -> Result<BTreeSet<String>, Error> {
-    let (_, steps) = vocabularies(tree)?;
+pub fn roles_of(store: &Store) -> Result<BTreeSet<String>, Error> {
+    let (_, steps) = vocabularies()?;
     let selves = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
     let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
     let mut reached = BTreeSet::new();
@@ -312,9 +318,9 @@ pub fn roles_of(store: &Store, tree: &Path) -> Result<BTreeSet<String>, Error> {
 
 /// Every package the self loads, in the order a pass runs their parts: each whose ontology declares the class of a
 /// role the self plays, and each transport a loaded role needs bytes from. Nothing where it plays no role.
-pub fn packages_of(store: &Store, tree: &Path) -> Result<Vec<String>, Error> {
-    let roles = roles_of(store, tree)?;
-    let (serving, _) = vocabularies(tree)?;
+pub fn packages_of(store: &Store) -> Result<Vec<String>, Error> {
+    let roles = roles_of(store)?;
+    let (serving, _) = vocabularies()?;
     let mut loaded: BTreeSet<String> = serving
         .iter()
         .filter(|(r, _)| roles.contains(*r))
@@ -325,12 +331,47 @@ pub fn packages_of(store: &Store, tree: &Path) -> Result<Vec<String>, Error> {
     let known: Vec<&str> = known.iter().map(String::as_str).collect();
     for (transport, needs) in transports() {
         for (role, pattern) in needs {
-            if roles.contains(&role) && store.ask(&format!("ASK {{ ?me a orexis:Self . {pattern} }}"), &known)? {
+            if roles.contains(&role)
+                && store.ask(&format!("{SPOKEN}ASK {{ ?me a orexis:Self . {pattern} }}"), &known)?
+            {
                 loaded.insert(transport.to_string());
             }
         }
     }
-    Ok(every_package(tree).into_iter().filter(|p| loaded.contains(p)).collect())
+    //  A TRANSPORT NEEDED AND BUILT OUT is refused: its package brings no ontology to be found by.
+    if let Some(absent) = loaded.iter().find(|p| registered(p).is_none()) {
+        return Err(Error::Evaluation(format!(
+            "the agent needs {absent}, and no package registered itself as that: this binary was built without it"
+        )));
+    }
+    let mut ordered = every_package();
+    ordered.retain(|p| loaded.contains(p));
+    Ok(ordered)
+}
+
+/// A ROLE THE SELF PLAYS THAT NO PACKAGE OF THIS BINARY DECLARES: the role's classes, none beneath `orexis:Role` by
+/// the vocabularies this binary holds. Its package was built out, and with it the ontology that would have said so.
+fn unserved(store: &Store) -> Result<Vec<String>, Error> {
+    let (_, steps) = vocabularies()?;
+    let selves = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
+    let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
+    let mut kinds: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for row in store.rows(PLAYED_Q, &selves)? {
+        if let (Some(role), Some(kind)) = (iri(&row, "role"), iri(&row, "kind")) {
+            kinds.entry(role).or_default().push(kind);
+        }
+    }
+    let mut out = Vec::new();
+    for (role, kinds) in kinds {
+        let mut served = false;
+        for kind in &kinds {
+            served |= beneath(kind, &steps, Some(store))?.contains(ROLE);
+        }
+        if !served {
+            out.push(format!("{role} ({})", kinds.join(", ")));
+        }
+    }
+    Ok(out)
 }
 
 /// Whether the vocabulary declares one of `kinds` a kind of graph.
@@ -507,7 +548,6 @@ fn stamp(store: &Store) -> Result<(), Error> {
 pub fn boot(store: &Store, booting: &Booting<'_>) -> Result<Vec<String>, Error> {
     let world = fs::canonicalize(booting.world)?;
     let booting = Booting {
-        tree: booting.tree,
         world: &world,
         agent: booting.agent,
     };
@@ -522,7 +562,8 @@ pub fn boot(store: &Store, booting: &Booting<'_>) -> Result<Vec<String>, Error> 
             "INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}"
         ))?;
     }
-    let read = read_with_imports(&documents(&booting))?;
+    let mut read = vec![brought(KERNEL, VOCABULARY, KERNEL_VOCABULARY)?];
+    read.extend(read_with_imports(&documents(&booting))?);
     let docs: Vec<&Document> = read.iter().map(|(_, d)| d).collect();
     let (own, passed) = put(store, &world, &read, Vec::new(), 0, &docs)?;
     let own = owned(store, own, &docs)?;
@@ -534,12 +575,16 @@ pub fn boot(store: &Store, booting: &Booting<'_>) -> Result<Vec<String>, Error> 
         .map(|(h, _)| (docs[h.1], h.2.as_str()))
         .collect();
     let self_graph = hold_the_self(store, booting.agent, &me, &mine)?;
-    let loaded = packages_of(store, booting.tree)?;
-    let seen: BTreeSet<&PathBuf> = read.iter().map(|(p, _)| p).collect();
-    let more: Vec<(PathBuf, Document)> = read_with_imports(&documents_of(booting.tree, &loaded))?
-        .into_iter()
-        .filter(|(p, _)| !seen.contains(p))
-        .collect();
+    let loaded = packages_of(store)?;
+    let unserved = unserved(store)?;
+    if !unserved.is_empty() {
+        return Err(Error::Evaluation(format!(
+            "{} plays a role no package of this binary declares: {}",
+            booting.agent,
+            unserved.join("; ")
+        )));
+    }
+    let more: Vec<(PathBuf, Document)> = documents_of(&loaded)?;
     let mut all: Vec<&Document> = docs.clone();
     all.extend(more.iter().map(|(_, d)| d));
     let (also, still) = if more.is_empty() {
@@ -549,17 +594,6 @@ pub fn boot(store: &Store, booting: &Booting<'_>) -> Result<Vec<String>, Error> 
     };
     let mut own = own;
     own.extend(owned(store, also, &all)?);
-    let absent: Vec<&String> = loaded
-        .iter()
-        .filter(|p| !directory_of(booting.tree, p).is_dir())
-        .collect();
-    if !absent.is_empty() {
-        return Err(Error::Evaluation(format!(
-            "{} plays a role whose package this tree does not hold: {}",
-            booting.agent,
-            absent.iter().map(|p| p.as_str()).collect::<Vec<_>>().join(", ")
-        )));
-    }
     if loaded.is_empty() {
         log::warn!(
             "{} plays no role, so it loads no package and runs nothing",

@@ -293,7 +293,7 @@ fn start() -> DateTime {
 /// Walk the two couriers of `world` on its road until the vans stand at `home`, the bus losing what `dropping` says,
 /// and hold the walk to the road's rules. A walk not home within forty minutes of the world's time has failed.
 async fn walked(name: &str, world: &Path, home: &[(&str, Cell)], dropping: Option<&str>, kept: bool) -> Walked {
-    let namespaces = Arc::new(Namespaces::of_tree(tree()).unwrap());
+    let namespaces = Arc::new(Namespaces::linked().unwrap());
     let stores = [Store::new(namespaces.clone()).unwrap(), Store::new(namespaces).unwrap()];
     let clock: Arc<dyn Clock> = common::clock(start());
     let carried = Arc::new(Mutex::new(Carried {
@@ -315,7 +315,7 @@ async fn walked(name: &str, world: &Path, home: &[(&str, Cell)], dropping: Optio
     };
     let mut runtimes: Vec<Running> = Vec::new();
     for (store, name) in stores.iter().zip(names) {
-        let loaded = booted(store, tree(), world, name, start()).unwrap();
+        let loaded = booted(store, world, name, start()).unwrap();
         if carried.lock().unwrap().road.is_none() {
             carried.lock().unwrap().road = Some(Road::of(store));
         }

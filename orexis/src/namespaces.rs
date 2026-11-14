@@ -31,31 +31,52 @@ pub struct Namespaces(BTreeMap<String, String>);
 impl Namespaces {
     /// Every prefix declared in the crates of `tree`, the agent's tree, and the kernel's: refused where a label means
     /// two IRIs. Only a crate is read, `orexis/` and each `orexis-*/` — never a domain or a world beside them — and in
-    /// it neither the build's output nor the interpreter's caches.
+    /// it neither the build's output nor the interpreter's caches. A CASE RUNNER'S, which holds a package alone to
+    /// texts speaking any package's words; an agent's are `linked`.
     pub fn of_tree(tree: &Path) -> Result<Self, Error> {
-        let prefix = Regex::new(r"@prefix\s+([A-Za-z][\w.-]*):\s*<([^>]*)>").expect("a valid pattern");
-        let mut found: BTreeMap<String, (String, PathBuf)> = BTreeMap::new();
         let mut files = Vec::new();
         for krate in crates(tree)? {
             files.extend(ttl_under(&krate)?);
         }
         files.sort();
+        let mut texts = Vec::new();
         for path in files {
-            let text = fs::read_to_string(&path)?;
-            for caps in prefix.captures_iter(&text) {
+            texts.push((path.display().to_string(), fs::read_to_string(&path)?));
+        }
+        Namespaces::of_texts(texts.iter().map(|(origin, text)| (origin.as_str(), text.as_str())))
+    }
+
+    /// Every prefix declared in the documents this binary holds — the kernel's ontology and each document a package
+    /// built into it brings — and the kernel's: what an agent's texts may spell, read off no disk.
+    pub fn linked() -> Result<Self, Error> {
+        let mut texts = vec![("orexis/ontology.ttl".to_string(), include_str!("../ontology.ttl"))];
+        let mut packages: Vec<&crate::task::Package> = inventory::iter::<crate::task::Package>().collect();
+        packages.sort_by_key(|p| p.name);
+        for package in packages {
+            for (name, text) in package.documents {
+                texts.push((format!("{}/{name}", crate::boot::crate_of(package.name)), *text));
+            }
+        }
+        Namespaces::of_texts(texts.iter().map(|(origin, text)| (origin.as_str(), *text)))
+    }
+
+    /// The prefixes `texts` declare, each text with where it is from, and the kernel's beside them.
+    fn of_texts<'a>(texts: impl Iterator<Item = (&'a str, &'a str)>) -> Result<Self, Error> {
+        let prefix = Regex::new(r"@prefix\s+([A-Za-z][\w.-]*):\s*<([^>]*)>").expect("a valid pattern");
+        let mut found: BTreeMap<String, (String, String)> = BTreeMap::new();
+        for (origin, text) in texts {
+            for caps in prefix.captures_iter(text) {
                 let (label, iri) = (caps[1].to_string(), caps[2].to_string());
                 match found.get(&label) {
-                    Some((prior, origin)) if *prior != iri => {
+                    Some((prior, first)) if *prior != iri => {
                         return Err(Error::Namespace(format!(
-                            "prefix '{label}' means <{prior}> in {} and <{iri}> in {}. One label, one namespace — a \
-                             query cannot mean both.",
-                            origin.display(),
-                            path.display()
+                            "prefix '{label}' means <{prior}> in {first} and <{iri}> in {origin}. One label, one \
+                             namespace — a query cannot mean both."
                         )));
                     }
                     Some(_) => {}
                     None => {
-                        found.insert(label, (iri, path.clone()));
+                        found.insert(label, (iri, origin.to_string()));
                     }
                 }
             }

@@ -784,14 +784,27 @@ impl Handed {
 /// A task: what a package's start answers, to be spawned.
 pub type Task = Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;
 
-/// A PACKAGE, AS IT REGISTERS ITSELF: its name, as a role's package is named, and its start, which makes its core
-/// from what it is handed and answers its task - or nothing, where what it is handed gives it nothing to do.
+/// A PACKAGE, AS IT REGISTERS ITSELF: its name, as a role's package is named, THE DOCUMENTS IT BRINGS - its ontology,
+/// its rules, its actions, each a file of its crate compiled into the binary (`documents!`), which the boot puts in
+/// the store where a role of the agent loads the package - and its start, which makes its core from what it is
+/// handed and answers its task - or nothing, where what it is handed gives it nothing to do.
 pub struct Package {
     pub name: &'static str,
+    pub documents: &'static [(&'static str, &'static str)],
     pub start: fn(&Handed) -> Result<Option<Task>, Error>,
 }
 
 inventory::collect!(Package);
+
+/// THE DOCUMENTS A PACKAGE BRINGS, each named as the file of its crate it is: `documents!("ontology.ttl", "rules.ttl")`
+/// is each file's name with its text, read as the crate is compiled. So a binary holds the documents of the packages
+/// built into it and of no other, and the boot reads no tree.
+#[macro_export]
+macro_rules! documents {
+    ($($name:literal),* $(,)?) => {
+        &[$(($name, include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", $name)))),*]
+    };
+}
 
 /// An agent's tasks, running.
 pub struct Running {
@@ -1006,7 +1019,7 @@ mod tests {
     }
 
     //  BEGINS AND ENDS AN ACTIVITY as the run begins, writes down that it did, and then that it waited.
-    inventory::submit! { Package { name: "test/begins", start: |handed| {
+    inventory::submit! { Package { name: "test/begins", documents: &[], start: |handed| {
         let (handed, seen) = (handed.clone(), seen_by(handed));
         Ok(Some(Box::pin(async move {
             let mut turn = handed.turn();
@@ -1019,7 +1032,7 @@ mod tests {
     } } }
 
     //  HEARS EVERY START said, and writes each down.
-    inventory::submit! { Package { name: "test/hears", start: |handed| {
+    inventory::submit! { Package { name: "test/hears", documents: &[], start: |handed| {
         let (handed, seen) = (handed.clone(), seen_by(handed));
         let mut hears = handed.events.hears();
         hears.event(crate::activity::STARTED, 7);
@@ -1043,7 +1056,7 @@ mod tests {
     } } }
 
     //  HOLDS THE AGENT, and lets it go an hour on by the clock.
-    inventory::submit! { Package { name: "test/holds", start: |handed| {
+    inventory::submit! { Package { name: "test/holds", documents: &[], start: |handed| {
         let (handed, seen) = (handed.clone(), seen_by(handed));
         Ok(Some(Box::pin(async move {
             let mut turn = handed.turn();
@@ -1059,7 +1072,7 @@ mod tests {
     } } }
 
     //  WAITS FOR AN ARRIVAL, rung from outside the agent a moment after the run begins, and holds until then.
-    inventory::submit! { Package { name: "test/arrives", start: |handed| {
+    inventory::submit! { Package { name: "test/arrives", documents: &[], start: |handed| {
         let (handed, seen) = (handed.clone(), seen_by(handed));
         let mut arrived = handed.arrived();
         let wake = arrived.wake();

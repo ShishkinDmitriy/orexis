@@ -1,5 +1,5 @@
 # THE BINARY'S IMAGE, one per agent whose every package is ported: the binary built with the features its roles
-# load, the tree's documents it boots from, and nothing else — no interpreter, no package manager, no shell
+# load, which holds the documents those packages bring, and nothing else — no interpreter, no package manager, no shell
 # (knowledge/decisions/the-agent-moves-to-rust-one-package-at-a-time.md). `orexis-compose` writes each such service's
 # build with its features; the world is mounted read-only beside the domains, as for the Python image.
 #
@@ -45,10 +45,9 @@ RUN --mount=type=cache,target=/src/target \
     cargo build --release --locked -p orexis-agent --no-default-features --features "volume,${FEATURES}" \
  && cp target/release/orexis-agent /orexis-agent
 
-# What the boot reads of the tree: each package's vocabulary and documents, beside the kernel's, and no code.
-RUN mkdir -p /out/tree /out/volumes/state /out/volumes/journal \
- && find orexis orexis-* -path '*/tests' -prune -o \( -name '*.ttl' -o -name '*.trig' \) -print \
-    | tar -cf - -T - | tar -xf - -C /out/tree \
+# No document of a crate is copied out: each package's vocabulary and documents are in the binary, compiled in beside
+# its code (`orexis::documents!`), so the image holds those of the packages built into it and of no other.
+RUN mkdir -p /out/volumes/state /out/volumes/journal \
  && chown -R 10001:10001 /out/volumes
 
 # ── the image ───────────────────────────────────────────────────────────────────────────────────
@@ -57,12 +56,10 @@ FROM gcr.io/distroless/cc-debian12
 
 WORKDIR /app
 COPY --from=build /orexis-agent /usr/local/bin/orexis-agent
-COPY --from=build /out/tree/ /app/
 # its volumes' mount points, the agent's own, so a volume created on them is the agent's to write: copied as
 # the entries of a directory, since a directory copied by name is made root's and only what is in it is owned
 COPY --from=build --chown=10001:10001 /out/volumes/ /app/
 COPY domains/ /app/domains/
-ENV OREXIS_TREE=/app
 
 # An agent runs as nobody in particular, the same uid the Python image runs as, so a volume it lived in stays its own.
 USER 10001:10001

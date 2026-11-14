@@ -215,7 +215,7 @@ fn me_of(beliefs: &Store, agent: &str) -> Result<String, Error> {
         .ok_or_else(|| Error::Evaluation(format!("no agent with localId '{agent}' in this store")))
 }
 
-inventory::submit! { Package { name: "sensing", start } }
+inventory::submit! { Package { name: "sensing", documents: orexis::documents!("ontology.ttl", "rules.ttl"), start } }
 
 /// THE PACKAGE'S START: its part made and started - what it hears, what it does every so often - and its task.
 fn start(handed: &Handed) -> Result<Option<Task>, Error> {

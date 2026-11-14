@@ -96,7 +96,7 @@ pub fn archive(store: &Store, sink: &Sink, shipped: &mut Shipped) -> Result<usiz
     took(store, due, shipped)
 }
 
-inventory::submit! { Package { name: "sensing-influxdb", start } }
+inventory::submit! { Package { name: "sensing-influxdb", documents: &[], start } }
 
 /// THE ARCHIVER'S START: where it is handed a series store, its task; and none otherwise.
 fn start(handed: &Handed) -> Result<Option<Task>, orexis::Error> {

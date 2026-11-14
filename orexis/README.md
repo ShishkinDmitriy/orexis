@@ -11,7 +11,9 @@ makes one agent's store from its world's documents, and **the events**, the one 
 ## What it gives a package
 
 A package is one task registered by the linker (`task::Package`) and handed four things (`task::Handed`):
-the store, the clock, the events, and what reaches outside.
+the store, the clock, the events, and what reaches outside. It registers the documents it brings with it
+(`orexis::documents!("ontology.ttl", "rules.ttl")`), compiled into the binary; the boot puts them in the store where
+a role of the agent loads the package, and reads no directory of crates.
 
 | A package | by |
 |---|---|

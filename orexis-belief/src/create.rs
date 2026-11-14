@@ -63,7 +63,7 @@ impl Belief {
     }
 }
 
-inventory::submit! { Package { name: "belief", start } }
+inventory::submit! { Package { name: "belief", documents: orexis::documents!("ontology.ttl"), start } }
 
 /// BELIEF'S START: its deliberator made, what the world authored as the agent's state revised, once, and its task,
 /// which hears a belief written and its trigger's events.
