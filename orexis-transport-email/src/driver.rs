@@ -1,7 +1,7 @@
 //! THE EMAIL DRIVER, as `agent/transport/email/driver.py` keeps it: an agent's own mailbox over IMAP and SMTP.
 //!
 //! **THE MAILBOX IS THE AGENT'S**, named by `MAIL_ADDRESS`, `MAIL_PASSWORD`, `MAIL_IMAP_HOST` and `MAIL_SMTP_HOST`,
-//! with `MAIL_IMAP_PORT` and `MAIL_SMTP_PORT` where not 993 and 465, all environment. **IT POLLS** every `MAIL_POLL_S`
+//! with `MAIL_IMAP_PORT` and `MAIL_SMTP_PORT` where not 993 and 465, all environment. **IT POLLS** as often as a role says (`email:polledEveryS`), every thirty
 //! real seconds on a thread of its own, every unseen message with a plain text waiting in the inbox, its channel the
 //! sender's address; `handle` finds the contact point the world names by that address, whatever case it is written in,
 //! and says the prose; an address the world names in no chat is dropped and said once. **IT SENDS** to a contact
@@ -25,6 +25,17 @@ pub const POLL_S: f64 = 30.0;
 const CONTACT_Q: &str =
     "SELECT ?contact WHERE { ?contact schema:email ?address FILTER (LCASE(STR(?address)) = LCASE($address)) }";
 const ADDRESS_Q: &str = "SELECT ?address WHERE { $contact schema:email ?address }";
+
+/// HOW OFTEN THE MAILBOX IS POLLED, in real seconds: what a role the self plays says in the agent's self graph
+/// (`email:polledEveryS`), and the transport's own where none says.
+pub fn polled_every_s(beliefs: &Store) -> Result<f64, Error> {
+    Ok(orexis::boot::figure(
+        beliefs,
+        "PREFIX email: <http://example.org/orexis/email#> ",
+        "?role email:polledEveryS ?figure .",
+    )?
+    .unwrap_or(POLL_S))
+}
 
 /// A mailbox: every unseen message as its sender's address and its plain text, each then seen; and one sent.
 pub trait Mailbox: Send + Sync {
@@ -168,9 +179,7 @@ impl Email {
             smtp: (smtp.clone(), port("MAIL_SMTP_PORT", 465)),
         };
         let mut email = Email::new(beliefs, me, Arc::new(remote));
-        if let Some(every) = env("MAIL_POLL_S").and_then(|s| s.parse().ok()) {
-            email.every = every;
-        }
+        email.every = polled_every_s(beliefs)?;
         Ok(email)
     }
 
@@ -377,12 +386,14 @@ mod tests {
                 "MAIL_PASSWORD" => Some("p"),
                 "MAIL_IMAP_HOST" => Some("imap"),
                 "MAIL_SMTP_HOST" => Some("smtp"),
-                "MAIL_POLL_S" => Some("60"),
                 _ => None,
             }
             .map(str::to_string)
         };
         let mail = Email::connect(&store, &me, &env).unwrap();
-        assert_eq!(mail.every, 60.0);
+        assert_eq!(
+            mail.every, POLL_S,
+            "no role of this world says how often, so the transport's own"
+        );
     }
 }

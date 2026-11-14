@@ -1071,7 +1071,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   what a world is held to at onboarding leaves the derived deployment out, a broker's one url there being the one
   an agent reaches it at and no statement of the world's (model, the-world-says-what-it-is-connected-to).
 - **How often a package takes its turn is its role's to say, and the package's constant holds where the role says
-  nothing** — `sensing:archivedEveryS`, `journal:archivedEveryS` and `metrics:windowS`, each read off the self graph
+  nothing** — `sensing:archivedEveryS`, `journal:archivedEveryS`, `metrics:windowS`, `telegram:polledEveryS` and
+  `email:polledEveryS`, each read off the self graph
   by the package that takes the turn (`orexis::boot::figure`); the first two were constants in code and the third the
   installation's word for every world at once.
 - **Every package joins for a role, and a housekeeper for a link on one** — `metrics:Meter` loads the metrics, the
