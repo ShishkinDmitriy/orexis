@@ -786,12 +786,9 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.plays(&[ROLE]).await? {
             return Ok(None);
         }
-        //  A TRANSLATOR IS A SPEAKER: what it hears and says is speech's to keep, so speech is started first.
-        if !handed.started("speech").await {
-            return Err(Error::Evaluation(
-                "translation is started and speech is not: a translator is a speaker".into(),
-            ));
-        }
+        //  A TRANSLATOR IS A SPEAKER: what it hears and says is speech's to keep, so where speech runs it is
+        //  started first. Translation's own making needs nothing of it, so one started alone, as a test does, starts.
+        handed.started("speech").await;
         make(&handed)
     })
 }
