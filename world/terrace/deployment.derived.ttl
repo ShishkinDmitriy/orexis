@@ -7,9 +7,13 @@
 @prefix journal: <http://example.org/orexis/journal#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix schema: <https://schema.org/> .
+@prefix translation: <http://example.org/orexis/translation#> .
 
 <> a orexis:DeploymentGraph .    # this document is one graph, and this is what it is
 
+:broker schema:url "mqtts://localhost:8888" .
+:model a translation:Model ;
+    schema:url "https://api.anthropic.com" .
 :series orexis:organisation "orexis" ;
     orexis:serves orexis:History , orexis:Metrics ;
     a orexis:SeriesStore ;
@@ -18,5 +22,6 @@
     schema:url "file:///app/journal" .
 :terrace_agent_endpoint a journal:Endpoint ;
     schema:url "http://localhost:7889" .
+:terrace_bot schema:url "https://api.telegram.org" .
 :tracer a journal:Tracer ;
     schema:url "http://localhost:4318" .

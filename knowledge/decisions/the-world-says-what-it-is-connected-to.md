@@ -90,7 +90,14 @@ role named was built first and lasted an hour: the sovereign asked that every pa
 too, so that nothing runs for what no role of the agent asked. What archives sensing's readings, the metrics and a chat that reads the past each make their own sink from the
 store the world names and the agent's own credential, and the metrics' window is stated beside it.
 
-Still environment, to move one by one, each with its package making its own connector: the brokers' addresses, the model's url, each bot's url, and the intervals. The journal's port moved
+The brokers, the bots and the model are there too. The society says which broker an agent is connected to and
+which bot it speaks through, so no role link is added for either: the derived deployment states each broker's url,
+the one an agent reaches it at, and each bot's where the world asserts one, and the transports read them as they
+connect. A [model](/domain/translation/model.md) is named by the translator's role (`translation:translatedBy`).
+`MQTT_BROKERS`, `TELEGRAM_URL` and `MODEL_URL` are gone. What a requirement holds a world to leaves the derived
+deployment out, since a broker's one url there is no statement of every url the world asserts of it.
+
+Still environment: the paths of an agent's certificate, the clock's pace, and two polling intervals nobody sets. The journal's port moved
 too: the role names an endpoint (`journal:servedAt`) and the derived deployment states the allocated url; its window
 and its incidents are the role's own figures, and no `JOURNAL_` variable is left. Tracked as #1173, not here.
 

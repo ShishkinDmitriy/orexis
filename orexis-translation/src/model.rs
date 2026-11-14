@@ -5,8 +5,9 @@
 //! far with their last block marked for the cache, and the tools the model may call, none where it is the last turn;
 //! `ask` is one call of one message, read as text. **WHAT ONE POST DOES NOT DO** the Python copy took Anthropic's SDK for:
 //! an overloaded, rate-limited or unreachable API is asked again `RETRIES` times with backoff, and each failure is named
-//! by its class, which `why_not` says in the chat in a person's terms. **WHICH MODEL AND WHERE IS ENVIRONMENT**:
-//! `MODEL_API_KEY`, `MODEL_NAME`, and `MODEL_URL` where the endpoint is not the default.
+//! by its class, which `why_not` says in the chat in a person's terms. **WHERE IT ANSWERS IS THE WORLD'S TO SAY, AND
+//! WHICH MODEL AND ITS KEY THE AGENT'S SECRET**: the url is the world's deployment graph's, of the model the
+//! translator's role names (`translation:translatedBy`), and `MODEL_API_KEY` and `MODEL_NAME` are environment.
 
 use std::collections::BTreeMap;
 use std::time::Duration;
@@ -111,8 +112,9 @@ impl Anthropic {
         }
     }
 
-    /// The model the environment names, or none where it names none — said once.
-    pub fn from_environ(env: &dyn Fn(&str) -> Option<String>) -> Option<Self> {
+    /// The model answering at `url` that the environment names and holds the key of, or none where it names none —
+    /// said once.
+    pub fn from_environ(url: &str, env: &dyn Fn(&str) -> Option<String>) -> Option<Self> {
         let (key, name) = (
             env("MODEL_API_KEY").filter(|k| !k.is_empty()),
             env("MODEL_NAME").filter(|n| !n.is_empty()),
@@ -121,11 +123,7 @@ impl Anthropic {
             log::warn!("no model: MODEL_API_KEY and MODEL_NAME are not both set");
             return None;
         };
-        Some(Anthropic::new(
-            &name,
-            &key,
-            &env("MODEL_URL").unwrap_or_else(|| DEFAULT_URL.to_string()),
-        ))
+        Some(Anthropic::new(&name, &key, url))
     }
 
     /// One request, asked again where the API is overloaded, rate-limited, timing out or unreachable, with the SDK's
@@ -365,15 +363,15 @@ mod tests {
 
     #[test]
     fn the_environment_names_the_model_or_there_is_none() {
-        assert!(Anthropic::from_environ(&|_| None).is_none());
-        assert!(Anthropic::from_environ(&|k| (k == "MODEL_API_KEY").then(|| "k".into())).is_none());
+        let url = "https://a.example/";
+        assert!(Anthropic::from_environ(url, &|_| None).is_none());
+        assert!(Anthropic::from_environ(url, &|k| (k == "MODEL_API_KEY").then(|| "k".into())).is_none());
         let env = |k: &str| match k {
             "MODEL_API_KEY" => Some("k".to_string()),
             "MODEL_NAME" => Some("claude-x".to_string()),
-            "MODEL_URL" => Some("https://a.example/".to_string()),
             _ => None,
         };
-        let model = Anthropic::from_environ(&env).unwrap();
+        let model = Anthropic::from_environ(url, &env).unwrap();
         assert_eq!(
             (model.name.as_str(), model.url.as_str()),
             ("claude-x", "https://a.example")

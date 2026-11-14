@@ -267,6 +267,40 @@ fn how_often_a_package_takes_its_turn_is_said_on_its_role_and_the_packages_own_w
     assert_eq!(figures(&store), (30.0, 5.0, 300.0));
 }
 
+/// WHERE A BROKER, A BOT AND A MODEL ANSWER IS THE WORLD'S TO SAY, and no environment's: the terrace's agent is
+/// connected to its broker by the society and reads where that answers off the derived deployment, as it reads
+/// where the bot it speaks through and the model its translator's role names answer; Hanoi's is connected to none.
+#[test]
+fn the_world_says_where_each_broker_bot_and_model_an_agent_reaches_answers() {
+    let now = oxsdatatypes::DateTime::now();
+    let booted = |world: &str, agent: &str| {
+        let store =
+            orexis::store::Store::new(std::sync::Arc::new(orexis::namespaces::Namespaces::linked().unwrap())).unwrap();
+        orexis_agent::booted(&store, &Path::new(TREE).join("world").join(world), agent, now).unwrap();
+        let me = orexis::boot::selves(&store).unwrap().remove(0);
+        (store, me)
+    };
+    let (store, me) = booted("terrace", "terrace");
+    assert_eq!(
+        orexis_transport_mqtt::driver::reached(&store, &me).unwrap(),
+        [(
+            "http://example.org/orexis/world/terrace#broker".to_string(),
+            "mqtts://localhost:8888".to_string()
+        )]
+    );
+    assert_eq!(
+        orexis_transport_telegram::driver::answers(&store, &me).unwrap(),
+        Some("https://api.telegram.org".to_string())
+    );
+    assert_eq!(
+        orexis_translation::create::answers(&store).unwrap(),
+        Some("https://api.anthropic.com".to_string())
+    );
+    let (store, me) = booted("hanoi", "hanoi");
+    assert!(orexis_transport_mqtt::driver::reached(&store, &me).unwrap().is_empty());
+    assert_eq!(orexis_translation::create::answers(&store).unwrap(), None);
+}
+
 /// WHERE A SERIES IS WRITTEN IS THE WORLD'S TO SAY, of each store a role names: the terrace's agent plays an observer
 /// whose readings are archived in one and a meter whose windows are written to it, so the deployment states the store
 /// for history and for metrics; Hanoi's agent plays neither, so it states none, and neither

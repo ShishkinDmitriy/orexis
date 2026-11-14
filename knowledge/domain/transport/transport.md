@@ -56,9 +56,9 @@ names each topic by one convention, for its publisher or its listener, into a de
 the member reads as any other ([requirement](/domain/onboarding/requirement.md)), so a board has one
 readings topic and its sensors each read their own value of the one message by pointer. Which sensors are the agent's is its
 [observer](/domain/sensing/observer.md) role's to declare, and the member asks sensing for them and
-names none of sensing's words. Where each broker the agent is connected to listens, and the
-agent's credential, come from the environment (`MQTT_BROKERS`, each broker's IRI and its url, then
-`MQTT_USERNAME` and the rest), which [onboarding](/domain/onboarding/onboarding.md) writes; the member
+names none of sensing's words. Which brokers the agent is connected to is the society's to say, where each answers the world's derived
+[deployment](/domain/onboarding/deployment.md)'s, and the agent's credential the environment's (`MQTT_USERNAME`
+and the rest), which [onboarding](/domain/onboarding/onboarding.md) writes; the member
 refuses to guess one, and holds a client per broker. A world may have any number of brokers, and
 MQTT4SSN says which each client `isConnectedToBroker`: a sensor's topic is subscribed to on every
 broker the agent shares with the sensor's client, its own on every broker it is connected to, and a
@@ -88,7 +88,7 @@ address is public and is read off the world, not told
 # The member that ships: Telegram
 
 The agent's own bot, the `telegram:Bot` it `telegram:hasBot`, its token `TELEGRAM_BOT_TOKEN` and where the API answers
-`TELEGRAM_URL`, over the standard library. Started, it asks `getUpdates` every few seconds from the
+the world's derived deployment's word of the bot, over the standard library. Started, it asks `getUpdates` every few seconds from the
 offset past the last update seen, on a thread of its own; a text message's channel is its chat's id,
 which the world states as a `telegram:Chat`'s `telegram:chatId`, and who wrote is the person the world
 states under that `telegram:userId`. A message in a chat the world names none of is dropped and said

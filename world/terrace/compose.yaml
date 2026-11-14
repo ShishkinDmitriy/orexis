@@ -49,17 +49,11 @@ services:
         FEATURES: "belief,http,journal,metrics,mqtt,prediction,sensing,speech,telegram,translation"
     command: ["orexis-agent", "/app/world/terrace", "terrace", "--volume", "/app/state"]
     environment:
-      # each broker it is connected to and where that listens — asserted or allocated, generated here,
-      # never read off the world by the agent
-      MQTT_BROKERS: "http://example.org/orexis/world/terrace#broker mqtts://localhost:8888"
+      # its certificate and the authority's, in its container; which brokers it is connected to and where each
+      # answers is the world's to say, in its society and its derived deployment
       MQTT_CERT: "/app/world/terrace/secrets/terrace/agent.crt"
       MQTT_KEY: "/app/world/terrace/secrets/terrace/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
-      # where the language model answers — the installation's `onboarding:Model`; which model, and the
-      # key, arrive in the installation's secret below
-      MODEL_URL: "https://api.anthropic.com"
-      # where its Telegram bot answers, as the world's deployment graph states
-      TELEGRAM_URL: "https://api.telegram.org"
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx terrace`, and
       # its own broker credential, minted by `orexis-mqtt terrace`; mounted into THIS container alone

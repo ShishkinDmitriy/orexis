@@ -63,7 +63,7 @@ MQTT4SSN says which each client `isConnectedToBroker`. Each broker is a compose 
 `mosquitto-<its local name>`, with its config, passwd and ACL under `mosquitto/<its local name>/`
 and a volume of its own; it holds the principals connected to it, and every broker of the world
 trusts the world's one authority, shares its CRL and serves one certificate naming every host. An
-agent is told each broker it is connected to (`MQTT_BROKERS`), a board is flashed with the one it is,
+agent reads where each broker it is connected to answers off the world's derived deployment, a board is flashed with the one it is,
 and the simulator started with its client's. Onboarding's own
 [requirement](/domain/onboarding/requirement.md) (`onboarding/requirements.ttl`) refuses what would
 make an address ambiguous — a broker whose urls disagree on a host or on a scheme's port, two

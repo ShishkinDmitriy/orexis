@@ -101,6 +101,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 # Translation — what a person says
 
 * [briefing](/domain/translation/briefing.md) - What a translator hands the model first: who the agent is, what its chat may read, its status.
+* [model](/domain/translation/model.md) - The language model a translator asks: its role names it, the world's deployment says where it answers.
 * [translator](/domain/translation/translator.md) - An agent speaking with its chats' people itself: prose heard through a transport member, a statement rendered back through it.
 
 # Speech — what peers say

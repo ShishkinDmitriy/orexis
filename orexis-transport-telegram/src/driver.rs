@@ -38,6 +38,24 @@ const CHAT_Q: &str = "SELECT ?chat WHERE { ?chat a telegram:Chat ; telegram:chat
 const USER_Q: &str = "SELECT ?person WHERE { ?person telegram:userId ?id FILTER (STR(?id) = $id) }";
 const ID_Q: &str = "SELECT ?id WHERE { $chat a telegram:Chat ; telegram:chatId ?id }";
 
+/// WHERE THE SELF'S BOT ANSWERS: the `schema:url` the world's deployment graph states of the bot the society says
+/// the agent speaks through.
+const ANSWERS_Q: &str =
+    "SELECT ?url WHERE { $me telegram:hasBot ?bot . ?bot <https://schema.org/url> ?url } ORDER BY ?url";
+
+/// Where the bot `me` speaks through answers, as the world's deployment graph says, or None where it says nothing.
+pub fn answers(beliefs: &Store, me: &str) -> Result<Option<String>, Error> {
+    let mut known = beliefs.graphs_of(&[orexis::ontology::BELIEF], &orexis::store::Within::common())?;
+    known.extend(beliefs.graphs_of(&[orexis::ontology::DEPLOYMENT], &orexis::store::Within::common())?);
+    let known: Vec<&str> = known.iter().map(String::as_str).collect();
+    let text = orexis::bind::bind(ANSWERS_Q, &[("me", orexis::bind::Value::iri(me))])?;
+    Ok(beliefs
+        .rows(&text, &known)?
+        .iter()
+        .find_map(|row| orexis::store::value(row, "url"))
+        .filter(|url| !url.is_empty()))
+}
+
 /// The Bot API as the driver calls it: a method's URL and its JSON body, answered with JSON.
 pub type Call = Arc<dyn Fn(&str, &Json) -> Result<Json, String> + Send + Sync>;
 /// What runs a poll: on a thread of its own, or at once in a test.
@@ -293,7 +311,8 @@ impl Telegram {
         Self::new(beliefs, me, "", "", call)
     }
 
-    /// The bot brought up from the environment: refused where it holds no token.
+    /// The bot brought up: where it answers is the world's deployment graph's to say, the Bot API's own address
+    /// where it says nothing, and its token the environment's. Refused where it holds no token.
     pub fn connect(beliefs: &Store, me: &str, env: &dyn Fn(&str) -> Option<String>) -> Result<Self, Error> {
         let token = env("TELEGRAM_BOT_TOKEN").filter(|t| !t.is_empty()).ok_or_else(|| {
             Error::Evaluation(
@@ -302,9 +321,7 @@ impl Telegram {
                     .into(),
             )
         })?;
-        let url = env("TELEGRAM_URL")
-            .filter(|u| !u.is_empty())
-            .unwrap_or_else(|| TELEGRAM_URL.to_string());
+        let url = answers(beliefs, me)?.unwrap_or_else(|| TELEGRAM_URL.to_string());
         let mut bot = Telegram::new(beliefs, me, &token, &url, post());
         if let Some(every) = env("TELEGRAM_POLL_S").and_then(|s| s.parse().ok()) {
             bot.every = every;
@@ -754,11 +771,14 @@ mod tests {
         assert!(Telegram::connect(&store, &format!("{TEST}keeper"), &|_| None).is_err());
         let env = |k: &str| match k {
             "TELEGRAM_BOT_TOKEN" => Some("t".to_string()),
-            "TELEGRAM_URL" => Some("https://bots.example/".to_string()),
             "TELEGRAM_POLL_S" => Some("5".to_string()),
             _ => None,
         };
         let bot = Telegram::connect(&store, &format!("{TEST}keeper"), &env).unwrap();
-        assert_eq!((bot.api.url.as_str(), bot.every), ("https://bots.example", 5.0));
+        //  WHERE IT ANSWERS IS THE WORLD'S DEPLOYMENT'S TO SAY, and this world says nothing: the Bot API's own.
+        assert_eq!(
+            (bot.api.url.as_str(), bot.every),
+            (TELEGRAM_URL.trim_end_matches('/'), 5.0)
+        );
     }
 }

@@ -42,8 +42,8 @@ log.
    ```
 
    The file is `secrets/<agent id>/telegram.env`, in the agent's own directory, one bot per agent. Where the Bot API answers is the
-   world's deployment graph's (`:terrace_bot schema:url "https://api.telegram.org"`), told to the agent as
-   `TELEGRAM_URL`.
+   world's deployment graph's (`:terrace_bot schema:url "https://api.telegram.org"`), which onboarding derives into
+   `deployment.derived.ttl`, where the agent reads it.
 
 # Per chat: its id
 

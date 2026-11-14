@@ -93,9 +93,8 @@ services:
         FEATURES: "belief,coordination,execution,journal,mqtt,planning,sensing,speech"
     command: ["orexis-agent", "/app/world/lane", "courier_a", "--volume", "/app/state"]
     environment:
-      # each broker it is connected to and where that listens — asserted or allocated, generated here,
-      # never read off the world by the agent
-      MQTT_BROKERS: "http://example.org/orexis/world/lane#broker mqtts://localhost:8891"
+      # its certificate and the authority's, in its container; which brokers it is connected to and where each
+      # answers is the world's to say, in its society and its derived deployment
       MQTT_CERT: "/app/world/lane/secrets/courier_a/agent.crt"
       MQTT_KEY: "/app/world/lane/secrets/courier_a/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
@@ -143,9 +142,8 @@ services:
         FEATURES: "belief,coordination,execution,journal,mqtt,planning,sensing,speech"
     command: ["orexis-agent", "/app/world/lane", "courier_b", "--volume", "/app/state"]
     environment:
-      # each broker it is connected to and where that listens — asserted or allocated, generated here,
-      # never read off the world by the agent
-      MQTT_BROKERS: "http://example.org/orexis/world/lane#broker mqtts://localhost:8891"
+      # its certificate and the authority's, in its container; which brokers it is connected to and where each
+      # answers is the world's to say, in its society and its derived deployment
       MQTT_CERT: "/app/world/lane/secrets/courier_b/agent.crt"
       MQTT_KEY: "/app/world/lane/secrets/courier_b/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"

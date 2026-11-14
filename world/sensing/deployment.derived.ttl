@@ -10,6 +10,7 @@
 
 <> a orexis:DeploymentGraph .    # this document is one graph, and this is what it is
 
+:broker schema:url "mqtts://localhost:8884" .
 :fern_agent_archive a journal:Archive ;
     schema:url "file:///app/journal" .
 :fern_agent_endpoint a journal:Endpoint ;
