@@ -639,7 +639,7 @@ def _installed(tmp_path, monkeypatch, edit=None, installation=lambda text: text,
     it names that is not there is written from nothing, and one it answers None for is dropped),
     beside a copy of the installation and — `derivation` — of what was derived from it: every
     onboarding tool redirected to the copy. Answers the copy's `world/`."""
-    from onboarding import compose, firmware, installation as installed, mqtt
+    from onboarding import compose, connections, firmware, installation as installed, mqtt
 
     edit = edit or {}
     root = tmp_path / "world"
@@ -666,7 +666,7 @@ def _installed(tmp_path, monkeypatch, edit=None, installation=lambda text: text,
     monkeypatch.setattr(installed, "INSTALLATION", infra / "installation.ttl")
     monkeypatch.setattr(installed, "DERIVATION", infra / "installation.derived.ttl")
     monkeypatch.setattr(installed, "worlds", lambda: names)
-    for module in (installed, mqtt, compose, firmware):
+    for module in (installed, mqtt, compose, connections, firmware):
         monkeypatch.setattr(module, "world_dir", lambda name: root / name)
     return root
 
@@ -709,9 +709,12 @@ def test_a_world_may_have_several_brokers_each_served_apart(tmp_path, monkeypatc
     services = yaml.safe_load(compose.render("sensing"))["services"]
     assert {"mosquitto-broker", "mosquitto-elsewhere"} <= set(services), sorted(services)
     assert "orexis-sensing-mosquitto-elsewhere:/var/lib/mosquitto" in services["mosquitto-elsewhere"]["volumes"]
-    told = services["agent-fern"]["environment"]["MQTT_BROKERS"].split()
-    assert told[0::2] == [_SENSING_BROKER, "http://example.org/orexis/world/sensing#elsewhere"], told
-    assert told[3] == "mqtts://elsewhere:8999", told
+    #  WHERE EACH ANSWERS IS THE DERIVED DEPLOYMENT'S TO SAY, which the agent reads, and no environment's.
+    from onboarding import connections
+    assert "MQTT_BROKERS" not in services["agent-fern"]["environment"]
+    told = {s: str(o.value) for s, p, o in connections.derive("sensing") if p == "https://schema.org/url" and "mqtt" in str(o.value)}
+    assert sorted(told) == [_SENSING_BROKER, "http://example.org/orexis/world/sensing#elsewhere"], told
+    assert told["http://example.org/orexis/world/sensing#elsewhere"] == "mqtts://elsewhere:8999", told
     mqtt.provision("sensing")
     assert "listener 1999 0.0.0.0" in (root / "sensing" / "mosquitto" / "elsewhere" / "orexis.conf").read_text()
     users = [line.split(":", 1)[0] for line in (root / "sensing" / "mosquitto" / "elsewhere" / "passwd").read_text().splitlines()]
@@ -1188,15 +1191,17 @@ _MQTT4SSN = "https://www.w3id.org/MQTT4SSN-Ontology#"
 _URL = "https://schema.org/url"
 
 
-def test_no_agent_holds_where_its_broker_listens():
+def test_an_agent_holds_where_its_broker_answers_in_its_deployment_and_in_no_belief():
     """The broker is two things and goes to two graphs: the rendezvous every client is connected to
-    is in the society, which an agent reads, and the `schema:url` it listens on is in a deployment
-    graph — the world's own, or the installation's derivation — a kind no agent's vocabulary
-    declares. Booted from its directory, as a container boots, every agent of every world with a
-    bus holds the broker and not one url on it — it is told where through its environment, and
-    cannot read it off the world."""
+    is in the society, which an agent believes, and the `schema:url` an agent reaches it at is in the
+    world's derived deployment, a graph of the kernel's kind `orexis:DeploymentGraph` that is no
+    belief, where the transport reads it as it connects. Booted from its directory, as a container
+    boots, every agent of every world with a bus holds the broker, one url on it, and that url in no
+    graph it believes; the world's own deployment document, with every url the broker listens on, is
+    onboarding's and no agent is handed it."""
     import pyoxigraph as ox
 
+    from documents.store import BELIEF, graphs_of
     from onboarding.reading import boot
     from onboarding.compose import roster
 
@@ -1210,9 +1215,11 @@ def test_no_agent_holds_where_its_broker_listens():
             brokers = {q.subject for q in store.quads_for_pattern(None, rdf_type, broker_class, None)}
             if not brokers:
                 continue                     # a world with no bus
-            held = sorted(f"{q.subject.value} {q.object.value}" for b in brokers
-                          for q in store.quads_for_pattern(b, url, None, None))
-            assert not held, f"{world}/{agent} holds where its broker listens: {held}"
+            believed = set(graphs_of(store, BELIEF, common=True)) | set(graphs_of(store, BELIEF))
+            for b in brokers:
+                held = [(q.graph_name.value, q.object.value) for q in store.quads_for_pattern(b, url, None, None)]
+                assert len(held) == 1, f"{world}/{agent} holds {b.value} at {held}, not at one url"
+                assert held[0][0] not in believed, f"{world}/{agent} believes where its broker answers: {held}"
             booted.append(f"{world}/{agent}")
     assert len(booted) >= 6, f"only {booted} hold a broker — the guard would check almost nothing"
 
@@ -1429,7 +1436,8 @@ def test_a_world_with_a_bus_is_onboarded_with_everything(tmp_path, monkeypatch, 
     written = (here / "compose.yaml").read_text()
     assert written == (REPO_ROOT / "world" / "sensing" / "compose.yaml").read_text(), "not the committed compose file"
     services = yaml.safe_load(written)["services"]
-    assert "mosquitto-broker" in services and "MQTT_BROKERS" in services["agent-fern"]["environment"]
+    assert "mosquitto-broker" in services and "MQTT_CERT" in services["agent-fern"]["environment"]
+    assert "MQTT_BROKERS" not in written, "where a broker answers is the derived deployment's to say"
 
 
 @pytest.mark.parametrize("edit, said", [
@@ -2020,8 +2028,12 @@ def test_a_chat_is_onboarded_as_the_agents_in_it_translate_it(tmp_path, monkeypa
     services = yaml.safe_load(compose.render("viewing"))["services"]
     assert "translation" not in services, "the world runs no process of its own: the agents translate"
     seeker, keeper = services["agent-seeker"], services["agent-keeper"]
-    assert seeker["environment"]["MODEL_URL"] == "https://api.anthropic.com"
-    assert seeker["environment"]["TELEGRAM_URL"] == "https://api.telegram.org", "where its bot answers, off the deployment graph"
+    #  WHERE ITS MODEL AND ITS BOT ANSWER is the world's derived deployment's to say, of the model its role names
+    #  and the bot the world asserts a url on, and no environment's.
+    from onboarding import connections
+    assert not {"MODEL_URL", "TELEGRAM_URL"} & set(seeker.get("environment") or {})
+    answers = {s.rsplit("#", 1)[-1]: str(o.value) for s, p, o in connections.derive("viewing") if p == "https://schema.org/url"}
+    assert answers["model"] == "https://api.anthropic.com" and answers["seeker_bot"] == "https://api.telegram.org", answers
     assert seeker["env_file"][-4:-1] == ["../../infra/secrets/model.env", "./secrets/seeker/telegram.env",
                                          "./secrets/seeker/mail.env"], seeker["env_file"]
     assert [f for f in keeper["env_file"] if "model" in f or "telegram" in f or "mail" in f] == \
@@ -2081,7 +2093,7 @@ def test_an_agent_in_a_chat_that_plays_no_translator_is_refused(tmp_path, monkey
     is refused of that agent's boot: nothing it runs would hear what is written there."""
     from onboarding import reading, topics
 
-    root = _installed(tmp_path, monkeypatch, _keeper_self(lambda text: text.replace("[ a translation:Translator ] , ", "")))
+    root = _installed(tmp_path, monkeypatch, _keeper_self(lambda text: text.replace("[ a translation:Translator ; translation:translatedBy :model ] , ", "")))
     monkeypatch.setattr(topics, "world_dir", lambda name: root / name)
     topics.write("viewing")
     found = reading.refused(root / "viewing")
@@ -2100,10 +2112,12 @@ def test_an_agent_that_translates_is_refused_where_the_installation_names_no_mod
                       installation=lambda text: re.sub(r":model a onboarding:Model ;\n    schema:url \"[^\"]*\" \.\n", "", text))
     monkeypatch.setattr(topics, "world_dir", lambda name: root / name)
     topics.write("viewing")
+    from onboarding import connections
     assert installation.model() is None
     with pytest.raises(SystemExit, match="of world 'viewing' translates, and the installation names no onboarding:Model"):
         compose.render("viewing")
-    assert "MODEL_URL" not in yaml.safe_load(compose.render("sensing"))["services"]["agent-fern"]["environment"]
+    with pytest.raises(SystemExit, match="translated by .*model.* and the installation names no onboarding:Model"):
+        connections.derive("viewing")
 
 
 @pytest.mark.parametrize("crate", sorted(CRATES))

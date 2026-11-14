@@ -4,7 +4,7 @@ The MQTT member of the transport family: readings and peers' documents in, comma
 
 - **Loaded for:** no role of its own. It is loaded where a loaded role needs bytes and the society wires a broker.
 - **Words:** `ontology.ttl` (`mqtt:`), speaking MQTT4SSN. **Dictionary:** `knowledge/domain/transport/transport.md`.
-- **Needs:** `MQTT_BROKERS` and the agent's credentials, from its environment and `secrets/<agent>/`.
+- **Needs:** where each broker it is connected to answers, from the world's derived deployment, and the agent's credentials, from its environment and `secrets/<agent>/`.
 
 ## What starts it
 

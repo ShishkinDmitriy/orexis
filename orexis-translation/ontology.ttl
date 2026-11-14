@@ -20,6 +20,16 @@ translation:Translator a owl:Class ;
     and the agent's container is handed the model's key for it and for nothing else
     (knowledge/domain/translation/translator.md).""" .
 
+#  THE MODEL A TRANSLATOR ASKS (knowledge/domain/translation/model.md): the role names it, the world says where it
+#  answers, and which model and its key are the agent's secret.
+
+translation:Model a owl:Class ; rdfs:label "Model" ;
+    rdfs:comment "A language model the world is connected to, answering at its `schema:url`, which the world's deployment graph (`orexis:DeploymentGraph`) states. The translation package finds it there as it starts, by the translator's role that names it; which model it is and its key are the agent's secret, never a graph." .
+
+translation:translatedBy a owl:ObjectProperty ; rdfs:label "translated by" ;
+    rdfs:domain translation:Translator ; rdfs:range translation:Model ;
+    rdfs:comment "The model a translator asks, said of the role in the agent's self graph. A translator whose role names none has no model: a person's words are kept and nothing is answered." .
+
 #  WHAT TRANSLATION JOURNALS (agent/translation/events.py): a person's message and the conversation it began.
 
 translation:Conversed a owl:Class ; rdfs:subClassOf orexis:Event ;

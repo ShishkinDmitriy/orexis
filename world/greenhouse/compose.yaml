@@ -92,9 +92,8 @@ services:
         FEATURES: "belief,execution,journal,metrics,mqtt,planning,prediction,sensing,speech"
     command: ["orexis-agent", "/app/world/greenhouse", "grower", "--volume", "/app/state"]
     environment:
-      # each broker it is connected to and where that listens — asserted or allocated, generated here,
-      # never read off the world by the agent
-      MQTT_BROKERS: "http://example.org/orexis/world/greenhouse#broker mqtts://localhost:8889"
+      # its certificate and the authority's, in its container; which brokers it is connected to and where each
+      # answers is the world's to say, in its society and its derived deployment
       MQTT_CERT: "/app/world/greenhouse/secrets/grower/agent.crt"
       MQTT_KEY: "/app/world/greenhouse/secrets/grower/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"

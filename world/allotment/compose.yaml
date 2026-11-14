@@ -92,9 +92,8 @@ services:
         FEATURES: "belief,execution,journal,mqtt,planning,prediction,sensing,speech"
     command: ["orexis-agent", "/app/world/allotment", "fern_grower", "--volume", "/app/state"]
     environment:
-      # each broker it is connected to and where that listens — asserted or allocated, generated here,
-      # never read off the world by the agent
-      MQTT_BROKERS: "http://example.org/orexis/world/allotment#broker mqtts://localhost:8890"
+      # its certificate and the authority's, in its container; which brokers it is connected to and where each
+      # answers is the world's to say, in its society and its derived deployment
       MQTT_CERT: "/app/world/allotment/secrets/fern_grower/agent.crt"
       MQTT_KEY: "/app/world/allotment/secrets/fern_grower/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
@@ -140,9 +139,8 @@ services:
         FEATURES: "belief,execution,journal,mqtt,planning,prediction,sensing,speech"
     command: ["orexis-agent", "/app/world/allotment", "rose_grower", "--volume", "/app/state"]
     environment:
-      # each broker it is connected to and where that listens — asserted or allocated, generated here,
-      # never read off the world by the agent
-      MQTT_BROKERS: "http://example.org/orexis/world/allotment#broker mqtts://localhost:8890"
+      # its certificate and the authority's, in its container; which brokers it is connected to and where each
+      # answers is the world's to say, in its society and its derived deployment
       MQTT_CERT: "/app/world/allotment/secrets/rose_grower/agent.crt"
       MQTT_KEY: "/app/world/allotment/secrets/rose_grower/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
@@ -188,9 +186,8 @@ services:
         FEATURES: "belief,execution,journal,mqtt,planning,sensing,speech"
     command: ["orexis-agent", "/app/world/allotment", "supplier", "--volume", "/app/state"]
     environment:
-      # each broker it is connected to and where that listens — asserted or allocated, generated here,
-      # never read off the world by the agent
-      MQTT_BROKERS: "http://example.org/orexis/world/allotment#broker mqtts://localhost:8890"
+      # its certificate and the authority's, in its container; which brokers it is connected to and where each
+      # answers is the world's to say, in its society and its derived deployment
       MQTT_CERT: "/app/world/allotment/secrets/supplier/agent.crt"
       MQTT_KEY: "/app/world/allotment/secrets/supplier/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"

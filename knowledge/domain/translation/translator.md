@@ -61,7 +61,7 @@ the agent, or a group they are in where they have none.
 # What it needs
 
 A chat it is in, of which onboarding's [requirement](/domain/onboarding/requirement.md) holds a
-translator; a model the installation names ([deployment](/domain/onboarding/deployment.md)), its key
+translator; a [model](/domain/translation/model.md) its role names (`translation:translatedBy`), its key
 mounted into this agent's container alone; and each carrier's secret where a chat goes through it —
 `secrets/<agent>/telegram.env` for its bot, `secrets/<agent>/mail.env` for its mailbox.
 

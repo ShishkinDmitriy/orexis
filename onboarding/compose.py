@@ -14,10 +14,9 @@ See knowledge/decisions/where-the-belief-base-lives.md.
 
 **Agent 0.2.0 runs here.** Each service runs `orexis-agent <world> <id> --volume /app/state`: the
 world mounted at `/app/world/<name>` beside `/app/domains`, so a world's `owl:imports` of its
-domains resolve, and the broker's address handed in as environment —
-the `schema:url`s the world asserts on its `mqtt4ssn:Broker` or the installation allocated it
-(`onboarding.mqtt.broker`), where the world has a bus. Where the series store answers is no environment: the
-world's derived deployment states it for each purpose the world's agents write (`installation.purposes`) — history
+domains resolve. Where a service answers is no environment: the world's derived deployment states each broker's
+address, the `schema:url` the world asserts on its `mqtt4ssn:Broker` or the installation allocated it, where the
+world has a bus, as it states where each bot and each model a role names answers; and it states the series store for each purpose the world's agents write (`installation.purposes`) — history
 always, metrics where an agent of the world plays a meter — and each package makes its own sink from it
 (`onboarding.connections`); what is mounted here is the credential `orexis-influx` minted for each purpose, the
 agent's bucket and the token that opens only it. An unmonitored world's agents are minted no metrics credential. An agent that
@@ -25,7 +24,7 @@ holds a device writes its command topic, which the ACL admits it and nobody else
 trusts itself, so nothing is signed until the market brings a second agent to ask.
 
 **The bus is the world's to have, and only a world that has one is given one** (`reading.BUS`, a
-broker its society names): the broker's service, its volume, an agent's `MQTT_*` environment, its
+broker its society names): the broker's service, its volume, the paths of an agent's certificate, its
 broker credential and its certificates. A world with no bus — Hanoi, the courier, the tower — is
 its agents alone, each told of its series stores and nothing else, which is all its runtime asks.
 
@@ -46,10 +45,9 @@ simulation <world>`, connected as the one client that hosts every system the wor
 
 **An agent that translates is handed the model and its carriers' secrets**, and nothing else is: an
 agent playing `translation:Translator` speaks with the people of its chats itself, so its own container is
-told where the language model answers (`MODEL_URL`, the installation's `onboarding:Model`) and handed which
-model and its key (`infra/secrets/model.env`), and, for each transport it speaks through beside the bus,
-its secret — its bot's token (`secrets/<agent>/telegram.env`) and where its bot answers (`TELEGRAM_URL`,
-off the world's deployment graph), its mailbox (`secrets/<agent>/mail.env`) — each written by hand, since
+handed which model and its key (`infra/secrets/model.env`), and, for each transport it speaks through beside the
+bus, its secret — its bot's token (`secrets/<agent>/telegram.env`), its mailbox (`secrets/<agent>/mail.env`) —
+each written by hand, since
 nothing can mint a bot or a mailbox. An agent that translates nothing is handed none of it, and a world
 with a translator where the installation names no model is refused, as a monitored world is where
 metrics are served by no store (knowledge/domain/translation/translator.md).
@@ -83,17 +81,6 @@ TRANSLATION = "translation"
 BELIEF = "http://example.org/orexis#BeliefGraph"
 
 _IDS_Q = "SELECT ?a ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id }"
-
-#  THE BROKERS EACH AGENT IS CONNECTED TO, which its environment names with the url it reaches each at.
-_CONNECTED_Q = f"""
-SELECT ?id ?broker WHERE {{ ?a a orexis:Agent ; orexis:localId ?id ; <{MQTT4SSN}isConnectedToBroker> ?broker }}
-ORDER BY ?id ?broker"""
-
-#  WHERE AN AGENT'S BOT ANSWERS: the `schema:url` the world's deployment graph states on the bot the agent speaks
-#  through on Telegram.
-_BOT_Q = """
-SELECT ?url WHERE { $agent <http://example.org/orexis/telegram#hasBot> ?bot . ?bot <https://schema.org/url> ?url } ORDER BY ?url"""
-
 
 #  HOW LONG A METRICS WINDOW IS, the name the binary reads it by.
 
@@ -204,10 +191,9 @@ def simulated_client(world: str) -> str | None:
 
 @dataclass(frozen=True)
 class Translating:
-    """What an agent that translates is handed: where the model answers, where its bot answers where it has one,
-    and the carriers beside the bus it speaks through — `telegram`, `mail` — each a secret written by hand."""
-    model: str
-    bot: str | None
+    """What an agent that translates is handed: the carriers beside the bus it speaks through — `telegram`,
+    `mail` — each a secret written by hand. Where its model and its bot answer is the world's derived deployment's
+    to say, which the agent reads."""
     carriers: tuple[str, ...]
 
 
@@ -223,11 +209,8 @@ def translating(world: str, agent_id: str) -> Translating | None:
         raise SystemExit(f"{agent_id} of world {world!r} translates, and the installation names no onboarding:Model — "
                          f"state where one answers in {installation._where(installation.INSTALLATION)}, or take the "
                          "translator out of its self graph")
-    store = reading.world(world_dir(world))
-    iri = next(r["a"] for r in rows(store, _IDS_Q, graphs_of(store, BELIEF, common=True)) if r["id"] == agent_id)
-    bot = next((r["url"] for r in rows(store, _BOT_Q, graphs_of(store, BELIEF, reading.DEPLOYMENT, common=True), agent=iri)), None)
     carriers = tuple(name for name, package in (("telegram", TELEGRAM), ("mail", EMAIL)) if package in loaded)
-    return Translating(model, bot, carriers)
+    return Translating(carriers)
 
 
 def _simulator(world: str, read: set[Path], client: str, host: str, plain: int) -> str:
@@ -283,34 +266,26 @@ def _restart(lasting: bool) -> str:
             '    restart: "no"')
 
 
-def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, str]] | None,
+def _service(agent_id: str, world: str, read: set[Path], bus: bool,
              series: tuple[str, ...], lasting: bool,
              translates: Translating | None = None,
              image: Image | None = None) -> str:
-    """An agent's service. `bus` is each broker the agent is connected to, by its IRI, with the url
-    it reaches it at — TLS where the broker listens so, since an agent of a world with a bus holds a
-    certificate — or None where the world has none, and then nothing of a bus is written: no
-    `MQTT_*`, no broker credential, no certificate. `lasting` says whether the agent runs for good (`reading.lasts`), and so whether
+    """An agent's service. `bus` says whether the world has one, and where it has none nothing of a bus is
+    written: no `MQTT_*`, no broker credential, no certificate. `lasting` says whether the agent runs for good (`reading.lasts`), and so whether
     its container is restarted."""
     stores = ""
     mine = f"./{SECRETS}/{agent_id}"
     credentials = "".join(f"\n      - {mine}/{series_credential(purpose)}" for purpose in series)
     if translates is not None:
-        stores += ("\n      # where the language model answers — the installation's `onboarding:Model`; which model, and the"
-                   f'\n      # key, arrive in the installation\'s secret below\n      MODEL_URL: "{translates.model}"')
-        if translates.bot:
-            stores += f'\n      # where its Telegram bot answers, as the world\'s deployment graph states\n      TELEGRAM_URL: "{translates.bot}"'
         credentials += ("\n      # the model's name and key — `infra/model.env.example` says how — since it translates"
                         "\n      - ../../infra/secrets/model.env")
         for carrier in translates.carriers:
             credentials += (f"\n      # its {'bot' if carrier == 'telegram' else 'mailbox'}'s secret, written by hand: nothing can mint one"
                             f"\n      - {mine}/{carrier}.env")
-    if bus is not None:
-        told = " ".join(f"{iri} {url}" for iri, url in bus)
+    if bus:
         where = f"""
-      # each broker it is connected to and where that listens — asserted or allocated, generated here,
-      # never read off the world by the agent
-      MQTT_BROKERS: "{told}"
+      # its certificate and the authority's, in its container; which brokers it is connected to and where each
+      # answers is the world's to say, in its society and its derived deployment
       MQTT_CERT: "/app/world/{world}/{SECRETS}/{agent_id}/agent.crt"
       MQTT_KEY: "/app/world/{world}/{SECRETS}/{agent_id}/agent.key"
       MQTT_CA: "/app/secrets/ca.crt\""""
@@ -398,18 +373,6 @@ def _broker(world: str, broker_iri: str, plain: int, tls: int | None) -> str:
 
 
 
-def _reached(world: str) -> dict[str, list[tuple[str, str]]]:
-    """Each agent's brokers, by its id: the IRI and the url it reaches it at, TLS where the broker
-    listens so and plain where it does not."""
-    store = reading.world(world_dir(world))
-    where = addresses(world)
-    out: dict[str, list[tuple[str, str]]] = {}
-    for r in rows(store, _CONNECTED_Q, graphs_of(store, BELIEF, common=True)):
-        host, plain, tls = where[r["broker"]]
-        out.setdefault(r["id"], []).append((r["broker"], f"mqtts://{host}:{tls}" if tls else f"mqtt://{host}:{plain}"))
-    return out
-
-
 def render(world: str) -> str:
     who = roster(world)
     if not who:
@@ -417,13 +380,12 @@ def render(world: str) -> str:
     #  THE BUS, where the world's society names a broker — a service per broker, each agent told the
     #  ones it is connected to — and only then are the brokers' addresses asked for.
     bus = addresses(world) if reading.BUS in reading.premises(world_dir(world)) else {}
-    reached = _reached(world) if bus else {}
     series = installation.purposes(world)
     client = simulated_client(world)
     read = read_by_an_agent(world)
     services = ("".join(_broker(world, b, *bus[b][1:]) for b in sorted(bus))
                 + (_simulator(world, read, client, *broker_of(world, client)[:2]) if client else "")
-                + "".join(_service(a, world, read, reached.get(a, []) if bus else None, series,
+                + "".join(_service(a, world, read, bool(bus), series,
                                    reading.lasts(world_dir(world), a),
                                    translating(world, a), image_of(world, a, bool(series)))
                           for a in who))

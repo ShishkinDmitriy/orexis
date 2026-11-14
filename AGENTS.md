@@ -747,8 +747,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **The transport speaks MQTT4SSN, and a topic is named by the filters that match it, which no society
   states** — onboarding's one `sh:rule` names each for its publisher or its listener, a board's one
   readings topic `sensors/<client>/reading`, into `society.derived.ttl`, which every reader reads as the
-  society (#836); the agent subscribes by the pattern and publishes to one with no wildcard; each
-  broker's address stays in the environment, `MQTT_BROKERS` by IRI, and a world may have any number, a
+  society (#836); the agent subscribes by the pattern and publishes to one with no wildcard; where each
+  broker answers is the world's derived deployment's to say, by its IRI, and a world may have any number, a
   topic going over a broker the agent shares with the client it is about.
 - **What is said is a statement, and what is believed of it is extracted, heard or said alike** — a
   document is kept as `speech:StatementGraph`, which no reader of the mind is handed, whatever kind it
@@ -1065,6 +1065,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   running for what no role asked; the address on the role in the authored self graph and the installation's
   document handed to the agent were refused, and a credential is never in it
   (the-world-says-what-it-is-connected-to).
+- **Where a broker, a bot and a model answer is the world's derived deployment's to say, and a transport reads it
+  as it connects** — the society already says which broker an agent is connected to and which bot it speaks
+  through, so neither gets a role link, and a model is named by the translator's role (`translation:translatedBy`);
+  what a world is held to at onboarding leaves the derived deployment out, a broker's one url there being the one
+  an agent reaches it at and no statement of the world's (model, the-world-says-what-it-is-connected-to).
 - **How often a package takes its turn is its role's to say, and the package's constant holds where the role says
   nothing** — `sensing:archivedEveryS`, `journal:archivedEveryS` and `metrics:windowS`, each read off the self graph
   by the package that takes the turn (`orexis::boot::figure`); the first two were constants in code and the third the
@@ -1151,7 +1156,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
    `world/<world>/`. Deployment facts
    (service URLs) are not beliefs anyone holds: what a world is connected to is derived by onboarding into
    `world/<world>/deployment.derived.ttl`, a graph of the world that is no belief, which a package reads as it
-   starts; what has not moved there yet is still environment. See
+   starts; a credential, and the path of one, is still environment. See
    [world-graph](knowledge/decisions/world-graph.md) and
    [the-world-says-what-it-is-connected-to](knowledge/decisions/the-world-says-what-it-is-connected-to.md).
 

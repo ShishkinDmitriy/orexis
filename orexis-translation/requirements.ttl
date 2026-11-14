@@ -32,4 +32,8 @@ SELECT $this ?agent WHERE { $this speech:participant ?agent . ?agent a orexis:Se
     sh:targetClass translation:Translator ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "a translator in no chat: no person's words would reach it" ;
-        sh:select """SELECT $this WHERE { ?me orexis:plays $this FILTER NOT EXISTS { ?chat speech:participant ?me } }""" ] .
+        sh:select """SELECT $this WHERE { ?me orexis:plays $this FILTER NOT EXISTS { ?chat speech:participant ?me } }""" ] ,
+      [ a sh:SPARQLConstraint ;
+        sh:message "a translator translated by no model, named: it would keep a person's words and answer nothing" ;
+        sh:select """PREFIX translation: <http://example.org/orexis/translation#>
+SELECT $this WHERE { FILTER NOT EXISTS { $this translation:translatedBy ?model FILTER isIRI(?model) } }""" ] .

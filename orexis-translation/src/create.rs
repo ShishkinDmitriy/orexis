@@ -783,6 +783,15 @@ inventory::submit! { Package { name: "translation", documents: orexis::documents
 /// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
 const ROLE: &str = "http://example.org/orexis/translation#Translator";
 
+const WORDS: &str = "PREFIX translation: <http://example.org/orexis/translation#> ";
+const TRANSLATED_BY: &str = "?role translation:translatedBy ?service . ?service a translation:Model .";
+
+/// WHERE THE MODEL THE TRANSLATOR'S ROLE NAMES ANSWERS (`translation:translatedBy`), as the world's deployment
+/// graph says, or None where the role names none or the world says nothing of the one named.
+pub fn answers(store: &orexis::store::Store) -> Result<Option<String>, Error> {
+    orexis::boot::connected(store, WORDS, TRANSLATED_BY)
+}
+
 /// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
 /// joined, makes its core.
 fn start(handed: Handed) -> orexis::task::Starting {
@@ -802,16 +811,23 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
         .into_iter()
         .next()
         .unwrap_or_default();
-    //  HANDED A MODEL, by a test that answers for it, it is that; deployed and handed none, the one the agent's
-    //  environment opens; and otherwise none, so a check calls no model.
-    let model = handed.outside.take::<Arc<dyn crate::model::Model>>().or_else(|| {
-        handed
-            .outside
-            .has::<orexis::task::Deployed>()
-            .then(|| crate::model::Anthropic::from_environ(&|name| std::env::var(name).ok()))
-            .flatten()
-            .map(|m| Arc::new(m) as Arc<dyn crate::model::Model>)
-    });
+    //  HANDED A MODEL, by a test that answers for it, it is that; deployed and handed none, the one its role names
+    //  (`translation:translatedBy`), where the world's deployment says that answers, under the name and key the
+    //  agent's environment holds; and otherwise none, so a check calls no model.
+    let model = match handed.outside.take::<Arc<dyn crate::model::Model>>() {
+        Some(model) => Some(model),
+        None if handed.outside.has::<orexis::task::Deployed>() => match answers(&handed.store)? {
+            Some(url) => crate::model::Anthropic::from_environ(&url, &|name| std::env::var(name).ok())
+                .map(|m| Arc::new(m) as Arc<dyn crate::model::Model>),
+            None => {
+                log::warn!(
+                    "no model: the translator's role names none the world says where to reach (translation:translatedBy)"
+                );
+                None
+            }
+        },
+        None => None,
+    };
     let mut translator = Translator::new(&handed.store, &me, model);
     translator.inline = handed.outside.take::<Inline>().is_some();
     //  WHAT A CHAT READS OF WHAT HAPPENED: the journal where what keeps it said where it lies, and the two series —

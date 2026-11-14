@@ -580,8 +580,9 @@ a message per check; and a world is never held to it, since a world states no st
   are fixed: the agent never constructs a name from an instance (a bucket's name was refused on
   that ground in series-and-bus-isolation), and it never reads a deployment graph. **Settled for
   the agent 2026-10-14, at the sovereign's word that nothing requires one broker:** one variable,
-  `MQTT_BROKERS`, holds each broker the agent is connected to by its IRI beside the url it reaches
-  it at, so the agent matches IRIs it reads in the society and constructs no name; the credential
+  `MQTT_BROKERS`, held each broker the agent is connected to by its IRI beside the url it reaches
+  it at (since 2026-11-15 the world's derived deployment states that url and the variable is gone),
+  so the agent matches IRIs it reads in the society and constructs no name; the credential
   stays one per agent, which each of the world's brokers holds. A mounted file per broker was not
   needed. **And for onboarding the next day:** each broker is served apart — a service, a config, a
   passwd and an ACL of its own, holding the principals connected to it — a board is flashed with the

@@ -18,7 +18,7 @@ telegram:chatId a owl:DatatypeProperty ; rdfs:domain telegram:Chat ; rdfs:label 
     rdfs:comment "The id the Bot API names a chat by, a number, negative for a group: read from `getUpdates` once someone has written in it. A person's own, so a world states it in a document under `secrets/` where it is." .
 
 telegram:Bot a owl:Class ; rdfs:label "Telegram bot" ;
-    rdfs:comment "An agent's account on Telegram, the user agent it speaks through there. Where the Bot API answers is its `schema:url`, a deployment fact told to the agent as `TELEGRAM_URL`; its token is the one secret, `TELEGRAM_BOT_TOKEN` in `secrets/telegram-<agent>.env`, never a graph." .
+    rdfs:comment "An agent's account on Telegram, the user agent it speaks through there. Where the Bot API answers is its `schema:url`, which the world's deployment graph (`orexis:DeploymentGraph`) states and the transport reads as it connects; its token is the one secret, `TELEGRAM_BOT_TOKEN` in `secrets/telegram-<agent>.env`, never a graph." .
 
 telegram:hasBot a owl:ObjectProperty ; rdfs:range telegram:Bot ; rdfs:label "has bot" ;
     rdfs:comment "The bot an agent speaks through on Telegram: the agent's own, so in a group with several agents each speaks in its own name." .

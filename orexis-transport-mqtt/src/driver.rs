@@ -11,7 +11,8 @@
 //! `received` once per sensor of the agent's whose pattern matches the topic.
 //!
 //! **THE MEMBER BRINGS ITSELF UP, AND THE THREAD IS THE CONTAINER'S**: `connect` makes a client per broker the
-//! environment names — `MQTT_BROKERS`, each broker's IRI and its url, `MQTT_USERNAME` and `MQTT_PASSWORD`, and
+//! world says the agent is connected to, at the url the world's deployment graph states of it, under the credential
+//! the environment holds — `MQTT_USERNAME` and `MQTT_PASSWORD`, and
 //! `MQTT_CA`, `MQTT_CERT` and `MQTT_KEY` for a url that is `mqtts` — and refuses without a broker or a credential
 //! rather than guess one. A message arrives on a session's task and goes to the member's inbox, which the part
 //! hands the one executing thread as a job. **A TOPIC GOES OVER A BROKER THE AGENT SHARES WITH THE CLIENT IT IS
@@ -554,19 +555,48 @@ pub struct Session {
     pub tls: Option<(String, String, String)>,
 }
 
-/// The sessions the environment names: a client per broker `MQTT_BROKERS` names — its IRI, then the url the agent
-/// reaches it at — under the agent's credential, with its certificate where the url is `mqtts`. Refused without a
-/// broker or a credential, since a guess puts a misconfigured agent on the real topics.
-pub fn sessions(me: &str, env: &dyn Fn(&str) -> Option<String>) -> Result<Vec<Session>, Error> {
-    let said: Vec<String> = env("MQTT_BROKERS")
-        .unwrap_or_default()
-        .split_whitespace()
-        .map(String::from)
-        .collect();
-    if said.is_empty() || said.len() % 2 == 1 {
+/// THE BROKERS THE SELF IS CONNECTED TO, AND WHERE EACH ANSWERS: connected as the society says
+/// (`mqtt4ssn:isConnectedToBroker`), answering at the `schema:url` the world's deployment graph states of it.
+const REACHED_Q: &str = "
+SELECT ?broker ?url WHERE { $me mqtt4ssn:isConnectedToBroker ?broker
+  OPTIONAL { ?broker <https://schema.org/url> ?url } } ORDER BY ?broker ?url";
+
+/// Each broker `me` is connected to, by its IRI, with the url the world's deployment graph says it answers at.
+/// Refused where the world says nothing of where one answers, since a guess puts a misconfigured agent on the real
+/// topics; empty where the agent is connected to none.
+pub fn reached(beliefs: &Store, me: &str) -> Result<Vec<(String, String)>, Error> {
+    let mut known = beliefs.graphs_of(&[BELIEF], &Within::common())?;
+    known.extend(beliefs.graphs_of(&[orexis::ontology::DEPLOYMENT], &Within::common())?);
+    let mut out: Vec<(String, String)> = Vec::new();
+    for row in beliefs.rows(&bind(REACHED_Q, &[("me", Value::iri(me))])?, &strs(&known))? {
+        let Some(broker) = iri(&row, "broker") else { continue };
+        if out.iter().any(|(b, _)| *b == broker) {
+            continue;
+        }
+        let Some(url) = value(&row, "url") else {
+            return Err(Error::Evaluation(format!(
+                "this agent is connected to {} and the world's deployment says nothing of where it answers — run \
+                 `orexis-onboard`, which derives it",
+                local_of(&broker)
+            )));
+        };
+        out.push((broker, url));
+    }
+    Ok(out)
+}
+
+/// The sessions of an agent connected to `brokers`, each by its IRI with the url it answers at: a client per
+/// broker, under the agent's credential from its environment, with its certificate where the url is `mqtts`.
+/// Refused without a broker or a credential, since a guess puts a misconfigured agent on the real topics.
+pub fn sessions(
+    me: &str,
+    brokers: &[(String, String)],
+    env: &dyn Fn(&str) -> Option<String>,
+) -> Result<Vec<Session>, Error> {
+    if brokers.is_empty() {
         return Err(Error::Evaluation(
-            "no MQTT_BROKERS in the environment, each a broker's IRI and its url — this agent is told where its bus is, \
-             never guesses"
+            "this agent is connected to no broker (mqtt4ssn:isConnectedToBroker) — it is told where its bus is by its \
+             world, never guesses"
                 .into(),
         ));
     }
@@ -579,11 +609,10 @@ pub fn sessions(me: &str, env: &dyn Fn(&str) -> Option<String>) -> Result<Vec<Se
     };
     let (ca, cert, key) = (env("MQTT_CA"), env("MQTT_CERT"), env("MQTT_KEY"));
     let mut out = Vec::new();
-    for pair in said.chunks(2) {
-        let (broker, text) = (&pair[0], &pair[1]);
+    for (broker, text) in brokers {
         let refused = || {
             Error::Evaluation(format!(
-                "MQTT_BROKERS says {} is at '{text}', which is no mqtt:// or mqtts:// url",
+                "the world's deployment says {} is at '{text}', which is no mqtt:// or mqtts:// url",
                 local_of(broker)
             ))
         };
@@ -702,10 +731,11 @@ impl Client for Rumqtt {
     }
 }
 
-/// The agent's side of the bus, up from the environment: a rumqttc session per broker it names.
+/// The agent's side of the bus, up: a rumqttc session per broker the world says it is connected to, where the
+/// world's deployment says each answers, under the credential its environment holds.
 pub fn connect(beliefs: &Store, me: &str, env: &dyn Fn(&str) -> Option<String>) -> Result<Mqtt, Error> {
     let mut member = Mqtt::new(beliefs, me, Vec::new());
-    for session in sessions(me, env)? {
+    for session in sessions(me, &reached(beliefs, me)?, env)? {
         let (client, listening) = Rumqtt::connect(&session, member.inbox.clone())?;
         member.listening.push(listening);
         member.clients.push((Some(session.broker.clone()), Box::new(client)));
@@ -999,13 +1029,9 @@ mod tests {
     #[test]
     fn the_environment_names_each_session_and_its_credential() {
         let broker = t("broker");
-        let said = format!("{broker} mqtt://broker:1888");
-        let by_password = env(&[
-            ("MQTT_BROKERS", &said),
-            ("MQTT_USERNAME", "keeper"),
-            ("MQTT_PASSWORD", "s3cret"),
-        ]);
-        let found = sessions(ME, &by_password).unwrap();
+        let said = [(broker.clone(), "mqtt://broker:1888".to_string())];
+        let by_password = env(&[("MQTT_USERNAME", "keeper"), ("MQTT_PASSWORD", "s3cret")]);
+        let found = sessions(ME, &said, &by_password).unwrap();
         assert_eq!(
             found,
             [Session {
@@ -1019,15 +1045,14 @@ mod tests {
             }],
             "an mqtt:// url, so by password"
         );
-        let tls = format!("{broker} mqtts://broker:8888");
+        let tls = [(broker.clone(), "mqtts://broker:8888".to_string())];
         let by_certificate = env(&[
-            ("MQTT_BROKERS", &tls),
             ("MQTT_USERNAME", "keeper"),
             ("MQTT_CA", "ca.pem"),
             ("MQTT_CERT", "keeper.pem"),
             ("MQTT_KEY", "keeper.key"),
         ]);
-        let found = sessions(ME, &by_certificate).unwrap();
+        let found = sessions(ME, &tls, &by_certificate).unwrap();
         assert_eq!(
             found[0].tls,
             Some(("ca.pem".into(), "keeper.pem".into(), "keeper.key".into()))
@@ -1036,28 +1061,23 @@ mod tests {
     }
 
     #[test]
-    fn the_environment_is_refused_rather_than_a_broker_or_a_credential_guessed() {
-        let broker = t("broker");
-        let plain = format!("{broker} mqtt://broker:1888");
-        let no_scheme = format!("{broker} broker:1888");
-        let tls = format!("{broker} mqtts://broker:8888");
-        for (pairs, refusal) in [
-            (vec![("MQTT_USERNAME", "keeper")], "no MQTT_BROKERS"),
+    fn a_session_is_refused_rather_than_a_broker_or_a_credential_guessed() {
+        let at = |url: &str| vec![(t("broker"), url.to_string())];
+        for (brokers, pairs, refusal) in [
+            (Vec::new(), vec![("MQTT_USERNAME", "keeper")], "connected to no broker"),
             (
-                vec![("MQTT_BROKERS", broker.as_str()), ("MQTT_USERNAME", "keeper")],
-                "no MQTT_BROKERS",
-            ),
-            (
-                vec![("MQTT_BROKERS", no_scheme.as_str()), ("MQTT_USERNAME", "keeper")],
+                at("broker:1888"),
+                vec![("MQTT_USERNAME", "keeper")],
                 "no mqtt:// or mqtts:// url",
             ),
             (
-                vec![("MQTT_BROKERS", tls.as_str()), ("MQTT_USERNAME", "keeper")],
+                at("mqtts://broker:8888"),
+                vec![("MQTT_USERNAME", "keeper")],
                 "no MQTT_CA",
             ),
-            (vec![("MQTT_BROKERS", plain.as_str())], "MQTT_USERNAME"),
+            (at("mqtt://broker:1888"), Vec::new(), "MQTT_USERNAME"),
         ] {
-            let refused = sessions(ME, &env(&pairs)).unwrap_err().to_string();
+            let refused = sessions(ME, &brokers, &env(&pairs)).unwrap_err().to_string();
             assert!(refused.contains(refusal), "{refused}");
         }
     }

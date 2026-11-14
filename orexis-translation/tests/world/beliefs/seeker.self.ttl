@@ -9,4 +9,4 @@
 #  world's rules graph holds the extraction that believes what a person says.
 
 :seeker a orexis:Self ;
-    orexis:plays [ a translation:Translator ] , [ a belief:Deliberator ] .
+    orexis:plays [ a translation:Translator ; translation:translatedBy :model ] , [ a belief:Deliberator ] .
