@@ -2075,3 +2075,32 @@ def test_an_agent_that_translates_is_refused_where_the_installation_names_no_mod
     with pytest.raises(SystemExit, match="of world 'viewing' translates, and the installation names no onboarding:Model"):
         compose.render("viewing")
     assert "MODEL_URL" not in yaml.safe_load(compose.render("sensing"))["services"]["agent-fern"]["environment"]
+
+
+@pytest.mark.parametrize("crate", sorted(CRATES))
+def test_a_crates_readme_names_every_activity_and_trigger_its_ontology_declares(crate):
+    """EACH CRATE SAYS WHAT STARTS IT, in a README beside its code: its description, the events that trigger it and
+    the activities it starts. Nothing gates prose against what it describes, so this holds the card to the one
+    thing that can be read off the tree: every activity the crate's ontology declares, and every event the
+    ontology puts beneath a trigger, with that trigger, is named there. An activity or a trigger added without
+    its line fails here."""
+    import rdflib
+    from rdflib.namespace import RDFS
+
+    readme = REPO_ROOT / crate / "README.md"
+    assert readme.is_file(), f"{crate}/ has no README.md: what the package does, what starts it and its activities"
+    text = readme.read_text()
+    assert text.strip(), f"{crate}/README.md is empty"
+    ontology = REPO_ROOT / crate / "ontology.ttl"
+    if not ontology.is_file():
+        return
+    graph = rdflib.Graph().parse(ontology)
+    local = lambda term: re.split(r"[#/]", str(term))[-1]
+    owed = set()
+    for below, above in graph.subject_objects(RDFS.subClassOf):
+        if str(above) == "http://www.w3.org/ns/prov#Activity":
+            owed.add(local(below))
+        elif local(above).endswith("Trigger") and not local(below).endswith("Trigger"):
+            owed |= {local(below), local(above)}
+    missing = sorted(word for word in owed if not re.search(rf":{word}\b", text))
+    assert not missing, f"{crate}/README.md names none of {missing}, which {crate}/ontology.ttl declares"
