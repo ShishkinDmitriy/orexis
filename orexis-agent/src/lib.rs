@@ -94,29 +94,9 @@ pub fn check(world: &Path, agent: &str, now: oxsdatatypes::DateTime, boot: Optio
     };
     let checking = orexis::task::Checking::default();
     let clock: Arc<dyn Clock> = Arc::new(orexis::clock::Manual::at(now));
-    #[allow(unused_variables)]
-    let me = orexis::boot::selves(&store)?.into_iter().next().unwrap_or_default();
+    //  A CHECK HANDS NOTHING BUT THAT IT IS ONE: each package handed no connector and not deployed makes one that
+    //  reaches nothing, so no broker, no web, no bot and no model is dialled.
     let wiring = Wiring {
-        #[cfg(feature = "mqtt")]
-        mqtt: Some(orexis_transport_mqtt::driver::Mqtt::new(&store, &me, Vec::new())),
-        #[cfg(feature = "http")]
-        http: Some(orexis_transport_http::driver::Http::new(
-            &store,
-            &me,
-            Arc::new(|_: &str| Err("a check reaches no web".to_string())),
-        )),
-        #[cfg(feature = "telegram")]
-        telegram: Some(orexis_transport_telegram::driver::Telegram::new(&store, &me, "", "", {
-            let call: orexis_transport_telegram::driver::Call =
-                Arc::new(|_, _| Err("a check reaches no bot".to_string()));
-            call
-        })),
-        #[cfg(feature = "email")]
-        email: Some(orexis_transport_email::driver::Email::new(
-            &store,
-            &me,
-            Arc::new(Unreachable),
-        )),
         checking: Some(checking.clone()),
         ..Wiring::default()
     };
@@ -132,20 +112,6 @@ pub fn check(world: &Path, agent: &str, now: oxsdatatypes::DateTime, boot: Optio
     checked.held = found.held;
     checked.refused = found.refused;
     Ok(checked)
-}
-
-/// The mailbox a check reaches: none.
-#[cfg(feature = "email")]
-struct Unreachable;
-
-#[cfg(feature = "email")]
-impl orexis_transport_email::driver::Mailbox for Unreachable {
-    fn fetch(&self) -> Result<Vec<(String, String)>, String> {
-        Err("a check reaches no mailbox".into())
-    }
-    fn send(&self, _: &str, _: &str) -> Result<(), String> {
-        Err("a check reaches no mailbox".into())
-    }
 }
 
 /// Whether this binary holds `package`: its crate was built in, and registered itself.
@@ -179,7 +145,7 @@ pub struct Watching {
 
 /// What the agent's bus is, where a test hands one: the MQTT member over a client of its own, the HTTP member over a
 /// web of its own, the Telegram member over a Bot API of its own, the email member over a mailbox of its own, translation's model. None, and a member the agent
-/// loads is brought up from the environment. And what watches it.
+/// loads is brought up from the environment where the agent is deployed, and reaches nothing where it is not. And what watches it.
 #[derive(Default)]
 pub struct Wiring {
     pub watching: Watching,
@@ -207,7 +173,7 @@ pub struct Wiring {
 
 /// WHAT REACHES OUTSIDE, handed to the packages that take it: each connector `wiring` brings, what watches the agent,
 /// and `budget`, which sizes planning's search where a caller states one. What it leaves out a package makes for
-/// itself from the environment.
+/// itself: from the environment where the agent is deployed, and reaching nothing where it is not.
 pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
     let outside = Outside::default();
     let Wiring {

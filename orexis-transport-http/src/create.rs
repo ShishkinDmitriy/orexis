@@ -65,10 +65,20 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
         .into_iter()
         .next()
         .unwrap_or_default();
-    let member = handed
-        .outside
-        .take::<crate::driver::Http>()
-        .unwrap_or_else(|| crate::driver::Http::new(&handed.store, &me, crate::driver::get()));
+    //  HANDED A MEMBER, by a test that plays the other side, it is that; deployed and handed none, it fetches over
+    //  the web; and otherwise, a check or a test that hands
+    //  none, it is a member that reaches nothing, so every text it parses at its making is parsed and nothing is dialled.
+    let member = match handed.outside.take::<crate::driver::Http>() {
+        Some(member) => member,
+        None if handed.outside.has::<orexis::task::Deployed>() => {
+            crate::driver::Http::new(&handed.store, &me, crate::driver::get())
+        }
+        None => crate::driver::Http::new(
+            &handed.store,
+            &me,
+            std::sync::Arc::new(|_: &str| Err("an agent that is not deployed reaches no web".to_string())),
+        ),
+    };
     let mut part = Transport::new(member);
     let mut hears = handed.events.hears();
     let arrived = handed.arrived();

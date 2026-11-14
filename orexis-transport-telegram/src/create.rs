@@ -66,10 +66,20 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
         .into_iter()
         .next()
         .unwrap_or_default();
+    //  HANDED A MEMBER, by a test that plays the other side, it is that; deployed and handed none, it connects from
+    //  the agent's environment, refused where that lacks what it needs; and otherwise, a check or a test that hands
+    //  none, it is a member that reaches nothing, so every text it parses at its making is parsed and nothing is dialled.
     let member = match handed.outside.take::<crate::driver::Telegram>() {
         Some(member) => member,
-        None => crate::driver::Telegram::connect(&handed.store, &me, &|name| std::env::var(name).ok())?,
+        None if handed.outside.has::<orexis::task::Deployed>() => {
+            crate::driver::Telegram::connect(&handed.store, &me, &|name| std::env::var(name).ok())?
+        }
+        None => crate::driver::Telegram::unreachable(&handed.store, &me),
     };
+    //  CHECKED, it says what a check asks of it: it listens, so it holds the agent for as long as its process runs.
+    if let Some(checking) = handed.outside.read::<orexis::task::Checking>() {
+        checking.holds("transport/telegram");
+    }
     let mut part = Transport::new(member);
     let mut hears = handed.events.hears();
     let arrived = handed.arrived();

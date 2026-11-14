@@ -146,9 +146,11 @@ fn the_boot_is_written_as_the_agent_believes_it_and_a_desire_is_told_from_wants_
     std::fs::remove_dir_all(&dir).unwrap();
     let world = Path::new(TREE).join("world/greenhouse");
     assert!(
-        agents(&world)
+        agents(&world).iter().any(|a| check(&world, a, now, None)
+            .unwrap()
+            .held
             .iter()
-            .any(|a| check(&world, a, now, None).unwrap().held == ["planning"]),
+            .any(|p| p == "planning")),
         "no agent of the greenhouse holds a desire"
     );
 }
@@ -160,6 +162,11 @@ fn an_agent_in_a_chat_by_email_boots_with_its_mailbox() {
         .unwrap()
         .loaded;
     assert!(loaded.iter().any(|p| p == "transport/email"), "{loaded:?}");
+    //  AND ITS MAILBOX HOLDS IT, said by the transport itself, which made a mailbox that reaches nothing.
+    let held = check(&world, "seeker", instant("2026-11-07T12:00:00Z").unwrap(), None)
+        .unwrap()
+        .held;
+    assert!(held.iter().any(|p| p == "transport/email"), "{held:?}");
 }
 
 /// A RECORDER'S ROLE NAMES WHAT IT IS LINKED TO, the world says where that answers, and each housekeeper asks as it

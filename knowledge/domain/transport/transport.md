@@ -11,8 +11,8 @@ description: >-
 
 # The contract
 
-What the container asks of any member: bring itself up from the environment (`connect`, handed
-the container's `deliver`), subscribe to the agent's
+What the container asks of any member: bring itself up from the environment where the agent is deployed (`connect`, handed
+the container's `deliver`) and as a member that reaches nothing where it is checked, subscribe to the agent's
 channels (`open`), turn a message into observations by calling sensing's `received` once per
 sensor it is for (`handle`), and send what a device may be told — a cadence, a sense-now, and the
 payload a step's command answers (`actuate`), say whether it `reaches` a sensor or an actuator,

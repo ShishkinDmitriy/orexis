@@ -798,8 +798,14 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
         .into_iter()
         .next()
         .unwrap_or_default();
+    //  HANDED A MODEL, by a test that answers for it, it is that; deployed and handed none, the one the agent's
+    //  environment opens; and otherwise none, so a check calls no model.
     let model = handed.outside.take::<Arc<dyn crate::model::Model>>().or_else(|| {
-        crate::model::Anthropic::from_environ(&|name| std::env::var(name).ok())
+        handed
+            .outside
+            .has::<orexis::task::Deployed>()
+            .then(|| crate::model::Anthropic::from_environ(&|name| std::env::var(name).ok()))
+            .flatten()
             .map(|m| Arc::new(m) as Arc<dyn crate::model::Model>)
     });
     let mut translator = Translator::new(&handed.store, &me, model);
