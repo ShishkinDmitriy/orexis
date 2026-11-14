@@ -32,6 +32,18 @@ pub trait Mailbox: Send + Sync {
     fn send(&self, to: &str, text: &str) -> Result<(), String>;
 }
 
+/// The mailbox of an agent that is not deployed and was handed none: it reaches nothing.
+pub struct Unreachable;
+
+impl Mailbox for Unreachable {
+    fn fetch(&self) -> Result<Vec<(String, String)>, String> {
+        Err("an agent that is not deployed reaches no mailbox".into())
+    }
+    fn send(&self, _: &str, _: &str) -> Result<(), String> {
+        Err("an agent that is not deployed reaches no mailbox".into())
+    }
+}
+
 /// What runs a poll: on a thread of its own, or at once in a test.
 pub type Spawn = Box<dyn Fn(Box<dyn FnOnce() + Send>) + Send + Sync>;
 

@@ -103,7 +103,7 @@ want, which such an agent exits as unreachable rather than looping on.
 
 **A sensed world runs through its transport.** Where a loaded role needs the member — a speaker
 listens to a topic, or a sensor of an observer's publishes on one — the
-[transport](/domain/transport/transport.md) is loaded and brings its member up from the environment as it
+[transport](/domain/transport/transport.md) is loaded and, in a deployed agent, brings its member up from the environment as it
 starts: a message arrives on the member's own thread or task, which rings the member's task, and what it hands on
 is heard in turn — [sensing](/domain/sensing/sensing.md) writes the observation, the
 [deliberator](/domain/belief/deliberator.md) runs the rules that conclude its side and the

@@ -287,6 +287,12 @@ impl Telegram {
         }
     }
 
+    /// A bot that reaches nothing: every call refused, for an agent that is not deployed and was handed none.
+    pub fn unreachable(beliefs: &Store, me: &str) -> Self {
+        let call: Call = Arc::new(|_, _| Err("an agent that is not deployed reaches no bot".to_string()));
+        Self::new(beliefs, me, "", "", call)
+    }
+
     /// The bot brought up from the environment: refused where it holds no token.
     pub fn connect(beliefs: &Store, me: &str, env: &dyn Fn(&str) -> Option<String>) -> Result<Self, Error> {
         let token = env("TELEGRAM_BOT_TOKEN").filter(|t| !t.is_empty()).ok_or_else(|| {

@@ -72,7 +72,7 @@ import pyshacl
 import rdflib
 
 from documents.ontology import local_of
-from documents.world import (EMAIL, in_a_crate, MQTT, ONTOLOGY, SPEAKER, TELEGRAM, documents, known, packages_of, read_with_imports,
+from documents.world import (in_a_crate, ONTOLOGY, SPEAKER, documents, known, packages_of, read_with_imports,
                            roles_of, selves, world_of)
 from documents.store import (NAMESPACES, DocumentRefused, answer, catalogue_of, close_catalogue, closed, document, graphs_of, kinds_in, put_document,
                          rdflib_view, rows, whose)
@@ -228,11 +228,11 @@ def _booting(here: Path, agent_id: str) -> Refused | None:
 def lasts(here: Path, agent_id: str) -> bool:
     """Whether the agent `agent_id` of the world in `here` runs for as long as its process does —
     booted from the documents as its container boots it, into a store of its own in memory: a
-    package says it holds the agent, as planning does where the agent holds a desire, or a transport that listens is among the packages it loads — the bus, a bot, a
-    mailbox — which is what brings a transport up (`_transport_of`). False for an agent holding wants
-    alone and reached by no transport, which the runtime lets finish."""
+    package says it holds the agent, as planning does where the agent holds a desire and as a
+    transport that listens does, the bus, a bot or a mailbox. False for an agent holding wants alone
+    and reached by no transport, which the runtime lets finish."""
     _, verdict = _checked(Path(here).resolve(), agent_id)
-    return bool(verdict["held"]) or bool({MQTT, TELEGRAM, EMAIL} & set(verdict["loaded"]))
+    return bool(verdict["held"])
 
 
 def check(here: Path) -> None:

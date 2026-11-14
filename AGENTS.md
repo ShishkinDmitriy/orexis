@@ -1082,6 +1082,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   writes its scopes in its start, and where the agent is being checked (`orexis::task::Checking`) says that a desire
   holds the agent and which constraint the world as posed violates; the binary called the planner by name for all
   three, and its verdict named a desire and a contradiction, planning's words (package).
+- **A check hands nothing but that it is one, and a transport not deployed and handed no member reaches nothing** —
+  each transport makes its own member: the one a test hands, one from the environment where the agent is deployed, and
+  otherwise one every call of which is refused; and each that listens says it holds the agent, so onboarding names no
+  transport to know an agent lasts; the binary built all four unreachable members by name (package).
 - **A deployed agent's package makes what it is not handed, and the binary makes no journal** — whoever runs the
   agent for good says so (`orexis::task::Deployed`), and the journal package then makes its journal, keeps the
   process's log in it and serves it, and what archives it opens its own archive and takes the last entries once
