@@ -828,6 +828,11 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
         archived = bool(connections.linked(path.parent.name, "archivedIn"))
         assert (named.exists() and f'"file://{connections.ARCHIVE}"' in named.read_text()) == archived, path
         assert "OTLP_ENDPOINT" not in text and "--journal" not in text, path
+        # nor does any say how an agent's journal is kept or where it is served: the role says, and the endpoint
+        # it names is in the derived deployment at the url the installation allocated.
+        assert "JOURNAL_" not in text, path
+        served = bool(connections.linked(path.parent.name, "servedAt"))
+        assert (named.exists() and "journal:Endpoint" in named.read_text()) == served, path
         assert not re.search(r"\bINFLUX_(URL|ORG|BUCKET|TOKEN)\b", text), path
 
 
@@ -1933,27 +1938,32 @@ def test_no_generated_credential_is_tracked():
 
 
 
-def test_what_a_world_counts_as_an_incident_reaches_its_agents_and_what_is_no_level_is_refused(tmp_path, monkeypatch):
-    """The lane's deployment graph saying its agents' incidents begin at ERROR, and that a conflict concluded is one:
-    `orexis-compose` tells every agent both, as environment its journal reads (`agent.journal.incident_level`,
-    `incidents`); a world saying nothing tells nothing; and a level that is none is refused before anything is
-    written."""
-    import yaml
+RECORDER = "http://example.org/orexis/journal#Recorder"
 
-    from onboarding import compose, installation
 
-    said = ('\n<> onboarding:incidentLevel "error" ;\n    onboarding:incident <http://example.org/orexis/coordination#Concluded> .\n')
-    _installed(tmp_path, monkeypatch, {("lane", "deployment.ttl"): lambda text: text + said}, derivation=True)
-    assert installation.incidents("lane") == ("ERROR", ["http://example.org/orexis/coordination#Concluded"])
-    composed = yaml.safe_load(compose.render("lane"))
-    for name, service in composed["services"].items():
-        env = {k: str(v) for k, v in (service.get("environment") or {}).items()}
-        if name.startswith("agent-"):
-            assert (env["JOURNAL_INCIDENT_LEVEL"], env["JOURNAL_INCIDENTS"]) == ("ERROR", "http://example.org/orexis/coordination#Concluded")
-    assert installation.incidents("greenhouse") == (None, []) and "JOURNAL_INCIDENT" not in compose.render("greenhouse")
-    _installed(tmp_path / "loud", monkeypatch, {("lane", "deployment.ttl"): lambda text: text + said.replace('"error"', '"loud"')}, derivation=True)
-    with pytest.raises(SystemExit, match="one of DEBUG, INFO, WARNING, ERROR, CRITICAL"):
-        installation.incidents("lane")
+@pytest.mark.parametrize("said, why", [
+    (' ; journal:incidentFrom "error" ; journal:windowS 30 ; journal:incident <http://example.org/orexis/coordination#Concluded>', None),
+    (' ; journal:incidentFrom "loud"', "a recorder's incidents begin at one level"),
+    (' ; journal:windowS 0', "a recorder's window is one number of seconds above nought"),
+    (' ; journal:archivedIn :one , :other', "a recorder is archived in one archive"),
+], ids=["said-once", "no-level", "no-window", "two-archives"])
+def test_how_a_recorders_journal_is_kept_is_said_on_its_role_and_held_by_the_journals_requirements(tmp_path, said, why):
+    """From which level a line of the log is an incident, how long the log is kept and which classes are incidents
+    are said on the recorder's role, where the journal package reads them as it starts; no environment tells an
+    agent any of it. A level that is none, a window of nought and a second archive are refused by the journal's
+    shapes before anything is granted, since the package would read WARNING, ten minutes and one of the two, in
+    silence."""
+    from onboarding import reading
+
+    words = "@prefix journal: <http://example.org/orexis/journal#> .\n"
+    #  A deliberator too, since the world `_declared` writes imports the market, whose rules belief reads.
+    world = _declared(tmp_path, ["http://example.org/orexis/belief#Deliberator", (RECORDER, said)])
+    own = tmp_path / "beliefs" / "me.self.ttl"
+    own.write_text(words + own.read_text())
+    #  The role is the agent's own word, so what it breaks is the agent's, and the world's common beliefs break nothing.
+    refused = reading.refused(world)
+    assert reading.invalid(world) == []
+    assert (refused == []) if why is None else (len(refused) == 1 and why in refused[0]), refused
 
 
 # --- a PERSON, in a chat with an agent that translates ----------------------------------------------

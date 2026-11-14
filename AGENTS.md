@@ -980,9 +980,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   identities are IRIs, which a series store's tags cannot hold, so InfluxDB keeps the observations and the metrics;
   the journal is served read-only on the host's loopback, and a central store, journal files, every event under
   words of its own and a reader opening a live journal were refused (the-journal-is-the-agents-flight-recorder).
-- **What an incident is, is the vocabulary's, and which count, the deployment's** — a class beneath `orexis:Incident`
-  in its package's ontology, read off the agent's T-Box, and what a world's deployment graph adds or sets the log's
-  level to, told as environment; an incident typed by code was refused, being a question nothing could ask
+- **What an incident is, is the vocabulary's, and which count, the recorder's role's** — a class beneath `orexis:Incident`
+  in its package's ontology, read off the agent's T-Box, and what the role adds (`journal:incident`) or sets the log's
+  level to (`journal:incidentFrom`), with its window (`journal:windowS`) and the endpoint it is served at
+  (`journal:servedAt`): how a journal is kept is said on the role and no environment tells an agent any of it; an
+  incident typed by code was refused, being a question nothing could ask
   (the-journal-is-the-agents-flight-recorder).
 - **An agent keeps a journal where it plays a recorder, and the kernel knows no journal** — `journal:Recorder` loads
   `orexis-journal/`, which holds the store too and is started before every other package; an agent that plays none

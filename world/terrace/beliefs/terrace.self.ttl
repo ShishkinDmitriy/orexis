@@ -31,4 +31,5 @@
 #  and nobody writes it down.
 :terrace_agent orexis:plays [ a journal:Recorder ;
     journal:tracedBy :tracer ;
-    journal:archivedIn :terrace_agent_archive ] .
+    journal:archivedIn :terrace_agent_archive ;
+    journal:servedAt :terrace_agent_endpoint ] .

@@ -65,7 +65,6 @@ import logging
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
-from urllib.parse import urlparse
 
 from documents.world import EMAIL, SECRETS, TREE, directory_of, package_of, TELEGRAM, documents, known, packages_of, world_of
 from .series import HISTORY, METRICS
@@ -283,8 +282,8 @@ def _restart(lasting: bool) -> str:
 
 
 def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, str]] | None,
-             series: dict[str, tuple[str, str]], window: float | None, lasting: bool, journal: str | None = None,
-             incidents: tuple[str | None, list[str]] = (None, []), translates: Translating | None = None,
+             series: dict[str, tuple[str, str]], window: float | None, lasting: bool,
+             translates: Translating | None = None,
              image: Image | None = None) -> str:
     """An agent's service. `bus` is each broker the agent is connected to, by its IRI, with the url
     it reaches it at — TLS where the broker listens so, since an agent of a world with a bus holds a
@@ -295,16 +294,6 @@ def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, st
                      for purpose, (url, organisation) in series.items())
     if METRICS in series and window is not None:
         stores += f'\n      {INTERVAL_KEY}: "{window:g}"'
-    if journal is not None:
-        stores += ("\n      # where it serves its journal, on the host's loopback, allocated by the installation"
-                   f'\n      JOURNAL_PORT: "{urlparse(journal).port}"')
-    level, classes = incidents
-    if level is not None or classes:
-        stores += "\n      # what the world's deployment counts as an incident in its journal, beside its vocabulary"
-    if level is not None:
-        stores += f'\n      JOURNAL_INCIDENT_LEVEL: "{level}"'
-    if classes:
-        stores += f'\n      JOURNAL_INCIDENTS: "{" ".join(classes)}"'
     mine = f"./{SECRETS}/{agent_id}"
     credentials = "".join(f"\n      - {mine}/{series_credential(purpose)}" for purpose in series)
     if translates is not None:
@@ -437,13 +426,10 @@ def render(world: str) -> str:
     window = installation.interval(METRICS) if METRICS in series else None
     client = simulated_client(world)
     read = read_by_an_agent(world)
-    store = reading.world(world_dir(world))
-    iris = {r["id"]: r["a"] for r in rows(store, _IDS_Q, graphs_of(store, BELIEF, common=True))}
-    counted = installation.incidents(world)
     services = ("".join(_broker(world, b, *bus[b][1:]) for b in sorted(bus))
                 + (_simulator(world, read, client, *broker_of(world, client)[:2]) if client else "")
                 + "".join(_service(a, world, read, reached.get(a, []) if bus else None, series, window,
-                                   reading.lasts(world_dir(world), a), installation.journal(iris[a]), counted,
+                                   reading.lasts(world_dir(world), a),
                                    translating(world, a), image_of(world, a, bool(series)))
                           for a in who))
     volumes = ("".join(f"  orexis-{world}-{service_of(b)}:\n" for b in sorted(bus))

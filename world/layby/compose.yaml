@@ -103,8 +103,6 @@ services:
       # purpose, its metrics only where the world is monitored — safe for every agent to hold
       INFLUX_HISTORY_URL: "http://localhost:8086"
       INFLUX_HISTORY_ORG: "orexis"
-      # where it serves its journal, on the host's loopback, allocated by the installation
-      JOURNAL_PORT: "7887"
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx layby`, and
       # its own broker credential, minted by `orexis-mqtt layby`; mounted into THIS container alone

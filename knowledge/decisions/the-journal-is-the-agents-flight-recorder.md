@@ -51,20 +51,23 @@ journals what it held and concluded, and what it asked and answered is speech's 
 steps, which execution journals.
 
 **The log is the dash cam.** Every record the agent's process logs is an `orexis:LogRecord` in the journal, kept for
-the window (`JOURNAL_WINDOW_S`, ten minutes where nothing says) and swept after — unless an INCIDENT keeps it: an
+the window (`journal:windowS` on the recorder's role, ten minutes where it says nothing) and swept after — unless an INCIDENT keeps it: an
 event of a class beneath `orexis:Incident` — `execution:StepFailed`, `execution:IntentionFailed`,
 `planning:WantUnreachable` — or a record at WARNING or above, which is how a present that violates a constraint, a
 sensor gone silent and an exception escaping a pass are said. **What an incident is, is the vocabulary's, and which
-count, the deployment's**: a package puts the classes of its events that are incidents beneath `orexis:Incident`, 
-`orexis-journal/` reads them off the agent's T-Box, and a world's deployment graph may add classes (`onboarding:incident`)
-and raise or lower the level (`onboarding:incidentLevel`), told to the agent as environment. Keeping a journal was
+count, the recorder's role's**: a package puts the classes of its events that are incidents beneath `orexis:Incident`,
+`orexis-journal/` reads them off the agent's T-Box, and the role may add classes (`journal:incident`)
+and raise or lower the level (`journal:incidentFrom`), read off the self graph as the package starts. Both were the
+world's deployment graph's, told to the agent as environment, until 2026-11-14, when how a journal is kept became
+the role's to say ([the-world-says-what-it-is-connected-to](/decisions/the-world-says-what-it-is-connected-to.md)). Keeping a journal was
 every agent's, and needed no role, until 2026-11-13 (amended below). An incident keeps every record of the window before it for good (`orexis:keptBy`). The history is
 the flight data, kept for good; the log the cockpit's voice, kept when something happened.
 
 **The journal is served read-only, on the host's loopback.** An agent runs on the host's network, so it serves its
 journal at `http://127.0.0.1:<port>/sparql`, a query endpoint over the journal alone that refuses an update by not
 parsing one. The port is allocated by the installation from a pool of its own, as a broker's is, and kept in
-`infra/installation.derived.ttl` (`onboarding:journal`); `orexis-compose` tells the container `JOURNAL_PORT`. A stopped
+`infra/installation.derived.ttl` (`onboarding:journal`); the recorder's role names an
+[endpoint](/domain/journal/endpoint.md) (`journal:servedAt`) and the world's derived deployment states that url of it. A stopped
 agent's journal is read off its volume, opened read-only, which is safe once nothing writes it.
 
 **InfluxDB keeps what it is built for**: the observations, a number at an instant on a few tags, which the dashboards
@@ -160,7 +163,7 @@ Left open: a mapping back from the archive into the journal. Nothing reads one y
   sovereign chose; a host shared with someone who may not read an agent's journal is the trigger for a token minted
   per agent, as the series store's are.
 - **A series store refusing writes keeps the log for good** where the world leaves the level at WARNING: each refusal
-  is a warning, and every warning an incident. A world raises it with `onboarding:incidentLevel`; the trigger for more
+  is a warning, and every warning an incident. A role raises it with `journal:incidentFrom`; the trigger for more
   is a journal that grows through an outage at ERROR.
 - **A deployment adds incidents and never takes one away.** A class the vocabulary counts is counted everywhere; the
   trigger for an exclusion is a world whose incidents of one class keep more log than anyone reads.

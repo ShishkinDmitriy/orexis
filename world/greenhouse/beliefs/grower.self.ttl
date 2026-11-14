@@ -26,4 +26,5 @@
 #  and nobody writes it down.
 :grower orexis:plays [ a journal:Recorder ;
     journal:tracedBy :tracer ;
-    journal:archivedIn :grower_archive ] .
+    journal:archivedIn :grower_archive ;
+    journal:servedAt :grower_endpoint ] .

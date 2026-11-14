@@ -9,10 +9,11 @@ is handed. A package asks the store as it starts, and one whose role names no se
 the world says nothing of, ends its start there.
 
 A ROLE NAMES THE SERVICE AND THIS SAYS WHERE IT ANSWERS. An agent's self graph links a role it plays to a
-service by name: a recorder to its tracer (`journal:tracedBy`) and to its archive (`journal:archivedIn`). The
-author states no address. Each tracer named is given the url of the installation's one tracer, and a world
+service by name: a recorder to its tracer (`journal:tracedBy`), to its archive (`journal:archivedIn`) and to the
+endpoint its journal is served at (`journal:servedAt`). The author states no address. Each tracer named is given the url of the installation's one tracer, and a world
 naming one where the installation names none is refused; each archive named is given the path the agent's
-journal volume is mounted at in its container (`ARCHIVE`), which `orexis-compose` mounts there.
+journal volume is mounted at in its container (`ARCHIVE`), which `orexis-compose` mounts there; each endpoint
+named is given the url the installation allocated its agent's journal, on the host's loopback.
 
 The other services still reach an agent through its environment, and move here one by one. Committed, as the
 derived society is, and held to a fresh derivation by `tests/test_layout.py`; a world whose agents are linked to
@@ -47,20 +48,21 @@ ARCHIVE = "/app/journal"
 
 #  WHAT A ROLE AN AGENT PLAYS IS LINKED TO, read off each of its own documents alone: the service a recorder's role
 #  names by `link`. A self graph is where an agent's roles are stated, so no world is booted to ask.
-_LINKED_Q = f"""SELECT DISTINCT ?service WHERE {{
+_LINKED_Q = f"""SELECT DISTINCT ?me ?service WHERE {{
   ?me a <{OREXIS}Self> ; <{OREXIS}plays> ?role . ?role <{JOURNAL}$link> ?service . FILTER(isIRI(?service)) }}"""
 
 
-def linked(world: str, link: str) -> list[str]:
-    """Every service a role some agent of `world` plays names by the journal's `link`, sorted."""
-    found: set[str] = set()
+def linked(world: str, link: str) -> dict[str, str]:
+    """{service: agent} — every service a role some agent of `world` plays names by the journal's `link`, with
+    the agent whose role names it, sorted by service."""
+    found: dict[str, str] = {}
     beliefs = world_dir(world) / BELIEFS
     for path in sorted(p for p in beliefs.glob("*") if p.is_file() and p.suffix in DOCUMENTS) if beliefs.is_dir() else []:
         document = ox.Store()
         document.load(path.read_bytes(), ox.RdfFormat.TRIG, base_iri=path.resolve().as_uri())
-        found |= {row["service"].value
-                  for row in document.query(_LINKED_Q.replace("$link", link), use_default_graph_as_union=True)}
-    return sorted(found)
+        for row in document.query(_LINKED_Q.replace("$link", link), use_default_graph_as_union=True):
+            found[row["service"].value] = row["me"].value
+    return {service: found[service] for service in sorted(found)}
 
 
 def derivation(world: str) -> Path:
@@ -69,8 +71,8 @@ def derivation(world: str) -> Path:
 
 def derive(world: str) -> list[tuple[str, str, ox.NamedNode | ox.Literal]]:
     """Every statement of what `world`'s agents are linked to, as (subject, predicate, object), sorted: each tracer
-    a recorder's role names, at the installation's tracer's url, and each archive one names, at the path its volume
-    is mounted at. Refused, naming it, where a role names a tracer and the installation names none."""
+    a recorder's role names, at the installation's tracer's url, each archive one names, at the path its volume is
+    mounted at, and each endpoint one names, at the url the installation allocated that agent's journal. Refused, naming it, where a role names a tracer and the installation names none."""
     statements: list[tuple[str, str, ox.NamedNode | ox.Literal]] = []
     tracers = linked(world, "tracedBy")
     if tracers:
@@ -85,6 +87,14 @@ def derive(world: str) -> list[tuple[str, str, ox.NamedNode | ox.Literal]]:
     for iri in linked(world, "archivedIn"):
         statements += [(iri, _TYPE, ox.NamedNode(JOURNAL + "Archive")),
                        (iri, SCHEMA + "url", ox.Literal(f"file://{ARCHIVE}"))]
+    for iri, agent in linked(world, "servedAt").items():
+        url = installation.journal(agent)
+        if url is None:
+            raise SystemExit(f"world {world!r} says a recorder's journal is served at {iri} (journal:servedAt) and the "
+                             f"installation has allocated {agent} no port — run `orexis-onboard {world}`, which "
+                             f"allocates one before it derives this")
+        statements += [(iri, _TYPE, ox.NamedNode(JOURNAL + "Endpoint")),
+                       (iri, SCHEMA + "url", ox.Literal(url))]
     return sorted(statements, key=lambda s: (s[0], s[1], str(s[2])))
 
 

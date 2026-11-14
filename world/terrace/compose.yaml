@@ -62,8 +62,6 @@ services:
       INFLUX_METRICS_URL: "http://localhost:8086"
       INFLUX_METRICS_ORG: "orexis"
       METRICS_INTERVAL_S: "60"
-      # where it serves its journal, on the host's loopback, allocated by the installation
-      JOURNAL_PORT: "7889"
       # where the language model answers — the installation's `onboarding:Model`; which model, and the
       # key, arrive in the installation's secret below
       MODEL_URL: "https://api.anthropic.com"

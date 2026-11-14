@@ -11,8 +11,7 @@
 //! it: until then a later incident keeps it again, and what ships the activities reads it there. One that changes
 //! after it was taken, an activity told the graphs it wrote, is taken again whole.
 //!
-//! WHEN: every `JOURNAL_ARCHIVE_INTERVAL_S` of the agent's seconds, two where the environment says nothing, where
-//! anything was written; at once as an incident is kept; and once more as the run ends. So an agent killed outright
+//! WHEN: every two of the agent's seconds where anything was written; at once as an incident is kept; and once more as the run ends. So an agent killed outright
 //! loses what it said in its last stretch, and one that stops, nothing.
 //!
 //! THE ARCHIVE IS WHAT A READER OF THE PAST IS HANDED: the endpoint's `/sparql`, a chat's journal tool and a stopped
@@ -30,18 +29,8 @@ use orexis::task::{Handed, Package, Task};
 use orexis_journal::Journal;
 use orexis_journal::journal::{ACTIVITY, KEPT_BY, LOG_RECORD};
 
-/// How often what lasts is archived, in the agent's seconds: the environment's to say.
-pub const INTERVAL: &str = "JOURNAL_ARCHIVE_INTERVAL_S";
-/// How often where the environment says nothing.
+/// How often what lasts is archived, in the agent's seconds.
 pub const INTERVAL_S: f64 = 2.0;
-
-/// How often what lasts is archived: `JOURNAL_ARCHIVE_INTERVAL_S`, or two seconds.
-pub fn interval(env: &dyn Fn(&str) -> Option<String>) -> f64 {
-    env(INTERVAL)
-        .and_then(|s| s.parse::<f64>().ok())
-        .filter(|s| *s > 0.0)
-        .unwrap_or(INTERVAL_S)
-}
 
 fn engine(e: impl std::fmt::Display) -> Error {
     Error::Evaluation(e.to_string())
@@ -213,7 +202,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
 }
 
 /// ITS OWN ARCHIVE, where the agent is deployed: the store on disk at the path the world states of the archive the
-/// recorder's role names, over the journal that package handed on, taken as often as the environment says. A
+/// recorder's role names, over the journal that package handed on, taken every two of the agent's seconds. A
 /// binary built without the volume has nowhere to keep one, says so, and what lasts stays in the journal.
 fn own(handed: &Handed) -> Result<Option<Archives>, Error> {
     let (Some(path), Some(journal)) = (archive(&handed.store)?, handed.outside.take::<orexis_journal::Traced>()) else {
@@ -227,7 +216,7 @@ fn own(handed: &Handed) -> Result<Option<Archives>, Error> {
         Ok(Some(Archives {
             journal: kept,
             archive: Arc::new(Archive::open(&path)?),
-            every_s: interval(&|key| std::env::var(key).ok()),
+            every_s: INTERVAL_S,
         }))
     }
     #[cfg(not(feature = "volume"))]
@@ -397,12 +386,5 @@ mod tests {
         journal.remark("planning", log::Level::Info, "after", None).unwrap();
         assert_eq!(archive.tidy().unwrap(), 1);
         assert_eq!(graphs(&archive.store), 3);
-    }
-
-    #[test]
-    fn the_interval_is_the_environments_and_two_seconds_where_it_says_nothing() {
-        assert_eq!(interval(&|k| (k == INTERVAL).then(|| "30".to_string())), 30.0);
-        assert_eq!(interval(&|_| None), INTERVAL_S);
-        assert_eq!(interval(&|_| Some("nought".to_string())), INTERVAL_S);
     }
 }

@@ -12,5 +12,7 @@
 
 :terrace_agent_archive a journal:Archive ;
     schema:url "file:///app/journal" .
+:terrace_agent_endpoint a journal:Endpoint ;
+    schema:url "http://localhost:7889" .
 :tracer a journal:Tracer ;
     schema:url "http://localhost:4318" .

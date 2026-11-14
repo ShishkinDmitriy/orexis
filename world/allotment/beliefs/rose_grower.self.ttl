@@ -22,4 +22,5 @@
 #  history view and its own account of itself read what it kept. Without the role its packages say what happens
 #  and nobody writes it down.
 :rose_grower orexis:plays [ a journal:Recorder ;
-    journal:archivedIn :rose_grower_archive ] .
+    journal:archivedIn :rose_grower_archive ;
+    journal:servedAt :rose_grower_endpoint ] .

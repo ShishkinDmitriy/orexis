@@ -105,8 +105,6 @@ services:
       INFLUX_METRICS_URL: "http://localhost:8086"
       INFLUX_METRICS_ORG: "orexis"
       METRICS_INTERVAL_S: "60"
-      # where it serves its journal, on the host's loopback, allocated by the installation
-      JOURNAL_PORT: "7883"
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx greenhouse`, and
       # its own broker credential, minted by `orexis-mqtt greenhouse`; mounted into THIS container alone
