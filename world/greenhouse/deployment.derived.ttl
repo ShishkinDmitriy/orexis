@@ -12,5 +12,7 @@
 
 :grower_archive a journal:Archive ;
     schema:url "file:///app/journal" .
+:grower_endpoint a journal:Endpoint ;
+    schema:url "http://localhost:7883" .
 :tracer a journal:Tracer ;
     schema:url "http://localhost:4318" .

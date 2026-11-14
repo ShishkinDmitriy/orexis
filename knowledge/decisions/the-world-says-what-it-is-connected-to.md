@@ -85,7 +85,9 @@ archives it opens its own archive at that path and takes the last entries once e
 makes neither and names neither.
 
 Still environment, to move one by one, each with its package making its own connector: the series store for
-history and for metrics, the brokers' addresses, the model's url, each bot's url, the journal's port, and the intervals. Tracked as #1173, not here.
+history and for metrics, the brokers' addresses, the model's url, each bot's url, and the intervals. The journal's port moved
+too: the role names an endpoint (`journal:servedAt`) and the derived deployment states the allocated url; its window
+and its incidents are the role's own figures, and no `JOURNAL_` variable is left. Tracked as #1173, not here.
 
 # Seams left open
 

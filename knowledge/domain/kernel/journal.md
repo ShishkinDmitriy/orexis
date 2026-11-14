@@ -19,7 +19,7 @@ by the node it is about, a UUID's URN:
   with what the agent held of what it is about — kept for good. This is the agent's history, beside the observations
   its [series](/domain/kernel/series.md) keeps.
 - a **log record**, `orexis:LogRecord`, what the code said in the log — its `orexis:logger`, `orexis:level` and
-  `orexis:message` — kept for the **window**, ten minutes where `JOURNAL_WINDOW_S` says nothing, and swept after.
+  `orexis:message` — kept for the **window**, ten minutes where the recorder's role states no `journal:windowS`, and swept after.
 - an [**activity**](/domain/kernel/activity.md) a package did, a `prov:Activity`, written as it ends by
   `orexis-journal/`: that page says what the entry holds. Kept for the window too.
 
@@ -27,17 +27,17 @@ An **incident**, `orexis:Incident`, keeps the window before it: every log record
 incident (`orexis:keptBy`), and the incident's entry says it is one. So what led up to a failure is there to read, and
 what led up to nothing goes. **What an incident is, is the vocabulary's**: an event is one where its class is beneath
 `orexis:Incident` in its package's ontology — `execution:StepFailed`, a step that did not land, `execution:IntentionFailed`,
-`planning:WantUnreachable` — which `orexis-journal/`, the crate that keeps the journal, reads off the agent's own T-Box. **Which count is the world's
-deployment's**: its deployment graph may add classes (`onboarding:incident`) and say from which level a log record is
-one (`onboarding:incidentLevel`, WARNING where it says nothing), told to the agent as `JOURNAL_INCIDENTS` and
-`JOURNAL_INCIDENT_LEVEL` and never believed. Keeping a journal is a [role](/domain/kernel/role.md), the recorder's: an agent that
+`planning:WantUnreachable` — which `orexis-journal/`, the crate that keeps the journal, reads off the agent's own T-Box. **Which count is the
+recorder's role's**: the role may add classes (`journal:incident`) and say from which level a log record is
+one (`journal:incidentFrom`, WARNING where it says nothing), read off the agent's self graph as the package starts. Keeping a journal is a [role](/domain/kernel/role.md), the recorder's: an agent that
 plays none keeps none.
 
 # How it is read
 
 The agent serves what happened at `http://127.0.0.1:<port>/sparql`, the SPARQL protocol's query alone: an update is
 refused. That path answers from the archive, and `/live/sparql` from the journal itself. The
-port is the installation's to allocate and the container's to be told, `JOURNAL_PORT`. Every entry is the default
+port is the installation's to allocate, and the agent reads it off the [endpoint](/domain/journal/endpoint.md) its
+recorder role names. Every entry is the default
 graph of a query asked there, and a pattern over a node several entries copy — a step, an act — is asked within one
 entry, `GRAPH ?e { … }`, or each copy answers it once more. `orexis-history` and `orexis-explain` are its readers; a
 stopped agent's archive is opened read-only off its volume, which nothing then writes.

@@ -101,13 +101,14 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
     # one of them after the credentials were minted.
     told = installation.purposes(world)
     log.info("  its agents write %s", " and ".join(p.lower() for p in told))
-    # What the world is connected to, into `deployment.derived.ttl`, which its agents read: a package asks the
-    # store for a service of its kind as it starts. Once the world is judged, since a world refused is given nothing.
-    connections.write(world)
     # What the documents leave out is derived before anything is rendered from them: a broker whose
     # world asserts no url is allocated one here, beside every other world's, and every tool below
     # only reads what was asserted or allocated (onboarding.derived).
     installation.write_derivation()
+    # What the world's agents are linked to, into `deployment.derived.ttl`, which they read: a package asks the
+    # store where the service its role names answers as it starts. Once the world is judged, since a world refused
+    # is given nothing, and once the installation has allocated, since an endpoint's port is allocated there.
+    connections.write(world)
     influx.provision(world, rotate=rotate)
     if bus:
         mqtt.provision(world, rotate=rotate)

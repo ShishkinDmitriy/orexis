@@ -17,8 +17,7 @@ incident kept. An entry is the same named graph in both, so one text reads eithe
 The journal is in memory, and is where a thing is written as it is said. `orexis-journal-oxigraph/` takes what lasts
 out of it into the archive, and has the journal forget what was taken:
 
-- **when**: every two of the agent's seconds where anything was written (`JOURNAL_ARCHIVE_INTERVAL_S` says
-  otherwise), at once when an incident is kept, and a last time as the run ends;
+- **when**: every two of the agent's seconds where anything was written, at once when an incident is kept, and a last time as the run ends;
 - **an event** is forgotten by the journal as soon as the archive has it;
 - **a log record or an activity an incident kept** stays in the journal too until the window has passed it, since a
   later incident keeps it again and `orexis-journal-otlp/` reads the activities there; one that changes after it was

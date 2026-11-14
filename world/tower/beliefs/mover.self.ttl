@@ -32,4 +32,5 @@
 #  history view and its own account of itself read what it kept. Without the role its packages say what happens
 #  and nobody writes it down.
 :mover orexis:plays [ a journal:Recorder ;
-    journal:archivedIn :mover_archive ] .
+    journal:archivedIn :mover_archive ;
+    journal:servedAt :mover_endpoint ] .

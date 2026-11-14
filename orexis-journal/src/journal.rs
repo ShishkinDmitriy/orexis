@@ -80,7 +80,7 @@ pub struct Journal {
     pub incident: tokio::sync::Notify,
     /// From which level a log record is an incident.
     pub incident_level: log::Level,
-    /// The classes the deployment counts as incidents besides the vocabulary.
+    /// The classes the recorder's role counts as incidents besides the vocabulary.
     pub incidents: BTreeSet<String>,
     /// Where what this journal forgot is: its archive's store, said once by what archives it.
     archive: std::sync::OnceLock<Engine>,
@@ -321,35 +321,19 @@ impl Journal {
     }
 }
 
-/// How long the log is kept, in the agent's seconds: `JOURNAL_WINDOW_S`, or ten minutes.
-pub fn window_s(env: &dyn Fn(&str) -> Option<String>) -> f64 {
-    env("JOURNAL_WINDOW_S").and_then(|s| s.parse().ok()).unwrap_or(WINDOW_S)
-}
-
-/// From which level a log record is an incident: `JOURNAL_INCIDENT_LEVEL`, a level's name, or WARNING.
-pub fn incident_level(env: &dyn Fn(&str) -> Option<String>) -> log::Level {
-    let said = env("JOURNAL_INCIDENT_LEVEL")
-        .unwrap_or_else(|| "WARNING".into())
-        .to_uppercase();
-    match said.as_str() {
+/// From which level a log record is an incident, as a recorder's role says it by a level's name: WARNING where it
+/// says none, and where it says a word that is no level, said in the log.
+pub fn incident_level(said: Option<&str>) -> log::Level {
+    match said.unwrap_or("WARNING").to_uppercase().as_str() {
         "CRITICAL" | "ERROR" => log::Level::Error,
         "WARNING" | "WARN" => log::Level::Warn,
         "INFO" => log::Level::Info,
         "DEBUG" | "NOTSET" => log::Level::Debug,
         other => {
-            log::warn!("JOURNAL_INCIDENT_LEVEL {other:?} is no level — WARNING holds");
+            log::warn!("the recorder's role says its incidents begin at {other:?}, which is no level: WARNING holds");
             log::Level::Warn
         }
     }
-}
-
-/// The classes the deployment counts as incidents beside the vocabulary's: `JOURNAL_INCIDENTS`, IRIs apart.
-pub fn incidents(env: &dyn Fn(&str) -> Option<String>) -> BTreeSet<String> {
-    env("JOURNAL_INCIDENTS")
-        .unwrap_or_default()
-        .split_whitespace()
-        .map(str::to_string)
-        .collect()
 }
 
 /// What the SPARQL protocol answers `text` with over `store`: its media type and its body. Every graph is the default
@@ -681,10 +665,9 @@ mod tests {
     }
 
     #[test]
-    fn a_class_the_deployment_counts_is_an_incident_though_the_vocabulary_says_nothing() {
+    fn a_class_the_role_counts_is_an_incident_though_the_vocabulary_says_nothing() {
         let mut journal = Journal::new(600.0, standing("2026-01-01T12:00:00+00:00")).unwrap();
-        journal.incidents =
-            incidents(&|k| (k == "JOURNAL_INCIDENTS").then(|| "http://example.org/test#Bad".to_string()));
+        journal.incidents = ["http://example.org/test#Bad".to_string()].into();
         let entry = mint();
         journal
             .record(
@@ -704,13 +687,10 @@ mod tests {
     }
 
     #[test]
-    fn the_environment_says_the_window_and_the_level_and_a_word_that_is_no_level_leaves_warning() {
-        let none = |_: &str| None;
-        assert_eq!(window_s(&none), 600.0);
-        assert_eq!(window_s(&|_: &str| Some("30".into())), 30.0);
-        assert_eq!(incident_level(&none), log::Level::Warn);
-        assert_eq!(incident_level(&|_: &str| Some("error".into())), log::Level::Error);
-        assert_eq!(incident_level(&|_: &str| Some("loud".into())), log::Level::Warn);
+    fn a_level_is_said_by_its_name_and_a_word_that_is_no_level_leaves_warning() {
+        assert_eq!(incident_level(None), log::Level::Warn);
+        assert_eq!(incident_level(Some("error")), log::Level::Error);
+        assert_eq!(incident_level(Some("loud")), log::Level::Warn);
     }
 
     #[test]

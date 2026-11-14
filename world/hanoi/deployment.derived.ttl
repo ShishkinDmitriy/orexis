@@ -12,3 +12,5 @@
 
 :hanoi_archive a journal:Archive ;
     schema:url "file:///app/journal" .
+:hanoi_endpoint a journal:Endpoint ;
+    schema:url "http://localhost:7884" .

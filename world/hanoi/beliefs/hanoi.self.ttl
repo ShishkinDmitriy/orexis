@@ -19,4 +19,5 @@
 #  history view and its own account of itself read what it kept. Without the role its packages say what happens
 #  and nobody writes it down.
 :hanoi orexis:plays [ a journal:Recorder ;
-    journal:archivedIn :hanoi_archive ] .
+    journal:archivedIn :hanoi_archive ;
+    journal:servedAt :hanoi_endpoint ] .

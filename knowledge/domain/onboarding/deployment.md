@@ -44,15 +44,15 @@ tracer refuses a world whose role names one, and otherwise refuses nothing.
 **What a world is connected to is derived into a document its agents read.** `orexis-onboard` writes
 `world/<world>/deployment.derived.ttl`, of the kernel's kind `orexis:DeploymentGraph`: each service a role of one of its agents
 names, with its `schema:url`, typed in the words of the package that uses it. Today that is the
-[tracer](/domain/journal/tracer.md) a recorder's role is traced by and the
-[archive](/domain/journal/archive.md) it is archived in. The boot puts it in, no reader of the mind is handed
+[tracer](/domain/journal/tracer.md) a recorder's role is traced by, the
+[archive](/domain/journal/archive.md) it is archived in and the
+[endpoint](/domain/journal/endpoint.md) its journal is served at. The boot puts it in, no reader of the mind is handed
 it, and a package asks it as it starts and ends its start where its role names no service of its kind. It names
 nothing of another world. The services still told as environment move there one by one
 ([the-world-says-what-it-is-connected-to](/decisions/the-world-says-what-it-is-connected-to.md)).
 
-A world says of its deployment graph, too, what its agents' [journals](/domain/kernel/journal.md) count as an
-incident beside their vocabulary: from which level a log line is one, `<> onboarding:incidentLevel "ERROR"`, and an
-event class more, `<> onboarding:incident coordination:Concluded`, each told to every agent of it as environment.
+What an agent's [journal](/domain/kernel/journal.md) counts as an incident beside its vocabulary is no deployment
+fact: the [recorder](/domain/journal/recorder.md)'s role says it.
 
 A world is **monitored** where its own deployment graph says so of itself, in one statement:
 `<> onboarding:monitored true`. Its agents then write their metrics — the admins' instrumentation
@@ -77,7 +77,8 @@ judged over everything the installation holds. Every address is a
 names nothing of the installation, and onboarding asks it about one world's broker at a time.
 Every agent's journal is allocated the same way and never asserted, on the host's loopback, a
 port of the journals' pool free of every service, broker and journal before it, written
-`onboarding:journal` on the agent and told to its container as `JOURNAL_PORT`.
+`onboarding:journal` on the agent, and stated in the world's derived deployment as the url of the
+[endpoint](/domain/journal/endpoint.md) that agent's recorder role names.
 
 # How it reaches an agent
 
@@ -97,7 +98,7 @@ into `world/<name>/secrets/` and mounted into one container.
 `onboarding:DeploymentGraph` is declared in onboarding's vocabulary (`onboarding/ontology.ttl`)
 beside the installation's words — `onboarding:SeriesStore`, `onboarding:SeriesView`, `onboarding:Tracer`,
 `onboarding:organisation`, `onboarding:image`, `onboarding:allocatesFrom`, `onboarding:allocatesFor`,
-`onboarding:journal`, `onboarding:incidentLevel`, `onboarding:incident`, `onboarding:serves`,
+`onboarding:journal`, `onboarding:serves`,
 `onboarding:retentionDays` and `onboarding:intervalSeconds`, the two `onboarding:SeriesPurpose`s,
 and `onboarding:monitored`, which a world says of its own deployment graph and the loader keeps in
 the catalogue beside the graph's kind — so an agent's boot passes over a graph of it. The terrace,

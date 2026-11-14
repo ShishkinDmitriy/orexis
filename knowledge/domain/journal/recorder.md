@@ -28,6 +28,21 @@ naming neither keeps the journal in memory for its window, and runs nothing else
 is kept there too, with what the boot said before the role was read. The package makes the journal itself as it
 starts, where the agent is deployed; the binary that runs the agent makes none.
 
+# What the role says
+
+How the journal is kept is said on the role, in the agent's self graph, and the package's own figure holds where the
+role says nothing:
+
+| on the role | says | where it says nothing |
+|---|---|---|
+| `journal:windowS` | how long the log is kept, in the agent's seconds | ten minutes |
+| `journal:incidentFrom` | from which level a line of the log is an incident | WARNING |
+| `journal:incident` | an event class that is an incident beside the vocabulary's | none more |
+| `journal:servedAt` | the [endpoint](/domain/journal/endpoint.md) the journal answers at | served nowhere |
+
+No environment tells an agent any of it, and `orexis-journal/requirements.ttl` holds a role to one window, one level
+that is a level, and one of each service.
+
 # What it is not
 
 **A part of the kernel, or known to any package.** A package says an event and may state triples for it; whether

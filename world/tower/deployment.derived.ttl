@@ -12,3 +12,5 @@
 
 :mover_archive a journal:Archive ;
     schema:url "file:///app/journal" .
+:mover_endpoint a journal:Endpoint ;
+    schema:url "http://localhost:7890" .

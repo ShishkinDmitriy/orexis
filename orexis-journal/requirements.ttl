@@ -1,0 +1,28 @@
+@prefix : <http://example.org/orexis/journal#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+
+<> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A WORLD MUST STATE OF the journal's WORDS, held by onboarding alone before anything is granted
+#  (knowledge/domain/onboarding/requirement.md, #838). No agent loads this graph: its kind is
+#  onboarding's, and the boot passes over it as it passes over a world's hardware.
+
+#  A RECORDER'S ROLE SAYS HOW ITS JOURNAL IS KEPT ONCE, IN WORDS THE PACKAGE CAN READ: one window, one level that is
+#  a level, and at most one tracer, one archive and one endpoint, since the package reads one of each and a second
+#  would be passed over in silence.
+
+[] a sh:NodeShape ;
+    sh:targetClass :Recorder ;
+    sh:property [ sh:path :windowS ; sh:maxCount 1 ; sh:minExclusive 0 ;
+                  sh:message "a recorder's window is one number of seconds above nought" ] ,
+                [ sh:path :incidentFrom ; sh:maxCount 1 ; sh:pattern "^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$" ; sh:flags "i" ;
+                  sh:message "a recorder's incidents begin at one level: DEBUG, INFO, WARNING, ERROR or CRITICAL" ] ,
+                [ sh:path :tracedBy ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "a recorder is traced by one tracer, named" ] ,
+                [ sh:path :archivedIn ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "a recorder is archived in one archive, named" ] ,
+                [ sh:path :servedAt ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "a recorder is served at one endpoint, named" ] .

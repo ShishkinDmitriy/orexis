@@ -22,4 +22,5 @@
 #  history view and its own account of itself read what it kept. Without the role its packages say what happens
 #  and nobody writes it down.
 :courier_a orexis:plays [ a journal:Recorder ;
-    journal:archivedIn :courier_a_archive ] .
+    journal:archivedIn :courier_a_archive ;
+    journal:servedAt :courier_a_endpoint ] .

@@ -12,7 +12,13 @@
 
 :fern_grower_archive a journal:Archive ;
     schema:url "file:///app/journal" .
+:fern_grower_endpoint a journal:Endpoint ;
+    schema:url "http://localhost:7878" .
 :rose_grower_archive a journal:Archive ;
     schema:url "file:///app/journal" .
+:rose_grower_endpoint a journal:Endpoint ;
+    schema:url "http://localhost:7879" .
 :supplier_archive a journal:Archive ;
     schema:url "file:///app/journal" .
+:supplier_endpoint a journal:Endpoint ;
+    schema:url "http://localhost:7880" .
