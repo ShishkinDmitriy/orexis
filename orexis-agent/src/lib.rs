@@ -185,9 +185,6 @@ pub struct Watching {
     /// How often the readings are archived there, in the agent's seconds: none, and the archiver's own stretch.
     pub archive_every_s: Option<f64>,
     pub metrics: Option<orexis_metrics::Window>,
-    /// Where the agent is traced, and how often it ships what its journal keeps.
-    #[cfg(feature = "journal")]
-    pub traces: Option<orexis_journal_otlp::Tracing>,
 }
 
 /// What the agent's bus is, where a test hands one: the MQTT member over a client of its own, the HTTP member over a
@@ -241,16 +238,6 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
         history: watching.history.as_ref().map(Sink::reader),
         metrics: watching.metrics.as_ref().map(|w| w.sink.reader()),
     });
-    //  WHAT THE AGENT DID, SHIPPED FROM ITS JOURNAL to whoever traces it: what is kept is what is sent, so with no
-    //  journal, nothing.
-    #[cfg(feature = "journal")]
-    if let (Some(tracing), Some(journal)) = (watching.traces, &watching.journal) {
-        outside.hand(orexis_journal_otlp::Ships {
-            journal: journal.clone(),
-            endpoint: tracing.endpoint,
-            every_s: tracing.every_s,
-        });
-    }
     //  AND WHAT IT KEEPS FOR GOOD, taken to its archive where the deployment keeps one.
     #[cfg(feature = "journal")]
     if let (Some((archive, every_s)), Some(journal)) = (watching.archive, &watching.journal) {

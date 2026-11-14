@@ -1054,6 +1054,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   for a package it needs started; a table in the kernel of which role loads which package and which pattern loads
   which transport was what this replaced, and a `plays` function beside `start` in the registration was refused as
   the kernel still doing the deciding (package).
+- **The world says what it is connected to, and a package reads it there as it starts** — onboarding derives each
+  service with where it answers into `deployment.derived.ttl`, of the kernel's kind `orexis:DeploymentGraph`, no
+  belief; a package asks it as it starts, makes its own connector and ends its start where the world names no
+  service of its kind, the tracer first; the address on the role in the authored self graph and the installation's
+  document handed to the agent were refused, and a credential is never in it
+  (the-world-says-what-it-is-connected-to).
 - **Each agent's image holds only what it runs** — `orexis-compose` builds `orexis-<world>-<agent>:local` with a feature of the binary for each
   package the agent loads and each whose crate those depend on; one image carrying everything was refused (a-package-brings-its-own-dependencies).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —
@@ -1107,8 +1113,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 5. **There is no config file for the model.** Topology lives in the world's documents, who each
    agent is and what it desires in documents of its own that say they are its, both authored in
    `world/<world>/`. Deployment facts
-   (service URLs) are environment, because they are not beliefs anyone holds. See
-   [world-graph](knowledge/decisions/world-graph.md).
+   (service URLs) are not beliefs anyone holds: what a world is connected to is derived by onboarding into
+   `world/<world>/deployment.derived.ttl`, a graph of the world that is no belief, which a package reads as it
+   starts; what has not moved there yet is still environment. See
+   [world-graph](knowledge/decisions/world-graph.md) and
+   [the-world-says-what-it-is-connected-to](knowledge/decisions/the-world-says-what-it-is-connected-to.md).
 
 **What an agent BELIEVES about all of that is settled by one test: model it only if a belief
 about it would change which plan gets selected.** Everything else is telemetry — logged and

@@ -55,6 +55,7 @@ services:
     userns_mode: "keep-id:uid=10001,gid=10001"
     restart: unless-stopped
     volumes:
+      - ./deployment.derived.ttl:/app/world/greenhouse/deployment.derived.ttl:ro
       - ./society.derived.ttl:/app/world/greenhouse/society.derived.ttl:ro
       - ./society.ttl:/app/world/greenhouse/society.ttl:ro
       - ./world.ttl:/app/world/greenhouse/world.ttl:ro
@@ -104,8 +105,6 @@ services:
       INFLUX_METRICS_URL: "http://localhost:8086"
       INFLUX_METRICS_ORG: "orexis"
       METRICS_INTERVAL_S: "60"
-      # where it sends its activities as spans — the installation's tracer, since the world is monitored
-      OTLP_ENDPOINT: "http://localhost:4318"
       # where it serves its journal, on the host's loopback, allocated by the installation
       JOURNAL_PORT: "7883"
     env_file:
@@ -125,6 +124,7 @@ services:
       # its journal, a store of its own beside the beliefs and apart from them
       - orexis-greenhouse-grower-journal:/app/journal
       # the world's documents, file by file, at the path its imports of the domains resolve from
+      - ./deployment.derived.ttl:/app/world/greenhouse/deployment.derived.ttl:ro
       - ./desires.ttl:/app/world/greenhouse/desires.ttl:ro
       - ./society.derived.ttl:/app/world/greenhouse/society.derived.ttl:ro
       - ./society.ttl:/app/world/greenhouse/society.ttl:ro

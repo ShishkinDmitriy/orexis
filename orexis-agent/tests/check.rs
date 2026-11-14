@@ -161,3 +161,31 @@ fn an_agent_in_a_chat_by_email_boots_with_its_mailbox() {
         .loaded;
     assert!(loaded.iter().any(|p| p == "transport/email"), "{loaded:?}");
 }
+
+/// THE WORLD SAYS WHAT IT IS CONNECTED TO, and a package asks it as it starts: the greenhouse is monitored, so its
+/// derived deployment names the installation's tracer, and what ships the journal's activities joins its recorder;
+/// Hanoi names none, so that package's start ends there, though its mover keeps a journal too.
+#[test]
+fn what_ships_the_activities_joins_where_the_world_names_a_tracer_and_ends_its_start_where_it_names_none() {
+    let now = oxsdatatypes::DateTime::now();
+    let traced = |world: &str, agent: &str| {
+        let store =
+            orexis::store::Store::new(std::sync::Arc::new(orexis::namespaces::Namespaces::linked().unwrap())).unwrap();
+        let loaded = orexis_agent::booted(&store, &Path::new(TREE).join("world").join(world), agent, now).unwrap();
+        (
+            orexis_journal_otlp::tracer(&store).unwrap(),
+            loaded.iter().any(|p| p == "journal"),
+            loaded.iter().any(|p| p == "journal-otlp"),
+        )
+    };
+    let greenhouse = agents(&Path::new(TREE).join("world/greenhouse"));
+    let recorder = greenhouse
+        .iter()
+        .find(|a| traced("greenhouse", a).1)
+        .expect("an agent of the greenhouse plays a recorder");
+    assert_eq!(
+        traced("greenhouse", recorder),
+        (Some("http://localhost:4318".to_string()), true, true)
+    );
+    assert_eq!(traced("hanoi", "hanoi"), (None, true, false));
+}

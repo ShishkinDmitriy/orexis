@@ -17,3 +17,9 @@
 
 journal:Recorder a owl:Class ; rdfs:subClassOf orexis:Role ; rdfs:label "Recorder" ;
     rdfs:comment "An agent that keeps a journal of what happened to it: every event its packages say and every activity they end, written as it happens. Declared, never derived; it changes nothing the agent plans or does." .
+
+#  WHERE THE ACTIVITIES ARE SHIPPED (knowledge/domain/journal/tracer.md): a service of the world's deployment, which
+#  what ships the journal's activities asks for as it starts.
+
+journal:Tracer a owl:Class ; rdfs:label "Tracer" ;
+    rdfs:comment "A service the world is connected to that takes an agent's activities as spans, OTLP over HTTP at its `schema:url`: stated in the world's deployment graph (`orexis:DeploymentGraph`), where what ships the journal's activities (`orexis-journal-otlp/`) finds it as it starts. A world that names none is traced by nobody, and that package ends its start." .

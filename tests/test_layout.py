@@ -818,8 +818,12 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
         assert "INFLUX_HISTORY_URL" in text, path
         monitored = METRICS in told[path.parent.name]
         assert ("INFLUX_METRICS_URL" in text) == ("influx-metrics.env" in text) == (compose.INTERVAL_KEY in text) == monitored, path
-        # the tracer is told where metrics are: both are the admins' instrumentation, opted into by the world
-        assert ("OTLP_ENDPOINT" in text) == monitored, path
+        # the tracer is named where metrics are told: both are the admins' instrumentation, opted into by the
+        # world. It is named in the world's derived deployment, which its agents read, and no environment says it.
+        from onboarding import connections
+        named = connections.derivation(path.parent.name)
+        assert (named.exists() and "journal:Tracer" in named.read_text()) == monitored, path
+        assert "OTLP_ENDPOINT" not in text, path
         assert not re.search(r"\bINFLUX_(URL|ORG|BUCKET|TOKEN)\b", text), path
 
 
@@ -1202,12 +1206,15 @@ def test_a_world_graph_states_no_wiring_and_only_a_deployment_graph_an_address()
     """What keeps the split from eroding: every MQTT4SSN word a world states — a client, a topic,
     a filter, which device speaks on which — is in its society graph, so its world graph holds the
     subjects, sensors and systems alone; and a `schema:url` is stated in a deployment graph or
-    nowhere, since in any other kind some agent would load it."""
+    nowhere: onboarding's, which no agent loads, or the kernel's, which onboarding derives for the
+    world's agents to read and which is no belief (the-world-says-what-it-is-connected-to). In any
+    other kind a reader of the mind would be handed an address."""
     import pyoxigraph as ox
 
     from documents.store import document, kinds_in
 
-    society, deployment = "http://example.org/orexis#SocietyGraph", _ONBOARDING + "DeploymentGraph"
+    society = "http://example.org/orexis#SocietyGraph"
+    deployments = {_ONBOARDING + "DeploymentGraph", "http://example.org/orexis#DeploymentGraph"}
     seen, wrong = {"society": 0, "deployment": 0}, []
     for world in _worlds():
         here = REPO_ROOT / "world" / world
@@ -1219,10 +1226,10 @@ def test_a_world_graph_states_no_wiring_and_only_a_deployment_graph_an_address()
                              for q in quads for t in (q.predicate, q.object))
                 addresses = any(q.predicate.value == _URL for q in quads)
                 seen["society"] += society in kinds and speaks
-                seen["deployment"] += deployment in kinds and addresses
+                seen["deployment"] += bool(deployments & set(kinds)) and addresses
                 if speaks and society not in kinds:
                     wrong.append(f"{world}/{path.name} speaks MQTT4SSN in a graph of {sorted(kinds)}")
-                if addresses and deployment not in kinds:
+                if addresses and not deployments & set(kinds):
                     wrong.append(f"{world}/{path.name} states a schema:url in a graph of {sorted(kinds)}")
     assert seen["society"] >= 4 and seen["deployment"] >= 3, f"the guard found {seen} — it would check nothing"
     assert not wrong, "\n".join(wrong)
@@ -2126,3 +2133,21 @@ def test_a_crate_brings_every_document_it_holds_and_names_none_it_does_not(crate
     nested = [p for p in root.rglob("*") if p.suffix in {".ttl", ".trig"} and p.parent != root
               and not ({"tests", "target", "node_modules"} & set(p.relative_to(root).parts))]
     assert not nested, f"{crate}/ holds documents below its root, which nothing brings: {nested}"
+
+
+def test_every_committed_derived_deployment_is_a_fresh_derivation():
+    """`world/<w>/deployment.derived.ttl` says GENERATED — do not edit, and it is what an agent's packages read
+    the world's services from: a package ends its start where it names none of its kind. So one left behind by a
+    change to the installation, or to whether the world is monitored, has an agent ship to a tracer that is gone
+    or to none. Held to what onboarding derives now; a world connected to nothing has no such document."""
+    from onboarding import connections
+
+    held = 0
+    for w in sorted(p.name for p in (REPO_ROOT / "world").iterdir() if (p / "world.ttl").exists()):
+        if connections.derive(w):
+            assert connections.derivation(w).read_text() == connections.derivation_text(w), \
+                f"world/{w}/deployment.derived.ttl is not what onboarding derives now — run `orexis-onboard {w}`"
+            held += 1
+        else:
+            assert not connections.derivation(w).exists(), f"world/{w} is connected to nothing onboarding derives"
+    assert held >= 2, "no world is connected to anything — the guard checks one side"

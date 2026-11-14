@@ -32,6 +32,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 # Journal — what happened, written down
 
 * [archive](/domain/journal/archive.md) - Where the journal puts what it keeps for good: a triplestore on disk, written every two seconds, read by whoever asks what happened.
+* [tracer](/domain/journal/tracer.md) - Where an agent's activities go as spans: a service the world's deployment names, found by the span shipper as it starts.
 * [recorder](/domain/journal/recorder.md) - An agent that keeps a journal: the role `orexis-journal/` is loaded for, and without it nobody writes events down.
 
 # Sensing — bytes become observations, and observations subject beliefs
@@ -148,6 +149,6 @@ future is predicted, wants are derived and searched, and the plans are carried o
 # Onboarding — from a world to a society
 
 * [onboarding](/domain/onboarding/onboarding.md) - Buckets, credentials, the ACL, compose and dashboards, each read off the world; decides nothing, so re-running is safe.
-* [deployment](/domain/onboarding/deployment.md) - What must run and where it answers, a graph onboarding alone reads; an agent is told it as environment, and never a credential.
+* [deployment](/domain/onboarding/deployment.md) - What must run and where it answers; onboarding derives what a world is connected to into a document its agents read. Never a credential.
 * [requirement](/domain/onboarding/requirement.md) - What a world must state of a package's words, shapes the package ships and onboarding alone holds a world to.
 * [history view](/domain/onboarding/history-view.md) - What the agents kept, drawn by SPARQL after a run or live: a generic core, a scene per domain, a layer per package.

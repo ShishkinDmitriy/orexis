@@ -423,7 +423,6 @@ async fn the_events_are_taken_to_the_archive_and_the_activities_stay_in_the_jour
         journal: Some(journal.clone()),
         history: None,
         metrics: None,
-        traces: None,
         archive: Some((archive.clone(), orexis_journal_oxigraph::INTERVAL_S)),
         archive_every_s: None,
     };
@@ -463,7 +462,6 @@ async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journa
         journal: Some(journal.clone()),
         history: None,
         metrics: None,
-        traces: None,
         archive: None,
         archive_every_s: None,
     };
@@ -621,7 +619,6 @@ async fn history_holds_every_reading_and_the_journal_the_dose_published_taken_an
         journal: Some(journal.clone()),
         history: Some(sink),
         metrics: None,
-        traces: None,
         archive: None,
         archive_every_s: None,
     };

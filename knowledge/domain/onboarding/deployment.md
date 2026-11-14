@@ -5,7 +5,8 @@ term: http://example.org/orexis/onboarding#DeploymentGraph
 description: >-
   What has to run for a world to be a society, and where each thing is reached - brokers and
   their addresses, series stores, containers, images - stated in a graph of its own kind, read
-  by onboarding alone and handed to an agent as environment. A world may assert its broker's; the
+  by onboarding, which derives what a world is connected to into a document its agents read and tells
+  the rest as environment. A world may assert its broker's; the
   installation allocates one that is not asserted, in a derived graph. Never a credential.
 ---
 
@@ -36,9 +37,16 @@ where metrics are served by no store. Where an agent's Telegram bot answers is t
 graph's, `<bot> schema:url`, told to the agent as `TELEGRAM_URL`.
 
 It says **where an agent's activities are sent as spans**: one `onboarding:Tracer` with a `schema:url`
-and an image, Tempo, told to each agent of a monitored world as `OTLP_ENDPOINT`. Spans are the admins'
-instrumentation as metrics are, so the same opt-in tells them; an installation naming no tracer traces
-no agent, and refuses nothing.
+and an image, Tempo. Spans are the admins' instrumentation as metrics are, so the same opt-in names it to a
+world: an installation naming no tracer traces no agent, and refuses nothing.
+
+**What a world is connected to is derived into a document its agents read.** `orexis-onboard` writes
+`world/<world>/deployment.derived.ttl`, of the kernel's kind `orexis:DeploymentGraph`: each service the world is
+given, with its `schema:url`, typed in the words of the package that uses it. Today that is the
+[tracer](/domain/journal/tracer.md), for a monitored world. The boot puts it in, no reader of the mind is handed
+it, and a package asks it as it starts and ends its start where the world names no service of its kind. It names
+nothing of another world. The services still told as environment move there one by one
+([the-world-says-what-it-is-connected-to](/decisions/the-world-says-what-it-is-connected-to.md)).
 
 A world says of its deployment graph, too, what its agents' [journals](/domain/kernel/journal.md) count as an
 incident beside their vocabulary: from which level a log line is one, `<> onboarding:incidentLevel "ERROR"`, and an

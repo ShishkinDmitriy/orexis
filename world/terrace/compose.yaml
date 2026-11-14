@@ -62,8 +62,6 @@ services:
       INFLUX_METRICS_URL: "http://localhost:8086"
       INFLUX_METRICS_ORG: "orexis"
       METRICS_INTERVAL_S: "60"
-      # where it sends its activities as spans — the installation's tracer, since the world is monitored
-      OTLP_ENDPOINT: "http://localhost:4318"
       # where it serves its journal, on the host's loopback, allocated by the installation
       JOURNAL_PORT: "7889"
       # where the language model answers — the installation's `onboarding:Model`; which model, and the
@@ -92,6 +90,7 @@ services:
       # its journal, a store of its own beside the beliefs and apart from them
       - orexis-terrace-terrace-journal:/app/journal
       # the world's documents, file by file, at the path its imports of the domains resolve from
+      - ./deployment.derived.ttl:/app/world/terrace/deployment.derived.ttl:ro
       - ./society.derived.ttl:/app/world/terrace/society.derived.ttl:ro
       - ./society.ttl:/app/world/terrace/society.ttl:ro
       - ./speech.ttl:/app/world/terrace/speech.ttl:ro

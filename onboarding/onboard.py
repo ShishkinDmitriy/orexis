@@ -64,7 +64,7 @@ from pathlib import Path
 
 from documents.store import DocumentRefused
 
-from . import certs, compose, dashboards, influx, installation, mqtt, reading, topics
+from . import certs, compose, connections, dashboards, influx, installation, mqtt, reading, topics
 from .worlds import world_dir, worlds
 
 log = logging.getLogger("onboard")
@@ -101,6 +101,9 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
     # one of them after the credentials were minted.
     told = installation.purposes(world)
     log.info("  its agents write %s", " and ".join(p.lower() for p in told))
+    # What the world is connected to, into `deployment.derived.ttl`, which its agents read: a package asks the
+    # store for a service of its kind as it starts. Once the world is judged, since a world refused is given nothing.
+    connections.write(world)
     # What the documents leave out is derived before anything is rendered from them: a broker whose
     # world asserts no url is allocated one here, beside every other world's, and every tool below
     # only reads what was asserted or allocated (onboarding.derived).
