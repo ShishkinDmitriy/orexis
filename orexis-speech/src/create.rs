@@ -222,7 +222,21 @@ impl Speech {
 inventory::submit! { Package { name: "speech", documents: orexis::documents!("ontology.ttl"), start } }
 
 /// THE PACKAGE'S START: its part made and started - what it hears, what it does every so often - and its task.
-fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
+const ROLE: &str = "http://example.org/orexis/speech#Speaker";
+
+/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
+/// joined, makes its core.
+fn start(handed: Handed) -> orexis::task::Starting {
+    Box::pin(async move {
+        if !handed.plays(&[ROLE]).await? {
+            return Ok(None);
+        }
+        make(&handed)
+    })
+}
+
+fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     let me = orexis::boot::selves(&handed.store)?
         .into_iter()
         .next()

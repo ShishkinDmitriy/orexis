@@ -261,7 +261,21 @@ impl Execution {
 inventory::submit! { Package { name: "execution", documents: orexis::documents!("ontology.ttl"), start } }
 
 /// EXECUTION'S START: its executor made, and its task, which hears the events beneath its triggers.
-fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
+const ROLE: &str = "http://example.org/orexis/execution#Executor";
+
+/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
+/// joined, makes its core.
+fn start(handed: Handed) -> orexis::task::Starting {
+    Box::pin(async move {
+        if !handed.plays(&[ROLE]).await? {
+            return Ok(None);
+        }
+        make(&handed)
+    })
+}
+
+fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     let mut execution = Execution::new(&handed.store, &handed.id, handed.clock.clone())?;
     execution.executor.watch = handed.events.watch().clone();
     let mut hears = handed.events.hears();

@@ -30,6 +30,12 @@ timestamp: 2026-10-08T12:00:00Z
 > packages', a transport loaded where a role needs bytes, and onboarding holding a declaration to its
 > world both ways, all stand.
 
+> **Amended 2026-11-14: who asks.** A package is still loaded only for a role, with no default, and a domain's
+> roles are still beneath the packages'. What changed is who does the asking: the boot no longer reads every
+> package's ontology apart and keeps a table of transports. Each package the binary holds asks in its own start
+> whether the self plays its role, of the store, and is asked again as other packages join and bring their
+> ontologies; a transport asks its own wiring. [package](/domain/kernel/package.md) says how.
+>
 > **Recorded before the code; §1 to §6 are built since (#927).** Where this record says how the tree
 > IS, it was read on `e99731d0` (2026-10-08) and the measurements were run in memory there. The
 > roles, their declarations, the boot that loads by them, the transports and the onboarding refusals

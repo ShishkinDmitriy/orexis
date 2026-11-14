@@ -813,8 +813,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   for every agent that is none.
 - **A package is loaded only for a role the agent plays, in its self graph, and there is no
   default** — a role is an instance the agent `orexis:plays`, never its type; each package declares its
-  role classes in its own ontology, read apart from the store, a domain's role classes sit beneath
-  them, and a transport is loaded where a loaded role needs bytes and the society wires a bus; a
+  role classes in its own ontology and asks in its own start whether the self plays one, a domain's role classes sit
+  beneath them, and a transport joins where a role the self plays needs bytes and the society wires a bus; a
   premise read off the world was refused, since it cannot write an assignment no fact implies (#927,
   a-package-is-loaded-only-for-a-role-the-agent-is-declared-in, a-role-is-an-instance-an-agent-plays).
 - **An observer role declares the sensors it reads, and how long it lets them be silent or stuck** —
@@ -1043,9 +1043,17 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   protocol engine were refused, a protocol being what the actions' preconditions allow (a-question-is-answered-and-every-other-act-is-kept).
 - **A package brings its own documents, compiled into the binary beside its code, and the boot reads no tree of
   crates** — its ontology, rules and actions are named in its registration (`orexis::documents!`) and put in the store
-  where a role loads it, so a binary holds the vocabulary of exactly the packages built into it; a role or a transport
-  whose package was built out is refused at boot; the image carried every crate's documents whatever the agent ran, and
-  a package was loaded by the kernel walking its directory (package).
+  as it joins, so a binary holds the vocabulary of exactly the packages built into it; a role whose package was built
+  out is refused at boot; the image carried every crate's documents whatever the agent ran, and a package was loaded
+  by the kernel walking its directory (package).
+- **A package decides in its own start whether the agent runs it, and the kernel names no package, role or
+  wiring** — the binary's feature and the agent's documents must both say yes; every package the binary holds is
+  given its start, which first asks its own reason of the store (`Handed::plays`, `joins`, `beside`), asked again
+  whenever another joined, since a joined package brings the ontology that may put a role beneath this one's, until
+  a round changes nothing; the kernel says `orexis:PackageStarting` and `orexis:PackageStarted`, and a start waits
+  for a package it needs started; a table in the kernel of which role loads which package and which pattern loads
+  which transport was what this replaced, and a `plays` function beside `start` in the registration was refused as
+  the kernel still doing the deciding (package).
 - **Each agent's image holds only what it runs** — `orexis-compose` builds `orexis-<world>-<agent>:local` with a feature of the binary for each
   package the agent loads and each whose crate those depend on; one image carrying everything was refused (a-package-brings-its-own-dependencies).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —

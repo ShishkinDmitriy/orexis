@@ -101,7 +101,39 @@ impl Transport {
 inventory::submit! { Package { name: "transport/mqtt", documents: orexis::documents!("ontology.ttl"), start } }
 
 /// THE PACKAGE'S START: its part made and started - what it hears, what it does every so often - and its task.
-fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+/// A TRANSPORT IS NO ROLE: this member joins the agent where a role the self plays needs bytes and the world wires
+/// them through it - each a role's class with what the world must state of the self, in words declared here.
+const WIRED: &[(&str, &str)] = &[
+    (
+        "http://example.org/orexis/sensing#Observer",
+        "?me orexis:plays/sensing:sensor ?sensor . ?sensor mqtt4ssn:observesTopic ?topic",
+    ),
+    (
+        "http://example.org/orexis/speech#Speaker",
+        "?me mqtt4ssn:listensToTopic ?topic",
+    ),
+    (
+        "http://example.org/orexis/translation#Translator",
+        "?chat speech:participant ?me ; speech:channel ?channel . ?channel a mqtt4ssn:Topic",
+    ),
+];
+const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX speech: <http://example.org/orexis/speech#> PREFIX mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> ";
+
+/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
+/// joined, makes its core.
+fn start(handed: Handed) -> orexis::task::Starting {
+    Box::pin(async move {
+        if !handed
+            .joins(|handed| orexis::boot::wired(&handed.store, WORDS, WIRED))
+            .await?
+        {
+            return Ok(None);
+        }
+        make(&handed)
+    })
+}
+
+fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     let me = orexis::boot::selves(&handed.store)?
         .into_iter()
         .next()

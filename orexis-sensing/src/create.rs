@@ -218,7 +218,21 @@ fn me_of(beliefs: &Store, agent: &str) -> Result<String, Error> {
 inventory::submit! { Package { name: "sensing", documents: orexis::documents!("ontology.ttl", "rules.ttl"), start } }
 
 /// THE PACKAGE'S START: its part made and started - what it hears, what it does every so often - and its task.
-fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
+const ROLE: &str = "http://example.org/orexis/sensing#Observer";
+
+/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
+/// joined, makes its core.
+fn start(handed: Handed) -> orexis::task::Starting {
+    Box::pin(async move {
+        if !handed.plays(&[ROLE]).await? {
+            return Ok(None);
+        }
+        make(&handed)
+    })
+}
+
+fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     let mut part = Sensing::new(&handed.store, &handed.id)?;
     let mut hears = handed.events.hears();
     let arrived = handed.arrived();

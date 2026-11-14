@@ -11,7 +11,7 @@ use std::sync::Arc;
 
 use oxsdatatypes::DateTime;
 
-use orexis::boot::{TREE, packages_of};
+use orexis::boot::TREE;
 use orexis::clock::instant;
 use orexis::namespaces::Namespaces;
 use orexis::ontology::{BELIEF, PLAN, SELF_GRAPH};
@@ -153,8 +153,11 @@ fn the_boot_says_what_each_graph_is() {
 #[test]
 fn the_mover_loads_planning_and_its_journal_and_nothing_else() {
     let store = store();
-    assert_eq!(boot(&store), ["planning", "journal"], "a planner and a recorder");
-    assert_eq!(packages_of(&store).unwrap(), ["planning", "journal"]);
+    assert_eq!(
+        boot(&store),
+        ["journal", "journal-oxigraph", "journal-otlp", "metrics", "planning"],
+        "a recorder with what keeps house for its journal, what watches every agent, and a planner"
+    );
     let absent = [
         "orexis-execution/ontology.ttl",
         "orexis-belief/ontology.ttl",

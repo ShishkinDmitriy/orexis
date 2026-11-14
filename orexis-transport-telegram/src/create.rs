@@ -39,7 +39,29 @@ impl Transport {
 inventory::submit! { Package { name: "transport/telegram", documents: orexis::documents!("ontology.ttl"), start } }
 
 /// THE PACKAGE'S START: its part made and started - what it hears, what it does every so often - and its task.
-fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+/// A TRANSPORT IS NO ROLE: this member joins the agent where a role the self plays needs bytes and the world wires
+/// them through it - each a role's class with what the world must state of the self, in words declared here.
+const WIRED: &[(&str, &str)] = &[(
+    "http://example.org/orexis/translation#Translator",
+    "?me telegram:hasBot ?bot",
+)];
+const WORDS: &str = "PREFIX telegram: <http://example.org/orexis/telegram#> ";
+
+/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
+/// joined, makes its core.
+fn start(handed: Handed) -> orexis::task::Starting {
+    Box::pin(async move {
+        if !handed
+            .joins(|handed| orexis::boot::wired(&handed.store, WORDS, WIRED))
+            .await?
+        {
+            return Ok(None);
+        }
+        make(&handed)
+    })
+}
+
+fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     let me = orexis::boot::selves(&handed.store)?
         .into_iter()
         .next()

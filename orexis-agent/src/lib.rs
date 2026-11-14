@@ -50,17 +50,10 @@ use orexis_transport_mqtt as _;
 #[cfg(feature = "telegram")]
 use orexis_transport_telegram as _;
 
-/// Boot `agent` of `world` into `store` from the world's documents and those its packages bring: the packages it
-/// loads, each one this binary holds — refused where it plays a role whose package this binary was built without.
+/// Boot `agent` of `world` into `store` from the world's documents and those its packages bring: the packages that
+/// joined it, each deciding in its own start, in the order they start (`orexis::boot::boot`).
 pub fn booted(store: &Store, world: &Path, agent: &str, now: oxsdatatypes::DateTime) -> Result<Vec<String>, Error> {
     let loaded = boot(store, &Booting { world, agent })?;
-    let held: Vec<&str> = loaded.iter().map(String::as_str).filter(|p| !built(p)).collect();
-    if !held.is_empty() {
-        return Err(Error::Evaluation(format!(
-            "{agent} plays a role whose package this binary was built without: {}",
-            held.join(", ")
-        )));
-    }
     #[cfg(feature = "planning")]
     if loaded.iter().any(|p| p == "planning") {
         orexis_planning::Planner::scope(store, now)?;
@@ -324,18 +317,7 @@ pub fn start(
     budget: Option<usize>,
     wiring: Wiring,
 ) -> Result<Running, Error> {
-    //  THE JOURNAL FIRST, where the agent plays a recorder, so what the others say as they start is heard; and with
-    //  it what archives it and what ships its activities. Then what the deployment watches with, and the packages the roles load.
-    let recorder = loaded.iter().any(|p| p == JOURNAL);
-    let mut names: Vec<String> = Vec::new();
-    if recorder {
-        names.push(JOURNAL.to_string());
-        names.push("journal-oxigraph".to_string());
-        names.push("journal-otlp".to_string());
-    }
-    names.push("metrics".to_string());
-    #[cfg(feature = "sensing")]
-    names.push("sensing-influxdb".to_string());
-    names.extend(loaded.iter().filter(|p| *p != JOURNAL).cloned());
-    orexis::task::start(store, agent, clock, outside(wiring, budget), &names)
+    //  THE PACKAGES THAT JOINED, in the order they start: what keeps the journal and what watches first, so what the
+    //  others say as they start is heard (`orexis::boot::PASS`).
+    orexis::task::start(store, agent, clock, outside(wiring, budget), loaded)
 }

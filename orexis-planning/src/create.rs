@@ -172,7 +172,21 @@ inventory::submit! { Package { name: "planning", documents: orexis::documents!("
 pub struct Budget(pub usize);
 
 /// PLANNING'S START: its planner made, and its task, which hears its trigger's events and a head asked.
-fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
+const ROLE: &str = "http://example.org/orexis/planning#Planner";
+
+/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
+/// joined, makes its core.
+fn start(handed: Handed) -> orexis::task::Starting {
+    Box::pin(async move {
+        if !handed.plays(&[ROLE]).await? {
+            return Ok(None);
+        }
+        make(&handed)
+    })
+}
+
+fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     let budget = handed.outside.take::<Budget>().map(|b| b.0);
     let mut planning = Planning::new(&handed.store, &handed.id, budget)?;
     planning.planner.watch = handed.events.watch().clone();

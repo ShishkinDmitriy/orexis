@@ -99,7 +99,19 @@ pub fn archive(store: &Store, sink: &Sink, shipped: &mut Shipped) -> Result<usiz
 inventory::submit! { Package { name: "sensing-influxdb", documents: &[], start } }
 
 /// THE ARCHIVER'S START: where it is handed a series store, its task; and none otherwise.
-fn start(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
+/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
+/// joined, makes its core.
+fn start(handed: Handed) -> orexis::task::Starting {
+    Box::pin(async move {
+        //  IT KEEPS HOUSE FOR SENSING, so it runs where sensing does. It needs nothing of sensing's start.
+        if !handed.beside("sensing").await? {
+            return Ok(None);
+        }
+        make(&handed)
+    })
+}
+
+fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
     let Some(archives) = handed.outside.take::<Archives>() else {
         return Ok(None);
     };

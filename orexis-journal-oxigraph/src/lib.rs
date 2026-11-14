@@ -155,7 +155,19 @@ pub struct Archives {
 inventory::submit! { Package { name: "journal-oxigraph", documents: &[], start } }
 
 /// THE ARCHIVER'S START: where it is handed a journal and an archive, its task; and none otherwise.
-fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
+/// joined, makes its core.
+fn start(handed: Handed) -> orexis::task::Starting {
+    Box::pin(async move {
+        //  IT KEEPS HOUSE FOR THE JOURNAL, so it runs where the journal does, started after it.
+        if !handed.beside("journal").await? || !handed.started("journal").await {
+            return Ok(None);
+        }
+        make(&handed)
+    })
+}
+
+fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     let Some(archives) = handed.outside.take::<Archives>() else {
         return Ok(None);
     };

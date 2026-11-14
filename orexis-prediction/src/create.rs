@@ -38,7 +38,21 @@ inventory::submit! { Package { name: "prediction", documents: orexis::documents!
 
 /// PREDICTION'S START: its foresight offered, for whoever lays the grounds to take, and no task - what it offers is
 /// asked for where the grounds are laid, and it waits for nothing.
-fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
+const ROLE: &str = "http://example.org/orexis/prediction#Predictor";
+
+/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
+/// joined, makes its core.
+fn start(handed: Handed) -> orexis::task::Starting {
+    Box::pin(async move {
+        if !handed.plays(&[ROLE]).await? {
+            return Ok(None);
+        }
+        make(&handed)
+    })
+}
+
+fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     handed.outside.hand::<Foresees>(Prediction.offered());
     Ok(None)
 }
