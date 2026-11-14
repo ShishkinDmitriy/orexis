@@ -1206,12 +1206,15 @@ def test_a_world_graph_states_no_wiring_and_only_a_deployment_graph_an_address()
     """What keeps the split from eroding: every MQTT4SSN word a world states — a client, a topic,
     a filter, which device speaks on which — is in its society graph, so its world graph holds the
     subjects, sensors and systems alone; and a `schema:url` is stated in a deployment graph or
-    nowhere, since in any other kind some agent would load it."""
+    nowhere: onboarding's, which no agent loads, or the kernel's, which onboarding derives for the
+    world's agents to read and which is no belief (the-world-says-what-it-is-connected-to). In any
+    other kind a reader of the mind would be handed an address."""
     import pyoxigraph as ox
 
     from documents.store import document, kinds_in
 
-    society, deployment = "http://example.org/orexis#SocietyGraph", _ONBOARDING + "DeploymentGraph"
+    society = "http://example.org/orexis#SocietyGraph"
+    deployments = {_ONBOARDING + "DeploymentGraph", "http://example.org/orexis#DeploymentGraph"}
     seen, wrong = {"society": 0, "deployment": 0}, []
     for world in _worlds():
         here = REPO_ROOT / "world" / world
@@ -1223,10 +1226,10 @@ def test_a_world_graph_states_no_wiring_and_only_a_deployment_graph_an_address()
                              for q in quads for t in (q.predicate, q.object))
                 addresses = any(q.predicate.value == _URL for q in quads)
                 seen["society"] += society in kinds and speaks
-                seen["deployment"] += deployment in kinds and addresses
+                seen["deployment"] += bool(deployments & set(kinds)) and addresses
                 if speaks and society not in kinds:
                     wrong.append(f"{world}/{path.name} speaks MQTT4SSN in a graph of {sorted(kinds)}")
-                if addresses and deployment not in kinds:
+                if addresses and not deployments & set(kinds):
                     wrong.append(f"{world}/{path.name} states a schema:url in a graph of {sorted(kinds)}")
     assert seen["society"] >= 4 and seen["deployment"] >= 3, f"the guard found {seen} — it would check nothing"
     assert not wrong, "\n".join(wrong)
