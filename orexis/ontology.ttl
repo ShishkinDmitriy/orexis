@@ -135,10 +135,6 @@ orexis:organisation a owl:DatatypeProperty ; rdfs:label "organisation" ;
     rdfs:domain orexis:SeriesStore ;
     rdfs:comment "The organisation on a series store that every bucket of the world's agents is in." .
 
-orexis:intervalSeconds a owl:DatatypeProperty ; rdfs:label "interval, in seconds" ;
-    rdfs:domain orexis:SeriesPurpose ;
-    rdfs:comment "How many seconds of real time one window of a purpose's points covers, stated of `orexis:Metrics` in the world's deployment graph. Sixty where it states none." .
-
 #  WHAT HAPPENED, as the journal keeps it (knowledge/domain/kernel/journal.md): an event a package says, an entry
 #  of the agent's journal — a store of its own beside the beliefs, which no part reads — and never a belief.
 

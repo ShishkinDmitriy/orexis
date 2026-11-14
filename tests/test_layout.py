@@ -807,7 +807,7 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
         influx._write_credential(credential, "terrace", purpose, influx.bucket_name("terrace", "terrace", purpose), "a-token")
         environment.update(dotenv_values(credential))
     assert (environment["INFLUX_HISTORY_BUCKET"], environment["INFLUX_METRICS_BUCKET"]) == ("terrace-terrace", "terrace-terrace-metrics")
-    assert installation.interval(METRICS) == 60 and HISTORY != METRICS
+    assert HISTORY != METRICS
     composed = sorted((REPO_ROOT / "world").glob("*/compose.yaml"))
     assert composed, "the glob stopped matching"
     told = {path.parent.name: installation.purposes(path.parent.name) for path in composed}
@@ -823,7 +823,8 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
         archived = bool(connections.linked(path.parent.name, "readingsArchivedIn"))
         assert ("orexis:History" in stated) == archived, path
         monitored = METRICS in told[path.parent.name]
-        assert ("influx-metrics.env" in text) == ("orexis:Metrics" in stated) == ("orexis:intervalSeconds" in stated) == monitored, path
+        assert ("influx-metrics.env" in text) == ("orexis:Metrics" in stated) == monitored, path
+        assert "intervalSeconds" not in stated, "how long a window is, is the meter's role's to say"
         assert not re.search(r"INFLUX_\w+_(URL|ORG)|METRICS_INTERVAL_S", text), path
         # the tracer is named where a recorder's role names one (`journal:tracedBy`), whatever the world says of
         # being monitored: in the world's derived deployment, which its agents read, and no environment says it.
@@ -853,7 +854,6 @@ def test_history_is_served_by_one_store_and_metrics_by_one_or_by_none(tmp_path, 
 
     assert {p: installation.series(p) for p in PURPOSES} == {p: ("http://localhost:8086", "orexis") for p in PURPOSES}
     assert installation.retention(HISTORY) is None and installation.retention(METRICS) == 30
-    assert installation.interval(HISTORY) is None and installation.interval(METRICS) == 60
     _installed(tmp_path, monkeypatch, installation=lambda text: text.replace(" , onboarding:Metrics .", " ."))
     assert installation.served(METRICS) is None
     assert installation.purposes("allotment") == (HISTORY,)
@@ -875,8 +875,6 @@ def test_history_is_served_by_one_store_and_metrics_by_one_or_by_none(tmp_path, 
     (lambda text: text.replace("http://localhost:8086", "https://localhost:8086"), "series: a series store answers at one http:// url"),
     (lambda text: text.replace("onboarding:retentionDays 30", "onboarding:retentionDays 30 , 60"), "Metrics: a purpose is kept one whole number of days"),
     (lambda text: text.replace("onboarding:retentionDays 30", 'onboarding:retentionDays "a month"'), "Metrics: a purpose is kept one whole number of days"),
-    (lambda text: text.replace("onboarding:intervalSeconds 60", 'onboarding:intervalSeconds "a minute"'),
-     "Metrics: a window of a minute, which is no number of seconds"),
     (lambda text: text + '\n:more onboarding:allocatesFrom "mqtt://localhost:2884" ; onboarding:allocatesFor <https://www.w3id.org/MQTT4SSN-Ontology#Broker> .\n',
      "more: is a pool beside http://example.org/orexis/installation#brokers"),
     (lambda text: text + '\n:more onboarding:allocatesFrom "mqtt://localhost:2884" .\n', "more: a pool allocates for one kind of listener, and says which"),
@@ -889,7 +887,7 @@ def test_history_is_served_by_one_store_and_metrics_by_one_or_by_none(tmp_path, 
     (lambda text: text.replace('"docker.io/grafana/tempo:2.6.1" .', '"docker.io/grafana/tempo:2.6.1" , "tempo:3" .'),
      "tracer: a tracer runs one image"),
 ], ids=["two-stores", "no-organisation", "two-images", "a-view-in-the-clear", "a-store-over-tls", "two-retentions",
-        "a-retention-in-words", "a-window-in-words", "two-pools", "a-pool-for-nothing", "a-pool-url-with-no-port",
+        "a-retention-in-words", "two-pools", "a-pool-for-nothing", "a-pool-url-with-no-port",
         "two-models", "a-model-in-the-clear", "two-tracers", "a-tracer-of-two-images"])
 def test_what_the_installation_states_is_held_to_its_requirements(tmp_path, monkeypatch, edit, said):
     """`installation.py` refused each of these by hand, in a reader of its own for each; each is a
@@ -1144,7 +1142,7 @@ _RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 _ONBOARDING = "http://example.org/orexis/onboarding#"
 _INSTALLATION_SAYS = {_RDF_TYPE, "https://schema.org/url", _ONBOARDING + "organisation", _ONBOARDING + "image",
                       _ONBOARDING + "allocatesFrom", _ONBOARDING + "allocatesFor", _ONBOARDING + "serves",
-                      _ONBOARDING + "retentionDays", _ONBOARDING + "intervalSeconds"}
+                      _ONBOARDING + "retentionDays"}
 
 
 def test_the_installation_and_its_derivation_say_where_and_nothing_else():
@@ -1954,7 +1952,9 @@ RECORDER = "http://example.org/orexis/journal#Recorder"
     (' ; journal:incidentFrom "loud"', "a recorder's incidents begin at one level"),
     (' ; journal:windowS 0', "a recorder's window is one number of seconds above nought"),
     (' ; journal:archivedIn :one , :other', "a recorder is archived in one archive"),
-], ids=["said-once", "no-level", "no-window", "two-archives"])
+    (' ; journal:archivedEveryS 5', None),
+    (' ; journal:archivedEveryS 0', "a recorder's journal is archived every one number of seconds above nought"),
+], ids=["said-once", "no-level", "no-window", "two-archives", "archived-every", "archived-never"])
 def test_how_a_recorders_journal_is_kept_is_said_on_its_role_and_held_by_the_journals_requirements(tmp_path, said, why):
     """From which level a line of the log is an incident, how long the log is kept and which classes are incidents
     are said on the recorder's role, where the journal package reads them as it starts; no environment tells an

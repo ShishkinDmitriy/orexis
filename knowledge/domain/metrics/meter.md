@@ -28,8 +28,10 @@ only through its marks, so it knows no package's words, and no agent believes a 
 # What the role says
 
 `metrics:writtenTo` names the series store. The author names a node and no address; the world's derived
-[deployment](/domain/onboarding/deployment.md) says where it answers, that it serves `orexis:Metrics`, and how long
-a window is. A meter naming no store is refused at onboarding.
+[deployment](/domain/onboarding/deployment.md) says where it answers and that it serves `orexis:Metrics`. A meter naming no store is refused at onboarding.
+
+`metrics:windowS` says how many seconds of real time a window covers, sixty where the role states none. Until
+2026-11-14 the installation stated it for every world at once.
 
 # What follows from it at onboarding
 

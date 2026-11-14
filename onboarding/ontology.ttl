@@ -40,11 +40,7 @@ onboarding:History a onboarding:SeriesPurpose ; rdfs:label "history" ;
     rdfs:comment "What happened: every observation, every step taken and how it ended, every plan published, and what coordination asked with, laid and concluded, contributed by the package that decides each. The record, kept for good, in the bucket the one series had before purposes." .
 
 onboarding:Metrics a onboarding:SeriesPurpose ; rdfs:label "metrics" ;
-    rdfs:comment "How the agent is doing, for whoever administers it: each loaded package's gauges and tallied events and the runtime's own, written once a window of `onboarding:intervalSeconds`. Written only by the agents of a world an agent of which plays a meter, to a bucket of their own opened for writing alone, and kept as long as `onboarding:retentionDays` says." .
-
-onboarding:intervalSeconds a owl:DatatypeProperty ; rdfs:label "interval seconds" ;
-    rdfs:domain onboarding:SeriesPurpose ;
-    rdfs:comment "How many seconds of real time one window of a purpose's points covers, stated by the installation of metrics: an agent tallies its events in memory and writes the window, with every gauge sampled once, at its end. A monitored world's derived deployment states it of `orexis:Metrics`; absent, the agent keeps sixty." .
+    rdfs:comment "How the agent is doing, for whoever administers it: each loaded package's gauges and tallied events and the runtime's own, written once a window. Written only by the agents of a world an agent of which plays a meter, to a bucket of their own opened for writing alone, and kept as long as `onboarding:retentionDays` says." .
 
 onboarding:retentionDays a owl:DatatypeProperty ; rdfs:label "retention days" ;
     rdfs:domain onboarding:SeriesPurpose ;

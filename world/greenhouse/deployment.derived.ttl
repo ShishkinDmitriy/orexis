@@ -10,7 +10,6 @@
 
 <> a orexis:DeploymentGraph .    # this document is one graph, and this is what it is
 
-orexis:Metrics orexis:intervalSeconds "60"^^<http://www.w3.org/2001/XMLSchema#decimal> .
 :grower_archive a journal:Archive ;
     schema:url "file:///app/journal" .
 :grower_endpoint a journal:Endpoint ;

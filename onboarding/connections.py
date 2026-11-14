@@ -110,10 +110,6 @@ def derive(world: str) -> list[tuple[str, str, ox.NamedNode | ox.Literal]]:
                            (iri, OREXIS + "serves", ox.NamedNode(OREXIS + _PURPOSE[purpose])),
                            (iri, SCHEMA + "url", ox.Literal(url)),
                            (iri, OREXIS + "organisation", ox.Literal(organisation))]
-            window = installation.interval(purpose)
-            if window is not None:
-                statements.append((OREXIS + _PURPOSE[purpose], OREXIS + "intervalSeconds",
-                                   ox.Literal(f"{window:g}", datatype=ox.NamedNode("http://www.w3.org/2001/XMLSchema#decimal"))))
     return sorted(statements, key=lambda s: (s[0], s[1], str(s[2])))
 
 

@@ -114,7 +114,7 @@ desire reads across worlds and agents.
 **A window is real time, never the agent's.** The agent's clock may run fast in a simulation and
 advances per read in a test, so a duration is `time.perf_counter`, the window is kept by a monotonic
 clock, a flush is stamped by the wall, and nothing reads `agent.clock`. The window is sixty seconds
-where the world states no `orexis:intervalSeconds` of `orexis:Metrics`, and is written at the end of the first
+where the [meter](/domain/metrics/meter.md)'s role states no `metrics:windowS`, and is written at the end of the first
 pass by which it has run its length, so it holds whole passes; a test drives it without sleeping.
 The last window is written as the metrics part stops — a `SIGTERM` is made an exit, so `podman stop` does
 not lose it.

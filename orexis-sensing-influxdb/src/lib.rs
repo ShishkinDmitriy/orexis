@@ -16,8 +16,9 @@
 //! say (`past::point`) and the graphs are sensing's to remove (`past::forget`): this asks, and names no word of an
 //! observation.
 //!
-//! EVERY TEN SECONDS of the agent's time, which is how far the series lags
-//! a reading; and a stretch in which sensing observed nothing asks the beliefs nothing.
+//! AS OFTEN AS THE OBSERVER'S ROLE SAYS (`sensing:archivedEveryS`), in the agent's seconds, every ten where it says
+//! nothing, which is how far the series lags a reading; and a stretch in which sensing observed nothing asks the
+//! beliefs nothing.
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -30,7 +31,7 @@ use orexis::task::{Handed, Package, Task};
 use orexis_sensing::events::Observed;
 use orexis_sensing::past;
 
-/// How often readings are archived, in the agent's seconds.
+/// How often readings are archived, in the agent's seconds, where the observer's role says nothing.
 pub const INTERVAL_S: f64 = 10.0;
 
 /// Where readings are archived and how often. Handed outside by a test that reads the series; a deployed agent is
@@ -90,6 +91,13 @@ inventory::submit! { Package { name: "sensing-influxdb", documents: &[], start }
 
 const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#> ";
 const ARCHIVED_IN: &str = "?role sensing:archivedIn ?service . ?service a orexis:SeriesStore .";
+const ARCHIVED_EVERY: &str = "?role sensing:archivedEveryS ?figure .";
+
+/// HOW OFTEN READINGS ARE ARCHIVED, in the agent's seconds: what the observer's role says in the agent's self graph
+/// (`sensing:archivedEveryS`), and the package's own where it says nothing.
+pub fn every_s(store: &Store) -> Result<f64, orexis::Error> {
+    Ok(orexis::boot::figure(store, WORDS, ARCHIVED_EVERY)?.unwrap_or(INTERVAL_S))
+}
 
 /// ITS START, which every package this binary holds is given: it keeps house for sensing, so it joins where sensing
 /// did AND THE OBSERVER'S ROLE NAMES A SERIES STORE the world says where to reach (`sensing:archivedIn`), and where
@@ -115,13 +123,14 @@ fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
         None if handed.outside.has::<orexis::task::Deployed>() => {
             match Sink::deployed(&handed.store, orexis::series::HISTORY, &orexis::series::environment)? {
                 Some((sink, _)) => {
+                    let every_s = every_s(&handed.store)?;
                     log::info!(
-                        "{} archives its readings to the history store every {INTERVAL_S}s",
+                        "{} archives its readings to the history store every {every_s}s",
                         handed.id
                     );
                     Archives {
                         sink: Arc::new(sink),
-                        every_s: INTERVAL_S,
+                        every_s,
                     }
                 }
                 None => return Ok(None),

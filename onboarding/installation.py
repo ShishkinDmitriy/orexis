@@ -14,8 +14,8 @@ so a purpose served nowhere would be a sink every agent is told of and none has:
 are the admins' instrumentation and optional at every level — a world is monitored only where an agent of
 it plays a meter, `metrics:Meter`, in its self graph, and an installation serving metrics
 nowhere monitors no world, refusing the one that asks. `purposes` is that answer, and every tool
-asks it: which purposes a world's agents are told a store for. How long a metrics window is,
-`onboarding:intervalSeconds` on the purpose, reaches each agent as its environment.
+asks it: which purposes a world's agents are told a store for. How long a metrics window is, is no
+word of the installation's: the meter's role says it (`metrics:windowS`).
 
 **Asserted wins, derived completes** (`onboarding.derived`). A world may assert its broker's urls
 in a deployment graph of its own, and an asserted url is what every tool is told. A broker no world
@@ -104,7 +104,6 @@ _AGENTS_Q = "SELECT ?a WHERE { ?a a orexis:Agent ; orexis:localId ?id } ORDER BY
 PURPOSE_OF = {HISTORY: ONBOARDING + "History", METRICS: ONBOARDING + "Metrics"}
 _SERVES_Q = f"SELECT ?s WHERE {{ ?s a <{ONBOARDING}SeriesStore> ; <{ONBOARDING}serves> <$purpose> }}"
 _RETENTION_Q = f"SELECT ?days WHERE {{ <$purpose> <{ONBOARDING}retentionDays> ?days }}"
-_INTERVAL_Q = f"SELECT ?s WHERE {{ <$purpose> <{ONBOARDING}intervalSeconds> ?s }}"
 _URLS_Q = f"SELECT ?s ?url WHERE {{ ?s <{_SCHEMA_URL}> ?url }}"
 
 #  A WORLD'S BROKER, as its society names it, and the urls its own documents assert on it — over
@@ -222,13 +221,6 @@ def purposes(world: str) -> tuple[str, ...]:
                          f"{local(PURPOSE_OF[METRICS])} from no store — serve it from one in "
                          f"{_where(INSTALLATION)}, or stop monitoring the world")
     return HISTORY, METRICS
-
-
-def interval(purpose: str) -> float | None:
-    """How many seconds a window of `purpose`'s points is, `onboarding:intervalSeconds` on the
-    purpose — or None where the installation states none, and the agent keeps its own sixty."""
-    said = {float(r["s"]) for r in _asserted(_store(with_derivation=False), _INTERVAL_Q.replace("$purpose", PURPOSE_OF[purpose]))}
-    return next(iter(said), None)
 
 
 def retention(purpose: str) -> int | None:

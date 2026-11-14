@@ -22,8 +22,7 @@ it listens on is deployment.
 The **installation** is the deployment graph of what every world on a host shares, asserted in
 `infra/installation.ttl`: the **series store**, with its url, its organisation, its image and the
 purposes it serves (`onboarding:serves` — history by exactly one store, metrics by one or none),
-how many days a purpose is kept where not for ever, and how many seconds one window of metrics is
-(`onboarding:intervalSeconds`); the **series view**, where a person draws the series — Grafana,
+and how many days a purpose is kept where not for ever; the **series view**, where a person draws the series — Grafana,
 with its url and image; and a pool per kind of listener it allocates ports to — a broker's, and an
 agent's [journal](/domain/kernel/journal.md)'s, each saying which (`onboarding:allocatesFor`).
 
@@ -100,7 +99,7 @@ into `world/<name>/secrets/` and mounted into one container.
 beside the installation's words — `onboarding:SeriesStore`, `onboarding:SeriesView`, `onboarding:Tracer`,
 `onboarding:organisation`, `onboarding:image`, `onboarding:allocatesFrom`, `onboarding:allocatesFor`,
 `onboarding:journal`, `onboarding:serves`,
-`onboarding:retentionDays` and `onboarding:intervalSeconds`, the two `onboarding:SeriesPurpose`s,
+`onboarding:retentionDays`, the two `onboarding:SeriesPurpose`s,
 — so an agent's boot passes over a graph of it. The terrace,
 the greenhouse and the allotment assert their brokers' urls; the sensing world asserts none and is
 allocated the 1884 and 8884 it once asserted.

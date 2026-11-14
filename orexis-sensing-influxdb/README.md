@@ -12,7 +12,7 @@ forget the past readings the store took.
 
 | Woken by | Does |
 |---|---|
-| the clock, every 10 s of the agent's time | writes every reading the store has not taken, then has sensing forget the past ones the store holds |
+| the clock, as often as the observer's role says (`sensing:archivedEveryS`), every 10 s of the agent's time where it says nothing | writes every reading the store has not taken, then has sensing forget the past ones the store holds |
 
 It hears no event and starts no activity. A stretch in which sensing observed nothing asks the beliefs nothing.
 A store that refuses leaves everything where it lies for the next time.

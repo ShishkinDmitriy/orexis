@@ -42,6 +42,10 @@ none, the observer shape's `sh:defaultValue` holds — three and six — and tha
 the figure lives: `missed`, `received` and the [stuck](/domain/sensing/stuck.md) rule all read it. A
 sensor judged by another figure is read by another observer role.
 
+**How often its readings are archived**, `sensing:archivedEveryS` in the agent's seconds, where the role names a
+series store (`sensing:archivedIn`); ten where it states none, the constant of `orexis-sensing-influxdb/`, which
+reads it.
+
 # What it is held to
 
 Onboarding holds the declaration to the world both ways. The shape sensing ships refuses an observer

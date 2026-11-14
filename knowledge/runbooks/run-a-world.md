@@ -185,7 +185,7 @@ cd world/greenhouse && podman compose up -d    # recreates the agents whose envi
 Taking the statement out and running the same four stops it: `orexis-influx` revokes the metrics
 tokens and removes their files, the compose file stops telling the agents, and the health
 dashboards are removed; the bucket is left for its retention to empty. The window's length is the
-installation's `onboarding:intervalSeconds`, sixty; an installation serving metrics from no store
+meter's role's `metrics:windowS`, sixty seconds where it states none; an installation serving metrics from no store
 refuses a world that asks.
 
 # Up, down, and watch

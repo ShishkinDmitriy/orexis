@@ -250,6 +250,24 @@ pub fn connected(store: &Store, words: &str, pattern: &str) -> Result<Option<Str
         .find(|url| !url.is_empty()))
 }
 
+/// A FIGURE A ROLE OF THE SELF STATES: `pattern` binds `?figure` from `?role`, a role the self plays, in the `words`
+/// the asking package declares, read off the self graph alone. None where no role of the self states one above
+/// nought, and the asking package's constant then holds. How often a housekeeper takes its turn and how long a
+/// window is are asked so: the kernel names no role and no figure.
+pub fn figure(store: &Store, words: &str, pattern: &str) -> Result<Option<f64>, Error> {
+    let selves = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
+    let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
+    let text = format!(
+        "{words}SELECT ?figure WHERE {{ ?me a orexis:Self ; orexis:plays ?role . {pattern} }} ORDER BY ?figure"
+    );
+    Ok(store
+        .rows(&text, &selves)?
+        .iter()
+        .filter_map(|row| crate::store::value(row, "figure"))
+        .filter_map(|said| said.parse::<f64>().ok())
+        .find(|figure| *figure > 0.0))
+}
+
 /// A ROLE THE SELF PLAYS THAT NO PACKAGE OF THIS BINARY DECLARES: the role's classes, none beneath `orexis:Role` by
 /// the vocabulary the store holds once every package has decided. Its package was built out, and with it the
 /// ontology that would have said so.

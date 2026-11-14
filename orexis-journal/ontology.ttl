@@ -56,6 +56,10 @@ journal:archivedIn a owl:ObjectProperty ; rdfs:label "archived in" ;
     rdfs:domain journal:Recorder ; rdfs:range journal:Archive ;
     rdfs:comment "The archive what a recorder's journal keeps for good is taken to, said of the role in the agent's self graph. A recorder whose role names none has no archive: what lasts stays in its journal, in memory." .
 
+journal:archivedEveryS a owl:DatatypeProperty ; rdfs:label "archived every, in seconds" ;
+    rdfs:domain journal:Recorder ;
+    rdfs:comment "How often what a recorder's journal keeps for good is taken to its archive, in the agent's seconds, said of the role: what an agent killed outright loses at most. Two where the role says none." .
+
 #  WHERE THE JOURNAL IS ASKED (knowledge/domain/journal/endpoint.md).
 
 journal:Endpoint a owl:Class ; rdfs:label "Endpoint" ;

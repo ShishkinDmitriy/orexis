@@ -33,11 +33,9 @@
 
 #  HOW LONG A PURPOSE'S POINTS ARE KEPT, where not for ever. History is the record and keeps
 #  everything. Metrics are a window's figures, read over hours and days, so a metrics bucket lets a
-#  point go after this. And HOW LONG A WINDOW OF METRICS IS, in real seconds: an agent tallies what
-#  happened in memory and writes it, with every gauge sampled once, at the window's end — told to
-#  each agent of a monitored world as its environment.
-onboarding:Metrics onboarding:retentionDays 30 ;
-    onboarding:intervalSeconds 60 .
+#  point go after this. How long a window of metrics is, is the meter's role's to say
+#  (`metrics:windowS`), and no word of the installation's.
+onboarding:Metrics onboarding:retentionDays 30 .
 
 #  WHERE THE SERIES IS DRAWN: the operator's view of every world at once, over TLS.
 :view a onboarding:SeriesView ;

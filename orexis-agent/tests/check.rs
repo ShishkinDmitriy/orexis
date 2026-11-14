@@ -227,9 +227,42 @@ fn the_journal_package_makes_its_own_journal_where_the_agent_is_deployed_and_non
     assert_eq!(kept(false), None, "a check keeps no journal");
 }
 
+/// HOW OFTEN A PACKAGE TAKES ITS TURN IS ITS ROLE'S TO SAY, and the package's own figure holds where the role says
+/// nothing: the terrace's roles state none, so its readings are archived every ten seconds, its journal every two
+/// and its metrics written every sixty; said on the role that names the store or the archive, each is what is said.
+#[test]
+fn how_often_a_package_takes_its_turn_is_said_on_its_role_and_the_packages_own_where_it_says_nothing() {
+    let now = oxsdatatypes::DateTime::now();
+    let store =
+        orexis::store::Store::new(std::sync::Arc::new(orexis::namespaces::Namespaces::linked().unwrap())).unwrap();
+    orexis_agent::booted(&store, &Path::new(TREE).join("world/terrace"), "terrace", now).unwrap();
+    let figures = |store: &orexis::store::Store| {
+        (
+            orexis_sensing_influxdb::every_s(store).unwrap(),
+            orexis_journal_oxigraph::every_s(store).unwrap(),
+            orexis_metrics::window_s(store).unwrap(),
+        )
+    };
+    assert_eq!(figures(&store), (10.0, 2.0, 60.0));
+    for (link, figure, said) in [
+        ("sensing#archivedIn", "sensing#archivedEveryS", 30),
+        ("journal#archivedIn", "journal#archivedEveryS", 5),
+        ("metrics#writtenTo", "metrics#windowS", 300),
+    ] {
+        store
+            .update(&format!(
+                "INSERT {{ GRAPH ?g {{ ?role <http://example.org/orexis/{figure}> {said} }} }} WHERE {{ GRAPH ?g {{ \
+                 ?me a <http://example.org/orexis#Self> ; <http://example.org/orexis#plays> ?role . \
+                 ?role <http://example.org/orexis/{link}> ?service }} }}"
+            ))
+            .unwrap();
+    }
+    assert_eq!(figures(&store), (30.0, 5.0, 300.0));
+}
+
 /// WHERE A SERIES IS WRITTEN IS THE WORLD'S TO SAY, of each store a role names: the terrace's agent plays an observer
 /// whose readings are archived in one and a meter whose windows are written to it, so the deployment states the store
-/// for history and for metrics, with the metrics' window; Hanoi's agent plays neither, so it states none, and neither
+/// for history and for metrics; Hanoi's agent plays neither, so it states none, and neither
 /// what archives readings nor the metrics joins it.
 #[test]
 fn the_world_names_the_series_store_for_each_purpose_its_agents_write() {
@@ -240,15 +273,12 @@ fn the_world_names_the_series_store_for_each_purpose_its_agents_write() {
         orexis_agent::booted(&store, &Path::new(TREE).join("world").join(world), agent, now).unwrap();
         orexis::series::store(&store, purpose).unwrap()
     };
-    let at = |interval_s| {
-        Some(orexis::series::Served {
-            url: "http://localhost:8086".to_string(),
-            organisation: "orexis".to_string(),
-            interval_s,
-        })
-    };
-    assert_eq!(served("terrace", "terrace", orexis::series::HISTORY), at(None));
-    assert_eq!(served("terrace", "terrace", orexis::series::METRICS), at(Some(60.0)));
+    let at = Some(orexis::series::Served {
+        url: "http://localhost:8086".to_string(),
+        organisation: "orexis".to_string(),
+    });
+    assert_eq!(served("terrace", "terrace", orexis::series::HISTORY), at);
+    assert_eq!(served("terrace", "terrace", orexis::series::METRICS), at);
     assert_eq!(served("hanoi", "hanoi", orexis::series::HISTORY), None);
     assert_eq!(served("hanoi", "hanoi", orexis::series::METRICS), None);
 

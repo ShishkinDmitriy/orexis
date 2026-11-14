@@ -1065,6 +1065,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   running for what no role asked; the address on the role in the authored self graph and the installation's
   document handed to the agent were refused, and a credential is never in it
   (the-world-says-what-it-is-connected-to).
+- **How often a package takes its turn is its role's to say, and the package's constant holds where the role says
+  nothing** — `sensing:archivedEveryS`, `journal:archivedEveryS` and `metrics:windowS`, each read off the self graph
+  by the package that takes the turn (`orexis::boot::figure`); the first two were constants in code and the third the
+  installation's word for every world at once.
 - **Every package joins for a role, and a housekeeper for a link on one** — `metrics:Meter` loads the metrics, the
   one package that joined every agent, and a world is monitored where an agent of it plays one, no statement of its
   deployment saying so; what archives sensing's readings joins where the observer's role names a series store

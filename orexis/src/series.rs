@@ -38,13 +38,11 @@ fn purpose_iri(purpose: &str) -> Option<&'static str> {
 pub struct Served {
     pub url: String,
     pub organisation: String,
-    /// How many seconds a window of the purpose's points covers, where the world states it.
-    pub interval_s: Option<f64>,
 }
 
-const SERVED_Q: &str = "SELECT ?url ?organisation ?interval WHERE { \
-?store a orexis:SeriesStore ; orexis:serves $purpose ; <https://schema.org/url> ?url ; orexis:organisation ?organisation . \
-OPTIONAL { $purpose orexis:intervalSeconds ?interval } } ORDER BY ?url";
+const SERVED_Q: &str = "SELECT ?url ?organisation WHERE { \
+?store a orexis:SeriesStore ; orexis:serves $purpose ; <https://schema.org/url> ?url ; orexis:organisation ?organisation } \
+ORDER BY ?url";
 
 /// THE STORE THE WORLD SAYS SERVES `purpose`, or None where its deployment graph names none.
 pub fn store(store: &crate::store::Store, purpose: &str) -> Result<Option<Served>, crate::Error> {
@@ -61,9 +59,6 @@ pub fn store(store: &crate::store::Store, purpose: &str) -> Result<Option<Served
         Some(Served {
             url: crate::store::value(row, "url")?,
             organisation: crate::store::value(row, "organisation")?,
-            interval_s: crate::store::value(row, "interval")
-                .and_then(|s| s.parse::<f64>().ok())
-                .filter(|s| *s > 0.0),
         })
     }))
 }

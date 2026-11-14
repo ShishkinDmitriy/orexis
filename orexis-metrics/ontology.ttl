@@ -19,4 +19,8 @@ metrics:Meter a owl:Class ; rdfs:subClassOf orexis:Role ; rdfs:label "Meter" ;
 
 metrics:writtenTo a owl:ObjectProperty ; rdfs:label "written to" ;
     rdfs:domain metrics:Meter ; rdfs:range orexis:SeriesStore ;
-    rdfs:comment "The series store a meter's windows are written to, said of the role in the agent's self graph. The role names it; the world's deployment graph (`orexis:DeploymentGraph`) says where it answers, that it serves `orexis:Metrics`, and how long a window is." .
+    rdfs:comment "The series store a meter's windows are written to, said of the role in the agent's self graph. The role names it; the world's deployment graph (`orexis:DeploymentGraph`) says where it answers and that it serves `orexis:Metrics`." .
+
+metrics:windowS a owl:DatatypeProperty ; rdfs:label "window, in seconds" ;
+    rdfs:domain metrics:Meter ;
+    rdfs:comment "How many seconds of real time one window of a meter's tallies covers, said of the role: how often its metrics are written. Sixty where the role says none." .

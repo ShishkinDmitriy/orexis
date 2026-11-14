@@ -67,12 +67,7 @@
 [] a sh:NodeShape ;
     sh:targetNode onboarding:History , onboarding:Metrics ;
     sh:property [ sh:path onboarding:retentionDays ; sh:maxCount 1 ; sh:datatype xsd:integer ;
-                  sh:message "a purpose is kept one whole number of days, or for ever" ] ,
-                [ sh:path onboarding:intervalSeconds ; sh:maxCount 1 ;
-                  sh:message "a window of a purpose's points is one length" ] ;
-    sh:sparql [
-        sh:message "a window of {?seconds}, which is no number of seconds" ;
-        sh:select """SELECT $this ?seconds WHERE { $this onboarding:intervalSeconds ?seconds . FILTER (!isNumeric(?seconds)) }""" ] .
+                  sh:message "a purpose is kept one whole number of days, or for ever" ] .
 
 [] a sh:NodeShape ;
     sh:targetSubjectsOf onboarding:allocatesFrom ;

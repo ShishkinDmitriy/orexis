@@ -13,7 +13,7 @@ Code, not model: no agent believes a metric.
 | Woken by | Does |
 |---|---|
 | any event said | adds it to the window's tally for its measurement and tags: a count, each value's sum, mean and max, each flag's count; a level is kept as it last stood |
-| the clock: real time, every window the world states of `orexis:Metrics` (60 s where it states none) | writes the tallies and the levels, each point tagged with the world and the agent |
+| the clock: real time, every window the meter's role states (`metrics:windowS`, 60 s where it states none) | writes the tallies and the levels, each point tagged with the world and the agent |
 | the task stopping | writes the window |
 
 It starts no activity.

@@ -10,7 +10,7 @@
 //!
 //! REAL TIME, NEVER THE AGENT'S: the window is kept by a monotonic real clock and a flush is stamped by the wall, so
 //! nothing here reads the agent's timeline, which may run fast or tick per read. The window's length is the
-//! world's to say of the purpose (`orexis:intervalSeconds`), sixty seconds where it says nothing. Every point is tagged with the world and the
+//! meter's role's to say (`metrics:windowS`), sixty seconds where it says nothing. Every point is tagged with the world and the
 //! agent. The window is written when a pass ends on the first pass by which it has run its length, so a window holds
 //! whole passes, and as the part stops, since a stop is an exit.
 
@@ -24,7 +24,7 @@ use orexis::events::{Event, Field, Mark, Number, Point, Watch, counted, round6};
 use orexis::series::Sink;
 use orexis::task::{Handed, PASS_METRIC, Package, Task};
 
-/// The window's length where the world states none.
+/// The window's length, in real seconds, where the meter's role says nothing.
 pub const INTERVAL_S: f64 = 60.0;
 
 #[derive(Default)]
@@ -202,6 +202,14 @@ inventory::submit! { Package { name: "metrics", documents: orexis::documents!("o
 
 /// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
 const ROLE: &str = "http://example.org/orexis/metrics#Meter";
+const WORDS: &str = "PREFIX metrics: <http://example.org/orexis/metrics#> ";
+const WINDOW: &str = "?role metrics:windowS ?figure .";
+
+/// HOW LONG A WINDOW IS, in real seconds: what the meter's role says in the agent's self graph (`metrics:windowS`),
+/// and the package's own where it says nothing.
+pub fn window_s(store: &orexis::store::Store) -> Result<f64, orexis::Error> {
+    Ok(orexis::boot::figure(store, WORDS, WINDOW)?.unwrap_or(INTERVAL_S))
+}
 
 /// ITS START, which every package this binary holds is given: it joins where the self plays a meter, and joined,
 /// makes its core.
@@ -216,7 +224,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
 
 fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
     //  HANDED A WINDOW, by a test that reads the points, it tallies into that; deployed and handed none, it makes
-    //  its own where the world says where the store its role names answers, its length the world's word or sixty seconds; and
+    //  its own where the world says where the store its role names answers, its length the role's word or sixty seconds; and
     //  otherwise nothing is tallied.
     let window = match handed.outside.take::<Window>() {
         Some(window) => window,
@@ -224,12 +232,11 @@ fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
             let Some(deployed) = handed.outside.read::<orexis::task::Deployed>() else {
                 return Ok(None);
             };
-            let Some((sink, served)) =
-                Sink::deployed(&handed.store, orexis::series::METRICS, &orexis::series::environment)?
+            let Some((sink, _)) = Sink::deployed(&handed.store, orexis::series::METRICS, &orexis::series::environment)?
             else {
                 return Ok(None);
             };
-            let interval = served.interval_s.unwrap_or(INTERVAL_S);
+            let interval = window_s(&handed.store)?;
             log::info!("{} writes its metrics every {interval}s", handed.id);
             Window::new(sink, interval, Some(&deployed.world), Some(&handed.id))
         }

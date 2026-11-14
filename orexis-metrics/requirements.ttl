@@ -15,7 +15,9 @@
 [] a sh:NodeShape ;
     sh:targetClass :Meter ;
     sh:property [ sh:path :writtenTo ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
-                  sh:message "a meter is written to one series store, named" ] ;
+                  sh:message "a meter is written to one series store, named" ] ,
+                [ sh:path :windowS ; sh:maxCount 1 ; sh:minExclusive 0 ;
+                  sh:message "a meter's window is one number of seconds above nought" ] ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "a meter that is written to no series store: it would tally and write nowhere" ;
         sh:select """SELECT $this WHERE { FILTER NOT EXISTS { $this metrics:writtenTo ?store } }""" ] .
