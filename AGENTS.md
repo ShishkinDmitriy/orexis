@@ -56,7 +56,7 @@ If it is unavailable, the rules are short enough to follow by hand:
   a path that is not on disk.
 
 **`knowledge/domain/` is the shared dictionary, filed by the package that owns each word** —
-`kernel/`, `journal/`, `sensing/`, `transport/`, `belief/`, `prediction/`, `planning/`, `execution/`,
+`kernel/`, `journal/`, `metrics/`, `sensing/`, `transport/`, `belief/`, `prediction/`, `planning/`, `execution/`,
 `speech/`, `coordination/`, `market/`, `actuation/`, `courier/`, `draw/`, `onboarding/` — and `tests/test_knowledge.py` holds a page to
 live terms in its folder's namespace, so retiring a term fails until its page follows. A record
 stays in `knowledge/decisions/` while something current cites it; 0.1.0's are filed under
@@ -1065,10 +1065,15 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   running for what no role asked; the address on the role in the authored self graph and the installation's
   document handed to the agent were refused, and a credential is never in it
   (the-world-says-what-it-is-connected-to).
-- **Where a series is written is the world's to say and what opens it the agent's own secret** — the derived
-  deployment names an `orexis:SeriesStore` for each purpose the world's agents write, linked to no role since
-  history is every agent's, and each package makes its own sink from it and the bucket and token of the agent's
-  credential file: what archives sensing's readings, the metrics, and a chat that reads the past (series).
+- **Every package joins for a role, and a housekeeper for a link on one** — `metrics:Meter` loads the metrics, the
+  one package that joined every agent, and a world is monitored where an agent of it plays one, no statement of its
+  deployment saying so; what archives sensing's readings joins where the observer's role names a series store
+  (`sensing:archivedIn`), as the journal's housekeepers join by the recorder's links (meter, package).
+- **Where a series is written is the world's to say and what opens it the agent's own secret** — a role names the
+  store, a meter's `metrics:writtenTo` or an observer's `sensing:archivedIn`, the derived deployment states it as
+  an `orexis:SeriesStore` with the purpose it is named for, and each package makes its own sink from it and the
+  bucket and token of the agent's credential file: what archives sensing's readings, the metrics, and a chat that
+  reads the past (series).
 - **A deployed agent's package makes what it is not handed, and the binary makes no journal** — whoever runs the
   agent for good says so (`orexis::task::Deployed`), and the journal package then makes its journal, keeps the
   process's log in it and serves it, and what archives it opens its own archive and takes the last entries once

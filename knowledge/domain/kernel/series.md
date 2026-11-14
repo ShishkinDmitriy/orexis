@@ -58,7 +58,8 @@ History, told by purpose (#825), written by what archives sensing's readings
 (`orexis-sensing-influxdb/`), and by nothing else. Where a purpose's store answers is the world's to say: its derived
 [deployment](/domain/onboarding/deployment.md) names an `orexis:SeriesStore` that `orexis:serves` `orexis:History` or
 `orexis:Metrics`, with its `schema:url` and its `orexis:organisation`. What opens it is the agent's own credential,
-`INFLUX_<PURPOSE>_BUCKET` and `_TOKEN`, a file in its `secrets/<agent>/` and never a document. Each package makes
+`INFLUX_<PURPOSE>_BUCKET` and `_TOKEN`, a file in its `secrets/<agent>/` and never a document. A role names the store, an observer's `sensing:archivedIn` or a meter's
+`metrics:writtenTo`, and it is stated with the purpose it is named for. Each package makes
 its own sink from the two (`Sink::deployed` in `orexis/src/series.rs`), where the agent is deployed: what archives
 sensing's readings, the metrics, and a chat that reads the past. A world naming no store for a purpose has no sink
 for it, and a credential missing or named in part is none too, said in the log. Where the history sink is made the archiver has a task: on a timer it writes the
@@ -119,8 +120,7 @@ The last window is written as the metrics part stops — a `SIGTERM` is made an 
 not lose it.
 
 **Optional at every level.** An agent with no metrics sink computes nothing. A world is monitored
-only where its own deployment graph says `onboarding:monitored`
-([deployment](/domain/onboarding/deployment.md)): only then does `orexis-influx` mint each agent a
+only where an agent of it plays a [meter](/domain/metrics/meter.md): only then does `orexis-influx` mint each agent a
 metrics bucket, `<world>-<agent>-metrics`, written by the agent, read by it only where a chat asks after what it
 did and spent ([translator](/domain/translation/translator.md)), and kept as many
 days as the installation's `onboarding:retentionDays` says; only then does `orexis-compose` tell it

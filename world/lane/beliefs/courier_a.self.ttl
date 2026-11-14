@@ -13,7 +13,7 @@
 #  instrument, so the observer lets it repeat far longer than sensing's six readings.
 :courier_a a orexis:Self ;
     orexis:plays [ a coordination:Coordinator ] ,    # plans, walks, asks the other courier in range, answers it, and draws lots with it
-                 [ a sensing:Observer ; sensing:stuckAfter 100000 ;
+                 [ a sensing:Observer ; sensing:archivedIn :series ; sensing:stuckAfter 100000 ;
                    sensing:sensor :fix_a_column , :fix_a_row , :receiver_b_column , :receiver_b_row , :radar_1_column , :radar_1_row , :radar_3_column , :radar_3_row ] .
 :courier_a planning:budget 256 .
 

@@ -4,7 +4,6 @@
 #  (knowledge/domain/onboarding/deployment.md).
 
 @prefix : <http://example.org/orexis/world/terrace#> .
-@prefix installation: <http://example.org/orexis/installation#> .
 @prefix journal: <http://example.org/orexis/journal#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix schema: <https://schema.org/> .
@@ -12,7 +11,7 @@
 <> a orexis:DeploymentGraph .    # this document is one graph, and this is what it is
 
 orexis:Metrics orexis:intervalSeconds "60"^^<http://www.w3.org/2001/XMLSchema#decimal> .
-installation:series orexis:organisation "orexis" ;
+:series orexis:organisation "orexis" ;
     orexis:serves orexis:History , orexis:Metrics ;
     a orexis:SeriesStore ;
     schema:url "http://localhost:8086" .

@@ -469,9 +469,8 @@ them all, hands each over. The selects are the ones §6's amendment measured, in
 the outcome coalesced, the cone counted by OPTIONAL rows.
 
 **Optional at every level.** An agent with no metrics sink computes nothing. A world is monitored
-only where its own deployment graph says `<> onboarding:monitored true` — one statement, said of
-the graph itself, since a world states no node for itself (the argument the tags made against a
-world IRI); an unmonitored world's agents get no metrics bucket or credential, no environment for
+only where an agent of it plays a meter (`metrics:Meter`, since 2026-11-14; until then its own deployment graph
+said `<> onboarding:monitored true`, one statement said of the graph itself); an unmonitored world's agents get no metrics bucket or credential, no environment for
 it, and no health dashboard, and a world that stops saying it has its grants revoked. An
 installation may serve metrics from no store, and then monitors no world; a world asking there is
 refused by `purposes`, which every onboarding tool asks, before anything is granted. The

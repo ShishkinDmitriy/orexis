@@ -603,6 +603,7 @@ FOLDERS = {
     "coordination": (f"{_O}/coordination#",),
     "draw": (f"{_O}/draw#",),
     "journal": (f"{_O}/journal#",),
+    "metrics": (f"{_O}/metrics#",),
 }
 
 

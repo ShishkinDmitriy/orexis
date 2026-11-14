@@ -11,8 +11,8 @@ under `infra/`, and rule 3 holds of it in the only way it can: nothing in it is 
 
 **History is served by one store, and metrics by one or by none.** Every agent writes its history,
 so a purpose served nowhere would be a sink every agent is told of and none has: refused. Metrics
-are the admins' instrumentation and optional at every level — a world is monitored only where its
-own deployment graph says `<> onboarding:monitored true`, and an installation serving metrics
+are the admins' instrumentation and optional at every level — a world is monitored only where an agent of
+it plays a meter, `metrics:Meter`, in its self graph, and an installation serving metrics
 nowhere monitors no world, refusing the one that asks. `purposes` is that answer, and every tool
 asks it: which purposes a world's agents are told a store for. How long a metrics window is,
 `onboarding:intervalSeconds` on the purpose, reaches each agent as its environment.
@@ -178,11 +178,6 @@ def _service(kind: str) -> dict:
     return {"iri": found["s"], **{key: found.get(key) for key in ("url", "image", "organisation")}}
 
 
-def series_store() -> str:
-    """The IRI of the installation's one series store, as a world's derived deployment names it."""
-    return _service(SERIES_STORE)["iri"]
-
-
 def served(purpose: str) -> tuple[str, str] | None:
     """(url, organisation) of the series store that `onboarding:serves` `purpose`, or None where no
     store serves it — metrics may be served by none; history served by none is refused as the
@@ -204,15 +199,15 @@ def series(purpose: str) -> tuple[str, str]:
     return found
 
 
-#  WHETHER A WORLD IS MONITORED: its deployment graph says so of itself, a row the loader keeps in
-#  the catalogue beside the graph's kind.
-_MONITORED_Q = f"""ASK {{ GRAPH $cat {{ ?g a <{ONBOARDING}DeploymentGraph> ; <{ONBOARDING}monitored> true }} }}"""
+#  WHETHER A WORLD IS MONITORED: an agent of it plays a meter whose role names where its metrics are written
+#  (`metrics:writtenTo`). The role is what has the agent tally anything, so it is what has onboarding mint a metrics
+#  bucket, tell of the store and draw the health dashboards; no statement of the world's deployment says it.
+WRITTEN_TO = "http://example.org/orexis/metrics#writtenTo"
 
 
 def monitored(world: str) -> bool:
-    """Whether `world`'s own deployment graph says it is monitored — absent is no."""
-    store = reading.world(world_dir(world))
-    return bool(answer(store, _MONITORED_Q, (), cat=Raw(f"<{catalogue_of(store)}>"))["boolean"])
+    """Whether an agent of `world` plays a meter — none is no."""
+    return bool(reading.linked(world_dir(world), WRITTEN_TO))
 
 
 def purposes(world: str) -> tuple[str, ...]:
@@ -223,7 +218,7 @@ def purposes(world: str) -> tuple[str, ...]:
     if not monitored(world):
         return (HISTORY,)
     if served(METRICS) is None:
-        raise SystemExit(f"world {world!r} says it is monitored (onboarding:monitored) and the installation serves "
+        raise SystemExit(f"world {world!r} has an agent that plays a meter (metrics:Meter), so it is monitored, and the installation serves "
                          f"{local(PURPOSE_OF[METRICS])} from no store — serve it from one in "
                          f"{_where(INSTALLATION)}, or stop monitoring the world")
     return HISTORY, METRICS

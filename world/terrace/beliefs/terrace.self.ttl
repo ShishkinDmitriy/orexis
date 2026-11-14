@@ -1,3 +1,4 @@
+@prefix metrics: <http://example.org/orexis/metrics#> .
 @prefix : <http://example.org/orexis/world/terrace#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix journal: <http://example.org/orexis/journal#> .
@@ -16,7 +17,7 @@
 #  its own bot and answers from the account it gives of itself.
 
 :terrace_agent a orexis:Self ;
-    orexis:plays [ a sensing:Observer ;
+    orexis:plays [ a sensing:Observer ; sensing:archivedIn :series ;
                    sensing:sensor :air_humidity_terrace ,
                                   :air_pressure_terrace ,
                                   :air_temp_terrace ,
@@ -33,3 +34,7 @@
     journal:tracedBy :tracer ;
     journal:archivedIn :terrace_agent_archive ;
     journal:servedAt :terrace_agent_endpoint ] .
+
+#  IT MEASURES HOW IT IS DOING, so it is a meter (knowledge/domain/metrics/meter.md): what its packages' events
+#  report is tallied and written once a window, for whoever administers it. Without the role nothing is tallied.
+:terrace_agent orexis:plays [ a metrics:Meter ; metrics:writtenTo :series ] .

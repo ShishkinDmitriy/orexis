@@ -819,7 +819,9 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
         # write, and no environment says it: what compose mounts is the credential, the bucket and its token.
         from onboarding import connections
         stated = connections.derivation(path.parent.name).read_text()
-        assert "influx-history.env" in text and "orexis:serves orexis:History" in stated, path
+        assert "influx-history.env" in text, path
+        archived = bool(connections.linked(path.parent.name, "readingsArchivedIn"))
+        assert ("orexis:History" in stated) == archived, path
         monitored = METRICS in told[path.parent.name]
         assert ("influx-metrics.env" in text) == ("orexis:Metrics" in stated) == ("orexis:intervalSeconds" in stated) == monitored, path
         assert not re.search(r"INFLUX_\w+_(URL|ORG)|METRICS_INTERVAL_S", text), path
@@ -829,8 +831,8 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
         named = connections.derivation(path.parent.name)
         traced = bool(connections.linked(path.parent.name, "tracedBy"))
         assert (named.exists() and "journal:Tracer" in named.read_text()) == traced, path
-        archived = bool(connections.linked(path.parent.name, "archivedIn"))
-        assert (named.exists() and f'"file://{connections.ARCHIVE}"' in named.read_text()) == archived, path
+        kept = bool(connections.linked(path.parent.name, "archivedIn"))
+        assert (named.exists() and f'"file://{connections.ARCHIVE}"' in named.read_text()) == kept, path
         assert "OTLP_ENDPOINT" not in text and "--journal" not in text, path
         # nor does any say how an agent's journal is kept or where it is served: the role says, and the endpoint
         # it names is in the derived deployment at the url the installation allocated.
@@ -844,7 +846,7 @@ def test_history_is_served_by_one_store_and_metrics_by_one_or_by_none(tmp_path, 
     """The installation ties a store to a purpose by `onboarding:serves` (#826). History is served
     by exactly one and kept for ever, and served by none it is refused, since every agent writes it.
     Metrics are optional (amended): served by none, a world that does not ask is told of history
-    alone, and one that says it is `onboarding:monitored` is refused — by `purposes`, which every
+    alone, and one an agent of which plays a meter is refused — by `purposes`, which every
     tool asks, so the compose file refuses it too."""
     from onboarding.series import HISTORY, METRICS, PURPOSES
     from onboarding import compose, installation
@@ -900,14 +902,16 @@ def test_what_the_installation_states_is_held_to_its_requirements(tmp_path, monk
         installation.view()
 
 
-def test_a_world_is_monitored_only_where_its_own_deployment_says_so(tmp_path, monkeypatch):
-    """Opt-in, one statement: the terrace says it and is monitored; take the statement out and it is
-    not, whatever the installation serves."""
+def test_a_world_is_monitored_only_where_an_agent_of_it_plays_a_meter(tmp_path, monkeypatch):
+    """Opt-in, one role: the terrace's agent plays a meter, so the world is monitored; take the role out and it
+    is not, whatever the installation serves."""
     from onboarding.series import HISTORY, METRICS
     from onboarding import installation
 
     assert installation.purposes("terrace") == (HISTORY, METRICS)
-    _installed(tmp_path, monkeypatch, {("terrace", "deployment.ttl"): lambda text: text.replace("<> onboarding:monitored true .", "")})
+    played = ":terrace_agent orexis:plays [ a metrics:Meter ; metrics:writtenTo :series ] ."
+    assert played in (REPO_ROOT / "world/terrace/beliefs/terrace.self.ttl").read_text(), "the role moved"
+    _installed(tmp_path, monkeypatch, {("terrace", "beliefs/terrace.self.ttl"): lambda text: text.replace(played, "")})
     assert not installation.monitored("terrace") and installation.purposes("terrace") == (HISTORY,)
 
 
@@ -1259,7 +1263,7 @@ def test_an_agents_image_holds_the_packages_it_loads_and_those_they_import_and_w
     assert {"sensing", "transport/mqtt", "translation", "belief"} <= set(terrace.packages)
     hanoi = compose.image_of("hanoi", "hanoi", series=False)
     assert hanoi.packages == ("belief", "journal", "planning"), "planning's crate depends on belief's; a recorder's"
-    assert terrace.features() == ("belief", "http", "journal", "mqtt", "prediction", "sensing", "speech", "telegram",
+    assert terrace.features() == ("belief", "http", "journal", "metrics", "mqtt", "prediction", "sensing", "speech", "telegram",
                                   "translation")
 
 
@@ -1394,7 +1398,7 @@ def test_a_world_with_no_bus_is_onboarded_without_one(tmp_path, monkeypatch, cap
     assert set(composed["services"]) == {f"agent-{a}" for a in agents}, "a service that is not an agent"
     assert set(composed["volumes"]) == {f"orexis-{world}-{a}{kept}" for a in agents for kept in ("", "-journal")}
     for name, service in composed["services"].items():
-        assert not [k for k in service["environment"] if k.startswith("MQTT_")], name
+        assert not [k for k in (service.get("environment") or {}) if k.startswith("MQTT_")], name
         agent = name.removeprefix("agent-")
         assert service["env_file"] == [f"./secrets/{agent}/influx-history.env"], name
         assert not [v for v in service["volumes"] if "/app/secrets/" in v], name

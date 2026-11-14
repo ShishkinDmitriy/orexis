@@ -22,7 +22,7 @@
 #  One store serves both purposes, and `infra/compose.yaml` runs one, so a second store is refused.
 #  An agent is told a store per purpose, under the purpose's keys. History served by none is refused
 #  too. Metrics served by none is an installation that monitors no world: take `onboarding:Metrics`
-#  off this line and every world saying it is `onboarding:monitored` is refused at onboarding. What
+#  off this line and every world an agent of which plays a meter is refused at onboarding. What
 #  this document must state is its own requirement, `requirements.ttl` beside it, judged as it is
 #  read, and every tool reads it through that judgment.
 :series a onboarding:SeriesStore ;

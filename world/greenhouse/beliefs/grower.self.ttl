@@ -1,3 +1,4 @@
+@prefix metrics: <http://example.org/orexis/metrics#> .
 @prefix : <http://example.org/orexis/world/greenhouse#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix journal: <http://example.org/orexis/journal#> .
@@ -18,7 +19,7 @@
 :grower a orexis:Self ;
     orexis:plays [ a planning:Planner ] ,
                  [ a execution:Executor ] ,
-                 [ a sensing:Observer ; sensing:sensor :moisture_probe , :thermometer ] ,
+                 [ a sensing:Observer ; sensing:archivedIn :series ; sensing:sensor :moisture_probe , :thermometer ] ,
                  [ a prediction:Predictor ] .
 
 #  IT KEEPS A JOURNAL of what happened to it, so it is a recorder (knowledge/domain/journal/recorder.md): the
@@ -28,3 +29,7 @@
     journal:tracedBy :tracer ;
     journal:archivedIn :grower_archive ;
     journal:servedAt :grower_endpoint ] .
+
+#  IT MEASURES HOW IT IS DOING, so it is a meter (knowledge/domain/metrics/meter.md): what its packages' events
+#  report is tallied and written once a window, for whoever administers it. Without the role nothing is tallied.
+:grower orexis:plays [ a metrics:Meter ; metrics:writtenTo :series ] .

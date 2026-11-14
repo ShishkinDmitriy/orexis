@@ -104,7 +104,7 @@ _TYPE = ox.NamedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 #  broker's credentials, its ACL, the agents' certificates and the broker in the compose file all
 #  serve one, and a world with none — a puzzle, a courier's map — has nothing for them to serve.
 #  History has no premise, since every agent writes it; metrics' is the world's deployment saying
-#  `onboarding:monitored`, which `installation.purposes` asks.
+#  whether an agent of the world plays a meter, which `installation.purposes` asks.
 BUS = "bus"
 PREMISES = {BUS: f"ASK {{ ?broker a <{MQTT4SSN}Broker> }}"}
 
@@ -135,6 +135,27 @@ def world(here: Path) -> ox.Store:
             put_document(store, doc, graphs=graphs)
     close_catalogue(store)
     return store
+
+
+#  WHAT A ROLE AN AGENT PLAYS IS LINKED TO, read off each of its own documents alone: the service a role names by a
+#  link of its package. A self graph is where an agent's roles are stated, so no world is booted to ask.
+_LINKED_Q = """SELECT DISTINCT ?me ?service WHERE {
+  ?me a <http://example.org/orexis#Self> ; <http://example.org/orexis#plays> ?role . ?role <$link> ?service . FILTER(isIRI(?service)) }"""
+
+
+def linked(here: Path, link: str) -> dict[str, str]:
+    """{service: agent} — every service a role some agent of the world in `here` plays names by the property
+    `link`, with the agent whose role names it, sorted by service."""
+    from documents.world import BELIEFS
+
+    found: dict[str, str] = {}
+    beliefs = Path(here) / BELIEFS
+    for path in sorted(p for p in beliefs.glob("*") if p.is_file() and p.suffix in DOCUMENTS) if beliefs.is_dir() else []:
+        document = ox.Store()
+        document.load(path.read_bytes(), ox.RdfFormat.TRIG, base_iri=path.resolve().as_uri())
+        for row in document.query(_LINKED_Q.replace("$link", link), use_default_graph_as_union=True):
+            found[row["service"].value] = row["me"].value
+    return {service: found[service] for service in sorted(found)}
 
 
 def premises(here: Path) -> frozenset[str]:

@@ -26,7 +26,7 @@ measurement names, which are a property's local name in history and a metric's i
 could not collide once they were in two buckets.
 
 **Metrics are minted only where the world is monitored** (`installation.purposes`): its own
-deployment graph says `onboarding:monitored true`. A world that stops saying it has its agents'
+agents' self graphs say one of them plays a meter (`metrics:Meter`). A world with none any more has its agents'
 metrics grants revoked and their credential files removed on the next run, since a grant nobody is
 told of is a grant nobody holds on purpose; the bucket is left for its retention to empty.
 

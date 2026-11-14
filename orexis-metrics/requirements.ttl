@@ -1,0 +1,21 @@
+@prefix : <http://example.org/orexis/metrics#> .
+@prefix metrics: <http://example.org/orexis/metrics#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+
+<> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A WORLD MUST STATE OF the metrics' WORDS, held by onboarding alone before anything is granted
+#  (knowledge/domain/onboarding/requirement.md, #838). No agent loads this graph: its kind is
+#  onboarding's, and the boot passes over it as it passes over a world's hardware.
+
+#  A METER'S WINDOWS ARE WRITTEN TO ONE STORE, NAMED: a meter naming none would tally and write nowhere, in silence,
+#  and no credential would be minted for it.
+
+[] a sh:NodeShape ;
+    sh:targetClass :Meter ;
+    sh:property [ sh:path :writtenTo ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;
+                  sh:message "a meter is written to one series store, named" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "a meter that is written to no series store: it would tally and write nowhere" ;
+        sh:select """SELECT $this WHERE { FILTER NOT EXISTS { $this metrics:writtenTo ?store } }""" ] .

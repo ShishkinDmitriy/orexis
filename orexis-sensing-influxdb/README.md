@@ -3,7 +3,9 @@
 The housekeeper of `orexis-sensing/`: it alone writes a reading to the agent's series store, and has sensing
 forget the past readings the store took.
 
-- **Loaded for:** no role of its own. It is started wherever the binary holds sensing, and has a task only where the world's deployment names a store that serves history: it makes its own sink from that and the agent's history credential, where the agent is deployed.
+- **Loaded for:** `sensing:Observer`, where the role names a series store (`sensing:archivedIn`): it makes its own
+  sink from that store, as the world's deployment states it, and the agent's history credential, where the agent
+  is deployed. An observer whose role names none keeps its readings in its beliefs.
 - **Words:** none. It asks sensing for a reading's point (`past::point`) and has sensing remove (`past::forget`).
 
 ## What starts it

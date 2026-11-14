@@ -18,7 +18,7 @@ domains resolve, and the broker's address handed in as environment —
 the `schema:url`s the world asserts on its `mqtt4ssn:Broker` or the installation allocated it
 (`onboarding.mqtt.broker`), where the world has a bus. Where the series store answers is no environment: the
 world's derived deployment states it for each purpose the world's agents write (`installation.purposes`) — history
-always, metrics where the world is `onboarding:monitored` — and each package makes its own sink from it
+always, metrics where an agent of the world plays a meter — and each package makes its own sink from it
 (`onboarding.connections`); what is mounted here is the credential `orexis-influx` minted for each purpose, the
 agent's bucket and the token that opens only it. An unmonitored world's agents are minted no metrics credential. An agent that
 holds a device writes its command topic, which the ACL admits it and nobody else to — an agent

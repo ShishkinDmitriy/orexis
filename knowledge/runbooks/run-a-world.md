@@ -166,11 +166,11 @@ says what to write where, and how to ask the terrace how it is.
 
 # Monitor a world, or stop
 
-Metrics — how each agent is doing, a point a minute — are written only by a world whose own
-`deployment.ttl` says so ([deployment](/domain/onboarding/deployment.md)):
+Metrics — how an agent is doing, a point a minute — are written only by an agent whose self graph says it plays
+a [meter](/domain/metrics/meter.md):
 
 ```turtle
-<> onboarding:monitored true .
+:grower orexis:plays [ a metrics:Meter ; metrics:writtenTo :series ] .
 ```
 
 Then re-run the tools that read it, and restart the agents so they are told the metrics store:

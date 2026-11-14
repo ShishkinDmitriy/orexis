@@ -4,17 +4,12 @@
 #  (knowledge/domain/onboarding/deployment.md).
 
 @prefix : <http://example.org/orexis/world/courier#> .
-@prefix installation: <http://example.org/orexis/installation#> .
 @prefix journal: <http://example.org/orexis/journal#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix schema: <https://schema.org/> .
 
 <> a orexis:DeploymentGraph .    # this document is one graph, and this is what it is
 
-installation:series orexis:organisation "orexis" ;
-    orexis:serves orexis:History ;
-    a orexis:SeriesStore ;
-    schema:url "http://localhost:8086" .
 :courier_archive a journal:Archive ;
     schema:url "file:///app/journal" .
 :courier_endpoint a journal:Endpoint ;

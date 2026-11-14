@@ -155,9 +155,9 @@ fn the_mover_loads_planning_and_its_journal_and_nothing_else() {
     let store = store();
     assert_eq!(
         boot(&store),
-        ["journal", "journal-oxigraph", "metrics", "planning"],
-        "a recorder with what archives its journal, what watches every agent, and a planner: the world names no \
-         tracer, so what ships the journal's activities ended its start"
+        ["journal", "journal-oxigraph", "planning"],
+        "a recorder with what archives its journal, and a planner: its role names no tracer, so what ships the \
+         journal's activities ended its start, and it plays no meter, so nothing is tallied"
     );
     let absent = [
         "orexis-execution/ontology.ttl",
@@ -251,7 +251,7 @@ async fn a_lived_in_volume_keeps_the_plan_and_does_not_search_again() {
 async fn metered(interval_s: f64) -> Vec<Vec<orexis::events::Point>> {
     use orexis::events::Point;
     let store = store();
-    let loaded = boot(&store);
+    let loaded = common::metered(boot(&store));
     let writes: std::sync::Arc<std::sync::Mutex<Vec<Vec<Point>>>> = Default::default();
     let kept = writes.clone();
     let sink = orexis::series::Sink::new(

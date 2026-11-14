@@ -46,8 +46,8 @@ tracer refuses a world whose role names one, and otherwise refuses nothing.
 names, with its `schema:url`, typed in the words of the package that uses it. Today that is the
 [tracer](/domain/journal/tracer.md) a recorder's role is traced by, the
 [archive](/domain/journal/archive.md) it is archived in, the
-[endpoint](/domain/journal/endpoint.md) its journal is served at, and, named by no role since every agent writes
-it, the [series](/domain/kernel/series.md) store for each purpose the world's agents write. The boot puts it in, no reader of the mind is handed
+[endpoint](/domain/journal/endpoint.md) its journal is served at, and the
+[series](/domain/kernel/series.md) store an observer's readings are archived in or a meter's windows are written to. The boot puts it in, no reader of the mind is handed
 it, and a package asks it as it starts and ends its start where its role names no service of its kind. It names
 nothing of another world. The services still told as environment move there one by one
 ([the-world-says-what-it-is-connected-to](/decisions/the-world-says-what-it-is-connected-to.md)).
@@ -55,14 +55,14 @@ nothing of another world. The services still told as environment move there one 
 What an agent's [journal](/domain/kernel/journal.md) counts as an incident beside its vocabulary is no deployment
 fact: the [recorder](/domain/journal/recorder.md)'s role says it.
 
-A world is **monitored** where its own deployment graph says so of itself, in one statement:
-`<> onboarding:monitored true`. Its agents then write their metrics — the admins' instrumentation
+A world is **monitored** where an agent of it plays a [meter](/domain/metrics/meter.md), in its self graph. Its
+meters then write their metrics — the admins' instrumentation
 of how each is doing ([series](/domain/kernel/series.md)) — each to a metrics bucket of its own,
-and the world gets a health dashboard per package that reports. A world that says nothing is not monitored: metrics are
+and the world gets a health dashboard per package that reports. A world with no meter is not monitored: metrics are
 opted into, world by world, since they are for whoever runs the host and a world is not the
 host's. The installation may serve metrics from no store, and then monitors no world; a world
-saying it is monitored there is refused at onboarding, before anything is granted. The greenhouse
-and the terrace say it.
+with a meter there is refused at onboarding, before anything is granted. The greenhouse's grower
+and the terrace's agent play one.
 
 **Asserted wins, derived completes.** A world may assert where its broker listens, in a
 `deployment.ttl` of its own, and is told exactly that — the terrace does, since a board is flashed
@@ -101,8 +101,7 @@ beside the installation's words — `onboarding:SeriesStore`, `onboarding:Series
 `onboarding:organisation`, `onboarding:image`, `onboarding:allocatesFrom`, `onboarding:allocatesFor`,
 `onboarding:journal`, `onboarding:serves`,
 `onboarding:retentionDays` and `onboarding:intervalSeconds`, the two `onboarding:SeriesPurpose`s,
-and `onboarding:monitored`, which a world says of its own deployment graph and the loader keeps in
-the catalogue beside the graph's kind — so an agent's boot passes over a graph of it. The terrace,
+— so an agent's boot passes over a graph of it. The terrace,
 the greenhouse and the allotment assert their brokers' urls; the sensing world asserts none and is
 allocated the 1884 and 8884 it once asserted.
 

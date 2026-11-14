@@ -3,9 +3,10 @@
 The admins' instrumentation: every event tallied in memory and written to the metrics bucket once a window.
 Code, not model: no agent believes a metric.
 
-- **Loaded for:** no role. It has a task only where the world's deployment names a store that serves metrics: it
-  makes its own sink from that and the agent's metrics credential, where the agent is deployed.
-- **Words:** none. It reads an event only through its marks (`orexis::events`).
+- **Loaded for:** `metrics:Meter`. It makes its own sink from the store the role names (`metrics:writtenTo`), as
+  the world's deployment states it, and the agent's metrics credential, where the agent is deployed.
+- **Words:** `ontology.ttl` (`metrics:`). **Dictionary:** `knowledge/domain/metrics/meter.md`.
+- It reads an event only through its marks (`orexis::events`), so it knows no package's words.
 
 ## What starts it
 

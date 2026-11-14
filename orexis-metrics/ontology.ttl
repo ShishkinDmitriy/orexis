@@ -1,0 +1,22 @@
+@prefix orexis: <http://example.org/orexis#> .
+@prefix metrics: <http://example.org/orexis/metrics#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix : <http://example.org/orexis/metrics#> .
+
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  OREXIS METRICS.
+#  THE METRICS PACKAGE'S OWN WORDS: the role it is loaded for, and the link from that role to where the metrics are
+#  written. A metric itself is no word: metrics are the admins' instrumentation, code and not model, and no agent
+#  believes one.
+
+#  THE ROLE THIS PACKAGE SERVES (knowledge/domain/metrics/meter.md): an agent declared a meter tallies what its
+#  packages' events report and writes it once a window. An agent declared none tallies nothing.
+
+metrics:Meter a owl:Class ; rdfs:subClassOf orexis:Role ; rdfs:label "Meter" ;
+    rdfs:comment "An agent that measures how it is doing, for whoever administers it: every event its packages say that reports is tallied in a window of real time and written once a window. Declared, never derived; it changes nothing the agent plans or does." .
+
+metrics:writtenTo a owl:ObjectProperty ; rdfs:label "written to" ;
+    rdfs:domain metrics:Meter ; rdfs:range orexis:SeriesStore ;
+    rdfs:comment "The series store a meter's windows are written to, said of the role in the agent's self graph. The role names it; the world's deployment graph (`orexis:DeploymentGraph`) says where it answers, that it serves `orexis:Metrics`, and how long a window is." .

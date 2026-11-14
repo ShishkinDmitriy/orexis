@@ -198,23 +198,25 @@ impl Metrics {
     }
 }
 
-inventory::submit! { Package { name: "metrics", documents: &[], start } }
+inventory::submit! { Package { name: "metrics", documents: orexis::documents!("ontology.ttl"), start } }
 
-/// METRICS' START: where it is handed a window it tallies what it hears on the watch from now on, and its task waits
-/// for the run's end and writes the last window.
-/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
-/// joined, makes its core.
+/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
+const ROLE: &str = "http://example.org/orexis/metrics#Meter";
+
+/// ITS START, which every package this binary holds is given: it joins where the self plays a meter, and joined,
+/// makes its core.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        //  NO ROLE: the admins' instrumentation runs for every agent, where the deployment hands it a sink.
-        handed.joins(|_| Ok(true)).await?;
+        if !handed.plays(&[ROLE]).await? {
+            return Ok(None);
+        }
         make(&handed)
     })
 }
 
 fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
     //  HANDED A WINDOW, by a test that reads the points, it tallies into that; deployed and handed none, it makes
-    //  its own where the world names a store that serves metrics, its length the world's word or sixty seconds; and
+    //  its own where the world says where the store its role names answers, its length the world's word or sixty seconds; and
     //  otherwise nothing is tallied.
     let window = match handed.outside.take::<Window>() {
         Some(window) => window,

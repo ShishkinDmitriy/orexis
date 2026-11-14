@@ -227,9 +227,10 @@ fn the_journal_package_makes_its_own_journal_where_the_agent_is_deployed_and_non
     assert_eq!(kept(false), None, "a check keeps no journal");
 }
 
-/// WHERE A SERIES IS WRITTEN IS THE WORLD'S TO SAY, for each purpose its agents write: the terrace is monitored, so
-/// its deployment names the store for history and for metrics, with the metrics' window; Hanoi is not, so it names
-/// one for history alone, and its metrics package, handed nothing, would make no sink.
+/// WHERE A SERIES IS WRITTEN IS THE WORLD'S TO SAY, of each store a role names: the terrace's agent plays an observer
+/// whose readings are archived in one and a meter whose windows are written to it, so the deployment states the store
+/// for history and for metrics, with the metrics' window; Hanoi's agent plays neither, so it states none, and neither
+/// what archives readings nor the metrics joins it.
 #[test]
 fn the_world_names_the_series_store_for_each_purpose_its_agents_write() {
     let now = oxsdatatypes::DateTime::now();
@@ -248,7 +249,7 @@ fn the_world_names_the_series_store_for_each_purpose_its_agents_write() {
     };
     assert_eq!(served("terrace", "terrace", orexis::series::HISTORY), at(None));
     assert_eq!(served("terrace", "terrace", orexis::series::METRICS), at(Some(60.0)));
-    assert_eq!(served("hanoi", "hanoi", orexis::series::HISTORY), at(None));
+    assert_eq!(served("hanoi", "hanoi", orexis::series::HISTORY), None);
     assert_eq!(served("hanoi", "hanoi", orexis::series::METRICS), None);
 
     //  AND A SINK IS MADE WHERE THE WORLD NAMES THE STORE AND THE AGENT'S OWN CREDENTIAL OPENS IT: each purpose by its

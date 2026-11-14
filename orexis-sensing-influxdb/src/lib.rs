@@ -88,13 +88,19 @@ pub fn archive(store: &Store, sink: &Sink, shipped: &mut Shipped) -> Result<usiz
 
 inventory::submit! { Package { name: "sensing-influxdb", documents: &[], start } }
 
-/// THE ARCHIVER'S START: where it is handed a series store, its task; and none otherwise.
-/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
-/// joined, makes its core.
+const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#> ";
+const ARCHIVED_IN: &str = "?role sensing:archivedIn ?service . ?service a orexis:SeriesStore .";
+
+/// ITS START, which every package this binary holds is given: it keeps house for sensing, so it joins where sensing
+/// did AND THE OBSERVER'S ROLE NAMES A SERIES STORE the world says where to reach (`sensing:archivedIn`), and where
+/// the role names none its start ends there and the readings stay in the beliefs. It needs nothing of sensing's
+/// start.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        //  IT KEEPS HOUSE FOR SENSING, so it runs where sensing does. It needs nothing of sensing's start.
-        if !handed.beside("sensing").await? {
+        let archived = |handed: &Handed| {
+            Ok(handed.joined("sensing") && orexis::boot::connected(&handed.store, WORDS, ARCHIVED_IN)?.is_some())
+        };
+        if !handed.joins(archived).await? {
             return Ok(None);
         }
         make(&handed)
@@ -103,7 +109,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
 
 fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
     //  HANDED A SINK, by a test that reads the series, it archives into that; deployed and handed none, it makes its
-    //  own where the world names a store that serves history; and otherwise the readings stay in the beliefs.
+    //  own where the world says where the store its role names answers; and otherwise the readings stay in the beliefs.
     let archives = match handed.outside.take::<Archives>() {
         Some(archives) => archives,
         None if handed.outside.has::<orexis::task::Deployed>() => {

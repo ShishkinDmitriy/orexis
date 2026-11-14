@@ -243,7 +243,15 @@ async fn the_last_window_is_written_as_the_process_stops() {
     );
     let mut wiring = orexis_agent::Wiring::default();
     wiring.watching.metrics = Some(orexis_metrics::Window::new(sink, 3600.0, Some("tower"), Some("mover")));
-    let running = orexis_agent::start(&store, "mover", common::clock(now()), &loaded, None, wiring).unwrap();
+    let running = orexis_agent::start(
+        &store,
+        "mover",
+        common::clock(now()),
+        &common::metered(loaded),
+        None,
+        wiring,
+    )
+    .unwrap();
     common::settled(&running).await;
     running.stop().await;
     let by: BTreeMap<String, orexis::events::Point> = written

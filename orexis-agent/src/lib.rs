@@ -28,6 +28,7 @@ use orexis_journal as _;
 use orexis_journal_otlp as _;
 #[cfg(feature = "journal")]
 use orexis_journal_oxigraph as _;
+#[cfg(feature = "metrics")]
 use orexis_metrics as _;
 #[cfg(feature = "planning")]
 use orexis_planning as _;
@@ -182,6 +183,9 @@ pub struct Watching {
     pub history: Option<Sink>,
     /// How often the readings are archived there, in the agent's seconds: none, and the archiver's own stretch.
     pub archive_every_s: Option<f64>,
+    /// The window a meter's tallies are written in, handed by a test that reads the points: none, and a deployed
+    /// agent's package makes its own where its role names a store.
+    #[cfg(feature = "metrics")]
     pub metrics: Option<orexis_metrics::Window>,
 }
 
@@ -240,7 +244,10 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
     outside.hand(Reads {
         journal: None,
         history: watching.history.as_ref().map(Sink::reader),
+        #[cfg(feature = "metrics")]
         metrics: watching.metrics.as_ref().map(|w| w.sink.reader()),
+        #[cfg(not(feature = "metrics"))]
+        metrics: None,
     });
     //  AND WHAT IT KEEPS FOR GOOD, taken to the archive a test hands.
     #[cfg(feature = "journal")]
@@ -268,6 +275,7 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
     outside.hand(orexis_journal::Keeps {
         journal: watching.journal,
     });
+    #[cfg(feature = "metrics")]
     if let Some(window) = watching.metrics {
         outside.hand(window);
     }
