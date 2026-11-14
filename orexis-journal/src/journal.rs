@@ -82,6 +82,8 @@ pub struct Journal {
     pub incident_level: log::Level,
     /// The classes the deployment counts as incidents besides the vocabulary.
     pub incidents: BTreeSet<String>,
+    /// Where what this journal forgot is: its archive's store, said once by what archives it.
+    archive: std::sync::OnceLock<Engine>,
 }
 
 /// A log level as the Python journal names it.
@@ -118,7 +120,18 @@ impl Journal {
             incident: tokio::sync::Notify::new(),
             incident_level: log::Level::Warn,
             incidents: BTreeSet::new(),
+            archive: std::sync::OnceLock::new(),
         })
+    }
+
+    /// What archives this journal says where it takes what lasts: readers of the past ask there from now on.
+    pub fn archived_in(&self, archive: Engine) {
+        let _ = self.archive.set(archive);
+    }
+
+    /// WHERE A READER OF THE PAST ASKS: the archive where one was said, and the journal itself where none was.
+    pub fn past(&self) -> Engine {
+        self.archive.get().cloned().unwrap_or_else(|| self.store.clone())
     }
 
     /// The instant the journal stands at, as it stamps an entry given none.
@@ -376,10 +389,15 @@ pub fn answer(store: &Engine, text: &str) -> Result<(&'static str, Vec<u8>), Str
     }
 }
 
+/// The store a path of the endpoint answers from, asked as each request arrives: which it is may change after the
+/// endpoint is up, as an archive is opened.
+#[cfg(feature = "serve")]
+pub type Answers = Box<dyn Fn() -> Engine + Send>;
+
 /// Serve `stores` read-only over the SPARQL protocol, each at `http://<host>:<port><path>` — `GET ?query=`, or `POST`
 /// of `application/sparql-query` or a form — on a thread of its own; the port it listens on.
 #[cfg(feature = "serve")]
-pub fn serve(stores: Vec<(&'static str, Engine)>, host: &str, port: u16) -> Result<u16, Error> {
+pub fn serve(stores: Vec<(&'static str, Answers)>, host: &str, port: u16) -> Result<u16, Error> {
     let server = tiny_http::Server::http((host, port)).map_err(engine)?;
     let bound = server.server_addr().to_ip().map_or(port, |a| a.port());
     std::thread::Builder::new()
@@ -417,7 +435,7 @@ pub fn serve(stores: Vec<(&'static str, Engine)>, host: &str, port: u16) -> Resu
                     None => (404, "text/plain", b"the journal answers at /sparql\n".to_vec()),
                     Some((_, store)) => match text.filter(|t| !t.is_empty()) {
                         None => (400, "text/plain", b"a query is asked as ?query= or a body\n".to_vec()),
-                        Some(text) => match answer(store, &text) {
+                        Some(text) => match answer(&store(), &text) {
                             Ok((kind, body)) => (200, kind, body),
                             Err(e) => (400, "text/plain", format!("{e}\n").into_bytes()),
                         },

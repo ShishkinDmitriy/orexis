@@ -706,6 +706,14 @@ impl Outside {
         held.insert(TypeId::of::<T>(), Box::new(thing));
     }
 
+    /// Whether anything of type `T` is handed, taking nothing.
+    pub fn has<T: Any + Send>(&self) -> bool {
+        self.0
+            .lock()
+            .expect("an outside nobody poisoned")
+            .contains_key(&TypeId::of::<T>())
+    }
+
     /// Take what was handed of type `T`, where anything was: it is the taker's from now on.
     pub fn take<T: Any + Send>(&self) -> Option<T> {
         let mut held = self.0.lock().expect("an outside nobody poisoned");
@@ -714,6 +722,18 @@ impl Outside {
             .map(|thing| *thing)
     }
 }
+
+/// THE AGENT IS DEPLOYED: handed outside by whoever runs it for good, and by no check and no test. Where it is
+/// handed, a package makes for itself what it was not handed, from what the world says: its journal, its archive.
+/// Where it is not, a package handed nothing has nothing, so a check reaches no disk and no port.
+pub struct Deployed;
+
+/// What keeps a line of the process's log: its logger, its level and its message.
+pub type Remark = Box<dyn Fn(&str, log::Level, &str) + Send + Sync>;
+
+/// THE PROCESS'S LOG, for whoever keeps it: handed outside by whoever owns the log, and called once by the package
+/// that keeps it, with how each line is kept. What was said before is kept first.
+pub struct Said(pub Box<dyn FnOnce(Remark) + Send>);
 
 /// WHAT THE AGENT KEEPS OF WHAT HAPPENED, as a chat reads it: its journal where it lies, and its two series. Handed
 /// outside by whoever runs the agent, where it keeps any.
@@ -752,6 +772,8 @@ struct Life {
     started: BTreeMap<String, bool>,
     begun: Option<crate::boot::Begun>,
     moved: u64,
+    /// What packages asked to be done once every task has ended (`Handed::finally`), in the order asked.
+    ending: Vec<Box<dyn FnOnce() + Send>>,
 }
 
 /// A PACKAGE STARTING, or STARTED: the two events of a package's lifecycle, said by the kernel to whoever watches
@@ -802,6 +824,12 @@ impl Event for Lifecycle {
 }
 
 impl Handed {
+    /// DO `last` ONCE EVERY TASK HAS ENDED, as the run stops: what a package owes after the others' last word, as
+    /// what archives the journal takes what they said while stopping.
+    pub fn finally(&self, last: impl FnOnce() + Send + 'static) {
+        self.life().ending.push(Box::new(last));
+    }
+
     /// A turn at the instant the clock reads.
     pub fn turn(&self) -> Turn<'_> {
         Turn {
@@ -1264,6 +1292,11 @@ impl Running {
         let _ = self.stop.send(true);
         for join in self.joins {
             let _ = join.await;
+        }
+        //  AND WHAT WAS ASKED FOR ONCE THEY HAVE ALL ENDED, in the order asked.
+        let ending = std::mem::take(&mut self.handed.life().ending);
+        for last in ending {
+            last();
         }
     }
 }

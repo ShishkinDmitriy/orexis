@@ -164,21 +164,17 @@ pub fn built(package: &str) -> bool {
     inventory::iter::<orexis::task::Package>().any(|p| p.name == package)
 }
 
-/// The package an agent that plays a recorder loads: what keeps its journal.
-pub const JOURNAL: &str = "journal";
-/// The package that joins where the recorder's role names an archive: what takes the journal's lasting entries there.
-pub const ARCHIVE: &str = "journal-oxigraph";
-
 /// WHAT WATCHES THE AGENT, where the deployment keeps any of it: the journal, the series store its readings are
 /// archived to, the metrics window and the tracer. Each is used by the package it is for, where the agent loads it:
 /// the journal and the tracer where it plays a recorder, the metrics part where a metrics window is.
 #[derive(Default)]
 pub struct Watching {
-    /// The journal a recorder keeps: handed by whoever runs the agent, and kept by nobody where it plays none.
+    /// The journal a recorder keeps, handed by a test that reads it: none, and a deployed agent's package makes its
+    /// own, and any other keeps none.
     #[cfg(feature = "journal")]
     pub journal: Option<Arc<orexis_journal::Journal>>,
-    /// The archive what the journal keeps for good is taken to, and how often, in the agent's seconds: none, and it
-    /// stays in the journal.
+    /// The archive what the journal keeps for good is taken to, and how often, in the agent's seconds, handed by a
+    /// test that reads it: none, and a deployed agent's package opens its own where its role names one.
     #[cfg(feature = "journal")]
     pub archive: Option<(Arc<orexis_journal_oxigraph::Archive>, f64)>,
     /// The series store sensing's readings are archived to, and a chat reads the past from: none, and every reading
@@ -195,6 +191,11 @@ pub struct Watching {
 #[derive(Default)]
 pub struct Wiring {
     pub watching: Watching,
+    /// THE AGENT IS DEPLOYED, the binary's run alone: a package makes for itself what it is not handed here
+    /// (`orexis::task::Deployed`). A check and a test leave it unsaid.
+    pub deployed: bool,
+    /// The process's log, for the package that keeps it (`orexis::task::Said`).
+    pub said: Option<orexis::task::Said>,
     #[cfg(feature = "http")]
     pub http: Option<orexis_transport_http::driver::Http>,
     #[cfg(feature = "telegram")]
@@ -216,6 +217,8 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
     let outside = Outside::default();
     let Wiring {
         watching,
+        deployed,
+        said,
         mqtt,
         #[cfg(feature = "http")]
         http,
@@ -226,21 +229,20 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
         #[cfg(feature = "translation")]
         model,
     } = wiring;
-    //  WHAT A CHAT READS OF WHAT HAPPENED, where it reads it: the journal's archive where the agent keeps one and the
-    //  journal itself where it keeps none, and the series as read.
-    #[cfg(feature = "journal")]
-    let journal = match (&watching.archive, &watching.journal) {
-        (Some((archive, _)), Some(_)) => Some(archive.store.clone()),
-        (_, journal) => journal.as_ref().map(|j| j.store.clone()),
-    };
-    #[cfg(not(feature = "journal"))]
-    let journal = None;
+    if deployed {
+        outside.hand(orexis::task::Deployed);
+    }
+    if let Some(said) = said {
+        outside.hand(said);
+    }
+    //  WHAT A CHAT READS OF WHAT HAPPENED: the two series as read, and the journal once what keeps it has started
+    //  and said where it lies.
     outside.hand(Reads {
-        journal,
+        journal: None,
         history: watching.history.as_ref().map(Sink::reader),
         metrics: watching.metrics.as_ref().map(|w| w.sink.reader()),
     });
-    //  AND WHAT IT KEEPS FOR GOOD, taken to its archive where the deployment keeps one.
+    //  AND WHAT IT KEEPS FOR GOOD, taken to the archive a test hands.
     #[cfg(feature = "journal")]
     if let (Some((archive, every_s)), Some(journal)) = (watching.archive, &watching.journal) {
         outside.hand(orexis_journal_oxigraph::Archives {
@@ -261,7 +263,7 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
             every_s: watching.archive_every_s.unwrap_or(orexis_sensing_influxdb::INTERVAL_S),
         });
     }
-    //  AND THE JOURNAL ITSELF, kept where the deployment keeps one: every event as it is said, every activity as it ends.
+    //  AND THE JOURNAL ITSELF, where a test hands one: every event as it is said, every activity as it ends.
     #[cfg(feature = "journal")]
     outside.hand(orexis_journal::Keeps {
         journal: watching.journal,

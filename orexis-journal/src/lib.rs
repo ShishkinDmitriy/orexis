@@ -22,7 +22,8 @@ pub mod journal;
 
 pub use journal::Journal;
 
-/// The journal to keep, handed outside by whoever runs the agent, where the deployment keeps one.
+/// The journal to keep, handed outside by a test that reads what it kept. A deployed agent is handed none and the
+/// package makes its own (`orexis::task::Deployed`).
 #[derive(Default)]
 pub struct Keeps {
     pub journal: Option<Arc<Journal>>,
@@ -33,8 +34,6 @@ pub struct Traced(pub Arc<Journal>);
 
 inventory::submit! { Package { name: "journal", documents: orexis::documents!("ontology.ttl"), start } }
 
-/// THE START: where it is handed a journal it hears the watch from now on, the events and the activities, and has
-/// no task.
 /// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
 const ROLE: &str = "http://example.org/orexis/journal#Recorder";
 
@@ -50,15 +49,64 @@ fn start(handed: Handed) -> orexis::task::Starting {
 }
 
 fn make(handed: &Handed) -> Result<Option<Task>, Error> {
-    if let Some(journal) = handed.outside.take::<Keeps>().and_then(|keeps| keeps.journal) {
-        events::History::new(
-            handed.events.watch(),
-            journal.clone(),
-            events::incidents(&handed.store)?,
-        );
-        activities::connect(handed.events.watch(), journal.clone());
-        //  AND HANDED ON to what ships its activities, which starts after it and makes itself.
-        handed.outside.hand(Traced(journal));
-    }
+    //  HANDED ONE, by a test that reads what it kept, it keeps that; deployed and handed none, it makes its own;
+    //  and otherwise it keeps none, so a check keeps nothing.
+    let journal = match handed.outside.take::<Keeps>().and_then(|keeps| keeps.journal) {
+        Some(journal) => journal,
+        None if handed.outside.has::<orexis::task::Deployed>() => own(handed)?,
+        None => return Ok(None),
+    };
+    events::History::new(
+        handed.events.watch(),
+        journal.clone(),
+        events::incidents(&handed.store)?,
+    );
+    activities::connect(handed.events.watch(), journal.clone());
+    //  WHAT A CHAT READS OF WHAT HAPPENED is this journal, until what archives it says otherwise.
+    let mut reads = handed.outside.take::<orexis::task::Reads>().unwrap_or_default();
+    reads.journal = Some(journal.store.clone());
+    handed.outside.hand(reads);
+    //  AND HANDED ON to its housekeepers, which start after it and make themselves.
+    handed.outside.hand(Traced(journal));
     Ok(None)
+}
+
+fn env(key: &str) -> Option<String> {
+    std::env::var(key).ok().filter(|v| !v.is_empty())
+}
+
+/// ITS OWN JOURNAL, where the agent is deployed: in memory, on the agent's clock, its window and what counts as an
+/// incident as the environment says; the process's log kept in it from here on, with what was said before; and
+/// served read-only on the loopback where the environment names a port (`JOURNAL_PORT`), the past at `/sparql` -
+/// the archive once what archives the journal has said where it is, the journal itself until then - and the
+/// journal at `/live/sparql`.
+fn own(handed: &Handed) -> Result<Arc<Journal>, Error> {
+    let mut journal = Journal::new(journal::window_s(&env), {
+        let clock = handed.clock.clone();
+        Arc::new(move || clock.now())
+    })?;
+    journal.incident_level = journal::incident_level(&env);
+    journal.incidents = journal::incidents(&env);
+    let journal = Arc::new(journal);
+    if let Some(orexis::task::Said(keep)) = handed.outside.take::<orexis::task::Said>() {
+        let into = journal.clone();
+        keep(Box::new(move |logger, level, message| {
+            let _ = into.remark(logger, level, message, None);
+        }));
+    }
+    #[cfg(feature = "serve")]
+    if let Some(port) = env("JOURNAL_PORT").and_then(|p| p.parse().ok()) {
+        let (past, live) = (journal.clone(), journal.store.clone());
+        if let Err(e) = journal::serve(
+            vec![
+                ("/sparql", Box::new(move || past.past())),
+                ("/live/sparql", Box::new(move || live.clone())),
+            ],
+            "127.0.0.1",
+            port,
+        ) {
+            log::warn!("{}: the journal cannot be served on {port}: {e}", handed.id);
+        }
+    }
+    Ok(journal)
 }

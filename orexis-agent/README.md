@@ -6,13 +6,13 @@ start whether the agent runs it, starts the task of each that joined, and runs u
 - **Each package is a Cargo feature**, so an agent's image holds only what it runs: the code and the documents
   of the packages built in, and of no other.
 - **Start order:** `journal`, `journal-oxigraph`, `journal-otlp`, `metrics`, `sensing-influxdb`, then the rest.
-- **It names no package's word.** It makes the connectors a deployment's environment describes (a broker session,
-  a series store, the journal's archive, the model's client) and hands them to the tasks.
+- **It names no package's word.** It makes the series stores a deployment's environment describes and hands them
+  to the tasks, says the agent is deployed, and hands the process's log to whichever package keeps it. It makes no
+  journal and no archive: those packages make their own.
 
 ## Triggering events and activities
 
-None. It hears no event and starts no activity. It serves the journal read-only on the host's loopback:
-`/sparql` answers from the archive and `/live/sparql` from the journal.
+None. It hears no event and starts no activity.
 
 ## Tests
 
