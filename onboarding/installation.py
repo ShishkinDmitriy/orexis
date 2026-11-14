@@ -11,11 +11,11 @@ under `infra/`, and rule 3 holds of it in the only way it can: nothing in it is 
 
 **History is served by one store, and metrics by one or by none.** Every agent writes its history,
 so a purpose served nowhere would be a sink every agent is told of and none has: refused. Metrics
-are the admins' instrumentation and optional at every level — a world is monitored only where its
-own deployment graph says `<> onboarding:monitored true`, and an installation serving metrics
+are the admins' instrumentation and optional at every level — a world is monitored only where an agent of
+it plays a meter, `metrics:Meter`, in its self graph, and an installation serving metrics
 nowhere monitors no world, refusing the one that asks. `purposes` is that answer, and every tool
-asks it: which purposes a world's agents are told a store for. How long a metrics window is,
-`onboarding:intervalSeconds` on the purpose, reaches each agent as its environment.
+asks it: which purposes a world's agents are told a store for. How long a metrics window is, is no
+word of the installation's: the meter's role says it (`metrics:windowS`).
 
 **Asserted wins, derived completes** (`onboarding.derived`). A world may assert its broker's urls
 in a deployment graph of its own, and an asserted url is what every tool is told. A broker no world
@@ -104,7 +104,6 @@ _AGENTS_Q = "SELECT ?a WHERE { ?a a orexis:Agent ; orexis:localId ?id } ORDER BY
 PURPOSE_OF = {HISTORY: ONBOARDING + "History", METRICS: ONBOARDING + "Metrics"}
 _SERVES_Q = f"SELECT ?s WHERE {{ ?s a <{ONBOARDING}SeriesStore> ; <{ONBOARDING}serves> <$purpose> }}"
 _RETENTION_Q = f"SELECT ?days WHERE {{ <$purpose> <{ONBOARDING}retentionDays> ?days }}"
-_INTERVAL_Q = f"SELECT ?s WHERE {{ <$purpose> <{ONBOARDING}intervalSeconds> ?s }}"
 _URLS_Q = f"SELECT ?s ?url WHERE {{ ?s <{_SCHEMA_URL}> ?url }}"
 
 #  A WORLD'S BROKER, as its society names it, and the urls its own documents assert on it — over
@@ -199,15 +198,15 @@ def series(purpose: str) -> tuple[str, str]:
     return found
 
 
-#  WHETHER A WORLD IS MONITORED: its deployment graph says so of itself, a row the loader keeps in
-#  the catalogue beside the graph's kind.
-_MONITORED_Q = f"""ASK {{ GRAPH $cat {{ ?g a <{ONBOARDING}DeploymentGraph> ; <{ONBOARDING}monitored> true }} }}"""
+#  WHETHER A WORLD IS MONITORED: an agent of it plays a meter whose role names where its metrics are written
+#  (`metrics:writtenTo`). The role is what has the agent tally anything, so it is what has onboarding mint a metrics
+#  bucket, tell of the store and draw the health dashboards; no statement of the world's deployment says it.
+WRITTEN_TO = "http://example.org/orexis/metrics#writtenTo"
 
 
 def monitored(world: str) -> bool:
-    """Whether `world`'s own deployment graph says it is monitored — absent is no."""
-    store = reading.world(world_dir(world))
-    return bool(answer(store, _MONITORED_Q, (), cat=Raw(f"<{catalogue_of(store)}>"))["boolean"])
+    """Whether an agent of `world` plays a meter — none is no."""
+    return bool(reading.linked(world_dir(world), WRITTEN_TO))
 
 
 def purposes(world: str) -> tuple[str, ...]:
@@ -218,17 +217,10 @@ def purposes(world: str) -> tuple[str, ...]:
     if not monitored(world):
         return (HISTORY,)
     if served(METRICS) is None:
-        raise SystemExit(f"world {world!r} says it is monitored (onboarding:monitored) and the installation serves "
+        raise SystemExit(f"world {world!r} has an agent that plays a meter (metrics:Meter), so it is monitored, and the installation serves "
                          f"{local(PURPOSE_OF[METRICS])} from no store — serve it from one in "
                          f"{_where(INSTALLATION)}, or stop monitoring the world")
     return HISTORY, METRICS
-
-
-def interval(purpose: str) -> float | None:
-    """How many seconds a window of `purpose`'s points is, `onboarding:intervalSeconds` on the
-    purpose — or None where the installation states none, and the agent keeps its own sixty."""
-    said = {float(r["s"]) for r in _asserted(_store(with_derivation=False), _INTERVAL_Q.replace("$purpose", PURPOSE_OF[purpose]))}
-    return next(iter(said), None)
 
 
 def retention(purpose: str) -> int | None:

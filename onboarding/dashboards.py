@@ -33,7 +33,7 @@ here — and draw `taken` and `landed` as events rather than a line, which is a 
 query shape this module does not build.
 
 **A DASHBOARD PER PACKAGE draws the agents' health** (`<package>.json`), for a world that is
-`onboarding:monitored` and for no other: what each package reports, as `reported.REPORTED` states it — the
+monitored, one an agent of which plays a meter, and for no other: what each package reports, as `reported.REPORTED` states it — the
 binary has no registry to ask, so an event added to a package's `events.rs` is drawn once it is added there. One for the runtime and one for each package some agent of the world loads that reports, each
 linked to the others by the tags they share; a ROW PER MEASUREMENT, in the order the table states
 its events, each panel described by the table's `about`; the AGENT is every dashboard's

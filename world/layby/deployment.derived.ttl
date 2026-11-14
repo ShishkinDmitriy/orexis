@@ -14,3 +14,7 @@
     schema:url "file:///app/journal" .
 :courier_a_endpoint a journal:Endpoint ;
     schema:url "http://localhost:7887" .
+:series orexis:organisation "orexis" ;
+    orexis:serves orexis:History ;
+    a orexis:SeriesStore ;
+    schema:url "http://localhost:8086" .

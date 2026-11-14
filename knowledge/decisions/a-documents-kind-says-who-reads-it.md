@@ -469,9 +469,8 @@ them all, hands each over. The selects are the ones §6's amendment measured, in
 the outcome coalesced, the cone counted by OPTIONAL rows.
 
 **Optional at every level.** An agent with no metrics sink computes nothing. A world is monitored
-only where its own deployment graph says `<> onboarding:monitored true` — one statement, said of
-the graph itself, since a world states no node for itself (the argument the tags made against a
-world IRI); an unmonitored world's agents get no metrics bucket or credential, no environment for
+only where an agent of it plays a meter (`metrics:Meter`, since 2026-11-14; until then its own deployment graph
+said `<> onboarding:monitored true`, one statement said of the graph itself); an unmonitored world's agents get no metrics bucket or credential, no environment for
 it, and no health dashboard, and a world that stops saying it has its grants revoked. An
 installation may serve metrics from no store, and then monitors no world; a world asking there is
 refused by `purposes`, which every onboarding tool asks, before anything is granted. The
@@ -486,8 +485,8 @@ and an admin's minute is neither. So the stamp #844 built — the pass's instant
 timeline, moved on by real seconds at the clock's pace — goes, and with it the reason for it, two
 events of one pass being two points: a window is one point per tag set by construction. Metrics now
 live in real time while history lives in the agent's; a simulated world's metrics are drawn when
-its process ran. The window's length is the installation's `onboarding:intervalSeconds`, told to
-each agent as `METRICS_INTERVAL_S`, sixty where nothing says.
+its process ran. The window's length was the installation's to state, and since
+2026-11-14 is the meter's role's (`metrics:windowS`), sixty seconds where it says nothing.
 
 **The want's name is on no point.** A name cannot be aggregated, and a tag of it breaks the store's
 index. The sovereign allowed it on a rare event, `unreachable` for one; it is not rare — an agent

@@ -61,8 +61,9 @@ see is sensing's logic, and what becomes of one done with is housekeeping. `orex
 answers whoever keeps house which readings it still reads and which are past, the point each is in the
 [series](/domain/kernel/series.md), and forgets a past one when asked.
 
-Where the agent is handed a series store, `orexis-sensing-influxdb/` asks, every `ARCHIVE_INTERVAL_S`
-of the agent's time, ten seconds where nothing says, and it alone writes a reading there. It writes
+Where the world names a series store for history, `orexis-sensing-influxdb/` asks, as often as the
+[observer](/domain/sensing/observer.md)'s role says (`sensing:archivedEveryS`) and every ten seconds
+of the agent's time where it says nothing, and it alone writes a reading there. It writes
 the point of each reading the store has not yet taken, the latest among them, so the series lags a
 reading by that stretch at most; it remembers what the store took, so each is written once, and again
 only where its point has changed since. A past reading it has sensing forget once the store holds it,

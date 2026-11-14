@@ -11,8 +11,8 @@ agent may import this.
 **Per purpose** (knowledge/domain/kernel/series.md). A series store is told to an agent for a
 purpose — history and metrics — in the store the installation says `onboarding:serves` it, so the
 credential file names its purpose, `secrets/<agent>/influx-<purpose>.env`, and says
-`INFLUX_<PURPOSE>_BUCKET` and `INFLUX_<PURPOSE>_TOKEN`; `orexis-compose` adds where the store is
-under the same purpose. The history bucket keeps the name the one bucket had, `<world>-<agent>`, so
+`INFLUX_<PURPOSE>_BUCKET` and `INFLUX_<PURPOSE>_TOKEN`; the world's derived deployment says where the
+store is, for the same purpose. The history bucket keeps the name the one bucket had, `<world>-<agent>`, so
 a history begun before purposes continues in it. A grant made before purposes — its authorization
 described without one, its file `influx-<agent>.env` — is replaced by the history grant and its
 file removed, since its token opens the same bucket and an orphaned token is a grant nobody holds
@@ -26,7 +26,7 @@ measurement names, which are a property's local name in history and a metric's i
 could not collide once they were in two buckets.
 
 **Metrics are minted only where the world is monitored** (`installation.purposes`): its own
-deployment graph says `onboarding:monitored true`. A world that stops saying it has its agents'
+agents' self graphs say one of them plays a meter (`metrics:Meter`). A world with none any more has its agents'
 metrics grants revoked and their credential files removed on the next run, since a grant nobody is
 told of is a grant nobody holds on purpose; the bucket is left for its retention to empty.
 

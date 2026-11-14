@@ -15,9 +15,14 @@ naming one where the installation names none is refused; each archive named is g
 journal volume is mounted at in its container (`ARCHIVE`), which `orexis-compose` mounts there; each endpoint
 named is given the url the installation allocated its agent's journal, on the host's loopback.
 
+AND THE SERIES STORE, NAMED BY TWO ROLES. An observer's readings are archived in one (`sensing:archivedIn`) and
+a meter's windows are written to one (`metrics:writtenTo`); each store named is stated as an `orexis:SeriesStore`
+with the purpose it is named for, the installation's store's url and organisation, and the metrics' window where
+the installation states one. The bucket and the token stay the agent's own credential, a file in its
+`secrets/<agent>/`, never here.
+
 The other services still reach an agent through its environment, and move here one by one. Committed, as the
-derived society is, and held to a fresh derivation by `tests/test_layout.py`; a world whose agents are linked to
-nothing has no such document.
+derived society is, and held to a fresh derivation by `tests/test_layout.py`.
 
     orexis-onboard <world>     # writes it, among its steps; it needs nothing up
 """
@@ -29,9 +34,8 @@ from pathlib import Path
 
 import pyoxigraph as ox
 
-from documents.world import BELIEFS, DOCUMENTS
 
-from . import derived, installation
+from . import derived, installation, reading
 from .worlds import world_dir
 
 log = logging.getLogger("connections")
@@ -42,27 +46,23 @@ DEPLOYMENT = OREXIS + "DeploymentGraph"
 JOURNAL = "http://example.org/orexis/journal#"
 SCHEMA = "https://schema.org/"
 _TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+#  A purpose as the kernel names it in a world's deployment graph.
+_PURPOSE = {"HISTORY": "History", "METRICS": "Metrics"}
 #  WHERE AN AGENT'S ARCHIVE IS, in its container: the path its journal volume is mounted at, which `orexis-compose`
 #  writes into the service and this into the world's derived deployment, so the two cannot differ.
 ARCHIVE = "/app/journal"
 
-#  WHAT A ROLE AN AGENT PLAYS IS LINKED TO, read off each of its own documents alone: the service a recorder's role
-#  names by `link`. A self graph is where an agent's roles are stated, so no world is booted to ask.
-_LINKED_Q = f"""SELECT DISTINCT ?me ?service WHERE {{
-  ?me a <{OREXIS}Self> ; <{OREXIS}plays> ?role . ?role <{JOURNAL}$link> ?service . FILTER(isIRI(?service)) }}"""
+SENSING = "http://example.org/orexis/sensing#"
+METRICS_NS = "http://example.org/orexis/metrics#"
+#  Each link a role names a service by, as this module's callers say it, with the property it is.
+_LINKS = {"tracedBy": JOURNAL + "tracedBy", "archivedIn": JOURNAL + "archivedIn", "servedAt": JOURNAL + "servedAt",
+          "readingsArchivedIn": SENSING + "archivedIn", "writtenTo": METRICS_NS + "writtenTo"}
 
 
 def linked(world: str, link: str) -> dict[str, str]:
-    """{service: agent} — every service a role some agent of `world` plays names by the journal's `link`, with
-    the agent whose role names it, sorted by service."""
-    found: dict[str, str] = {}
-    beliefs = world_dir(world) / BELIEFS
-    for path in sorted(p for p in beliefs.glob("*") if p.is_file() and p.suffix in DOCUMENTS) if beliefs.is_dir() else []:
-        document = ox.Store()
-        document.load(path.read_bytes(), ox.RdfFormat.TRIG, base_iri=path.resolve().as_uri())
-        for row in document.query(_LINKED_Q.replace("$link", link), use_default_graph_as_union=True):
-            found[row["service"].value] = row["me"].value
-    return {service: found[service] for service in sorted(found)}
+    """{service: agent} — every service a role some agent of `world` plays names by `link`, a key of `_LINKS`,
+    with the agent whose role names it, sorted by service."""
+    return reading.linked(world_dir(world), _LINKS[link])
 
 
 def derivation(world: str) -> Path:
@@ -95,6 +95,21 @@ def derive(world: str) -> list[tuple[str, str, ox.NamedNode | ox.Literal]]:
                              f"allocates one before it derives this")
         statements += [(iri, _TYPE, ox.NamedNode(JOURNAL + "Endpoint")),
                        (iri, SCHEMA + "url", ox.Literal(url))]
+    #  EACH SERIES STORE A ROLE NAMES, with each purpose it is named for: an observer's readings are archived in one
+    #  (`sensing:archivedIn`), which makes it serve history, and a meter's windows are written to one
+    #  (`metrics:writtenTo`), which makes it serve metrics. Every one is the installation's one store.
+    named: dict[str, set[str]] = {}
+    for link, purpose in (("readingsArchivedIn", "HISTORY"), ("writtenTo", "METRICS")):
+        for iri in linked(world, link):
+            named.setdefault(iri, set()).add(purpose)
+    told = installation.purposes(world) if named else ()
+    for iri, served in sorted(named.items()):
+        for purpose in sorted(served & set(told)):
+            url, organisation = installation.series(purpose)
+            statements += [(iri, _TYPE, ox.NamedNode(OREXIS + "SeriesStore")),
+                           (iri, OREXIS + "serves", ox.NamedNode(OREXIS + _PURPOSE[purpose])),
+                           (iri, SCHEMA + "url", ox.Literal(url)),
+                           (iri, OREXIS + "organisation", ox.Literal(organisation))]
     return sorted(statements, key=lambda s: (s[0], s[1], str(s[2])))
 
 
@@ -107,7 +122,7 @@ the store for the service its role names as it starts, and ends its start where 
 def derivation_text(world: str, statements=None) -> str:
     """The derived deployment document for `world`, as `derive` would write it now."""
     statements = derive(world) if statements is None else statements
-    spoken = {s.rsplit("#", 1)[0] + "#" for s, _, _ in statements if "#" in s}
+    spoken = {s.rsplit("#", 1)[0] + "#" for s, _, _ in statements if "#" in s} - {OREXIS}
     prefixes = {"journal": JOURNAL, "orexis": OREXIS, "schema": SCHEMA, **({"": spoken.pop()} if len(spoken) == 1 else {})}
     return derived.text(DEPLOYMENT, statements, prefixes, _HEADER)
 

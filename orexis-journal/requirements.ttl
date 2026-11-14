@@ -18,6 +18,8 @@
     sh:targetClass :Recorder ;
     sh:property [ sh:path :windowS ; sh:maxCount 1 ; sh:minExclusive 0 ;
                   sh:message "a recorder's window is one number of seconds above nought" ] ,
+                [ sh:path :archivedEveryS ; sh:maxCount 1 ; sh:minExclusive 0 ;
+                  sh:message "a recorder's journal is archived every one number of seconds above nought" ] ,
                 [ sh:path :incidentFrom ; sh:maxCount 1 ; sh:pattern "^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$" ; sh:flags "i" ;
                   sh:message "a recorder's incidents begin at one level: DEBUG, INFO, WARNING, ERROR or CRITICAL" ] ,
                 [ sh:path :tracedBy ; sh:maxCount 1 ; sh:nodeKind sh:IRI ;

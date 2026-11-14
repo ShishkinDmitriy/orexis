@@ -66,7 +66,7 @@ package it was for. Three things followed.
 - **A service of the world serving every agent of it.** The first cut joined the shipper wherever the world's
   deployment named any tracer, so every recorder of a monitored world was traced and `onboarding:monitored` decided
   it. A package then ran for something no role of the agent asked for. The link on the role replaced it, and
-  `onboarding:monitored` now decides metrics alone.
+  `onboarding:monitored` then decided metrics alone, and went when the metrics became a role's.
 - **Keeping the environment and adding a flag.** A variable saying "no tracer" is the same copy with one more
   spelling of absence.
 
@@ -84,8 +84,13 @@ is: `orexis-journal-oxigraph/` joins by the role's link and answers the path the
 archives it opens its own archive at that path and takes the last entries once every task has ended; the binary
 makes neither and names neither.
 
-Still environment, to move one by one, each with its package making its own connector: the series store for
-history and for metrics, the brokers' addresses, the model's url, each bot's url, and the intervals. The journal's port moved
+The series store is there too, named by two roles: an observer's readings are archived in one
+(`sensing:archivedIn`) and a meter's windows are written to one (`metrics:writtenTo`). A world-level store that no
+role named was built first and lasted an hour: the sovereign asked that every package join for a role, the metrics
+too, so that nothing runs for what no role of the agent asked. What archives sensing's readings, the metrics and a chat that reads the past each make their own sink from the
+store the world names and the agent's own credential, and the metrics' window is stated beside it.
+
+Still environment, to move one by one, each with its package making its own connector: the brokers' addresses, the model's url, each bot's url, and the intervals. The journal's port moved
 too: the role names an endpoint (`journal:servedAt`) and the derived deployment states the allocated url; its window
 and its incidents are the role's own figures, and no `JOURNAL_` variable is left. Tracked as #1173, not here.
 

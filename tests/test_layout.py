@@ -798,7 +798,7 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
     from onboarding import compose, influx, installation
 
     service = yaml.safe_load(compose.render("terrace"))["services"]["agent-terrace"]
-    environment = dict(service["environment"])
+    environment = dict(service.get("environment") or {})
     for purpose in PURPOSES:
         minted = influx.credential_file("terrace", "terrace", purpose)
         assert minted.name == f"influx-{purpose.lower()}.env" and minted.parent.name == "terrace"
@@ -807,7 +807,7 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
         influx._write_credential(credential, "terrace", purpose, influx.bucket_name("terrace", "terrace", purpose), "a-token")
         environment.update(dotenv_values(credential))
     assert (environment["INFLUX_HISTORY_BUCKET"], environment["INFLUX_METRICS_BUCKET"]) == ("terrace-terrace", "terrace-terrace-metrics")
-    assert installation.interval(METRICS) == 60 and HISTORY != METRICS
+    assert HISTORY != METRICS
     composed = sorted((REPO_ROOT / "world").glob("*/compose.yaml"))
     assert composed, "the glob stopped matching"
     told = {path.parent.name: installation.purposes(path.parent.name) for path in composed}
@@ -815,18 +815,25 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
     assert {w for w, p in told.items() if METRICS not in p}, "every world is monitored — the guard checks one side"
     for path in composed:
         text = path.read_text()
-        assert "INFLUX_HISTORY_URL" in text, path
+        # where a purpose's store answers is the world's derived deployment's to say, for each purpose its agents
+        # write, and no environment says it: what compose mounts is the credential, the bucket and its token.
+        from onboarding import connections
+        stated = connections.derivation(path.parent.name).read_text()
+        assert "influx-history.env" in text, path
+        archived = bool(connections.linked(path.parent.name, "readingsArchivedIn"))
+        assert ("orexis:History" in stated) == archived, path
         monitored = METRICS in told[path.parent.name]
-        assert ("INFLUX_METRICS_URL" in text) == ("influx-metrics.env" in text) == (compose.INTERVAL_KEY in text) == monitored, path
+        assert ("influx-metrics.env" in text) == ("orexis:Metrics" in stated) == monitored, path
+        assert "intervalSeconds" not in stated, "how long a window is, is the meter's role's to say"
+        assert not re.search(r"INFLUX_\w+_(URL|ORG)|METRICS_INTERVAL_S", text), path
         # the tracer is named where a recorder's role names one (`journal:tracedBy`), whatever the world says of
         # being monitored: in the world's derived deployment, which its agents read, and no environment says it.
         # And no flag says where an agent's archive is: the role names it and the derived deployment says where.
-        from onboarding import connections
         named = connections.derivation(path.parent.name)
         traced = bool(connections.linked(path.parent.name, "tracedBy"))
         assert (named.exists() and "journal:Tracer" in named.read_text()) == traced, path
-        archived = bool(connections.linked(path.parent.name, "archivedIn"))
-        assert (named.exists() and f'"file://{connections.ARCHIVE}"' in named.read_text()) == archived, path
+        kept = bool(connections.linked(path.parent.name, "archivedIn"))
+        assert (named.exists() and f'"file://{connections.ARCHIVE}"' in named.read_text()) == kept, path
         assert "OTLP_ENDPOINT" not in text and "--journal" not in text, path
         # nor does any say how an agent's journal is kept or where it is served: the role says, and the endpoint
         # it names is in the derived deployment at the url the installation allocated.
@@ -840,14 +847,13 @@ def test_history_is_served_by_one_store_and_metrics_by_one_or_by_none(tmp_path, 
     """The installation ties a store to a purpose by `onboarding:serves` (#826). History is served
     by exactly one and kept for ever, and served by none it is refused, since every agent writes it.
     Metrics are optional (amended): served by none, a world that does not ask is told of history
-    alone, and one that says it is `onboarding:monitored` is refused — by `purposes`, which every
+    alone, and one an agent of which plays a meter is refused — by `purposes`, which every
     tool asks, so the compose file refuses it too."""
     from onboarding.series import HISTORY, METRICS, PURPOSES
     from onboarding import compose, installation
 
     assert {p: installation.series(p) for p in PURPOSES} == {p: ("http://localhost:8086", "orexis") for p in PURPOSES}
     assert installation.retention(HISTORY) is None and installation.retention(METRICS) == 30
-    assert installation.interval(HISTORY) is None and installation.interval(METRICS) == 60
     _installed(tmp_path, monkeypatch, installation=lambda text: text.replace(" , onboarding:Metrics .", " ."))
     assert installation.served(METRICS) is None
     assert installation.purposes("allotment") == (HISTORY,)
@@ -869,8 +875,6 @@ def test_history_is_served_by_one_store_and_metrics_by_one_or_by_none(tmp_path, 
     (lambda text: text.replace("http://localhost:8086", "https://localhost:8086"), "series: a series store answers at one http:// url"),
     (lambda text: text.replace("onboarding:retentionDays 30", "onboarding:retentionDays 30 , 60"), "Metrics: a purpose is kept one whole number of days"),
     (lambda text: text.replace("onboarding:retentionDays 30", 'onboarding:retentionDays "a month"'), "Metrics: a purpose is kept one whole number of days"),
-    (lambda text: text.replace("onboarding:intervalSeconds 60", 'onboarding:intervalSeconds "a minute"'),
-     "Metrics: a window of a minute, which is no number of seconds"),
     (lambda text: text + '\n:more onboarding:allocatesFrom "mqtt://localhost:2884" ; onboarding:allocatesFor <https://www.w3id.org/MQTT4SSN-Ontology#Broker> .\n',
      "more: is a pool beside http://example.org/orexis/installation#brokers"),
     (lambda text: text + '\n:more onboarding:allocatesFrom "mqtt://localhost:2884" .\n', "more: a pool allocates for one kind of listener, and says which"),
@@ -883,7 +887,7 @@ def test_history_is_served_by_one_store_and_metrics_by_one_or_by_none(tmp_path, 
     (lambda text: text.replace('"docker.io/grafana/tempo:2.6.1" .', '"docker.io/grafana/tempo:2.6.1" , "tempo:3" .'),
      "tracer: a tracer runs one image"),
 ], ids=["two-stores", "no-organisation", "two-images", "a-view-in-the-clear", "a-store-over-tls", "two-retentions",
-        "a-retention-in-words", "a-window-in-words", "two-pools", "a-pool-for-nothing", "a-pool-url-with-no-port",
+        "a-retention-in-words", "two-pools", "a-pool-for-nothing", "a-pool-url-with-no-port",
         "two-models", "a-model-in-the-clear", "two-tracers", "a-tracer-of-two-images"])
 def test_what_the_installation_states_is_held_to_its_requirements(tmp_path, monkeypatch, edit, said):
     """`installation.py` refused each of these by hand, in a reader of its own for each; each is a
@@ -896,14 +900,16 @@ def test_what_the_installation_states_is_held_to_its_requirements(tmp_path, monk
         installation.view()
 
 
-def test_a_world_is_monitored_only_where_its_own_deployment_says_so(tmp_path, monkeypatch):
-    """Opt-in, one statement: the terrace says it and is monitored; take the statement out and it is
-    not, whatever the installation serves."""
+def test_a_world_is_monitored_only_where_an_agent_of_it_plays_a_meter(tmp_path, monkeypatch):
+    """Opt-in, one role: the terrace's agent plays a meter, so the world is monitored; take the role out and it
+    is not, whatever the installation serves."""
     from onboarding.series import HISTORY, METRICS
     from onboarding import installation
 
     assert installation.purposes("terrace") == (HISTORY, METRICS)
-    _installed(tmp_path, monkeypatch, {("terrace", "deployment.ttl"): lambda text: text.replace("<> onboarding:monitored true .", "")})
+    played = ":terrace_agent orexis:plays [ a metrics:Meter ; metrics:writtenTo :series ] ."
+    assert played in (REPO_ROOT / "world/terrace/beliefs/terrace.self.ttl").read_text(), "the role moved"
+    _installed(tmp_path, monkeypatch, {("terrace", "beliefs/terrace.self.ttl"): lambda text: text.replace(played, "")})
     assert not installation.monitored("terrace") and installation.purposes("terrace") == (HISTORY,)
 
 
@@ -1136,7 +1142,7 @@ _RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 _ONBOARDING = "http://example.org/orexis/onboarding#"
 _INSTALLATION_SAYS = {_RDF_TYPE, "https://schema.org/url", _ONBOARDING + "organisation", _ONBOARDING + "image",
                       _ONBOARDING + "allocatesFrom", _ONBOARDING + "allocatesFor", _ONBOARDING + "serves",
-                      _ONBOARDING + "retentionDays", _ONBOARDING + "intervalSeconds"}
+                      _ONBOARDING + "retentionDays"}
 
 
 def test_the_installation_and_its_derivation_say_where_and_nothing_else():
@@ -1255,7 +1261,7 @@ def test_an_agents_image_holds_the_packages_it_loads_and_those_they_import_and_w
     assert {"sensing", "transport/mqtt", "translation", "belief"} <= set(terrace.packages)
     hanoi = compose.image_of("hanoi", "hanoi", series=False)
     assert hanoi.packages == ("belief", "journal", "planning"), "planning's crate depends on belief's; a recorder's"
-    assert terrace.features() == ("belief", "http", "journal", "mqtt", "prediction", "sensing", "speech", "telegram",
+    assert terrace.features() == ("belief", "http", "journal", "metrics", "mqtt", "prediction", "sensing", "speech", "telegram",
                                   "translation")
 
 
@@ -1390,7 +1396,7 @@ def test_a_world_with_no_bus_is_onboarded_without_one(tmp_path, monkeypatch, cap
     assert set(composed["services"]) == {f"agent-{a}" for a in agents}, "a service that is not an agent"
     assert set(composed["volumes"]) == {f"orexis-{world}-{a}{kept}" for a in agents for kept in ("", "-journal")}
     for name, service in composed["services"].items():
-        assert not [k for k in service["environment"] if k.startswith("MQTT_")], name
+        assert not [k for k in (service.get("environment") or {}) if k.startswith("MQTT_")], name
         agent = name.removeprefix("agent-")
         assert service["env_file"] == [f"./secrets/{agent}/influx-history.env"], name
         assert not [v for v in service["volumes"] if "/app/secrets/" in v], name
@@ -1946,7 +1952,9 @@ RECORDER = "http://example.org/orexis/journal#Recorder"
     (' ; journal:incidentFrom "loud"', "a recorder's incidents begin at one level"),
     (' ; journal:windowS 0', "a recorder's window is one number of seconds above nought"),
     (' ; journal:archivedIn :one , :other', "a recorder is archived in one archive"),
-], ids=["said-once", "no-level", "no-window", "two-archives"])
+    (' ; journal:archivedEveryS 5', None),
+    (' ; journal:archivedEveryS 0', "a recorder's journal is archived every one number of seconds above nought"),
+], ids=["said-once", "no-level", "no-window", "two-archives", "archived-every", "archived-never"])
 def test_how_a_recorders_journal_is_kept_is_said_on_its_role_and_held_by_the_journals_requirements(tmp_path, said, why):
     """From which level a line of the log is an incident, how long the log is kept and which classes are incidents
     are said on the recorder's role, where the journal package reads them as it starts; no environment tells an

@@ -22,7 +22,9 @@
     sh:property [ sh:path :silentAfter ; sh:datatype xsd:integer ; sh:maxCount 1 ;
                   sh:message "an observer limit is one whole number of cadences or readings" ] ,
                 [ sh:path :stuckAfter ; sh:datatype xsd:integer ; sh:maxCount 1 ;
-                  sh:message "an observer limit is one whole number of cadences or readings" ] ;
+                  sh:message "an observer limit is one whole number of cadences or readings" ] ,
+                [ sh:path :archivedEveryS ; sh:maxCount 1 ; sh:minExclusive 0 ;
+                  sh:message "an observer's readings are archived every one number of seconds above nought" ] ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "an observer that reads no sensor: it would observe nothing" ;
         sh:select """SELECT $this WHERE { FILTER NOT EXISTS { $this sensing:sensor ?sensor } }""" ] ,

@@ -153,6 +153,13 @@ pub fn archive(store: &orexis::store::Store) -> Result<Option<std::path::PathBuf
 
 const WORDS: &str = "PREFIX journal: <http://example.org/orexis/journal#> ";
 const ARCHIVED_IN: &str = "?role journal:archivedIn ?service . ?service a journal:Archive .";
+const ARCHIVED_EVERY: &str = "?role journal:archivedEveryS ?figure .";
+
+/// HOW OFTEN THE JOURNAL IS ARCHIVED, in the agent's seconds: what the recorder's role says in the agent's self
+/// graph (`journal:archivedEveryS`), and the package's own where it says nothing.
+pub fn every_s(store: &orexis::store::Store) -> Result<f64, Error> {
+    Ok(orexis::boot::figure(store, WORDS, ARCHIVED_EVERY)?.unwrap_or(INTERVAL_S))
+}
 
 /// ITS START, which every package this binary holds is given: it keeps house for the journal, so it joins where the
 /// journal did AND THE RECORDER'S ROLE NAMES AN ARCHIVE the world says where to find, and where the role names none
@@ -202,7 +209,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
 }
 
 /// ITS OWN ARCHIVE, where the agent is deployed: the store on disk at the path the world states of the archive the
-/// recorder's role names, over the journal that package handed on, taken every two of the agent's seconds. A
+/// recorder's role names, over the journal that package handed on, taken as often as the role says. A
 /// binary built without the volume has nowhere to keep one, says so, and what lasts stays in the journal.
 fn own(handed: &Handed) -> Result<Option<Archives>, Error> {
     let (Some(path), Some(journal)) = (archive(&handed.store)?, handed.outside.take::<orexis_journal::Traced>()) else {
@@ -216,7 +223,7 @@ fn own(handed: &Handed) -> Result<Option<Archives>, Error> {
         Ok(Some(Archives {
             journal: kept,
             archive: Arc::new(Archive::open(&path)?),
-            every_s: INTERVAL_S,
+            every_s: every_s(&handed.store)?,
         }))
     }
     #[cfg(not(feature = "volume"))]

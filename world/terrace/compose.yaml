@@ -46,7 +46,7 @@ services:
       dockerfile: orexis-agent/Containerfile
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
-        FEATURES: "belief,http,journal,mqtt,prediction,sensing,speech,telegram,translation"
+        FEATURES: "belief,http,journal,metrics,mqtt,prediction,sensing,speech,telegram,translation"
     command: ["orexis-agent", "/app/world/terrace", "terrace", "--volume", "/app/state"]
     environment:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
@@ -55,13 +55,6 @@ services:
       MQTT_CERT: "/app/world/terrace/secrets/terrace/agent.crt"
       MQTT_KEY: "/app/world/terrace/secrets/terrace/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
-      # where each series it writes goes, and the org — the store the installation says serves each
-      # purpose, its metrics only where the world is monitored — safe for every agent to hold
-      INFLUX_HISTORY_URL: "http://localhost:8086"
-      INFLUX_HISTORY_ORG: "orexis"
-      INFLUX_METRICS_URL: "http://localhost:8086"
-      INFLUX_METRICS_ORG: "orexis"
-      METRICS_INTERVAL_S: "60"
       # where the language model answers — the installation's `onboarding:Model`; which model, and the
       # key, arrive in the installation's secret below
       MODEL_URL: "https://api.anthropic.com"

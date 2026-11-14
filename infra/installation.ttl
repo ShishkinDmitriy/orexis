@@ -22,7 +22,7 @@
 #  One store serves both purposes, and `infra/compose.yaml` runs one, so a second store is refused.
 #  An agent is told a store per purpose, under the purpose's keys. History served by none is refused
 #  too. Metrics served by none is an installation that monitors no world: take `onboarding:Metrics`
-#  off this line and every world saying it is `onboarding:monitored` is refused at onboarding. What
+#  off this line and every world an agent of which plays a meter is refused at onboarding. What
 #  this document must state is its own requirement, `requirements.ttl` beside it, judged as it is
 #  read, and every tool reads it through that judgment.
 :series a onboarding:SeriesStore ;
@@ -33,11 +33,9 @@
 
 #  HOW LONG A PURPOSE'S POINTS ARE KEPT, where not for ever. History is the record and keeps
 #  everything. Metrics are a window's figures, read over hours and days, so a metrics bucket lets a
-#  point go after this. And HOW LONG A WINDOW OF METRICS IS, in real seconds: an agent tallies what
-#  happened in memory and writes it, with every gauge sampled once, at the window's end — told to
-#  each agent of a monitored world as its environment.
-onboarding:Metrics onboarding:retentionDays 30 ;
-    onboarding:intervalSeconds 60 .
+#  point go after this. How long a window of metrics is, is the meter's role's to say
+#  (`metrics:windowS`), and no word of the installation's.
+onboarding:Metrics onboarding:retentionDays 30 .
 
 #  WHERE THE SERIES IS DRAWN: the operator's view of every world at once, over TLS.
 :view a onboarding:SeriesView ;

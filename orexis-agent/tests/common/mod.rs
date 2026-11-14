@@ -83,3 +83,18 @@ pub fn logged() {
     let _ = log::set_logger(&LOGGER);
     log::set_max_level(log::LevelFilter::Debug);
 }
+
+/// `loaded` WITH THE METRICS AMONG THEM, started where a meter's would be, after what keeps the journal: a world
+/// whose agent plays no meter is metered by the test that hands it a window, which names the package as whoever
+/// starts an agent may.
+#[allow(dead_code)]
+pub fn metered(mut loaded: Vec<String>) -> Vec<String> {
+    if !loaded.iter().any(|p| p == "metrics") {
+        let at = loaded
+            .iter()
+            .position(|p| !p.starts_with("journal"))
+            .unwrap_or(loaded.len());
+        loaded.insert(at, "metrics".to_string());
+    }
+    loaded
+}

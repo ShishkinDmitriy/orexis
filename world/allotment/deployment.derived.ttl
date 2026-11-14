@@ -18,6 +18,10 @@
     schema:url "file:///app/journal" .
 :rose_grower_endpoint a journal:Endpoint ;
     schema:url "http://localhost:7879" .
+:series orexis:organisation "orexis" ;
+    orexis:serves orexis:History ;
+    a orexis:SeriesStore ;
+    schema:url "http://localhost:8086" .
 :supplier_archive a journal:Archive ;
     schema:url "file:///app/journal" .
 :supplier_endpoint a journal:Endpoint ;

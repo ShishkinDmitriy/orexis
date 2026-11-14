@@ -16,8 +16,9 @@
 //! say (`past::point`) and the graphs are sensing's to remove (`past::forget`): this asks, and names no word of an
 //! observation.
 //!
-//! EVERY `ARCHIVE_INTERVAL_S` of the agent's time, ten seconds where nothing says, which is how far the series lags
-//! a reading; and a stretch in which sensing observed nothing asks the beliefs nothing.
+//! AS OFTEN AS THE OBSERVER'S ROLE SAYS (`sensing:archivedEveryS`), in the agent's seconds, every ten where it says
+//! nothing, which is how far the series lags a reading; and a stretch in which sensing observed nothing asks the
+//! beliefs nothing.
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -30,13 +31,11 @@ use orexis::task::{Handed, Package, Task};
 use orexis_sensing::events::Observed;
 use orexis_sensing::past;
 
-/// How often readings are archived, in the agent's seconds, told as environment.
-pub const INTERVAL: &str = "ARCHIVE_INTERVAL_S";
-/// How often, where the environment says nothing.
+/// How often readings are archived, in the agent's seconds, where the observer's role says nothing.
 pub const INTERVAL_S: f64 = 10.0;
 
-/// Where readings are archived and how often, handed outside by whoever runs the agent, where the deployment keeps a
-/// series store.
+/// Where readings are archived and how often. Handed outside by a test that reads the series; a deployed agent is
+/// handed none and the package makes its own sink, where the world names a store that serves history.
 pub struct Archives {
     pub sink: Arc<Sink>,
     pub every_s: f64,
@@ -50,14 +49,6 @@ pub type Shipped = BTreeMap<String, Point>;
 pub struct Due {
     pub points: Vec<(String, Point)>,
     pub past: Vec<String>,
-}
-
-/// How often to archive, as the environment says, or `INTERVAL_S`.
-pub fn interval(env: &dyn Fn(&str) -> Option<String>) -> f64 {
-    env(INTERVAL)
-        .and_then(|s| s.parse::<f64>().ok())
-        .filter(|s| *s > 0.0)
-        .unwrap_or(INTERVAL_S)
 }
 
 /// What is due in `store`, given what was `shipped`: every reading whose point the store does not hold as it now
@@ -98,13 +89,26 @@ pub fn archive(store: &Store, sink: &Sink, shipped: &mut Shipped) -> Result<usiz
 
 inventory::submit! { Package { name: "sensing-influxdb", documents: &[], start } }
 
-/// THE ARCHIVER'S START: where it is handed a series store, its task; and none otherwise.
-/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
-/// joined, makes its core.
+const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#> ";
+const ARCHIVED_IN: &str = "?role sensing:archivedIn ?service . ?service a orexis:SeriesStore .";
+const ARCHIVED_EVERY: &str = "?role sensing:archivedEveryS ?figure .";
+
+/// HOW OFTEN READINGS ARE ARCHIVED, in the agent's seconds: what the observer's role says in the agent's self graph
+/// (`sensing:archivedEveryS`), and the package's own where it says nothing.
+pub fn every_s(store: &Store) -> Result<f64, orexis::Error> {
+    Ok(orexis::boot::figure(store, WORDS, ARCHIVED_EVERY)?.unwrap_or(INTERVAL_S))
+}
+
+/// ITS START, which every package this binary holds is given: it keeps house for sensing, so it joins where sensing
+/// did AND THE OBSERVER'S ROLE NAMES A SERIES STORE the world says where to reach (`sensing:archivedIn`), and where
+/// the role names none its start ends there and the readings stay in the beliefs. It needs nothing of sensing's
+/// start.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        //  IT KEEPS HOUSE FOR SENSING, so it runs where sensing does. It needs nothing of sensing's start.
-        if !handed.beside("sensing").await? {
+        let archived = |handed: &Handed| {
+            Ok(handed.joined("sensing") && orexis::boot::connected(&handed.store, WORDS, ARCHIVED_IN)?.is_some())
+        };
+        if !handed.joins(archived).await? {
             return Ok(None);
         }
         make(&handed)
@@ -112,8 +116,27 @@ fn start(handed: Handed) -> orexis::task::Starting {
 }
 
 fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
-    let Some(archives) = handed.outside.take::<Archives>() else {
-        return Ok(None);
+    //  HANDED A SINK, by a test that reads the series, it archives into that; deployed and handed none, it makes its
+    //  own where the world says where the store its role names answers; and otherwise the readings stay in the beliefs.
+    let archives = match handed.outside.take::<Archives>() {
+        Some(archives) => archives,
+        None if handed.outside.has::<orexis::task::Deployed>() => {
+            match Sink::deployed(&handed.store, orexis::series::HISTORY, &orexis::series::environment)? {
+                Some((sink, _)) => {
+                    let every_s = every_s(&handed.store)?;
+                    log::info!(
+                        "{} archives its readings to the history store every {every_s}s",
+                        handed.id
+                    );
+                    Archives {
+                        sink: Arc::new(sink),
+                        every_s,
+                    }
+                }
+                None => return Ok(None),
+            }
+        }
+        None => return Ok(None),
     };
     //  WHETHER SENSING OBSERVED ANYTHING SINCE THE LAST TURN: heard, so a quiet stretch asks the beliefs nothing. The
     //  readings a lived volume already holds are due at the first.
@@ -162,16 +185,4 @@ async fn task(handed: Handed, archives: Archives, news: Arc<AtomicBool>) -> Resu
         }
     }
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn the_interval_is_the_environments_and_ten_seconds_where_it_says_nothing() {
-        assert_eq!(interval(&|k| (k == INTERVAL).then(|| "300".to_string())), 300.0);
-        assert_eq!(interval(&|_| None), INTERVAL_S);
-        assert_eq!(interval(&|_| Some("nought".to_string())), INTERVAL_S);
-    }
 }

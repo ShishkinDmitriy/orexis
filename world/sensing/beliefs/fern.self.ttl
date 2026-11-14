@@ -14,7 +14,7 @@
 #  and no executor; an observer is a deliberator too, so what its percepts are of is concluded.
 
 :fern_agent a orexis:Self ;
-    orexis:plays [ a sensing:Observer ;
+    orexis:plays [ a sensing:Observer ; sensing:archivedIn :series ;
                    sensing:sensor :air_humidity_fern ,
                                   :air_temp_fern ,
                                   :moisture_sensor_fern ] ,

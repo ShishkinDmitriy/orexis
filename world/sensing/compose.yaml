@@ -55,10 +55,6 @@ services:
       MQTT_CERT: "/app/world/sensing/secrets/fern/agent.crt"
       MQTT_KEY: "/app/world/sensing/secrets/fern/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
-      # where each series it writes goes, and the org — the store the installation says serves each
-      # purpose, its metrics only where the world is monitored — safe for every agent to hold
-      INFLUX_HISTORY_URL: "http://localhost:8086"
-      INFLUX_HISTORY_ORG: "orexis"
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx sensing`, and
       # its own broker credential, minted by `orexis-mqtt sensing`; mounted into THIS container alone

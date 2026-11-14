@@ -32,6 +32,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 # Journal — what happened, written down
 
 * [archive](/domain/journal/archive.md) - Where the journal puts what it keeps for good: a triplestore on disk, written every two seconds, read by whoever asks what happened.
+* [meter](/domain/metrics/meter.md) - An agent that measures how it is doing: the role `orexis-metrics/` is loaded for, written to the series store the role names.
 * [endpoint](/domain/journal/endpoint.md) - Where a running agent's journal answers queries: a loopback url the installation allocates, named by the recorder's role.
 * [tracer](/domain/journal/tracer.md) - Where an agent's activities go as spans: a service the world's deployment names, found by the span shipper as it starts.
 * [recorder](/domain/journal/recorder.md) - An agent that keeps a journal: the role `orexis-journal/` is loaded for, and without it nobody writes events down.

@@ -353,3 +353,14 @@ sensing:ObservingTrigger a owl:Class ; rdfs:subClassOf sensing:Trigger ; rdfs:la
     rdfs:comment "What starts an observing: belief's revision pass, beneath it here, naming the percepts it revised (`belief:revised`)." .
 
 belief:Revised rdfs:subClassOf sensing:ObservingTrigger .
+
+#  WHERE AN OBSERVER'S READINGS ARE ARCHIVED (knowledge/domain/kernel/series.md): a link from the role to a series
+#  store, which decides whether what archives the readings (`orexis-sensing-influxdb/`) joins the agent.
+
+sensing:archivedIn a owl:ObjectProperty ; rdfs:label "archived in" ;
+    rdfs:domain sensing:Observer ; rdfs:range orexis:SeriesStore ;
+    rdfs:comment "The series store an observer's readings are archived to, each once, said of the role in the agent's self graph. The role names it; the world's deployment graph (`orexis:DeploymentGraph`) says where it answers and that it serves `orexis:History`. An observer whose role names none keeps its readings in its beliefs and writes no series." .
+
+sensing:archivedEveryS a owl:DatatypeProperty ; rdfs:label "archived every, in seconds" ;
+    rdfs:domain sensing:Observer ;
+    rdfs:comment "How often an observer's readings are archived to the series store its role names, in the agent's seconds, said of the role: how far the series lags a reading. Ten where the role says none." .

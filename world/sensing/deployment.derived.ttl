@@ -14,3 +14,7 @@
     schema:url "file:///app/journal" .
 :fern_agent_endpoint a journal:Endpoint ;
     schema:url "http://localhost:7888" .
+:series orexis:organisation "orexis" ;
+    orexis:serves orexis:History ;
+    a orexis:SeriesStore ;
+    schema:url "http://localhost:8086" .

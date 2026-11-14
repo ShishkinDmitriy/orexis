@@ -166,18 +166,18 @@ says what to write where, and how to ask the terrace how it is.
 
 # Monitor a world, or stop
 
-Metrics — how each agent is doing, a point a minute — are written only by a world whose own
-`deployment.ttl` says so ([deployment](/domain/onboarding/deployment.md)):
+Metrics — how an agent is doing, a point a minute — are written only by an agent whose self graph says it plays
+a [meter](/domain/metrics/meter.md):
 
 ```turtle
-<> onboarding:monitored true .
+:grower orexis:plays [ a metrics:Meter ; metrics:writtenTo :series ] .
 ```
 
 Then re-run the tools that read it, and restart the agents so they are told the metrics store:
 
 ```bash
 orexis-influx greenhouse       # mints each agent a metrics bucket and a write-only token
-orexis-compose greenhouse      # adds INFLUX_METRICS_* and METRICS_INTERVAL_S to each agent
+orexis-compose greenhouse      # mounts each agent's metrics credential; the store is named in deployment.derived.ttl
 orexis-dashboards greenhouse   # writes infra/grafana/dashboards/greenhouse/<package>.json, one per package that reports
 cd world/greenhouse && podman compose up -d    # recreates the agents whose environment changed
 ```
@@ -185,7 +185,7 @@ cd world/greenhouse && podman compose up -d    # recreates the agents whose envi
 Taking the statement out and running the same four stops it: `orexis-influx` revokes the metrics
 tokens and removes their files, the compose file stops telling the agents, and the health
 dashboards are removed; the bucket is left for its retention to empty. The window's length is the
-installation's `onboarding:intervalSeconds`, sixty; an installation serving metrics from no store
+meter's role's `metrics:windowS`, sixty seconds where it states none; an installation serving metrics from no store
 refuses a world that asks.
 
 # Up, down, and watch

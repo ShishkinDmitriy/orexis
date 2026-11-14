@@ -31,7 +31,7 @@ It reads `greenhouse-grower`, the history, and `greenhouse-grower-metrics`, the 
 `infra/installation.ttl` says serves each purpose, with the admin token `orexis-influx` reads from
 `infra/secrets/` — which is why the command lives in `onboarding/` beside the grants and outside the
 agent image, as `onboarding/influx.py` does ([onboarding](/domain/onboarding/onboarding.md)). A
-world that is not `onboarding:monitored` writes no metrics, and the report says so: four of the five
+world none of whose agents plays a meter writes no metrics, and the report says so: four of the five
 questions then have nothing to read, and the fifth answers from the history alone.
 
 Every step taken and answered is read from the agent's [journal](/domain/kernel/journal.md), at the

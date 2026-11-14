@@ -15,10 +15,12 @@ path = "src/main.rs"
 path = "src/lib.rs"
 
 [features]
-default = ["journal", "belief", "planning", "execution", "sensing", "prediction", "speech", "coordination", "translation", "mqtt", "http", "telegram", "email"]
+default = ["journal", "metrics", "belief", "planning", "execution", "sensing", "prediction", "speech", "coordination", "translation", "mqtt", "http", "telegram", "email"]
 # THE JOURNAL, for an agent that plays a recorder: the crate that keeps it, the one that archives what lasts and the
 # one that ships its activities.
 journal = ["dep:orexis-journal", "dep:orexis-journal-oxigraph", "dep:orexis-journal-otlp"]
+# THE METRICS, for an agent that plays a meter.
+metrics = ["dep:orexis-metrics"]
 belief = ["dep:orexis-belief"]
 planning = ["dep:orexis-planning"]
 execution = ["dep:orexis-execution"]
@@ -53,7 +55,7 @@ orexis-transport-email = { workspace = true, optional = true }
 orexis-journal = { workspace = true, optional = true, features = ["serve"] }
 orexis-journal-otlp = { workspace = true, optional = true }
 orexis-journal-oxigraph = { workspace = true, optional = true }
-orexis-metrics = { workspace = true }
+orexis-metrics = { workspace = true, optional = true }
 oxsdatatypes = "0.2"
 oxigraph.workspace = true
 log = "0.4"

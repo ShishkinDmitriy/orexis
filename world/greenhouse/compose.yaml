@@ -89,7 +89,7 @@ services:
       dockerfile: orexis-agent/Containerfile
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
-        FEATURES: "belief,execution,journal,mqtt,planning,prediction,sensing,speech"
+        FEATURES: "belief,execution,journal,metrics,mqtt,planning,prediction,sensing,speech"
     command: ["orexis-agent", "/app/world/greenhouse", "grower", "--volume", "/app/state"]
     environment:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
@@ -98,13 +98,6 @@ services:
       MQTT_CERT: "/app/world/greenhouse/secrets/grower/agent.crt"
       MQTT_KEY: "/app/world/greenhouse/secrets/grower/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
-      # where each series it writes goes, and the org — the store the installation says serves each
-      # purpose, its metrics only where the world is monitored — safe for every agent to hold
-      INFLUX_HISTORY_URL: "http://localhost:8086"
-      INFLUX_HISTORY_ORG: "orexis"
-      INFLUX_METRICS_URL: "http://localhost:8086"
-      INFLUX_METRICS_ORG: "orexis"
-      METRICS_INTERVAL_S: "60"
     env_file:
       # its own bucket per purpose and a token that opens only it, minted by `orexis-influx greenhouse`, and
       # its own broker credential, minted by `orexis-mqtt greenhouse`; mounted into THIS container alone

@@ -22,8 +22,7 @@ it listens on is deployment.
 The **installation** is the deployment graph of what every world on a host shares, asserted in
 `infra/installation.ttl`: the **series store**, with its url, its organisation, its image and the
 purposes it serves (`onboarding:serves` — history by exactly one store, metrics by one or none),
-how many days a purpose is kept where not for ever, and how many seconds one window of metrics is
-(`onboarding:intervalSeconds`); the **series view**, where a person draws the series — Grafana,
+and how many days a purpose is kept where not for ever; the **series view**, where a person draws the series — Grafana,
 with its url and image; and a pool per kind of listener it allocates ports to — a broker's, and an
 agent's [journal](/domain/kernel/journal.md)'s, each saying which (`onboarding:allocatesFor`).
 
@@ -45,8 +44,9 @@ tracer refuses a world whose role names one, and otherwise refuses nothing.
 `world/<world>/deployment.derived.ttl`, of the kernel's kind `orexis:DeploymentGraph`: each service a role of one of its agents
 names, with its `schema:url`, typed in the words of the package that uses it. Today that is the
 [tracer](/domain/journal/tracer.md) a recorder's role is traced by, the
-[archive](/domain/journal/archive.md) it is archived in and the
-[endpoint](/domain/journal/endpoint.md) its journal is served at. The boot puts it in, no reader of the mind is handed
+[archive](/domain/journal/archive.md) it is archived in, the
+[endpoint](/domain/journal/endpoint.md) its journal is served at, and the
+[series](/domain/kernel/series.md) store an observer's readings are archived in or a meter's windows are written to. The boot puts it in, no reader of the mind is handed
 it, and a package asks it as it starts and ends its start where its role names no service of its kind. It names
 nothing of another world. The services still told as environment move there one by one
 ([the-world-says-what-it-is-connected-to](/decisions/the-world-says-what-it-is-connected-to.md)).
@@ -54,14 +54,14 @@ nothing of another world. The services still told as environment move there one 
 What an agent's [journal](/domain/kernel/journal.md) counts as an incident beside its vocabulary is no deployment
 fact: the [recorder](/domain/journal/recorder.md)'s role says it.
 
-A world is **monitored** where its own deployment graph says so of itself, in one statement:
-`<> onboarding:monitored true`. Its agents then write their metrics — the admins' instrumentation
+A world is **monitored** where an agent of it plays a [meter](/domain/metrics/meter.md), in its self graph. Its
+meters then write their metrics — the admins' instrumentation
 of how each is doing ([series](/domain/kernel/series.md)) — each to a metrics bucket of its own,
-and the world gets a health dashboard per package that reports. A world that says nothing is not monitored: metrics are
+and the world gets a health dashboard per package that reports. A world with no meter is not monitored: metrics are
 opted into, world by world, since they are for whoever runs the host and a world is not the
 host's. The installation may serve metrics from no store, and then monitors no world; a world
-saying it is monitored there is refused at onboarding, before anything is granted. The greenhouse
-and the terrace say it.
+with a meter there is refused at onboarding, before anything is granted. The greenhouse's grower
+and the terrace's agent play one.
 
 **Asserted wins, derived completes.** A world may assert where its broker listens, in a
 `deployment.ttl` of its own, and is told exactly that — the terrace does, since a board is flashed
@@ -99,9 +99,8 @@ into `world/<name>/secrets/` and mounted into one container.
 beside the installation's words — `onboarding:SeriesStore`, `onboarding:SeriesView`, `onboarding:Tracer`,
 `onboarding:organisation`, `onboarding:image`, `onboarding:allocatesFrom`, `onboarding:allocatesFor`,
 `onboarding:journal`, `onboarding:serves`,
-`onboarding:retentionDays` and `onboarding:intervalSeconds`, the two `onboarding:SeriesPurpose`s,
-and `onboarding:monitored`, which a world says of its own deployment graph and the loader keeps in
-the catalogue beside the graph's kind — so an agent's boot passes over a graph of it. The terrace,
+`onboarding:retentionDays`, the two `onboarding:SeriesPurpose`s,
+— so an agent's boot passes over a graph of it. The terrace,
 the greenhouse and the allotment assert their brokers' urls; the sensing world asserts none and is
 allocated the 1884 and 8884 it once asserted.
 
@@ -113,9 +112,9 @@ with `orexis:arrivedBy orexis:Derived`). Then every renderer only formats: `brok
 `onboarding/mqtt.py` answers the asserted url or the allocated one, for the compose file, the
 broker's config and a board's `config.h`. Which purposes a world's agents are told of is
 `purposes` in `onboarding/installation.py` — history always, metrics where the world is monitored
-— and every tool asks it: `orexis-compose` writes, for each, the url and organisation of the store
-serving it into every agent's environment under the purpose's keys, and for metrics the window as
-`METRICS_INTERVAL_S`; `orexis-influx` mints each one's buckets in that store, kept as long as the
+— and every tool asks it: the world's derived deployment states, for each, the store serving it as an
+`orexis:SeriesStore` with its url and organisation, and for metrics the window; `orexis-compose` mounts each
+purpose's credential; `orexis-influx` mints each one's buckets in that store, kept as long as the
 purpose's retention says, and revokes the metrics grants of a world that stopped being monitored;
 `orexis-dashboards` draws health for a monitored world alone; and `orexis-infra-compose` writes
 `infra/compose.yaml`, the images and ports the document's and the rest the template's.
