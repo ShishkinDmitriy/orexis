@@ -187,8 +187,38 @@ fn start(handed: Handed) -> orexis::task::Starting {
 }
 
 fn make(handed: &Handed) -> Result<Option<Task>, Error> {
+    //  THE SCOPES A PASS READS are written as planning starts, over the store as every package that joined left it:
+    //  the boot's act, and planning's own.
+    let now = handed.clock.now();
+    Planner::scope(&handed.store, now)?;
     let budget = handed.outside.take::<Budget>().map(|b| b.0);
     let mut planning = Planning::new(&handed.store, &handed.id, budget)?;
+    //  CHECKED, it says what a check asks of it: that a desire holds the agent, and each constraint the agent holds
+    //  that the world as posed violates, which no agent repairs (constraint.md).
+    if let Some(checking) = handed.outside.read::<orexis::task::Checking>() {
+        if planning.planner.holds_a_desire()? {
+            checking.holds("planning");
+        }
+        for (constraint, rows) in planning.planner.contradictions(now)? {
+            let said = |term: &Option<String>| term.as_deref().map_or("none".to_string(), |t| local_of(t).to_string());
+            let rows: Vec<String> = rows
+                .iter()
+                .map(|(instance, component, _, offending)| {
+                    format!(
+                        "({}, {}, {})",
+                        local_of(instance),
+                        component.as_deref().unwrap_or("none"),
+                        said(offending)
+                    )
+                })
+                .collect();
+            checking.refuses(format!(
+                "holds {}, which the world as posed violates: {}",
+                local_of(&constraint),
+                rows.join(", ")
+            ));
+        }
+    }
     planning.planner.watch = handed.events.watch().clone();
     let mut hears = handed.events.hears();
     hears.event(PLANNING_TRIGGER, REOPEN);

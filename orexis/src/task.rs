@@ -743,6 +743,37 @@ pub struct Deployed {
     pub world: String,
 }
 
+/// THE AGENT IS BEING CHECKED: handed outside by whoever checks an agent before anything is granted, and by no run
+/// and no test of a run. A package handed it says, as it makes its core, the two things a check asks of every
+/// package and no document states alone: that it HOLDS the agent, which then runs for as long as its process
+/// does, and why it REFUSES the world as posed. The kernel knows neither reason; whoever checks reads what was found.
+#[derive(Clone, Default)]
+pub struct Checking(Arc<Mutex<Found>>);
+
+/// What the packages of a checked agent said: which hold it, and each reason one refuses the world as posed.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Found {
+    pub held: Vec<String>,
+    pub refused: Vec<String>,
+}
+
+impl Checking {
+    /// The package `who` holds the agent: it does not finish while this stands.
+    pub fn holds(&self, who: &str) {
+        self.0.lock().unwrap().held.push(who.to_string());
+    }
+
+    /// The world as posed is refused, and `why`, in the saying package's words.
+    pub fn refuses(&self, why: String) {
+        self.0.lock().unwrap().refused.push(why);
+    }
+
+    /// What was said so far.
+    pub fn found(&self) -> Found {
+        self.0.lock().unwrap().clone()
+    }
+}
+
 /// What keeps a line of the process's log: its logger, its level and its message.
 pub type Remark = Box<dyn Fn(&str, log::Level, &str) + Send + Sync>;
 

@@ -148,8 +148,9 @@ Every one of those boots is the binary's, the one its container runs: `orexis-ag
 that reach nothing, so a document that will not parse, a self stated twice or a text a part refuses at its making is
 refused before anything is granted, against the documents and secrets the container will be handed; and what the
 requirements are held to is what that agent will believe, booted once, by the agent that will run (`reading.boot`).
-Its verdict says beside the store whether the agent holds a desire and what of its world as posed its constraints
-call impossible. The `rust` job holds every shipped world to it (`orexis-agent/tests/check.rs`).
+Its verdict says beside the store what the agent's packages said as each made its core: which hold the agent, as
+planning does where it holds a desire, and why any refuses the world as posed, as planning does of a
+[constraint](/domain/planning/constraint.md) the posed state violates. The `rust` job holds every shipped world to it (`orexis-agent/tests/check.rs`).
 
 # What it reads that no agent does
 

@@ -182,7 +182,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   binding of its own; the desire is universal, the want existential and one-shot (#618).
 - **Nothing stands between a desire and a want** — `derive_wants` judges every desire at the present
   and at each foreseen instant and mints a want per cluster of what the met-tests read unmet, in one
-  function; `scope_actions` writes the scopes at boot.
+  function; `scope_actions` writes the scopes as planning starts.
 - **A want exists because its desire read unmet, so the same rows withdraw it** — against the whole
   decomposition, present and foreseen; a want a plan is walking is kept whatever its desire reads.
 - **A want is judged by its met-test, and nothing scores a world by degree** — the search sees no
@@ -1078,6 +1078,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   an `orexis:SeriesStore` with the purpose it is named for, and each package makes its own sink from it and the
   bucket and token of the agent's credential file: what archives sensing's readings, the metrics, and a chat that
   reads the past (series).
+- **A package does its own work as it starts, and a check asks every package the same two things** — planning
+  writes its scopes in its start, and where the agent is being checked (`orexis::task::Checking`) says that a desire
+  holds the agent and which constraint the world as posed violates; the binary called the planner by name for all
+  three, and its verdict named a desire and a contradiction, planning's words (package).
 - **A deployed agent's package makes what it is not handed, and the binary makes no journal** — whoever runs the
   agent for good says so (`orexis::task::Deployed`), and the journal package then makes its journal, keeps the
   process's log in it and serves it, and what archives it opens its own archive and takes the last entries once

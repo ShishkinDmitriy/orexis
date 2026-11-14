@@ -93,10 +93,10 @@ fn every_agent_of_every_world_boots_and_makes_its_parts() {
                 Ok(checked) => {
                     assert!(!checked.loaded.is_empty(), "{agent} makes no part");
                     assert!(
-                        checked.contradictions.is_empty(),
+                        checked.refused.is_empty(),
                         "{}/{agent} is posed in a state its constraints say is impossible: {:?}",
                         world.display(),
-                        checked.contradictions
+                        checked.refused
                     );
                 }
                 Err(e) => refused.push(format!("{}/{agent}: {e}", world.display())),
@@ -125,7 +125,7 @@ fn the_boot_is_written_as_the_agent_believes_it_and_a_desire_is_told_from_wants_
     std::fs::create_dir_all(&dir).unwrap();
     let file = dir.join("hanoi.nq");
     let hanoi = check(&Path::new(TREE).join("world/hanoi"), "hanoi", now, Some(&file)).unwrap();
-    assert!(!hanoi.desire, "the mover holds wants alone, and finishes");
+    assert!(hanoi.held.is_empty(), "the mover holds wants alone, and finishes");
     let store = oxigraph::store::Store::new().unwrap();
     store
         .load_from_slice(
@@ -148,7 +148,7 @@ fn the_boot_is_written_as_the_agent_believes_it_and_a_desire_is_told_from_wants_
     assert!(
         agents(&world)
             .iter()
-            .any(|a| check(&world, a, now, None).unwrap().desire),
+            .any(|a| check(&world, a, now, None).unwrap().held == ["planning"]),
         "no agent of the greenhouse holds a desire"
     );
 }

@@ -227,12 +227,12 @@ def _booting(here: Path, agent_id: str) -> Refused | None:
 
 def lasts(here: Path, agent_id: str) -> bool:
     """Whether the agent `agent_id` of the world in `here` runs for as long as its process does —
-    booted from the documents as its container boots it, into a store of its own in memory: it
-    holds a desire, or a transport that listens is among the packages it loads — the bus, a bot, a
+    booted from the documents as its container boots it, into a store of its own in memory: a
+    package says it holds the agent, as planning does where the agent holds a desire, or a transport that listens is among the packages it loads — the bus, a bot, a
     mailbox — which is what brings a transport up (`_transport_of`). False for an agent holding wants
     alone and reached by no transport, which the runtime lets finish."""
     _, verdict = _checked(Path(here).resolve(), agent_id)
-    return verdict["desire"] or bool({MQTT, TELEGRAM, EMAIL} & set(verdict["loaded"]))
+    return bool(verdict["held"]) or bool({MQTT, TELEGRAM, EMAIL} & set(verdict["loaded"]))
 
 
 def check(here: Path) -> None:
@@ -266,7 +266,7 @@ def check(here: Path) -> None:
     if found:
         raise SystemExit(f"world {name!r} declares its agents' roles in a way it does not bear out — "
                          f"{'; '.join(found)}; nothing granted")
-    found = [f"{a} holds {c}" for a in agents(here) for c in contradicted(here, a)]
+    found = [f"{a} {c}" for a in agents(here) for c in contradicted(here, a)]
     if found:
         raise SystemExit(f"world {name!r} is posed in a state its own constraints say is impossible — "
                          f"{'; '.join(found)}; nothing granted")
@@ -274,17 +274,16 @@ def check(here: Path) -> None:
 
 def contradicted(here: Path, agent_id: str) -> list[str]:
     """Every constraint the agent `agent_id` of the world in `here` holds that the world AS POSED
-    violates, as `constraint: (instance, constraint, offending), …` — asked of the agent as its boot
-    reads it, by the Planner's own judge. A constraint is what the world says is possible, so a
+    violates, as planning says each while the agent is checked, `holds <constraint>, which the world
+    as posed violates: (instance, constraint, offending), …` — asked of the agent as its boot reads it,
+    by the Planner's own judge, and read here as whatever a package of the agent refused the world for. A constraint is what the world says is possible, so a
     world whose asserted state violates its own word is a contradiction and not a want anyone could
     repair: `orexis-onboard` refuses it before anything is granted, as it refuses a world that will
     not load, since a society started that way would say the contradiction in every pass and mend
     nothing (knowledge/domain/planning/constraint.md). Empty for a world posed as it says it can be,
     and for an agent that is no planner, which weighs no constraint."""
     _, verdict = _checked(Path(here).resolve(), agent_id)
-    return [f"{constraint.rsplit('#', 1)[-1]}: " + ", ".join(
-                f"({str(i).rsplit('#', 1)[-1]}, {c}, {str(o).rsplit('#', 1)[-1]})" for i, c, _, o in sorted(broken, key=str))
-            for constraint, broken in verdict["contradictions"]]
+    return list(verdict["refused"])
 
 
 def unread(here: Path) -> list[str]:

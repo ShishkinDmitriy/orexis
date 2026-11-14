@@ -132,22 +132,43 @@ async fn ran(store: &Store, budget: usize, within: u64) -> String {
 }
 
 #[test]
-fn the_boot_says_what_each_graph_is() {
+fn the_boot_says_what_each_graph_is_and_planning_writes_its_scopes_as_it_starts() {
     let store = store();
     boot(&store);
     assert_eq!(store.graphs_of(&[WANT], &Within::default()).unwrap().len(), 1);
     assert_eq!(own(&store).len(), 1);
     assert_eq!(home(&store), 0, "three disks on peg A");
-    let scopes = store
-        .rows(
-            "SELECT (COUNT(?s) AS ?n) WHERE { GRAPH ?g { ?s a planning:Scope } }",
-            &[],
-        )
-        .unwrap();
-    assert!(
-        value(&scopes[0], "n").unwrap().parse::<usize>().unwrap() >= 1,
-        "the scopes were written at boot"
+    let scopes = |store: &Store| {
+        let rows = store
+            .rows(
+                "SELECT (COUNT(?s) AS ?n) WHERE { GRAPH ?g { ?s a planning:Scope } }",
+                &[],
+            )
+            .unwrap();
+        value(&rows[0], "n").unwrap().parse::<usize>().unwrap()
+    };
+    assert_eq!(
+        scopes(&store),
+        0,
+        "the boot writes no scope: they are planning's to write"
     );
+    //  AND PLANNING WRITES ITS SCOPES AS IT STARTS, the binary asking nothing of it.
+    let tasks = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    let _entered = tasks.enter();
+    let loaded = ["planning".to_string()];
+    orexis_agent::start(
+        &store,
+        "hanoi",
+        common::clock(now()),
+        &loaded,
+        None,
+        orexis_agent::Wiring::default(),
+    )
+    .unwrap();
+    assert!(scopes(&store) >= 1, "the scopes were written as planning started");
 }
 
 #[test]

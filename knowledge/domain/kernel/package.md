@@ -90,6 +90,11 @@ archive on disk. A check and a test do not hand it, so a package handed nothing 
 no disk and no port. What a package owes after every other task has ended, it asks for with `handed.finally`: the
 archiver takes there what the others said while stopping.
 
+**A checked agent's package says what the check asks.** Whoever checks an agent hands `orexis::task::Checking`
+outside, and a package says there, in its start, whether it holds the agent and why it refuses the world as posed;
+planning is the one that does, and it writes its [scopes](/domain/planning/scope.md) in that start too. The binary
+reads what was found and asks no package by name.
+
 There is no default set and no fixed mind: an agent declaring no role is joined by the metrics alone. A brought
 document's graph is named for its crate and file (`urn:orexis:orexis-sensing/rules.ttl`), a name for eyes. A
 crate's `requirements.ttl` is not brought: it is onboarding's, read off the disk by `orexis-onboard`, and no

@@ -13,7 +13,7 @@ description: >-
 # Who runs it
 
 Each agent that is a `planning:Planner` by its [roles](/domain/kernel/role.md) — stated so, or a
-market host or bidder, both under it — has planning loaded, its scopes written at boot and its part
+market host or bidder, both under it — has planning loaded, its scopes written as planning starts and its part
 made; no other agent has any of it. One concept, one word, for the role and the part.
 It needs a desire or a want the agent holds — a shape planning ships beside the role — so the
 terrace's agent, which wants nothing, is no planner. Planning also ships the

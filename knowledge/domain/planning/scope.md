@@ -90,7 +90,7 @@ spent the puzzle's budget and moved no disk.
 
 # In the store
 
-`scope_actions` writes the partition to the store's scope graph at boot — a `planning:Scope`
+`scope_actions` writes the partition to the store's scope graph as planning starts — a `planning:Scope`
 per part, and each action, each predicate and each TERM a filling binds — the property, the valve,
 the bed — `planning:inScope` every scope it falls in; and the [wait](/domain/planning/wait.md),
 which touches no atom and so falls in none, `planning:inScope` every one. `find_scopes` reads it back as a map of
