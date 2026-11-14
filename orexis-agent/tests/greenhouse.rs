@@ -80,7 +80,7 @@ impl Client for Broker {
 }
 
 fn store() -> Store {
-    Store::new(Arc::new(Namespaces::of_tree(tree()).unwrap())).unwrap()
+    Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap()
 }
 
 /// The grower booted and started over the fake broker, on a clock from noon.
@@ -96,7 +96,7 @@ fn grower(store: &Store) -> Grower {
 }
 
 fn grower_watched(store: &Store, watching: orexis_agent::Watching) -> Grower {
-    let loaded = booted(store, tree(), &world(), "grower", noon()).unwrap();
+    let loaded = booted(store, &world(), "grower", noon()).unwrap();
     for package in [
         "belief",
         "planning",

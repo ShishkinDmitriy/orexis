@@ -50,23 +50,10 @@ use orexis_transport_mqtt as _;
 #[cfg(feature = "telegram")]
 use orexis_transport_telegram as _;
 
-/// Boot `agent` of `world` into `store` from the documents of `tree`: the packages it loads, each one this binary
-/// holds — refused where it plays a role whose package this binary was built without.
-pub fn booted(
-    store: &Store,
-    tree: &Path,
-    world: &Path,
-    agent: &str,
-    now: oxsdatatypes::DateTime,
-) -> Result<Vec<String>, Error> {
-    let loaded = boot(store, &Booting { tree, world, agent })?;
-    let held: Vec<&str> = loaded.iter().map(String::as_str).filter(|p| !built(p)).collect();
-    if !held.is_empty() {
-        return Err(Error::Evaluation(format!(
-            "{agent} plays a role whose package this binary was built without: {}",
-            held.join(", ")
-        )));
-    }
+/// Boot `agent` of `world` into `store` from the world's documents and those its packages bring: the packages that
+/// joined it, each deciding in its own start, in the order they start (`orexis::boot::boot`).
+pub fn booted(store: &Store, world: &Path, agent: &str, now: oxsdatatypes::DateTime) -> Result<Vec<String>, Error> {
+    let loaded = boot(store, &Booting { world, agent })?;
     #[cfg(feature = "planning")]
     if loaded.iter().any(|p| p == "planning") {
         orexis_planning::Planner::scope(store, now)?;
@@ -89,21 +76,15 @@ pub struct Checked {
 }
 
 /// CHECK `agent` of `world` as its container would boot it, and run nothing: booted into a store in memory from the
-/// documents of `tree`, and every part its roles load made and started, on a runtime that is never run, over members
+/// world's documents and its packages', and every part its roles load made and started, on a runtime that is never run, over members
 /// that reach nothing — no broker, no web, no bot and no model — so every text a part parses at its making is parsed. What it found, or why it would not boot; and,
 /// where `boot` names a file, the store as booted, in N-Quads, before any part is made — which is what onboarding
 /// holds to the requirements, so the world is booted once, by the agent that will run it.
 /// `orexis-onboard` asks it of every agent before anything is granted, and `orexis-agent/tests/check.rs` of every world.
-pub fn check(
-    tree: &Path,
-    world: &Path,
-    agent: &str,
-    now: oxsdatatypes::DateTime,
-    boot: Option<&Path>,
-) -> Result<Checked, Error> {
-    let namespaces = Arc::new(orexis::namespaces::Namespaces::of_tree(tree)?);
+pub fn check(world: &Path, agent: &str, now: oxsdatatypes::DateTime, boot: Option<&Path>) -> Result<Checked, Error> {
+    let namespaces = Arc::new(orexis::namespaces::Namespaces::linked()?);
     let store = Store::new(namespaces)?;
-    let loaded = booted(&store, tree, world, agent, now)?;
+    let loaded = booted(&store, world, agent, now)?;
     if let Some(path) = boot {
         let file = std::io::BufWriter::new(std::fs::File::create(path)?);
         store
@@ -336,18 +317,7 @@ pub fn start(
     budget: Option<usize>,
     wiring: Wiring,
 ) -> Result<Running, Error> {
-    //  THE JOURNAL FIRST, where the agent plays a recorder, so what the others say as they start is heard; and with
-    //  it what archives it and what ships its activities. Then what the deployment watches with, and the packages the roles load.
-    let recorder = loaded.iter().any(|p| p == JOURNAL);
-    let mut names: Vec<String> = Vec::new();
-    if recorder {
-        names.push(JOURNAL.to_string());
-        names.push("journal-oxigraph".to_string());
-        names.push("journal-otlp".to_string());
-    }
-    names.push("metrics".to_string());
-    #[cfg(feature = "sensing")]
-    names.push("sensing-influxdb".to_string());
-    names.extend(loaded.iter().filter(|p| *p != JOURNAL).cloned());
-    orexis::task::start(store, agent, clock, outside(wiring, budget), &names)
+    //  THE PACKAGES THAT JOINED, in the order they start: what keeps the journal and what watches first, so what the
+    //  others say as they start is heard (`orexis::boot::PASS`).
+    orexis::task::start(store, agent, clock, outside(wiring, budget), loaded)
 }

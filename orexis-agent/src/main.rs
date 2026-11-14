@@ -16,7 +16,6 @@ use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex, OnceLock};
 
 use orexis::Error;
-use orexis::boot::TREE;
 use orexis::clock::{Clock, Paced};
 use orexis::namespaces::Namespaces;
 use orexis::series::{self, HISTORY, METRICS};
@@ -215,8 +214,7 @@ fn journal(args: &Args, clock: &Arc<Paced>) -> Result<Kept, Error> {
 }
 
 fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, Error> {
-    let tree = PathBuf::from(env("OREXIS_TREE").unwrap_or_else(|| TREE.to_string()));
-    let namespaces = Arc::new(Namespaces::of_tree(&tree)?);
+    let namespaces = Arc::new(Namespaces::linked()?);
     let store = match &args.volume {
         #[cfg(feature = "volume")]
         Some(path) => Store::open(path, namespaces)?,
@@ -228,7 +226,7 @@ fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, 
         }
         None => Store::new(namespaces)?,
     };
-    let loaded = orexis_agent::booted(&store, &tree, &args.world, &args.agent, clock.now())?;
+    let loaded = orexis_agent::booted(&store, &args.world, &args.agent, clock.now())?;
     //  A JOURNAL WHERE THE AGENT PLAYS A RECORDER, and none otherwise: its packages say what happens either way.
     #[cfg(feature = "journal")]
     let (kept, archive) = if loaded.iter().any(|p| p == orexis_agent::JOURNAL) {
@@ -356,9 +354,7 @@ fn main() {
     };
     if args.check {
         //  A CHECK RUNS NOTHING: no journal, no series, no bus — the boot and the parts' making, and the verdict.
-        let tree = PathBuf::from(env("OREXIS_TREE").unwrap_or_else(|| TREE.to_string()));
         match orexis_agent::check(
-            &tree,
             &args.world,
             &args.agent,
             oxsdatatypes::DateTime::now(),

@@ -60,6 +60,24 @@ impl Document {
         doc.checked(&name, true)
     }
 
+    /// A document a package brings, compiled into the binary: the text of the file `name`, Turtle or TriG by its name, read against
+    /// `base`, which names its graph, and refused as a file is.
+    pub fn brought(name: &str, text: &str, base: &str) -> Result<Self, Error> {
+        let trig = name.ends_with(".trig");
+        let parsed = parse(
+            if trig { RdfFormat::TriG } else { RdfFormat::Turtle },
+            text.as_bytes(),
+            Some(base),
+        )
+        .map_err(|e| refused(format!("{name} will not parse: {e}")))?;
+        let doc = if trig {
+            Document::of_quads(parsed)
+        } else {
+            Document::of_turtle(parsed, base)?
+        };
+        doc.checked(name, true)
+    }
+
     /// A document handed as TriG bytes — what a peer says, as the transport received it — refused as a file is,
     /// and refused besides where it says whose a graph is or who the self is.
     pub fn of(bytes: &[u8]) -> Result<Self, Error> {

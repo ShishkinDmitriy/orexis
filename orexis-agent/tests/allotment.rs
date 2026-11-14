@@ -119,7 +119,7 @@ fn facts(store: &Store, predicate: &str) -> BTreeSet<(String, String)> {
 
 /// The allotment's three agents, booted at noon on the first of January, on one clock, and walked.
 async fn allotment(walk: impl AsyncFnOnce(&mut Market<'_>)) {
-    let namespaces = Arc::new(Namespaces::of_tree(tree()).unwrap());
+    let namespaces = Arc::new(Namespaces::linked().unwrap());
     let stores: Vec<Store> = NAMES.iter().map(|_| Store::new(namespaces.clone()).unwrap()).collect();
     let noon = instant("2026-01-01T12:00:00+00:00").unwrap();
     let clock = common::clock(noon);
@@ -127,7 +127,7 @@ async fn allotment(walk: impl AsyncFnOnce(&mut Market<'_>)) {
     let world = world();
     let mut runnings: Vec<Running> = Vec::new();
     for (store, name) in stores.iter().zip(NAMES) {
-        let loaded = booted(store, tree(), &world, name, noon).unwrap();
+        let loaded = booted(store, &world, name, noon).unwrap();
         let bus = Bus {
             name,
             clock: clock.clone(),

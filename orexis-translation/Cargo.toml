@@ -30,3 +30,8 @@ tokio = { workspace = true, features = ["test-util"] }
 orexis = { workspace = true, features = ["snapshots"] }
 # THE JOURNAL, for the cases that hold what an event states to what the journal answers of it: a test's alone.
 orexis-journal = { workspace = true }
+# THE CARRIERS THE TEST WORLD'S CHATS NEED, so the boot finds the documents they bring: a test's alone, translation
+# importing no transport member.
+orexis-transport-email = { workspace = true }
+orexis-transport-telegram = { workspace = true }
+orexis-transport-mqtt = { workspace = true }

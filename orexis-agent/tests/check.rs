@@ -89,7 +89,7 @@ fn every_agent_of_every_world_boots_and_makes_its_parts() {
             world.display()
         );
         for agent in ids {
-            match check(Path::new(TREE), &world, &agent, now, None) {
+            match check(&world, &agent, now, None) {
                 Ok(checked) => {
                     assert!(!checked.loaded.is_empty(), "{agent} makes no part");
                     assert!(
@@ -114,14 +114,7 @@ fn every_agent_of_every_world_boots_and_makes_its_parts() {
 #[test]
 fn an_agent_the_world_does_not_state_is_refused() {
     let world = Path::new(TREE).join("world/hanoi");
-    let refused = check(
-        Path::new(TREE),
-        &world,
-        "nobody",
-        instant("2026-11-07T12:00:00Z").unwrap(),
-        None,
-    )
-    .unwrap_err();
+    let refused = check(&world, "nobody", instant("2026-11-07T12:00:00Z").unwrap(), None).unwrap_err();
     assert!(refused.to_string().contains("nobody"), "{refused}");
 }
 
@@ -131,14 +124,7 @@ fn the_boot_is_written_as_the_agent_believes_it_and_a_desire_is_told_from_wants_
     let dir = std::env::temp_dir().join(format!("orexis-check-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let file = dir.join("hanoi.nq");
-    let hanoi = check(
-        Path::new(TREE),
-        &Path::new(TREE).join("world/hanoi"),
-        "hanoi",
-        now,
-        Some(&file),
-    )
-    .unwrap();
+    let hanoi = check(&Path::new(TREE).join("world/hanoi"), "hanoi", now, Some(&file)).unwrap();
     assert!(!hanoi.desire, "the mover holds wants alone, and finishes");
     let store = oxigraph::store::Store::new().unwrap();
     store
@@ -162,7 +148,7 @@ fn the_boot_is_written_as_the_agent_believes_it_and_a_desire_is_told_from_wants_
     assert!(
         agents(&world)
             .iter()
-            .any(|a| check(Path::new(TREE), &world, a, now, None).unwrap().desire),
+            .any(|a| check(&world, a, now, None).unwrap().desire),
         "no agent of the greenhouse holds a desire"
     );
 }
@@ -170,14 +156,8 @@ fn the_boot_is_written_as_the_agent_believes_it_and_a_desire_is_told_from_wants_
 #[test]
 fn an_agent_in_a_chat_by_email_boots_with_its_mailbox() {
     let world = Path::new(TREE).join("orexis-translation/tests/world");
-    let loaded = check(
-        Path::new(TREE),
-        &world,
-        "seeker",
-        instant("2026-11-07T12:00:00Z").unwrap(),
-        None,
-    )
-    .unwrap()
-    .loaded;
+    let loaded = check(&world, "seeker", instant("2026-11-07T12:00:00Z").unwrap(), None)
+        .unwrap()
+        .loaded;
     assert!(loaded.iter().any(|p| p == "transport/email"), "{loaded:?}");
 }

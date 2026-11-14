@@ -31,7 +31,7 @@ fn now() -> DateTime {
 
 /// Boot `agent` of `world` and run it until nothing holds it or `within` seconds of its time are spent: the outcome.
 async fn run(store: &Store, world: &Path, agent: &str, within: u64, budget: Option<usize>) -> String {
-    let loaded = booted(store, tree(), world, agent, now()).unwrap();
+    let loaded = booted(store, world, agent, now()).unwrap();
     let wiring = orexis_agent::Wiring::default();
     let running = orexis_agent::start(store, agent, common::clock(now()), &loaded, budget, wiring).unwrap();
     let outcome = common::outcome(&running, within).await;
@@ -40,7 +40,7 @@ async fn run(store: &Store, world: &Path, agent: &str, within: u64, budget: Opti
 }
 
 fn store() -> Store {
-    Store::new(Arc::new(Namespaces::of_tree(tree()).unwrap())).unwrap()
+    Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap()
 }
 
 fn count(store: &Store, text: &str) -> usize {
@@ -152,7 +152,7 @@ async fn metered_courier(watched: bool) -> (usize, usize, String, std::collectio
     }
     let store = store();
     let clock = Arc::new(Counting(orexis::clock::Elapsing::from(now()), Mutex::new(0)));
-    let loaded = booted(&store, tree(), &world("courier"), "courier", now()).unwrap();
+    let loaded = booted(&store, &world("courier"), "courier", now()).unwrap();
     let written: std::sync::Arc<std::sync::Mutex<Vec<orexis::events::Point>>> = Default::default();
     let kept = written.clone();
     let mut wiring = orexis_agent::Wiring::default();

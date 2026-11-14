@@ -133,7 +133,7 @@ services:
       # the world's authority, which every client of its brokers trusts
       - ./secrets/ca.crt:/app/secrets/ca.crt:ro
       # The domains, mounted over the image's copy so a changed document needs a restart; the binary and the
-      # tree's documents are its image's, so a change to the agent is a rebuild.
+      # documents its packages bring are in it, so a change to the agent is a rebuild.
       - ../../domains:/app/domains:ro
 
   agent-courier_b:
@@ -187,7 +187,7 @@ services:
       # the world's authority, which every client of its brokers trusts
       - ./secrets/ca.crt:/app/secrets/ca.crt:ro
       # The domains, mounted over the image's copy so a changed document needs a restart; the binary and the
-      # tree's documents are its image's, so a change to the agent is a rebuild.
+      # documents its packages bring are in it, so a change to the agent is a rebuild.
       - ../../domains:/app/domains:ro
 
 volumes:

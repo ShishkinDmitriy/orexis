@@ -28,11 +28,25 @@ pub struct Keeps {
     pub journal: Option<Arc<Journal>>,
 }
 
-inventory::submit! { Package { name: "journal", start } }
+inventory::submit! { Package { name: "journal", documents: orexis::documents!("ontology.ttl"), start } }
 
 /// THE START: where it is handed a journal it hears the watch from now on, the events and the activities, and has
 /// no task.
-fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
+const ROLE: &str = "http://example.org/orexis/journal#Recorder";
+
+/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
+/// joined, makes its core.
+fn start(handed: Handed) -> orexis::task::Starting {
+    Box::pin(async move {
+        if !handed.plays(&[ROLE]).await? {
+            return Ok(None);
+        }
+        make(&handed)
+    })
+}
+
+fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     if let Some(journal) = handed.outside.take::<Keeps>().and_then(|keeps| keeps.journal) {
         events::History::new(
             handed.events.watch(),

@@ -101,9 +101,9 @@ async fn a_day_in_the_greenhouse_sends_the_commands_it_is_pinned_to() {
         })
         .collect();
     assert_eq!(readings.len(), 144, "a reading every ten minutes for a day");
-    let store = Store::new(Arc::new(Namespaces::of_tree(tree).unwrap())).unwrap();
+    let store = Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap();
     let clock: Arc<dyn Clock> = common::clock(readings[0].0);
-    let loaded = booted(&store, tree, &world, "grower", readings[0].0).unwrap();
+    let loaded = booted(&store, &world, "grower", readings[0].0).unwrap();
     let commands = Arc::new(Mutex::new(Vec::new()));
     let bus = Bus {
         clock: clock.clone(),

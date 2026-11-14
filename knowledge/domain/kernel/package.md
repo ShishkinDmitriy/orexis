@@ -31,7 +31,7 @@ Nothing assembles them - each registers itself (`orexis/src/task.rs`) - and the 
 # How a package is loaded
 
 **Only for a [role](/domain/kernel/role.md) the agent is declared in.** A package is a crate at the
-repo's root holding an `ontology.ttl`, named for it (`transport/mqtt` is `orexis-transport-mqtt/`), found by looking and never listed, and that ontology declares the
+repo's root holding an `ontology.ttl`, named for it (`transport/mqtt` is `orexis-transport-mqtt/`), and that ontology declares the
 roles the package serves, beneath `orexis:Role`:
 
 | package | its role | an agent in it |
@@ -44,40 +44,52 @@ roles the package serves, beneath `orexis:Role`:
 | speech | `speech:Speaker` | hears its peers' documents and says its own |
 
 The agent's self graph states its roles beside its self, in a domain's words where a domain has them.
-The boot reads the kernel and the world, finds the agent and puts its self graph in, then closes the
-declared roles over `rdfs:subClassOf` — the steps the world's domains state, and each package's own,
-read off its ontology APART from the store — and loads exactly the packages whose ontology declares a
-role in that closure, its documents put in and its part created. A package's ontology never enters an
-agent's store to answer whether the package is needed: Hanoi's mover, a planner alone, holds no
-execution, sensing, prediction, speech or belief document, as the #824 measurement found for all
-but execution, which #928 took away. A domain that
-speaks a package's words, as climate's flows speak prediction's, is read whether the package is
-loaded or not.
 
-**A transport is no role.** It is loaded where a loaded role needs bytes and the society wires a bus
-— the MQTT member for an observer one of whose sensors publishes on a topic, or a speaker that
-listens to one; the HTTP member for an observer one of whose sensors is a thing with a form —
-asked over the world's common beliefs and the self (`TRANSPORTS` in `orexis/src/boot.rs`). That is the
-one derivation left, since which bus reaches a device is wiring and not a choice. History and metrics
-are loaded from the environment.
+**A package decides for itself whether the agent runs it, in its own start.** Two things must agree: the
+binary holds the package, a Cargo feature, and the agent's documents call for it. Where either says no, it is
+not loaded. Every package the binary holds is given its start, and the first thing a start does is decide:
 
-There is no default set and no fixed mind: an agent declaring no role loads nothing. A package
-directory with no `ontology.ttl` is no package and is read by no agent, and one whose ontology
-declares no role is read by none but as a transport; `agent/tests/test_roles.py` holds the tree to
-both, and every role both ways — declared, loaded and its part created; undeclared, absent.
+| a package | joins where | asked by |
+|---|---|---|
+| with a role | the self plays a role of its class, or of a class an ontology in the store puts beneath it | `handed.plays(&[ROLE])` |
+| a transport | a role the self plays needs bytes and the world wires them through this member | `handed.joins(...)` over `boot::wired` |
+| keeping house for another | that package joined | `handed.beside("journal")` |
+| the metrics | always | `handed.joins(|_| Ok(true))` |
 
-Once loaded, a package **starts itself**: its crate registers its name and its start with the linker, and
-the binary starts each one the roles load; the start makes the package's
-[part](/domain/kernel/part.md) and answers the one task that holds it — a loop of the package's own,
-awaiting the [events](/domain/kernel/event.md) beneath its triggers, the kinds of graph written it asked
-to hear, an arrival and the clock; the kernel knows no package and no word of what one
-does ([a-package-starts-itself](/decisions/a-package-starts-itself.md),
+The package knows its own role; the kernel names no package, no role and no transport's wiring. A package that
+joins **brings its documents**: its `ontology.ttl`, and where it has them its rules and its actions, each a file
+of its crate compiled into the binary beside its code (`orexis::documents!` in the crate's registration). They are
+put in the store, the vocabulary is closed again, and every graph of the world passed over until then is offered
+again, since a kind this package declares is now one the agent reads.
+
+**The asking goes round until it settles.** A package that joins may bring the ontology that puts a role beneath
+another's: translation's says a translator is a speaker, so speech, asked before translation joined, is asked
+again after. A round in which nobody joined settles it, and those still asking decline. So a package's ontology
+enters the store only where the package joined: Hanoi's mover, a planner and a recorder, holds no execution,
+sensing, prediction, speech or belief document. A role the self plays that no package of the binary declares is
+refused, its package having been built out. A domain that speaks a package's words, as climate's flows speak
+prediction's, is read whether the package is loaded or not.
+
+**Then each start goes on, in the order the packages start, and its lifecycle is two events.** The kernel says
+`orexis:PackageStarting` as a joined package's start is resumed and `orexis:PackageStarted` as it ends, each
+naming the package (`orexis:package`), so the journal keeps which packages run. A package whose start needs what
+another's made waits for that one: translation waits for speech (`handed.started("speech")`), and what keeps
+house for the journal waits for the journal. The start makes the package's [part](/domain/kernel/part.md) and
+answers the one task that holds it — a loop of the package's own, awaiting the
+[events](/domain/kernel/event.md) beneath its triggers, the kinds of graph written it asked to hear, an arrival
+and the clock ([a-package-starts-itself](/decisions/a-package-starts-itself.md),
 [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
 
-A package's need of another is said by its role sitting beneath the other's — the observer beneath
-the deliberator, since an observation's sides are revisions — in the package's own ontology, so no
-package speaks a word above it and the runtime knows none of the needs
-([a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md)).
+**A start does nothing before it has joined.** The boot runs every start as far as its decision and drops it
+there (`task::decide`), so that whoever runs the agent knows what joined before anything is made — the journal
+is created only for a recorder — and `task::start` runs the starts of the joined to their ends.
+
+There is no default set and no fixed mind: an agent declaring no role is joined by the metrics alone. A brought
+document's graph is named for its crate and file (`urn:orexis:orexis-sensing/rules.ttl`), a name for eyes. A
+crate's `requirements.ttl` is not brought: it is onboarding's, read off the disk by `orexis-onboard`, and no
+agent loads it. Onboarding, which is Python and compiles nothing, still finds each crate's documents by looking,
+and works out which packages an agent loads from the ontologies, to build its image.
+
 
 # Whose a word is
 

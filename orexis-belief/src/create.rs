@@ -63,11 +63,22 @@ impl Belief {
     }
 }
 
-inventory::submit! { Package { name: "belief", start } }
+inventory::submit! { Package { name: "belief", documents: orexis::documents!("ontology.ttl"), start } }
 
 /// BELIEF'S START: its deliberator made, what the world authored as the agent's state revised, once, and its task,
 /// which hears a belief written and its trigger's events.
-fn start(handed: &Handed) -> Result<Option<Task>, Error> {
+/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
+/// joined, makes its core.
+fn start(handed: Handed) -> orexis::task::Starting {
+    Box::pin(async move {
+        if !handed.plays(&[crate::ontology::DELIBERATOR]).await? {
+            return Ok(None);
+        }
+        make(&handed)
+    })
+}
+
+fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     let mut belief = Belief::new(&handed.store, &handed.id)?;
     belief.deliberator.watch = handed.events.watch().clone();
     belief.start(handed.clock.now())?;

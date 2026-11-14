@@ -213,11 +213,21 @@ impl Metrics {
     }
 }
 
-inventory::submit! { Package { name: "metrics", start } }
+inventory::submit! { Package { name: "metrics", documents: &[], start } }
 
 /// METRICS' START: where it is handed a window it tallies what it hears on the watch from now on, and its task waits
 /// for the run's end and writes the last window.
-fn start(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
+/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
+/// joined, makes its core.
+fn start(handed: Handed) -> orexis::task::Starting {
+    Box::pin(async move {
+        //  NO ROLE: the admins' instrumentation runs for every agent, where the deployment hands it a sink.
+        handed.joins(|_| Ok(true)).await?;
+        make(&handed)
+    })
+}
+
+fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
     let Some(window) = handed.outside.take::<Window>() else {
         return Ok(None);
     };
