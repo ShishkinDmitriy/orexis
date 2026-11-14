@@ -285,7 +285,7 @@ def _restart(lasting: bool) -> str:
 def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, str]] | None,
              series: dict[str, tuple[str, str]], window: float | None, lasting: bool, journal: str | None = None,
              incidents: tuple[str | None, list[str]] = (None, []), translates: Translating | None = None,
-             image: Image | None = None, traced: str | None = None) -> str:
+             image: Image | None = None) -> str:
     """An agent's service. `bus` is each broker the agent is connected to, by its IRI, with the url
     it reaches it at — TLS where the broker listens so, since an agent of a world with a bus holds a
     certificate — or None where the world has none, and then nothing of a bus is written: no
@@ -295,9 +295,6 @@ def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, st
                      for purpose, (url, organisation) in series.items())
     if METRICS in series and window is not None:
         stores += f'\n      {INTERVAL_KEY}: "{window:g}"'
-    if traced is not None:
-        stores += ("\n      # where it sends its activities as spans — the installation's tracer, since the world is monitored"
-                   f'\n      OTLP_ENDPOINT: "{traced}"')
     if journal is not None:
         stores += ("\n      # where it serves its journal, on the host's loopback, allocated by the installation"
                    f'\n      JOURNAL_PORT: "{urlparse(journal).port}"')
@@ -437,7 +434,6 @@ def render(world: str) -> str:
     reached = _reached(world) if bus else {}
     series = {purpose: installation.series(purpose) for purpose in installation.purposes(world)}
     window = installation.interval(METRICS) if METRICS in series else None
-    tracer = installation.tracer() if METRICS in series else None
     client = simulated_client(world)
     read = read_by_an_agent(world)
     store = reading.world(world_dir(world))
@@ -447,8 +443,7 @@ def render(world: str) -> str:
                 + (_simulator(world, read, client, *broker_of(world, client)[:2]) if client else "")
                 + "".join(_service(a, world, read, reached.get(a, []) if bus else None, series, window,
                                    reading.lasts(world_dir(world), a), installation.journal(iris[a]), counted,
-                                   translating(world, a), image_of(world, a, bool(series)),
-                                   tracer and tracer["url"])
+                                   translating(world, a), image_of(world, a, bool(series)))
                           for a in who))
     volumes = ("".join(f"  orexis-{world}-{service_of(b)}:\n" for b in sorted(bus))
                + "".join(f"  orexis-{world}-{a}:\n  orexis-{world}-{a}-journal:\n" for a in who))

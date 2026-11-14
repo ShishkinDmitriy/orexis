@@ -155,8 +155,9 @@ fn the_mover_loads_planning_and_its_journal_and_nothing_else() {
     let store = store();
     assert_eq!(
         boot(&store),
-        ["journal", "journal-oxigraph", "journal-otlp", "metrics", "planning"],
-        "a recorder with what keeps house for its journal, what watches every agent, and a planner"
+        ["journal", "journal-oxigraph", "metrics", "planning"],
+        "a recorder with what archives its journal, what watches every agent, and a planner: the world names no \
+         tracer, so what ships the journal's activities ended its start"
     );
     let absent = [
         "orexis-execution/ontology.ttl",

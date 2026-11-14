@@ -105,6 +105,12 @@ orexis:WorldGraph
     rdfs:label "World graph" ;
     rdfs:comment "The world agents act in: the subjects and their ranges, the sensors, devices and systems, the venues — and, in a world with no society graph beside it, the agents and what each acts for. Sovereign-authored and common, importing the domains the world speaks (knowledge/domain/kernel/world.md)." .
 
+orexis:DeploymentGraph
+    a owl:Class ;
+    rdfs:subClassOf orexis:Graph ;
+    rdfs:label "Deployment graph" ;
+    rdfs:comment "What the world is connected to, as its agents read it: each service with where it answers (`schema:url`), typed in the words of the package that uses it — a tracer is the journal's. Derived by onboarding from the installation's document and the world's own deployment, into a document of the world. No belief: no reader of the mind is handed it, and no plan branches on it. A package asks it for a service of its kind as it starts, and ends its start where the world names none (knowledge/domain/onboarding/deployment.md)." .
+
 #  WHAT HAPPENED, as the journal keeps it (knowledge/domain/kernel/journal.md): an event a package says, an entry
 #  of the agent's journal — a store of its own beside the beliefs, which no part reads — and never a belief.
 

@@ -818,8 +818,12 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
         assert "INFLUX_HISTORY_URL" in text, path
         monitored = METRICS in told[path.parent.name]
         assert ("INFLUX_METRICS_URL" in text) == ("influx-metrics.env" in text) == (compose.INTERVAL_KEY in text) == monitored, path
-        # the tracer is told where metrics are: both are the admins' instrumentation, opted into by the world
-        assert ("OTLP_ENDPOINT" in text) == monitored, path
+        # the tracer is named where metrics are told: both are the admins' instrumentation, opted into by the
+        # world. It is named in the world's derived deployment, which its agents read, and no environment says it.
+        from onboarding import connections
+        named = connections.derivation(path.parent.name)
+        assert (named.exists() and "journal:Tracer" in named.read_text()) == monitored, path
+        assert "OTLP_ENDPOINT" not in text, path
         assert not re.search(r"\bINFLUX_(URL|ORG|BUCKET|TOKEN)\b", text), path
 
 
@@ -2126,3 +2130,21 @@ def test_a_crate_brings_every_document_it_holds_and_names_none_it_does_not(crate
     nested = [p for p in root.rglob("*") if p.suffix in {".ttl", ".trig"} and p.parent != root
               and not ({"tests", "target", "node_modules"} & set(p.relative_to(root).parts))]
     assert not nested, f"{crate}/ holds documents below its root, which nothing brings: {nested}"
+
+
+def test_every_committed_derived_deployment_is_a_fresh_derivation():
+    """`world/<w>/deployment.derived.ttl` says GENERATED — do not edit, and it is what an agent's packages read
+    the world's services from: a package ends its start where it names none of its kind. So one left behind by a
+    change to the installation, or to whether the world is monitored, has an agent ship to a tracer that is gone
+    or to none. Held to what onboarding derives now; a world connected to nothing has no such document."""
+    from onboarding import connections
+
+    held = 0
+    for w in sorted(p.name for p in (REPO_ROOT / "world").iterdir() if (p / "world.ttl").exists()):
+        if connections.derive(w):
+            assert connections.derivation(w).read_text() == connections.derivation_text(w), \
+                f"world/{w}/deployment.derived.ttl is not what onboarding derives now — run `orexis-onboard {w}`"
+            held += 1
+        else:
+            assert not connections.derivation(w).exists(), f"world/{w} is connected to nothing onboarding derives"
+    assert held >= 2, "no world is connected to anything — the guard checks one side"

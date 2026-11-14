@@ -64,7 +64,7 @@ from pathlib import Path
 
 from documents.store import DocumentRefused
 
-from . import certs, compose, dashboards, influx, installation, mqtt, reading, topics
+from . import certs, compose, connections, dashboards, influx, installation, mqtt, reading, topics
 from .worlds import world_dir, worlds
 
 log = logging.getLogger("onboard")
@@ -89,6 +89,9 @@ def onboard(world: str, rotate: bool = False, check: bool = True) -> None:
         # What the society leaves out is derived before the world is judged: each topic's filter, into
         # `society.derived.ttl`, which the judgment and every tool below read as the society (#836).
         topics.write(world)
+    # And what the world is connected to, into `deployment.derived.ttl`, which its agents read: a package asks
+    # the store for a service of its kind as it starts.
+    connections.write(world)
     if check:
         # Onboarding a world whose documents will not load, or do not hold, is worse than refusing: it
         # mints real credentials for agents that will refuse to boot, or for a society reading what its

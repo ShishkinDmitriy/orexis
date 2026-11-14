@@ -265,17 +265,6 @@ fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, 
     let archive_every_s = Some(orexis_sensing_influxdb::interval(&env));
     #[cfg(not(feature = "sensing"))]
     let archive_every_s = None;
-    #[cfg(feature = "journal")]
-    let traces = orexis_journal_otlp::from_environment(&env).filter(|_| kept.is_some());
-    #[cfg(feature = "journal")]
-    if let Some(tracing) = &traces {
-        log::info!(
-            "{} ships its activities as spans to {} every {}s",
-            args.agent,
-            tracing.endpoint,
-            tracing.every_s
-        );
-    }
     let wiring = Wiring {
         watching: Watching {
             #[cfg(feature = "journal")]
@@ -285,8 +274,6 @@ fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, 
             history: sinks.remove(HISTORY),
             archive_every_s,
             metrics,
-            #[cfg(feature = "journal")]
-            traces,
         },
         ..Wiring::default()
     };

@@ -28,6 +28,9 @@ pub struct Keeps {
     pub journal: Option<Arc<Journal>>,
 }
 
+/// The journal this package keeps, handed on as it starts to what ships its activities to a tracer.
+pub struct Traced(pub Arc<Journal>);
+
 inventory::submit! { Package { name: "journal", documents: orexis::documents!("ontology.ttl"), start } }
 
 /// THE START: where it is handed a journal it hears the watch from now on, the events and the activities, and has
@@ -53,7 +56,9 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
             journal.clone(),
             events::incidents(&handed.store)?,
         );
-        activities::connect(handed.events.watch(), journal);
+        activities::connect(handed.events.watch(), journal.clone());
+        //  AND HANDED ON to what ships its activities, which starts after it and makes itself.
+        handed.outside.hand(Traced(journal));
     }
     Ok(None)
 }

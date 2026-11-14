@@ -17,7 +17,7 @@
 //! the journal until the journal's window sweeps it - the hot record is bounded whether or not anything ships.
 //!
 //! OTLP'S JSON OVER HTTP, written here rather than by the OpenTelemetry SDK: one POST of a documented shape to
-//! `$OTLP_ENDPOINT/v1/traces` every `OTLP_INTERVAL_S` of the agent's time, ten seconds where nothing says, made off
+//! `/v1/traces` beneath the url of the tracer the world's deployment names, every ten of the agent's seconds, made off
 //! the agent's own threads, so a tracer slow or away never holds the mind.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -29,13 +29,10 @@ use serde_json::{Value, json};
 
 use orexis::events::triple;
 use orexis::task::{Handed, Package, Task};
+use orexis_journal::Traced;
 use orexis_journal::journal::{ACTIVITY, Journal};
 
-/// Where the tracer is, told as environment: OTLP's HTTP endpoint, `/v1/traces` beneath it.
-pub const ENDPOINT: &str = "OTLP_ENDPOINT";
-/// How often what is kept is shipped, in the agent's seconds, told as environment.
-pub const INTERVAL: &str = "OTLP_INTERVAL_S";
-/// How often, where the environment says nothing.
+/// How often what is kept is shipped, in the agent's seconds.
 pub const INTERVAL_S: f64 = 10.0;
 /// An activity shipped says to which cold store, so two may each have their own.
 pub const SHIPPED_TO: &str = "http://example.org/orexis#shippedTo";
@@ -43,14 +40,8 @@ pub const SHIPPED_TO: &str = "http://example.org/orexis#shippedTo";
 /// How a batch of spans reaches the tracer: the body of one POST, and whether it was accepted.
 pub type Send = Arc<dyn Fn(String) -> bool + std::marker::Send + Sync>;
 
-/// Where the agent is traced and how often it ships, as its deployment says.
-#[derive(Clone, Debug, PartialEq)]
-pub struct Tracing {
-    pub endpoint: String,
-    pub every_s: f64,
-}
-
-/// What is shipped and where, handed outside by whoever runs the agent, where the deployment traces it.
+/// What is shipped and where: made by this package from the journal handed on and the tracer the world names, or
+/// handed outside by a test that ships to an endpoint of its own.
 pub struct Ships {
     pub journal: Arc<Journal>,
     pub endpoint: String,
@@ -266,17 +257,24 @@ pub fn ship(journal: &Journal, agent: &str, endpoint: &str, send: &Send) -> usiz
     activities.len()
 }
 
-/// What the environment says of the tracer: its endpoint and how often to ship, or None where it names no endpoint.
-pub fn from_environment(env: &dyn Fn(&str) -> Option<String>) -> Option<Tracing> {
-    let endpoint = env(ENDPOINT)
-        .map(|e| e.trim_end_matches('/').to_string())
-        .filter(|e| !e.is_empty())?;
-    let every_s = env(INTERVAL)
-        .and_then(|s| s.parse::<f64>().ok())
-        .filter(|s| *s > 0.0)
-        .unwrap_or(INTERVAL_S);
-    Some(Tracing { endpoint, every_s })
+/// WHERE THE WORLD SAYS ITS AGENTS ARE TRACED: the url of the tracer its deployment graph names, or None where it
+/// names none. The world is what an agent is given, so the world says it; nothing here reads the environment.
+pub fn tracer(store: &orexis::store::Store) -> Result<Option<String>, orexis::Error> {
+    let graphs = store.graphs_of(&[orexis::ontology::DEPLOYMENT], &orexis::store::Within::common())?;
+    let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
+    if graphs.is_empty() {
+        return Ok(None);
+    }
+    let rows = store.rows(TRACER_Q, &graphs)?;
+    Ok(rows
+        .iter()
+        .filter_map(|row| orexis::store::value(row, "url"))
+        .map(|url| url.trim_end_matches('/').to_string())
+        .find(|url| !url.is_empty()))
 }
+
+const TRACER_Q: &str = "PREFIX journal: <http://example.org/orexis/journal#> PREFIX schema: <https://schema.org/> \
+SELECT ?url WHERE { ?tracer a journal:Tracer ; schema:url ?url } ORDER BY ?url";
 
 /// POST each body to `endpoint`'s traces, and say whether it was accepted.
 pub fn post(endpoint: &str) -> Send {
@@ -305,13 +303,14 @@ pub fn post(endpoint: &str) -> Send {
 
 inventory::submit! { Package { name: "journal-otlp", documents: &[], start } }
 
-/// THE SHIPPER'S START: where it is handed a journal and an endpoint, its task; and none otherwise.
-/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
-/// joined, makes its core.
+/// ITS START, which every package this binary holds is given: it keeps house for the journal, so it joins where the
+/// journal did AND THE WORLD NAMES A TRACER, and where the world names none its start ends there. Joined, it waits
+/// for the journal's start, takes the journal that handed on, and makes its task: where to ship is the world's word,
+/// and how often is its own stretch.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        //  IT KEEPS HOUSE FOR THE JOURNAL, so it runs where the journal does, started after it.
-        if !handed.beside("journal").await? || !handed.started("journal").await {
+        let traced = |handed: &Handed| Ok(handed.joined("journal") && tracer(&handed.store)?.is_some());
+        if !handed.joins(traced).await? || !handed.started("journal").await {
             return Ok(None);
         }
         make(&handed)
@@ -319,9 +318,26 @@ fn start(handed: Handed) -> orexis::task::Starting {
 }
 
 fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
-    let Some(ships) = handed.outside.take::<Ships>() else {
-        return Ok(None);
+    //  HANDED ONE, by a test that ships to its own endpoint, it ships that; otherwise it makes its own.
+    let ships = match handed.outside.take::<Ships>() {
+        Some(ships) => ships,
+        None => {
+            let (Some(endpoint), Some(journal)) = (tracer(&handed.store)?, handed.outside.take::<Traced>()) else {
+                return Ok(None);
+            };
+            Ships {
+                journal: journal.0,
+                endpoint,
+                every_s: INTERVAL_S,
+            }
+        }
     };
+    log::info!(
+        "{} ships its activities as spans to {} every {}s",
+        handed.id,
+        ships.endpoint,
+        ships.every_s
+    );
     let send = post(&ships.endpoint);
     Ok(Some(Box::pin(task(handed.clone(), ships, send))))
 }
@@ -523,24 +539,5 @@ mod tests {
             2,
             "another cold store has its own"
         );
-    }
-
-    #[test]
-    fn the_endpoint_and_the_interval_are_the_environments() {
-        let env = |k: &str| match k {
-            ENDPOINT => Some("http://127.0.0.1:4318/".to_string()),
-            INTERVAL => Some("30".to_string()),
-            _ => None,
-        };
-        assert_eq!(
-            from_environment(&env),
-            Some(Tracing {
-                endpoint: "http://127.0.0.1:4318".to_string(),
-                every_s: 30.0
-            })
-        );
-        let only = |k: &str| (k == ENDPOINT).then(|| "http://127.0.0.1:4318".to_string());
-        assert_eq!(from_environment(&only).unwrap().every_s, INTERVAL_S);
-        assert_eq!(from_environment(&|_| None), None);
     }
 }

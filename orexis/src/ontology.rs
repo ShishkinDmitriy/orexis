@@ -32,6 +32,8 @@ pub const END: &str = "http://example.org/orexis#end";
 pub const WORLD_GRAPH: &str = "http://example.org/orexis#WorldGraph";
 pub const SOCIETY_GRAPH: &str = "http://example.org/orexis#SocietyGraph";
 pub const GRAPH: &str = "http://example.org/orexis#Graph";
+/// What the world is connected to, as its agents read it: no belief, asked by a package as it starts.
+pub const DEPLOYMENT: &str = "http://example.org/orexis#DeploymentGraph";
 pub const ROLE: &str = "http://example.org/orexis#Role";
 
 /// The two graphs a writer names: the catalogue, created by genesis alone, and the vocabulary's closure.

@@ -275,7 +275,7 @@ def tracer() -> dict | None:
     image — or None where it names none, and no agent here traces. One at most, with one http url and one image, is
     the installation's requirement, judged as the document is read."""
     found = _asserted(_store(with_derivation=False), _SERVICE_Q.replace("$kind", TRACER))
-    return {"url": found[0]["url"], "image": found[0]["image"]} if found else None
+    return {"iri": found[0]["s"], "url": found[0]["url"], "image": found[0]["image"]} if found else None
 
 
 # ---------------------------------------------------------------- a world's broker
