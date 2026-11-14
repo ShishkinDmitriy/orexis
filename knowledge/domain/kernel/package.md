@@ -82,8 +82,15 @@ and the clock ([a-package-starts-itself](/decisions/a-package-starts-itself.md),
 [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
 
 **A start does nothing before it has joined.** The boot runs every start as far as its decision and drops it
-there (`task::decide`), so that whoever runs the agent knows what joined before anything is made — the journal
-is created only for a recorder — and `task::start` runs the starts of the joined to their ends.
+there (`task::decide`), so that what joined is known before anything is made, and `task::start` runs the starts of the joined to their
+ends.
+
+**A deployed agent's package makes what it is not handed.** Whoever runs an agent for good hands
+`orexis::task::Deployed` outside, and a package then makes its own from what the world says: the journal package
+its journal, which it serves and keeps the process's log in (`orexis::task::Said`), and what archives it its
+archive on disk. A check and a test do not hand it, so a package handed nothing has nothing, and a check reaches
+no disk and no port. What a package owes after every other task has ended, it asks for with `handed.finally`: the
+archiver takes there what the others said while stopping.
 
 There is no default set and no fixed mind: an agent declaring no role is joined by the metrics alone. A brought
 document's graph is named for its crate and file (`urn:orexis:orexis-sensing/rules.ttl`), a name for eyes. A

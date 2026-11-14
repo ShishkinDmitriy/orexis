@@ -5,6 +5,8 @@ triplestore on the agent's volume, and has the journal forget what it took.
 
 - **Loaded for:** `journal:Recorder`, where the role names an archive (`journal:archivedIn`): it asks the world's
   deployment graph where that `journal:Archive` is as it starts, and ends its start where the role names none.
+- **It opens its own archive** at the path the world states, where the agent is deployed, and takes once more after
+  every task has ended. A test hands it one instead.
 - **Words:** none. **Dictionary:** `knowledge/domain/journal/archive.md`.
 
 ## What starts it

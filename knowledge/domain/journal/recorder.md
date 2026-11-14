@@ -25,7 +25,8 @@ linked to decides which of the two crates that keep house for the journal are st
 `orexis-journal-oxigraph/`, which takes what lasts to the [archive](/domain/journal/archive.md) the role names, and
 `orexis-journal-otlp/`, which ships the activities to the [tracer](/domain/journal/tracer.md) the role names. A role
 naming neither keeps the journal in memory for its window, and runs nothing else. The agent's log
-is kept there too, with what the boot said before the role was read.
+is kept there too, with what the boot said before the role was read. The package makes the journal itself as it
+starts, where the agent is deployed; the binary that runs the agent makes none.
 
 # What it is not
 

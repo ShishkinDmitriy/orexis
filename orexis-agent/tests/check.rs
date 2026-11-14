@@ -192,3 +192,37 @@ fn a_housekeeper_of_the_journal_joins_where_the_recorders_role_names_its_service
     );
     assert_eq!(linked("hanoi", "hanoi"), (None, archive, [true, false, true]));
 }
+
+/// A DEPLOYED AGENT'S JOURNAL PACKAGE MAKES ITS OWN JOURNAL, and one that is not deployed and handed none keeps
+/// none: Hanoi's agent, started deployed, hands its journal on to its housekeepers with the packages' starts
+/// already in it, and started as a check starts it, hands nothing on.
+#[test]
+fn the_journal_package_makes_its_own_journal_where_the_agent_is_deployed_and_none_where_it_is_not() {
+    let now = oxsdatatypes::DateTime::now();
+    let kept = |deployed: bool| {
+        let store =
+            orexis::store::Store::new(std::sync::Arc::new(orexis::namespaces::Namespaces::linked().unwrap())).unwrap();
+        let loaded = orexis_agent::booted(&store, &Path::new(TREE).join("world/hanoi"), "hanoi", now).unwrap();
+        let tasks = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        let _entered = tasks.enter();
+        let clock: std::sync::Arc<dyn orexis::clock::Clock> = std::sync::Arc::new(orexis::clock::Manual::at(now));
+        let wiring = orexis_agent::Wiring {
+            deployed,
+            ..orexis_agent::Wiring::default()
+        };
+        let running = orexis_agent::start(&store, "hanoi", clock, &loaded, None, wiring).unwrap();
+        running
+            .handed
+            .outside
+            .take::<orexis_journal::Traced>()
+            .map(|traced| traced.0.store.named_graphs().count())
+    };
+    assert!(
+        kept(true).is_some_and(|entries| entries > 0),
+        "deployed, it keeps what the packages said as they started"
+    );
+    assert_eq!(kept(false), None, "a check keeps no journal");
+}

@@ -1063,6 +1063,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   running for what no role asked; the address on the role in the authored self graph and the installation's
   document handed to the agent were refused, and a credential is never in it
   (the-world-says-what-it-is-connected-to).
+- **A deployed agent's package makes what it is not handed, and the binary makes no journal** — whoever runs the
+  agent for good says so (`orexis::task::Deployed`), and the journal package then makes its journal, keeps the
+  process's log in it and serves it, and what archives it opens its own archive and takes the last entries once
+  every task has ended (`Handed::finally`); a check and a test say nothing, so a package handed nothing has nothing
+  and a check reaches no disk and no port (package).
 - **Each agent's image holds only what it runs** — `orexis-compose` builds `orexis-<world>-<agent>:local` with a feature of the binary for each
   package the agent loads and each whose crate those depend on; one image carrying everything was refused (a-package-brings-its-own-dependencies).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —

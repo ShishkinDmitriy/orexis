@@ -80,8 +80,9 @@ beliefs. They are no longer environment where a package has moved: they are a gr
 Built: the tracer. `orexis-journal-otlp/` reads the `journal:Tracer` its role names from the deployment graph;
 `OTLP_ENDPOINT` and `OTLP_INTERVAL_S` are gone from the binary and from every compose file. And where the archive
 is: `orexis-journal-oxigraph/` joins by the role's link and answers the path the world states, and the binary's
-`--journal` flag is gone. The binary still opens the archive at that path, since it serves it and takes the last
-entries as the run ends; the package opening its own is #1173's.
+`--journal` flag is gone. The journal package makes its own journal, keeps the process's log in it and serves it, and what
+archives it opens its own archive at that path and takes the last entries once every task has ended; the binary
+makes neither and names neither.
 
 Still environment, to move one by one, each with its package making its own connector: the series store for
 history and for metrics, the brokers' addresses, the model's url, each bot's url, the journal's port, and the intervals. Tracked as #1173, not here.

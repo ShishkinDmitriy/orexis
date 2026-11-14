@@ -5,9 +5,8 @@
 //! makes, whether it holds a desire and what its world as posed contradicts — or 3 and why not; and with `--boot PATH`
 //! it writes the store as booted there, in N-Quads, which is what `orexis-onboard` reads the agent's boot from.
 //!
-//! THE JOURNAL FIRST, so the log of the boot is in it: a store of its own in memory, its archive on disk where the world says the
-//! archive its recorder's role names is (`journal:archivedIn`), its log kept
-//! for the window the environment says and served read-only where the environment names a port (`JOURNAL_PORT`). A
+//! IT MAKES NO JOURNAL: the package that keeps one makes its own as it starts, and is handed the process's log, with
+//! what the boot said before; what archives it opens its own archive. A
 //! SINK PER PURPOSE the environment names a store for, and the part that writes it made with the rest. A STOP IS AN
 //! EXIT: `podman stop` sends SIGTERM, and the run ends before its next pass, every part stopped and the last window of
 //! metrics written.
@@ -24,8 +23,7 @@ use orexis::store::Store;
 use orexis::task::{MET, PLANNED, UNREACHABLE};
 use orexis_agent::{Watching, Wiring};
 
-/// What keeps a log record: the logger, the level and the message, as a journal remarks it.
-type Remark = Box<dyn Fn(&str, log::Level, &str) + Send + Sync>;
+use orexis::task::Remark;
 
 /// The log, to the standard error and into the journal where the agent keeps one: every record at its level. Whether
 /// it keeps one is known only once its self graph is read, so what is said before is held (`early`) and handed to the
@@ -154,75 +152,6 @@ fn world_name(world: &Path) -> String {
         .unwrap_or_default()
 }
 
-/// What an agent that plays a recorder keeps of what happened: its journal, and the archive what lasts is taken to.
-#[cfg(feature = "journal")]
-type Kept = (
-    Arc<orexis_journal::Journal>,
-    Option<Arc<orexis_journal_oxigraph::Archive>>,
-);
-
-/// THE ARCHIVE OF AN AGENT WHOSE RECORDER'S ROLE NAMES ONE: a store of its own on disk where the world says it is,
-/// and none where what archives the journal did not join. A binary built without the volume has nowhere to keep
-/// one, says so, and what lasts stays in its journal.
-#[cfg(feature = "journal")]
-#[cfg_attr(feature = "volume", allow(unused_variables))]
-fn archive(
-    store: &Store,
-    loaded: &[String],
-    agent: &str,
-) -> Result<Option<Arc<orexis_journal_oxigraph::Archive>>, Error> {
-    if !loaded.iter().any(|p| p == orexis_agent::ARCHIVE) {
-        return Ok(None);
-    }
-    match orexis_journal_oxigraph::archive(store)? {
-        #[cfg(feature = "volume")]
-        Some(path) => Ok(Some(Arc::new(orexis_journal_oxigraph::Archive::open(&path)?))),
-        #[cfg(not(feature = "volume"))]
-        Some(path) => {
-            log::warn!(
-                "{agent}: this binary was built without the volume feature, so no archive is kept at {} and what \
-                 lasts stays in the journal",
-                path.display()
-            );
-            Ok(None)
-        }
-        None => Ok(None),
-    }
-}
-
-/// THE JOURNAL OF AN AGENT THAT PLAYS A RECORDER: in memory, its log kept from here on with what the boot said
-/// before; its archive on disk where the world says; and both served on the loopback where the environment names a
-/// port, the archive at `/sparql`, or the journal there where the agent keeps none, and the journal at `/live/sparql`.
-#[cfg(feature = "journal")]
-fn journal(args: &Args, clock: &Arc<Paced>, store: &Store, loaded: &[String]) -> Result<Kept, Error> {
-    use orexis_journal::journal;
-    let archive = archive(store, loaded, &args.agent)?;
-    let mut kept = journal::Journal::new(journal::window_s(&env), {
-        let clock = clock.clone();
-        Arc::new(move || clock.now())
-    })?;
-    kept.incident_level = journal::incident_level(&env);
-    kept.incidents = journal::incidents(&env);
-    let kept = Arc::new(kept);
-    if let Some(logger) = LOGGER.get() {
-        let into = kept.clone();
-        logger.attach(Box::new(move |logger, level, message| {
-            let _ = into.remark(logger, level, message, None);
-        }));
-    }
-    if let Some(port) = env("JOURNAL_PORT").and_then(|p| p.parse().ok()) {
-        let past = archive.as_ref().map_or_else(|| kept.store.clone(), |a| a.store.clone());
-        if let Err(e) = journal::serve(
-            vec![("/sparql", past), ("/live/sparql", kept.store.clone())],
-            "127.0.0.1",
-            port,
-        ) {
-            log::warn!("{}: the journal cannot be served on {port}: {e}", args.agent);
-        }
-    }
-    Ok((kept, archive))
-}
-
 fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, Error> {
     let namespaces = Arc::new(Namespaces::linked()?);
     let store = match &args.volume {
@@ -237,27 +166,6 @@ fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, 
         None => Store::new(namespaces)?,
     };
     let loaded = orexis_agent::booted(&store, &args.world, &args.agent, clock.now())?;
-    //  A JOURNAL WHERE THE AGENT PLAYS A RECORDER, and none otherwise: its packages say what happens either way.
-    #[cfg(feature = "journal")]
-    let (kept, archive) = if loaded.iter().any(|p| p == orexis_agent::JOURNAL) {
-        let (kept, archive) = journal(args, &clock, &store, &loaded)?;
-        (Some(kept), archive)
-    } else {
-        log::info!("{} plays no recorder, and keeps no journal", args.agent);
-        (None, None)
-    };
-    #[cfg(feature = "journal")]
-    let archive_journal_every_s = orexis_journal_oxigraph::interval(&env);
-    #[cfg(feature = "journal")]
-    if archive.is_some() {
-        log::info!(
-            "{} archives what its journal keeps for good every {archive_journal_every_s}s",
-            args.agent
-        );
-    }
-    if let Some(logger) = LOGGER.get() {
-        logger.unkept();
-    }
     let mut sinks = series::load(&env);
     let told: Vec<String> = sinks.keys().map(|p| p.to_lowercase()).collect();
     if told.is_empty() {
@@ -275,16 +183,22 @@ fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, 
     let archive_every_s = Some(orexis_sensing_influxdb::interval(&env));
     #[cfg(not(feature = "sensing"))]
     let archive_every_s = None;
+    //  What a journal's test would hand is left unsaid; without the journal there is nothing more to leave.
+    #[allow(clippy::needless_update)]
     let wiring = Wiring {
         watching: Watching {
-            #[cfg(feature = "journal")]
-            journal: kept.clone(),
-            #[cfg(feature = "journal")]
-            archive: archive.clone().map(|a| (a, archive_journal_every_s)),
             history: sinks.remove(HISTORY),
             archive_every_s,
             metrics,
+            ..Watching::default()
         },
+        //  DEPLOYED: what a package is not handed here it makes for itself, its journal and its archive among them;
+        //  and the log is handed to whichever package keeps it.
+        deployed: true,
+        said: LOGGER.get().map(|logger| {
+            let keep: Box<dyn FnOnce(orexis::task::Remark) + Send> = Box::new(move |remark| logger.attach(remark));
+            orexis::task::Said(keep)
+        }),
         ..Wiring::default()
     };
     //  THE AGENT'S BODY IS A TOKIO RUNTIME, a worker a core, and each package its roles load is a task on it
@@ -296,8 +210,12 @@ fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, 
         .enable_all()
         .build()
         .map_err(|e| Error::Evaluation(format!("the tasks could not start: {e}")))?;
-    let outcome = tasks.block_on(async {
+    tasks.block_on(async {
         let mut running = orexis_agent::start(&store, &args.agent, clock.clone(), &loaded, None, wiring)?;
+        //  EVERY PACKAGE HAS STARTED: where none kept the log, what was held of it is dropped.
+        if let Some(logger) = LOGGER.get() {
+            logger.unkept();
+        }
         //  A SIGNAL ENDS THE RUN'S WAIT, which may be long since nothing polls: the flag is raised and the wake rung.
         if let Ok(mut signals) =
             signal_hook::iterator::Signals::new([signal_hook::consts::SIGTERM, signal_hook::consts::SIGINT])
@@ -318,16 +236,7 @@ fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, 
         }
         running.stop().await;
         outcome
-    });
-    //  THE LAST WORD: what was said after the archiver's last turn is taken too, and reaches the disk.
-    #[cfg(feature = "journal")]
-    if let (Some(kept), Some(archive)) = (&kept, &archive) {
-        if let Err(e) = archive.take(kept) {
-            eprintln!("{}: the journal's last entries were not archived: {e}", args.agent);
-        }
-        archive.flush();
-    }
-    outcome
+    })
 }
 
 fn main() {

@@ -144,8 +144,8 @@ impl Archive {
     }
 }
 
-/// What archives: the journal read, the archive written and how often, handed outside by whoever runs the agent
-/// where the deployment keeps an archive.
+/// What archives: the journal read, the archive written and how often. Handed outside by a test that reads both; a
+/// deployed agent is handed none and the package opens its own.
 pub struct Archives {
     pub journal: Arc<Journal>,
     pub archive: Arc<Archive>,
@@ -180,10 +180,67 @@ fn start(handed: Handed) -> orexis::task::Starting {
 }
 
 fn make(handed: &Handed) -> Result<Option<Task>, Error> {
-    let Some(archives) = handed.outside.take::<Archives>() else {
+    //  HANDED A JOURNAL AND AN ARCHIVE, by a test that reads both, it archives into that; deployed and handed none,
+    //  it opens its own where the world says the archive is, over the journal handed on; and otherwise it has no task.
+    let archives = match handed.outside.take::<Archives>() {
+        Some(archives) => archives,
+        None if handed.outside.has::<orexis::task::Deployed>() => match own(handed)? {
+            Some(archives) => archives,
+            None => return Ok(None),
+        },
+        None => return Ok(None),
+    };
+    log::info!(
+        "{} archives what its journal keeps for good every {}s",
+        handed.id,
+        archives.every_s
+    );
+    //  READERS OF THE PAST ASK THE ARCHIVE from now on: the journal's endpoint, and a chat.
+    archives.journal.archived_in(archives.archive.store.clone());
+    let mut reads = handed.outside.take::<orexis::task::Reads>().unwrap_or_default();
+    reads.journal = Some(archives.archive.store.clone());
+    handed.outside.hand(reads);
+    //  THE LAST WORD: what was said after this task's last turn, while the others stopped, is taken too, and reaches
+    //  the disk.
+    let (journal, archive, agent) = (archives.journal.clone(), archives.archive.clone(), handed.id.clone());
+    handed.finally(move || {
+        if let Err(e) = archive.take(&journal) {
+            eprintln!("{agent}: the journal's last entries were not archived: {e}");
+        }
+        archive.flush();
+    });
+    Ok(Some(Box::pin(task(handed.clone(), archives))))
+}
+
+/// ITS OWN ARCHIVE, where the agent is deployed: the store on disk at the path the world states of the archive the
+/// recorder's role names, over the journal that package handed on, taken as often as the environment says. A
+/// binary built without the volume has nowhere to keep one, says so, and what lasts stays in the journal.
+fn own(handed: &Handed) -> Result<Option<Archives>, Error> {
+    let (Some(path), Some(journal)) = (archive(&handed.store)?, handed.outside.take::<orexis_journal::Traced>()) else {
         return Ok(None);
     };
-    Ok(Some(Box::pin(task(handed.clone(), archives))))
+    //  STILL HANDED ON, to what ships the activities.
+    let kept = journal.0.clone();
+    handed.outside.hand(journal);
+    #[cfg(feature = "volume")]
+    {
+        Ok(Some(Archives {
+            journal: kept,
+            archive: Arc::new(Archive::open(&path)?),
+            every_s: interval(&|key| std::env::var(key).ok()),
+        }))
+    }
+    #[cfg(not(feature = "volume"))]
+    {
+        let _ = kept;
+        log::warn!(
+            "{}: this binary was built without the volume feature, so no archive is kept at {} and what lasts \
+             stays in the journal",
+            handed.id,
+            path.display()
+        );
+        Ok(None)
+    }
 }
 
 /// THE ARCHIVER'S TASK: every stretch of the agent's time, or as an incident is kept, it takes what lasts where

@@ -7,6 +7,9 @@ it generated.
 - **Loaded for:** `journal:Recorder`. An agent that plays none says what happens and nobody writes it down.
 - **Words:** `ontology.ttl` (`journal:`). **Dictionary:** `knowledge/domain/kernel/journal.md`,
   `knowledge/domain/journal/`.
+- **It makes its own journal** where the agent is deployed, keeps the process's log in it, and serves it read-only
+  on the loopback where `JOURNAL_PORT` names a port: `/sparql` answers from the archive, or from the journal where
+  there is none, and `/live/sparql` from the journal. A test hands it one instead; a check gets none.
 - **Its housekeepers:** `orexis-journal-oxigraph/` takes what lasts to the archive on disk;
   `orexis-journal-otlp/` ships the activities as spans.
 
