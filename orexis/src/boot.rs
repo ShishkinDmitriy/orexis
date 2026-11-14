@@ -70,28 +70,6 @@ const SECRETS: &str = "secrets";
 const BELIEFS: &str = "beliefs";
 const VOCABULARY: &str = "ontology.ttl";
 
-/// THE ORDER THE PACKAGES START IN, and every package this binary holds is ordered by it: what keeps the journal and
-/// what watches first, so that what the others say as they start is heard, then the order a pass ran the parts in.
-pub const PASS: &[&str] = &[
-    "journal",
-    "journal-oxigraph",
-    "journal-otlp",
-    "metrics",
-    "sensing-influxdb",
-    "belief",
-    "planning",
-    "execution",
-    "sensing",
-    "prediction",
-    "speech",
-    "translation",
-    "coordination",
-    "transport/mqtt",
-    "transport/http",
-    "transport/telegram",
-    "transport/email",
-];
-
 const ME_Q: &str = "SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id }";
 const PLAYED_Q: &str = "SELECT ?role ?kind WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind }";
 const AGENTS_Q: &str = "SELECT DISTINCT ?a WHERE { ?a a orexis:Agent }";
@@ -130,15 +108,14 @@ fn under(directory: &Path) -> Vec<PathBuf> {
     out
 }
 
-/// Every package this binary holds, in the order they start, and any the order does not name after, by its name.
+/// Every package this binary holds, by its name: the kernel keeps no order between them, and the order they start
+/// in follows from what each start waits for (`Handed::started`).
 pub fn every_package() -> Vec<String> {
-    let mut found: Vec<String> = inventory::iter::<Package>()
+    inventory::iter::<Package>()
         .map(|p| p.name.to_string())
         .collect::<BTreeSet<_>>()
         .into_iter()
-        .collect();
-    found.sort_by_key(|p| (PASS.iter().position(|q| q == p).unwrap_or(PASS.len()), p.clone()));
-    found
+        .collect()
 }
 
 /// What a boot reads first off the disk: the world's directory, the agent's own `secrets/<agent>/`, and `beliefs/`.
@@ -589,7 +566,7 @@ impl Begun {
     }
 }
 
-/// BOOT `booting.agent` into `store`, and answer the packages that joined, in the order they start: begun, each
+/// BOOT `booting.agent` into `store`, and answer the packages that joined, by name: begun, each
 /// package this binary holds asked in its own start whether the agent runs it (`task::decide`), and finished. No
 /// package's core is made and no task started: that is `task::start`, over the packages this answers.
 pub fn boot(store: &Store, booting: &Booting<'_>) -> Result<Vec<String>, Error> {

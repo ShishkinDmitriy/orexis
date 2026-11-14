@@ -52,7 +52,7 @@ use orexis_transport_mqtt as _;
 use orexis_transport_telegram as _;
 
 /// Boot `agent` of `world` into `store` from the world's documents and those its packages bring: the packages that
-/// joined it, each deciding in its own start, in the order they start (`orexis::boot::boot`).
+/// joined it, each deciding in its own start, by name (`orexis::boot::boot`).
 pub fn booted(store: &Store, world: &Path, agent: &str, now: oxsdatatypes::DateTime) -> Result<Vec<String>, Error> {
     let _ = now;
     boot(store, &Booting { world, agent })
@@ -203,7 +203,7 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
     //  WHAT A CHAT READS OF WHAT HAPPENED: the two series as read, and the journal once what keeps it has started
     //  and said where it lies.
     outside.hand(Reads {
-        journal: None,
+        journal: orexis::task::Journaled::default(),
         history: watching.history.as_ref().map(Sink::reader),
         #[cfg(feature = "metrics")]
         metrics: watching.metrics.as_ref().map(|w| w.sink.reader()),
@@ -277,7 +277,7 @@ pub fn start(
     budget: Option<usize>,
     wiring: Wiring,
 ) -> Result<Running, Error> {
-    //  THE PACKAGES THAT JOINED, in the order they start: what keeps the journal and what watches first, so what the
-    //  others say as they start is heard (`orexis::boot::PASS`).
+    //  THE PACKAGES THAT JOINED: the order they start in follows from what each start waits for, and that each
+    //  started is said once all have, so whichever keeps what is said hears every one.
     orexis::task::start(store, agent, clock, outside(wiring, budget), loaded)
 }

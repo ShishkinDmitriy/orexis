@@ -987,7 +987,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   incident typed by code was refused, being a question nothing could ask
   (the-journal-is-the-agents-flight-recorder).
 - **An agent keeps a journal where it plays a recorder, and the kernel knows no journal** — `journal:Recorder` loads
-  `orexis-journal/`, which holds the store too and is started before every other package; an agent that plays none
+  `orexis-journal/`, which holds the store too; an agent that plays none
   says what happens and nobody writes it down. Every agent kept one whatever it played, the one package loaded for no
   role, and the role was first refused as changing no plan; the cost stands, a world that forgets the role having no
   journal when one is wanted (recorder, the-journal-is-the-agents-flight-recorder).
@@ -1082,6 +1082,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   writes its scopes in its start, and where the agent is being checked (`orexis::task::Checking`) says that a desire
   holds the agent and which constraint the world as posed violates; the binary called the planner by name for all
   three, and its verdict named a desire and a contradiction, planning's words (package).
+- **The kernel keeps no order between packages: a start waits for the start it needs, and nothing else orders two**
+  — every start is begun and run until it ends or waits (`Handed::started`), that each started is said once all
+  have, so the journal hears every one, and what several packages add to or read is shared (`Outside::share`) and
+  asked when read, as where the journal lies; a list of seventeen names in the kernel ordered them, and three
+  handoffs worked only in that order (package).
 - **A check hands nothing but that it is one, and a transport not deployed and handed no member reaches nothing** —
   each transport makes its own member: the one a test hands, one from the environment where the agent is deployed, and
   otherwise one every call of which is refused; and each that listens says it holds the agent, so onboarding names no

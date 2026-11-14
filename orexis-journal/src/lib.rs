@@ -30,6 +30,7 @@ pub struct Keeps {
 }
 
 /// The journal this package keeps, handed on as it starts to what ships its activities to a tracer.
+#[derive(Clone)]
 pub struct Traced(pub Arc<Journal>);
 
 inventory::submit! { Package { name: "journal", documents: orexis::documents!("ontology.ttl"), start } }
@@ -63,10 +64,12 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     );
     activities::connect(handed.events.watch(), journal.clone());
     //  WHAT A CHAT READS OF WHAT HAPPENED is this journal, until what archives it says otherwise.
-    let mut reads = handed.outside.take::<orexis::task::Reads>().unwrap_or_default();
-    reads.journal = Some(journal.store.clone());
-    handed.outside.hand(reads);
-    //  AND HANDED ON to its housekeepers, which start after it and make themselves.
+    handed
+        .outside
+        .share::<orexis::task::Reads>()
+        .journal
+        .lies_in(journal.store.clone());
+    //  AND HANDED ON to its housekeepers, which wait for this start and make themselves.
     handed.outside.hand(Traced(journal));
     Ok(None)
 }

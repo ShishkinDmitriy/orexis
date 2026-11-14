@@ -69,11 +69,14 @@ sensing, prediction, speech or belief document. A role the self plays that no pa
 refused, its package having been built out. A domain that speaks a package's words, as climate's flows speak
 prediction's, is read whether the package is loaded or not.
 
-**Then each start goes on, in the order the packages start, and its lifecycle is two events.** The kernel says
-`orexis:PackageStarting` as a joined package's start is resumed and `orexis:PackageStarted` as it ends, each
-naming the package (`orexis:package`), so the journal keeps which packages run. A package whose start needs what
-another's made waits for that one: translation waits for speech (`handed.started("speech")`), and what keeps
-house for the journal waits for the journal. The start makes the package's [part](/domain/kernel/part.md) and
+**Then each start goes on, and its lifecycle is two events.** The kernel keeps no order between packages: every
+start is begun and run until it ends or waits for another's, so the order they end in follows from those waits
+alone. A package whose start needs what another's made waits for that one: translation waits for speech
+(`handed.started("speech")`), and what keeps house for the journal waits for the journal. Once all have started
+the kernel says `orexis:PackageStarting` and `orexis:PackageStarted` of each, at the instants it began and ended and
+naming the package (`orexis:package`), so the journal keeps which packages run whichever started first. What
+several packages add to or read is shared outside (`Outside::share`) and asked when it is read, as where the
+journal lies is: none of them waits for another for it. The start makes the package's [part](/domain/kernel/part.md) and
 answers the one task that holds it — a loop of the package's own, awaiting the
 [events](/domain/kernel/event.md) beneath its triggers, the kinds of graph written it asked to hear, an arrival
 and the clock ([a-package-starts-itself](/decisions/a-package-starts-itself.md),

@@ -105,7 +105,7 @@ async fn the_agent_concludes_what_each_disk_is_on_from_where_it_stands() {
     }
     let wiring = orexis_agent::Wiring::default();
     let running = orexis_agent::start(&store, "mover", common::clock(now()), &loaded, None, wiring).unwrap();
-    assert_eq!(running.parts(), ["belief", "planning", "execution"]);
+    assert_eq!(running.parts(), ["belief", "execution", "planning"]);
     assert_eq!(
         on(&store),
         pairs(&[("disk_1", "disk_2"), ("disk_2", "disk_3"), ("disk_3", "PegA")])
