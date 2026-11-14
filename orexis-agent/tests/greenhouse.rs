@@ -243,6 +243,7 @@ ORDER BY ?start";
 /// The grounds a planner lays over the grower's beliefs at `now`: one of the test's own, with prediction's
 /// foresight, since the grower's is its task's alone.
 fn foreseen(store: &Store, now: DateTime) -> Vec<(DateTime, String)> {
+    orexis_planning::Planner::scope(store, now).unwrap();
     let mut planner = orexis_planning::Planner::new(store, "grower", None).unwrap();
     planner.foresee = Some(orexis_prediction::create::Prediction.offered());
     planner.plan(now).unwrap();

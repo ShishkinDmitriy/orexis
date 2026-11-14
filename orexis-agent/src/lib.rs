@@ -54,26 +54,18 @@ use orexis_transport_telegram as _;
 /// Boot `agent` of `world` into `store` from the world's documents and those its packages bring: the packages that
 /// joined it, each deciding in its own start, in the order they start (`orexis::boot::boot`).
 pub fn booted(store: &Store, world: &Path, agent: &str, now: oxsdatatypes::DateTime) -> Result<Vec<String>, Error> {
-    let loaded = boot(store, &Booting { world, agent })?;
-    #[cfg(feature = "planning")]
-    if loaded.iter().any(|p| p == "planning") {
-        orexis_planning::Planner::scope(store, now)?;
-    }
     let _ = now;
-    Ok(loaded)
+    boot(store, &Booting { world, agent })
 }
 
-/// One row of a violated constraint: the instance, the constraint and what it offended by, as the planner says them.
-pub type Broken = (String, Option<String>, Option<String>, Option<String>);
-
-/// What a check found of an agent that boots: the packages it loads, whether it holds a desire, and every constraint
-/// it holds that its world as posed violates, with the rows — `orexis-onboard` refuses such a world, since no agent
-/// repairs what its own word says is impossible (constraint.md).
+/// What a check found of an agent that boots: the packages it loads, and what they said as each made its core
+/// (`orexis::task::Checking`) — which hold the agent, so it runs for as long as its process does, and why any
+/// refuses the world as posed; `orexis-onboard` refuses such a world.
 #[derive(Debug, Default)]
 pub struct Checked {
     pub loaded: Vec<String>,
-    pub desire: bool,
-    pub contradictions: Vec<(String, Vec<Broken>)>,
+    pub held: Vec<String>,
+    pub refused: Vec<String>,
 }
 
 /// CHECK `agent` of `world` as its container would boot it, and run nothing: booted into a store in memory from the
@@ -100,16 +92,7 @@ pub fn check(world: &Path, agent: &str, now: oxsdatatypes::DateTime, boot: Optio
         loaded,
         ..Checked::default()
     };
-    #[cfg(feature = "planning")]
-    if checked.loaded.iter().any(|p| p == "planning") {
-        let planner = orexis_planning::Planner::new(&store, agent, None)?;
-        checked.desire = planner.holds_a_desire()?;
-        checked.contradictions = planner
-            .contradictions(now)?
-            .into_iter()
-            .map(|(c, rows)| (c, rows.into_iter().collect()))
-            .collect();
-    }
+    let checking = orexis::task::Checking::default();
     let clock: Arc<dyn Clock> = Arc::new(orexis::clock::Manual::at(now));
     #[allow(unused_variables)]
     let me = orexis::boot::selves(&store)?.into_iter().next().unwrap_or_default();
@@ -134,6 +117,7 @@ pub fn check(world: &Path, agent: &str, now: oxsdatatypes::DateTime, boot: Optio
             &me,
             Arc::new(Unreachable),
         )),
+        checking: Some(checking.clone()),
         ..Wiring::default()
     };
     //  STARTED AND NEVER RUN: on a runtime nothing drives, each package makes its core and its task is dropped.
@@ -143,6 +127,10 @@ pub fn check(world: &Path, agent: &str, now: oxsdatatypes::DateTime, boot: Optio
         .map_err(|e| Error::Evaluation(format!("the tasks could not start: {e}")))?;
     let _entered = tasks.enter();
     start(&store, agent, clock, &checked.loaded, None, wiring)?;
+    //  WHAT EACH PACKAGE SAID AS IT MADE ITS CORE: the binary asks none of them by name.
+    let found = checking.found();
+    checked.held = found.held;
+    checked.refused = found.refused;
     Ok(checked)
 }
 
@@ -200,6 +188,9 @@ pub struct Wiring {
     pub deployed: Option<String>,
     /// The process's log, for the package that keeps it (`orexis::task::Said`).
     pub said: Option<orexis::task::Said>,
+    /// THE AGENT IS BEING CHECKED, a check alone: what each package says of it as it makes its core
+    /// (`orexis::task::Checking`).
+    pub checking: Option<orexis::task::Checking>,
     #[cfg(feature = "http")]
     pub http: Option<orexis_transport_http::driver::Http>,
     #[cfg(feature = "telegram")]
@@ -223,6 +214,7 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
         watching,
         deployed,
         said,
+        checking,
         mqtt,
         #[cfg(feature = "http")]
         http,
@@ -238,6 +230,9 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
     }
     if let Some(said) = said {
         outside.hand(said);
+    }
+    if let Some(checking) = checking {
+        outside.hand(checking);
     }
     //  WHAT A CHAT READS OF WHAT HAPPENED: the two series as read, and the journal once what keeps it has started
     //  and said where it lies.

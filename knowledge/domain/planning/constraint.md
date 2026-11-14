@@ -57,7 +57,7 @@ No want is minted from a constraint: the derivation reads desires alone. A const
 the present ground is a contradiction between the world's state and its own word about what is
 possible, and the pass says so — a warning naming the constraint and its rows, once per scope whose
 actions could violate it — and sets about mending nothing; `Planner.contradictions` answers the same
-rows to whoever asks, and `orexis-onboard` refuses a world posed that way before anything is granted
+rows, which planning says as it starts where its agent is being checked, and `orexis-onboard` refuses a world posed that way before anything is granted
 (`onboarding/reading.py`, `contradicted`). A prohibition the agent may break and then has to mend
 is not a constraint at all but the aversion [desire](/domain/planning/desire.md) describes, and the
 suite keeps one being mended in `orexis-planning/tests/plans/an_aversions_want_is_repaired_by_a_step.trig`.

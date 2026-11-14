@@ -244,18 +244,13 @@ fn main() {
                 //  THE VERDICT AS ONE LINE OF JSON on the standard output, for onboarding to read; what is said for eyes
                 //  goes to the log.
                 log::info!("{} boots, and makes {}", args.agent, checked.loaded.join(", "));
-                let contradictions: Vec<serde_json::Value> = checked
-                    .contradictions
-                    .iter()
-                    .map(|(c, rows)| serde_json::json!([c, rows]))
-                    .collect();
                 println!(
                     "{}",
                     serde_json::json!({
                         "agent": args.agent,
                         "loaded": checked.loaded,
-                        "desire": checked.desire,
-                        "contradictions": contradictions,
+                        "held": checked.held,
+                        "refused": checked.refused,
                     })
                 );
                 std::process::exit(0);
