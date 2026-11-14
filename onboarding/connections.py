@@ -3,14 +3,20 @@
 A world's agents were told where the installation's services are through their environment, a variable per
 service that `orexis-compose` wrote into each container. A package then could not ask whether a service was
 there: it was handed an address or it was not, by whoever ran it. The world is what an agent is given, so the
-world says it: this derives, from the installation's document and the world's own deployment, the services the
-world is connected to, each with its `schema:url`, into a document of the kernel's kind `orexis:DeploymentGraph`,
-which an agent's boot puts in and no reader of the mind is handed. A package asks the store as it starts, and one
-that finds no service of its kind ends its start there.
+world says it: this derives the services the world's agents are linked to, each with its `schema:url`, into a
+document of the kernel's kind `orexis:DeploymentGraph`, which an agent's boot puts in and no reader of the mind
+is handed. A package asks the store as it starts, and one whose role names no service of its kind, or names one
+the world says nothing of, ends its start there.
 
-Today it states one service, the tracer, for a monitored world of an installation that names one; the others
-still reach an agent through its environment, and move here one by one. Committed, as the derived society is,
-and held to a fresh derivation by `tests/test_layout.py`; a world connected to nothing has no such document.
+A ROLE NAMES THE SERVICE AND THIS SAYS WHERE IT ANSWERS. An agent's self graph links a role it plays to a
+service by name: a recorder to its tracer (`journal:tracedBy`) and to its archive (`journal:archivedIn`). The
+author states no address. Each tracer named is given the url of the installation's one tracer, and a world
+naming one where the installation names none is refused; each archive named is given the path the agent's
+journal volume is mounted at in its container (`ARCHIVE`), which `orexis-compose` mounts there.
+
+The other services still reach an agent through its environment, and move here one by one. Committed, as the
+derived society is, and held to a fresh derivation by `tests/test_layout.py`; a world whose agents are linked to
+nothing has no such document.
 
     orexis-onboard <world>     # writes it, among its steps; it needs nothing up
 """
@@ -21,6 +27,8 @@ import logging
 from pathlib import Path
 
 import pyoxigraph as ox
+
+from documents.world import BELIEFS, DOCUMENTS
 
 from . import derived, installation
 from .worlds import world_dir
@@ -33,6 +41,26 @@ DEPLOYMENT = OREXIS + "DeploymentGraph"
 JOURNAL = "http://example.org/orexis/journal#"
 SCHEMA = "https://schema.org/"
 _TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+#  WHERE AN AGENT'S ARCHIVE IS, in its container: the path its journal volume is mounted at, which `orexis-compose`
+#  writes into the service and this into the world's derived deployment, so the two cannot differ.
+ARCHIVE = "/app/journal"
+
+#  WHAT A ROLE AN AGENT PLAYS IS LINKED TO, read off each of its own documents alone: the service a recorder's role
+#  names by `link`. A self graph is where an agent's roles are stated, so no world is booted to ask.
+_LINKED_Q = f"""SELECT DISTINCT ?service WHERE {{
+  ?me a <{OREXIS}Self> ; <{OREXIS}plays> ?role . ?role <{JOURNAL}$link> ?service . FILTER(isIRI(?service)) }}"""
+
+
+def linked(world: str, link: str) -> list[str]:
+    """Every service a role some agent of `world` plays names by the journal's `link`, sorted."""
+    found: set[str] = set()
+    beliefs = world_dir(world) / BELIEFS
+    for path in sorted(p for p in beliefs.glob("*") if p.is_file() and p.suffix in DOCUMENTS) if beliefs.is_dir() else []:
+        document = ox.Store()
+        document.load(path.read_bytes(), ox.RdfFormat.TRIG, base_iri=path.resolve().as_uri())
+        found |= {row["service"].value
+                  for row in document.query(_LINKED_Q.replace("$link", link), use_default_graph_as_union=True)}
+    return sorted(found)
 
 
 def derivation(world: str) -> Path:
@@ -40,19 +68,29 @@ def derivation(world: str) -> Path:
 
 
 def derive(world: str) -> list[tuple[str, str, ox.NamedNode | ox.Literal]]:
-    """Every statement of what `world` is connected to, as (subject, predicate, object), sorted: the
-    installation's tracer where the world is monitored and the installation names one."""
+    """Every statement of what `world`'s agents are linked to, as (subject, predicate, object), sorted: each tracer
+    a recorder's role names, at the installation's tracer's url, and each archive one names, at the path its volume
+    is mounted at. Refused, naming it, where a role names a tracer and the installation names none."""
     statements: list[tuple[str, str, ox.NamedNode | ox.Literal]] = []
-    tracer = installation.tracer() if installation.METRICS in installation.purposes(world) else None
-    if tracer is not None:
-        statements += [(tracer["iri"], _TYPE, ox.NamedNode(JOURNAL + "Tracer")),
-                       (tracer["iri"], SCHEMA + "url", ox.Literal(tracer["url"]))]
+    tracers = linked(world, "tracedBy")
+    if tracers:
+        tracer = installation.tracer()
+        if tracer is None:
+            raise SystemExit(f"world {world!r} says a recorder is traced by {', '.join(tracers)} (journal:tracedBy) "
+                             f"and the installation names no tracer — name one in infra/installation.ttl, or take "
+                             f"the link off the role")
+        for iri in tracers:
+            statements += [(iri, _TYPE, ox.NamedNode(JOURNAL + "Tracer")),
+                           (iri, SCHEMA + "url", ox.Literal(tracer["url"]))]
+    for iri in linked(world, "archivedIn"):
+        statements += [(iri, _TYPE, ox.NamedNode(JOURNAL + "Archive")),
+                       (iri, SCHEMA + "url", ox.Literal(f"file://{ARCHIVE}"))]
     return sorted(statements, key=lambda s: (s[0], s[1], str(s[2])))
 
 
-_HEADER = """GENERATED by `orexis-onboard` from the installation's document and this world's deployment — do not
-edit. What this world is connected to, each service with where it answers, as its agents read it: a package asks
-the store for a service of its kind as it starts, and ends its start where the world names none
+_HEADER = """GENERATED by `orexis-onboard` from the installation's document and this world's agents' roles — do not
+edit. What this world's agents are linked to, each service with where it answers, as they read it: a package asks
+the store for the service its role names as it starts, and ends its start where the role names none
 (knowledge/domain/onboarding/deployment.md)."""
 
 

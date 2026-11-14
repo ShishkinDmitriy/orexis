@@ -28,7 +28,8 @@ cp infra/admin.env.example infra/secrets/admin.env   # the admin token. Fill it 
 cd infra && podman compose up -d influxdb grafana tempo    # the broker needs its ACL first, below
 ```
 
-Each recorder of a monitored world reads the tracer from the world's `deployment.derived.ttl` and ships Tempo
+Each recorder whose role names a tracer (`journal:tracedBy`) reads where it answers from the world's
+`deployment.derived.ttl` and ships Tempo
 what its journal keeps of its [activities](/domain/kernel/activity.md), every ten seconds of its time: an
 activity a span, one begun inside another its child, and what caused it a link to the span that did. In
 Grafana, Explore, the Tempo datasource, search by service name, which is the agent's id. An agent whose

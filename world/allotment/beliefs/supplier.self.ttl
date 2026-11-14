@@ -19,4 +19,5 @@
 #  IT KEEPS A JOURNAL of what happened to it, so it is a recorder (knowledge/domain/journal/recorder.md): the
 #  history view and its own account of itself read what it kept. Without the role its packages say what happens
 #  and nobody writes it down.
-:supplier orexis:plays [ a journal:Recorder ] .
+:supplier orexis:plays [ a journal:Recorder ;
+    journal:archivedIn :supplier_archive ] .

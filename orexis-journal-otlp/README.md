@@ -3,8 +3,8 @@
 A housekeeper of `orexis-journal/`: it ships the activities the journal holds to a tracer, as spans, over OTLP's
 JSON on HTTP.
 
-- **Loaded for:** `journal:Recorder`, where the world names a tracer: it asks the world's deployment graph for a
-  `journal:Tracer` as it starts, and ends its start where there is none.
+- **Loaded for:** `journal:Recorder`, where the role names a tracer (`journal:tracedBy`): it asks the world's
+  deployment graph where that `journal:Tracer` answers as it starts, and ends its start where the role names none.
 - **Words:** none. It marks what the tracer accepted `orexis:shippedTo`.
 
 ## What starts it

@@ -56,6 +56,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./constraints.ttl:/app/world/lane/constraints.ttl:ro
+      - ./deployment.derived.ttl:/app/world/lane/deployment.derived.ttl:ro
       - ./society.derived.ttl:/app/world/lane/society.derived.ttl:ro
       - ./society.ttl:/app/world/lane/society.ttl:ro
       - ./world.ttl:/app/world/lane/world.ttl:ro
@@ -90,7 +91,7 @@ services:
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
         FEATURES: "belief,coordination,execution,journal,mqtt,planning,sensing,speech"
-    command: ["orexis-agent", "/app/world/lane", "courier_a", "--volume", "/app/state", "--journal", "/app/journal"]
+    command: ["orexis-agent", "/app/world/lane", "courier_a", "--volume", "/app/state"]
     environment:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
       # never read off the world by the agent
@@ -117,10 +118,12 @@ services:
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-lane-courier_a:/app/state
-      # its journal, a store of its own beside the beliefs and apart from them
+      # its journal's archive, a store of its own beside the beliefs and apart from them, where the world's derived
+      # deployment says the archive its recorder's role names is
       - orexis-lane-courier_a-journal:/app/journal
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./constraints.ttl:/app/world/lane/constraints.ttl:ro
+      - ./deployment.derived.ttl:/app/world/lane/deployment.derived.ttl:ro
       - ./society.derived.ttl:/app/world/lane/society.derived.ttl:ro
       - ./society.ttl:/app/world/lane/society.ttl:ro
       - ./world.ttl:/app/world/lane/world.ttl:ro
@@ -144,7 +147,7 @@ services:
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
         FEATURES: "belief,coordination,execution,journal,mqtt,planning,sensing,speech"
-    command: ["orexis-agent", "/app/world/lane", "courier_b", "--volume", "/app/state", "--journal", "/app/journal"]
+    command: ["orexis-agent", "/app/world/lane", "courier_b", "--volume", "/app/state"]
     environment:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
       # never read off the world by the agent
@@ -171,10 +174,12 @@ services:
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-lane-courier_b:/app/state
-      # its journal, a store of its own beside the beliefs and apart from them
+      # its journal's archive, a store of its own beside the beliefs and apart from them, where the world's derived
+      # deployment says the archive its recorder's role names is
       - orexis-lane-courier_b-journal:/app/journal
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./constraints.ttl:/app/world/lane/constraints.ttl:ro
+      - ./deployment.derived.ttl:/app/world/lane/deployment.derived.ttl:ro
       - ./society.derived.ttl:/app/world/lane/society.derived.ttl:ro
       - ./society.ttl:/app/world/lane/society.ttl:ro
       - ./world.ttl:/app/world/lane/world.ttl:ro

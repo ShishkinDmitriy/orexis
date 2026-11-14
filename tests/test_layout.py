@@ -818,12 +818,16 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
         assert "INFLUX_HISTORY_URL" in text, path
         monitored = METRICS in told[path.parent.name]
         assert ("INFLUX_METRICS_URL" in text) == ("influx-metrics.env" in text) == (compose.INTERVAL_KEY in text) == monitored, path
-        # the tracer is named where metrics are told: both are the admins' instrumentation, opted into by the
-        # world. It is named in the world's derived deployment, which its agents read, and no environment says it.
+        # the tracer is named where a recorder's role names one (`journal:tracedBy`), whatever the world says of
+        # being monitored: in the world's derived deployment, which its agents read, and no environment says it.
+        # And no flag says where an agent's archive is: the role names it and the derived deployment says where.
         from onboarding import connections
         named = connections.derivation(path.parent.name)
-        assert (named.exists() and "journal:Tracer" in named.read_text()) == monitored, path
-        assert "OTLP_ENDPOINT" not in text, path
+        traced = bool(connections.linked(path.parent.name, "tracedBy"))
+        assert (named.exists() and "journal:Tracer" in named.read_text()) == traced, path
+        archived = bool(connections.linked(path.parent.name, "archivedIn"))
+        assert (named.exists() and f'"file://{connections.ARCHIVE}"' in named.read_text()) == archived, path
+        assert "OTLP_ENDPOINT" not in text and "--journal" not in text, path
         assert not re.search(r"\bINFLUX_(URL|ORG|BUCKET|TOKEN)\b", text), path
 
 
@@ -2137,9 +2141,10 @@ def test_a_crate_brings_every_document_it_holds_and_names_none_it_does_not(crate
 
 def test_every_committed_derived_deployment_is_a_fresh_derivation():
     """`world/<w>/deployment.derived.ttl` says GENERATED — do not edit, and it is what an agent's packages read
-    the world's services from: a package ends its start where it names none of its kind. So one left behind by a
-    change to the installation, or to whether the world is monitored, has an agent ship to a tracer that is gone
-    or to none. Held to what onboarding derives now; a world connected to nothing has no such document."""
+    where the service its role names answers from: a package ends its start where the world says nothing of it. So
+    one left behind by a change to the installation, or to what a role of an agent names, has an agent ship to a
+    tracer that is gone or to none. Held to what onboarding derives now; a world whose agents are linked to nothing
+    has no such document."""
     from onboarding import connections
 
     held = 0
@@ -2149,5 +2154,5 @@ def test_every_committed_derived_deployment_is_a_fresh_derivation():
                 f"world/{w}/deployment.derived.ttl is not what onboarding derives now — run `orexis-onboard {w}`"
             held += 1
         else:
-            assert not connections.derivation(w).exists(), f"world/{w} is connected to nothing onboarding derives"
-    assert held >= 2, "no world is connected to anything — the guard checks one side"
+            assert not connections.derivation(w).exists(), f"world/{w}'s agents are linked to nothing onboarding derives"
+    assert held >= 2, "no world's agents are linked to anything — the guard checks one side"

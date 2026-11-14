@@ -53,7 +53,8 @@ not loaded. Every package the binary holds is given its start, and the first thi
 |---|---|---|
 | with a role | the self plays a role of its class, or of a class an ontology in the store puts beneath it | `handed.plays(&[ROLE])` |
 | a transport | a role the self plays needs bytes and the world wires them through this member | `handed.joins(...)` over `boot::wired` |
-| keeping house for another | that package joined | `handed.beside("journal")` |
+| keeping house for another | that package joined | `handed.beside("sensing")` |
+| keeping house for a role linked to a service | that package joined, the role names the service and the world says where it answers | `handed.joins(...)` over `boot::connected` |
 | the metrics | always | `handed.joins(|_| Ok(true))` |
 
 The package knows its own role; the kernel names no package, no role and no transport's wiring. A package that

@@ -37,14 +37,16 @@ where metrics are served by no store. Where an agent's Telegram bot answers is t
 graph's, `<bot> schema:url`, told to the agent as `TELEGRAM_URL`.
 
 It says **where an agent's activities are sent as spans**: one `onboarding:Tracer` with a `schema:url`
-and an image, Tempo. Spans are the admins' instrumentation as metrics are, so the same opt-in names it to a
-world: an installation naming no tracer traces no agent, and refuses nothing.
+and an image, Tempo. Which agent is traced is the agent's to say: a recorder whose role names a
+tracer (`journal:tracedBy`) is given this one's url in its world's derived deployment. An installation naming no
+tracer refuses a world whose role names one, and otherwise refuses nothing.
 
 **What a world is connected to is derived into a document its agents read.** `orexis-onboard` writes
-`world/<world>/deployment.derived.ttl`, of the kernel's kind `orexis:DeploymentGraph`: each service the world is
-given, with its `schema:url`, typed in the words of the package that uses it. Today that is the
-[tracer](/domain/journal/tracer.md), for a monitored world. The boot puts it in, no reader of the mind is handed
-it, and a package asks it as it starts and ends its start where the world names no service of its kind. It names
+`world/<world>/deployment.derived.ttl`, of the kernel's kind `orexis:DeploymentGraph`: each service a role of one of its agents
+names, with its `schema:url`, typed in the words of the package that uses it. Today that is the
+[tracer](/domain/journal/tracer.md) a recorder's role is traced by and the
+[archive](/domain/journal/archive.md) it is archived in. The boot puts it in, no reader of the mind is handed
+it, and a package asks it as it starts and ends its start where its role names no service of its kind. It names
 nothing of another world. The services still told as environment move there one by one
 ([the-world-says-what-it-is-connected-to](/decisions/the-world-says-what-it-is-connected-to.md)).
 

@@ -3,7 +3,8 @@
 The journal's archive: a housekeeper of `orexis-journal/`. It takes what the journal keeps for good into a
 triplestore on the agent's volume, and has the journal forget what it took.
 
-- **Loaded for:** `journal:Recorder`, and it has a task only where the deployment hands it an archive.
+- **Loaded for:** `journal:Recorder`, where the role names an archive (`journal:archivedIn`): it asks the world's
+  deployment graph where that `journal:Archive` is as it starts, and ends its start where the role names none.
 - **Words:** none. **Dictionary:** `knowledge/domain/journal/archive.md`.
 
 ## What starts it

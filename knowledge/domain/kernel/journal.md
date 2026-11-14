@@ -11,8 +11,8 @@ description: >-
 
 A [recorder](/domain/journal/recorder.md)'s **journal** is a store of its own (`orexis-journal/src/journal.rs`), in
 memory, so saying a thing waits for no disk. What it keeps for good is taken to its
-[archive](/domain/journal/archive.md), on a volume beside the belief base's (`--journal`), and forgotten here; where
-the process is told no volume it stays here. It holds three kinds of entry, each a named graph named
+[archive](/domain/journal/archive.md), on a volume beside the belief base's, and forgotten here; where
+the recorder's role names no archive it stays here. It holds three kinds of entry, each a named graph named
 by the node it is about, a UUID's URN:
 
 - an **event** a package says, of a class beneath `orexis:Event` in that package's ontology, at its `prov:atTime`,

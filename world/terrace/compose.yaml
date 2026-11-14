@@ -47,7 +47,7 @@ services:
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
         FEATURES: "belief,http,journal,mqtt,prediction,sensing,speech,telegram,translation"
-    command: ["orexis-agent", "/app/world/terrace", "terrace", "--volume", "/app/state", "--journal", "/app/journal"]
+    command: ["orexis-agent", "/app/world/terrace", "terrace", "--volume", "/app/state"]
     environment:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
       # never read off the world by the agent
@@ -87,7 +87,8 @@ services:
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-terrace-terrace:/app/state
-      # its journal, a store of its own beside the beliefs and apart from them
+      # its journal's archive, a store of its own beside the beliefs and apart from them, where the world's derived
+      # deployment says the archive its recorder's role names is
       - orexis-terrace-terrace-journal:/app/journal
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./deployment.derived.ttl:/app/world/terrace/deployment.derived.ttl:ro

@@ -55,6 +55,7 @@ services:
     userns_mode: "keep-id:uid=10001,gid=10001"
     restart: unless-stopped
     volumes:
+      - ./deployment.derived.ttl:/app/world/allotment/deployment.derived.ttl:ro
       - ./society.derived.ttl:/app/world/allotment/society.derived.ttl:ro
       - ./society.ttl:/app/world/allotment/society.ttl:ro
       - ./world.ttl:/app/world/allotment/world.ttl:ro
@@ -89,7 +90,7 @@ services:
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
         FEATURES: "belief,execution,journal,mqtt,planning,prediction,sensing,speech"
-    command: ["orexis-agent", "/app/world/allotment", "fern_grower", "--volume", "/app/state", "--journal", "/app/journal"]
+    command: ["orexis-agent", "/app/world/allotment", "fern_grower", "--volume", "/app/state"]
     environment:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
       # never read off the world by the agent
@@ -116,9 +117,11 @@ services:
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-allotment-fern_grower:/app/state
-      # its journal, a store of its own beside the beliefs and apart from them
+      # its journal's archive, a store of its own beside the beliefs and apart from them, where the world's derived
+      # deployment says the archive its recorder's role names is
       - orexis-allotment-fern_grower-journal:/app/journal
       # the world's documents, file by file, at the path its imports of the domains resolve from
+      - ./deployment.derived.ttl:/app/world/allotment/deployment.derived.ttl:ro
       - ./society.derived.ttl:/app/world/allotment/society.derived.ttl:ro
       - ./society.ttl:/app/world/allotment/society.ttl:ro
       - ./world.ttl:/app/world/allotment/world.ttl:ro
@@ -141,7 +144,7 @@ services:
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
         FEATURES: "belief,execution,journal,mqtt,planning,prediction,sensing,speech"
-    command: ["orexis-agent", "/app/world/allotment", "rose_grower", "--volume", "/app/state", "--journal", "/app/journal"]
+    command: ["orexis-agent", "/app/world/allotment", "rose_grower", "--volume", "/app/state"]
     environment:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
       # never read off the world by the agent
@@ -168,9 +171,11 @@ services:
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-allotment-rose_grower:/app/state
-      # its journal, a store of its own beside the beliefs and apart from them
+      # its journal's archive, a store of its own beside the beliefs and apart from them, where the world's derived
+      # deployment says the archive its recorder's role names is
       - orexis-allotment-rose_grower-journal:/app/journal
       # the world's documents, file by file, at the path its imports of the domains resolve from
+      - ./deployment.derived.ttl:/app/world/allotment/deployment.derived.ttl:ro
       - ./society.derived.ttl:/app/world/allotment/society.derived.ttl:ro
       - ./society.ttl:/app/world/allotment/society.ttl:ro
       - ./world.ttl:/app/world/allotment/world.ttl:ro
@@ -193,7 +198,7 @@ services:
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
         FEATURES: "belief,execution,journal,mqtt,planning,sensing,speech"
-    command: ["orexis-agent", "/app/world/allotment", "supplier", "--volume", "/app/state", "--journal", "/app/journal"]
+    command: ["orexis-agent", "/app/world/allotment", "supplier", "--volume", "/app/state"]
     environment:
       # each broker it is connected to and where that listens — asserted or allocated, generated here,
       # never read off the world by the agent
@@ -220,9 +225,11 @@ services:
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-allotment-supplier:/app/state
-      # its journal, a store of its own beside the beliefs and apart from them
+      # its journal's archive, a store of its own beside the beliefs and apart from them, where the world's derived
+      # deployment says the archive its recorder's role names is
       - orexis-allotment-supplier-journal:/app/journal
       # the world's documents, file by file, at the path its imports of the domains resolve from
+      - ./deployment.derived.ttl:/app/world/allotment/deployment.derived.ttl:ro
       - ./society.derived.ttl:/app/world/allotment/society.derived.ttl:ro
       - ./society.ttl:/app/world/allotment/society.ttl:ro
       - ./world.ttl:/app/world/allotment/world.ttl:ro

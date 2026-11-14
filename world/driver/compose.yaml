@@ -23,7 +23,7 @@ services:
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
         FEATURES: "belief,execution,journal,planning,speech"
-    command: ["orexis-agent", "/app/world/driver", "dispatcher", "--volume", "/app/state", "--journal", "/app/journal"]
+    command: ["orexis-agent", "/app/world/driver", "dispatcher", "--volume", "/app/state"]
     environment:
       # where each series it writes goes, and the org — the store the installation says serves each
       # purpose, its metrics only where the world is monitored — safe for every agent to hold
@@ -43,10 +43,12 @@ services:
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-driver-dispatcher:/app/state
-      # its journal, a store of its own beside the beliefs and apart from them
+      # its journal's archive, a store of its own beside the beliefs and apart from them, where the world's derived
+      # deployment says the archive its recorder's role names is
       - orexis-driver-dispatcher-journal:/app/journal
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./constraints.ttl:/app/world/driver/constraints.ttl:ro
+      - ./deployment.derived.ttl:/app/world/driver/deployment.derived.ttl:ro
       - ./desires.ttl:/app/world/driver/desires.ttl:ro
       - ./state.ttl:/app/world/driver/state.ttl:ro
       - ./world.ttl:/app/world/driver/world.ttl:ro

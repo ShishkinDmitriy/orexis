@@ -45,7 +45,7 @@ onboarding:Metrics onboarding:retentionDays 30 ;
     onboarding:image "docker.io/grafana/grafana:11.2.0" .
 
 #  WHERE AN AGENT'S ACTIVITIES ARE SENT AS SPANS: OTLP over HTTP, drawn in the view above beside the
-#  series. Named to each monitored world in its `deployment.derived.ttl`, which its agents read, as metrics are told; take this line
+#  series. Named in a world's `deployment.derived.ttl`, which its agents read, to each recorder whose role names a tracer; take this line
 #  out and no agent traces (knowledge/domain/kernel/activity.md).
 :tracer a onboarding:Tracer ;
     schema:url "http://localhost:4318" ;
