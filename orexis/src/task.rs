@@ -714,6 +714,16 @@ impl Outside {
             .contains_key(&TypeId::of::<T>())
     }
 
+    /// What was handed of type `T`, read and left where it is.
+    pub fn read<T: Any + Send + Clone>(&self) -> Option<T> {
+        self.0
+            .lock()
+            .expect("an outside nobody poisoned")
+            .get(&TypeId::of::<T>())
+            .and_then(|thing| thing.downcast_ref::<T>())
+            .cloned()
+    }
+
     /// Take what was handed of type `T`, where anything was: it is the taker's from now on.
     pub fn take<T: Any + Send>(&self) -> Option<T> {
         let mut held = self.0.lock().expect("an outside nobody poisoned");
@@ -725,8 +735,13 @@ impl Outside {
 
 /// THE AGENT IS DEPLOYED: handed outside by whoever runs it for good, and by no check and no test. Where it is
 /// handed, a package makes for itself what it was not handed, from what the world says: its journal, its archive.
-/// Where it is not, a package handed nothing has nothing, so a check reaches no disk and no port.
-pub struct Deployed;
+/// Where it is not, a package handed nothing has nothing, so a check reaches no disk and no port. It says the one
+/// thing whoever runs the agent knows and no document states: the name of the world's directory, which its buckets
+/// and its metrics' points go by.
+#[derive(Clone, Default)]
+pub struct Deployed {
+    pub world: String,
+}
 
 /// What keeps a line of the process's log: its logger, its level and its message.
 pub type Remark = Box<dyn Fn(&str, log::Level, &str) + Send + Sync>;

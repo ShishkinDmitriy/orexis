@@ -798,7 +798,7 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
     from onboarding import compose, influx, installation
 
     service = yaml.safe_load(compose.render("terrace"))["services"]["agent-terrace"]
-    environment = dict(service["environment"])
+    environment = dict(service.get("environment") or {})
     for purpose in PURPOSES:
         minted = influx.credential_file("terrace", "terrace", purpose)
         assert minted.name == f"influx-{purpose.lower()}.env" and minted.parent.name == "terrace"
@@ -815,13 +815,17 @@ def test_what_onboarding_tells_an_agent_of_its_series_stores_is_what_the_sinks_l
     assert {w for w, p in told.items() if METRICS not in p}, "every world is monitored — the guard checks one side"
     for path in composed:
         text = path.read_text()
-        assert "INFLUX_HISTORY_URL" in text, path
+        # where a purpose's store answers is the world's derived deployment's to say, for each purpose its agents
+        # write, and no environment says it: what compose mounts is the credential, the bucket and its token.
+        from onboarding import connections
+        stated = connections.derivation(path.parent.name).read_text()
+        assert "influx-history.env" in text and "orexis:serves orexis:History" in stated, path
         monitored = METRICS in told[path.parent.name]
-        assert ("INFLUX_METRICS_URL" in text) == ("influx-metrics.env" in text) == (compose.INTERVAL_KEY in text) == monitored, path
+        assert ("influx-metrics.env" in text) == ("orexis:Metrics" in stated) == ("orexis:intervalSeconds" in stated) == monitored, path
+        assert not re.search(r"INFLUX_\w+_(URL|ORG)|METRICS_INTERVAL_S", text), path
         # the tracer is named where a recorder's role names one (`journal:tracedBy`), whatever the world says of
         # being monitored: in the world's derived deployment, which its agents read, and no environment says it.
         # And no flag says where an agent's archive is: the role names it and the derived deployment says where.
-        from onboarding import connections
         named = connections.derivation(path.parent.name)
         traced = bool(connections.linked(path.parent.name, "tracedBy"))
         assert (named.exists() and "journal:Tracer" in named.read_text()) == traced, path

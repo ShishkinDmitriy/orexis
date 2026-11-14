@@ -177,7 +177,7 @@ Then re-run the tools that read it, and restart the agents so they are told the 
 
 ```bash
 orexis-influx greenhouse       # mints each agent a metrics bucket and a write-only token
-orexis-compose greenhouse      # adds INFLUX_METRICS_* and METRICS_INTERVAL_S to each agent
+orexis-compose greenhouse      # mounts each agent's metrics credential; the store is named in deployment.derived.ttl
 orexis-dashboards greenhouse   # writes infra/grafana/dashboards/greenhouse/<package>.json, one per package that reports
 cd world/greenhouse && podman compose up -d    # recreates the agents whose environment changed
 ```

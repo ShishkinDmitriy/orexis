@@ -7,7 +7,7 @@
 //!
 //! IT MAKES NO JOURNAL: the package that keeps one makes its own as it starts, and is handed the process's log, with
 //! what the boot said before; what archives it opens its own archive. A
-//! SINK PER PURPOSE the environment names a store for, and the part that writes it made with the rest. A STOP IS AN
+//! series sink is made by the package that writes it, as the rest are. A STOP IS AN
 //! EXIT: `podman stop` sends SIGTERM, and the run ends before its next pass, every part stopped and the last window of
 //! metrics written.
 
@@ -18,10 +18,9 @@ use std::sync::{Arc, Mutex, OnceLock};
 use orexis::Error;
 use orexis::clock::{Clock, Paced};
 use orexis::namespaces::Namespaces;
-use orexis::series::{self, HISTORY, METRICS};
 use orexis::store::Store;
 use orexis::task::{MET, PLANNED, UNREACHABLE};
-use orexis_agent::{Watching, Wiring};
+use orexis_agent::Wiring;
 
 use orexis::task::Remark;
 
@@ -166,35 +165,10 @@ fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, 
         None => Store::new(namespaces)?,
     };
     let loaded = orexis_agent::booted(&store, &args.world, &args.agent, clock.now())?;
-    let mut sinks = series::load(&env);
-    let told: Vec<String> = sinks.keys().map(|p| p.to_lowercase()).collect();
-    if told.is_empty() {
-        log::info!("{} writes no series", args.agent);
-    } else {
-        log::info!("{} writes {} to a series store", args.agent, told.join(", "));
-    }
-    let metrics = sinks.remove(METRICS).map(|sink| {
-        let interval = orexis_metrics::load(&env);
-        log::info!("{} writes its metrics every {interval}s", args.agent);
-        orexis_metrics::Window::new(sink, interval, Some(&world_name(&args.world)), Some(&args.agent))
-    });
-    //  WHERE THE HISTORY BUCKET IS, sensing's readings are archived, and how often is the environment's to say.
-    #[cfg(feature = "sensing")]
-    let archive_every_s = Some(orexis_sensing_influxdb::interval(&env));
-    #[cfg(not(feature = "sensing"))]
-    let archive_every_s = None;
-    //  What a journal's test would hand is left unsaid; without the journal there is nothing more to leave.
-    #[allow(clippy::needless_update)]
     let wiring = Wiring {
-        watching: Watching {
-            history: sinks.remove(HISTORY),
-            archive_every_s,
-            metrics,
-            ..Watching::default()
-        },
-        //  DEPLOYED: what a package is not handed here it makes for itself, its journal and its archive among them;
-        //  and the log is handed to whichever package keeps it.
-        deployed: true,
+        //  DEPLOYED: what a package is not handed here it makes for itself from what the world says, its journal, its
+        //  archive and its series sinks; and the log is handed to whichever package keeps it.
+        deployed: Some(world_name(&args.world)),
         said: LOGGER.get().map(|logger| {
             let keep: Box<dyn FnOnce(orexis::task::Remark) + Send> = Box::new(move |remark| logger.attach(remark));
             orexis::task::Said(keep)

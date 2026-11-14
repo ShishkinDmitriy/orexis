@@ -804,9 +804,25 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     });
     let mut translator = Translator::new(&handed.store, &me, model);
     translator.inline = handed.outside.take::<Inline>().is_some();
-    if let Some(reads) = handed.outside.take::<Reads>() {
-        (translator.journal, translator.history, translator.metrics) = (reads.journal, reads.history, reads.metrics);
+    //  WHAT A CHAT READS OF WHAT HAPPENED: the journal where what keeps it said where it lies, and the two series —
+    //  handed, by a test that answers for them, or, where the agent is deployed, read through a sink of its own
+    //  wherever the world names a store that serves the purpose.
+    let mut reads = handed.outside.take::<Reads>().unwrap_or_default();
+    if handed.outside.has::<orexis::task::Deployed>() {
+        let own = |purpose: &'static str| -> Result<Option<Reader>, orexis::Error> {
+            Ok(
+                orexis::series::Sink::deployed(&handed.store, purpose, &orexis::series::environment)?
+                    .map(|(sink, _)| sink.reader()),
+            )
+        };
+        if reads.history.is_none() {
+            reads.history = own(orexis::series::HISTORY)?;
+        }
+        if reads.metrics.is_none() {
+            reads.metrics = own(orexis::series::METRICS)?;
+        }
     }
+    (translator.journal, translator.history, translator.metrics) = (reads.journal, reads.history, reads.metrics);
     let mut part = Translation::new(translator);
     let mut hears = handed.events.hears();
     let arrived = handed.arrived();

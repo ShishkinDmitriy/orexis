@@ -177,8 +177,8 @@ pub struct Watching {
     /// test that reads it: none, and a deployed agent's package opens its own where its role names one.
     #[cfg(feature = "journal")]
     pub archive: Option<(Arc<orexis_journal_oxigraph::Archive>, f64)>,
-    /// The series store sensing's readings are archived to, and a chat reads the past from: none, and every reading
-    /// stays in the agent's beliefs.
+    /// The series store sensing's readings are archived to, and a chat reads the past from, handed by a test that
+    /// reads it: none, and a deployed agent's packages make their own where the world names one.
     pub history: Option<Sink>,
     /// How often the readings are archived there, in the agent's seconds: none, and the archiver's own stretch.
     pub archive_every_s: Option<f64>,
@@ -191,9 +191,9 @@ pub struct Watching {
 #[derive(Default)]
 pub struct Wiring {
     pub watching: Watching,
-    /// THE AGENT IS DEPLOYED, the binary's run alone: a package makes for itself what it is not handed here
-    /// (`orexis::task::Deployed`). A check and a test leave it unsaid.
-    pub deployed: bool,
+    /// THE AGENT IS DEPLOYED, the binary's run alone, in the world of this name: a package makes for itself what it
+    /// is not handed here (`orexis::task::Deployed`). A check and a test leave it unsaid.
+    pub deployed: Option<String>,
     /// The process's log, for the package that keeps it (`orexis::task::Said`).
     pub said: Option<orexis::task::Said>,
     #[cfg(feature = "http")]
@@ -229,8 +229,8 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
         #[cfg(feature = "translation")]
         model,
     } = wiring;
-    if deployed {
-        outside.hand(orexis::task::Deployed);
+    if let Some(world) = deployed {
+        outside.hand(orexis::task::Deployed { world });
     }
     if let Some(said) = said {
         outside.hand(said);

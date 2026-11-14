@@ -45,8 +45,9 @@ tracer refuses a world whose role names one, and otherwise refuses nothing.
 `world/<world>/deployment.derived.ttl`, of the kernel's kind `orexis:DeploymentGraph`: each service a role of one of its agents
 names, with its `schema:url`, typed in the words of the package that uses it. Today that is the
 [tracer](/domain/journal/tracer.md) a recorder's role is traced by, the
-[archive](/domain/journal/archive.md) it is archived in and the
-[endpoint](/domain/journal/endpoint.md) its journal is served at. The boot puts it in, no reader of the mind is handed
+[archive](/domain/journal/archive.md) it is archived in, the
+[endpoint](/domain/journal/endpoint.md) its journal is served at, and, named by no role since every agent writes
+it, the [series](/domain/kernel/series.md) store for each purpose the world's agents write. The boot puts it in, no reader of the mind is handed
 it, and a package asks it as it starts and ends its start where its role names no service of its kind. It names
 nothing of another world. The services still told as environment move there one by one
 ([the-world-says-what-it-is-connected-to](/decisions/the-world-says-what-it-is-connected-to.md)).
@@ -113,9 +114,9 @@ with `orexis:arrivedBy orexis:Derived`). Then every renderer only formats: `brok
 `onboarding/mqtt.py` answers the asserted url or the allocated one, for the compose file, the
 broker's config and a board's `config.h`. Which purposes a world's agents are told of is
 `purposes` in `onboarding/installation.py` — history always, metrics where the world is monitored
-— and every tool asks it: `orexis-compose` writes, for each, the url and organisation of the store
-serving it into every agent's environment under the purpose's keys, and for metrics the window as
-`METRICS_INTERVAL_S`; `orexis-influx` mints each one's buckets in that store, kept as long as the
+— and every tool asks it: the world's derived deployment states, for each, the store serving it as an
+`orexis:SeriesStore` with its url and organisation, and for metrics the window; `orexis-compose` mounts each
+purpose's credential; `orexis-influx` mints each one's buckets in that store, kept as long as the
 purpose's retention says, and revokes the metrics grants of a world that stopped being monitored;
 `orexis-dashboards` draws health for a monitored world alone; and `orexis-infra-compose` writes
 `infra/compose.yaml`, the images and ports the document's and the rest the template's.

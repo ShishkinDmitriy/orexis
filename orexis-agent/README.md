@@ -6,9 +6,9 @@ start whether the agent runs it, starts the task of each that joined, and runs u
 - **Each package is a Cargo feature**, so an agent's image holds only what it runs: the code and the documents
   of the packages built in, and of no other.
 - **Start order:** `journal`, `journal-oxigraph`, `journal-otlp`, `metrics`, `sensing-influxdb`, then the rest.
-- **It names no package's word.** It makes the series stores a deployment's environment describes and hands them
-  to the tasks, says the agent is deployed, and hands the process's log to whichever package keeps it. It makes no
-  journal and no archive: those packages make their own.
+- **It names no package's word.** It says the agent is deployed, in which world, and hands the process's log to
+  whichever package keeps it. It makes no journal, no archive and no series sink: those packages make their own
+  from what the world says.
 
 ## Triggering events and activities
 

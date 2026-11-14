@@ -486,8 +486,8 @@ and an admin's minute is neither. So the stamp #844 built — the pass's instant
 timeline, moved on by real seconds at the clock's pace — goes, and with it the reason for it, two
 events of one pass being two points: a window is one point per tag set by construction. Metrics now
 live in real time while history lives in the agent's; a simulated world's metrics are drawn when
-its process ran. The window's length is the installation's `onboarding:intervalSeconds`, told to
-each agent as `METRICS_INTERVAL_S`, sixty where nothing says.
+its process ran. The window's length is the installation's `onboarding:intervalSeconds`, stated
+of `orexis:Metrics` in the world's derived deployment since 2026-11-14, sixty where nothing says.
 
 **The want's name is on no point.** A name cannot be aggregated, and a tag of it breaks the store's
 index. The sovereign allowed it on a rare event, `unreachable` for one; it is not rare — an agent

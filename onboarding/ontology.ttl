@@ -35,7 +35,7 @@ onboarding:SeriesStore a owl:Class ; rdfs:label "Series store" ;
 
 onboarding:serves a owl:ObjectProperty ; rdfs:label "serves" ;
     rdfs:domain onboarding:SeriesStore ; rdfs:range onboarding:SeriesPurpose ;
-    rdfs:comment "A purpose a series store is told to an agent for: history is served by exactly one store, metrics by one or none, and `orexis-compose` tells an agent the store's url and organisation under the purpose's keys, `INFLUX_<PURPOSE>_URL` and `_ORG` - metrics' only where the agent's world is `onboarding:monitored`. Two purposes may name one store, by coincidence and not by design (knowledge/domain/kernel/series.md)." .
+    rdfs:comment "A purpose a series store is told to an agent for: history is served by exactly one store, metrics by one or none, and a world's derived deployment names the store to its agents as an `orexis:SeriesStore` serving the purpose, with its url and organisation - metrics' only where the world is `onboarding:monitored`. Two purposes may name one store, by coincidence and not by design (knowledge/domain/kernel/series.md)." .
 
 onboarding:SeriesPurpose a owl:Class ; rdfs:label "Series purpose" ;
     rdfs:comment "What a series is written for, which decides the bucket it goes to, the credential that opens it and how long it keeps a point. Two, and the agent's code names each (`agent.series`): history and metrics." .
@@ -48,7 +48,7 @@ onboarding:Metrics a onboarding:SeriesPurpose ; rdfs:label "metrics" ;
 
 onboarding:intervalSeconds a owl:DatatypeProperty ; rdfs:label "interval seconds" ;
     rdfs:domain onboarding:SeriesPurpose ;
-    rdfs:comment "How many seconds of real time one window of a purpose's points covers, stated by the installation of metrics: an agent tallies its events in memory and writes the window, with every gauge sampled once, at its end. `orexis-compose` tells it to each agent of a monitored world as `METRICS_INTERVAL_S`; absent, the agent keeps sixty (agent/metrics.py)." .
+    rdfs:comment "How many seconds of real time one window of a purpose's points covers, stated by the installation of metrics: an agent tallies its events in memory and writes the window, with every gauge sampled once, at its end. A monitored world's derived deployment states it of `orexis:Metrics`; absent, the agent keeps sixty." .
 
 onboarding:retentionDays a owl:DatatypeProperty ; rdfs:label "retention days" ;
     rdfs:domain onboarding:SeriesPurpose ;

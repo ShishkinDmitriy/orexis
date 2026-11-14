@@ -84,8 +84,11 @@ is: `orexis-journal-oxigraph/` joins by the role's link and answers the path the
 archives it opens its own archive at that path and takes the last entries once every task has ended; the binary
 makes neither and names neither.
 
-Still environment, to move one by one, each with its package making its own connector: the series store for
-history and for metrics, the brokers' addresses, the model's url, each bot's url, and the intervals. The journal's port moved
+The series store is there too, for history and for metrics, named by no role since every agent writes it:
+what archives sensing's readings, the metrics and a chat that reads the past each make their own sink from the
+store the world names and the agent's own credential, and the metrics' window is stated beside it.
+
+Still environment, to move one by one, each with its package making its own connector: the brokers' addresses, the model's url, each bot's url, and the intervals. The journal's port moved
 too: the role names an endpoint (`journal:servedAt`) and the derived deployment states the allocated url; its window
 and its incidents are the role's own figures, and no `JOURNAL_` variable is left. Tracked as #1173, not here.
 

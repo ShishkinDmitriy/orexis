@@ -14,16 +14,13 @@ See knowledge/decisions/where-the-belief-base-lives.md.
 
 **Agent 0.2.0 runs here.** Each service runs `orexis-agent <world> <id> --volume /app/state`: the
 world mounted at `/app/world/<name>` beside `/app/domains`, so a world's `owl:imports` of its
-domains resolve, and the broker's address and the series store's handed in as environment —
+domains resolve, and the broker's address handed in as environment —
 the `schema:url`s the world asserts on its `mqtt4ssn:Broker` or the installation allocated it
-(`onboarding.mqtt.broker`), where the world has a bus, and for each purpose the world's agents are told of
-(`installation.purposes`) — history always, metrics where the world is `onboarding:monitored` — the
-url and organisation of the series store the installation says `onboarding:serves` it, told under
-the purpose's keys, `INFLUX_HISTORY_URL` and `_ORG`, `INFLUX_METRICS_URL` and `_ORG`, beside the
-credential `orexis-influx` minted for each, and for metrics the window the installation states, as
-`METRICS_INTERVAL_S`. An unmonitored world's agents are told of no metrics store at all. All of it
-is deployment graphs, a kind the agent's vocabulary does not
-declare, so no container is handed one and the agent cannot read where anything is. An agent that
+(`onboarding.mqtt.broker`), where the world has a bus. Where the series store answers is no environment: the
+world's derived deployment states it for each purpose the world's agents write (`installation.purposes`) — history
+always, metrics where the world is `onboarding:monitored` — and each package makes its own sink from it
+(`onboarding.connections`); what is mounted here is the credential `orexis-influx` minted for each purpose, the
+agent's bucket and the token that opens only it. An unmonitored world's agents are minted no metrics credential. An agent that
 holds a device writes its command topic, which the ACL admits it and nobody else to — an agent
 trusts itself, so nothing is signed until the market brings a second agent to ask.
 
@@ -99,7 +96,6 @@ SELECT ?url WHERE { $agent <http://example.org/orexis/telegram#hasBot> ?bot . ?b
 
 
 #  HOW LONG A METRICS WINDOW IS, the name the binary reads it by.
-INTERVAL_KEY = "METRICS_INTERVAL_S"
 
 
 @dataclass(frozen=True)
@@ -269,6 +265,12 @@ def _documents(world: str, read: dict[Path, frozenset[str] | None], agent_id: st
                    and SECRETS not in p.relative_to(here).parts)
 
 
+def _environment(told: str) -> str:
+    """An agent's `environment:` block, or nothing where nothing is told it there: an agent of a world with no bus
+    that translates nothing reads everything it needs off its world and its own credentials."""
+    return f"    environment:{told}\n" if told else ""
+
+
 def _restart(lasting: bool) -> str:
     """How an agent's service is restarted: always but by hand where it lasts, and never where it
     finishes (`reading.lasts`), since a restart of an agent that finished would boot, find nothing
@@ -282,7 +284,7 @@ def _restart(lasting: bool) -> str:
 
 
 def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, str]] | None,
-             series: dict[str, tuple[str, str]], window: float | None, lasting: bool,
+             series: tuple[str, ...], lasting: bool,
              translates: Translating | None = None,
              image: Image | None = None) -> str:
     """An agent's service. `bus` is each broker the agent is connected to, by its IRI, with the url
@@ -290,10 +292,7 @@ def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, st
     certificate — or None where the world has none, and then nothing of a bus is written: no
     `MQTT_*`, no broker credential, no certificate. `lasting` says whether the agent runs for good (`reading.lasts`), and so whether
     its container is restarted."""
-    stores = "".join(f'\n      INFLUX_{purpose}_URL: "{url}"\n      INFLUX_{purpose}_ORG: "{organisation}"'
-                     for purpose, (url, organisation) in series.items())
-    if METRICS in series and window is not None:
-        stores += f'\n      {INTERVAL_KEY}: "{window:g}"'
+    stores = ""
     mine = f"./{SECRETS}/{agent_id}"
     credentials = "".join(f"\n      - {mine}/{series_credential(purpose)}" for purpose in series)
     if translates is not None:
@@ -327,10 +326,7 @@ def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, st
   agent-{agent_id}:
     {image.build()}
     command: ["orexis-agent", "/app/world/{world}", "{agent_id}", "--volume", "/app/state"]
-    environment:{where}
-      # where each series it writes goes, and the org — the store the installation says serves each
-      # purpose, its metrics only where the world is monitored — safe for every agent to hold{stores}
-    env_file:
+{_environment(where + stores)}    env_file:
       # {minted}
     network_mode: host
     # Rootless podman maps YOUR uid into the container; map it onto the image's user so the agent
@@ -422,13 +418,12 @@ def render(world: str) -> str:
     #  ones it is connected to — and only then are the brokers' addresses asked for.
     bus = addresses(world) if reading.BUS in reading.premises(world_dir(world)) else {}
     reached = _reached(world) if bus else {}
-    series = {purpose: installation.series(purpose) for purpose in installation.purposes(world)}
-    window = installation.interval(METRICS) if METRICS in series else None
+    series = installation.purposes(world)
     client = simulated_client(world)
     read = read_by_an_agent(world)
     services = ("".join(_broker(world, b, *bus[b][1:]) for b in sorted(bus))
                 + (_simulator(world, read, client, *broker_of(world, client)[:2]) if client else "")
-                + "".join(_service(a, world, read, reached.get(a, []) if bus else None, series, window,
+                + "".join(_service(a, world, read, reached.get(a, []) if bus else None, series,
                                    reading.lasts(world_dir(world), a),
                                    translating(world, a), image_of(world, a, bool(series)))
                           for a in who))

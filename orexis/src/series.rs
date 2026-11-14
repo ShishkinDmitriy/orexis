@@ -1,13 +1,16 @@
-//! THE SERIES SINK, as `agent/series.py` offers it: points a package's events answer, written to the store the agent is
-//! told of for their purpose — and nothing about what the points are. A SERIES IS WATCHED AND NEVER BELIEVED.
+//! THE SERIES SINK: points a package's events answer, written to the store the world says serves their purpose — and
+//! nothing about what the points are. A SERIES IS WATCHED AND NEVER BELIEVED.
 //!
-//! TWO PURPOSES, each named its own store in the environment: HISTORY, what happened, `INFLUX_HISTORY_URL`, `_ORG`,
-//! `_BUCKET`, `_TOKEN`; and METRICS, how the agent is doing, the same four under `INFLUX_METRICS_`. A purpose the
-//! environment does not name has no sink, and one named in part is none either, said in the log. A store that refuses
-//! a point is said in the log and costs the agent nothing.
+//! TWO PURPOSES: HISTORY, what happened, and METRICS, how the agent is doing. WHERE A PURPOSE'S STORE ANSWERS IS THE
+//! WORLD'S TO SAY: its deployment graph names an `orexis:SeriesStore` that `orexis:serves` the purpose, with its
+//! `schema:url` and its `orexis:organisation` (`store`). WHAT OPENS IT IS THE AGENT'S OWN SECRET, never in a
+//! document: its bucket and the token that opens only it, `INFLUX_<PURPOSE>_BUCKET` and `_TOKEN`, from the
+//! credential file mounted into its container alone. A purpose the world names no store for has no sink, and one
+//! named without its credential is none either, said in the log. A store that refuses a point is said in the log and
+//! costs the agent nothing.
 //!
-//! A SINK IS HANDED to the part that writes it, where the Python module keeps one per purpose for whoever asks: in the
-//! binary the parts are linked by sharing objects, and the one process is one agent.
+//! A PACKAGE MAKES ITS OWN SINK (`Sink::deployed`), where the agent is deployed and it was handed none: what
+//! archives sensing's readings, the metrics, and a chat that reads the past.
 
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -19,7 +22,51 @@ use crate::events::{Field, Point};
 pub const HISTORY: &str = "HISTORY";
 pub const METRICS: &str = "METRICS";
 pub const PURPOSES: [&str; 2] = [HISTORY, METRICS];
-const KEYS: [&str; 4] = ["URL", "ORG", "BUCKET", "TOKEN"];
+const KEYS: [&str; 2] = ["BUCKET", "TOKEN"];
+
+/// A purpose as the world's deployment graph names it.
+fn purpose_iri(purpose: &str) -> Option<&'static str> {
+    match purpose {
+        HISTORY => Some("http://example.org/orexis#History"),
+        METRICS => Some("http://example.org/orexis#Metrics"),
+        _ => None,
+    }
+}
+
+/// Where a purpose's store answers, as the world's deployment graph states it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Served {
+    pub url: String,
+    pub organisation: String,
+    /// How many seconds a window of the purpose's points covers, where the world states it.
+    pub interval_s: Option<f64>,
+}
+
+const SERVED_Q: &str = "SELECT ?url ?organisation ?interval WHERE { \
+?store a orexis:SeriesStore ; orexis:serves $purpose ; <https://schema.org/url> ?url ; orexis:organisation ?organisation . \
+OPTIONAL { $purpose orexis:intervalSeconds ?interval } } ORDER BY ?url";
+
+/// THE STORE THE WORLD SAYS SERVES `purpose`, or None where its deployment graph names none.
+pub fn store(store: &crate::store::Store, purpose: &str) -> Result<Option<Served>, crate::Error> {
+    let Some(iri) = purpose_iri(purpose) else {
+        return Ok(None);
+    };
+    let graphs = store.graphs_of(&[crate::ontology::DEPLOYMENT], &crate::store::Within::common())?;
+    let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
+    if graphs.is_empty() {
+        return Ok(None);
+    }
+    let text = crate::bind::bind(SERVED_Q, &[("purpose", crate::bind::Value::iri(iri))])?;
+    Ok(store.rows(&text, &graphs)?.first().and_then(|row| {
+        Some(Served {
+            url: crate::store::value(row, "url")?,
+            organisation: crate::store::value(row, "organisation")?,
+            interval_s: crate::store::value(row, "interval")
+                .and_then(|s| s.parse::<f64>().ok())
+                .filter(|s| *s > 0.0),
+        })
+    }))
+}
 
 /// How a batch of points reaches a bucket: the client's own call, refused with why.
 pub type Write = Box<dyn Fn(&str, &[Point]) -> Result<(), String> + Send + Sync>;
@@ -78,16 +125,21 @@ impl Sink {
         }
     }
 
-    /// The store the environment names for `purpose`, or None where it names none, or names some of the four and
-    /// not all — said in the log.
-    pub fn from_environment(purpose: &'static str, env: &dyn Fn(&str) -> Option<String>) -> Option<Self> {
+    /// THE SINK OF `purpose` FOR AN AGENT DEPLOYED IN THE WORLD `store` HOLDS: the store the world says serves it,
+    /// opened by the bucket and the token the agent's own credential names in `env`. None where the world names no
+    /// store for the purpose, and where the credential is missing or named in part — said in the log.
+    pub fn deployed(
+        store: &crate::store::Store,
+        purpose: &'static str,
+        env: &dyn Fn(&str) -> Option<String>,
+    ) -> Result<Option<(Self, Served)>, crate::Error> {
+        let Some(served) = self::store(store, purpose)? else {
+            return Ok(None);
+        };
         let named: Vec<(&str, Option<String>)> = KEYS
             .iter()
             .map(|k| (*k, env(&format!("INFLUX_{purpose}_{k}")).filter(|v| !v.is_empty())))
             .collect();
-        if named.iter().all(|(_, v)| v.is_none()) {
-            return None;
-        }
         let missing: Vec<String> = named
             .iter()
             .filter(|(_, v)| v.is_none())
@@ -95,11 +147,11 @@ impl Sink {
             .collect();
         if !missing.is_empty() {
             log::warn!(
-                "a {} store is named without {} — nothing is written for it",
+                "the world names a {} store and the agent's credential names no {} — nothing is written for it",
                 purpose.to_lowercase(),
                 missing.join(", ")
             );
-            return None;
+            return Ok(None);
         }
         let value = |key: &str| {
             named
@@ -108,14 +160,14 @@ impl Sink {
                 .and_then(|(_, v)| v.clone())
                 .unwrap_or_default()
         };
-        let bucket = value("BUCKET");
-        Some(Self::influx(
+        let sink = Self::influx(
             purpose,
-            &value("URL"),
-            &value("ORG"),
-            &bucket,
+            &served.url,
+            &served.organisation,
+            &value("BUCKET"),
             &value("TOKEN"),
-        ))
+        );
+        Ok(Some((sink, served)))
     }
 
     #[cfg(feature = "series")]
@@ -286,12 +338,9 @@ fn cells(line: &str) -> Vec<String> {
     out
 }
 
-/// A sink for every purpose the environment names a store for.
-pub fn load(env: &dyn Fn(&str) -> Option<String>) -> BTreeMap<&'static str, Sink> {
-    PURPOSES
-        .iter()
-        .filter_map(|p| Sink::from_environment(p, env).map(|s| (*p, s)))
-        .collect()
+/// The process's environment, as a package asks it for the agent's own credential.
+pub fn environment(key: &str) -> Option<String> {
+    std::env::var(key).ok()
 }
 
 fn escaped(text: &str, also: &[char]) -> String {
@@ -355,22 +404,6 @@ mod tests {
     use crate::clock::instant;
     use std::sync::Mutex;
 
-    fn named(purpose: &str, bucket: &str) -> Vec<(String, String)> {
-        [
-            ("URL", "http://localhost:8086"),
-            ("ORG", "orexis"),
-            ("BUCKET", bucket),
-            ("TOKEN", "t"),
-        ]
-        .iter()
-        .map(|(k, v)| (format!("INFLUX_{purpose}_{k}"), v.to_string()))
-        .collect()
-    }
-
-    fn env(pairs: Vec<(String, String)>) -> impl Fn(&str) -> Option<String> {
-        move |k| pairs.iter().find(|(n, _)| n == k).map(|(_, v)| v.clone())
-    }
-
     fn point() -> Point {
         Point {
             measurement: "anything".into(),
@@ -401,32 +434,6 @@ mod tests {
     fn a_store_that_refuses_costs_the_agent_nothing() {
         let sink = Sink::new(HISTORY, "b", Box::new(|_, _| Err("down".into())));
         assert_eq!(sink.write(&[point()]), 0);
-    }
-
-    #[test]
-    fn no_store_named_for_a_purpose_is_no_sink_and_one_half_named_is_none_either() {
-        assert!(load(&|_| None).is_empty());
-        let old = env(vec![
-            ("INFLUX_URL".into(), "http://localhost:8086".into()),
-            ("INFLUX_BUCKET".into(), "b".into()),
-        ]);
-        assert!(load(&old).is_empty(), "a store named for no purpose names nothing");
-        let mut half = named(HISTORY, "terrace-terrace");
-        half.retain(|(k, _)| k != "INFLUX_HISTORY_TOKEN");
-        assert!(Sink::from_environment(HISTORY, &env(half)).is_none());
-    }
-
-    #[test]
-    fn each_purpose_is_told_its_own_store_and_one_names_nothing_of_the_other() {
-        let sinks = load(&env(named(METRICS, "terrace-terrace-metrics")));
-        assert_eq!(sinks.keys().copied().collect::<Vec<_>>(), [METRICS]);
-        let mut both = named(HISTORY, "terrace-terrace");
-        both.extend(named(METRICS, "terrace-terrace-metrics"));
-        let sinks = load(&env(both));
-        assert_eq!(
-            (sinks[HISTORY].bucket.as_str(), sinks[METRICS].bucket.as_str()),
-            ("terrace-terrace", "terrace-terrace-metrics")
-        );
     }
 
     #[test]

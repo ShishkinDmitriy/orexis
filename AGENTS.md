@@ -1065,6 +1065,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   running for what no role asked; the address on the role in the authored self graph and the installation's
   document handed to the agent were refused, and a credential is never in it
   (the-world-says-what-it-is-connected-to).
+- **Where a series is written is the world's to say and what opens it the agent's own secret** — the derived
+  deployment names an `orexis:SeriesStore` for each purpose the world's agents write, linked to no role since
+  history is every agent's, and each package makes its own sink from it and the bucket and token of the agent's
+  credential file: what archives sensing's readings, the metrics, and a chat that reads the past (series).
 - **A deployed agent's package makes what it is not handed, and the binary makes no journal** — whoever runs the
   agent for good says so (`orexis::task::Deployed`), and the journal package then makes its journal, keeps the
   process's log in it and serves it, and what archives it opens its own archive and takes the last entries once

@@ -55,9 +55,13 @@ other testimony.
 # What is built
 
 History, told by purpose (#825), written by what archives sensing's readings
-(`orexis-sensing-influxdb/`), and by nothing else. A sink per purpose (`orexis/src/series.rs`) is loaded where
-`INFLUX_HISTORY_URL`, `_ORG`, `_BUCKET` and `_TOKEN` are all set — none set is no sink, some set is
-none too, said in the log. Where the history sink is loaded the archiver has a task: on a timer it writes the
+(`orexis-sensing-influxdb/`), and by nothing else. Where a purpose's store answers is the world's to say: its derived
+[deployment](/domain/onboarding/deployment.md) names an `orexis:SeriesStore` that `orexis:serves` `orexis:History` or
+`orexis:Metrics`, with its `schema:url` and its `orexis:organisation`. What opens it is the agent's own credential,
+`INFLUX_<PURPOSE>_BUCKET` and `_TOKEN`, a file in its `secrets/<agent>/` and never a document. Each package makes
+its own sink from the two (`Sink::deployed` in `orexis/src/series.rs`), where the agent is deployed: what archives
+sensing's readings, the metrics, and a chat that reads the past. A world naming no store for a purpose has no sink
+for it, and a credential missing or named in part is none too, said in the log. Where the history sink is made the archiver has a task: on a timer it writes the
 point of every [observation](/domain/sensing/observation.md) the store has not yet taken, so no event is a point
 and what keeps the journal writes none; until 2026-11-13 it wrote each as its event was said and the archiver
 wrote it again, two writers of one point.
@@ -109,7 +113,7 @@ desire reads across worlds and agents.
 **A window is real time, never the agent's.** The agent's clock may run fast in a simulation and
 advances per read in a test, so a duration is `time.perf_counter`, the window is kept by a monotonic
 clock, a flush is stamped by the wall, and nothing reads `agent.clock`. The window is sixty seconds
-where the environment's `METRICS_INTERVAL_S` says nothing, and is written at the end of the first
+where the world states no `orexis:intervalSeconds` of `orexis:Metrics`, and is written at the end of the first
 pass by which it has run its length, so it holds whole passes; a test drives it without sleeping.
 The last window is written as the metrics part stops — a `SIGTERM` is made an exit, so `podman stop` does
 not lose it.

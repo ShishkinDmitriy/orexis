@@ -55,13 +55,6 @@ services:
       MQTT_CERT: "/app/world/terrace/secrets/terrace/agent.crt"
       MQTT_KEY: "/app/world/terrace/secrets/terrace/agent.key"
       MQTT_CA: "/app/secrets/ca.crt"
-      # where each series it writes goes, and the org — the store the installation says serves each
-      # purpose, its metrics only where the world is monitored — safe for every agent to hold
-      INFLUX_HISTORY_URL: "http://localhost:8086"
-      INFLUX_HISTORY_ORG: "orexis"
-      INFLUX_METRICS_URL: "http://localhost:8086"
-      INFLUX_METRICS_ORG: "orexis"
-      METRICS_INTERVAL_S: "60"
       # where the language model answers — the installation's `onboarding:Model`; which model, and the
       # key, arrive in the installation's secret below
       MODEL_URL: "https://api.anthropic.com"

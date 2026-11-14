@@ -109,7 +109,35 @@ orexis:DeploymentGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
     rdfs:label "Deployment graph" ;
-    rdfs:comment "What the world is connected to, as its agents read it: each service with where it answers (`schema:url`), typed in the words of the package that uses it — a tracer is the journal's. Derived by onboarding from the installation's document and the world's own deployment, into a document of the world. No belief: no reader of the mind is handed it, and no plan branches on it. A package asks it for a service of its kind as it starts, and ends its start where the world names none (knowledge/domain/onboarding/deployment.md)." .
+    rdfs:comment "What the world is connected to, as its agents read it: each service with where it answers (`schema:url`), typed in the words of the package that uses it — a tracer is the journal's, a series store the kernel's. Derived by onboarding from the installation's document and the world's own deployment, into a document of the world. No belief: no reader of the mind is handed it, and no plan branches on it. A package asks it for a service of its kind as it starts, and ends its start where the world names none (knowledge/domain/onboarding/deployment.md)." .
+
+#  WHERE A SERIES IS WRITTEN (knowledge/domain/kernel/series.md): a service of the world's deployment graph, which
+#  each package that writes or reads a series asks for as it makes its sink. The kernel's words, since the sink is
+#  the kernel's and three packages meet at it.
+
+orexis:SeriesStore a owl:Class ; rdfs:label "Series store" ;
+    rdfs:comment "A service the world is connected to that keeps series, InfluxDB today, at its `schema:url` and under its `orexis:organisation`: stated in the world's deployment graph (`orexis:DeploymentGraph`) with each purpose it `orexis:serves`. What opens it is never stated: an agent's bucket and token are its own credential." .
+
+orexis:SeriesPurpose a owl:Class ; rdfs:label "Series purpose" ;
+    rdfs:comment "What a series is kept for: `orexis:History`, what happened, or `orexis:Metrics`, how the agent is doing. A package asks the world for the store that serves its purpose." .
+
+orexis:History a orexis:SeriesPurpose ; rdfs:label "History" ;
+    rdfs:comment "What happened, as a series: each reading a sensor gave. Written by what archives sensing's readings, and read by a chat asked about the past." .
+
+orexis:Metrics a orexis:SeriesPurpose ; rdfs:label "Metrics" ;
+    rdfs:comment "How the agent is doing, for whoever administers it: each package's tallied events and gauges, written once a window." .
+
+orexis:serves a owl:ObjectProperty ; rdfs:label "serves" ;
+    rdfs:domain orexis:SeriesStore ; rdfs:range orexis:SeriesPurpose ;
+    rdfs:comment "A purpose a series store is written for. A world whose deployment graph names no store serving a purpose has no agent write it." .
+
+orexis:organisation a owl:DatatypeProperty ; rdfs:label "organisation" ;
+    rdfs:domain orexis:SeriesStore ;
+    rdfs:comment "The organisation on a series store that every bucket of the world's agents is in." .
+
+orexis:intervalSeconds a owl:DatatypeProperty ; rdfs:label "interval, in seconds" ;
+    rdfs:domain orexis:SeriesPurpose ;
+    rdfs:comment "How many seconds of real time one window of a purpose's points covers, stated of `orexis:Metrics` in the world's deployment graph. Sixty where it states none." .
 
 #  WHAT HAPPENED, as the journal keeps it (knowledge/domain/kernel/journal.md): an event a package says, an entry
 #  of the agent's journal — a store of its own beside the beliefs, which no part reads — and never a belief.

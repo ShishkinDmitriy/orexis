@@ -178,6 +178,11 @@ def _service(kind: str) -> dict:
     return {"iri": found["s"], **{key: found.get(key) for key in ("url", "image", "organisation")}}
 
 
+def series_store() -> str:
+    """The IRI of the installation's one series store, as a world's derived deployment names it."""
+    return _service(SERIES_STORE)["iri"]
+
+
 def served(purpose: str) -> tuple[str, str] | None:
     """(url, organisation) of the series store that `onboarding:serves` `purpose`, or None where no
     store serves it — metrics may be served by none; history served by none is refused as the

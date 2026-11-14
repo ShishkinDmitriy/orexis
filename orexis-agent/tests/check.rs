@@ -210,7 +210,7 @@ fn the_journal_package_makes_its_own_journal_where_the_agent_is_deployed_and_non
         let _entered = tasks.enter();
         let clock: std::sync::Arc<dyn orexis::clock::Clock> = std::sync::Arc::new(orexis::clock::Manual::at(now));
         let wiring = orexis_agent::Wiring {
-            deployed,
+            deployed: deployed.then(|| "hanoi".to_string()),
             ..orexis_agent::Wiring::default()
         };
         let running = orexis_agent::start(&store, "hanoi", clock, &loaded, None, wiring).unwrap();
@@ -225,4 +225,59 @@ fn the_journal_package_makes_its_own_journal_where_the_agent_is_deployed_and_non
         "deployed, it keeps what the packages said as they started"
     );
     assert_eq!(kept(false), None, "a check keeps no journal");
+}
+
+/// WHERE A SERIES IS WRITTEN IS THE WORLD'S TO SAY, for each purpose its agents write: the terrace is monitored, so
+/// its deployment names the store for history and for metrics, with the metrics' window; Hanoi is not, so it names
+/// one for history alone, and its metrics package, handed nothing, would make no sink.
+#[test]
+fn the_world_names_the_series_store_for_each_purpose_its_agents_write() {
+    let now = oxsdatatypes::DateTime::now();
+    let served = |world: &str, agent: &str, purpose: &str| {
+        let store =
+            orexis::store::Store::new(std::sync::Arc::new(orexis::namespaces::Namespaces::linked().unwrap())).unwrap();
+        orexis_agent::booted(&store, &Path::new(TREE).join("world").join(world), agent, now).unwrap();
+        orexis::series::store(&store, purpose).unwrap()
+    };
+    let at = |interval_s| {
+        Some(orexis::series::Served {
+            url: "http://localhost:8086".to_string(),
+            organisation: "orexis".to_string(),
+            interval_s,
+        })
+    };
+    assert_eq!(served("terrace", "terrace", orexis::series::HISTORY), at(None));
+    assert_eq!(served("terrace", "terrace", orexis::series::METRICS), at(Some(60.0)));
+    assert_eq!(served("hanoi", "hanoi", orexis::series::HISTORY), at(None));
+    assert_eq!(served("hanoi", "hanoi", orexis::series::METRICS), None);
+
+    //  AND A SINK IS MADE WHERE THE WORLD NAMES THE STORE AND THE AGENT'S OWN CREDENTIAL OPENS IT: each purpose by its
+    //  own bucket, none where the credential is missing or named in part, and none where the world names no store,
+    //  whatever the credential says.
+    let sink = |world: &str, agent: &str, purpose: &'static str, told: &[(&str, &str)]| {
+        let store =
+            orexis::store::Store::new(std::sync::Arc::new(orexis::namespaces::Namespaces::linked().unwrap())).unwrap();
+        orexis_agent::booted(&store, &Path::new(TREE).join("world").join(world), agent, now).unwrap();
+        let env = |key: &str| told.iter().find(|(k, _)| *k == key).map(|(_, v)| v.to_string());
+        orexis::series::Sink::deployed(&store, purpose, &env)
+            .unwrap()
+            .map(|(sink, _)| sink.bucket)
+    };
+    let both = [
+        ("INFLUX_HISTORY_BUCKET", "terrace-terrace"),
+        ("INFLUX_HISTORY_TOKEN", "t"),
+        ("INFLUX_METRICS_BUCKET", "terrace-terrace-metrics"),
+        ("INFLUX_METRICS_TOKEN", "t"),
+    ];
+    assert_eq!(
+        sink("terrace", "terrace", orexis::series::HISTORY, &both).as_deref(),
+        Some("terrace-terrace")
+    );
+    assert_eq!(
+        sink("terrace", "terrace", orexis::series::METRICS, &both).as_deref(),
+        Some("terrace-terrace-metrics")
+    );
+    assert_eq!(sink("terrace", "terrace", orexis::series::HISTORY, &[]), None);
+    assert_eq!(sink("terrace", "terrace", orexis::series::HISTORY, &both[..1]), None);
+    assert_eq!(sink("hanoi", "hanoi", orexis::series::METRICS, &both), None);
 }

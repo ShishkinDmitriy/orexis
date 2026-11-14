@@ -15,9 +15,13 @@ naming one where the installation names none is refused; each archive named is g
 journal volume is mounted at in its container (`ARCHIVE`), which `orexis-compose` mounts there; each endpoint
 named is given the url the installation allocated its agent's journal, on the host's loopback.
 
+AND THE SERIES STORE, WHICH NO ROLE NAMES. History is every agent's and metrics every agent's of a monitored
+world, so the store is stated for the world: an `orexis:SeriesStore` with each purpose it `orexis:serves`, its url
+and its organisation, and the metrics' window where the installation states one. The bucket and the token stay
+the agent's own credential, a file in its `secrets/<agent>/`, never here.
+
 The other services still reach an agent through its environment, and move here one by one. Committed, as the
-derived society is, and held to a fresh derivation by `tests/test_layout.py`; a world whose agents are linked to
-nothing has no such document.
+derived society is, and held to a fresh derivation by `tests/test_layout.py`.
 
     orexis-onboard <world>     # writes it, among its steps; it needs nothing up
 """
@@ -41,7 +45,10 @@ OREXIS = "http://example.org/orexis#"
 DEPLOYMENT = OREXIS + "DeploymentGraph"
 JOURNAL = "http://example.org/orexis/journal#"
 SCHEMA = "https://schema.org/"
+INSTALLATION = "http://example.org/orexis/installation#"
 _TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+#  A purpose as the kernel names it in a world's deployment graph.
+_PURPOSE = {"HISTORY": "History", "METRICS": "Metrics"}
 #  WHERE AN AGENT'S ARCHIVE IS, in its container: the path its journal volume is mounted at, which `orexis-compose`
 #  writes into the service and this into the world's derived deployment, so the two cannot differ.
 ARCHIVE = "/app/journal"
@@ -95,6 +102,20 @@ def derive(world: str) -> list[tuple[str, str, ox.NamedNode | ox.Literal]]:
                              f"allocates one before it derives this")
         statements += [(iri, _TYPE, ox.NamedNode(JOURNAL + "Endpoint")),
                        (iri, SCHEMA + "url", ox.Literal(url))]
+    #  THE SERIES STORE, for each purpose the world's agents write: history always, metrics where it is monitored.
+    #  Every agent of the world reads it, so it is linked to no role: what archives sensing's readings, the metrics
+    #  and a chat that reads the past each ask for the store serving their purpose.
+    for purpose in installation.purposes(world):
+        url, organisation = installation.series(purpose)
+        store = installation.series_store()
+        statements += [(store, _TYPE, ox.NamedNode(OREXIS + "SeriesStore")),
+                       (store, OREXIS + "serves", ox.NamedNode(OREXIS + _PURPOSE[purpose])),
+                       (store, SCHEMA + "url", ox.Literal(url)),
+                       (store, OREXIS + "organisation", ox.Literal(organisation))]
+        window = installation.interval(purpose)
+        if window is not None:
+            statements.append((OREXIS + _PURPOSE[purpose], OREXIS + "intervalSeconds",
+                               ox.Literal(f"{window:g}", datatype=ox.NamedNode("http://www.w3.org/2001/XMLSchema#decimal"))))
     return sorted(statements, key=lambda s: (s[0], s[1], str(s[2])))
 
 
@@ -107,8 +128,9 @@ the store for the service its role names as it starts, and ends its start where 
 def derivation_text(world: str, statements=None) -> str:
     """The derived deployment document for `world`, as `derive` would write it now."""
     statements = derive(world) if statements is None else statements
-    spoken = {s.rsplit("#", 1)[0] + "#" for s, _, _ in statements if "#" in s}
-    prefixes = {"journal": JOURNAL, "orexis": OREXIS, "schema": SCHEMA, **({"": spoken.pop()} if len(spoken) == 1 else {})}
+    spoken = {s.rsplit("#", 1)[0] + "#" for s, _, _ in statements if "#" in s} - {OREXIS, INSTALLATION}
+    prefixes = {"journal": JOURNAL, "orexis": OREXIS, "schema": SCHEMA, "installation": INSTALLATION,
+                **({"": spoken.pop()} if len(spoken) == 1 else {})}
     return derived.text(DEPLOYMENT, statements, prefixes, _HEADER)
 
 

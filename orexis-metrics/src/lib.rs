@@ -10,7 +10,7 @@
 //!
 //! REAL TIME, NEVER THE AGENT'S: the window is kept by a monotonic real clock and a flush is stamped by the wall, so
 //! nothing here reads the agent's timeline, which may run fast or tick per read. The window's length is the
-//! environment's, `METRICS_INTERVAL_S`, sixty seconds where nothing says. Every point is tagged with the world and the
+//! world's to say of the purpose (`orexis:intervalSeconds`), sixty seconds where it says nothing. Every point is tagged with the world and the
 //! agent. The window is written when a pass ends on the first pass by which it has run its length, so a window holds
 //! whole passes, and as the part stops, since a stop is an exit.
 
@@ -24,23 +24,8 @@ use orexis::events::{Event, Field, Mark, Number, Point, Watch, counted, round6};
 use orexis::series::Sink;
 use orexis::task::{Handed, PASS_METRIC, Package, Task};
 
-/// The window's length where the environment says none, and the key it is said under.
+/// The window's length where the world states none.
 pub const INTERVAL_S: f64 = 60.0;
-pub const INTERVAL_KEY: &str = "METRICS_INTERVAL_S";
-
-/// The window's length as the environment says it, or sixty seconds where it says none or no positive number.
-pub fn load(env: &dyn Fn(&str) -> Option<String>) -> f64 {
-    match env(INTERVAL_KEY) {
-        None => INTERVAL_S,
-        Some(told) => match told.parse::<f64>() {
-            Ok(s) if s > 0.0 => s,
-            _ => {
-                log::warn!("{INTERVAL_KEY}={told:?} is no positive number of seconds — the window is {INTERVAL_S}s");
-                INTERVAL_S
-            }
-        },
-    }
-}
 
 #[derive(Default)]
 struct Tally {
@@ -228,8 +213,24 @@ fn start(handed: Handed) -> orexis::task::Starting {
 }
 
 fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
-    let Some(window) = handed.outside.take::<Window>() else {
-        return Ok(None);
+    //  HANDED A WINDOW, by a test that reads the points, it tallies into that; deployed and handed none, it makes
+    //  its own where the world names a store that serves metrics, its length the world's word or sixty seconds; and
+    //  otherwise nothing is tallied.
+    let window = match handed.outside.take::<Window>() {
+        Some(window) => window,
+        None => {
+            let Some(deployed) = handed.outside.read::<orexis::task::Deployed>() else {
+                return Ok(None);
+            };
+            let Some((sink, served)) =
+                Sink::deployed(&handed.store, orexis::series::METRICS, &orexis::series::environment)?
+            else {
+                return Ok(None);
+            };
+            let interval = served.interval_s.unwrap_or(INTERVAL_S);
+            log::info!("{} writes its metrics every {interval}s", handed.id);
+            Window::new(sink, interval, Some(&deployed.world), Some(&handed.id))
+        }
     };
     let metrics = Metrics::new(window, handed.events.watch());
     let handed = handed.clone();
@@ -369,13 +370,5 @@ mod tests {
             BTreeMap::from([("hanoi".into(), Field::Int(7)), ("courier".into(), Field::Float(2.5))])
         );
         assert!(w.flush().is_empty());
-    }
-
-    #[test]
-    fn the_window_is_the_environments_or_sixty_seconds() {
-        assert_eq!(load(&|_| None), 60.0);
-        assert_eq!(load(&|_| Some("15".into())), 15.0);
-        assert_eq!(load(&|_| Some("never".into())), 60.0);
-        assert_eq!(load(&|_| Some("0".into())), 60.0);
     }
 }
