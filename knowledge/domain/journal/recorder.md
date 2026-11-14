@@ -20,10 +20,11 @@ happened all read what a recorder kept.
 
 The package is started before every other the agent loads, so what they say as they start is heard. It hears the
 agent's [events](/domain/kernel/event.md) and writes the [journal](/domain/kernel/journal.md): each event that states
-triples as an entry in its package's words, and each [activity](/domain/kernel/activity.md) as it ends. With it are
-started the two crates that keep house for it: `orexis-journal-oxigraph/`, which takes what lasts to the
-[archive](/domain/journal/archive.md) where the agent has a volume for one, and `orexis-journal-otlp/`, which ships
-the activities to a tracer where the deployment names one. The agent's log
+triples as an entry in its package's words, and each [activity](/domain/kernel/activity.md) as it ends. What the role is
+linked to decides which of the two crates that keep house for the journal are started with it:
+`orexis-journal-oxigraph/`, which takes what lasts to the [archive](/domain/journal/archive.md) the role names, and
+`orexis-journal-otlp/`, which ships the activities to the [tracer](/domain/journal/tracer.md) the role names. A role
+naming neither keeps the journal in memory for its window, and runs nothing else. The agent's log
 is kept there too, with what the boot said before the role was read.
 
 # What it is not

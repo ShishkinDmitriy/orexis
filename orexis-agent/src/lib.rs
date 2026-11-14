@@ -166,6 +166,8 @@ pub fn built(package: &str) -> bool {
 
 /// The package an agent that plays a recorder loads: what keeps its journal.
 pub const JOURNAL: &str = "journal";
+/// The package that joins where the recorder's role names an archive: what takes the journal's lasting entries there.
+pub const ARCHIVE: &str = "journal-oxigraph";
 
 /// WHAT WATCHES THE AGENT, where the deployment keeps any of it: the journal, the series store its readings are
 /// archived to, the metrics window and the tracer. Each is used by the package it is for, where the agent loads it:

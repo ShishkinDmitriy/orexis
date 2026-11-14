@@ -27,7 +27,8 @@ use crate::bind::{Value, bind};
 use crate::document::Document;
 use crate::hash::hash_named_graph;
 use crate::ontology::{
-    BELIEF, CATALOGUE_GRAPH, CLOSURE_GRAPH, DERIVED, GRAPH, ONTOLOGY, ROLE, SELF_GRAPH, SOCIETY_GRAPH, WORLD_GRAPH,
+    BELIEF, CATALOGUE_GRAPH, CLOSURE_GRAPH, DEPLOYMENT, DERIVED, GRAPH, ONTOLOGY, ROLE, SELF_GRAPH, SOCIETY_GRAPH,
+    WORLD_GRAPH,
 };
 use crate::store::{Store, Within, iri};
 use crate::task::Package;
@@ -225,6 +226,28 @@ pub fn wired(store: &Store, words: &str, wired: &[(&str, &str)]) -> Result<bool,
         }
     }
     Ok(false)
+}
+
+/// WHERE A SERVICE A ROLE OF THE SELF NAMES ANSWERS: `pattern` binds `?service` from `?role`, a role the self plays,
+/// in the `words` the asking package declares, and the world's deployment states the service's `schema:url`. None
+/// where no role of the self names one, or the world's deployment says nothing of the one named. What a package
+/// that serves a role only where it is linked to a service asks as it starts: the kernel names no role and no link.
+pub fn connected(store: &Store, words: &str, pattern: &str) -> Result<Option<String>, Error> {
+    let mut known = store.graphs_of(&[DEPLOYMENT], &Within::common())?;
+    if known.is_empty() {
+        return Ok(None);
+    }
+    known.extend(store.graphs_of(&[SELF_GRAPH], &Within::default())?);
+    let known: Vec<&str> = known.iter().map(String::as_str).collect();
+    let text = format!(
+        "{words}SELECT ?url WHERE {{ ?me a orexis:Self ; orexis:plays ?role . {pattern} \
+         ?service <https://schema.org/url> ?url }} ORDER BY ?url"
+    );
+    Ok(store
+        .rows(&text, &known)?
+        .iter()
+        .filter_map(|row| crate::store::value(row, "url"))
+        .find(|url| !url.is_empty()))
 }
 
 /// A ROLE THE SELF PLAYS THAT NO PACKAGE OF THIS BINARY DECLARES: the role's classes, none beneath `orexis:Role` by

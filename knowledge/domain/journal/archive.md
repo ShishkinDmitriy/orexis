@@ -1,6 +1,7 @@
 ---
 type: Repository
 title: Archive
+term: http://example.org/orexis/journal#Archive
 description: >-
   Where a recorder's journal puts what it keeps for good - a triplestore on the agent's own volume, written on a
   timer by `orexis-journal-oxigraph/` and read by everyone who asks what happened. The journal in memory is the hot
@@ -9,7 +10,7 @@ description: >-
 
 # What it is
 
-A [recorder](/domain/journal/recorder.md)'s **archive** is a triplestore on a volume of the agent's own (`--journal`),
+A [recorder](/domain/journal/recorder.md)'s **archive** is a triplestore on a volume of the agent's own,
 holding what its [journal](/domain/kernel/journal.md) kept for good: each event, and each log record and activity an
 incident kept. An entry is the same named graph in both, so one text reads either.
 
@@ -33,8 +34,19 @@ stops loses nothing. A reader of the archive is as far behind the journal.
 
 Whoever asks about the past: the endpoint's `/sparql`, a chat's journal tool, and `orexis-history` and
 `orexis-explain` opening a stopped agent's volume. The journal itself answers at `/live/sparql`, for the log and the
-activities of the window. An agent told no `--journal` has no archive: what lasts stays in its journal, and both
+activities of the window. A recorder whose role names no archive has none: what lasts stays in its journal, and both
 paths answer from there.
+
+# Who has one
+
+The agent whose recorder role is linked to one: `journal:archivedIn`, naming a `journal:Archive`, with no path
+beside it. Where the archive lies is derived, into the world's
+[deployment](/domain/onboarding/deployment.md) graph as a `file:` url: the path that agent's journal volume is
+mounted at. `orexis-journal-oxigraph/` joins only where both are there.
+
+```turtle
+:grower orexis:plays [ a journal:Recorder ; journal:archivedIn :grower_archive ] .
+```
 
 An archive opened over what an earlier journal wrote straight to the volume is tidied first of the log and the
 activities no incident kept.

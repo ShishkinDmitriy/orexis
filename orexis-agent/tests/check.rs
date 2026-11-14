@@ -162,30 +162,33 @@ fn an_agent_in_a_chat_by_email_boots_with_its_mailbox() {
     assert!(loaded.iter().any(|p| p == "transport/email"), "{loaded:?}");
 }
 
-/// THE WORLD SAYS WHAT IT IS CONNECTED TO, and a package asks it as it starts: the greenhouse is monitored, so its
-/// derived deployment names the installation's tracer, and what ships the journal's activities joins its recorder;
-/// Hanoi names none, so that package's start ends there, though its mover keeps a journal too.
+/// A RECORDER'S ROLE NAMES WHAT IT IS LINKED TO, the world says where that answers, and each housekeeper asks as it
+/// starts: the greenhouse's grower is traced by a tracer and archived in an archive, so what ships the activities
+/// and what archives the journal both join it; Hanoi's role names an archive and no tracer, so the shipper's start
+/// ends there, though its agent keeps a journal too.
 #[test]
-fn what_ships_the_activities_joins_where_the_world_names_a_tracer_and_ends_its_start_where_it_names_none() {
+fn a_housekeeper_of_the_journal_joins_where_the_recorders_role_names_its_service_and_ends_its_start_where_it_names_none()
+ {
     let now = oxsdatatypes::DateTime::now();
-    let traced = |world: &str, agent: &str| {
+    let linked = |world: &str, agent: &str| {
         let store =
             orexis::store::Store::new(std::sync::Arc::new(orexis::namespaces::Namespaces::linked().unwrap())).unwrap();
         let loaded = orexis_agent::booted(&store, &Path::new(TREE).join("world").join(world), agent, now).unwrap();
+        let joined = |package: &str| loaded.iter().any(|p| p == package);
         (
             orexis_journal_otlp::tracer(&store).unwrap(),
-            loaded.iter().any(|p| p == "journal"),
-            loaded.iter().any(|p| p == "journal-otlp"),
+            orexis_journal_oxigraph::archive(&store).unwrap(),
+            [joined("journal"), joined("journal-otlp"), joined("journal-oxigraph")],
         )
     };
-    let greenhouse = agents(&Path::new(TREE).join("world/greenhouse"));
-    let recorder = greenhouse
-        .iter()
-        .find(|a| traced("greenhouse", a).1)
-        .expect("an agent of the greenhouse plays a recorder");
+    let archive = Some(std::path::PathBuf::from("/app/journal"));
     assert_eq!(
-        traced("greenhouse", recorder),
-        (Some("http://localhost:4318".to_string()), true, true)
+        linked("greenhouse", "grower"),
+        (
+            Some("http://localhost:4318".to_string()),
+            archive.clone(),
+            [true, true, true]
+        )
     );
-    assert_eq!(traced("hanoi", "hanoi"), (None, true, false));
+    assert_eq!(linked("hanoi", "hanoi"), (None, archive, [true, false, true]));
 }

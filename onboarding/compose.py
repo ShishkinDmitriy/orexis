@@ -70,7 +70,7 @@ from urllib.parse import urlparse
 from documents.world import EMAIL, SECRETS, TREE, directory_of, package_of, TELEGRAM, documents, known, packages_of, world_of
 from .series import HISTORY, METRICS
 from documents.store import document, graphs_of, kinds_in, rows, whose
-from . import installation, reading
+from . import connections, installation, reading
 from .worlds import REPO_ROOT
 from .worlds import agent_secrets, world_dir, worlds
 
@@ -337,7 +337,7 @@ def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, st
     return f"""
   agent-{agent_id}:
     {image.build()}
-    command: ["orexis-agent", "/app/world/{world}", "{agent_id}", "--volume", "/app/state", "--journal", "/app/journal"]
+    command: ["orexis-agent", "/app/world/{world}", "{agent_id}", "--volume", "/app/state"]
     environment:{where}
       # where each series it writes goes, and the org — the store the installation says serves each
       # purpose, its metrics only where the world is monitored — safe for every agent to hold{stores}
@@ -351,8 +351,9 @@ def _service(agent_id: str, world: str, read: set[Path], bus: list[tuple[str, st
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-{world}-{agent_id}:/app/state
-      # its journal, a store of its own beside the beliefs and apart from them
-      - orexis-{world}-{agent_id}-journal:/app/journal
+      # its journal's archive, a store of its own beside the beliefs and apart from them, where the world's derived
+      # deployment says the archive its recorder's role names is
+      - orexis-{world}-{agent_id}-journal:{connections.ARCHIVE}
       # the world's documents, file by file, at the path its imports of the domains resolve from{_documents(world, read, agent_id)}
       # its own secrets, whole: its credentials, its certificate, and every document only it is handed — written
       # by onboarding and by hand, never committed, and mounted into THIS container alone

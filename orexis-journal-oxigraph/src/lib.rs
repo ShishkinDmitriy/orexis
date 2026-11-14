@@ -154,13 +154,25 @@ pub struct Archives {
 
 inventory::submit! { Package { name: "journal-oxigraph", documents: &[], start } }
 
-/// THE ARCHIVER'S START: where it is handed a journal and an archive, its task; and none otherwise.
-/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
-/// joined, makes its core.
+/// WHERE THE RECORDER'S ARCHIVE IS: the path of the archive its role names (`journal:archivedIn`), as the world's
+/// deployment states it, a `file:` url, or None where the role names none or the world says nothing of the one
+/// named. The role says that there is one and the world where; no flag does.
+pub fn archive(store: &orexis::store::Store) -> Result<Option<std::path::PathBuf>, Error> {
+    Ok(orexis::boot::connected(store, WORDS, ARCHIVED_IN)?
+        .and_then(|url| url.strip_prefix("file://").map(std::path::PathBuf::from)))
+}
+
+const WORDS: &str = "PREFIX journal: <http://example.org/orexis/journal#> ";
+const ARCHIVED_IN: &str = "?role journal:archivedIn ?service . ?service a journal:Archive .";
+
+/// ITS START, which every package this binary holds is given: it keeps house for the journal, so it joins where the
+/// journal did AND THE RECORDER'S ROLE NAMES AN ARCHIVE the world says where to find, and where the role names none
+/// its start ends there, and what lasts stays in the journal. Joined, it waits for the journal's start; handed a
+/// journal and an archive, its task.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        //  IT KEEPS HOUSE FOR THE JOURNAL, so it runs where the journal does, started after it.
-        if !handed.beside("journal").await? || !handed.started("journal").await {
+        let archived = |handed: &Handed| Ok(handed.joined("journal") && archive(&handed.store)?.is_some());
+        if !handed.joins(archived).await? || !handed.started("journal").await {
             return Ok(None);
         }
         make(&handed)

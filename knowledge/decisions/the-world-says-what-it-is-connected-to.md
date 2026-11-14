@@ -30,17 +30,23 @@ package it was for. Three things followed.
 
 # What is decided
 
-1. **The world says what it is connected to.** Onboarding derives it, from the installation's document and the
-   world's own deployment, into `world/<world>/deployment.derived.ttl`: each service with its `schema:url`, typed in
-   the words of the package that uses it. A tracer is `journal:Tracer`.
+1. **The world says what it is connected to.** Onboarding derives it into
+   `world/<world>/deployment.derived.ttl`: each service with its `schema:url`, typed in the words of the package
+   that uses it. A tracer is `journal:Tracer`, an archive `journal:Archive`.
+   **A role names the service it is linked to, and the world says where that answers.** The author writes the link
+   on the role in the agent's self graph, `journal:tracedBy` and `journal:archivedIn` on a recorder's, naming a
+   node and no address; onboarding derives the node's url, the installation's tracer's for a tracer and the path
+   the agent's journal volume is mounted at for an archive. So which recorder is traced and which is archived is
+   said per agent, by the author.
 2. **Its kind is the kernel's, `orexis:DeploymentGraph`, and it is no belief.** The boot puts it in with the
    world's other documents. No reader of the mind is handed it and no plan branches on it, which is the test
    [model-it-only-if-a-plan-would-branch-on-it](/decisions/model-it-only-if-a-plan-would-branch-on-it.md) sets; a
    package reads it by its kind, as it reads a stance off the self graph.
 3. **A package reads it as it starts, and makes what it needs itself.** Whether to join is the package's own
    question ([package](/domain/kernel/package.md)): what ships the journal's activities joins where the journal did
-   and the world names a tracer, and ends its start where it names none. Joined, it reads the url and makes its own
-   sender. Nothing hands it an endpoint.
+   and the recorder's role names a tracer the world says where to reach, and ends its start where the role names
+   none. Joined, it reads the url and makes its own sender. Nothing hands it an endpoint. What archives the journal
+   joins by `journal:archivedIn` the same way.
 4. **Derived, not authored, where the installation decides.** Which port an agent's journal serves on is allocated
    across the host, and where the shared tracer answers is the installation's to say. A world's author knows
    neither, so onboarding writes them, as it writes `society.derived.ttl`; what a world asserts of its own
@@ -57,6 +63,10 @@ package it was for. Three things followed.
 - **The installation's document handed to the agent.** `infra/installation.derived.ttl` is the one document that
   names every world, and an agent never learns that other worlds exist. The world's derived document states what
   this world is given and nothing of another.
+- **A service of the world serving every agent of it.** The first cut joined the shipper wherever the world's
+  deployment named any tracer, so every recorder of a monitored world was traced and `onboarding:monitored` decided
+  it. A package then ran for something no role of the agent asked for. The link on the role replaced it, and
+  `onboarding:monitored` now decides metrics alone.
 - **Keeping the environment and adding a flag.** A variable saying "no tracer" is the same copy with one more
   spelling of absence.
 
@@ -67,12 +77,14 @@ beliefs. They are no longer environment where a package has moved: they are a gr
 
 # Built, and still to build
 
-Built: the tracer. `orexis-journal-otlp/` reads `journal:Tracer` from the deployment graph; `OTLP_ENDPOINT` and
-`OTLP_INTERVAL_S` are gone from the binary and from every compose file.
+Built: the tracer. `orexis-journal-otlp/` reads the `journal:Tracer` its role names from the deployment graph;
+`OTLP_ENDPOINT` and `OTLP_INTERVAL_S` are gone from the binary and from every compose file. And where the archive
+is: `orexis-journal-oxigraph/` joins by the role's link and answers the path the world states, and the binary's
+`--journal` flag is gone. The binary still opens the archive at that path, since it serves it and takes the last
+entries as the run ends; the package opening its own is #1173's.
 
 Still environment, to move one by one, each with its package making its own connector: the series store for
-history and for metrics, the brokers' addresses, the model's url, each bot's url, the journal's port and its
-archive's path, and the intervals. Tracked as #1173, not here.
+history and for metrics, the brokers' addresses, the model's url, each bot's url, the journal's port, and the intervals. Tracked as #1173, not here.
 
 # Seams left open
 

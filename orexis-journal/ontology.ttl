@@ -18,8 +18,25 @@
 journal:Recorder a owl:Class ; rdfs:subClassOf orexis:Role ; rdfs:label "Recorder" ;
     rdfs:comment "An agent that keeps a journal of what happened to it: every event its packages say and every activity they end, written as it happens. Declared, never derived; it changes nothing the agent plans or does." .
 
-#  WHERE THE ACTIVITIES ARE SHIPPED (knowledge/domain/journal/tracer.md): a service of the world's deployment, which
-#  what ships the journal's activities asks for as it starts.
+#  WHAT A RECORDER'S ROLE IS LINKED TO decides which of the two crates that keep house for the journal join it: the
+#  role names a tracer, and what ships the activities joins; it names an archive, and what takes the lasting entries
+#  to disk joins; it names neither, and the journal is kept in memory for its window and nothing else is run. The
+#  role says WHICH service, and the world's deployment graph (`orexis:DeploymentGraph`) WHERE it answers.
+
+#  WHERE THE ACTIVITIES ARE SHIPPED (knowledge/domain/journal/tracer.md).
 
 journal:Tracer a owl:Class ; rdfs:label "Tracer" ;
-    rdfs:comment "A service the world is connected to that takes an agent's activities as spans, OTLP over HTTP at its `schema:url`: stated in the world's deployment graph (`orexis:DeploymentGraph`), where what ships the journal's activities (`orexis-journal-otlp/`) finds it as it starts. A world that names none is traced by nobody, and that package ends its start." .
+    rdfs:comment "A service the world is connected to that takes an agent's activities as spans, OTLP over HTTP at its `schema:url`, which the world's deployment graph (`orexis:DeploymentGraph`) states. What ships the journal's activities (`orexis-journal-otlp/`) finds it there as it starts, by the recorder's role that names it." .
+
+journal:tracedBy a owl:ObjectProperty ; rdfs:label "traced by" ;
+    rdfs:domain journal:Recorder ; rdfs:range journal:Tracer ;
+    rdfs:comment "The tracer a recorder's activities are shipped to, said of the role in the agent's self graph. A recorder whose role names none is traced by nobody, and what ships the activities ends its start." .
+
+#  WHERE WHAT LASTS IS KEPT (knowledge/domain/journal/archive.md).
+
+journal:Archive a owl:Class ; rdfs:label "Archive" ;
+    rdfs:comment "A triplestore on a volume of the agent's own holding what its journal kept for good, at the `file:` url the world's deployment graph (`orexis:DeploymentGraph`) states as its `schema:url`. What archives the journal (`orexis-journal-oxigraph/`) finds it there as it starts, by the recorder's role that names it." .
+
+journal:archivedIn a owl:ObjectProperty ; rdfs:label "archived in" ;
+    rdfs:domain journal:Recorder ; rdfs:range journal:Archive ;
+    rdfs:comment "The archive what a recorder's journal keeps for good is taken to, said of the role in the agent's self graph. A recorder whose role names none has no archive: what lasts stays in its journal, in memory." .

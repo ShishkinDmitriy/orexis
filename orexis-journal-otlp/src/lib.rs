@@ -17,7 +17,7 @@
 //! the journal until the journal's window sweeps it - the hot record is bounded whether or not anything ships.
 //!
 //! OTLP'S JSON OVER HTTP, written here rather than by the OpenTelemetry SDK: one POST of a documented shape to
-//! `/v1/traces` beneath the url of the tracer the world's deployment names, every ten of the agent's seconds, made off
+//! `/v1/traces` beneath the url of the tracer the recorder's role names, where the world's deployment says it answers, every ten of the agent's seconds, made off
 //! the agent's own threads, so a tracer slow or away never holds the mind.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -257,24 +257,15 @@ pub fn ship(journal: &Journal, agent: &str, endpoint: &str, send: &Send) -> usiz
     activities.len()
 }
 
-/// WHERE THE WORLD SAYS ITS AGENTS ARE TRACED: the url of the tracer its deployment graph names, or None where it
-/// names none. The world is what an agent is given, so the world says it; nothing here reads the environment.
+/// WHERE THE RECORDER IS TRACED: the url of the tracer its role names (`journal:tracedBy`), as the world's deployment
+/// states it, or None where the role names none or the world says nothing of the one named. The role says which
+/// service and the world where it answers; nothing here reads the environment.
 pub fn tracer(store: &orexis::store::Store) -> Result<Option<String>, orexis::Error> {
-    let graphs = store.graphs_of(&[orexis::ontology::DEPLOYMENT], &orexis::store::Within::common())?;
-    let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
-    if graphs.is_empty() {
-        return Ok(None);
-    }
-    let rows = store.rows(TRACER_Q, &graphs)?;
-    Ok(rows
-        .iter()
-        .filter_map(|row| orexis::store::value(row, "url"))
-        .map(|url| url.trim_end_matches('/').to_string())
-        .find(|url| !url.is_empty()))
+    Ok(orexis::boot::connected(store, WORDS, TRACED_BY)?.map(|url| url.trim_end_matches('/').to_string()))
 }
 
-const TRACER_Q: &str = "PREFIX journal: <http://example.org/orexis/journal#> PREFIX schema: <https://schema.org/> \
-SELECT ?url WHERE { ?tracer a journal:Tracer ; schema:url ?url } ORDER BY ?url";
+const WORDS: &str = "PREFIX journal: <http://example.org/orexis/journal#> ";
+const TRACED_BY: &str = "?role journal:tracedBy ?service . ?service a journal:Tracer .";
 
 /// POST each body to `endpoint`'s traces, and say whether it was accepted.
 pub fn post(endpoint: &str) -> Send {
@@ -304,7 +295,8 @@ pub fn post(endpoint: &str) -> Send {
 inventory::submit! { Package { name: "journal-otlp", documents: &[], start } }
 
 /// ITS START, which every package this binary holds is given: it keeps house for the journal, so it joins where the
-/// journal did AND THE WORLD NAMES A TRACER, and where the world names none its start ends there. Joined, it waits
+/// journal did AND THE RECORDER'S ROLE NAMES A TRACER the world says where to reach, and where the role names none
+/// its start ends there. Joined, it waits
 /// for the journal's start, takes the journal that handed on, and makes its task: where to ship is the world's word,
 /// and how often is its own stretch.
 fn start(handed: Handed) -> orexis::task::Starting {

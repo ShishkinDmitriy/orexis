@@ -1054,10 +1054,13 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   for a package it needs started; a table in the kernel of which role loads which package and which pattern loads
   which transport was what this replaced, and a `plays` function beside `start` in the registration was refused as
   the kernel still doing the deciding (package).
-- **The world says what it is connected to, and a package reads it there as it starts** — onboarding derives each
-  service with where it answers into `deployment.derived.ttl`, of the kernel's kind `orexis:DeploymentGraph`, no
-  belief; a package asks it as it starts, makes its own connector and ends its start where the world names no
-  service of its kind, the tracer first; the address on the role in the authored self graph and the installation's
+- **A role names the service it is linked to, the world says where that answers, and a package reads both as it
+  starts** — a recorder's role says `journal:tracedBy` and `journal:archivedIn`, so the journal's package joins for
+  the role, what ships its activities for the first link and what archives it for the second; onboarding derives
+  each named service with where it answers into `deployment.derived.ttl`, of the kernel's kind
+  `orexis:DeploymentGraph`, no belief; a package asks it as it starts and ends its start where its role names no
+  service of its kind; a service of the world serving every agent of it was built first and refused, a package
+  running for what no role asked; the address on the role in the authored self graph and the installation's
   document handed to the agent were refused, and a credential is never in it
   (the-world-says-what-it-is-connected-to).
 - **Each agent's image holds only what it runs** — `orexis-compose` builds `orexis-<world>-<agent>:local` with a feature of the binary for each

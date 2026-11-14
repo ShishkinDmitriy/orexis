@@ -1,11 +1,12 @@
-//! `orexis-agent <world> <agent> [--volume PATH] [--journal PATH] [--check [--boot PATH]]`: one agent, booted from a
+//! `orexis-agent <world> <agent> [--volume PATH] [--check [--boot PATH]]`: one agent, booted from a
 //! world's files and run until nothing is left to pursue — exit 0 `met` or `planned`, 1 `unreachable`, 2 `unfinished`,
 //! and 143 where it was told to stop, as the Python runtime's `main` exits. With `--check` it runs nothing: booted in
 //! memory, its parts made over members that reach nothing, it exits 0 printing one line of JSON — the packages it
 //! makes, whether it holds a desire and what its world as posed contradicts — or 3 and why not; and with `--boot PATH`
 //! it writes the store as booted there, in N-Quads, which is what `orexis-onboard` reads the agent's boot from.
 //!
-//! THE JOURNAL FIRST, so the log of the boot is in it: a store of its own in memory, its archive on disk where `--journal` says, its log kept
+//! THE JOURNAL FIRST, so the log of the boot is in it: a store of its own in memory, its archive on disk where the world says the
+//! archive its recorder's role names is (`journal:archivedIn`), its log kept
 //! for the window the environment says and served read-only where the environment names a port (`JOURNAL_PORT`). A
 //! SINK PER PURPOSE the environment names a store for, and the part that writes it made with the rest. A STOP IS AN
 //! EXIT: `podman stop` sends SIGTERM, and the run ends before its next pass, every part stopped and the last window of
@@ -112,34 +113,29 @@ struct Args {
     world: PathBuf,
     agent: String,
     volume: Option<PathBuf>,
-    journal: Option<PathBuf>,
     check: bool,
     boot: Option<PathBuf>,
 }
 
 fn args() -> Result<Args, String> {
     let mut rest = std::env::args().skip(1);
-    let (mut positional, mut volume, mut journal, mut check) = (Vec::new(), None, None, false);
+    let (mut positional, mut volume, mut check) = (Vec::new(), None, false);
     let mut boot = None;
     while let Some(arg) = rest.next() {
         match arg.as_str() {
             "--volume" => volume = Some(PathBuf::from(rest.next().ok_or("--volume takes a path")?)),
-            "--journal" => journal = Some(PathBuf::from(rest.next().ok_or("--journal takes a path")?)),
             "--check" => check = true,
             "--boot" => boot = Some(PathBuf::from(rest.next().ok_or("--boot takes a path")?)),
             other => positional.push(other.to_string()),
         }
     }
     let [world, agent] = positional.as_slice() else {
-        return Err(
-            "usage: orexis-agent <world> <agent> [--volume PATH] [--journal PATH] [--check [--boot PATH]]".into(),
-        );
+        return Err("usage: orexis-agent <world> <agent> [--volume PATH] [--check [--boot PATH]]".into());
     };
     Ok(Args {
         world: PathBuf::from(world),
         agent: agent.clone(),
         volume,
-        journal,
         check,
         boot,
     })
@@ -165,28 +161,42 @@ type Kept = (
     Option<Arc<orexis_journal_oxigraph::Archive>>,
 );
 
-/// THE ARCHIVE OF AN AGENT THAT PLAYS A RECORDER: a store of its own on disk where `--journal` says, and none
-/// otherwise.
+/// THE ARCHIVE OF AN AGENT WHOSE RECORDER'S ROLE NAMES ONE: a store of its own on disk where the world says it is,
+/// and none where what archives the journal did not join. A binary built without the volume has nowhere to keep
+/// one, says so, and what lasts stays in its journal.
 #[cfg(feature = "journal")]
-fn archive(path: Option<&Path>) -> Result<Option<Arc<orexis_journal_oxigraph::Archive>>, Error> {
-    match path {
+#[cfg_attr(feature = "volume", allow(unused_variables))]
+fn archive(
+    store: &Store,
+    loaded: &[String],
+    agent: &str,
+) -> Result<Option<Arc<orexis_journal_oxigraph::Archive>>, Error> {
+    if !loaded.iter().any(|p| p == orexis_agent::ARCHIVE) {
+        return Ok(None);
+    }
+    match orexis_journal_oxigraph::archive(store)? {
         #[cfg(feature = "volume")]
-        Some(path) => Ok(Some(Arc::new(orexis_journal_oxigraph::Archive::open(path)?))),
+        Some(path) => Ok(Some(Arc::new(orexis_journal_oxigraph::Archive::open(&path)?))),
         #[cfg(not(feature = "volume"))]
-        Some(_) => Err(Error::Evaluation(
-            "this binary was built without the volume feature".into(),
-        )),
+        Some(path) => {
+            log::warn!(
+                "{agent}: this binary was built without the volume feature, so no archive is kept at {} and what \
+                 lasts stays in the journal",
+                path.display()
+            );
+            Ok(None)
+        }
         None => Ok(None),
     }
 }
 
 /// THE JOURNAL OF AN AGENT THAT PLAYS A RECORDER: in memory, its log kept from here on with what the boot said
-/// before; its archive on disk where `--journal` says; and both served on the loopback where the environment names a
+/// before; its archive on disk where the world says; and both served on the loopback where the environment names a
 /// port, the archive at `/sparql`, or the journal there where the agent keeps none, and the journal at `/live/sparql`.
 #[cfg(feature = "journal")]
-fn journal(args: &Args, clock: &Arc<Paced>) -> Result<Kept, Error> {
+fn journal(args: &Args, clock: &Arc<Paced>, store: &Store, loaded: &[String]) -> Result<Kept, Error> {
     use orexis_journal::journal;
-    let archive = archive(args.journal.as_deref())?;
+    let archive = archive(store, loaded, &args.agent)?;
     let mut kept = journal::Journal::new(journal::window_s(&env), {
         let clock = clock.clone();
         Arc::new(move || clock.now())
@@ -230,7 +240,7 @@ fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, 
     //  A JOURNAL WHERE THE AGENT PLAYS A RECORDER, and none otherwise: its packages say what happens either way.
     #[cfg(feature = "journal")]
     let (kept, archive) = if loaded.iter().any(|p| p == orexis_agent::JOURNAL) {
-        let (kept, archive) = journal(args, &clock)?;
+        let (kept, archive) = journal(args, &clock, &store, &loaded)?;
         (Some(kept), archive)
     } else {
         log::info!("{} plays no recorder, and keeps no journal", args.agent);

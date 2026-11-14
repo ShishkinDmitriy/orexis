@@ -23,7 +23,7 @@ services:
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
         FEATURES: "belief,journal,planning"
-    command: ["orexis-agent", "/app/world/hanoi", "hanoi", "--volume", "/app/state", "--journal", "/app/journal"]
+    command: ["orexis-agent", "/app/world/hanoi", "hanoi", "--volume", "/app/state"]
     environment:
       # where each series it writes goes, and the org — the store the installation says serves each
       # purpose, its metrics only where the world is monitored — safe for every agent to hold
@@ -46,9 +46,11 @@ services:
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-hanoi-hanoi:/app/state
-      # its journal, a store of its own beside the beliefs and apart from them
+      # its journal's archive, a store of its own beside the beliefs and apart from them, where the world's derived
+      # deployment says the archive its recorder's role names is
       - orexis-hanoi-hanoi-journal:/app/journal
       # the world's documents, file by file, at the path its imports of the domains resolve from
+      - ./deployment.derived.ttl:/app/world/hanoi/deployment.derived.ttl:ro
       - ./state.ttl:/app/world/hanoi/state.ttl:ro
       - ./wants.ttl:/app/world/hanoi/wants.ttl:ro
       - ./world.ttl:/app/world/hanoi/world.ttl:ro

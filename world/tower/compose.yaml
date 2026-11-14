@@ -23,7 +23,7 @@ services:
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
         FEATURES: "belief,execution,journal,planning,speech"
-    command: ["orexis-agent", "/app/world/tower", "mover", "--volume", "/app/state", "--journal", "/app/journal"]
+    command: ["orexis-agent", "/app/world/tower", "mover", "--volume", "/app/state"]
     environment:
       # where each series it writes goes, and the org — the store the installation says serves each
       # purpose, its metrics only where the world is monitored — safe for every agent to hold
@@ -46,10 +46,12 @@ services:
     volumes:
       # its own belief base, and nobody else can name it
       - orexis-tower-mover:/app/state
-      # its journal, a store of its own beside the beliefs and apart from them
+      # its journal's archive, a store of its own beside the beliefs and apart from them, where the world's derived
+      # deployment says the archive its recorder's role names is
       - orexis-tower-mover-journal:/app/journal
       # the world's documents, file by file, at the path its imports of the domains resolve from
       - ./constraints.ttl:/app/world/tower/constraints.ttl:ro
+      - ./deployment.derived.ttl:/app/world/tower/deployment.derived.ttl:ro
       - ./state.ttl:/app/world/tower/state.ttl:ro
       - ./wants.ttl:/app/world/tower/wants.ttl:ro
       - ./world.ttl:/app/world/tower/world.ttl:ro
