@@ -168,11 +168,13 @@ async fn walked(order: &[&str]) -> Walked {
     use orexis::clock::Clock;
     let store = store();
     let loaded = booted(&store, &world(), "mover", now()).unwrap();
-    //  THE RECORDER'S PACKAGE begins on no event and is handed no journal here, so no order is asked of it.
+    //  THE RECORDER'S PACKAGE, WHAT KEEPS HOUSE FOR IT AND THE METRICS begin on no event and are handed nothing
+    //  here, so no order is asked of them.
+    let watching = ["journal", "journal-oxigraph", "journal-otlp", "metrics"];
     let mut sorted: Vec<&str> = loaded
         .iter()
         .map(String::as_str)
-        .filter(|p| *p != orexis_agent::JOURNAL)
+        .filter(|p| !watching.contains(p))
         .collect();
     sorted.sort();
     let mut asked = order.to_vec();
