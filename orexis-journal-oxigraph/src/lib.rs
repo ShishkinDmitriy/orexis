@@ -193,9 +193,11 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     );
     //  READERS OF THE PAST ASK THE ARCHIVE from now on: the journal's endpoint, and a chat.
     archives.journal.archived_in(archives.archive.store.clone());
-    let mut reads = handed.outside.take::<orexis::task::Reads>().unwrap_or_default();
-    reads.journal = Some(archives.archive.store.clone());
-    handed.outside.hand(reads);
+    handed
+        .outside
+        .share::<orexis::task::Reads>()
+        .journal
+        .lies_in(archives.archive.store.clone());
     //  THE LAST WORD: what was said after this task's last turn, while the others stopped, is taken too, and reaches
     //  the disk.
     let (journal, archive, agent) = (archives.journal.clone(), archives.archive.clone(), handed.id.clone());
@@ -212,12 +214,11 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
 /// recorder's role names, over the journal that package handed on, taken as often as the role says. A
 /// binary built without the volume has nowhere to keep one, says so, and what lasts stays in the journal.
 fn own(handed: &Handed) -> Result<Option<Archives>, Error> {
-    let (Some(path), Some(journal)) = (archive(&handed.store)?, handed.outside.take::<orexis_journal::Traced>()) else {
+    //  READ AND LEFT, for what ships the activities, whichever of the two starts first.
+    let (Some(path), Some(journal)) = (archive(&handed.store)?, handed.outside.read::<orexis_journal::Traced>()) else {
         return Ok(None);
     };
-    //  STILL HANDED ON, to what ships the activities.
-    let kept = journal.0.clone();
-    handed.outside.hand(journal);
+    let kept = journal.0;
     #[cfg(feature = "volume")]
     {
         Ok(Some(Archives {

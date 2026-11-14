@@ -56,9 +56,9 @@ timestamp: 2026-10-08T12:00:00Z
 > `belief:` word in its files; §3 says belief is below, so the test now allows that one word in the
 > ontology and nothing else. (3) **The parts are still made in one order** — belief, planning,
 > execution, sensing, prediction, speech, the transports — since a pass needs the deliberator to hear
-> a graph first and the planner to publish before the executor walks; that order is `PASS` in
-> `orexis/src/boot.rs`, which orders what the roles load and decides none of it, a package it does not
-> name loading after the rest. The terrace's agent and the sensing world's fern agent want nothing,
+> a graph first and the planner to publish before the executor walks; that order was a list in
+> `orexis/src/boot.rs`, which ordered what the roles load and decided none of it, and is gone since
+> 2026-11-14: a start waits for the start it needs, and the kernel keeps no order. The terrace's agent and the sensing world's fern agent want nothing,
 > so by §5's planner need they are observers and predictors and no planner — their dashboards lose
 > the planner's and the executor's, which they never fed.
 

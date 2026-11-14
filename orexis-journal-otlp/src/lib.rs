@@ -314,7 +314,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
     let ships = match handed.outside.take::<Ships>() {
         Some(ships) => ships,
         None => {
-            let (Some(endpoint), Some(journal)) = (tracer(&handed.store)?, handed.outside.take::<Traced>()) else {
+            let (Some(endpoint), Some(journal)) = (tracer(&handed.store)?, handed.outside.read::<Traced>()) else {
                 return Ok(None);
             };
             Ships {

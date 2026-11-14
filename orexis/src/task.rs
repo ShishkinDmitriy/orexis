@@ -724,6 +724,18 @@ impl Outside {
             .cloned()
     }
 
+    /// What was handed of type `T`, shared: read and left where it is, and where nothing was handed, a default one
+    /// handed now. For what several packages each add to or read, whichever starts first.
+    pub fn share<T: Any + Send + Clone + Default>(&self) -> T {
+        let mut held = self.0.lock().expect("an outside nobody poisoned");
+        if let Some(thing) = held.get(&TypeId::of::<T>()).and_then(|thing| thing.downcast_ref::<T>()) {
+            return thing.clone();
+        }
+        let thing = T::default();
+        held.insert(TypeId::of::<T>(), Box::new(thing.clone()));
+        thing
+    }
+
     /// Take what was handed of type `T`, where anything was: it is the taker's from now on.
     pub fn take<T: Any + Send>(&self) -> Option<T> {
         let mut held = self.0.lock().expect("an outside nobody poisoned");
@@ -781,11 +793,29 @@ pub type Remark = Box<dyn Fn(&str, log::Level, &str) + Send + Sync>;
 /// that keeps it, with how each line is kept. What was said before is kept first.
 pub struct Said(pub Box<dyn FnOnce(Remark) + Send>);
 
-/// WHAT THE AGENT KEEPS OF WHAT HAPPENED, as a chat reads it: its journal where it lies, and its two series. Handed
-/// outside by whoever runs the agent, where it keeps any.
-#[derive(Default)]
+/// WHERE THE AGENT'S JOURNAL LIES, said by whoever keeps it whenever that starts, and asked by a reader when it
+/// reads: so no reader waits for a keeper's start, and no order between them is kept. What archives the journal
+/// says the archive, after the journal it waits for said itself.
+#[derive(Clone, Default)]
+pub struct Journaled(Arc<Mutex<Option<oxigraph::store::Store>>>);
+
+impl Journaled {
+    /// The journal lies in `store` from now on.
+    pub fn lies_in(&self, store: oxigraph::store::Store) {
+        *self.0.lock().unwrap() = Some(store);
+    }
+
+    /// Where it lies now, or None where nobody keeps one.
+    pub fn now(&self) -> Option<oxigraph::store::Store> {
+        self.0.lock().unwrap().clone()
+    }
+}
+
+/// WHAT THE AGENT KEEPS OF WHAT HAPPENED, as a chat reads it: its journal where it lies, and its two series. Shared
+/// outside (`Outside::share`) by whoever runs the agent and by each package that keeps or reads any of it.
+#[derive(Clone, Default)]
 pub struct Reads {
-    pub journal: Option<oxigraph::store::Store>,
+    pub journal: Journaled,
     pub history: Option<crate::series::Reader>,
     pub metrics: Option<crate::series::Reader>,
 }
@@ -1057,7 +1087,7 @@ pub fn named(handed: Handed, make: fn(&Handed) -> Result<Option<Task>, Error>) -
     })
 }
 
-/// Every package this binary holds, in the order they start.
+/// Every package this binary holds, by its name.
 fn every() -> Vec<String> {
     crate::boot::every_package()
 }
@@ -1139,8 +1169,8 @@ pub fn decide(store: &Store, agent: &str, begun: crate::boot::Begun) -> Result<V
     Ok(loaded)
 }
 
-/// START THE AGENT `id` over `store`: each package of `names` that registered itself is started, in that order, and
-/// its task spawned on the Tokio runtime this is called in. A name no package registered under is an error: its
+/// START THE AGENT `id` over `store`: each package of `names` that registered itself is started, in the order
+/// their own waits for each other allow, and its task spawned on the Tokio runtime this is called in. A name no package registered under is an error: its
 /// crate was not built in.
 pub fn start(
     store: &Store,
@@ -1173,65 +1203,85 @@ pub fn start(
         halt: None,
         halted: Arc::new(Notify::new()),
     };
+    //  EVERY START IS BEGUN, and each is run until it ends or waits for another's (`Handed::started`): the order
+    //  they end in follows from those waits alone, and the kernel keeps none. A round in which none ended while
+    //  some still wait is a wait for what never comes.
+    let mut waiting: Vec<(String, DateTime, Starting)> = Vec::new();
     for name in names {
         let Some(package) = inventory::iter::<Package>().find(|p| p.name == name) else {
             return Err(Error::Evaluation(format!(
                 "no package registered itself as {name}: this binary was built without it"
             )));
         };
-        //  ITS START, run to its end here: joined already, it waits only for a package started before it.
-        handed.events.0.watch.emit(&Lifecycle {
-            package: name.clone(),
-            started: false,
-            at: handed.clock.now(),
-        });
-        let mut starting = (package.start)(Handed {
+        let starting = (package.start)(Handed {
             me: name.clone(),
             ..handed.clone()
         });
-        let ended = match starting
-            .as_mut()
-            .poll(&mut std::task::Context::from_waker(std::task::Waker::noop()))
-        {
-            std::task::Poll::Ready(ended) => ended?,
-            std::task::Poll::Pending => {
-                return Err(Error::Evaluation(format!(
-                    "{name} waits, as it starts, for a package that starts after it or for what never comes"
-                )));
-            }
-        };
-        handed.life().started.insert(name.clone(), true);
-        handed.events.0.watch.emit(&Lifecycle {
-            package: name.clone(),
-            started: true,
-            at: handed.clock.now(),
-        });
-        let Some(task) = ended else {
-            continue;
-        };
-        let events = handed.events.clone();
-        //  A TASK IS BUSY FROM ITS START until it first waits: the run is not over before every policy decided once.
-        events.0.busy.up();
-        let scoped = TURN.scope(
-            RefCell::new(Local {
-                said: Vec::new(),
-                in_hand: 1,
-            }),
-            async move {
-                if let Err(e) = task.await {
-                    events.failed(e);
+        waiting.push((name.clone(), handed.clock.now(), starting));
+    }
+    let mut lives = Vec::new();
+    while !waiting.is_empty() {
+        let mut still = Vec::new();
+        let before = waiting.len();
+        for (name, began, mut starting) in waiting {
+            let ended = match starting
+                .as_mut()
+                .poll(&mut std::task::Context::from_waker(std::task::Waker::noop()))
+            {
+                std::task::Poll::Ready(ended) => ended?,
+                std::task::Poll::Pending => {
+                    still.push((name, began, starting));
+                    continue;
                 }
-                events.rest();
-            },
-        );
-        running.names.push(name.clone());
-        running.joins.push(tokio::spawn(scoped));
+            };
+            handed.life().started.insert(name.clone(), true);
+            lives.push((name.clone(), began, handed.clock.now()));
+            let Some(task) = ended else {
+                continue;
+            };
+            let events = handed.events.clone();
+            //  A TASK IS BUSY FROM ITS START until it first waits: the run is not over before every policy decided once.
+            events.0.busy.up();
+            let scoped = TURN.scope(
+                RefCell::new(Local {
+                    said: Vec::new(),
+                    in_hand: 1,
+                }),
+                async move {
+                    if let Err(e) = task.await {
+                        events.failed(e);
+                    }
+                    events.rest();
+                },
+            );
+            running.names.push(name.clone());
+            running.joins.push(tokio::spawn(scoped));
+        }
+        if still.len() == before {
+            let names: Vec<&str> = still.iter().map(|(name, _, _)| name.as_str()).collect();
+            return Err(Error::Evaluation(format!(
+                "{} wait, as they start, for what never comes",
+                names.join(", ")
+            )));
+        }
+        waiting = still;
+    }
+    //  THAT EACH STARTED IS SAID ONCE ALL HAVE, in the order they did and at the instants they did: whichever
+    //  package keeps what is said hears every start, its own and those that ended before it.
+    for (name, began, ended) in lives {
+        for (started, at) in [(false, began), (true, ended)] {
+            handed.events.0.watch.emit(&Lifecycle {
+                package: name.clone(),
+                started,
+                at,
+            });
+        }
     }
     Ok(running)
 }
 
 impl Running {
-    /// The packages whose tasks run, in the order they started.
+    /// The packages whose tasks run, in the order their starts ended.
     pub fn parts(&self) -> Vec<&str> {
         self.names.iter().map(String::as_str).collect()
     }

@@ -417,6 +417,9 @@ pub struct Translator {
     /// Each chat with an answer still being thought, and how many.
     pub writing: BTreeMap<String, (Chat, i64)>,
     pub journal: Option<Engine>,
+    /// Where the journal lies, as whoever keeps it says whenever it starts: asked as a chat reads, where `journal`
+    /// was set by nobody.
+    pub journaled: orexis::task::Journaled,
     pub history: Option<Reader>,
     pub metrics: Option<Reader>,
     pub watch: Watch,
@@ -434,6 +437,7 @@ impl Translator {
             inline: false,
             writing: BTreeMap::new(),
             journal: None,
+            journaled: orexis::task::Journaled::default(),
             history: None,
             metrics: None,
             watch: Watch::default(),
@@ -490,7 +494,7 @@ impl Translator {
             .as_ref()
             .map_or_else(|| prefixes_of(store, &self.me), |r| r.prefixes.clone());
         let past = chat.reads.iter().any(|k| k == EVENT).then(|| Past {
-            journal: self.journal.clone(),
+            journal: self.journal.clone().or_else(|| self.journaled.now()),
             history: self.history.clone(),
             metrics: self.metrics.clone(),
             prefixes: readable
@@ -813,7 +817,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     //  WHAT A CHAT READS OF WHAT HAPPENED: the journal where what keeps it said where it lies, and the two series —
     //  handed, by a test that answers for them, or, where the agent is deployed, read through a sink of its own
     //  wherever the world names a store that serves the purpose.
-    let mut reads = handed.outside.take::<Reads>().unwrap_or_default();
+    let mut reads = handed.outside.share::<Reads>();
     if handed.outside.has::<orexis::task::Deployed>() {
         let own = |purpose: &'static str| -> Result<Option<Reader>, orexis::Error> {
             Ok(
@@ -828,7 +832,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
             reads.metrics = own(orexis::series::METRICS)?;
         }
     }
-    (translator.journal, translator.history, translator.metrics) = (reads.journal, reads.history, reads.metrics);
+    (translator.journaled, translator.history, translator.metrics) = (reads.journal, reads.history, reads.metrics);
     let mut part = Translation::new(translator);
     let mut hears = handed.events.hears();
     let arrived = handed.arrived();
