@@ -478,7 +478,7 @@ struct Member {
 
 //  THE MEMBER'S TASK, registered as a package registers itself: it takes the member the test handed outside, hears
 //  the agent's words kept and its writing announced, and is rung for what the test queued on it.
-inventory::submit! { Package { name: "test/member", documents: &[], start: |handed| orexis::task::named(handed, |handed| {
+inventory::submit! { Package { name: "test/member", documents: &[], start: |handed| orexis::task::named(handed, "test/member", |handed| {
     let member = handed.outside.take::<Arc<Mutex<Member>>>().expect("a member handed");
     let mut hears = handed.events.hears();
     hears.event(PROSE_KEPT, 1);
@@ -676,9 +676,10 @@ impl<'s> Seeker<'s> {
         outside.hand(Inline);
         let names = ["translation".to_string(), "test/member".to_string()];
         let running = {
-            let _entered = tasks.enter();
             let clock = Arc::new(Elapsing::from(now()));
-            orexis::task::start(store, "seeker", clock, outside.clone(), &names).unwrap()
+            tasks
+                .block_on(orexis::task::start(store, "seeker", clock, outside.clone(), &names))
+                .unwrap()
         };
         let wake = outside.take::<Wake>().expect("the member's wake");
         Seeker {

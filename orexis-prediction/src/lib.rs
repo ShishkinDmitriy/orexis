@@ -72,17 +72,15 @@ const ROLE: &str = "http://example.org/orexis/prediction#Predictor";
 /// joined, makes its core.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        if !handed.plays(&[ROLE]).await? {
+        if !handed.plays(&[ROLE])? {
             return Ok(());
         }
-        let Some(task) = make(&handed)? else {
-            return Ok(());
-        };
-        if handed.checking().is_some() {
-            return Ok(());
+        let task = make(&handed)?;
+        handed.started("prediction").await;
+        match task {
+            Some(task) if handed.checking().is_none() => task.await,
+            _ => Ok(()),
         }
-        handed.started().await;
-        task.await
     })
 }
 

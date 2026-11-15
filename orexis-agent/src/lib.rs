@@ -51,16 +51,15 @@ use orexis_transport_mqtt as _;
 #[cfg(feature = "telegram")]
 use orexis_transport_telegram as _;
 
-/// Boot `agent` of `world` into `store` from the world's documents and those its packages bring: the packages that
-/// joined it, each deciding in its own start, by name (`orexis::boot::boot`).
-pub fn booted(store: &Store, world: &Path, agent: &str, now: oxsdatatypes::DateTime) -> Result<Vec<String>, Error> {
+/// Boot `agent` of `world` into `store` from the world's documents and those of every package this binary holds, and
+/// start nothing (`orexis::boot::boot`).
+pub fn booted(store: &Store, world: &Path, agent: &str, now: oxsdatatypes::DateTime) -> Result<(), Error> {
     let _ = now;
     orexis::boot::boot(store, &Booting { world, agent })
 }
 
-/// BOOT `agent` of `world` into `store`, handed what `wiring` says, and hold it ready to start: each package's start
-/// run as far as its decision and kept there, so starting the agent runs each on and a start runs once for a boot
-/// (`orexis::task::boot`). What a deployed agent and a check do; `booted` is for a caller that starts nothing.
+/// BOOT `agent` of `world` into `store`, handed what `wiring` says, and hold it ready to start (`orexis::task::boot`).
+/// What a deployed agent and a check do; `booted` is for a caller that starts nothing.
 pub fn boot(
     store: &Store,
     world: &Path,
@@ -110,29 +109,35 @@ pub fn check(world: &Path, agent: &str, now: oxsdatatypes::DateTime, boot: Optio
             )
             .map_err(|e| Error::Evaluation(format!("the boot will not dump: {e}")))?;
     }
-    let mut checked = Checked {
-        loaded: booted.loaded().to_vec(),
-        ..Checked::default()
-    };
-    //  EACH PACKAGE CHECKS ITS OWN: told it is checked, it makes its core, says what it found and ends its start,
-    //  so nothing runs. The runtime is entered for what a making spawns, and nothing is spawned after it.
+    //  EACH PACKAGE CHECKS ITS OWN: told it is checked, it decides whether it runs, makes its core, says what it found
+    //  and that it started, and ends. The runtime is driven until every start has ended or waits.
     let tasks = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
         .map_err(|e| Error::Evaluation(format!("the tasks could not start: {e}")))?;
-    let _entered = tasks.enter();
-    let running = booted.start()?;
-    //  A PACKAGE THAT WENT ON TO ITS TASK did not check its own, and would run as it is checked.
-    if !running.parts().is_empty() {
-        return Err(Error::Evaluation(format!(
-            "{} went on to run as it was checked: a package being checked ends its start once its core is made",
-            running.parts().join(", ")
-        )));
-    }
+    let loaded = tasks.block_on(async {
+        let running = booted.start().await?;
+        running.settled().await?;
+        tokio::task::yield_now().await;
+        //  A PACKAGE THAT WENT ON TO ITS TASK did not check its own, and would run as it is checked.
+        let going_on = running.going_on();
+        if !going_on.is_empty() {
+            return Err(Error::Evaluation(format!(
+                "{} went on to run as it was checked: a package being checked ends its start once its core is made",
+                going_on.join(", ")
+            )));
+        }
+        let loaded = running.parts();
+        running.stop().await;
+        Ok::<_, Error>(loaded)
+    })?;
     //  WHAT EACH PACKAGE SAID AS IT MADE ITS CORE: the binary asks none of them by name.
     let found = checking.found();
-    checked.held = found.held;
-    checked.refused = found.refused;
+    let checked = Checked {
+        loaded,
+        held: found.held,
+        refused: found.refused,
+    };
     Ok(checked)
 }
 
@@ -291,18 +296,15 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
     outside
 }
 
-/// START THE AGENT `agent` over `store`, on the Tokio runtime this is called in: what watches it first, so it hears
-/// what a package says as it starts, then each package `loaded` names, in that order. Every one registered itself;
-/// this names none.
-pub fn start(
+/// START THE AGENT `agent` over `store`, for a test, on the Tokio runtime this is called in: every package this binary
+/// holds, those `order` names first and in that order, each deciding for itself whether it runs.
+pub async fn start(
     store: &Store,
     agent: &str,
     clock: Arc<dyn Clock>,
-    loaded: &[String],
+    order: &[String],
     budget: Option<usize>,
     wiring: Wiring,
 ) -> Result<Running, Error> {
-    //  THE PACKAGES THAT JOINED: the order they start in follows from what each start waits for, and that each
-    //  started is said once all have, so whichever keeps what is said hears every one.
-    orexis::task::start(store, agent, clock, outside(wiring, budget), loaded)
+    orexis::task::start(store, agent, clock, outside(wiring, budget), order).await
 }

@@ -143,7 +143,7 @@ async fn allotment(walk: impl AsyncFnOnce(&mut Market<'_>)) {
             ..Wiring::default()
         };
         let booted = orexis_agent::boot(store, &world, name, clock.clone(), None, wiring).unwrap();
-        runnings.push(booted.start().unwrap());
+        runnings.push(booted.start().await.unwrap());
     }
     let mut market = Market {
         stores: &stores,

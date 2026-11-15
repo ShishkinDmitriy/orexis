@@ -91,11 +91,11 @@ struct Grower {
     broker: Broker,
 }
 
-fn grower(store: &Store) -> Grower {
-    grower_watched(store, orexis_agent::Watching::default())
+async fn grower(store: &Store) -> Grower {
+    grower_watched(store, orexis_agent::Watching::default()).await
 }
 
-fn grower_watched(store: &Store, watching: orexis_agent::Watching) -> Grower {
+async fn grower_watched(store: &Store, watching: orexis_agent::Watching) -> Grower {
     let broker = Broker::default();
     let member = Mqtt::new(store, &format!("{GH}grower"), vec![(None, Box::new(broker.clone()))]);
     let inbox = member.inbox.clone();
@@ -106,18 +106,7 @@ fn grower_watched(store: &Store, watching: orexis_agent::Watching) -> Grower {
     };
     let clock = common::clock(noon());
     let booted = orexis_agent::boot(store, &world(), "grower", clock.clone(), None, wiring).unwrap();
-    let loaded = booted.loaded().to_vec();
-    for package in [
-        "belief",
-        "planning",
-        "execution",
-        "sensing",
-        "prediction",
-        "transport/mqtt",
-    ] {
-        assert!(loaded.iter().any(|p| p == package), "{package}: {loaded:?}");
-    }
-    let running = booted.start().unwrap();
+    let running = booted.start().await.unwrap();
     Grower {
         running,
         clock,
@@ -180,7 +169,18 @@ fn pump(dose: i64) -> (String, Json, bool) {
 #[tokio::test(start_paused = true)]
 async fn the_grower_listens_to_the_instruments_of_the_bed_it_acts_for() {
     let store = store();
-    let g = grower(&store);
+    let g = grower(&store).await;
+    let parts = g.running.parts();
+    for package in [
+        "belief",
+        "planning",
+        "execution",
+        "sensing",
+        "prediction",
+        "transport/mqtt",
+    ] {
+        assert!(parts.iter().any(|p| p == package), "{package}: {parts:?}");
+    }
     let broker = g.broker.clone();
     assert_eq!(
         broker.subscribed(),
@@ -192,7 +192,7 @@ async fn the_grower_listens_to_the_instruments_of_the_bed_it_acts_for() {
 #[tokio::test(start_paused = true)]
 async fn a_reading_is_written_and_the_bed_believed_dry() {
     let store = store();
-    let g = grower(&store);
+    let g = grower(&store).await;
     let inbox = g.inbox.clone();
     reading(&inbox, r#"{"moisture": 0.2}"#, noon());
     common::settled(&g.running).await;
@@ -211,7 +211,7 @@ async fn a_reading_is_written_and_the_bed_believed_dry() {
 #[tokio::test(start_paused = true)]
 async fn a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_reading_answers_it() {
     let store = store();
-    let g = grower(&store);
+    let g = grower(&store).await;
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     reading(&inbox, r#"{"temperature": 21.0}"#, noon());
     reading(&inbox, r#"{"moisture": 0.2}"#, noon());
@@ -266,7 +266,7 @@ fn foreseen(store: &Store, now: DateTime) -> Vec<(DateTime, String)> {
 #[tokio::test(start_paused = true)]
 async fn a_committed_dose_is_a_flow_the_beds_prediction_accumulates() {
     let store = store();
-    let g = grower(&store);
+    let g = grower(&store).await;
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     reading(&inbox, r#"{"temperature": 21.0}"#, noon());
     reading(&inbox, r#"{"moisture": 0.2}"#, noon());
@@ -318,7 +318,7 @@ async fn a_committed_dose_is_a_flow_the_beds_prediction_accumulates() {
 #[tokio::test(start_paused = true)]
 async fn a_cold_bed_is_heated_for_as_long_as_the_gap_takes() {
     let store = store();
-    let g = grower(&store);
+    let g = grower(&store).await;
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     reading(&inbox, r#"{"moisture": 0.45}"#, noon());
     reading(&inbox, r#"{"temperature": 16.0}"#, noon());
@@ -332,7 +332,7 @@ async fn a_cold_bed_is_heated_for_as_long_as_the_gap_takes() {
 #[tokio::test(start_paused = true)]
 async fn a_cold_dry_bed_is_two_wants_planned_apart() {
     let store = store();
-    let g = grower(&store);
+    let g = grower(&store).await;
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     //  THE SCOPES A SEARCH IMAGINED IN, and the heads blocked as they were taken: what planning says of itself.
     let imagined: Arc<Mutex<Vec<String>>> = Arc::default();
@@ -379,7 +379,7 @@ async fn a_cold_dry_bed_is_two_wants_planned_apart() {
 #[tokio::test(start_paused = true)]
 async fn a_foreseen_crossing_is_planned_ahead_and_dosed_when_it_arrives() {
     let store = store();
-    let g = grower(&store);
+    let g = grower(&store).await;
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     reading(&inbox, r#"{"temperature": 21.0}"#, noon());
     reading(&inbox, r#"{"moisture": 0.31}"#, noon());
@@ -428,7 +428,7 @@ async fn the_events_are_taken_to_the_archive_and_the_activities_stay_in_the_jour
         archive: Some((archive.clone(), 2.0)),
         archive_every_s: None,
     };
-    let g = grower_watched(&store, watching);
+    let g = grower_watched(&store, watching).await;
     reading(&g.inbox, r#"{"temperature": 21.0}"#, noon());
     reading(&g.inbox, r#"{"moisture": 0.2}"#, noon());
     common::settled(&g.running).await;
@@ -467,7 +467,7 @@ async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journa
         archive: None,
         archive_every_s: None,
     };
-    let g = grower_watched(&store, watching);
+    let g = grower_watched(&store, watching).await;
     reading(&g.inbox, r#"{"temperature": 21.0}"#, noon());
     reading(&g.inbox, r#"{"moisture": 0.2}"#, noon());
     common::settled(&g.running).await;
@@ -565,7 +565,7 @@ async fn each_reading_is_archived_once_where_there_is_a_store_and_the_past_ones_
             history: archived.then_some(sink),
             ..Default::default()
         };
-        let g = grower_watched(&store, watching);
+        let g = grower_watched(&store, watching).await;
         let readings = 12;
         for n in 0..readings {
             let at = plus(noon(), n as f64 * 600.0);
@@ -624,7 +624,7 @@ async fn history_holds_every_reading_and_the_journal_the_dose_published_taken_an
         archive: None,
         archive_every_s: None,
     };
-    let g = grower_watched(&store, watching);
+    let g = grower_watched(&store, watching).await;
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     {
         reading(&inbox, r#"{"temperature": 21.0}"#, noon());
@@ -751,7 +751,7 @@ async fn unanswered() -> (Vec<Vec<orexis::events::Point>>, Broker) {
         )),
         ..Default::default()
     };
-    let g = grower_watched(&store, watching);
+    let g = grower_watched(&store, watching).await;
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     {
         reading(&inbox, r#"{"temperature": 21.0}"#, noon());
@@ -853,7 +853,7 @@ async fn a_dose_the_world_never_answers_is_a_failure_and_a_silent_probe_is_count
 async fn a_plan_that_fails_as_it_is_taken_is_not_planned_again_until_something_new_is_heard() {
     const PUBLISHED: &str = "http://example.org/orexis/planning#PlanPublished";
     let store = store();
-    let g = grower(&store);
+    let g = grower(&store).await;
     let published = Arc::new(Mutex::new(0));
     let counted = published.clone();
     g.running.handed.events.watch().connect(move |event, _| {

@@ -127,7 +127,7 @@ async fn walk(world: &Path, fixture: &str) -> (Drives, BTreeMap<String, (i64, i6
         ..Wiring::default()
     };
     let booted = orexis_agent::boot(&store, world, "courier_a", clock.clone(), None, wiring).unwrap();
-    let running = booted.start().unwrap();
+    let running = booted.start().await.unwrap();
     //  THE WANTS THE COURIER IS WALKING, read off its intentions by an executor of the test's own.
     let reader = orexis_execution::Executor::new(&store, "courier_a", None, None, clock.clone()).unwrap();
     for (n, (when, published)) in steps.iter().enumerate() {

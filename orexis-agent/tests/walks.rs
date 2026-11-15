@@ -33,7 +33,7 @@ fn now() -> DateTime {
 async fn run(store: &Store, world: &Path, agent: &str, within: u64, budget: Option<usize>) -> String {
     let wiring = orexis_agent::Wiring::default();
     let booted = orexis_agent::boot(store, world, agent, common::clock(now()), budget, wiring).unwrap();
-    let running = booted.start().unwrap();
+    let running = booted.start().await.unwrap();
     let outcome = common::outcome(&running, within).await;
     running.stop().await;
     outcome
@@ -152,7 +152,7 @@ async fn metered_courier(watched: bool) -> (usize, usize, String, std::collectio
     }
     let store = store();
     let clock = Arc::new(Counting(orexis::clock::Elapsing::from(now()), Mutex::new(0)));
-    let loaded = booted(&store, &world("courier"), "courier", now()).unwrap();
+    booted(&store, &world("courier"), "courier", now()).unwrap();
     let written: std::sync::Arc<std::sync::Mutex<Vec<orexis::events::Point>>> = Default::default();
     let kept = written.clone();
     let mut wiring = orexis_agent::Wiring::default();
@@ -168,8 +168,10 @@ async fn metered_courier(watched: bool) -> (usize, usize, String, std::collectio
         wiring.watching.metrics = Some(orexis_metrics::Window::new(sink, 0.0, Some("courier"), Some("courier")));
     }
     //  The metrics start either way, handed a window or not, so the two runs differ in the window alone.
-    let loaded = common::metered(loaded);
-    let running = orexis_agent::start(&store, "courier", clock.clone(), &loaded, Some(128), wiring).unwrap();
+    common::metered(&store);
+    let running = orexis_agent::start(&store, "courier", clock.clone(), &[], Some(128), wiring)
+        .await
+        .unwrap();
     let outcome = common::outcome(&running, 3600).await;
     running.stop().await;
     let reads = *clock.1.lock().unwrap();

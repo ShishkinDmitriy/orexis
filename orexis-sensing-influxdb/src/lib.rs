@@ -171,19 +171,20 @@ impl Observer {
 /// start.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        let archived =
-            |handed: &Handed| Ok(handed.joined("sensing") && Observer::new(&handed.store)?.archived_in.is_some());
-        if !handed.joins(archived).await? {
+        //  IT RUNS WHERE THE OBSERVER'S ROLE NAMES A SERIES STORE.
+        if !handed.plays(&[OBSERVER])? {
             return Ok(());
         }
-        let Some(task) = make(&handed)? else {
-            return Ok(());
-        };
-        if handed.checking().is_some() {
+        let observer = Observer::new(&handed.store)?;
+        if observer.archived_in.is_none() {
             return Ok(());
         }
-        handed.started().await;
-        task.await
+        let task = make(&handed)?;
+        handed.started("sensing-influxdb").await;
+        match task {
+            Some(task) if handed.checking().is_none() => task.await,
+            _ => Ok(()),
+        }
     })
 }
 

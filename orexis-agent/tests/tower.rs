@@ -101,12 +101,11 @@ async fn the_agent_concludes_what_each_disk_is_on_from_where_it_stands() {
     let store = store();
     let wiring = orexis_agent::Wiring::default();
     let booted = orexis_agent::boot(&store, &world(), "mover", common::clock(now()), None, wiring).unwrap();
-    let loaded = booted.loaded().to_vec();
+    let running = booted.start().await.unwrap();
+    let parts = running.parts();
     for package in ["belief", "planning", "execution"] {
-        assert!(loaded.iter().any(|p| p == package), "{package}: {loaded:?}");
+        assert!(parts.iter().any(|p| p == package), "{package}: {parts:?}");
     }
-    let running = booted.start().unwrap();
-    assert_eq!(running.parts(), ["belief", "execution", "planning"]);
     assert_eq!(
         on(&store),
         pairs(&[("disk_1", "disk_2"), ("disk_2", "disk_3"), ("disk_3", "PegA")])
@@ -119,7 +118,7 @@ async fn the_puzzle_is_planned_above_and_carried_out_by_the_van_below() {
     let wiring = orexis_agent::Wiring::default();
     let booted = orexis_agent::boot(&store, &world(), "mover", common::clock(now()), None, wiring).unwrap();
     two_disks(&store);
-    let running = booted.start().unwrap();
+    let running = booted.start().await.unwrap();
     let outcome = common::outcome(&running, 3600).await;
     running.stop().await;
     assert_eq!(outcome, MET);
@@ -168,25 +167,26 @@ type Walked = (
 async fn walked(order: &[&str]) -> Walked {
     use orexis::clock::Clock;
     let store = store();
-    let loaded = booted(&store, &world(), "mover", now()).unwrap();
+    booted(&store, &world(), "mover", now()).unwrap();
     //  THE RECORDER'S PACKAGE, WHAT KEEPS HOUSE FOR IT AND THE METRICS begin on no event and are handed nothing
     //  here, so no order is asked of them.
     let watching = ["journal", "journal-oxigraph", "journal-otlp", "metrics"];
-    let mut sorted: Vec<&str> = loaded
-        .iter()
-        .map(String::as_str)
-        .filter(|p| !watching.contains(p))
-        .collect();
-    sorted.sort();
-    let mut asked = order.to_vec();
-    asked.sort();
-    assert_eq!(sorted, asked, "the order names every package the mover loads");
     two_disks(&store);
     let order: Vec<String> = order.iter().map(|p| p.to_string()).collect();
     let clock = common::clock(now());
     let wiring = orexis_agent::Wiring::default();
-    let running = orexis_agent::start(&store, "mover", clock.clone(), &order, None, wiring).unwrap();
-    assert_eq!(running.parts(), order);
+    let running = orexis_agent::start(&store, "mover", clock.clone(), &order, None, wiring)
+        .await
+        .unwrap();
+    let started: Vec<String> = running
+        .parts()
+        .into_iter()
+        .filter(|p| !watching.contains(&p.as_str()))
+        .collect();
+    assert_eq!(
+        started, order,
+        "the order names every package the mover runs, and they start in it"
+    );
     let outcome = common::outcome(&running, 3600).await;
     let ended = clock.now().to_string();
     running.stop().await;
@@ -231,7 +231,8 @@ async fn the_puzzle_ends_the_same_whichever_of_planning_and_execution_hears_a_re
 #[tokio::test(start_paused = true)]
 async fn the_last_window_is_written_as_the_process_stops() {
     let store = store();
-    let loaded = booted(&store, &world(), "mover", now()).unwrap();
+    booted(&store, &world(), "mover", now()).unwrap();
+    common::metered(&store);
     let written: std::sync::Arc<std::sync::Mutex<Vec<orexis::events::Point>>> = Default::default();
     let kept = written.clone();
     let sink = orexis::series::Sink::new(
@@ -244,15 +245,9 @@ async fn the_last_window_is_written_as_the_process_stops() {
     );
     let mut wiring = orexis_agent::Wiring::default();
     wiring.watching.metrics = Some(orexis_metrics::Window::new(sink, 3600.0, Some("tower"), Some("mover")));
-    let running = orexis_agent::start(
-        &store,
-        "mover",
-        common::clock(now()),
-        &common::metered(loaded),
-        None,
-        wiring,
-    )
-    .unwrap();
+    let running = orexis_agent::start(&store, "mover", common::clock(now()), &[], None, wiring)
+        .await
+        .unwrap();
     common::settled(&running).await;
     running.stop().await;
     let by: BTreeMap<String, orexis::events::Point> = written

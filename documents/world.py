@@ -344,6 +344,16 @@ def world_of(world: Path, others=frozenset()) -> ox.Store:
     close_catalogue(store)
     return store
 
+def read_by_packages(world: Path, packages) -> ox.Store:
+    """What a world says publicly, read with the documents of `packages` alone, and closed: the vocabulary the packages
+    an agent runs declare, with the world's, which is what a graph is read by. An agent's boot holds the documents of
+    every package its binary holds, run or not, so a kind declared there is no sign anything the agent runs reads it."""
+    store = ox.Store()
+    update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}")
+    _put(store, Path(world).resolve(), read_with_imports(documents(Path(world).resolve(), packages)), [])
+    close_catalogue(store)
+    return store
+
 def selves(store: ox.Store) -> list[str]:
     """Every agent the store says is the self, in any graph, sorted — one in an agent's store, none
     in a store holding a whole world, and anything else a store no boot will run."""

@@ -186,8 +186,8 @@ fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, 
         .build()
         .map_err(|e| Error::Evaluation(format!("the tasks could not start: {e}")))?;
     tasks.block_on(async {
-        let mut running = booted.start()?;
-        //  EVERY PACKAGE HAS STARTED: where none kept the log, what was held of it is dropped.
+        let mut running = booted.start().await?;
+        //  EVERY PACKAGE HAS MADE ITS CORE: where none kept the log, what was held of it is dropped.
         if let Some(logger) = LOGGER.get() {
             logger.unkept();
         }

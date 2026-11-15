@@ -72,8 +72,8 @@ import pyshacl
 import rdflib
 
 from documents.ontology import local_of
-from documents.world import (in_a_crate, ONTOLOGY, SPEAKER, documents, known, packages_of, read_with_imports,
-                           roles_of, selves, world_of)
+from documents.world import (in_a_crate, ONTOLOGY, SPEAKER, documents, known, packages_of, read_by_packages,
+                           read_with_imports, roles_of, selves, world_of)
 from documents.store import (NAMESPACES, DocumentRefused, answer, catalogue_of, close_catalogue, closed, document, graphs_of, kinds_in, put_document,
                          rdflib_view, rows, whose)
 
@@ -447,9 +447,11 @@ def _refusals(here: Path, beliefs: ox.Store, broken: list[str]) -> list[str]:
         out.append("it listens to a topic, and it is no speaker: no package it loads would hear what arrives there")
     (me,) = selves(beliefs)
     everyone = None
-    for path, doc in read_with_imports(documents(here, packages_of(beliefs))):
+    loads = packages_of(beliefs)
+    read_by = read_by_packages(here, loads)
+    for path, doc in read_with_imports(documents(here, loads)):
         for graph, kinds in sorted(kinds_in(doc).items()):
-            if known(beliefs, kinds) or ours() & kinds or whose(doc, graph) not in (None, me):
+            if known(read_by, kinds) or ours() & kinds or whose(doc, graph) not in (None, me):
                 continue
             #  A PACKAGE'S DOCUMENT FOR A READER THE AGENT DOES NOT LOAD is passed over, as its requirements are: a
             #  kind only a package above declares, which an agent playing none of its roles holds no word of. A

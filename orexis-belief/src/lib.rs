@@ -35,7 +35,7 @@ inventory::submit! { Package { name: "belief", documents: orexis::documents!("on
 /// its trigger, and revises.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        if !handed.plays(&[crate::ontology::DELIBERATOR]).await? {
+        if !handed.plays(&[crate::ontology::DELIBERATOR])? {
             return Ok(());
         }
         let mut deliberator = Deliberator::new(&handed.store)?;
@@ -44,10 +44,10 @@ fn start(handed: Handed) -> orexis::task::Starting {
         let mut hears = handed.events.hears();
         hears.graph(BELIEF, HEARD);
         hears.event(REVISING_TRIGGER, REVISE);
+        handed.started("belief").await;
         if handed.checking().is_some() {
             return Ok(());
         }
-        handed.started().await;
         loop {
             let woke = tokio::select! {
                 biased;

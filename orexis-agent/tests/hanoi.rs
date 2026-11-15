@@ -39,7 +39,7 @@ fn store() -> Store {
     Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap()
 }
 
-fn boot(store: &Store) -> Vec<String> {
+fn boot(store: &Store) {
     booted(store, &world(), "hanoi", now()).unwrap()
 }
 
@@ -124,8 +124,14 @@ fn own(store: &Store) -> Vec<String> {
 async fn ran(store: &Store, budget: usize, within: u64) -> String {
     let loaded = ["planning".to_string()];
     let wiring = orexis_agent::Wiring::default();
-    let running = orexis_agent::start(store, "hanoi", common::clock(now()), &loaded, Some(budget), wiring).unwrap();
-    assert_eq!(running.parts(), ["planning"]);
+    let running = orexis_agent::start(store, "hanoi", common::clock(now()), &loaded, Some(budget), wiring)
+        .await
+        .unwrap();
+    assert!(
+        !running.parts().iter().any(|p| p == "execution"),
+        "the mover plans and walks nothing: {:?}",
+        running.parts()
+    );
     let outcome = common::outcome(&running, within).await;
     running.stop().await;
     outcome
@@ -157,39 +163,35 @@ fn the_boot_says_what_each_graph_is_and_planning_writes_its_scopes_as_it_starts(
         .enable_all()
         .build()
         .unwrap();
-    let _entered = tasks.enter();
-    let loaded = ["planning".to_string()];
-    orexis_agent::start(
-        &store,
-        "hanoi",
-        common::clock(now()),
-        &loaded,
-        None,
-        orexis_agent::Wiring::default(),
-    )
-    .unwrap();
-    assert!(scopes(&store) >= 1, "the scopes were written as planning started");
+    tasks.block_on(async {
+        let running = orexis_agent::start(
+            &store,
+            "hanoi",
+            common::clock(now()),
+            &[],
+            None,
+            orexis_agent::Wiring::default(),
+        )
+        .await
+        .unwrap();
+        assert!(scopes(&store) >= 1, "the scopes were written as planning started");
+        running.stop().await;
+    });
 }
 
 #[test]
-fn the_mover_loads_planning_and_its_journal_and_nothing_else() {
-    let store = store();
+fn the_mover_runs_planning_and_its_journal_and_nothing_else() {
+    let checked = orexis_agent::check(&world(), "hanoi", now(), None).unwrap();
     assert_eq!(
-        boot(&store),
+        checked.loaded,
         ["journal", "journal-oxigraph", "planning"],
         "a recorder with what archives its journal, and a planner: its role names no tracer, so what ships the \
          journal's activities ended its start, and it plays no meter, so nothing is tallied"
     );
-    let absent = [
-        "orexis-execution/ontology.ttl",
-        "orexis-belief/ontology.ttl",
-        "orexis-sensing/ontology.ttl",
-        "orexis-sensing/rules.ttl",
-        "orexis-prediction/ontology.ttl",
-        "orexis-speech/ontology.ttl",
-        "orexis-transport-mqtt/ontology.ttl",
-    ];
-    let present = ["orexis/ontology.ttl", "orexis-planning/ontology.ttl"];
+    //  THE STORE HOLDS THE DOCUMENTS OF EVERY PACKAGE THIS BINARY HOLDS, whether or not the package runs: each
+    //  decides in its own start, and none is looked for by another.
+    let store = store();
+    boot(&store);
     let held = |p: &str| {
         let (krate, name) = p.split_once('/').unwrap();
         let uri = orexis::boot::brought_uri(krate, name);
@@ -201,11 +203,13 @@ fn the_mover_loads_planning_and_its_journal_and_nothing_else() {
             .unwrap()
             .is_empty()
     };
-    for p in absent {
-        assert!(!held(p), "{p} is not the mover's to read");
-    }
-    for p in present {
-        assert!(held(p), "{p} is read");
+    for p in [
+        "orexis/ontology.ttl",
+        "orexis-planning/ontology.ttl",
+        "orexis-execution/ontology.ttl",
+        "orexis-sensing/rules.ttl",
+    ] {
+        assert!(held(p), "{p} is held");
     }
 }
 
@@ -272,7 +276,9 @@ async fn a_lived_in_volume_keeps_the_plan_and_does_not_search_again() {
 async fn metered(interval_s: f64) -> Vec<Vec<orexis::events::Point>> {
     use orexis::events::Point;
     let store = store();
-    let loaded = common::metered(boot(&store));
+    boot(&store);
+    common::metered(&store);
+    let loaded: Vec<String> = Vec::new();
     let writes: std::sync::Arc<std::sync::Mutex<Vec<Vec<Point>>>> = Default::default();
     let kept = writes.clone();
     let sink = orexis::series::Sink::new(
@@ -291,7 +297,9 @@ async fn metered(interval_s: f64) -> Vec<Vec<orexis::events::Point>> {
         },
         ..Default::default()
     };
-    let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, Some(20), wiring).unwrap();
+    let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, Some(20), wiring)
+        .await
+        .unwrap();
     assert_eq!(common::outcome(&running, 30).await, PLANNED);
     running.stop().await;
     writes
@@ -406,7 +414,8 @@ async fn every_search_and_the_publishing_are_tallied_into_one_window_and_never_b
 #[tokio::test(start_paused = true)]
 async fn a_plan_published_is_kept_in_the_journal_with_its_steps_in_the_words_of_the_domain() {
     let store = store();
-    let loaded = boot(&store);
+    boot(&store);
+    let loaded: Vec<String> = Vec::new();
     let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(now)).unwrap());
     let wiring = orexis_agent::Wiring {
         watching: orexis_agent::Watching {
@@ -415,7 +424,9 @@ async fn a_plan_published_is_kept_in_the_journal_with_its_steps_in_the_words_of_
         },
         ..Default::default()
     };
-    let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, Some(400), wiring).unwrap();
+    let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, Some(400), wiring)
+        .await
+        .unwrap();
     common::settled(&running).await;
     running.stop().await;
     let text = "PREFIX planning: <http://example.org/orexis/planning#> PREFIX execution: <http://example.org/orexis/execution#>
@@ -446,7 +457,8 @@ async fn the_history_part_marks_an_event_of_a_class_beneath_incident_and_no_othe
     use orexis::events::Event;
     use orexis_planning::events::{PlanPublished, WantUnreachable};
     let store = store();
-    let loaded = boot(&store);
+    boot(&store);
+    let loaded: Vec<String> = Vec::new();
     let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(now)).unwrap());
     let wiring = orexis_agent::Wiring {
         watching: orexis_agent::Watching {
@@ -455,7 +467,9 @@ async fn the_history_part_marks_an_event_of_a_class_beneath_incident_and_no_othe
         },
         ..Default::default()
     };
-    let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, Some(1), wiring).unwrap();
+    let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, Some(1), wiring)
+        .await
+        .unwrap();
     let watch = running.handed.events.watch().clone();
     let unreachable: &dyn Event = &WantUnreachable {
         want: "http://example.org/test#want".into(),

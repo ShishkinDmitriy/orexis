@@ -93,7 +93,7 @@ async fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_
         ..Wiring::default()
     };
     let booted = orexis_agent::boot(&store, &world(), "fern", common::clock(now), None, wiring).unwrap();
-    let running = booted.start().unwrap();
+    let running = booted.start().await.unwrap();
     assert_eq!(broker.0.lock().unwrap().0, ["sensors/moisture_sensor_fern/reading"]);
     //  WHAT IS SAID OF THE MESSAGE: its three percepts perceived together and revised together, once each.
     let said: Arc<Mutex<Vec<(String, usize)>>> = Arc::default();

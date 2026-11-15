@@ -107,8 +107,8 @@ fn under(directory: &Path) -> Vec<PathBuf> {
     out
 }
 
-/// Every package this binary holds, by its name: the kernel keeps no order between them, and the order they start
-/// in follows from what each start waits for (`Handed::after`).
+/// Every package this binary holds, by its name: the kernel keeps no order between them, and each decides in its own
+/// start whether it runs.
 pub fn every_package() -> Vec<String> {
     inventory::iter::<Package>()
         .map(|p| p.name.to_string())
@@ -205,7 +205,7 @@ pub fn wired(store: &Store, words: &str, wired: &[(&str, &str)]) -> Result<bool,
 }
 
 /// A ROLE THE SELF PLAYS THAT NO PACKAGE OF THIS BINARY DECLARES: the role's classes, none beneath `orexis:Role` by
-/// the vocabulary the store holds once every package has decided. Its package was built out, and with it the
+/// the vocabulary the store holds once every package's documents are in. Its package was built out, and with it the
 /// ontology that would have said so.
 fn unserved(store: &Store) -> Result<Vec<String>, Error> {
     let selves = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
@@ -397,7 +397,7 @@ fn stamp(store: &Store) -> Result<(), Error> {
     Ok(())
 }
 
-/// A BOOT BEGUN: what was read and what is still to be put, held while the packages decide.
+/// A BOOT BEGUN: what was read and what is still to be put, held while the packages' documents are brought.
 pub struct Begun {
     world: PathBuf,
     agent: String,
@@ -454,8 +454,8 @@ pub fn begin(store: &Store, booting: &Booting<'_>) -> Result<Begun, Error> {
 }
 
 impl Begun {
-    /// `package` JOINS: the documents it brings are put in, the vocabulary closed again, and every graph of the
-    /// world passed over until now is offered again, since a kind this package declares is now one the agent reads.
+    /// `package`'S DOCUMENTS ARE BROUGHT: put in, the vocabulary closed again, and every graph of the world passed
+    /// over until now offered again, since a kind this package declares is now one the agent reads.
     pub fn bring(&mut self, store: &Store, package: &str) -> Result<(), Error> {
         let documents = registered(package).map(|p| p.documents).unwrap_or_default();
         if documents.is_empty() {
@@ -474,8 +474,8 @@ impl Begun {
         store.close_catalogue()
     }
 
-    /// EVERY PACKAGE HAS DECIDED, and `loaded` joined: the boot is finished.
-    pub fn finish(self, store: &Store, loaded: &[String]) -> Result<(), Error> {
+    /// EVERY PACKAGE'S DOCUMENTS ARE BROUGHT, the packages `brought` names: the boot is finished.
+    pub fn finish(self, store: &Store, brought: &[String]) -> Result<(), Error> {
         let unserved = unserved(store)?;
         if !unserved.is_empty() {
             return Err(Error::Evaluation(format!(
@@ -484,11 +484,7 @@ impl Begun {
                 unserved.join("; ")
             )));
         }
-        if loaded.is_empty() {
-            log::warn!("{} is joined by no package, and runs nothing", self.agent);
-        } else {
-            log::info!("{} loads {}", self.agent, loaded.join(", "));
-        }
+        log::debug!("{} holds the documents of {}", self.agent, brought.join(", "));
         for (path, _, graph, kinds) in &self.passed {
             log::debug!(
                 "passed over {graph} of {}: {} is no kind this agent reads",
@@ -525,14 +521,9 @@ impl Begun {
     }
 }
 
-/// BOOT `booting.agent` into `store`, and answer the packages that joined, by name: each package this binary holds
-/// asked in its own start whether the agent runs it, and the starts dropped where they decided (`task::boot`). No
+/// BOOT `booting.agent` into `store`, with the documents of every package this binary holds (`task::boot`). No
 /// package's core is made and nothing runs: for a caller that wants the store as booted and nothing started.
-pub fn boot(store: &Store, booting: &Booting<'_>) -> Result<Vec<String>, Error> {
+pub fn boot(store: &Store, booting: &Booting<'_>) -> Result<(), Error> {
     let clock = std::sync::Arc::new(crate::clock::Manual::at(oxsdatatypes::DateTime::now()));
-    Ok(
-        crate::task::boot(store, booting, clock, crate::task::Outside::default())?
-            .loaded()
-            .to_vec(),
-    )
+    crate::task::boot(store, booting, clock, crate::task::Outside::default()).map(|_| ())
 }
