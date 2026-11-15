@@ -10,7 +10,7 @@
 //! - the start, below the modules, and nothing else: the deliberator made, and the task that wakes it.
 
 use orexis::ontology::BELIEF;
-use orexis::task::{Handed, Package, Task, Woke};
+use orexis::task::{Handed, Package, Woke};
 
 use crate::ontology::REVISING_TRIGGER;
 
@@ -31,11 +31,12 @@ inventory::submit! { Package { name: "belief", documents: orexis::documents!("on
 
 /// BELIEF'S START, which every package this binary holds is given: it joins where the self plays a deliberator and
 /// declines otherwise; joined, its deliberator is made and what the world authored as the agent's state revised,
-/// once; and it answers ITS TASK, which waits for a belief written or an event beneath its trigger, and revises.
+/// once; it says it has started, and what follows is ITS TASK, which waits for a belief written or an event beneath
+/// its trigger, and revises.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         if !handed.plays(&[crate::ontology::DELIBERATOR]).await? {
-            return Ok(None);
+            return Ok(());
         }
         let mut deliberator = Deliberator::new(&handed.store)?;
         deliberator.watch = handed.events.watch().clone();
@@ -43,23 +44,21 @@ fn start(handed: Handed) -> orexis::task::Starting {
         let mut hears = handed.events.hears();
         hears.graph(BELIEF, HEARD);
         hears.event(REVISING_TRIGGER, REVISE);
-        let task: Task = Box::pin(async move {
-            loop {
-                let woke = tokio::select! {
-                    biased;
-                    _ = handed.stopped() => break,
-                    woke = hears.next() => woke,
-                };
-                let Some(woke) = woke else { break };
-                let mut turn = handed.turn();
-                let wrote = match woke {
-                    Woke::Graphs(_, graphs) => deliberator.revising(&graphs, BELIEF, &mut turn).map(|()| Vec::new()),
-                    Woke::Event(_, event) => deliberator.heard_event(&event, &mut turn),
-                };
-                turn.done(wrote)?;
-            }
-            Ok(())
-        });
-        Ok(Some(task))
+        handed.started().await;
+        loop {
+            let woke = tokio::select! {
+                biased;
+                _ = handed.stopped() => break,
+                woke = hears.next() => woke,
+            };
+            let Some(woke) = woke else { break };
+            let mut turn = handed.turn();
+            let wrote = match woke {
+                Woke::Graphs(_, graphs) => deliberator.revising(&graphs, BELIEF, &mut turn).map(|()| Vec::new()),
+                Woke::Event(_, event) => deliberator.heard_event(&event, &mut turn),
+            };
+            turn.done(wrote)?;
+        }
+        Ok(())
     })
 }

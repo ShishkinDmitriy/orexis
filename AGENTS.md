@@ -1103,10 +1103,15 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   holds the agent and which constraint the world as posed violates; the binary called the planner by name for all
   three, and its verdict named a desire and a contradiction, planning's words (package).
 - **The kernel keeps no order between packages: a start waits for the start it needs, and nothing else orders two**
-  — every start is begun and run until it ends or waits (`Handed::started`), that each started is said once all
-  have, so the journal hears every one, and what several packages add to or read is shared (`Outside::share`) and
+  — every start is begun and run until it says it has started, ends or waits (`Handed::after`), that each started
+  is said once all have, so the journal hears every one, and what several packages add to or read is shared (`Outside::share`) and
   asked when read, as where the journal lies; a list of seventeen names in the kernel ordered them, and three
   handoffs worked only in that order (package).
+- **A start is the whole of what a package does, and the package says when it has started** — it decides, makes its
+  core, says so (`Handed::started`) and goes on as its task, so what it says before is said as the agent starts and
+  what it does after as the agent runs; a start answered the kernel a task to spawn, which was how the kernel
+  told a package made from a package running, for a check that makes every core and runs none; a check drives no
+  runtime, so what follows the saying is never reached, and the kernel is told nothing of checks (package).
 - **A package's struct for its role has a field per property of the role, named as the property is** — `Recorder`,
   `Meter`, `Predictor`, `Coordinator`, `Observer`, and the cores that bear the role's name; three roles had no
   struct, four fields went by another word than their property (`every_s`, `endpoint`, `archive`, `tracer`), and

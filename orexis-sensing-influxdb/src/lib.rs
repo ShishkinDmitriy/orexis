@@ -174,9 +174,13 @@ fn start(handed: Handed) -> orexis::task::Starting {
         let archived =
             |handed: &Handed| Ok(handed.joined("sensing") && Observer::new(&handed.store)?.archived_in.is_some());
         if !handed.joins(archived).await? {
-            return Ok(None);
+            return Ok(());
         }
-        make(&handed)
+        let Some(task) = make(&handed)? else {
+            return Ok(());
+        };
+        handed.started().await;
+        task.await
     })
 }
 

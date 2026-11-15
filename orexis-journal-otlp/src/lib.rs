@@ -292,10 +292,14 @@ fn start(handed: Handed) -> orexis::task::Starting {
         let traced = |handed: &Handed| {
             Ok(handed.joined("journal") && orexis_journal::Recorder::new(&handed.store)?.traced_by.is_some())
         };
-        if !handed.joins(traced).await? || !handed.started("journal").await {
-            return Ok(None);
+        if !handed.joins(traced).await? || !handed.after("journal").await {
+            return Ok(());
         }
-        make(&handed)
+        let Some(task) = make(&handed)? else {
+            return Ok(());
+        };
+        handed.started().await;
+        task.await
     })
 }
 

@@ -270,9 +270,13 @@ const ROLE: &str = "http://example.org/orexis/sensing#Observer";
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         if !handed.plays(&[ROLE]).await? {
-            return Ok(None);
+            return Ok(());
         }
-        make(&handed)
+        let Some(task) = make(&handed)? else {
+            return Ok(());
+        };
+        handed.started().await;
+        task.await
     })
 }
 
