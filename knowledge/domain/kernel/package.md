@@ -73,7 +73,8 @@ prediction's, is read whether the package is loaded or not.
 start is begun and run until it says it has started, ends, or waits for another's, so the order they start in
 follows from those waits alone. A START IS THE WHOLE OF WHAT THE PACKAGE DOES: it makes its core, SAYS IT HAS
 STARTED (`handed.started().await`) and goes on as its task, and the kernel is handed no task back; one that ends
-without saying so has nothing to run. A package whose making needs what another's made waits for that one to have
+without saying so has nothing to run. A package being checked (`handed.checking()`) says what the check asks of it as it makes
+its core and ends its start there, before it says it has started: each package checks its own. A package whose making needs what another's made waits for that one to have
 said it: what keeps house for the journal waits for the journal (`handed.after("journal")`), and nothing else
 waits, translation's wait for speech having ordered two packages that needed nothing of each other. Once all have
 started the kernel says `orexis:PackageStarting` and `orexis:PackageStarted` of each, at the instants it began and said so and

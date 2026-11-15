@@ -1110,8 +1110,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A start is the whole of what a package does, and the package says when it has started** — it decides, makes its
   core, says so (`Handed::started`) and goes on as its task, so what it says before is said as the agent starts and
   what it does after as the agent runs; a start answered the kernel a task to spawn, which was how the kernel
-  told a package made from a package running, for a check that makes every core and runs none; a check drives no
-  runtime, so what follows the saying is never reached, and the kernel is told nothing of checks (package).
+  told a package made from a package running, for a check that makes every core and runs none; and each package
+  checks its own (`Handed::checking`), saying what it found as it makes its core and ending its start there, where the
+  check was a runtime the binary never drove, which worked only while nothing a package did came before its first wait (package).
 - **A package's struct for its role has a field per property of the role, named as the property is** — `Recorder`,
   `Meter`, `Predictor`, `Coordinator`, `Observer`, and the cores that bear the role's name; three roles had no
   struct, four fields went by another word than their property (`every_s`, `endpoint`, `archive`, `tracer`), and

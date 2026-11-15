@@ -1033,6 +1033,14 @@ impl Handed {
         .await
     }
 
+    /// WHETHER THE AGENT IS BEING CHECKED, and where to say what the check asks: handed outside by whoever checks an
+    /// agent before anything is granted. A package being checked says what it found as it makes its core - that it
+    /// holds the agent, why it refuses the world as posed - and ENDS ITS START THERE, its core made and nothing run:
+    /// each package checks its own, and the kernel knows nothing of checks.
+    pub fn checking(&self) -> Option<Checking> {
+        self.outside.read::<Checking>()
+    }
+
     /// WAIT UNTIL `package` HAS STARTED - it said so, or its start ended - and answer whether it runs: false where
     /// it declined, or is no package of this binary. For a package whose own making needs what another's made.
     pub async fn after(&self, package: &str) -> bool {
@@ -1111,6 +1119,9 @@ pub fn named(handed: Handed, make: fn(&Handed) -> Result<Option<Task>, Error>) -
         let Some(task) = make(&handed)? else {
             return Ok(());
         };
+        if handed.checking().is_some() {
+            return Ok(());
+        }
         handed.started().await;
         task.await
     })

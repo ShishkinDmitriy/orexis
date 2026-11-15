@@ -246,6 +246,9 @@ fn start(handed: Handed) -> orexis::task::Starting {
         let Some(task) = make(&handed)? else {
             return Ok(());
         };
+        if handed.checking().is_some() {
+            return Ok(());
+        }
         handed.started().await;
         task.await
     })

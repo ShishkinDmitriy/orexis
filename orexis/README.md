@@ -19,6 +19,7 @@ package joins the agent, which it decides itself, and the boot reads no director
 |---|---|
 | decides whether the agent runs it, first thing in its start | `Handed::plays` (its role), `Handed::joins` (its own reason), `Handed::beside` (another package) |
 | says it has started, its core made: what follows is its task | `Handed::started` |
+| is checked: says what it found as its core is made, and ends its start | `Handed::checking` |
 | waits for a package it needs started | `Handed::after` |
 | subscribes to an event class or a graph kind | `Events::hears()`, `Hears::event`, `Hears::graph` |
 | waits for an event, a graph written, an arrival or the clock | `Hears::next`, `Arrived::wait`, `Handed::sleep_until` |
