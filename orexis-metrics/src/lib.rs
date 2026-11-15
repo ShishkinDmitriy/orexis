@@ -202,6 +202,11 @@ inventory::submit! { Package { name: "metrics", documents: orexis::documents!("o
 
 /// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
 const ROLE: &str = "http://example.org/orexis/metrics#Meter";
+/// WHAT HOLDS WHERE THE ROLE STATES NONE: each default the metrics' ontology's shape of the role states
+/// (`sh:defaultValue`), the one place the figure lives.
+const OWN_Q: &str = "SELECT ?path ?own WHERE { ?shape sh:targetClass <http://example.org/orexis/metrics#Meter> ; \
+sh:property ?property . ?property sh:path ?path ; sh:defaultValue ?own }";
+
 /// WHAT THE METER THE SELF PLAYS SAYS, a row per way of saying it.
 const METER_Q: &str = "SELECT ?kind ?store ?window WHERE { \
 ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind . \
@@ -234,16 +239,36 @@ impl Meter {
                 rows.push(row);
             }
         }
+        //  THE ONTOLOGY'S DEFAULT, WHERE THE ROLE SAYS NOTHING: refused where the ontology states none, since a figure
+        //  nothing states is a package shipped broken.
+        let ontologies = store.graphs_of(&[orexis::ontology::ONTOLOGY], &Within::default())?;
+        let ontologies: Vec<&str> = ontologies.iter().map(String::as_str).collect();
+        let owns = store.rows(OWN_Q, &ontologies)?;
+        let own = |word: &str| {
+            let path = format!("http://example.org/orexis/metrics#{word}");
+            owns.iter()
+                .find(|row| value(row, "path").as_deref() == Some(path.as_str()))
+                .and_then(|row| value(row, "own"))
+                .ok_or_else(|| orexis::Error::Document(format!("the metrics' ontology states no default for {word}")))
+        };
+        let figure = |what: &str, word: &str| {
+            let said = rows
+                .iter()
+                .filter_map(|row| value(row, what)?.parse::<f64>().ok())
+                .find(|figure| *figure > 0.0);
+            match said {
+                Some(figure) => Ok(figure),
+                None => own(word)?.parse::<f64>().map_err(|_| {
+                    orexis::Error::Document(format!("the metrics' ontology's default for {word} is no number"))
+                }),
+            }
+        };
         Ok(Meter {
             written_to: rows
                 .iter()
                 .find_map(|row| value(row, "store"))
                 .filter(|url| !url.is_empty()),
-            window_s: rows
-                .iter()
-                .filter_map(|row| value(row, "window")?.parse::<f64>().ok())
-                .find(|figure| *figure > 0.0)
-                .unwrap_or(INTERVAL_S),
+            window_s: figure("window", "windowS")?,
         })
     }
 }

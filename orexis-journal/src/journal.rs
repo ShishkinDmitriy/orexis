@@ -10,7 +10,7 @@
 //! THREE KINDS OF ENTRY, each a named graph named by the node it is about: an EVENT a package says, beneath
 //! `orexis:Event`, at its `prov:atTime`, kept for good; a LOG RECORD, `orexis:LogRecord`, its logger, level and
 //! message; and an ACTIVITY a package did, a `prov:Activity`, with what started it and what it generated
-//! (`orexis-journal/`). The last two are kept for the WINDOW (`JOURNAL_WINDOW_S`, ten minutes where nothing says) and
+//! (`orexis-journal/`). The last two are kept for the WINDOW (`journal:windowS`, ten minutes where the role says none) and
 //! swept after, unless an INCIDENT kept them: the minutes before one are kept for good beside it (`orexis:keptBy`).
 //!
 //! WHAT AN INCIDENT IS, IS THE VOCABULARY'S, AND WHICH ONES COUNT, THE DEPLOYMENT'S: an entry the history part hands
@@ -47,8 +47,6 @@ const LOGGER: &str = "http://example.org/orexis#logger";
 const LEVEL: &str = "http://example.org/orexis#level";
 const MESSAGE: &str = "http://example.org/orexis#message";
 
-/// How long the log is kept where no incident keeps it, in the agent's seconds, where the environment says nothing.
-pub const WINDOW_S: f64 = 600.0;
 /// How often the window is swept, at most, in the agent's seconds.
 const SWEEP_S: f64 = 60.0;
 /// The port the endpoint listens on inside the container, where the environment says nothing: oxigraph's own.

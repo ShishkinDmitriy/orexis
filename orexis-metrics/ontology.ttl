@@ -1,3 +1,4 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix metrics: <http://example.org/orexis/metrics#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -24,3 +25,9 @@ metrics:writtenTo a owl:ObjectProperty ; rdfs:label "written to" ;
 metrics:windowS a owl:DatatypeProperty ; rdfs:label "window, in seconds" ;
     rdfs:domain metrics:Meter ;
     rdfs:comment "How many seconds of real time one window of a meter's tallies covers, said of the role: how often its metrics are written. Sixty where the role says none." .
+
+#  WHAT HOLDS WHERE A METER'S ROLE STATES NONE, read by the package as it reads the role: the one place the figure
+#  lives.
+[] a sh:NodeShape ;
+    sh:targetClass metrics:Meter ;
+    sh:property [ sh:path metrics:windowS ; sh:defaultValue 60 ] .

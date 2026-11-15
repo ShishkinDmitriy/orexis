@@ -91,6 +91,11 @@ inventory::submit! { Package { name: "sensing-influxdb", documents: &[], start }
 
 const OBSERVER: &str = "http://example.org/orexis/sensing#Observer";
 
+/// WHAT HOLDS WHERE THE ROLE STATES NONE: each default sensing's ontology's shape of the role states
+/// (`sh:defaultValue`), the one place the figure lives.
+const OWN_Q: &str = "SELECT ?path ?own WHERE { ?shape sh:targetClass <http://example.org/orexis/sensing#Observer> ; \
+sh:property ?property . ?property sh:path ?path ; sh:defaultValue ?own }";
+
 /// WHAT THE OBSERVER THE SELF PLAYS SAYS OF ARCHIVING ITS READINGS, a row per way of saying it.
 const OBSERVER_Q: &str = "SELECT ?kind ?archive ?every WHERE { \
 ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind . \
@@ -125,16 +130,36 @@ impl Observer {
                 rows.push(row);
             }
         }
+        //  THE ONTOLOGY'S DEFAULT, WHERE THE ROLE SAYS NOTHING: refused where the ontology states none, since a figure
+        //  nothing states is a package shipped broken.
+        let ontologies = store.graphs_of(&[orexis::ontology::ONTOLOGY], &Within::default())?;
+        let ontologies: Vec<&str> = ontologies.iter().map(String::as_str).collect();
+        let owns = store.rows(OWN_Q, &ontologies)?;
+        let own = |word: &str| {
+            let path = format!("http://example.org/orexis/sensing#{word}");
+            owns.iter()
+                .find(|row| value(row, "path").as_deref() == Some(path.as_str()))
+                .and_then(|row| value(row, "own"))
+                .ok_or_else(|| orexis::Error::Document(format!("sensing's ontology states no default for {word}")))
+        };
+        let figure = |what: &str, word: &str| {
+            let said = rows
+                .iter()
+                .filter_map(|row| value(row, what)?.parse::<f64>().ok())
+                .find(|figure| *figure > 0.0);
+            match said {
+                Some(figure) => Ok(figure),
+                None => own(word)?.parse::<f64>().map_err(|_| {
+                    orexis::Error::Document(format!("sensing's ontology's default for {word} is no number"))
+                }),
+            }
+        };
         Ok(Observer {
             archive: rows
                 .iter()
                 .find_map(|row| value(row, "archive"))
                 .filter(|url| !url.is_empty()),
-            archived_every_s: rows
-                .iter()
-                .filter_map(|row| value(row, "every")?.parse::<f64>().ok())
-                .find(|figure| *figure > 0.0)
-                .unwrap_or(INTERVAL_S),
+            archived_every_s: figure("every", "archivedEveryS")?,
         })
     }
 }

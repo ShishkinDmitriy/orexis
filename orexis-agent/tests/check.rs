@@ -237,8 +237,8 @@ fn the_journal_package_makes_its_own_journal_where_the_agent_is_deployed_and_non
 
 /// A PACKAGE READS ITS OWN ROLE, into a struct with a field for each thing the role may say: the terrace's agent
 /// plays a recorder, an observer, a meter and a translator, each linked to its services and stating no figure, so
-/// each reads with its links and the package's own figures; a figure said on a role is what is read; and Hanoi's
-/// agent, which plays a recorder alone, reads no link of an observer, a meter or a translator.
+/// each reads with its links and the defaults its package's ontology states; a figure said on a role is what is read; and Hanoi's
+/// agent, which plays a recorder alone, holds no ontology of the metrics or of sensing, so neither is read.
 #[test]
 fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_role_may_say() {
     let now = oxsdatatypes::DateTime::now();
@@ -320,8 +320,9 @@ fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_ro
     //  AND A ROLE THE SELF DOES NOT PLAY SAYS NOTHING.
     let store = booted("hanoi", "hanoi");
     assert!(orexis_journal::Recorder::new(&store).unwrap().archive.is_some());
-    assert_eq!(orexis_sensing_influxdb::Observer::new(&store).unwrap().archive, None);
-    assert_eq!(orexis_metrics::Meter::new(&store).unwrap().written_to, None);
+    //  A PACKAGE THAT DID NOT JOIN BROUGHT NO ONTOLOGY, so its role's figures have no default and it is refused.
+    assert!(orexis_sensing_influxdb::Observer::new(&store).is_err());
+    assert!(orexis_metrics::Meter::new(&store).is_err());
     assert_eq!(orexis_translation::create::translated_by(&store).unwrap(), None);
 }
 

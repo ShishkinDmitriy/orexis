@@ -1,3 +1,4 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix journal: <http://example.org/orexis/journal#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -19,7 +20,7 @@ journal:Recorder a owl:Class ; rdfs:subClassOf orexis:Role ; rdfs:label "Recorde
     rdfs:comment "An agent that keeps a journal of what happened to it: every event its packages say and every activity they end, written as it happens. Declared, never derived; it changes nothing the agent plans or does." .
 
 #  HOW A RECORDER'S JOURNAL IS KEPT is the role's to say, each figure and word on the role in the agent's self graph,
-#  and the package's own where the role says nothing.
+#  and the shape's default below where the role says nothing.
 
 journal:windowS a owl:DatatypeProperty ; rdfs:label "window, in seconds" ;
     rdfs:domain journal:Recorder ;
@@ -72,3 +73,12 @@ journal:Endpoint a owl:Class ; rdfs:label "Endpoint" ;
 journal:servedAt a owl:ObjectProperty ; rdfs:label "served at" ;
     rdfs:domain journal:Recorder ; rdfs:range journal:Endpoint ;
     rdfs:comment "The endpoint a recorder's journal is served at, said of the role in the agent's self graph. A recorder whose role names none is served nowhere: its journal is kept and nobody outside the process can ask it while it runs." .
+
+#  WHAT HOLDS WHERE A RECORDER'S ROLE STATES NONE, read by the journal's crates as they read the role: the one place
+#  each figure lives.
+[] a sh:NodeShape ;
+    sh:targetClass journal:Recorder ;
+    sh:property [ sh:path journal:windowS ; sh:defaultValue 600 ] ,
+                [ sh:path journal:incidentFrom ; sh:defaultValue "WARNING" ] ,
+                [ sh:path journal:archivedEveryS ; sh:defaultValue 2 ] ,
+                [ sh:path journal:tracedEveryS ; sh:defaultValue 10 ] .

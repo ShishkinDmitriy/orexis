@@ -1,3 +1,4 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix speech: <http://example.org/orexis/speech#> .
 @prefix telegram: <http://example.org/orexis/telegram#> .
@@ -42,7 +43,12 @@ telegram:CarryingTrigger a owl:Class ; rdfs:subClassOf telegram:Trigger ; rdfs:l
 speech:ProseKept rdfs:subClassOf telegram:CarryingTrigger .
 speech:WritingAnnounced rdfs:subClassOf telegram:CarryingTrigger .
 
-#  HOW OFTEN THE BOT IS POLLED is a role's to say, in the agent's self graph, and the transport's own where none says.
+#  HOW OFTEN THE BOT IS POLLED is a role's to say, in the agent's self graph, and the shape's default below where none says.
 
 telegram:polledEveryS a owl:DatatypeProperty ; rdfs:label "polled every, in seconds" ;
     rdfs:comment "How often an agent's bot is polled for what was written, in real seconds, said of a role the agent plays that speaks through it. Three where no role says." .
+
+#  WHAT HOLDS WHERE NO ROLE SAYS HOW OFTEN, read by the transport as it connects: the one place the figure lives.
+[] a sh:NodeShape ;
+    sh:targetClass orexis:Role ;
+    sh:property [ sh:path telegram:polledEveryS ; sh:defaultValue 3 ] .

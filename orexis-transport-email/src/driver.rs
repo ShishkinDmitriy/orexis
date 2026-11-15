@@ -31,7 +31,7 @@ const ADDRESS_Q: &str = "SELECT ?address WHERE { $contact schema:email ?address 
 pub fn polled_every_s(beliefs: &Store) -> Result<f64, Error> {
     let selves = beliefs.graphs_of(&[orexis::ontology::SELF_GRAPH], &orexis::store::Within::default())?;
     let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
-    Ok(beliefs
+    let said = beliefs
         .rows(
             "SELECT ?every WHERE { ?me a orexis:Self ; orexis:plays ?role . \
              ?role <http://example.org/orexis/email#polledEveryS> ?every } ORDER BY ?every",
@@ -39,8 +39,21 @@ pub fn polled_every_s(beliefs: &Store) -> Result<f64, Error> {
         )?
         .iter()
         .filter_map(|row| orexis::store::value(row, "every")?.parse::<f64>().ok())
-        .find(|figure| *figure > 0.0)
-        .unwrap_or(POLL_S))
+        .find(|figure| *figure > 0.0);
+    if let Some(figure) = said {
+        return Ok(figure);
+    }
+    let ontologies = beliefs.graphs_of(&[orexis::ontology::ONTOLOGY], &orexis::store::Within::default())?;
+    let ontologies: Vec<&str> = ontologies.iter().map(String::as_str).collect();
+    beliefs
+        .rows(
+            "SELECT ?own WHERE { ?shape sh:property ?property . \
+             ?property sh:path <http://example.org/orexis/email#polledEveryS> ; sh:defaultValue ?own }",
+            &ontologies,
+        )?
+        .iter()
+        .find_map(|row| orexis::store::value(row, "own")?.parse::<f64>().ok())
+        .ok_or_else(|| Error::Document("the email transport's ontology states no default for polledEveryS".into()))
 }
 
 /// A mailbox: every unseen message as its sender's address and its plain text, each then seen; and one sent.
@@ -383,6 +396,13 @@ mod tests {
     #[test]
     fn connect_refuses_an_agent_with_no_mailbox() {
         let store = world();
+        //  THE TRANSPORT'S ONTOLOGY STATES HOW OFTEN WHERE NO ROLE DOES, as the package brings it.
+        store
+            .update(
+                "INSERT DATA { GRAPH <http://example.org/test#ontology> { [] sh:property \
+                 [ sh:path <http://example.org/orexis/email#polledEveryS> ; sh:defaultValue 30 ] } }",
+            )
+            .unwrap();
         let me = format!("{TEST}keeper");
         let partial = |k: &str| (k == "MAIL_ADDRESS").then(|| "keeper@example.org".to_string());
         assert!(Email::connect(&store, &me, &partial).is_err());
@@ -398,8 +418,8 @@ mod tests {
         };
         let mail = Email::connect(&store, &me, &env).unwrap();
         assert_eq!(
-            mail.every, POLL_S,
-            "no role of this world says how often, so the transport's own"
+            mail.every, 30.0,
+            "no role of this world says how often, so the default the transport's ontology states"
         );
     }
 }

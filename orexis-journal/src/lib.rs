@@ -74,6 +74,11 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     Ok(None)
 }
 
+/// WHAT HOLDS WHERE THE ROLE STATES NONE: each default the journal's ontology's shape of the role states
+/// (`sh:defaultValue`), the one place the figure lives.
+const OWN_Q: &str = "SELECT ?path ?own WHERE { ?shape sh:targetClass <http://example.org/orexis/journal#Recorder> ; \
+sh:property ?property . ?property sh:path ?path ; sh:defaultValue ?own }";
+
 /// WHAT THE RECORDER THE SELF PLAYS SAYS, a row per way of saying it: each figure and word of the role, and where
 /// each service it names answers, as the world's deployment states it.
 const RECORDER_Q: &str = "SELECT ?kind ?window ?from ?incident ?served ?archive ?archivedEvery ?tracer ?tracedEvery WHERE { \
@@ -111,11 +116,6 @@ pub struct Recorder {
     pub traced_every_s: f64,
 }
 
-/// How often what lasts is taken to the archive where the role says nothing, and how often the activities are
-/// shipped, in the agent's seconds.
-pub const ARCHIVED_EVERY_S: f64 = 2.0;
-pub const TRACED_EVERY_S: f64 = 10.0;
-
 impl Recorder {
     /// The recorder the self plays, read off its self graph and the world's deployment graph by this package's own
     /// query. Several recorder roles are read as one, and where the self plays none nothing is said.
@@ -137,23 +137,45 @@ impl Recorder {
                 .find_map(|row| value(row, what))
                 .filter(|said| !said.is_empty())
         };
-        let figure = |what: &str| {
-            rows.iter()
+        //  THE ONTOLOGY'S DEFAULT, WHERE THE ROLE SAYS NOTHING: refused where the ontology states none, since a figure
+        //  nothing states is a package shipped broken.
+        let ontologies = store.graphs_of(&[orexis::ontology::ONTOLOGY], &Within::default())?;
+        let ontologies: Vec<&str> = ontologies.iter().map(String::as_str).collect();
+        let owns = store.rows(OWN_Q, &ontologies)?;
+        let own = |word: &str| {
+            let path = format!("http://example.org/orexis/journal#{word}");
+            owns.iter()
+                .find(|row| value(row, "path").as_deref() == Some(path.as_str()))
+                .and_then(|row| value(row, "own"))
+                .ok_or_else(|| orexis::Error::Document(format!("the journal's ontology states no default for {word}")))
+        };
+        let figure = |what: &str, word: &str| {
+            let said = rows
+                .iter()
                 .filter_map(|row| value(row, what)?.parse::<f64>().ok())
-                .find(|figure| *figure > 0.0)
+                .find(|figure| *figure > 0.0);
+            match said {
+                Some(figure) => Ok(figure),
+                None => own(word)?.parse::<f64>().map_err(|_| {
+                    orexis::Error::Document(format!("the journal's ontology's default for {word} is no number"))
+                }),
+            }
         };
         Ok(Recorder {
-            window_s: figure("window").unwrap_or(journal::WINDOW_S),
-            incident_level: journal::incident_level(said("from").as_deref()),
+            window_s: figure("window", "windowS")?,
+            incident_level: journal::incident_level(Some(&match said("from") {
+                Some(level) => level,
+                None => own("incidentFrom")?,
+            })),
             incidents: rows.iter().filter_map(|row| value(row, "incident")).collect(),
             endpoint: said("served").and_then(|url| {
                 let authority = url.split("://").last()?.split('/').next()?;
                 authority.rsplit(':').next()?.parse().ok()
             }),
             archive: said("archive").and_then(|url| url.strip_prefix("file://").map(std::path::PathBuf::from)),
-            archived_every_s: figure("archivedEvery").unwrap_or(ARCHIVED_EVERY_S),
+            archived_every_s: figure("archivedEvery", "archivedEveryS")?,
             tracer: said("tracer").map(|url| url.trim_end_matches('/').to_string()),
-            traced_every_s: figure("tracedEvery").unwrap_or(TRACED_EVERY_S),
+            traced_every_s: figure("tracedEvery", "tracedEveryS")?,
         })
     }
 }
