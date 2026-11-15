@@ -52,7 +52,7 @@ a bidder holds none, which is why its plan buys water instead of dosing.
 :supplier a orexis:Self ; orexis:plays [ a market:Host ] .
 :fern_grower a orexis:Self ;
     orexis:plays [ a market:Bidder ] ,
-                 [ a sensing:Observer ; sensing:sensor :fern_probe ] ,
+                 [ a sensing:Observer ; sensing:attends [ sensing:sensor :fern_probe ] ] ,
                  [ a prediction:Predictor ] .
 ```
 

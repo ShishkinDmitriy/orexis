@@ -19,7 +19,7 @@
 :grower a orexis:Self ;
     orexis:plays [ a planning:Planner ] ,
                  [ a execution:Executor ] ,
-                 [ a sensing:Observer ; sensing:archivedIn :series ; sensing:sensor :moisture_probe , :thermometer ] ,
+                 [ a sensing:Observer ; sensing:archivedIn :series ; sensing:attends [ sensing:sensor :moisture_probe , :thermometer ] ] ,
                  [ a prediction:Predictor ] .
 
 #  IT KEEPS A JOURNAL of what happened to it, so it is a recorder (knowledge/domain/journal/recorder.md): the

@@ -18,12 +18,12 @@
 
 :terrace_agent a orexis:Self ;
     orexis:plays [ a sensing:Observer ; sensing:archivedIn :series ;
-                   sensing:sensor :air_humidity_terrace ,
-                                  :air_pressure_terrace ,
-                                  :air_temp_terrace ,
-                                  :battery_sensor_terrace ,
-                                  :forecast_terrace ,
-                                  :moisture_sensor_terrace ] ,
+                   sensing:attends [ sensing:sensor :air_humidity_terrace ,
+                                    :air_pressure_terrace ,
+                                    :air_temp_terrace ,
+                                    :battery_sensor_terrace ,
+                                    :forecast_terrace ,
+                                    :moisture_sensor_terrace ] ] ,
                  [ a prediction:Predictor ] ,
                  [ a translation:Translator ; translation:translatedBy :model ] .
 

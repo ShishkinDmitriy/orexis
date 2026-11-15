@@ -84,7 +84,7 @@ PASS = ("belief", "planning", "execution", "sensing", "prediction", "speech", "t
 #  nothing here walks where a sensor is mounted; onboarding holds the declaration to the world
 #  (`orexis-sensing/ontology.ttl`'s observer shape). The one relation the transports read a sensor as
 #  the agent's by, the MQTT driver's and the HTTP driver's, and named here for the patterns below.
-MINE = "?me orexis:plays/sensing:sensor ?sensor ."
+MINE = "?me orexis:plays/sensing:attends/sensing:sensor ?sensor ."
 
 #  THE ROLES THAT NEED BYTES, which the transports are loaded for: a transport is no role and no
 #  author declares one, so it is the one derivation left — where a loaded role needs bytes and the

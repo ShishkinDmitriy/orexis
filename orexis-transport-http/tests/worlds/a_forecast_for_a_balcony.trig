@@ -54,7 +54,7 @@ GRAPH :world {
 # role reads the pot's probe and the balcony's forecast.
 GRAPH :self {
   :keeper a orexis:Self .
-  :keeper orexis:plays [ a sensing:Observer ; sensing:sensor :probe , :weather ] .
+  :keeper orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor :probe , :weather ] ] .
 }
 
 GRAPH :catalogue {

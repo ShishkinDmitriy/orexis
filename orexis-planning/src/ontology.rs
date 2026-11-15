@@ -61,7 +61,7 @@ pub fn figure_of(store: &orexis::store::Store, term: &str) -> Result<f64, orexis
     let selves = store.graphs_of(&[orexis::ontology::SELF_GRAPH], &Within::default())?;
     let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
     let text = bind(
-        "SELECT ?n WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role $figure ?n }",
+        "SELECT DISTINCT ?n WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role $figure ?n }",
         &[("figure", Value::iri(term))],
     )?;
     let said: Vec<String> = store

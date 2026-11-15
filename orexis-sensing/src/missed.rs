@@ -15,7 +15,7 @@ use orexis::clock::microseconds;
 use crate::cadence::{cadence_of, lapsed, limit_of};
 use crate::ontology::SILENT_AFTER_TERM;
 
-/// The sensors silent at `now` — the latest percept ended and the limit of cadences the observer role reading it
+/// The sensors silent at `now` — the latest percept ended and the limit of cadences the attention naming it
 /// allows gone since — each with the instant it fell silent, earliest first. A sensor stating no frequency is never
 /// silent. Writes nothing.
 pub fn missed(store: &orexis::store::Store, now: DateTime) -> Result<Vec<(String, DateTime)>, Error> {
@@ -42,7 +42,7 @@ mod tests {
     //! `missed`, held as `agent/sensing/tests/test_missed.py` holds it, over the world: nothing is silent while the
     //! reading stands, nor while it is late inside its grace (#870), a lapsed reading is not yet a silence, a sensor
     //! past the limit is silent since its latest percept ended and stays so, a reading ends the silence, a sensor
-    //! stating no frequency is never silent, the limit is the observer role's, and no ask writes anything.
+    //! stating no frequency is never silent, the limit is the attention's, and no ask writes anything.
 
     use std::path::Path;
 
@@ -172,13 +172,13 @@ mod tests {
     }
 
     #[test]
-    fn the_silence_limit_is_the_observer_roles_where_it_states_one() {
+    fn the_silence_limit_is_the_attentions_where_it_states_one() {
         let store = pot();
         store
             .update(
                 &bind(
                     "INSERT DATA { GRAPH <http://example.org/test#world> {
-  $me orexis:plays [ a sensing:Observer ; sensing:sensor $probe ; sensing:silentAfter 1 ] } }",
+  $me orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor $probe ; sensing:silentAfter 1 ] ] } }",
                     &[("me", Value::iri(ME)), ("probe", Value::iri(PROBE))],
                 )
                 .unwrap(),
@@ -195,6 +195,34 @@ mod tests {
         assert_eq!(
             missed(&store, plus(fell_due, CADENCE)).unwrap(),
             [(PROBE.to_string(), fell_due)]
+        );
+    }
+    #[test]
+    fn two_attentions_of_one_observer_hold_their_sensors_to_their_own_limits() {
+        let store = pot();
+        let selves = store
+            .graphs_of(&[orexis::ontology::SELF_GRAPH], &Within::default())
+            .unwrap();
+        store
+            .update(&format!(
+                "INSERT DATA {{ GRAPH <{}> {{ <{ME}> orexis:plays [ a sensing:Observer ; sensing:attends \
+                 [ sensing:sensor <{PROBE}> ; sensing:silentAfter 1 ] , \
+                 [ sensing:sensor <urn:other> , <urn:both> ; sensing:silentAfter 7 ] , \
+                 [ sensing:sensor <urn:both> ; sensing:silentAfter 9 ] , [ sensing:sensor <urn:plain> ] ] }} }}",
+                selves[0]
+            ))
+            .unwrap();
+        let limit = |sensor: &str| limit_of(&store, sensor, SILENT_AFTER_TERM).unwrap();
+        assert_eq!((limit(PROBE), limit("urn:other")), (1, 7));
+        assert_eq!(limit("urn:plain"), default_of(SILENT_AFTER_TERM).unwrap());
+        assert_eq!(
+            limit("urn:both"),
+            default_of(SILENT_AFTER_TERM).unwrap(),
+            "two attentions naming one sensor are never picked between"
+        );
+        assert_eq!(
+            crate::cadence::sensors(&store).unwrap(),
+            [PROBE, "urn:both", "urn:other", "urn:plain"]
         );
     }
 }

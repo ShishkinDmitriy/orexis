@@ -16,6 +16,9 @@ description: >-
   role instances, a link from the role to its player, and a role's period stated on the instance with
   machinery of its own. Amended 2026-10-12 - an observer's silent and stuck limits are its role's,
   the observer shape's default where none is stated, where they were stances with a constant in code.
+  Amended 2026-11-15 - a role is told from another of its class by a context, so a package role with
+  none is played once, and an observer's sensors and limits are its attentions'; refused - a second
+  observer role per limit, and scopes as objects of the planner.
 status: accepted
 timestamp: 2026-10-11T12:00:00Z
 ---
@@ -62,7 +65,7 @@ a patient. Three things a role has, a type cannot:
   `market:bidsIn` fold into the role's `market:onVenue`: a bidder finds a venue's host by the host
   role on it, and there is one fact where there were two to keep in agreement.
 - **A package role is an instance too, and carries its context where it has one.** An observer's
-  is the sensors it reads: `:fern_agent orexis:plays [ a sensing:Observer ; sensing:sensor :probe ]`.
+  is the sensors it reads: `:fern_agent orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor :probe ] ]`.
   Which sensors report to an agent is then declared, where today it is derived: a sensor hosted by
   what the agent acts for, by a sample of it, or by a place containing it (the observer's shape in
   `orexis-sensing/ontology.ttl`). Derived, a probe moved into a pot the agent acts for became its
@@ -149,7 +152,8 @@ which reads the figure too and could not import a constant, so the one figure li
 equal by a test. Decided: **a limit is a figure about what a role is over, so the observer role states
 it** beside the sensors it reads, and where a role states none **the observer shape's `sh:defaultValue`
 holds**, in sensing's ontology, which Python and the rule both read. A sensor judged by another figure
-is read by another observer role, as two venues are two host roles.
+is read by another observer role, as two venues are two host roles. (That last sentence is taken back
+below: the limits are an attention's.)
 
 Refused: the limits kept as stances, since a figure the agent holds about one of its sensors is not its
 word about itself, and one figure for all its sensors is the per-context value this record exists to
@@ -157,11 +161,44 @@ give a home; and the default kept in code, since a rule cannot read it, and a de
 the flow a test was holding back. The other stances keep their constants in code: nothing but Python
 reads them.
 
+# A role is told from another of its class by a context (amended 2026-11-15)
+
+The amendment above made a second observer role the way to hold a sensor to another limit. Read against
+the code, that had three costs. An agent then played two roles of one class told apart by a number and
+by nothing a role is: no venue, no school. What the role says to sensing once for the agent — how often
+it asks after its sensors, where and how often their readings are archived — was stated on each, and
+every reader merged them its own way: sensing fell to the default with a warning, what archives the
+readings took the first row its query returned, so a figure a role stated could lose to the default the
+other role's row carried. And onboarding saw none of it, each role alone being well formed.
+
+Decided: **two roles of one class are two contexts, and a package role that has none is played once.**
+Two venues are still two host roles. An observer is one, and what was per group of sensors moves beneath
+it: the role `sensing:attends` any number of [attentions](/domain/sensing/attention.md), each naming
+sensors and holding them to its two limits. A recorder and a meter are one each, having no context
+either. The package refuses a second as it starts, as the boot refuses a second self, which onboarding
+meets when it boots the agent; and onboarding refuses two roles stating two values of one figure, since
+a planner beneath two hosts is still one planner with one budget.
+
+Refused:
+
+- **A second observer role per limit**, for the costs above.
+- **Listener and poller as the object's word.** Pushed against polled is the transport's distinction,
+  and sensing knows no transport; how often a polled sensor is asked is the sensor's cadence.
+- **One attention per sensor.** The lane's couriers hold eight sensors to one limit, and eight nodes
+  repeating it are eight places to change it. A sensor two attentions name is refused instead.
+- **Scopes as objects of the planner**, each with figures of its own. A scope is written by planning as
+  it starts, from the actions and what the world binds, so an author has none to name; and the budget is
+  already one want's search's. The trigger: a world where one key's searches must be bounded apart, and
+  then the figure is keyed by what the scope is keyed by.
+
+Left open: the other package roles are not held to one, since a domain's roles sit beneath them and two
+hosts are two roles beneath one planner; what holds them is the one figure, not the one role.
+
 # How it is built
 
 The first step is built: `orexis:plays` and the role classes no longer beneath `orexis:Agent`, the boot
 reading the classes of the roles played, every world's self graph rewritten, and the observer's role
-carrying its sensors (`sensing:sensor`) and its limits. Which sensors are an agent's is declared: the
+carrying its sensors and its limits, since 2026-11-15 through its attentions. Which sensors are an agent's is declared: the
 transports ask sensing for them (`cadence.sensors`), the broker's ACL is derived from them, and
 onboarding holds them to where they are mounted, both ways.
 

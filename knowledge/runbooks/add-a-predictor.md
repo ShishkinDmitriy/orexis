@@ -24,7 +24,7 @@ to the agent, and onboarding refuses a sensor no observer role reads, so in prac
 
 ```turtle
 :grower a orexis:Self ;
-    orexis:plays [ a sensing:Observer ; sensing:sensor :moisture_probe ] ,
+    orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor :moisture_probe ] ] ,
                  [ a prediction:Predictor ] .
 ```
 

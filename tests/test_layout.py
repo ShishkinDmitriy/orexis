@@ -434,7 +434,7 @@ _ROLE_HEAD = """@prefix : <http://example.org/test#> .
 
 def _declared(tmp_path, roles, facts: str = "", reads=(), **documents) -> Path:
     """A world of one agent, `me`, importing the market, playing a role of each class in `roles` in its
-    self graph — each given `reads`, the sensors an observer role reads — or each role there written out
+    self graph — each given `reads`, the sensors an observer role attends — or each role there written out
     whole where it is a `(class, what follows it)` pair."""
     market = (REPO_ROOT / "domains" / "market" / "ontology.ttl").as_uri()
     (tmp_path / "world.ttl").write_text(_ROLE_HEAD + f"<> a orexis:WorldGraph ; owl:imports <{market}> .\n"
@@ -448,14 +448,20 @@ def _declared(tmp_path, roles, facts: str = "", reads=(), **documents) -> Path:
 
 
 _SENSOR = "http://example.org/orexis/sensing#sensor"
+_ATTENDS = "http://example.org/orexis/sensing#attends"
 OBSERVER = "http://example.org/orexis/sensing#Observer"
 
 
 def _plays(roles, reads=()) -> str:
     """`; orexis:plays [ a <class> … ] , …` for each of `roles`, or nothing for none."""
     played = [f"[ a <{r[0]}>{r[1]} ]" if isinstance(r, tuple) else
-              f"[ a <{r}>" + "".join(f" ; <{_SENSOR}> :{s}" for s in reads) + " ]" for r in roles]
+              f"[ a <{r}>" + (_attending(reads) if reads else "") + " ]" for r in roles]
     return f" ; orexis:plays {' , '.join(played)}" if played else ""
+
+
+def _attending(*attentions) -> str:
+    """` ; sensing:attends [ sensing:sensor … ] , …`: an attention for each list of sensors' names."""
+    return f" ; <{_ATTENDS}> " + " , ".join("[ " + " ; ".join(f"<{_SENSOR}> :{s}" for s in a) + " ]" for a in attentions)
 
 
 def _needs() -> list[tuple[str, str]]:
@@ -529,14 +535,56 @@ def test_onboarding_refuses_a_world_an_agent_of_which_does_not_boot_on_the_binar
 @pytest.mark.parametrize("role, message", NEEDS, ids=[role.rsplit("#", 1)[-1] for role, _ in NEEDS])
 def test_onboarding_refuses_a_declared_role_whose_needs_its_world_lacks(tmp_path, role, message):
     """Declared in the role alone, in a world holding nothing the role needs: the shape its need is
-    stated by comes back with a row, and onboarding says what it says. An observer is held to two
-    needs, reading a sensor and reading only sensors that report to it, so it is played twice: once
-    reading nothing, and once reading `:stray`, which nothing the agent acts for mounts."""
+    stated by comes back with a row, and onboarding says what it says. An observer's one such need is
+    that an attention names its sensors and the role none, so it is played naming `:stray` itself."""
     from onboarding import reading
 
-    played = [role, (role, f" ; <{_SENSOR}> :stray")] if role == OBSERVER else [role]
+    played = [(role, f" ; <{_SENSOR}> :stray")] if role == OBSERVER else [role]
     refused = reading.refused(_declared(tmp_path, played, ":stray a sosa:Sensor .\n"))
     assert f"me: {message}" in refused, refused
+
+
+def test_onboarding_holds_an_observer_to_one_role_and_its_attentions_to_their_sensors(tmp_path):
+    """An agent plays one observer, which attends: a second observer is refused by the binary's boot, as the
+    self is held to one, and an observer attending nothing, an attention naming a sensor that does not report
+    to the agent and a sensor two attentions name by sensing's requirement; one observer attending twice, each
+    attention its own sensor, is not refused."""
+    from onboarding import reading
+
+    mounted = "".join(f":{s} a sosa:Sensor ; sosa:isHostedBy :pot ; sosa:observes :moisture .\n" for s in ("probe", "hygro"))
+    mounted += ":stray a sosa:Sensor ; sosa:observes :moisture ; sosa:isHostedBy :elsewhere .\n" + "".join(_cadence(f":{s}") for s in ("probe", "hygro", "stray"))
+
+    def refused(*played):
+        return [line.removeprefix("me: ").removeprefix("me: ").split(":")[0]
+                for line in reading.refused(_declared(tmp_path, list(played), mounted))]
+
+    twice = (OBSERVER, _attending(["probe"], ["hygro"]))
+    assert refused(twice) == []
+    with pytest.raises(reading.Refused, match="the self plays 2 observers, and an agent plays one"):
+        refused((OBSERVER, _attending(["probe"])), (OBSERVER, _attending(["hygro"])))
+    assert refused((OBSERVER, "")) == ["an observer that attends nothing", "hygro reports to it, and no observer role it plays reads it",
+                                       "probe reports to it, and no observer role it plays reads it"]
+    assert refused((OBSERVER, _attending(["probe", "hygro"], ["stray"]))) == ["an observer reads a sensor that does not report to it"]
+    assert refused((OBSERVER, _attending(["probe", "hygro"], ["hygro"]))) == ["names hygro, which another attention names too"]
+
+
+def test_onboarding_refuses_two_roles_stating_two_values_of_one_figure_and_two_recorders(tmp_path):
+    """A package runs by one figure whichever role states it: two roles beneath the planner stating two budgets
+    are refused, the same budget said twice is one answer, and the binary's boot refuses a second recorder."""
+    from onboarding import reading
+
+    planner, budget = "http://example.org/orexis/planning#Planner", "http://example.org/orexis/planning#budget"
+    recorder = "http://example.org/orexis/journal#Recorder"
+
+    def refused(*played):
+        return [line.removeprefix("me: ").removeprefix("me: ").split(":")[0]
+                for line in reading.refused(_declared(tmp_path, list(played)))]
+
+    said = "two roles it plays state budget as 128 and 64"
+    assert said not in refused((planner, f" ; <{budget}> 64"), (planner, f" ; <{budget}> 64"))
+    assert said in refused((planner, f" ; <{budget}> 64"), (planner, f" ; <{budget}> 128"))
+    with pytest.raises(reading.Refused, match="the self plays 2 recorders, and an agent plays one"):
+        refused(recorder, recorder)
 
 
 def test_every_role_but_the_deliberators_and_the_recorders_states_a_need():
@@ -560,7 +608,7 @@ def test_onboarding_refuses_a_sensor_reporting_to_an_agent_that_no_observer_role
     deliberator = "http://example.org/orexis/belief#Deliberator"
     mounted = ":probe a sosa:Sensor ; sosa:isHostedBy :pot .\n:hygro a sosa:Sensor ; sosa:isHostedBy :pot .\n"
     unread = ("reports to it, and no observer role it plays reads it: no package it loads would read the sensor — "
-              "`orexis:plays [ a sensing:Observer ; sensing:sensor <sensor> ]` says one does")
+              "`orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor <sensor> ] ]` says one does")
     assert reading.refused(_declared(tmp_path, [deliberator], mounted)) == [f"me: hygro {unread}", f"me: probe {unread}"]
     assert reading.refused(_declared(tmp_path, [OBSERVER], mounted, reads=["probe"])) == [f"me: hygro {unread}"]
     assert reading.refused(_declared(tmp_path, [OBSERVER], mounted, reads=["probe", "hygro"])) == []

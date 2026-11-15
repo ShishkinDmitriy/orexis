@@ -18,7 +18,7 @@ from simulation.simulator import JITTER, PLACES, Simulator
 
 _SENSING = Path(__file__).resolve().parents[2] / "orexis-sensing" / "ontology.ttl"
 _DEFAULT_Q = """
-SELECT ?default WHERE { ?shape sh:targetClass sensing:Observer ; sh:property ?p . ?p sh:path sensing:stuckAfter ; sh:defaultValue ?default }"""
+SELECT ?default WHERE { ?shape sh:targetClass sensing:Attention ; sh:property ?p . ?p sh:path sensing:stuckAfter ; sh:defaultValue ?default }"""
 STUCK_AFTER = int(float(rows(document(_SENSING), _DEFAULT_Q, [_SENSING.as_uri()])[0]["default"]))          # where the observer role states none, the observer shape's default
 
 WORLD = Path(__file__).resolve().parents[2] / "world" / "greenhouse"

@@ -816,9 +816,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   beneath them, and a transport joins where a role the self plays needs bytes and the society wires a bus; a
   premise read off the world was refused, since it cannot write an assignment no fact implies (#927,
   a-package-is-loaded-only-for-a-role-the-agent-is-declared-in, a-role-is-an-instance-an-agent-plays).
-- **An observer role declares the sensors it reads, and how long it lets them be silent or stuck** —
-  `sensing:sensor`, `sensing:silentAfter`, `sensing:stuckAfter`; a sensor moved into a pot is not the
-  agent's until a role says so, onboarding refuses a declared sensor mounted on nothing the agent acts
+- **An agent plays one observer, which attends the sensors it reads, and an attention says how long it lets its
+  sensors be silent or stuck** — `sensing:attends`, then `sensing:sensor`, `sensing:silentAfter`,
+  `sensing:stuckAfter`; a second observer role per limit was what this replaced, two roles told apart by a number,
+  whose other figures each reader merged its own way (attention); a sensor moved into a pot is not the
+  agent's until an attention names it, onboarding refuses a declared sensor mounted on nothing the agent acts
   for and a mounted one no role reads, the transports ask sensing which are the agent's
   (`cadence.sensors`), and the broker's ACL is derived from the declarations.
 - **A world is held to its requirements at onboarding alone, read off the world and never an agent's
@@ -835,6 +837,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   installation must state, judged once as its document is read; what stays in a renderer is what no
   document answers, a credential not minted or a port not allocated, two documents' word, or a word no
   vocabulary declares, which board is a sentinel being the hardware's (#838, requirement).
+- **Two roles of one class are two contexts, and a role with none is played once** — two venues are two hosts;
+  an observer, a recorder and a meter are one each, refused by their package as it starts; a package role
+  beneath several domain roles is held to one value of each figure, by onboarding; listeners and pollers beneath
+  the observer and scopes beneath the planner were refused, the first the transport's words and the second
+  derived, with nothing for an author to name (a-role-is-an-instance-an-agent-plays).
 - **A role's need is a shape shipped by whoever owns the words it is stated in, and onboarding holds a
   declaration to its world both ways** — the executor's need to be a planner is planning's shape, the
   speaker's topic the MQTT transport's, since a package beneath may not speak them (#927).

@@ -697,7 +697,7 @@ ORDER BY ?t";
         assert_eq!(holding(&store, now()), beat);
     }
 
-    /// `store` with the keeper's self graph saying it plays an observer role reading `sensor`, the role stating each
+    /// `store` with the keeper's self graph saying it plays an observer attending `sensor`, the attention stating each
     /// of `limits`, as `agent/conftest.py`'s `observing` adds it.
     pub(crate) fn observing(store: &Store, sensor: &str, limits: &[(&str, i64)]) {
         let selves = store
@@ -706,7 +706,7 @@ ORDER BY ?t";
         let figures: String = limits.iter().map(|(t, n)| format!(" ; <{t}> {n}")).collect();
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <{}> {{ <{ME}> orexis:plays [ a sensing:Observer ; sensing:sensor <{sensor}>{figures} ] }} }}",
+                "INSERT DATA {{ GRAPH <{}> {{ <{ME}> orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor <{sensor}>{figures} ] ] }} }}",
                 selves[0]
             ))
             .unwrap();

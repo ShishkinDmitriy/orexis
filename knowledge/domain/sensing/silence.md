@@ -3,7 +3,7 @@ type: Domain Concept
 title: Silence
 term: http://example.org/orexis/sensing#SilenceGraph
 description: >-
-  A time a sensor sent nothing past the limit its observer role allows, kept by sensing from the first
+  A time a sensor sent nothing past the limit the attention naming it allows, kept by sensing from the first
   minute it is found until the sensor reads again, and then for good - what sensing knows of a sensor's
   outages, since the percepts a silence is computed from do not stay. No reader of the mind is handed one.
 ---
@@ -18,9 +18,9 @@ description: >-
 ```
 
 A sensor is **silent** when its latest reading has stopped being the present - its period over, the next
-due and a grace past it - and no reading has come for the `sensing:silentAfter` cadences its
-[observer](/domain/sensing/observer.md) role allows. `missed` answers that each minute from what is stored:
-the period of the latest [observation](/domain/sensing/observation.md), the sensor's frequency, the role's
+due and a grace past it - and no reading has come for the `sensing:silentAfter` cadences the
+[attention](/domain/sensing/attention.md) naming it allows. `missed` answers that each minute from what is stored:
+the period of the latest [observation](/domain/sensing/observation.md), the sensor's frequency, the attention's
 limit.
 
 The first ask that finds a sensor silent keeps it: one `sensing:SilenceGraph`, owned by the agent, saying

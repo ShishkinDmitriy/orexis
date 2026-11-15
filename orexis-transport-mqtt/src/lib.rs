@@ -112,7 +112,7 @@ inventory::submit! { Package { name: "transport/mqtt", documents: orexis::docume
 const WIRED: &[(&str, &str)] = &[
     (
         "http://example.org/orexis/sensing#Observer",
-        "?me orexis:plays/sensing:sensor ?sensor . ?sensor mqtt4ssn:observesTopic ?topic",
+        "?me orexis:plays/sensing:attends/sensing:sensor ?sensor . ?sensor mqtt4ssn:observesTopic ?topic",
     ),
     (
         "http://example.org/orexis/speech#Speaker",

@@ -46,7 +46,7 @@ its first line, importing its domains with `owl:imports` and speaking no word a 
 declare: `world.ttl`; `society.ttl` only where there is a bus; a self graph for every agent,
 `beliefs/<id>.self.ttl`, saying who it is and each ROLE it plays beside its self, an instance
 (`orexis:plays [ a market:Host ]`) — of a domain's class where the domain has one, otherwise a
-package's (`planning:Planner`, `sensing:Observer` naming each `sensing:sensor` it reads, …), since an
+package's (`planning:Planner`, `sensing:Observer` attending each sensor it reads (`sensing:attends [ sensing:sensor … ]`), …), since an
 agent playing none loads nothing and is refused — and on
 each role any figure its package runs by, stating none anywhere else, where nothing reads it. Above all a planner
 whose pass needs more than planning's 32 candidates states the search's `planning:budget` it needs,

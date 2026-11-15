@@ -123,9 +123,9 @@
 #  many of a sensor's in this kind and files the rest past — concluded in the revision of the percept arriving, so it
 #  holds while that percept does and the next reading, differing, finds the kept ones no longer
 #  agree. The percepts before the one arriving are no testimony a revision is handed, so this rule
-#  reads them where they lie, by the kind sensing keeps them in, as it reads the limit off the observer
-#  role reading the sensor, in the self graph where the role is played, and the observer shape's
-#  default off this layer's ontology where the role states none — the one rule here that reaches past
+#  reads them where they lie, by the kind sensing keeps them in, as it reads the limit off the
+#  attention naming the sensor, in the self graph where the observer is played, and the attention shape's
+#  default off this layer's ontology where it states none — the one rule here that reaches past
 #  its arrival, and only into what this layer keeps and states; `received` reads the same two, so the
 #  figure lives in one place (`cadence.limit_of`). Identical is the
 #  RAW number, since a clamp or a rescale can make two counts one reading, and a sensor stating no
@@ -152,15 +152,15 @@
                     GRAPH ?percept { ?kept sosa:madeBySensor ?sensor ; sensing:rawResult ?number }
                     OPTIONAL {
                         GRAPH ?cat { ?self a orexis:SelfGraph }
-                        GRAPH ?self { ?me a orexis:Self ; orexis:plays ?role .
-                                      ?role sensing:sensor ?sensor ; sensing:stuckAfter ?stated }
+                        GRAPH ?self { ?me a orexis:Self ; orexis:plays/sensing:attends ?attention .
+                                      ?attention sensing:sensor ?sensor ; sensing:stuckAfter ?stated }
                     }
                 } GROUP BY ?sensor
             }
             {
                 SELECT (SAMPLE(?given) AS ?default) WHERE {
                     GRAPH ?catalogue { ?catalogue a orexis:CatalogueGraph . ?ontology a orexis:OntologyGraph }
-                    GRAPH ?ontology { ?shape sh:targetClass sensing:Observer ; sh:property ?property .
+                    GRAPH ?ontology { ?shape sh:targetClass sensing:Attention ; sh:property ?property .
                                       ?property sh:path sensing:stuckAfter ; sh:defaultValue ?given }
                 }
             }

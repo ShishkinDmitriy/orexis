@@ -15,9 +15,9 @@
 
 :fern_agent a orexis:Self ;
     orexis:plays [ a sensing:Observer ; sensing:archivedIn :series ;
-                   sensing:sensor :air_humidity_fern ,
-                                  :air_temp_fern ,
-                                  :moisture_sensor_fern ] ,
+                   sensing:attends [ sensing:sensor :air_humidity_fern ,
+                                    :air_temp_fern ,
+                                    :moisture_sensor_fern ] ] ,
                  [ a prediction:Predictor ] .
 
 #  IT KEEPS A JOURNAL of what happened to it, so it is a recorder (knowledge/domain/journal/recorder.md): the

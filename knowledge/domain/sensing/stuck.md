@@ -64,6 +64,6 @@ The premise is the instrument's to keep, and a simulated one keeps it too. The s
 (`simulation/simulator.py`) publishes each number with the instrument's noise — a seeded draw
 within the model's `sim:jitter` either way, never the number that sensor published last — because
 the model's reading moves only where the physics moves it, and a thermometer in a greenhouse
-nobody heats was said stuck an hour into its world (#879). The limit is the observer role's word
-about its sensor; a simulated world that read as stuck was a quiet instrument, not a low limit, and
+nobody heats was said stuck an hour into its world (#879). The limit is its [attention](/domain/sensing/attention.md)'s word
+about the sensor; a simulated world that read as stuck was a quiet instrument, not a low limit, and
 `sensing:stuckAfter` is not where that is fixed.
