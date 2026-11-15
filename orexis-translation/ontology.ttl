@@ -1,3 +1,4 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix translation: <http://example.org/orexis/translation#> .
 @prefix speech: <http://example.org/orexis/speech#> .
@@ -104,3 +105,33 @@ translation:PhrasingTrigger a owl:Class ; rdfs:subClassOf translation:Trigger ; 
     rdfs:comment "What starts a phrasing: speech's `speech:Said`, beneath it here, naming each statement of the document (`speech:statement`) and each it is to (`speech:to`). The policy phrases it for each that is a person in a chat of the agent's, and passes over an agent." .
 
 speech:Said rdfs:subClassOf translation:PhrasingTrigger .
+
+#  HOW A TRANSLATOR TALKS WITH ITS MODEL is the role's to say, each figure on the role in the agent's self graph,
+#  and the shape's default below where the role says none.
+translation:turns a owl:DatatypeProperty ; rdfs:label "turns" ;
+    rdfs:domain translation:Translator ;
+    rdfs:comment "How many turns one conversation with the model may take: the last offers no tool, so the model answers in words. Eight where the role says none." .
+
+translation:rows a owl:DatatypeProperty ; rdfs:label "rows" ;
+    rdfs:domain translation:Translator ;
+    rdfs:comment "How many rows one query hands the model: past these it is told how many there were. Fifty where the role says none." .
+
+translation:answeredWithinS a owl:DatatypeProperty ; rdfs:label "answered within, in seconds" ;
+    rdfs:domain translation:Translator ;
+    rdfs:comment "How long the model's call waits for the agent to say whether a statement it made is within what the chat allows, in real seconds. Sixty where the role says none." .
+
+translation:calledWithinS a owl:DatatypeProperty ; rdfs:label "called within, in seconds" ;
+    rdfs:domain translation:Translator ;
+    rdfs:comment "How long one call of the model may take before it is given up, in real seconds. Sixty where the role says none." .
+
+translation:retries a owl:DatatypeProperty ; rdfs:label "retries" ;
+    rdfs:domain translation:Translator ;
+    rdfs:comment "How often a model that fails to answer is asked again before the call is given up. Three where the role says none." .
+
+[] a sh:NodeShape ;
+    sh:targetClass translation:Translator ;
+    sh:property [ sh:path translation:turns ; sh:defaultValue 8 ] ,
+                [ sh:path translation:rows ; sh:defaultValue 50 ] ,
+                [ sh:path translation:answeredWithinS ; sh:defaultValue 60 ] ,
+                [ sh:path translation:calledWithinS ; sh:defaultValue 60 ] ,
+                [ sh:path translation:retries ; sh:defaultValue 3 ] .

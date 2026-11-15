@@ -58,7 +58,8 @@ ahead beginning, a step landing - and the integration runs in that ground: every
 at the same instants over the same graphs and the same numbers, and every key moves by its own sum.
 Soil reading air and air reading soil are two coupled flows, not a cycle, and nothing orders the keys.
 Between two grounds the rates are asked again at every **happening**, the start or end of a belief
-holding inside the stretch, since only there can what a flow reads change, and at most an hour apart.
+holding inside the stretch, since only there can what a flow reads change, and no further apart than the
+predictor's role says (`prediction:rateHeldS`).
 Within a segment the value is a straight line, so a crossing of a bound of every
 [region](/domain/sensing/region.md) that applies to what the sensor observes is placed exactly, by
 division. Where a rate is a range the value is a [corridor](/domain/prediction/corridor.md).

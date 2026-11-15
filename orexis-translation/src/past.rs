@@ -16,7 +16,7 @@ use serde_json::{Value as Json, json};
 use orexis::clock::{instant, isoformat};
 use orexis::series::Reader;
 
-use crate::readable::{Prefixes, ROWS, refusal, run};
+use crate::readable::{Prefixes, refusal, run};
 
 pub const JOURNAL: &str = "journal";
 pub const SERIES: &str = "series";
@@ -37,6 +37,8 @@ pub struct Past {
     pub history: Option<Reader>,
     pub metrics: Option<Reader>,
     pub prefixes: Prefixes,
+    /// How many rows or points a read hands the model (`translation:rows`).
+    pub rows: usize,
 }
 
 fn duration(text: &str) -> bool {
@@ -101,6 +103,7 @@ fn checked(fname: &str, every: Option<&str>) -> Result<(), String> {
 }
 
 /// The one read of the series the fields describe, every field checked before it is written into the text.
+#[allow(clippy::too_many_arguments)]
 pub fn flux(
     bucket: &str,
     measurement: Option<&str>,
@@ -109,6 +112,7 @@ pub fn flux(
     stop: Option<&str>,
     every: Option<&str>,
     fname: &str,
+    most: usize,
 ) -> Result<String, String> {
     checked(fname, every)?;
     let stretch = format!(
@@ -122,7 +126,7 @@ pub fn flux(
     let Some(measurement) = measurement else {
         return Ok(head
             + "  |> filter(fn: (r) => r._field == \"value\")\n  |> group(columns: [\"_measurement\", \"sensor\"])\n  |> last()\n  |> group()\n"
-            + &format!("  |> limit(n: {ROWS})"));
+            + &format!("  |> limit(n: {most})"));
     };
     let mut text = head
         + &format!(
@@ -139,7 +143,7 @@ pub fn flux(
         );
     }
     Ok(text
-        + &format!("  |> group()\n  |> sort(columns: [\"_time\"], desc: true)\n  |> limit(n: {ROWS})\n")
+        + &format!("  |> group()\n  |> sort(columns: [\"_time\"], desc: true)\n  |> limit(n: {most})\n")
         + "  |> sort(columns: [\"_time\"])")
 }
 
@@ -154,6 +158,7 @@ pub fn metric_flux(
     stop: Option<&str>,
     every: Option<&str>,
     fname: &str,
+    most: usize,
 ) -> Result<String, String> {
     checked(fname, every)?;
     for (what, n) in [("field", field), ("by", by)] {
@@ -176,7 +181,7 @@ pub fn metric_flux(
             + "  |> keep(columns: [\"_measurement\", \"_field\"])\n  |> group(columns: [\"_measurement\"])\n"
             + "  |> distinct(column: \"_field\")\n"
             + "  |> reduce(identity: {fields: \"\"}, fn: (r, accumulator) => ({fields: accumulator.fields + \" \" + r._value}))\n"
-            + &format!("  |> group()\n  |> limit(n: {ROWS})"));
+            + &format!("  |> group()\n  |> limit(n: {most})"));
     };
     let Some(field) = field else {
         return Err(
@@ -194,10 +199,10 @@ pub fn metric_flux(
             dumps(field)
         );
     Ok(match every {
-        None => text + &format!("  |> {fname}()\n  |> limit(n: {ROWS})"),
+        None => text + &format!("  |> {fname}()\n  |> limit(n: {most})"),
         Some(every) => {
             text + &format!(
-                "  |> aggregateWindow(every: {}, fn: {fname}, createEmpty: false)\n  |> sort(columns: [\"_time\"], desc: true)\n  |> limit(n: {ROWS})\n  |> sort(columns: [\"_time\"])",
+                "  |> aggregateWindow(every: {}, fn: {fname}, createEmpty: false)\n  |> sort(columns: [\"_time\"], desc: true)\n  |> limit(n: {most})\n  |> sort(columns: [\"_time\"])",
                 every.trim_start_matches('-')
             )
         }
@@ -234,7 +239,7 @@ SPARQL SELECT or ASK over its entries. Each is an event at its prov:atTime — `
 its package's and its fields in that package's words — or a line of its log, orexis:LogRecord with orexis:logger, \
 orexis:level and orexis:message, kept for the last minutes and for good before an incident, which says `a \
 orexis:Incident`. Ask the newest first, ORDER BY DESC(?t) with a LIMIT. The query tool's prefixes are declared. Write no \
-SERVICE or FROM. At most {ROWS} rows come back."),
+SERVICE or FROM. At most {} rows come back.", self.rows),
                 "input_schema": {"type": "object", "properties": {"sparql": {"type": "string"}}, "required": ["sparql"]}}));
         }
         if self.history.is_some() {
@@ -242,8 +247,8 @@ SERVICE or FROM. At most {ROWS} rows come back."),
 the points of one measurement, the observed property's local name (SoilMoisture, AirTemperature), of one sensor where \
 named, its local name. Leave the measurement out to list each measurement and sensor with its latest point over the last \
 {}. A stretch starts and stops at a duration back from now (-24h, -7d) or an ISO instant, {SINCE} where none is given; \
-`every` and `fn` aggregate it per window (1h, mean). The newest {ROWS} points come back, oldest first.",
-                LISTED_SINCE.trim_start_matches('-')),
+`every` and `fn` aggregate it per window (1h, mean). The newest {} points come back, oldest first.",
+                LISTED_SINCE.trim_start_matches('-'), self.rows),
                 "input_schema": {"type": "object", "properties": {
                     "measurement": {"type": "string"}, "sensor": {"type": "string"},
                     "start": {"type": "string"}, "stop": {"type": "string"},
@@ -287,7 +292,7 @@ the sum of a `_sum` field or of `count`, never of a mean or a max.", LISTED_SINC
         if let Some(why) = refusal(text, &self.prefixes) {
             return format!("refused: {why}");
         }
-        match run(journal, text, &self.prefixes, None, None) {
+        match run(journal, text, &self.prefixes, None, None, self.rows) {
             Ok(answer) => answer,
             Err(e) => format!("the engine would not run it: {e}"),
         }
@@ -308,6 +313,7 @@ the sum of a `_sum` field or of `count`, never of a mean or a max.", LISTED_SINC
             f.get("stop").map(String::as_str),
             f.get("every").map(String::as_str),
             f.get("fn").map_or("mean", String::as_str),
+            self.rows,
         ) {
             Ok(t) => t,
             Err(why) => return format!("refused: {why}"),
@@ -358,6 +364,7 @@ the sum of a `_sum` field or of `count`, never of a mean or a max.", LISTED_SINC
             f.get("stop").map(String::as_str),
             f.get("every").map(String::as_str),
             f.get("fn").map_or("sum", String::as_str),
+            self.rows,
         ) {
             Ok(t) => t,
             Err(why) => return format!("refused: {why}"),
@@ -449,6 +456,7 @@ mod tests {
             history: None,
             metrics: None,
             prefixes: prefixes(),
+            rows: 50,
         };
         let names: Vec<String> = past
             .tools()
@@ -494,6 +502,7 @@ mod tests {
             history: Some(history),
             metrics: None,
             prefixes: prefixes(),
+            rows: 50,
         };
         let found = past
             .call(
@@ -512,7 +521,7 @@ mod tests {
             flux.contains("r._measurement == \"SoilMoisture\"")
                 && flux.contains("r.sensor == \"moisture_sensor_terrace\"")
         );
-        assert!(flux.contains("aggregateWindow(every: 1h, fn: max") && flux.contains(&format!("limit(n: {ROWS})")));
+        assert!(flux.contains("aggregateWindow(every: 1h, fn: max") && flux.contains("limit(n: 50)"));
         past.call(SERIES, &json!({"start": "2026-10-16T00:00:00Z"}));
         let last = asked.lock().unwrap().last().unwrap().clone();
         assert!(last.contains("group(columns: [\"_measurement\", \"sensor\"])"));
@@ -527,6 +536,7 @@ mod tests {
             history: Some(history),
             metrics: None,
             prefixes: prefixes(),
+            rows: 50,
         };
         for (fields, why) in [
             (
@@ -559,6 +569,7 @@ mod tests {
             history: Some(Reader::new("HISTORY", "b", None)),
             metrics: None,
             prefixes: prefixes(),
+            rows: 50,
         };
         assert_eq!(
             unread.call(SERIES, &json!({})).unwrap(),
@@ -592,6 +603,7 @@ mod tests {
             history: None,
             metrics: Some(metrics),
             prefixes: prefixes(),
+            rows: 50,
         };
         let found = past
             .call(

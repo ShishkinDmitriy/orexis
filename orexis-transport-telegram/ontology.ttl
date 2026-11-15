@@ -51,4 +51,8 @@ telegram:polledEveryS a owl:DatatypeProperty ; rdfs:label "polled every, in seco
 #  WHAT HOLDS WHERE NO ROLE SAYS HOW OFTEN, read by the transport as it connects: the one place the figure lives.
 [] a sh:NodeShape ;
     sh:targetClass orexis:Role ;
-    sh:property [ sh:path telegram:polledEveryS ; sh:defaultValue 3 ] .
+    sh:property [ sh:path telegram:polledEveryS ; sh:defaultValue 3 ] ,
+                [ sh:path telegram:calledWithinS ; sh:defaultValue 30 ] .
+
+telegram:calledWithinS a owl:DatatypeProperty ; rdfs:label "called within, in seconds" ;
+    rdfs:comment "How long one call of the Bot API may take before it is given up, in real seconds, said of a role the agent plays that speaks through the bot. Thirty where no role says." .

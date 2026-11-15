@@ -15,6 +15,8 @@ pub const RATE: &str = "http://example.org/orexis/prediction#rate";
 
 /// HOW FAR PAST AN OBSERVATION THE AGENT LOOKS: a figure the predictor's role states in the agent's self graph.
 pub const HORIZON_TERM: &str = "http://example.org/orexis/prediction#horizonS";
+/// THE LONGEST A RATE IS HELD before the flows are asked again: a figure the predictor's role states.
+pub const RATE_HELD_TERM: &str = "http://example.org/orexis/prediction#rateHeldS";
 
 /// SOSA'S, on an observation — the key a flow's answer is matched by, and the number.
 pub const FEATURE: &str = "http://www.w3.org/ns/sosa/hasFeatureOfInterest";

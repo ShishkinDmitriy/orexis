@@ -71,7 +71,8 @@ A peer's document travels the same way: the member hears speech's `speech:Said` 
 `mqtt:TellingTrigger`, reads the document back from the store, and `tell` publishes it on the topic each recipient listens to,
 and one arriving is handed to [speech](/domain/speech/speech.md)'s `heard`; a document to a person is
 not the bus's, and is passed over in silence. A chat's topic carries prose both ways, each message
-`{"from": …, "text": …}`, and the member skips its own when the broker hands it back.
+`{"from": …, "text": …}`, and the member skips its own when the broker hands it back. A board told to sense that sends no reading is told
+again after `mqtt:askedAgainAfterS`, a figure a role the agent plays may state, sixty seconds where none does.
 
 # The member that ships: HTTP
 
@@ -83,7 +84,8 @@ hosted by, variable by local name. Started, it polls each sensor at once and the
 sensor, and the response is submitted like a message.
 The one sensor it serves today is a [forecast](/domain/kernel/forecast.md) service, whose
 address is public and is read off the world, not told
-([a-forecast-is-a-series-a-sensor-reads](/decisions/a-forecast-is-a-series-a-sensor-reads.md)).
+([a-forecast-is-a-series-a-sensor-reads](/decisions/a-forecast-is-a-series-a-sensor-reads.md)). A fetch is given
+up after `http:fetchedWithinS`, the member's one word of its own, thirty seconds where no role states it.
 
 # The member that ships: Telegram
 
@@ -96,7 +98,9 @@ once. In a group it says whom the words were for, as Telegram tells it: words ta
 replying to one of its messages are addressed to the agent, words tagging or replying to someone else
 and not it are not, and which account is the bot's own it asks the API (`getMe`) rather than any
 document. `say_to` posts `sendMessage` with the chat's id, as a reply to the message the agent answers.
-Its words are its own ontology's (`orexis-transport-telegram/ontology.ttl`).
+Its words are its own ontology's (`orexis-transport-telegram/ontology.ttl`), among them how often the bot is
+polled and how long one call of the API may take, `telegram:polledEveryS` and `telegram:calledWithinS`, three and
+thirty seconds where no role states them.
 
 # The member that ships: email
 

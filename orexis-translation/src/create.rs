@@ -78,10 +78,6 @@ to you.";
 pub const SILENT: &str = "NOTHING";
 pub const UNADDRESSED: &str = " Several agents are in this chat and the message names none. Where what this agent holds says \
 nothing that answers it, reply with exactly NOTHING and nothing else.";
-/// HOW MANY TURNS A CONVERSATION MAY TAKE: the last offers no tool, so the model answers in words.
-pub const TURNS: usize = 8;
-/// HOW LONG THE MODEL'S THREAD WAITS FOR A STATEMENT HELD TO ITS BOUNDS ON THE MIND'S, in real seconds.
-pub const ANSWER_S: f64 = 60.0;
 pub const SAY_SYSTEM: &str = "You write the message a software agent sends to a person. You are given who the person is and the \
 statement the agent is making, in Turtle, with the labels and comments of the words it is in. Write it as a \
 short, plain, courteous message in the person's language, never in IRIs or Turtle, saying exactly what the \
@@ -148,6 +144,8 @@ struct Asked {
     back: Sender<Back>,
     at: DateTime,
     stating: Option<Stating>,
+    /// How long the model's thread waits for the mind's answer, in real seconds (`translation:answeredWithinS`).
+    within_s: f64,
 }
 
 impl Mind for Asked {
@@ -167,7 +165,7 @@ impl Mind for Asked {
             })
             .map_err(|e| e.to_string())?;
         waited
-            .recv_timeout(Duration::from_secs_f64(ANSWER_S))
+            .recv_timeout(Duration::from_secs_f64(self.within_s))
             .map_err(|e| e.to_string())?
     }
 }
@@ -202,6 +200,8 @@ struct Conversation {
     reply: Option<String>,
     me: String,
     at: DateTime,
+    /// How many turns it may take (`translation:turns`): the last offers no tool, so the model answers in words.
+    turns: usize,
 }
 
 fn sum(spent: &mut BTreeMap<String, i64>, tokens: &BTreeMap<String, i64>) {
@@ -251,10 +251,10 @@ fn converse(c: Conversation, model: &dyn Model, mind: &dyn Mind, back: &Sender<B
     let (began, mut requests) = (Instant::now(), 0);
     let mut turn = None;
     let mut taken = 0;
-    for n in 0..TURNS {
+    for n in 0..c.turns {
         requests += 1;
         taken = n + 1;
-        let answered = model.converse(&c.system, &messages, &tools, n == TURNS - 1);
+        let answered = model.converse(&c.system, &messages, &tools, n + 1 == c.turns);
         let t = match answered {
             Ok(t) => t,
             Err(e) => {
@@ -423,6 +423,12 @@ pub struct Translator {
     pub history: Option<Reader>,
     pub metrics: Option<Reader>,
     pub watch: Watch,
+    /// How many turns a conversation may take, how many rows a query hands the model, and how long the model's
+    /// thread waits for the mind's answer: the translator's role's figures (`translation:turns`, `rows`,
+    /// `answeredWithinS`).
+    pub turns: usize,
+    pub rows: usize,
+    pub answered_within_s: f64,
     tx: Sender<Back>,
     rx: Receiver<Back>,
 }
@@ -441,6 +447,9 @@ impl Translator {
             history: None,
             metrics: None,
             watch: Watch::default(),
+            turns: crate::figures::figure(beliefs, crate::figures::TURNS) as usize,
+            rows: crate::figures::figure(beliefs, crate::figures::ROWS) as usize,
+            answered_within_s: crate::figures::figure(beliefs, crate::figures::ANSWERED_WITHIN_S),
             tx,
             rx,
         }
@@ -488,7 +497,7 @@ impl Translator {
         let readable = if chat.reads.is_empty() {
             None
         } else {
-            Some(Readable::new(store, &chat.reads, Some(&self.me))?)
+            Some(Readable::new(store, &chat.reads, Some(&self.me), self.rows)?)
         };
         let prefixes = readable
             .as_ref()
@@ -497,6 +506,7 @@ impl Translator {
             journal: self.journal.clone().or_else(|| self.journaled.now()),
             history: self.history.clone(),
             metrics: self.metrics.clone(),
+            rows: self.rows,
             prefixes: readable
                 .as_ref()
                 .map_or_else(|| namespaces(store), |r| r.prefixes.clone()),
@@ -546,7 +556,9 @@ impl Translator {
             reply: prose.message.clone(),
             me: local_of(&self.me),
             at: now,
+            turns: self.turns,
         };
+        let within_s = self.answered_within_s;
         if self.inline {
             let mind = Direct {
                 store,
@@ -561,6 +573,7 @@ impl Translator {
                     back: back.clone(),
                     at: now,
                     stating,
+                    within_s,
                 };
                 converse(conversation, model.as_ref(), &mind, &back);
             });
@@ -831,8 +844,13 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     let model = match handed.outside.take::<Arc<dyn crate::model::Model>>() {
         Some(model) => Some(model),
         None if handed.outside.has::<orexis::task::Deployed>() => match translated_by(&handed.store)? {
-            Some(url) => crate::model::Anthropic::from_environ(&url, &|name| std::env::var(name).ok())
-                .map(|m| Arc::new(m) as Arc<dyn crate::model::Model>),
+            Some(url) => {
+                //  CALLED AS THE TRANSLATOR'S ROLE SAYS: how long a call may take, and how often it is asked again.
+                let within_s = crate::figures::figure_of(&handed.store, crate::figures::CALLED_WITHIN_S)?;
+                let retries = crate::figures::figure_of(&handed.store, crate::figures::RETRIES)? as u32;
+                crate::model::Anthropic::from_environ(&url, &|name| std::env::var(name).ok())
+                    .map(|m| Arc::new(m.paced(within_s, retries)) as Arc<dyn crate::model::Model>)
+            }
             None => {
                 log::warn!(
                     "no model: the translator's role names none the world says where to reach (translation:translatedBy)"

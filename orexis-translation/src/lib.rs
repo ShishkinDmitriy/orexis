@@ -14,6 +14,7 @@ pub mod briefing;
 pub mod chat;
 pub mod create;
 pub mod events;
+pub mod figures;
 pub mod model;
 pub mod past;
 pub mod readable;

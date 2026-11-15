@@ -36,8 +36,9 @@ use orexis_sensing::received::received;
 use orexis_speech::heard::heard;
 
 /// HOW SOON THE MEMBER ASKS A BOARD AGAIN that it told to sense and that has not answered, in seconds of the one
-/// timeline. Otherwise it asks when a reading next falls due (`cadence::next_lapse`).
-pub const NUDGE_S: f64 = 60.0;
+/// timeline: a figure a role states (`mqtt:askedAgainAfterS`). Otherwise it asks when a reading next falls due
+/// (`cadence::next_lapse`).
+pub const ASKED_AGAIN_AFTER_S: &str = "http://example.org/orexis/mqtt#askedAgainAfterS";
 
 /// THE PATTERNS OF THE FILTERS THAT MATCH THE TOPIC A SENSOR'S BOARD LISTENS ON.
 const COMMANDS_Q: &str = "
@@ -378,8 +379,9 @@ impl Mqtt {
         if told.is_empty() {
             return Ok(next);
         }
+        let after_s = crate::figures::figure_of(&self.beliefs, ASKED_AGAIN_AFTER_S)?;
         let again = now
-            .checked_add_day_time_duration(orexis::clock::seconds(NUDGE_S))
+            .checked_add_day_time_duration(orexis::clock::seconds(after_s))
             .unwrap_or(now);
         Ok(Some(next.map_or(again, |n| if n < again { n } else { again })))
     }
@@ -942,8 +944,10 @@ mod tests {
         assert_eq!(
             driver.nudge_until(late).unwrap(),
             Some(
-                late.checked_add_day_time_duration(orexis::clock::seconds(NUDGE_S))
-                    .unwrap()
+                late.checked_add_day_time_duration(orexis::clock::seconds(
+                    crate::figures::DEFAULTS.figure(ASKED_AGAIN_AFTER_S).unwrap(),
+                ))
+                .unwrap()
             ),
             "told to sense, and asked again a minute on"
         );

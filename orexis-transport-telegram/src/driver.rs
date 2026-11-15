@@ -34,7 +34,41 @@ pub const TELEGRAM_URL: &str = "https://api.telegram.org";
 /// WHAT HOLDS WHERE NO ROLE SAYS HOW OFTEN: the defaults this transport's ontology states (`sh:defaultValue`).
 pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
     std::sync::LazyLock::new(|| orexis::shape::Defaults::of("the telegram transport", include_str!("../ontology.ttl")));
-pub const TIMEOUT_S: u64 = 30;
+
+/// A FIGURE OF THE ROLE THIS PACKAGE IS LOADED FOR: what a role the self plays says of `term` in the agent's self
+/// graph, read by this package's own query, and where no role says it the default this ontology states. Two
+/// answers are never picked between: several, or one that is no number, is the default, said in the log.
+pub fn figure_of(store: &orexis::store::Store, term: &str) -> Result<f64, orexis::Error> {
+    use orexis::bind::{Value, bind};
+    use orexis::store::{Within, value};
+    let selves = store.graphs_of(&[orexis::ontology::SELF_GRAPH], &Within::default())?;
+    let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
+    let text = bind(
+        "SELECT ?n WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role $figure ?n }",
+        &[("figure", Value::iri(term))],
+    )?;
+    let said: Vec<String> = store
+        .rows(&text, &selves)?
+        .iter()
+        .filter_map(|row| value(row, "n"))
+        .collect();
+    if let [one] = said.as_slice()
+        && let Ok(figure) = one.parse::<f64>()
+    {
+        return Ok(figure);
+    }
+    let default = DEFAULTS.figure(term)?;
+    if !said.is_empty() {
+        log::warn!(
+            "the self's roles say {} for {}: the default, {default}, holds",
+            said.join(", "),
+            orexis::ontology::local_of(term)
+        );
+    }
+    Ok(default)
+}
+/// HOW LONG ONE CALL OF THE BOT API MAY TAKE, in real seconds: a figure a role states.
+pub const CALLED_WITHIN_S: &str = "http://example.org/orexis/telegram#calledWithinS";
 
 const CHAT_Q: &str = "SELECT ?chat WHERE { ?chat a telegram:Chat ; telegram:chatId ?id FILTER (STR(?id) = $id) }";
 const USER_Q: &str = "SELECT ?person WHERE { ?person telegram:userId ?id FILTER (STR(?id) = $id) }";
@@ -84,10 +118,10 @@ pub type Call = Arc<dyn Fn(&str, &Json) -> Result<Json, String> + Send + Sync>;
 /// What runs a poll: on a thread of its own, or at once in a test.
 pub type Spawn = Box<dyn Fn(Box<dyn FnOnce() + Send>) + Send + Sync>;
 
-/// The API as a deployed agent calls it.
-pub fn post() -> Call {
+/// The API as a deployed agent calls it, a call given up after `within_s` real seconds.
+pub fn post(within_s: f64) -> Call {
     let agent = ureq::AgentBuilder::new()
-        .timeout(Duration::from_secs(TIMEOUT_S))
+        .timeout(Duration::from_secs_f64(within_s))
         .build();
     Arc::new(move |url, body| {
         let reply = agent
@@ -348,7 +382,7 @@ impl Telegram {
             )
         })?;
         let url = answers(beliefs, me)?.unwrap_or_else(|| TELEGRAM_URL.to_string());
-        let mut bot = Telegram::new(beliefs, me, &token, &url, post());
+        let mut bot = Telegram::new(beliefs, me, &token, &url, post(figure_of(beliefs, CALLED_WITHIN_S)?));
         bot.every = polled_every_s(beliefs)?;
         Ok(bot)
     }

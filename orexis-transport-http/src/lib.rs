@@ -7,3 +7,4 @@
 
 pub mod create;
 pub mod driver;
+pub mod figures;

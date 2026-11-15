@@ -68,4 +68,10 @@
 #  figure lives.
 [] a sh:NodeShape ;
     sh:targetClass :Predictor ;
-    sh:property [ sh:path :horizonS ; sh:defaultValue 86400 ] .
+    sh:property [ sh:path :horizonS ; sh:defaultValue 86400 ] ,
+                [ sh:path :rateHeldS ; sh:defaultValue 3600 ] .
+
+:rateHeldS a owl:DatatypeProperty ;
+    rdfs:domain :Predictor ;
+    rdfs:label "rate held, in seconds" ;
+    rdfs:comment "The longest a flow's rate is held before the flows are asked again, in the timeline's seconds, said of the role: a knot of the prediction is this far from the one before at most. An hour where the role says none." .

@@ -1,3 +1,6 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix http: <http://example.org/orexis/http#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix td: <https://www.w3.org/2019/wot/td#> .
 @prefix hctl: <https://www.w3.org/2019/wot/hypermedia#> .
@@ -6,9 +9,18 @@
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
 #  OREXIS HTTP TRANSPORT, AGENT 0.2.0.
-#  The HTTP transport of Agent 0.2.0 declares no word of its own: it speaks the W3C Web of Things
+#  The HTTP transport of Agent 0.2.0 declares one word of its own, how long a fetch may take, and otherwise speaks the W3C Web of Things
 #  Thing Description and its hypermedia controls, and these are the terms it reads. A sensor reached
 #  over HTTP is a td:Thing whose td:hasForm is an hctl:Form, and the form's hctl:hasTarget is the
 #  URI template it is read at, its variables filled from the schema:geo of what the sensor is hosted
 #  by. The adoption is by prefix: this file names the two namespaces, and the vendored copies the
 #  tests read are tests/fixtures/vocabularies/wot-td.ttl and wot-hctl.ttl.
+
+#  ITS ONE WORD: how long a fetch may take, a role's to say in the agent's self graph, and the shape's default below
+#  where none says.
+http:fetchedWithinS a owl:DatatypeProperty ; rdfs:label "fetched within, in seconds" ;
+    rdfs:comment "How long one fetch of a sensor read over HTTP may take before it is given up, in real seconds, said of a role the agent plays that reads such a sensor. Thirty where no role says." .
+
+[] a sh:NodeShape ;
+    sh:targetClass orexis:Role ;
+    sh:property [ sh:path http:fetchedWithinS ; sh:defaultValue 30 ] .

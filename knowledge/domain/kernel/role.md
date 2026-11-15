@@ -83,14 +83,14 @@ A figure a package runs by is said on the role it is loaded for, and the self st
 | `prediction:horizonS` | the [predictor](/domain/prediction/predictor.md) | seconds past an observation the flows are integrated | a day |
 | `coordination:patienceS`, `rounds`, `lookahead` | the [coordinator](/domain/coordination/coordinator.md) | how long a draw stands undecided, how often it restarts, how many of a silent peer's steps are foreseen | sixty seconds, three, two |
 
-The intervals a package takes its turn at and an observer's two limits are figures of their roles the same way,
-each on its own page. A figure is read in the self graph and in no other: a world graph saying a figure of an
+The intervals a package takes its turn at, an observer's limits, a translator's turns and rows, a predictor's
+held rate and a transport's timings are figures of their roles the same way, each on its own page. A figure is read in the self graph and in no other: a world graph saying a figure of an
 agent states something about it in public, which no package reads as the role's. One figure, said once and as a
 number, is the figure; several, or one that is no number, is the default, said in the log. And a figure is a
 role's only where a plan would branch on it or an author would choose it
 ([model-it-only-if-a-plan-would-branch-on-it](/decisions/model-it-only-if-a-plan-would-branch-on-it.md)): the
 grace a reading keeps past its due is the instrument's, and how a pass's revision budget is shared between
-sources is how the package does its work.
+sources, a page of a read or a queue's length is how the package does its work.
 
 # What it is held to
 

@@ -87,3 +87,12 @@ said as `Translated`, tagged by the act, how it ended and the model, with the re
 by the API's own names. Where the world is monitored the metrics part tallies it, and `orexis-dashboards` draws
 it on the package's health dashboard, so what an agent's chats cost is watched beside its other figures — and asked of the agent itself, through
 `metrics`, its metrics token opening its own bucket to read as well as to write.
+
+# What it may state
+
+Five figures, on the role, each with its default in the package's ontology: `translation:turns`, how many turns one
+conversation with the [model](/domain/translation/model.md) may take, eight, the last offering no tool so the model
+answers in words; `translation:rows`, how many rows or points one read hands the model, fifty; `translation:answeredWithinS`,
+how long the model's call waits for the agent to hold a statement to what the chat allows, sixty seconds; and
+`translation:calledWithinS` and `translation:retries`, how long one call of the model may take and how often a
+failing one is asked again, sixty seconds and three.

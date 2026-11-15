@@ -6,7 +6,7 @@
 //! for the subject at an instant, and the flows ADD. What a flow reads is the ground the planner hands, every graph
 //! holding at the instant asked beside it, and the keys' current numbers, kept in a working graph of this package's
 //! own (`NUMBERS`), and `$value`, its own key's number. Between two grounds the rates are asked at every HAPPENING
-//! and held for at most `SEGMENT_S` between; within a segment the value is a straight line, and a crossing of a
+//! and held for as long as the predictor's role says at most (`prediction:rateHeldS`), an hour where it says none; within a segment the value is a straight line, and a crossing of a
 //! bound is placed exactly, by division. **EVERY KEY ADVANCES TOGETHER**: soil reading air and air reading soil are
 //! two coupled flows, not a cycle. **A RATE KNOWN AS A RANGE GIVES A CORRIDOR**: two trajectories, the low and the
 //! high, and the side of an instant is the corridor's worst.
@@ -34,9 +34,6 @@ use crate::ontology::{
     FEATURE, FLOW, HORIZON_TERM, MOVES, OBSERVATION_GRAPH, PROPERTY, RATE, RESULT, SOSA, predicted_of,
 };
 use crate::ranges::{ranges_of, side};
-
-/// THE LONGEST A RATE IS HELD before the flows are asked again: an hour.
-pub const SEGMENT_S: f64 = 3600.0;
 
 /// WHERE A STRETCH'S NUMBER IS READ when its end lies across a bound: this long before the end, or half the stretch.
 const EDGE_S: f64 = 60.0;
@@ -121,6 +118,8 @@ pub struct Foresight {
     pub keys: Vec<Key>,
     /// Where the integration stands, past the origin.
     t: Option<f64>,
+    /// The longest a rate is held before the flows are asked again, in seconds (`prediction:rateHeldS`).
+    held_s: f64,
 }
 
 fn round_to(x: f64, places: i32) -> f64 {
@@ -174,7 +173,7 @@ impl Foresight {
             return Ok(None);
         }
         let t0 = standing;
-        let cap = t0 + SEGMENT_S;
+        let cap = t0 + self.held_s;
         let marks = self.marks(store, t0, t1, cap)?;
         for key in &mut self.keys {
             key.knots = vec![(t0, key.lo, key.hi)];
@@ -208,7 +207,7 @@ impl Foresight {
                                 .filter(|(_, c)| (c - earliest).abs() < 1e-9)
                                 .map(|(s, _)| (*s).clone())
                                 .collect();
-                            let mut bound = (earliest + SEGMENT_S).min(t1);
+                            let mut bound = (earliest + self.held_s).min(t1);
                             for (sensor, cs) in &found {
                                 if crossing.contains(sensor) {
                                     for c in cs.iter().filter(|c| **c > earliest + 1e-9) {
@@ -292,7 +291,7 @@ impl Foresight {
                 let (r_lo, stops_lo) = net(&self.rates(store, &self.keys[i], lo, t, &graphs)?, lo, 0);
                 let (r_hi, stops_hi) = net(&self.rates(store, &self.keys[i], hi, t, &graphs)?, hi, 1);
                 let step = (t0 - t)
-                    .min(SEGMENT_S)
+                    .min(self.held_s)
                     .min(reach(lo, r_lo, &stops_lo))
                     .min(reach(hi, r_hi, &stops_hi));
                 let (a, b) = (shift(lo, r_lo, step, &stops_lo), shift(hi, r_hi, step, &stops_hi));
@@ -355,7 +354,7 @@ impl Foresight {
             let (r_hi, stops_hi) = net(&said_hi, key.hi, 1);
             plans.push(Some((r_lo, stops_lo, r_hi, stops_hi)));
         }
-        let mut step = (mark - t).min(SEGMENT_S);
+        let mut step = (mark - t).min(self.held_s);
         for (key, plan) in self.keys.iter().zip(&plans) {
             if let Some((r_lo, stops_lo, r_hi, stops_hi)) = plan {
                 step = step
@@ -465,6 +464,7 @@ pub fn foresee(beliefs: &Store, now: DateTime, placed: Option<&Placed<'_>>) -> R
         return Ok(None);
     };
     let horizon = crate::ontology::figure_of(beliefs, HORIZON_TERM)?;
+    let held_s = crate::ontology::figure_of(beliefs, crate::ontology::RATE_HELD_TERM)?;
     let flow_graphs = beliefs.graphs_of(&[FLOW_GRAPH], &Within::default())?;
     let flow_graphs: Vec<&str> = flow_graphs.iter().map(String::as_str).collect();
     let sensors: Vec<String> = beliefs
@@ -586,6 +586,7 @@ pub fn foresee(beliefs: &Store, now: DateTime, placed: Option<&Placed<'_>>) -> R
         origin: now,
         keys,
         t: None,
+        held_s,
     }))
 }
 
@@ -931,7 +932,15 @@ mod tests {
                 );
             }
             for pair in every.windows(2) {
-                assert!(pair[1].0 - pair[0].0 <= SEGMENT_S / 60.0 + 1e-9, "{stem}: {every:?}");
+                assert!(
+                    pair[1].0 - pair[0].0
+                        <= crate::ontology::DEFAULTS
+                            .figure(crate::ontology::RATE_HELD_TERM)
+                            .unwrap()
+                            / 60.0
+                            + 1e-9,
+                    "{stem}: {every:?}"
+                );
             }
             foresight.finish(&store).unwrap();
             assert!(

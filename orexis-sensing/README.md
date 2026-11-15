@@ -15,7 +15,7 @@ no reader of the mind is handed one.
 | bytes a transport read for a sensor (`received`, a call, not an event) | a transport member | a percept written per reading, then `sensing:Perceived` said |
 | a graph of kind `sensing:ObservationGraph` written | itself | `sensing:Perceived` said to belief |
 | `sensing:ObservingTrigger`: `belief:Revised` | belief | `sensing:Observing` |
-| the clock, every 60 s of the agent's time | | the ask after silent sensors (`missed`) |
+| the clock, as often as the observer's role says (`sensing:askedEveryS`), every 60 s of the agent's time where it says nothing | | the ask after silent sensors (`missed`) |
 
 ## Activities
 
