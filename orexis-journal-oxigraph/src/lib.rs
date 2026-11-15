@@ -147,8 +147,7 @@ inventory::submit! { Package { name: "journal-oxigraph", documents: &[], start }
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         let archived = |handed: &Handed| {
-            Ok(handed.joined("journal")
-                && orexis_journal::Recorder::read(&handed.store)?.is_some_and(|recorder| recorder.archive.is_some()))
+            Ok(handed.joined("journal") && orexis_journal::Recorder::new(&handed.store)?.archive.is_some())
         };
         if !handed.joins(archived).await? || !handed.started("journal").await {
             return Ok(None);
@@ -197,7 +196,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
 /// binary built without the volume has nowhere to keep one, says so, and what lasts stays in the journal.
 fn own(handed: &Handed) -> Result<Option<Archives>, Error> {
     //  READ AND LEFT, for what ships the activities, whichever of the two starts first.
-    let recorder = orexis_journal::Recorder::read(&handed.store)?.unwrap_or_default();
+    let recorder = orexis_journal::Recorder::new(&handed.store)?;
     let (Some(path), Some(journal)) = (recorder.archive, handed.outside.read::<orexis_journal::Traced>()) else {
         return Ok(None);
     };

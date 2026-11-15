@@ -1070,11 +1070,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   through, so neither gets a role link, and a model is named by the translator's role (`translation:translatedBy`);
   what a world is held to at onboarding leaves the derived deployment out, a broker's one url there being the one
   an agent reaches it at and no statement of the world's (model, the-world-says-what-it-is-connected-to).
-- **A package reads its role as one instance, whose `Default` is the package's own** — `Recorder`, `Observer`,
-  `Meter` and translation's `Role` are each a struct with a field per thing the role may say, a figure, a word or
-  where the service it names answers, filled by one read of the self graph and the deployment
-  (`orexis::role::played`); a reader per figure, each with a pattern of its own, was built first, and three intervals
-  were constants no document could change (role).
+- **A package reads its own role, into a struct with a field for each thing the role may say** — `Recorder::new(store)`,
+  `Observer::new`, `Meter::new`: each asks the self graph and the deployment by a query of its package, so the
+  struct and the role's class are one to one and the kernel reads no role for anyone; a kernel reader handing every
+  package what its roles say, with a `Default` per struct and an instance that might be none, was built first and
+  refused (role).
 - **How often a package takes its turn is its role's to say** — `sensing:archivedEveryS`, `journal:archivedEveryS`,
   `journal:tracedEveryS`, `metrics:windowS`, `telegram:polledEveryS` and `email:polledEveryS`; the first three were
   constants in code and the fourth the installation's word for every world at once.

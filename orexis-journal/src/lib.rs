@@ -74,12 +74,23 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     Ok(None)
 }
 
-const JOURNAL: &str = "http://example.org/orexis/journal#";
+/// WHAT THE RECORDER THE SELF PLAYS SAYS, a row per way of saying it: each figure and word of the role, and where
+/// each service it names answers, as the world's deployment states it.
+const RECORDER_Q: &str = "SELECT ?kind ?window ?from ?incident ?served ?archive ?archivedEvery ?tracer ?tracedEvery WHERE { \
+?me a orexis:Self ; orexis:plays ?role . ?role a ?kind . \
+OPTIONAL { ?role <http://example.org/orexis/journal#windowS> ?window } \
+OPTIONAL { ?role <http://example.org/orexis/journal#incidentFrom> ?from } \
+OPTIONAL { ?role <http://example.org/orexis/journal#incident> ?incident } \
+OPTIONAL { ?role <http://example.org/orexis/journal#servedAt> ?endpoint . ?endpoint <https://schema.org/url> ?served } \
+OPTIONAL { ?role <http://example.org/orexis/journal#archivedIn> ?kept . ?kept <https://schema.org/url> ?archive } \
+OPTIONAL { ?role <http://example.org/orexis/journal#archivedEveryS> ?archivedEvery } \
+OPTIONAL { ?role <http://example.org/orexis/journal#tracedBy> ?traced . ?traced <https://schema.org/url> ?tracer } \
+OPTIONAL { ?role <http://example.org/orexis/journal#tracedEveryS> ?tracedEvery } }";
 
-/// THE RECORDER'S ROLE, AS THE JOURNAL'S CRATES READ IT: how the journal is kept and what it is linked to, each
-/// field what the role says in the agent's self graph and, where it says nothing, the package's own (`Default`).
-/// A link is where the service the role names answers, as the world's deployment states it, and None where the
-/// role names none or the world says nothing of the one named.
+/// THE RECORDER THE SELF PLAYS, AS THE JOURNAL'S CRATES READ IT: a field for each thing `journal:Recorder` may say,
+/// how the journal is kept and what it is linked to. A figure the role does not state is the journal's own, and a
+/// link is where the service the role names answers, as the world's deployment states it: None where the role
+/// names none or the world says nothing of the one named.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Recorder {
     /// How long the log and the activities no incident kept are kept, in the agent's seconds (`journal:windowS`).
@@ -100,46 +111,50 @@ pub struct Recorder {
     pub traced_every_s: f64,
 }
 
-impl Default for Recorder {
-    fn default() -> Self {
-        Recorder {
-            window_s: journal::WINDOW_S,
-            incident_level: log::Level::Warn,
-            incidents: std::collections::BTreeSet::new(),
-            endpoint: None,
-            archive: None,
-            archived_every_s: 2.0,
-            tracer: None,
-            traced_every_s: 10.0,
-        }
-    }
-}
+/// How often what lasts is taken to the archive where the role says nothing, and how often the activities are
+/// shipped, in the agent's seconds.
+pub const ARCHIVED_EVERY_S: f64 = 2.0;
+pub const TRACED_EVERY_S: f64 = 10.0;
 
 impl Recorder {
-    /// The recorder the self plays, read off the store: None where it plays none.
-    pub fn read(store: &orexis::store::Store) -> Result<Option<Self>, Error> {
-        let Some(role) = orexis::role::played(store, ROLE)? else {
-            return Ok(None);
+    /// The recorder the self plays, read off its self graph and the world's deployment graph by this package's own
+    /// query. Several recorder roles are read as one, and where the self plays none nothing is said.
+    pub fn new(store: &orexis::store::Store) -> Result<Self, Error> {
+        use orexis::ontology::{DEPLOYMENT, SELF_GRAPH};
+        use orexis::store::{Within, value};
+        let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
+        known.extend(store.graphs_of(&[DEPLOYMENT], &Within::common())?);
+        let known: Vec<&str> = known.iter().map(String::as_str).collect();
+        let mut rows = Vec::new();
+        for row in store.rows(RECORDER_Q, &known)? {
+            let kind = value(&row, "kind").unwrap_or_default();
+            if kind == ROLE || store.closed(&kind)?.iter().any(|class| class == ROLE) {
+                rows.push(row);
+            }
+        }
+        let said = |what: &str| {
+            rows.iter()
+                .find_map(|row| value(row, what))
+                .filter(|said| !said.is_empty())
         };
-        let own = Recorder::default();
-        let said = |word: &str| format!("{JOURNAL}{word}");
-        Ok(Some(Recorder {
-            window_s: role.figure(&said("windowS")).unwrap_or(own.window_s),
-            incident_level: journal::incident_level(role.word(&said("incidentFrom"))),
-            incidents: role.words(&said("incident")).iter().cloned().collect(),
-            endpoint: role.answers(&said("servedAt")).and_then(|url| {
+        let figure = |what: &str| {
+            rows.iter()
+                .filter_map(|row| value(row, what)?.parse::<f64>().ok())
+                .find(|figure| *figure > 0.0)
+        };
+        Ok(Recorder {
+            window_s: figure("window").unwrap_or(journal::WINDOW_S),
+            incident_level: journal::incident_level(said("from").as_deref()),
+            incidents: rows.iter().filter_map(|row| value(row, "incident")).collect(),
+            endpoint: said("served").and_then(|url| {
                 let authority = url.split("://").last()?.split('/').next()?;
                 authority.rsplit(':').next()?.parse().ok()
             }),
-            archive: role
-                .answers(&said("archivedIn"))
-                .and_then(|url| url.strip_prefix("file://").map(std::path::PathBuf::from)),
-            archived_every_s: role.figure(&said("archivedEveryS")).unwrap_or(own.archived_every_s),
-            tracer: role
-                .answers(&said("tracedBy"))
-                .map(|url| url.trim_end_matches('/').to_string()),
-            traced_every_s: role.figure(&said("tracedEveryS")).unwrap_or(own.traced_every_s),
-        }))
+            archive: said("archive").and_then(|url| url.strip_prefix("file://").map(std::path::PathBuf::from)),
+            archived_every_s: figure("archivedEvery").unwrap_or(ARCHIVED_EVERY_S),
+            tracer: said("tracer").map(|url| url.trim_end_matches('/').to_string()),
+            traced_every_s: figure("tracedEvery").unwrap_or(TRACED_EVERY_S),
+        })
     }
 }
 
@@ -149,7 +164,7 @@ impl Recorder {
 /// what archives the journal has said where it is, the journal itself until then - and the journal at
 /// `/live/sparql`. A role naming no endpoint is served nowhere.
 fn own(handed: &Handed) -> Result<Arc<Journal>, Error> {
-    let kept = Recorder::read(&handed.store)?.unwrap_or_default();
+    let kept = Recorder::new(&handed.store)?;
     let mut journal = Journal::new(kept.window_s, {
         let clock = handed.clock.clone();
         Arc::new(move || clock.now())

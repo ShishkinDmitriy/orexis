@@ -182,7 +182,7 @@ fn a_housekeeper_of_the_journal_joins_where_the_recorders_role_names_its_service
             orexis::store::Store::new(std::sync::Arc::new(orexis::namespaces::Namespaces::linked().unwrap())).unwrap();
         let loaded = orexis_agent::booted(&store, &Path::new(TREE).join("world").join(world), agent, now).unwrap();
         let joined = |package: &str| loaded.iter().any(|p| p == package);
-        let recorder = orexis_journal::Recorder::read(&store).unwrap().unwrap();
+        let recorder = orexis_journal::Recorder::new(&store).unwrap();
         (
             recorder.tracer,
             recorder.archive,
@@ -235,12 +235,12 @@ fn the_journal_package_makes_its_own_journal_where_the_agent_is_deployed_and_non
     assert_eq!(kept(false), None, "a check keeps no journal");
 }
 
-/// A ROLE IS READ AS ONE INSTANCE, each field what the role says and, where it says nothing, the package's own: the
-/// terrace's agent plays a recorder, an observer, a meter and a translator, each linked to its services and stating
-/// no figure, so each reads as its `Default` with the links filled in; a figure said on a role is what is read; and
-/// Hanoi's agent, which plays a recorder alone, reads as no observer, no meter and no translator.
+/// A PACKAGE READS ITS OWN ROLE, into a struct with a field for each thing the role may say: the terrace's agent
+/// plays a recorder, an observer, a meter and a translator, each linked to its services and stating no figure, so
+/// each reads with its links and the package's own figures; a figure said on a role is what is read; and Hanoi's
+/// agent, which plays a recorder alone, reads no link of an observer, a meter or a translator.
 #[test]
-fn a_role_is_read_as_one_instance_whose_default_is_the_packages_own() {
+fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_role_may_say() {
     let now = oxsdatatypes::DateTime::now();
     let booted = |world: &str, agent: &str| {
         let store =
@@ -251,38 +251,32 @@ fn a_role_is_read_as_one_instance_whose_default_is_the_packages_own() {
     let store = booted("terrace", "terrace");
     let series = Some("http://localhost:8086".to_string());
     let recorder = orexis_journal::Recorder {
+        window_s: 600.0,
+        incident_level: log::Level::Warn,
+        incidents: Default::default(),
         endpoint: Some(7889),
         archive: Some(std::path::PathBuf::from("/app/journal")),
+        archived_every_s: 2.0,
         tracer: Some("http://localhost:4318".to_string()),
-        ..orexis_journal::Recorder::default()
+        traced_every_s: 10.0,
     };
-    assert_eq!(
-        (recorder.window_s, recorder.archived_every_s, recorder.traced_every_s),
-        (600.0, 2.0, 10.0),
-        "the journal's own figures"
-    );
-    assert_eq!(orexis_journal::Recorder::read(&store).unwrap(), Some(recorder.clone()));
+    assert_eq!(orexis_journal::Recorder::new(&store).unwrap(), recorder);
     let observer = orexis_sensing_influxdb::Observer {
         archive: series.clone(),
         archived_every_s: 10.0,
     };
-    assert_eq!(
-        orexis_sensing_influxdb::Observer::read(&store).unwrap(),
-        Some(observer.clone())
-    );
+    assert_eq!(orexis_sensing_influxdb::Observer::new(&store).unwrap(), observer);
     let meter = orexis_metrics::Meter {
-        store: series,
+        written_to: series,
         window_s: 60.0,
     };
-    assert_eq!(orexis_metrics::Meter::read(&store).unwrap(), Some(meter.clone()));
+    assert_eq!(orexis_metrics::Meter::new(&store).unwrap(), meter);
     assert_eq!(
-        orexis_translation::create::Role::read(&store).unwrap(),
-        Some(orexis_translation::create::Role {
-            model: Some("https://api.anthropic.com".to_string())
-        })
+        orexis_translation::create::translated_by(&store).unwrap(),
+        Some("https://api.anthropic.com".to_string())
     );
     assert_eq!(orexis_transport_telegram::driver::polled_every_s(&store).unwrap(), 3.0);
-    //  SAID ON THE ROLE, each figure is what is read, and nothing else of the instance changes.
+    //  SAID ON THE ROLE, each figure is what is read, and nothing else of the struct changes.
     for (link, figure, said) in [
         ("sensing#archivedIn", "sensing#archivedEveryS", 30),
         ("journal#archivedIn", "journal#archivedEveryS", 5),
@@ -300,35 +294,35 @@ fn a_role_is_read_as_one_instance_whose_default_is_the_packages_own() {
             .unwrap();
     }
     assert_eq!(
-        orexis_journal::Recorder::read(&store).unwrap(),
-        Some(orexis_journal::Recorder {
+        orexis_journal::Recorder::new(&store).unwrap(),
+        orexis_journal::Recorder {
             window_s: 90.0,
             archived_every_s: 5.0,
             traced_every_s: 20.0,
             ..recorder
-        })
+        }
     );
     assert_eq!(
-        orexis_sensing_influxdb::Observer::read(&store).unwrap(),
-        Some(orexis_sensing_influxdb::Observer {
+        orexis_sensing_influxdb::Observer::new(&store).unwrap(),
+        orexis_sensing_influxdb::Observer {
             archived_every_s: 30.0,
             ..observer
-        })
+        }
     );
     assert_eq!(
-        orexis_metrics::Meter::read(&store).unwrap(),
-        Some(orexis_metrics::Meter {
+        orexis_metrics::Meter::new(&store).unwrap(),
+        orexis_metrics::Meter {
             window_s: 300.0,
             ..meter
-        })
+        }
     );
     assert_eq!(orexis_transport_telegram::driver::polled_every_s(&store).unwrap(), 7.0);
-    //  AND A ROLE THE SELF DOES NOT PLAY IS NO INSTANCE.
+    //  AND A ROLE THE SELF DOES NOT PLAY SAYS NOTHING.
     let store = booted("hanoi", "hanoi");
-    assert!(orexis_journal::Recorder::read(&store).unwrap().is_some());
-    assert_eq!(orexis_sensing_influxdb::Observer::read(&store).unwrap(), None);
-    assert_eq!(orexis_metrics::Meter::read(&store).unwrap(), None);
-    assert_eq!(orexis_translation::create::Role::read(&store).unwrap(), None);
+    assert!(orexis_journal::Recorder::new(&store).unwrap().archive.is_some());
+    assert_eq!(orexis_sensing_influxdb::Observer::new(&store).unwrap().archive, None);
+    assert_eq!(orexis_metrics::Meter::new(&store).unwrap().written_to, None);
+    assert_eq!(orexis_translation::create::translated_by(&store).unwrap(), None);
 }
 
 /// WHERE A BROKER, A BOT AND A MODEL ANSWER IS THE WORLD'S TO SAY, and no environment's: the terrace's agent is
@@ -357,12 +351,12 @@ fn the_world_says_where_each_broker_bot_and_model_an_agent_reaches_answers() {
         Some("https://api.telegram.org".to_string())
     );
     assert_eq!(
-        orexis_translation::create::Role::read(&store).unwrap().unwrap().model,
+        orexis_translation::create::translated_by(&store).unwrap(),
         Some("https://api.anthropic.com".to_string())
     );
     let (store, me) = booted("hanoi", "hanoi");
     assert!(orexis_transport_mqtt::driver::reached(&store, &me).unwrap().is_empty());
-    assert_eq!(orexis_translation::create::Role::read(&store).unwrap(), None);
+    assert_eq!(orexis_translation::create::translated_by(&store).unwrap(), None);
 }
 
 /// WHERE A SERIES IS WRITTEN IS THE WORLD'S TO SAY, of each store a role names: the terrace's agent plays an observer

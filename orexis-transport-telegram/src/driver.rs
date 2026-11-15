@@ -59,8 +59,17 @@ pub fn answers(beliefs: &Store, me: &str) -> Result<Option<String>, Error> {
 /// HOW OFTEN THE BOT IS POLLED, in real seconds: what a role the self plays says in the agent's self graph
 /// (`telegram:polledEveryS`), and the transport's own where none says.
 pub fn polled_every_s(beliefs: &Store) -> Result<f64, Error> {
-    Ok(orexis::role::played(beliefs, "http://example.org/orexis#Role")?
-        .and_then(|role| role.figure("http://example.org/orexis/telegram#polledEveryS"))
+    let selves = beliefs.graphs_of(&[orexis::ontology::SELF_GRAPH], &orexis::store::Within::default())?;
+    let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
+    Ok(beliefs
+        .rows(
+            "SELECT ?every WHERE { ?me a orexis:Self ; orexis:plays ?role . \
+             ?role <http://example.org/orexis/telegram#polledEveryS> ?every } ORDER BY ?every",
+            &selves,
+        )?
+        .iter()
+        .filter_map(|row| orexis::store::value(row, "every")?.parse::<f64>().ok())
+        .find(|figure| *figure > 0.0)
         .unwrap_or(POLL_S))
 }
 

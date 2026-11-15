@@ -202,39 +202,49 @@ inventory::submit! { Package { name: "metrics", documents: orexis::documents!("o
 
 /// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
 const ROLE: &str = "http://example.org/orexis/metrics#Meter";
-const METRICS: &str = "http://example.org/orexis/metrics#";
+/// WHAT THE METER THE SELF PLAYS SAYS, a row per way of saying it.
+const METER_Q: &str = "SELECT ?kind ?store ?window WHERE { \
+?me a orexis:Self ; orexis:plays ?role . ?role a ?kind . \
+OPTIONAL { ?role <http://example.org/orexis/metrics#writtenTo> ?named . ?named <https://schema.org/url> ?store } \
+OPTIONAL { ?role <http://example.org/orexis/metrics#windowS> ?window } }";
 
-/// THE METER'S ROLE, AS THIS PACKAGE READS IT: each field what the role says in the agent's self graph and, where it
-/// says nothing, the package's own (`Default`).
+/// THE METER THE SELF PLAYS, AS THIS PACKAGE READS IT: a field for each thing `metrics:Meter` may say.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Meter {
     /// Where the series store the role names answers (`metrics:writtenTo`), as the world's deployment states it:
     /// None where the role names none or the world says nothing of the one named.
-    pub store: Option<String>,
-    /// How long a window is, in real seconds (`metrics:windowS`).
+    pub written_to: Option<String>,
+    /// How long a window is, in real seconds (`metrics:windowS`), and `INTERVAL_S` where the role states none.
     pub window_s: f64,
 }
 
-impl Default for Meter {
-    fn default() -> Self {
-        Meter {
-            store: None,
-            window_s: INTERVAL_S,
-        }
-    }
-}
-
 impl Meter {
-    /// The meter the self plays, read off the store: None where it plays none.
-    pub fn read(store: &orexis::store::Store) -> Result<Option<Self>, orexis::Error> {
-        let Some(role) = orexis::role::played(store, ROLE)? else {
-            return Ok(None);
-        };
-        let own = Meter::default();
-        Ok(Some(Meter {
-            store: role.answers(&format!("{METRICS}writtenTo")).map(String::from),
-            window_s: role.figure(&format!("{METRICS}windowS")).unwrap_or(own.window_s),
-        }))
+    /// The meter the self plays, read off its self graph and the world's deployment graph by this package's own
+    /// query. Several meter roles are read as one, and where the self plays none nothing is said.
+    pub fn new(store: &orexis::store::Store) -> Result<Self, orexis::Error> {
+        use orexis::ontology::{DEPLOYMENT, SELF_GRAPH};
+        use orexis::store::{Within, value};
+        let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
+        known.extend(store.graphs_of(&[DEPLOYMENT], &Within::common())?);
+        let known: Vec<&str> = known.iter().map(String::as_str).collect();
+        let mut rows = Vec::new();
+        for row in store.rows(METER_Q, &known)? {
+            let kind = value(&row, "kind").unwrap_or_default();
+            if kind == ROLE || store.closed(&kind)?.iter().any(|class| class == ROLE) {
+                rows.push(row);
+            }
+        }
+        Ok(Meter {
+            written_to: rows
+                .iter()
+                .find_map(|row| value(row, "store"))
+                .filter(|url| !url.is_empty()),
+            window_s: rows
+                .iter()
+                .filter_map(|row| value(row, "window")?.parse::<f64>().ok())
+                .find(|figure| *figure > 0.0)
+                .unwrap_or(INTERVAL_S),
+        })
     }
 }
 
@@ -263,7 +273,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
             else {
                 return Ok(None);
             };
-            let interval = Meter::read(&handed.store)?.unwrap_or_default().window_s;
+            let interval = Meter::new(&handed.store)?.window_s;
             log::info!("{} writes its metrics every {interval}s", handed.id);
             Window::new(sink, interval, Some(&deployed.world), Some(&handed.id))
         }

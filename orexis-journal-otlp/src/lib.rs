@@ -290,8 +290,7 @@ inventory::submit! { Package { name: "journal-otlp", documents: &[], start } }
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         let traced = |handed: &Handed| {
-            Ok(handed.joined("journal")
-                && orexis_journal::Recorder::read(&handed.store)?.is_some_and(|recorder| recorder.tracer.is_some()))
+            Ok(handed.joined("journal") && orexis_journal::Recorder::new(&handed.store)?.tracer.is_some())
         };
         if !handed.joins(traced).await? || !handed.started("journal").await {
             return Ok(None);
@@ -305,7 +304,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
     let ships = match handed.outside.take::<Ships>() {
         Some(ships) => ships,
         None => {
-            let recorder = orexis_journal::Recorder::read(&handed.store)?.unwrap_or_default();
+            let recorder = orexis_journal::Recorder::new(&handed.store)?;
             let (Some(endpoint), Some(journal)) = (recorder.tracer, handed.outside.read::<Traced>()) else {
                 return Ok(None);
             };

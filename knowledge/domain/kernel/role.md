@@ -53,13 +53,13 @@ a peer finds the agent by it: the courier's [driver](/domain/courier/driver.md),
 
 # How a package reads it
 
-As one instance. A package that takes anything from its role declares a type for it, a field per thing the role may
-say: a figure, a word, or where the service a link names answers, which the world's derived
-[deployment](/domain/onboarding/deployment.md) states. `orexis::role::played` reads everything the self's roles of
-the package's class say, once, and the type's `read` fills its fields from that; a field the role says nothing of
-keeps the type's `Default`, which is the package's own constants in one place. So what an author can tell a
-package is the fields of one struct: the journal's `Recorder`, `Observer` for what archives sensing's readings,
-the metrics' `Meter`, translation's `Role`. Several roles of one class are read as one.
+By itself. A package that takes anything from its role declares a struct named for the role's class, with a field
+for each thing the role may say: a figure, a word, or where the service a link names answers, which the world's
+derived [deployment](/domain/onboarding/deployment.md) states. The struct is made from the store
+(`Recorder::new(store)`), by a query the package owns, and the kernel reads no role for a package. A figure the
+role does not state is the package's constant, and a link it does not state is none. So what an author can tell a
+package is the fields of one struct, one to one with the role's class: the journal's `Recorder`, `Observer` for
+what archives sensing's readings, the metrics' `Meter`. Several roles of one class are read as one.
 
 # What it is held to
 
