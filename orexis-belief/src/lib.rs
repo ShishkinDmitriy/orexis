@@ -9,9 +9,8 @@
 //! - `events`: what belief says happened, a pass that revised and the revisions held;
 //! - the start, below the modules, and nothing else: the deliberator made, and the task that wakes it.
 
-use orexis::Error;
 use orexis::ontology::BELIEF;
-use orexis::task::{Handed, Hears, Package, Task, Woke};
+use orexis::task::{Handed, Package, Task, Woke};
 
 use crate::ontology::REVISING_TRIGGER;
 
@@ -30,44 +29,37 @@ const REVISE: usize = 1;
 
 inventory::submit! { Package { name: "belief", documents: orexis::documents!("ontology.ttl"), start } }
 
-/// BELIEF'S START: its deliberator made, what the world authored as the agent's state revised, once, and its task,
-/// which hears a belief written and its trigger's events.
-/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
-/// joined, makes its core.
+/// BELIEF'S START, which every package this binary holds is given: it joins where the self plays a deliberator and
+/// declines otherwise; joined, its deliberator is made and what the world authored as the agent's state revised,
+/// once; and it answers ITS TASK, which waits for a belief written or an event beneath its trigger, and revises.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         if !handed.plays(&[crate::ontology::DELIBERATOR]).await? {
             return Ok(None);
         }
-        make(&handed)
+        let mut belief = Deliberator::new(&handed.store)?;
+        belief.watch = handed.events.watch().clone();
+        belief.unrevised(handed.clock.now())?;
+        let mut hears = handed.events.hears();
+        hears.graph(BELIEF, HEARD);
+        hears.event(REVISING_TRIGGER, REVISE);
+        let task: Task = Box::pin(async move {
+            loop {
+                let woke = tokio::select! {
+                    biased;
+                    _ = handed.stopped() => break,
+                    woke = hears.next() => woke,
+                };
+                let Some(woke) = woke else { break };
+                let mut turn = handed.turn();
+                let wrote = match woke {
+                    Woke::Graphs(_, graphs) => belief.revising(&graphs, BELIEF, &mut turn).map(|()| Vec::new()),
+                    Woke::Event(_, event) => belief.heard_event(&event, &mut turn),
+                };
+                turn.done(wrote)?;
+            }
+            Ok(())
+        });
+        Ok(Some(task))
     })
-}
-
-fn make(handed: &Handed) -> Result<Option<Task>, Error> {
-    let mut belief = Deliberator::new(&handed.store)?;
-    belief.watch = handed.events.watch().clone();
-    belief.unrevised(handed.clock.now())?;
-    let mut hears = handed.events.hears();
-    hears.graph(BELIEF, HEARD);
-    hears.event(REVISING_TRIGGER, REVISE);
-    Ok(Some(Box::pin(task(handed.clone(), belief, hears))))
-}
-
-/// BELIEF'S TASK: it waits for a belief written, or an event beneath its trigger, and revises.
-async fn task(handed: Handed, mut belief: Deliberator, mut hears: Hears) -> Result<(), Error> {
-    loop {
-        let woke = tokio::select! {
-            biased;
-            _ = handed.stopped() => break,
-            woke = hears.next() => woke,
-        };
-        let Some(woke) = woke else { break };
-        let mut turn = handed.turn();
-        let wrote = match woke {
-            Woke::Graphs(_, graphs) => belief.revising(&graphs, BELIEF, &mut turn).map(|()| Vec::new()),
-            Woke::Event(_, event) => belief.heard_event(&event, &mut turn),
-        };
-        turn.done(wrote)?;
-    }
-    Ok(())
 }
