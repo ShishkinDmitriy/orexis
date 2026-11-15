@@ -74,23 +74,25 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     Ok(None)
 }
 
-/// WHAT HOLDS WHERE THE ROLE STATES NONE: each default the journal's ontology's shape of the role states
-/// (`sh:defaultValue`), the one place the figure lives.
-const OWN_Q: &str = "SELECT ?path ?own WHERE { ?shape sh:targetClass <http://example.org/orexis/journal#Recorder> ; \
-sh:property ?property . ?property sh:path ?path ; sh:defaultValue ?own }";
-
-/// WHAT THE RECORDER THE SELF PLAYS SAYS, a row per way of saying it: each figure and word of the role, and where
-/// each service it names answers, as the world's deployment states it.
-const RECORDER_Q: &str = "SELECT ?kind ?window ?from ?incident ?served ?archive ?archivedEvery ?tracer ?tracedEvery WHERE { \
+/// THE RECORDER THE SELF PLAYS, IN ONE QUERY: each figure and word the role says or, where it says none, the
+/// default the journal's ontology states on its shape of the role (`sh:defaultValue`); and where each service the
+/// role names answers, as the world's deployment states it.
+const RECORDER_Q: &str = "SELECT ?kind (COALESCE(?windowSaid, ?windowOwn) AS ?window) (COALESCE(?fromSaid, ?fromOwn) AS ?from) \
+?incident ?served ?archive (COALESCE(?archivedEverySaid, ?archivedEveryOwn) AS ?archivedEvery) ?tracer \
+(COALESCE(?tracedEverySaid, ?tracedEveryOwn) AS ?tracedEvery) WHERE { \
 ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind . \
-OPTIONAL { ?role <http://example.org/orexis/journal#windowS> ?window } \
-OPTIONAL { ?role <http://example.org/orexis/journal#incidentFrom> ?from } \
+OPTIONAL { ?role <http://example.org/orexis/journal#windowS> ?windowSaid FILTER(?windowSaid > 0) } \
+OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/journal#windowS> ; sh:defaultValue ?windowOwn ] } \
+OPTIONAL { ?role <http://example.org/orexis/journal#incidentFrom> ?fromSaid } \
+OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/journal#incidentFrom> ; sh:defaultValue ?fromOwn ] } \
+OPTIONAL { ?role <http://example.org/orexis/journal#archivedEveryS> ?archivedEverySaid FILTER(?archivedEverySaid > 0) } \
+OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/journal#archivedEveryS> ; sh:defaultValue ?archivedEveryOwn ] } \
+OPTIONAL { ?role <http://example.org/orexis/journal#tracedEveryS> ?tracedEverySaid FILTER(?tracedEverySaid > 0) } \
+OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/journal#tracedEveryS> ; sh:defaultValue ?tracedEveryOwn ] } \
 OPTIONAL { ?role <http://example.org/orexis/journal#incident> ?incident } \
 OPTIONAL { ?role <http://example.org/orexis/journal#servedAt> ?endpoint . ?endpoint <https://schema.org/url> ?served } \
 OPTIONAL { ?role <http://example.org/orexis/journal#archivedIn> ?kept . ?kept <https://schema.org/url> ?archive } \
-OPTIONAL { ?role <http://example.org/orexis/journal#archivedEveryS> ?archivedEvery } \
-OPTIONAL { ?role <http://example.org/orexis/journal#tracedBy> ?traced . ?traced <https://schema.org/url> ?tracer } \
-OPTIONAL { ?role <http://example.org/orexis/journal#tracedEveryS> ?tracedEvery } }";
+OPTIONAL { ?role <http://example.org/orexis/journal#tracedBy> ?traced . ?traced <https://schema.org/url> ?tracer } }";
 
 /// THE RECORDER THE SELF PLAYS, AS THE JOURNAL'S CRATES READ IT: a field for each thing `journal:Recorder` may say,
 /// how the journal is kept and what it is linked to. A figure the role does not state is the journal's own, and a
@@ -120,62 +122,48 @@ impl Recorder {
     /// The recorder the self plays, read off its self graph and the world's deployment graph by this package's own
     /// query. Several recorder roles are read as one, and where the self plays none nothing is said.
     pub fn new(store: &orexis::store::Store) -> Result<Self, Error> {
-        use orexis::ontology::{DEPLOYMENT, SELF_GRAPH};
+        use orexis::ontology::{DEPLOYMENT, ONTOLOGY, SELF_GRAPH};
         use orexis::store::{Within, value};
         let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
         known.extend(store.graphs_of(&[DEPLOYMENT], &Within::common())?);
+        known.extend(store.graphs_of(&[ONTOLOGY], &Within::default())?);
         let known: Vec<&str> = known.iter().map(String::as_str).collect();
         let mut rows = Vec::new();
-        for row in store.rows(RECORDER_Q, &known)? {
+        for row in store.rows(&RECORDER_Q.replace("{ROLE}", ROLE), &known)? {
             let kind = value(&row, "kind").unwrap_or_default();
             if kind == ROLE || store.closed(&kind)?.iter().any(|class| class == ROLE) {
                 rows.push(row);
             }
+        }
+        if rows.is_empty() {
+            return Err(orexis::Error::Document(format!(
+                "the self plays no {}",
+                orexis::ontology::local_of(ROLE)
+            )));
         }
         let said = |what: &str| {
             rows.iter()
                 .find_map(|row| value(row, what))
                 .filter(|said| !said.is_empty())
         };
-        //  THE ONTOLOGY'S DEFAULT, WHERE THE ROLE SAYS NOTHING: refused where the ontology states none, since a figure
-        //  nothing states is a package shipped broken.
-        let ontologies = store.graphs_of(&[orexis::ontology::ONTOLOGY], &Within::default())?;
-        let ontologies: Vec<&str> = ontologies.iter().map(String::as_str).collect();
-        let owns = store.rows(OWN_Q, &ontologies)?;
-        let own = |word: &str| {
-            let path = format!("http://example.org/orexis/journal#{word}");
-            owns.iter()
-                .find(|row| value(row, "path").as_deref() == Some(path.as_str()))
-                .and_then(|row| value(row, "own"))
-                .ok_or_else(|| orexis::Error::Document(format!("the journal's ontology states no default for {word}")))
-        };
-        let figure = |what: &str, word: &str| {
-            let said = rows
-                .iter()
-                .filter_map(|row| value(row, what)?.parse::<f64>().ok())
-                .find(|figure| *figure > 0.0);
-            match said {
-                Some(figure) => Ok(figure),
-                None => own(word)?.parse::<f64>().map_err(|_| {
-                    orexis::Error::Document(format!("the journal's ontology's default for {word} is no number"))
-                }),
-            }
+        //  A FIGURE NEITHER THE ROLE NOR THE SHAPE STATES is a package shipped broken.
+        let figure = |what: &str| {
+            said(what)
+                .and_then(|figure| figure.parse::<f64>().ok())
+                .ok_or_else(|| orexis::Error::Document(format!("the journal's ontology states no default for {what}")))
         };
         Ok(Recorder {
-            window_s: figure("window", "windowS")?,
-            incident_level: journal::incident_level(Some(&match said("from") {
-                Some(level) => level,
-                None => own("incidentFrom")?,
-            })),
+            window_s: figure("window")?,
+            incident_level: journal::incident_level(said("from").as_deref()),
             incidents: rows.iter().filter_map(|row| value(row, "incident")).collect(),
             endpoint: said("served").and_then(|url| {
                 let authority = url.split("://").last()?.split('/').next()?;
                 authority.rsplit(':').next()?.parse().ok()
             }),
             archive: said("archive").and_then(|url| url.strip_prefix("file://").map(std::path::PathBuf::from)),
-            archived_every_s: figure("archivedEvery", "archivedEveryS")?,
+            archived_every_s: figure("archivedEvery")?,
             tracer: said("tracer").map(|url| url.trim_end_matches('/').to_string()),
-            traced_every_s: figure("tracedEvery", "tracedEveryS")?,
+            traced_every_s: figure("tracedEvery")?,
         })
     }
 }

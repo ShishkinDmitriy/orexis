@@ -59,30 +59,21 @@ pub fn answers(beliefs: &Store, me: &str) -> Result<Option<String>, Error> {
 /// HOW OFTEN THE BOT IS POLLED, in real seconds: what a role the self plays says in the agent's self graph
 /// (`telegram:polledEveryS`), and the transport's own where none says.
 pub fn polled_every_s(beliefs: &Store) -> Result<f64, Error> {
-    let selves = beliefs.graphs_of(&[orexis::ontology::SELF_GRAPH], &orexis::store::Within::default())?;
-    let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
-    let said = beliefs
-        .rows(
-            "SELECT ?every WHERE { ?me a orexis:Self ; orexis:plays ?role . \
-             ?role <http://example.org/orexis/telegram#polledEveryS> ?every } ORDER BY ?every",
-            &selves,
-        )?
-        .iter()
-        .filter_map(|row| orexis::store::value(row, "every")?.parse::<f64>().ok())
-        .find(|figure| *figure > 0.0);
-    if let Some(figure) = said {
-        return Ok(figure);
-    }
-    let ontologies = beliefs.graphs_of(&[orexis::ontology::ONTOLOGY], &orexis::store::Within::default())?;
-    let ontologies: Vec<&str> = ontologies.iter().map(String::as_str).collect();
+    let mut known = beliefs.graphs_of(&[orexis::ontology::SELF_GRAPH], &orexis::store::Within::default())?;
+    known.extend(beliefs.graphs_of(&[orexis::ontology::ONTOLOGY], &orexis::store::Within::default())?);
+    let known: Vec<&str> = known.iter().map(String::as_str).collect();
+    //  ONE QUERY: what a role the self plays says or, where none says, the default the transport's ontology states.
     beliefs
         .rows(
-            "SELECT ?own WHERE { ?shape sh:property ?property . \
-             ?property sh:path <http://example.org/orexis/telegram#polledEveryS> ; sh:defaultValue ?own }",
-            &ontologies,
+            "SELECT (COALESCE(?said, ?own) AS ?every) WHERE { \
+             OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . \
+                        ?role <http://example.org/orexis/telegram#polledEveryS> ?said FILTER(?said > 0) } \
+             OPTIONAL { ?shape sh:property [ sh:path <http://example.org/orexis/telegram#polledEveryS> ; \
+                        sh:defaultValue ?own ] } } ORDER BY ?every",
+            &known,
         )?
         .iter()
-        .find_map(|row| orexis::store::value(row, "own")?.parse::<f64>().ok())
+        .find_map(|row| orexis::store::value(row, "every")?.parse::<f64>().ok())
         .ok_or_else(|| Error::Document("the telegram transport's ontology states no default for polledEveryS".into()))
 }
 
