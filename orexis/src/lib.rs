@@ -27,6 +27,7 @@ pub mod foresight;
 pub mod hash;
 pub mod namespaces;
 pub mod ontology;
+pub mod role;
 pub mod series;
 #[cfg(any(test, feature = "snapshots"))]
 pub mod snapshots;

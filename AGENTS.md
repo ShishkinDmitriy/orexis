@@ -1070,11 +1070,14 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   through, so neither gets a role link, and a model is named by the translator's role (`translation:translatedBy`);
   what a world is held to at onboarding leaves the derived deployment out, a broker's one url there being the one
   an agent reaches it at and no statement of the world's (model, the-world-says-what-it-is-connected-to).
-- **How often a package takes its turn is its role's to say, and the package's constant holds where the role says
-  nothing** — `sensing:archivedEveryS`, `journal:archivedEveryS`, `metrics:windowS`, `telegram:polledEveryS` and
-  `email:polledEveryS`, each read off the self graph
-  by the package that takes the turn (`orexis::boot::figure`); the first two were constants in code and the third the
-  installation's word for every world at once.
+- **A package reads its role as one instance, whose `Default` is the package's own** — `Recorder`, `Observer`,
+  `Meter` and translation's `Role` are each a struct with a field per thing the role may say, a figure, a word or
+  where the service it names answers, filled by one read of the self graph and the deployment
+  (`orexis::role::played`); a reader per figure, each with a pattern of its own, was built first, and three intervals
+  were constants no document could change (role).
+- **How often a package takes its turn is its role's to say** — `sensing:archivedEveryS`, `journal:archivedEveryS`,
+  `journal:tracedEveryS`, `metrics:windowS`, `telegram:polledEveryS` and `email:polledEveryS`; the first three were
+  constants in code and the fourth the installation's word for every world at once.
 - **Every package joins for a role, and a housekeeper for a link on one** — `metrics:Meter` loads the metrics, the
   one package that joined every agent, and a world is monitored where an agent of it plays one, no statement of its
   deployment saying so; what archives sensing's readings joins where the observer's role names a series store

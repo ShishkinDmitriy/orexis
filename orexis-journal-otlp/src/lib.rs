@@ -17,7 +17,7 @@
 //! the journal until the journal's window sweeps it - the hot record is bounded whether or not anything ships.
 //!
 //! OTLP'S JSON OVER HTTP, written here rather than by the OpenTelemetry SDK: one POST of a documented shape to
-//! `/v1/traces` beneath the url of the tracer the recorder's role names, where the world's deployment says it answers, every ten of the agent's seconds, made off
+//! `/v1/traces` beneath the url of the tracer the recorder's role names, where the world's deployment says it answers, as often as the role says and every ten of the agent's seconds where it says nothing, made off
 //! the agent's own threads, so a tracer slow or away never holds the mind.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -32,8 +32,6 @@ use orexis::task::{Handed, Package, Task};
 use orexis_journal::Traced;
 use orexis_journal::journal::{ACTIVITY, Journal};
 
-/// How often what is kept is shipped, in the agent's seconds.
-pub const INTERVAL_S: f64 = 10.0;
 /// An activity shipped says to which cold store, so two may each have their own.
 pub const SHIPPED_TO: &str = "http://example.org/orexis#shippedTo";
 
@@ -257,16 +255,6 @@ pub fn ship(journal: &Journal, agent: &str, endpoint: &str, send: &Send) -> usiz
     activities.len()
 }
 
-/// WHERE THE RECORDER IS TRACED: the url of the tracer its role names (`journal:tracedBy`), as the world's deployment
-/// states it, or None where the role names none or the world says nothing of the one named. The role says which
-/// service and the world where it answers; nothing here reads the environment.
-pub fn tracer(store: &orexis::store::Store) -> Result<Option<String>, orexis::Error> {
-    Ok(orexis::boot::connected(store, WORDS, TRACED_BY)?.map(|url| url.trim_end_matches('/').to_string()))
-}
-
-const WORDS: &str = "PREFIX journal: <http://example.org/orexis/journal#> ";
-const TRACED_BY: &str = "?role journal:tracedBy ?service . ?service a journal:Tracer .";
-
 /// POST each body to `endpoint`'s traces, and say whether it was accepted.
 pub fn post(endpoint: &str) -> Send {
     let url = format!("{endpoint}/v1/traces");
@@ -301,7 +289,10 @@ inventory::submit! { Package { name: "journal-otlp", documents: &[], start } }
 /// and how often is its own stretch.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        let traced = |handed: &Handed| Ok(handed.joined("journal") && tracer(&handed.store)?.is_some());
+        let traced = |handed: &Handed| {
+            Ok(handed.joined("journal")
+                && orexis_journal::Recorder::read(&handed.store)?.is_some_and(|recorder| recorder.tracer.is_some()))
+        };
         if !handed.joins(traced).await? || !handed.started("journal").await {
             return Ok(None);
         }
@@ -314,13 +305,14 @@ fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
     let ships = match handed.outside.take::<Ships>() {
         Some(ships) => ships,
         None => {
-            let (Some(endpoint), Some(journal)) = (tracer(&handed.store)?, handed.outside.read::<Traced>()) else {
+            let recorder = orexis_journal::Recorder::read(&handed.store)?.unwrap_or_default();
+            let (Some(endpoint), Some(journal)) = (recorder.tracer, handed.outside.read::<Traced>()) else {
                 return Ok(None);
             };
             Ships {
                 journal: journal.0,
                 endpoint,
-                every_s: INTERVAL_S,
+                every_s: recorder.traced_every_s,
             }
         }
     };

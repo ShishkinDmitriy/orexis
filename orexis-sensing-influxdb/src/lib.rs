@@ -89,14 +89,44 @@ pub fn archive(store: &Store, sink: &Sink, shipped: &mut Shipped) -> Result<usiz
 
 inventory::submit! { Package { name: "sensing-influxdb", documents: &[], start } }
 
-const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#> ";
-const ARCHIVED_IN: &str = "?role sensing:archivedIn ?service . ?service a orexis:SeriesStore .";
-const ARCHIVED_EVERY: &str = "?role sensing:archivedEveryS ?figure .";
+const OBSERVER: &str = "http://example.org/orexis/sensing#Observer";
+const SENSING: &str = "http://example.org/orexis/sensing#";
 
-/// HOW OFTEN READINGS ARE ARCHIVED, in the agent's seconds: what the observer's role says in the agent's self graph
-/// (`sensing:archivedEveryS`), and the package's own where it says nothing.
-pub fn every_s(store: &Store) -> Result<f64, orexis::Error> {
-    Ok(orexis::boot::figure(store, WORDS, ARCHIVED_EVERY)?.unwrap_or(INTERVAL_S))
+/// THE OBSERVER'S ROLE, AS WHAT ARCHIVES ITS READINGS READS IT: each field what the role says in the agent's self
+/// graph and, where it says nothing, this package's own (`Default`). What sensing itself reads of the role, its
+/// sensors and its limits, is sensing's.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Observer {
+    /// Where the series store the role names answers (`sensing:archivedIn`), as the world's deployment states it:
+    /// None where the role names none or the world says nothing of the one named.
+    pub archive: Option<String>,
+    /// How often readings are archived, in the agent's seconds (`sensing:archivedEveryS`).
+    pub archived_every_s: f64,
+}
+
+impl Default for Observer {
+    fn default() -> Self {
+        Observer {
+            archive: None,
+            archived_every_s: INTERVAL_S,
+        }
+    }
+}
+
+impl Observer {
+    /// The observer the self plays, read off the store: None where it plays none.
+    pub fn read(store: &Store) -> Result<Option<Self>, orexis::Error> {
+        let Some(role) = orexis::role::played(store, OBSERVER)? else {
+            return Ok(None);
+        };
+        let own = Observer::default();
+        Ok(Some(Observer {
+            archive: role.answers(&format!("{SENSING}archivedIn")).map(String::from),
+            archived_every_s: role
+                .figure(&format!("{SENSING}archivedEveryS"))
+                .unwrap_or(own.archived_every_s),
+        }))
+    }
 }
 
 /// ITS START, which every package this binary holds is given: it keeps house for sensing, so it joins where sensing
@@ -106,7 +136,8 @@ pub fn every_s(store: &Store) -> Result<f64, orexis::Error> {
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         let archived = |handed: &Handed| {
-            Ok(handed.joined("sensing") && orexis::boot::connected(&handed.store, WORDS, ARCHIVED_IN)?.is_some())
+            Ok(handed.joined("sensing")
+                && Observer::read(&handed.store)?.is_some_and(|observer| observer.archive.is_some()))
         };
         if !handed.joins(archived).await? {
             return Ok(None);
@@ -123,7 +154,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
         None if handed.outside.has::<orexis::task::Deployed>() => {
             match Sink::deployed(&handed.store, orexis::series::HISTORY, &orexis::series::environment)? {
                 Some((sink, _)) => {
-                    let every_s = every_s(&handed.store)?;
+                    let every_s = Observer::read(&handed.store)?.unwrap_or_default().archived_every_s;
                     log::info!(
                         "{} archives its readings to the history store every {every_s}s",
                         handed.id

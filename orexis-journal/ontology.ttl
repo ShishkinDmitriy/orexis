@@ -47,6 +47,10 @@ journal:tracedBy a owl:ObjectProperty ; rdfs:label "traced by" ;
     rdfs:domain journal:Recorder ; rdfs:range journal:Tracer ;
     rdfs:comment "The tracer a recorder's activities are shipped to, said of the role in the agent's self graph. A recorder whose role names none is traced by nobody, and what ships the activities ends its start." .
 
+journal:tracedEveryS a owl:DatatypeProperty ; rdfs:label "traced every, in seconds" ;
+    rdfs:domain journal:Recorder ;
+    rdfs:comment "How often a recorder's activities are shipped to its tracer, in the agent's seconds, said of the role: how far a trace lags what the agent did. Ten where the role says none." .
+
 #  WHERE WHAT LASTS IS KEPT (knowledge/domain/journal/archive.md).
 
 journal:Archive a owl:Class ; rdfs:label "Archive" ;

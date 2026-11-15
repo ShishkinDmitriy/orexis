@@ -74,51 +74,73 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     Ok(None)
 }
 
-const WORDS: &str = "PREFIX journal: <http://example.org/orexis/journal#> ";
-const SERVED_AT: &str = "?role journal:servedAt ?service . ?service a journal:Endpoint .";
-/// WHAT THE RECORDER'S ROLE SAYS OF HOW ITS JOURNAL IS KEPT, a row per thing said.
-const KEPT_Q: &str = "PREFIX journal: <http://example.org/orexis/journal#> \
-SELECT ?window ?level ?incident WHERE { ?me a orexis:Self ; orexis:plays ?role . \
-{ ?role journal:windowS ?window } UNION { ?role journal:incidentFrom ?level } UNION { ?role journal:incident ?incident } }";
+const JOURNAL: &str = "http://example.org/orexis/journal#";
 
-/// How a recorder's journal is kept, as its role says in the agent's self graph, and the package's own where it
-/// says nothing: how long the log is kept, from which level a line of it is an incident, and the classes that are
-/// incidents beside the vocabulary's.
-pub struct Kept {
+/// THE RECORDER'S ROLE, AS THE JOURNAL'S CRATES READ IT: how the journal is kept and what it is linked to, each
+/// field what the role says in the agent's self graph and, where it says nothing, the package's own (`Default`).
+/// A link is where the service the role names answers, as the world's deployment states it, and None where the
+/// role names none or the world says nothing of the one named.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Recorder {
+    /// How long the log and the activities no incident kept are kept, in the agent's seconds (`journal:windowS`).
     pub window_s: f64,
+    /// From which level a line of the log is an incident (`journal:incidentFrom`).
     pub incident_level: log::Level,
+    /// The classes that are incidents beside the vocabulary's (`journal:incident`).
     pub incidents: std::collections::BTreeSet<String>,
+    /// Where the journal is served, the port of its endpoint (`journal:servedAt`).
+    pub endpoint: Option<u16>,
+    /// Where what lasts is archived, the path of its archive (`journal:archivedIn`).
+    pub archive: Option<std::path::PathBuf>,
+    /// How often what lasts is taken to the archive, in the agent's seconds (`journal:archivedEveryS`).
+    pub archived_every_s: f64,
+    /// Where the activities are shipped, the url of its tracer (`journal:tracedBy`).
+    pub tracer: Option<String>,
+    /// How often the activities are shipped, in the agent's seconds (`journal:tracedEveryS`).
+    pub traced_every_s: f64,
 }
 
-/// What the self's recorder role says of how its journal is kept (`journal:windowS`, `journal:incidentFrom`,
-/// `journal:incident`), read off the self graph alone.
-pub fn kept(store: &orexis::store::Store) -> Result<Kept, Error> {
-    let selves = store.graphs_of(&[orexis::ontology::SELF_GRAPH], &orexis::store::Within::default())?;
-    let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
-    let rows = store.rows(KEPT_Q, &selves)?;
-    let said = |variable: &'static str| -> Vec<String> {
-        rows.iter()
-            .filter_map(|row| orexis::store::value(row, variable))
-            .collect()
-    };
-    let window_s = said("window")
-        .iter()
-        .find_map(|w| w.parse::<f64>().ok())
-        .filter(|w| *w > 0.0);
-    Ok(Kept {
-        window_s: window_s.unwrap_or(journal::WINDOW_S),
-        incident_level: journal::incident_level(said("level").first().map(String::as_str)),
-        incidents: said("incident").into_iter().collect(),
-    })
+impl Default for Recorder {
+    fn default() -> Self {
+        Recorder {
+            window_s: journal::WINDOW_S,
+            incident_level: log::Level::Warn,
+            incidents: std::collections::BTreeSet::new(),
+            endpoint: None,
+            archive: None,
+            archived_every_s: 2.0,
+            tracer: None,
+            traced_every_s: 10.0,
+        }
+    }
 }
 
-/// WHERE THE RECORDER'S JOURNAL IS SERVED: the port of the endpoint its role names (`journal:servedAt`), as the
-/// world's deployment states its url, or None where the role names none or the world says nothing of the one named.
-pub fn endpoint(store: &orexis::store::Store) -> Result<Option<u16>, Error> {
-    Ok(orexis::boot::connected(store, WORDS, SERVED_AT)?.and_then(|url| {
-        let authority = url.split("://").last()?.split('/').next()?.to_string();
-        authority.rsplit(':').next()?.parse().ok()
-    }))
+impl Recorder {
+    /// The recorder the self plays, read off the store: None where it plays none.
+    pub fn read(store: &orexis::store::Store) -> Result<Option<Self>, Error> {
+        let Some(role) = orexis::role::played(store, ROLE)? else {
+            return Ok(None);
+        };
+        let own = Recorder::default();
+        let said = |word: &str| format!("{JOURNAL}{word}");
+        Ok(Some(Recorder {
+            window_s: role.figure(&said("windowS")).unwrap_or(own.window_s),
+            incident_level: journal::incident_level(role.word(&said("incidentFrom"))),
+            incidents: role.words(&said("incident")).iter().cloned().collect(),
+            endpoint: role.answers(&said("servedAt")).and_then(|url| {
+                let authority = url.split("://").last()?.split('/').next()?;
+                authority.rsplit(':').next()?.parse().ok()
+            }),
+            archive: role
+                .answers(&said("archivedIn"))
+                .and_then(|url| url.strip_prefix("file://").map(std::path::PathBuf::from)),
+            archived_every_s: role.figure(&said("archivedEveryS")).unwrap_or(own.archived_every_s),
+            tracer: role
+                .answers(&said("tracedBy"))
+                .map(|url| url.trim_end_matches('/').to_string()),
+            traced_every_s: role.figure(&said("tracedEveryS")).unwrap_or(own.traced_every_s),
+        }))
+    }
 }
 
 /// ITS OWN JOURNAL, where the agent is deployed: in memory, on the agent's clock, its window and what counts as an
@@ -127,7 +149,7 @@ pub fn endpoint(store: &orexis::store::Store) -> Result<Option<u16>, Error> {
 /// what archives the journal has said where it is, the journal itself until then - and the journal at
 /// `/live/sparql`. A role naming no endpoint is served nowhere.
 fn own(handed: &Handed) -> Result<Arc<Journal>, Error> {
-    let kept = kept(&handed.store)?;
+    let kept = Recorder::read(&handed.store)?.unwrap_or_default();
     let mut journal = Journal::new(kept.window_s, {
         let clock = handed.clock.clone();
         Arc::new(move || clock.now())
@@ -142,7 +164,7 @@ fn own(handed: &Handed) -> Result<Arc<Journal>, Error> {
         }));
     }
     #[cfg(feature = "serve")]
-    if let Some(port) = endpoint(&handed.store)? {
+    if let Some(port) = kept.endpoint {
         let (past, live) = (journal.clone(), journal.store.clone());
         if let Err(e) = journal::serve(
             vec![

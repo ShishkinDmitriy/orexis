@@ -202,13 +202,40 @@ inventory::submit! { Package { name: "metrics", documents: orexis::documents!("o
 
 /// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
 const ROLE: &str = "http://example.org/orexis/metrics#Meter";
-const WORDS: &str = "PREFIX metrics: <http://example.org/orexis/metrics#> ";
-const WINDOW: &str = "?role metrics:windowS ?figure .";
+const METRICS: &str = "http://example.org/orexis/metrics#";
 
-/// HOW LONG A WINDOW IS, in real seconds: what the meter's role says in the agent's self graph (`metrics:windowS`),
-/// and the package's own where it says nothing.
-pub fn window_s(store: &orexis::store::Store) -> Result<f64, orexis::Error> {
-    Ok(orexis::boot::figure(store, WORDS, WINDOW)?.unwrap_or(INTERVAL_S))
+/// THE METER'S ROLE, AS THIS PACKAGE READS IT: each field what the role says in the agent's self graph and, where it
+/// says nothing, the package's own (`Default`).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Meter {
+    /// Where the series store the role names answers (`metrics:writtenTo`), as the world's deployment states it:
+    /// None where the role names none or the world says nothing of the one named.
+    pub store: Option<String>,
+    /// How long a window is, in real seconds (`metrics:windowS`).
+    pub window_s: f64,
+}
+
+impl Default for Meter {
+    fn default() -> Self {
+        Meter {
+            store: None,
+            window_s: INTERVAL_S,
+        }
+    }
+}
+
+impl Meter {
+    /// The meter the self plays, read off the store: None where it plays none.
+    pub fn read(store: &orexis::store::Store) -> Result<Option<Self>, orexis::Error> {
+        let Some(role) = orexis::role::played(store, ROLE)? else {
+            return Ok(None);
+        };
+        let own = Meter::default();
+        Ok(Some(Meter {
+            store: role.answers(&format!("{METRICS}writtenTo")).map(String::from),
+            window_s: role.figure(&format!("{METRICS}windowS")).unwrap_or(own.window_s),
+        }))
+    }
 }
 
 /// ITS START, which every package this binary holds is given: it joins where the self plays a meter, and joined,
@@ -236,7 +263,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
             else {
                 return Ok(None);
             };
-            let interval = window_s(&handed.store)?;
+            let interval = Meter::read(&handed.store)?.unwrap_or_default().window_s;
             log::info!("{} writes its metrics every {interval}s", handed.id);
             Window::new(sink, interval, Some(&deployed.world), Some(&handed.id))
         }

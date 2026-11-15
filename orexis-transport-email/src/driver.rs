@@ -29,12 +29,9 @@ const ADDRESS_Q: &str = "SELECT ?address WHERE { $contact schema:email ?address 
 /// HOW OFTEN THE MAILBOX IS POLLED, in real seconds: what a role the self plays says in the agent's self graph
 /// (`email:polledEveryS`), and the transport's own where none says.
 pub fn polled_every_s(beliefs: &Store) -> Result<f64, Error> {
-    Ok(orexis::boot::figure(
-        beliefs,
-        "PREFIX email: <http://example.org/orexis/email#> ",
-        "?role email:polledEveryS ?figure .",
-    )?
-    .unwrap_or(POLL_S))
+    Ok(orexis::role::played(beliefs, "http://example.org/orexis#Role")?
+        .and_then(|role| role.figure("http://example.org/orexis/email#polledEveryS"))
+        .unwrap_or(POLL_S))
 }
 
 /// A mailbox: every unseen message as its sender's address and its plain text, each then seen; and one sent.

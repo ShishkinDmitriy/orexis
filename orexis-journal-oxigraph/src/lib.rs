@@ -29,9 +29,6 @@ use orexis::task::{Handed, Package, Task};
 use orexis_journal::Journal;
 use orexis_journal::journal::{ACTIVITY, KEPT_BY, LOG_RECORD};
 
-/// How often what lasts is archived, in the agent's seconds.
-pub const INTERVAL_S: f64 = 2.0;
-
 fn engine(e: impl std::fmt::Display) -> Error {
     Error::Evaluation(e.to_string())
 }
@@ -143,31 +140,16 @@ pub struct Archives {
 
 inventory::submit! { Package { name: "journal-oxigraph", documents: &[], start } }
 
-/// WHERE THE RECORDER'S ARCHIVE IS: the path of the archive its role names (`journal:archivedIn`), as the world's
-/// deployment states it, a `file:` url, or None where the role names none or the world says nothing of the one
-/// named. The role says that there is one and the world where; no flag does.
-pub fn archive(store: &orexis::store::Store) -> Result<Option<std::path::PathBuf>, Error> {
-    Ok(orexis::boot::connected(store, WORDS, ARCHIVED_IN)?
-        .and_then(|url| url.strip_prefix("file://").map(std::path::PathBuf::from)))
-}
-
-const WORDS: &str = "PREFIX journal: <http://example.org/orexis/journal#> ";
-const ARCHIVED_IN: &str = "?role journal:archivedIn ?service . ?service a journal:Archive .";
-const ARCHIVED_EVERY: &str = "?role journal:archivedEveryS ?figure .";
-
-/// HOW OFTEN THE JOURNAL IS ARCHIVED, in the agent's seconds: what the recorder's role says in the agent's self
-/// graph (`journal:archivedEveryS`), and the package's own where it says nothing.
-pub fn every_s(store: &orexis::store::Store) -> Result<f64, Error> {
-    Ok(orexis::boot::figure(store, WORDS, ARCHIVED_EVERY)?.unwrap_or(INTERVAL_S))
-}
-
 /// ITS START, which every package this binary holds is given: it keeps house for the journal, so it joins where the
 /// journal did AND THE RECORDER'S ROLE NAMES AN ARCHIVE the world says where to find, and where the role names none
 /// its start ends there, and what lasts stays in the journal. Joined, it waits for the journal's start; handed a
 /// journal and an archive, its task.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        let archived = |handed: &Handed| Ok(handed.joined("journal") && archive(&handed.store)?.is_some());
+        let archived = |handed: &Handed| {
+            Ok(handed.joined("journal")
+                && orexis_journal::Recorder::read(&handed.store)?.is_some_and(|recorder| recorder.archive.is_some()))
+        };
         if !handed.joins(archived).await? || !handed.started("journal").await {
             return Ok(None);
         }
@@ -215,7 +197,8 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
 /// binary built without the volume has nowhere to keep one, says so, and what lasts stays in the journal.
 fn own(handed: &Handed) -> Result<Option<Archives>, Error> {
     //  READ AND LEFT, for what ships the activities, whichever of the two starts first.
-    let (Some(path), Some(journal)) = (archive(&handed.store)?, handed.outside.read::<orexis_journal::Traced>()) else {
+    let recorder = orexis_journal::Recorder::read(&handed.store)?.unwrap_or_default();
+    let (Some(path), Some(journal)) = (recorder.archive, handed.outside.read::<orexis_journal::Traced>()) else {
         return Ok(None);
     };
     let kept = journal.0;
@@ -224,7 +207,7 @@ fn own(handed: &Handed) -> Result<Option<Archives>, Error> {
         Ok(Some(Archives {
             journal: kept,
             archive: Arc::new(Archive::open(&path)?),
-            every_s: every_s(&handed.store)?,
+            every_s: recorder.archived_every_s,
         }))
     }
     #[cfg(not(feature = "volume"))]

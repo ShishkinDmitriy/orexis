@@ -51,6 +51,16 @@ a peer finds the agent by it: the courier's [driver](/domain/courier/driver.md),
   Hanoi's mover is a planner and nothing else, its plan its output — and planning, finding no
   executor to link to, lets it go `planned` once the plan is published ([runtime](/domain/kernel/runtime.md)).
 
+# How a package reads it
+
+As one instance. A package that takes anything from its role declares a type for it, a field per thing the role may
+say: a figure, a word, or where the service a link names answers, which the world's derived
+[deployment](/domain/onboarding/deployment.md) states. `orexis::role::played` reads everything the self's roles of
+the package's class say, once, and the type's `read` fills its fields from that; a field the role says nothing of
+keeps the type's `Default`, which is the package's own constants in one place. So what an author can tell a
+package is the fields of one struct: the journal's `Recorder`, `Observer` for what archives sensing's readings,
+the metrics' `Meter`, translation's `Role`. Several roles of one class are read as one.
+
 # What it is held to
 
 There is **no default**. An agent playing no role runs nothing and `orexis-onboard` refuses it — a

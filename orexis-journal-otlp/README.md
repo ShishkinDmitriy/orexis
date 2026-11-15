@@ -11,7 +11,7 @@ JSON on HTTP.
 
 | Woken by | Does |
 |---|---|
-| the clock, every 10 s of the agent's time | POSTs every activity not yet shipped to `/v1/traces` beneath the tracer's url, off the agent's own threads |
+| the clock, as often as the recorder's role says (`journal:tracedEveryS`), every 10 s of the agent's time where it says nothing | POSTs every activity not yet shipped to `/v1/traces` beneath the tracer's url, off the agent's own threads |
 
 It hears no event and starts no activity.
 

@@ -29,7 +29,7 @@ where the installation names none.
 `orexis-journal-otlp/`, the housekeeper that ships what the [journal](/domain/kernel/journal.md) holds of the
 activities. As it starts it asks the store for the tracer its role names. Where the agent plays a
 [recorder](/domain/journal/recorder.md) whose role names one and the world says where it answers, it joins, takes
-the journal and posts to `/v1/traces` beneath the url every ten of the agent's seconds. Where the role names none,
+the journal and posts to `/v1/traces` beneath the url as often as the role says (`journal:tracedEveryS`), every ten of the agent's seconds where it says nothing. Where the role names none,
 its start ends, and the activities stay in the journal for its window.
 
 Why the world says it and no environment does is
