@@ -46,7 +46,8 @@ at all.
 `:rose_grower execution:patienceS 120` beside `:rose_grower a orexis:Self`. Each package declares the
 figures it reads in its own ontology, with domain `orexis:Self`, and reads them through one kernel
 reader, `stance` in `orexis/src/stance.rs`, which asks `?me a orexis:Self ; $stance ?n` over the graphs of
-kind `orexis:SelfGraph` and nothing else; the package's constant stands where none is stated. The
+kind `orexis:SelfGraph` and nothing else; the package's constant stands where none is stated (since 2026-11-15
+the default its ontology states, [stance](/domain/kernel/stance.md)). The
 kernel names no package's figure and no package names another's. What each is, and what reads it,
 is [stance](/domain/kernel/stance.md)'s.
 

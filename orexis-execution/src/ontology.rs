@@ -75,3 +75,8 @@ pub fn committed_graph(agent: &str, step: &str) -> String {
         .collect();
     format!("{GRAPH}committed/{agent}/{local}")
 }
+
+/// WHAT HOLDS WHERE THE AGENT'S DOCUMENTS STATE NO FIGURE: the defaults this package's ontology states
+/// (`sh:defaultValue`), the one place each lives.
+pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
+    std::sync::LazyLock::new(|| orexis::shape::Defaults::of("execution", include_str!("../ontology.ttl")));

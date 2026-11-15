@@ -32,10 +32,6 @@ use crate::ontology::{BUDGET_TERM, CHANGED, REVISED, REVISED_SOURCE, REVISION_GR
 use crate::revise::{self, revise, say_settled};
 use crate::trigger::trigger;
 
-/// Rule executions one pass may spend, across every source it revises, where the self graph states no
-/// `belief:budget`.
-pub const BUDGET: usize = 256;
-
 /// EVERY SOURCE WHOSE RULES DID NOT SETTLE, off the revision graphs' rows.
 const UNSETTLED_Q: &str = "
 SELECT ?source WHERE { GRAPH $cat { ?g $settled false ; prov:wasDerivedFrom ?source } } ORDER BY ?source";
@@ -155,7 +151,8 @@ impl Deliberator {
     pub fn new(beliefs: &Store, agent: &str, budget: Option<usize>) -> Result<Self, Error> {
         let budget = match budget {
             Some(b) => b,
-            None => stance(beliefs, BUDGET_TERM)?.map_or(BUDGET, |b| b as usize),
+            None => stance(beliefs, BUDGET_TERM)?.map_or_else(|| crate::ontology::DEFAULTS.figure(BUDGET_TERM), Ok)?
+                as usize,
         };
         let mut deliberator = Deliberator {
             beliefs: beliefs.clone(),
@@ -505,7 +502,10 @@ mod tests {
     #[test]
     fn the_budget_is_the_agents_stance_where_its_self_graph_states_one() {
         let store = revise_case("a_chain_settles_in_a_later_round");
-        assert_eq!(Deliberator::new(&store, snapshots::AGENT, None).unwrap().budget, BUDGET);
+        assert_eq!(
+            Deliberator::new(&store, snapshots::AGENT, None).unwrap().budget,
+            crate::ontology::DEFAULTS.figure(BUDGET_TERM).unwrap() as usize
+        );
         store
             .update(&format!(
                 "INSERT DATA {{ GRAPH <{T}self> {{ <{T}keeper> a orexis:Self ; <{BUDGET_TERM}> 2 }} {} }}",

@@ -304,3 +304,9 @@ execution:intention a owl:ObjectProperty ; rdfs:range execution:Intention ;
 execution:landed a owl:DatatypeProperty ; rdfs:domain execution:StepAnswered ; rdfs:range xsd:boolean ;
     rdfs:label "landed" ;
     rdfs:comment "Whether the present came to hold what the step predicted." .
+
+#  WHAT HOLDS WHERE THE SELF STATES NO SUCH STANCE, read by the package off this ontology: the one place each
+#  figure lives.
+[] a sh:NodeShape ;
+    sh:targetClass orexis:Self ;
+    sh:property [ sh:path execution:patienceS ; sh:defaultValue 60 ] .

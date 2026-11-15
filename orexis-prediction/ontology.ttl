@@ -64,3 +64,9 @@
     sum is integrated that far and no ground is laid past it, so a crossing beyond it is not
     foreseen and no want is minted for it yet. A stance: the agent states it of itself in its self
     graph and `foresee` reads it; where it states none, a day.""" .
+
+#  WHAT HOLDS WHERE THE SELF STATES NO SUCH STANCE, read by the package off this ontology: the one place each
+#  figure lives.
+[] a sh:NodeShape ;
+    sh:targetClass orexis:Self ;
+    sh:property [ sh:path :horizonS ; sh:defaultValue 86400 ] .

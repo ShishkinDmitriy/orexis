@@ -39,3 +39,8 @@ pub fn slug(iri: &str) -> String {
 pub fn predicted_of(feature: &str, property: &str) -> String {
     format!("{OREXIS}predicted_{}_{}", slug(feature), slug(property))
 }
+
+/// WHAT HOLDS WHERE THE AGENT'S DOCUMENTS STATE NO FIGURE: the defaults this package's ontology states
+/// (`sh:defaultValue`), the one place each lives.
+pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
+    std::sync::LazyLock::new(|| orexis::shape::Defaults::of("prediction", include_str!("../ontology.ttl")));

@@ -32,3 +32,8 @@ pub fn revision_graph(source: &str) -> String {
 pub fn state_graph(arrival: &str) -> String {
     format!("{arrival}/believed")
 }
+
+/// WHAT HOLDS WHERE THE AGENT'S DOCUMENTS STATE NO FIGURE: the defaults this package's ontology states
+/// (`sh:defaultValue`), the one place each lives.
+pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
+    std::sync::LazyLock::new(|| orexis::shape::Defaults::of("belief", include_str!("../ontology.ttl")));

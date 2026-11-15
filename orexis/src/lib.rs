@@ -28,6 +28,7 @@ pub mod hash;
 pub mod namespaces;
 pub mod ontology;
 pub mod series;
+pub mod shape;
 #[cfg(any(test, feature = "snapshots"))]
 pub mod snapshots;
 pub mod stance;

@@ -36,9 +36,6 @@ use crate::ontology::{
 };
 use crate::ranges::{ranges_of, side};
 
-/// HOW FAR PAST THE OBSERVATION THE AGENT LOOKS, where its self graph states no `prediction:horizonS`: a day.
-pub const HORIZON_S: f64 = 86400.0;
-
 /// THE LONGEST A RATE IS HELD before the flows are asked again: an hour.
 pub const SEGMENT_S: f64 = 3600.0;
 
@@ -468,7 +465,7 @@ pub fn foresee(beliefs: &Store, now: DateTime, placed: Option<&Placed<'_>>) -> R
     let Some(cat) = beliefs.catalogue()? else {
         return Ok(None);
     };
-    let horizon = stance(beliefs, HORIZON_TERM)?.unwrap_or(HORIZON_S);
+    let horizon = stance(beliefs, HORIZON_TERM)?.map_or_else(|| crate::ontology::DEFAULTS.figure(HORIZON_TERM), Ok)?;
     let flow_graphs = beliefs.graphs_of(&[FLOW_GRAPH], &Within::default())?;
     let flow_graphs: Vec<&str> = flow_graphs.iter().map(String::as_str).collect();
     let sensors: Vec<String> = beliefs

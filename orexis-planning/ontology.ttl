@@ -437,3 +437,10 @@ planning:published a owl:ObjectProperty ; rdfs:domain planning:PlanPublished ; r
 planning:want a owl:ObjectProperty ; rdfs:domain planning:WantUnreachable ; rdfs:range planning:Want ;
     rdfs:label "want" ;
     rdfs:comment "The want nothing reaches." .
+
+#  WHAT HOLDS WHERE THE SELF STATES NO SUCH STANCE, read by the package off this ontology: the one place each
+#  figure lives.
+[] a sh:NodeShape ;
+    sh:targetClass orexis:Self ;
+    sh:property [ sh:path planning:budget ; sh:defaultValue 32 ] ,
+                [ sh:path planning:budgetEveryS ; sh:defaultValue 10 ] .
