@@ -82,6 +82,10 @@ answers the one task that holds it — a loop of the package's own, awaiting the
 and the clock ([a-package-starts-itself](/decisions/a-package-starts-itself.md),
 [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
 
+**A package's start is in its crate's `lib.rs`.** Below what the crate is and its modules: what a test hands it, the
+[role](/domain/kernel/role.md) it is loaded for, its registration, `start`, `make` and its task, the same in every
+crate. The work is in the modules.
+
 **A start does nothing before it has joined.** The boot runs every start as far as its decision and holds it
 there (`task::boot`), so that what joined is known and the store finished before anything is made; starting the
 agent then runs the same starts on to their ends (`Booted::start`), so a start runs once for a boot. It ran twice,

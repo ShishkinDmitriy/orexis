@@ -23,11 +23,11 @@ use orexis_speech::events::{Said, Statement};
 use orexis_speech::prose::{Carrier, PROSE_GRAPH, PROSE_KEPT, Prose, ProseKept, WRITING_ANNOUNCED, carry, kept};
 use orexis_translation::briefing::briefing;
 use orexis_translation::chat::chats_of;
-use orexis_translation::create::{CONVERSE_SYSTEM, Inline, SAY_SYSTEM, SILENT, UNADDRESSED};
 use orexis_translation::events::{Conversed, Translated};
 use orexis_translation::model::{Answer, Failure, Model, Turn};
 use orexis_translation::readable::{QUERY, Readable, VOCABULARY};
 use orexis_translation::stated::{PROPERTY, Stating, believe, listing, rendered, statement_of, words};
+use orexis_translation::{CONVERSE_SYSTEM, Inline, SAY_SYSTEM, SILENT, UNADDRESSED};
 use orexis_transport_email as _;
 use orexis_transport_mqtt as _;
 use orexis_transport_telegram as _;
@@ -1319,7 +1319,7 @@ fn the_person_sees_the_agent_writing_from_the_words_heard_to_the_answer_said() {
         [format!("{V}clara_telegram")],
         "shown before the model is asked"
     );
-    s.later(3.0 * orexis_translation::create::WRITING_S);
+    s.later(3.0 * orexis_translation::WRITING_S);
     assert_eq!(
         s.bot.lock().unwrap().writing.len(),
         1,
@@ -1356,7 +1356,7 @@ fn a_model_that_fails_says_so_in_the_chat_where_the_agent_was_addressed() {
         )]
     );
     let shown = s.bot.lock().unwrap().writing.len();
-    s.later(3.0 * orexis_translation::create::WRITING_S);
+    s.later(3.0 * orexis_translation::WRITING_S);
     assert_eq!(
         s.bot.lock().unwrap().writing.len(),
         shown,
