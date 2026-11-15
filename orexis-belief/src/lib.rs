@@ -12,8 +12,9 @@ use oxigraph::model::NamedNode;
 use oxsdatatypes::DateTime;
 
 use orexis::Error;
+use orexis::events::Watch;
 use orexis::ontology::BELIEF;
-use orexis::store::Within;
+use orexis::store::{Store, Within};
 use orexis::task::{Handed, Heard, Hears, Package, Task, Turn, Woke};
 
 use crate::ontology::{INTO, REVISES, REVISING, REVISING_TRIGGER, REVISION_GRAPH};
@@ -24,10 +25,49 @@ mod revise;
 pub mod transition;
 mod trigger;
 
-pub use deliberator::{Deliberator, Revised};
+pub use deliberator::Revised;
+
+use deliberator::Arrival;
 
 const HEARD: usize = 0;
 const REVISE: usize = 1;
+
+/// THE DELIBERATOR THE SELF PLAYS, the package's core: the pass over what was written since the last one, within the
+/// budget its role states (`deliberator.rs`).
+pub struct Deliberator {
+    pub(crate) beliefs: Store,
+    pub id: String,
+    pub budget: usize,
+    /// Rule executions one source's revision may spend in a pass.
+    pub per_source: usize,
+    /// Source to where it stands, in the order changes arrived.
+    pub(crate) queue: Vec<(String, Arrival)>,
+    /// Whoever watches the agent.
+    pub watch: Watch,
+}
+
+impl Deliberator {
+    /// The beliefs and the one identifier a process is told. The budget is the deliberator's role's figure, its ontology's default where it
+    /// states none — or the caller's.
+    pub fn new(beliefs: &Store, agent: &str, budget: Option<usize>) -> Result<Self, Error> {
+        let budget = match budget {
+            Some(b) => b,
+            None => crate::ontology::figure_of(beliefs, crate::ontology::BUDGET_TERM)? as usize,
+        };
+        let mut deliberator = Deliberator {
+            beliefs: beliefs.clone(),
+            id: agent.to_string(),
+            budget,
+            per_source: revise::BUDGET,
+            queue: Vec::new(),
+            watch: Watch::default(),
+        };
+        for source in deliberator.unsettled()? {
+            deliberator.queue.push((source, Arrival::new(None, BELIEF)));
+        }
+        Ok(deliberator)
+    }
+}
 
 //  THE PACKAGE'S POLICY, on its core: what the deliberator revises as the package starts and on what it hears.
 impl Deliberator {
@@ -118,7 +158,6 @@ mod tests {
 
     use orexis::ontology::CATALOGUE_GRAPH;
     use orexis::snapshots;
-    use orexis::store::Store;
 
     use super::*;
     use std::sync::{Arc, Mutex};

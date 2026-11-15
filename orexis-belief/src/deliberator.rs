@@ -1,4 +1,4 @@
-//! THE DELIBERATOR: the belief package's pass, as `agent/belief/deliberator.py` sequences it.
+//! THE DELIBERATOR'S PASS (the struct is in `lib.rs`, where the package's start is): the belief package's pass, as `agent/belief/deliberator.py` sequences it.
 //!
 //! **WHAT IT OWNS IS A QUEUE.** A writer that wrote a graph says so, `changed(source)`, and nothing happens there;
 //! `deliberate()` is the pass, which takes every source in the queue in turn, spending at most a budget of rule
@@ -23,12 +23,13 @@ use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
-use orexis::events::{Event, Mark, Number, Watch};
+use orexis::events::{Event, Mark, Number};
 use orexis::ontology::{BELIEF, RECORD};
-use orexis::store::{Store, Within, iri};
+use orexis::store::{Within, iri};
 
-use crate::ontology::{BUDGET_TERM, CHANGED, REVISED, REVISED_SOURCE, REVISION_GRAPH, SETTLED, revision_graph};
-use crate::revise::{self, revise, say_settled};
+use crate::Deliberator;
+use crate::ontology::{CHANGED, REVISED, REVISED_SOURCE, REVISION_GRAPH, SETTLED, revision_graph};
+use crate::revise::{revise, say_settled};
 use crate::trigger::trigger;
 
 /// EVERY SOURCE WHOSE RULES DID NOT SETTLE, off the revision graphs' rows.
@@ -111,7 +112,7 @@ WHERE { GRAPH $cat { ?g a $revision ; $settled ?settled } }";
 /// revision has settled, how many orders of its transitions are applied, whether its row was said unsettled for
 /// its transitions, and the kind its revisions are.
 #[derive(Clone, Debug)]
-struct Arrival {
+pub(crate) struct Arrival {
     read: Option<Vec<String>>,
     revised: bool,
     done: usize,
@@ -120,7 +121,7 @@ struct Arrival {
 }
 
 impl Arrival {
-    fn new(read: Option<Vec<String>>, kind: &str) -> Self {
+    pub(crate) fn new(read: Option<Vec<String>>, kind: &str) -> Self {
         Arrival {
             read,
             revised: false,
@@ -131,41 +132,7 @@ impl Arrival {
     }
 }
 
-/// The pass over what was written since the last one, within a budget.
-pub struct Deliberator {
-    pub(crate) beliefs: Store,
-    pub id: String,
-    pub budget: usize,
-    /// Rule executions one source's revision may spend in a pass.
-    pub per_source: usize,
-    /// Source to where it stands, in the order changes arrived.
-    queue: Vec<(String, Arrival)>,
-    /// Whoever watches the agent.
-    pub watch: Watch,
-}
-
 impl Deliberator {
-    /// The beliefs and the one identifier a process is told. The budget is the deliberator's role's figure, its ontology's default where it
-    /// states none — or the caller's.
-    pub fn new(beliefs: &Store, agent: &str, budget: Option<usize>) -> Result<Self, Error> {
-        let budget = match budget {
-            Some(b) => b,
-            None => crate::ontology::figure_of(beliefs, BUDGET_TERM)? as usize,
-        };
-        let mut deliberator = Deliberator {
-            beliefs: beliefs.clone(),
-            id: agent.to_string(),
-            budget,
-            per_source: revise::BUDGET,
-            queue: Vec::new(),
-            watch: Watch::default(),
-        };
-        for source in deliberator.unsettled()? {
-            deliberator.queue.push((source, Arrival::new(None, BELIEF)));
-        }
-        Ok(deliberator)
-    }
-
     /// A graph was written: take it on the next pass, revised beside `read` where the writer says what stands, its
     /// revisions classified `kind`. Written again before it was done, it is a new arrival at the end of the queue.
     pub fn changed(&mut self, source: &str, read: Option<Vec<String>>, kind: &str) {
@@ -321,7 +288,7 @@ impl Deliberator {
         Ok(())
     }
 
-    fn unsettled(&self) -> Result<Vec<String>, Error> {
+    pub(crate) fn unsettled(&self) -> Result<Vec<String>, Error> {
         let Some(cat) = self.beliefs.catalogue()? else {
             return Ok(Vec::new());
         };
@@ -347,11 +314,13 @@ mod tests {
 
     use std::collections::BTreeMap;
 
-    use orexis::snapshots;
-    use oxsdatatypes::DayTimeDuration;
-
     use super::*;
+    use crate::ontology::BUDGET_TERM;
+    use crate::revise;
     use crate::trigger::trigger as triggered;
+    use orexis::snapshots;
+    use orexis::store::Store;
+    use oxsdatatypes::DayTimeDuration;
 
     const SENSED: &str = "http://example.org/test#sensed";
     const T: &str = "http://example.org/test#";
