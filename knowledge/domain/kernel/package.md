@@ -82,9 +82,10 @@ answers the one task that holds it — a loop of the package's own, awaiting the
 and the clock ([a-package-starts-itself](/decisions/a-package-starts-itself.md),
 [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
 
-**A start does nothing before it has joined.** The boot runs every start as far as its decision and drops it
-there (`task::decide`), so that what joined is known before anything is made, and `task::start` runs the starts of the joined to their
-ends.
+**A start does nothing before it has joined.** The boot runs every start as far as its decision and holds it
+there (`task::boot`), so that what joined is known and the store finished before anything is made; starting the
+agent then runs the same starts on to their ends (`Booted::start`), so a start runs once for a boot. It ran twice,
+the first run dropped at its decision, while the binary had to know what joined before it made the journal.
 
 **A deployed agent's package makes what it is not handed.** Whoever runs an agent for good hands
 `orexis::task::Deployed` outside, and a package then makes its own from what the world says: the journal package

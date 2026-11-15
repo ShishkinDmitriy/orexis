@@ -525,10 +525,14 @@ impl Begun {
     }
 }
 
-/// BOOT `booting.agent` into `store`, and answer the packages that joined, by name: begun, each
-/// package this binary holds asked in its own start whether the agent runs it (`task::decide`), and finished. No
-/// package's core is made and no task started: that is `task::start`, over the packages this answers.
+/// BOOT `booting.agent` into `store`, and answer the packages that joined, by name: each package this binary holds
+/// asked in its own start whether the agent runs it, and the starts dropped where they decided (`task::boot`). No
+/// package's core is made and nothing runs: for a caller that wants the store as booted and nothing started.
 pub fn boot(store: &Store, booting: &Booting<'_>) -> Result<Vec<String>, Error> {
-    let begun = begin(store, booting)?;
-    crate::task::decide(store, booting.agent, begun)
+    let clock = std::sync::Arc::new(crate::clock::Manual::at(oxsdatatypes::DateTime::now()));
+    Ok(
+        crate::task::boot(store, booting, clock, crate::task::Outside::default())?
+            .loaded()
+            .to_vec(),
+    )
 }
