@@ -9,20 +9,20 @@ description: >-
 
 # The two budgets
 
-- **The search's**, in candidates weighed: `planning:budget`, a [stance](/domain/kernel/stance.md)
+- **The search's**, in candidates weighed: `planning:budget`, a figure of the planner's [role](/domain/kernel/role.md)
   the Planner reads when it is made, or `Planner(budget=…)` where a caller sizes one. A
   search stops when it has weighed that many more than it had, and its plan says
   `planning:Exhausted`. The frontier is rows, so the next planning opens the same worlds where this
   one stopped: three disks at twenty a planning reach their seven moves on the third, having
   weighed exactly what one planning with room would.
 - **Revision's**, in rule executions: the [deliberator](/domain/belief/deliberator.md)'s per pass,
-  `belief:budget`, a stance too. A graph the budget cut short keeps what was concluded, its row saying `belief:settled false`.
+  `belief:budget`, a figure of its role too. A graph the budget cut short keeps what was concluded, its row saying `belief:settled false`.
 
 # A budget is for a stretch of time
 
 A search the budget cut short is given its next budget when one of two things holds, and not before:
 the grounds it is searched in differ from those it was cut short in, by their hashes, which is news;
-or `planning:budgetEveryS` of the agent's time has passed since it was cut short, a stance too, ten
+or `planning:budgetEveryS` of the agent's time has passed since it was cut short, a figure of the planner's role too, ten
 seconds where none is stated. The planner says when that is (`continues_at`), and planning's
 [policy](/domain/kernel/policy.md) wakes then.
 

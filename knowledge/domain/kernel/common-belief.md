@@ -48,5 +48,5 @@ and a desire the world states without naming an agent are common to every agent 
 `common=True` asks for those of any kind.
 
 A common belief is never where an agent states itself: a figure about an agent in one is the
-world's word about it, not the agent's ([stance](/domain/kernel/stance.md),
+world's word about it, not the agent's ([role](/domain/kernel/role.md),
 [self](/domain/kernel/self.md)).

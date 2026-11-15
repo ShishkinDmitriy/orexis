@@ -118,12 +118,11 @@ sh:RulesGraph rdfs:subClassOf orexis:Graph .
     (knowledge/domain/belief/transition.md).""" .
 
 :budget a owl:DatatypeProperty ;
-    rdfs:domain orexis:Self ;
+    rdfs:domain :Deliberator ;
     rdfs:range xsd:integer ;
     rdfs:label "budget" ;
     rdfs:comment """How many rule executions one pass of revision may spend, across every source it
-    revises; a source the budget cuts short is continued by the next pass. A stance: the agent
-    states it of itself in its self graph and the deliberator reads it when it is made; where it
+    revises; a source the budget cuts short is continued by the next pass. A figure of the role, said on it in the agent's self graph and the deliberator reads it when it is made; where it
     states none, two hundred and fifty-six. One source's share of a pass stays `revise`'s own
     constant, which says how a pass's budget is spent and not how much.""" .
 
@@ -170,8 +169,8 @@ belief:revises a owl:ObjectProperty ; rdfs:domain belief:RevisingTrigger ; rdfs:
 belief:into a owl:ObjectProperty ; rdfs:domain belief:RevisingTrigger ; rdfs:label "into" ;
     rdfs:comment "The graph class the revisions a revising makes are classified as." .
 
-#  WHAT HOLDS WHERE THE SELF STATES NO SUCH STANCE, read by the package off this ontology: the one place each
+#  WHAT HOLDS WHERE THE ROLE STATES NO SUCH FIGURE, read by the package off this ontology: the one place each
 #  figure lives.
 [] a sh:NodeShape ;
-    sh:targetClass orexis:Self ;
+    sh:targetClass :Deliberator ;
     sh:property [ sh:path :budget ; sh:defaultValue 256 ] .

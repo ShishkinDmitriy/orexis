@@ -67,13 +67,12 @@ A directory `world/<name>/`, and in it documents that each say which graph they 
    observer and a market role are one already). `orexis-onboard` refuses an agent playing none, a
    role whose needs the world lacks, a sensor reporting to no observer role, a sensor a role reads that
    reports to the agent from nowhere, and a topic no speaker hears.
-   Beside that row, any figure the agent holds of itself — its patience, a budget, its horizon — as a
-   triple about the self; stated in any other document it is not read
-   ([stance](/domain/kernel/stance.md)). **A planner whose search needs more than planning's 32
-   candidates a pass states the budget it needs**, `:courier planning:budget 128`, at the figure the
+   On each role, any figure its package runs by — a patience, a budget, a horizon; stated in any other
+   document it is not read ([role](/domain/kernel/role.md)). **A planner whose search needs more than planning's 32
+   candidates a pass states the budget it needs**, `[ a planning:Planner ; planning:budget 128 ]`, at the figure the
    world's own test measured — and that test hands the Planner and the Runtime no budget of its own,
    so it reads the stated one and fails if it is too low; a test handing its own proves a figure no
-   container searches at. Neither reaches a volume already lived in: a role or a stance changed after
+   container searches at. Neither reaches a volume already lived in: a role or a figure on one changed after
    birth needs a fresh volume.
 5. **`state.ttl`** — `<> a orexis:BeliefGraph`, where things stand, for a world nothing senses.
 6. **what each agent is for** — `<> a planning:DesireGraph` for standing desires, or

@@ -48,6 +48,7 @@ Who may author what, and why isolation here is structural rather than enforced.
 * [series-and-bus-isolation](/decisions/series-and-bus-isolation.md) - A bucket and scoped token per agent; broker credentials and ACL derived from the same wiring that derives capability.
 * [the-self-is-a-class-held-to-one-instance](/decisions/the-self-is-a-class-held-to-one-instance.md) - The world authors who an agent is in its self graph and the boot checks it; a document says whose it is, never its file's name.
 * [a-belief-is-crisp-and-an-estimator-may-reason-with-probability](/decisions/a-belief-is-crisp-and-an-estimator-may-reason-with-probability.md) - SUPERSEDED IN PART — a belief is a crisp triple, and an estimator may reason with probability inside; the hysteresis moved to belief revision.
+* [a-figure-is-its-roles-to-say](/decisions/a-figure-is-its-roles-to-say.md) - A package's patience, budgets and horizon are said on its role and read by its own query; stances on the self were refused.
 * [a-stance-is-the-agents-word-about-itself](/decisions/a-stance-is-the-agents-word-about-itself.md) - Patience, budgets, a sensor's limits and the horizon are triples about the self in its self graph, read there alone; never a flag or public knowledge.
 
 # The mind — what an agent wants

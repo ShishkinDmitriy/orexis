@@ -63,7 +63,7 @@ frame "kernel" {
   folder "orexis:OntologyGraph · orexis:WorldGraph\norexis:SocietyGraph · common beliefs,\nthe world's documents" as pub
   folder "orexis:ActionGraph · orexis:FlowGraph\nwhat the agent reads to act, no belief" as acts
   folder "orexis:DeploymentGraph\nwhat the world is connected to,\nasked by a package as it starts" as dep
-  folder "orexis:SelfGraph\nwho I am · my roles · my stances" as self
+  folder "orexis:SelfGraph\nwho I am · my roles · figures" as self
   folder "orexis:BeliefGraph\nthe agent's own state · the subject beliefs\na silence · what is extracted of a statement" as st
   folder "orexis:ForecastGraph\na diff over a period" as pr
   folder "orexis:PlanGraph\na plan published, adopted by reference" as plan

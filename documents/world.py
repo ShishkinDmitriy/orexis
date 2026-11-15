@@ -219,7 +219,7 @@ def _beneath(cls: str, steps, store: ox.Store | None = None) -> set[str]:
 def roles_of(store: ox.Store) -> frozenset[str]:
     """Every role class the self of `store` plays: the class of each role its self graph says it
     `orexis:plays`, and every class those are beneath, that is beneath `orexis:Role` — read off the
-    self graph alone, as a stance is, since a role is the agent's word about itself and nothing a
+    self graph alone, since a role is the agent's word about itself and nothing a
     peer or the world may say of it. Empty where it plays none."""
     _, steps = _vocabularies()
     stated = {r["kind"] for r in rows(store, _DECLARED_Q, graphs_of(store, SELF_GRAPH))}

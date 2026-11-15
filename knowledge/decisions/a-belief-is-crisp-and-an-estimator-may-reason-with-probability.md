@@ -230,7 +230,7 @@ held it in sensing (#946).
 - **A band an estimator writes says how it was made.** A worst-case band holds the value certainly
   where its premises hold; a band of a mean and some multiple of a spread holds it usually. Should
   an estimator ever write the second kind, the band says which it is, and the multiple — how much
-  doubt the agent accepts — would be a [stance](/domain/kernel/stance.md). Nothing writes one yet,
+  doubt the agent accepts — would be a figure of a [role](/domain/kernel/role.md). Nothing writes one yet,
   so nothing is declared.
 - **The corridor still treats a range's extreme as certain.** Over a long horizon a wide range of
   rain makes the agent act early. That is the corridor's own seam, and a fitted range from

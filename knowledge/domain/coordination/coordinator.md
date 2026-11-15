@@ -34,6 +34,6 @@ whose rules ship no outcome is refused by `orexis-onboard`, since no conflict wo
 (`orexis-coordination/requirements.ttl`). And a constraint it holds whose key a peer's thing can share: without
 one there is nothing to ask about, and the part asks nothing.
 
-Two stances, each read through `orexis/src/stance.rs` where the self graph states it: `coordination:patienceS`,
+Two figures of the role, each read by the package where the role states it: `coordination:patienceS`,
 how long a draw may stand undecided, sixty seconds where none is stated; and `coordination:rounds`, how many
 times it restarts before the peer is taken as silent, three.

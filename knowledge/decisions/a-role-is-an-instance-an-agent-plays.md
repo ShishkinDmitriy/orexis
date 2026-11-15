@@ -143,7 +143,7 @@ The role record's OntoClean grounding stands; it is applied one level up.
 # An observer's limits are its role's (amended 2026-10-12)
 
 How long a sensor may be silent or stuck, `sensing:silentAfter` and `sensing:stuckAfter`, were
-[stances](/domain/kernel/stance.md), one figure for every sensor the agent heard, and where the self
+stances, one figure for every sensor the agent heard, and where the self
 graph stated none a constant in `missed` and `received` held — and a literal six in the stuck rule,
 which reads the figure too and could not import a constant, so the one figure lived in two places held
 equal by a test. Decided: **a limit is a figure about what a role is over, so the observer role states

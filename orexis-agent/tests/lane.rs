@@ -144,9 +144,9 @@ fn secret(who: &str, digit: &str) -> Edit {
     let file = format!("beliefs/courier_{who}.self.ttl");
     edit(
         &file,
-        &format!(":courier_{who} planning:budget 256 ."),
+        &format!(":courier_{who} a orexis:Self ;"),
         &format!(
-            ":courier_{who} planning:budget 256 ; coordination:secret \"{}\" .",
+            ":courier_{who} coordination:secret \"{}\" .\n:courier_{who} a orexis:Self ;",
             digit.repeat(64)
         ),
     )

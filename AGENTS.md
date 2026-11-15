@@ -606,7 +606,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   other's way clear, where "both wait" held for a patience (`test_two_couriers_silent_to_each_other_both_yield_and_still_part`).
 - **A peer that answers nothing for a patience is silent, and a forecast is the agent's own estimate where it is
   not the peer's word** — a domain's reach says where a van may be a drive on, laid one node per place as far ahead
-  as the agent's stance says, so "no two vans at one position" stays the one constraint; a second constraint keeping
+  as the coordinator's role says, so "no two vans at one position" stays the one constraint; a second constraint keeping
   cells clear made the present violate it and found no plan, and a desire restricted no other plan; two that cannot
   hear each other back off by a lot each draws alone, the loser foreseeing a step further, and part only where
   there is a way round (two-agents-that-want-one-resource-ask-each-other-and-draw-lots-for-it).
@@ -687,14 +687,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   taking the subject, held by `tests/test_store.py`
   (#944, an-observation-is-a-percept-and-the-mind-reads-only-beliefs,
   a-transition-changes-the-state-and-an-inference-only-concludes).
-- **A figure an agent holds about itself is a stance, a triple about the self in its self graph,
-  read there alone, and the default its package's ontology states holds where none is stated** — `sh:defaultValue`
-  on a shape of `orexis:Self`, read off the ontology the package brings (`orexis/src/shape.rs`), where each was a
-  constant in code; the patience, both
-  budgets and the horizon, each declared by its reader's package and read through `orexis/src/stance.rs`;
-  never a flag or a common belief, and a grace or a metrics window is none
-  (a-stance-is-the-agents-word-about-itself). A figure about what a role is OVER is the role's: an
-  observer's silent and stuck limits, the observer shape's `sh:defaultValue` where it states none.
+- **A figure a package runs by is its role's to say, in the agent's self graph, read there alone by the package's
+  own query, and the default its ontology states holds where no role says it** — `sh:defaultValue` on its shape of
+  the role (`orexis/src/shape.rs`); the patience, both budgets, the horizon, a coordinator's rounds and an
+  observer's limits alike, never a flag or a common belief; they were stances, triples about the self read by a
+  kernel reader, which left an author two places to configure a package (a-figure-is-its-roles-to-say).
 - **A world's test hands its agent no budget, so the figure it passes at is the one the self graph
   states** — handed by the tests, 128 and 256 were proved while every container searched at 32, at
   which the tower's two disks were not walked home in the test's passes (#932).

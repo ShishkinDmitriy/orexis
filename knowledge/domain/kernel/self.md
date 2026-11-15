@@ -30,12 +30,11 @@ owner's by what it holds — the self it states; every other says whose beside i
 
 Every text that means the agent asks for it, and is handed nothing: a precondition
 (`?me a orexis:Self ; actuation:hasActuator ?valve`), an effect, a command, a saying, a role's
-need, a transport's, a [stance](/domain/kernel/stance.md). The `$me` token each of those texts was
+need, a transport's, a role's figure. The `$me` token each of those texts was
 handed is gone, and `tests/test_store.py` refuses one written back.
 
-The self graph is also where the agent's word about itself lives: each stance is a triple about the
-self there, and each [role](/domain/kernel/role.md) a kind the self is stated in beside
-`orexis:Self`; both are read in no other graph.
+The self graph is also where the agent's word about itself lives: each [role](/domain/kernel/role.md) is an instance the self plays there, carrying the figures its
+package runs by, and is read in no other graph.
 
 The self graph is a BELIEF, and the agent's own. A reader answering a text over what is known — a
 precondition in a possible world, a command over the present — reads it as it reads any belief,

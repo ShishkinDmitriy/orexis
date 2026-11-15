@@ -25,7 +25,6 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::events::{Event, Mark, Number, Watch};
 use orexis::ontology::{BELIEF, RECORD};
-use orexis::stance::stance;
 use orexis::store::{Store, Within, iri};
 
 use crate::ontology::{BUDGET_TERM, CHANGED, REVISED, REVISED_SOURCE, REVISION_GRAPH, SETTLED, revision_graph};
@@ -146,13 +145,12 @@ pub struct Deliberator {
 }
 
 impl Deliberator {
-    /// The beliefs and the one identifier a process is told. The budget is the agent's stance, `BUDGET` where it
+    /// The beliefs and the one identifier a process is told. The budget is the deliberator's role's figure, its ontology's default where it
     /// states none — or the caller's.
     pub fn new(beliefs: &Store, agent: &str, budget: Option<usize>) -> Result<Self, Error> {
         let budget = match budget {
             Some(b) => b,
-            None => stance(beliefs, BUDGET_TERM)?.map_or_else(|| crate::ontology::DEFAULTS.figure(BUDGET_TERM), Ok)?
-                as usize,
+            None => crate::ontology::figure_of(beliefs, BUDGET_TERM)? as usize,
         };
         let mut deliberator = Deliberator {
             beliefs: beliefs.clone(),
@@ -500,7 +498,7 @@ mod tests {
     }
 
     #[test]
-    fn the_budget_is_the_agents_stance_where_its_self_graph_states_one() {
+    fn the_budget_is_the_deliberators_roles_where_one_states_it() {
         let store = revise_case("a_chain_settles_in_a_later_round");
         assert_eq!(
             Deliberator::new(&store, snapshots::AGENT, None).unwrap().budget,
@@ -508,7 +506,7 @@ mod tests {
         );
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <{T}self> {{ <{T}keeper> a orexis:Self ; <{BUDGET_TERM}> 2 }} {} }}",
+                "INSERT DATA {{ GRAPH <{T}self> {{ <{T}keeper> a orexis:Self ; orexis:plays [ <{BUDGET_TERM}> 2 ] }} {} }}",
                 store
                     .entry(
                         &format!("{T}self"),

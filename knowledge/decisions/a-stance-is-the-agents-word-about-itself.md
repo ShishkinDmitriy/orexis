@@ -1,8 +1,8 @@
 ---
 type: Decision
 title: A stance is the agent's word about itself, stated in its self graph and read there alone
-status: superseded-in-part
-superseded-by: a-role-is-an-instance-an-agent-plays
+status: superseded
+superseded-by: a-figure-is-its-roles-to-say
 timestamp: 2026-10-08
 description: >-
   What an agent holds about itself - its patience, the search's and revision's budgets, how long a
@@ -13,6 +13,11 @@ description: >-
   `orexis:actsFor`, a stances kind of its own, a flag or environment, refusal at the loader. The
   second half of #876.
 ---
+
+> **Superseded, 2026-11-15: every figure is its role's.** The patience, the budgets and the horizon are said on
+> the role the package is loaded for, read by that package's own query, and the kernel's reader is gone
+> ([a-figure-is-its-roles-to-say](/decisions/a-figure-is-its-roles-to-say.md)). What this record refused - a
+> public graph, a flag, the environment - stays refused.
 
 > **Superseded in part, 2026-10-12: a sensor's limits are its observer role's.** How long a sensor may
 > be silent or stuck is a figure about what a role is OVER, so `sensing:silentAfter` and
@@ -45,11 +50,11 @@ at all.
 [self](/domain/kernel/self.md), in the agent's self graph** —
 `:rose_grower execution:patienceS 120` beside `:rose_grower a orexis:Self`. Each package declares the
 figures it reads in its own ontology, with domain `orexis:Self`, and reads them through one kernel
-reader, `stance` in `orexis/src/stance.rs`, which asks `?me a orexis:Self ; $stance ?n` over the graphs of
+reader, `stance` in the kernel (since removed), which asks `?me a orexis:Self ; $stance ?n` over the graphs of
 kind `orexis:SelfGraph` and nothing else; the package's constant stands where none is stated (since 2026-11-15
-the default its ontology states, [stance](/domain/kernel/stance.md)). The
+the default its ontology states). The
 kernel names no package's figure and no package names another's. What each is, and what reads it,
-is [stance](/domain/kernel/stance.md)'s.
+was the stance page's, and is [role](/domain/kernel/role.md)'s.
 
 **Domain `orexis:Self`, not `orexis:Agent`.** A stance is only ever read of the self; a domain of
 every agent invites stating it of a peer, which is exactly what is not read. Where the self graph

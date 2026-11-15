@@ -79,7 +79,7 @@ SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:BeliefGraph .
                                FILTER NOT EXISTS { ?g a orexis:ForecastGraph ; orexis:arrivedBy orexis:Recorded } } } LIMIT 1";
 
 impl Planning {
-    /// The part, its budget the agent's stance unless the caller sizes one.
+    /// The part, its budget the planner's role's figure unless the caller sizes one.
     pub fn new(beliefs: &Store, agent: &str, budget: Option<usize>) -> Result<Self, Error> {
         Ok(Planning {
             planner: Planner::new(beliefs, agent, budget)?,
@@ -167,8 +167,8 @@ fn walks(beliefs: &Store) -> Result<bool, Error> {
 
 inventory::submit! { Package { name: "planning", documents: orexis::documents!("ontology.ttl", "wait.ttl"), start } }
 
-/// How many worlds planning's search may weigh a pass, where whoever runs the agent sizes it: none reads the agent's
-/// stance.
+/// How many worlds planning's search may weigh a pass, where whoever runs the agent sizes it: none reads the
+/// planner's role's figure.
 pub struct Budget(pub usize);
 
 /// PLANNING'S START: its planner made, and its task, which hears its trigger's events and a head asked.
