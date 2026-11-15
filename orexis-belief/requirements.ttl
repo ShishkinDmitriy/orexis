@@ -1,0 +1,19 @@
+@prefix : <http://example.org/orexis/belief#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+
+<> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A WORLD MUST STATE OF belief's WORDS, held by onboarding alone before anything is granted
+#  (knowledge/domain/onboarding/requirement.md, #838). No agent loads this graph: its kind is
+#  onboarding's, and the boot passes over it as it passes over a world's hardware.
+
+#  A BUDGET IS ONE WHOLE NUMBER ABOVE NOUGHT, on whichever role states it: a domain's role beneath the
+#  deliberator may, so the shape targets what states the figure. The deliberator reads it as it is made
+#  and judges nothing of it, this being where it is judged; that two roles do not state two is onboarding's
+#  own requirement, of every package's figures.
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf :budget ;
+    sh:property [ sh:path :budget ; sh:datatype xsd:integer ; sh:maxCount 1 ; sh:minExclusive 0 ;
+                  sh:message "a deliberator's budget is one whole number of rule executions above nought" ] .

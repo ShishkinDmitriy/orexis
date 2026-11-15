@@ -33,14 +33,13 @@ use crate::ontology::{INTO, REVISES, REVISING, REVISION_GRAPH, SETTLED, revision
 use crate::revise::{self, revise, say_settled};
 use crate::trigger::trigger;
 
-/// THE DELIBERATOR THE SELF PLAYS, IN ONE QUERY: the default belief's ontology states on the role's shape
-/// (`sh:defaultValue`), how many values the roles the self plays state, and one of them. Whichever role states it:
-/// a domain's role beneath the deliberator is one too.
-const DELIBERATOR_Q: &str = "SELECT ?own (COUNT(DISTINCT ?said) AS ?stated) (SAMPLE(?said) AS ?one) WHERE { \
+/// THE DELIBERATOR THE SELF PLAYS, IN ONE QUERY: what a role the self plays states of its budget and, where none
+/// does, the default belief's ontology states on the role's shape (`sh:defaultValue`). Whichever role states it: a
+/// domain's role beneath the deliberator is one too.
+const DELIBERATOR_Q: &str = "SELECT DISTINCT (COALESCE(?said, ?own) AS ?budget) WHERE { \
 ?shape sh:targetClass <http://example.org/orexis/belief#Deliberator> ; sh:property ?property . \
 ?property sh:path <http://example.org/orexis/belief#budget> ; sh:defaultValue ?own . \
-OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . ?role <http://example.org/orexis/belief#budget> ?said } } \
-GROUP BY ?own";
+OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . ?role <http://example.org/orexis/belief#budget> ?said } }";
 
 /// EVERY SOURCE WHOSE RULES DID NOT SETTLE, off the revision graphs' rows.
 const UNSETTLED_Q: &str = "
@@ -92,35 +91,25 @@ pub struct Deliberator {
 
 impl Deliberator {
     /// The deliberator the self plays, read off the store in one query: what its role says and, where it says
-    /// nothing, the default belief's ontology states. Refused where the store holds no such default, the ontology
-    /// being what the package brings as it joins.
+    /// nothing, the default belief's ontology states. THE SELF GRAPH WAS HELD TO ITS REQUIREMENTS AT ONBOARDING
+    /// (`requirements.ttl`), so one budget is stated at most; nothing is picked between here.
+    /// Refused where the store states no budget at all, the ontology being what the package brings as it joins, and
+    /// where what it states is no whole number, which onboarding meets as it boots the agent.
     pub fn new(beliefs: &Store) -> Result<Self, Error> {
         let mut known = beliefs.graphs_of(&[SELF_GRAPH], &Within::default())?;
         known.extend(beliefs.graphs_of(&[ONTOLOGY], &Within::default())?);
         let known: Vec<&str> = known.iter().map(String::as_str).collect();
-        let rows = beliefs.rows(DELIBERATOR_Q, &known)?;
-        let [row] = rows.as_slice() else {
-            return Err(Error::Document(format!(
-                "belief's ontology states {} defaults for a deliberator's budget, and one is the default",
-                rows.len()
-            )));
-        };
-        let figure = |what: &str| value(row, what).and_then(|n| n.parse::<f64>().ok());
-        let own = figure("own").ok_or_else(|| Error::Document("a deliberator's default budget is no number".into()))?;
-        //  TWO ANSWERS ARE NEVER PICKED BETWEEN: several, or one that is no number, is the default, said in the log.
-        let budget = match (figure("stated"), figure("one")) {
-            (Some(0.0), _) => own,
-            (Some(1.0), Some(one)) => one,
-            _ => {
-                log::warn!(
-                    "the self's roles state no one number for a deliberator's budget: the default, {own}, holds"
-                );
-                own
-            }
-        };
+        let said = beliefs
+            .rows(DELIBERATOR_Q, &known)?
+            .first()
+            .and_then(|row| value(row, "budget"))
+            .ok_or_else(|| Error::Document("the store states no budget for a deliberator, and no default".into()))?;
+        let budget = said
+            .parse::<usize>()
+            .map_err(|_| Error::Document(format!("a deliberator's budget of {said} is no whole number")))?;
         Ok(Deliberator {
             beliefs: beliefs.clone(),
-            budget: budget as usize,
+            budget,
             per_source: revise::BUDGET,
             queue: Vec::new(),
             watch: Watch::default(),
