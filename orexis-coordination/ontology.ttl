@@ -170,23 +170,23 @@
     rdfs:label "secret" ;
     rdfs:comment "A random secret the agent mints the first time this package starts, kept in its own store and never said: what a draw derives the agent's number from, so nothing is kept per draw and a test can fix it." .
 
-#################  Stances  #################
+#################  The role's figures  #################
 
-:patienceS a owl:DatatypeProperty ; rdfs:domain orexis:Self ; rdfs:range xsd:decimal ;
+:patienceS a owl:DatatypeProperty ; rdfs:domain :Coordinator ; rdfs:range xsd:decimal ;
     rdfs:label "patience" ;
-    rdfs:comment "How many seconds a draw may stand undecided before it is restarted in the next round. A stance: the agent states it of itself in its self graph; where it states none, sixty (knowledge/domain/kernel/stance.md)." .
+    rdfs:comment "How many seconds a draw may stand undecided before it is restarted in the next round. A figure of the role, said on it in the agent's self graph; where it states none, sixty (knowledge/domain/kernel/role.md)." .
 
-:lookahead a owl:DatatypeProperty ; rdfs:domain orexis:Self ; rdfs:range xsd:integer ;
+:lookahead a owl:DatatypeProperty ; rdfs:domain :Coordinator ; rdfs:range xsd:integer ;
     rdfs:label "lookahead" ;
-    rdfs:comment "How many of a silent peer's steps the agent looks ahead to foresee where its things may be - its risk appetite: one for the step the peer may take next, one more since what the agent believes of the peer may be a step behind. A stance; where the self states none, two, and one more where the lot the agent drew alone this round was lost. Nought where a collision only fails: the lot's winner then foresees nothing and goes." .
+    rdfs:comment "How many of a silent peer's steps the agent looks ahead to foresee where its things may be - its risk appetite: one for the step the peer may take next, one more since what the agent believes of the peer may be a step behind. A figure of the role; where the role states none, two, and one more where the lot the agent drew alone this round was lost. Nought where a collision only fails: the lot's winner then foresees nothing and goes." .
 
 :stepS a owl:DatatypeProperty ; rdfs:domain :Reach ; rdfs:range xsd:decimal ;
     rdfs:label "step" ;
     rdfs:comment "How many seconds one step a reach foresees takes at most: what the places it gives are foreseen for, the lookahead times it, from the sighting on - after which only the next sighting says. A reach stating none foresees for ever." .
 
-:rounds a owl:DatatypeProperty ; rdfs:domain orexis:Self ; rdfs:range xsd:integer ;
+:rounds a owl:DatatypeProperty ; rdfs:domain :Coordinator ; rdfs:range xsd:integer ;
     rdfs:label "rounds" ;
-    rdfs:comment "How many rounds a conflict's draw may restart before the peer is taken as silent. A stance; where the self states none, three." .
+    rdfs:comment "How many rounds a conflict's draw may restart before the peer is taken as silent. A figure of the role; where the role states none, three." .
 
 #################  What the coordinator says happened, as the journal keeps it  #################
 #  (`events.py`): each an `orexis:Event`, a set said whole and replacing the one said before it.
@@ -239,10 +239,10 @@ coordination:DrawWon a owl:Class ; rdfs:subClassOf orexis:Event , planning:Plann
 coordination:Told a owl:Class ; rdfs:subClassOf orexis:Event , speech:SpeakingTrigger ; rdfs:label "Told" ;
     rdfs:comment "A question or an answer said to a peer, already believed as the agent's own statements by speech's `said`: said to speech, beneath its speaking trigger since coordination is above speech, as the statements (`speech:statement`) and the peer they are to (`speech:to`)." .
 
-#  WHAT HOLDS WHERE THE SELF STATES NO SUCH STANCE, read by the package off this ontology: the one place each
+#  WHAT HOLDS WHERE THE ROLE STATES NO SUCH FIGURE, read by the package off this ontology: the one place each
 #  figure lives.
 [] a sh:NodeShape ;
-    sh:targetClass orexis:Self ;
+    sh:targetClass :Coordinator ;
     sh:property [ sh:path :patienceS ; sh:defaultValue 60 ] ,
                 [ sh:path :rounds ; sh:defaultValue 3 ] ,
                 [ sh:path :lookahead ; sh:defaultValue 2 ] .

@@ -35,13 +35,12 @@ use orexis::clock::{Clock, instant as parse_instant, isoformat, seconds, seconds
 use orexis::events::{Event, Watch};
 use orexis::hash::hash_named_graph;
 use orexis::ontology::{BELIEF, DERIVED, OREXIS, RECORDED, local_of};
-use orexis::stance::stance;
 use orexis::store::{Row, Store, Within, instant, iri, value};
 
 use crate::events::{About, HeadAsked, IntentionAdopted, IntentionResolved, StepAnswered, StepTaken, Walked};
 use crate::implementation::operations;
 use crate::ontology::{
-    ADDS_GRAPH, ANSWERED_WITHIN_S, COMMITTED_STEP_GRAPH, DEFAULTS, EXECUTION, FICTIVE, INTENTION, INTENTION_GRAPH,
+    ADDS_GRAPH, ANSWERED_WITHIN_S, COMMITTED_STEP_GRAPH, EXECUTION, FICTIVE, INTENTION, INTENTION_GRAPH,
     LANDS_WITHIN_S, PATIENCE_S, RETRACTS_GRAPH, STEP_CLASS, committed_graph, fictive_graph, intentions_graph,
 };
 
@@ -219,7 +218,7 @@ pub struct Executor {
     pub holder: Option<String>,
     pub graph: String,
     /// How long a standing commitment absorbs another for its want, and how long past its latest landing a step may
-    /// go unanswered: the agent's stance, the default where it states none.
+    /// go unanswered: the executor's role's figure, the default where it states none.
     pub patience_s: f64,
     /// Every step taken by writing its own prediction, the shorthand for a pure simulation.
     pub all_fictive: bool,
@@ -319,7 +318,7 @@ impl Executor {
             id: agent.to_string(),
             holder: holder.map(str::to_string),
             graph: intentions_graph(agent),
-            patience_s: stance(beliefs, PATIENCE_S)?.map_or_else(|| DEFAULTS.figure(PATIENCE_S), Ok)?,
+            patience_s: crate::ontology::figure_of(beliefs, PATIENCE_S)?,
             all_fictive: false,
             take: None,
             asks: false,
@@ -1412,7 +1411,7 @@ mod tests {
 
     /// The patience the executor's ontology states where the self states none.
     fn patience_s() -> f64 {
-        super::DEFAULTS.figure(super::PATIENCE_S).unwrap()
+        crate::ontology::DEFAULTS.figure(super::PATIENCE_S).unwrap()
     }
 
     const AGENT: &str = "keeper";
@@ -1853,7 +1852,7 @@ GRAPH <http://example.org/test#catalogue> {{
     }
 
     #[test]
-    fn the_patience_is_the_agents_stance_where_its_self_graph_states_one() {
+    fn the_patience_is_the_executors_roles_where_one_states_it() {
         let (i, clock) = (store(), Arc::new(Manual::at(now())));
         let plain = beliefs(PEG_A);
         assert_eq!(
@@ -1866,7 +1865,7 @@ GRAPH <http://example.org/test#catalogue> {{
         let me_self = "http://example.org/test#self";
         b.update(&format!(
             "INSERT DATA {{
-  GRAPH <{me_self}> {{ <{ME}> a orexis:Self ; <{PATIENCE_S}> 5 }}
+  GRAPH <{me_self}> {{ <{ME}> a orexis:Self ; orexis:plays [ <{PATIENCE_S}> 5 ] }}
   GRAPH <http://example.org/test#catalogue> {{ <{me_self}> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy <{ME}> }} }}"
         ))
         .unwrap();

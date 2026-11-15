@@ -28,7 +28,6 @@ use orexis::clock::{instant as parse_instant, isoformat, microseconds, seconds_o
 use orexis::foresight::{Foresight as Integration, GraphsAt, Placed};
 use orexis::hash::py_float_repr;
 use orexis::ontology::{FLOW_GRAPH, local_of};
-use orexis::stance::stance;
 use orexis::store::{Store, Within, instant, iri, value};
 
 use crate::ontology::{
@@ -465,7 +464,7 @@ pub fn foresee(beliefs: &Store, now: DateTime, placed: Option<&Placed<'_>>) -> R
     let Some(cat) = beliefs.catalogue()? else {
         return Ok(None);
     };
-    let horizon = stance(beliefs, HORIZON_TERM)?.map_or_else(|| crate::ontology::DEFAULTS.figure(HORIZON_TERM), Ok)?;
+    let horizon = crate::ontology::figure_of(beliefs, HORIZON_TERM)?;
     let flow_graphs = beliefs.graphs_of(&[FLOW_GRAPH], &Within::default())?;
     let flow_graphs: Vec<&str> = flow_graphs.iter().map(String::as_str).collect();
     let sensors: Vec<String> = beliefs
@@ -973,12 +972,12 @@ mod tests {
     }
 
     #[test]
-    fn the_horizon_is_the_agents_stance_where_its_self_graph_states_one() {
+    fn the_horizon_is_the_predictors_roles_where_one_states_it() {
         let store = stand_in(&cases().join("a_slow_dryer_crosses_the_floor_after_seven_hours.trig"));
         let cat = store.catalogue().unwrap().unwrap();
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <urn:test:self> {{ <{ME}> a orexis:Self ; prediction:horizonS 28800 }}
+                "INSERT DATA {{ GRAPH <urn:test:self> {{ <{ME}> a orexis:Self ; orexis:plays [ prediction:horizonS 28800 ] }}
                GRAPH <{cat}> {{ <urn:test:self> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ;
                                 orexis:ownedBy <{ME}> }} }}"
             ))

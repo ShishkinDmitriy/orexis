@@ -24,6 +24,6 @@ rectangle "orexis-onboard, then up -d" as O #EAF5EA
 C --> R : a crate or domains/ code
 C --> R : world.ttl · society.ttl\na range, a rate, a scaling, a venue
 C --> B : pyproject.toml
-C --> V : the agent's own documents\na role, a sensor it reads, a stance,\na desire, a want, its state
+C --> V : the agent's own documents\na role, a sensor it reads, a figure,\na desire, a want, its state
 C --> O : society wiring\nan agent, a topic, a broker
 @enduml

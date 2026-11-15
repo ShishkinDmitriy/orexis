@@ -10,7 +10,7 @@
 
 #  OREXIS PREDICTION, AGENT 0.2.0.
 #  What the prediction package of Agent 0.2.0 declares: the flow and the two things it says, and
-#  how far ahead the agent looks, a stance of its own. A
+#  how far ahead the agent looks, a figure of the predictor's role. A
 #  prediction is the calculation of when a reading changes range — the rates of every flow moving
 #  the observed property, summed and accumulated from each ground the planner lays, between
 #  the happenings at which what a flow reads may change, every crossing of a range bound placed
@@ -58,15 +58,14 @@
     contributes nothing. Read over whatever holds at $at; one row per contribution, and rows add.""" .
 
 :horizonS a owl:DatatypeProperty ;
-    rdfs:domain orexis:Self ; rdfs:range xsd:integer ;
+    rdfs:domain :Predictor ; rdfs:range xsd:integer ;
     rdfs:label "horizon seconds" ;
     rdfs:comment """How far past an observation the agent looks, in the timeline's seconds: the flows'
     sum is integrated that far and no ground is laid past it, so a crossing beyond it is not
-    foreseen and no want is minted for it yet. A stance: the agent states it of itself in its self
-    graph and `foresee` reads it; where it states none, a day.""" .
+    foreseen and no want is minted for it yet. A figure of the role, said on it in the agent's self graph and `foresee` reads it; where it states none, a day.""" .
 
-#  WHAT HOLDS WHERE THE SELF STATES NO SUCH STANCE, read by the package off this ontology: the one place each
+#  WHAT HOLDS WHERE THE ROLE STATES NO SUCH FIGURE, read by the package off this ontology: the one place each
 #  figure lives.
 [] a sh:NodeShape ;
-    sh:targetClass orexis:Self ;
+    sh:targetClass :Predictor ;
     sh:property [ sh:path :horizonS ; sh:defaultValue 86400 ] .

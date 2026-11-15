@@ -27,7 +27,7 @@ use crate::ontology::{
 use crate::pipeline::{decode, decode_series, reads_series};
 
 /// HOW LATE A READING MAY BE, in its sensor's cadences: the percept before it stays the present until its successor
-/// arrives or this long past the instant the successor was due. Not a stance: how late a reading arrives is the
+/// arrives or this long past the instant the successor was due. No figure of a role: how late a reading arrives is the
 /// instrument's and the path its bytes take.
 pub const GRACE: f64 = 1.0;
 

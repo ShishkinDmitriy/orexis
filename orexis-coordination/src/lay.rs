@@ -19,7 +19,6 @@ use orexis::bind::{Value, bind};
 use orexis::clock::{instant, seconds, seconds_of};
 use orexis::hash::hash_named_graph;
 use orexis::ontology::{BELIEF, FORECAST, RECEIVED};
-use orexis::stance::stance;
 use orexis::store::{Store, iri, value};
 
 use crate::holdings::{
@@ -27,7 +26,7 @@ use crate::holdings::{
     sorted,
 };
 use crate::ontology::{
-    CONSTRAINT_GRAPH, DEFAULTS, LOOKAHEAD, answer_graph, conflicts_graph, laid_graph, laid_root, question_graph,
+    CONSTRAINT_GRAPH, LOOKAHEAD, answer_graph, conflicts_graph, laid_graph, laid_root, question_graph,
 };
 
 const STANDING_Q: &str = "
@@ -87,7 +86,7 @@ pub fn lay(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Error> 
             theirs.retain(|h| h.start.is_none() || h.taken);
         }
         if value(&r, "silent").as_deref() == Some("true") && !said {
-            let looking = stance(store, LOOKAHEAD)?.map_or_else(|| DEFAULTS.figure(LOOKAHEAD), Ok)? as i64;
+            let looking = crate::ontology::figure_of(store, LOOKAHEAD)? as i64;
             let ahead = looking + i64::from(winner.as_ref().is_some_and(|w| w != me));
             let landing: Vec<Holding> = holdings(store, &constraint, at)?
                 .into_iter()

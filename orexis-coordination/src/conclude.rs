@@ -16,14 +16,13 @@ use orexis::bind::{Value, bind};
 use orexis::clock::{instant, isoformat, seconds_of};
 use orexis::hash::hash_named_graph;
 use orexis::ontology::{BELIEF, DERIVED, RECEIVED, RECORDED, local_of};
-use orexis::stance::stance;
 use orexis::store::{Store, Within, iri, value};
 
 use crate::ask::{held, in_range, patience};
 use crate::holdings::{key_of, of_kind, rows_of};
 use crate::ontology::{
-    CONFLICT, COORDINATION, DEFAULTS, QUESTION_GRAPH, ROUNDS, WON_BY, answer_graph, conflict_of, conflicts_graph,
-    draw_of, question_graph,
+    CONFLICT, COORDINATION, QUESTION_GRAPH, ROUNDS, WON_BY, answer_graph, conflict_of, conflicts_graph, draw_of,
+    question_graph,
 };
 
 /// EVERY ANSWER BETWEEN THE AGENT AND A PEER, said or heard, with the constraint and whether it carries a holding.
@@ -121,7 +120,7 @@ pub fn conclude(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Er
         return Ok(Vec::new());
     };
     let patience = patience(store)?;
-    let bound = stance(store, ROUNDS)?.map_or_else(|| DEFAULTS.figure(ROUNDS), Ok)?;
+    let bound = crate::ontology::figure_of(store, ROUNDS)?;
     let graph = conflicts_graph(me);
     let prior = prior(store, me)?;
     let won = won(store)?;

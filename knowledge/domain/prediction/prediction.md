@@ -49,7 +49,7 @@ The flows are integrated **from each ground, as the grounds are laid**
 `sosa:madeBySensor`, the one word of sensing's prediction speaks, from above it, importing none of its
 code - with what the rules concluded of it, its key and its number; the flows moving its property, off
 the flow graphs alone; the ranges that apply to it; and how far the agent looks, `prediction:horizonS`,
-a [stance](/domain/kernel/stance.md), a day where it states none. A key no flow moves is foreseen
+a figure of the predictor's [role](/domain/kernel/role.md), a day where it states none. A key no flow moves is foreseen
 nothing: a package that declares no flow has claimed nothing, and the state concluded of the reading
 is what every ground ahead inherits (#989).
 

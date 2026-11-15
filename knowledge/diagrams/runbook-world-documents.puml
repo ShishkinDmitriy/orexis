@@ -19,7 +19,7 @@ frame "read by every agent, again on each restart" {
   rectangle "society.ttl\nagents · boards · broker · topics\nonly with a bus" as S
 }
 frame "each agent's own, read once at birth" {
-  rectangle "beliefs/<id>.self.ttl\nthe self, the roles it plays, its stances" as SELF
+  rectangle "beliefs/<id>.self.ttl\nthe self, the roles it plays, their figures" as SELF
   rectangle "desires or wants\nstate, for a world nothing senses" as DES
 }
 frame "read by onboarding alone" {

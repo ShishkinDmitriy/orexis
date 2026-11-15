@@ -13,7 +13,7 @@ pub const FLOW: &str = "http://example.org/orexis/prediction#Flow";
 pub const MOVES: &str = "http://example.org/orexis/prediction#moves";
 pub const RATE: &str = "http://example.org/orexis/prediction#rate";
 
-/// HOW FAR PAST AN OBSERVATION THE AGENT LOOKS: a stance it states of itself in its self graph.
+/// HOW FAR PAST AN OBSERVATION THE AGENT LOOKS: a figure the predictor's role states in the agent's self graph.
 pub const HORIZON_TERM: &str = "http://example.org/orexis/prediction#horizonS";
 
 /// SOSA'S, on an observation — the key a flow's answer is matched by, and the number.
@@ -40,7 +40,40 @@ pub fn predicted_of(feature: &str, property: &str) -> String {
     format!("{OREXIS}predicted_{}_{}", slug(feature), slug(property))
 }
 
-/// WHAT HOLDS WHERE THE AGENT'S DOCUMENTS STATE NO FIGURE: the defaults this package's ontology states
+/// WHAT HOLDS WHERE NO ROLE THE SELF PLAYS STATES A FIGURE: the defaults this package's ontology states
 /// (`sh:defaultValue`), the one place each lives.
 pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
     std::sync::LazyLock::new(|| orexis::shape::Defaults::of("prediction", include_str!("../ontology.ttl")));
+
+/// A FIGURE OF THE ROLE THIS PACKAGE IS LOADED FOR: what a role the self plays says of `term` in the agent's self
+/// graph, read by this package's own query, and where no role says it the default this ontology states. Two
+/// answers are never picked between: several, or one that is no number, is the default, said in the log.
+pub fn figure_of(store: &orexis::store::Store, term: &str) -> Result<f64, orexis::Error> {
+    use orexis::bind::{Value, bind};
+    use orexis::store::{Within, value};
+    let selves = store.graphs_of(&[orexis::ontology::SELF_GRAPH], &Within::default())?;
+    let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
+    let text = bind(
+        "SELECT ?n WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role $figure ?n }",
+        &[("figure", Value::iri(term))],
+    )?;
+    let said: Vec<String> = store
+        .rows(&text, &selves)?
+        .iter()
+        .filter_map(|row| value(row, "n"))
+        .collect();
+    if let [one] = said.as_slice()
+        && let Ok(figure) = one.parse::<f64>()
+    {
+        return Ok(figure);
+    }
+    let default = DEFAULTS.figure(term)?;
+    if !said.is_empty() {
+        log::warn!(
+            "the self's roles say {} for {}: the default, {default}, holds",
+            said.join(", "),
+            orexis::ontology::local_of(term)
+        );
+    }
+    Ok(default)
+}

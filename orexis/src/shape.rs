@@ -1,6 +1,6 @@
-//! WHAT A PACKAGE'S ONTOLOGY STATES WHERE NOTHING ELSE DOES. A figure an agent's documents may state - a stance of
-//! the self, a limit or an interval of a role - has a default, and the default is a statement too: the shape of
-//! the self or of the role in the package's ontology carries it as `sh:defaultValue` on the property. So a figure
+//! WHAT A PACKAGE'S ONTOLOGY STATES WHERE NOTHING ELSE DOES. A figure a role may state - a budget, a patience, a
+//! limit or an interval - has a default, and the default is a statement too: the shape of
+//! the role in the package's ontology carries it as `sh:defaultValue` on the property. So a figure
 //! lives in a document and in no code, and a package reads its default off its own ontology, the text it brings
 //! compiled into the binary (`task::documents!`), which is there whether or not a store holds it.
 

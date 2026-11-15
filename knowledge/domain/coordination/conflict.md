@@ -66,7 +66,7 @@ agent's own and received, so the grounds take them in where each begins (`orexis
   would otherwise go round, and a sighting that moves the peer lays the places again. Laid one node per place, the keys are never crossed into
   places the thing cannot stand, and the one constraint over the thing keeps the agent's plans out of every one.
   The reach is about `$this`, the thing, and asked over all the agent believes, so it may read the world - the
-  free tools a robot with free hands may pick up. Nought steps ahead is a stance too: where a collision only
+  free tools a robot with free hands may pick up. Nought steps ahead is a figure the role may state too: where a collision only
   fails, the lot's winner foresees nothing and goes;
 - **won**, the winner lays only what a step the loser has taken gives its thing, as the loser says it
   (`coordination:taken`): nothing the draw decides cancels a step in flight - [commitment](/domain/execution/commitment.md)

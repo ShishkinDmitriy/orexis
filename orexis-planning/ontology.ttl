@@ -189,13 +189,13 @@ planning:NoCandidate a planning:Outcome ; rdfs:label "no candidate" ;
 planning:Exhausted a planning:Outcome ; rdfs:label "exhausted" ;
     rdfs:comment "Levers exist and no bounded sequence of them lands inside the region: the budget in worlds ran out, or the frontier emptied. MY DOSES ARE TOO COARSE, or my region is too tight for them." .
 
-planning:budget a owl:DatatypeProperty ; rdfs:domain orexis:Self ; rdfs:range xsd:integer ;
+planning:budget a owl:DatatypeProperty ; rdfs:domain planning:Planner ; rdfs:range xsd:integer ;
     rdfs:label "budget" ;
-    rdfs:comment "How many candidates one want's search may weigh in one planning — the ceiling on what a search spends, in the unit it spends; a search it cuts short ends `Exhausted` and is continued when its next budget is due (`planning:budgetEveryS`) or its grounds change. A stance: the agent states it of itself in its self graph, sized by its world's author from a measured cost per candidate, and the Planner reads it when it is made; where it states none, thirty-two (knowledge/domain/kernel/stance.md, knowledge/domain/planning/budget.md)." .
+    rdfs:comment "How many candidates one want's search may weigh in one planning — the ceiling on what a search spends, in the unit it spends; a search it cuts short ends `Exhausted` and is continued when its next budget is due (`planning:budgetEveryS`) or its grounds change. A figure of the role, said on it in the agent's self graph, sized by its world's author from a measured cost per candidate, and the Planner reads it when it is made; where it states none, thirty-two (knowledge/domain/kernel/role.md, knowledge/domain/planning/budget.md)." .
 
-planning:budgetEveryS a owl:DatatypeProperty ; rdfs:domain orexis:Self ; rdfs:range xsd:decimal ;
+planning:budgetEveryS a owl:DatatypeProperty ; rdfs:domain planning:Planner ; rdfs:range xsd:decimal ;
     rdfs:label "budget every, in seconds" ;
-    rdfs:comment "How long a budget is for, in the agent's seconds: a search the budget cut short is given its next budget this long after it was cut short, or sooner where the grounds it is searched in differ from those it was cut short in, which is news. The pair makes the budget a rate, so many candidates per so many seconds; with no period, every event heard handed the same search a fresh budget and the ceiling bounded nothing. A stance: the agent states it of itself in its self graph, and the Planner reads it when it is made; where it states none, ten seconds (knowledge/domain/kernel/stance.md, knowledge/domain/planning/budget.md)." .
+    rdfs:comment "How long a budget is for, in the agent's seconds: a search the budget cut short is given its next budget this long after it was cut short, or sooner where the grounds it is searched in differ from those it was cut short in, which is news. The pair makes the budget a rate, so many candidates per so many seconds; with no period, every event heard handed the same search a fresh budget and the ceiling bounded nothing. A figure of the role, said on it in the agent's self graph, and the Planner reads it when it is made; where it states none, ten seconds (knowledge/domain/kernel/role.md, knowledge/domain/planning/budget.md)." .
 
 planning:for a owl:ObjectProperty ;
     rdfs:label "for" ;
@@ -438,9 +438,9 @@ planning:want a owl:ObjectProperty ; rdfs:domain planning:WantUnreachable ; rdfs
     rdfs:label "want" ;
     rdfs:comment "The want nothing reaches." .
 
-#  WHAT HOLDS WHERE THE SELF STATES NO SUCH STANCE, read by the package off this ontology: the one place each
+#  WHAT HOLDS WHERE THE ROLE STATES NO SUCH FIGURE, read by the package off this ontology: the one place each
 #  figure lives.
 [] a sh:NodeShape ;
-    sh:targetClass orexis:Self ;
+    sh:targetClass planning:Planner ;
     sh:property [ sh:path planning:budget ; sh:defaultValue 32 ] ,
                 [ sh:path planning:budgetEveryS ; sh:defaultValue 10 ] .

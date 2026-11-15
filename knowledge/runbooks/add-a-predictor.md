@@ -43,8 +43,8 @@ rate, read off facts the world states. Importing the domain's ontology brings it
 :bed climate:driesPerDay 0.04 ; climate:wetsPerMm 0.01 ; schema:containedInPlace :terrace .
 ```
 
-**4. How far ahead**, if not a day: `prediction:horizonS` on the self, a
-[stance](/domain/kernel/stance.md). A crossing past the horizon is not foreseen yet.
+**4. How far ahead**, if not a day: `prediction:horizonS` on the predictor's
+[role](/domain/kernel/role.md). A crossing past the horizon is not foreseen yet.
 
 # What onboarding refuses
 
