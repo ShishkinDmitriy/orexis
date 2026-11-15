@@ -21,6 +21,7 @@ use orexis::task::{Handed, Heard, Hears, Package, Task, Turn, Woke};
 
 use crate::Deliberator;
 use crate::ontology::{INTO, REVISES, REVISING, REVISING_TRIGGER, REVISION_GRAPH};
+use crate::role::ROLE;
 
 const HEARD: usize = 0;
 const REVISE: usize = 1;
@@ -71,7 +72,7 @@ inventory::submit! { Package { name: "belief", documents: orexis::documents!("on
 /// joined, makes its core.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        if !handed.plays(&[crate::ontology::DELIBERATOR]).await? {
+        if !handed.plays(&[ROLE]).await? {
             return Ok(None);
         }
         make(&handed)

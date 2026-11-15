@@ -39,9 +39,7 @@ use crate::find_wants::{Finding, find_wants};
 use crate::footprint::{actions_of, reads_of_shape, terms_of_shape, written};
 use crate::lay_ground::{Landed, Laying, lay_ground, lay_ground_foreseeing};
 use crate::memo::Memo;
-use crate::ontology::{
-    BUDGET_EVERY_TERM, BUDGET_TERM, CONSTRAINT_GRAPH, DESIRE, EXHAUSTED, PLANNING, SCOPE_GRAPH, SHAPES, WANT,
-};
+use crate::ontology::{CONSTRAINT_GRAPH, DESIRE, EXHAUSTED, PLANNING, SCOPE_GRAPH, SHAPES, WANT};
 use crate::prepare_ground::prepare_ground;
 use crate::publish_plan::publish_plan;
 use crate::refine::refine;
@@ -609,11 +607,12 @@ const NEXT_GROUND_Q: &str = "SELECT (MIN(?start) AS ?start) WHERE { GRAPH $cat {
 
 impl Planner {
     /// The beliefs, the one identifier a process is told, and how much a search may spend — the planner's role's figure,
-    /// `planning:budget` off its self graph, where the caller hands none, and `(crate::ontology::DEFAULTS.figure(BUDGET_TERM).unwrap() as usize)` where it states none.
+    /// `planning:budget` off its self graph, where the caller hands none, and its
+    /// ontology's default where it states none.
     pub fn new(beliefs: &Store, agent_id: &str, budget: Option<usize>) -> Result<Self, Error> {
         let budget = match budget {
             Some(b) => b,
-            None => crate::ontology::figure_of(beliefs, BUDGET_TERM)? as usize,
+            None => crate::role::Role::read(beliefs)?.budget,
         };
         let common = beliefs.graphs_of(&[BELIEF], &Within::common())?;
         let text = format!("SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId \"{agent_id}\" }} LIMIT 1");
@@ -631,7 +630,7 @@ impl Planner {
             id: agent_id.to_string(),
             uri,
             budget,
-            every_s: crate::ontology::figure_of(beliefs, BUDGET_EVERY_TERM)?,
+            every_s: crate::role::Role::read(beliefs)?.budget_every_s,
             cut: BTreeMap::new(),
             beside: BTreeMap::new(),
             imaginaria: BTreeMap::new(),
@@ -929,7 +928,7 @@ impl Planner {
                 if walking.contains(&want) && !reopening.contains(&want) {
                     continue;
                 }
-                //  A (crate::ontology::DEFAULTS.figure(BUDGET_TERM).unwrap() as usize) IS FOR A STRETCH OF THE AGENT'S TIME (`planning:budgetEveryS`): a search it cut short is given
+                //  A BUDGET IS FOR A STRETCH OF THE AGENT'S TIME (`planning:budgetEveryS`): a search it cut short is given
                 //  another where its grounds differ from those it was cut short in, which is news, or that stretch has
                 //  passed, and not before. With no pass to pace it, every event heard handed the same search a fresh
                 //  budget, and the budget was no ceiling.
@@ -1329,7 +1328,7 @@ ORDER BY ?want";
                     .expand(
                         &store,
                         &want,
-                        crate::ontology::DEFAULTS.figure(BUDGET_TERM).unwrap() as usize,
+                        crate::role::DEFAULTS.figure(crate::ontology::BUDGET_TERM).unwrap() as usize,
                         &scoped,
                         &mut Memo::default(),
                     )
@@ -1657,7 +1656,9 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         let mut planner = Planner::new(&store, snapshots::AGENT, Some(20)).unwrap();
         assert_eq!(
             planner.every_s,
-            crate::ontology::DEFAULTS.figure(BUDGET_EVERY_TERM).unwrap(),
+            crate::role::DEFAULTS
+                .figure(crate::ontology::BUDGET_EVERY_TERM)
+                .unwrap(),
             "the package's figure, no role stating one"
         );
         let said: Arc<Mutex<Vec<f64>>> = Default::default();
@@ -1673,7 +1674,9 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         assert_eq!(*said.lock().unwrap(), [20.0], "one search, to its budget");
         let due = at
             .checked_add_day_time_duration(orexis::clock::seconds(
-                crate::ontology::DEFAULTS.figure(BUDGET_EVERY_TERM).unwrap(),
+                crate::role::DEFAULTS
+                    .figure(crate::ontology::BUDGET_EVERY_TERM)
+                    .unwrap(),
             ))
             .unwrap();
         assert_eq!(planner.continues_at(), Some(due));
@@ -1752,14 +1755,15 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         let store = snapshots::stand_in(&bench("three_disk_hanoi"));
         assert_eq!(
             Planner::new(&store, snapshots::AGENT, None).unwrap().budget,
-            crate::ontology::DEFAULTS.figure(BUDGET_TERM).unwrap() as usize
+            crate::role::DEFAULTS.figure(crate::ontology::BUDGET_TERM).unwrap() as usize
         );
         let cat = store.catalogue().unwrap().unwrap();
         let (me, own) = (snapshots::ME, "http://example.org/test#self");
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <{own}> {{ <{me}> a orexis:Self ; orexis:plays [ <{BUDGET_TERM}> 20 ] }}
-  GRAPH <{cat}> {{ <{own}> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy <{me}> }} }}"
+                "INSERT DATA {{ GRAPH <{own}> {{ <{me}> a orexis:Self ; orexis:plays [ <{}> 20 ] }}
+  GRAPH <{cat}> {{ <{own}> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy <{me}> }} }}",
+                crate::ontology::BUDGET_TERM
             ))
             .unwrap();
         assert_eq!(Planner::new(&store, snapshots::AGENT, Some(64)).unwrap().budget, 64);
@@ -2052,7 +2056,7 @@ GROUP BY ?outcome";
             .search(
                 &store,
                 &want,
-                crate::ontology::DEFAULTS.figure(BUDGET_TERM).unwrap() as usize,
+                crate::role::DEFAULTS.figure(crate::ontology::BUDGET_TERM).unwrap() as usize,
                 &scoped,
                 &mut Memo::default(),
             )
@@ -2063,7 +2067,7 @@ GROUP BY ?outcome";
             .search(
                 &store,
                 &want,
-                crate::ontology::DEFAULTS.figure(BUDGET_TERM).unwrap() as usize,
+                crate::role::DEFAULTS.figure(crate::ontology::BUDGET_TERM).unwrap() as usize,
                 &scoped,
                 &mut Memo::default(),
             )

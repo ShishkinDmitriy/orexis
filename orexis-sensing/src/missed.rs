@@ -52,8 +52,9 @@ mod tests {
     use orexis::store::{Store, Within, value};
 
     use super::*;
-    use crate::ontology::{OBSERVATION_GRAPH, default_of};
+    use crate::ontology::OBSERVATION_GRAPH;
     use crate::received::{GRACE, received};
+    use crate::role::default_of;
 
     const PROBE: &str = "http://example.org/test#probe";
     const CADENCE: f64 = 900.0;

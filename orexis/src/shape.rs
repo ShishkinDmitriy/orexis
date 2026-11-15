@@ -2,7 +2,8 @@
 //! limit or an interval - has a default, and the default is a statement too: the shape of
 //! the role in the package's ontology carries it as `sh:defaultValue` on the property. So a figure
 //! lives in a document and in no code, and a package reads its default off its own ontology, the text it brings
-//! compiled into the binary (`task::documents!`), which is there whether or not a store holds it.
+//! compiled into the binary (`task::documents!`), which is there whether or not a store holds it. What reads the
+//! role is the package's own query; this only says which of its rows' answers holds, or the default.
 
 use std::collections::BTreeMap;
 
@@ -47,6 +48,33 @@ impl Defaults {
                 said.len()
             ))),
         }
+    }
+
+    /// WHAT THE ROWS SAY OF A FIGURE, OR ITS DEFAULT: `variable` as a package's own query of its role bound it, where
+    /// it is said once and is a number, and the default of `property` otherwise. Two answers are never picked
+    /// between: several, or one that is no number, is the default, said in the log.
+    pub fn said(&self, rows: &[crate::store::Row], variable: &str, property: &str) -> Result<f64, Error> {
+        let mut said: Vec<String> = rows
+            .iter()
+            .filter_map(|row| crate::store::value(row, variable))
+            .collect();
+        said.sort();
+        said.dedup();
+        if let [one] = said.as_slice()
+            && let Ok(figure) = one.parse::<f64>()
+        {
+            return Ok(figure);
+        }
+        let default = self.figure(property)?;
+        if !said.is_empty() {
+            log::warn!(
+                "{}'s role says {} for {}: the default, {default}, holds",
+                self.whose,
+                said.join(", "),
+                crate::ontology::local_of(property)
+            );
+        }
+        Ok(default)
     }
 
     /// The default of `property`, a number.

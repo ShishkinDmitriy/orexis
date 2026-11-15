@@ -4,7 +4,8 @@
 //! - [`driver`]: which sensors are the member's, where each is read, a fetch on a thread of its own, and the body handed
 //!   to sensing;
 //! - [`create`]: the member's part, polling each of its sensors at the frequency the sensor states.
+//! - [`role`]: what a role the self plays says of this transport, read as one struct with its ontology's defaults;
 
 pub mod create;
 pub mod driver;
-pub mod figures;
+pub mod role;

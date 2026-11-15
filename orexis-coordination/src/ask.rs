@@ -20,7 +20,7 @@ use orexis::store::{Store, Within, iri, value};
 use crate::holdings::{
     Holding, RDF_TYPE, common, constraints_and_self, heard, holdings, key_of, of_kind, present, rows_of, said,
 };
-use crate::ontology::{COORDINATION, PATIENCE_S, QUESTION, QUESTION_GRAPH, question_graph};
+use crate::ontology::{COORDINATION, QUESTION, QUESTION_GRAPH, question_graph};
 
 /// THE CONSTRAINTS THE AGENT HOLDS.
 pub(crate) const HELD_Q: &str =
@@ -44,7 +44,7 @@ pub(crate) fn held(store: &Store) -> Result<Vec<String>, Error> {
 
 /// How long the agent's patience is, what the coordinator's role says or its ontology's default.
 pub(crate) fn patience(store: &Store) -> Result<f64, Error> {
-    crate::ontology::figure_of(store, PATIENCE_S)
+    Ok(crate::role::Role::read(store)?.patience_s)
 }
 
 /// Every question the self `me` of `store` has to say at `at`, with the peer it is to.

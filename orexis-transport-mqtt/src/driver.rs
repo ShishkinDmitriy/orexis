@@ -35,11 +35,6 @@ use orexis_sensing::cadence::{lapsed, next_lapse, sensors};
 use orexis_sensing::received::received;
 use orexis_speech::heard::heard;
 
-/// HOW SOON THE MEMBER ASKS A BOARD AGAIN that it told to sense and that has not answered, in seconds of the one
-/// timeline: a figure a role states (`mqtt:askedAgainAfterS`). Otherwise it asks when a reading next falls due
-/// (`cadence::next_lapse`).
-pub const ASKED_AGAIN_AFTER_S: &str = "http://example.org/orexis/mqtt#askedAgainAfterS";
-
 /// THE PATTERNS OF THE FILTERS THAT MATCH THE TOPIC A SENSOR'S BOARD LISTENS ON.
 const COMMANDS_Q: &str = "
 SELECT ?pattern WHERE {
@@ -379,7 +374,7 @@ impl Mqtt {
         if told.is_empty() {
             return Ok(next);
         }
-        let after_s = crate::figures::figure_of(&self.beliefs, ASKED_AGAIN_AFTER_S)?;
+        let after_s = crate::role::Role::read(&self.beliefs)?.asked_again_after_s;
         let again = now
             .checked_add_day_time_duration(orexis::clock::seconds(after_s))
             .unwrap_or(now);
@@ -945,7 +940,7 @@ mod tests {
             driver.nudge_until(late).unwrap(),
             Some(
                 late.checked_add_day_time_duration(orexis::clock::seconds(
-                    crate::figures::DEFAULTS.figure(ASKED_AGAIN_AFTER_S).unwrap(),
+                    crate::role::DEFAULTS.figure(crate::role::ASKED_AGAIN_AFTER_S).unwrap(),
                 ))
                 .unwrap()
             ),

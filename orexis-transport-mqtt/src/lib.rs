@@ -8,7 +8,8 @@
 //!
 //! A CHAT ON A TOPIC is carried too: a person's prose heard there is kept for translation, which the part hands it to,
 //! and words said back are published as `{"from": the agent, "text": …}`.
+//! - [`role`]: what a role the self plays says of this transport, read as one struct with its ontology's defaults;
 
 pub mod create;
 pub mod driver;
-pub mod figures;
+pub mod role;

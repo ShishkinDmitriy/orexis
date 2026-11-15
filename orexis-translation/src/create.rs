@@ -49,6 +49,7 @@ use crate::events::{Conversed, Translated};
 use crate::model::{Model, TOKENS, why_not};
 use crate::past::Past;
 use crate::readable::{Prefixes, Readable, namespace_of, namespaces};
+use crate::role::ROLE;
 use crate::stated::{PROPERTY, STATE, Stating, believe, listing, rendered, statement_of, tool, words};
 
 pub const CONVERSE_SYSTEM: &str = "You are the voice of a software agent, speaking for it with a person in a chat. Below is its briefing: who it \
@@ -436,6 +437,8 @@ pub struct Translator {
 impl Translator {
     pub fn new(beliefs: &Store, me: &str, model: Option<Arc<dyn Model>>) -> Self {
         let (tx, rx) = channel();
+        //  WHAT ITS ROLE SAYS OF TALKING WITH THE MODEL, read as the translator is made.
+        let role = crate::role::Role::read(beliefs).expect("the translator's role is read off the agent's own store");
         Translator {
             beliefs: beliefs.clone(),
             me: me.to_string(),
@@ -447,9 +450,9 @@ impl Translator {
             history: None,
             metrics: None,
             watch: Watch::default(),
-            turns: crate::figures::figure(beliefs, crate::figures::TURNS) as usize,
-            rows: crate::figures::figure(beliefs, crate::figures::ROWS) as usize,
-            answered_within_s: crate::figures::figure(beliefs, crate::figures::ANSWERED_WITHIN_S),
+            turns: role.turns,
+            rows: role.rows,
+            answered_within_s: role.answered_within_s,
             tx,
             rx,
         }
@@ -793,32 +796,6 @@ pub struct Inline;
 inventory::submit! { Package { name: "translation", documents: orexis::documents!("ontology.ttl"), start } }
 
 /// THE PACKAGE'S START: its part made and started - what it hears, what it does every so often - and its task.
-/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
-const ROLE: &str = "http://example.org/orexis/translation#Translator";
-
-/// WHERE THE MODEL THE TRANSLATOR THE SELF PLAYS NAMES ANSWERS (`translation:translatedBy`), as the world's
-/// deployment states it, a row per role's class.
-const MODEL_Q: &str = "SELECT ?kind ?model WHERE { \
-?me a orexis:Self ; orexis:plays ?role . ?role a ?kind ; \
-<http://example.org/orexis/translation#translatedBy> ?named . ?named <https://schema.org/url> ?model }";
-
-/// Where the model the translator the self plays names answers, read off its self graph and the world's
-/// deployment graph: None where the role names none or the world says nothing of the one named.
-pub fn translated_by(store: &orexis::store::Store) -> Result<Option<String>, Error> {
-    use orexis::ontology::{DEPLOYMENT, SELF_GRAPH};
-    use orexis::store::{Within, value};
-    let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
-    known.extend(store.graphs_of(&[DEPLOYMENT], &Within::common())?);
-    let known: Vec<&str> = known.iter().map(String::as_str).collect();
-    for row in store.rows(MODEL_Q, &known)? {
-        let kind = value(&row, "kind").unwrap_or_default();
-        if kind == ROLE || store.closed(&kind)?.iter().any(|class| class == ROLE) {
-            return Ok(value(&row, "model").filter(|url| !url.is_empty()));
-        }
-    }
-    Ok(None)
-}
-
 /// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
 /// joined, makes its core.
 fn start(handed: Handed) -> orexis::task::Starting {
@@ -843,21 +820,20 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     //  agent's environment holds; and otherwise none, so a check calls no model.
     let model = match handed.outside.take::<Arc<dyn crate::model::Model>>() {
         Some(model) => Some(model),
-        None if handed.outside.has::<orexis::task::Deployed>() => match translated_by(&handed.store)? {
-            Some(url) => {
-                //  CALLED AS THE TRANSLATOR'S ROLE SAYS: how long a call may take, and how often it is asked again.
-                let within_s = crate::figures::figure_of(&handed.store, crate::figures::CALLED_WITHIN_S)?;
-                let retries = crate::figures::figure_of(&handed.store, crate::figures::RETRIES)? as u32;
-                crate::model::Anthropic::from_environ(&url, &|name| std::env::var(name).ok())
-                    .map(|m| Arc::new(m.paced(within_s, retries)) as Arc<dyn crate::model::Model>)
+        None if handed.outside.has::<orexis::task::Deployed>() => {
+            //  CALLED AS THE TRANSLATOR'S ROLE SAYS: where, how long a call may take, and how often it is asked again.
+            let role = crate::role::Role::read(&handed.store)?;
+            match role.model {
+                Some(url) => crate::model::Anthropic::from_environ(&url, &|name| std::env::var(name).ok())
+                    .map(|m| Arc::new(m.paced(role.called_within_s, role.retries)) as Arc<dyn crate::model::Model>),
+                None => {
+                    log::warn!(
+                        "no model: the translator's role names none the world says where to reach (translation:translatedBy)"
+                    );
+                    None
+                }
             }
-            None => {
-                log::warn!(
-                    "no model: the translator's role names none the world says where to reach (translation:translatedBy)"
-                );
-                None
-            }
-        },
+        }
         None => None,
     };
     let mut translator = Translator::new(&handed.store, &me, model);

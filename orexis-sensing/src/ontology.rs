@@ -5,11 +5,8 @@
 //! identifier a process is handed, the sensor and the instant of the reading; every reader asks the catalogue by
 //! class and by pattern.
 
-use std::sync::LazyLock;
-
 use oxsdatatypes::DateTime;
 
-use orexis::Error;
 use orexis::clock::isoformat;
 use orexis::ontology::GRAPH_PREFIX;
 
@@ -35,18 +32,6 @@ pub const STUCK_AFTER_TERM: &str = "http://example.org/orexis/sensing#stuckAfter
 pub const ASKED_EVERY_S_TERM: &str = "http://example.org/orexis/sensing#askedEveryS";
 /// The codec that ships.
 pub const JSON_CODEC: &str = "http://example.org/orexis/sensing#Json";
-
-/// WHAT HOLDS WHERE NO OBSERVER ROLE STATES A FIGURE: the defaults this layer's ontology states on the observer's
-/// shape (`sh:defaultValue`), the one place each lives.
-pub static DEFAULTS: LazyLock<orexis::shape::Defaults> =
-    LazyLock::new(|| orexis::shape::Defaults::of("sensing", include_str!("../ontology.ttl")));
-
-/// What holds of `limit` — `sensing:silentAfter`, `sensing:stuckAfter` — where no observer role states it: the
-/// observer shape's `sh:defaultValue`, read off this layer's ontology. Refused where the ontology states none or
-/// several, since a limit with no figure is a package shipped broken.
-pub fn default_of(limit: &str) -> Result<i64, Error> {
-    Ok(DEFAULTS.figure(limit)? as i64)
-}
 
 /// The local name of a term, safe to paste into an IRI.
 pub fn slug(iri: &str) -> String {
@@ -116,51 +101,11 @@ pub fn silence_graph(agent: &str, sensor: &str, since: DateTime) -> String {
     format!("{GRAPH_PREFIX}silence/{agent}/{}_{}", slug(sensor), stamp(since))
 }
 
-/// A FIGURE OF THE ROLE THIS PACKAGE IS LOADED FOR: what a role the self plays says of `term` in the agent's self
-/// graph, read by this package's own query, and where no role says it the default this ontology states. Two
-/// answers are never picked between: several, or one that is no number, is the default, said in the log.
-pub fn figure_of(store: &orexis::store::Store, term: &str) -> Result<f64, orexis::Error> {
-    use orexis::bind::{Value, bind};
-    use orexis::store::{Within, value};
-    let selves = store.graphs_of(&[orexis::ontology::SELF_GRAPH], &Within::default())?;
-    let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
-    let text = bind(
-        "SELECT ?n WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role $figure ?n }",
-        &[("figure", Value::iri(term))],
-    )?;
-    let said: Vec<String> = store
-        .rows(&text, &selves)?
-        .iter()
-        .filter_map(|row| value(row, "n"))
-        .collect();
-    if let [one] = said.as_slice()
-        && let Ok(figure) = one.parse::<f64>()
-    {
-        return Ok(figure);
-    }
-    let default = DEFAULTS.figure(term)?;
-    if !said.is_empty() {
-        log::warn!(
-            "the self's roles say {} for {}: the default, {default}, holds",
-            said.join(", "),
-            orexis::ontology::local_of(term)
-        );
-    }
-    Ok(default)
-}
-
 #[cfg(test)]
 mod tests {
     use orexis::clock::instant;
 
     use super::*;
-
-    #[test]
-    fn the_observer_shape_states_one_default_of_each_limit() {
-        assert_eq!(default_of(SILENT_AFTER_TERM).unwrap(), 3);
-        assert_eq!(default_of(STUCK_AFTER_TERM).unwrap(), 6);
-        assert!(default_of(&format!("{SENSING}nothing")).is_err());
-    }
 
     #[test]
     fn a_name_is_the_sensor_and_the_instant_to_the_microsecond_where_it_has_one() {

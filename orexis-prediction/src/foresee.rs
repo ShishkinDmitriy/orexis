@@ -30,9 +30,7 @@ use orexis::hash::py_float_repr;
 use orexis::ontology::{FLOW_GRAPH, local_of};
 use orexis::store::{Store, Within, instant, iri, value};
 
-use crate::ontology::{
-    FEATURE, FLOW, HORIZON_TERM, MOVES, OBSERVATION_GRAPH, PROPERTY, RATE, RESULT, SOSA, predicted_of,
-};
+use crate::ontology::{FEATURE, FLOW, MOVES, OBSERVATION_GRAPH, PROPERTY, RATE, RESULT, SOSA, predicted_of};
 use crate::ranges::{ranges_of, side};
 
 /// WHERE A STRETCH'S NUMBER IS READ when its end lies across a bound: this long before the end, or half the stretch.
@@ -463,8 +461,8 @@ pub fn foresee(beliefs: &Store, now: DateTime, placed: Option<&Placed<'_>>) -> R
     let Some(cat) = beliefs.catalogue()? else {
         return Ok(None);
     };
-    let horizon = crate::ontology::figure_of(beliefs, HORIZON_TERM)?;
-    let held_s = crate::ontology::figure_of(beliefs, crate::ontology::RATE_HELD_TERM)?;
+    let role = crate::role::Role::read(beliefs)?;
+    let (horizon, held_s) = (role.horizon_s, role.rate_held_s);
     let flow_graphs = beliefs.graphs_of(&[FLOW_GRAPH], &Within::default())?;
     let flow_graphs: Vec<&str> = flow_graphs.iter().map(String::as_str).collect();
     let sensors: Vec<String> = beliefs
@@ -934,11 +932,7 @@ mod tests {
             for pair in every.windows(2) {
                 assert!(
                     pair[1].0 - pair[0].0
-                        <= crate::ontology::DEFAULTS
-                            .figure(crate::ontology::RATE_HELD_TERM)
-                            .unwrap()
-                            / 60.0
-                            + 1e-9,
+                        <= crate::role::DEFAULTS.figure(crate::ontology::RATE_HELD_TERM).unwrap() / 60.0 + 1e-9,
                     "{stem}: {every:?}"
                 );
             }

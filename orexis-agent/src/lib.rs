@@ -244,7 +244,9 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
             sink: Arc::new(sink),
             every_s: match watching.archive_every_s {
                 Some(every_s) => every_s,
-                None => orexis_sensing_influxdb::archived_every_s().expect("sensing's ontology states how often"),
+                None => orexis_sensing_influxdb::role::DEFAULTS
+                    .figure(orexis_sensing_influxdb::role::ARCHIVED_EVERY_S)
+                    .expect("sensing's ontology states how often"),
             },
         });
     }

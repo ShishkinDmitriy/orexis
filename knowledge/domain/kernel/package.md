@@ -53,7 +53,7 @@ not loaded. Every package the binary holds is given its start, and the first thi
 |---|---|---|
 | with a role | the self plays a role of its class, or of a class an ontology in the store puts beneath it | `handed.plays(&[ROLE])` |
 | a transport | a role the self plays needs bytes and the world wires them through this member | `handed.joins(...)` over `boot::wired` |
-| keeping house for a role linked to a service | that package joined, the role names the service and the world says where it answers | `handed.joins(...)` over the role the package reads (`Recorder::new`) |
+| keeping house for a role linked to a service | that package joined, the role names the service and the world says where it answers | `handed.joins(...)` over the role the package reads (`Role::read`) |
 
 The package knows its own role; the kernel names no package, no role and no transport's wiring. A package that
 joins **brings its documents**: its `ontology.ttl`, and where it has them its rules and its actions, each a file
@@ -81,6 +81,11 @@ answers the one task that holds it — a loop of the package's own, awaiting the
 [events](/domain/kernel/event.md) beneath its triggers, the kinds of graph written it asked to hear, an arrival
 and the clock ([a-package-starts-itself](/decisions/a-package-starts-itself.md),
 [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
+
+**Every package crate is laid out one way.** `lib.rs` says what the crate is and names its modules; `role.rs` holds
+the [role](/domain/kernel/role.md) it is loaded for and what that says, read as one struct; `create.rs` holds what
+it is handed by a test, its registration, `start`, `make` and `task`; and the work is in modules named for what
+they do. A crate that keeps house for another's role, or a transport, has the same three.
 
 **A start does nothing before it has joined.** The boot runs every start as far as its decision and holds it
 there (`task::boot`), so that what joined is known and the store finished before anything is made; starting the

@@ -27,7 +27,7 @@ use orexis::events::{Event, Mark, Number, Watch};
 use orexis::ontology::{BELIEF, RECORD};
 use orexis::store::{Store, Within, iri};
 
-use crate::ontology::{BUDGET_TERM, CHANGED, REVISED, REVISED_SOURCE, REVISION_GRAPH, SETTLED, revision_graph};
+use crate::ontology::{CHANGED, REVISED, REVISED_SOURCE, REVISION_GRAPH, SETTLED, revision_graph};
 use crate::revise::{self, revise, say_settled};
 use crate::trigger::trigger;
 
@@ -150,7 +150,7 @@ impl Deliberator {
     pub fn new(beliefs: &Store, agent: &str, budget: Option<usize>) -> Result<Self, Error> {
         let budget = match budget {
             Some(b) => b,
-            None => crate::ontology::figure_of(beliefs, BUDGET_TERM)? as usize,
+            None => crate::role::Role::read(beliefs)?.budget,
         };
         let mut deliberator = Deliberator {
             beliefs: beliefs.clone(),
@@ -502,11 +502,12 @@ mod tests {
         let store = revise_case("a_chain_settles_in_a_later_round");
         assert_eq!(
             Deliberator::new(&store, snapshots::AGENT, None).unwrap().budget,
-            crate::ontology::DEFAULTS.figure(BUDGET_TERM).unwrap() as usize
+            crate::role::DEFAULTS.figure(crate::ontology::BUDGET_TERM).unwrap() as usize
         );
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <{T}self> {{ <{T}keeper> a orexis:Self ; orexis:plays [ <{BUDGET_TERM}> 2 ] }} {} }}",
+                "INSERT DATA {{ GRAPH <{T}self> {{ <{T}keeper> a orexis:Self ; orexis:plays [ <{}> 2 ] }} {} }}",
+                crate::ontology::BUDGET_TERM,
                 store
                     .entry(
                         &format!("{T}self"),

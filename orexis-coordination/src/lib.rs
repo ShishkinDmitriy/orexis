@@ -12,6 +12,7 @@
 //! - [`events`]: what it says happened — the holdings asked with, said and foreseen, and the conflicts concluded.
 //!
 //! It imports no code of planning, execution or speech, and meets them at the store and through whoever links them.
+//! - [`role`]: the role the package is loaded for and what it says, read as one struct with its ontology's defaults;
 
 pub mod answer;
 pub mod ask;
@@ -22,3 +23,4 @@ pub mod holdings;
 pub mod lay;
 pub mod mint;
 pub mod ontology;
+pub mod role;

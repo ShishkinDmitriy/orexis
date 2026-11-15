@@ -1069,9 +1069,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   through, so neither gets a role link, and a model is named by the translator's role (`translation:translatedBy`);
   what a world is held to at onboarding leaves the derived deployment out, a broker's one url there being the one
   an agent reaches it at and no statement of the world's (model, the-world-says-what-it-is-connected-to).
-- **A package reads its own role, into a struct with a field for each thing the role may say** — `Recorder::new(store)`,
-  `Observer::new`, `Meter::new`: each asks the self graph and the deployment by a query of its package, so the
-  struct and the role's class are one to one and the kernel reads no role for anyone, and a figure the role does not
+- **A package reads its own role, into a struct with a field for each thing the role may say** — `Role::read(store)`
+  in each crate's `role.rs`, the same in all of them: it asks the self graph and the deployment by one query of its
+  package, so the struct and the role's class are one to one and the kernel reads no role for anyone, and a figure the role does not
   state is its ontology's `sh:defaultValue`, never a constant in code; a kernel reader handing every
   package what its roles say, with a `Default` per struct and an instance that might be none, was built first and
   refused (role).
@@ -1100,6 +1100,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   have, so the journal hears every one, and what several packages add to or read is shared (`Outside::share`) and
   asked when read, as where the journal lies; a list of seventeen names in the kernel ordered them, and three
   handoffs worked only in that order (package).
+- **Every package crate is laid out one way** — `lib.rs` says what the crate is and names its modules, `role.rs`
+  holds the role it is loaded for and what that says, `create.rs` its registration, `start`, `make` and `task`, and
+  the work is in modules named for what they do; five crates kept all of it in `lib.rs`, and what a role says was
+  read in four places by three kinds of reader (package).
 - **A start runs once for a boot** — the boot runs every package's start as far as its decision and holds it there,
   and starting the agent runs the same starts on (`task::boot`, `Booted::start`); each ran twice, the first dropped
   at its decision, while the binary made the journal between the two (package, #1173).

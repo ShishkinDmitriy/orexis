@@ -24,9 +24,6 @@ use orexis::transport::Inbox;
 use orexis_sensing::cadence::sensors as observed;
 use orexis_sensing::received::received;
 
-/// HOW LONG ONE FETCH MAY TAKE, in real seconds: a figure a role states.
-pub const FETCHED_WITHIN_S: &str = "http://example.org/orexis/http#fetchedWithinS";
-
 const FORM_Q: &str = "ASK { $sensor td:hasForm ?form }";
 const TARGET_Q: &str =
     "SELECT ?target WHERE { $sensor td:hasForm ?form . ?form hctl:hasTarget ?target } ORDER BY ?target";

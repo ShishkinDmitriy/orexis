@@ -31,45 +31,6 @@ use orexis::transport::Inbox;
 use orexis_speech::prose::{Carrier, Prose};
 
 pub const TELEGRAM_URL: &str = "https://api.telegram.org";
-/// WHAT HOLDS WHERE NO ROLE SAYS HOW OFTEN: the defaults this transport's ontology states (`sh:defaultValue`).
-pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
-    std::sync::LazyLock::new(|| orexis::shape::Defaults::of("the telegram transport", include_str!("../ontology.ttl")));
-
-/// A FIGURE OF THE ROLE THIS PACKAGE IS LOADED FOR: what a role the self plays says of `term` in the agent's self
-/// graph, read by this package's own query, and where no role says it the default this ontology states. Two
-/// answers are never picked between: several, or one that is no number, is the default, said in the log.
-pub fn figure_of(store: &orexis::store::Store, term: &str) -> Result<f64, orexis::Error> {
-    use orexis::bind::{Value, bind};
-    use orexis::store::{Within, value};
-    let selves = store.graphs_of(&[orexis::ontology::SELF_GRAPH], &Within::default())?;
-    let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
-    let text = bind(
-        "SELECT ?n WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role $figure ?n }",
-        &[("figure", Value::iri(term))],
-    )?;
-    let said: Vec<String> = store
-        .rows(&text, &selves)?
-        .iter()
-        .filter_map(|row| value(row, "n"))
-        .collect();
-    if let [one] = said.as_slice()
-        && let Ok(figure) = one.parse::<f64>()
-    {
-        return Ok(figure);
-    }
-    let default = DEFAULTS.figure(term)?;
-    if !said.is_empty() {
-        log::warn!(
-            "the self's roles say {} for {}: the default, {default}, holds",
-            said.join(", "),
-            orexis::ontology::local_of(term)
-        );
-    }
-    Ok(default)
-}
-/// HOW LONG ONE CALL OF THE BOT API MAY TAKE, in real seconds: a figure a role states.
-pub const CALLED_WITHIN_S: &str = "http://example.org/orexis/telegram#calledWithinS";
-
 const CHAT_Q: &str = "SELECT ?chat WHERE { ?chat a telegram:Chat ; telegram:chatId ?id FILTER (STR(?id) = $id) }";
 const USER_Q: &str = "SELECT ?person WHERE { ?person telegram:userId ?id FILTER (STR(?id) = $id) }";
 const ID_Q: &str = "SELECT ?id WHERE { $chat a telegram:Chat ; telegram:chatId ?id }";
@@ -90,27 +51,6 @@ pub fn answers(beliefs: &Store, me: &str) -> Result<Option<String>, Error> {
         .iter()
         .find_map(|row| orexis::store::value(row, "url"))
         .filter(|url| !url.is_empty()))
-}
-
-/// HOW OFTEN THE BOT IS POLLED, in real seconds: what a role the self plays says in the agent's self graph
-/// (`telegram:polledEveryS`), and the default the transport's ontology states where none says.
-pub fn polled_every_s(beliefs: &Store) -> Result<f64, Error> {
-    let mut known = beliefs.graphs_of(&[orexis::ontology::SELF_GRAPH], &orexis::store::Within::default())?;
-    known.extend(beliefs.graphs_of(&[orexis::ontology::ONTOLOGY], &orexis::store::Within::default())?);
-    let known: Vec<&str> = known.iter().map(String::as_str).collect();
-    //  ONE QUERY: what a role the self plays says or, where none says, the default the transport's ontology states.
-    beliefs
-        .rows(
-            "SELECT (COALESCE(?said, ?own) AS ?every) WHERE { \
-             OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . \
-                        ?role <http://example.org/orexis/telegram#polledEveryS> ?said FILTER(?said > 0) } \
-             OPTIONAL { ?shape sh:property [ sh:path <http://example.org/orexis/telegram#polledEveryS> ; \
-                        sh:defaultValue ?own ] } } ORDER BY ?every",
-            &known,
-        )?
-        .iter()
-        .find_map(|row| orexis::store::value(row, "every")?.parse::<f64>().ok())
-        .ok_or_else(|| Error::Document("the telegram transport's ontology states no default for polledEveryS".into()))
 }
 
 /// The Bot API as the driver calls it: a method's URL and its JSON body, answered with JSON.
@@ -354,7 +294,7 @@ impl Telegram {
                 polling: Arc::default(),
             },
             //  UNTIL IT CONNECTS and reads what a role says, as often as the transport's ontology states.
-            every: DEFAULTS
+            every: crate::role::DEFAULTS
                 .figure("http://example.org/orexis/telegram#polledEveryS")
                 .expect("the transport's ontology states how often it polls"),
             spawn: Box::new(|work| {
@@ -382,8 +322,10 @@ impl Telegram {
             )
         })?;
         let url = answers(beliefs, me)?.unwrap_or_else(|| TELEGRAM_URL.to_string());
-        let mut bot = Telegram::new(beliefs, me, &token, &url, post(figure_of(beliefs, CALLED_WITHIN_S)?));
-        bot.every = polled_every_s(beliefs)?;
+        //  POLLED AND CALLED AS A ROLE THE SELF PLAYS SAYS.
+        let role = crate::role::Role::read(beliefs)?;
+        let mut bot = Telegram::new(beliefs, me, &token, &url, post(role.called_within_s));
+        bot.every = role.polled_every_s;
         Ok(bot)
     }
 
@@ -823,13 +765,6 @@ mod tests {
     #[test]
     fn an_api_that_fails_sends_nothing_and_connect_refuses_an_agent_with_no_token() {
         let store = world();
-        //  THE TRANSPORT'S ONTOLOGY STATES HOW OFTEN WHERE NO ROLE DOES, as the package brings it.
-        store
-            .update(
-                "INSERT DATA { GRAPH <http://example.org/test#ontology> { [] sh:property \
-                 [ sh:path <http://example.org/orexis/telegram#polledEveryS> ; sh:defaultValue 3 ] } }",
-            )
-            .unwrap();
         let (mut bot, _, _) = bot(&store);
         bot.api.call = Arc::new(|_, _| Err("unreachable".into()));
         assert!(!bot.say_to(&format!("{TEST}anna_telegram"), "x", None));

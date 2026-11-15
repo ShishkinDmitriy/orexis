@@ -31,6 +31,7 @@ use crate::lay::{laid, lay};
 use crate::mint::mint;
 use crate::ontology::{ANSWER_GRAPH, QUESTION_GRAPH};
 use crate::ontology::{COORDINATING, COORDINATING_TRIGGER, COORDINATION};
+use crate::role::ROLE;
 
 const PASS: usize = 0;
 const QUESTIONED: usize = 1;
@@ -204,9 +205,6 @@ impl Coordination {
 inventory::submit! { Package { name: "coordination", documents: orexis::documents!("ontology.ttl"), start } }
 
 /// THE PACKAGE'S START: its part made and started - what it hears, what it does every so often - and its task.
-/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
-const ROLE: &str = "http://example.org/orexis/coordination#Coordinator";
-
 /// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
 /// joined, makes its core.
 fn start(handed: Handed) -> orexis::task::Starting {

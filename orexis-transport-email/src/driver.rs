@@ -20,34 +20,9 @@ use orexis::store::{Store, Within, iri, value};
 use orexis::transport::Inbox;
 use orexis_speech::prose::{Carrier, Prose};
 
-/// WHAT HOLDS WHERE NO ROLE SAYS HOW OFTEN: the defaults this transport's ontology states (`sh:defaultValue`).
-pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
-    std::sync::LazyLock::new(|| orexis::shape::Defaults::of("the email transport", include_str!("../ontology.ttl")));
-
 const CONTACT_Q: &str =
     "SELECT ?contact WHERE { ?contact schema:email ?address FILTER (LCASE(STR(?address)) = LCASE($address)) }";
 const ADDRESS_Q: &str = "SELECT ?address WHERE { $contact schema:email ?address }";
-
-/// HOW OFTEN THE MAILBOX IS POLLED, in real seconds: what a role the self plays says in the agent's self graph
-/// (`email:polledEveryS`), and the default the transport's ontology states where none says.
-pub fn polled_every_s(beliefs: &Store) -> Result<f64, Error> {
-    let mut known = beliefs.graphs_of(&[orexis::ontology::SELF_GRAPH], &orexis::store::Within::default())?;
-    known.extend(beliefs.graphs_of(&[orexis::ontology::ONTOLOGY], &orexis::store::Within::default())?);
-    let known: Vec<&str> = known.iter().map(String::as_str).collect();
-    //  ONE QUERY: what a role the self plays says or, where none says, the default the transport's ontology states.
-    beliefs
-        .rows(
-            "SELECT (COALESCE(?said, ?own) AS ?every) WHERE { \
-             OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . \
-                        ?role <http://example.org/orexis/email#polledEveryS> ?said FILTER(?said > 0) } \
-             OPTIONAL { ?shape sh:property [ sh:path <http://example.org/orexis/email#polledEveryS> ; \
-                        sh:defaultValue ?own ] } } ORDER BY ?every",
-            &known,
-        )?
-        .iter()
-        .find_map(|row| orexis::store::value(row, "every")?.parse::<f64>().ok())
-        .ok_or_else(|| Error::Document("the email transport's ontology states no default for polledEveryS".into()))
-}
 
 /// A mailbox: every unseen message as its sender's address and its plain text, each then seen; and one sent.
 pub trait Mailbox: Send + Sync {
@@ -164,7 +139,7 @@ impl Email {
             me: me.to_string(),
             box_,
             //  UNTIL IT CONNECTS and reads what a role says, as often as the transport's ontology states.
-            every: DEFAULTS
+            every: crate::role::DEFAULTS
                 .figure("http://example.org/orexis/email#polledEveryS")
                 .expect("the transport's ontology states how often it polls"),
             spawn: Box::new(|work| {
@@ -194,7 +169,7 @@ impl Email {
             smtp: (smtp.clone(), port("MAIL_SMTP_PORT", 465)),
         };
         let mut email = Email::new(beliefs, me, Arc::new(remote));
-        email.every = polled_every_s(beliefs)?;
+        email.every = crate::role::Role::read(beliefs)?.polled_every_s;
         Ok(email)
     }
 
@@ -392,13 +367,6 @@ mod tests {
     #[test]
     fn connect_refuses_an_agent_with_no_mailbox() {
         let store = world();
-        //  THE TRANSPORT'S ONTOLOGY STATES HOW OFTEN WHERE NO ROLE DOES, as the package brings it.
-        store
-            .update(
-                "INSERT DATA { GRAPH <http://example.org/test#ontology> { [] sh:property \
-                 [ sh:path <http://example.org/orexis/email#polledEveryS> ; sh:defaultValue 30 ] } }",
-            )
-            .unwrap();
         let me = format!("{TEST}keeper");
         let partial = |k: &str| (k == "MAIL_ADDRESS").then(|| "keeper@example.org".to_string());
         assert!(Email::connect(&store, &me, &partial).is_err());

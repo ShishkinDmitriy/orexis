@@ -32,6 +32,7 @@ use crate::cadence::cadence_of;
 use crate::events::{Doubted, Perceived, Silence, tag_of};
 use crate::missed::missed;
 use crate::ontology::{OBSERVATION_GRAPH, OBSERVING, OBSERVING_TRIGGER, REVISED_SOURCE, SILENCE_GRAPH, silence_graph};
+use crate::role::ROLE;
 
 const ASK: usize = 0;
 const HEARD: usize = 1;
@@ -215,9 +216,6 @@ fn me_of(beliefs: &Store, agent: &str) -> Result<String, Error> {
 inventory::submit! { Package { name: "sensing", documents: orexis::documents!("ontology.ttl", "rules.ttl"), start } }
 
 /// THE PACKAGE'S START: its part made and started - what it hears, what it does every so often - and its task.
-/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
-const ROLE: &str = "http://example.org/orexis/sensing#Observer";
-
 /// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
 /// joined, makes its core.
 fn start(handed: Handed) -> orexis::task::Starting {
@@ -312,7 +310,7 @@ impl Sensing {
         let _ = (&handed, &hears, &arrived, &timers);
         self.watch = handed.events.watch().clone();
         //  HOW OFTEN IT ASKS WHAT HAS FALLEN DUE is the observer's role's to say (`sensing:askedEveryS`).
-        let every_s = crate::ontology::figure_of(&handed.store, crate::ontology::ASKED_EVERY_S_TERM)?;
+        let every_s = crate::role::Role::read(&handed.store)?.asked_every_s;
         timers.push((Every::new(every_s), ASK));
         self.unrevised()?;
         hears.graph(OBSERVATION_GRAPH, HEARD);
@@ -377,8 +375,9 @@ mod tests {
     use orexis::store::value;
 
     use super::*;
-    use crate::ontology::{SILENT_AFTER_TERM, default_of};
+    use crate::ontology::SILENT_AFTER_TERM;
     use crate::received::{GRACE, received};
+    use crate::role::default_of;
     use std::sync::{Arc, Mutex};
 
     const PROBE: &str = "http://example.org/test#probe";

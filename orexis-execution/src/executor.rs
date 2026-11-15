@@ -41,7 +41,7 @@ use crate::events::{About, HeadAsked, IntentionAdopted, IntentionResolved, StepA
 use crate::implementation::operations;
 use crate::ontology::{
     ADDS_GRAPH, ANSWERED_WITHIN_S, COMMITTED_STEP_GRAPH, EXECUTION, FICTIVE, INTENTION, INTENTION_GRAPH,
-    LANDS_WITHIN_S, PATIENCE_S, RETRACTS_GRAPH, STEP_CLASS, committed_graph, fictive_graph, intentions_graph,
+    LANDS_WITHIN_S, RETRACTS_GRAPH, STEP_CLASS, committed_graph, fictive_graph, intentions_graph,
 };
 
 const ADOPTS: &str = "http://example.org/orexis/execution#adopts";
@@ -318,7 +318,7 @@ impl Executor {
             id: agent.to_string(),
             holder: holder.map(str::to_string),
             graph: intentions_graph(agent),
-            patience_s: crate::ontology::figure_of(beliefs, PATIENCE_S)?,
+            patience_s: crate::role::Role::read(beliefs)?.patience_s,
             all_fictive: false,
             take: None,
             asks: false,
@@ -1411,7 +1411,7 @@ mod tests {
 
     /// The patience the executor's ontology states where the self states none.
     fn patience_s() -> f64 {
-        crate::ontology::DEFAULTS.figure(super::PATIENCE_S).unwrap()
+        crate::role::DEFAULTS.figure(crate::ontology::PATIENCE_S).unwrap()
     }
 
     const AGENT: &str = "keeper";
@@ -1865,8 +1865,9 @@ GRAPH <http://example.org/test#catalogue> {{
         let me_self = "http://example.org/test#self";
         b.update(&format!(
             "INSERT DATA {{
-  GRAPH <{me_self}> {{ <{ME}> a orexis:Self ; orexis:plays [ <{PATIENCE_S}> 5 ] }}
-  GRAPH <http://example.org/test#catalogue> {{ <{me_self}> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy <{ME}> }} }}"
+  GRAPH <{me_self}> {{ <{ME}> a orexis:Self ; orexis:plays [ <{}> 5 ] }}
+  GRAPH <http://example.org/test#catalogue> {{ <{me_self}> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy <{ME}> }} }}",
+            crate::ontology::PATIENCE_S
         ))
         .unwrap();
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
