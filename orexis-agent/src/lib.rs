@@ -8,7 +8,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use orexis::Error;
-use orexis::boot::{Booting, boot};
+use orexis::boot::Booting;
 use orexis::clock::Clock;
 use orexis::series::Sink;
 use orexis::store::Store;
@@ -55,7 +55,21 @@ use orexis_transport_telegram as _;
 /// joined it, each deciding in its own start, by name (`orexis::boot::boot`).
 pub fn booted(store: &Store, world: &Path, agent: &str, now: oxsdatatypes::DateTime) -> Result<Vec<String>, Error> {
     let _ = now;
-    boot(store, &Booting { world, agent })
+    orexis::boot::boot(store, &Booting { world, agent })
+}
+
+/// BOOT `agent` of `world` into `store`, handed what `wiring` says, and hold it ready to start: each package's start
+/// run as far as its decision and kept there, so starting the agent runs each on and a start runs once for a boot
+/// (`orexis::task::boot`). What a deployed agent and a check do; `booted` is for a caller that starts nothing.
+pub fn boot(
+    store: &Store,
+    world: &Path,
+    agent: &str,
+    clock: Arc<dyn Clock>,
+    budget: Option<usize>,
+    wiring: Wiring,
+) -> Result<orexis::task::Booted, Error> {
+    orexis::task::boot(store, &Booting { world, agent }, clock, outside(wiring, budget))
 }
 
 /// What a check found of an agent that boots: the packages it loads, and what they said as each made its core
@@ -77,7 +91,15 @@ pub struct Checked {
 pub fn check(world: &Path, agent: &str, now: oxsdatatypes::DateTime, boot: Option<&Path>) -> Result<Checked, Error> {
     let namespaces = Arc::new(orexis::namespaces::Namespaces::linked()?);
     let store = Store::new(namespaces)?;
-    let loaded = booted(&store, world, agent, now)?;
+    let checking = orexis::task::Checking::default();
+    let clock: Arc<dyn Clock> = Arc::new(orexis::clock::Manual::at(now));
+    //  A CHECK HANDS NOTHING BUT THAT IT IS ONE: each package handed no connector and not deployed makes one that
+    //  reaches nothing, so no broker, no web, no bot and no model is dialled.
+    let wiring = Wiring {
+        checking: Some(checking.clone()),
+        ..Wiring::default()
+    };
+    let booted = self::boot(&store, world, agent, clock, None, wiring)?;
     if let Some(path) = boot {
         let file = std::io::BufWriter::new(std::fs::File::create(path)?);
         store
@@ -89,16 +111,8 @@ pub fn check(world: &Path, agent: &str, now: oxsdatatypes::DateTime, boot: Optio
             .map_err(|e| Error::Evaluation(format!("the boot will not dump: {e}")))?;
     }
     let mut checked = Checked {
-        loaded,
+        loaded: booted.loaded().to_vec(),
         ..Checked::default()
-    };
-    let checking = orexis::task::Checking::default();
-    let clock: Arc<dyn Clock> = Arc::new(orexis::clock::Manual::at(now));
-    //  A CHECK HANDS NOTHING BUT THAT IT IS ONE: each package handed no connector and not deployed makes one that
-    //  reaches nothing, so no broker, no web, no bot and no model is dialled.
-    let wiring = Wiring {
-        checking: Some(checking.clone()),
-        ..Wiring::default()
     };
     //  STARTED AND NEVER RUN: on a runtime nothing drives, each package makes its core and its task is dropped.
     let tasks = tokio::runtime::Builder::new_current_thread()
@@ -106,7 +120,7 @@ pub fn check(world: &Path, agent: &str, now: oxsdatatypes::DateTime, boot: Optio
         .build()
         .map_err(|e| Error::Evaluation(format!("the tasks could not start: {e}")))?;
     let _entered = tasks.enter();
-    start(&store, agent, clock, &checked.loaded, None, wiring)?;
+    booted.start()?;
     //  WHAT EACH PACKAGE SAID AS IT MADE ITS CORE: the binary asks none of them by name.
     let found = checking.found();
     checked.held = found.held;

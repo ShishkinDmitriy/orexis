@@ -820,8 +820,7 @@ pub struct Reads {
     pub metrics: Option<crate::series::Reader>,
 }
 
-/// WHAT A PACKAGE'S TASK IS HANDED, plain: the agent's store, its id, the clock, the events, what reaches outside,
-/// and the packages the agent loads.
+/// WHAT A PACKAGE'S TASK IS HANDED, plain: the agent's store, its id, the clock, the events and what reaches outside.
 #[derive(Clone)]
 pub struct Handed {
     pub store: Store,
@@ -829,7 +828,6 @@ pub struct Handed {
     pub clock: Arc<dyn Clock>,
     pub events: Events,
     pub outside: Outside,
-    pub loaded: Arc<Vec<String>>,
     stop: watch::Receiver<bool>,
     /// The package this was handed to, and the lifecycle it starts in.
     me: String,
@@ -1046,7 +1044,8 @@ pub type Starting = Pin<Box<dyn Future<Output = Result<Option<Task>, Error>> + S
 /// (`Handed::joins`, `plays`, `beside`), by a reason the package knows and the kernel does not; declined, it ends
 /// in nothing; joined, it waits for what it needs started (`Handed::started`), makes its core from what it is
 /// handed and answers its task - or nothing, where what it is handed gives it nothing to do. A START DOES NOTHING
-/// BEFORE IT HAS JOINED: the boot runs every start as far as its decision and no further (`decide`).
+/// BEFORE IT HAS JOINED: the boot runs every start as far as its decision and holds it there (`boot`), and
+/// starting the agent runs it on (`Booted::start`).
 pub struct Package {
     pub name: &'static str,
     pub documents: &'static [(&'static str, &'static str)],
@@ -1092,28 +1091,43 @@ fn every() -> Vec<String> {
     crate::boot::every_package()
 }
 
-/// DECIDE WHICH PACKAGES `agent` RUNS, over a boot `begun`: every package this binary holds is given its start, and
-/// each start is run as far as its decision (`Handed::joins`) and no further. They are asked in the order they
-/// start, round after round, since one that joins brings the ontology another's role may be beneath; a round in
-/// which nothing changed settles the asking, and those still asking decline. Then the boot is finished, and the
-/// packages that joined are answered. The starts are dropped where they wait: no core is made and nothing runs.
-pub fn decide(store: &Store, agent: &str, begun: crate::boot::Begun) -> Result<Vec<String>, Error> {
-    let (_stop, stopped) = watch::channel(false);
-    let life = Arc::new(Mutex::new(Life {
-        deciding: true,
-        begun: Some(begun),
-        ..Life::default()
-    }));
+/// AN AGENT BOOTED AND NOT YET STARTED: its store finished, the packages that joined it decided, and each one's
+/// start held where it waits, having decided and done nothing else. `start` runs those same starts on, so a
+/// package's start runs once for a boot; dropped instead, no core is made and nothing runs, which is all a caller
+/// asking only which packages joined wants.
+pub struct Booted {
+    handed: Handed,
+    stop: watch::Sender<bool>,
+    loaded: Vec<String>,
+    starting: Vec<(String, Starting)>,
+}
+
+/// BOOT `booting.agent` INTO `store` AND DECIDE WHICH PACKAGES IT RUNS: the boot is begun, every package this binary
+/// holds is given its start with what the agent is handed, and each start is run as far as its decision
+/// (`Handed::joins`) and no further. They are asked round after round, since one that joins brings the ontology
+/// another's role may be beneath; a round in which nothing changed settles the asking, and those still asking
+/// decline. Then the boot is finished over the packages that joined.
+pub fn boot(
+    store: &Store,
+    booting: &crate::boot::Booting<'_>,
+    clock: Arc<dyn Clock>,
+    outside: Outside,
+) -> Result<Booted, Error> {
+    let begun = crate::boot::begin(store, booting)?;
+    let (stop, stopped) = watch::channel(false);
     let handed = Handed {
         store: store.clone(),
-        id: agent.to_string(),
-        clock: Arc::new(crate::clock::Manual::at(DateTime::now())),
+        id: booting.agent.to_string(),
+        clock,
         events: Events::new(store),
-        outside: Outside(Arc::new(Mutex::new(HashMap::new()))),
-        loaded: Arc::new(Vec::new()),
+        outside,
         stop: stopped,
         me: String::new(),
-        life: life.clone(),
+        life: Arc::new(Mutex::new(Life {
+            deciding: true,
+            begun: Some(begun),
+            ..Life::default()
+        })),
     };
     let names = every();
     let mut starting: Vec<(String, Option<Starting>)> = Vec::new();
@@ -1164,14 +1178,44 @@ pub fn decide(store: &Store, agent: &str, begun: crate::boot::Begun) -> Result<V
         names.iter().filter(|n| life.decided[*n]).cloned().collect()
     };
     let begun = handed.life().begun.take().expect("the boot it was begun with");
-    drop(starting);
     begun.finish(store, &loaded)?;
-    Ok(loaded)
+    //  THE STARTS OF THE PACKAGES THAT JOINED ARE KEPT where they wait, to be run on.
+    let starting = starting
+        .into_iter()
+        .filter_map(|(name, start)| start.filter(|_| loaded.contains(&name)).map(|start| (name, start)))
+        .collect();
+    Ok(Booted {
+        handed,
+        stop,
+        loaded,
+        starting,
+    })
 }
 
-/// START THE AGENT `id` over `store`: each package of `names` that registered itself is started, in the order
-/// their own waits for each other allow, and its task spawned on the Tokio runtime this is called in. A name no package registered under is an error: its
-/// crate was not built in.
+impl Booted {
+    /// The packages that joined the agent, by name.
+    pub fn loaded(&self) -> &[String] {
+        &self.loaded
+    }
+
+    /// START THE AGENT, on the Tokio runtime this is called in: each start is run on from its decision.
+    pub fn start(self) -> Result<Running, Error> {
+        started();
+        self.handed.life().deciding = false;
+        let began = self.handed.clock.now();
+        let waiting = self
+            .starting
+            .into_iter()
+            .map(|(name, starting)| (name, began, starting))
+            .collect();
+        run(self.handed, self.stop, waiting)
+    }
+}
+
+/// START THE AGENT `id` over `store`, booted already: each package of `names` that registered itself is given its
+/// start and its task spawned on the Tokio runtime this is called in. A name no package registered under is an
+/// error: its crate was not built in. For a test that boots a store and starts what it chooses over it; an agent
+/// that runs is booted and started as one (`boot`, `Booted::start`).
 pub fn start(
     store: &Store,
     id: &str,
@@ -1187,7 +1231,6 @@ pub fn start(
         clock,
         events: Events::new(store),
         outside,
-        loaded: Arc::new(names.to_vec()),
         stop: stopped,
         me: String::new(),
         life: Arc::new(Mutex::new(Life {
@@ -1195,17 +1238,6 @@ pub fn start(
             ..Life::default()
         })),
     };
-    let mut running = Running {
-        handed: handed.clone(),
-        names: Vec::new(),
-        joins: Vec::new(),
-        stop,
-        halt: None,
-        halted: Arc::new(Notify::new()),
-    };
-    //  EVERY START IS BEGUN, and each is run until it ends or waits for another's (`Handed::started`): the order
-    //  they end in follows from those waits alone, and the kernel keeps none. A round in which none ended while
-    //  some still wait is a wait for what never comes.
     let mut waiting: Vec<(String, DateTime, Starting)> = Vec::new();
     for name in names {
         let Some(package) = inventory::iter::<Package>().find(|p| p.name == name) else {
@@ -1219,6 +1251,25 @@ pub fn start(
         });
         waiting.push((name.clone(), handed.clock.now(), starting));
     }
+    run(handed, stop, waiting)
+}
+
+/// EVERY START IS RUN until it ends or waits for another's (`Handed::started`): the order they end in follows from
+/// those waits alone, and the kernel keeps none. A round in which none ended while some still wait is a wait for
+/// what never comes.
+fn run(
+    handed: Handed,
+    stop: watch::Sender<bool>,
+    mut waiting: Vec<(String, DateTime, Starting)>,
+) -> Result<Running, Error> {
+    let mut running = Running {
+        handed: handed.clone(),
+        names: Vec::new(),
+        joins: Vec::new(),
+        stop,
+        halt: None,
+        halted: Arc::new(Notify::new()),
+    };
     let mut lives = Vec::new();
     while !waiting.is_empty() {
         let mut still = Vec::new();

@@ -210,7 +210,6 @@ fn the_journal_package_makes_its_own_journal_where_the_agent_is_deployed_and_non
     let kept = |deployed: bool| {
         let store =
             orexis::store::Store::new(std::sync::Arc::new(orexis::namespaces::Namespaces::linked().unwrap())).unwrap();
-        let loaded = orexis_agent::booted(&store, &Path::new(TREE).join("world/hanoi"), "hanoi", now).unwrap();
         let tasks = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
@@ -221,7 +220,12 @@ fn the_journal_package_makes_its_own_journal_where_the_agent_is_deployed_and_non
             deployed: deployed.then(|| "hanoi".to_string()),
             ..orexis_agent::Wiring::default()
         };
-        let running = orexis_agent::start(&store, "hanoi", clock, &loaded, None, wiring).unwrap();
+        //  BOOTED AND STARTED AS THE BINARY DOES: each start run once, from its decision on.
+        let world = Path::new(TREE).join("world/hanoi");
+        let running = orexis_agent::boot(&store, &world, "hanoi", clock, None, wiring)
+            .unwrap()
+            .start()
+            .unwrap();
         running
             .handed
             .outside

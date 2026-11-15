@@ -16,7 +16,7 @@ use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex, OnceLock};
 
 use orexis::Error;
-use orexis::clock::{Clock, Paced};
+use orexis::clock::Paced;
 use orexis::namespaces::Namespaces;
 use orexis::store::Store;
 use orexis::task::{MET, PLANNED, UNREACHABLE};
@@ -164,7 +164,6 @@ fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, 
         }
         None => Store::new(namespaces)?,
     };
-    let loaded = orexis_agent::booted(&store, &args.world, &args.agent, clock.now())?;
     let wiring = Wiring {
         //  DEPLOYED: what a package is not handed here it makes for itself from what the world says, its journal, its
         //  archive and its series sinks; and the log is handed to whichever package keeps it.
@@ -175,6 +174,8 @@ fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, 
         }),
         ..Wiring::default()
     };
+    //  BOOTED, each package's start held where it decided, to be run on once the runtime is there.
+    let booted = orexis_agent::boot(&store, &args.world, &args.agent, clock.clone(), None, wiring)?;
     //  THE AGENT'S BODY IS A TOKIO RUNTIME, a worker a core, and each package its roles load is a task on it
     //  (a-package-is-a-task-that-awaits-its-events).
     let workers = std::thread::available_parallelism().map_or(1, |n| n.get());
@@ -185,7 +186,7 @@ fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, 
         .build()
         .map_err(|e| Error::Evaluation(format!("the tasks could not start: {e}")))?;
     tasks.block_on(async {
-        let mut running = orexis_agent::start(&store, &args.agent, clock.clone(), &loaded, None, wiring)?;
+        let mut running = booted.start()?;
         //  EVERY PACKAGE HAS STARTED: where none kept the log, what was held of it is dropped.
         if let Some(logger) = LOGGER.get() {
             logger.unkept();
