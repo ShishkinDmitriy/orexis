@@ -12,7 +12,7 @@ own bot.
 
 | Heard | Said by | Starts |
 |---|---|---|
-| the clock, every `TELEGRAM_POLL_S` | | the bot polled on a thread of its own |
+| the clock, as often as a role says (`telegram:polledEveryS`), every 3 s where none says | | the bot polled on a thread of its own |
 | a message polled (an arrival) | Telegram | the words kept as a `speech:ProseGraph`, `speech:ProseKept` said |
 | `telegram:CarryingTrigger`: `speech:ProseKept` | translation | `telegram:Carrying`, where the words are the agent's own |
 | `telegram:CarryingTrigger`: `speech:WritingAnnounced` | translation | `telegram:Carrying`, showing the agent writing |

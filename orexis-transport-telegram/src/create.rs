@@ -1,5 +1,5 @@
 //! THE TELEGRAM TRANSPORT'S PART, as `agent/transport/telegram/create.py` and the family's `Transport.start` make it
-//! (a-package-starts-itself): started, it polls the bot every `TELEGRAM_POLL_S` and holds the agent running; a message
+//! (a-package-starts-itself): started, it polls the bot as often as a role says (`telegram:polledEveryS`) and holds the agent running; a message
 //! a poll's thread received waits in the member's inbox and is handed to the one executing thread as a job that says
 //! it as prose. The agent's own words for a channel it carries it hears said kept, beneath its trigger, and sends.
 

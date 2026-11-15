@@ -235,8 +235,8 @@ fn the_journal_package_makes_its_own_journal_where_the_agent_is_deployed_and_non
 }
 
 /// HOW OFTEN A PACKAGE TAKES ITS TURN IS ITS ROLE'S TO SAY, and the package's own figure holds where the role says
-/// nothing: the terrace's roles state none, so its readings are archived every ten seconds, its journal every two
-/// and its metrics written every sixty; said on the role that names the store or the archive, each is what is said.
+/// nothing: the terrace's roles state none, so its readings are archived every ten seconds, its journal every two,
+/// its metrics written every sixty and its bot polled every three; said on the role that names the store or the archive, each is what is said.
 #[test]
 fn how_often_a_package_takes_its_turn_is_said_on_its_role_and_the_packages_own_where_it_says_nothing() {
     let now = oxsdatatypes::DateTime::now();
@@ -248,13 +248,15 @@ fn how_often_a_package_takes_its_turn_is_said_on_its_role_and_the_packages_own_w
             orexis_sensing_influxdb::every_s(store).unwrap(),
             orexis_journal_oxigraph::every_s(store).unwrap(),
             orexis_metrics::window_s(store).unwrap(),
+            orexis_transport_telegram::driver::polled_every_s(store).unwrap(),
         )
     };
-    assert_eq!(figures(&store), (10.0, 2.0, 60.0));
+    assert_eq!(figures(&store), (10.0, 2.0, 60.0, 3.0));
     for (link, figure, said) in [
         ("sensing#archivedIn", "sensing#archivedEveryS", 30),
         ("journal#archivedIn", "journal#archivedEveryS", 5),
         ("metrics#writtenTo", "metrics#windowS", 300),
+        ("translation#translatedBy", "telegram#polledEveryS", 7),
     ] {
         store
             .update(&format!(
@@ -264,7 +266,7 @@ fn how_often_a_package_takes_its_turn_is_said_on_its_role_and_the_packages_own_w
             ))
             .unwrap();
     }
-    assert_eq!(figures(&store), (30.0, 5.0, 300.0));
+    assert_eq!(figures(&store), (30.0, 5.0, 300.0, 7.0));
 }
 
 /// WHERE A BROKER, A BOT AND A MODEL ANSWER IS THE WORLD'S TO SAY, and no environment's: the terrace's agent is

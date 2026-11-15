@@ -1,7 +1,7 @@
 //! THE TELEGRAM DRIVER, as `agent/transport/telegram/driver.py` keeps it: an agent's own bot over the Bot API.
 //!
 //! **THE BOT IS THE AGENT'S.** It is the account the agent speaks through (`telegram:hasBot`), its token
-//! `TELEGRAM_BOT_TOKEN` and where the API answers `TELEGRAM_URL`, both environment.
+//! `TELEGRAM_BOT_TOKEN`, environment, and where the API answers the world's derived deployment's word of the bot.
 //!
 //! **IT POLLS.** `getUpdates` from the offset after the last update seen, on a thread of its own; every text message
 //! waits in the inbox, its channel the chat's id. `handle` finds the `telegram:Chat` the world names by that id and
@@ -54,6 +54,17 @@ pub fn answers(beliefs: &Store, me: &str) -> Result<Option<String>, Error> {
         .iter()
         .find_map(|row| orexis::store::value(row, "url"))
         .filter(|url| !url.is_empty()))
+}
+
+/// HOW OFTEN THE BOT IS POLLED, in real seconds: what a role the self plays says in the agent's self graph
+/// (`telegram:polledEveryS`), and the transport's own where none says.
+pub fn polled_every_s(beliefs: &Store) -> Result<f64, Error> {
+    Ok(orexis::boot::figure(
+        beliefs,
+        "PREFIX telegram: <http://example.org/orexis/telegram#> ",
+        "?role telegram:polledEveryS ?figure .",
+    )?
+    .unwrap_or(POLL_S))
 }
 
 /// The Bot API as the driver calls it: a method's URL and its JSON body, answered with JSON.
@@ -323,9 +334,7 @@ impl Telegram {
         })?;
         let url = answers(beliefs, me)?.unwrap_or_else(|| TELEGRAM_URL.to_string());
         let mut bot = Telegram::new(beliefs, me, &token, &url, post());
-        if let Some(every) = env("TELEGRAM_POLL_S").and_then(|s| s.parse().ok()) {
-            bot.every = every;
-        }
+        bot.every = polled_every_s(beliefs)?;
         Ok(bot)
     }
 
@@ -771,14 +780,13 @@ mod tests {
         assert!(Telegram::connect(&store, &format!("{TEST}keeper"), &|_| None).is_err());
         let env = |k: &str| match k {
             "TELEGRAM_BOT_TOKEN" => Some("t".to_string()),
-            "TELEGRAM_POLL_S" => Some("5".to_string()),
             _ => None,
         };
         let bot = Telegram::connect(&store, &format!("{TEST}keeper"), &env).unwrap();
         //  WHERE IT ANSWERS IS THE WORLD'S DEPLOYMENT'S TO SAY, and this world says nothing: the Bot API's own.
         assert_eq!(
             (bot.api.url.as_str(), bot.every),
-            (TELEGRAM_URL.trim_end_matches('/'), 5.0)
+            (TELEGRAM_URL.trim_end_matches('/'), POLL_S)
         );
     }
 }

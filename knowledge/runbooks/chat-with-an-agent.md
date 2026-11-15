@@ -96,7 +96,7 @@ podman compose logs -f agent-terrace
 At boot it says what it loads, and the list ends with `transport/telegram`:
 `terrace loads belief, sensing, prediction, speech, translation, transport/mqtt, transport/http, transport/telegram`.
 Then write to the bot — "is the bed dry?", with or without its @name. The words go to the model, the
-chat shows the bot typing while it thinks (polled every `TELEGRAM_POLL_S`, three seconds by default),
+chat shows the bot typing while it thinks (polled as often as a role of the agent says, `telegram:polledEveryS`, three seconds where none says),
 and the answer comes from the rows its queries read. Tell it "the probe shows strange numbers" and the
 model states `sensing:defect` of the probe, which the terrace's chat allows as it allows every word; the
 probe's next number is kept and no reading, until you say it is fine again.

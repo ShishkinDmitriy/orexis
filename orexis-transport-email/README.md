@@ -11,7 +11,7 @@ The email member of the transport family: a person's mail in, the agent's own wo
 
 | Heard | Said by | Starts |
 |---|---|---|
-| the clock, every `MAIL_POLL_S` | | the mailbox polled on a thread of its own |
+| the clock, as often as a role says (`email:polledEveryS`), every 30 s where none says | | the mailbox polled on a thread of its own |
 | a message polled (an arrival) | the mail server | the words kept as a `speech:ProseGraph`, `speech:ProseKept` said |
 | `email:CarryingTrigger`: `speech:ProseKept` | translation | `email:Carrying`, where the words are the agent's own |
 

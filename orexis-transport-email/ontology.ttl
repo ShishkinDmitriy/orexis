@@ -26,3 +26,8 @@ email:CarryingTrigger a owl:Class ; rdfs:subClassOf email:Trigger ; rdfs:label "
     rdfs:comment "What starts a carrying: speech's `speech:ProseKept`, beneath it here, naming the prose graph whose words it carries where they are the agent's own (`speech:kept`). The policy judges by the graph's provenance: a person's words it kept itself are translation's." .
 
 speech:ProseKept rdfs:subClassOf email:CarryingTrigger .
+
+#  HOW OFTEN THE MAILBOX IS POLLED is a role's to say, in the agent's self graph, and the transport's own where none says.
+
+email:polledEveryS a owl:DatatypeProperty ; rdfs:label "polled every, in seconds" ;
+    rdfs:comment "How often an agent's mailbox is polled, in real seconds, said of a role the agent plays that speaks through it. Thirty where no role says." .
