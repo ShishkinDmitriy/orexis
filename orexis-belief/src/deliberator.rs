@@ -10,8 +10,8 @@
 //! **ARRIVALS ARE TRANSITIONED ON IN TURN.** A later arrival may be revised while an earlier one is cut short, but
 //! its transitions wait until every arrival queued before it has had its own — unless the earlier triggers none.
 //!
-//! **A CUT SURVIVES A RESTART.** At construction every revision graph whose row says it did not settle is queued
-//! again, read off the catalogue.
+//! **A CUT SURVIVES A RESTART.** As the package starts every revision graph whose row says it did not settle is
+//! queued again, read off the catalogue (`resume`).
 //!
 //! **WHAT A PASS REVISED IS SAID** to whoever watches the agent, and with it the revisions the catalogue holds and how
 //! many are unsettled, which only the metrics hear (`events.rs`).
@@ -24,14 +24,23 @@ use oxsdatatypes::DateTime;
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::events::Watch;
-use orexis::ontology::{BELIEF, RECORD};
-use orexis::store::{Store, Within, iri};
+use orexis::ontology::{BELIEF, ONTOLOGY, RECORD, SELF_GRAPH};
+use orexis::store::{Store, Within, iri, value};
 use orexis::task::{Heard, Turn};
 
 use crate::events::{Revised, RevisionsHeld};
-use crate::ontology::{BUDGET_TERM, INTO, REVISES, REVISING, REVISION_GRAPH, SETTLED, revision_graph};
+use crate::ontology::{INTO, REVISES, REVISING, REVISION_GRAPH, SETTLED, revision_graph};
 use crate::revise::{self, revise, say_settled};
 use crate::trigger::trigger;
+
+/// THE DELIBERATOR THE SELF PLAYS, IN ONE QUERY: the default belief's ontology states on the role's shape
+/// (`sh:defaultValue`), how many values the roles the self plays state, and one of them. Whichever role states it:
+/// a domain's role beneath the deliberator is one too.
+const DELIBERATOR_Q: &str = "SELECT ?own (COUNT(DISTINCT ?said) AS ?stated) (SAMPLE(?said) AS ?one) WHERE { \
+?shape sh:targetClass <http://example.org/orexis/belief#Deliberator> ; sh:property ?property . \
+?property sh:path <http://example.org/orexis/belief#budget> ; sh:defaultValue ?own . \
+OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . ?role <http://example.org/orexis/belief#budget> ?said } } \
+GROUP BY ?own";
 
 /// EVERY SOURCE WHOSE RULES DID NOT SETTLE, off the revision graphs' rows.
 const UNSETTLED_Q: &str = "
@@ -82,19 +91,51 @@ pub struct Deliberator {
 }
 
 impl Deliberator {
-    /// The deliberator the self plays, read off the store: its budget is its role's figure.
+    /// The deliberator the self plays, read off the store in one query: what its role says and, where it says
+    /// nothing, the default belief's ontology states. Refused where the store holds no such default, the ontology
+    /// being what the package brings as it joins.
     pub fn new(beliefs: &Store) -> Result<Self, Error> {
-        let mut deliberator = Deliberator {
+        let mut known = beliefs.graphs_of(&[SELF_GRAPH], &Within::default())?;
+        known.extend(beliefs.graphs_of(&[ONTOLOGY], &Within::default())?);
+        let known: Vec<&str> = known.iter().map(String::as_str).collect();
+        let rows = beliefs.rows(DELIBERATOR_Q, &known)?;
+        let [row] = rows.as_slice() else {
+            return Err(Error::Document(format!(
+                "belief's ontology states {} defaults for a deliberator's budget, and one is the default",
+                rows.len()
+            )));
+        };
+        let figure = |what: &str| value(row, what).and_then(|n| n.parse::<f64>().ok());
+        let own = figure("own").ok_or_else(|| Error::Document("a deliberator's default budget is no number".into()))?;
+        //  TWO ANSWERS ARE NEVER PICKED BETWEEN: several, or one that is no number, is the default, said in the log.
+        let budget = match (figure("stated"), figure("one")) {
+            (Some(0.0), _) => own,
+            (Some(1.0), Some(one)) => one,
+            _ => {
+                log::warn!(
+                    "the self's roles state no one number for a deliberator's budget: the default, {own}, holds"
+                );
+                own
+            }
+        };
+        Ok(Deliberator {
             beliefs: beliefs.clone(),
-            budget: crate::ontology::figure_of(beliefs, BUDGET_TERM)? as usize,
+            budget: budget as usize,
             per_source: revise::BUDGET,
             queue: Vec::new(),
             watch: Watch::default(),
-        };
-        for source in deliberator.unsettled()? {
-            deliberator.queue.push((source, Arrival::new(None, BELIEF)));
+        })
+    }
+
+    /// WHAT A BUDGET CUT SHORT BEFORE THIS DELIBERATOR WAS MADE is taken up again: every revision graph whose row
+    /// says it did not settle is queued, read off the catalogue, so a cut survives a restart.
+    pub(crate) fn resume(&mut self) -> Result<(), Error> {
+        for source in self.unsettled()? {
+            if !self.queue.iter().any(|(queued, _)| *queued == source) {
+                self.queue.push((source, Arrival::new(None, BELIEF)));
+            }
         }
-        Ok(deliberator)
+        Ok(())
     }
 
     /// A graph was written: take it on the next pass, revised beside `read` where the writer says what stands, its
@@ -281,8 +322,9 @@ impl Deliberator {
         revised
     }
 
-    /// What is unrevised as the package starts, revised once.
+    /// What is unrevised as the package starts, revised once, with what a budget cut short before it.
     pub(crate) fn unrevised(&mut self, now: DateTime) -> Result<(), Error> {
+        self.resume()?;
         //  EVERY BELIEF NOT YET REVISED, but the common ones: the world's documents were concluded on at genesis.
         let mut skip = self.beliefs.graphs_of(&[REVISION_GRAPH], &Within::default())?;
         skip.extend(self.beliefs.graphs_of(&[BELIEF], &Within::common())?);
@@ -331,12 +373,24 @@ mod tests {
     ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
     FILTER NOT EXISTS { ?g a belief:RevisionGraph } ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
 
+    /// `store` with belief's ontology in it, as the package brings it when it joins: the deliberator's shape, whose
+    /// default the role's budget is where no role states one.
+    fn with_ontology(store: Store) -> Store {
+        let ontology = orexis::document::Document::read(&snapshots::tree().join("orexis-belief/ontology.ttl")).unwrap();
+        store.put_document(&ontology, None, None, None, true).unwrap();
+        store
+    }
+
     fn revise_case(name: &str) -> Store {
-        snapshots::stand_in(&snapshots::tree().join(format!("orexis-belief/tests/revise/{name}.trig")))
+        with_ontology(snapshots::stand_in(
+            &snapshots::tree().join(format!("orexis-belief/tests/revise/{name}.trig")),
+        ))
     }
 
     fn ticks() -> Store {
-        snapshots::stand_in(&snapshots::tree().join("orexis-belief/tests/worlds/a_counter_and_its_ticks.trig"))
+        with_ontology(snapshots::stand_in(
+            &snapshots::tree().join("orexis-belief/tests/worlds/a_counter_and_its_ticks.trig"),
+        ))
     }
 
     fn row_settled(store: &Store, graph: &str) -> Option<String> {
@@ -483,13 +537,10 @@ mod tests {
     #[test]
     fn the_budget_is_the_deliberators_roles_where_one_states_it() {
         let store = revise_case("a_chain_settles_in_a_later_round");
-        assert_eq!(
-            Deliberator::new(&store).unwrap().budget,
-            crate::ontology::DEFAULTS.figure(BUDGET_TERM).unwrap() as usize
-        );
+        assert_eq!(Deliberator::new(&store).unwrap().budget, 256);
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <{T}self> {{ <{T}keeper> a orexis:Self ; orexis:plays [ <{BUDGET_TERM}> 2 ] }} {} }}",
+                "INSERT DATA {{ GRAPH <{T}self> {{ <{T}keeper> a orexis:Self ; orexis:plays [ <http://example.org/orexis/belief#budget> 2 ] }} {} }}",
                 store
                     .entry(
                         &format!("{T}self"),
@@ -516,6 +567,7 @@ mod tests {
         first.changed(SENSED, None, BELIEF);
         first.deliberate(snapshots::now()).unwrap();
         let mut second = Deliberator::new(&store).unwrap();
+        second.resume().unwrap();
         assert_eq!(second.pending(), [SENSED], "the row said the rules did not settle");
         second.deliberate(snapshots::now()).unwrap();
         assert!(second.pending().is_empty());
@@ -661,6 +713,7 @@ mod tests {
         assert!(counter(&store).is_empty());
         assert_eq!(row_settled(&store, &first_tick).as_deref(), Some("false"));
         let mut second = Deliberator::new(&store).unwrap();
+        second.resume().unwrap();
         assert_eq!(
             second.pending(),
             std::slice::from_ref(&first_tick),
@@ -698,7 +751,7 @@ mod tests {
                 "INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph }} }}"
             ))
             .unwrap();
-        store
+        with_ontology(store)
     }
 
     #[test]
