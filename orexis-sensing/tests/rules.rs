@@ -48,11 +48,13 @@ fn put(store: &Store, path: PathBuf) {
         .unwrap();
 }
 
-/// `world` with sensing's rules and its ontology, the observer shape whose default the stuck rule reads.
+/// `world` with sensing's rules and its ontology, the observer shape whose default the stuck rule reads, and
+/// belief's, whose default the deliberator's budget is.
 fn with_rules(world: &str) -> Store {
     let store = stand_in(&here().join("tests/worlds").join(world));
     put(&store, here().join("rules.ttl"));
     put(&store, here().join("ontology.ttl"));
+    put(&store, here().join("../orexis-belief/ontology.ttl"));
     store
 }
 
@@ -333,6 +335,7 @@ const CALIBRATION: &str = r#"<http://example.org/test#probe_calibration> a sensi
 fn pot() -> Store {
     let store = stand_in(&here().join("tests/worlds/a_pot_and_its_probe.trig"));
     put(&store, here().join("rules.ttl"));
+    put(&store, here().join("../orexis-belief/ontology.ttl"));
     store
 }
 
