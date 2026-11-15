@@ -1,4 +1,4 @@
-//! THE DELIBERATOR'S PASS (the struct is in `lib.rs`, where the package's start is): the belief package's pass, as `agent/belief/deliberator.py` sequences it.
+//! THE DELIBERATOR: the belief package's pass, as `agent/belief/deliberator.py` sequences it.
 //!
 //! **WHAT IT OWNS IS A QUEUE.** A writer that wrote a graph says so, `changed(source)`, and nothing happens there;
 //! `deliberate()` is the pass, which takes every source in the queue in turn, spending at most a budget of rule
@@ -23,13 +23,15 @@ use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
-use orexis::events::{Event, Mark, Number};
+use orexis::events::{Event, Mark, Number, Watch};
 use orexis::ontology::{BELIEF, RECORD};
-use orexis::store::{Within, iri};
+use orexis::store::{Store, Within, iri};
+use orexis::task::{Heard, Turn};
 
-use crate::Deliberator;
-use crate::ontology::{CHANGED, REVISED, REVISED_SOURCE, REVISION_GRAPH, SETTLED, revision_graph};
-use crate::revise::{revise, say_settled};
+use crate::ontology::{
+    BUDGET_TERM, CHANGED, INTO, REVISED, REVISED_SOURCE, REVISES, REVISING, REVISION_GRAPH, SETTLED, revision_graph,
+};
+use crate::revise::{self, revise, say_settled};
 use crate::trigger::trigger;
 
 /// EVERY SOURCE WHOSE RULES DID NOT SETTLE, off the revision graphs' rows.
@@ -112,7 +114,7 @@ WHERE { GRAPH $cat { ?g a $revision ; $settled ?settled } }";
 /// revision has settled, how many orders of its transitions are applied, whether its row was said unsettled for
 /// its transitions, and the kind its revisions are.
 #[derive(Clone, Debug)]
-pub(crate) struct Arrival {
+struct Arrival {
     read: Option<Vec<String>>,
     revised: bool,
     done: usize,
@@ -121,7 +123,7 @@ pub(crate) struct Arrival {
 }
 
 impl Arrival {
-    pub(crate) fn new(read: Option<Vec<String>>, kind: &str) -> Self {
+    fn new(read: Option<Vec<String>>, kind: &str) -> Self {
         Arrival {
             read,
             revised: false,
@@ -132,7 +134,41 @@ impl Arrival {
     }
 }
 
+/// The pass over what was written since the last one, within a budget.
+pub struct Deliberator {
+    pub(crate) beliefs: Store,
+    pub id: String,
+    pub budget: usize,
+    /// Rule executions one source's revision may spend in a pass.
+    pub per_source: usize,
+    /// Source to where it stands, in the order changes arrived.
+    queue: Vec<(String, Arrival)>,
+    /// Whoever watches the agent.
+    pub watch: Watch,
+}
+
 impl Deliberator {
+    /// The beliefs and the one identifier a process is told. The budget is the deliberator's role's figure, its ontology's default where it
+    /// states none — or the caller's.
+    pub fn new(beliefs: &Store, agent: &str, budget: Option<usize>) -> Result<Self, Error> {
+        let budget = match budget {
+            Some(b) => b,
+            None => crate::ontology::figure_of(beliefs, BUDGET_TERM)? as usize,
+        };
+        let mut deliberator = Deliberator {
+            beliefs: beliefs.clone(),
+            id: agent.to_string(),
+            budget,
+            per_source: revise::BUDGET,
+            queue: Vec::new(),
+            watch: Watch::default(),
+        };
+        for source in deliberator.unsettled()? {
+            deliberator.queue.push((source, Arrival::new(None, BELIEF)));
+        }
+        Ok(deliberator)
+    }
+
     /// A graph was written: take it on the next pass, revised beside `read` where the writer says what stands, its
     /// revisions classified `kind`. Written again before it was done, it is a new arrival at the end of the queue.
     pub fn changed(&mut self, source: &str, read: Option<Vec<String>>, kind: &str) {
@@ -288,7 +324,7 @@ impl Deliberator {
         Ok(())
     }
 
-    pub(crate) fn unsettled(&self) -> Result<Vec<String>, Error> {
+    fn unsettled(&self) -> Result<Vec<String>, Error> {
         let Some(cat) = self.beliefs.catalogue()? else {
             return Ok(Vec::new());
         };
@@ -307,6 +343,46 @@ impl Deliberator {
     }
 }
 
+//  THE PACKAGE'S POLICY, on its core: what the deliberator revises as the package starts and on what it hears.
+impl Deliberator {
+    /// Revise `graphs` as an activity, triggered by them.
+    pub(crate) fn revising(&mut self, graphs: &[String], kind: &str, pass: &mut Turn<'_>) -> Result<(), Error> {
+        let triggers: Vec<NamedNode> = graphs.iter().filter_map(|g| NamedNode::new(g.as_str()).ok()).collect();
+        let activity = pass.begin(REVISING, &triggers);
+        let revised = self.revise(graphs, kind, pass.now);
+        pass.end(activity);
+        revised
+    }
+}
+
+impl Deliberator {
+    /// What is unrevised as the package starts, revised once.
+    pub(crate) fn unrevised(&mut self, now: DateTime) -> Result<(), Error> {
+        //  EVERY BELIEF NOT YET REVISED, but the common ones: the world's documents were concluded on at genesis.
+        let mut skip = self.beliefs.graphs_of(&[REVISION_GRAPH], &Within::default())?;
+        skip.extend(self.beliefs.graphs_of(&[BELIEF], &Within::common())?);
+        let mut due = Vec::new();
+        for g in self.beliefs.graphs_of(&[BELIEF], &Within::default())? {
+            if !skip.contains(&g) && self.beliefs.revisions_of(&[&g], BELIEF)?.is_empty() {
+                due.push(g);
+            }
+        }
+        self.revise(&due, BELIEF, now)
+    }
+
+    /// What belief's policy does of a trigger: revise each graph it names, its revisions of the kind it names.
+    pub(crate) fn heard_event(&mut self, event: &Heard, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+        let graphs: Vec<String> = event.all(REVISES).iter().map(|g| g.as_str().to_string()).collect();
+        let Some(kind) = event.named(INTO).map(|k| k.as_str().to_string()) else {
+            return Ok(Vec::new());
+        };
+        if !graphs.is_empty() {
+            self.revising(&graphs, &kind, pass)?;
+        }
+        Ok(Vec::new())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     //! The deliberator, held as `agent/belief/tests/test_deliberator.py` holds it: over the `revise/` cases for the
@@ -314,13 +390,14 @@ mod tests {
 
     use std::collections::BTreeMap;
 
-    use super::*;
-    use crate::ontology::BUDGET_TERM;
-    use crate::revise;
-    use crate::trigger::trigger as triggered;
     use orexis::snapshots;
-    use orexis::store::Store;
     use oxsdatatypes::DayTimeDuration;
+
+    use std::sync::{Arc, Mutex};
+
+    use super::*;
+    use crate::trigger::trigger as triggered;
+    use orexis::ontology::CATALOGUE_GRAPH;
 
     const SENSED: &str = "http://example.org/test#sensed";
     const T: &str = "http://example.org/test#";
@@ -681,5 +758,77 @@ mod tests {
             counter(&store),
             map(&[("count", "1"), ("echo", "1"), ("last", "first_t")])
         );
+    }
+
+    fn bare() -> Store {
+        let store = Store::new(snapshots::namespaces()).unwrap();
+        store
+            .update(&format!(
+                "INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph }} }}"
+            ))
+            .unwrap();
+        store
+    }
+
+    #[test]
+    fn its_part_hears_beliefs_written_and_says_each_pass_revised() {
+        let store = bare();
+        let mut part = Deliberator::new(&store, "urn:test:me", None).unwrap();
+        let heard = Arc::new(Mutex::new(Vec::new()));
+        let into = heard.clone();
+        part.watch.connect(move |event, _| {
+            if let Some(r) = orexis::events::as_of::<crate::deliberator::Revised>(event) {
+                into.lock().unwrap().extend(r.graphs.clone());
+            }
+        });
+        part.unrevised(snapshots::now()).unwrap();
+        store
+            .update(&format!(
+                "INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <urn:test:nothing> a orexis:BeliefGraph }} }}"
+            ))
+            .unwrap();
+        part.revise(&["urn:test:nothing".to_string()], BELIEF, snapshots::now())
+            .unwrap();
+        assert_eq!(
+            *heard.lock().unwrap(),
+            ["urn:test:nothing"],
+            "each pass says what it revised"
+        );
+    }
+
+    #[test]
+    fn a_graph_written_is_revised_beside_the_world_alone() {
+        let store = bare();
+        let said = [
+            (
+                "urn:test:world",
+                "orexis:BeliefGraph ; orexis:arrivedBy orexis:Asserted",
+            ),
+            (
+                "urn:test:concluded",
+                "orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy <urn:test:me>",
+            ),
+            (
+                "urn:test:other_reading",
+                "orexis:BeliefGraph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy <urn:test:me>",
+            ),
+            (
+                "urn:test:said",
+                "orexis:BeliefGraph ; orexis:arrivedBy orexis:Recorded ; orexis:ownedBy <urn:test:me>",
+            ),
+        ];
+        let rows: String = said.iter().map(|(g, s)| format!("<{g}> a {s} . ")).collect();
+        store
+            .update(&format!("INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ {rows} }} }}"))
+            .unwrap();
+        let mut part = Deliberator::new(&store, "urn:test:me", None).unwrap();
+        part.revise(&["urn:test:reading".to_string()], BELIEF, snapshots::now())
+            .unwrap();
+        assert!(part.pending().is_empty());
+        let mut deliberator = Deliberator::new(&store, "urn:test:me", Some(0)).unwrap();
+        let stated = store.graphs_of(&[BELIEF], &Within::common()).unwrap();
+        assert_eq!(stated, ["urn:test:world"], "the common beliefs alone stand beside it");
+        deliberator.changed("urn:test:observed", Some(stated), "urn:test:ObservedGraph");
+        assert_eq!(deliberator.pending(), ["urn:test:observed"]);
     }
 }
