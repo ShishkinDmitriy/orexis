@@ -14,96 +14,28 @@
 //! again, read off the catalogue.
 //!
 //! **WHAT A PASS REVISED IS SAID** to whoever watches the agent, and with it the revisions the catalogue holds and how
-//! many are unsettled (`RevisionsHeld`), which only the metrics hear.
+//! many are unsettled, which only the metrics hear (`events.rs`).
 
 use std::time::Instant;
 
-use oxigraph::model::{NamedNode, Term};
+use oxigraph::model::NamedNode;
 use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
-use orexis::events::{Event, Mark, Number, Watch};
+use orexis::events::Watch;
 use orexis::ontology::{BELIEF, RECORD};
 use orexis::store::{Store, Within, iri};
 use orexis::task::{Heard, Turn};
 
-use crate::ontology::{
-    BUDGET_TERM, CHANGED, INTO, REVISED, REVISED_SOURCE, REVISES, REVISING, REVISION_GRAPH, SETTLED, revision_graph,
-};
+use crate::events::{Revised, RevisionsHeld};
+use crate::ontology::{BUDGET_TERM, INTO, REVISES, REVISING, REVISION_GRAPH, SETTLED, revision_graph};
 use crate::revise::{self, revise, say_settled};
 use crate::trigger::trigger;
 
 /// EVERY SOURCE WHOSE RULES DID NOT SETTLE, off the revision graphs' rows.
 const UNSETTLED_Q: &str = "
 SELECT ?source WHERE { GRAPH $cat { ?g $settled false ; prov:wasDerivedFrom ?source } } ORDER BY ?source";
-
-/// A revision pass: the sources it revised or transitioned on, the agent's own state graphs the transitions they
-/// triggered changed, how many it was handed, the rule executions it spent, how many it left cut short, and its
-/// real seconds.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct Revised {
-    pub graphs: Vec<String>,
-    pub changed: Vec<String>,
-    pub sources: usize,
-    pub executions: usize,
-    pub cut: usize,
-    pub duration_s: f64,
-}
-
-impl Event for Revised {
-    fn metric(&self) -> Option<&'static str> {
-        Some("revise")
-    }
-
-    fn kind(&self) -> Option<&'static str> {
-        Some(REVISED)
-    }
-
-    /// Every source it revised or transitioned on (`belief:revised`) and every state of the agent's its transitions
-    /// changed (`belief:changed`), in belief's own words: whoever hears it is above belief and reads them.
-    fn about(&self) -> Vec<(&'static str, Term)> {
-        let named = |p: &'static str, gs: &[String]| {
-            gs.iter()
-                .filter_map(|g| NamedNode::new(g.as_str()).ok())
-                .map(move |n| (p, Term::NamedNode(n)))
-                .collect::<Vec<_>>()
-        };
-        let mut about = named(REVISED_SOURCE, &self.graphs);
-        about.extend(named(CHANGED, &self.changed));
-        about
-    }
-
-    fn marks(&self) -> Vec<(&'static str, Mark)> {
-        vec![
-            ("sources", Mark::Value(Some(self.sources as f64))),
-            ("executions", Mark::Value(Some(self.executions as f64))),
-            ("cut", Mark::Value(Some(self.cut as f64))),
-            ("duration_s", Mark::Value(Some(self.duration_s))),
-        ]
-    }
-}
-
-/// The revisions the belief base's catalogue describes, and how many a budget cut short — settled false, which the
-/// next pass continues. A revision unsettled window after window is a rule set that never settles.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct RevisionsHeld {
-    pub revisions: i64,
-    pub unsettled: i64,
-}
-
-impl Event for RevisionsHeld {
-    fn metric(&self) -> Option<&'static str> {
-        Some("revisions")
-    }
-
-    fn marks(&self) -> Vec<(&'static str, Mark)> {
-        vec![
-            ("revisions", Mark::Level(Some(Number::Int(self.revisions)))),
-            ("unsettled", Mark::Level(Some(Number::Int(self.unsettled)))),
-        ]
-    }
-}
 
 /// THE REVISIONS THE CATALOGUE DESCRIBES, and how many are unsettled.
 const HELD_Q: &str = "
@@ -776,7 +708,7 @@ mod tests {
         let heard = Arc::new(Mutex::new(Vec::new()));
         let into = heard.clone();
         part.watch.connect(move |event, _| {
-            if let Some(r) = orexis::events::as_of::<crate::deliberator::Revised>(event) {
+            if let Some(r) = orexis::events::as_of::<Revised>(event) {
                 into.lock().unwrap().extend(r.graphs.clone());
             }
         });
