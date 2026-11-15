@@ -64,7 +64,7 @@ fn strs(names: &[String]) -> Vec<&str> {
 /// beside what is known then, into `kind`.
 fn read(store: &Store, sensor: &str, payload: &str, at: DateTime, read: &[String], kind: &str) -> Vec<String> {
     let written = received(store, ME, sensor, payload.as_bytes(), at).unwrap();
-    let mut deliberator = Deliberator::new(store, "keeper", None).unwrap();
+    let mut deliberator = Deliberator::new(store).unwrap();
     for graph in &written {
         deliberator.changed(graph, Some(read.to_vec()), kind);
     }

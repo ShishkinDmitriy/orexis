@@ -26,8 +26,11 @@ use orexis::bind::{Value, bind};
 use orexis::events::{Event, Mark, Number, Watch};
 use orexis::ontology::{BELIEF, RECORD};
 use orexis::store::{Store, Within, iri};
+use orexis::task::{Heard, Turn};
 
-use crate::ontology::{BUDGET_TERM, CHANGED, REVISED, REVISED_SOURCE, REVISION_GRAPH, SETTLED, revision_graph};
+use crate::ontology::{
+    BUDGET_TERM, CHANGED, INTO, REVISED, REVISED_SOURCE, REVISES, REVISING, REVISION_GRAPH, SETTLED, revision_graph,
+};
 use crate::revise::{self, revise, say_settled};
 use crate::trigger::trigger;
 
@@ -131,10 +134,12 @@ impl Arrival {
     }
 }
 
-/// The pass over what was written since the last one, within a budget.
+/// THE DELIBERATOR THE SELF PLAYS: the pass over what was written since the last one, within the budget its role
+/// states.
 pub struct Deliberator {
-    beliefs: Store,
-    pub id: String,
+    pub(crate) beliefs: Store,
+    /// Rule executions one pass may spend (`belief:budget`), and the default the ontology states where the role
+    /// states none.
     pub budget: usize,
     /// Rule executions one source's revision may spend in a pass.
     pub per_source: usize,
@@ -145,17 +150,11 @@ pub struct Deliberator {
 }
 
 impl Deliberator {
-    /// The beliefs and the one identifier a process is told. The budget is the deliberator's role's figure, its ontology's default where it
-    /// states none — or the caller's.
-    pub fn new(beliefs: &Store, agent: &str, budget: Option<usize>) -> Result<Self, Error> {
-        let budget = match budget {
-            Some(b) => b,
-            None => crate::ontology::figure_of(beliefs, BUDGET_TERM)? as usize,
-        };
+    /// The deliberator the self plays, read off the store: its budget is its role's figure.
+    pub fn new(beliefs: &Store) -> Result<Self, Error> {
         let mut deliberator = Deliberator {
             beliefs: beliefs.clone(),
-            id: agent.to_string(),
-            budget,
+            budget: crate::ontology::figure_of(beliefs, BUDGET_TERM)? as usize,
             per_source: revise::BUDGET,
             queue: Vec::new(),
             watch: Watch::default(),
@@ -171,6 +170,17 @@ impl Deliberator {
     pub fn changed(&mut self, source: &str, read: Option<Vec<String>>, kind: &str) {
         self.queue.retain(|(s, _)| s != source);
         self.queue.push((source.to_string(), Arrival::new(read, kind)));
+    }
+
+    /// Revise `graphs` beside what the world states and apply the transitions each triggers, now — their revisions
+    /// classified `kind`.
+    pub fn revise(&mut self, graphs: &[String], kind: &str, at: DateTime) -> Result<(), Error> {
+        let stated = self.beliefs.graphs_of(&[BELIEF], &Within::common())?;
+        for graph in graphs {
+            self.changed(graph, Some(stated.clone()), kind);
+        }
+        self.deliberate(at)?;
+        Ok(())
     }
 
     /// What the next pass will take, in order.
@@ -247,7 +257,7 @@ impl Deliberator {
             self.queue.remove(i);
         }
         if spent > 0 {
-            log::debug!("{}: {spent} execution(s), {} pending", self.id, self.queue.len());
+            log::debug!("{spent} execution(s), {} pending", self.queue.len());
         }
         if handed > 0 {
             let revised = Revised {
@@ -327,6 +337,43 @@ impl Deliberator {
             .filter_map(|r| iri(r, "source"))
             .collect())
     }
+
+    //  THE PACKAGE'S POLICY: what the deliberator revises as the package starts and on what it hears.
+
+    /// Revise `graphs` as an activity, triggered by them.
+    pub(crate) fn revising(&mut self, graphs: &[String], kind: &str, pass: &mut Turn<'_>) -> Result<(), Error> {
+        let triggers: Vec<NamedNode> = graphs.iter().filter_map(|g| NamedNode::new(g.as_str()).ok()).collect();
+        let activity = pass.begin(REVISING, &triggers);
+        let revised = self.revise(graphs, kind, pass.now);
+        pass.end(activity);
+        revised
+    }
+
+    /// What is unrevised as the package starts, revised once.
+    pub(crate) fn unrevised(&mut self, now: DateTime) -> Result<(), Error> {
+        //  EVERY BELIEF NOT YET REVISED, but the common ones: the world's documents were concluded on at genesis.
+        let mut skip = self.beliefs.graphs_of(&[REVISION_GRAPH], &Within::default())?;
+        skip.extend(self.beliefs.graphs_of(&[BELIEF], &Within::common())?);
+        let mut due = Vec::new();
+        for g in self.beliefs.graphs_of(&[BELIEF], &Within::default())? {
+            if !skip.contains(&g) && self.beliefs.revisions_of(&[&g], BELIEF)?.is_empty() {
+                due.push(g);
+            }
+        }
+        self.revise(&due, BELIEF, now)
+    }
+
+    /// What belief's policy does of a trigger: revise each graph it names, its revisions of the kind it names.
+    pub(crate) fn heard_event(&mut self, event: &Heard, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+        let graphs: Vec<String> = event.all(REVISES).iter().map(|g| g.as_str().to_string()).collect();
+        let Some(kind) = event.named(INTO).map(|k| k.as_str().to_string()) else {
+            return Ok(Vec::new());
+        };
+        if !graphs.is_empty() {
+            self.revising(&graphs, &kind, pass)?;
+        }
+        Ok(Vec::new())
+    }
 }
 
 #[cfg(test)]
@@ -339,8 +386,11 @@ mod tests {
     use orexis::snapshots;
     use oxsdatatypes::DayTimeDuration;
 
+    use std::sync::{Arc, Mutex};
+
     use super::*;
     use crate::trigger::trigger as triggered;
+    use orexis::ontology::CATALOGUE_GRAPH;
 
     const SENSED: &str = "http://example.org/test#sensed";
     const T: &str = "http://example.org/test#";
@@ -454,7 +504,7 @@ mod tests {
     #[test]
     fn a_changed_source_is_revised_on_the_pass_and_leaves_the_queue() {
         let store = revise_case("a_reading_below_its_range_is_concluded_below");
-        let mut deliberator = Deliberator::new(&store, snapshots::AGENT, None).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
         deliberator.changed(SENSED, None, BELIEF);
         assert_eq!(deliberator.pending(), [SENSED]);
         assert!(deliberator.deliberate(snapshots::now()).unwrap() > 0);
@@ -467,7 +517,7 @@ mod tests {
     fn nothing_changed_spends_nothing_and_says_nothing() {
         let store = revise_case("a_reading_below_its_range_is_concluded_below");
         let heard = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let mut deliberator = Deliberator::new(&store, snapshots::AGENT, None).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
         let into = heard.clone();
         deliberator.watch.connect(move |event, _| {
             if orexis::events::as_of::<Revised>(event).is_some() {
@@ -481,7 +531,8 @@ mod tests {
     #[test]
     fn a_budget_cuts_the_pass_and_the_next_continues() {
         let store = revise_case("a_chain_settles_in_a_later_round");
-        let mut deliberator = Deliberator::new(&store, snapshots::AGENT, Some(2)).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
+        deliberator.budget = 2;
         deliberator.changed(SENSED, None, BELIEF);
         assert_eq!(deliberator.deliberate(snapshots::now()).unwrap(), 2);
         assert_eq!(deliberator.pending(), [SENSED]);
@@ -501,7 +552,7 @@ mod tests {
     fn the_budget_is_the_deliberators_roles_where_one_states_it() {
         let store = revise_case("a_chain_settles_in_a_later_round");
         assert_eq!(
-            Deliberator::new(&store, snapshots::AGENT, None).unwrap().budget,
+            Deliberator::new(&store).unwrap().budget,
             crate::ontology::DEFAULTS.figure(BUDGET_TERM).unwrap() as usize
         );
         store
@@ -519,8 +570,7 @@ mod tests {
                     .unwrap()
             ))
             .unwrap();
-        assert_eq!(Deliberator::new(&store, snapshots::AGENT, Some(64)).unwrap().budget, 64);
-        let mut deliberator = Deliberator::new(&store, snapshots::AGENT, None).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
         deliberator.changed(SENSED, None, BELIEF);
         assert_eq!(deliberator.deliberate(snapshots::now()).unwrap(), 2);
         assert_eq!(deliberator.pending(), [SENSED]);
@@ -529,10 +579,11 @@ mod tests {
     #[test]
     fn a_cut_survives_a_new_deliberator_over_the_store() {
         let store = revise_case("a_chain_settles_in_a_later_round");
-        let mut first = Deliberator::new(&store, snapshots::AGENT, Some(2)).unwrap();
+        let mut first = Deliberator::new(&store).unwrap();
+        first.budget = 2;
         first.changed(SENSED, None, BELIEF);
         first.deliberate(snapshots::now()).unwrap();
-        let mut second = Deliberator::new(&store, snapshots::AGENT, None).unwrap();
+        let mut second = Deliberator::new(&store).unwrap();
         assert_eq!(second.pending(), [SENSED], "the row said the rules did not settle");
         second.deliberate(snapshots::now()).unwrap();
         assert!(second.pending().is_empty());
@@ -549,7 +600,7 @@ mod tests {
             "nothing the transition reads is concluded yet"
         );
         let store = ticks();
-        let mut deliberator = Deliberator::new(&store, snapshots::AGENT, None).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
         deliberator.changed(&tick(&store, "first", snapshots::now(), true), None, BELIEF);
         assert_eq!(deliberator.deliberate(snapshots::now()).unwrap(), 5);
         assert_eq!(
@@ -562,7 +613,8 @@ mod tests {
     #[test]
     fn arrivals_are_transitioned_on_in_turn_whatever_the_budget_cuts() {
         let store = ticks();
-        let mut deliberator = Deliberator::new(&store, snapshots::AGENT, Some(50)).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
+        deliberator.budget = 50;
         deliberator.per_source = 1;
         let loud = tick(&store, "loud", snapshots::now(), true);
         let quiet = tick(&store, "quiet", minutes(1), false);
@@ -620,7 +672,8 @@ mod tests {
                 "INSERT DATA {{ GRAPH <{note}> {{ <{T}note_t> a <{T}Tick> ; <{T}loud> true }} {entry} }}"
             ))
             .unwrap();
-        let mut deliberator = Deliberator::new(&store, snapshots::AGENT, Some(50)).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
+        deliberator.budget = 50;
         deliberator.per_source = 1;
         deliberator.changed(&note, None, BELIEF);
         let quiet = tick(&store, "quiet", snapshots::now(), false);
@@ -633,7 +686,8 @@ mod tests {
     #[test]
     fn a_graph_written_again_is_a_new_arrival_at_the_end_of_the_queue() {
         let store = ticks();
-        let mut deliberator = Deliberator::new(&store, snapshots::AGENT, Some(50)).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
+        deliberator.budget = 50;
         deliberator.per_source = 1;
         let loud = tick(&store, "loud", snapshots::now(), true);
         deliberator.changed(&loud, None, BELIEF);
@@ -667,13 +721,14 @@ mod tests {
     fn transitions_a_budget_left_waiting_survive_a_new_deliberator() {
         let store = ticks();
         let first_tick = tick(&store, "first", snapshots::now(), true);
-        let mut first = Deliberator::new(&store, snapshots::AGENT, Some(2)).unwrap();
+        let mut first = Deliberator::new(&store).unwrap();
+        first.budget = 2;
         first.changed(&first_tick, None, BELIEF);
         assert_eq!(first.deliberate(snapshots::now()).unwrap(), 2);
         assert_eq!(first.pending(), std::slice::from_ref(&first_tick));
         assert!(counter(&store).is_empty());
         assert_eq!(row_settled(&store, &first_tick).as_deref(), Some("false"));
-        let mut second = Deliberator::new(&store, snapshots::AGENT, None).unwrap();
+        let mut second = Deliberator::new(&store).unwrap();
         assert_eq!(
             second.pending(),
             std::slice::from_ref(&first_tick),
@@ -691,7 +746,8 @@ mod tests {
     #[test]
     fn a_cut_between_orders_is_continued_from_the_order_it_stopped_at() {
         let store = ticks();
-        let mut deliberator = Deliberator::new(&store, snapshots::AGENT, Some(3)).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
+        deliberator.budget = 3;
         deliberator.changed(&tick(&store, "first", snapshots::now(), true), None, BELIEF);
         assert_eq!(deliberator.deliberate(snapshots::now()).unwrap(), 4);
         assert_eq!(counter(&store), map(&[("count", "1"), ("last", "first_t")]));
@@ -701,5 +757,78 @@ mod tests {
             counter(&store),
             map(&[("count", "1"), ("echo", "1"), ("last", "first_t")])
         );
+    }
+
+    fn bare() -> Store {
+        let store = Store::new(snapshots::namespaces()).unwrap();
+        store
+            .update(&format!(
+                "INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph }} }}"
+            ))
+            .unwrap();
+        store
+    }
+
+    #[test]
+    fn its_part_hears_beliefs_written_and_says_each_pass_revised() {
+        let store = bare();
+        let mut part = Deliberator::new(&store).unwrap();
+        let heard = Arc::new(Mutex::new(Vec::new()));
+        let into = heard.clone();
+        part.watch.connect(move |event, _| {
+            if let Some(r) = orexis::events::as_of::<crate::deliberator::Revised>(event) {
+                into.lock().unwrap().extend(r.graphs.clone());
+            }
+        });
+        part.unrevised(snapshots::now()).unwrap();
+        store
+            .update(&format!(
+                "INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <urn:test:nothing> a orexis:BeliefGraph }} }}"
+            ))
+            .unwrap();
+        part.revise(&["urn:test:nothing".to_string()], BELIEF, snapshots::now())
+            .unwrap();
+        assert_eq!(
+            *heard.lock().unwrap(),
+            ["urn:test:nothing"],
+            "each pass says what it revised"
+        );
+    }
+
+    #[test]
+    fn a_graph_written_is_revised_beside_the_world_alone() {
+        let store = bare();
+        let said = [
+            (
+                "urn:test:world",
+                "orexis:BeliefGraph ; orexis:arrivedBy orexis:Asserted",
+            ),
+            (
+                "urn:test:concluded",
+                "orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy <urn:test:me>",
+            ),
+            (
+                "urn:test:other_reading",
+                "orexis:BeliefGraph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy <urn:test:me>",
+            ),
+            (
+                "urn:test:said",
+                "orexis:BeliefGraph ; orexis:arrivedBy orexis:Recorded ; orexis:ownedBy <urn:test:me>",
+            ),
+        ];
+        let rows: String = said.iter().map(|(g, s)| format!("<{g}> a {s} . ")).collect();
+        store
+            .update(&format!("INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ {rows} }} }}"))
+            .unwrap();
+        let mut part = Deliberator::new(&store).unwrap();
+        part.revise(&["urn:test:reading".to_string()], BELIEF, snapshots::now())
+            .unwrap();
+        assert!(part.pending().is_empty());
+        let mut deliberator = Deliberator::new(&store).unwrap();
+        deliberator.budget = 0;
+        let stated = store.graphs_of(&[BELIEF], &Within::common()).unwrap();
+        assert_eq!(stated, ["urn:test:world"], "the common beliefs alone stand beside it");
+        deliberator.changed("urn:test:observed", Some(stated), "urn:test:ObservedGraph");
+        assert_eq!(deliberator.pending(), ["urn:test:observed"]);
     }
 }
