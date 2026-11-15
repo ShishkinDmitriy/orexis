@@ -99,12 +99,13 @@ fn two_disks(store: &Store) {
 #[tokio::test(start_paused = true)]
 async fn the_agent_concludes_what_each_disk_is_on_from_where_it_stands() {
     let store = store();
-    let loaded = booted(&store, &world(), "mover", now()).unwrap();
+    let wiring = orexis_agent::Wiring::default();
+    let booted = orexis_agent::boot(&store, &world(), "mover", common::clock(now()), None, wiring).unwrap();
+    let loaded = booted.loaded().to_vec();
     for package in ["belief", "planning", "execution"] {
         assert!(loaded.iter().any(|p| p == package), "{package}: {loaded:?}");
     }
-    let wiring = orexis_agent::Wiring::default();
-    let running = orexis_agent::start(&store, "mover", common::clock(now()), &loaded, None, wiring).unwrap();
+    let running = booted.start().unwrap();
     assert_eq!(running.parts(), ["belief", "execution", "planning"]);
     assert_eq!(
         on(&store),
@@ -115,10 +116,10 @@ async fn the_agent_concludes_what_each_disk_is_on_from_where_it_stands() {
 #[tokio::test(start_paused = true)]
 async fn the_puzzle_is_planned_above_and_carried_out_by_the_van_below() {
     let store = store();
-    let loaded = booted(&store, &world(), "mover", now()).unwrap();
-    two_disks(&store);
     let wiring = orexis_agent::Wiring::default();
-    let running = orexis_agent::start(&store, "mover", common::clock(now()), &loaded, None, wiring).unwrap();
+    let booted = orexis_agent::boot(&store, &world(), "mover", common::clock(now()), None, wiring).unwrap();
+    two_disks(&store);
+    let running = booted.start().unwrap();
     let outcome = common::outcome(&running, 3600).await;
     running.stop().await;
     assert_eq!(outcome, MET);

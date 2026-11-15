@@ -22,7 +22,7 @@ use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, value};
 use orexis::task::Running;
-use orexis_agent::{Wiring, booted};
+use orexis_agent::Wiring;
 use orexis_transport_mqtt::driver::{Client, Inbox, Mqtt};
 
 const AL: &str = "http://example.org/orexis/world/allotment#";
@@ -127,7 +127,6 @@ async fn allotment(walk: impl AsyncFnOnce(&mut Market<'_>)) {
     let world = world();
     let mut runnings: Vec<Running> = Vec::new();
     for (store, name) in stores.iter().zip(NAMES) {
-        let loaded = booted(store, &world, name, noon).unwrap();
         let bus = Bus {
             name,
             clock: clock.clone(),
@@ -143,7 +142,8 @@ async fn allotment(walk: impl AsyncFnOnce(&mut Market<'_>)) {
             mqtt: Some(member),
             ..Wiring::default()
         };
-        runnings.push(orexis_agent::start(store, name, clock.clone(), &loaded, None, wiring).unwrap());
+        let booted = orexis_agent::boot(store, &world, name, clock.clone(), None, wiring).unwrap();
+        runnings.push(booted.start().unwrap());
     }
     let mut market = Market {
         stores: &stores,

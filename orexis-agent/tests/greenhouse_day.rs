@@ -21,7 +21,7 @@ use orexis::boot::TREE;
 use orexis::clock::{Clock, instant, isoformat};
 use orexis::namespaces::Namespaces;
 use orexis::store::Store;
-use orexis_agent::{Wiring, booted};
+use orexis_agent::Wiring;
 use orexis_transport_mqtt::driver::{Client, Mqtt, dumps};
 
 const GH: &str = "http://example.org/orexis/world/greenhouse#";
@@ -103,7 +103,6 @@ async fn a_day_in_the_greenhouse_sends_the_commands_it_is_pinned_to() {
     assert_eq!(readings.len(), 144, "a reading every ten minutes for a day");
     let store = Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap();
     let clock: Arc<dyn Clock> = common::clock(readings[0].0);
-    let loaded = booted(&store, &world, "grower", readings[0].0).unwrap();
     let commands = Arc::new(Mutex::new(Vec::new()));
     let bus = Bus {
         clock: clock.clone(),
@@ -115,7 +114,8 @@ async fn a_day_in_the_greenhouse_sends_the_commands_it_is_pinned_to() {
         mqtt: Some(member),
         ..Wiring::default()
     };
-    let running = orexis_agent::start(&store, "grower", clock.clone(), &loaded, None, wiring).unwrap();
+    let booted = orexis_agent::boot(&store, &world, "grower", clock.clone(), None, wiring).unwrap();
+    let running = booted.start().unwrap();
     for (at, topic, payload) in &readings {
         //  THE DAY RUNS TO EACH READING'S INSTANT, the grower doing what falls due on the way, and the reading arrives.
         let ahead = orexis::clock::seconds_of(at.checked_sub(clock.now()).unwrap());
