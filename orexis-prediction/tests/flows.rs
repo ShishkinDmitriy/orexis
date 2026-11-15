@@ -14,7 +14,7 @@ use orexis::ontology::{BELIEF, FORECAST, RECORD};
 use orexis::snapshots::{ME, now, stand_in};
 use orexis::store::{Store, Within, value};
 use orexis_belief::Deliberator;
-use orexis_prediction::create::Prediction;
+use orexis_prediction::Prediction;
 use orexis_prediction::foresee::foresee;
 use orexis_prediction::ontology::OBSERVATION_GRAPH;
 use orexis_sensing::received::received;

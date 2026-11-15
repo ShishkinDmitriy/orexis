@@ -1100,6 +1100,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   have, so the journal hears every one, and what several packages add to or read is shared (`Outside::share`) and
   asked when read, as where the journal lies; a list of seventeen names in the kernel ordered them, and three
   handoffs worked only in that order (package).
+- **A package's start is in its crate's `lib.rs`, in every crate** — the registration, the role it is loaded for,
+  `start`, `make` and its task, below the crate's description and its modules; twelve crates kept it in a
+  `create.rs` and five in `lib.rs`, and a `role.rs` per crate with one struct named `Role` was built and refused,
+  the struct named for the role with a `new` that reads the store being what a package has (package).
 - **A start runs once for a boot** — the boot runs every package's start as far as its decision and holds it there,
   and starting the agent runs the same starts on (`task::boot`, `Booted::start`); each ran twice, the first dropped
   at its decision, while the binary made the journal between the two (package, #1173).

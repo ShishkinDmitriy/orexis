@@ -235,7 +235,7 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
     }
     #[cfg(feature = "planning")]
     if let Some(budget) = budget {
-        outside.hand(orexis_planning::create::Budget(budget));
+        outside.hand(orexis_planning::Budget(budget));
     }
     //  AND SENSING'S READINGS, archived where the deployment keeps a series store and left in the beliefs otherwise.
     #[cfg(feature = "sensing")]

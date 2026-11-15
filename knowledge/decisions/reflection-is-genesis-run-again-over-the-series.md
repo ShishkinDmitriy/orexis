@@ -110,7 +110,7 @@ would need and cannot get from the series is a GAP IN WHAT THE AGENT REPORTS, ne
 the beliefs. Measured on this tree, two of the five questions above already find one:
 
 - `orexis-sensing/src/events.rs` writes an observation's point with one field, `value`, which
-  `orexis-sensing/src/create.rs` reads off `sosa:hasSimpleResult` — the reading, after the scaling and the
+  `orexis-sensing/src/lib.rs` reads off `sosa:hasSimpleResult` — the reading, after the scaling and the
   calibration the world states. The raw count (`sensing:rawResult`) is on no point. So "a raw count
   that has not moved for days" cannot be asked of the history today, and "past a calibration point"
   can only be asked of the reading, which a past-the-point count makes read past 1.0 — askable, but

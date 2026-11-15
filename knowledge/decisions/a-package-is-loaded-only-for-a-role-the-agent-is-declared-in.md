@@ -80,7 +80,7 @@ Read on `e99731d0`; each measurement was an in-memory boot, nothing started, not
   `packages_of` answers `MIND` plus each package whose ASK holds, in `PREMISES`' order. Hanoi's mover
   loads exactly `('belief', 'planning', 'execution')` — measured, and pinned by
   `test_the_mover_loads_the_mind_and_nothing_else`.
-- **Planning already tolerates no executor.** `_Planning.link` in `orexis-planning/src/create.rs` returns
+- **Planning already tolerates no executor.** `_Planning.link` in `orexis-planning/src/lib.rs` returns
   at once where `parts.get("execution")` is `None`; nothing else in the runtime indexes
   `parts["execution"]` outside tests.
 - **Planning alone plans Hanoi, and then never ends.** Booted with `MIND` narrowed to planning

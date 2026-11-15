@@ -20,7 +20,7 @@ world declares the one role where the lane's couriers once declared three ([role
 
 # What its part does
 
-Linked, the part holds speech's, and says through it as a step's saying does (`orexis-coordination/src/create.rs`).
+Linked, the part holds speech's, and says through it as a step's saying does (`orexis-coordination/src/lib.rs`).
 Started, it mints the agent's secret where its self graph states none (`orexis-coordination/src/mint.rs`); it
 answers every [question](/domain/coordination/question.md) as it is heard; as each question or
 [answer](/domain/coordination/answer.md) arrives it concludes its [conflicts](/domain/coordination/conflict.md)
