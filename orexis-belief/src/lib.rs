@@ -37,9 +37,9 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.plays(&[crate::ontology::DELIBERATOR]).await? {
             return Ok(None);
         }
-        let mut belief = Deliberator::new(&handed.store)?;
-        belief.watch = handed.events.watch().clone();
-        belief.unrevised(handed.clock.now())?;
+        let mut deliberator = Deliberator::new(&handed.store)?;
+        deliberator.watch = handed.events.watch().clone();
+        deliberator.unrevised(handed.clock.now())?;
         let mut hears = handed.events.hears();
         hears.graph(BELIEF, HEARD);
         hears.event(REVISING_TRIGGER, REVISE);
@@ -53,8 +53,8 @@ fn start(handed: Handed) -> orexis::task::Starting {
                 let Some(woke) = woke else { break };
                 let mut turn = handed.turn();
                 let wrote = match woke {
-                    Woke::Graphs(_, graphs) => belief.revising(&graphs, BELIEF, &mut turn).map(|()| Vec::new()),
-                    Woke::Event(_, event) => belief.heard_event(&event, &mut turn),
+                    Woke::Graphs(_, graphs) => deliberator.revising(&graphs, BELIEF, &mut turn).map(|()| Vec::new()),
+                    Woke::Event(_, event) => deliberator.heard_event(&event, &mut turn),
                 };
                 turn.done(wrote)?;
             }
