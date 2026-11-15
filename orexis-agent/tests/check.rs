@@ -346,6 +346,28 @@ fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_ro
         }
     );
     assert_eq!(orexis_transport_telegram::driver::polled_every_s(&store).unwrap(), 7.0);
+    //  AN AGENT PLAYS ONE OF EACH: a second role of the class is a second answer to what its package is told once,
+    //  and is refused, never merged or picked between; the same figure said by two roles is one answer.
+    for (class, figure) in [
+        ("sensing#Observer", "sensing#askedEveryS"),
+        ("journal#Recorder", "journal#windowS"),
+        ("metrics#Meter", "metrics#windowS"),
+    ] {
+        store
+            .update(&format!(
+                "INSERT {{ GRAPH ?g {{ ?me <http://example.org/orexis#plays> [ a <http://example.org/orexis/{class}> ; \
+                 <http://example.org/orexis/{figure}> 1 ] }} }} WHERE {{ GRAPH ?g {{ ?me a <http://example.org/orexis#Self> }} }}"
+            ))
+            .unwrap();
+    }
+    for refused in [
+        orexis_sensing::Observer::new(&store).map(|_| ()),
+        orexis_sensing_influxdb::Observer::new(&store).map(|_| ()),
+        orexis_journal::Recorder::new(&store).map(|_| ()),
+        orexis_metrics::Meter::new(&store).map(|_| ()),
+    ] {
+        assert!(format!("{refused:?}").contains("and an agent plays one"), "{refused:?}");
+    }
     //  AND A ROLE THE SELF DOES NOT PLAY SAYS NOTHING.
     let store = booted("hanoi", "hanoi");
     assert!(orexis_journal::Recorder::new(&store).unwrap().archived_in.is_some());

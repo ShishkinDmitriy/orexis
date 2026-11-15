@@ -84,11 +84,12 @@ other than the defaults (silent after 3 cadences, stuck after 6 equal readings).
 ```turtle
 :grower a orexis:Self ;
     orexis:plays [ a sensing:Observer ;
-                   sensing:sensor :moisture_probe , :thermometer ;
-                   sensing:silentAfter 3 ] .
+                   sensing:attends [ sensing:sensor :moisture_probe , :thermometer ;
+                                     sensing:silentAfter 3 ] ] .
 ```
 
-A sensor judged by other limits goes in a second observer role.
+A sensor judged by other limits goes in a second [attention](/domain/sensing/attention.md) of the same
+role; an agent plays one observer.
 
 **5. A domain whose transition makes a state of the reading.** Without one the agent keeps the
 percepts and believes nothing of the subject. `climate:` ships one for soil moisture and one for
@@ -115,9 +116,11 @@ stuck sensor ([stuck](/domain/sensing/stuck.md)).
 
 | refused | because |
 |---|---|
-| an observer role naming no sensor | it would observe nothing |
-| a role naming a sensor mounted on nothing the agent acts for | the sensor does not report to it |
-| a sensor mounted on what the agent acts for that no role names | its bytes would reach no package |
+| an observer role attending nothing, or an attention naming no sensor | it would observe nothing |
+| an attention naming a sensor mounted on nothing the agent acts for | the sensor does not report to it |
+| a sensor mounted on what the agent acts for that no attention names | its bytes would reach no package |
+| a sensor two attentions name | it would have two limits |
+| a second observer role | what the role says is said once for the agent |
 | a sensor observing no property, or mounted on nothing | it reports nothing of anything |
 | a range's condition with no one property, or a floor not below its ceiling | no reading can be judged by it |
 | a margin that is no number, negative, or half the range or more | the state could never be left |

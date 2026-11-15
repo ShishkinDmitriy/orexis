@@ -269,14 +269,14 @@ fn a_sensor_stating_no_frequency_is_never_said_stuck() {
 }
 
 #[test]
-fn the_stuck_limit_is_the_observer_roles_where_it_states_one() {
+fn the_stuck_limit_is_the_attentions_where_it_states_one() {
     let store = with_rules("a_pot_and_its_probe.trig");
     let selves = store
         .graphs_of(&[orexis::ontology::SELF_GRAPH], &Within::default())
         .unwrap();
     store
         .update(&format!(
-            "INSERT DATA {{ GRAPH <{}> {{ <{ME}> orexis:plays [ a sensing:Observer ; sensing:sensor <{PROBE}> ; <{STUCK_AFTER_TERM}> 2 ] }} }}",
+            "INSERT DATA {{ GRAPH <{}> {{ <{ME}> orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor <{PROBE}> ; <{STUCK_AFTER_TERM}> 2 ] ] }} }}",
             selves[0]
         ))
         .unwrap();

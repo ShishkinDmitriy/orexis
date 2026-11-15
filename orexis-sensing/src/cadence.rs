@@ -5,7 +5,7 @@
 //! `ssn-system:Frequency`, whose `schema:value` is the time between one observation and the next in the
 //! `schema:unitCode` it states — seconds where it states none. A sensor stating no frequency has no cadence.
 //!
-//! **WHICH SENSORS ARE THE AGENT'S** (`sensors`): the ones an observer role it plays reads, declared in its self
+//! **WHICH SENSORS ARE THE AGENT'S** (`sensors`): the ones an attention of the observer it plays names, declared in its self
 //! graph. **WHEN A CADENCE HAS LAPSED** (`lapsed`): the sensors whose latest percept's period has ended — one read
 //! and one owner, which `missed` asks and a transport beneath asks to nudge a board — and when one next will
 //! (`next_lapse`), which that transport waits for.
@@ -42,13 +42,12 @@ SELECT (MIN(?end) AS ?next) WHERE {
   GRAPH ?g { ?obs sosa:madeBySensor ?sensor }
   FILTER NOT EXISTS { GRAPH ?h { ?later sensing:previous ?obs } GRAPH $cat { ?h a sensing:ObservationGraph } } }";
 
-/// EVERY SENSOR THE AGENT READS: each an observer role it plays declares, in the self graph.
-const SENSORS_Q: &str =
-    "SELECT DISTINCT ?sensor WHERE { ?me a orexis:Self ; orexis:plays/sensing:sensor ?sensor } ORDER BY ?sensor";
+/// EVERY SENSOR THE AGENT READS: each an attention of the observer it plays names, in the self graph.
+const SENSORS_Q: &str = "SELECT DISTINCT ?sensor WHERE { ?me a orexis:Self ; orexis:plays/sensing:attends/sensing:sensor ?sensor } ORDER BY ?sensor";
 
-/// WHAT AN OBSERVER ROLE READING THIS SENSOR STATES OF A LIMIT, in the self graph where it is played.
-const LIMIT_Q: &str =
-    "SELECT DISTINCT ?n WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role sensing:sensor $sensor ; $limit ?n }";
+/// WHAT THE ATTENTION NAMING THIS SENSOR STATES OF A LIMIT, in the self graph where the observer is played.
+const LIMIT_Q: &str = "SELECT DISTINCT ?n WHERE { ?me a orexis:Self ; orexis:plays/sensing:attends ?attention . \
+?attention sensing:sensor $sensor ; $limit ?n }";
 
 /// A unit of time as its seconds, by the local name QUDT and UN/CEFACT spell it under.
 fn seconds_in(unit: &str) -> Option<f64> {
@@ -123,7 +122,7 @@ pub fn next_lapse(store: &Store, now: DateTime) -> Result<Option<DateTime>, Erro
     }
 }
 
-/// Every sensor the agent reads: each an observer role the self plays declares (`sensing:sensor`), in its self
+/// Every sensor the agent reads: each an attention of the observer the self plays names (`sensing:sensor`), in its self
 /// graph, sorted — whose bytes a transport hands `received`.
 pub fn sensors(store: &Store) -> Result<Vec<String>, Error> {
     let selves = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
@@ -135,7 +134,7 @@ pub fn sensors(store: &Store) -> Result<Vec<String>, Error> {
 }
 
 /// How many cadences or readings `limit` — `sensing:silentAfter`, `sensing:stuckAfter` — allows `sensor`: the
-/// figure the observer role reading it states in the self graph, or the observer shape's default where it states
+/// figure the attention naming it states in the self graph, or the attention shape's default where it states
 /// none, several, or one that is no number, said in the log, since two answers are never picked between.
 pub fn limit_of(store: &Store, sensor: &str, limit: &str) -> Result<i64, Error> {
     let selves = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
@@ -155,7 +154,7 @@ pub fn limit_of(store: &Store, sensor: &str, limit: &str) -> Result<i64, Error> 
         let mut said = found.clone();
         said.sort();
         log::warn!(
-            "the roles reading {} state {} for {}: the default, {default}, holds",
+            "the attentions naming {} state {} for {}: the default, {default}, holds",
             local_of(sensor),
             said.join(", "),
             local_of(limit)

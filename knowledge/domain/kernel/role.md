@@ -18,7 +18,7 @@ its type: the agent says it `orexis:plays` it, beside `orexis:Self`, in its
 ```turtle
 :supplier a orexis:Self ; orexis:plays [ a market:Host ] .
 :terrace_agent a orexis:Self ;
-    orexis:plays [ a sensing:Observer ; sensing:sensor :moisture_sensor_terrace , :forecast_terrace ] ,
+    orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor :moisture_sensor_terrace , :forecast_terrace ] ] ,
                  [ a prediction:Predictor ] .
 ```
 
@@ -63,8 +63,16 @@ one place the figure lives, read off the store beside the role or off the ontolo
 package is the fields of one struct, one to one with the role's class and named as its properties are
 (`journal:archivedIn` is `archived_in`): the journal's `Recorder`, the metrics' `Meter`, `Predictor`, `Coordinator`,
 sensing's `Observer` and the one of what archives its readings; and where the package's core bears the role's name
-it holds what the role says itself, `Deliberator`, `Planner`, `Executor` and `Translator`. Several roles of one
-class are read as one. An observer's two limits are said per role, so they are asked per sensor and are no field.
+it holds what the role says itself, `Deliberator`, `Planner`, `Executor` and `Translator`. An observer's two limits are
+its [attentions](/domain/sensing/attention.md)', so they are asked per sensor and are no field.
+
+# How many of one class
+
+Two roles of one class are two contexts: two venues are two host roles, each carrying its own. A role with no
+context is played once, since what it says is said to its package once for the agent — an observer, a recorder
+and a meter are each one, and their package refuses a second as it starts. A package role a domain's roles sit
+beneath, as the planner beneath two hosts, is held to the figure instead: the same figure said by two roles is one
+answer, two values are never picked between, the default holding at run time, and onboarding refuses them.
 
 # The figures a role states
 

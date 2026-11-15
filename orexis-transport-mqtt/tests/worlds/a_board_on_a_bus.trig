@@ -95,7 +95,7 @@ GRAPH :world {
 # reads the pot's three sensors, and the neighbour's lamp is not its.
 GRAPH :self {
   :keeper a orexis:Self .
-  :keeper orexis:plays [ a sensing:Observer ; sensing:sensor :hygro , :probe , :thermo ] .
+  :keeper orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor :hygro , :probe , :thermo ] ] .
 }
 
 GRAPH :catalogue {

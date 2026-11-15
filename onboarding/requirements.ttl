@@ -1,6 +1,7 @@
 @prefix : <http://example.org/orexis/onboarding#> .
 @prefix onboarding: <http://example.org/orexis/onboarding#> .
 @prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
+@prefix orexis: <http://example.org/orexis#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix schema: <https://schema.org/> .
@@ -185,6 +186,22 @@ SELECT $this WHERE { FILTER NOT EXISTS { $this a mqtt4ssn:Topic } FILTER NOT EXI
     sh:property [ sh:path mqtt4ssn:hasClientID ; sh:minCount 1 ; sh:maxCount 1 ;
                   sh:message "acts on someone's behalf and has no one client id: it connects as itself, with a credential of its own" ] .
 
+#  A FIGURE A PACKAGE RUNS BY IS SAID ONCE FOR THE AGENT (knowledge/domain/kernel/role.md): a package is one
+#  task with one budget, one patience, one interval, whichever of the self's roles states it, so two roles
+#  stating two values of one figure ask the package to pick, which it refuses to: the default would hold, said
+#  in a log nobody reads at onboarding. A figure is a property some shape states a default of; what a role
+#  carries as its context, a venue or a sensor, has none and is each role's own. Onboarding's, since it is
+#  stated of every package's figures and in none of their words.
+[] a sh:NodeShape ;
+    sh:targetClass orexis:Self ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "two roles it plays state {?figure} as {?one} and {?two}: a package runs by one figure, said once" ;
+        sh:select """
+            SELECT DISTINCT $this ?figure ?one ?two WHERE {
+              $this orexis:plays ?a , ?b . ?a ?p ?one . ?b ?p ?two FILTER (?a != ?b && STR(?one) < STR(?two))
+              ?shape sh:path ?p ; sh:defaultValue ?default .
+              BIND (REPLACE(STR(?p), "^.*[#/]", "") AS ?figure) }""" ] .
+
 #  A SENSOR'S READINGS COME OVER THE BROKERS ITS CLIENT IS CONNECTED TO, so an observer reading one over
 #  MQTT is played by an agent connected to one of them: a world may have any number of brokers, and the
 #  agent subscribes to a sensor's topic on each it shares with the sensor's client. Onboarding's, since
@@ -195,7 +212,7 @@ SELECT $this WHERE { FILTER NOT EXISTS { $this a mqtt4ssn:Topic } FILTER NOT EXI
         sh:message "read by {?me}, which is connected to none of the brokers its readings come over" ;
         sh:select """
             SELECT $this ?me WHERE {
-              ?me orexis:plays ?role . ?role sensing:sensor $this .
+              ?me orexis:plays/sensing:attends/sensing:sensor $this .
               ?client mqtt4ssn:hosts ?system . ?system ssn:hasSubSystem* $this .
               FILTER NOT EXISTS { ?client mqtt4ssn:isConnectedToBroker ?broker . ?me mqtt4ssn:isConnectedToBroker ?broker } }""" ] .
 

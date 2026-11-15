@@ -47,7 +47,7 @@ inventory::submit! { Package { name: "transport/http", documents: orexis::docume
 /// them through it - each a role's class with what the world must state of the self, in words declared here.
 const WIRED: &[(&str, &str)] = &[(
     "http://example.org/orexis/sensing#Observer",
-    "?me orexis:plays/sensing:sensor ?sensor . ?sensor td:hasForm ?form",
+    "?me orexis:plays/sensing:attends/sensing:sensor ?sensor . ?sensor td:hasForm ?form",
 )];
 const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX speech: <http://example.org/orexis/speech#> PREFIX td: <https://www.w3.org/2019/wot/td#> ";
 

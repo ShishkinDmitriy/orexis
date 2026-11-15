@@ -134,12 +134,12 @@ _AGENTS_Q = "SELECT ?a ?id WHERE { ?a a orexis:Agent ; orexis:localId ?id }"
 #  self graph (`sensing:sensor`), which a store of the whole world does not hold.
 _HEARS_Q = f"""
 SELECT ?pattern WHERE {{
-  ?me a orexis:Self ; orexis:plays/sensing:sensor ?sensor . ?sensor <{MQTT4SSN}observesTopic> ?topic .
+  ?me a orexis:Self ; orexis:plays/sensing:attends/sensing:sensor ?sensor . ?sensor <{MQTT4SSN}observesTopic> ?topic .
   ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
 
 _NUDGES_Q = f"""
 SELECT ?pattern WHERE {{
-  ?me a orexis:Self ; orexis:plays/sensing:sensor ?sensor .
+  ?me a orexis:Self ; orexis:plays/sensing:attends/sensing:sensor ?sensor .
   ?board ssn:hasSubSystem ?sensor ; <{MQTT4SSN}listensToTopic> ?topic .
   ?filter <{MQTT4SSN}matchesTopic> ?topic ; <{MQTT4SSN}hasFilterPattern> ?pattern }}"""
 

@@ -25,7 +25,8 @@ description: >-
 > `sh:defaultValue` holds where none is stated — the one place the figure lives, read by Python and by
 > the stuck rule alike, where it was a constant in code and a literal in the rule
 > ([a-role-is-an-instance-an-agent-plays](/decisions/a-role-is-an-instance-an-agent-plays.md)). Every
-> other stance stands as this record has it.
+> other stance stands as this record has it. Since 2026-11-15 the limits are an
+> [attention](/domain/sensing/attention.md)'s, the observer role being played once.
 
 # What was true (measured 2026-10-08, on main at 2c20aeec)
 

@@ -14,8 +14,9 @@
 :courier_a a orexis:Self ;
     orexis:plays [ a planning:Planner ; planning:budget 256 ] ,
                  [ a execution:Executor ] ,
-                 [ a sensing:Observer ; sensing:archivedIn :series ; sensing:stuckAfter 100000 ;
-                   sensing:sensor :fix_a_column , :fix_a_row , :receiver_b_column , :receiver_b_row , :radar_1_column , :radar_1_row ] .
+                 [ a sensing:Observer ; sensing:archivedIn :series ;
+                   sensing:attends [ sensing:stuckAfter 100000 ;
+                                     sensing:sensor :fix_a_column , :fix_a_row , :receiver_b_column , :receiver_b_row , :radar_1_column , :radar_1_row ] ] .
 
 #  IT KEEPS A JOURNAL of what happened to it, so it is a recorder (knowledge/domain/journal/recorder.md): the
 #  history view and its own account of itself read what it kept. Without the role its packages say what happens

@@ -15,7 +15,7 @@
 
 :rose_grower a orexis:Self ;
     orexis:plays [ a market:Bidder ] ,
-                 [ a sensing:Observer ; sensing:archivedIn :series ; sensing:sensor :rose_probe ] ,
+                 [ a sensing:Observer ; sensing:archivedIn :series ; sensing:attends [ sensing:sensor :rose_probe ] ] ,
                  [ a prediction:Predictor ] .
 
 #  IT KEEPS A JOURNAL of what happened to it, so it is a recorder (knowledge/domain/journal/recorder.md): the

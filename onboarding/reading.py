@@ -403,7 +403,7 @@ SELECT DISTINCT ?sensor WHERE {
   { ?sensor sosa:isHostedBy ?host }
   UNION { ?sensor sosa:isHostedBy/sosa:isHostedBy ?host }
   UNION { ?sensor sosa:isHostedBy ?sample . ?sample sosa:isSampleOf ?host FILTER NOT EXISTS { ?sample sosa:isHostedBy ?carrier } }
-  FILTER NOT EXISTS { ?me orexis:plays/sensing:sensor ?sensor } }
+  FILTER NOT EXISTS { ?me orexis:plays/sensing:attends/sensing:sensor ?sensor } }
 ORDER BY ?sensor"""
 #  WHETHER THE SELF IS READ BY A PACKAGE IT DOES NOT LOAD, off the common beliefs and the self.
 _LISTENS_Q = "ASK { ?me a orexis:Self ; mqtt4ssn:listensToTopic ?topic }"
@@ -441,7 +441,7 @@ def _refusals(here: Path, beliefs: ox.Store, broken: list[str]) -> list[str]:
     out = list(broken)
     stated = [*graphs_of(beliefs, BELIEF, common=True), *graphs_of(beliefs, SELF_GRAPH)]
     out += [f"{local_of(r['sensor'])} reports to it, and no observer role it plays reads it: no package it "
-            f"loads would read the sensor — `orexis:plays [ a sensing:Observer ; sensing:sensor <sensor> ]` says one does"
+            f"loads would read the sensor — `orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor <sensor> ] ]` says one does"
             for r in rows(beliefs, _UNREAD_Q, stated)]
     if SPEAKER not in roles and answer(beliefs, _LISTENS_Q, stated)["boolean"]:
         out.append("it listens to a topic, and it is no speaker: no package it loads would hear what arrives there")

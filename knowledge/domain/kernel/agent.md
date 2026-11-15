@@ -38,7 +38,7 @@ agent SAID, as a document, never what it believes ([speech](/domain/speech/speec
 
 Whatever its [roles](/domain/kernel/role.md) call for, and nothing else. Its self graph says it plays
 them beside its self — `:grower orexis:plays [ a planning:Planner ] , [ a execution:Executor ] , [ a
-sensing:Observer ; sensing:sensor :moisture_probe ] , [ a prediction:Predictor ]` — and the boot loads
+sensing:Observer ; sensing:attends [ sensing:sensor :moisture_probe ] ] , [ a prediction:Predictor ]` — and the boot loads
 exactly the packages those roles are served by: the
 greenhouse's grower runs belief, planning, execution, sensing and prediction, the terrace's agent
 belief, sensing and prediction, Hanoi's mover planning alone. Two agents of one world may

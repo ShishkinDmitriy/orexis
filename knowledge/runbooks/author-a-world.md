@@ -53,15 +53,15 @@ A directory `world/<name>/`, and in it documents that each say which graph they 
    environment; no agent loads them and no container mounts them.
 4. **who each agent is, and what it runs** — `beliefs/<id>.self.ttl`, `<> a orexis:SelfGraph` and
    the one row stating the self and the ROLES it plays, `:fern_grower a orexis:Self ; orexis:plays [ a
-   market:Bidder ] , [ a sensing:Observer ; sensing:sensor :fern_probe ] , [ a prediction:Predictor ]`,
+   market:Bidder ] , [ a sensing:Observer ; sensing:attends [ sensing:sensor :fern_probe ] ] , [ a prediction:Predictor ]`,
    for every agent the world states: an agent whose world
    authored none, or two, refuses to boot, and the boot checks this one against the id it is told
    ([self](/domain/kernel/self.md)). The roles are what the agent runs, and nothing loads without
    one ([role](/domain/kernel/role.md)): in a domain's words where the domain has them — the market's
    `market:Host` and `market:Bidder` — and otherwise in the packages' own: `planning:Planner` and
    `execution:Executor` for an agent with a desire or a want to plan and walk, `sensing:Observer` for
-   one a sensor reports to — naming each sensor it reads, `sensing:sensor`, and any `sensing:silentAfter`
-   or `sensing:stuckAfter` it holds them to ([observer](/domain/sensing/observer.md)) —
+   one a sensor reports to — attending each sensor it reads, `sensing:attends`, with any `sensing:silentAfter`
+   or `sensing:stuckAfter` it holds them to ([attention](/domain/sensing/attention.md)) —
    `prediction:Predictor` for one that foresees by a flow,
    `speech:Speaker` for one that hears on a topic, `belief:Deliberator` for one holding rules (an
    observer and a market role are one already). `orexis-onboard` refuses an agent playing none, a

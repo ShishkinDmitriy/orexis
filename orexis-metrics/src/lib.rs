@@ -202,7 +202,7 @@ const ROLE: &str = "http://example.org/orexis/metrics#Meter";
 /// THE METER THE SELF PLAYS, IN ONE QUERY: where the series store it names answers, and how long a window is, the
 /// role's word or, where it says none, the default the metrics' ontology states on the meter's shape
 /// (`sh:defaultValue`).
-const METER_Q: &str = "SELECT ?kind ?store (COALESCE(?windowSaid, ?windowOwn) AS ?window) WHERE { \
+const METER_Q: &str = "SELECT ?role ?kind ?store (COALESCE(?windowSaid, ?windowOwn) AS ?window) WHERE { \
 ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind . \
 OPTIONAL { ?role <http://example.org/orexis/metrics#windowS> ?windowSaid FILTER(?windowSaid > 0) } \
 OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/metrics#windowS> ; sh:defaultValue ?windowOwn ] } \
@@ -220,7 +220,7 @@ pub struct Meter {
 
 impl Meter {
     /// The meter the self plays, read off its self graph and the world's deployment graph by this package's own
-    /// query. Several meter roles are read as one, and where the self plays none nothing is said.
+    /// query. An agent plays one meter: two are refused, and where the self plays none nothing is said.
     pub fn new(store: &orexis::store::Store) -> Result<Self, orexis::Error> {
         use orexis::ontology::{DEPLOYMENT, ONTOLOGY, SELF_GRAPH};
         use orexis::store::{Within, value};
@@ -234,6 +234,15 @@ impl Meter {
             if kind == ROLE || store.closed(&kind)?.iter().any(|class| class == ROLE) {
                 rows.push(row);
             }
+        }
+        //  ONE IS PLAYED: what the role says is said to this package once for the agent, and two are never picked
+        //  between, which onboarding refuses before a boot does.
+        let played: std::collections::BTreeSet<String> = rows.iter().filter_map(|row| value(row, "role")).collect();
+        if played.len() > 1 {
+            return Err(orexis::Error::Document(format!(
+                "the self plays {} meters, and an agent plays one",
+                played.len()
+            )));
         }
         if rows.is_empty() {
             return Err(orexis::Error::Document(format!(

@@ -105,7 +105,7 @@ derivation, as the installation's allocation is.
 
 # What stays in the ontology
 
-What an agent reads as it runs stays in the vocabulary it loads. The observer's limits are the one
-case: what holds of `sensing:silentAfter` and `sensing:stuckAfter` where a role states none is a
+What an agent reads as it runs stays in the vocabulary it loads. An attention's limits are the one
+case: what holds of `sensing:silentAfter` and `sensing:stuckAfter` where it states none is a
 `sh:defaultValue` on a shape in sensing's ontology, which the stuck rule reads there. That shape
-refuses nothing; the observer's refusals are its requirement's.
+refuses nothing; an attention's refusals are its requirement's.

@@ -25,7 +25,7 @@ frame "society.ttl" {
   rectangle "topic + filter\nobservesTopic" as TOP
 }
 frame "beliefs/<id>.self.ttl" {
-  rectangle "plays sensing:Observer\nsensing:sensor" as ROLE
+  rectangle "plays sensing:Observer\nsensing:attends" as ROLE
 }
 rectangle "a domain's rules\none transition per property" as DOM
 

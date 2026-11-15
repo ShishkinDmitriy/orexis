@@ -28,7 +28,7 @@ pub const OBSERVING_TRIGGER: &str = "http://example.org/orexis/sensing#Observing
 pub const REVISED_SOURCE: &str = "http://example.org/orexis/belief#revised";
 /// A time a sensor fell silent, kept for good.
 pub const SILENCE_GRAPH: &str = "http://example.org/orexis/sensing#SilenceGraph";
-/// An observer role's limits: cadences, and readings.
+/// An attention's limits: cadences, and readings.
 pub const SILENT_AFTER_TERM: &str = "http://example.org/orexis/sensing#silentAfter";
 pub const STUCK_AFTER_TERM: &str = "http://example.org/orexis/sensing#stuckAfter";
 /// How often sensing asks what has fallen due: a figure the observer's role states.
@@ -41,8 +41,8 @@ pub const JSON_CODEC: &str = "http://example.org/orexis/sensing#Json";
 pub static DEFAULTS: LazyLock<orexis::shape::Defaults> =
     LazyLock::new(|| orexis::shape::Defaults::of("sensing", include_str!("../ontology.ttl")));
 
-/// What holds of `limit` — `sensing:silentAfter`, `sensing:stuckAfter` — where no observer role states it: the
-/// observer shape's `sh:defaultValue`, read off this layer's ontology. Refused where the ontology states none or
+/// What holds of `limit` — `sensing:silentAfter`, `sensing:stuckAfter` — where no attention states it: the
+/// attention shape's `sh:defaultValue`, read off this layer's ontology. Refused where the ontology states none or
 /// several, since a limit with no figure is a package shipped broken.
 pub fn default_of(limit: &str) -> Result<i64, Error> {
     Ok(DEFAULTS.figure(limit)? as i64)
@@ -125,7 +125,7 @@ pub fn figure_of(store: &orexis::store::Store, term: &str) -> Result<f64, orexis
     let selves = store.graphs_of(&[orexis::ontology::SELF_GRAPH], &Within::default())?;
     let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
     let text = bind(
-        "SELECT ?n WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role $figure ?n }",
+        "SELECT DISTINCT ?n WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role $figure ?n }",
         &[("figure", Value::iri(term))],
     )?;
     let said: Vec<String> = store

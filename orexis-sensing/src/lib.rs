@@ -216,22 +216,42 @@ fn me_of(beliefs: &Store, agent: &str) -> Result<String, Error> {
         .ok_or_else(|| Error::Evaluation(format!("no agent with localId '{agent}' in this store")))
 }
 
-/// THE OBSERVER THE SELF PLAYS, AS THIS PACKAGE READS IT: the sensors its roles read and how often sensing asks
-/// after them, each what the roles say in the agent's self graph and, where they say nothing, the default this
-/// package's ontology states. How long a sensor may be silent or stuck is said per role, so it is asked per sensor
-/// (`cadence::limit_of`); and what the role says of archiving is read by what archives the readings.
+/// THE OBSERVER THE SELF PLAYS, AS THIS PACKAGE READS IT: the sensors its attentions name and how often sensing asks
+/// after them, each what the role says in the agent's self graph and, where it says nothing, the default this
+/// package's ontology states. How long a sensor may be silent or stuck is said per attention, so it is asked per
+/// sensor (`cadence::limit_of`); and what the role says of archiving is read by what archives the readings.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Observer {
-    /// Every sensor an observer role the self plays reads (`sensing:sensor`), sorted.
+    /// Every sensor an attention of the role names (`sensing:attends`, `sensing:sensor`), sorted.
     pub sensors: Vec<String>,
     /// How often sensing asks which sensors have fallen due or gone silent, in the agent's seconds
     /// (`sensing:askedEveryS`).
     pub asked_every_s: f64,
 }
 
+/// EVERY ROLE THE SELF PLAYS, WITH ITS CLASS, in the self graph.
+const PLAYED_Q: &str = "SELECT ?role ?kind WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind }";
+
 impl Observer {
     /// The observer the self plays, read off the store.
     pub fn new(store: &Store) -> Result<Self, Error> {
+        //  ONE IS PLAYED: what the role says besides its attentions is said to sensing once for the agent, so sensors
+        //  judged by different limits are two attentions of one observer, and a second observer is refused.
+        let selves = store.graphs_of(&[orexis::ontology::SELF_GRAPH], &Within::default())?;
+        let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
+        let mut played = BTreeSet::new();
+        for row in store.rows(PLAYED_Q, &selves)? {
+            let kind = value(&row, "kind").unwrap_or_default();
+            if kind == ROLE || store.closed(&kind)?.iter().any(|class| class == ROLE) {
+                played.extend(value(&row, "role"));
+            }
+        }
+        if played.len() > 1 {
+            return Err(Error::Document(format!(
+                "the self plays {} observers, and an agent plays one",
+                played.len()
+            )));
+        }
         Ok(Observer {
             sensors: cadence::sensors(store)?,
             asked_every_s: ontology::figure_of(store, ontology::ASKED_EVERY_S_TERM)?,

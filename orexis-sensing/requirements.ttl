@@ -19,18 +19,33 @@
 
 [] a sh:NodeShape ;
     sh:targetClass :Observer ;
-    sh:property [ sh:path :silentAfter ; sh:datatype xsd:integer ; sh:maxCount 1 ;
-                  sh:message "an observer limit is one whole number of cadences or readings" ] ,
-                [ sh:path :stuckAfter ; sh:datatype xsd:integer ; sh:maxCount 1 ;
-                  sh:message "an observer limit is one whole number of cadences or readings" ] ,
-                [ sh:path :archivedEveryS ; sh:maxCount 1 ; sh:minExclusive 0 ;
-                  sh:message "an observer's readings are archived every one number of seconds above nought" ] ;
+    sh:property [ sh:path :archivedEveryS ; sh:maxCount 1 ; sh:minExclusive 0 ;
+                  sh:message "an observer's readings are archived every one number of seconds above nought" ] ,
+                [ sh:path :askedEveryS ; sh:maxCount 1 ; sh:minExclusive 0 ;
+                  sh:message "an observer's sensors are asked after every one number of seconds above nought" ] ,
+                [ sh:path :attends ; sh:minCount 1 ;
+                  sh:message "an observer that attends nothing: it would observe nothing" ] ;
     sh:sparql [ a sh:SPARQLConstraint ;
-        sh:message "an observer that reads no sensor: it would observe nothing" ;
-        sh:select """SELECT $this WHERE { FILTER NOT EXISTS { $this sensing:sensor ?sensor } }""" ] ,
+        sh:message "an observer that names a sensor itself: a sensor is named by an attention (sensing:attends [ sensing:sensor … ])" ;
+        sh:select """SELECT $this WHERE { $this sensing:sensor ?sensor }""" ] .
+
+#  AN ATTENTION NAMES SENSORS AND HOLDS THEM TO ONE PAIR OF LIMITS (knowledge/domain/sensing/attention.md).
+#  Targeted by the relation, since an attention is seldom typed where it is written.
+[] a sh:NodeShape ;
+    sh:targetObjectsOf :attends ;
+    sh:property [ sh:path :silentAfter ; sh:datatype xsd:integer ; sh:maxCount 1 ;
+                  sh:message "an attention's limit is one whole number of cadences or readings" ] ,
+                [ sh:path :stuckAfter ; sh:datatype xsd:integer ; sh:maxCount 1 ;
+                  sh:message "an attention's limit is one whole number of cadences or readings" ] ,
+                [ sh:path :sensor ; sh:minCount 1 ;
+                  sh:message "an attention that names no sensor: it attends nothing" ] ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "names {?named}, which another attention names too: it would have two limits and neither would be its" ;
+        sh:select """SELECT DISTINCT $this ?named WHERE { $this sensing:sensor ?sensor . ?other sensing:sensor ?sensor FILTER (?other != $this)
+            BIND (REPLACE(STR(?sensor), "^.*[#/]", "") AS ?named) }""" ] ,
       [ a sh:SPARQLConstraint ;
         sh:message "an observer reads a sensor that does not report to it: none mounted on what it acts for, a sample it carries, a sample of it that nothing carries, or a place containing it" ;
-        sh:select """SELECT $this WHERE { ?me orexis:plays $this . $this sensing:sensor ?sensor
+        sh:select """SELECT $this WHERE { ?me orexis:plays/sensing:attends $this . $this sensing:sensor ?sensor
             FILTER NOT EXISTS { ?me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
                                 { ?sensor sosa:isHostedBy ?host }
                                 UNION { ?sensor sosa:isHostedBy/sosa:isHostedBy ?host }

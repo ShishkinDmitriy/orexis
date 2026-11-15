@@ -25,7 +25,7 @@ timestamp: 2026-10-08T12:00:00Z
 > of the agent stated beside `orexis:Self`, and `orexis:Role` is no longer beneath `orexis:Agent`: the
 > self graph says `<agent> orexis:plays [ a <role class> ]`, and the boot closes the classes of the roles
 > played ([a-role-is-an-instance-an-agent-plays](/decisions/a-role-is-an-instance-an-agent-plays.md)).
-> And which sensors report to an observer is declared by its role (`sensing:sensor`), not derived from
+> And which sensors report to an observer is declared by its role's attentions (`sensing:attends`, `sensing:sensor`), not derived from
 > where they are mounted. A package loaded only for a role, no default, a domain's roles beneath the
 > packages', a transport loaded where a role needs bytes, and onboarding holding a declaration to its
 > world both ways, all stand.

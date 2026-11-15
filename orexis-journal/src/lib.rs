@@ -77,7 +77,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
 /// THE RECORDER THE SELF PLAYS, IN ONE QUERY: each figure and word the role says or, where it says none, the
 /// default the journal's ontology states on its shape of the role (`sh:defaultValue`); and where each service the
 /// role names answers, as the world's deployment states it.
-const RECORDER_Q: &str = "SELECT ?kind (COALESCE(?windowSaid, ?windowOwn) AS ?window) (COALESCE(?fromSaid, ?fromOwn) AS ?from) \
+const RECORDER_Q: &str = "SELECT ?role ?kind (COALESCE(?windowSaid, ?windowOwn) AS ?window) (COALESCE(?fromSaid, ?fromOwn) AS ?from) \
 ?incident ?served ?archive (COALESCE(?archivedEverySaid, ?archivedEveryOwn) AS ?archivedEvery) ?tracer \
 (COALESCE(?tracedEverySaid, ?tracedEveryOwn) AS ?tracedEvery) WHERE { \
 ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind . \
@@ -120,7 +120,7 @@ pub struct Recorder {
 
 impl Recorder {
     /// The recorder the self plays, read off its self graph and the world's deployment graph by this package's own
-    /// query. Several recorder roles are read as one, and where the self plays none nothing is said.
+    /// query. An agent plays one recorder: two are refused, and where the self plays none nothing is said.
     pub fn new(store: &orexis::store::Store) -> Result<Self, Error> {
         use orexis::ontology::{DEPLOYMENT, ONTOLOGY, SELF_GRAPH};
         use orexis::store::{Within, value};
@@ -134,6 +134,15 @@ impl Recorder {
             if kind == ROLE || store.closed(&kind)?.iter().any(|class| class == ROLE) {
                 rows.push(row);
             }
+        }
+        //  ONE IS PLAYED: what the role says is said to this package once for the agent, and two are never picked
+        //  between, which onboarding refuses before a boot does.
+        let played: std::collections::BTreeSet<String> = rows.iter().filter_map(|row| value(row, "role")).collect();
+        if played.len() > 1 {
+            return Err(orexis::Error::Document(format!(
+                "the self plays {} recorders, and an agent plays one",
+                played.len()
+            )));
         }
         if rows.is_empty() {
             return Err(orexis::Error::Document(format!(

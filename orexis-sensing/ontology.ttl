@@ -45,42 +45,60 @@
 #  would hold numbers that are of nothing. That is how this layer says what it needs of the belief
 #  package without the runtime knowing it (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
 #
-#  AN OBSERVER IS A ROLE THE AGENT PLAYS, AND IT CARRIES THE SENSORS IT READS
-#  (a-role-is-an-instance-an-agent-plays): `:fern_agent orexis:plays [ a sensing:Observer ;
-#  sensing:sensor :probe ]`. Which sensors report to an agent is DECLARED, where it was derived from
-#  where they are mounted, so a probe moved into a pot the agent acts for is not its sensor until
-#  someone says so. Onboarding holds the declaration to the world both ways: this shape refuses an
-#  observer reading no sensor, and one reading a sensor mounted on nothing the agent acts for — not
-#  on it, a sample of it, or a place containing it; `orexis-onboard` refuses a sensor mounted so that
-#  no observer role of the agent reads it. And the role carries how far its sensors are trusted:
-#  `silentAfter` and `stuckAfter`, the shape's `sh:defaultValue` where a role states none — the one
-#  place the figure lives, read by `received`, `missed` and the stuck rule alike. A sensor judged by
-#  another figure is read by another observer role.
+#  AN OBSERVER IS A ROLE THE AGENT PLAYS, ONE, AND IT ATTENDS THE SENSORS IT READS
+#  (a-role-is-an-instance-an-agent-plays, knowledge/domain/sensing/attention.md): `:fern_agent orexis:plays
+#  [ a sensing:Observer ; sensing:attends [ sensing:sensor :probe ] ]`. Which sensors report to an agent
+#  is DECLARED, where it was derived from where they are mounted, so a probe moved into a pot the agent
+#  acts for is not its sensor until someone says so. Onboarding holds the declaration to the world both
+#  ways: the shapes this layer ships refuse an observer attending nothing, and an attention naming a
+#  sensor mounted on nothing the agent acts for — not on it, a sample of it, or a place containing it;
+#  `orexis-onboard` refuses a sensor mounted so that no attention of the agent's names it. And an
+#  attention carries how far its sensors are trusted: `silentAfter` and `stuckAfter`, the attention
+#  shape's `sh:defaultValue` where it states none — the one place the figure lives, read by `received`,
+#  `missed` and the stuck rule alike. A sensor judged by another figure is named by another attention of
+#  the one role, never by a second observer: what the role says besides is said once for the agent.
 
 :Observer a owl:Class ;
     rdfs:subClassOf orexis:Role , belief:Deliberator ;
     rdfs:label "Observer" ;
     rdfs:comment """A role an agent plays that turns its sensors' numbers into observations: the role
     whose part is sensing's, which writes an observation per reading and says a sensor silent or
-    stuck. Played, never derived, and carrying the sensors it reads (`sensor`) and how long it lets
-    them be silent or stuck (`silentAfter`, `stuckAfter`).""" .
+    stuck. Played, never derived, and by an agent once: it attends the sensors it reads (`attends`), and
+    says how often sensing asks after them and where their readings are archived.""" .
+
+:Attention a owl:Class ;
+    rdfs:label "Attention" ;
+    rdfs:comment """What an observer gives the sensors it reads (knowledge/domain/sensing/attention.md):
+    which they are (`sensor`) and how long it lets them be silent or stuck (`silentAfter`,
+    `stuckAfter`). An observer attends any number of times, so sensors judged by different figures are
+    two attentions of one role. No role and no belief about the world: a node of the self graph.""" .
+
+:attends a owl:ObjectProperty ;
+    rdfs:domain :Observer ;
+    rdfs:range :Attention ;
+    rdfs:label "attends" ;
+    rdfs:comment """An attention of this observer role: sensors it reads, and the limits it holds them to.""" .
 
 :sensor a owl:ObjectProperty ;
-    rdfs:domain :Observer ;
+    rdfs:domain :Attention ;
     rdfs:range sosa:Sensor ;
     rdfs:label "sensor" ;
-    rdfs:comment """A sensor this observer role reads: what makes it the agent's, declared in the self
-    graph where the role is played. What the transports subscribe to and fetch, and what onboarding
+    rdfs:comment """A sensor this attention names: what makes it the agent's, declared in the self
+    graph where the observer role is played. What the transports subscribe to and fetch, and what onboarding
     grants the agent on the bus. It must report to the agent — be mounted on what the agent acts for,
     a sample of it, or a place containing it — and onboarding refuses one that does not.""" .
 
-#  WHAT HOLDS OF A LIMIT NO OBSERVER ROLE STATES, read by `default_of` and by the stuck rule off this
-#  ontology. The refusals of an observer are onboarding's (`requirements.ttl`).
+#  WHAT HOLDS OF A LIMIT NO ATTENTION STATES, read by `default_of` and by the stuck rule off this
+#  ontology, and of a figure the observer role does not state. The refusals of either are onboarding's
+#  (`requirements.ttl`).
+[] a sh:NodeShape ;
+    sh:targetClass :Attention ;
+    sh:property [ sh:path :silentAfter ; sh:defaultValue 3 ] ,
+                [ sh:path :stuckAfter ; sh:defaultValue 6 ] .
+
 [] a sh:NodeShape ;
     sh:targetClass :Observer ;
-    sh:property [ sh:path :silentAfter ; sh:defaultValue 3 ] ,
-                [ sh:path :stuckAfter ; sh:defaultValue 6 ] ,
-                [ sh:path :archivedEveryS ; sh:defaultValue 10 ] ,
+    sh:property [ sh:path :archivedEveryS ; sh:defaultValue 10 ] ,
                 [ sh:path :askedEveryS ; sh:defaultValue 60 ] .
 
 :ObservationGraph a owl:Class ;
@@ -239,12 +257,12 @@
     rdfs:comment """As startsPointer, the instants each the END of the stretch its value holds over,
     the one before its start: what a service summing the hour up to a time says of rain.""" .
 
-# TWO LIMITS AN OBSERVER ROLE STATES of the sensors it reads, each a count of the doubted sensor's
-# cadences or readings: stated on the role where it is played, and the observer shape's
-# `sh:defaultValue` where the role states none — the one place the figure lives, read by `received`,
-# `missed` and the stuck rule alike. A sensor judged by another figure is read by another role.
+# TWO LIMITS AN ATTENTION STATES of the sensors it names, each a count of the doubted sensor's
+# cadences or readings: stated on the attention, and the attention shape's `sh:defaultValue` where it
+# states none — the one place the figure lives, read by `received`, `missed` and the stuck rule alike.
+# A sensor judged by another figure is named by another attention.
 :silentAfter a owl:DatatypeProperty ;
-    rdfs:domain :Observer ;
+    rdfs:domain :Attention ;
     rdfs:range xsd:integer ;
     rdfs:label "silent after" ;
     rdfs:comment """How many of a sensor's cadences its reading may be missing before `missed` answers
@@ -267,7 +285,7 @@
     rdfs:range xsd:dateTime ;
     rdfs:label "silent since" ;
     rdfs:comment """The instant the sensor's latest reading stopped being the present, after which none came
-    for the `silentAfter` cadences its observer role allows: the start of a silence, in its graph.""" .
+    for the `silentAfter` cadences the attention naming it allows: the start of a silence, in its graph.""" .
 
 :silentUntil a owl:DatatypeProperty ;
     rdfs:domain sosa:Sensor ;
@@ -276,14 +294,14 @@
     rdfs:comment """The instant the sensor read again, ending a silence, in the silence's graph.""" .
 
 :stuckAfter a owl:DatatypeProperty ;
-    rdfs:domain :Observer ;
+    rdfs:domain :Attention ;
     rdfs:range xsd:integer ;
     rdfs:label "stuck after" ;
     rdfs:comment """How many of a sensor's readings may give the same number before its sensor is said
     stuck (`stuckOn`) — a count of READINGS, not of time (#944): `received` keeps that many of a
     sensor's percepts in the kind the rule reads, an older one being past, and sensing's rule says the sensor stuck when every one kept gave one number, so
-    a sensor that misses readings is said stuck later than one that never does. Stated on the observer
-    role that reads the sensor; where it states none, the observer shape's default, six — twice the
+    a sensor that misses readings is said stuck later than one that never does. Stated on the attention
+    that names the sensor; where it states none, the attention shape's default, six — twice the
     silence: a live instrument's count moves by a bit within a few readings even in still soil, and
     soil itself drifts within an hour, so six readings of one number are the signature of a frozen
     oscillator or a half-lost wire rather than of equilibrium.""" .
