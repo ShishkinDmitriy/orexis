@@ -202,16 +202,14 @@ inventory::submit! { Package { name: "metrics", documents: orexis::documents!("o
 
 /// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
 const ROLE: &str = "http://example.org/orexis/metrics#Meter";
-/// WHAT HOLDS WHERE THE ROLE STATES NONE: each default the metrics' ontology's shape of the role states
-/// (`sh:defaultValue`), the one place the figure lives.
-const OWN_Q: &str = "SELECT ?path ?own WHERE { ?shape sh:targetClass <http://example.org/orexis/metrics#Meter> ; \
-sh:property ?property . ?property sh:path ?path ; sh:defaultValue ?own }";
-
-/// WHAT THE METER THE SELF PLAYS SAYS, a row per way of saying it.
-const METER_Q: &str = "SELECT ?kind ?store ?window WHERE { \
+/// THE METER THE SELF PLAYS, IN ONE QUERY: where the series store it names answers, and how long a window is, the
+/// role's word or, where it says none, the default the metrics' ontology states on the meter's shape
+/// (`sh:defaultValue`).
+const METER_Q: &str = "SELECT ?kind ?store (COALESCE(?windowSaid, ?windowOwn) AS ?window) WHERE { \
 ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind . \
-OPTIONAL { ?role <http://example.org/orexis/metrics#writtenTo> ?named . ?named <https://schema.org/url> ?store } \
-OPTIONAL { ?role <http://example.org/orexis/metrics#windowS> ?window } }";
+OPTIONAL { ?role <http://example.org/orexis/metrics#windowS> ?windowSaid FILTER(?windowSaid > 0) } \
+OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/metrics#windowS> ; sh:defaultValue ?windowOwn ] } \
+OPTIONAL { ?role <http://example.org/orexis/metrics#writtenTo> ?named . ?named <https://schema.org/url> ?store } }";
 
 /// THE METER THE SELF PLAYS, AS THIS PACKAGE READS IT: a field for each thing `metrics:Meter` may say.
 #[derive(Debug, Clone, PartialEq)]
@@ -227,48 +225,39 @@ impl Meter {
     /// The meter the self plays, read off its self graph and the world's deployment graph by this package's own
     /// query. Several meter roles are read as one, and where the self plays none nothing is said.
     pub fn new(store: &orexis::store::Store) -> Result<Self, orexis::Error> {
-        use orexis::ontology::{DEPLOYMENT, SELF_GRAPH};
+        use orexis::ontology::{DEPLOYMENT, ONTOLOGY, SELF_GRAPH};
         use orexis::store::{Within, value};
         let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
         known.extend(store.graphs_of(&[DEPLOYMENT], &Within::common())?);
+        known.extend(store.graphs_of(&[ONTOLOGY], &Within::default())?);
         let known: Vec<&str> = known.iter().map(String::as_str).collect();
         let mut rows = Vec::new();
-        for row in store.rows(METER_Q, &known)? {
+        for row in store.rows(&METER_Q.replace("{ROLE}", ROLE), &known)? {
             let kind = value(&row, "kind").unwrap_or_default();
             if kind == ROLE || store.closed(&kind)?.iter().any(|class| class == ROLE) {
                 rows.push(row);
             }
         }
-        //  THE ONTOLOGY'S DEFAULT, WHERE THE ROLE SAYS NOTHING: refused where the ontology states none, since a figure
-        //  nothing states is a package shipped broken.
-        let ontologies = store.graphs_of(&[orexis::ontology::ONTOLOGY], &Within::default())?;
-        let ontologies: Vec<&str> = ontologies.iter().map(String::as_str).collect();
-        let owns = store.rows(OWN_Q, &ontologies)?;
-        let own = |word: &str| {
-            let path = format!("http://example.org/orexis/metrics#{word}");
-            owns.iter()
-                .find(|row| value(row, "path").as_deref() == Some(path.as_str()))
-                .and_then(|row| value(row, "own"))
-                .ok_or_else(|| orexis::Error::Document(format!("the metrics' ontology states no default for {word}")))
+        if rows.is_empty() {
+            return Err(orexis::Error::Document(format!(
+                "the self plays no {}",
+                orexis::ontology::local_of(ROLE)
+            )));
+        }
+        let said = |what: &str| {
+            rows.iter()
+                .find_map(|row| value(row, what))
+                .filter(|said| !said.is_empty())
         };
-        let figure = |what: &str, word: &str| {
-            let said = rows
-                .iter()
-                .filter_map(|row| value(row, what)?.parse::<f64>().ok())
-                .find(|figure| *figure > 0.0);
-            match said {
-                Some(figure) => Ok(figure),
-                None => own(word)?.parse::<f64>().map_err(|_| {
-                    orexis::Error::Document(format!("the metrics' ontology's default for {word} is no number"))
-                }),
-            }
+        //  A FIGURE NEITHER THE ROLE NOR THE SHAPE STATES is a package shipped broken.
+        let figure = |what: &str| {
+            said(what)
+                .and_then(|figure| figure.parse::<f64>().ok())
+                .ok_or_else(|| orexis::Error::Document(format!("the metrics' ontology states no default for {what}")))
         };
         Ok(Meter {
-            written_to: rows
-                .iter()
-                .find_map(|row| value(row, "store"))
-                .filter(|url| !url.is_empty()),
-            window_s: figure("window", "windowS")?,
+            written_to: said("store"),
+            window_s: figure("window")?,
         })
     }
 }

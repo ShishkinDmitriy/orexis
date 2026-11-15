@@ -169,3 +169,9 @@ belief:revises a owl:ObjectProperty ; rdfs:domain belief:RevisingTrigger ; rdfs:
 
 belief:into a owl:ObjectProperty ; rdfs:domain belief:RevisingTrigger ; rdfs:label "into" ;
     rdfs:comment "The graph class the revisions a revising makes are classified as." .
+
+#  WHAT HOLDS WHERE THE SELF STATES NO SUCH STANCE, read by the package off this ontology: the one place each
+#  figure lives.
+[] a sh:NodeShape ;
+    sh:targetClass orexis:Self ;
+    sh:property [ sh:path :budget ; sh:defaultValue 256 ] .

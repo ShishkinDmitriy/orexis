@@ -5,7 +5,7 @@ description: >-
   A figure the agent holds about itself - how long it waits, how much a search or a revision may
   spend, how far ahead it looks. A triple about the
   self in its self graph, declared by the package that reads it, read there alone, and the
-  package's constant where nothing is stated. A belief, never configuration.
+  default its package's ontology states where nothing is stated. A belief, never configuration.
 ---
 
 # What it is
@@ -21,9 +21,10 @@ agent's self graph beside the row saying who it is:
 ```
 
 The word is the figure's, not the triple's: `execution:patienceS` is a stance whether or not a
-world states it, and where none does the package reading it uses its own constant. That constant
-is what holds when the agent said nothing about itself — never a second place the figure lives,
-and never overridden by environment, a flag or a file beside the documents.
+world states it, and where none does the package reading it uses the default its own ontology states, as
+`sh:defaultValue` on a shape of `orexis:Self`. That default is what holds when the agent said nothing
+about itself, a statement in a document and no constant in code, read off the ontology the package
+brings (`orexis/src/shape.rs`), and never overridden by environment, a flag or a file beside the documents.
 
 # The stances there are
 
@@ -55,7 +56,7 @@ fact about an agent, and a figure of an agent in a common belief may mean someth
 it.
 
 One figure, stated once and as a number, is the stance. Two of one term, or one that is no number,
-is the constant, said in the log; two answers are never picked between.
+is the default, said in the log; two answers are never picked between.
 
 # What is not one
 

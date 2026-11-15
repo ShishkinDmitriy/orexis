@@ -46,3 +46,8 @@ pub const BUDGET_TERM: &str = "http://example.org/orexis/planning#budget";
 /// How long a budget is for, the agent's stance: a search the budget cut short is given another this long after.
 pub const BUDGET_EVERY_TERM: &str = "http://example.org/orexis/planning#budgetEveryS";
 pub const PLAN: &str = "http://example.org/orexis#PlanGraph";
+
+/// WHAT HOLDS WHERE THE AGENT'S DOCUMENTS STATE NO FIGURE: the defaults this package's ontology states
+/// (`sh:defaultValue`), the one place each lives.
+pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
+    std::sync::LazyLock::new(|| orexis::shape::Defaults::of("planning", include_str!("../ontology.ttl")));

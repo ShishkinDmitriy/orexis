@@ -238,3 +238,11 @@ coordination:DrawWon a owl:Class ; rdfs:subClassOf orexis:Event , planning:Plann
 
 coordination:Told a owl:Class ; rdfs:subClassOf orexis:Event , speech:SpeakingTrigger ; rdfs:label "Told" ;
     rdfs:comment "A question or an answer said to a peer, already believed as the agent's own statements by speech's `said`: said to speech, beneath its speaking trigger since coordination is above speech, as the statements (`speech:statement`) and the peer they are to (`speech:to`)." .
+
+#  WHAT HOLDS WHERE THE SELF STATES NO SUCH STANCE, read by the package off this ontology: the one place each
+#  figure lives.
+[] a sh:NodeShape ;
+    sh:targetClass orexis:Self ;
+    sh:property [ sh:path :patienceS ; sh:defaultValue 60 ] ,
+                [ sh:path :rounds ; sh:defaultValue 3 ] ,
+                [ sh:path :lookahead ; sh:defaultValue 2 ] .

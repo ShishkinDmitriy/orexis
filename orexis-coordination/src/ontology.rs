@@ -19,13 +19,6 @@ pub const PATIENCE_S: &str = "http://example.org/orexis/coordination#patienceS";
 pub const ROUNDS: &str = "http://example.org/orexis/coordination#rounds";
 pub const LOOKAHEAD: &str = "http://example.org/orexis/coordination#lookahead";
 
-/// WHAT HOLDS WHERE THE SELF STATES NO STANCE: how many seconds a draw stands undecided, and a question holds, before
-/// it is said again; how many rounds a draw restarts before the peer is taken as silent; and how many of a silent
-/// peer's steps the agent looks ahead.
-pub const PATIENCE: f64 = 60.0;
-pub const BOUND: f64 = 3.0;
-pub const LOOKING: f64 = 2.0;
-
 /// THE WORDS OF THE PACKAGES BENEATH THAT THIS ONE READS AT THE STORE, spelled here since it imports no code of theirs.
 pub const CONSTRAINT_GRAPH: &str = "http://example.org/orexis/planning#ConstraintGraph";
 pub const COMMITTED_STEP_GRAPH: &str = "http://example.org/orexis/execution#CommittedStepGraph";
@@ -95,3 +88,8 @@ pub const REOPENS: &str = "http://example.org/orexis/planning#reopens";
 pub const TOLD: &str = "http://example.org/orexis/coordination#Told";
 pub const STATEMENT: &str = "http://example.org/orexis/speech#statement";
 pub const TO: &str = "http://example.org/orexis/speech#to";
+
+/// WHAT HOLDS WHERE THE AGENT'S DOCUMENTS STATE NO FIGURE: the defaults this package's ontology states
+/// (`sh:defaultValue`), the one place each lives.
+pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
+    std::sync::LazyLock::new(|| orexis::shape::Defaults::of("coordination", include_str!("../ontology.ttl")));

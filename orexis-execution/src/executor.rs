@@ -41,12 +41,9 @@ use orexis::store::{Row, Store, Within, instant, iri, value};
 use crate::events::{About, HeadAsked, IntentionAdopted, IntentionResolved, StepAnswered, StepTaken, Walked};
 use crate::implementation::operations;
 use crate::ontology::{
-    ADDS_GRAPH, ANSWERED_WITHIN_S, COMMITTED_STEP_GRAPH, EXECUTION, FICTIVE, INTENTION, INTENTION_GRAPH,
+    ADDS_GRAPH, ANSWERED_WITHIN_S, COMMITTED_STEP_GRAPH, DEFAULTS, EXECUTION, FICTIVE, INTENTION, INTENTION_GRAPH,
     LANDS_WITHIN_S, PATIENCE_S, RETRACTS_GRAPH, STEP_CLASS, committed_graph, fictive_graph, intentions_graph,
 };
-
-/// The patience, in seconds, where the agent's self graph states no `execution:patienceS`.
-pub const DEFAULT_PATIENCE_S: f64 = 60.0;
 
 const ADOPTS: &str = "http://example.org/orexis/execution#adopts";
 const BY: &str = "http://example.org/orexis/execution#by";
@@ -322,7 +319,7 @@ impl Executor {
             id: agent.to_string(),
             holder: holder.map(str::to_string),
             graph: intentions_graph(agent),
-            patience_s: stance(beliefs, PATIENCE_S)?.unwrap_or(DEFAULT_PATIENCE_S),
+            patience_s: stance(beliefs, PATIENCE_S)?.map_or_else(|| DEFAULTS.figure(PATIENCE_S), Ok)?,
             all_fictive: false,
             take: None,
             asks: false,
@@ -1413,6 +1410,11 @@ mod tests {
 
     use super::*;
 
+    /// The patience the executor's ontology states where the self states none.
+    fn patience_s() -> f64 {
+        super::DEFAULTS.figure(super::PATIENCE_S).unwrap()
+    }
+
     const AGENT: &str = "keeper";
     const ME: &str = "http://example.org/test#keeper";
     const WANT: &str = "http://example.org/test#want";
@@ -1627,7 +1629,7 @@ GRAPH <http://example.org/test#catalogue> {{
         let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let first = x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().unwrap();
-        clock.advance(DEFAULT_PATIENCE_S + 1.0);
+        clock.advance(patience_s() + 1.0);
         let second = x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().unwrap();
         assert_ne!(first, second);
         assert_eq!(
@@ -1843,10 +1845,10 @@ GRAPH <http://example.org/test#catalogue> {{
         let intention = x.commit(Some(&predicting_move(1, PLAN)), PLAN, WANT).unwrap().unwrap();
         x.tick(now()).unwrap();
         x.drain().unwrap();
-        x.tick(after(DEFAULT_PATIENCE_S - 1.0)).unwrap();
+        x.tick(after(patience_s() - 1.0)).unwrap();
         assert!(resolved(&x, &intention).is_empty());
         assert_eq!(x.standing().unwrap().len(), 1);
-        x.tick(after(DEFAULT_PATIENCE_S)).unwrap();
+        x.tick(after(patience_s())).unwrap();
         assert_eq!(resolved(&x, &intention), ["failed"]);
     }
 
@@ -1858,7 +1860,7 @@ GRAPH <http://example.org/test#catalogue> {{
             Executor::new(&plain, AGENT, Some(&i), None, clock.clone())
                 .unwrap()
                 .patience_s,
-            DEFAULT_PATIENCE_S
+            patience_s()
         );
         let b = beliefs(PEG_A);
         let me_self = "http://example.org/test#self";
@@ -1894,14 +1896,14 @@ GRAPH <http://example.org/test#catalogue> {{
         let intention = x.commit(Some(&source), PLAN, WANT).unwrap().unwrap();
         x.tick(now()).unwrap();
         x.drain().unwrap();
-        x.tick(after(DEFAULT_PATIENCE_S)).unwrap();
+        x.tick(after(patience_s())).unwrap();
         assert!(
             resolved(&x, &intention).is_empty(),
             "a patience past the earliest is still inside the band"
         );
-        x.tick(plus(latest, DEFAULT_PATIENCE_S - 1.0).unwrap()).unwrap();
+        x.tick(plus(latest, patience_s() - 1.0).unwrap()).unwrap();
         assert!(resolved(&x, &intention).is_empty());
-        x.tick(plus(latest, DEFAULT_PATIENCE_S).unwrap()).unwrap();
+        x.tick(plus(latest, patience_s()).unwrap()).unwrap();
         assert_eq!(resolved(&x, &intention), ["failed"]);
     }
 
@@ -1942,12 +1944,12 @@ GRAPH <http://example.org/test#catalogue> {{
         clock.set(late);
         x.tick(late).unwrap();
         x.drain().unwrap();
-        x.tick(plus(late, DEFAULT_PATIENCE_S - 1.0).unwrap()).unwrap();
+        x.tick(plus(late, patience_s() - 1.0).unwrap()).unwrap();
         assert!(
             resolved(&x, &intention).is_empty(),
             "held to the landing it was placed at, it had failed"
         );
-        x.tick(plus(late, DEFAULT_PATIENCE_S).unwrap()).unwrap();
+        x.tick(plus(late, patience_s()).unwrap()).unwrap();
         assert_eq!(resolved(&x, &intention), ["failed"]);
     }
 
@@ -1958,7 +1960,7 @@ GRAPH <http://example.org/test#catalogue> {{
         let first = x.commit(Some(&predicting_move(1, PLAN)), PLAN, WANT).unwrap().unwrap();
         x.tick(now()).unwrap();
         x.drain().unwrap();
-        x.tick(after(DEFAULT_PATIENCE_S)).unwrap();
+        x.tick(after(patience_s())).unwrap();
         assert_eq!(resolved(&x, &first), ["failed"]);
         let second_plan = format!("{PLAN}2");
         let second = x
@@ -1970,7 +1972,7 @@ GRAPH <http://example.org/test#catalogue> {{
         assert_eq!(standing[0].uri, second);
         assert_eq!(standing[0].at.as_deref(), Some(format!("{PLAN}2.0").as_str()));
         assert_eq!(
-            x.tick(after(DEFAULT_PATIENCE_S)).unwrap(),
+            x.tick(after(patience_s())).unwrap(),
             [format!("{PLAN}2.0")],
             "due, never taken"
         );
@@ -2007,7 +2009,7 @@ GRAPH <http://example.org/test#catalogue> {{
         assert_eq!(windows.len(), 1);
         assert_eq!(
             (windows[0].1, windows[0].2),
-            (after(300.0), after(1500.0 + DEFAULT_PATIENCE_S))
+            (after(300.0), after(1500.0 + patience_s()))
         );
         let held = held_in(&b, &windows[0].0);
         assert!(held.contains(&(LANDS_WITHIN_S.into(), "600".into())), "{held:?}");
@@ -2023,8 +2025,8 @@ GRAPH <http://example.org/test#catalogue> {{
         assert_eq!(
             windows.iter().map(|w| (w.1, w.2)).collect::<Vec<_>>(),
             [
-                (after(300.0), after(900.0 + DEFAULT_PATIENCE_S)),
-                (now(), after(DEFAULT_PATIENCE_S))
+                (after(300.0), after(900.0 + patience_s())),
+                (now(), after(patience_s()))
             ]
         );
         assert_eq!(
@@ -2313,9 +2315,9 @@ SELECT ?kind ?taken ?landed ?failed ?action ?disk ?to ?want WHERE {{ GRAPH ?e {{
         x.commit(Some(&filled_move()), PLAN, WANT).unwrap();
         x.tick(now()).unwrap();
         x.drain().unwrap();
-        x.tick(after(DEFAULT_PATIENCE_S - 1.0)).unwrap();
+        x.tick(after(patience_s() - 1.0)).unwrap();
         assert_eq!(step_events(&journal).len(), 1, "waiting is no verdict");
-        x.tick(after(DEFAULT_PATIENCE_S)).unwrap();
+        x.tick(after(patience_s())).unwrap();
         let said: Vec<Vec<String>> = step_events(&journal).into_iter().map(|r| r[..4].to_vec()).collect();
         assert_eq!(
             said,
@@ -2332,7 +2334,7 @@ SELECT ?kind ?taken ?landed ?failed ?action ?disk ?to ?want WHERE {{ GRAPH ?e {{
                 verdict.late_s,
                 verdict.about.action.as_deref()
             ),
-            (false, true, Some(DEFAULT_PATIENCE_S), Some("Move"))
+            (false, true, Some(patience_s()), Some("Move"))
         );
     }
 
@@ -2345,7 +2347,7 @@ SELECT ?kind ?taken ?landed ?failed ?action ?disk ?to ?want WHERE {{ GRAPH ?e {{
         x.commit(Some(&filled_move()), PLAN, WANT).unwrap();
         x.tick(now()).unwrap();
         x.drain().unwrap();
-        x.tick(after(DEFAULT_PATIENCE_S)).unwrap();
+        x.tick(after(patience_s())).unwrap();
         let said: Vec<Vec<String>> = step_events(&journal).into_iter().map(|r| r[..4].to_vec()).collect();
         assert_eq!(said, [["StepTaken", "false", "-", "false"]]);
         let (_, body) = orexis_journal::journal::answer(

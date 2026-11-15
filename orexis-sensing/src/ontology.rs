@@ -5,11 +5,8 @@
 //! identifier a process is handed, the sensor and the instant of the reading; every reader asks the catalogue by
 //! class and by pattern.
 
-use std::collections::BTreeMap;
 use std::sync::LazyLock;
 
-use oxigraph::io::{RdfFormat, RdfParser};
-use oxigraph::model::{NamedOrBlankNode, Quad, Term};
 use oxsdatatypes::DateTime;
 
 use orexis::Error;
@@ -37,74 +34,16 @@ pub const STUCK_AFTER_TERM: &str = "http://example.org/orexis/sensing#stuckAfter
 /// The codec that ships.
 pub const JSON_CODEC: &str = "http://example.org/orexis/sensing#Json";
 
-/// THIS LAYER'S ONTOLOGY, where the observer shape states what holds of a limit no role states.
-const ONTOLOGY: &str = include_str!("../ontology.ttl");
-
-const SH: &str = "http://www.w3.org/ns/shacl#";
-
-/// Every limit the observer shape states a default of, read off the ontology once.
-static DEFAULTS: LazyLock<Result<BTreeMap<String, Vec<i64>>, String>> = LazyLock::new(defaults);
-
-fn defaults() -> Result<BTreeMap<String, Vec<i64>>, String> {
-    let quads: Vec<Quad> = RdfParser::from_format(RdfFormat::Turtle)
-        .with_base_iri("file:///agent/sensing/ontology.ttl")
-        .map_err(|e| e.to_string())?
-        .for_slice(ONTOLOGY.as_bytes())
-        .collect::<Result<_, _>>()
-        .map_err(|e| e.to_string())?;
-    let objects = |s: &NamedOrBlankNode, p: &str| -> Vec<Term> {
-        quads
-            .iter()
-            .filter(|q| &q.subject == s && q.predicate.as_str() == p)
-            .map(|q| q.object.clone())
-            .collect()
-    };
-    let mut out: BTreeMap<String, Vec<i64>> = BTreeMap::new();
-    let shapes = quads
-        .iter()
-        .filter(|q| {
-            q.predicate.as_str() == format!("{SH}targetClass") && q.object.to_string() == format!("<{SENSING}Observer>")
-        })
-        .map(|q| q.subject.clone());
-    for shape in shapes {
-        for property in objects(&shape, &format!("{SH}property")) {
-            let node: NamedOrBlankNode = match property {
-                Term::NamedNode(n) => n.into(),
-                Term::BlankNode(b) => b.into(),
-                _ => continue,
-            };
-            for path in objects(&node, &format!("{SH}path")) {
-                let Term::NamedNode(path) = path else { continue };
-                for default in objects(&node, &format!("{SH}defaultValue")) {
-                    if let Term::Literal(l) = default
-                        && let Ok(n) = l.value().parse::<f64>()
-                    {
-                        out.entry(path.as_str().to_string()).or_default().push(n as i64);
-                    }
-                }
-            }
-        }
-    }
-    Ok(out)
-}
+/// WHAT HOLDS WHERE NO OBSERVER ROLE STATES A FIGURE: the defaults this layer's ontology states on the observer's
+/// shape (`sh:defaultValue`), the one place each lives.
+pub static DEFAULTS: LazyLock<orexis::shape::Defaults> =
+    LazyLock::new(|| orexis::shape::Defaults::of("sensing", include_str!("../ontology.ttl")));
 
 /// What holds of `limit` — `sensing:silentAfter`, `sensing:stuckAfter` — where no observer role states it: the
-/// observer shape's `sh:defaultValue`, read off this layer's ontology, the one place the figure lives. Refused where
-/// the ontology states none or several, since a limit with no figure is a package shipped broken.
+/// observer shape's `sh:defaultValue`, read off this layer's ontology. Refused where the ontology states none or
+/// several, since a limit with no figure is a package shipped broken.
 pub fn default_of(limit: &str) -> Result<i64, Error> {
-    let found = DEFAULTS
-        .as_ref()
-        .map_err(|e| Error::Document(format!("sensing's ontology: {e}")))?;
-    let mut figures = found.get(limit).cloned().unwrap_or_default();
-    figures.sort();
-    figures.dedup();
-    match figures.as_slice() {
-        [one] => Ok(*one),
-        _ => Err(Error::Document(format!(
-            "sensing's ontology states {} defaults for {limit}, and one is the limit",
-            figures.len()
-        ))),
-    }
+    Ok(DEFAULTS.figure(limit)? as i64)
 }
 
 /// The local name of a term, safe to paste into an IRI.
