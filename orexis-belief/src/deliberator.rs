@@ -133,7 +133,7 @@ impl Arrival {
 
 /// The pass over what was written since the last one, within a budget.
 pub struct Deliberator {
-    beliefs: Store,
+    pub(crate) beliefs: Store,
     pub id: String,
     pub budget: usize,
     /// Rule executions one source's revision may spend in a pass.
@@ -171,6 +171,17 @@ impl Deliberator {
     pub fn changed(&mut self, source: &str, read: Option<Vec<String>>, kind: &str) {
         self.queue.retain(|(s, _)| s != source);
         self.queue.push((source.to_string(), Arrival::new(read, kind)));
+    }
+
+    /// Revise `graphs` beside what the world states and apply the transitions each triggers, now — their revisions
+    /// classified `kind`.
+    pub fn revise(&mut self, graphs: &[String], kind: &str, at: DateTime) -> Result<(), Error> {
+        let stated = self.beliefs.graphs_of(&[BELIEF], &Within::common())?;
+        for graph in graphs {
+            self.changed(graph, Some(stated.clone()), kind);
+        }
+        self.deliberate(at)?;
+        Ok(())
     }
 
     /// What the next pass will take, in order.
