@@ -31,8 +31,11 @@ use orexis::task::{Handed, Package, Task};
 use orexis_sensing::events::Observed;
 use orexis_sensing::past;
 
-/// How often readings are archived, in the agent's seconds, where the observer's role says nothing.
-pub const INTERVAL_S: f64 = 10.0;
+/// How often readings are archived, in the agent's seconds, where no observer's role says: the default sensing's
+/// ontology states on the observer's shape, for an archiver a test makes with no role to read.
+pub fn archived_every_s() -> Result<f64, orexis::Error> {
+    orexis_sensing::ontology::DEFAULTS.figure("http://example.org/orexis/sensing#archivedEveryS")
+}
 
 /// Where readings are archived and how often. Handed outside by a test that reads the series; a deployed agent is
 /// handed none and the package makes its own sink, where the world names a store that serves history.
@@ -107,8 +110,8 @@ pub struct Observer {
     /// Where the series store the role names answers (`sensing:archivedIn`), as the world's deployment states it:
     /// None where the role names none or the world says nothing of the one named.
     pub archive: Option<String>,
-    /// How often readings are archived, in the agent's seconds (`sensing:archivedEveryS`), and `INTERVAL_S` where
-    /// the role states none.
+    /// How often readings are archived, in the agent's seconds (`sensing:archivedEveryS`), and the default
+    /// sensing's ontology states where the role states none.
     pub archived_every_s: f64,
 }
 

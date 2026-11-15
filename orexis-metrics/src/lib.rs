@@ -24,9 +24,6 @@ use orexis::events::{Event, Field, Mark, Number, Point, Watch, counted, round6};
 use orexis::series::Sink;
 use orexis::task::{Handed, PASS_METRIC, Package, Task};
 
-/// The window's length, in real seconds, where the meter's role says nothing.
-pub const INTERVAL_S: f64 = 60.0;
-
 #[derive(Default)]
 struct Tally {
     count: i64,
@@ -217,7 +214,7 @@ pub struct Meter {
     /// Where the series store the role names answers (`metrics:writtenTo`), as the world's deployment states it:
     /// None where the role names none or the world says nothing of the one named.
     pub written_to: Option<String>,
-    /// How long a window is, in real seconds (`metrics:windowS`), and `INTERVAL_S` where the role states none.
+    /// How long a window is, in real seconds (`metrics:windowS`), and the default the ontology states where the role states none.
     pub window_s: f64,
 }
 

@@ -2,7 +2,7 @@
 //! held to what its suite asks.
 //!
 //! - [`driver`]: polled for what is written to the bot, a chat's words said as prose, and told what the agent says;
-//! - [`create`]: the member's part, polling every `TELEGRAM_POLL_S`.
+//! - [`create`]: the member's part, polling as often as a role says (`telegram:polledEveryS`).
 
 pub mod create;
 pub mod driver;
