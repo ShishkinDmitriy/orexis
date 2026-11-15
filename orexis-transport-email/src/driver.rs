@@ -20,6 +20,25 @@ use orexis::store::{Store, Within, iri, value};
 use orexis::transport::Inbox;
 use orexis_speech::prose::{Carrier, Prose};
 
+/// WHAT HOLDS WHERE NO ROLE THE SELF PLAYS STATES A FIGURE: the defaults this package's ontology states
+/// (`sh:defaultValue`), the one place each lives.
+pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
+    std::sync::LazyLock::new(|| orexis::shape::Defaults::of("the email transport", include_str!("../ontology.ttl")));
+
+/// How often the mailbox is polled: a figure a role states.
+pub const POLLED_EVERY_S: &str = "http://example.org/orexis/email#polledEveryS";
+
+/// WHAT THE ROLES THE SELF PLAYS SAY OF IT, a row per role, in the agent's self graph.
+const SAID_Q: &str = "SELECT ?polledEveryS WHERE { ?me a orexis:Self ; orexis:plays ?role . \
+OPTIONAL { ?role <http://example.org/orexis/email#polledEveryS> ?polledEveryS } }";
+
+/// What the roles the self plays say of this transport, a row per role, read off the agent's self graph.
+fn said(beliefs: &Store) -> Result<Vec<orexis::store::Row>, Error> {
+    let selves = beliefs.graphs_of(&[orexis::ontology::SELF_GRAPH], &orexis::store::Within::default())?;
+    let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
+    beliefs.rows(SAID_Q, &selves)
+}
+
 const CONTACT_Q: &str =
     "SELECT ?contact WHERE { ?contact schema:email ?address FILTER (LCASE(STR(?address)) = LCASE($address)) }";
 const ADDRESS_Q: &str = "SELECT ?address WHERE { $contact schema:email ?address }";
@@ -139,8 +158,8 @@ impl Email {
             me: me.to_string(),
             box_,
             //  UNTIL IT CONNECTS and reads what a role says, as often as the transport's ontology states.
-            every: crate::role::DEFAULTS
-                .figure("http://example.org/orexis/email#polledEveryS")
+            every: DEFAULTS
+                .figure(POLLED_EVERY_S)
                 .expect("the transport's ontology states how often it polls"),
             spawn: Box::new(|work| {
                 std::thread::spawn(work);
@@ -169,7 +188,8 @@ impl Email {
             smtp: (smtp.clone(), port("MAIL_SMTP_PORT", 465)),
         };
         let mut email = Email::new(beliefs, me, Arc::new(remote));
-        email.every = crate::role::Role::read(beliefs)?.polled_every_s;
+        //  POLLED AS A ROLE THE SELF PLAYS SAYS.
+        email.every = DEFAULTS.said(&said(beliefs)?, "polledEveryS", POLLED_EVERY_S)?;
         Ok(email)
     }
 

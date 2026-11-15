@@ -30,6 +30,28 @@ use orexis::store::{Store, Within, iri, value};
 use orexis::transport::Inbox;
 use orexis_speech::prose::{Carrier, Prose};
 
+/// WHAT HOLDS WHERE NO ROLE THE SELF PLAYS STATES A FIGURE: the defaults this package's ontology states
+/// (`sh:defaultValue`), the one place each lives.
+pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
+    std::sync::LazyLock::new(|| orexis::shape::Defaults::of("the telegram transport", include_str!("../ontology.ttl")));
+
+/// How often the bot is polled: a figure a role states.
+pub const POLLED_EVERY_S: &str = "http://example.org/orexis/telegram#polledEveryS";
+/// How long one call of the Bot API may take: a figure a role states.
+pub const CALLED_WITHIN_S: &str = "http://example.org/orexis/telegram#calledWithinS";
+
+/// WHAT THE ROLES THE SELF PLAYS SAY OF IT, a row per role, in the agent's self graph.
+const SAID_Q: &str = "SELECT ?polledEveryS ?calledWithinS WHERE { ?me a orexis:Self ; orexis:plays ?role . \
+OPTIONAL { ?role <http://example.org/orexis/telegram#polledEveryS> ?polledEveryS } \
+OPTIONAL { ?role <http://example.org/orexis/telegram#calledWithinS> ?calledWithinS } }";
+
+/// What the roles the self plays say of this transport, a row per role, read off the agent's self graph.
+fn said(beliefs: &Store) -> Result<Vec<orexis::store::Row>, Error> {
+    let selves = beliefs.graphs_of(&[orexis::ontology::SELF_GRAPH], &orexis::store::Within::default())?;
+    let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
+    beliefs.rows(SAID_Q, &selves)
+}
+
 pub const TELEGRAM_URL: &str = "https://api.telegram.org";
 const CHAT_Q: &str = "SELECT ?chat WHERE { ?chat a telegram:Chat ; telegram:chatId ?id FILTER (STR(?id) = $id) }";
 const USER_Q: &str = "SELECT ?person WHERE { ?person telegram:userId ?id FILTER (STR(?id) = $id) }";
@@ -294,8 +316,8 @@ impl Telegram {
                 polling: Arc::default(),
             },
             //  UNTIL IT CONNECTS and reads what a role says, as often as the transport's ontology states.
-            every: crate::role::DEFAULTS
-                .figure("http://example.org/orexis/telegram#polledEveryS")
+            every: DEFAULTS
+                .figure(POLLED_EVERY_S)
                 .expect("the transport's ontology states how often it polls"),
             spawn: Box::new(|work| {
                 std::thread::spawn(work);
@@ -323,9 +345,10 @@ impl Telegram {
         })?;
         let url = answers(beliefs, me)?.unwrap_or_else(|| TELEGRAM_URL.to_string());
         //  POLLED AND CALLED AS A ROLE THE SELF PLAYS SAYS.
-        let role = crate::role::Role::read(beliefs)?;
-        let mut bot = Telegram::new(beliefs, me, &token, &url, post(role.called_within_s));
-        bot.every = role.polled_every_s;
+        let said = said(beliefs)?;
+        let within_s = DEFAULTS.said(&said, "calledWithinS", CALLED_WITHIN_S)?;
+        let mut bot = Telegram::new(beliefs, me, &token, &url, post(within_s));
+        bot.every = DEFAULTS.said(&said, "polledEveryS", POLLED_EVERY_S)?;
         Ok(bot)
     }
 

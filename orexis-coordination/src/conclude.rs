@@ -119,7 +119,7 @@ pub fn conclude(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Er
         return Ok(Vec::new());
     };
     let patience = patience(store)?;
-    let bound = crate::role::Role::read(store)?.rounds;
+    let bound = crate::coordinator::Coordinator::new(store)?.rounds;
     let graph = conflicts_graph(me);
     let prior = prior(store, me)?;
     let won = won(store)?;

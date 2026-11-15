@@ -4,10 +4,12 @@
 //!   a crossing of a range bound answered as the place the next ground is laid;
 //! - [`ranges`]: the ranges that apply to what a sensor observes, and which side of one a number lies on;
 //! - [`create`]: the package's part, which hears nothing and offers the foresight at link.
-//! - [`role`]: the role the package is loaded for and what it says, read as one struct with its ontology's defaults;
+//! - [`predictor`]: the predictor the self plays, a struct with a field for each thing its role may state, which reads
+//!   itself off the store;
 
 pub mod create;
 pub mod foresee;
 pub mod ontology;
+pub mod predictor;
 pub mod ranges;
-pub mod role;
+pub use predictor::Predictor;

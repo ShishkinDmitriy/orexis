@@ -461,7 +461,7 @@ pub fn foresee(beliefs: &Store, now: DateTime, placed: Option<&Placed<'_>>) -> R
     let Some(cat) = beliefs.catalogue()? else {
         return Ok(None);
     };
-    let role = crate::role::Role::read(beliefs)?;
+    let role = crate::predictor::Predictor::new(beliefs)?;
     let (horizon, held_s) = (role.horizon_s, role.rate_held_s);
     let flow_graphs = beliefs.graphs_of(&[FLOW_GRAPH], &Within::default())?;
     let flow_graphs: Vec<&str> = flow_graphs.iter().map(String::as_str).collect();
@@ -932,7 +932,11 @@ mod tests {
             for pair in every.windows(2) {
                 assert!(
                     pair[1].0 - pair[0].0
-                        <= crate::role::DEFAULTS.figure(crate::ontology::RATE_HELD_TERM).unwrap() / 60.0 + 1e-9,
+                        <= crate::predictor::DEFAULTS
+                            .figure(crate::ontology::RATE_HELD_TERM)
+                            .unwrap()
+                            / 60.0
+                            + 1e-9,
                     "{stem}: {every:?}"
                 );
             }

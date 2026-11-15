@@ -9,7 +9,6 @@
 //! - [`model`]: the model client, the one place a language model is asked;
 //! - [`events`]: what translation says happened — the model used, and each conversation;
 //! - [`create`]: the package's part.
-//! - [`role`]: the role the package is loaded for and what it says, read as one struct with its ontology's defaults;
 
 pub mod briefing;
 pub mod chat;
@@ -18,5 +17,4 @@ pub mod events;
 pub mod model;
 pub mod past;
 pub mod readable;
-pub mod role;
 pub mod stated;

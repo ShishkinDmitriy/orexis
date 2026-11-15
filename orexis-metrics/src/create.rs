@@ -3,10 +3,13 @@
 use orexis::series::Sink;
 use orexis::task::{Handed, Package, Task};
 
-use crate::role::{ROLE, Role};
+use crate::meter::Meter;
 use crate::window::{Metrics, Window};
 
 inventory::submit! { Package { name: "metrics", documents: orexis::documents!("ontology.ttl"), start } }
+
+/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
+const ROLE: &str = "http://example.org/orexis/metrics#Meter";
 
 /// ITS START, which every package this binary holds is given: it joins where the self plays a meter, and joined,
 /// makes its core.
@@ -33,7 +36,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
             else {
                 return Ok(None);
             };
-            let interval = Role::read(&handed.store)?.window_s;
+            let interval = Meter::new(&handed.store)?.window_s;
             log::info!("{} writes its metrics every {interval}s", handed.id);
             Window::new(sink, interval, Some(&deployed.world), Some(&handed.id))
         }

@@ -100,7 +100,7 @@ pub struct Anthropic {
 
 /// What translation's ontology states of a figure where no role is read: a model made by a test.
 fn defaulted(term: &str) -> f64 {
-    crate::role::DEFAULTS
+    crate::create::DEFAULTS
         .figure(term)
         .expect("translation's ontology states a default for each of its figures")
 }
@@ -116,8 +116,8 @@ impl Anthropic {
             agent: ureq::AgentBuilder::new().build(),
         }
         .paced(
-            defaulted(crate::role::CALLED_WITHIN_S),
-            defaulted(crate::role::RETRIES) as u32,
+            defaulted(crate::create::CALLED_WITHIN_S),
+            defaulted(crate::create::RETRIES) as u32,
         )
     }
 

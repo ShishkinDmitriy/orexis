@@ -11,14 +11,16 @@
 //! a tracer is the other half, `orexis-journal-otlp/`, which reads them here on a timer. A reading's point in the
 //! series is neither's: what archives sensing's readings writes it (`orexis-sensing-influxdb/`).
 //!
-//! - [`role`]: the role the package is loaded for and what it says, read as one struct with its ontology's defaults;
+//! - [`recorder`]: the recorder the self plays, a struct with a field for each thing its role may state, which reads
+//!   itself off the store;
 //! - [`create`]: the package's start, which every package this binary holds is given, and its task.
 
 pub mod activities;
 pub mod create;
 pub mod events;
 pub mod journal;
-pub mod role;
+pub mod recorder;
 
 pub use create::{Keeps, Traced};
 pub use journal::Journal;
+pub use recorder::Recorder;

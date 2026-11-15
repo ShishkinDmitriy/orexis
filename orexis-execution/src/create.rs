@@ -43,7 +43,6 @@ use crate::ontology::{
     ENDS_AFTER, OUTCOME, PAYLOAD, PURSUES, RESOLVING, RESOLVING_TRIGGER, REVISED_SOURCE, SAYING, SPEECH_STATEMENT,
     SPEECH_TO, SUPERSEDING, SUPERSEDING_TRIGGER, TOLD, WALKING_TRIGGER,
 };
-use crate::role::ROLE;
 use crate::says::says;
 use crate::{Executor, Said};
 
@@ -260,6 +259,9 @@ impl Execution {
 }
 
 inventory::submit! { Package { name: "execution", documents: orexis::documents!("ontology.ttl"), start } }
+
+/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
+const ROLE: &str = "http://example.org/orexis/execution#Executor";
 
 /// EXECUTION'S START: its executor made, and its task, which hears the events beneath its triggers.
 /// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and

@@ -1,12 +1,9 @@
-//! THE ROLE THIS PACKAGE IS LOADED FOR, AND WHAT IT SAYS: `sensing:Observer`, read as one struct by this package's own query
+//! THE OBSERVER: the role this package is loaded for, as a struct that reads itself: `sensing:Observer`, read as one struct by this package's own query
 //! (knowledge/domain/kernel/role.md). The sensors a role reads and its two limits are read per sensor, by `cadence`.
 
 use orexis::Error;
 use orexis::ontology::SELF_GRAPH;
 use orexis::store::{Store, Within};
-
-/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
-pub const ROLE: &str = "http://example.org/orexis/sensing#Observer";
 
 /// WHAT HOLDS WHERE NO ROLE THE SELF PLAYS STATES A FIGURE: the defaults this package's ontology states
 /// (`sh:defaultValue`), the one place each lives.
@@ -17,21 +14,21 @@ pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
 const SAID_Q: &str = "SELECT ?askedEveryS WHERE { ?me a orexis:Self ; orexis:plays ?role . \
 OPTIONAL { ?role <http://example.org/orexis/sensing#askedEveryS> ?askedEveryS } }";
 
-/// WHAT THIS PACKAGE'S ROLE SAYS, AS THE PACKAGE READS IT: a field for each thing the role may state, one to one. A
+/// THE OBSERVER THE SELF PLAYS, AS THIS PACKAGE READS IT: a field for each thing the role may state, one to one. A
 /// figure no role states is the default this ontology states.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Role {
+pub struct Observer {
     /// How often sensing asks which sensors have fallen due or gone silent, in the agent's seconds (`sensing:askedEveryS`).
     pub asked_every_s: f64,
 }
 
-impl Role {
-    /// The role as the agent's documents state it, read by this package's own query.
-    pub fn read(store: &Store) -> Result<Self, Error> {
+impl Observer {
+    /// The observer the self plays, as the agent's documents state it, read by this package's own query.
+    pub fn new(store: &Store) -> Result<Self, Error> {
         let known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
         let known: Vec<&str> = known.iter().map(String::as_str).collect();
         let rows = store.rows(SAID_Q, &known)?;
-        Ok(Role {
+        Ok(Observer {
             asked_every_s: DEFAULTS.said(&rows, "askedEveryS", crate::ontology::ASKED_EVERY_S_TERM)?,
         })
     }

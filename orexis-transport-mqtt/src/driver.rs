@@ -35,6 +35,25 @@ use orexis_sensing::cadence::{lapsed, next_lapse, sensors};
 use orexis_sensing::received::received;
 use orexis_speech::heard::heard;
 
+/// WHAT HOLDS WHERE NO ROLE THE SELF PLAYS STATES A FIGURE: the defaults this package's ontology states
+/// (`sh:defaultValue`), the one place each lives.
+pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
+    std::sync::LazyLock::new(|| orexis::shape::Defaults::of("the mqtt transport", include_str!("../ontology.ttl")));
+
+/// How soon a silent board is told again: a figure a role states.
+pub const ASKED_AGAIN_AFTER_S: &str = "http://example.org/orexis/mqtt#askedAgainAfterS";
+
+/// WHAT THE ROLES THE SELF PLAYS SAY OF IT, a row per role, in the agent's self graph.
+const SAID_Q: &str = "SELECT ?askedAgainAfterS WHERE { ?me a orexis:Self ; orexis:plays ?role . \
+OPTIONAL { ?role <http://example.org/orexis/mqtt#askedAgainAfterS> ?askedAgainAfterS } }";
+
+/// What the roles the self plays say of this transport, a row per role, read off the agent's self graph.
+fn said(beliefs: &Store) -> Result<Vec<orexis::store::Row>, Error> {
+    let selves = beliefs.graphs_of(&[orexis::ontology::SELF_GRAPH], &orexis::store::Within::default())?;
+    let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
+    beliefs.rows(SAID_Q, &selves)
+}
+
 /// THE PATTERNS OF THE FILTERS THAT MATCH THE TOPIC A SENSOR'S BOARD LISTENS ON.
 const COMMANDS_Q: &str = "
 SELECT ?pattern WHERE {
@@ -374,7 +393,7 @@ impl Mqtt {
         if told.is_empty() {
             return Ok(next);
         }
-        let after_s = crate::role::Role::read(&self.beliefs)?.asked_again_after_s;
+        let after_s = DEFAULTS.said(&said(&self.beliefs)?, "askedAgainAfterS", ASKED_AGAIN_AFTER_S)?;
         let again = now
             .checked_add_day_time_duration(orexis::clock::seconds(after_s))
             .unwrap_or(now);
@@ -940,7 +959,7 @@ mod tests {
             driver.nudge_until(late).unwrap(),
             Some(
                 late.checked_add_day_time_duration(orexis::clock::seconds(
-                    crate::role::DEFAULTS.figure(crate::role::ASKED_AGAIN_AFTER_S).unwrap(),
+                    DEFAULTS.figure(ASKED_AGAIN_AFTER_S).unwrap(),
                 ))
                 .unwrap()
             ),

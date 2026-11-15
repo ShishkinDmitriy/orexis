@@ -10,7 +10,7 @@ use orexis::task::{Handed, Package, Task};
 use orexis_sensing::events::Observed;
 
 use crate::archive::{Shipped, due, took};
-use crate::role::Role;
+use crate::observer::Observer;
 
 /// Where readings are archived and how often. Handed outside by a test that reads the series; a deployed agent is
 /// handed none and the package makes its own sink, where the world names a store that serves history.
@@ -27,7 +27,8 @@ inventory::submit! { Package { name: "sensing-influxdb", documents: &[], start }
 /// start.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        let archived = |handed: &Handed| Ok(handed.joined("sensing") && Role::read(&handed.store)?.archive.is_some());
+        let archived =
+            |handed: &Handed| Ok(handed.joined("sensing") && Observer::new(&handed.store)?.archive.is_some());
         if !handed.joins(archived).await? {
             return Ok(None);
         }
@@ -43,7 +44,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
         None if handed.outside.has::<orexis::task::Deployed>() => {
             match Sink::deployed(&handed.store, orexis::series::HISTORY, &orexis::series::environment)? {
                 Some((sink, _)) => {
-                    let every_s = Role::read(&handed.store)?.archived_every_s;
+                    let every_s = Observer::new(&handed.store)?.archived_every_s;
                     log::info!(
                         "{} archives its readings to the history store every {every_s}s",
                         handed.id

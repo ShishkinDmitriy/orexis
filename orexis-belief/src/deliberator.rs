@@ -131,6 +131,15 @@ impl Arrival {
     }
 }
 
+/// WHAT HOLDS WHERE NO ROLE THE SELF PLAYS STATES A FIGURE: the defaults this package's ontology states
+/// (`sh:defaultValue`), the one place each lives.
+pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
+    std::sync::LazyLock::new(|| orexis::shape::Defaults::of("belief", include_str!("../ontology.ttl")));
+
+/// WHAT THE ROLES THE SELF PLAYS SAY OF IT, a row per role, in the agent's self graph.
+const SAID_Q: &str = "SELECT ?budget WHERE { ?me a orexis:Self ; orexis:plays ?role . \
+OPTIONAL { ?role <http://example.org/orexis/belief#budget> ?budget } }";
+
 /// The pass over what was written since the last one, within a budget.
 pub struct Deliberator {
     beliefs: Store,
@@ -150,7 +159,13 @@ impl Deliberator {
     pub fn new(beliefs: &Store, agent: &str, budget: Option<usize>) -> Result<Self, Error> {
         let budget = match budget {
             Some(b) => b,
-            None => crate::role::Role::read(beliefs)?.budget,
+            None => {
+                //  WHAT THE DELIBERATOR'S ROLE SAYS, read off the agent's self graph by this package's own query.
+                let selves = beliefs.graphs_of(&[orexis::ontology::SELF_GRAPH], &Within::default())?;
+                let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
+                let said = beliefs.rows(SAID_Q, &selves)?;
+                DEFAULTS.said(&said, "budget", crate::ontology::BUDGET_TERM)? as usize
+            }
         };
         let mut deliberator = Deliberator {
             beliefs: beliefs.clone(),
@@ -502,7 +517,7 @@ mod tests {
         let store = revise_case("a_chain_settles_in_a_later_round");
         assert_eq!(
             Deliberator::new(&store, snapshots::AGENT, None).unwrap().budget,
-            crate::role::DEFAULTS.figure(crate::ontology::BUDGET_TERM).unwrap() as usize
+            DEFAULTS.figure(crate::ontology::BUDGET_TERM).unwrap() as usize
         );
         store
             .update(&format!(

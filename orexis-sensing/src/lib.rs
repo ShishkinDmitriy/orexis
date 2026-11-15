@@ -10,14 +10,16 @@
 //! - [`events`]: what it says happened — each observation, a point of the history, and the sensors silent and doubted.
 //!
 //! The Python copy's `account`, sensing's word of itself for a person, is read by nothing, and is not ported.
-//! - [`role`]: the role the package is loaded for and what it says, read as one struct with its ontology's defaults;
+//! - [`observer`]: the observer the self plays, a struct with a field for each thing its role may state, which reads
+//!   itself off the store;
 
 pub mod cadence;
 pub mod create;
 pub mod events;
 pub mod missed;
+pub mod observer;
 pub mod ontology;
 pub mod past;
 pub mod pipeline;
 pub mod received;
-pub mod role;
+pub use observer::Observer;

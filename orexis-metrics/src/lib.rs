@@ -14,11 +14,13 @@
 //! agent. The window is written when a pass ends on the first pass by which it has run its length, so a window holds
 //! whole passes, and as the part stops, since a stop is an exit.
 //!
-//! - [`role`]: the role the package is loaded for and what it says, read as one struct with its ontology's defaults;
+//! - [`meter`]: the meter the self plays, a struct with a field for each thing its role may state, which reads
+//!   itself off the store;
 //! - [`create`]: the package's start, which every package this binary holds is given, and its task.
 
 pub mod create;
-pub mod role;
+pub mod meter;
 pub mod window;
 
+pub use meter::Meter;
 pub use window::{Metrics, Window};

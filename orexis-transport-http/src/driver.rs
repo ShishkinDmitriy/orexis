@@ -24,6 +24,25 @@ use orexis::transport::Inbox;
 use orexis_sensing::cadence::sensors as observed;
 use orexis_sensing::received::received;
 
+/// WHAT HOLDS WHERE NO ROLE THE SELF PLAYS STATES A FIGURE: the defaults this package's ontology states
+/// (`sh:defaultValue`), the one place each lives.
+pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
+    std::sync::LazyLock::new(|| orexis::shape::Defaults::of("the http transport", include_str!("../ontology.ttl")));
+
+/// How long one fetch may take: a figure a role states.
+pub const FETCHED_WITHIN_S: &str = "http://example.org/orexis/http#fetchedWithinS";
+
+/// WHAT THE ROLES THE SELF PLAYS SAY OF IT, a row per role, in the agent's self graph.
+const SAID_Q: &str = "SELECT ?fetchedWithinS WHERE { ?me a orexis:Self ; orexis:plays ?role . \
+OPTIONAL { ?role <http://example.org/orexis/http#fetchedWithinS> ?fetchedWithinS } }";
+
+/// What the roles the self plays say of this transport, a row per role, read off the agent's self graph.
+fn said(beliefs: &Store) -> Result<Vec<orexis::store::Row>, Error> {
+    let selves = beliefs.graphs_of(&[orexis::ontology::SELF_GRAPH], &orexis::store::Within::default())?;
+    let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
+    beliefs.rows(SAID_Q, &selves)
+}
+
 const FORM_Q: &str = "ASK { $sensor td:hasForm ?form }";
 const TARGET_Q: &str =
     "SELECT ?target WHERE { $sensor td:hasForm ?form . ?form hctl:hasTarget ?target } ORDER BY ?target";
@@ -61,6 +80,11 @@ fn quote(text: &str) -> String {
             _ => format!("%{b:02X}"),
         })
         .collect()
+}
+
+/// How long one fetch may take, in real seconds, as a role the self plays says (`http:fetchedWithinS`).
+pub fn fetched_within_s(beliefs: &Store) -> Result<f64, Error> {
+    DEFAULTS.said(&said(beliefs)?, "fetchedWithinS", FETCHED_WITHIN_S)
 }
 
 /// The web as a deployed agent reads it, a fetch given up after `within_s` real seconds.

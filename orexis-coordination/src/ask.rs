@@ -44,7 +44,7 @@ pub(crate) fn held(store: &Store) -> Result<Vec<String>, Error> {
 
 /// How long the agent's patience is, what the coordinator's role says or its ontology's default.
 pub(crate) fn patience(store: &Store) -> Result<f64, Error> {
-    Ok(crate::role::Role::read(store)?.patience_s)
+    Ok(crate::coordinator::Coordinator::new(store)?.patience_s)
 }
 
 /// Every question the self `me` of `store` has to say at `at`, with the peer it is to.

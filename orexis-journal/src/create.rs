@@ -7,7 +7,7 @@ use orexis::Error;
 use orexis::task::{Handed, Package, Task};
 
 use crate::journal::Journal;
-use crate::role::{ROLE, Role};
+use crate::recorder::Recorder;
 use crate::{activities, events};
 
 /// The journal to keep, handed outside by a test that reads what it kept. A deployed agent is handed none and the
@@ -22,6 +22,9 @@ pub struct Keeps {
 pub struct Traced(pub Arc<Journal>);
 
 inventory::submit! { Package { name: "journal", documents: orexis::documents!("ontology.ttl"), start } }
+
+/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
+const ROLE: &str = "http://example.org/orexis/journal#Recorder";
 
 /// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
 /// joined, makes its core.
@@ -65,7 +68,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
 /// what archives the journal has said where it is, the journal itself until then - and the journal at
 /// `/live/sparql`. A role naming no endpoint is served nowhere.
 fn own(handed: &Handed) -> Result<Arc<Journal>, Error> {
-    let kept = Role::read(&handed.store)?;
+    let kept = Recorder::new(&handed.store)?;
     let mut journal = Journal::new(kept.window_s, {
         let clock = handed.clock.clone();
         Arc::new(move || clock.now())

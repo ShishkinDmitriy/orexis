@@ -1,12 +1,9 @@
-//! THE ROLE THIS PACKAGE IS LOADED FOR, AND WHAT IT SAYS: `metrics:Meter`, read as one struct by this package's own query
+//! THE METER: the role this package is loaded for, as a struct that reads itself: `metrics:Meter`, read as one struct by this package's own query
 //! (knowledge/domain/kernel/role.md).
 
 use orexis::Error;
 use orexis::ontology::{DEPLOYMENT, SELF_GRAPH};
 use orexis::store::{Store, Within, value};
-
-/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
-pub const ROLE: &str = "http://example.org/orexis/metrics#Meter";
 
 /// WHAT HOLDS WHERE NO ROLE THE SELF PLAYS STATES A FIGURE: the defaults this package's ontology states
 /// (`sh:defaultValue`), the one place each lives.
@@ -22,25 +19,25 @@ const SAID_Q: &str = "SELECT ?windowS ?store WHERE { ?me a orexis:Self ; orexis:
 OPTIONAL { ?role <http://example.org/orexis/metrics#windowS> ?windowS } \
 OPTIONAL { ?role <http://example.org/orexis/metrics#writtenTo> ?storeNamed . ?storeNamed <https://schema.org/url> ?store } }";
 
-/// WHAT THIS PACKAGE'S ROLE SAYS, AS THE PACKAGE READS IT: a field for each thing the role may state, one to one. A
+/// THE METER THE SELF PLAYS, AS THIS PACKAGE READS IT: a field for each thing the role may state, one to one. A
 /// figure no role states is the default this ontology states, and a link is where the service the role names answers,
 /// none where the role names none or the world says nothing of the one named.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Role {
+pub struct Meter {
     /// How long a window is, in real seconds (`metrics:windowS`).
     pub window_s: f64,
     /// Where the series store the role names answers (`metrics:writtenTo`).
     pub written_to: Option<String>,
 }
 
-impl Role {
-    /// The role as the agent's documents state it, read by this package's own query.
-    pub fn read(store: &Store) -> Result<Self, Error> {
+impl Meter {
+    /// The meter the self plays, as the agent's documents state it, read by this package's own query.
+    pub fn new(store: &Store) -> Result<Self, Error> {
         let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
         known.extend(store.graphs_of(&[DEPLOYMENT], &Within::common())?);
         let known: Vec<&str> = known.iter().map(String::as_str).collect();
         let rows = store.rows(SAID_Q, &known)?;
-        Ok(Role {
+        Ok(Meter {
             window_s: DEFAULTS.said(&rows, "windowS", WINDOW_S)?,
             written_to: rows
                 .iter()

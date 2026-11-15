@@ -19,9 +19,9 @@ use orexis::ontology::{BELIEF, RECORD};
 use orexis::snapshots::{ME, now, stand_in};
 use orexis::store::{Store, Within, iri, value};
 use orexis_belief::Deliberator;
+use orexis_sensing::observer::default_of;
 use orexis_sensing::ontology::{OBSERVATION_GRAPH, STUCK_AFTER_TERM};
 use orexis_sensing::received::received;
-use orexis_sensing::role::default_of;
 
 const TEST: &str = "http://example.org/test#";
 const PROBE: &str = "http://example.org/test#probe";

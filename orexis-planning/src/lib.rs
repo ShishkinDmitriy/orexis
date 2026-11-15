@@ -14,7 +14,6 @@
 //! - `derive_wants`: a want minted for every cluster of what a desire's met-test reads unmet, read off the weighings;
 //! - `couplings`: which instances a holder's constraints can make collide, over what the actions can reach;
 //! - `withdraw`: every derived want the derivation no longer implies, and every want reached, taken away.
-//! - [`role`]: the role the package is loaded for and what it says, read as one struct with its ontology's defaults;
 //! - [`create`]: the package's start, which every package this binary holds is given, and its task.
 
 mod admit;
@@ -36,7 +35,6 @@ mod prepare_ground;
 mod publish_plan;
 mod refine;
 mod reroot;
-pub mod role;
 mod scope_actions;
 mod shapes;
 mod take;

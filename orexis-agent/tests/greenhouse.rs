@@ -639,8 +639,8 @@ async fn history_holds_every_reading_and_the_journal_the_dose_published_taken_an
             &g,
             plus(
                 later,
-                orexis_sensing_influxdb::role::DEFAULTS
-                    .figure(orexis_sensing_influxdb::role::ARCHIVED_EVERY_S)
+                orexis_sensing_influxdb::observer::DEFAULTS
+                    .figure(orexis_sensing_influxdb::observer::ARCHIVED_EVERY_S)
                     .unwrap(),
             ),
         )

@@ -363,7 +363,7 @@ pub(crate) mod tests {
     use orexis::snapshots::{ME, all_read, cases_in, held_to_diff, now, stand_in};
 
     use super::*;
-    use crate::role::default_of;
+    use crate::observer::default_of;
 
     const TEST: &str = "http://example.org/test#";
     const OBSERVED: &str = "http://example.org/orexis/graph/observed/keeper/";

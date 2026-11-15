@@ -23,7 +23,6 @@ use crate::Planner;
 use crate::admit::local_of;
 use crate::events::HeadChecked;
 use crate::ontology::{PLANNING_ACTIVITY, PLANNING_TRIGGER, REOPENS};
-use crate::role::ROLE;
 
 const REOPEN: usize = 1;
 const CHECK: usize = 2;
@@ -171,6 +170,9 @@ inventory::submit! { Package { name: "planning", documents: orexis::documents!("
 /// How many worlds planning's search may weigh a pass, where whoever runs the agent sizes it: none reads the
 /// planner's role's figure.
 pub struct Budget(pub usize);
+
+/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
+const ROLE: &str = "http://example.org/orexis/planning#Planner";
 
 /// PLANNING'S START: its planner made, and its task, which hears its trigger's events and a head asked.
 /// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and

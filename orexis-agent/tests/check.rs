@@ -182,7 +182,7 @@ fn a_housekeeper_of_the_journal_joins_where_the_recorders_role_names_its_service
             orexis::store::Store::new(std::sync::Arc::new(orexis::namespaces::Namespaces::linked().unwrap())).unwrap();
         let loaded = orexis_agent::booted(&store, &Path::new(TREE).join("world").join(world), agent, now).unwrap();
         let joined = |package: &str| loaded.iter().any(|p| p == package);
-        let recorder = orexis_journal::role::Role::read(&store).unwrap();
+        let recorder = orexis_journal::Recorder::new(&store).unwrap();
         (
             recorder.tracer,
             recorder.archive,
@@ -254,7 +254,7 @@ fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_ro
     };
     let store = booted("terrace", "terrace");
     let series = Some("http://localhost:8086".to_string());
-    let recorder = orexis_journal::role::Role {
+    let recorder = orexis_journal::Recorder {
         window_s: 600.0,
         incident_level: log::Level::Warn,
         incidents: Default::default(),
@@ -264,31 +264,37 @@ fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_ro
         archive: Some(std::path::PathBuf::from("/app/journal")),
         tracer: Some("http://localhost:4318".to_string()),
     };
-    assert_eq!(orexis_journal::role::Role::read(&store).unwrap(), recorder);
-    let observer = orexis_sensing_influxdb::role::Role {
+    assert_eq!(orexis_journal::Recorder::new(&store).unwrap(), recorder);
+    let observer = orexis_sensing_influxdb::Observer {
         archived_every_s: 10.0,
         archive: series.clone(),
     };
-    assert_eq!(orexis_sensing_influxdb::role::Role::read(&store).unwrap(), observer);
-    let meter = orexis_metrics::role::Role {
+    assert_eq!(orexis_sensing_influxdb::Observer::new(&store).unwrap(), observer);
+    let meter = orexis_metrics::Meter {
         window_s: 60.0,
         written_to: series,
     };
-    assert_eq!(orexis_metrics::role::Role::read(&store).unwrap(), meter);
-    let translator = orexis_translation::role::Role {
-        turns: 8,
-        rows: 50,
-        answered_within_s: 60.0,
-        called_within_s: 60.0,
-        retries: 3,
-        model: Some("https://api.anthropic.com".to_string()),
+    assert_eq!(orexis_metrics::Meter::new(&store).unwrap(), meter);
+    //  THE TRANSLATOR IS ITS OWN STRUCT: made over the store, it holds what its role says.
+    let translator = |store: &orexis::store::Store| {
+        let made = orexis_translation::create::Translator::new(store, "", None);
+        (
+            (made.turns, made.rows, made.retries),
+            (made.answered_within_s, made.called_within_s),
+            made.translated_by,
+        )
     };
-    assert_eq!(orexis_translation::role::Role::read(&store).unwrap(), translator);
-    let bot = orexis_transport_telegram::role::Role {
-        polled_every_s: 3.0,
-        called_within_s: 30.0,
+    let model = Some("https://api.anthropic.com".to_string());
+    assert_eq!(translator(&store), ((8, 50, 3), (60.0, 60.0), model.clone()));
+    //  AND THE BOT, connected, is polled as a role says: three seconds where none does.
+    let polled = |store: &orexis::store::Store| {
+        let me = orexis::boot::selves(store).unwrap().remove(0);
+        let token = |name: &str| (name == "TELEGRAM_BOT_TOKEN").then(|| "t".to_string());
+        orexis_transport_telegram::driver::Telegram::connect(store, &me, &token)
+            .unwrap()
+            .every
     };
-    assert_eq!(orexis_transport_telegram::role::Role::read(&store).unwrap(), bot);
+    assert_eq!(polled(&store), 3.0);
     //  SAID ON THE ROLE, each figure is what is read, and nothing else of the struct changes.
     for (link, figure, said) in [
         ("sensing#archivedIn", "sensing#archivedEveryS", 30),
@@ -308,8 +314,8 @@ fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_ro
             .unwrap();
     }
     assert_eq!(
-        orexis_journal::role::Role::read(&store).unwrap(),
-        orexis_journal::role::Role {
+        orexis_journal::Recorder::new(&store).unwrap(),
+        orexis_journal::Recorder {
             window_s: 90.0,
             archived_every_s: 5.0,
             traced_every_s: 20.0,
@@ -317,48 +323,39 @@ fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_ro
         }
     );
     assert_eq!(
-        orexis_sensing_influxdb::role::Role::read(&store).unwrap(),
-        orexis_sensing_influxdb::role::Role {
+        orexis_sensing_influxdb::Observer::new(&store).unwrap(),
+        orexis_sensing_influxdb::Observer {
             archived_every_s: 30.0,
             ..observer
         }
     );
     assert_eq!(
-        orexis_metrics::role::Role::read(&store).unwrap(),
-        orexis_metrics::role::Role {
+        orexis_metrics::Meter::new(&store).unwrap(),
+        orexis_metrics::Meter {
             window_s: 300.0,
             ..meter
         }
     );
-    assert_eq!(
-        orexis_translation::role::Role::read(&store).unwrap(),
-        orexis_translation::role::Role { turns: 4, ..translator }
-    );
-    assert_eq!(
-        orexis_transport_telegram::role::Role::read(&store).unwrap(),
-        orexis_transport_telegram::role::Role {
-            polled_every_s: 7.0,
-            ..bot
-        }
-    );
+    assert_eq!(translator(&store), ((4, 50, 3), (60.0, 60.0), model));
+    assert_eq!(polled(&store), 7.0);
     //  AND A ROLE THE SELF DOES NOT PLAY SAYS NOTHING: the ontology's defaults, and no link.
     let store = booted("hanoi", "hanoi");
-    assert!(orexis_journal::role::Role::read(&store).unwrap().archive.is_some());
+    assert!(orexis_journal::Recorder::new(&store).unwrap().archive.is_some());
     assert_eq!(
-        orexis_sensing_influxdb::role::Role::read(&store).unwrap(),
-        orexis_sensing_influxdb::role::Role {
+        orexis_sensing_influxdb::Observer::new(&store).unwrap(),
+        orexis_sensing_influxdb::Observer {
             archived_every_s: 10.0,
             archive: None
         }
     );
     assert_eq!(
-        orexis_metrics::role::Role::read(&store).unwrap(),
-        orexis_metrics::role::Role {
+        orexis_metrics::Meter::new(&store).unwrap(),
+        orexis_metrics::Meter {
             window_s: 60.0,
             written_to: None
         }
     );
-    assert_eq!(orexis_translation::role::Role::read(&store).unwrap().model, None);
+    assert_eq!(translator(&store).2, None);
 }
 
 /// WHERE A BROKER, A BOT AND A MODEL ANSWER IS THE WORLD'S TO SAY, and no environment's: the terrace's agent is
@@ -387,12 +384,15 @@ fn the_world_says_where_each_broker_bot_and_model_an_agent_reaches_answers() {
         Some("https://api.telegram.org".to_string())
     );
     assert_eq!(
-        orexis_translation::role::Role::read(&store).unwrap().model,
+        orexis_translation::create::Translator::new(&store, "", None).translated_by,
         Some("https://api.anthropic.com".to_string())
     );
     let (store, me) = booted("hanoi", "hanoi");
     assert!(orexis_transport_mqtt::driver::reached(&store, &me).unwrap().is_empty());
-    assert_eq!(orexis_translation::role::Role::read(&store).unwrap().model, None);
+    assert_eq!(
+        orexis_translation::create::Translator::new(&store, "", None).translated_by,
+        None
+    );
 }
 
 /// WHERE A SERIES IS WRITTEN IS THE WORLD'S TO SAY, of each store a role names: the terrace's agent plays an observer

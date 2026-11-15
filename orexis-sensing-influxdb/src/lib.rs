@@ -20,12 +20,14 @@
 //! nothing, which is how far the series lags a reading; and a stretch in which sensing observed nothing asks the
 //! beliefs nothing.
 //!
-//! - [`role`]: the role the package keeps house for and what it says of it, read as one struct;
+//! - [`observer`]: the observer the self plays, a struct with a field for each thing its role may state, which reads
+//!   itself off the store;
 //! - [`create`]: the package's start, which every package this binary holds is given, and its task.
 
 pub mod archive;
 pub mod create;
-pub mod role;
+pub mod observer;
 
 pub use archive::{Due, Shipped, archive, due, took};
 pub use create::Archives;
+pub use observer::Observer;

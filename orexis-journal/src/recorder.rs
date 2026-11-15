@@ -1,4 +1,4 @@
-//! THE ROLE THIS PACKAGE IS LOADED FOR, AND WHAT IT SAYS: `journal:Recorder`, read as one struct by this package's own query
+//! THE RECORDER: the role this package is loaded for, as a struct that reads itself: `journal:Recorder`, read as one struct by this package's own query
 //! (knowledge/domain/kernel/role.md). What ships the journal's activities and what archives it read it here too.
 
 use std::collections::BTreeSet;
@@ -7,9 +7,6 @@ use std::path::PathBuf;
 use orexis::Error;
 use orexis::ontology::{DEPLOYMENT, SELF_GRAPH};
 use orexis::store::{Store, Within, value};
-
-/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
-pub const ROLE: &str = "http://example.org/orexis/journal#Recorder";
 
 /// WHAT HOLDS WHERE NO ROLE THE SELF PLAYS STATES A FIGURE: the defaults this package's ontology states
 /// (`sh:defaultValue`), the one place each lives.
@@ -38,11 +35,11 @@ OPTIONAL { ?role <http://example.org/orexis/journal#servedAt> ?endpointNamed . ?
 OPTIONAL { ?role <http://example.org/orexis/journal#archivedIn> ?archiveNamed . ?archiveNamed <https://schema.org/url> ?archive } \
 OPTIONAL { ?role <http://example.org/orexis/journal#tracedBy> ?tracerNamed . ?tracerNamed <https://schema.org/url> ?tracer } }";
 
-/// WHAT THIS PACKAGE'S ROLE SAYS, AS THE PACKAGE READS IT: a field for each thing the role may state, one to one. A
+/// THE RECORDER THE SELF PLAYS, AS THIS PACKAGE READS IT: a field for each thing the role may state, one to one. A
 /// figure or a word no role states is the default this ontology states, and a link is where the service the role
 /// names answers, none where the role names none or the world says nothing of the one named.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Role {
+pub struct Recorder {
     /// How long the log and the activities no incident kept are kept, in the agent's seconds (`journal:windowS`).
     pub window_s: f64,
     /// From which level a line of the log is an incident (`journal:incidentFrom`).
@@ -61,9 +58,9 @@ pub struct Role {
     pub tracer: Option<String>,
 }
 
-impl Role {
-    /// The role as the agent's documents state it, read by this package's own query.
-    pub fn read(store: &Store) -> Result<Self, Error> {
+impl Recorder {
+    /// The recorder the self plays, as the agent's documents state it, read by this package's own query.
+    pub fn new(store: &Store) -> Result<Self, Error> {
         let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
         known.extend(store.graphs_of(&[DEPLOYMENT], &Within::common())?);
         let known: Vec<&str> = known.iter().map(String::as_str).collect();
@@ -77,7 +74,7 @@ impl Role {
             Some(level) => level,
             None => DEFAULTS.word(INCIDENT_FROM)?,
         };
-        Ok(Role {
+        Ok(Recorder {
             window_s: DEFAULTS.said(&rows, "windowS", WINDOW_S)?,
             incident_level: crate::journal::incident_level(Some(&from)),
             incidents: rows.iter().filter_map(|row| value(row, "incident")).collect(),

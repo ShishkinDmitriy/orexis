@@ -11,7 +11,6 @@ use orexis::store::Store;
 use orexis::task::{Handed, Package, Task};
 
 use crate::foresee::foresee;
-use crate::role::ROLE;
 
 /// Prediction's part: its foresight, offered at link.
 #[derive(Default)]
@@ -36,6 +35,9 @@ impl Prediction {
 }
 
 inventory::submit! { Package { name: "prediction", documents: orexis::documents!("ontology.ttl"), start } }
+
+/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
+const ROLE: &str = "http://example.org/orexis/prediction#Predictor";
 
 /// PREDICTION'S START: its foresight offered, for whoever lays the grounds to take, and no task - what it offers is
 /// asked for where the grounds are laid, and it waits for nothing.

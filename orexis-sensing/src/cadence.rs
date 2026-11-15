@@ -18,7 +18,7 @@ use orexis::clock::instant as parse_instant;
 use orexis::ontology::{BELIEF, SELF_GRAPH, local_of};
 use orexis::store::{Store, Within, instant, iri, value};
 
-use crate::role::default_of;
+use crate::observer::default_of;
 
 const CADENCE_Q: &str = "
 SELECT ?every ?unit WHERE {

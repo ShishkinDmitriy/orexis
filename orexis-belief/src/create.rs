@@ -21,7 +21,6 @@ use orexis::task::{Handed, Heard, Hears, Package, Task, Turn, Woke};
 
 use crate::Deliberator;
 use crate::ontology::{INTO, REVISES, REVISING, REVISING_TRIGGER, REVISION_GRAPH};
-use crate::role::ROLE;
 
 const HEARD: usize = 0;
 const REVISE: usize = 1;
@@ -65,6 +64,9 @@ impl Belief {
 }
 
 inventory::submit! { Package { name: "belief", documents: orexis::documents!("ontology.ttl"), start } }
+
+/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
+const ROLE: &str = "http://example.org/orexis/belief#Deliberator";
 
 /// BELIEF'S START: its deliberator made, what the world authored as the agent's state revised, once, and its task,
 /// which hears a belief written and its trigger's events.

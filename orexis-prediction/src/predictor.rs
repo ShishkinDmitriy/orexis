@@ -1,12 +1,9 @@
-//! THE ROLE THIS PACKAGE IS LOADED FOR, AND WHAT IT SAYS: `prediction:Predictor`, read as one struct by this package's own query
+//! THE PREDICTOR: the role this package is loaded for, as a struct that reads itself: `prediction:Predictor`, read as one struct by this package's own query
 //! (knowledge/domain/kernel/role.md).
 
 use orexis::Error;
 use orexis::ontology::SELF_GRAPH;
 use orexis::store::{Store, Within};
-
-/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
-pub const ROLE: &str = "http://example.org/orexis/prediction#Predictor";
 
 /// WHAT HOLDS WHERE NO ROLE THE SELF PLAYS STATES A FIGURE: the defaults this package's ontology states
 /// (`sh:defaultValue`), the one place each lives.
@@ -18,23 +15,23 @@ const SAID_Q: &str = "SELECT ?horizonS ?rateHeldS WHERE { ?me a orexis:Self ; or
 OPTIONAL { ?role <http://example.org/orexis/prediction#horizonS> ?horizonS } \
 OPTIONAL { ?role <http://example.org/orexis/prediction#rateHeldS> ?rateHeldS } }";
 
-/// WHAT THIS PACKAGE'S ROLE SAYS, AS THE PACKAGE READS IT: a field for each thing the role may state, one to one. A
+/// THE PREDICTOR THE SELF PLAYS, AS THIS PACKAGE READS IT: a field for each thing the role may state, one to one. A
 /// figure no role states is the default this ontology states.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Role {
+pub struct Predictor {
     /// How far past an observation the flows are integrated, in seconds (`prediction:horizonS`).
     pub horizon_s: f64,
     /// The longest a rate is held before the flows are asked again, in seconds (`prediction:rateHeldS`).
     pub rate_held_s: f64,
 }
 
-impl Role {
-    /// The role as the agent's documents state it, read by this package's own query.
-    pub fn read(store: &Store) -> Result<Self, Error> {
+impl Predictor {
+    /// The predictor the self plays, as the agent's documents state it, read by this package's own query.
+    pub fn new(store: &Store) -> Result<Self, Error> {
         let known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
         let known: Vec<&str> = known.iter().map(String::as_str).collect();
         let rows = store.rows(SAID_Q, &known)?;
-        Ok(Role {
+        Ok(Predictor {
             horizon_s: DEFAULTS.said(&rows, "horizonS", crate::ontology::HORIZON_TERM)?,
             rate_held_s: DEFAULTS.said(&rows, "rateHeldS", crate::ontology::RATE_HELD_TERM)?,
         })

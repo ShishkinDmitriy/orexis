@@ -210,6 +210,15 @@ pub struct Standing {
     pub adopted: DateTime,
 }
 
+/// WHAT HOLDS WHERE NO ROLE THE SELF PLAYS STATES A FIGURE: the defaults this package's ontology states
+/// (`sh:defaultValue`), the one place each lives.
+pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
+    std::sync::LazyLock::new(|| orexis::shape::Defaults::of("execution", include_str!("../ontology.ttl")));
+
+/// WHAT THE ROLES THE SELF PLAYS SAY OF IT, a row per role, in the agent's self graph.
+const SAID_Q: &str = "SELECT ?patienceS WHERE { ?me a orexis:Self ; orexis:plays ?role . \
+OPTIONAL { ?role <http://example.org/orexis/execution#patienceS> ?patienceS } }";
+
 /// One agent's intentions, and what carries them out.
 pub struct Executor {
     pub beliefs: Store,
@@ -312,13 +321,17 @@ impl Executor {
         holder: Option<&str>,
         clock: Arc<dyn Clock>,
     ) -> Result<Self, Error> {
+        //  WHAT THE EXECUTOR'S ROLE SAYS, read off the agent's self graph by this package's own query.
+        let selves = beliefs.graphs_of(&[orexis::ontology::SELF_GRAPH], &Within::default())?;
+        let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
+        let said = beliefs.rows(SAID_Q, &selves)?;
         Ok(Executor {
             beliefs: beliefs.clone(),
             intentions: intentions.unwrap_or(beliefs).clone(),
             id: agent.to_string(),
             holder: holder.map(str::to_string),
             graph: intentions_graph(agent),
-            patience_s: crate::role::Role::read(beliefs)?.patience_s,
+            patience_s: DEFAULTS.said(&said, "patienceS", crate::ontology::PATIENCE_S)?,
             all_fictive: false,
             take: None,
             asks: false,
@@ -1411,7 +1424,7 @@ mod tests {
 
     /// The patience the executor's ontology states where the self states none.
     fn patience_s() -> f64 {
-        crate::role::DEFAULTS.figure(crate::ontology::PATIENCE_S).unwrap()
+        super::DEFAULTS.figure(crate::ontology::PATIENCE_S).unwrap()
     }
 
     const AGENT: &str = "keeper";

@@ -73,7 +73,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
         None if handed.outside.has::<orexis::task::Deployed>() => crate::driver::Http::new(
             &handed.store,
             &me,
-            crate::driver::get(crate::role::Role::read(&handed.store)?.fetched_within_s),
+            crate::driver::get(crate::driver::fetched_within_s(&handed.store)?),
         ),
         None => crate::driver::Http::new(
             &handed.store,

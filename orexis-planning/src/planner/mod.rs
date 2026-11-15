@@ -183,6 +183,16 @@ type Flights = BTreeMap<String, Flight>;
 /// What one step says: the action it fills and the values of the parameters that action takes.
 type Said = (String, Vec<(String, String)>);
 
+/// WHAT HOLDS WHERE NO ROLE THE SELF PLAYS STATES A FIGURE: the defaults this package's ontology states
+/// (`sh:defaultValue`), the one place each lives.
+pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
+    std::sync::LazyLock::new(|| orexis::shape::Defaults::of("planning", include_str!("../../ontology.ttl")));
+
+/// WHAT THE ROLES THE SELF PLAYS SAY OF IT, a row per role, in the agent's self graph.
+const SAID_Q: &str = "SELECT ?budget ?budgetEveryS WHERE { ?me a orexis:Self ; orexis:plays ?role . \
+OPTIONAL { ?role <http://example.org/orexis/planning#budget> ?budget } \
+OPTIONAL { ?role <http://example.org/orexis/planning#budgetEveryS> ?budgetEveryS } }";
+
 /// One agent's planning: the pass, one want's search, and one iteration of it, each a method that sequences the
 /// package's acts and reads the store between them. What the Python copy signals, a caller reads off the fields.
 pub struct Planner {
@@ -610,9 +620,13 @@ impl Planner {
     /// `planning:budget` off its self graph, where the caller hands none, and its
     /// ontology's default where it states none.
     pub fn new(beliefs: &Store, agent_id: &str, budget: Option<usize>) -> Result<Self, Error> {
+        //  WHAT THE PLANNER'S ROLE SAYS, read off the agent's self graph by this package's own query.
+        let selves = beliefs.graphs_of(&[orexis::ontology::SELF_GRAPH], &Within::default())?;
+        let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
+        let said = beliefs.rows(SAID_Q, &selves)?;
         let budget = match budget {
             Some(b) => b,
-            None => crate::role::Role::read(beliefs)?.budget,
+            None => DEFAULTS.said(&said, "budget", crate::ontology::BUDGET_TERM)? as usize,
         };
         let common = beliefs.graphs_of(&[BELIEF], &Within::common())?;
         let text = format!("SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId \"{agent_id}\" }} LIMIT 1");
@@ -630,7 +644,7 @@ impl Planner {
             id: agent_id.to_string(),
             uri,
             budget,
-            every_s: crate::role::Role::read(beliefs)?.budget_every_s,
+            every_s: DEFAULTS.said(&said, "budgetEveryS", crate::ontology::BUDGET_EVERY_TERM)?,
             cut: BTreeMap::new(),
             beside: BTreeMap::new(),
             imaginaria: BTreeMap::new(),
@@ -1328,7 +1342,7 @@ ORDER BY ?want";
                     .expand(
                         &store,
                         &want,
-                        crate::role::DEFAULTS.figure(crate::ontology::BUDGET_TERM).unwrap() as usize,
+                        DEFAULTS.figure(crate::ontology::BUDGET_TERM).unwrap() as usize,
                         &scoped,
                         &mut Memo::default(),
                     )
@@ -1656,9 +1670,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         let mut planner = Planner::new(&store, snapshots::AGENT, Some(20)).unwrap();
         assert_eq!(
             planner.every_s,
-            crate::role::DEFAULTS
-                .figure(crate::ontology::BUDGET_EVERY_TERM)
-                .unwrap(),
+            DEFAULTS.figure(crate::ontology::BUDGET_EVERY_TERM).unwrap(),
             "the package's figure, no role stating one"
         );
         let said: Arc<Mutex<Vec<f64>>> = Default::default();
@@ -1674,9 +1686,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         assert_eq!(*said.lock().unwrap(), [20.0], "one search, to its budget");
         let due = at
             .checked_add_day_time_duration(orexis::clock::seconds(
-                crate::role::DEFAULTS
-                    .figure(crate::ontology::BUDGET_EVERY_TERM)
-                    .unwrap(),
+                DEFAULTS.figure(crate::ontology::BUDGET_EVERY_TERM).unwrap(),
             ))
             .unwrap();
         assert_eq!(planner.continues_at(), Some(due));
@@ -1755,7 +1765,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         let store = snapshots::stand_in(&bench("three_disk_hanoi"));
         assert_eq!(
             Planner::new(&store, snapshots::AGENT, None).unwrap().budget,
-            crate::role::DEFAULTS.figure(crate::ontology::BUDGET_TERM).unwrap() as usize
+            DEFAULTS.figure(crate::ontology::BUDGET_TERM).unwrap() as usize
         );
         let cat = store.catalogue().unwrap().unwrap();
         let (me, own) = (snapshots::ME, "http://example.org/test#self");
@@ -2056,7 +2066,7 @@ GROUP BY ?outcome";
             .search(
                 &store,
                 &want,
-                crate::role::DEFAULTS.figure(crate::ontology::BUDGET_TERM).unwrap() as usize,
+                DEFAULTS.figure(crate::ontology::BUDGET_TERM).unwrap() as usize,
                 &scoped,
                 &mut Memo::default(),
             )
@@ -2067,7 +2077,7 @@ GROUP BY ?outcome";
             .search(
                 &store,
                 &want,
-                crate::role::DEFAULTS.figure(crate::ontology::BUDGET_TERM).unwrap() as usize,
+                DEFAULTS.figure(crate::ontology::BUDGET_TERM).unwrap() as usize,
                 &scoped,
                 &mut Memo::default(),
             )

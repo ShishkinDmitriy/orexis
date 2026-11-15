@@ -8,7 +8,6 @@
 //! - [`create`]: the package's part, which extracts from every statement written and says what a step says.
 //!
 //! - [`events`]: every statement said and heard, history in speech's words.
-//! - [`role`]: the role the package is loaded for and what it says, read as one struct with its ontology's defaults;
 
 pub mod create;
 pub mod events;
@@ -16,6 +15,5 @@ pub mod extract;
 pub mod heard;
 pub mod ontology;
 pub mod prose;
-pub mod role;
 pub mod said;
 pub mod statements;

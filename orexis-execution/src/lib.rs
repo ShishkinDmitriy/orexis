@@ -9,7 +9,6 @@
 //! - `events`: what it says happened — a step taken and answered, an intention resolved — to whoever watches.
 //!
 //! NOT PORTED: the two threads, which the runtime's pass replaces.
-//! - [`role`]: the role the package is loaded for and what it says, read as one struct with its ontology's defaults;
 //! - [`create`]: the package's start, which every package this binary holds is given, and its task.
 
 pub mod command;
@@ -18,7 +17,6 @@ pub mod events;
 mod executor;
 mod implementation;
 pub mod ontology;
-pub mod role;
 pub mod says;
 
 pub use executor::{Executor, Said, Standing, Take};

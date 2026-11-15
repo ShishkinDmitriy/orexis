@@ -16,7 +16,6 @@ use orexis::task::{Arrived, Every, Handed, Heard as HeardEvent, Hears, Package, 
 use oxigraph::model::{BlankNode, GraphName, NamedNode, Quad, Triple};
 
 use crate::events::{Heard, Said, Statement};
-use crate::role::ROLE;
 
 use crate::extract::extract;
 use crate::ontology::{SPEAKING, SPEAKING_TRIGGER, STATEMENT, STATEMENT_GRAPH, TO};
@@ -221,6 +220,9 @@ impl Speech {
 }
 
 inventory::submit! { Package { name: "speech", documents: orexis::documents!("ontology.ttl"), start } }
+
+/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
+const ROLE: &str = "http://example.org/orexis/speech#Speaker";
 
 /// THE PACKAGE'S START: its part made and started - what it hears, what it does every so often - and its task.
 /// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
