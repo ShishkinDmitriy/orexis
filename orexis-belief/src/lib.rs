@@ -6,6 +6,7 @@
 //! - `trigger`: the transitions an arrival of testimony triggers, applied to the agent's own state;
 //! - `deliberator`: the package's core, the pass that sequences the two over what was written, within a budget, and
 //!   what it revises as the package starts and on what it hears;
+//! - `events`: what belief says happened, a pass that revised and the revisions held;
 //! - the start, below the modules, and nothing else: the deliberator made, and the task that wakes it.
 
 use orexis::Error;
@@ -15,12 +16,14 @@ use orexis::task::{Handed, Hears, Package, Task, Woke};
 use crate::ontology::REVISING_TRIGGER;
 
 mod deliberator;
+mod events;
 pub mod ontology;
 mod revise;
 pub mod transition;
 mod trigger;
 
-pub use deliberator::{Deliberator, Revised};
+pub use deliberator::Deliberator;
+pub use events::Revised;
 
 const HEARD: usize = 0;
 const REVISE: usize = 1;
