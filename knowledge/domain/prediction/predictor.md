@@ -30,3 +30,9 @@ The other way round is NOT refused. A world may ship flows — a domain's `flows
 its actions — whose agents foresee nothing; declining foresight is the author's choice, and refusing
 it would make the declaration a premise restated
 ([a-package-is-loaded-only-for-a-role-the-agent-is-declared-in](/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md)).
+
+# What it may state
+
+Two figures, on the role: `prediction:horizonS`, how far past an observation the flows are integrated, a day where
+it states none; and `prediction:rateHeldS`, the longest a flow's rate is held before the flows are asked again, an
+hour. What the integration does between is [prediction](/domain/prediction/prediction.md)'s.

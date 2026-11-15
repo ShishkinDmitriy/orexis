@@ -24,8 +24,8 @@ use orexis::transport::Inbox;
 use orexis_sensing::cadence::sensors as observed;
 use orexis_sensing::received::received;
 
-/// HOW LONG ONE FETCH MAY TAKE, in real seconds.
-pub const TIMEOUT_S: u64 = 30;
+/// HOW LONG ONE FETCH MAY TAKE, in real seconds: a figure a role states.
+pub const FETCHED_WITHIN_S: &str = "http://example.org/orexis/http#fetchedWithinS";
 
 const FORM_Q: &str = "ASK { $sensor td:hasForm ?form }";
 const TARGET_Q: &str =
@@ -66,10 +66,10 @@ fn quote(text: &str) -> String {
         .collect()
 }
 
-/// The web as a deployed agent reads it.
-pub fn get() -> Client {
+/// The web as a deployed agent reads it, a fetch given up after `within_s` real seconds.
+pub fn get(within_s: f64) -> Client {
     let agent = ureq::AgentBuilder::new()
-        .timeout(Duration::from_secs(TIMEOUT_S))
+        .timeout(Duration::from_secs_f64(within_s))
         .build();
     Arc::new(move |url| {
         let response = agent

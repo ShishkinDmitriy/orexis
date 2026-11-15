@@ -67,3 +67,12 @@ mqtt:ActuatingTrigger a owl:Class ; rdfs:subClassOf mqtt:Trigger ; rdfs:label "A
     rdfs:comment "What starts an actuating: execution's `execution:Commanded`, beneath it here, naming the command graph a step's order kept (`execution:commands`). The policy sends each command whose actuator the member reaches, and passes over the rest." .
 
 execution:Commanded rdfs:subClassOf mqtt:ActuatingTrigger .
+
+#  HOW SOON A BOARD THAT WAS TOLD TO SENSE AND HAS NOT ANSWERED IS ASKED AGAIN is a role's to say, in the agent's
+#  self graph, and the shape's default below where none says.
+mqtt:askedAgainAfterS a owl:DatatypeProperty ; rdfs:label "asked again after, in seconds" ;
+    rdfs:comment "How soon the MQTT member tells a board to sense again where it told it and no reading came, in the agent's seconds, said of a role the agent plays that reads the board's sensors. Sixty where no role says." .
+
+[] a sh:NodeShape ;
+    sh:targetClass orexis:Role ;
+    sh:property [ sh:path mqtt:askedAgainAfterS ; sh:defaultValue 60 ] .

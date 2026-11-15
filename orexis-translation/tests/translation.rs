@@ -23,10 +23,10 @@ use orexis_speech::events::{Said, Statement};
 use orexis_speech::prose::{Carrier, PROSE_GRAPH, PROSE_KEPT, Prose, ProseKept, WRITING_ANNOUNCED, carry, kept};
 use orexis_translation::briefing::briefing;
 use orexis_translation::chat::chats_of;
-use orexis_translation::create::{CONVERSE_SYSTEM, Inline, SAY_SYSTEM, SILENT, TURNS, UNADDRESSED};
+use orexis_translation::create::{CONVERSE_SYSTEM, Inline, SAY_SYSTEM, SILENT, UNADDRESSED};
 use orexis_translation::events::{Conversed, Translated};
 use orexis_translation::model::{Answer, Failure, Model, Turn};
-use orexis_translation::readable::{QUERY, ROWS, Readable, VOCABULARY};
+use orexis_translation::readable::{QUERY, Readable, VOCABULARY};
 use orexis_translation::stated::{PROPERTY, Stating, believe, listing, rendered, statement_of, words};
 use orexis_transport_email as _;
 use orexis_transport_mqtt as _;
@@ -35,6 +35,11 @@ use orexis_transport_telegram as _;
 const V: &str = "http://example.org/orexis/world/viewing#";
 const O: &str = "http://example.org/orexis#";
 const STATEMENT: &str = "http://example.org/orexis/speech#StatementGraph";
+
+/// What translation's ontology states where no translator's role says: the turns of a conversation and the rows a
+/// query hands the model.
+const TURNS: usize = 8;
+const ROWS: usize = 50;
 
 fn world() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/world")
@@ -146,7 +151,7 @@ fn a_briefing_says_who_the_agent_is_what_the_chat_reads_and_what_a_person_may_st
 // --- what a chat may read ------------------------------------------------------------------------------------------
 
 fn readable() -> Readable {
-    Readable::new(&seeker(), &[format!("{O}BeliefGraph")], Some(&me())).unwrap()
+    Readable::new(&seeker(), &[format!("{O}BeliefGraph")], Some(&me()), ROWS).unwrap()
 }
 
 fn beliefs() -> Vec<String> {

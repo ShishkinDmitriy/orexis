@@ -43,8 +43,10 @@ the figure lives: `missed`, `received` and the [stuck](/domain/sensing/stuck.md)
 sensor judged by another figure is read by another observer role.
 
 **How often its readings are archived**, `sensing:archivedEveryS` in the agent's seconds, where the role names a
-series store (`sensing:archivedIn`); ten where it states none, the constant of `orexis-sensing-influxdb/`, which
-reads it.
+series store (`sensing:archivedIn`); ten where it states none, read by `orexis-sensing-influxdb/`.
+
+**How often sensing asks after its sensors**, `sensing:askedEveryS` in the agent's seconds: how long a
+[silence](/domain/sensing/silence.md) may go unsaid, sixty where the role states none.
 
 # What it is held to
 

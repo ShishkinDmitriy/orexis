@@ -15,9 +15,6 @@ use std::time::Duration;
 use serde_json::{Value as Json, json};
 
 pub const DEFAULT_URL: &str = "https://api.anthropic.com";
-/// HOW LONG ONE CALL MAY TAKE, in real seconds, and how often a failing API is asked again.
-pub const TIMEOUT_S: u64 = 60;
-pub const RETRIES: u32 = 3;
 const VERSION: &str = "2023-06-01";
 /// WHAT A TURN SPENT, by the API's own names.
 pub const TOKENS: [&str; 4] = [
@@ -96,7 +93,16 @@ pub struct Anthropic {
     key: String,
     pub url: String,
     pub max_tokens: u32,
+    /// How often a failing API is asked again (`translation:retries`).
+    pub retries: u32,
     agent: ureq::Agent,
+}
+
+/// What translation's ontology states of a figure where no role is read: a model made by a test.
+fn defaulted(term: &str) -> f64 {
+    crate::figures::DEFAULTS
+        .figure(term)
+        .expect("translation's ontology states a default for each of its figures")
 }
 
 impl Anthropic {
@@ -106,14 +112,27 @@ impl Anthropic {
             key: key.to_string(),
             url: url.trim_end_matches('/').to_string(),
             max_tokens: 1024,
-            agent: ureq::AgentBuilder::new()
-                .timeout(Duration::from_secs(TIMEOUT_S))
-                .build(),
+            retries: 0,
+            agent: ureq::AgentBuilder::new().build(),
         }
+        .paced(
+            defaulted(crate::figures::CALLED_WITHIN_S),
+            defaulted(crate::figures::RETRIES) as u32,
+        )
     }
 
     /// The model answering at `url` that the environment names and holds the key of, or none where it names none —
     /// said once.
+    /// The model called within `within_s` real seconds a call (`translation:calledWithinS`) and asked again `retries`
+    /// times where it fails (`translation:retries`): the translator's role's figures.
+    pub fn paced(mut self, within_s: f64, retries: u32) -> Self {
+        self.agent = ureq::AgentBuilder::new()
+            .timeout(Duration::from_secs_f64(within_s))
+            .build();
+        self.retries = retries;
+        self
+    }
+
     pub fn from_environ(url: &str, env: &dyn Fn(&str) -> Option<String>) -> Option<Self> {
         let (key, name) = (
             env("MODEL_API_KEY").filter(|k| !k.is_empty()),
@@ -156,7 +175,7 @@ impl Anthropic {
                 }
                 Err(e) => Failure::Unreachable(e.to_string()),
             };
-            if attempt >= RETRIES {
+            if attempt >= self.retries {
                 return Err(failure);
             }
             //  THE SDK'S BACKOFF: half a second doubled each time, at most eight.

@@ -33,9 +33,6 @@ use crate::events::{Doubted, Perceived, Silence, tag_of};
 use crate::missed::missed;
 use crate::ontology::{OBSERVATION_GRAPH, OBSERVING, OBSERVING_TRIGGER, REVISED_SOURCE, SILENCE_GRAPH, silence_graph};
 
-/// HOW OFTEN SENSING ASKS WHAT HAS FALLEN DUE, in seconds of the one timeline.
-pub const EVERY_S: f64 = 60.0;
-
 const ASK: usize = 0;
 const HEARD: usize = 1;
 const OBSERVE: usize = 2;
@@ -314,7 +311,9 @@ impl Sensing {
     ) -> Result<(), Error> {
         let _ = (&handed, &hears, &arrived, &timers);
         self.watch = handed.events.watch().clone();
-        timers.push((Every::new(EVERY_S), ASK));
+        //  HOW OFTEN IT ASKS WHAT HAS FALLEN DUE is the observer's role's to say (`sensing:askedEveryS`).
+        let every_s = crate::ontology::figure_of(&handed.store, crate::ontology::ASKED_EVERY_S_TERM)?;
+        timers.push((Every::new(every_s), ASK));
         self.unrevised()?;
         hears.graph(OBSERVATION_GRAPH, HEARD);
         hears.event(OBSERVING_TRIGGER, OBSERVE);

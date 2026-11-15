@@ -23,8 +23,6 @@ use orexis::Error;
 use orexis::ontology::{CLOSURE_GRAPH, ONTOLOGY, local_of};
 use orexis::store::{Store, Within};
 
-/// HOW MANY ROWS A QUERY HANDS THE MODEL: past these it is told how many there were.
-pub const ROWS: usize = 50;
 pub const VOCABULARY: &str = "vocabulary";
 pub const QUERY: &str = "query";
 const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
@@ -52,6 +50,8 @@ pub struct Readable {
     pub catalogues: BTreeSet<String>,
     pub world: Option<String>,
     pub vocabularies: BTreeMap<String, String>,
+    /// How many rows a query hands the model (`translation:rows`): past these it is told how many there were.
+    pub rows: usize,
 }
 
 fn failed(e: impl std::fmt::Display) -> Error {
@@ -78,7 +78,7 @@ pub fn named(ns: &str, taken: &BTreeSet<String>) -> String {
 
 impl Readable {
     /// What `kinds` let a chat of the agent `me` read of `store`, copied now, on the mind's thread.
-    pub fn new(store: &Store, kinds: &[String], me: Option<&str>) -> Result<Self, Error> {
+    pub fn new(store: &Store, kinds: &[String], me: Option<&str>, rows: usize) -> Result<Self, Error> {
         let engine = Engine::new().map_err(failed)?;
         let mut prefixes = namespaces(store);
         let mut by_kind: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
@@ -135,6 +135,7 @@ impl Readable {
             catalogues,
             world,
             vocabularies: BTreeMap::new(),
+            rows,
         };
         let vocabularies: BTreeMap<String, String> = read
             .iter()
@@ -164,7 +165,7 @@ the world's documents — and not more. GRAPH ?g ranges over those graphs, each 
 catalogue, whose rows say of each graph its kinds (a), how it arrived (orexis:arrivedBy), whose it is (orexis:ownedBy) \
 and when it holds (dcterms:temporal): where a belief came from is `GRAPH ?g {{ …the belief… }} GRAPH ?c {{ ?g \
 orexis:arrivedBy ?how }}`. These prefixes are declared for you: {prefixes}{world}; declare any other with PREFIX. The \
-rows write a name with them, as the vocabularies do. Write no SERVICE or FROM. At most {ROWS} rows come back."),
+rows write a name with them, as the vocabularies do. Write no SERVICE or FROM. At most {} rows come back.", self.rows),
              "input_schema": {"type": "object", "properties": {
                  "kinds": {"type": "array", "items": {"type": "string"}, "minItems": 1,
                            "description": "the kinds of graph the query reads, as the briefing names them"},
@@ -240,7 +241,14 @@ rows write a name with them, as the vocabularies do. Write no SERVICE or FROM. A
             return "refused: name the kinds of graph the query reads".into();
         }
         let named: BTreeSet<String> = graphs.union(&self.catalogues).cloned().collect();
-        match run(&self.store, text, &self.prefixes, Some(&graphs), Some(&named)) {
+        match run(
+            &self.store,
+            text,
+            &self.prefixes,
+            Some(&graphs),
+            Some(&named),
+            self.rows,
+        ) {
             Ok(answer) => answer,
             Err(e) => format!("the engine would not run it: {e}"),
         }
@@ -273,6 +281,7 @@ pub fn run(
     prefixes: &Prefixes,
     graphs: Option<&BTreeSet<String>>,
     named: Option<&BTreeSet<String>>,
+    most: usize,
 ) -> Result<String, Error> {
     let mut evaluator = SparqlEvaluator::new();
     for (name, iri) in prefixes {
@@ -299,12 +308,12 @@ pub fn run(
         None => query.dataset_mut().set_default_graph_as_union(),
     }
     let results = query.on_store(store).execute().map_err(failed)?;
-    answered(results, prefixes)
+    answered(results, prefixes, most)
 }
 
 /// A query's result as the model reads it: an ASK's truth, or a row per line with each value written with `prefixes`,
-/// the rows capped at `ROWS` and their count said past it.
-pub fn answered(results: QueryResults<'_>, prefixes: &Prefixes) -> Result<String, Error> {
+/// the rows capped at `most` and their count said past it.
+pub fn answered(results: QueryResults<'_>, prefixes: &Prefixes, most: usize) -> Result<String, Error> {
     match results {
         QueryResults::Boolean(b) => Ok(b.to_string()),
         QueryResults::Solutions(solutions) => {
@@ -320,9 +329,9 @@ pub fn answered(results: QueryResults<'_>, prefixes: &Prefixes) -> Result<String
                 );
             }
             let total = rows.len();
-            let shown: Vec<String> = rows.into_iter().take(ROWS).collect();
-            let more = if total > ROWS {
-                format!("\n(the first {ROWS} of {total} rows: ask more narrowly)")
+            let shown: Vec<String> = rows.into_iter().take(most).collect();
+            let more = if total > most {
+                format!("\n(the first {most} of {total} rows: ask more narrowly)")
             } else {
                 String::new()
             };

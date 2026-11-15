@@ -80,7 +80,8 @@
     sh:targetClass :Observer ;
     sh:property [ sh:path :silentAfter ; sh:defaultValue 3 ] ,
                 [ sh:path :stuckAfter ; sh:defaultValue 6 ] ,
-                [ sh:path :archivedEveryS ; sh:defaultValue 10 ] .
+                [ sh:path :archivedEveryS ; sh:defaultValue 10 ] ,
+                [ sh:path :askedEveryS ; sh:defaultValue 60 ] .
 
 :ObservationGraph a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
@@ -365,3 +366,7 @@ sensing:archivedIn a owl:ObjectProperty ; rdfs:label "archived in" ;
 sensing:archivedEveryS a owl:DatatypeProperty ; rdfs:label "archived every, in seconds" ;
     rdfs:domain sensing:Observer ;
     rdfs:comment "How often an observer's readings are archived to the series store its role names, in the agent's seconds, said of the role: how far the series lags a reading. Ten where the role says none." .
+
+sensing:askedEveryS a owl:DatatypeProperty ; rdfs:label "asked every, in seconds" ;
+    rdfs:domain sensing:Observer ;
+    rdfs:comment "How often sensing asks which of an observer's sensors have fallen due or gone silent, in the agent's seconds, said of the role: how long a silence may go unsaid. Sixty where the role says none." .

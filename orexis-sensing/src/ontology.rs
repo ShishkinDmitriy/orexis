@@ -31,6 +31,8 @@ pub const SILENCE_GRAPH: &str = "http://example.org/orexis/sensing#SilenceGraph"
 /// An observer role's limits: cadences, and readings.
 pub const SILENT_AFTER_TERM: &str = "http://example.org/orexis/sensing#silentAfter";
 pub const STUCK_AFTER_TERM: &str = "http://example.org/orexis/sensing#stuckAfter";
+/// How often sensing asks what has fallen due: a figure the observer's role states.
+pub const ASKED_EVERY_S_TERM: &str = "http://example.org/orexis/sensing#askedEveryS";
 /// The codec that ships.
 pub const JSON_CODEC: &str = "http://example.org/orexis/sensing#Json";
 
@@ -112,6 +114,39 @@ pub fn forecast_graph(agent: &str, sensor: &str, starts: DateTime) -> String {
 /// Where the time `sensor` fell silent at `since` is kept, named by the sensor and that instant.
 pub fn silence_graph(agent: &str, sensor: &str, since: DateTime) -> String {
     format!("{GRAPH_PREFIX}silence/{agent}/{}_{}", slug(sensor), stamp(since))
+}
+
+/// A FIGURE OF THE ROLE THIS PACKAGE IS LOADED FOR: what a role the self plays says of `term` in the agent's self
+/// graph, read by this package's own query, and where no role says it the default this ontology states. Two
+/// answers are never picked between: several, or one that is no number, is the default, said in the log.
+pub fn figure_of(store: &orexis::store::Store, term: &str) -> Result<f64, orexis::Error> {
+    use orexis::bind::{Value, bind};
+    use orexis::store::{Within, value};
+    let selves = store.graphs_of(&[orexis::ontology::SELF_GRAPH], &Within::default())?;
+    let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
+    let text = bind(
+        "SELECT ?n WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role $figure ?n }",
+        &[("figure", Value::iri(term))],
+    )?;
+    let said: Vec<String> = store
+        .rows(&text, &selves)?
+        .iter()
+        .filter_map(|row| value(row, "n"))
+        .collect();
+    if let [one] = said.as_slice()
+        && let Ok(figure) = one.parse::<f64>()
+    {
+        return Ok(figure);
+    }
+    let default = DEFAULTS.figure(term)?;
+    if !said.is_empty() {
+        log::warn!(
+            "the self's roles say {} for {}: the default, {default}, holds",
+            said.join(", "),
+            orexis::ontology::local_of(term)
+        );
+    }
+    Ok(default)
 }
 
 #[cfg(test)]
