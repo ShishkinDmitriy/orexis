@@ -93,7 +93,7 @@ fn reading(store: &Store, value: f64, minutes: f64) -> (String, Option<orexis_pr
     let graph = received(store, ME, PROBE, format!(r#"{{"value": {value}}}"#).as_bytes(), at)
         .unwrap()
         .remove(0);
-    let mut deliberator = Deliberator::new(store, "keeper", None).unwrap();
+    let mut deliberator = Deliberator::new(store).unwrap();
     deliberator.changed(&graph, Some(read), OBSERVATION_GRAPH);
     deliberator.deliberate(at).unwrap();
     store.close_catalogue().unwrap();

@@ -41,7 +41,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
 }
 
 fn make(handed: &Handed) -> Result<Option<Task>, Error> {
-    let mut belief = Deliberator::new(&handed.store, &handed.id, None)?;
+    let mut belief = Deliberator::new(&handed.store)?;
     belief.watch = handed.events.watch().clone();
     belief.unrevised(handed.clock.now())?;
     let mut hears = handed.events.hears();

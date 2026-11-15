@@ -134,10 +134,12 @@ impl Arrival {
     }
 }
 
-/// The pass over what was written since the last one, within a budget.
+/// THE DELIBERATOR THE SELF PLAYS: the pass over what was written since the last one, within the budget its role
+/// states.
 pub struct Deliberator {
     pub(crate) beliefs: Store,
-    pub id: String,
+    /// Rule executions one pass may spend (`belief:budget`), and the default the ontology states where the role
+    /// states none.
     pub budget: usize,
     /// Rule executions one source's revision may spend in a pass.
     pub per_source: usize,
@@ -148,17 +150,11 @@ pub struct Deliberator {
 }
 
 impl Deliberator {
-    /// The beliefs and the one identifier a process is told. The budget is the deliberator's role's figure, its ontology's default where it
-    /// states none — or the caller's.
-    pub fn new(beliefs: &Store, agent: &str, budget: Option<usize>) -> Result<Self, Error> {
-        let budget = match budget {
-            Some(b) => b,
-            None => crate::ontology::figure_of(beliefs, BUDGET_TERM)? as usize,
-        };
+    /// The deliberator the self plays, read off the store: its budget is its role's figure.
+    pub fn new(beliefs: &Store) -> Result<Self, Error> {
         let mut deliberator = Deliberator {
             beliefs: beliefs.clone(),
-            id: agent.to_string(),
-            budget,
+            budget: crate::ontology::figure_of(beliefs, BUDGET_TERM)? as usize,
             per_source: revise::BUDGET,
             queue: Vec::new(),
             watch: Watch::default(),
@@ -261,7 +257,7 @@ impl Deliberator {
             self.queue.remove(i);
         }
         if spent > 0 {
-            log::debug!("{}: {spent} execution(s), {} pending", self.id, self.queue.len());
+            log::debug!("{spent} execution(s), {} pending", self.queue.len());
         }
         if handed > 0 {
             let revised = Revised {
@@ -511,7 +507,7 @@ mod tests {
     #[test]
     fn a_changed_source_is_revised_on_the_pass_and_leaves_the_queue() {
         let store = revise_case("a_reading_below_its_range_is_concluded_below");
-        let mut deliberator = Deliberator::new(&store, snapshots::AGENT, None).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
         deliberator.changed(SENSED, None, BELIEF);
         assert_eq!(deliberator.pending(), [SENSED]);
         assert!(deliberator.deliberate(snapshots::now()).unwrap() > 0);
@@ -524,7 +520,7 @@ mod tests {
     fn nothing_changed_spends_nothing_and_says_nothing() {
         let store = revise_case("a_reading_below_its_range_is_concluded_below");
         let heard = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let mut deliberator = Deliberator::new(&store, snapshots::AGENT, None).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
         let into = heard.clone();
         deliberator.watch.connect(move |event, _| {
             if orexis::events::as_of::<Revised>(event).is_some() {
@@ -538,7 +534,8 @@ mod tests {
     #[test]
     fn a_budget_cuts_the_pass_and_the_next_continues() {
         let store = revise_case("a_chain_settles_in_a_later_round");
-        let mut deliberator = Deliberator::new(&store, snapshots::AGENT, Some(2)).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
+        deliberator.budget = 2;
         deliberator.changed(SENSED, None, BELIEF);
         assert_eq!(deliberator.deliberate(snapshots::now()).unwrap(), 2);
         assert_eq!(deliberator.pending(), [SENSED]);
@@ -558,7 +555,7 @@ mod tests {
     fn the_budget_is_the_deliberators_roles_where_one_states_it() {
         let store = revise_case("a_chain_settles_in_a_later_round");
         assert_eq!(
-            Deliberator::new(&store, snapshots::AGENT, None).unwrap().budget,
+            Deliberator::new(&store).unwrap().budget,
             crate::ontology::DEFAULTS.figure(BUDGET_TERM).unwrap() as usize
         );
         store
@@ -576,8 +573,7 @@ mod tests {
                     .unwrap()
             ))
             .unwrap();
-        assert_eq!(Deliberator::new(&store, snapshots::AGENT, Some(64)).unwrap().budget, 64);
-        let mut deliberator = Deliberator::new(&store, snapshots::AGENT, None).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
         deliberator.changed(SENSED, None, BELIEF);
         assert_eq!(deliberator.deliberate(snapshots::now()).unwrap(), 2);
         assert_eq!(deliberator.pending(), [SENSED]);
@@ -586,10 +582,11 @@ mod tests {
     #[test]
     fn a_cut_survives_a_new_deliberator_over_the_store() {
         let store = revise_case("a_chain_settles_in_a_later_round");
-        let mut first = Deliberator::new(&store, snapshots::AGENT, Some(2)).unwrap();
+        let mut first = Deliberator::new(&store).unwrap();
+        first.budget = 2;
         first.changed(SENSED, None, BELIEF);
         first.deliberate(snapshots::now()).unwrap();
-        let mut second = Deliberator::new(&store, snapshots::AGENT, None).unwrap();
+        let mut second = Deliberator::new(&store).unwrap();
         assert_eq!(second.pending(), [SENSED], "the row said the rules did not settle");
         second.deliberate(snapshots::now()).unwrap();
         assert!(second.pending().is_empty());
@@ -606,7 +603,7 @@ mod tests {
             "nothing the transition reads is concluded yet"
         );
         let store = ticks();
-        let mut deliberator = Deliberator::new(&store, snapshots::AGENT, None).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
         deliberator.changed(&tick(&store, "first", snapshots::now(), true), None, BELIEF);
         assert_eq!(deliberator.deliberate(snapshots::now()).unwrap(), 5);
         assert_eq!(
@@ -619,7 +616,8 @@ mod tests {
     #[test]
     fn arrivals_are_transitioned_on_in_turn_whatever_the_budget_cuts() {
         let store = ticks();
-        let mut deliberator = Deliberator::new(&store, snapshots::AGENT, Some(50)).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
+        deliberator.budget = 50;
         deliberator.per_source = 1;
         let loud = tick(&store, "loud", snapshots::now(), true);
         let quiet = tick(&store, "quiet", minutes(1), false);
@@ -677,7 +675,8 @@ mod tests {
                 "INSERT DATA {{ GRAPH <{note}> {{ <{T}note_t> a <{T}Tick> ; <{T}loud> true }} {entry} }}"
             ))
             .unwrap();
-        let mut deliberator = Deliberator::new(&store, snapshots::AGENT, Some(50)).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
+        deliberator.budget = 50;
         deliberator.per_source = 1;
         deliberator.changed(&note, None, BELIEF);
         let quiet = tick(&store, "quiet", snapshots::now(), false);
@@ -690,7 +689,8 @@ mod tests {
     #[test]
     fn a_graph_written_again_is_a_new_arrival_at_the_end_of_the_queue() {
         let store = ticks();
-        let mut deliberator = Deliberator::new(&store, snapshots::AGENT, Some(50)).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
+        deliberator.budget = 50;
         deliberator.per_source = 1;
         let loud = tick(&store, "loud", snapshots::now(), true);
         deliberator.changed(&loud, None, BELIEF);
@@ -724,13 +724,14 @@ mod tests {
     fn transitions_a_budget_left_waiting_survive_a_new_deliberator() {
         let store = ticks();
         let first_tick = tick(&store, "first", snapshots::now(), true);
-        let mut first = Deliberator::new(&store, snapshots::AGENT, Some(2)).unwrap();
+        let mut first = Deliberator::new(&store).unwrap();
+        first.budget = 2;
         first.changed(&first_tick, None, BELIEF);
         assert_eq!(first.deliberate(snapshots::now()).unwrap(), 2);
         assert_eq!(first.pending(), std::slice::from_ref(&first_tick));
         assert!(counter(&store).is_empty());
         assert_eq!(row_settled(&store, &first_tick).as_deref(), Some("false"));
-        let mut second = Deliberator::new(&store, snapshots::AGENT, None).unwrap();
+        let mut second = Deliberator::new(&store).unwrap();
         assert_eq!(
             second.pending(),
             std::slice::from_ref(&first_tick),
@@ -748,7 +749,8 @@ mod tests {
     #[test]
     fn a_cut_between_orders_is_continued_from_the_order_it_stopped_at() {
         let store = ticks();
-        let mut deliberator = Deliberator::new(&store, snapshots::AGENT, Some(3)).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
+        deliberator.budget = 3;
         deliberator.changed(&tick(&store, "first", snapshots::now(), true), None, BELIEF);
         assert_eq!(deliberator.deliberate(snapshots::now()).unwrap(), 4);
         assert_eq!(counter(&store), map(&[("count", "1"), ("last", "first_t")]));
@@ -773,7 +775,7 @@ mod tests {
     #[test]
     fn its_part_hears_beliefs_written_and_says_each_pass_revised() {
         let store = bare();
-        let mut part = Deliberator::new(&store, "urn:test:me", None).unwrap();
+        let mut part = Deliberator::new(&store).unwrap();
         let heard = Arc::new(Mutex::new(Vec::new()));
         let into = heard.clone();
         part.watch.connect(move |event, _| {
@@ -821,11 +823,12 @@ mod tests {
         store
             .update(&format!("INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ {rows} }} }}"))
             .unwrap();
-        let mut part = Deliberator::new(&store, "urn:test:me", None).unwrap();
+        let mut part = Deliberator::new(&store).unwrap();
         part.revise(&["urn:test:reading".to_string()], BELIEF, snapshots::now())
             .unwrap();
         assert!(part.pending().is_empty());
-        let mut deliberator = Deliberator::new(&store, "urn:test:me", Some(0)).unwrap();
+        let mut deliberator = Deliberator::new(&store).unwrap();
+        deliberator.budget = 0;
         let stated = store.graphs_of(&[BELIEF], &Within::common()).unwrap();
         assert_eq!(stated, ["urn:test:world"], "the common beliefs alone stand beside it");
         deliberator.changed("urn:test:observed", Some(stated), "urn:test:ObservedGraph");
