@@ -337,10 +337,9 @@ impl Deliberator {
             .filter_map(|r| iri(r, "source"))
             .collect())
     }
-}
 
-//  THE PACKAGE'S POLICY, on its core: what the deliberator revises as the package starts and on what it hears.
-impl Deliberator {
+    //  THE PACKAGE'S POLICY: what the deliberator revises as the package starts and on what it hears.
+
     /// Revise `graphs` as an activity, triggered by them.
     pub(crate) fn revising(&mut self, graphs: &[String], kind: &str, pass: &mut Turn<'_>) -> Result<(), Error> {
         let triggers: Vec<NamedNode> = graphs.iter().filter_map(|g| NamedNode::new(g.as_str()).ok()).collect();
@@ -349,9 +348,7 @@ impl Deliberator {
         pass.end(activity);
         revised
     }
-}
 
-impl Deliberator {
     /// What is unrevised as the package starts, revised once.
     pub(crate) fn unrevised(&mut self, now: DateTime) -> Result<(), Error> {
         //  EVERY BELIEF NOT YET REVISED, but the common ones: the world's documents were concluded on at genesis.
