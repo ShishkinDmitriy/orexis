@@ -20,14 +20,16 @@ use orexis::store::{Store, Within, iri, value};
 use orexis::transport::Inbox;
 use orexis_speech::prose::{Carrier, Prose};
 
-pub const POLL_S: f64 = 30.0;
+/// WHAT HOLDS WHERE NO ROLE SAYS HOW OFTEN: the defaults this transport's ontology states (`sh:defaultValue`).
+pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
+    std::sync::LazyLock::new(|| orexis::shape::Defaults::of("the email transport", include_str!("../ontology.ttl")));
 
 const CONTACT_Q: &str =
     "SELECT ?contact WHERE { ?contact schema:email ?address FILTER (LCASE(STR(?address)) = LCASE($address)) }";
 const ADDRESS_Q: &str = "SELECT ?address WHERE { $contact schema:email ?address }";
 
 /// HOW OFTEN THE MAILBOX IS POLLED, in real seconds: what a role the self plays says in the agent's self graph
-/// (`email:polledEveryS`), and the transport's own where none says.
+/// (`email:polledEveryS`), and the default the transport's ontology states where none says.
 pub fn polled_every_s(beliefs: &Store) -> Result<f64, Error> {
     let mut known = beliefs.graphs_of(&[orexis::ontology::SELF_GRAPH], &orexis::store::Within::default())?;
     known.extend(beliefs.graphs_of(&[orexis::ontology::ONTOLOGY], &orexis::store::Within::default())?);
@@ -161,7 +163,10 @@ impl Email {
             beliefs: beliefs.clone(),
             me: me.to_string(),
             box_,
-            every: POLL_S,
+            //  UNTIL IT CONNECTS and reads what a role says, as often as the transport's ontology states.
+            every: DEFAULTS
+                .figure("http://example.org/orexis/email#polledEveryS")
+                .expect("the transport's ontology states how often it polls"),
             spawn: Box::new(|work| {
                 std::thread::spawn(work);
             }),

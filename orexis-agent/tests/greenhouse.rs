@@ -634,7 +634,7 @@ async fn history_holds_every_reading_and_the_journal_the_dose_published_taken_an
         reading(&inbox, r#"{"moisture": 0.45}"#, later);
         common::settled(&g.running).await;
         //  A READING REACHES THE SERIES WHEN IT IS NEXT ARCHIVED, a stretch of the archiver's on at the latest.
-        until(&g, plus(later, orexis_sensing_influxdb::INTERVAL_S)).await;
+        until(&g, plus(later, orexis_sensing_influxdb::archived_every_s().unwrap())).await;
     }
     assert!(walking(&store).is_empty(), "the dose landed");
     let mut observed: Vec<(String, Field, Option<DateTime>)> = written

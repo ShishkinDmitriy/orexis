@@ -31,7 +31,9 @@ use orexis::transport::Inbox;
 use orexis_speech::prose::{Carrier, Prose};
 
 pub const TELEGRAM_URL: &str = "https://api.telegram.org";
-pub const POLL_S: f64 = 3.0;
+/// WHAT HOLDS WHERE NO ROLE SAYS HOW OFTEN: the defaults this transport's ontology states (`sh:defaultValue`).
+pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
+    std::sync::LazyLock::new(|| orexis::shape::Defaults::of("the telegram transport", include_str!("../ontology.ttl")));
 pub const TIMEOUT_S: u64 = 30;
 
 const CHAT_Q: &str = "SELECT ?chat WHERE { ?chat a telegram:Chat ; telegram:chatId ?id FILTER (STR(?id) = $id) }";
@@ -57,7 +59,7 @@ pub fn answers(beliefs: &Store, me: &str) -> Result<Option<String>, Error> {
 }
 
 /// HOW OFTEN THE BOT IS POLLED, in real seconds: what a role the self plays says in the agent's self graph
-/// (`telegram:polledEveryS`), and the transport's own where none says.
+/// (`telegram:polledEveryS`), and the default the transport's ontology states where none says.
 pub fn polled_every_s(beliefs: &Store) -> Result<f64, Error> {
     let mut known = beliefs.graphs_of(&[orexis::ontology::SELF_GRAPH], &orexis::store::Within::default())?;
     known.extend(beliefs.graphs_of(&[orexis::ontology::ONTOLOGY], &orexis::store::Within::default())?);
@@ -317,7 +319,10 @@ impl Telegram {
                 polled: Arc::default(),
                 polling: Arc::default(),
             },
-            every: POLL_S,
+            //  UNTIL IT CONNECTS and reads what a role says, as often as the transport's ontology states.
+            every: DEFAULTS
+                .figure("http://example.org/orexis/telegram#polledEveryS")
+                .expect("the transport's ontology states how often it polls"),
             spawn: Box::new(|work| {
                 std::thread::spawn(work);
             }),

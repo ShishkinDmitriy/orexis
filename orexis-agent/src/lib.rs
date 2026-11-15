@@ -228,7 +228,10 @@ pub fn outside(wiring: Wiring, budget: Option<usize>) -> Outside {
     if let Some(sink) = watching.history {
         outside.hand(orexis_sensing_influxdb::Archives {
             sink: Arc::new(sink),
-            every_s: watching.archive_every_s.unwrap_or(orexis_sensing_influxdb::INTERVAL_S),
+            every_s: match watching.archive_every_s {
+                Some(every_s) => every_s,
+                None => orexis_sensing_influxdb::archived_every_s().expect("sensing's ontology states how often"),
+            },
         });
     }
     //  AND THE JOURNAL ITSELF, where a test hands one: every event as it is said, every activity as it ends.
