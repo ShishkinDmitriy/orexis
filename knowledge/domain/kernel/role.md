@@ -60,8 +60,11 @@ derived [deployment](/domain/onboarding/deployment.md) states. The struct is mad
 role does not state is the default the package's ontology states on its shape of the role (`sh:defaultValue`), the
 one place the figure lives, read off the store beside the role or off the ontology the package brings
 (`orexis/src/shape.rs`), and a link it does not state is none. So what an author can tell a
-package is the fields of one struct, one to one with the role's class: the journal's `Recorder`, `Observer` for
-what archives sensing's readings, the metrics' `Meter`. Several roles of one class are read as one.
+package is the fields of one struct, one to one with the role's class and named as its properties are
+(`journal:archivedIn` is `archived_in`): the journal's `Recorder`, the metrics' `Meter`, `Predictor`, `Coordinator`,
+sensing's `Observer` and the one of what archives its readings; and where the package's core bears the role's name
+it holds what the role says itself, `Deliberator`, `Planner`, `Executor` and `Translator`. Several roles of one
+class are read as one. An observer's two limits are said per role, so they are asked per sensor and are no field.
 
 # The figures a role states
 

@@ -212,6 +212,30 @@ impl Coordination {
     }
 }
 
+/// THE COORDINATOR THE SELF PLAYS, AS THIS PACKAGE READS IT: a field for each thing `coordination:Coordinator` may
+/// state, one to one, each what the role says in the agent's self graph and, where it says nothing, the default
+/// this package's ontology states.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Coordinator {
+    /// How many seconds a draw may stand undecided, and a question holds (`coordination:patienceS`).
+    pub patience_s: f64,
+    /// How many rounds a conflict's draw may restart before the peer is taken as silent (`coordination:rounds`).
+    pub rounds: f64,
+    /// How many of a silent peer's steps the agent looks ahead (`coordination:lookahead`).
+    pub lookahead: i64,
+}
+
+impl Coordinator {
+    /// The coordinator the self plays, read off the store.
+    pub fn new(store: &Store) -> Result<Self, Error> {
+        Ok(Coordinator {
+            patience_s: ontology::figure_of(store, ontology::PATIENCE_S)?,
+            rounds: ontology::figure_of(store, ontology::ROUNDS)?,
+            lookahead: ontology::figure_of(store, ontology::LOOKAHEAD)? as i64,
+        })
+    }
+}
+
 inventory::submit! { Package { name: "coordination", documents: orexis::documents!("ontology.ttl"), start } }
 
 /// THE PACKAGE'S START: its part made and started - what it hears, what it does every so often - and its task.

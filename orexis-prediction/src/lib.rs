@@ -40,6 +40,27 @@ impl Prediction {
     }
 }
 
+/// THE PREDICTOR THE SELF PLAYS, AS THIS PACKAGE READS IT: a field for each thing `prediction:Predictor` may state,
+/// one to one, each what the role says in the agent's self graph and, where it says nothing, the default this
+/// package's ontology states.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Predictor {
+    /// How far past an observation the flows are integrated, in the timeline's seconds (`prediction:horizonS`).
+    pub horizon_s: f64,
+    /// The longest a flow's rate is held before the flows are asked again, in seconds (`prediction:rateHeldS`).
+    pub rate_held_s: f64,
+}
+
+impl Predictor {
+    /// The predictor the self plays, read off the store.
+    pub fn new(store: &Store) -> Result<Self, Error> {
+        Ok(Predictor {
+            horizon_s: ontology::figure_of(store, ontology::HORIZON_TERM)?,
+            rate_held_s: ontology::figure_of(store, ontology::RATE_HELD_TERM)?,
+        })
+    }
+}
+
 inventory::submit! { Package { name: "prediction", documents: orexis::documents!("ontology.ttl"), start } }
 
 /// PREDICTION'S START: its foresight offered, for whoever lays the grounds to take, and no task - what it offers is

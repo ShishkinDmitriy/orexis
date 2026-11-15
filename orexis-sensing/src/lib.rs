@@ -216,6 +216,29 @@ fn me_of(beliefs: &Store, agent: &str) -> Result<String, Error> {
         .ok_or_else(|| Error::Evaluation(format!("no agent with localId '{agent}' in this store")))
 }
 
+/// THE OBSERVER THE SELF PLAYS, AS THIS PACKAGE READS IT: the sensors its roles read and how often sensing asks
+/// after them, each what the roles say in the agent's self graph and, where they say nothing, the default this
+/// package's ontology states. How long a sensor may be silent or stuck is said per role, so it is asked per sensor
+/// (`cadence::limit_of`); and what the role says of archiving is read by what archives the readings.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Observer {
+    /// Every sensor an observer role the self plays reads (`sensing:sensor`), sorted.
+    pub sensors: Vec<String>,
+    /// How often sensing asks which sensors have fallen due or gone silent, in the agent's seconds
+    /// (`sensing:askedEveryS`).
+    pub asked_every_s: f64,
+}
+
+impl Observer {
+    /// The observer the self plays, read off the store.
+    pub fn new(store: &Store) -> Result<Self, Error> {
+        Ok(Observer {
+            sensors: cadence::sensors(store)?,
+            asked_every_s: ontology::figure_of(store, ontology::ASKED_EVERY_S_TERM)?,
+        })
+    }
+}
+
 inventory::submit! { Package { name: "sensing", documents: orexis::documents!("ontology.ttl", "rules.ttl"), start } }
 
 /// THE PACKAGE'S START: its part made and started - what it hears, what it does every so often - and its task.
@@ -316,7 +339,7 @@ impl Sensing {
         let _ = (&handed, &hears, &arrived, &timers);
         self.watch = handed.events.watch().clone();
         //  HOW OFTEN IT ASKS WHAT HAS FALLEN DUE is the observer's role's to say (`sensing:askedEveryS`).
-        let every_s = crate::ontology::figure_of(&handed.store, crate::ontology::ASKED_EVERY_S_TERM)?;
+        let every_s = Observer::new(&handed.store)?.asked_every_s;
         timers.push((Every::new(every_s), ASK));
         self.unrevised()?;
         hears.graph(OBSERVATION_GRAPH, HEARD);

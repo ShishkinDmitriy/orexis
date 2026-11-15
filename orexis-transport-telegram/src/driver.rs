@@ -330,7 +330,7 @@ pub struct Telegram {
     beliefs: Store,
     pub me: String,
     pub api: Api,
-    pub every: f64,
+    pub polled_every_s: f64,
     pub spawn: Spawn,
     pub inbox: Inbox,
     unknown: BTreeSet<String>,
@@ -354,7 +354,7 @@ impl Telegram {
                 polling: Arc::default(),
             },
             //  UNTIL IT CONNECTS and reads what a role says, as often as the transport's ontology states.
-            every: DEFAULTS
+            polled_every_s: DEFAULTS
                 .figure("http://example.org/orexis/telegram#polledEveryS")
                 .expect("the transport's ontology states how often it polls"),
             spawn: Box::new(|work| {
@@ -383,7 +383,7 @@ impl Telegram {
         })?;
         let url = answers(beliefs, me)?.unwrap_or_else(|| TELEGRAM_URL.to_string());
         let mut bot = Telegram::new(beliefs, me, &token, &url, post(figure_of(beliefs, CALLED_WITHIN_S)?));
-        bot.every = polled_every_s(beliefs)?;
+        bot.polled_every_s = polled_every_s(beliefs)?;
         Ok(bot)
     }
 
@@ -841,7 +841,7 @@ mod tests {
         let bot = Telegram::connect(&store, &format!("{TEST}keeper"), &env).unwrap();
         //  WHERE IT ANSWERS IS THE WORLD'S DEPLOYMENT'S TO SAY, and this world says nothing: the Bot API's own.
         assert_eq!(
-            (bot.api.url.as_str(), bot.every),
+            (bot.api.url.as_str(), bot.polled_every_s),
             (TELEGRAM_URL.trim_end_matches('/'), 3.0)
         );
     }

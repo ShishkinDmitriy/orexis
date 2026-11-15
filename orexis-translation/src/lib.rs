@@ -427,6 +427,13 @@ pub struct Translator {
     pub turns: usize,
     pub rows: usize,
     pub answered_within_s: f64,
+    /// How long one call of the model may take and how often a failing one is asked again (`translation:calledWithinS`,
+    /// `retries`).
+    pub called_within_s: f64,
+    pub retries: u32,
+    /// Where the model the role names answers (`translation:translatedBy`), as the world's deployment states it: none
+    /// where the role names none or the world says nothing of the one named.
+    pub translated_by: Option<String>,
     tx: Sender<Back>,
     rx: Receiver<Back>,
 }
@@ -448,6 +455,12 @@ impl Translator {
             turns: crate::figures::figure(beliefs, crate::figures::TURNS) as usize,
             rows: crate::figures::figure(beliefs, crate::figures::ROWS) as usize,
             answered_within_s: crate::figures::figure(beliefs, crate::figures::ANSWERED_WITHIN_S),
+            called_within_s: crate::figures::figure(beliefs, crate::figures::CALLED_WITHIN_S),
+            retries: crate::figures::figure(beliefs, crate::figures::RETRIES) as u32,
+            translated_by: translated_by(beliefs).unwrap_or_else(|e| {
+                log::warn!("the model the translator's role names is not read: {e}");
+                None
+            }),
             tx,
             rx,
         }
@@ -802,7 +815,7 @@ const MODEL_Q: &str = "SELECT ?kind ?model WHERE { \
 
 /// Where the model the translator the self plays names answers, read off its self graph and the world's
 /// deployment graph: None where the role names none or the world says nothing of the one named.
-pub fn translated_by(store: &orexis::store::Store) -> Result<Option<String>, Error> {
+fn translated_by(store: &orexis::store::Store) -> Result<Option<String>, Error> {
     use orexis::ontology::{DEPLOYMENT, SELF_GRAPH};
     use orexis::store::{Within, value};
     let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
@@ -839,26 +852,25 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     //  HANDED A MODEL, by a test that answers for it, it is that; deployed and handed none, the one its role names
     //  (`translation:translatedBy`), where the world's deployment says that answers, under the name and key the
     //  agent's environment holds; and otherwise none, so a check calls no model.
-    let model = match handed.outside.take::<Arc<dyn crate::model::Model>>() {
-        Some(model) => Some(model),
-        None if handed.outside.has::<orexis::task::Deployed>() => match translated_by(&handed.store)? {
-            Some(url) => {
-                //  CALLED AS THE TRANSLATOR'S ROLE SAYS: how long a call may take, and how often it is asked again.
-                let within_s = crate::figures::figure_of(&handed.store, crate::figures::CALLED_WITHIN_S)?;
-                let retries = crate::figures::figure_of(&handed.store, crate::figures::RETRIES)? as u32;
-                crate::model::Anthropic::from_environ(&url, &|name| std::env::var(name).ok())
-                    .map(|m| Arc::new(m.paced(within_s, retries)) as Arc<dyn crate::model::Model>)
-            }
+    let mut translator = Translator::new(
+        &handed.store,
+        &me,
+        handed.outside.take::<Arc<dyn crate::model::Model>>(),
+    );
+    if translator.model.is_none() && handed.outside.has::<orexis::task::Deployed>() {
+        //  CALLED AS THE TRANSLATOR'S ROLE SAYS: where, how long a call may take, and how often it is asked again.
+        translator.model = match &translator.translated_by {
+            Some(url) => crate::model::Anthropic::from_environ(url, &|name| std::env::var(name).ok()).map(|m| {
+                Arc::new(m.paced(translator.called_within_s, translator.retries)) as Arc<dyn crate::model::Model>
+            }),
             None => {
                 log::warn!(
                     "no model: the translator's role names none the world says where to reach (translation:translatedBy)"
                 );
                 None
             }
-        },
-        None => None,
-    };
-    let mut translator = Translator::new(&handed.store, &me, model);
+        };
+    }
     translator.inline = handed.outside.take::<Inline>().is_some();
     //  WHAT A CHAT READS OF WHAT HAPPENED: the journal where what keeps it said where it lies, and the two series —
     //  handed, by a test that answers for them, or, where the agent is deployed, read through a sink of its own

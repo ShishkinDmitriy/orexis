@@ -145,7 +145,7 @@ pub struct Email {
     beliefs: Store,
     pub me: String,
     pub box_: Arc<dyn Mailbox>,
-    pub every: f64,
+    pub polled_every_s: f64,
     pub spawn: Spawn,
     pub inbox: Inbox,
     polling: Arc<Mutex<()>>,
@@ -164,7 +164,7 @@ impl Email {
             me: me.to_string(),
             box_,
             //  UNTIL IT CONNECTS and reads what a role says, as often as the transport's ontology states.
-            every: DEFAULTS
+            polled_every_s: DEFAULTS
                 .figure("http://example.org/orexis/email#polledEveryS")
                 .expect("the transport's ontology states how often it polls"),
             spawn: Box::new(|work| {
@@ -194,7 +194,7 @@ impl Email {
             smtp: (smtp.clone(), port("MAIL_SMTP_PORT", 465)),
         };
         let mut email = Email::new(beliefs, me, Arc::new(remote));
-        email.every = polled_every_s(beliefs)?;
+        email.polled_every_s = polled_every_s(beliefs)?;
         Ok(email)
     }
 
@@ -414,7 +414,7 @@ mod tests {
         };
         let mail = Email::connect(&store, &me, &env).unwrap();
         assert_eq!(
-            mail.every, 30.0,
+            mail.polled_every_s, 30.0,
             "no role of this world says how often, so the default the transport's ontology states"
         );
     }
