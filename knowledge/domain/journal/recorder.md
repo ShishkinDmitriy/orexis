@@ -37,6 +37,7 @@ role says nothing:
 |---|---|---|
 | `journal:windowS` | how long the log is kept, in the agent's seconds | ten minutes |
 | `journal:archivedEveryS` | how often what lasts is taken to the [archive](/domain/journal/archive.md), in the agent's seconds | two seconds |
+| `journal:tracedEveryS` | how often the activities are shipped to the [tracer](/domain/journal/tracer.md), in the agent's seconds | ten seconds |
 | `journal:incidentFrom` | from which level a line of the log is an incident | WARNING |
 | `journal:incident` | an event class that is an incident beside the vocabulary's | none more |
 | `journal:servedAt` | the [endpoint](/domain/journal/endpoint.md) the journal answers at | served nowhere |

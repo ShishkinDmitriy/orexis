@@ -424,7 +424,7 @@ async fn the_events_are_taken_to_the_archive_and_the_activities_stay_in_the_jour
         journal: Some(journal.clone()),
         history: None,
         metrics: None,
-        archive: Some((archive.clone(), orexis_journal_oxigraph::INTERVAL_S)),
+        archive: Some((archive.clone(), 2.0)),
         archive_every_s: None,
     };
     let g = grower_watched(&store, watching);
@@ -432,7 +432,7 @@ async fn the_events_are_taken_to_the_archive_and_the_activities_stay_in_the_jour
     reading(&g.inbox, r#"{"moisture": 0.2}"#, noon());
     common::settled(&g.running).await;
     assert_eq!(g.broker.topics(), ["actuators/pump/command"]);
-    until(&g, plus(noon(), orexis_journal_oxigraph::INTERVAL_S)).await;
+    until(&g, plus(noon(), 2.0)).await;
     let count = |engine: &oxigraph::store::Store, class: &str| -> usize {
         let text = format!("SELECT DISTINCT ?e WHERE {{ GRAPH ?e {{ ?e a <{class}> }} }}");
         let body = String::from_utf8(orexis_journal::journal::answer(engine, &text).unwrap().1).unwrap();

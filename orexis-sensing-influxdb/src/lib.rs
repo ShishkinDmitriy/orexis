@@ -89,14 +89,79 @@ pub fn archive(store: &Store, sink: &Sink, shipped: &mut Shipped) -> Result<usiz
 
 inventory::submit! { Package { name: "sensing-influxdb", documents: &[], start } }
 
-const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#> ";
-const ARCHIVED_IN: &str = "?role sensing:archivedIn ?service . ?service a orexis:SeriesStore .";
-const ARCHIVED_EVERY: &str = "?role sensing:archivedEveryS ?figure .";
+const OBSERVER: &str = "http://example.org/orexis/sensing#Observer";
 
-/// HOW OFTEN READINGS ARE ARCHIVED, in the agent's seconds: what the observer's role says in the agent's self graph
-/// (`sensing:archivedEveryS`), and the package's own where it says nothing.
-pub fn every_s(store: &Store) -> Result<f64, orexis::Error> {
-    Ok(orexis::boot::figure(store, WORDS, ARCHIVED_EVERY)?.unwrap_or(INTERVAL_S))
+/// WHAT HOLDS WHERE THE ROLE STATES NONE: each default sensing's ontology's shape of the role states
+/// (`sh:defaultValue`), the one place the figure lives.
+const OWN_Q: &str = "SELECT ?path ?own WHERE { ?shape sh:targetClass <http://example.org/orexis/sensing#Observer> ; \
+sh:property ?property . ?property sh:path ?path ; sh:defaultValue ?own }";
+
+/// WHAT THE OBSERVER THE SELF PLAYS SAYS OF ARCHIVING ITS READINGS, a row per way of saying it.
+const OBSERVER_Q: &str = "SELECT ?kind ?archive ?every WHERE { \
+?me a orexis:Self ; orexis:plays ?role . ?role a ?kind . \
+OPTIONAL { ?role <http://example.org/orexis/sensing#archivedIn> ?store . ?store <https://schema.org/url> ?archive } \
+OPTIONAL { ?role <http://example.org/orexis/sensing#archivedEveryS> ?every } }";
+
+/// THE OBSERVER THE SELF PLAYS, AS WHAT ARCHIVES ITS READINGS READS IT: a field for each thing `sensing:Observer`
+/// may say of archiving. What sensing itself reads of the role, its sensors and its limits, is sensing's.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Observer {
+    /// Where the series store the role names answers (`sensing:archivedIn`), as the world's deployment states it:
+    /// None where the role names none or the world says nothing of the one named.
+    pub archive: Option<String>,
+    /// How often readings are archived, in the agent's seconds (`sensing:archivedEveryS`), and `INTERVAL_S` where
+    /// the role states none.
+    pub archived_every_s: f64,
+}
+
+impl Observer {
+    /// The observer the self plays, read off its self graph and the world's deployment graph by this package's own
+    /// query. Several observer roles are read as one, and where the self plays none nothing is said.
+    pub fn new(store: &Store) -> Result<Self, orexis::Error> {
+        use orexis::ontology::{DEPLOYMENT, SELF_GRAPH};
+        use orexis::store::{Within, value};
+        let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
+        known.extend(store.graphs_of(&[DEPLOYMENT], &Within::common())?);
+        let known: Vec<&str> = known.iter().map(String::as_str).collect();
+        let mut rows = Vec::new();
+        for row in store.rows(OBSERVER_Q, &known)? {
+            let kind = value(&row, "kind").unwrap_or_default();
+            if kind == OBSERVER || store.closed(&kind)?.iter().any(|class| class == OBSERVER) {
+                rows.push(row);
+            }
+        }
+        //  THE ONTOLOGY'S DEFAULT, WHERE THE ROLE SAYS NOTHING: refused where the ontology states none, since a figure
+        //  nothing states is a package shipped broken.
+        let ontologies = store.graphs_of(&[orexis::ontology::ONTOLOGY], &Within::default())?;
+        let ontologies: Vec<&str> = ontologies.iter().map(String::as_str).collect();
+        let owns = store.rows(OWN_Q, &ontologies)?;
+        let own = |word: &str| {
+            let path = format!("http://example.org/orexis/sensing#{word}");
+            owns.iter()
+                .find(|row| value(row, "path").as_deref() == Some(path.as_str()))
+                .and_then(|row| value(row, "own"))
+                .ok_or_else(|| orexis::Error::Document(format!("sensing's ontology states no default for {word}")))
+        };
+        let figure = |what: &str, word: &str| {
+            let said = rows
+                .iter()
+                .filter_map(|row| value(row, what)?.parse::<f64>().ok())
+                .find(|figure| *figure > 0.0);
+            match said {
+                Some(figure) => Ok(figure),
+                None => own(word)?.parse::<f64>().map_err(|_| {
+                    orexis::Error::Document(format!("sensing's ontology's default for {word} is no number"))
+                }),
+            }
+        };
+        Ok(Observer {
+            archive: rows
+                .iter()
+                .find_map(|row| value(row, "archive"))
+                .filter(|url| !url.is_empty()),
+            archived_every_s: figure("every", "archivedEveryS")?,
+        })
+    }
 }
 
 /// ITS START, which every package this binary holds is given: it keeps house for sensing, so it joins where sensing
@@ -105,9 +170,8 @@ pub fn every_s(store: &Store) -> Result<f64, orexis::Error> {
 /// start.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        let archived = |handed: &Handed| {
-            Ok(handed.joined("sensing") && orexis::boot::connected(&handed.store, WORDS, ARCHIVED_IN)?.is_some())
-        };
+        let archived =
+            |handed: &Handed| Ok(handed.joined("sensing") && Observer::new(&handed.store)?.archive.is_some());
         if !handed.joins(archived).await? {
             return Ok(None);
         }
@@ -123,7 +187,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, orexis::Error> {
         None if handed.outside.has::<orexis::task::Deployed>() => {
             match Sink::deployed(&handed.store, orexis::series::HISTORY, &orexis::series::environment)? {
                 Some((sink, _)) => {
-                    let every_s = every_s(&handed.store)?;
+                    let every_s = Observer::new(&handed.store)?.archived_every_s;
                     log::info!(
                         "{} archives its readings to the history store every {every_s}s",
                         handed.id

@@ -783,13 +783,27 @@ inventory::submit! { Package { name: "translation", documents: orexis::documents
 /// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
 const ROLE: &str = "http://example.org/orexis/translation#Translator";
 
-const WORDS: &str = "PREFIX translation: <http://example.org/orexis/translation#> ";
-const TRANSLATED_BY: &str = "?role translation:translatedBy ?service . ?service a translation:Model .";
+/// WHERE THE MODEL THE TRANSLATOR THE SELF PLAYS NAMES ANSWERS (`translation:translatedBy`), as the world's
+/// deployment states it, a row per role's class.
+const MODEL_Q: &str = "SELECT ?kind ?model WHERE { \
+?me a orexis:Self ; orexis:plays ?role . ?role a ?kind ; \
+<http://example.org/orexis/translation#translatedBy> ?named . ?named <https://schema.org/url> ?model }";
 
-/// WHERE THE MODEL THE TRANSLATOR'S ROLE NAMES ANSWERS (`translation:translatedBy`), as the world's deployment
-/// graph says, or None where the role names none or the world says nothing of the one named.
-pub fn answers(store: &orexis::store::Store) -> Result<Option<String>, Error> {
-    orexis::boot::connected(store, WORDS, TRANSLATED_BY)
+/// Where the model the translator the self plays names answers, read off its self graph and the world's
+/// deployment graph: None where the role names none or the world says nothing of the one named.
+pub fn translated_by(store: &orexis::store::Store) -> Result<Option<String>, Error> {
+    use orexis::ontology::{DEPLOYMENT, SELF_GRAPH};
+    use orexis::store::{Within, value};
+    let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
+    known.extend(store.graphs_of(&[DEPLOYMENT], &Within::common())?);
+    let known: Vec<&str> = known.iter().map(String::as_str).collect();
+    for row in store.rows(MODEL_Q, &known)? {
+        let kind = value(&row, "kind").unwrap_or_default();
+        if kind == ROLE || store.closed(&kind)?.iter().any(|class| class == ROLE) {
+            return Ok(value(&row, "model").filter(|url| !url.is_empty()));
+        }
+    }
+    Ok(None)
 }
 
 /// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
@@ -816,7 +830,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     //  agent's environment holds; and otherwise none, so a check calls no model.
     let model = match handed.outside.take::<Arc<dyn crate::model::Model>>() {
         Some(model) => Some(model),
-        None if handed.outside.has::<orexis::task::Deployed>() => match answers(&handed.store)? {
+        None if handed.outside.has::<orexis::task::Deployed>() => match translated_by(&handed.store)? {
             Some(url) => crate::model::Anthropic::from_environ(&url, &|name| std::env::var(name).ok())
                 .map(|m| Arc::new(m) as Arc<dyn crate::model::Model>),
             None => {

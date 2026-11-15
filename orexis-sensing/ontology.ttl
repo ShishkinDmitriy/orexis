@@ -79,7 +79,8 @@
 [] a sh:NodeShape ;
     sh:targetClass :Observer ;
     sh:property [ sh:path :silentAfter ; sh:defaultValue 3 ] ,
-                [ sh:path :stuckAfter ; sh:defaultValue 6 ] .
+                [ sh:path :stuckAfter ; sh:defaultValue 6 ] ,
+                [ sh:path :archivedEveryS ; sh:defaultValue 10 ] .
 
 :ObservationGraph a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
