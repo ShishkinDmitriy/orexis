@@ -22,7 +22,7 @@ use orexis::namespaces::Namespaces;
 use orexis::ontology::{BELIEF, FORECAST, SELF_GRAPH};
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::{Running, UNFINISHED};
-use orexis_agent::{Watching, Wiring, booted};
+use orexis_agent::{Watching, Wiring};
 use orexis_translation::model::{Answer, Failure, Model, Turn};
 use orexis_transport_mqtt::driver::{Client, Mqtt};
 
@@ -202,19 +202,6 @@ async fn terrace(
         broker: Broker::default(),
         asked: Arc::default(),
     };
-    let loaded = booted(&t.store, world, "terrace", noon()).unwrap();
-    for package in [
-        "belief",
-        "sensing",
-        "prediction",
-        "speech",
-        "translation",
-        "transport/mqtt",
-        "transport/http",
-        "transport/telegram",
-    ] {
-        assert!(loaded.iter().any(|p| p == package), "{package}: {loaded:?}");
-    }
     let member = Mqtt::new(
         &t.store,
         &format!("{T}terrace_agent"),
@@ -248,7 +235,21 @@ async fn terrace(
         ..Wiring::default()
     };
     let clock = common::clock(noon());
-    let running = orexis_agent::start(&t.store, "terrace", clock.clone(), &loaded, None, wiring).unwrap();
+    let booted = orexis_agent::boot(&t.store, world, "terrace", clock.clone(), None, wiring).unwrap();
+    let loaded = booted.loaded().to_vec();
+    for package in [
+        "belief",
+        "sensing",
+        "prediction",
+        "speech",
+        "translation",
+        "transport/mqtt",
+        "transport/http",
+        "transport/telegram",
+    ] {
+        assert!(loaded.iter().any(|p| p == package), "{package}: {loaded:?}");
+    }
+    let running = booted.start().unwrap();
     assert!(running.parts().contains(&"translation"));
     walk(&t, &running, &clock, &inbox).await;
     running.stop().await;

@@ -21,7 +21,7 @@ use orexis::clock::{Clock, instant, isoformat};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri, value};
-use orexis_agent::{Wiring, booted};
+use orexis_agent::Wiring;
 use orexis_transport_mqtt::driver::{Client, Mqtt};
 
 const L: &str = "http://example.org/orexis/world/layby#";
@@ -115,7 +115,6 @@ async fn walk(world: &Path, fixture: &str) -> (Drives, BTreeMap<String, (i64, i6
     let steps = steps(fixture);
     let store = Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap();
     let clock: Arc<dyn Clock> = common::clock(steps[0].0);
-    let loaded = booted(&store, world, "courier_a", steps[0].0).unwrap();
     let drives = Arc::new(Mutex::new(Vec::new()));
     let bus = Bus {
         clock: clock.clone(),
@@ -127,7 +126,8 @@ async fn walk(world: &Path, fixture: &str) -> (Drives, BTreeMap<String, (i64, i6
         mqtt: Some(member),
         ..Wiring::default()
     };
-    let running = orexis_agent::start(&store, "courier_a", clock.clone(), &loaded, None, wiring).unwrap();
+    let booted = orexis_agent::boot(&store, world, "courier_a", clock.clone(), None, wiring).unwrap();
+    let running = booted.start().unwrap();
     //  THE WANTS THE COURIER IS WALKING, read off its intentions by an executor of the test's own.
     let reader = orexis_execution::Executor::new(&store, "courier_a", None, None, clock.clone()).unwrap();
     for (n, (when, published)) in steps.iter().enumerate() {

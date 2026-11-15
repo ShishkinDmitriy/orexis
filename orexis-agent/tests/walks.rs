@@ -31,9 +31,9 @@ fn now() -> DateTime {
 
 /// Boot `agent` of `world` and run it until nothing holds it or `within` seconds of its time are spent: the outcome.
 async fn run(store: &Store, world: &Path, agent: &str, within: u64, budget: Option<usize>) -> String {
-    let loaded = booted(store, world, agent, now()).unwrap();
     let wiring = orexis_agent::Wiring::default();
-    let running = orexis_agent::start(store, agent, common::clock(now()), &loaded, budget, wiring).unwrap();
+    let booted = orexis_agent::boot(store, world, agent, common::clock(now()), budget, wiring).unwrap();
+    let running = booted.start().unwrap();
     let outcome = common::outcome(&running, within).await;
     running.stop().await;
     outcome

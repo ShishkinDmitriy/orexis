@@ -81,7 +81,6 @@ fn booted_from_its_directory_the_agent_holds_no_hardware() {
 async fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_to_the_boards_command_topic() {
     let store = store();
     let now = instant("2026-01-01T12:00:00+00:00").unwrap();
-    let loaded = booted(&store, &world(), "fern", now).unwrap();
     let broker = Broker::default();
     let member = Mqtt::new(
         &store,
@@ -93,7 +92,8 @@ async fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_
         mqtt: Some(member),
         ..Wiring::default()
     };
-    let running = orexis_agent::start(&store, "fern", common::clock(now), &loaded, None, wiring).unwrap();
+    let booted = orexis_agent::boot(&store, &world(), "fern", common::clock(now), None, wiring).unwrap();
+    let running = booted.start().unwrap();
     assert_eq!(broker.0.lock().unwrap().0, ["sensors/moisture_sensor_fern/reading"]);
     //  WHAT IS SAID OF THE MESSAGE: its three percepts perceived together and revised together, once each.
     let said: Arc<Mutex<Vec<(String, usize)>>> = Arc::default();
@@ -145,7 +145,7 @@ async fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_
     );
     assert!(broker.0.lock().unwrap().1.is_empty());
     let store2 = self::store();
-    booted(&store2, &world(), "fern", now).unwrap();
+    orexis_agent::booted(&store2, &world(), "fern", now).unwrap();
     let cadence = Broker::default();
     let mut member = Mqtt::new(
         &store2,

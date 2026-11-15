@@ -30,7 +30,7 @@ use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::Running;
-use orexis_agent::{Wiring, booted};
+use orexis_agent::Wiring;
 use orexis_transport_mqtt::driver::{Client, Inbox, Mqtt};
 use road::{Cell, Road};
 
@@ -315,10 +315,6 @@ async fn walked(name: &str, world: &Path, home: &[(&str, Cell)], dropping: Optio
     };
     let mut runtimes: Vec<Running> = Vec::new();
     for (store, name) in stores.iter().zip(names) {
-        let loaded = booted(store, world, name, start()).unwrap();
-        if carried.lock().unwrap().road.is_none() {
-            carried.lock().unwrap().road = Some(Road::of(store));
-        }
         let bus = Bus {
             clock: clock.clone(),
             carried: carried.clone(),
@@ -338,7 +334,11 @@ async fn walked(name: &str, world: &Path, home: &[(&str, Cell)], dropping: Optio
             watching,
             ..Wiring::default()
         };
-        let running = orexis_agent::start(store, name, clock.clone(), &loaded, None, wiring).unwrap();
+        let booted = orexis_agent::boot(store, world, name, clock.clone(), None, wiring).unwrap();
+        if carried.lock().unwrap().road.is_none() {
+            carried.lock().unwrap().road = Some(Road::of(store));
+        }
+        let running = booted.start().unwrap();
         if let Some(trace) = &traced {
             trace.watch(name, &running, clock.clone());
         }

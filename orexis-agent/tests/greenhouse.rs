@@ -22,7 +22,7 @@ use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::Running;
-use orexis_agent::{Wiring, booted};
+use orexis_agent::Wiring;
 use orexis_transport_mqtt::driver::{Client, Inbox, Mqtt};
 
 const GH: &str = "http://example.org/orexis/world/greenhouse#";
@@ -96,7 +96,17 @@ fn grower(store: &Store) -> Grower {
 }
 
 fn grower_watched(store: &Store, watching: orexis_agent::Watching) -> Grower {
-    let loaded = booted(store, &world(), "grower", noon()).unwrap();
+    let broker = Broker::default();
+    let member = Mqtt::new(store, &format!("{GH}grower"), vec![(None, Box::new(broker.clone()))]);
+    let inbox = member.inbox.clone();
+    let wiring = Wiring {
+        mqtt: Some(member),
+        watching,
+        ..Wiring::default()
+    };
+    let clock = common::clock(noon());
+    let booted = orexis_agent::boot(store, &world(), "grower", clock.clone(), None, wiring).unwrap();
+    let loaded = booted.loaded().to_vec();
     for package in [
         "belief",
         "planning",
@@ -107,16 +117,7 @@ fn grower_watched(store: &Store, watching: orexis_agent::Watching) -> Grower {
     ] {
         assert!(loaded.iter().any(|p| p == package), "{package}: {loaded:?}");
     }
-    let broker = Broker::default();
-    let member = Mqtt::new(store, &format!("{GH}grower"), vec![(None, Box::new(broker.clone()))]);
-    let inbox = member.inbox.clone();
-    let wiring = Wiring {
-        mqtt: Some(member),
-        watching,
-        ..Wiring::default()
-    };
-    let clock = common::clock(noon());
-    let running = orexis_agent::start(store, "grower", clock.clone(), &loaded, None, wiring).unwrap();
+    let running = booted.start().unwrap();
     Grower {
         running,
         clock,
