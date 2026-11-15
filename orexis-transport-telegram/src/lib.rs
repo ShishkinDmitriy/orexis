@@ -161,7 +161,7 @@ impl Transport {
     ) -> Result<(), Error> {
         let _ = (&handed, &hears, &arrived, &timers);
         self.member.inbox.wakes(arrived.wake());
-        timers.push((Every::new(self.member.every), POLL));
+        timers.push((Every::new(self.member.polled_every_s), POLL));
         hears.event(CARRYING_TRIGGER, CARRY);
         Ok(())
     }

@@ -1100,6 +1100,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   have, so the journal hears every one, and what several packages add to or read is shared (`Outside::share`) and
   asked when read, as where the journal lies; a list of seventeen names in the kernel ordered them, and three
   handoffs worked only in that order (package).
+- **A package's struct for its role has a field per property of the role, named as the property is** — `Recorder`,
+  `Meter`, `Predictor`, `Coordinator`, `Observer`, and the cores that bear the role's name; three roles had no
+  struct, four fields went by another word than their property (`every_s`, `endpoint`, `archive`, `tracer`), and
+  half of what a translator's role says lay on its model's client (role).
 - **A package's start is in its crate's `lib.rs`, in every crate** — the registration, the role it is loaded for,
   `start`, `make` and its task, below the crate's description and its modules; twelve crates kept it in a
   `create.rs` and five in `lib.rs`, and a `role.rs` per crate with one struct named `Role` was built and refused,

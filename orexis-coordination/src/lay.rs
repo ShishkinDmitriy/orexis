@@ -25,9 +25,7 @@ use crate::holdings::{
     Holding, TEXTS_Q, asked, common, constraints_and_self, heard, holdings, key_of, of_kind, present, rows_of, scratch,
     sorted,
 };
-use crate::ontology::{
-    CONSTRAINT_GRAPH, LOOKAHEAD, answer_graph, conflicts_graph, laid_graph, laid_root, question_graph,
-};
+use crate::ontology::{CONSTRAINT_GRAPH, answer_graph, conflicts_graph, laid_graph, laid_root, question_graph};
 
 const STANDING_Q: &str = "
 SELECT ?c ?peer ?constraint ?draw ?silent WHERE { GRAPH $graph {
@@ -86,7 +84,7 @@ pub fn lay(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Error> 
             theirs.retain(|h| h.start.is_none() || h.taken);
         }
         if value(&r, "silent").as_deref() == Some("true") && !said {
-            let looking = crate::ontology::figure_of(store, LOOKAHEAD)? as i64;
+            let looking = crate::Coordinator::new(store)?.lookahead;
             let ahead = looking + i64::from(winner.as_ref().is_some_and(|w| w != me));
             let landing: Vec<Holding> = holdings(store, &constraint, at)?
                 .into_iter()

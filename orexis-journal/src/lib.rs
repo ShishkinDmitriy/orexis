@@ -103,17 +103,17 @@ pub struct Recorder {
     /// How long the log and the activities no incident kept are kept, in the agent's seconds (`journal:windowS`).
     pub window_s: f64,
     /// From which level a line of the log is an incident (`journal:incidentFrom`).
-    pub incident_level: log::Level,
+    pub incident_from: log::Level,
     /// The classes that are incidents beside the vocabulary's (`journal:incident`).
     pub incidents: std::collections::BTreeSet<String>,
     /// Where the journal is served, the port of its endpoint (`journal:servedAt`).
-    pub endpoint: Option<u16>,
+    pub served_at: Option<u16>,
     /// Where what lasts is archived, the path of its archive (`journal:archivedIn`).
-    pub archive: Option<std::path::PathBuf>,
+    pub archived_in: Option<std::path::PathBuf>,
     /// How often what lasts is taken to the archive, in the agent's seconds (`journal:archivedEveryS`).
     pub archived_every_s: f64,
     /// Where the activities are shipped, the url of its tracer (`journal:tracedBy`).
-    pub tracer: Option<String>,
+    pub traced_by: Option<String>,
     /// How often the activities are shipped, in the agent's seconds (`journal:tracedEveryS`).
     pub traced_every_s: f64,
 }
@@ -154,15 +154,15 @@ impl Recorder {
         };
         Ok(Recorder {
             window_s: figure("window")?,
-            incident_level: journal::incident_level(said("from").as_deref()),
+            incident_from: journal::incident_level(said("from").as_deref()),
             incidents: rows.iter().filter_map(|row| value(row, "incident")).collect(),
-            endpoint: said("served").and_then(|url| {
+            served_at: said("served").and_then(|url| {
                 let authority = url.split("://").last()?.split('/').next()?;
                 authority.rsplit(':').next()?.parse().ok()
             }),
-            archive: said("archive").and_then(|url| url.strip_prefix("file://").map(std::path::PathBuf::from)),
+            archived_in: said("archive").and_then(|url| url.strip_prefix("file://").map(std::path::PathBuf::from)),
             archived_every_s: figure("archivedEvery")?,
-            tracer: said("tracer").map(|url| url.trim_end_matches('/').to_string()),
+            traced_by: said("tracer").map(|url| url.trim_end_matches('/').to_string()),
             traced_every_s: figure("tracedEvery")?,
         })
     }
@@ -179,7 +179,7 @@ fn own(handed: &Handed) -> Result<Arc<Journal>, Error> {
         let clock = handed.clock.clone();
         Arc::new(move || clock.now())
     })?;
-    journal.incident_level = kept.incident_level;
+    journal.incident_level = kept.incident_from;
     journal.incidents = kept.incidents;
     let journal = Arc::new(journal);
     if let Some(orexis::task::Said(keep)) = handed.outside.take::<orexis::task::Said>() {
@@ -189,7 +189,7 @@ fn own(handed: &Handed) -> Result<Arc<Journal>, Error> {
         }));
     }
     #[cfg(feature = "serve")]
-    if let Some(port) = kept.endpoint {
+    if let Some(port) = kept.served_at {
         let (past, live) = (journal.clone(), journal.store.clone());
         if let Err(e) = journal::serve(
             vec![

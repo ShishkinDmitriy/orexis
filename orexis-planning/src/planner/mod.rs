@@ -193,7 +193,7 @@ pub struct Planner {
     pub uri: String,
     pub budget: usize,
     /// How long a budget is for, in the agent's seconds (`planning:budgetEveryS`).
-    pub every_s: f64,
+    pub budget_every_s: f64,
     /// Each want whose search the budget last cut short: when, and the grounds it was searched in, by hash. It is
     /// searched again where the grounds differ or the budget's stretch has passed, and not before.
     cut: BTreeMap<String, (DateTime, BTreeSet<String>)>,
@@ -631,7 +631,7 @@ impl Planner {
             id: agent_id.to_string(),
             uri,
             budget,
-            every_s: crate::ontology::figure_of(beliefs, BUDGET_EVERY_TERM)?,
+            budget_every_s: crate::ontology::figure_of(beliefs, BUDGET_EVERY_TERM)?,
             cut: BTreeMap::new(),
             beside: BTreeMap::new(),
             imaginaria: BTreeMap::new(),
@@ -935,7 +935,7 @@ impl Planner {
                 //  budget, and the budget was no ceiling.
                 if let Some((when, seen)) = self.cut.get(&want)
                     && *seen == grounds
-                    && orexis::clock::seconds_of(at.checked_sub(*when).unwrap_or_else(zero)) < self.every_s
+                    && orexis::clock::seconds_of(at.checked_sub(*when).unwrap_or_else(zero)) < self.budget_every_s
                 {
                     here.insert(want.clone());
                     continue;
@@ -1129,7 +1129,7 @@ impl Planner {
     pub fn continues_at(&self) -> Option<DateTime> {
         self.cut
             .values()
-            .filter_map(|(when, _)| when.checked_add_day_time_duration(orexis::clock::seconds(self.every_s)))
+            .filter_map(|(when, _)| when.checked_add_day_time_duration(orexis::clock::seconds(self.budget_every_s)))
             .reduce(|a, b| if b < a { b } else { a })
     }
 
@@ -1656,7 +1656,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         let store = snapshots::stand_in(&bench("three_disk_hanoi"));
         let mut planner = Planner::new(&store, snapshots::AGENT, Some(20)).unwrap();
         assert_eq!(
-            planner.every_s,
+            planner.budget_every_s,
             crate::ontology::DEFAULTS.figure(BUDGET_EVERY_TERM).unwrap(),
             "the package's figure, no role stating one"
         );
@@ -1697,7 +1697,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         let (whole, _) = weighed(&bench("three_disk_hanoi"), 128, true);
         let store = snapshots::stand_in(&bench("three_disk_hanoi"));
         let mut planner = Planner::new(&store, snapshots::AGENT, Some(20)).unwrap();
-        planner.every_s = 0.0;
+        planner.budget_every_s = 0.0;
         let at = minutes(0);
         let mut passes = Vec::new();
         for _ in 0..4 {
@@ -1722,7 +1722,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
     fn a_ground_laid_again_keeps_nothing_where_what_is_read_beside_it_changed() {
         let store = snapshots::stand_in(&bench("three_disk_hanoi"));
         let mut planner = Planner::new(&store, snapshots::AGENT, Some(20)).unwrap();
-        planner.every_s = 0.0;
+        planner.budget_every_s = 0.0;
         let at = minutes(0);
         planner.plan(at).unwrap();
         planner.plan(at).unwrap();

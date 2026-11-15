@@ -109,7 +109,7 @@ OPTIONAL { ?role <http://example.org/orexis/sensing#archivedIn> ?store . ?store 
 pub struct Observer {
     /// Where the series store the role names answers (`sensing:archivedIn`), as the world's deployment states it:
     /// None where the role names none or the world says nothing of the one named.
-    pub archive: Option<String>,
+    pub archived_in: Option<String>,
     /// How often readings are archived, in the agent's seconds (`sensing:archivedEveryS`), and the default
     /// sensing's ontology states where the role states none.
     pub archived_every_s: f64,
@@ -150,7 +150,7 @@ impl Observer {
                 .ok_or_else(|| orexis::Error::Document(format!("sensing's ontology states no default for {what}")))
         };
         Ok(Observer {
-            archive: said("archive"),
+            archived_in: said("archive"),
             archived_every_s: figure("every")?,
         })
     }
@@ -163,7 +163,7 @@ impl Observer {
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         let archived =
-            |handed: &Handed| Ok(handed.joined("sensing") && Observer::new(&handed.store)?.archive.is_some());
+            |handed: &Handed| Ok(handed.joined("sensing") && Observer::new(&handed.store)?.archived_in.is_some());
         if !handed.joins(archived).await? {
             return Ok(None);
         }
