@@ -1121,7 +1121,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   not be made, so each listens before any speaks and the journal
   hears every start; what several packages add to is added as each makes its core (`Outside::alter`) and read once
   every core is made (`Outside::share`), and what a caller hands is a package's own type, which the binary assembles
-  nothing of, its `Wiring` of every package's connectors being what this replaced; a list of seventeen names in the kernel ordered them, then a lifecycle in `Handed` the kernel
+  nothing of, a struct in the binary with a field for every package's connectors being what this replaced; a list of seventeen names in the kernel ordered them, then a lifecycle in `Handed` the kernel
   kept of which had joined and which started, waited on by name (`Handed::after`) (package).
 - **A start is the whole of what a package does, and the package says when it has started** — it decides, makes its
   core, says so (`Handed::started`), checked ends there, and goes on as its task, so what it says before is said as the agent starts and
