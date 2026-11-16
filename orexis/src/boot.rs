@@ -6,13 +6,14 @@
 //! the agent's own.
 //!
 //! JOINED, PACKAGE BY PACKAGE (`Begun::bring`): each package this binary holds decides in its own start whether the
-//! agent runs it — by the role the self plays, which the package knows as its own, or by what it needs of the world —
-//! and one that joins brings its documents, compiled in beside its code (`task::Package::documents`): they are put
-//! in, the vocabulary closed again, and the world's graphs passed over until now offered again. The kernel names no
-//! package and no role, and knows no package's reason to join (`task::Handed::joins`).
+//! agent runs it — by the role the self plays, which the package knows as its own class, or by what it needs of the
+//! world — and one that joins brings its documents, compiled in beside its code (`task::Package::documents`): they
+//! are put in, the vocabulary closed again, and the world's graphs passed over until now offered again. The kernel
+//! names no package and no role, and knows no package's reason to join (`task::Handed::joins`). Every graph is put
+//! in, the agent's own among them, and its row stamped, as soon as the vocabulary declares its kind.
 //!
 //! FINISHED (`Begun::finish`), once every package has decided: a role the self plays that no package of this binary
-//! declares is refused, the graphs that say they are this agent's are put in, and each graph's row is stamped.
+//! declares is refused, the package that would have declared it having been built out.
 //!
 //! Writing the scopes is planning's, which the kernel names nothing of: whoever boots an agent that plans says so.
 
@@ -71,8 +72,11 @@ const VOCABULARY: &str = "ontology.ttl";
 
 const ME_Q: &str = "SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id }";
 const PLAYED_Q: &str = "SELECT ?role ?kind WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind }";
+const SERVED_Q: &str = "SELECT ?class WHERE { ?class rdfs:subClassOf orexis:Role }";
+const DEPENDS_Q: &str = "SELECT ?needed WHERE { $class orexis:dependsOn ?needed }";
 const AGENTS_Q: &str = "SELECT DISTINCT ?a WHERE { ?a a orexis:Agent }";
 const SELVES_Q: &str = "SELECT DISTINCT ?self WHERE { GRAPH ?g { ?self a orexis:Self } } ORDER BY ?self";
+const STAMPED_Q: &str = "SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:hash ?hash } }";
 const ASSERTED_Q: &str =
     "SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:arrivedBy orexis:Asserted } }";
 /// WHAT A BOOT PUT IN AND NOBODY HOLDS: asserted from a document, with no owner, and the closure.
@@ -187,6 +191,43 @@ pub fn plays(store: &Store, classes: &[&str]) -> Result<bool, Error> {
         }
     }
     Ok(false)
+}
+
+/// THE ROLE CLASSES `package`'S OWN DOCUMENTS DECLARE, each beneath `orexis:Role` in a graph it brought: the roles
+/// the package serves, as the kernel learns it once the package has joined, reading no code of the package's.
+pub fn served(store: &Store, package: &str) -> Result<Vec<String>, Error> {
+    let own = brought_uri(&crate_of(package), "");
+    let vocabularies = store.graphs_of(&[ONTOLOGY], &Within::default())?;
+    let mut out = BTreeSet::new();
+    for graph in vocabularies.iter().filter(|g| g.starts_with(&own)) {
+        out.extend(
+            store
+                .rows(SERVED_Q, &[graph.as_str()])?
+                .iter()
+                .filter_map(|r| iri(r, "class")),
+        );
+    }
+    Ok(out.into_iter().collect())
+}
+
+/// EVERY ROLE CLASS `role` DEPENDS ON (`orexis:dependsOn`), or a class it is beneath does, by the vocabulary the
+/// store holds as it is asked: what `task::Handed::joins` orders the starts by.
+pub fn depended(store: &Store, role: &str) -> Result<Vec<String>, Error> {
+    let vocabularies = store.graphs_of(&[ONTOLOGY], &Within::default())?;
+    let vocabularies: Vec<&str> = vocabularies.iter().map(String::as_str).collect();
+    let mut classes = vec![role.to_string()];
+    classes.extend(store.closed(role)?);
+    let mut out = BTreeSet::new();
+    for class in classes {
+        let text = bind(DEPENDS_Q, &[("class", Value::iri(&class))])?;
+        out.extend(
+            store
+                .rows(&text, &vocabularies)?
+                .iter()
+                .filter_map(|r| iri(r, "needed")),
+        );
+    }
+    Ok(out.into_iter().collect())
 }
 
 /// WHETHER THE WORLD WIRES THE SELF THROUGH A TRANSPORT: one of `wired` holds, each a role's class the self plays
@@ -383,16 +424,22 @@ fn hold_the_self(store: &Store, agent: &str, me: &str, mine: &[(&Document, &str)
     Ok(graph.to_string())
 }
 
-/// Every belief and every graph a document put, its row stamped with the hash of what it holds.
-fn stamp(store: &Store) -> Result<(), Error> {
+/// Every belief and every graph a document put, its row stamped with the hash of what it holds: each, or where
+/// `fresh`, each whose row says no hash yet, as a package joining put it in.
+fn stamp(store: &Store, fresh: bool) -> Result<(), Error> {
     let mut graphs: Vec<String> = store.graphs_of(&[BELIEF], &Within::default())?;
     for g in store.rows(ASSERTED_Q, &[])?.iter().filter_map(|r| iri(r, "g")) {
         if !graphs.contains(&g) {
             graphs.push(g);
         }
     }
-    for g in graphs {
-        hash_named_graph(store, &g, None)?;
+    let stamped: BTreeSet<String> = if fresh {
+        store.rows(STAMPED_Q, &[])?.iter().filter_map(|r| iri(r, "g")).collect()
+    } else {
+        BTreeSet::new()
+    };
+    for g in graphs.iter().filter(|g| !stamped.contains(*g)) {
+        hash_named_graph(store, g, None)?;
     }
     Ok(())
 }
@@ -404,7 +451,6 @@ pub struct Begun {
     lived_in: bool,
     read: Vec<(PathBuf, Document)>,
     passed: Vec<Held>,
-    own: Vec<(Held, String)>,
     me: String,
     self_graph: String,
 }
@@ -441,16 +487,18 @@ pub fn begin(store: &Store, booting: &Booting<'_>) -> Result<Begun, Error> {
         .collect();
     let self_graph = hold_the_self(store, booting.agent, &me, &mine)?;
     let agent = booting.agent.to_string();
-    Ok(Begun {
+    let begun = Begun {
         world,
         agent,
         lived_in,
         read,
         passed,
-        own,
         me,
         self_graph,
-    })
+    };
+    begun.hold(store, &own)?;
+    stamp(store, false)?;
+    Ok(begun)
 }
 
 impl Begun {
@@ -470,11 +518,32 @@ impl Begun {
         let (also, still) = put(store, &self.world, &self.read[offset..], passed, offset, &all)?;
         let also = owned(store, also, &all)?;
         self.passed = still;
-        self.own.extend(also);
-        store.close_catalogue()
+        self.hold(store, &also)?;
+        store.close_catalogue()?;
+        stamp(store, true)
     }
 
-    /// EVERY PACKAGE'S DOCUMENTS ARE BROUGHT, the packages `brought` names: the boot is finished.
+    /// THE GRAPHS THAT SAY THEY ARE THIS AGENT'S, of `own`, are put in, but the self's, held already, and on a
+    /// volume lived in, where the agent's own are kept.
+    fn hold(&self, store: &Store, own: &[(Held, String)]) -> Result<(), Error> {
+        if self.lived_in {
+            return Ok(());
+        }
+        for (held, owner) in own {
+            if *owner == self.me && held.2 != self.self_graph {
+                store.put_document(
+                    &self.read[held.1].1,
+                    Some(&self.me),
+                    Some(&[held.2.as_str()]),
+                    None,
+                    false,
+                )?;
+            }
+        }
+        Ok(())
+    }
+
+    /// EVERY PACKAGE HAS DECIDED, and those `brought` names brought their documents: the boot is finished.
     pub fn finish(self, store: &Store, brought: &[String]) -> Result<(), Error> {
         let unserved = unserved(store)?;
         if !unserved.is_empty() {
@@ -492,21 +561,6 @@ impl Begun {
                 kinds.iter().cloned().collect::<Vec<_>>().join(", ")
             );
         }
-        if !self.lived_in {
-            for (held, owner) in &self.own {
-                if *owner == self.me && held.2 != self.self_graph {
-                    store.put_document(
-                        &self.read[held.1].1,
-                        Some(&self.me),
-                        Some(&[held.2.as_str()]),
-                        None,
-                        false,
-                    )?;
-                }
-            }
-        }
-        store.close_catalogue()?;
-        stamp(store)?;
         log::info!(
             "{} booted from {}{}",
             self.agent,
@@ -521,9 +575,14 @@ impl Begun {
     }
 }
 
-/// BOOT `booting.agent` into `store`, with the documents of every package this binary holds (`task::boot`). No
-/// package's core is made and nothing runs: for a caller that wants the store as booted and nothing started.
+/// BOOT `booting.agent` into `store` WITH THE DOCUMENTS OF EVERY PACKAGE THIS BINARY HOLDS, whether or not it would
+/// run: no start decides and nothing runs, for a caller that wants the store as booted and calls a package's core
+/// itself. An agent that runs is booted by `task::boot`, where each package brings its own as it joins.
 pub fn boot(store: &Store, booting: &Booting<'_>) -> Result<(), Error> {
-    let clock = std::sync::Arc::new(crate::clock::Manual::at(oxsdatatypes::DateTime::now()));
-    crate::task::boot(store, booting, clock, crate::task::Outside::default()).map(|_| ())
+    let mut begun = begin(store, booting)?;
+    let names = every_package();
+    for name in &names {
+        begun.bring(store, name)?;
+    }
+    begun.finish(store, &names)
 }

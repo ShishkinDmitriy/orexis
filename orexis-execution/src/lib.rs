@@ -40,6 +40,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.plays(&[ROLE])? {
             return Ok(());
         }
+        handed.joins("execution").await?;
         let mut executor = Executor::new(&handed.store, &handed.id, None, None, handed.clock.clone())?;
         executor.watch = handed.events.watch().clone();
         let mut hears = handed.events.hears();

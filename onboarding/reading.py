@@ -357,9 +357,13 @@ def _held_to(shapes: tuple[rdflib.Graph, rdflib.Graph], store: ox.Store, held: l
     documents in an agent's boot. The graphs cross into rdflib for pyshacl with the store's namespaces
     bound on what is held, since pyshacl reads a constraint's select against the graph it asks, and
     the world's vocabulary mixed in, so a role is targeted through the class it is beneath. What is
-    judged `beside` them is in no agent's store, and crosses as it is."""
+    judged `beside` them is in no agent's store, and crosses as it is; and so is the world's vocabulary,
+    every package's, since an agent's boot holds only the documents of the packages it runs and a
+    constraint's select reads the data alone: an executor's dependency on a planner is planning's word,
+    in no store of an agent that runs no planning."""
     data = rdflib_view(store, *held)
     data += beside
+    data += shapes[1]
     return reported(data, *shapes)
 
 

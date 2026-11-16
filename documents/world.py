@@ -346,8 +346,8 @@ def world_of(world: Path, others=frozenset()) -> ox.Store:
 
 def read_by_packages(world: Path, packages) -> ox.Store:
     """What a world says publicly, read with the documents of `packages` alone, and closed: the vocabulary the packages
-    an agent runs declare, with the world's, which is what a graph is read by. An agent's boot holds the documents of
-    every package its binary holds, run or not, so a kind declared there is no sign anything the agent runs reads it."""
+    an agent runs declare, with the world's, which is what a graph is read by: what an agent's boot holds, each package
+    it runs bringing its documents as it joins."""
     store = ox.Store()
     update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}")
     _put(store, Path(world).resolve(), read_with_imports(documents(Path(world).resolve(), packages)), [])

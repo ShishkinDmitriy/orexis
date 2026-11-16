@@ -41,6 +41,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.plays(&[ROLE])? {
             return Ok(());
         }
+        handed.joins("speech").await?;
         let mut speaker = Speaker::new(&handed.store)?;
         speaker.watch = handed.events.watch().clone();
         speaker.unextracted()?;

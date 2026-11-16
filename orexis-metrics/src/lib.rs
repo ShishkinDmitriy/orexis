@@ -41,6 +41,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.plays(&[ROLE])? {
             return Ok(());
         }
+        handed.joins("metrics").await?;
         let mut meter = Meter::new(&handed.store)?;
         let window = match handed.outside.take::<Window>() {
             Some(window) => Some(window),

@@ -35,6 +35,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !orexis::boot::wired(&handed.store, WORDS, WIRED)? {
             return Ok(());
         }
+        handed.joins("transport/telegram").await?;
         let me = orexis::boot::selves(&handed.store)?
             .into_iter()
             .next()
