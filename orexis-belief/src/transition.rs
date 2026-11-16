@@ -25,15 +25,6 @@ use orexis::store::{Store, Within, iri, value};
 use crate::held::{holds, push_unique};
 use crate::ontology::{RULES_GRAPH, node};
 
-/// EVERY TRANSITION, over the rules graphs: each active one, with its order and its update.
-const TRANSITIONS_Q: &str = "
-SELECT DISTINCT ?rule ?order ?update WHERE {
-  ?rule a belief:Transition .
-  FILTER NOT EXISTS { ?rule sh:deactivated true }
-  OPTIONAL { ?rule sh:order ?o } OPTIONAL { ?rule belief:update ?update }
-  BIND(COALESCE(?o, 0) AS ?order) }
-ORDER BY ?order ?rule";
-
 /// One rule of a transition: its order, its update text, and its name for the log. A transition stating no
 /// update is refused as it is read (`transitions`), so a rule always has a text.
 #[derive(Clone, Debug, PartialEq)]
@@ -56,6 +47,14 @@ impl Rule {
 /// Every active `belief:Transition` of the rules graphs, in the orders they are applied in. One stating no
 /// `belief:update` changes nothing, said in the log once as it is read.
 pub fn transitions(store: &Store) -> Result<Vec<Vec<Rule>>, Error> {
+    /// EVERY TRANSITION, over the rules graphs: each active one, with its order and its update.
+    const TRANSITIONS_Q: &str = "
+    SELECT DISTINCT ?rule ?order ?update WHERE {
+      ?rule a belief:Transition .
+      FILTER NOT EXISTS { ?rule sh:deactivated true }
+      OPTIONAL { ?rule sh:order ?o } OPTIONAL { ?rule belief:update ?update }
+      BIND(COALESCE(?o, 0) AS ?order) }
+    ORDER BY ?order ?rule";
     let graphs = store.graphs_of(&[RULES_GRAPH], &Within::default())?;
     let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
     let found = store.rows(TRANSITIONS_Q, &graphs)?;

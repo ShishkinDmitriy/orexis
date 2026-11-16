@@ -40,47 +40,6 @@ pub const BUDGET: usize = 64;
 
 const SPARQL_RULE: &str = "http://www.w3.org/ns/shacl#SPARQLRule";
 
-/// THE DEFAULT RULE SET of every rules graph: every active rule of any kind, with where the draft places it, its
-/// construct, and whether a shape links it, so that what cannot be run is reported. No transition is of it.
-const RULES_Q: &str = "
-SELECT ?rule ?type ?construct ?layer ?order ?once ?shape ?condition ?expects WHERE {
-  ?rule a ?type . FILTER(?type IN (sh:SPARQLRule, sh:TripleRule, sh:Rule))
-  OPTIONAL { ?rule sh:construct ?construct }
-  OPTIONAL { ?rule sh:layer ?layer } OPTIONAL { ?rule sh:order ?order }
-  OPTIONAL { ?rule sh:runOnce ?once }
-  OPTIONAL { ?shape sh:rule ?rule }
-  OPTIONAL { ?rule sh:condition ?condition } OPTIONAL { ?rule sh:expectedPredicate ?expects }
-  FILTER NOT EXISTS { ?rule sh:deactivated true }
-  FILTER NOT EXISTS { ?rule a belief:Transition } }";
-
-/// WHAT A RULE'S `sh:prefixes` DECLARE, as SHACL-SPARQL spells it.
-const DECLARED_Q: &str = "
-SELECT ?rule ?prefix ?namespace WHERE {
-  ?rule sh:prefixes ?ontology . ?ontology sh:declare ?d . ?d sh:prefix ?prefix ; sh:namespace ?namespace }";
-
-/// A CUSTOM RULE PROCESSOR named anywhere in a rules graph: an instruction this engine cannot follow.
-const PROCESSOR_Q: &str = "SELECT ?x ?processor WHERE { ?x sh:ruleProcessor ?processor }";
-
-/// WHOSE THE SOURCE IS AND WHEN IT HOLDS, off its row: the revisions are the same.
-const SOURCE_Q: &str = "
-SELECT ?owner ?start ?end WHERE {
-  GRAPH $cat { OPTIONAL { $source orexis:ownedBy ?owner }
-               OPTIONAL { $source dcterms:temporal ?p .
-                          OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
-LIMIT 1";
-
-/// THE REVISION GRAPH'S ROW beside its entry: derived from its source, and whether its rules settled.
-const DESCRIBED_Q: &str = "GRAPH $cat { $into $derived $source ; $settled $value . }";
-
-/// WHETHER A REVISION GRAPH'S RULES SETTLED, said again on its row.
-const SAY_SETTLED_U: &str = "
-DELETE { GRAPH $cat { $graph $settled ?was } }
-INSERT { GRAPH $cat { $graph $settled $value } }
-WHERE  { GRAPH $cat { $graph $settled ?was } }";
-
-/// WHETHER A REVISION GRAPH'S RULES DID NOT SETTLE, off its row.
-const UNSETTLED_Q: &str = "ASK { GRAPH $cat { $graph $settled false } }";
-
 /// `PREFIX name: <iri>` at the head of a text, the empty name included.
 static PREFIX_LINE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?im)^\s*PREFIX\s+([A-Za-z][\w.\-]*)?\s*:\s*<([^>]*)>").expect("a valid pattern"));
@@ -227,6 +186,8 @@ impl Evaluation<'_> {
 
 /// Whether `graph`'s row says its rules did not settle; no row is settled.
 fn unsettled(store: &Store, cat: &str, graph: &str) -> Result<bool, Error> {
+    /// WHETHER A REVISION GRAPH'S RULES DID NOT SETTLE, off its row.
+    const UNSETTLED_Q: &str = "ASK { GRAPH $cat { $graph $settled false } }";
     store.ask(
         &bind(
             UNSETTLED_Q,
@@ -288,6 +249,24 @@ struct About {
 /// The default rule set of every rules graph, as the draft executes it. A rule this engine cannot execute — not a
 /// SPARQL rule, or linked to a shape — is the failure the draft says to report, logged and left out.
 fn layers(store: &Store) -> Result<Layers, Error> {
+    /// A CUSTOM RULE PROCESSOR named anywhere in a rules graph: an instruction this engine cannot follow.
+    const PROCESSOR_Q: &str = "SELECT ?x ?processor WHERE { ?x sh:ruleProcessor ?processor }";
+    /// WHAT A RULE'S `sh:prefixes` DECLARE, as SHACL-SPARQL spells it.
+    const DECLARED_Q: &str = "
+    SELECT ?rule ?prefix ?namespace WHERE {
+      ?rule sh:prefixes ?ontology . ?ontology sh:declare ?d . ?d sh:prefix ?prefix ; sh:namespace ?namespace }";
+    /// THE DEFAULT RULE SET of every rules graph: every active rule of any kind, with where the draft places it, its
+    /// construct, and whether a shape links it, so that what cannot be run is reported. No transition is of it.
+    const RULES_Q: &str = "
+    SELECT ?rule ?type ?construct ?layer ?order ?once ?shape ?condition ?expects WHERE {
+      ?rule a ?type . FILTER(?type IN (sh:SPARQLRule, sh:TripleRule, sh:Rule))
+      OPTIONAL { ?rule sh:construct ?construct }
+      OPTIONAL { ?rule sh:layer ?layer } OPTIONAL { ?rule sh:order ?order }
+      OPTIONAL { ?rule sh:runOnce ?once }
+      OPTIONAL { ?shape sh:rule ?rule }
+      OPTIONAL { ?rule sh:condition ?condition } OPTIONAL { ?rule sh:expectedPredicate ?expects }
+      FILTER NOT EXISTS { ?rule sh:deactivated true }
+      FILTER NOT EXISTS { ?rule a belief:Transition } }";
     let rules_graphs = store.graphs_of(&[RULES_GRAPH], &Within::default())?;
     let rules: Vec<&str> = rules_graphs.iter().map(String::as_str).collect();
     for r in store.rows(PROCESSOR_Q, &rules)? {
@@ -423,6 +402,15 @@ fn describe(
     continuing: bool,
     kind: &str,
 ) -> Result<(), Error> {
+    /// THE REVISION GRAPH'S ROW beside its entry: derived from its source, and whether its rules settled.
+    const DESCRIBED_Q: &str = "GRAPH $cat { $into $derived $source ; $settled $value . }";
+    /// WHOSE THE SOURCE IS AND WHEN IT HOLDS, off its row: the revisions are the same.
+    const SOURCE_Q: &str = "
+    SELECT ?owner ?start ?end WHERE {
+      GRAPH $cat { OPTIONAL { $source orexis:ownedBy ?owner }
+                   OPTIONAL { $source dcterms:temporal ?p .
+                              OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
+    LIMIT 1";
     if continuing {
         return say_settled(store, cat, into, settled);
     }
@@ -457,6 +445,11 @@ fn describe(
 
 /// Say on `graph`'s row whether its rules — or its arrival — are done, replacing what it said.
 pub(crate) fn say_settled(store: &Store, cat: &str, graph: &str, settled: bool) -> Result<(), Error> {
+    /// WHETHER A REVISION GRAPH'S RULES SETTLED, said again on its row.
+    const SAY_SETTLED_U: &str = "
+    DELETE { GRAPH $cat { $graph $settled ?was } }
+    INSERT { GRAPH $cat { $graph $settled $value } }
+    WHERE  { GRAPH $cat { $graph $settled ?was } }";
     store.update(&bind(
         SAY_SETTLED_U,
         &[
@@ -480,7 +473,6 @@ mod tests {
     use super::*;
 
     const SENSED: &str = "http://example.org/test#sensed";
-    const CONCLUDED_Q: &str = "SELECT ?s ?p ?o WHERE { GRAPH $g { ?s ?p ?o } }";
 
     fn cases() -> PathBuf {
         snapshots::tree().join("orexis-belief/tests/revise")
@@ -495,6 +487,7 @@ mod tests {
     }
 
     fn concluded(store: &Store) -> Vec<(String, String, String)> {
+        const CONCLUDED_Q: &str = "SELECT ?s ?p ?o WHERE { GRAPH $g { ?s ?p ?o } }";
         store
             .rows(
                 &bind(CONCLUDED_Q, &[("g", Value::iri(revision_graph(SENSED)))]).unwrap(),

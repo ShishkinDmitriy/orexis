@@ -25,29 +25,6 @@ use crate::held::{holds, push_unique};
 use crate::ontology::{REVISION_GRAPH, state_graph};
 use crate::transition::{Change, applied, asked, transitions};
 
-/// WHETHER THE ARRIVAL IS TESTIMONY, WHOSE IT IS AND WHEN IT HOLDS, off its row.
-const ARRIVAL_Q: &str = "
-SELECT ?owner ?start ?end WHERE {
-  GRAPH $cat { $arrival orexis:arrivedBy orexis:Received .
-               OPTIONAL { $arrival orexis:ownedBy ?owner }
-               OPTIONAL { $arrival dcterms:temporal ?p .
-                          OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
-LIMIT 1";
-
-/// EVERY BELIEF THE AGENT DERIVED, of any period, that is no revision: its own state.
-const DERIVED_Q: &str = "
-SELECT ?g WHERE { GRAPH $cat { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
-                               FILTER NOT EXISTS { ?g a belief:RevisionGraph }
-                               ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
-
-/// WHETHER A GRAPH STILL HAS A ROW: one an order emptied was forgotten, row and all.
-const ROW_Q: &str = "SELECT ?k WHERE { GRAPH $cat { $graph a ?k } } LIMIT 1";
-
-/// A ROW, AND ITS PERIOD, TAKEN BACK — for an arrival's state graph said again of a later arrival.
-const UNDESCRIBE_U: &str = "
-DELETE { GRAPH $cat { $graph ?p ?o . ?period ?pp ?po } }
-WHERE  { GRAPH $cat { $graph ?p ?o . OPTIONAL { $graph dcterms:temporal ?period . ?period ?pp ?po } } }";
-
 /// What applying the transitions an arrival triggers did: the rule executions it spent, how many of its orders are
 /// applied — those before this call included — whether that is all of them, and the agent's own state graphs this
 /// call changed.
@@ -72,6 +49,14 @@ impl Triggered {
 
 /// The catalogue and `arrival`'s row, where the arrival is testimony: None where it is not, or there is no catalogue.
 fn testimony(store: &Store, arrival: &str) -> Result<Option<(String, Row)>, Error> {
+    /// WHETHER THE ARRIVAL IS TESTIMONY, WHOSE IT IS AND WHEN IT HOLDS, off its row.
+    const ARRIVAL_Q: &str = "
+    SELECT ?owner ?start ?end WHERE {
+      GRAPH $cat { $arrival orexis:arrivedBy orexis:Received .
+                   OPTIONAL { $arrival orexis:ownedBy ?owner }
+                   OPTIONAL { $arrival dcterms:temporal ?p .
+                              OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
+    LIMIT 1";
     let Some(cat) = store.catalogue()? else {
         return Ok(None);
     };
@@ -179,6 +164,8 @@ pub fn trigger(store: &Store, arrival: &str, budget: usize, done: usize) -> Resu
 
 /// `changed`, each graph still standing stamped with the hash of what it now holds.
 fn stamped(store: &Store, cat: &str, changed: Vec<String>) -> Result<Vec<String>, Error> {
+    /// WHETHER A GRAPH STILL HAS A ROW: one an order emptied was forgotten, row and all.
+    const ROW_Q: &str = "SELECT ?k WHERE { GRAPH $cat { $graph a ?k } } LIMIT 1";
     for graph in &changed {
         let row = store.rows(
             &bind(ROW_Q, &[("cat", Value::iri(cat)), ("graph", Value::iri(graph))])?,
@@ -207,6 +194,11 @@ fn deleted_from(store: &Store, change: &Change, targets: &[&str]) -> Result<Vec<
 
 /// Every state graph the agent derived, whatever its period.
 fn derived(store: &Store, cat: &str) -> Result<Vec<String>, Error> {
+    /// EVERY BELIEF THE AGENT DERIVED, of any period, that is no revision: its own state.
+    const DERIVED_Q: &str = "
+    SELECT ?g WHERE { GRAPH $cat { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
+                                   FILTER NOT EXISTS { ?g a belief:RevisionGraph }
+                                   ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
     Ok(store
         .rows(&bind(DERIVED_Q, &[("cat", Value::iri(cat))])?, &[])?
         .iter()
@@ -217,6 +209,10 @@ fn derived(store: &Store, cat: &str) -> Result<Vec<String>, Error> {
 /// The arrival's state graph's row, said of the arrival it now holds the state of, any row of an earlier arrival
 /// taken back first.
 fn describe(store: &Store, cat: &str, into: &str, row: &Row) -> Result<(), Error> {
+    /// A ROW, AND ITS PERIOD, TAKEN BACK — for an arrival's state graph said again of a later arrival.
+    const UNDESCRIBE_U: &str = "
+    DELETE { GRAPH $cat { $graph ?p ?o . ?period ?pp ?po } }
+    WHERE  { GRAPH $cat { $graph ?p ?o . OPTIONAL { $graph dcterms:temporal ?period . ?period ?pp ?po } } }";
     store.update(&bind(
         UNDESCRIBE_U,
         &[("cat", Value::iri(cat)), ("graph", Value::iri(into))],
@@ -248,10 +244,6 @@ mod tests {
 
     const T: &str = "http://example.org/test#";
     const TICK: &str = "http://example.org/test#tick2";
-    const HELD_Q: &str = "SELECT ?p ?o WHERE { <http://example.org/test#counter> ?p ?o FILTER(?p != rdf:type) }";
-    const OWN_STATE_Q: &str = "SELECT ?g WHERE { GRAPH ?c { ?c a orexis:CatalogueGraph .
-    ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
-    FILTER NOT EXISTS { ?g a belief:RevisionGraph } ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
 
     fn cases() -> PathBuf {
         snapshots::tree().join("orexis-belief/tests/trigger")
@@ -266,6 +258,10 @@ mod tests {
     }
 
     fn held(store: &Store) -> BTreeMap<String, String> {
+        const OWN_STATE_Q: &str = "SELECT ?g WHERE { GRAPH ?c { ?c a orexis:CatalogueGraph .
+        ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
+        FILTER NOT EXISTS { ?g a belief:RevisionGraph } ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
+        const HELD_Q: &str = "SELECT ?p ?o WHERE { <http://example.org/test#counter> ?p ?o FILTER(?p != rdf:type) }";
         let own: Vec<String> = store
             .rows(OWN_STATE_Q, &[])
             .unwrap()
