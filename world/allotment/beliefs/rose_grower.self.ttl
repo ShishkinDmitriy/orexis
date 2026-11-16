@@ -1,3 +1,7 @@
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 @prefix : <http://example.org/orexis/world/allotment#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix journal: <http://example.org/orexis/journal#> .
@@ -24,3 +28,10 @@
 :rose_grower orexis:plays [ a journal:Recorder ;
     journal:archivedIn :rose_grower_archive ;
     journal:servedAt :rose_grower_endpoint ] .
+
+#  WHAT ITS ROLES DEPEND ON, played beside them (`orexis:dependsOn`, knowledge/domain/kernel/role.md):
+#  its bidder and its observer work only beside these, and each is a role of its own.
+:rose_grower orexis:plays [ a planning:Planner ] ,
+    [ a execution:Executor ] ,
+    [ a speech:Speaker ] ,
+    [ a belief:Deliberator ] .

@@ -586,8 +586,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   intentions, which execution writes, so it begins on `execution:IntentionAdopted`, a step taken and an intention
   resolved, and on nothing of planning's; begun on the plan published, it could ask its peers before execution had
   adopted the plan, with the holdings of the plan before, and was not begun again until the first step was taken.
-- **A coordinator is a planner and an executor too** — a draw is joined only by committing and revealing,
-  actions planning plans and execution takes, so the role is beneath all three it needs.
+- **A coordinator depends on a planner, an executor and a speaker, and is none of them** — a draw is joined only
+  by committing and revealing, actions planning plans and execution takes, so the agent plays all four
+  (a-role-depends-on-another-and-is-no-kind-of-it).
 - **Who won is asked, not triggered** — a peer's word is extracted into a belief of the agent's own,
   which triggers no transition, so the draw ships a `coordination:Outcome` coordination asks each pass;
   a transition on the reveal's arrival decided no draw.
@@ -813,8 +814,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   for every agent that is none.
 - **A package is loaded only for a role the agent plays, in its self graph, and there is no
   default** — a role is an instance the agent `orexis:plays`, never its type; each package declares its
-  role classes in its own ontology and asks in its own start whether the self plays one, a domain's role classes sit
-  beneath them, and a transport joins where a role the self plays needs bytes and the society wires a bus; a
+  role classes in its own ontology and asks in its own start whether the self plays one, a domain's role classes
+  depend on them, and a transport joins where a role the self plays needs bytes and the society wires a bus; a
   premise read off the world was refused, since it cannot write an assignment no fact implies (#927,
   a-package-is-loaded-only-for-a-role-the-agent-is-declared-in, a-role-is-an-instance-an-agent-plays).
 - **An agent plays one observer, which attends the sensors it reads, and an attention says how long it lets its
@@ -844,8 +845,14 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   the observer and scopes beneath the planner were refused, the first the transport's words and the second
   derived, with nothing for an author to name (a-role-is-an-instance-an-agent-plays).
 - **A role's need is a shape shipped by whoever owns the words it is stated in, and onboarding holds a
-  declaration to its world both ways** — the executor's need to be a planner is planning's shape, the
-  speaker's topic the MQTT transport's, since a package beneath may not speak them (#927).
+  declaration to its world both ways** — the speaker's topic is the MQTT transport's shape, since a package
+  beneath may not speak them (#927); and a need of another role is `orexis:dependsOn`, stated by the same rule,
+  the executor's of a planner in planning's ontology.
+- **A role depends on the roles it works only beside, and is no kind of them** — `orexis:dependsOn` between
+  role classes, each depended-on role played in the self graph with what it says and refused at onboarding where
+  missing, so a package decides by its own class alone; a coordinator, an observer, a translator and the market's
+  roles were beneath the roles they need, one class meaning both what a role is and what runs beside it, which
+  made a package's decision read another package's ontology (a-role-depends-on-another-and-is-no-kind-of-it).
 - **The runtime stops when no desire is held, no transport reaches it and every want is reached** —
   `met` — **or, where no executor is linked, has a plan published** — `planned`, since a plan nobody
   will adopt is no walk (#928); wants standing with nothing walking is `planning:Exhausted` or

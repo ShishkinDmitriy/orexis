@@ -27,11 +27,12 @@ A domain that combines others imports them: the tower's ontology imports `<../ha
 and `<../courier/ontology.ttl>` beside its own rules.
 
 A domain whose agents play a part only its words can name declares that as a
-[role](/domain/kernel/role.md) in its `ontology.ttl`, `rdfs:subClassOf` each package role it needs —
-the market's `market:Host` is beneath the planner, the executor, the speaker and, since it ships
-`rules.ttl`, the deliberator — and in its `requirements.ttl` a SHACL shape targeting the role whose `sh:sparql`
+[role](/domain/kernel/role.md) in its `ontology.ttl`, beneath `orexis:Role` and `orexis:dependsOn` each
+package role it needs — the market's `market:Host` depends on the planner, the executor, the speaker and,
+since it ships `rules.ttl`, the deliberator — and in its `requirements.ttl` a SHACL shape targeting the role whose `sh:sparql`
 select returns a row where the world lacks what the role is founded on, `market:hosts` for the host.
-A world's agents are then declared in the domain's word, and nobody lists what it runs.
+A world's agents are then declared in the domain's word, beside each role it depends on, which onboarding
+holds them to.
 
 # The rules its texts live by
 

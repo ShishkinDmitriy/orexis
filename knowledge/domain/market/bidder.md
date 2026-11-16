@@ -5,8 +5,8 @@ term: http://example.org/orexis/market#Bidder
 description: >-
   An agent that bids in a venue - calls for a round, tenders into it, and presents the claim it
   wins. A role declared in the agent's own self graph and founded on the public relation
-  `market:bidsIn`, which says where; beneath the planner, the executor, the speaker and the
-  deliberator, which declaring it loads.
+  `market:bidsIn`, which says where; depending on the planner, the executor, the speaker and the
+  deliberator, which the agent plays beside it.
 ---
 
 # What it is
@@ -23,7 +23,7 @@ into the [round](/domain/market/round.md), a [claim](/domain/market/claim.md) pr
 # What declaring it loads, and needs
 
 For the reason the [host](/domain/market/host.md) gives, a bidder plans, walks, speaks and
-deliberates too: the role sits beneath the same four package roles, and the boot loads belief,
-planning, execution and speech for it. It needs a venue it bids in — the shape the market
+deliberates too: the role depends on the same four package roles, and the agent plays each, so belief,
+planning, execution and speech run beside it. It needs a venue it bids in — the shape the market
 ships beside the role asks for `market:bidsIn` — and `orexis-onboard` refuses a bidder bidding
 nowhere ([role](/domain/kernel/role.md)).

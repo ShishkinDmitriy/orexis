@@ -125,7 +125,7 @@ boots every agent as its container would and holds the declaration to the world 
 - **an agent playing no role**, which would boot, load nothing and run nothing;
 - **a declared role whose needs the world lacks** — each need a SHACL shape targeting the role, its
   `sh:sparql` select returning the role, `$this`, for each way it is unmet, shipped by the package or domain whose words the need
-  is stated in: a planner holding no desire or want, an executor that is no planner, an observer that
+  is stated in: a planner holding no desire or want, an observer that
   reads no sensor or reads one mounted on nothing the agent acts for, a predictor with no sensor or no flow, a speaker listening to no topic, a host
   hosting no venue, a bidder bidding in none;
 - **a requirement its boot breaks that is not the world's**, as a want carrying both tests (the

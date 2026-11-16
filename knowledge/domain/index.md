@@ -132,7 +132,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 # Coordination — two agents, one resource
 
-* [coordinator](/domain/coordination/coordinator.md) - The role coordination serves, beneath the speaker: asks peers in range, answers them, and lays what it yields to.
+* [coordinator](/domain/coordination/coordinator.md) - The role coordination serves, depending on the speaker, planner and executor: asks peers in range, answers them, and lays what it yields to.
 * [question](/domain/coordination/question.md) - Asked of a peer in range under a constraint: the asker's holdings and the constraint's name, never a query text.
 * [answer](/domain/coordination/answer.md) - Said only under a constraint both hold, carrying the answerer's holdings that meet the asked ones; empty is the cost of no conflict.
 * [holding](/domain/coordination/holding.md) - A thing's values on a constraint's key over a period, read off the walking intentions; the one thing of a plan that crosses.

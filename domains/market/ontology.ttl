@@ -67,12 +67,14 @@
 #  (knowledge/decisions/a-package-is-loaded-only-for-a-role-the-agent-is-declared-in.md).
 
 :Host a owl:Class ;
-    rdfs:subClassOf planning:Planner , execution:Executor , speech:Speaker , belief:Deliberator ;
+    rdfs:subClassOf orexis:Role ;
+    orexis:dependsOn planning:Planner , execution:Executor , speech:Speaker , belief:Deliberator ;
     rdfs:label "Host" ;
     rdfs:comment "An agent that holds a venue's good and serves it: offers and clears the rounds, serves the claims, and commands its own valve. Founded on `market:hosts`, which says which venue; this says what the agent runs." .
 
 :Bidder a owl:Class ;
-    rdfs:subClassOf planning:Planner , execution:Executor , speech:Speaker , belief:Deliberator ;
+    rdfs:subClassOf orexis:Role ;
+    orexis:dependsOn planning:Planner , execution:Executor , speech:Speaker , belief:Deliberator ;
     rdfs:label "Bidder" ;
     rdfs:comment "An agent that bids in a venue: calls for a round, tenders into it and presents the claim it wins. Founded on `market:bidsIn`, which says which venue; this says what the agent runs." .
 

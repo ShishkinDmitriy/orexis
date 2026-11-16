@@ -1,3 +1,4 @@
+@prefix belief: <http://example.org/orexis/belief#> .
 @prefix : <http://example.org/orexis/world/layby#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix journal: <http://example.org/orexis/journal#> .
@@ -24,3 +25,7 @@
 :courier_a orexis:plays [ a journal:Recorder ;
     journal:archivedIn :courier_a_archive ;
     journal:servedAt :courier_a_endpoint ] .
+
+#  WHAT ITS ROLES DEPEND ON, played beside them (`orexis:dependsOn`, knowledge/domain/kernel/role.md):
+#  its observer works only beside these, and each is a role of its own.
+:courier_a orexis:plays [ a belief:Deliberator ] .

@@ -5,8 +5,9 @@ term: http://example.org/orexis#Role
 description: >-
   What an agent runs and may do - an instance the agent plays, declared in its own self graph and
   never derived from the world, carrying its own context. A package declares the role classes it
-  serves, a domain declares role classes in its own words beneath those, and only a package one of
-  the agent's roles calls for is loaded. No role is every agent's.
+  serves, a domain declares role classes in its own words, a role depends on the roles it works only
+  beside and the agent plays those too, and only a package one of the agent's roles calls for runs. No
+  role is every agent's.
 ---
 
 # What it is
@@ -44,12 +45,35 @@ a peer finds the agent by it: the courier's [driver](/domain/courier/driver.md),
   [speaker](/domain/speech/speaker.md). A role and the part that plays it are one concept, so each is
   the word its part already had where it had one; how declaring one loads its package is the
   [package](/domain/kernel/package.md)'s to say.
-- **A domain declares roles in its own words, beneath package roles.** The market's
-  [host](/domain/market/host.md) and [bidder](/domain/market/bidder.md) sit beneath the four package
-  roles a market agent needs, so an author declares a host and never lists what a host runs.
+- **A domain declares roles in its own words, depending on package roles.** The market's
+  [host](/domain/market/host.md) and [bidder](/domain/market/bidder.md) depend on the four package
+  roles a market agent needs, and an author declares those beside a host, each with what it says.
 - **An author declares a package role directly** where no domain has a word for what the agent is:
   Hanoi's mover is a planner and nothing else, its plan its output — and planning, finding no
   executor to link to, lets it go `planned` once the plan is published ([runtime](/domain/kernel/runtime.md)).
+
+# A role that depends on another
+
+A role DEPENDS ON another (`orexis:dependsOn`, between their classes) where its package works only beside the
+other's: a [coordinator](/domain/coordination/coordinator.md) asks and answers, which is saying and hearing, and
+draws lots by committing and revealing, which is planning and walking, so it depends on the speaker, the planner and
+the executor; an [observer](/domain/sensing/observer.md)'s percepts are revised by the deliberator; a
+[translator](/domain/translation/translator.md)'s person's words are a document speech keeps; and an executor
+walks what a planner published. It is no kind of the other: a coordinator is not a planner, and a class beneath
+another (`rdfs:subClassOf`) says what a role IS, never what it needs beside it. The dependency is stated by whoever
+owns the words it is stated in, as planning states the executor's, execution speaking none of planning's.
+
+So the agent plays every role its roles depend on, each stated in its self graph with what that role says - a
+courier's budget on its planner, not on its coordinator - and onboarding refuses a role played without them. A
+package then decides whether it runs by its own role's class alone, reading no other package's vocabulary.
+
+```turtle
+:courier_a a orexis:Self ;
+    orexis:plays [ a coordination:Coordinator ] ,
+                 [ a planning:Planner ; planning:budget 256 ] ,
+                 [ a execution:Executor ] ,
+                 [ a speech:Speaker ] .
+```
 
 # How a package reads it
 
@@ -73,8 +97,8 @@ its [attentions](/domain/sensing/attention.md)', so they are asked per sensor an
 
 Two roles of one class are two contexts: two venues are two host roles, each carrying its own. A role with no
 context is played once, since what it says is said to its package once for the agent — an observer, a recorder
-and a meter are each one, and their package refuses a second as it starts. A package role a domain's roles sit
-beneath, as the planner beneath two hosts, is held to the figure instead: the same figure said by two roles is one
+and a meter are each one, and their package refuses a second as it starts. A package role played beside
+several of a domain's, as one planner beside two hosts, is held to the figure instead: the same figure said by two roles is one
 answer, two values are never picked between, the default holding at run time, and onboarding refuses them.
 
 # The figures a role states
@@ -112,7 +136,7 @@ There is **no default**. An agent playing no role runs nothing and `orexis-onboa
 default would be a kind said by absence, and a role every agent has is not a role, since its holder
 could not cease to hold it. Each role's needs of the world are a shape, shipped by whoever owns the
 words the need is stated in, and [onboarding](/domain/onboarding/onboarding.md) holds a declaration
-to its world both ways.
+to its world both ways; that every role a played one depends on is played too is onboarding's own.
 
 A role loads code; it does not narrow which steps an agent's actions admit, which stays their
 preconditions' to say over public relations. And it is anti-rigid, though changing one on a running

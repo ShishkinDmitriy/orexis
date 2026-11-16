@@ -27,14 +27,15 @@
 #################  The role this package serves  #################
 
 :Coordinator a owl:Class ;
-    rdfs:subClassOf speech:Speaker , planning:Planner , execution:Executor ;
+    rdfs:subClassOf orexis:Role ;
+    orexis:dependsOn speech:Speaker , planning:Planner , execution:Executor ;
     rdfs:label "Coordinator" ;
     rdfs:comment """An agent that asks the peers it believes in range what its constraints read, answers
     them under the constraints it holds too, and yields where a draw it lost says so: the role whose part
-    is this package's (knowledge/domain/coordination/coordinator.md). Beneath the speaker, since asking and
-    answering is saying and hearing; and beneath the planner and the executor, since a draw is taken part in
-    only by committing and revealing, actions planning plans and execution takes. So the boot loads all three
-    with it. Declared, never derived.""" .
+    is this package's (knowledge/domain/coordination/coordinator.md). It depends on the speaker, since asking
+    and answering is saying and hearing; and on the planner and the executor, since a draw is taken part in
+    only by committing and revealing, actions planning plans and execution takes. So an agent playing one
+    plays all three beside it. Declared, never derived.""" .
 
 #################  What is said  #################
 

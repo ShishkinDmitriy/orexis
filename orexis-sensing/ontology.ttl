@@ -59,12 +59,14 @@
 #  the one role, never by a second observer: what the role says besides is said once for the agent.
 
 :Observer a owl:Class ;
-    rdfs:subClassOf orexis:Role , belief:Deliberator ;
+    rdfs:subClassOf orexis:Role ;
+    orexis:dependsOn belief:Deliberator ;
     rdfs:label "Observer" ;
     rdfs:comment """A role an agent plays that turns its sensors' numbers into observations: the role
     whose part is sensing's, which writes an observation per reading and says a sensor silent or
     stuck. Played, never derived, and by an agent once: it attends the sensors it reads (`attends`), and
-    says how often sensing asks after them and where their readings are archived.""" .
+    says how often sensing asks after them and where their readings are archived. It depends on the
+    deliberator, which revises each percept into what is concluded of it.""" .
 
 :Attention a owl:Class ;
     rdfs:label "Attention" ;

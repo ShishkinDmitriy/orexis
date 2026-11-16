@@ -366,13 +366,13 @@ def test_what_the_world_leaves_out_an_agents_own_documents_may_complete(tmp_path
     from onboarding import reading
 
     state = "<> a orexis:BeliefGraph ; orexis:ownedBy :me .\n:probe sosa:observes :moisture .\n"
-    world = _declared(tmp_path, [OBSERVER], ":probe a sosa:Sensor ; sosa:isHostedBy :pot .\n" + _cadence(), reads=["probe"], state=state)
+    world = _declared(tmp_path, [OBSERVER, DELIBERATED], ":probe a sosa:Sensor ; sosa:isHostedBy :pot .\n" + _cadence(), reads=["probe"], state=state)
     assert reading.invalid(world) == [] and reading.refused(world) == []
 
     with (world / "world.ttl").open("a") as text:
         text.write(':you a orexis:Agent ; orexis:localId "you" ; orexis:actsFor :pot .\n')
     (world / "beliefs" / "you.self.ttl").write_text(
-        _ROLE_HEAD + "<> a orexis:SelfGraph .\n:you a orexis:Self" + _plays([OBSERVER], ["probe"]) + " .\n")
+        _ROLE_HEAD + "<> a orexis:SelfGraph .\n:you a orexis:Self" + _plays([OBSERVER, DELIBERATED], ["probe"]) + " .\n")
     assert reading.invalid(world) == []
     assert reading.refused(world) == ["you: probe: a sensor that observes no property: its readings would be of nothing"]
 
@@ -450,6 +450,8 @@ def _declared(tmp_path, roles, facts: str = "", reads=(), **documents) -> Path:
 _SENSOR = "http://example.org/orexis/sensing#sensor"
 _ATTENDS = "http://example.org/orexis/sensing#attends"
 OBSERVER = "http://example.org/orexis/sensing#Observer"
+#  AN OBSERVER DEPENDS ON A DELIBERATOR (`orexis:dependsOn`), so a self graph playing one plays this beside it.
+DELIBERATED = ("http://example.org/orexis/belief#Deliberator", "")
 
 
 def _plays(roles, reads=()) -> str:
@@ -556,7 +558,7 @@ def test_onboarding_holds_an_observer_to_one_role_and_its_attentions_to_their_se
 
     def refused(*played):
         return [line.removeprefix("me: ").removeprefix("me: ").split(":")[0]
-                for line in reading.refused(_declared(tmp_path, list(played), mounted))]
+                for line in reading.refused(_declared(tmp_path, [*played, DELIBERATED], mounted))]
 
     twice = (OBSERVER, _attending(["probe"], ["hygro"]))
     assert refused(twice) == []
@@ -591,13 +593,36 @@ def test_every_role_but_the_deliberators_and_the_recorders_states_a_need():
     """The deliberator needs nothing — an agent holding no rules may be declared one and revises
     nothing — and neither does the recorder, which writes down whatever its agent's packages say and
     asks nothing of the world to do it; every other role a package or the market declares has a need,
-    so a role added with none is a decision someone has to make here."""
+    of the world or of another role it depends on (`orexis:dependsOn`), so a role added with none is a
+    decision someone has to make here."""
+    import rdflib
+
     from documents.world import _vocabularies
 
-    targeted = {role for role, _ in NEEDS}
+    depends = rdflib.URIRef("http://example.org/orexis#dependsOn")
+    depending = set()
+    for ontology in [*REPO_ROOT.glob("orexis*/ontology.ttl"), REPO_ROOT / "domains" / "market" / "ontology.ttl"]:
+        depending |= {str(role) for role in rdflib.Graph().parse(ontology).subjects(depends, None)}
+    assert depending, "no role depends on another — the guard would count nothing"
+    targeted = {role for role, _ in NEEDS} | depending
     roles = set(_vocabularies()[0]) | {"http://example.org/orexis/market#Host", "http://example.org/orexis/market#Bidder"}
     needless = {"http://example.org/orexis/belief#Deliberator", "http://example.org/orexis/journal#Recorder"}
     assert roles - targeted == needless, sorted(roles - targeted)
+
+
+def test_onboarding_refuses_a_role_played_without_a_role_it_depends_on(tmp_path):
+    """A role depends on the roles it works only beside (`orexis:dependsOn`), whoever states it: a coordinator
+    played alone lacks a speaker, a planner and an executor, each said by name, and played beside the three is
+    refused nothing for it; an executor played without a planner is refused by the dependency planning states."""
+    from onboarding import reading
+
+    coordination, planning = "http://example.org/orexis/coordination#", "http://example.org/orexis/planning#"
+    speaker, executor = "http://example.org/orexis/speech#Speaker", "http://example.org/orexis/execution#Executor"
+    depending = lambda roles: sorted(line for line in reading.refused(_declared(tmp_path, roles)) if "depends on" in line)
+    assert depending([coordination + "Coordinator"]) == [
+        f"me: me: plays a Coordinator, which depends on a {needed} it plays none of" for needed in ("Executor", "Planner", "Speaker")]
+    assert depending([coordination + "Coordinator", speaker, planning + "Planner", executor]) == []
+    assert depending([executor]) == ["me: me: plays a Executor, which depends on a Planner it plays none of"]
 
 
 def test_onboarding_refuses_a_sensor_reporting_to_an_agent_that_no_observer_role_of_its_reads(tmp_path):
@@ -610,8 +635,8 @@ def test_onboarding_refuses_a_sensor_reporting_to_an_agent_that_no_observer_role
     unread = ("reports to it, and no observer role it plays reads it: no package it loads would read the sensor — "
               "`orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor <sensor> ] ]` says one does")
     assert reading.refused(_declared(tmp_path, [deliberator], mounted)) == [f"me: hygro {unread}", f"me: probe {unread}"]
-    assert reading.refused(_declared(tmp_path, [OBSERVER], mounted, reads=["probe"])) == [f"me: hygro {unread}"]
-    assert reading.refused(_declared(tmp_path, [OBSERVER], mounted, reads=["probe", "hygro"])) == []
+    assert reading.refused(_declared(tmp_path, [OBSERVER, DELIBERATED], mounted, reads=["probe"])) == [f"me: hygro {unread}"]
+    assert reading.refused(_declared(tmp_path, [OBSERVER, DELIBERATED], mounted, reads=["probe", "hygro"])) == []
 
 
 @pytest.mark.parametrize("connected", [False, True], ids=["on-none-of-its", "on-its"])
@@ -621,7 +646,7 @@ def test_onboarding_refuses_an_observer_on_no_broker_its_sensor_reports_over(tmp
     the readings. The MQTT transport's requirement, since the words are its."""
     from onboarding import reading
 
-    world = _declared(tmp_path, [OBSERVER], ":probe a sosa:Sensor ; sosa:isHostedBy :pot ; sosa:observes :moisture ;\n"
+    world = _declared(tmp_path, [OBSERVER, DELIBERATED], ":probe a sosa:Sensor ; sosa:isHostedBy :pot ; sosa:observes :moisture ;\n"
                       "    mqtt4ssn:observesTopic :readings .\n:board mqtt4ssn:hosts :probe ; mqtt4ssn:isConnectedToBroker :hub .\n"
                       + (":me mqtt4ssn:isConnectedToBroker :hub .\n" if connected else ""), reads=["probe"])
     said = [line for line in reading.refused(world) if "broker" in line]

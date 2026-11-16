@@ -3,7 +3,7 @@ type: Role
 title: Translator
 term: http://example.org/orexis/translation#Translator
 description: >-
-  An agent that speaks with the people of its chats itself - the role beneath the speaker whose part
+  An agent that speaks with the people of its chats itself - the role depending on the speaker whose part
   is the translation package's. A person's words reach it through a transport member as prose and
   become a statement in the words the chat allows, believed as the world's word, or a question answered by
   the model's queries; a statement the agent says to a person is rendered by the model and sent back on
