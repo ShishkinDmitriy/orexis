@@ -65,7 +65,9 @@ owns the words it is stated in, as planning states the executor's, execution spe
 
 So the agent plays every role its roles depend on, each stated in its self graph with what that role says - a
 courier's budget on its planner, not on its coordinator - and onboarding refuses a role played without them. A
-package then decides whether it runs by its own role's class alone, reading no other package's vocabulary.
+package then decides whether it runs by its own role's class alone, reading no other package's vocabulary, and one
+whose role depends on others makes its core once their packages have made theirs, the kernel reading the order off
+the dependencies ([package](/domain/kernel/package.md)).
 
 ```turtle
 :courier_a a orexis:Self ;

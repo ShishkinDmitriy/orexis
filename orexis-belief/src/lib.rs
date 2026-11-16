@@ -38,6 +38,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.plays(&[crate::ontology::DELIBERATOR])? {
             return Ok(());
         }
+        handed.joins("belief").await?;
         let mut deliberator = Deliberator::new(&handed.store)?;
         deliberator.watch = handed.events.watch().clone();
         deliberator.unrevised(handed.clock.now())?;

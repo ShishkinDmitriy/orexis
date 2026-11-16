@@ -50,6 +50,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.plays(&[ROLE])? {
             return Ok(());
         }
+        handed.joins("translation").await?;
         let mut translator = Translator::new(&handed.store)?;
         //  HANDED A MODEL, by a test that answers for it, it is that; deployed and handed none, the one its role
         //  names (`translation:translatedBy`), where the world's deployment says that answers, under the name and key

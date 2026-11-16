@@ -40,6 +40,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.plays(&[OBSERVER])? {
             return Ok(());
         }
+        handed.joins("sensing").await?;
         let mut observer = Observer::new(&handed.store)?;
         observer.watch = handed.events.watch().clone();
         observer.unrevised()?;

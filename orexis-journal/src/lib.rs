@@ -39,6 +39,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.plays(&[ROLE])? {
             return Ok(());
         }
+        handed.joins("journal").await?;
         let journal = match handed.outside.take::<Keeps>().and_then(|keeps| keeps.journal) {
             Some(journal) => Some(journal),
             None if handed.outside.has::<orexis::task::Deployed>() => Some(Recorder::new(&handed.store)?.own(&handed)?),

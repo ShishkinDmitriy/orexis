@@ -47,22 +47,30 @@ The agent's self graph states its roles beside its self, in a domain's words whe
 
 **The agent starts every package it holds, and each decides for itself whether it runs.** Two things must agree:
 the binary holds the package, a Cargo feature, and the agent's documents call for it. The agent's boot puts the
-documents of every package the binary holds in the store, its `ontology.ttl` and where it has them its rules and
-its actions, each a file of its crate compiled into the binary beside its code (`orexis::documents!` in the crate's
-registration), whether or not the package runs; then it starts every package, and the first thing a start does is
-decide:
+kernel's vocabulary, the world's documents and the self in the store; then it starts every package, and the first
+thing a start does is decide:
 
 | a package | runs where | asked by |
 |---|---|---|
-| with a role | the self plays a role of its class, or of a class an ontology in the store puts beneath it | `handed.plays(&[ROLE])` |
+| with a role | the self plays a role of its class, or of a domain's class beneath it | `handed.plays(&[ROLE])` |
 | a transport | a role the self plays needs bytes and the world wires them through this member | `boot::wired` |
 | keeping house for a role linked to a service | the self plays the role, the role names the service and the world says where it answers | the role the package reads (`Recorder::new`) |
 
-One look decides, since every package's ontology is in the store before any start: a translator is a speaker by
-translation's, so speech runs for a translator whether or not translation has looked yet. The package knows its own
-role; nothing decides for it, and the kernel names no package, no role and no transport's wiring. A role the self
-plays that no package of the binary declares is refused, its package having been built out. A deployed image is
-built with its agent's packages alone (`orexis-compose`), so its store holds their documents and no other's.
+Its own class decides, since no package's role is beneath another package's, and a domain's role class beneath
+one is the world's to say, in the store as the boot began. **A package that runs joins, bringing its own documents**
+(`handed.joins("speech")`): its `ontology.ttl` and where it has them its rules and its actions, each a file of its
+crate compiled into the binary beside its code (`orexis::documents!` in the crate's registration), are put in, and
+every graph of the world passed over until then, a kind its vocabulary declares, with them. So an agent's store holds
+the documents of the packages it runs and of no other. **The order the packages make their cores in is the
+vocabulary's** ([role](/domain/kernel/role.md)): joining waits until every start has decided and the boot is
+finished, every package that joins having brought its documents; the kernel then reads which of the self's roles each
+joined package's own documents declare, and what those roles depend on (`orexis:dependsOn`), and holds a package
+until every package serving a role its roles depend on has made its core, and refuses the boot where the
+dependencies go round a cycle; that the self plays every role depended on is onboarding's to hold. A package whose role depends on
+nothing goes straight on; a coordinator makes its core after planning, execution and speech have made theirs, and no
+package names another. The package knows its own role; nothing
+decides for it, and the kernel names no package, no role and no transport's wiring. Once every start has decided, a
+role the self plays that no package of the binary declares is refused, its package having been built out.
 
 **A package's start is the whole of what it does, and its lifecycle is two events.** It decides, makes its core,
 SAYS IT HAS STARTED (`handed.started("belief").await`), and checked (`handed.checking()`), ends there: each package

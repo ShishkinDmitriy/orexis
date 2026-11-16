@@ -41,8 +41,8 @@ coordination:Coordinator rdfs:subClassOf orexis:Role ;
     orexis:dependsOn speech:Speaker , planning:Planner , execution:Executor .
 ```
 
-- **`orexis:dependsOn`**, the kernel's, between role classes. It says nothing a reasoner concludes, and it is
-  read by nobody at run time: it is what onboarding holds a self graph to.
+- **`orexis:dependsOn`**, the kernel's, between role classes. It says nothing a reasoner concludes: it is what
+  onboarding holds a self graph to, and, since the change after, the order the kernel makes the packages' cores in.
 - **Stated by whoever owns the words it is stated in**, as a role's need of the world already was: the
   coordinator's in coordination's ontology, the observer's of the deliberator in sensing's, the executor's of the
   planner in planning's, since execution speaks none of planning's words.
@@ -69,5 +69,6 @@ coordination:Coordinator rdfs:subClassOf orexis:Role ;
 
 - Six self graphs of shipped worlds and two of a test world state the roles their roles depend on, the lane's
   budget moving onto its planner.
-- **A package may bring its own documents as it starts**, deciding first by its own class and waiting only on
-  the packages its role depends on: the seam this opens, not yet built.
+- **A package brings its own documents as it starts**, deciding first by its own class and waiting only on the
+  roles its role depends on, in the order the kernel reads off the dependencies (`Handed::joins`, package): what
+  this opened, built in the change after it.

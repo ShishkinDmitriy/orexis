@@ -70,6 +70,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.plays(&[ROLE])? {
             return Ok(());
         }
+        handed.joins("planning").await?;
         //  THE SCOPES A PASS READS are written as planning starts, over the store as the boot left it: the boot's
         //  act, and planning's own.
         let now = handed.clock.now();

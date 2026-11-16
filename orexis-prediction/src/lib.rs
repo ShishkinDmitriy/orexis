@@ -29,6 +29,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.plays(&[ROLE])? {
             return Ok(());
         }
+        handed.joins("prediction").await?;
         let predictor = Predictor::new(&handed.store)?;
         handed.outside.hand::<Foresees>(predictor.offered());
         handed.started("prediction").await;

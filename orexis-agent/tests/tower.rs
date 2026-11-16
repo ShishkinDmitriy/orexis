@@ -178,14 +178,17 @@ async fn walked(order: &[&str]) -> Walked {
     let running = orexis_agent::start(&store, "mover", clock.clone(), &order, None, wiring)
         .await
         .unwrap();
-    let started: Vec<String> = running
+    //  THE ORDER THE STARTS ARE SPAWNED IN, not the order they say they started: an executor depends on a planner
+    //  (`orexis:dependsOn`), so execution makes its core once planning has made its own, whichever was spawned first.
+    let started: BTreeSet<String> = running
         .parts()
         .into_iter()
         .filter(|p| !watching.contains(&p.as_str()))
         .collect();
     assert_eq!(
-        started, order,
-        "the order names every package the mover runs, and they start in it"
+        started,
+        order.iter().cloned().collect::<BTreeSet<_>>(),
+        "the order names every package the mover runs"
     );
     let outcome = common::outcome(&running, 3600).await;
     let ended = clock.now().to_string();

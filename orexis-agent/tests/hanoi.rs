@@ -182,8 +182,10 @@ fn the_boot_says_what_each_graph_is_and_planning_writes_its_scopes_as_it_starts(
 #[test]
 fn the_mover_runs_planning_and_its_journal_and_nothing_else() {
     let checked = orexis_agent::check(&world(), "hanoi", now(), None).unwrap();
+    let mut loaded = checked.loaded.clone();
+    loaded.sort();
     assert_eq!(
-        checked.loaded,
+        loaded,
         ["journal", "journal-oxigraph", "planning"],
         "a recorder with what archives its journal, and a planner: its role names no tracer, so what ships the \
          journal's activities ended its start, and it plays no meter, so nothing is tallied"
@@ -361,7 +363,8 @@ async fn a_window_a_stretch_writes_the_planners_levels_and_the_runs_own_and_noth
             .sum();
         assert!(
             phases > 0.0 && phases <= float(p, "duration_s_sum"),
-            "the parts are of the pass"
+            "the parts are of the pass: {:?}",
+            p.fields
         );
     }
 }
