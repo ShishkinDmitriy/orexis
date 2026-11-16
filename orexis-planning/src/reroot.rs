@@ -9,9 +9,6 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::store::{Store, iri, value};
 
-const CONE_Q: &str = r#"
-SELECT DISTINCT ?w WHERE { GRAPH $cat { ?w (planning:by/planning:from)+ $match } }"#;
-
 /// What a re-root found: the world matched, or None; which of the four the present was — `first`, `ground`,
 /// `child` or `surprise` — and the worlds kept and dropped.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -75,6 +72,8 @@ fn matched(store: &Store, ground: &str, hash: &str, cat: &Value) -> Result<Optio
 /// Find the world the last pass imagined that `ground` landed in, hand its cone to the ground, and drop everything
 /// else the last pass made. Refused where the ground has no hash.
 pub fn reroot(store: &Store, ground: &str) -> Result<Rerooting, Error> {
+    const CONE_Q: &str = r#"
+    SELECT DISTINCT ?w WHERE { GRAPH $cat { ?w (planning:by/planning:from)+ $match } }"#;
     const HASH_Q: &str = r#"SELECT ?h WHERE { GRAPH $cat { $ground orexis:hash ?h } }"#;
     const LAID_Q: &str = r#"
     SELECT ?g WHERE { GRAPH $cat { ?g prov:wasDerivedFrom* $ground . ?g a planning:GroundGraph } }"#;

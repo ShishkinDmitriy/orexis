@@ -60,22 +60,6 @@ pub struct Laying<'a> {
     pub as_stood: bool,
 }
 
-/// THE CHANGEABLE PART OF EVERY BELIEF THAT BEGINS AFTER `$now`, the graph it was cut from and when.
-const PIECES_AHEAD_Q: &str = "
-SELECT ?piece ?source ?start WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-               ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source .
-               ?source dcterms:temporal/orexis:start ?start . FILTER(?start > $now) } }
-ORDER BY ?start ?piece";
-
-/// EVERY CHANGEABLE GRAPH AND THE GRAPH IT WAS CUT FROM.
-const CUT_Q: &str = "
-SELECT ?piece ?source WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-  ?piece a planning:ChangeableGraph . OPTIONAL { ?piece prov:wasDerivedFrom ?source } } }";
-
-const STOOD_Q: &str =
-    "SELECT ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $ground orexis:hash ?h } } LIMIT 1";
-
 /// Build one ground world per period the agent can see, classified with its stretch; the graphs made, earliest
 /// first. In place: it lays the grounds into whichever store it is handed. Handed no foresight.
 pub fn lay_ground(store: &Store, now: DateTime, laying: &Laying<'_>) -> Result<Vec<String>, Error> {
@@ -369,6 +353,13 @@ impl Ground<'_> {
 /// Every boundary ahead of `now` — the instant, the changeable part laid there and the graph it was cut from —
 /// earliest first.
 fn foreseen(store: &Store, now: DateTime) -> Result<Vec<(DateTime, String, String)>, Error> {
+    /// THE CHANGEABLE PART OF EVERY BELIEF THAT BEGINS AFTER `$now`, the graph it was cut from and when.
+    const PIECES_AHEAD_Q: &str = "
+    SELECT ?piece ?source ?start WHERE {
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                   ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source .
+                   ?source dcterms:temporal/orexis:start ?start . FILTER(?start > $now) } }
+    ORDER BY ?start ?piece";
     let text = bind(PIECES_AHEAD_Q, &[("now", orexis::store::instant(now))])?;
     let mut out = Vec::new();
     for row in store.rows(&text, &[])? {
@@ -488,8 +479,7 @@ fn by_instant(
 fn present(store: &Store, now: DateTime) -> Result<(String, Option<String>), Error> {
     let name = name(now);
     let stood = relaid(store, &name)?;
-    let text = bind(PIECES_AHEAD_Q, &[("now", orexis::store::instant(now))])?;
-    let ahead: HashSet<String> = store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "piece")).collect();
+    let ahead: HashSet<String> = foreseen(store, now)?.into_iter().map(|(_, piece, _)| piece).collect();
     let into = named(&name)?;
     for source in store.graphs_of(&[CHANGEABLE_GRAPH], &Within::default())? {
         if ahead.contains(&source) {
@@ -530,9 +520,8 @@ fn split(
     };
     let by = signature(patterns.as_deref());
     let mut pieces: BTreeMap<String, Vec<String>> = BTreeMap::new();
-    for row in store.rows(CUT_Q, &[])? {
-        let Some(piece) = iri(&row, "piece") else { continue };
-        match iri(&row, "source") {
+    for (piece, source) in cut(store)? {
+        match source {
             Some(source) if classified(store, &source)? => pieces.entry(source).or_default().push(piece),
             _ => store.forget_graph(&piece, Some(BELIEF))?,
         }
@@ -695,14 +684,35 @@ fn reads_any(store: &Store, graphs: &[String], within: &BTreeSet<String>) -> Res
 /// `graphs` and every changeable graph cut from one of them: each as it stood before the cut.
 fn whole(store: &Store, mut graphs: Vec<String>) -> Result<Vec<String>, Error> {
     let wanted: HashSet<String> = graphs.iter().cloned().collect();
-    for row in store.rows(CUT_Q, &[])? {
-        if iri(&row, "source").is_some_and(|s| wanted.contains(&s))
-            && let Some(piece) = iri(&row, "piece")
-        {
+    for (piece, source) in cut(store)? {
+        if source.is_some_and(|s| wanted.contains(&s)) {
             graphs.push(piece);
         }
     }
     Ok(graphs)
+}
+
+/// Every changeable graph, and the graph it was cut from where its row says.
+fn cut(store: &Store) -> Result<Vec<(String, Option<String>)>, Error> {
+    /// EVERY CHANGEABLE GRAPH AND THE GRAPH IT WAS CUT FROM.
+    const CUT_Q: &str = "
+    SELECT ?piece ?source WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+      ?piece a planning:ChangeableGraph . OPTIONAL { ?piece prov:wasDerivedFrom ?source } } }";
+    Ok(store
+        .rows(CUT_Q, &[])?
+        .iter()
+        .filter_map(|r| Some((iri(r, "piece")?, iri(r, "source"))))
+        .collect())
+}
+
+/// The hash `ground`'s row says it holds, where a row stands.
+fn hash_of(store: &Store, ground: &str) -> Result<Option<String>, Error> {
+    const STOOD_Q: &str =
+        "SELECT ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $ground orexis:hash ?h } } LIMIT 1";
+    Ok(store
+        .rows(&bind(STOOD_Q, &[("ground", Value::iri(ground))])?, &[])?
+        .first()
+        .and_then(|r| orexis::store::value(r, "h")))
 }
 
 /// Whether the catalogue still says what `graph` is.
@@ -766,10 +776,7 @@ fn fork(store: &Store, parent: &str, name: &str, added: &[Triple]) -> Result<(St
 /// Take back the facts and the row of a ground standing under the name this pass is about to lay under, the
 /// imaginarium outliving the pass and a ground being named for its instant; the hash it stood at, where it stood.
 fn relaid(store: &Store, name: &str) -> Result<Option<String>, Error> {
-    let stood = store
-        .rows(&bind(STOOD_Q, &[("ground", Value::iri(name))])?, &[])?
-        .first()
-        .and_then(|r| orexis::store::value(r, "h"));
+    let stood = hash_of(store, name)?;
     store.forget_graph(name, Some(BELIEF))?;
     Ok(stood)
 }
@@ -793,10 +800,7 @@ fn settled(store: &Store, name: &str, stood: Option<String>, beside: bool) -> Re
     DELETE { GRAPH ?cat { ?c ?p ?o } }
     WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                           ?c a planning:Candidate ; planning:from $world ; ?p ?o } }";
-    let now = store
-        .rows(&bind(STOOD_Q, &[("ground", Value::iri(name))])?, &[])?
-        .first()
-        .and_then(|r| orexis::store::value(r, "h"));
+    let now = hash_of(store, name)?;
     if beside && stood.is_some() && now == stood {
         return Ok(());
     }

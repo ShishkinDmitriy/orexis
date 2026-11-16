@@ -27,11 +27,6 @@ use crate::holdings::{
 };
 use crate::ontology::{answer_graph, conflicts_graph, laid_graph, laid_root, question_graph};
 
-/// EVERY GRAPH THE AGENT LAID BEFORE: its own forecasts, named under its laid root.
-const LAID_Q: &str = "SELECT ?g WHERE { GRAPH $cat { ?g a orexis:ForecastGraph . FILTER(STRSTARTS(STR(?g), $root)) } }";
-
-const ACTS_FOR_Q: &str = "SELECT ?t WHERE { $peer orexis:actsFor ?t } ORDER BY ?t";
-
 const RULES_GRAPH: &str = "http://www.w3.org/ns/shacl#RulesGraph";
 
 fn named(iri: &str) -> NamedNode {
@@ -104,14 +99,7 @@ pub fn lay(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Error> 
             }
         }
     }
-    let text = bind(
-        LAID_Q,
-        &[
-            ("cat", Value::iri(cat.as_str())),
-            ("root", Value::raw(format!("\"{}\"", laid_root(me)))),
-        ],
-    )?;
-    let laid: BTreeSet<String> = store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "g")).collect();
+    let laid = laid_graphs(store, &cat, me)?;
     let mut written = Vec::new();
     for graph in laid.iter().filter(|g| !wanted.contains_key(*g)) {
         store.forget_graph(graph, Some(BELIEF))?;
@@ -177,8 +165,7 @@ fn reach(store: &Store, peer: &str, constraint: &str, ahead: i64, at: DateTime) 
         }
     }
     let mut out = Vec::new();
-    for r in rows_of(store, ACTS_FOR_Q, &[("peer", Value::iri(peer))], &common)? {
-        let Some(thing) = iri(&r, "t") else { continue };
+    for thing in acts_for(store, peer, &common)? {
         let node: NamedOrBlankNode = named(&thing).into();
         let mut rest = Vec::new();
         let mut now = Vec::new();
@@ -402,6 +389,32 @@ pub(crate) type Laid = ((String, String), (Vec<Holding>, Vec<Holding>));
 /// What the self `me` of `store` lays now, per peer and constraint of a conflict it holds: the holdings the peer said,
 /// and those it foresaw of the peer — told apart by whether the peer acts for the thing. What a history view is told; a
 /// conflict laying nothing answers two empty lists.
+/// The graphs the agent `me` laid of its peers, off the catalogue `cat`.
+fn laid_graphs(store: &Store, cat: &str, me: &str) -> Result<BTreeSet<String>, Error> {
+    /// EVERY GRAPH THE AGENT LAID BEFORE: its own forecasts, named under its laid root.
+    const LAID_Q: &str =
+        "SELECT ?g WHERE { GRAPH $cat { ?g a orexis:ForecastGraph . FILTER(STRSTARTS(STR(?g), $root)) } }";
+    let text = bind(
+        LAID_Q,
+        &[
+            ("cat", Value::iri(cat)),
+            ("root", Value::raw(format!("\"{}\"", laid_root(me)))),
+        ],
+    )?;
+    Ok(store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "g")).collect())
+}
+
+/// The things `peer` acts for, as `graphs` say, in name order.
+fn acts_for<G: AsRef<str>>(store: &Store, peer: &str, graphs: &[G]) -> Result<Vec<String>, Error> {
+    const ACTS_FOR_Q: &str = "SELECT ?t WHERE { $peer orexis:actsFor ?t } ORDER BY ?t";
+    let graphs: Vec<&str> = graphs.iter().map(AsRef::as_ref).collect();
+    Ok(store
+        .rows(&bind(ACTS_FOR_Q, &[("peer", Value::iri(peer))])?, &graphs)?
+        .iter()
+        .filter_map(|r| iri(r, "t"))
+        .collect())
+}
+
 pub(crate) fn laid(store: &Store, me: &str) -> Result<Vec<Laid>, Error> {
     /// EVERY CONFLICT THE AGENT HOLDS, by peer and constraint.
     const ALL_Q: &str = "SELECT DISTINCT ?peer ?constraint WHERE { GRAPH $graph { ?c a coordination:Conflict ; coordination:with ?peer ;
@@ -409,14 +422,7 @@ pub(crate) fn laid(store: &Store, me: &str) -> Result<Vec<Laid>, Error> {
     let Some(cat) = store.catalogue()? else {
         return Ok(Vec::new());
     };
-    let text = bind(
-        LAID_Q,
-        &[
-            ("cat", Value::iri(cat.as_str())),
-            ("root", Value::raw(format!("\"{}\"", laid_root(me)))),
-        ],
-    )?;
-    let present: BTreeSet<String> = store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "g")).collect();
+    let present = laid_graphs(store, &cat, me)?;
     let common = store.graphs_of(&[BELIEF], &orexis::store::Within::common())?;
     let common: Vec<&str> = common.iter().map(String::as_str).collect();
     let mut out = Vec::new();
@@ -424,11 +430,7 @@ pub(crate) fn laid(store: &Store, me: &str) -> Result<Vec<Laid>, Error> {
         let (Some(peer), Some(constraint)) = (iri(&r, "peer"), iri(&r, "constraint")) else {
             continue;
         };
-        let acts: BTreeSet<String> = store
-            .rows(&bind(ACTS_FOR_Q, &[("peer", Value::iri(peer.as_str()))])?, &common)?
-            .iter()
-            .filter_map(|a| iri(a, "t"))
-            .collect();
+        let acts: BTreeSet<String> = acts_for(store, &peer, &common)?.into_iter().collect();
         let full = laid_graph(me, &peer, &constraint, 0);
         let under = &full[..full.len() - 1];
         let mut graphs: Vec<(usize, &String)> = present

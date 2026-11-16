@@ -20,9 +20,13 @@ use crate::memo::Memo;
 use crate::ontology::{CONSTRAINT_GRAPH, GROUND_GRAPH, SATISFIED};
 use crate::world_at::lexical;
 
-const DERIVED_Q: &str = r#"
-SELECT ?w WHERE { GRAPH ?g { ?w a planning:Want }
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }"#;
+/// Every want `store` derived, across its want graphs.
+fn derived(store: &Store) -> Result<BTreeSet<String>, Error> {
+    const DERIVED_Q: &str = r#"
+    SELECT ?w WHERE { GRAPH ?g { ?w a planning:Want }
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }"#;
+    Ok(store.rows(DERIVED_Q, &[])?.iter().filter_map(|r| iri(r, "w")).collect())
+}
 
 impl Planner {
     /// Ask that each of `wants` an intention walks be searched again in the next pass.
@@ -40,7 +44,7 @@ impl Planner {
         if self.asked.is_empty() {
             return Ok(BTreeSet::new());
         }
-        let derived: BTreeSet<String> = store.rows(DERIVED_Q, &[])?.iter().filter_map(|r| iri(r, "w")).collect();
+        let derived = derived(store)?;
         let out: BTreeSet<String> = self
             .asked
             .iter()
@@ -167,7 +171,7 @@ impl Planner {
         WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                               ?x planning:weighs $world ; ?p ?o .
                               OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }"#;
-        let derived: BTreeSet<String> = store.rows(DERIVED_Q, &[])?.iter().filter_map(|r| iri(r, "w")).collect();
+        let derived = derived(store)?;
         let mut out = BTreeSet::new();
         for (want, flight) in flights {
             if flight.ending || !derived.contains(want) || only.is_some_and(|o| !o.contains(&flight.action)) {
