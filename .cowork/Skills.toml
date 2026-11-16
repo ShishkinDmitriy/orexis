@@ -1,0 +1,24 @@
+[project]
+name = "orexis"
+
+[skills.global]
+enabled = [
+    "okf-open-knowledge-format",
+    "author-a-world",
+    "snapshot-tests",
+]
+
+[skills.install]
+rust-skills = "actionbook/rust-skills"
+
+[skills.groups]
+
+[triggers]
+
+[security]
+require_lockfile = false
+verify_checksums = false
+show_update_diff = false
+auto_reject_high_risk = false
+trusted_authors = ["ZhangHanDong"]
+
