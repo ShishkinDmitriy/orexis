@@ -164,7 +164,7 @@ fn is_a(store: &Store, kind: &str, class: &str) -> Result<bool, Error> {
 /// holds as it is asked: a role's class beneath one of them counts, where an ontology in the store says so. What a
 /// package asks of its own role as it starts (`task::Handed::plays`).
 pub fn plays(store: &Store, classes: &[&str]) -> Result<bool, Error> {
-    for kind in played(store)?.into_values().flatten() {
+    for (_, kind) in played(store)? {
         for class in classes {
             if is_a(store, &kind, class)? {
                 return Ok(true);
@@ -174,18 +174,17 @@ pub fn plays(store: &Store, classes: &[&str]) -> Result<bool, Error> {
     Ok(false)
 }
 
-/// Every role the self plays, to the classes it is typed, off the self graphs.
-fn played(store: &Store) -> Result<BTreeMap<String, Vec<String>>, Error> {
+/// Every role the self plays with each class it is typed, off the self graphs: the role's IRI where it has one, since
+/// a role stated in place (`orexis:plays [ … ]`) is a blank node and is played all the same.
+fn played(store: &Store) -> Result<Vec<(Option<String>, String)>, Error> {
     const PLAYED_Q: &str = "SELECT ?role ?kind WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind }";
     let selves = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
     let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
-    let mut kinds: BTreeMap<String, Vec<String>> = BTreeMap::new();
-    for row in store.rows(PLAYED_Q, &selves)? {
-        if let (Some(role), Some(kind)) = (iri(&row, "role"), iri(&row, "kind")) {
-            kinds.entry(role).or_default().push(kind);
-        }
-    }
-    Ok(kinds)
+    Ok(store
+        .rows(PLAYED_Q, &selves)?
+        .iter()
+        .filter_map(|r| Some((iri(r, "role"), iri(r, "kind")?)))
+        .collect())
 }
 
 /// THE ROLE CLASSES `package`'S OWN DOCUMENTS DECLARE, each beneath `orexis:Role` in a graph it brought: the roles
@@ -246,8 +245,14 @@ pub fn wired(store: &Store, words: &str, wired: &[(&str, &str)]) -> Result<bool,
 /// the vocabulary the store holds once every package's documents are in. Its package was built out, and with it the
 /// ontology that would have said so.
 fn unserved(store: &Store) -> Result<Vec<String>, Error> {
+    let mut kinds: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for (role, kind) in played(store)? {
+        if let Some(role) = role {
+            kinds.entry(role).or_default().push(kind);
+        }
+    }
     let mut out = Vec::new();
-    for (role, kinds) in played(store)? {
+    for (role, kinds) in kinds {
         let mut served = false;
         for kind in &kinds {
             served |= kind != ROLE && is_a(store, kind, ROLE)?;
