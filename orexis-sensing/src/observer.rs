@@ -10,14 +10,14 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::{instant, isoformat, seconds_of};
 use orexis::events::Watch;
-use orexis::ontology::{DERIVED, local_of};
+use orexis::ontology::{DERIVED, ONTOLOGY, SELF_GRAPH, local_of};
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::{Heard, Turn};
 
-use crate::cadence::{self, cadence_of};
+use crate::cadence::cadence_of;
 use crate::events::{Doubted, Perceived, Silence, tag_of};
 use crate::missed::missed;
-use crate::ontology::{self, OBSERVATION_GRAPH, OBSERVER, OBSERVING, REVISED_SOURCE, SILENCE_GRAPH, silence_graph};
+use crate::ontology::{OBSERVATION_GRAPH, OBSERVER, OBSERVING, REVISED_SOURCE, SILENCE_GRAPH, silence_graph};
 
 pub(crate) const ASK: usize = 0;
 pub(crate) const HEARD: usize = 1;
@@ -40,8 +40,15 @@ const MADE_Q: &str = "SELECT ?t WHERE { $percept sosa:resultTime ?t } LIMIT 1";
 
 const STUCK_Q: &str = "SELECT DISTINCT ?sensor WHERE { ?sensor sensing:stuckOn ?number }";
 
-/// EVERY ROLE THE SELF PLAYS, WITH ITS CLASS, in the self graph.
-const PLAYED_Q: &str = "SELECT ?role ?kind WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind }";
+/// THE OBSERVER THE SELF PLAYS, IN ONE QUERY: the self, every role it plays with its class, every sensor an attention
+/// of a role names, and how often sensing asks after them as the role says or, where it says none, the default
+/// sensing's ontology states on its shape of the observer (`sh:defaultValue`). A row per role and sensor.
+const OBSERVER_Q: &str = "SELECT DISTINCT ?me ?role ?kind ?sensor (COALESCE(?askedSaid, ?askedOwn) AS ?asked) WHERE { \
+?shape sh:targetClass sensing:Observer ; sh:property [ sh:path sensing:askedEveryS ; sh:defaultValue ?askedOwn ] . \
+OPTIONAL { ?me a orexis:Self } \
+OPTIONAL { ?me orexis:plays ?role . ?role a ?kind } \
+OPTIONAL { ?me orexis:plays/sensing:attends/sensing:sensor ?sensor } \
+OPTIONAL { ?me orexis:plays ?asking . ?asking sensing:askedEveryS ?askedSaid } }";
 
 /// THE OBSERVER THE SELF PLAYS, the package's core: the sensors its attentions name and how often sensing asks after
 /// them, each what the role says in the agent's self graph and, where it says nothing, the default this package's
@@ -65,17 +72,21 @@ pub struct Observer {
 }
 
 impl Observer {
-    /// The observer the self plays, read off the store.
+    /// The observer the self plays, read off the store in one query: what its role says and, where it says
+    /// nothing, the default sensing's ontology states. THE SELF GRAPH WAS HELD TO ITS REQUIREMENTS AT ONBOARDING, so
+    /// each figure is stated once at most; nothing is picked between here.
     pub fn new(store: &Store) -> Result<Self, Error> {
+        let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
+        known.extend(store.graphs_of(&[ONTOLOGY], &Within::default())?);
+        let known: Vec<&str> = known.iter().map(String::as_str).collect();
+        let rows = store.rows(OBSERVER_Q, &known)?;
         //  ONE IS PLAYED: what the role says besides its attentions is said to sensing once for the agent, so sensors
         //  judged by different limits are two attentions of one observer, and a second observer is refused.
-        let selves = store.graphs_of(&[orexis::ontology::SELF_GRAPH], &Within::default())?;
-        let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
         let mut played = BTreeSet::new();
-        for row in store.rows(PLAYED_Q, &selves)? {
-            let kind = value(&row, "kind").unwrap_or_default();
+        for row in &rows {
+            let Some(kind) = value(row, "kind") else { continue };
             if kind == OBSERVER || store.closed(&kind)?.iter().any(|class| class == OBSERVER) {
-                played.extend(value(&row, "role"));
+                played.extend(value(row, "role"));
             }
         }
         if played.len() > 1 {
@@ -84,13 +95,20 @@ impl Observer {
                 played.len()
             )));
         }
-        let me = orexis::boot::selves(store)?
-            .into_iter()
-            .next()
-            .ok_or_else(|| Error::Document("the store holds no self".into()))?;
+        let first = rows
+            .first()
+            .ok_or_else(|| Error::Document("the store states no observer's figures, and no default".into()))?;
+        let me = iri(first, "me").ok_or_else(|| Error::Document("the store holds no self".into()))?;
+        let asked = value(first, "asked").unwrap_or_default();
+        let asked_every_s = asked.parse::<f64>().map_err(|_| {
+            Error::Document(format!(
+                "an observer asked after its sensors every {asked} is no number"
+            ))
+        })?;
+        let sensors: BTreeSet<String> = rows.iter().filter_map(|row| iri(row, "sensor")).collect();
         Ok(Observer {
-            sensors: cadence::sensors(store)?,
-            asked_every_s: ontology::figure_of(store, ontology::ASKED_EVERY_S_TERM)?,
+            sensors: sensors.into_iter().collect(),
+            asked_every_s,
             beliefs: store.clone(),
             me,
             due: Vec::new(),

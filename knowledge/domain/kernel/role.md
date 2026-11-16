@@ -56,10 +56,13 @@ a peer finds the agent by it: the courier's [driver](/domain/courier/driver.md),
 By itself. A package that takes anything from its role declares a struct named for the role's class, with a field
 for each thing the role may say: a figure, a word, or where the service a link names answers, which the world's
 derived [deployment](/domain/onboarding/deployment.md) states. The struct is made from the store
-(`Recorder::new(store)`), by a query the package owns, and the kernel reads no role for a package. A figure the
+(`Recorder::new(store)`), by one query the package owns, and the kernel reads no role for a package. A figure the
 role does not state is the default the package's ontology states on its shape of the role (`sh:defaultValue`), the
-one place the figure lives, read off the store beside the role or off the ontology the package brings
-(`orexis/src/shape.rs`), and a link it does not state is none. So what an author can tell a
+one place the figure lives, read in that query off the ontology the package put in the store; what no role's struct
+reads, an attention's limits, a transport's figures, a model's client made with no role, takes it off the ontology
+the package brings (`orexis/src/shape.rs`). A link the role does not state is none. The struct judges nothing of
+what it reads: that each figure is stated once and is a number of its kind is the package's requirement, held at
+[onboarding](/domain/onboarding/requirement.md). So what an author can tell a
 package is the fields of one struct, one to one with the role's class and named as its properties are
 (`journal:archivedIn` is `archived_in`): the journal's `Recorder`, the metrics' `Meter`, `Predictor`, `Coordinator`,
 sensing's `Observer` and the one of what archives its readings; and where the package's core bears the role's name

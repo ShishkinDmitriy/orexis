@@ -29,7 +29,7 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::events::{Laps, Watch, round6};
 use orexis::foresight::{Foresees, Foresight};
-use orexis::ontology::{ACTION, BELIEF, RECORD};
+use orexis::ontology::{ACTION, BELIEF, ONTOLOGY, RECORD, SELF_GRAPH};
 use orexis::store::{Store, Within, instant, iri, value};
 
 use crate::admit::local_of;
@@ -40,9 +40,7 @@ use crate::find_wants::{Finding, find_wants};
 use crate::footprint::{actions_of, reads_of_shape, terms_of_shape, written};
 use crate::lay_ground::{Landed, Laying, lay_ground, lay_ground_foreseeing};
 use crate::memo::Memo;
-use crate::ontology::{
-    BUDGET_EVERY_TERM, BUDGET_TERM, CONSTRAINT_GRAPH, DESIRE, EXHAUSTED, PLANNING, SCOPE_GRAPH, SHAPES, WANT,
-};
+use crate::ontology::{CONSTRAINT_GRAPH, DESIRE, EXHAUSTED, PLANNING, SCOPE_GRAPH, SHAPES, WANT};
 use crate::prepare_ground::prepare_ground;
 use crate::publish_plan::publish_plan;
 use crate::refine::refine;
@@ -624,35 +622,65 @@ fn of_scope(
     Ok(mine)
 }
 
+/// THE PLANNER THE SELF PLAYS, IN ONE QUERY: the agent told `$id`, and each figure its role says or, where it says
+/// none, the default planning's ontology states on its shape of the role (`sh:defaultValue`).
+const PLANNER_Q: &str = "SELECT DISTINCT ?agent (COALESCE(?budgetSaid, ?budgetOwn) AS ?budget) \
+(COALESCE(?everySaid, ?everyOwn) AS ?budgetEvery) WHERE { \
+?shape sh:targetClass planning:Planner ; \
+  sh:property [ sh:path planning:budget ; sh:defaultValue ?budgetOwn ] , \
+              [ sh:path planning:budgetEveryS ; sh:defaultValue ?everyOwn ] . \
+OPTIONAL { ?agent a orexis:Agent ; orexis:localId $id } \
+OPTIONAL { ?me a orexis:Self ; orexis:plays ?r1 . ?r1 planning:budget ?budgetSaid } \
+OPTIONAL { ?me a orexis:Self ; orexis:plays ?r2 . ?r2 planning:budgetEveryS ?everySaid } }";
+
 /// THE EARLIEST GROUND BEGINNING AFTER `$at`, off an imaginarium's catalogue.
 const NEXT_GROUND_Q: &str = "SELECT (MIN(?start) AS ?start) WHERE { GRAPH $cat {
   ?g a planning:GroundGraph ; dcterms:temporal ?period . ?period orexis:start ?start . FILTER (?start > $at) } }";
 
 impl Planner {
-    /// The beliefs, the one identifier a process is told, and how much a search may spend — the planner's role's figure,
-    /// `planning:budget` off its self graph, where the caller hands none, and `(crate::ontology::DEFAULTS.figure(BUDGET_TERM).unwrap() as usize)` where it states none.
+    /// The beliefs, the one identifier a process is told, and how much a search may spend: the agent and what its
+    /// planner's role says, read in one query, with the default planning's ontology states where the role says
+    /// nothing, and the budget the caller hands where it hands one. THE SELF GRAPH WAS HELD TO ITS REQUIREMENTS AT
+    /// ONBOARDING, so each figure is stated once at most; nothing is picked between here.
     pub fn new(beliefs: &Store, agent_id: &str, budget: Option<usize>) -> Result<Self, Error> {
+        let mut known = beliefs.graphs_of(&[BELIEF], &Within::common())?;
+        known.extend(beliefs.graphs_of(&[SELF_GRAPH], &Within::default())?);
+        known.extend(beliefs.graphs_of(&[ONTOLOGY], &Within::default())?);
+        let text = bind(
+            PLANNER_Q,
+            &[(
+                "id",
+                Value::Term(oxigraph::model::Literal::new_simple_literal(agent_id).into()),
+            )],
+        )?;
+        let rows = beliefs.rows(&text, &strs(&known))?;
+        let row = rows
+            .first()
+            .ok_or_else(|| Error::Document("the store states no planner's figures, and no default".into()))?;
+        let uri = iri(row, "agent").ok_or_else(|| {
+            Error::Evaluation(format!(
+                "no agent with localId '{agent_id}' in this store — was the world loaded before the planner was built?"
+            ))
+        })?;
+        let said = |name: &str| value(row, name).unwrap_or_default();
         let budget = match budget {
             Some(b) => b,
-            None => crate::ontology::figure_of(beliefs, BUDGET_TERM)? as usize,
+            None => said("budget")
+                .parse::<usize>()
+                .map_err(|_| Error::Document(format!("a planner's budget of {} is no whole number", said("budget"))))?,
         };
-        let common = beliefs.graphs_of(&[BELIEF], &Within::common())?;
-        let text = format!("SELECT ?a WHERE {{ ?a a orexis:Agent ; orexis:localId \"{agent_id}\" }} LIMIT 1");
-        let uri = beliefs
-            .rows(&text, &strs(&common))?
-            .first()
-            .and_then(|r| iri(r, "a"))
-            .ok_or_else(|| {
-                Error::Evaluation(format!(
-                    "no agent with localId '{agent_id}' in this store — was the world loaded before the planner was built?"
-                ))
-            })?;
+        let budget_every_s = said("budgetEvery").parse::<f64>().map_err(|_| {
+            Error::Document(format!(
+                "a planner's budget of every {} seconds is no number",
+                said("budgetEvery")
+            ))
+        })?;
         Ok(Planner {
             beliefs: beliefs.clone(),
             id: agent_id.to_string(),
             uri,
             budget,
-            budget_every_s: crate::ontology::figure_of(beliefs, BUDGET_EVERY_TERM)?,
+            budget_every_s,
             cut: BTreeMap::new(),
             beside: BTreeMap::new(),
             imaginaria: BTreeMap::new(),
@@ -957,7 +985,7 @@ impl Planner {
                 if walking.contains(&want) && !reopening.contains(&want) {
                     continue;
                 }
-                //  A (crate::ontology::DEFAULTS.figure(BUDGET_TERM).unwrap() as usize) IS FOR A STRETCH OF THE AGENT'S TIME (`planning:budgetEveryS`): a search it cut short is given
+                //  A BUDGET IS FOR A STRETCH OF THE AGENT'S TIME (`planning:budgetEveryS`): a search it cut short is given
                 //  another where its grounds differ from those it was cut short in, which is news, or that stretch has
                 //  passed, and not before. With no pass to pace it, every event heard handed the same search a fresh
                 //  budget, and the budget was no ceiling.
@@ -1288,6 +1316,11 @@ mod tests {
     use crate::ontology::{EXHAUSTED, GROUND_GRAPH, PLAN_GRAPH, SATISFIED};
     use crate::world_at::{Asking, world_at};
 
+    /// The budget and its stretch planning's ontology states where no role says one (`sh:defaultValue`), as the
+    /// cases' ontology graphs state them.
+    const BUDGET: usize = 32;
+    const BUDGET_EVERY_S: f64 = 10.0;
+
     fn cases() -> PathBuf {
         snapshots::tree().join("orexis-planning/tests/plans")
     }
@@ -1354,13 +1387,7 @@ ORDER BY ?want";
             };
             for want in wants {
                 planner
-                    .expand(
-                        &store,
-                        &want,
-                        crate::ontology::DEFAULTS.figure(BUDGET_TERM).unwrap() as usize,
-                        &scoped,
-                        &mut Memo::default(),
-                    )
+                    .expand(&store, &want, BUDGET, &scoped, &mut Memo::default())
                     .unwrap();
             }
             snapshots::held_to_diff(&case, &store, "expand");
@@ -1684,8 +1711,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         let store = snapshots::stand_in(&bench("three_disk_hanoi"));
         let mut planner = Planner::new(&store, snapshots::AGENT, Some(20)).unwrap();
         assert_eq!(
-            planner.budget_every_s,
-            crate::ontology::DEFAULTS.figure(BUDGET_EVERY_TERM).unwrap(),
+            planner.budget_every_s, BUDGET_EVERY_S,
             "the package's figure, no role stating one"
         );
         let said: Arc<Mutex<Vec<f64>>> = Default::default();
@@ -1700,9 +1726,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         assert!(planner.exhausted().unwrap());
         assert_eq!(*said.lock().unwrap(), [20.0], "one search, to its budget");
         let due = at
-            .checked_add_day_time_duration(orexis::clock::seconds(
-                crate::ontology::DEFAULTS.figure(BUDGET_EVERY_TERM).unwrap(),
-            ))
+            .checked_add_day_time_duration(orexis::clock::seconds(BUDGET_EVERY_S))
             .unwrap();
         assert_eq!(planner.continues_at(), Some(due));
         planner.plan(at).unwrap();
@@ -1778,15 +1802,13 @@ SELECT (COUNT(?x) AS ?n) WHERE {
     #[test]
     fn the_budget_is_the_planners_roles_where_one_states_it() {
         let store = snapshots::stand_in(&bench("three_disk_hanoi"));
-        assert_eq!(
-            Planner::new(&store, snapshots::AGENT, None).unwrap().budget,
-            crate::ontology::DEFAULTS.figure(BUDGET_TERM).unwrap() as usize
-        );
+        assert_eq!(Planner::new(&store, snapshots::AGENT, None).unwrap().budget, BUDGET);
         let cat = store.catalogue().unwrap().unwrap();
         let (me, own) = (snapshots::ME, "http://example.org/test#self");
+        let budget = crate::ontology::BUDGET_TERM;
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <{own}> {{ <{me}> a orexis:Self ; orexis:plays [ <{BUDGET_TERM}> 20 ] }}
+                "INSERT DATA {{ GRAPH <{own}> {{ <{me}> a orexis:Self ; orexis:plays [ <{budget}> 20 ] }}
   GRAPH <{cat}> {{ <{own}> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy <{me}> }} }}"
             ))
             .unwrap();
@@ -2077,24 +2099,12 @@ GROUP BY ?outcome";
             at: snapshots::now(),
         };
         planner
-            .search(
-                &store,
-                &want,
-                crate::ontology::DEFAULTS.figure(BUDGET_TERM).unwrap() as usize,
-                &scoped,
-                &mut Memo::default(),
-            )
+            .search(&store, &want, BUDGET, &scoped, &mut Memo::default())
             .unwrap();
         let held = |s: &Store| -> BTreeSet<String> { s.engine().iter().map(|q| q.unwrap().to_string()).collect() };
         let before = held(&store);
         planner
-            .search(
-                &store,
-                &want,
-                crate::ontology::DEFAULTS.figure(BUDGET_TERM).unwrap() as usize,
-                &scoped,
-                &mut Memo::default(),
-            )
+            .search(&store, &want, BUDGET, &scoped, &mut Memo::default())
             .unwrap();
         assert_eq!(held(&store), before, "not one quad differs");
         assert_eq!(plan_of(&store, &want), (SATISFIED.to_string(), 2));

@@ -1,3 +1,4 @@
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix speech: <http://example.org/orexis/speech#> .
 @prefix translation: <http://example.org/orexis/translation#> .
@@ -37,3 +38,28 @@ SELECT $this ?agent WHERE { $this speech:participant ?agent . ?agent a orexis:Se
         sh:message "a translator translated by no model, named: it would keep a person's words and answer nothing" ;
         sh:select """PREFIX translation: <http://example.org/orexis/translation#>
 SELECT $this WHERE { FILTER NOT EXISTS { $this translation:translatedBy ?model FILTER isIRI(?model) } }""" ] .
+
+#  A TRANSLATOR'S FIGURES, ONE EACH, on whichever role states them: a domain's role beneath the translator may, so each
+#  shape targets what states the figure. The translator reads them in one query as it is made and judges nothing of
+#  them, this being where they are judged; that two roles do not state two values of one figure is onboarding's
+#  own requirement, of every package's figures.
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf translation:turns ;
+    sh:property [ sh:path translation:turns ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minExclusive 0 ;
+                  sh:message "a translator's conversation takes one whole number of turns above nought" ] .
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf translation:rows ;
+    sh:property [ sh:path translation:rows ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minExclusive 0 ;
+                  sh:message "a translator hands the model one whole number of rows above nought" ] .
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf translation:retries ;
+    sh:property [ sh:path translation:retries ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 0 ;
+                  sh:message "a translator asks a failing model again one whole number of times, nought or more" ] .
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf translation:answeredWithinS ;
+    sh:property [ sh:path translation:answeredWithinS ; sh:maxCount 1 ; sh:minExclusive 0 ;
+                  sh:message "a translator waits for the mind's answer one number of seconds above nought" ] .
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf translation:calledWithinS ;
+    sh:property [ sh:path translation:calledWithinS ; sh:maxCount 1 ; sh:minExclusive 0 ;
+                  sh:message "a translator's call of the model takes one number of seconds above nought" ] .

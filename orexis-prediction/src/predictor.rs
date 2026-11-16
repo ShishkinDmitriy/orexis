@@ -6,8 +6,20 @@ use orexis::Error;
 use orexis::foresight::{Foresees, Foresight, Placed};
 use orexis::store::Store;
 
+use orexis::ontology::{ONTOLOGY, SELF_GRAPH};
+use orexis::store::{Within, value};
+
 use crate::foresee::foresee;
-use crate::ontology;
+
+/// THE PREDICTOR THE SELF PLAYS, IN ONE QUERY: each figure its role says or, where it says none, the default
+/// prediction's ontology states on its shape of the role (`sh:defaultValue`).
+const PREDICTOR_Q: &str = "SELECT DISTINCT (COALESCE(?horizonSaid, ?horizonOwn) AS ?horizon) \
+(COALESCE(?heldSaid, ?heldOwn) AS ?held) WHERE { \
+?shape sh:targetClass <http://example.org/orexis/prediction#Predictor> ; \
+  sh:property [ sh:path <http://example.org/orexis/prediction#horizonS> ; sh:defaultValue ?horizonOwn ] , \
+              [ sh:path <http://example.org/orexis/prediction#rateHeldS> ; sh:defaultValue ?heldOwn ] . \
+OPTIONAL { ?me a orexis:Self ; orexis:plays ?r1 . ?r1 <http://example.org/orexis/prediction#horizonS> ?horizonSaid } \
+OPTIONAL { ?me a orexis:Self ; orexis:plays ?r2 . ?r2 <http://example.org/orexis/prediction#rateHeldS> ?heldSaid } }";
 
 /// THE PREDICTOR THE SELF PLAYS, AS THIS PACKAGE READS IT: a field for each thing `prediction:Predictor` may state,
 /// one to one, each what the role says in the agent's self graph and, where it says nothing, the default this
@@ -21,11 +33,25 @@ pub struct Predictor {
 }
 
 impl Predictor {
-    /// The predictor the self plays, read off the store.
+    /// The predictor the self plays, read off the store in one query: what its role says and, where it says
+    /// nothing, the default prediction's ontology states. THE SELF GRAPH WAS HELD TO ITS REQUIREMENTS AT ONBOARDING,
+    /// so each figure is stated once at most; nothing is picked between here.
     pub fn new(store: &Store) -> Result<Self, Error> {
+        let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
+        known.extend(store.graphs_of(&[ONTOLOGY], &Within::default())?);
+        let known: Vec<&str> = known.iter().map(String::as_str).collect();
+        let rows = store.rows(PREDICTOR_Q, &known)?;
+        let row = rows
+            .first()
+            .ok_or_else(|| Error::Document("the store states no predictor's figures, and no default".into()))?;
+        let number = |name: &str| {
+            value(row, name)
+                .and_then(|said| said.parse::<f64>().ok())
+                .ok_or_else(|| Error::Document(format!("a predictor's {name} is no number of seconds")))
+        };
         Ok(Predictor {
-            horizon_s: ontology::figure_of(store, ontology::HORIZON_TERM)?,
-            rate_held_s: ontology::figure_of(store, ontology::RATE_HELD_TERM)?,
+            horizon_s: number("horizon")?,
+            rate_held_s: number("held")?,
         })
     }
 

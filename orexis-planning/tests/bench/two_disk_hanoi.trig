@@ -26,6 +26,9 @@
 @prefix plan: <http://example.org/orexis/graph/plan/> .
 
 GRAPH :ontology {
+  :planner_shape sh:property [ sh:defaultValue 10 ; sh:path planning:budgetEveryS ] .
+  :planner_shape sh:property [ sh:defaultValue 32 ; sh:path planning:budget ] .
+  :planner_shape sh:targetClass planning:Planner .
   planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 

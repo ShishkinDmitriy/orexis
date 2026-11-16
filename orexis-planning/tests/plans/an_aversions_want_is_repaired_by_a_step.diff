@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -58,8 +58,6 @@
+@@ -61,8 +61,6 @@
  }
  
  GRAPH :sensed {
@@ -9,7 +9,7 @@
  }
  
  GRAPH :scopes {
-@@ -85,6 +83,133 @@
+@@ -88,6 +86,133 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:ownedBy :keeper .

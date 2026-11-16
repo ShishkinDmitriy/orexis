@@ -34,7 +34,7 @@ use orexis::bind::{Value, bind};
 use orexis::clock::{Clock, instant as parse_instant, isoformat, seconds, seconds_of};
 use orexis::events::{Event, Watch};
 use orexis::hash::hash_named_graph;
-use orexis::ontology::{BELIEF, DERIVED, OREXIS, RECORDED, local_of};
+use orexis::ontology::{BELIEF, DERIVED, ONTOLOGY, OREXIS, RECORDED, SELF_GRAPH, local_of};
 use orexis::store::{Row, Store, Within, instant, iri, value};
 use orexis::task::{Heard, Turn};
 
@@ -43,7 +43,7 @@ use crate::events::{BLOCKED, HEAD};
 use crate::implementation::operations;
 use crate::ontology::{
     ADDS_GRAPH, ANSWERED_WITHIN_S, COMMITTED_STEP_GRAPH, EXECUTION, FICTIVE, INTENTION, INTENTION_GRAPH,
-    LANDS_WITHIN_S, PATIENCE_S, RETRACTS_GRAPH, STEP_CLASS, committed_graph, fictive_graph, intentions_graph,
+    LANDS_WITHIN_S, RETRACTS_GRAPH, STEP_CLASS, committed_graph, fictive_graph, intentions_graph,
 };
 use crate::ontology::{ADOPTING, CHANGED, DERIVED_FROM, OUTCOME, RESOLVING, REVISED_SOURCE, SUPERSEDING};
 
@@ -258,6 +258,13 @@ pub struct Executor {
     resolved_told: usize,
 }
 
+/// THE EXECUTOR THE SELF PLAYS, IN ONE QUERY: its patience as the role says or, where it says none, the default
+/// execution's ontology states on its shape of the role (`sh:defaultValue`).
+const EXECUTOR_Q: &str = "SELECT DISTINCT (COALESCE(?patienceSaid, ?patienceOwn) AS ?patience) WHERE { \
+?shape sh:targetClass <http://example.org/orexis/execution#Executor> ; \
+  sh:property [ sh:path <http://example.org/orexis/execution#patienceS> ; sh:defaultValue ?patienceOwn ] . \
+OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . ?role <http://example.org/orexis/execution#patienceS> ?patienceSaid } }";
+
 pub(crate) const PASS: usize = 0;
 const WALK: usize = 1;
 pub(crate) const ADOPT: usize = 2;
@@ -322,7 +329,9 @@ fn named(iri: &str) -> Result<NamedNode, Error> {
 
 impl Executor {
     /// The executor of `agent` over `beliefs`, its intentions a graph of the belief base unless `intentions` is
-    /// another store, as a case may hand; `holder` the agent whose graphs they are, where the caller knows it.
+    /// another store, as a case may hand; `holder` the agent whose graphs they are, where the caller knows it. What
+    /// its role says is read in one query, with the default execution's ontology states where it says nothing; the
+    /// self graph was held to its requirements at onboarding, so nothing is picked between here.
     pub fn new(
         beliefs: &Store,
         agent: &str,
@@ -330,13 +339,23 @@ impl Executor {
         holder: Option<&str>,
         clock: Arc<dyn Clock>,
     ) -> Result<Self, Error> {
+        let mut known = beliefs.graphs_of(&[SELF_GRAPH], &Within::default())?;
+        known.extend(beliefs.graphs_of(&[ONTOLOGY], &Within::default())?);
+        let patience_s = beliefs
+            .rows(EXECUTOR_Q, &strs(&known))?
+            .first()
+            .and_then(|row| value(row, "patience"))
+            .ok_or_else(|| Error::Document("the store states no patience for an executor, and no default".into()))?;
+        let patience_s = patience_s
+            .parse::<f64>()
+            .map_err(|_| Error::Document(format!("an executor's patience of {patience_s} is no number")))?;
         Ok(Executor {
             beliefs: beliefs.clone(),
             intentions: intentions.unwrap_or(beliefs).clone(),
             id: agent.to_string(),
             holder: holder.map(str::to_string),
             graph: intentions_graph(agent),
-            patience_s: crate::ontology::figure_of(beliefs, PATIENCE_S)?,
+            patience_s,
             all_fictive: false,
             take: None,
             asks: false,
@@ -1596,10 +1615,34 @@ mod tests {
     use orexis::snapshots;
 
     use super::*;
+    use crate::ontology::PATIENCE_S;
 
-    /// The patience the executor's ontology states where the self states none.
+    /// The patience the executor's ontology states where the self states none, read as the executor reads it.
     fn patience_s() -> f64 {
-        crate::ontology::DEFAULTS.figure(super::PATIENCE_S).unwrap()
+        Executor::new(&held(), AGENT, Some(&store()), None, Arc::new(Manual::at(now())))
+            .unwrap()
+            .patience_s
+    }
+
+    /// `st` holding execution's ontology, which the executor reads its role's defaults from, as an agent's store
+    /// holds what each package it runs brings.
+    fn with_ontology(st: Store) -> Store {
+        let ontology =
+            orexis::document::Document::read(&snapshots::tree().join("orexis-execution/ontology.ttl")).unwrap();
+        st.put_document(&ontology, None, None, None, true).unwrap();
+        st
+    }
+
+    /// A belief base holding nothing but its catalogue and execution's ontology.
+    fn held() -> Store {
+        let st = store();
+        st.put_trig(
+            "http://example.org/test#world",
+            "@prefix orexis: <http://example.org/orexis#> .
+GRAPH <http://example.org/test#catalogue> { <http://example.org/test#catalogue> a orexis:CatalogueGraph }",
+        )
+        .unwrap();
+        with_ontology(st)
     }
 
     const AGENT: &str = "keeper";
@@ -1656,7 +1699,7 @@ GRAPH <http://example.org/test#catalogue> {{
             ),
         )
         .unwrap();
-        st
+        with_ontology(st)
     }
 
     /// `source`, its `step` predicting `adds` gained and `retracts` lost, in the two graphs a step names.
@@ -1750,7 +1793,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_committed_plan_stands_at_its_head() {
-        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
+        let (b, i, clock) = (held(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         assert!(x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().is_some());
         let standing = x.standing().unwrap();
@@ -1765,7 +1808,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_plan_from_another_store_is_brought_in_whole_and_adopted_by_reference() {
-        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
+        let (b, i, clock) = (held(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let intention = x.commit(Some(&a_plan(3, PLAN)), PLAN, WANT).unwrap().unwrap();
         let steps = |g: &str| i.rows("SELECT ?s WHERE { ?s a execution:Step }", &[g]).unwrap().len();
@@ -1782,7 +1825,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_second_plan_inside_the_patience_is_absorbed() {
-        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
+        let (b, i, clock) = (held(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         assert!(x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().is_some());
         assert!(
@@ -1797,7 +1840,7 @@ GRAPH <http://example.org/test#catalogue> {{
     #[test]
     fn an_adoption_is_said_once_and_an_absorbed_plan_says_nothing() {
         use crate::events::IntentionAdopted;
-        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
+        let (b, i, clock) = (held(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let said: Arc<std::sync::Mutex<Vec<String>>> = Default::default();
         let kept = said.clone();
@@ -1813,7 +1856,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn past_the_patience_a_new_plan_supersedes_the_old() {
-        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
+        let (b, i, clock) = (held(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let first = x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().unwrap();
         clock.advance(patience_s() + 1.0);
@@ -1828,7 +1871,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_resolved_commitment_stays_among_the_intentions() {
-        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
+        let (b, i, clock) = (held(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let intention = x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().unwrap();
         x.resolve(&intention, "done").unwrap();
@@ -1844,14 +1887,14 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn an_empty_plan_is_an_answer_and_not_a_commitment() {
-        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
+        let (b, i, clock) = (held(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         assert!(x.commit(Some(&store()), PLAN, WANT).unwrap().is_none());
     }
 
     #[test]
     fn a_committed_plan_is_taken_step_by_step_and_resolved_done() {
-        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
+        let (b, i, clock) = (held(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let intention = x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().unwrap();
         assert_eq!(
@@ -1879,7 +1922,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_step_waits_for_its_instant() {
-        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
+        let (b, i, clock) = (held(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let source = a_plan(1, PLAN);
         let later = after(3600.0);
@@ -1896,7 +1939,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_step_that_cannot_be_taken_fails_the_intention() {
-        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
+        let (b, i, clock) = (held(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         x.take = Some(Box::new(|_, _| Err(Error::Evaluation("no valve answers".into()))));
         let intention = x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().unwrap();
@@ -2344,7 +2387,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_head_asked_waits_for_its_answer_and_one_blocked_is_not_taken_and_its_intention_fails() {
-        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
+        let (b, i, clock) = (held(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         x.asks = true;
         let intention = x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().unwrap();
@@ -2366,7 +2409,7 @@ GRAPH <http://example.org/test#catalogue> {{
 
     #[test]
     fn a_head_asked_and_admitted_is_taken() {
-        let (b, i, clock) = (store(), store(), Arc::new(Manual::at(now())));
+        let (b, i, clock) = (held(), store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         x.asks = true;
         x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap();

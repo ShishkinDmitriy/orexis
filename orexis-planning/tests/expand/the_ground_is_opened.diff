@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -54,9 +54,8 @@
+@@ -57,9 +57,8 @@
    :keeper.in_range rdfs:label "every tank in range" .
  }
  
@@ -11,7 +11,7 @@
  GRAPH :scopes {
    :fill planning:inScope :keeper.scope.1 .
    :keeper.scope.1 a planning:Scope .
-@@ -86,7 +85,7 @@
+@@ -89,7 +88,7 @@
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
    ground:2026-01-01T120000p0000 a planning:GroundGraph .
@@ -20,7 +20,7 @@
    ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
    ground:2026-01-01T120000p0000 orexis:hash "sha256:6049dbc777f47880d902c748f455b6e2f0c0df6ee3e7cd098544d26edb928bc8" .
    ground:2026-01-01T120000p0000.for.keeper.in_range a planning:Weighing .
-@@ -95,14 +94,32 @@
+@@ -98,14 +97,32 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 a planning:Weighing .
@@ -55,7 +55,7 @@
    pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
    pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
  }
-@@ -116,7 +133,7 @@
+@@ -119,7 +136,7 @@
    :keeper.in_range.pursued.tank1 a planning:Want .
    :keeper.in_range.pursued.tank1 planning:metWhen :keeper.in_range.pursued.tank1.met .
    :keeper.in_range.pursued.tank1 planning:state planning:Recognized .
@@ -64,7 +64,7 @@
    :keeper.in_range.pursued.tank1 prov:wasDerivedFrom :keeper.in_range .
    :keeper.in_range.pursued.tank1 rdfs:label "pursued: every tank in range" .
    :keeper.in_range.pursued.tank1.met a sh:NodeShape .
-@@ -127,3 +144,8 @@
+@@ -130,3 +147,8 @@
  GRAPH :sensed.changeable {
    :tank1 :level 0 .
  }

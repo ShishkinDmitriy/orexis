@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -64,9 +64,8 @@
+@@ -67,9 +67,8 @@
    :one_level sh:select "PREFIX : <http://example.org/test#> SELECT $this ?value WHERE { $this a :Tank ; :level ?value . ?other a :Tank ; :level ?value . FILTER(?other != $this) }" .
  }
  
@@ -11,7 +11,7 @@
  GRAPH :scopes {
    :fill planning:inScope :keeper.scope.1 .
    :keeper.scope.1 a planning:Scope .
-@@ -98,7 +97,7 @@
+@@ -101,7 +100,7 @@
    :world a orexis:BeliefGraph .
    :world a orexis:Graph .
    ground:2026-01-01T120000p0000 a planning:GroundGraph .
@@ -20,7 +20,7 @@
    ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
    ground:2026-01-01T120000p0000 orexis:hash "sha256:122f9efd04505aa8d36ce8190f474f132c655429225259db8e8c7204268f4d26" .
    ground:2026-01-01T120000p0000.for.keeper.apart a planning:Weighing .
-@@ -113,14 +112,80 @@
+@@ -116,14 +115,80 @@
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank3 ; planning:offending 0 ] .
    ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
    ground:2026-01-01T120000p0000.for.keeper.in_range.pursued a planning:Weighing .
@@ -103,7 +103,7 @@
    pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
    pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
  }
-@@ -136,7 +201,7 @@
+@@ -139,7 +204,7 @@
    :keeper.in_range.pursued a planning:Want .
    :keeper.in_range.pursued planning:metWhen :keeper.in_range.pursued.met .
    :keeper.in_range.pursued planning:state planning:Recognized .
@@ -112,7 +112,7 @@
    :keeper.in_range.pursued prov:wasDerivedFrom :keeper.in_range .
    :keeper.in_range.pursued rdfs:label "pursued: the tank in range" .
    :keeper.in_range.pursued.met a sh:NodeShape .
-@@ -149,3 +214,22 @@
+@@ -152,3 +217,22 @@
    :tank2 :level 7 .
    :tank3 :level 0 .
  }

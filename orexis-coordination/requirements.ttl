@@ -1,3 +1,4 @@
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix coordination: <http://example.org/orexis/coordination#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
 @prefix onboarding: <http://example.org/orexis/onboarding#> .
@@ -15,3 +16,20 @@
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "a coordinator's world ships no outcome (coordination:Outcome): no draw it takes part in would ever be decided — import a draw" ;
         sh:select """SELECT $this WHERE { FILTER NOT EXISTS { ?outcome a coordination:Outcome } }""" ] .
+
+#  A COORDINATOR'S FIGURES, ONE EACH, on whichever role states them: a domain's role beneath the coordinator may, so each
+#  shape targets what states the figure. The coordinator reads them in one query as it is made and judges nothing of
+#  them, this being where they are judged; that two roles do not state two values of one figure is onboarding's
+#  own requirement, of every package's figures.
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf coordination:patienceS ;
+    sh:property [ sh:path coordination:patienceS ; sh:maxCount 1 ; sh:minExclusive 0 ;
+                  sh:message "a coordinator's patience is one number of seconds above nought" ] .
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf coordination:rounds ;
+    sh:property [ sh:path coordination:rounds ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minExclusive 0 ;
+                  sh:message "a coordinator's draw restarts one whole number of rounds above nought" ] .
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf coordination:lookahead ;
+    sh:property [ sh:path coordination:lookahead ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 0 ;
+                  sh:message "a coordinator looks one whole number of steps ahead, nought or more" ] .

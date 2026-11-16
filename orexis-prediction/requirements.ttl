@@ -1,3 +1,4 @@
+@prefix prediction: <http://example.org/orexis/prediction#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix : <http://example.org/orexis/prediction#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
@@ -21,3 +22,16 @@
             FILTER (NOT EXISTS { ?me orexis:actsFor ?subject . ?subject schema:containedInPlace* ?host .
                                  ?sensor sosa:isHostedBy/(sosa:isSampleOf)? ?host }
                     || NOT EXISTS { ?flow a prediction:Flow }) }""" ] .
+
+#  A PREDICTOR'S FIGURES, ONE EACH, on whichever role states them: a domain's role beneath the predictor may, so each
+#  shape targets what states the figure. The predictor reads them in one query as it is made and judges nothing of
+#  them, this being where they are judged; that two roles do not state two values of one figure is onboarding's
+#  own requirement, of every package's figures.
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf prediction:horizonS ;
+    sh:property [ sh:path prediction:horizonS ; sh:maxCount 1 ; sh:minExclusive 0 ;
+                  sh:message "a predictor's horizon is one number of seconds above nought" ] .
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf prediction:rateHeldS ;
+    sh:property [ sh:path prediction:rateHeldS ; sh:maxCount 1 ; sh:minExclusive 0 ;
+                  sh:message "a predictor holds a rate for one number of seconds above nought" ] .

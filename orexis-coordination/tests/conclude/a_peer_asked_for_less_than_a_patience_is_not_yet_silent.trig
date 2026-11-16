@@ -46,6 +46,10 @@ SELECT $this ?value WHERE { $this a courier:Van ; courier:x ?x ; courier:y ?y .
                             ?value a courier:Van ; courier:x ?x ; courier:y ?y . FILTER(?value != $this) }""" .
 }
 GRAPH :ontology {
+  :coordinator_shape sh:property [ sh:defaultValue 2 ; sh:path coordination:lookahead ] .
+  :coordinator_shape sh:property [ sh:defaultValue 3 ; sh:path coordination:rounds ] .
+  :coordinator_shape sh:property [ sh:defaultValue 60 ; sh:path coordination:patienceS ] .
+  :coordinator_shape sh:targetClass coordination:Coordinator .
   coordination:AnswerGraph rdfs:subClassOf speech:StatementGraph .
   coordination:QuestionGraph rdfs:subClassOf speech:StatementGraph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .

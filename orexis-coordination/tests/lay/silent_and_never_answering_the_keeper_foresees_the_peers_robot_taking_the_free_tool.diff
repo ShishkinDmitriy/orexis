@@ -13,7 +13,7 @@
  }
  GRAPH :constraints {
    :no_tool_held_twice a planning:Constraint .
-@@ -82,7 +88,13 @@
+@@ -86,7 +92,13 @@
    conflict:b0236418f63ada64 coordination:over :no_tool_held_twice .
    conflict:b0236418f63ada64 coordination:round 0 .
    conflict:b0236418f63ada64 coordination:silent true .

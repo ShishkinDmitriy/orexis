@@ -689,7 +689,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   a-transition-changes-the-state-and-an-inference-only-concludes).
 - **A figure a package runs by is its role's to say, in the agent's self graph, read there alone by the package's
   own query, and the default its ontology states holds where no role says it** — `sh:defaultValue` on its shape of
-  the role (`orexis/src/shape.rs`); the patience, both budgets, the horizon, a coordinator's rounds and an
+  the role, read in the one query that makes the role's struct, off the ontology in the store, each figure held to
+  one of its kind by the package's requirement and judged nowhere else; the patience, both budgets, the horizon, a coordinator's rounds and an
   observer's limits alike, never a flag or a common belief; they were stances, triples about the self read by a
   kernel reader, which left an author two places to configure a package (a-figure-is-its-roles-to-say).
 - **A world's test hands its agent no budget, so the figure it passes at is the one the self graph
