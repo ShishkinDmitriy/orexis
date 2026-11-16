@@ -12,15 +12,16 @@
 
 use std::collections::BTreeSet;
 
-use oxigraph::model::{NamedNode, Triple};
+use oxigraph::model::Triple;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::instant;
 use orexis::hash::hash_named_graph;
 use orexis::ontology::{BELIEF, DERIVED};
-use orexis::store::{Store, Within, iri, value};
+use orexis::store::{Row, Store, Within, iri, value};
 
+use crate::held::{holds, push_unique};
 use crate::ontology::{REVISION_GRAPH, state_graph};
 use crate::transition::{Change, applied, asked, transitions};
 
@@ -69,11 +70,10 @@ impl Triggered {
     }
 }
 
-/// Apply the transitions `arrival` triggers to the agent's own state, from its `done`th order on, spending at most
-/// `budget` rule executions. An arrival that is no testimony triggers nothing, spends nothing, and is done.
-pub fn trigger(store: &Store, arrival: &str, budget: usize, done: usize) -> Result<Triggered, Error> {
+/// The catalogue and `arrival`'s row, where the arrival is testimony: None where it is not, or there is no catalogue.
+fn testimony(store: &Store, arrival: &str) -> Result<Option<(String, Row)>, Error> {
     let Some(cat) = store.catalogue()? else {
-        return Ok(Triggered::finished(done));
+        return Ok(None);
     };
     let found = store.rows(
         &bind(
@@ -82,7 +82,18 @@ pub fn trigger(store: &Store, arrival: &str, budget: usize, done: usize) -> Resu
         )?,
         &[],
     )?;
-    let Some(row) = found.into_iter().next() else {
+    Ok(found.into_iter().next().map(|row| (cat, row)))
+}
+
+/// Whether `arrival` triggers any transition from its `done`th order on: it is testimony, and an order is left.
+pub fn triggers_any(store: &Store, arrival: &str, done: usize) -> Result<bool, Error> {
+    Ok(testimony(store, arrival)?.is_some() && done < transitions(store)?.len())
+}
+
+/// Apply the transitions `arrival` triggers to the agent's own state, from its `done`th order on, spending at most
+/// `budget` rule executions. An arrival that is no testimony triggers nothing, spends nothing, and is done.
+pub fn trigger(store: &Store, arrival: &str, budget: usize, done: usize) -> Result<Triggered, Error> {
+    let Some((cat, row)) = testimony(store, arrival)? else {
         return Ok(Triggered::finished(done));
     };
     let orders = transitions(store)?;
@@ -118,27 +129,23 @@ pub fn trigger(store: &Store, arrival: &str, budget: usize, done: usize) -> Resu
             .chain(common.iter().cloned())
             .chain(state.iter().cloned())
         {
-            if !reads.contains(&g) {
-                reads.push(g);
-            }
+            push_unique(&mut reads, g);
         }
         let reads: Vec<&str> = reads.iter().map(String::as_str).collect();
         let change = asked(store, order, &reads, &[]);
         spent += change.executions;
         let state: Vec<&str> = state.iter().map(String::as_str).collect();
         for t in &change.deleted {
-            let held = state.iter().any(|g| {
-                NamedNode::new(*g).is_ok_and(|name| store.engine().contains(&t.clone().in_graph(name)).unwrap_or(true))
-            });
-            if held {
-                lost.insert(t.to_string());
+            for g in &state {
+                if holds(store, t, g)? {
+                    lost.insert(t.to_string());
+                    break;
+                }
             }
         }
         gained.extend(change.added.iter().map(Triple::to_string));
         for g in deleted_from(store, &change, &state)? {
-            if !changed.contains(&g) {
-                changed.push(g);
-            }
+            push_unique(&mut changed, g);
         }
         let emptied = applied(store, &change, &into, &state)?;
         for graph in emptied {
@@ -148,9 +155,7 @@ pub fn trigger(store: &Store, arrival: &str, budget: usize, done: usize) -> Resu
         }
         if !change.added.is_empty() {
             describe(store, &cat, &into, &row)?;
-            if !changed.contains(&into) {
-                changed.push(into.clone());
-            }
+            push_unique(&mut changed, into.clone());
         }
         if !change.added.is_empty() || !change.deleted.is_empty() {
             log::debug!(
@@ -190,14 +195,8 @@ fn stamped(store: &Store, cat: &str, changed: Vec<String>) -> Result<Vec<String>
 fn deleted_from(store: &Store, change: &Change, targets: &[&str]) -> Result<Vec<String>, Error> {
     let mut out = Vec::new();
     for g in targets {
-        let name = NamedNode::new(*g).map_err(|e| Error::Evaluation(e.to_string()))?;
         for t in &change.deleted {
-            let quad = t.clone().in_graph(name.clone());
-            if store
-                .engine()
-                .contains(&quad)
-                .map_err(|e| Error::Evaluation(e.to_string()))?
-            {
+            if holds(store, t, g)? {
                 out.push(g.to_string());
                 break;
             }
@@ -217,7 +216,7 @@ fn derived(store: &Store, cat: &str) -> Result<Vec<String>, Error> {
 
 /// The arrival's state graph's row, said of the arrival it now holds the state of, any row of an earlier arrival
 /// taken back first.
-fn describe(store: &Store, cat: &str, into: &str, row: &orexis::store::Row) -> Result<(), Error> {
+fn describe(store: &Store, cat: &str, into: &str, row: &Row) -> Result<(), Error> {
     store.update(&bind(
         UNDESCRIBE_U,
         &[("cat", Value::iri(cat)), ("graph", Value::iri(into))],
@@ -369,7 +368,7 @@ mod tests {
             )
             .unwrap();
         let known = store.graphs_of(&[BELIEF, RECORD], &Within::default()).unwrap();
-        assert_eq!(revise(&store, TICK, &known, BUDGET, BELIEF).unwrap(), 0);
+        assert_eq!(revise(&store, TICK, &known, BUDGET, BELIEF).unwrap().spent, 0);
         assert_eq!(held(&store), map(&[("count", "1")]));
         assert!(
             store

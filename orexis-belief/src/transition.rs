@@ -13,7 +13,7 @@
 //! chaining a second operation, no `DELETE`/`INSERT … WHERE`, refusing to bind or refused by the engine is said in
 //! the log, naming the rule, and the whole of it changes nothing.
 
-use oxigraph::model::{NamedNode, Triple};
+use oxigraph::model::Triple;
 use spargebra::algebra::{Expression, GraphPattern, QueryDataset};
 use spargebra::term::{GraphNamePattern, GroundQuadPattern, QuadPattern, TriplePattern};
 use spargebra::{GraphUpdateOperation, Query, Update};
@@ -22,7 +22,8 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::store::{Store, Within, iri, value};
 
-use crate::ontology::RULES_GRAPH;
+use crate::held::{holds, push_unique};
+use crate::ontology::{RULES_GRAPH, node};
 
 /// EVERY TRANSITION, over the rules graphs: each active one, with its order and its update.
 const TRANSITIONS_Q: &str = "
@@ -33,37 +34,39 @@ SELECT DISTINCT ?rule ?order ?update WHERE {
   BIND(COALESCE(?o, 0) AS ?order) }
 ORDER BY ?order ?rule";
 
-/// One rule of a transition: its order, its update text, and its name for the log.
-#[derive(Clone, Debug, Default, PartialEq)]
+/// One rule of a transition: its order, its update text, and its name for the log. A transition stating no
+/// update is refused as it is read (`transitions`), so a rule always has a text.
+#[derive(Clone, Debug, PartialEq)]
 pub struct Rule {
     pub order: f64,
-    pub update: Option<String>,
-    pub name: Option<String>,
+    pub update: String,
+    pub name: String,
 }
 
 impl Rule {
     pub fn new(order: f64, update: impl Into<String>, name: impl Into<String>) -> Self {
         Rule {
             order,
-            update: Some(update.into()),
-            name: Some(name.into()),
+            update: update.into(),
+            name: name.into(),
         }
-    }
-
-    fn named(&self) -> &str {
-        self.name.as_deref().unwrap_or("a rule")
     }
 }
 
-/// Every active `belief:Transition` of the rules graphs, in the orders they are applied in.
+/// Every active `belief:Transition` of the rules graphs, in the orders they are applied in. One stating no
+/// `belief:update` changes nothing, said in the log once as it is read.
 pub fn transitions(store: &Store) -> Result<Vec<Vec<Rule>>, Error> {
     let graphs = store.graphs_of(&[RULES_GRAPH], &Within::default())?;
     let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
     let found = store.rows(TRANSITIONS_Q, &graphs)?;
-    let rules = found.iter().map(|r| Rule {
-        order: value(r, "order").and_then(|o| o.parse().ok()).unwrap_or(0.0),
-        update: value(r, "update"),
-        name: iri(r, "rule"),
+    let rules = found.iter().filter_map(|r| {
+        let name = iri(r, "rule").unwrap_or_else(|| "a rule".to_string());
+        let Some(update) = value(r, "update") else {
+            log::error!("{name}: a transition states no belief:update, so it changes nothing");
+            return None;
+        };
+        let order = value(r, "order").and_then(|o| o.parse().ok()).unwrap_or(0.0);
+        Some(Rule { order, update, name })
     });
     Ok(ordered(rules))
 }
@@ -87,24 +90,17 @@ pub fn ordered(rules: impl IntoIterator<Item = Rule>) -> Vec<Vec<Rule>> {
 pub fn run(store: &Store, rules: &[Rule], into: &str, graphs: &[&str], tokens: &[(&str, Value)]) -> usize {
     let flat: Vec<Rule> = ordered(rules.iter().cloned()).into_iter().flatten().collect();
     for rule in &flat {
-        let Some(text) = &rule.update else {
-            log::error!(
-                "{}: a transition states no belief:update, so it changes nothing",
-                rule.named()
-            );
-            continue;
-        };
-        let applied = bind(text, tokens).and_then(|bound| {
+        let applied = bind(&rule.update, tokens).and_then(|bound| {
             refuse_a_chain(&bound)?;
             let parsed = store.parse_update(&bound)?;
             store.run_update(scoped(parsed, into, graphs)?)
         });
         match applied {
             Ok(()) => {}
-            Err(Error::Document(reason)) => log::error!("{}: {reason}, so it changes nothing", rule.named()),
+            Err(Error::Document(reason)) => log::error!("{}: {reason}, so it changes nothing", rule.name),
             Err(other) => log::error!(
                 "{}: its update would not run, so it changes nothing: {other}",
-                rule.named()
+                rule.name
             ),
         }
     }
@@ -126,14 +122,7 @@ pub struct Change {
 pub fn asked(store: &Store, rules: &[Rule], graphs: &[&str], tokens: &[(&str, Value)]) -> Change {
     let (mut added, mut deleted) = (Vec::new(), Vec::new());
     for rule in rules {
-        let Some(text) = &rule.update else {
-            log::error!(
-                "{}: a transition states no belief:update, so it changes nothing",
-                rule.named()
-            );
-            continue;
-        };
-        let asked = bind(text, tokens).and_then(|bound| {
+        let asked = bind(&rule.update, tokens).and_then(|bound| {
             let Parts {
                 delete,
                 insert,
@@ -174,10 +163,10 @@ pub fn asked(store: &Store, rules: &[Rule], graphs: &[&str], tokens: &[(&str, Va
                 deleted.extend(taken);
                 added.extend(made);
             }
-            Err(Error::Document(reason)) => log::error!("{}: {reason}, so it changes nothing", rule.named()),
+            Err(Error::Document(reason)) => log::error!("{}: {reason}, so it changes nothing", rule.name),
             Err(other) => log::error!(
                 "{}: its update would not run, so it changes nothing: {other}",
-                rule.named()
+                rule.name
             ),
         }
     }
@@ -194,23 +183,14 @@ pub fn asked(store: &Store, rules: &[Rule], graphs: &[&str], tokens: &[(&str, Va
 pub fn applied(store: &Store, change: &Change, into: &str, targets: &[&str]) -> Result<Vec<String>, Error> {
     let mut seen: Vec<&str> = Vec::new();
     for t in targets {
-        if !seen.contains(t) {
-            seen.push(t);
-        }
+        push_unique(&mut seen, *t);
     }
     let mut touched: Vec<&str> = Vec::new();
     for t in &change.deleted {
         for graph in &seen {
-            let quad = t.clone().in_graph(node(graph)?);
-            if store
-                .engine()
-                .contains(&quad)
-                .map_err(|e| Error::Evaluation(e.to_string()))?
-            {
-                store.remove_all(&[quad])?;
-                if !touched.contains(graph) {
-                    touched.push(graph);
-                }
+            if holds(store, t, graph)? {
+                store.remove_all(&[t.clone().in_graph(node(graph)?)])?;
+                push_unique(&mut touched, *graph);
             }
         }
     }
@@ -281,12 +261,9 @@ pub fn scoped(update: Update, into: &str, graphs: &[&str]) -> Result<Update, Err
         pattern,
     } = parts_of(operations)?;
     let world = node(into)?;
-    let mut default: Vec<oxigraph::model::NamedNode> = Vec::new();
+    let mut default = Vec::new();
     for g in graphs {
-        let g = node(g)?;
-        if !default.contains(&g) {
-            default.push(g);
-        }
+        push_unique(&mut default, node(g)?);
     }
     let delete = delete
         .into_iter()
@@ -394,10 +371,6 @@ fn refused(reason: &str) -> Error {
     Error::Document(reason.to_string())
 }
 
-fn node(iri: &str) -> Result<NamedNode, Error> {
-    NamedNode::new(iri).map_err(|e| Error::Evaluation(format!("no IRI: {iri}: {e}")))
-}
-
 #[cfg(test)]
 mod tests {
     //! The machine a transition is applied by, held as `agent/belief/tests/test_transition.py` holds it: on a bare
@@ -478,7 +451,7 @@ mod tests {
             orders
                 .into_iter()
                 .map(|order| {
-                    let mut names: Vec<String> = order.iter().map(|r| r.named()[T.len()..].to_string()).collect();
+                    let mut names: Vec<String> = order.iter().map(|r| r.name[T.len()..].to_string()).collect();
                     names.sort();
                     names
                 })
@@ -490,11 +463,11 @@ mod tests {
         );
         let found = transitions(&store).unwrap()[0]
             .iter()
-            .find(|r| r.named() == t("countRule"))
+            .find(|r| r.name == t("countRule"))
             .cloned()
             .unwrap();
         assert!(
-            found.update.is_some() && found.order == 0.0,
+            !found.update.is_empty() && found.order == 0.0,
             "its text and its order travel with it"
         );
         store
@@ -548,7 +521,7 @@ mod tests {
             ])
         );
         let store = self::store();
-        let later = Rule::new(1.0, darken().update.unwrap(), "later");
+        let later = Rule::new(1.0, darken().update, "later");
         run(&store, &[later, witness()], &t("state"), &[&t("state")], &[]);
         assert!(
             facts(&store, "state").contains(&("lamp".into(), "seen".into(), "Lit".into())),

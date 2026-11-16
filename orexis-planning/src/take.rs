@@ -440,10 +440,17 @@ fn carried(store: &Store, action: &str, memo: &mut Memo) -> Result<Option<Carrie
                     );
                     continue;
                 }
+                let Some(update) = value(&r, "update") else {
+                    log::error!(
+                        "a rule of the effect of {} states no belief:update, so it changes nothing",
+                        local_of(action)
+                    );
+                    continue;
+                };
                 rules.push(Rule {
                     order: value(&r, "order").and_then(|o| o.parse().ok()).unwrap_or(0.0),
-                    update: value(&r, "update"),
-                    name: Some(format!("the effect of {}", local_of(action))),
+                    update,
+                    name: format!("the effect of {}", local_of(action)),
                 });
             }
             Some(Carried {

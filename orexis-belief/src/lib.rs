@@ -7,6 +7,7 @@
 //! - `deliberator`: the package's core, the pass that sequences the two over what was written, within a budget, and
 //!   what it revises as the package starts and on what it hears;
 //! - `events`: what belief says happened, a pass that revised and the revisions held;
+//! - `held`: what a graph holds, asked of the engine, and a list keeping each item once;
 //! - the start, below the modules, and nothing else: the deliberator made, and the task that wakes it.
 
 use orexis::ontology::BELIEF;
@@ -16,6 +17,7 @@ use crate::ontology::REVISING_TRIGGER;
 
 mod deliberator;
 mod events;
+mod held;
 pub mod ontology;
 mod revise;
 pub mod transition;
@@ -57,11 +59,11 @@ fn start(handed: Handed) -> orexis::task::Starting {
             };
             let Some(woke) = woke else { break };
             let mut turn = handed.turn();
-            let wrote = match woke {
-                Woke::Graphs(_, graphs) => deliberator.revising(&graphs, BELIEF, &mut turn).map(|()| Vec::new()),
+            let revised = match woke {
+                Woke::Graphs(_, graphs) => deliberator.revising(&graphs, BELIEF, &mut turn),
                 Woke::Event(_, event) => deliberator.heard_event(&event, &mut turn),
             };
-            turn.done(wrote)?;
+            turn.done(revised.map(|()| Vec::new()))?;
         }
         Ok(())
     })

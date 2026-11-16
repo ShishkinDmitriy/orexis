@@ -32,3 +32,8 @@ pub fn revision_graph(source: &str) -> String {
 pub fn state_graph(arrival: &str) -> String {
     format!("{arrival}/believed")
 }
+
+/// `iri` as a node, refused where it is no IRI — so a name spliced into a text is one the grammar reads as one.
+pub(crate) fn node(iri: &str) -> Result<oxigraph::model::NamedNode, orexis::Error> {
+    oxigraph::model::NamedNode::new(iri).map_err(|e| orexis::Error::Evaluation(format!("no IRI: {iri}: {e}")))
+}

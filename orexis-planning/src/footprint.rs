@@ -105,7 +105,7 @@ pub fn read_by_transitions(store: &Store) -> Result<Option<BTreeSet<String>>, Er
     let mut out = BTreeSet::new();
     for order in transitions(store)? {
         for rule in order {
-            let Some(text) = &rule.update else { continue };
+            let text = &rule.update;
             let Some(parts) = read(store, text) else {
                 return Ok(None);
             };
@@ -239,7 +239,7 @@ pub fn changeable(
     }
     for order in transitions(store)? {
         for rule in order {
-            texts.extend(rule.update);
+            texts.push(rule.update);
         }
     }
     let mut out: BTreeMap<(String, Option<String>), Pattern> = BTreeMap::new();
