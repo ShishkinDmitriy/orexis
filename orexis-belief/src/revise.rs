@@ -22,7 +22,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::LazyLock;
 
-use oxigraph::model::{GraphNameRef, NamedNode, Triple};
+use oxigraph::model::{NamedNode, Triple};
 use regex::Regex;
 
 use orexis::Error;
@@ -32,7 +32,8 @@ use orexis::hash::{forms, hash_named_graph};
 use orexis::ontology::{BELIEF, DERIVED};
 use orexis::store::{Store, Within, value};
 
-use crate::ontology::{DERIVED_FROM, REVISION_GRAPH, RULES_GRAPH, SETTLED, revision_graph};
+use crate::held::{holds, push_unique};
+use crate::ontology::{DERIVED_FROM, REVISION_GRAPH, RULES_GRAPH, SETTLED, node, revision_graph};
 
 /// Rule executions one call may spend, unless the caller says otherwise.
 pub const BUDGET: usize = 64;
@@ -68,6 +69,15 @@ SELECT ?owner ?start ?end WHERE {
                           OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
 LIMIT 1";
 
+/// THE REVISION GRAPH'S ROW beside its entry: derived from its source, and whether its rules settled.
+const DESCRIBED_Q: &str = "GRAPH $cat { $into $derived $source ; $settled $value . }";
+
+/// WHETHER A REVISION GRAPH'S RULES SETTLED, said again on its row.
+const SAY_SETTLED_U: &str = "
+DELETE { GRAPH $cat { $graph $settled ?was } }
+INSERT { GRAPH $cat { $graph $settled $value } }
+WHERE  { GRAPH $cat { $graph $settled ?was } }";
+
 /// WHETHER A REVISION GRAPH'S RULES DID NOT SETTLE, off its row.
 const UNSETTLED_Q: &str = "ASK { GRAPH $cat { $graph $settled false } }";
 
@@ -85,81 +95,68 @@ struct Inference {
 /// The rules, layer by layer ascending, each layer's grouped by order ascending.
 type Layers = Vec<(f64, Vec<(f64, Vec<Inference>)>)>;
 
+/// What one call of `revise` did: the rule executions it spent, and whether the rules settled — false only where the
+/// revision graph's row now says `belief:settled false`, which the next call continues.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Concluded {
+    pub spent: usize,
+    pub settled: bool,
+}
+
 /// Conclude what the rules say follows from `source` beside `read` into its revision graph, classified `kind` beside
-/// `belief:RevisionGraph`, layer by layer towards a fixpoint, spending at most `budget` rule executions: what this
-/// call spent. A source whose row says its rules did not settle is CONTINUED from what is held; any other has what
-/// was concluded of it before forgotten first. Where nothing is concluded there is no graph and no row.
-pub fn revise(store: &Store, source: &str, read: &[String], budget: usize, kind: &str) -> Result<usize, Error> {
+/// `belief:RevisionGraph`, layer by layer towards a fixpoint, spending at most `budget` rule executions. A source
+/// whose row says its rules did not settle is CONTINUED from what is held; any other has what was concluded of it
+/// before forgotten first. Where nothing is concluded there is no graph and no row; where something is and there is
+/// no catalogue to describe it in, the call is refused.
+pub fn revise(store: &Store, source: &str, read: &[String], budget: usize, kind: &str) -> Result<Concluded, Error> {
     let into = revision_graph(source);
-    let cat = store.catalogue()?.unwrap_or_default();
-    let continuing = unsettled(store, &cat, &into)?;
-    let mut held: Vec<Triple> = Vec::new();
-    if continuing {
-        held = store.triples(&into)?;
+    let cat = store.catalogue()?;
+    let continuing = match &cat {
+        Some(cat) => unsettled(store, cat, &into)?,
+        None => false,
+    };
+    let held = if continuing {
+        store.triples(&into)?
     } else {
         store.forget_graph(&into, Some(BELIEF))?;
-    }
+        Vec::new()
+    };
     let layers = layers(store)?;
     if layers.is_empty() {
-        return Ok(0);
+        return Ok(Concluded {
+            spent: 0,
+            settled: !continuing,
+        });
     }
-    let mut evaluation: Vec<&str> = Vec::new();
+    let mut graphs: Vec<&str> = Vec::new();
     for g in read.iter().map(String::as_str).chain([source, into.as_str()]) {
-        if !evaluation.contains(&g) {
-            evaluation.push(g);
-        }
+        push_unique(&mut graphs, g);
     }
-    let base: Vec<NamedNode> = evaluation
-        .iter()
-        .filter(|g| **g != into)
-        .map(|g| node(g))
-        .collect::<Result<_, _>>()?;
-    let target = node(&into)?;
-    let mut spent = 0;
+    let mut evaluation = Evaluation {
+        store,
+        source,
+        base: graphs.iter().copied().filter(|g| *g != into).collect(),
+        target: node(&into)?,
+        graphs,
+        held,
+        spent: 0,
+        budget,
+    };
     let mut settled = true;
     for (layer, orders) in &layers {
-        //  ONE ITERATION OVER THE RUN-ONCE RULES FIRST, then the iterating rules while new.
+        //  ONE ITERATION OVER THE RUN-ONCE RULES FIRST, then the iterating rules while an iteration concludes.
         let pick = |once: bool| -> Vec<Vec<&Inference>> {
             orders
                 .iter()
                 .map(|(_, rules)| rules.iter().filter(|r| r.once == once).collect())
                 .collect()
         };
-        let (once, iterating) = (pick(true), pick(false));
-        let mut groups = &once;
-        loop {
-            let mut concluded = 0;
-            for due in groups {
-                if due.is_empty() {
-                    continue;
-                }
-                if spent >= budget {
-                    settled = false;
-                    break;
-                }
-                //  ONE ORDER, ONE STATE: every rule of the order is asked before any conclusion is written.
-                let mut added = Vec::new();
-                for rule in due {
-                    spent += 1;
-                    match store.construct(&rule.construct, &evaluation) {
-                        Ok(made) => added.extend(made),
-                        Err(e) => log::error!("a rule would not run over {source}: {e}"),
-                    }
-                }
-                let fresh = novel(&held, inferred(store, added, &base)?);
-                if !fresh.is_empty() {
-                    store.add(fresh.iter().map(|t| t.clone().in_graph(target.clone())))?;
-                    concluded += fresh.len();
-                    held.extend(fresh);
-                }
-            }
-            if !settled {
-                break;
-            }
-            if std::ptr::eq(groups, &once) || concluded > 0 {
-                groups = &iterating;
-            } else {
-                break;
+        settled = evaluation.iterate(&pick(true))?.is_some();
+        while settled {
+            match evaluation.iterate(&pick(false))? {
+                Some(0) => break,
+                Some(_) => {}
+                None => settled = false,
             }
         }
         if !settled {
@@ -170,9 +167,11 @@ pub fn revise(store: &Store, source: &str, read: &[String], budget: usize, kind:
             break;
         }
     }
+    let Evaluation { held, spent, .. } = evaluation;
     if held.is_empty() {
-        return Ok(spent);
+        return Ok(Concluded { spent, settled: true });
     }
+    let cat = cat.ok_or_else(|| Error::Catalogue(format!("no catalogue to describe the revisions of {source} in")))?;
     describe(store, &cat, source, &into, settled, continuing, kind)?;
     hash_named_graph(store, &into, None)?;
     log::debug!(
@@ -180,14 +179,54 @@ pub fn revise(store: &Store, source: &str, read: &[String], budget: usize, kind:
         held.len(),
         if settled { "" } else { ", not settled" }
     );
-    Ok(spent)
+    Ok(Concluded { spent, settled })
+}
+
+/// THE EVALUATION GRAPH of one call and what it has spent: the graphs every rule reads, the base graph among them
+/// — all but the revision graph — the revision graph written into, and what is concluded in it so far.
+struct Evaluation<'a> {
+    store: &'a Store,
+    source: &'a str,
+    graphs: Vec<&'a str>,
+    base: Vec<&'a str>,
+    target: NamedNode,
+    held: Vec<Triple>,
+    spent: usize,
+    budget: usize,
+}
+
+impl Evaluation<'_> {
+    /// One iteration over `orders`, each order's rules asked of one state before any conclusion is written: how
+    /// many facts it concluded, or None where the budget was spent before an order was begun.
+    fn iterate(&mut self, orders: &[Vec<&Inference>]) -> Result<Option<usize>, Error> {
+        let mut concluded = 0;
+        for due in orders.iter().filter(|due| !due.is_empty()) {
+            if self.spent >= self.budget {
+                return Ok(None);
+            }
+            let mut added = Vec::new();
+            for rule in due {
+                self.spent += 1;
+                match self.store.construct(&rule.construct, &self.graphs) {
+                    Ok(made) => added.extend(made),
+                    Err(e) => log::error!("a rule would not run over {}: {e}", self.source),
+                }
+            }
+            let fresh = novel(&self.held, inferred(self.store, added, &self.base)?);
+            if !fresh.is_empty() {
+                let target = &self.target;
+                self.store
+                    .add(fresh.iter().map(|t| t.clone().in_graph(target.clone())))?;
+                concluded += fresh.len();
+                self.held.extend(fresh);
+            }
+        }
+        Ok(Some(concluded))
+    }
 }
 
 /// Whether `graph`'s row says its rules did not settle; no row is settled.
 fn unsettled(store: &Store, cat: &str, graph: &str) -> Result<bool, Error> {
-    if cat.is_empty() {
-        return Ok(false);
-    }
     store.ask(
         &bind(
             UNSETTLED_Q,
@@ -220,29 +259,15 @@ fn novel(held: &[Triple], added: Vec<Triple>) -> Vec<Triple> {
 }
 
 /// The triples of `added` the base graph does not already hold — what the draft calls inferred.
-fn inferred(store: &Store, added: Vec<Triple>, base: &[NamedNode]) -> Result<Vec<Triple>, Error> {
+fn inferred(store: &Store, added: Vec<Triple>, base: &[&str]) -> Result<Vec<Triple>, Error> {
     let mut out = Vec::new();
-    for t in added {
-        let mut stated = false;
+    'added: for t in added {
         for g in base {
-            if store
-                .engine()
-                .quads_for_pattern(
-                    Some(t.subject.as_ref()),
-                    Some(t.predicate.as_ref()),
-                    Some(t.object.as_ref()),
-                    Some(GraphNameRef::NamedNode(g.as_ref())),
-                )
-                .next()
-                .is_some()
-            {
-                stated = true;
-                break;
+            if holds(store, &t, g)? {
+                continue 'added;
             }
         }
-        if !stated {
-            out.push(t);
-        }
+        out.push(t);
     }
     Ok(out)
 }
@@ -287,9 +312,7 @@ fn layers(store: &Store) -> Result<Layers, Error> {
     }
     let mut read = rules_graphs.clone();
     for g in store.graphs_of(&[BELIEF], &Within::common())? {
-        if !read.contains(&g) {
-            read.push(g);
-        }
+        push_unique(&mut read, g);
     }
     let read: Vec<&str> = read.iter().map(String::as_str).collect();
     let mut declared: BTreeMap<String, BTreeMap<String, String>> = BTreeMap::new();
@@ -418,22 +441,31 @@ fn describe(
         when("start"),
         when("end"),
     )?;
-    store.update(&format!(
-        "INSERT DATA {{\n  {entry}\n  GRAPH <{cat}> {{ <{into}> <{DERIVED_FROM}> <{source}> ; <{SETTLED}> {settled} . }} }}"
-    ))
+    let described = bind(
+        DESCRIBED_Q,
+        &[
+            ("cat", node(cat)?.into()),
+            ("into", node(into)?.into()),
+            ("source", node(source)?.into()),
+            ("derived", Value::iri(DERIVED_FROM)),
+            ("settled", Value::iri(SETTLED)),
+            ("value", Value::Bool(settled)),
+        ],
+    )?;
+    store.update(&format!("INSERT DATA {{\n  {entry}\n  {described} }}"))
 }
 
 /// Say on `graph`'s row whether its rules — or its arrival — are done, replacing what it said.
 pub(crate) fn say_settled(store: &Store, cat: &str, graph: &str, settled: bool) -> Result<(), Error> {
-    store.update(&format!(
-        "DELETE {{ GRAPH <{cat}> {{ <{graph}> <{SETTLED}> ?was }} }}
-INSERT {{ GRAPH <{cat}> {{ <{graph}> <{SETTLED}> {settled} }} }}
-WHERE  {{ GRAPH <{cat}> {{ <{graph}> <{SETTLED}> ?was }} }}"
-    ))
-}
-
-fn node(iri: &str) -> Result<NamedNode, Error> {
-    NamedNode::new(iri).map_err(|e| Error::Evaluation(format!("no IRI: {iri}: {e}")))
+    store.update(&bind(
+        SAY_SETTLED_U,
+        &[
+            ("cat", node(cat)?.into()),
+            ("graph", node(graph)?.into()),
+            ("settled", Value::iri(SETTLED)),
+            ("value", Value::Bool(settled)),
+        ],
+    )?)
 }
 
 #[cfg(test)]
@@ -505,7 +537,7 @@ mod tests {
     fn a_rewritten_source_replaces_its_conclusions() {
         let store = case("a_reading_below_its_range_is_concluded_below");
         let read = known(&store);
-        assert!(revise(&store, SENSED, &read, BUDGET, BELIEF).unwrap() > 0);
+        assert!(revise(&store, SENSED, &read, BUDGET, BELIEF).unwrap().spent > 0);
         assert!(!concluded(&store).is_empty());
         store
             .update(&format!(
@@ -514,7 +546,7 @@ mod tests {
                  <http://example.org/test#reads> ?v }} }}"
             ))
             .unwrap();
-        assert!(revise(&store, SENSED, &read, BUDGET, BELIEF).unwrap() > 0);
+        assert!(revise(&store, SENSED, &read, BUDGET, BELIEF).unwrap().spent > 0);
         assert!(concluded(&store).is_empty());
         assert!(
             store
@@ -535,7 +567,7 @@ mod tests {
       <http://www.w3.org/ns/shacl#construct> "PREFIX : <http://example.org/test#> CONSTRUCT { ?s :token ?u } WHERE { ?s a :Pot BIND(STRUUID() AS ?u) }" ] } }"#,
             )
             .unwrap();
-        assert_eq!(revise(&store, SENSED, &known(&store), 12, BELIEF).unwrap(), 12);
+        assert_eq!(revise(&store, SENSED, &known(&store), 12, BELIEF).unwrap().spent, 12);
         let tokens = concluded(&store)
             .iter()
             .filter(|(_, p, _)| p.ends_with("token"))
@@ -551,7 +583,7 @@ mod tests {
         let expected: BTreeSet<_> = concluded(&whole).into_iter().collect();
         let store = case("a_chain_settles_in_a_later_round");
         let read = known(&store);
-        assert_eq!(revise(&store, SENSED, &read, 2, BELIEF).unwrap(), 2);
+        assert_eq!(revise(&store, SENSED, &read, 2, BELIEF).unwrap().spent, 2);
         assert_eq!(settled(&store).as_deref(), Some("false"));
         revise(&store, SENSED, &read, 64, BELIEF).unwrap();
         assert_eq!(settled(&store).as_deref(), Some("true"));

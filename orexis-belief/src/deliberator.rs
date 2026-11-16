@@ -29,17 +29,18 @@ use orexis::store::{Store, Within, iri, value};
 use orexis::task::{Heard, Turn};
 
 use crate::events::{Revised, RevisionsHeld};
-use crate::ontology::{INTO, REVISES, REVISING, REVISION_GRAPH, SETTLED, revision_graph};
+use crate::held::push_unique;
+use crate::ontology::{BUDGET_TERM, DELIBERATOR, INTO, REVISES, REVISING, REVISION_GRAPH, SETTLED, revision_graph};
 use crate::revise::{self, revise, say_settled};
-use crate::trigger::trigger;
+use crate::trigger::{trigger, triggers_any};
 
 /// THE DELIBERATOR THE SELF PLAYS, IN ONE QUERY: what a role the self plays states of its budget and, where none
 /// does, the default belief's ontology states on the role's shape (`sh:defaultValue`). Whichever role states it: a
 /// domain's role beneath the deliberator is one too.
 const DELIBERATOR_Q: &str = "SELECT DISTINCT (COALESCE(?said, ?own) AS ?budget) WHERE { \
-?shape sh:targetClass <http://example.org/orexis/belief#Deliberator> ; sh:property ?property . \
-?property sh:path <http://example.org/orexis/belief#budget> ; sh:defaultValue ?own . \
-OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . ?role <http://example.org/orexis/belief#budget> ?said } }";
+?shape sh:targetClass $deliberator ; sh:property ?property . \
+?property sh:path $budgeted ; sh:defaultValue ?own . \
+OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . ?role $budgeted ?said } }";
 
 /// EVERY SOURCE WHOSE RULES DID NOT SETTLE, off the revision graphs' rows.
 const UNSETTLED_Q: &str = "
@@ -50,15 +51,20 @@ const HELD_Q: &str = "
 SELECT (COUNT(?g) AS ?revisions) (SUM(IF(?settled, 0, 1)) AS ?unsettled)
 WHERE { GRAPH $cat { ?g a $revision ; $settled ?settled } }";
 
-/// A source queued: what stands beside it — None for the beliefs holding at the pass's instant — whether its
-/// revision has settled, how many orders of its transitions are applied, whether its row was said unsettled for
-/// its transitions, and the kind its revisions are.
+/// Where a queued source stands: its rules not yet settled, or settled and its transitions applied up to an order.
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum Stage {
+    Revising,
+    Transitioning { done: usize },
+}
+
+/// A source queued: what stands beside it — None for the beliefs holding at the pass's instant — where it stands,
+/// whether its row was said unsettled for its transitions, and the kind its revisions are.
 #[derive(Clone, Debug)]
 struct Arrival {
     read: Option<Vec<String>>,
-    revised: bool,
-    done: usize,
-    said: bool,
+    stage: Stage,
+    said_unsettled: bool,
     kind: String,
 }
 
@@ -66,11 +72,29 @@ impl Arrival {
     fn new(read: Option<Vec<String>>, kind: &str) -> Self {
         Arrival {
             read,
-            revised: false,
-            done: 0,
-            said: false,
+            stage: Stage::Revising,
+            said_unsettled: false,
             kind: kind.to_string(),
         }
+    }
+}
+
+/// What one pass has spent and said so far, across the arrivals it took: the budget left, the executions spent,
+/// whether a later arrival's transitions wait for an earlier one's, the sources it revised or transitioned on, and
+/// the agent's own state graphs the transitions changed.
+#[derive(Default)]
+struct Pass {
+    left: usize,
+    spent: usize,
+    waiting: bool,
+    took: Vec<String>,
+    changed: Vec<String>,
+}
+
+impl Pass {
+    fn spend(&mut self, used: usize) {
+        self.spent += used;
+        self.left = self.left.saturating_sub(used);
     }
 }
 
@@ -99,8 +123,15 @@ impl Deliberator {
         let mut known = beliefs.graphs_of(&[SELF_GRAPH], &Within::default())?;
         known.extend(beliefs.graphs_of(&[ONTOLOGY], &Within::default())?);
         let known: Vec<&str> = known.iter().map(String::as_str).collect();
+        let asked = bind(
+            DELIBERATOR_Q,
+            &[
+                ("deliberator", Value::iri(DELIBERATOR)),
+                ("budgeted", Value::iri(BUDGET_TERM)),
+            ],
+        )?;
         let said = beliefs
-            .rows(DELIBERATOR_Q, &known)?
+            .rows(&asked, &known)?
             .first()
             .and_then(|row| value(row, "budget"))
             .ok_or_else(|| Error::Document("the store states no budget for a deliberator, and no default".into()))?;
@@ -154,79 +185,40 @@ impl Deliberator {
     /// budget across them: what the pass spent.
     pub fn deliberate(&mut self, at: DateTime) -> Result<usize, Error> {
         let started = Instant::now();
-        let mut left = self.budget as i64;
-        let mut spent = 0;
         let handed = self.queue.len();
-        let mut done: Vec<String> = Vec::new();
-        let mut changed: Vec<String> = Vec::new();
-        let mut waiting = false;
-        let mut i = 0;
-        while i < self.queue.len() {
-            if left <= 0 {
-                break;
-            }
-            let source = self.queue[i].0.clone();
-            if !self.queue[i].1.revised {
-                let read = match &self.queue[i].1.read {
-                    Some(read) => read.clone(),
-                    None => self.beliefs.graphs_of(
-                        &[BELIEF, RECORD],
-                        &Within {
-                            at: Some(at),
-                            now: Some(at),
-                            ..Within::default()
-                        },
-                    )?,
-                };
-                let share = (left as usize).min(self.per_source);
-                let kind = self.queue[i].1.kind.clone();
-                let used = revise(&self.beliefs, &source, &read, share, &kind)?;
-                done.push(source.clone());
-                spent += used;
-                left -= used as i64;
-                if self.unsettled()?.contains(&source) {
-                    //  CUT IN ITS REVISION: the arrivals after it wait for its transitions — where it triggers any.
-                    let arrival = &mut self.queue[i].1;
-                    arrival.read = Some(read);
-                    waiting = waiting || !trigger(&self.beliefs, &source, 0, arrival.done)?.finished;
-                    i += 1;
-                    continue;
-                }
-                self.queue[i].1.revised = true;
-            }
-            let budget = if waiting { 0 } else { left.max(0) as usize };
-            let triggered = trigger(&self.beliefs, &source, budget, self.queue[i].1.done)?;
-            spent += triggered.spent;
-            left -= triggered.spent as i64;
-            if triggered.spent > 0 && !done.contains(&source) {
-                done.push(source.clone());
-            }
-            for g in triggered.changed {
-                if !changed.contains(&g) {
-                    changed.push(g);
-                }
-            }
-            if !triggered.finished {
-                self.queue[i].1.done = triggered.done;
-                self.say(i, false)?;
-                waiting = true;
-                i += 1;
+        let mut pass = Pass {
+            left: self.budget,
+            ..Pass::default()
+        };
+        let mut queue = std::mem::take(&mut self.queue).into_iter();
+        let mut kept = Vec::with_capacity(handed);
+        while let Some((source, mut arrival)) = queue.next() {
+            if pass.left == 0 {
+                kept.push((source, arrival));
                 continue;
             }
-            if self.queue[i].1.said {
-                self.say(i, true)?;
+            match self.take(&source, &mut arrival, at, &mut pass) {
+                Ok(true) => {}
+                Ok(false) => kept.push((source, arrival)),
+                Err(e) => {
+                    //  WHAT THE PASS HAD NOT TAKEN STAYS QUEUED, as it stood.
+                    kept.push((source, arrival));
+                    kept.extend(queue);
+                    self.queue = kept;
+                    return Err(e);
+                }
             }
-            self.queue.remove(i);
         }
-        if spent > 0 {
-            log::debug!("{spent} execution(s), {} pending", self.queue.len());
+        self.queue = kept;
+        if pass.spent > 0 {
+            log::debug!("{} execution(s), {} pending", pass.spent, self.queue.len());
         }
         if handed > 0 {
             let revised = Revised {
-                graphs: done,
-                changed,
+                graphs: pass.took,
+                changed: pass.changed,
                 sources: handed,
-                executions: spent,
+                executions: pass.spent,
                 cut: self.queue.len(),
                 duration_s: (started.elapsed().as_secs_f64() * 1e6).round() / 1e6,
             };
@@ -236,7 +228,60 @@ impl Deliberator {
                 self.watch.emit(&held);
             }
         }
-        Ok(spent)
+        Ok(pass.spent)
+    }
+
+    /// One queued arrival taken as far as the pass lets it: revised until its rules settle, then the transitions it
+    /// triggers applied, unless an earlier arrival's wait. True where it is done with both and leaves the queue.
+    fn take(&self, source: &str, arrival: &mut Arrival, at: DateTime, pass: &mut Pass) -> Result<bool, Error> {
+        if arrival.stage == Stage::Revising {
+            let read = match arrival.read.take() {
+                Some(read) => read,
+                None => self.beliefs.graphs_of(
+                    &[BELIEF, RECORD],
+                    &Within {
+                        at: Some(at),
+                        now: Some(at),
+                        ..Within::default()
+                    },
+                )?,
+            };
+            let share = pass.left.min(self.per_source);
+            let concluded = revise(&self.beliefs, source, &read, share, &arrival.kind)?;
+            push_unique(&mut pass.took, source.to_string());
+            pass.spend(concluded.spent);
+            if !concluded.settled {
+                //  CUT IN ITS REVISION: the arrivals after it wait for its transitions — where it triggers any.
+                arrival.read = Some(read);
+                if !pass.waiting {
+                    pass.waiting = triggers_any(&self.beliefs, source, 0)?;
+                }
+                return Ok(false);
+            }
+            arrival.stage = Stage::Transitioning { done: 0 };
+        }
+        let Stage::Transitioning { done } = arrival.stage else {
+            unreachable!("an arrival whose rules settled is transitioning")
+        };
+        let budget = if pass.waiting { 0 } else { pass.left };
+        let triggered = trigger(&self.beliefs, source, budget, done)?;
+        pass.spend(triggered.spent);
+        if triggered.spent > 0 {
+            push_unique(&mut pass.took, source.to_string());
+        }
+        for g in triggered.changed {
+            push_unique(&mut pass.changed, g);
+        }
+        if !triggered.finished {
+            arrival.stage = Stage::Transitioning { done: triggered.done };
+            self.say(source, arrival, false)?;
+            pass.waiting = true;
+            return Ok(false);
+        }
+        if arrival.said_unsettled {
+            self.say(source, arrival, true)?;
+        }
+        Ok(true)
     }
 
     /// The revisions the catalogue describes now, and how many are unsettled.
@@ -268,17 +313,17 @@ impl Deliberator {
         })
     }
 
-    /// Say on the source's revision row whether it is done, so a restart continues an arrival whose transitions
-    /// waited or were cut — where a row stands.
-    fn say(&mut self, i: usize, settled: bool) -> Result<(), Error> {
-        let (source, arrival) = &mut self.queue[i];
-        if arrival.said != settled {
+    /// Say on the source's revision row whether its arrival is done, where that is not what the row says, so a
+    /// restart continues an arrival whose transitions waited or were cut — where a row stands.
+    fn say(&self, source: &str, arrival: &mut Arrival, settled: bool) -> Result<(), Error> {
+        let unsettled = !settled;
+        if arrival.said_unsettled == unsettled {
             return Ok(());
         }
         if let Some(cat) = self.beliefs.catalogue()? {
             say_settled(&self.beliefs, &cat, &revision_graph(source), settled)?;
         }
-        arrival.said = !settled;
+        arrival.said_unsettled = unsettled;
         Ok(())
     }
 
@@ -327,15 +372,15 @@ impl Deliberator {
     }
 
     /// What belief's policy does of a trigger: revise each graph it names, its revisions of the kind it names.
-    pub(crate) fn heard_event(&mut self, event: &Heard, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+    pub(crate) fn heard_event(&mut self, event: &Heard, pass: &mut Turn<'_>) -> Result<(), Error> {
         let graphs: Vec<String> = event.all(REVISES).iter().map(|g| g.as_str().to_string()).collect();
         let Some(kind) = event.named(INTO).map(|k| k.as_str().to_string()) else {
-            return Ok(Vec::new());
+            return Ok(());
         };
-        if !graphs.is_empty() {
-            self.revising(&graphs, &kind, pass)?;
+        if graphs.is_empty() {
+            return Ok(());
         }
-        Ok(Vec::new())
+        self.revising(&graphs, &kind, pass)
     }
 }
 
