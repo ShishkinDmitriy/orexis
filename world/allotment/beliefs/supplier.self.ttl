@@ -1,3 +1,7 @@
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix planning: <http://example.org/orexis/planning#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 @prefix : <http://example.org/orexis/world/allotment#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix journal: <http://example.org/orexis/journal#> .
@@ -22,3 +26,10 @@
 :supplier orexis:plays [ a journal:Recorder ;
     journal:archivedIn :supplier_archive ;
     journal:servedAt :supplier_endpoint ] .
+
+#  WHAT ITS ROLES DEPEND ON, played beside them (`orexis:dependsOn`, knowledge/domain/kernel/role.md):
+#  its host works only beside these, and each is a role of its own.
+:supplier orexis:plays [ a planning:Planner ] ,
+    [ a execution:Executor ] ,
+    [ a speech:Speaker ] ,
+    [ a belief:Deliberator ] .

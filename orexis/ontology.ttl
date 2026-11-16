@@ -79,7 +79,7 @@ orexis:RecordGraph
 orexis:Role
     a owl:Class ;
     rdfs:label "Role" ;
-    rdfs:comment "The class every role class is beneath (knowledge/domain/kernel/role.md). A role is an INSTANCE an agent plays, never its type: the agent declares it in its own self graph by `orexis:plays` — `:supplier orexis:plays [ a market:Host ]` — and it carries its own context and what belongs to it, as an observer's carries the sensors it reads. A package declares the role classes it serves in its own ontology, beneath this; a domain declares role classes in its own words beneath package ones; and the boot loads a package only where the closure of the classes of the roles the agent plays reaches one its ontology declares. Not beneath `orexis:Agent`: a role is played by an agent and is none. Anti-rigid, as a role is: its player could cease to play it, so no role is every agent's, and an agent playing none loads nothing and is refused at onboarding (knowledge/decisions/a-role-is-an-instance-an-agent-plays.md)." .
+    rdfs:comment "The class every role class is beneath (knowledge/domain/kernel/role.md). A role is an INSTANCE an agent plays, never its type: the agent declares it in its own self graph by `orexis:plays` — `:supplier orexis:plays [ a market:Host ]` — and it carries its own context and what belongs to it, as an observer's carries the sensors it reads. A package declares the role classes it serves in its own ontology, beneath this; a domain declares role classes in its own words, each beneath this and depending on the package roles it needs (`orexis:dependsOn`); and a package runs where the agent plays a role of a class its ontology declares, or one beneath it. Not beneath `orexis:Agent`: a role is played by an agent and is none. Anti-rigid, as a role is: its player could cease to play it, so no role is every agent's, and an agent playing none loads nothing and is refused at onboarding (knowledge/decisions/a-role-is-an-instance-an-agent-plays.md)." .
 
 orexis:SocietyGraph
     a owl:Class ;
@@ -259,6 +259,13 @@ orexis:plays
     rdfs:range orexis:Role ;
     rdfs:label "plays" ;
     rdfs:comment "A role this agent plays, stated in its own self graph beside `orexis:Self` and holding over that graph's period: an instance of a role class, anonymous unless something must refer to it, carrying its own context. The boot reads it before any package is loaded, so it is a word packages meet at (knowledge/decisions/a-role-is-an-instance-an-agent-plays.md)." .
+
+orexis:dependsOn
+    a owl:ObjectProperty ;
+    rdfs:domain owl:Class ;
+    rdfs:range owl:Class ;
+    rdfs:label "depends on" ;
+    rdfs:comment "A role class whose package works only beside a package another role class loads: `coordination:Coordinator orexis:dependsOn planning:Planner` says a coordinator's package needs a planner's running beside it, and is no kind of planner. Stated by whoever owns the words it is stated in, as planning states the executor's need of a planner; and an agent playing a role plays every role its class depends on, each stated in its self graph, which onboarding holds a self graph to (knowledge/domain/kernel/role.md). A role class beneath another is a kind of it; one depending on another is not." .
 
 orexis:start
     a owl:DatatypeProperty ;

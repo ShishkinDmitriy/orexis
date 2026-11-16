@@ -218,6 +218,13 @@ planning:Planner a owl:Class ;
     Planner, one concept with it. Declared, never derived; it needs a desire or a want the agent
     holds, since a planner with nothing to pursue plans nothing.""" .
 
+#  AN EXECUTOR DEPENDS ON A PLANNER, while a plan crosses no agent: the executor walks what planning published in
+#  the same store, and a step is checked against the present by the Planner when it is taken (#916). Stated HERE
+#  and not in execution's ontology because the planner is planning's word, and execution, beneath it, speaks none
+#  of planning's; the seam that would lift it is a plan crossing agents
+#  (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
+execution:Executor orexis:dependsOn planning:Planner .
+
 #################  Desires, wants and the searched half of an action — planning's  #################
 
 planning:Desire

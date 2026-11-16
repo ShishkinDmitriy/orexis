@@ -18,7 +18,8 @@ description: >-
   the observer shape's default where none is stated, where they were stances with a constant in code.
   Amended 2026-11-15 - a role is told from another of its class by a context, so a package role with
   none is played once, and an observer's sensors and limits are its attentions'; refused - a second
-  observer role per limit, and scopes as objects of the planner.
+  observer role per limit, and scopes as objects of the planner. Amended 2026-11-16 - a role that needs
+  another is no kind of it and depends on it (a-role-depends-on-another-and-is-no-kind-of-it).
 status: accepted
 timestamp: 2026-10-11T12:00:00Z
 ---

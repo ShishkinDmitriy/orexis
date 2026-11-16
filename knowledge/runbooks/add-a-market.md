@@ -11,8 +11,8 @@ description: >-
 A [market](/domain/market/market.md) is the `market:` domain: a [host](/domain/market/host.md)
 holds a venue's good and serves it, and a [bidder](/domain/market/bidder.md) buys a claim on it in
 a [round](/domain/market/round.md). Every message is a document one agent says to another, heard by
-[speech](/domain/speech/speech.md). Each market role is beneath the planner, the executor, the
-speaker and the deliberator, so playing one loads all four.
+[speech](/domain/speech/speech.md). Each market role depends on the planner, the executor, the
+speaker and the deliberator, so an agent playing one plays all four beside it.
 
 ![a bidder calls the host, tenders in the round, presents the claim it won, and the host doses its plot](../diagrams/runbook-market-round.svg)
 

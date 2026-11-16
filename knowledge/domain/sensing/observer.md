@@ -4,7 +4,7 @@ title: Observer
 term: http://example.org/orexis/sensing#Observer
 description: >-
   A role an agent plays that turns its sensors' numbers into observations - the role whose part is
-  sensing's, beneath the deliberator since what an observation is of is a revision. An agent plays
+  sensing's, depending on the deliberator since what an observation is of is a revision. An agent plays
   one, which attends the sensors it reads and says how often sensing asks after them and where their
   readings are archived; onboarding holds the sensors it attends to where they are mounted, both ways.
 ---
@@ -19,10 +19,10 @@ fern agent, the greenhouse's grower, the allotment's growers:
     orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor :moisture_probe , :thermometer ] ] .
 ```
 
-Playing it loads [sensing](/domain/sensing/sensing.md) and, because the role is beneath the
-[deliberator](/domain/belief/deliberator.md), belief too: what sensing writes is a number, and what it
-is of and its quantity are concluded by sensing's own rules, which only a deliberator runs. Without
-belief an observer would hold readings that are of nothing.
+Playing it runs [sensing](/domain/sensing/sensing.md), and it depends on the
+[deliberator](/domain/belief/deliberator.md), which the agent plays beside it: what sensing writes is a number,
+and what it is of and its quantity are concluded by sensing's own rules, which only a deliberator runs. Without
+belief an observer would hold readings that are of nothing ([role](/domain/kernel/role.md)).
 
 It is the one role the MQTT and HTTP transports are loaded for on a sensor's account: the MQTT member
 where a sensor the role reads publishes on a topic, the HTTP member where one is a thing with a form

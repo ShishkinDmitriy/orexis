@@ -4,19 +4,19 @@ title: Coordinator
 term: http://example.org/orexis/coordination#Coordinator
 description: >-
   An agent that asks the peers it believes in range what its constraints read, answers them under the
-  constraints it holds too, and lays what it yields to - the role whose part is coordination's. Beneath
-  the speaker, the planner and the executor, so declaring it loads speech, planning and execution as well;
+  constraints it holds too, and lays what it yields to - the role whose part is coordination's. It depends
+  on the speaker, the planner and the executor, so an agent playing it plays those three beside it;
   the draw it takes part in is a domain its world imports.
 ---
 
 # Who is one
 
-An agent whose self graph says it plays `coordination:Coordinator` - each courier on the lane. The class is
-beneath [speaker](/domain/speech/speaker.md), since asking and answering is saying and hearing, and beneath
+An agent whose self graph says it plays `coordination:Coordinator` - each courier on the lane. The class
+depends on the [speaker](/domain/speech/speaker.md), since asking and answering is saying and hearing, and on
 the [planner](/domain/planning/planner.md) and the [executor](/domain/execution/executor.md), since a draw is
-taken part in only by committing and revealing, actions planning plans and execution takes. So the boot loads
-speech, planning and execution with the package, every need of those roles holds of a coordinator too, and a
-world declares the one role where the lane's couriers once declared three ([role](/domain/kernel/role.md)).
+taken part in only by committing and revealing, actions planning plans and execution takes. It is no kind of
+any of them: the lane's couriers play all four, the budget said on the planner, and onboarding refuses a
+coordinator played without the three ([role](/domain/kernel/role.md)).
 
 # What its part does
 

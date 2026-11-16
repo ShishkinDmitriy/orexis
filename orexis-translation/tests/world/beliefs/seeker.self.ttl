@@ -1,3 +1,4 @@
+@prefix speech: <http://example.org/orexis/speech#> .
 @prefix : <http://example.org/orexis/world/viewing#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix translation: <http://example.org/orexis/translation#> .
@@ -10,3 +11,7 @@
 
 :seeker a orexis:Self ;
     orexis:plays [ a translation:Translator ; translation:translatedBy :model ] , [ a belief:Deliberator ] .
+
+#  WHAT ITS ROLES DEPEND ON, played beside them (`orexis:dependsOn`, knowledge/domain/kernel/role.md):
+#  its translator works only beside these, and each is a role of its own.
+:seeker orexis:plays [ a speech:Speaker ] .

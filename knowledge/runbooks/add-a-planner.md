@@ -103,7 +103,7 @@ candidates a pass states its own [budget](/domain/planning/budget.md), measured 
 |---|---|
 | a planner holding no desire and no want | it would plan nothing |
 | a desire or a want carrying both `metWhen` and `unmetWhen`, or neither | it would be judged by nothing |
-| an executor that is no planner | nothing would publish a plan for it to walk |
+| an executor played with no planner beside it | it depends on one: nothing would publish a plan for it to walk |
 | a present that violates a constraint | an impossible world is not repaired |
 
 # Prove it

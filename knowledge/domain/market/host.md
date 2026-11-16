@@ -18,9 +18,9 @@ venue to call it. The relation is what the role is founded on: the shape the mar
 role asks for `market:hosts`, so a host that hosts nothing is refused at onboarding, and the two
 agree wherever both exist. A bidder in one venue may host another.
 
-Declared, the role loads what a host needs: it is beneath the planner, the executor, the speaker and
-the deliberator, since the market's actions say documents and its rules conclude what they mean
-([role](/domain/kernel/role.md)).
+Declared, the role says what a host needs beside it: it depends on the planner, the executor, the speaker and
+the deliberator, since the market's actions say documents and its rules conclude what they mean, and the agent
+plays each of the four ([role](/domain/kernel/role.md)).
 
 # What it holds
 

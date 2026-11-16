@@ -1,3 +1,6 @@
+@prefix speech: <http://example.org/orexis/speech#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix belief: <http://example.org/orexis/belief#> .
 @prefix : <http://example.org/orexis/world/lane#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix journal: <http://example.org/orexis/journal#> .
@@ -10,7 +13,7 @@
 #  THE COURIER OF VAN B: the same mind as A's over the other van, reading its fix and its contacts; its fix
 #  repeats a cell for as long as the van stands, which is a van standing and no stuck instrument.
 :courier_b a orexis:Self ;
-    orexis:plays [ a coordination:Coordinator ; planning:budget 256 ] ,    # plans, walks, asks the other courier in range, answers it, and draws lots with it
+    orexis:plays [ a coordination:Coordinator ] ,    # asks the other courier in range, answers it, and draws lots with it
                  [ a sensing:Observer ; sensing:archivedIn :series ;
                    sensing:attends [ sensing:stuckAfter 100000 ;
                                      sensing:sensor :fix_b_column , :fix_b_row , :receiver_a_column , :receiver_a_row , :radar_2_column , :radar_2_row , :radar_4_column , :radar_4_row ] ] .
@@ -21,3 +24,10 @@
 :courier_b orexis:plays [ a journal:Recorder ;
     journal:archivedIn :courier_b_archive ;
     journal:servedAt :courier_b_endpoint ] .
+
+#  WHAT ITS ROLES DEPEND ON, played beside them (`orexis:dependsOn`, knowledge/domain/kernel/role.md):
+#  its coordinator and its observer work only beside these, and each is a role of its own.
+:courier_b orexis:plays [ a planning:Planner ; planning:budget 256 ] ,
+    [ a execution:Executor ] ,
+    [ a speech:Speaker ] ,
+    [ a belief:Deliberator ] .

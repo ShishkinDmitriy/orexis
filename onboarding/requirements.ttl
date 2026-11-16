@@ -224,3 +224,20 @@ SELECT $this WHERE { FILTER NOT EXISTS { $this a mqtt4ssn:Topic } FILTER NOT EXI
     sh:sparql [
         sh:message "states a credential in {?url}: a deployment graph says where, never what may be done there" ;
         sh:select """SELECT $this ?url WHERE { $this schema:url ?url . FILTER REGEX(STR(?url), "^[a-z]+://[^/]*@") }""" ] .
+
+#  A ROLE IS PLAYED BESIDE EVERY ROLE ITS CLASS DEPENDS ON (`orexis:dependsOn`, knowledge/domain/kernel/role.md):
+#  a coordinator's package works only beside a planner's, an executor's and a speaker's, an observer's beside a
+#  deliberator's, and each is a role the self states, since a package decides by its own class alone and nothing
+#  plays a role for the self. Judged here once for every package and domain, whoever states the dependency.
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf orexis:plays ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "plays a {?role}, which depends on a {?needed} it plays none of" ;
+        sh:select """SELECT $this ?role ?needed WHERE {
+            $this <http://example.org/orexis#plays> ?played . ?played a ?class .
+            ?class (<http://www.w3.org/2000/01/rdf-schema#subClassOf>)* ?depending .
+            ?depending <http://example.org/orexis#dependsOn> ?wanted .
+            FILTER NOT EXISTS { $this <http://example.org/orexis#plays> ?other . ?other a ?kind .
+                                ?kind (<http://www.w3.org/2000/01/rdf-schema#subClassOf>)* ?wanted }
+            BIND (REPLACE(STR(?class), "^.*[#/]", "") AS ?role)
+            BIND (REPLACE(STR(?wanted), "^.*[#/]", "") AS ?needed) }""" ] .

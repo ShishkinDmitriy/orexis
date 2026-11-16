@@ -3,7 +3,7 @@
 Speaks with people. What a person writes in a chat becomes a statement in the words the chat allows, or a question
 the model answers from what the chat may read; what the agent says to a person is phrased and sent back.
 
-- **Loaded for:** `translation:Translator`, beneath the speaker.
+- **Loaded for:** `translation:Translator`, which depends on the speaker.
 - **Words:** `ontology.ttl` (`translation:`). **Dictionary:** `knowledge/domain/translation/`.
 - **Imports:** the kernel and speech. It imports no transport member.
 - **Needs:** the model's key, mounted into this agent's container alone.

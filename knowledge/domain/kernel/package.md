@@ -37,7 +37,7 @@ roles the package serves, beneath `orexis:Role`:
 | package | its role | an agent in it |
 |---|---|---|
 | belief | `belief:Deliberator` | revises what it believes by the rules it holds |
-| sensing | `sensing:Observer`, beneath the deliberator | turns its sensors' numbers into observations |
+| sensing | `sensing:Observer`, depending on the deliberator | turns its sensors' numbers into observations |
 | prediction | `prediction:Predictor` | foresees its readings by the flows |
 | planning | `planning:Planner` | derives wants and searches for plans |
 | execution | `execution:Executor` | walks intentions and takes their steps |

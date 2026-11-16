@@ -3,7 +3,7 @@
 Two agents that want one resource ask each other and draw lots for it. The coordinator asks the peers in range
 what its constraints read, answers them, concludes each conflict itself and lays what it yields to.
 
-- **Loaded for:** `coordination:Coordinator`, beneath the speaker, the planner and the executor.
+- **Loaded for:** `coordination:Coordinator`, which depends on the speaker, the planner and the executor.
 - **Words:** `ontology.ttl` (`coordination:`). **Dictionary:** `knowledge/domain/coordination/`.
 - **Imports:** the kernel and speech; it speaks belief's, planning's and execution's words.
 

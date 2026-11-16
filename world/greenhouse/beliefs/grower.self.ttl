@@ -1,3 +1,4 @@
+@prefix belief: <http://example.org/orexis/belief#> .
 @prefix metrics: <http://example.org/orexis/metrics#> .
 @prefix : <http://example.org/orexis/world/greenhouse#> .
 @prefix orexis: <http://example.org/orexis#> .
@@ -33,3 +34,7 @@
 #  IT MEASURES HOW IT IS DOING, so it is a meter (knowledge/domain/metrics/meter.md): what its packages' events
 #  report is tallied and written once a window, for whoever administers it. Without the role nothing is tallied.
 :grower orexis:plays [ a metrics:Meter ; metrics:writtenTo :series ] .
+
+#  WHAT ITS ROLES DEPEND ON, played beside them (`orexis:dependsOn`, knowledge/domain/kernel/role.md):
+#  its observer works only beside these, and each is a role of its own.
+:grower orexis:plays [ a belief:Deliberator ] .
