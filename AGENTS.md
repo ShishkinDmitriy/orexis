@@ -1121,10 +1121,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   `Meter`, `Predictor`, `Coordinator`, `Observer`, and the cores that bear the role's name; three roles had no
   struct, four fields went by another word than their property (`every_s`, `endpoint`, `archive`, `tracer`), and
   half of what a translator's role says lay on its model's client (role).
-- **A package's start is in its crate's `lib.rs`, in every crate** — the registration, the role it is loaded for,
-  `start`, `make` and its task, below the crate's description and its modules; twelve crates kept it in a
-  `create.rs` and five in `lib.rs`, and a `role.rs` per crate with one struct named `Role` was built and refused,
-  the struct named for the role with a `new` that reads the store being what a package has (package).
+- **A package's start is in its crate's `lib.rs`, in every crate, and nothing else is** — the registration, the role
+  it is loaded for and `start`, one function from the decision to the end of its task, below the crate's description
+  and its modules; its core is the role's struct, in a file named for the role, and what it says happened is
+  `events.rs`; twelve crates kept the start in a `create.rs` and five in `lib.rs`, a `role.rs` per crate with one
+  struct named `Role` was built and refused, and a part struct beside the role's (`Sensing`, `Execution`,
+  `Coordination`) was folded into it, as `Belief` into the `Deliberator` (package, part).
 - **A start runs once for a boot** — the boot runs every package's start as far as its decision and holds it there,
   and starting the agent runs the same starts on (`task::boot`, `Booted::start`); each ran twice, the first dropped
   at its decision, while the binary made the journal between the two (package, #1173).

@@ -14,7 +14,7 @@ use orexis::ontology::{BELIEF, FORECAST, RECORD};
 use orexis::snapshots::{ME, now, stand_in};
 use orexis::store::{Store, Within, value};
 use orexis_belief::Deliberator;
-use orexis_prediction::Prediction;
+use orexis_prediction::Predictor;
 use orexis_prediction::foresee::foresee;
 use orexis_prediction::ontology::OBSERVATION_GRAPH;
 use orexis_sensing::received::received;
@@ -97,7 +97,10 @@ fn reading(store: &Store, value: f64, minutes: f64) -> (String, Option<orexis_pr
     deliberator.changed(&graph, Some(read), OBSERVATION_GRAPH);
     deliberator.deliberate(at).unwrap();
     store.close_catalogue().unwrap();
-    (graph, foresee(store, at, None).unwrap())
+    (
+        graph,
+        foresee(store, &Predictor::new(store).unwrap(), at, None).unwrap(),
+    )
 }
 
 fn known(store: &Store, at: DateTime) -> Result<Vec<String>, orexis::Error> {
@@ -187,7 +190,7 @@ fn a_second_reading_follows_the_first_and_the_foresight_is_made_from_it() {
 #[test]
 fn its_part_offers_the_foresight_and_hears_nothing() {
     let store = pot();
-    let part = Prediction;
+    let part = Predictor::new(&store).unwrap();
     assert!(
         part.foresee(&store, now(), None).unwrap().is_none(),
         "no percept in hand: nothing is foreseen"

@@ -36,13 +36,16 @@ use orexis::events::{Event, Watch};
 use orexis::hash::hash_named_graph;
 use orexis::ontology::{BELIEF, DERIVED, OREXIS, RECORDED, local_of};
 use orexis::store::{Row, Store, Within, instant, iri, value};
+use orexis::task::{Heard, Turn};
 
 use crate::events::{About, HeadAsked, IntentionAdopted, IntentionResolved, StepAnswered, StepTaken, Walked};
+use crate::events::{BLOCKED, HEAD};
 use crate::implementation::operations;
 use crate::ontology::{
     ADDS_GRAPH, ANSWERED_WITHIN_S, COMMITTED_STEP_GRAPH, EXECUTION, FICTIVE, INTENTION, INTENTION_GRAPH,
     LANDS_WITHIN_S, PATIENCE_S, RETRACTS_GRAPH, STEP_CLASS, committed_graph, fictive_graph, intentions_graph,
 };
+use crate::ontology::{ADOPTING, CHANGED, DERIVED_FROM, OUTCOME, RESOLVING, REVISED_SOURCE, SUPERSEDING};
 
 const ADOPTS: &str = "http://example.org/orexis/execution#adopts";
 const BY: &str = "http://example.org/orexis/execution#by";
@@ -245,7 +248,22 @@ pub struct Executor {
     replaced: BTreeMap<String, Vec<String>>,
     work: VecDeque<(String, String)>,
     inflight: BTreeSet<String>,
+    /// Raised by whoever saw the present change: a walk is queued.
+    pub soon: Arc<std::sync::atomic::AtomicBool>,
+    /// Whether a walk is queued, when the last walk was, how many intentions it left, and how many intentions were
+    /// resolved when the runtime was last asked for another pass.
+    queued: bool,
+    walked_at: Option<DateTime>,
+    since: usize,
+    resolved_told: usize,
 }
+
+pub(crate) const PASS: usize = 0;
+const WALK: usize = 1;
+pub(crate) const ADOPT: usize = 2;
+pub(crate) const SUPERSEDE: usize = 3;
+pub(crate) const RESOLVE: usize = 4;
+pub(crate) const REVISED: usize = 5;
 
 fn strs(names: &[String]) -> Vec<&str> {
     names.iter().map(String::as_str).collect()
@@ -333,6 +351,11 @@ impl Executor {
             replaced: BTreeMap::new(),
             work: VecDeque::new(),
             inflight: BTreeSet::new(),
+            soon: Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            queued: false,
+            walked_at: None,
+            since: usize::MAX,
+            resolved_told: 0,
         })
     }
 
@@ -1381,7 +1404,172 @@ impl Executor {
         self.written.push(graph);
         Ok(())
     }
+
+    /// What the executor and the taker wrote since the runtime was last handed it.
+    fn handed(&mut self) -> Vec<String> {
+        std::mem::take(&mut self.written)
+    }
+
+    fn walked(&mut self, pass: &mut Turn<'_>) -> Result<(), Error> {
+        self.queued = false;
+        let activity = pass.begin(crate::ontology::WALKING, &[]);
+        if self.walk(pass.now)? > 0 {
+            pass.again();
+        }
+        pass.end(activity);
+        self.walked_at = Some(pass.now);
+        self.since = self.intentions.len()?;
+        Ok(())
+    }
+
+    /// What it queued for itself, each in turn and what each wrote told, until nothing is left.
+    pub(crate) fn queued(&mut self, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+        loop {
+            let jobs = self.submitted();
+            if jobs.is_empty() {
+                return Ok(Vec::new());
+            }
+            for job in jobs {
+                let wrote = self.run(job, pass)?;
+                pass.told(wrote)?;
+            }
+        }
+    }
+
+    /// What execution's policy does of a trigger: the activity it is the trigger of, begun with the entity the event
+    /// names as what triggered it, and ended once done. An event naming less than its activity needs starts nothing.
+    pub(crate) fn heard_event(&mut self, job: usize, event: &Heard, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+        //  A WALK IS QUEUED where what was heard changed the present, which alone answers a step: the walk is the
+        //  activity, started when it runs.
+        if job == REVISED {
+            //  A HEAD ASKED IS ANSWERED beneath the same trigger: taken or failed now, and walked on from, since a
+            //  fictive step taken is answered at once.
+            if let Some(head) = event.named(HEAD) {
+                let blocked = event.about.iter().any(|(p, t)| {
+                    p == BLOCKED && matches!(t, oxigraph::model::Term::Literal(l) if l.value() == "true")
+                });
+                let activity = pass.begin(crate::ontology::WALKING, std::slice::from_ref(&event.node));
+                if self.judged(head.as_str(), blocked)? {
+                    pass.again();
+                }
+                pass.end(activity);
+                self.soon.store(true, std::sync::atomic::Ordering::SeqCst);
+                return Ok(self.handed());
+            }
+            let names = |p: &str| {
+                event
+                    .all(p)
+                    .into_iter()
+                    .map(|n| n.as_str().to_string())
+                    .collect::<Vec<_>>()
+            };
+            let beliefs = self.beliefs.clone();
+            if present(&beliefs, &names(REVISED_SOURCE), &names(CHANGED))? {
+                self.soon.store(true, std::sync::atomic::Ordering::SeqCst);
+            }
+            return Ok(Vec::new());
+        }
+        let want = event.named(PURSUES).cloned();
+        let (kind, trigger) = match job {
+            ADOPT => (ADOPTING, event.named(ADOPTS)),
+            SUPERSEDE => (SUPERSEDING, event.named(ENDS_AFTER)),
+            RESOLVE => (RESOLVING, want.as_ref()),
+            _ => return Ok(Vec::new()),
+        };
+        let Some(trigger) = trigger.cloned() else {
+            return Ok(Vec::new());
+        };
+        let outcome = event.about.iter().find_map(|(p, t)| match t {
+            oxigraph::model::Term::Literal(l) if p == OUTCOME => Some(l.value().to_string()),
+            _ => None,
+        });
+        let activity = pass.begin(kind, std::slice::from_ref(&trigger));
+        let want = want.map(|w| w.as_str().to_string());
+        let wrote = match (job, want) {
+            (ADOPT, Some(want)) => {
+                if let Some(desire) = event.named(DERIVED_FROM) {
+                    self.desires
+                        .insert(want.clone(), orexis::ontology::local_of(desire.as_str()));
+                }
+                self.adopt(trigger.as_str(), &want)
+            }
+            (SUPERSEDE, want) => self.supersede_after(trigger.as_str(), want.as_deref()),
+            (RESOLVE, Some(want)) => match outcome {
+                Some(outcome) => self.end_for(&want, &outcome),
+                None => Ok(Vec::new()),
+            },
+            _ => Ok(Vec::new()),
+        };
+        pass.end(activity);
+        wrote
+    }
+
+    pub(crate) fn run(&mut self, job: usize, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+        if job == WALK {
+            self.walked(pass)?;
+        } else {
+            //  EXECUTION'S POLICY AT THE PASS: walk where the instant the last walk said is due has come — a head
+            //  due, a landing to look at, a patience run out — or the intentions were written since it, as Python
+            //  read it off the store's length, a plan that replaced another leaving as many standing; and otherwise
+            //  nothing, since what else answers a step is a revision of the present, which queues a walk of its own.
+            //  THE DUE INSTANT IS HELD TO THE CLOCK, not to the pass's instant: a walk reads the clock as it goes, so
+            //  a landing may have come since the pass began.
+            let (held, due) = {
+                let due = match self.next_due {
+                    Some(d) => d <= pass.now || d <= self.clock.now(),
+                    None => false,
+                };
+                (self.intentions.len()?, due)
+            };
+            if self.walked_at.is_none() || self.since != held || due {
+                self.walked(pass)?;
+            }
+            if let Some(due) = self.next_due {
+                pass.wake_at(due);
+            }
+            //  THE PASS'S LAP IS MARKED HERE AND ONLY HERE: a walk a revision queued, run among the drain's jobs,
+            //  would mark `execute` over the sensing and revision before it.
+            pass.lap("execute");
+        }
+        if self.resolved != self.resolved_told {
+            self.resolved_told = self.resolved;
+            pass.again();
+        }
+        Ok(self.handed())
+    }
+
+    fn submitted(&mut self) -> Vec<usize> {
+        if !self.soon.swap(false, std::sync::atomic::Ordering::SeqCst) || self.queued {
+            return Vec::new();
+        }
+        self.queued = true;
+        vec![WALK]
+    }
 }
+
+/// Whether a revision pass changed the present, which alone answers a step: the transitions it applied changed a
+/// state, or a source it revised is a belief of the agent's — no world's document, and no committed step the
+/// executor wrote itself, since a walk on those would read the clock for nothing.
+fn present(beliefs: &Store, revised: &[String], changed: &[String]) -> Result<bool, Error> {
+    if !changed.is_empty() {
+        return Ok(true);
+    }
+    let Some(cat) = beliefs.catalogue()? else {
+        return Ok(false);
+    };
+    if revised.is_empty() {
+        return Ok(false);
+    }
+    let graphs = revised.iter().map(|g| format!("<{g}>")).collect::<Vec<_>>().join(" ");
+    let text = bind(PRESENT_Q, &[("cat", Value::iri(cat)), ("revised", Value::Raw(graphs))])?;
+    Ok(!beliefs.rows(&text, &[])?.is_empty())
+}
+
+/// WHETHER ANY OF SOME GRAPHS IS THE PRESENT: a belief of the agent's, by the catalogue.
+const PRESENT_Q: &str = "
+SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:BeliefGraph .
+                               FILTER NOT EXISTS { ?g a execution:CommittedStepGraph }
+                               ?g orexis:ownedBy ?owner . } } LIMIT 1";
 
 /// When a taken head should show what it predicted, at the earliest and at the latest — each as long after it was
 /// taken as the plan placed it after its opening.

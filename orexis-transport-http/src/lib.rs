@@ -3,46 +3,20 @@
 //!
 //! - [`driver`]: which sensors are the member's, where each is read, a fetch on a thread of its own, and the body handed
 //!   to sensing;
-//! - the start, below the modules: the member's part, polling each of its sensors at the frequency the sensor states.
+//! - `transport`: the member's part, a poll job per sensor and the bodies it handed on;
+//! - the start, below the modules, and nothing else: the member made, and the task that polls each of its sensors at
+//!   the frequency the sensor states.
 
-use std::collections::VecDeque;
-
-use orexis::Error;
-use orexis::task::{Arrived, Every, Handed, Hears, Package, Task, Turn, Woke, sooner};
-use orexis::transport::Message;
-use orexis_sensing::cadence::cadence_of;
-
-use crate::driver::Http;
+use orexis::task::{Handed, Package, Woke, sooner};
 
 pub mod driver;
 pub mod figures;
+mod transport;
 
-const HANDLE: usize = 0;
-const HOLDER: &str = "transport/http";
-
-/// The member's part: the member, a poll job per sensor, and the bodies handed to the pass.
-pub struct Transport {
-    pub member: Http,
-    /// Each poll job's sensor, its job the index after `HANDLE`.
-    polled: Vec<String>,
-    once: Vec<usize>,
-    pending: VecDeque<Message>,
-}
-
-impl Transport {
-    pub fn new(member: Http) -> Self {
-        Transport {
-            member,
-            polled: Vec::new(),
-            once: Vec::new(),
-            pending: VecDeque::new(),
-        }
-    }
-}
+pub use transport::Transport;
 
 inventory::submit! { Package { name: "transport/http", documents: orexis::documents!("ontology.ttl"), start } }
 
-/// THE PACKAGE'S START: its part made and started - what it hears, what it does every so often - and its task.
 /// A TRANSPORT IS NO ROLE: this member joins the agent where a role the self plays needs bytes and the world wires
 /// them through it - each a role's class with what the world must state of the self, in words declared here.
 const WIRED: &[(&str, &str)] = &[(
@@ -51,162 +25,79 @@ const WIRED: &[(&str, &str)] = &[(
 )];
 const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX speech: <http://example.org/orexis/speech#> PREFIX td: <https://www.w3.org/2019/wot/td#> ";
 
-/// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
-/// joined, makes its core.
+/// ITS START, which every package this binary holds is given: it joins where a role the self plays needs what it
+/// reads and the world wires it, and declines otherwise; joined, its member is made and each sensor opened; checked,
+/// it ends there; otherwise it says it has started, and what follows is ITS TASK, which hears nothing and waits for an
+/// arrival or the instant a sensor is next polled, and once nothing more waits does what has fallen due.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         if !orexis::boot::wired(&handed.store, WORDS, WIRED)? {
             return Ok(());
         }
-        let task = make(&handed)?;
-        handed.started("transport/http").await;
-        match task {
-            Some(task) if handed.checking().is_none() => task.await,
-            _ => Ok(()),
-        }
-    })
-}
-
-fn make(handed: &Handed) -> Result<Option<Task>, Error> {
-    let me = orexis::boot::selves(&handed.store)?
-        .into_iter()
-        .next()
-        .unwrap_or_default();
-    //  HANDED A MEMBER, by a test that plays the other side, it is that; deployed and handed none, it fetches over
-    //  the web; and otherwise, a check or a test that hands
-    //  none, it is a member that reaches nothing, so every text it parses at its making is parsed and nothing is dialled.
-    let member = match handed.outside.take::<crate::driver::Http>() {
-        Some(member) => member,
-        None if handed.outside.has::<orexis::task::Deployed>() => crate::driver::Http::new(
-            &handed.store,
-            &me,
-            crate::driver::get(crate::figures::figure_of(
+        let me = orexis::boot::selves(&handed.store)?
+            .into_iter()
+            .next()
+            .unwrap_or_default();
+        //  HANDED A MEMBER, by a test that plays the other side, it is that; deployed and handed none, it fetches
+        //  over the web; and otherwise, a check or a test that hands none, it is a member that reaches nothing, so
+        //  every text it parses at its making is parsed and nothing is dialled.
+        let member = match handed.outside.take::<crate::driver::Http>() {
+            Some(member) => member,
+            None if handed.outside.has::<orexis::task::Deployed>() => crate::driver::Http::new(
                 &handed.store,
-                crate::driver::FETCHED_WITHIN_S,
-            )?),
-        ),
-        None => crate::driver::Http::new(
-            &handed.store,
-            &me,
-            std::sync::Arc::new(|_: &str| Err("an agent that is not deployed reaches no web".to_string())),
-        ),
-    };
-    let mut part = Transport::new(member);
-    let mut hears = handed.events.hears();
-    let arrived = handed.arrived();
-    let mut timers = Vec::new();
-    part.start(handed, &mut hears, &arrived, &mut timers)?;
-    Ok(Some(Box::pin(task(handed.clone(), part, hears, arrived, timers))))
-}
-
-/// THE PACKAGE'S TASK: it decides as the run begins, then waits for what it hears, an arrival or the instant it is
-/// next due; once nothing more waits to be heard it does what it queued for itself and what has fallen due.
-async fn task(
-    handed: Handed,
-    mut part: Transport,
-    mut hears: Hears,
-    mut arrived: Arrived,
-    mut timers: Vec<(Every, usize)>,
-) -> Result<(), Error> {
-    let mut heard = None;
-    let mut due = None;
-    loop {
-        let mut turn = handed.turn();
-        //  THE WEB MEMBER HEARS NOTHING: whatever woke it, it does what has fallen due.
-        let _: Option<Woke> = heard.take();
-        if hears.is_empty() {
-            let wrote = part.queued(&mut turn);
-            turn.done(wrote)?;
-            for (every, tag) in &mut timers {
-                if every.due(turn.now) {
-                    let wrote = part.run(*tag, &mut turn);
-                    turn.done(wrote)?;
-                    let wrote = part.queued(&mut turn);
-                    turn.done(wrote)?;
-                }
-            }
-            due = timers
-                .iter()
-                .fold(turn.next(), |soonest, (every, _)| sooner(soonest, every.at()));
-        }
-        heard = tokio::select! {
-            biased;
-            _ = handed.stopped() => break,
-            woke = hears.next() => match woke {
-                Some(woke) => Some(woke),
-                None => break,
-            },
-            _ = arrived.wait() => None,
-            _ = handed.sleep_until(due) => None,
+                &me,
+                crate::driver::get(crate::figures::figure_of(
+                    &handed.store,
+                    crate::driver::FETCHED_WITHIN_S,
+                )?),
+            ),
+            None => crate::driver::Http::new(
+                &handed.store,
+                &me,
+                std::sync::Arc::new(|_: &str| Err("an agent that is not deployed reaches no web".to_string())),
+            ),
         };
-    }
-    Ok(())
-}
-
-impl Transport {
-    /// What it queued for itself, each in turn and what each wrote told, until nothing is left.
-    fn queued(&mut self, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
-        loop {
-            let jobs = self.submitted();
-            if jobs.is_empty() {
-                return Ok(Vec::new());
-            }
-            for job in jobs {
-                let wrote = self.run(job, pass)?;
-                pass.told(wrote)?;
-            }
+        let mut transport = Transport::new(member);
+        let mut hears = handed.events.hears();
+        let mut arrived = handed.arrived();
+        transport.member.inbox.wakes(arrived.wake());
+        let mut timers = transport.open()?;
+        handed.started("transport/http").await;
+        if handed.checking().is_some() {
+            return Ok(());
         }
-    }
-
-    fn start(
-        &mut self,
-        handed: &Handed,
-        hears: &mut Hears,
-        arrived: &Arrived,
-        timers: &mut Vec<(Every, usize)>,
-    ) -> Result<(), Error> {
-        let _ = (&handed, &hears, &arrived, &timers);
-        self.member.inbox.wakes(arrived.wake());
-        for sensor in self.member.open()? {
-            let job = HANDLE + 1 + self.polled.len();
-            match cadence_of(self.member_beliefs(), &sensor)? {
-                Some(every) => timers.push((Every::new(every), job)),
-                None => self.once.push(job),
+        let mut heard = None;
+        let mut due = None;
+        loop {
+            let mut turn = handed.turn();
+            //  THE WEB MEMBER HEARS NOTHING: whatever woke it, it does what has fallen due.
+            let _: Option<Woke> = heard.take();
+            if hears.is_empty() {
+                let wrote = transport.queued(&mut turn);
+                turn.done(wrote)?;
+                for (every, tag) in &mut timers {
+                    if every.due(turn.now) {
+                        let wrote = transport.run(*tag, &mut turn);
+                        turn.done(wrote)?;
+                        let wrote = transport.queued(&mut turn);
+                        turn.done(wrote)?;
+                    }
+                }
+                due = timers
+                    .iter()
+                    .fold(turn.next(), |soonest, (every, _)| sooner(soonest, every.at()));
             }
-            self.polled.push(sensor);
+            heard = tokio::select! {
+                biased;
+                _ = handed.stopped() => break,
+                woke = hears.next() => match woke {
+                    Some(woke) => Some(woke),
+                    None => break,
+                },
+                _ = arrived.wait() => None,
+                _ = handed.sleep_until(due) => None,
+            };
         }
         Ok(())
-    }
-
-    fn run(&mut self, job: usize, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
-        //  A MEMBER KEEPS THE AGENT RUNNING: what it senses goes on arriving whatever is wanted.
-        pass.hold(HOLDER);
-        if job == HANDLE {
-            let Some(message) = self.pending.pop_front() else {
-                return Ok(Vec::new());
-            };
-            let written = self
-                .member
-                .handle(&message.topic, &message.payload, message.at.unwrap_or(pass.now))?;
-            return Ok(written.into_iter().map(|(_, graph)| graph).collect());
-        }
-        if let Some(sensor) = self.polled.get(job - HANDLE - 1) {
-            self.member.sense_now(sensor)?;
-        }
-        Ok(Vec::new())
-    }
-
-    fn submitted(&mut self) -> Vec<usize> {
-        let mut jobs = std::mem::take(&mut self.once);
-        let arrived = self.member.inbox.take();
-        jobs.extend(std::iter::repeat_n(HANDLE, arrived.len()));
-        self.pending.extend(arrived);
-        jobs
-    }
-}
-
-impl Transport {
-    fn member_beliefs(&self) -> &orexis::store::Store {
-        self.member.beliefs()
-    }
+    })
 }

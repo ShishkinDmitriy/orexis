@@ -895,7 +895,13 @@ mod tests {
         snapshots::all_read(&foreseen, 1);
         for case in snapshots::cases_in(&foreseen) {
             let store = snapshots::stand_in(&case);
-            let mut foresight = orexis_prediction::foresee::foresee(&store, snapshots::now(), None).unwrap();
+            let mut foresight = orexis_prediction::foresee::foresee(
+                &store,
+                &orexis_prediction::Predictor::new(&store).unwrap(),
+                snapshots::now(),
+                None,
+            )
+            .unwrap();
             lay_ground_foreseeing(
                 &store,
                 snapshots::now(),
