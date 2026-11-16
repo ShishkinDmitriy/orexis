@@ -55,21 +55,8 @@ const ADOPTED_AT: &str = "http://example.org/orexis/execution#adoptedAt";
 const ENDS_AFTER: &str = "http://example.org/orexis/execution#endsAfter";
 const WAITS_FOR: &str = "http://example.org/orexis/execution#waitsFor";
 
-const PREDICTED_Q: &str = "
-SELECT ?adds ?retracts WHERE {
-  OPTIONAL { GRAPH ?a { $step execution:adds ?adds } }
-  OPTIONAL { GRAPH ?r { $step execution:retracts ?retracts } } } LIMIT 1";
-
 const ADDS_MISSING: &str = "{ GRAPH $adds { ?s ?p ?o } FILTER NOT EXISTS { ?s ?p ?x . FILTER(?x = ?o) } }";
 const RETRACTS_STANDING: &str = "{ GRAPH $retracts { ?s ?p ?o } ?s ?p ?x . FILTER(?x = ?o) }";
-
-/// THE WANT AN INTENTION PURSUES, and THE LATEST ACT RECORDED OF A STEP: what an event about a step carries.
-const PURSUED_Q: &str = "SELECT ?want WHERE { GRAPH $intentions { $intention execution:pursues ?want } }";
-
-const COMMITTED_Q: &str = "SELECT ?step WHERE { GRAPH $intentions { $intention execution:step ?step } }";
-
-const IN_FLIGHT_Q: &str =
-    "SELECT ?act WHERE { GRAPH $intentions { ?act execution:of $step ; execution:taken true } } LIMIT 1";
 
 /// What a step says of itself in words other than this layer's, keyed by the local part of each predicate, with
 /// the step's own IRI under `step` — what a taker is handed.
@@ -261,6 +248,37 @@ impl Executor {
         self.intentions.rows(&bind(text, values)?, &[])
     }
 
+    /// The graphs `step`'s prediction is stated in: what it adds, and what it retracts.
+    fn predicted(&self, step: &str) -> Result<(Option<String>, Option<String>), Error> {
+        const PREDICTED_Q: &str = "
+        SELECT ?adds ?retracts WHERE {
+          OPTIONAL { GRAPH ?a { $step execution:adds ?adds } }
+          OPTIONAL { GRAPH ?r { $step execution:retracts ?retracts } } } LIMIT 1";
+        let found = self.rows_of(PREDICTED_Q, &[("step", Value::iri(step))])?;
+        let row = found.first();
+        Ok((row.and_then(|r| iri(r, "adds")), row.and_then(|r| iri(r, "retracts"))))
+    }
+
+    /// The want `intention` pursues: what an event about one of its steps carries.
+    fn pursued(&self, intention: &str) -> Result<Option<String>, Error> {
+        const PURSUED_Q: &str = "SELECT ?want WHERE { GRAPH $intentions { $intention execution:pursues ?want } }";
+        let found = self.rows_of(
+            PURSUED_Q,
+            &[("intentions", self.mine()), ("intention", Value::iri(intention))],
+        )?;
+        Ok(found.first().and_then(|r| iri(r, "want")))
+    }
+
+    /// The steps `intention` committed.
+    fn committed(&self, intention: &str) -> Result<Vec<String>, Error> {
+        const COMMITTED_Q: &str = "SELECT ?step WHERE { GRAPH $intentions { $intention execution:step ?step } }";
+        let found = self.rows_of(
+            COMMITTED_Q,
+            &[("intentions", self.mine()), ("intention", Value::iri(intention))],
+        )?;
+        Ok(found.iter().filter_map(|r| iri(r, "step")).collect())
+    }
+
     fn catalogue(&self) -> Result<Option<String>, Error> {
         self.beliefs.catalogue()
     }
@@ -368,6 +386,8 @@ impl Executor {
     /// End the standing intention that stands at `step` AFTER it, `superseded`: the plan for `by` replaces its untaken
     /// steps, and waits for it when adopted. A step in flight is never cancelled; one untaken resolves at once.
     pub fn supersede_after(&mut self, step: &str, by: Option<&str>) -> Result<Vec<String>, Error> {
+        const IN_FLIGHT_Q: &str =
+            "SELECT ?act WHERE { GRAPH $intentions { ?act execution:of $step ; execution:taken true } } LIMIT 1";
         for held in self.standing()? {
             if held.at.as_deref() != Some(step) {
                 continue;
@@ -385,12 +405,7 @@ impl Executor {
                 self.replaced.entry(by.to_string()).or_default().push(held.uri.clone());
             }
             let now = self.clock.now();
-            let committed = self.rows_of(
-                COMMITTED_Q,
-                &[("intentions", self.mine()), ("intention", Value::iri(held.uri.clone()))],
-            )?;
-            for r in committed {
-                let Some(other) = iri(&r, "step") else { continue };
+            for other in self.committed(&held.uri)? {
                 if other != step
                     && self
                         .rows_of(
@@ -796,23 +811,11 @@ impl Executor {
         ))?;
         log::info!("{}: {} — {outcome}", self.id, short(intention));
         self.resolved += 1;
-        let committed = self.rows_of(
-            COMMITTED_Q,
-            &[("intentions", self.mine()), ("intention", Value::iri(intention))],
-        )?;
-        for r in committed {
-            if let Some(step) = iri(&r, "step") {
-                self.close_window(&step, now)?;
-            }
+        for step in self.committed(intention)? {
+            self.close_window(&step, now)?;
         }
         if self.watch.connected() {
-            let want = self
-                .rows_of(
-                    PURSUED_Q,
-                    &[("intentions", self.mine()), ("intention", Value::iri(intention))],
-                )?
-                .first()
-                .and_then(|r| iri(r, "want"));
+            let want = self.pursued(intention)?;
             self.watch.emit(&IntentionResolved {
                 intention: intention.to_string(),
                 desire: want.as_ref().and_then(|w| self.desires.get(w).cloned()),
@@ -1180,13 +1183,7 @@ impl Executor {
         const LAST_ACT_Q: &str = "
         SELECT ?act WHERE { GRAPH $intentions { ?act a execution:Act ; execution:of $step ; execution:takenAt ?t } }
         ORDER BY DESC(?t) LIMIT 1";
-        let want = self
-            .rows_of(
-                PURSUED_Q,
-                &[("intentions", self.mine()), ("intention", Value::iri(intention))],
-            )?
-            .first()
-            .and_then(|r| iri(r, "want"));
+        let want = self.pursued(intention)?;
         let act = match act {
             Some(act) => Some(act.to_string()),
             None => self
@@ -1240,8 +1237,8 @@ impl Executor {
     }
 
     fn predicts(&self, step: &str) -> Result<bool, Error> {
-        let found = self.rows_of(PREDICTED_Q, &[("step", Value::iri(step))])?;
-        Ok(found.first().is_some_and(|r| !r.is_empty()))
+        let (adds, retracts) = self.predicted(step)?;
+        Ok(adds.is_some() || retracts.is_some())
     }
 
     fn kept_by(&self, step: &str) -> Result<Option<String>, Error> {
@@ -1328,12 +1325,7 @@ impl Executor {
           GRAPH ?g { ?s ?p ?o } } ORDER BY ?g";
         self.say(said, intention);
         let step = said.get("step").cloned().unwrap_or_default();
-        let predicted = self
-            .rows_of(PREDICTED_Q, &[("step", Value::iri(step))])?
-            .into_iter()
-            .next()
-            .unwrap_or_default();
-        let (adds, retracts) = (iri(&predicted, "adds"), iri(&predicted, "retracts"));
+        let (adds, retracts) = self.predicted(&step)?;
         if adds.is_none() && retracts.is_none() {
             return Ok(());
         }

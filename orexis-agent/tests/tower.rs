@@ -25,9 +25,35 @@ const TOWER: &str = "http://example.org/orexis/world/tower#";
 const REVISION: &str = "http://example.org/orexis/belief#RevisionGraph";
 const COMMITTED: &str = "http://example.org/orexis/execution#CommittedStepGraph";
 
-const AT_Q: &str = "PREFIX courier: <http://example.org/orexis/courier#>
+/// Where each of the tower's things is believed to stand, by its local name.
+fn positions(store: &Store) -> BTreeMap<String, (i64, i64)> {
+    const AT_Q: &str = "PREFIX courier: <http://example.org/orexis/courier#>
 SELECT ?s ?x ?y WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?s courier:x ?x ; courier:y ?y } } ORDER BY ?s";
-const REFINED_Q: &str = "SELECT (COUNT(?a) AS ?n) WHERE { GRAPH ?g { ?a execution:refinedBy ?w } }";
+    store
+        .rows(AT_Q, &[])
+        .unwrap()
+        .iter()
+        .filter(|r| iri(r, "s").unwrap().starts_with(TOWER))
+        .map(|r| {
+            (
+                local(&iri(r, "s").unwrap()),
+                (
+                    value(r, "x").unwrap().parse().unwrap(),
+                    value(r, "y").unwrap().parse().unwrap(),
+                ),
+            )
+        })
+        .collect()
+}
+
+/// How many steps were refined.
+fn refined(store: &Store) -> usize {
+    const REFINED_Q: &str = "SELECT (COUNT(?a) AS ?n) WHERE { GRAPH ?g { ?a execution:refinedBy ?w } }";
+    value(&store.rows(REFINED_Q, &[]).unwrap()[0], "n")
+        .unwrap()
+        .parse()
+        .unwrap()
+}
 
 fn tree() -> &'static Path {
     Path::new(TREE)
@@ -122,21 +148,7 @@ async fn the_puzzle_is_planned_above_and_carried_out_by_the_van_below() {
     let outcome = common::outcome(&running, 3600).await;
     running.stop().await;
     assert_eq!(outcome, MET);
-    let at: BTreeMap<String, (i64, i64)> = store
-        .rows(AT_Q, &[])
-        .unwrap()
-        .iter()
-        .filter(|r| iri(r, "s").unwrap().starts_with(TOWER))
-        .map(|r| {
-            (
-                local(&iri(r, "s").unwrap()),
-                (
-                    value(r, "x").unwrap().parse().unwrap(),
-                    value(r, "y").unwrap().parse().unwrap(),
-                ),
-            )
-        })
-        .collect();
+    let at = positions(&store);
     assert_eq!(at["disk_1"], (1, 2), "both disks at peg C's position: {at:?}");
     assert_eq!(at["disk_2"], (1, 2), "{at:?}");
     assert_eq!(
@@ -144,10 +156,7 @@ async fn the_puzzle_is_planned_above_and_carried_out_by_the_van_below() {
         pairs(&[("disk_1", "disk_2"), ("disk_2", "PegC")]),
         "and stacked in order"
     );
-    let refined: usize = value(&store.rows(REFINED_Q, &[]).unwrap()[0], "n")
-        .unwrap()
-        .parse()
-        .unwrap();
+    let refined = refined(&store);
     assert_eq!(
         refined, 3,
         "each of the three moves was kept below, and none was taken as fictive"
@@ -193,25 +202,8 @@ async fn walked(order: &[&str]) -> Walked {
     let outcome = common::outcome(&running, 3600).await;
     let ended = clock.now().to_string();
     running.stop().await;
-    let at = store
-        .rows(AT_Q, &[])
-        .unwrap()
-        .iter()
-        .filter(|r| iri(r, "s").unwrap().starts_with(TOWER))
-        .map(|r| {
-            (
-                local(&iri(r, "s").unwrap()),
-                (
-                    value(r, "x").unwrap().parse().unwrap(),
-                    value(r, "y").unwrap().parse().unwrap(),
-                ),
-            )
-        })
-        .collect();
-    let refined = value(&store.rows(REFINED_Q, &[]).unwrap()[0], "n")
-        .unwrap()
-        .parse()
-        .unwrap();
+    let at = positions(&store);
+    let refined = refined(&store);
     (outcome, ended, at, on(&store), refined)
 }
 

@@ -54,16 +54,36 @@ use crate::world_at::{catalogue, lexical};
 
 pub(crate) use policy::{CHECK, HEAD_ASKED, REOPEN};
 
-const GROUND_HASHES_Q: &str = r#"SELECT ?h WHERE { GRAPH $cat { ?g a planning:GroundGraph ; orexis:hash ?h } }"#;
+/// What is said of a want's search and its plan: how the search ended, and what the plan spent.
+struct PlanOf {
+    outcome: Option<String>,
+    spent: Option<f64>,
+}
 
-/// WHAT IS SAID OF A SEARCH AND A PLAN, as the Python Planner reads it for its events: how the want's search ended and
-/// what its plan spent, the desire it was derived under, what its estimate said was left at the present ground, and
-/// how many intentions pursued it before.
-const PLAN_OF_Q: &str = r#"
-SELECT ?outcome ?spent WHERE { GRAPH ?g { ?p a planning:Plan ; planning:for $want ; planning:outcome ?outcome .
-  OPTIONAL { ?p planning:spent ?spent } } } LIMIT 1"#;
+/// What `store` says of `want`'s search and plan; nothing where no plan is for it.
+fn plan_of(store: &Store, want: &str) -> Result<PlanOf, Error> {
+    const PLAN_OF_Q: &str = r#"
+    SELECT ?outcome ?spent WHERE { GRAPH ?g { ?p a planning:Plan ; planning:for $want ; planning:outcome ?outcome .
+      OPTIONAL { ?p planning:spent ?spent } } } LIMIT 1"#;
+    let found = store.rows(&bind(PLAN_OF_Q, &[("want", Value::iri(want))])?, &[])?;
+    let row = found.first();
+    Ok(PlanOf {
+        outcome: row.and_then(|r| iri(r, "outcome")),
+        spent: row.and_then(|r| value(r, "spent")).and_then(|v| v.parse().ok()),
+    })
+}
 
-const CONSTRAINTS_Q: &str = r#"SELECT ?c WHERE { $holder planning:holds ?c . ?c a planning:Constraint } ORDER BY ?c"#;
+/// The constraints `holder` holds, off the constraint graphs, in name order.
+fn constraints_of(store: &Store, holder: &str) -> Result<Vec<String>, Error> {
+    const CONSTRAINTS_Q: &str =
+        r#"SELECT ?c WHERE { $holder planning:holds ?c . ?c a planning:Constraint } ORDER BY ?c"#;
+    let held = graphs(store, &[CONSTRAINT_GRAPH])?;
+    Ok(store
+        .rows(&bind(CONSTRAINTS_Q, &[("holder", Value::iri(holder))])?, &strs(&held))?
+        .iter()
+        .filter_map(|r| iri(r, "c"))
+        .collect())
+}
 
 /// THE WORLD OF A STORE THAT SCOPED NOTHING.
 pub const UNSCOPED: &str = "unscoped";
@@ -371,12 +391,7 @@ fn held_constraints(
     if let Some(known) = &memo.constraints {
         return Ok(known.clone());
     }
-    let held = graphs(store, &[CONSTRAINT_GRAPH])?;
-    let found: Vec<String> = store
-        .rows(&bind(CONSTRAINTS_Q, &[("holder", Value::iri(holder))])?, &strs(&held))?
-        .iter()
-        .filter_map(|r| iri(r, "c"))
-        .collect();
+    let found = constraints_of(store, holder)?;
     let mut out = Vec::new();
     if !found.is_empty() {
         let mut writes: Option<BTreeSet<String>> = Some(BTreeSet::new());
@@ -779,6 +794,8 @@ impl Planner {
         searched: &mut BTreeSet<String>,
         at: DateTime,
     ) -> Result<Vec<String>, Error> {
+        const GROUND_HASHES_Q: &str =
+            r#"SELECT ?h WHERE { GRAPH $cat { ?g a planning:GroundGraph ; orexis:hash ?h } }"#;
         const IN_SCOPE_Q: &str = r#"SELECT ?a WHERE { ?a planning:inScope $scope }"#;
         const REOPENING_Q: &str = r#"
         SELECT ?w WHERE { GRAPH ?g { ?w planning:reopens ?w }
@@ -1009,11 +1026,7 @@ impl Planner {
                     at,
                 };
                 self.search(store, &want, self.budget, &scoped, &mut memo)?;
-                let exhausted = store
-                    .rows(&bind(PLAN_OF_Q, &[("want", Value::iri(want.as_str()))])?, &[])?
-                    .first()
-                    .and_then(|r| iri(r, "outcome"))
-                    .is_some_and(|o| o == EXHAUSTED);
+                let exhausted = plan_of(store, &want)?.outcome.is_some_and(|o| o == EXHAUSTED);
                 if exhausted {
                     self.cut.insert(want.clone(), (at, grounds.clone()));
                 } else {
@@ -1078,11 +1091,7 @@ impl Planner {
                 continue;
             };
             let tally = self.searches.lock().unwrap().remove(&want);
-            let spent_by = store
-                .rows(&bind(PLAN_OF_Q, &[("want", Value::iri(want.as_str()))])?, &[])?
-                .first()
-                .and_then(|r| value(r, "spent"))
-                .and_then(|v| v.parse::<f64>().ok());
+            let spent_by = plan_of(store, &want)?.spent;
             let estimate = store
                 .rows(
                     &bind(
@@ -1173,11 +1182,7 @@ impl Planner {
         if !self.watch.connected() {
             return Ok(());
         }
-        let outcome = store
-            .rows(&bind(PLAN_OF_Q, &[("want", Value::iri(want))])?, &[])?
-            .first()
-            .and_then(|r| iri(r, "outcome"))
-            .map(|o| local_of(&o));
+        let outcome = plan_of(store, want)?.outcome.map(|o| local_of(&o));
         self.watch.emit(&SearchEnded {
             want: want.to_string(),
             desire: desire_of(store, want)?,
@@ -1302,15 +1307,7 @@ impl Planner {
             .first()
             .cloned()
             .ok_or_else(|| Error::Evaluation("no ground was laid".into()))?;
-        let held = graphs(&store, &[CONSTRAINT_GRAPH])?;
-        let constraints: Vec<String> = store
-            .rows(
-                &bind(CONSTRAINTS_Q, &[("holder", Value::iri(self.uri.as_str()))])?,
-                &strs(&held),
-            )?
-            .iter()
-            .filter_map(|r| iri(r, "c"))
-            .collect();
+        let constraints = constraints_of(&store, &self.uri)?;
         let mut out = Vec::new();
         for c in constraints {
             let rows = broken(&store, &c, &present, &mut memo)?;

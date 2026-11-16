@@ -40,19 +40,6 @@ use orexis_speech::heard::heard;
 /// (`cadence::next_lapse`).
 pub const ASKED_AGAIN_AFTER_S: &str = "http://example.org/orexis/mqtt#askedAgainAfterS";
 
-/// WHERE AN AGENT IS TOLD THINGS: the topic it listens to itself.
-const LISTENS_Q: &str = "
-SELECT ?pattern WHERE {
-  $agent mqtt4ssn:listensToTopic ?topic .
-  ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
-ORDER BY ?pattern";
-
-/// THE TOPICS OF THE CHATS THE AGENT IS IN.
-const CHAT_TOPICS_Q: &str = "
-SELECT ?topic ?pattern WHERE {
-  ?chat a speech:Chat ; speech:participant $agent ; speech:channel ?topic . ?topic a mqtt4ssn:Topic .
-  ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern } ORDER BY ?topic ?pattern";
-
 /// Whether a topic filter matches a topic name, as MQTT specifies: `+` matches one level, `#` the rest and may only
 /// end a filter, and a topic beginning with `$` is matched by no wildcard at its first level.
 pub fn matches(pattern: &str, topic: &str) -> bool {
@@ -215,6 +202,29 @@ impl Mqtt {
             .collect())
     }
 
+    /// The filter patterns of the topic `agent` listens to itself: where it is told things.
+    fn listens(&self, agent: &str) -> Result<Vec<String>, Error> {
+        const LISTENS_Q: &str = "
+        SELECT ?pattern WHERE {
+          $agent mqtt4ssn:listensToTopic ?topic .
+          ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
+        ORDER BY ?pattern";
+        self.patterns(LISTENS_Q, &[("agent", Value::iri(agent))])
+    }
+
+    /// The topics of the chats this agent is in, each with a filter pattern matching it, by topic.
+    fn chat_topics(&self) -> Result<Vec<(String, String)>, Error> {
+        const CHAT_TOPICS_Q: &str = "
+        SELECT ?topic ?pattern WHERE {
+          ?chat a speech:Chat ; speech:participant $agent ; speech:channel ?topic . ?topic a mqtt4ssn:Topic .
+          ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern } ORDER BY ?topic ?pattern";
+        Ok(self
+            .rows_of(CHAT_TOPICS_Q, &[("agent", Value::iri(self.me.as_str()))])?
+            .iter()
+            .filter_map(|r| Some((iri(r, "topic")?, value(r, "pattern")?)))
+            .collect())
+    }
+
     /// The clients `thing` is reached over, by index: each broker this member is connected to that the world says
     /// carries it; the one client, where the member has one.
     fn over(&self, thing: &str) -> Result<Vec<usize>, Error> {
@@ -262,12 +272,8 @@ impl Mqtt {
     /// Subscribe to every pattern the world implies for the agent's sensors, and to the topic it listens to itself;
     /// the patterns.
     pub fn open(&mut self) -> Result<Vec<String>, Error> {
-        let me = Value::iri(self.me.as_str());
-        let mut own: BTreeSet<String> = self
-            .patterns(LISTENS_Q, &[("agent", me.clone())])?
-            .into_iter()
-            .collect();
-        own.extend(self.patterns(CHAT_TOPICS_Q, &[("agent", me)])?);
+        let mut own: BTreeSet<String> = self.listens(&self.me)?.into_iter().collect();
+        own.extend(self.chat_topics()?.into_iter().map(|(_, pattern)| pattern));
         let mut on: Vec<BTreeSet<String>> = vec![own; self.clients.len()];
         for (sensor, pattern) in self.topics()? {
             for i in self.over(&sensor)? {
@@ -304,22 +310,17 @@ impl Mqtt {
         payload: &[u8],
         at: DateTime,
     ) -> Result<Vec<(Option<String>, String)>, Error> {
-        let me = Value::iri(self.me.as_str());
-        if self
-            .patterns(LISTENS_Q, &[("agent", me.clone())])?
-            .iter()
-            .any(|p| matches(p, topic))
-        {
+        if self.listens(&self.me)?.iter().any(|p| matches(p, topic)) {
             return Ok(heard(&self.beliefs, &self.me, payload)?
                 .into_iter()
                 .map(|g| (None, g))
                 .collect());
         }
         let chats: Vec<String> = self
-            .rows_of(CHAT_TOPICS_Q, &[("agent", me.clone())])?
-            .iter()
-            .filter(|r| value(r, "pattern").is_some_and(|p| matches(&p, topic)))
-            .filter_map(|r| iri(r, "topic"))
+            .chat_topics()?
+            .into_iter()
+            .filter(|(_, pattern)| matches(pattern, topic))
+            .map(|(topic, _)| topic)
             .collect();
         if let Some(channel) = chats.first() {
             if let Some(prose) = self.prose_of(channel, payload, at) {
@@ -453,11 +454,7 @@ impl Mqtt {
         {
             return Ok(false);
         }
-        let names: Vec<String> = self
-            .patterns(LISTENS_Q, &[("agent", Value::iri(to))])?
-            .into_iter()
-            .filter(|p| no_wildcard(p))
-            .collect();
+        let names: Vec<String> = self.listens(to)?.into_iter().filter(|p| no_wildcard(p)).collect();
         let Some(name) = names.first() else {
             return Ok(self.unreached(to, "nothing said to it is sent"));
         };
@@ -743,12 +740,11 @@ impl orexis_speech::prose::Carrier for Mqtt {
     /// `{"from": the agent, "text": …}` so the agent knows its own when the broker hands it back; false where the
     /// channel is no topic of a chat this agent is in, or it is on no broker of this member's.
     fn say_to(&mut self, channel: &str, text: &str, _reply: Option<&str>) -> bool {
-        let names: Vec<String> = match self.rows_of(CHAT_TOPICS_Q, &[("agent", Value::iri(self.me.as_str()))]) {
-            Ok(rows) => rows
-                .iter()
-                .filter(|r| iri(r, "topic").as_deref() == Some(channel))
-                .filter_map(|r| value(r, "pattern"))
-                .filter(|p| no_wildcard(p))
+        let names: Vec<String> = match self.chat_topics() {
+            Ok(topics) => topics
+                .into_iter()
+                .filter(|(topic, pattern)| topic == channel && no_wildcard(pattern))
+                .map(|(_, pattern)| pattern)
                 .collect(),
             Err(_) => return false,
         };

@@ -44,20 +44,24 @@ pub fn statements(store: &Store, doc: &Document) -> Result<Document, Error> {
 const TEMPORAL: &str = "http://purl.org/dc/terms/temporal";
 const START: &str = "http://example.org/orexis#start";
 const END: &str = "http://example.org/orexis#end";
-const KINDS_Q: &str = "
-SELECT ?k WHERE { GRAPH $cat { $graph a ?k FILTER(?k NOT IN (speech:StatementGraph, orexis:Graph)) } } ORDER BY ?k";
+/// The kinds the catalogue `cat` says `graph` is, but a statement's own and the bare graph, in name order.
+fn kinds_of(beliefs: &Store, cat: &str, graph: &str) -> Result<Vec<String>, Error> {
+    const KINDS_Q: &str = "
+    SELECT ?k WHERE { GRAPH $cat { $graph a ?k FILTER(?k NOT IN (speech:StatementGraph, orexis:Graph)) } } ORDER BY ?k";
+    Ok(beliefs
+        .rows(
+            &bind(KINDS_Q, &[("cat", Value::iri(cat)), ("graph", Value::iri(graph))])?,
+            &[],
+        )?
+        .iter()
+        .filter_map(|r| iri(r, "k"))
+        .collect())
+}
 
 /// The kinds `graph` says it is, and what it says.
 pub(crate) fn described(beliefs: &Store, graph: &str) -> Result<(Vec<String>, Vec<Triple>), Error> {
     let kinds = match beliefs.catalogue()? {
-        Some(cat) => beliefs
-            .rows(
-                &bind(KINDS_Q, &[("cat", Value::iri(cat)), ("graph", Value::iri(graph))])?,
-                &[],
-            )?
-            .iter()
-            .filter_map(|r| iri(r, "k"))
-            .collect(),
+        Some(cat) => kinds_of(beliefs, &cat, graph)?,
         None => Vec::new(),
     };
     let said = match NamedNode::new(graph) {
@@ -92,17 +96,7 @@ pub fn document_of(beliefs: &Store, graphs: &[String]) -> Result<Document, Error
                 .quads_for_pattern(None, None, None, Some(g.as_ref().into()))
                 .flatten(),
         );
-        let kinds: Vec<String> = beliefs
-            .rows(
-                &bind(
-                    KINDS_Q,
-                    &[("cat", Value::iri(cat.as_str())), ("graph", Value::iri(graph))],
-                )?,
-                &[],
-            )?
-            .iter()
-            .filter_map(|r| iri(r, "k"))
-            .collect();
+        let kinds = kinds_of(beliefs, &cat, graph)?;
         let mut beneath = Vec::new();
         for kind in &kinds {
             beneath.push(beliefs.closed(kind)?);

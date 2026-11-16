@@ -47,7 +47,11 @@ fn count(store: &Store, text: &str) -> usize {
     value(&store.rows(text, &[]).unwrap()[0], "n").unwrap().parse().unwrap()
 }
 
-const ACTS_Q: &str = "SELECT (COUNT(?a) AS ?n) WHERE { GRAPH ?g { ?a a execution:Act } }";
+/// How many acts the executor recorded.
+fn acts(store: &Store) -> usize {
+    const ACTS_Q: &str = "SELECT (COUNT(?a) AS ?n) WHERE { GRAPH ?g { ?a a execution:Act } }";
+    count(store, ACTS_Q)
+}
 
 fn local(iri: &str) -> &str {
     iri.rsplit('#').next().unwrap()
@@ -79,11 +83,7 @@ async fn the_parcel_is_delivered_in_eight_steps_and_the_runtime_stops() {
         "SELECT (COUNT(?g) AS ?n) WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph } }";
     let store = store();
     assert_eq!(run(&store, &world("courier"), "courier", 3600, None).await, MET);
-    assert_eq!(
-        count(&store, ACTS_Q),
-        8,
-        "three drives, the pick, three drives, the drop"
-    );
+    assert_eq!(acts(&store), 8, "three drives, the pick, three drives, the drop");
     assert!(
         stands(&store).contains(&("parcel".to_string(), 3, 3)),
         "{:?}",
@@ -96,7 +96,7 @@ async fn the_parcel_is_delivered_in_eight_steps_and_the_runtime_stops() {
 async fn a_budget_that_cuts_the_search_short_is_finished_by_the_passes_after() {
     let store = store();
     assert_eq!(run(&store, &world("courier"), "courier", 3600, Some(16)).await, MET);
-    assert_eq!(count(&store, ACTS_Q), 8);
+    assert_eq!(acts(&store), 8);
 }
 
 #[tokio::test(start_paused = true)]
@@ -113,7 +113,7 @@ async fn walked_the_drivers_one_plan_moves_both_parcels_and_leaves_the_driver_ab
         "a desire holds the agent"
     );
     assert_eq!(count(&store, INTENTIONS_Q), 1, "one want, one plan, one intention");
-    assert_eq!(count(&store, ACTS_Q), 11, "the one plan walked whole");
+    assert_eq!(acts(&store), 11, "the one plan walked whole");
     let outcomes: Vec<String> = store
         .rows(OUTCOMES_Q, &[])
         .unwrap()

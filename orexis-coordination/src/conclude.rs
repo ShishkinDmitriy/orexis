@@ -24,13 +24,6 @@ use crate::ontology::{
     CONFLICT, COORDINATION, QUESTION_GRAPH, WON_BY, answer_graph, conflict_of, conflicts_graph, draw_of, question_graph,
 };
 
-/// WHAT THE AGENT CONCLUDED BEFORE.
-pub(crate) const PRIOR_Q: &str = "
-SELECT ?c ?peer ?constraint ?round ?since ?standing ?silent ?winner WHERE { GRAPH $graph {
-  ?c a coordination:Conflict ; coordination:with ?peer ; coordination:over ?constraint ; coordination:round ?round ;
-     coordination:since ?since ; coordination:draw ?draw . OPTIONAL { ?c coordination:standing ?standing }
-  OPTIONAL { ?c coordination:silent ?silent } OPTIONAL { ?draw coordination:wonBy ?winner } } }";
-
 const RULES_GRAPH: &str = "http://www.w3.org/ns/shacl#RulesGraph";
 
 /// One conflict as concluded.
@@ -65,6 +58,12 @@ fn since(at: DateTime, before: DateTime) -> f64 {
 
 /// What the agent concluded before, by conflict.
 pub(crate) fn prior(store: &Store, me: &str) -> Result<BTreeMap<String, Concluded>, Error> {
+    /// WHAT THE AGENT CONCLUDED BEFORE.
+    const PRIOR_Q: &str = "
+    SELECT ?c ?peer ?constraint ?round ?since ?standing ?silent ?winner WHERE { GRAPH $graph {
+      ?c a coordination:Conflict ; coordination:with ?peer ; coordination:over ?constraint ; coordination:round ?round ;
+         coordination:since ?since ; coordination:draw ?draw . OPTIONAL { ?c coordination:standing ?standing }
+      OPTIONAL { ?c coordination:silent ?silent } OPTIONAL { ?draw coordination:wonBy ?winner } } }";
     let mut out = BTreeMap::new();
     for r in store.rows(&bind(PRIOR_Q, &[("graph", Value::iri(conflicts_graph(me)))])?, &[])? {
         let (Some(c), Some(peer), Some(constraint)) = (iri(&r, "c"), iri(&r, "peer"), iri(&r, "constraint")) else {
@@ -392,23 +391,18 @@ fn written(
 
 /// Every conflict the self `me` of `store` holds, as it last concluded them: what the history view is told.
 pub(crate) fn conflicts(store: &Store, me: &str) -> Result<Vec<crate::events::Conflict>, Error> {
-    let mut out: Vec<crate::events::Conflict> = store
-        .rows(&bind(PRIOR_Q, &[("graph", Value::iri(conflicts_graph(me)))])?, &[])?
-        .iter()
-        .filter_map(|r| {
-            Some(crate::events::Conflict {
-                conflict: iri(r, "c")?,
-                peer: iri(r, "peer")?,
-                constraint: iri(r, "constraint")?,
-                standing: value(r, "standing").as_deref() == Some("true"),
-                silent: value(r, "silent").as_deref() == Some("true"),
-                round: value(r, "round").and_then(|v| v.parse().ok()).unwrap_or(0),
-                won_by: iri(r, "winner"),
-            })
+    Ok(prior(store, me)?
+        .into_iter()
+        .map(|(conflict, c)| crate::events::Conflict {
+            conflict,
+            peer: c.peer,
+            constraint: c.constraint,
+            standing: c.standing,
+            silent: c.silent,
+            round: c.round,
+            won_by: c.winner,
         })
-        .collect();
-    out.sort_by(|a, b| a.conflict.cmp(&b.conflict));
-    Ok(out)
+        .collect())
 }
 
 #[cfg(test)]
