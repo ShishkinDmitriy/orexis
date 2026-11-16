@@ -289,20 +289,23 @@ inventory::submit! { Package { name: "journal-otlp", documents: &[], start } }
 /// and how often is its own stretch.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        let traced = |handed: &Handed| {
-            Ok(handed.joined("journal") && orexis_journal::Recorder::new(&handed.store)?.traced_by.is_some())
-        };
-        if !handed.joins(traced).await? || !handed.after("journal").await {
+        //  IT RUNS WHERE THE RECORDER'S ROLE NAMES ITS SERVICE.
+        if !handed.plays(&[orexis_journal::ROLE])? {
             return Ok(());
         }
-        let Some(task) = make(&handed)? else {
+        let recorder = orexis_journal::Recorder::new(&handed.store)?;
+        if recorder.traced_by.is_none() {
             return Ok(());
-        };
+        }
+        //  ITS CORE IS MADE ONCE EVERY PACKAGE HAS MADE ITS OWN, so the journal it keeps house for is handed on.
+        handed.started("journal-otlp").await;
         if handed.checking().is_some() {
             return Ok(());
         }
-        handed.started().await;
-        task.await
+        match make(&handed)? {
+            Some(task) => task.await,
+            None => Ok(()),
+        }
     })
 }
 

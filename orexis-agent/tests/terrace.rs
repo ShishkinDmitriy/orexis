@@ -236,7 +236,8 @@ async fn terrace(
     };
     let clock = common::clock(noon());
     let booted = orexis_agent::boot(&t.store, world, "terrace", clock.clone(), None, wiring).unwrap();
-    let loaded = booted.loaded().to_vec();
+    let running = booted.start().await.unwrap();
+    let loaded = running.parts();
     for package in [
         "belief",
         "sensing",
@@ -249,8 +250,6 @@ async fn terrace(
     ] {
         assert!(loaded.iter().any(|p| p == package), "{package}: {loaded:?}");
     }
-    let running = booted.start().unwrap();
-    assert!(running.parts().contains(&"translation"));
     walk(&t, &running, &clock, &inbox).await;
     running.stop().await;
 }

@@ -45,42 +45,35 @@ roles the package serves, beneath `orexis:Role`:
 
 The agent's self graph states its roles beside its self, in a domain's words where a domain has them.
 
-**A package decides for itself whether the agent runs it, in its own start.** Two things must agree: the
-binary holds the package, a Cargo feature, and the agent's documents call for it. Where either says no, it is
-not loaded. Every package the binary holds is given its start, and the first thing a start does is decide:
+**The agent starts every package it holds, and each decides for itself whether it runs.** Two things must agree:
+the binary holds the package, a Cargo feature, and the agent's documents call for it. The agent's boot puts the
+documents of every package the binary holds in the store, its `ontology.ttl` and where it has them its rules and
+its actions, each a file of its crate compiled into the binary beside its code (`orexis::documents!` in the crate's
+registration), whether or not the package runs; then it starts every package, and the first thing a start does is
+decide:
 
-| a package | joins where | asked by |
+| a package | runs where | asked by |
 |---|---|---|
 | with a role | the self plays a role of its class, or of a class an ontology in the store puts beneath it | `handed.plays(&[ROLE])` |
-| a transport | a role the self plays needs bytes and the world wires them through this member | `handed.joins(...)` over `boot::wired` |
-| keeping house for a role linked to a service | that package joined, the role names the service and the world says where it answers | `handed.joins(...)` over the role the package reads (`Recorder::new`) |
+| a transport | a role the self plays needs bytes and the world wires them through this member | `boot::wired` |
+| keeping house for a role linked to a service | the self plays the role, the role names the service and the world says where it answers | the role the package reads (`Recorder::new`) |
 
-The package knows its own role; the kernel names no package, no role and no transport's wiring. A package that
-joins **brings its documents**: its `ontology.ttl`, and where it has them its rules and its actions, each a file
-of its crate compiled into the binary beside its code (`orexis::documents!` in the crate's registration). They are
-put in the store, the vocabulary is closed again, and every graph of the world passed over until then is offered
-again, since a kind this package declares is now one the agent reads.
+One look decides, since every package's ontology is in the store before any start: a translator is a speaker by
+translation's, so speech runs for a translator whether or not translation has looked yet. The package knows its own
+role; nothing decides for it, and the kernel names no package, no role and no transport's wiring. A role the self
+plays that no package of the binary declares is refused, its package having been built out. A deployed image is
+built with its agent's packages alone (`orexis-compose`), so its store holds their documents and no other's.
 
-**The asking goes round until it settles.** A package that joins may bring the ontology that puts a role beneath
-another's: translation's says a translator is a speaker, so speech, asked before translation joined, is asked
-again after. A round in which nobody joined settles it, and those still asking decline. So a package's ontology
-enters the store only where the package joined: Hanoi's mover, a planner and a recorder, holds no execution,
-sensing, prediction, speech or belief document. A role the self plays that no package of the binary declares is
-refused, its package having been built out. A domain that speaks a package's words, as climate's flows speak
-prediction's, is read whether the package is loaded or not.
-
-**Then each start goes on, and its lifecycle is two events.** The kernel keeps no order between packages: every
-start is begun and run until it says it has started, ends, or waits for another's, so the order they start in
-follows from those waits alone. A START IS THE WHOLE OF WHAT THE PACKAGE DOES: it makes its core, SAYS IT HAS
-STARTED (`handed.started().await`) and goes on as its task, and the kernel is handed no task back; one that ends
-without saying so has nothing to run. A package being checked (`handed.checking()`) says what the check asks of it as it makes
-its core and ends its start there, before it says it has started: each package checks its own. A package whose making needs what another's made waits for that one to have
-said it: what keeps house for the journal waits for the journal (`handed.after("journal")`), and nothing else
-waits, translation's wait for speech having ordered two packages that needed nothing of each other. Once all have
-started the kernel says `orexis:PackageStarting` and `orexis:PackageStarted` of each, at the instants it began and said so and
-naming the package (`orexis:package`), so the journal keeps which packages run whichever started first. What
-several packages add to or read is shared outside (`Outside::share`) and asked when it is read, as where the
-journal lies is: none of them waits for another for it. The start makes the package's [part](/domain/kernel/part.md) and
+**A package's start is the whole of what it does, and its lifecycle is two events.** It decides, makes its core,
+SAYS IT HAS STARTED (`handed.started("belief").await`), and checked (`handed.checking()`), ends there: each package
+checks its own; otherwise it goes on as its task. Saying it started WAITS UNTIL EVERY PACKAGE HAS MADE ITS CORE OR
+ENDED, so each is listening before any goes on to speak, and then says `orexis:PackageStarting` and
+`orexis:PackageStarted`, at the instants it began and made its core and naming the package (`orexis:package`), so the
+journal, made by then, keeps every start. Starting the agent ends there too (`Booted::start`, awaited): once every
+package has made its core or ended, refused where one could not be made. Nothing keeps an order between packages, and nothing knows which run but
+the events. What keeps house for the journal makes its core after saying it started, the journal's being made by
+then. What several packages add to or read is shared outside (`Outside::share`) and asked when it is read, as where
+the journal lies is. The start makes the package's [part](/domain/kernel/part.md) and
 goes on as the one task that holds it — a loop of the package's own, awaiting the
 [events](/domain/kernel/event.md) beneath its triggers, the kinds of graph written it asked to hear, an arrival
 and the clock ([a-package-starts-itself](/decisions/a-package-starts-itself.md),
@@ -89,11 +82,6 @@ and the clock ([a-package-starts-itself](/decisions/a-package-starts-itself.md),
 **A package's start is in its crate's `lib.rs`.** Below what the crate is and its modules: what a test hands it, the
 [role](/domain/kernel/role.md) it is loaded for, its registration, `start`, `make` and its task, the same in every
 crate. The work is in the modules.
-
-**A start does nothing before it has joined.** The boot runs every start as far as its decision and holds it
-there (`task::boot`), so that what joined is known and the store finished before anything is made; starting the
-agent then runs the same starts on to their ends (`Booted::start`), so a start runs once for a boot. It ran twice,
-the first run dropped at its decision, while the binary had to know what joined before it made the journal.
 
 **A deployed agent's package makes what it is not handed.** Whoever runs an agent for good hands
 `orexis::task::Deployed` outside, and a package then makes its own from what the world says: the journal package

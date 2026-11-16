@@ -54,20 +54,15 @@ const WORDS: &str = "PREFIX telegram: <http://example.org/orexis/telegram#> ";
 /// joined, makes its core.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        if !handed
-            .joins(|handed| orexis::boot::wired(&handed.store, WORDS, WIRED))
-            .await?
-        {
+        if !orexis::boot::wired(&handed.store, WORDS, WIRED)? {
             return Ok(());
         }
-        let Some(task) = make(&handed)? else {
-            return Ok(());
-        };
-        if handed.checking().is_some() {
-            return Ok(());
+        let task = make(&handed)?;
+        handed.started("transport/telegram").await;
+        match task {
+            Some(task) if handed.checking().is_none() => task.await,
+            _ => Ok(()),
         }
-        handed.started().await;
-        task.await
     })
 }
 

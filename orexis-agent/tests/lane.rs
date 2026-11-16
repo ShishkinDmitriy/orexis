@@ -338,7 +338,7 @@ async fn walked(name: &str, world: &Path, home: &[(&str, Cell)], dropping: Optio
         if carried.lock().unwrap().road.is_none() {
             carried.lock().unwrap().road = Some(Road::of(store));
         }
-        let running = booted.start().unwrap();
+        let running = booted.start().await.unwrap();
         if let Some(trace) = &traced {
             trace.watch(name, &running, clock.clone());
         }

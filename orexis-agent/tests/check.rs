@@ -180,7 +180,9 @@ fn a_housekeeper_of_the_journal_joins_where_the_recorders_role_names_its_service
     let linked = |world: &str, agent: &str| {
         let store =
             orexis::store::Store::new(std::sync::Arc::new(orexis::namespaces::Namespaces::linked().unwrap())).unwrap();
-        let loaded = orexis_agent::booted(&store, &Path::new(TREE).join("world").join(world), agent, now).unwrap();
+        let at = Path::new(TREE).join("world").join(world);
+        orexis_agent::booted(&store, &at, agent, now).unwrap();
+        let loaded = check(&at, agent, now, None).unwrap().loaded;
         let joined = |package: &str| loaded.iter().any(|p| p == package);
         let recorder = orexis_journal::Recorder::new(&store).unwrap();
         (
@@ -214,23 +216,27 @@ fn the_journal_package_makes_its_own_journal_where_the_agent_is_deployed_and_non
             .enable_all()
             .build()
             .unwrap();
-        let _entered = tasks.enter();
         let clock: std::sync::Arc<dyn orexis::clock::Clock> = std::sync::Arc::new(orexis::clock::Manual::at(now));
         let wiring = orexis_agent::Wiring {
             deployed: deployed.then(|| "hanoi".to_string()),
             ..orexis_agent::Wiring::default()
         };
-        //  BOOTED AND STARTED AS THE BINARY DOES: each start run once, from its decision on.
+        //  BOOTED AND STARTED AS THE BINARY DOES, until every package has made its core.
         let world = Path::new(TREE).join("world/hanoi");
-        let running = orexis_agent::boot(&store, &world, "hanoi", clock, None, wiring)
-            .unwrap()
-            .start()
-            .unwrap();
-        running
-            .handed
-            .outside
-            .take::<orexis_journal::Traced>()
-            .map(|traced| traced.0.store.named_graphs().count())
+        tasks.block_on(async {
+            let running = orexis_agent::boot(&store, &world, "hanoi", clock, None, wiring)
+                .unwrap()
+                .start()
+                .await
+                .unwrap();
+            let kept = running
+                .handed
+                .outside
+                .take::<orexis_journal::Traced>()
+                .map(|traced| traced.0.store.named_graphs().count());
+            running.stop().await;
+            kept
+        })
     };
     assert!(
         kept(true).is_some_and(|entries| entries > 0),

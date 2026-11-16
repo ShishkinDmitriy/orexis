@@ -115,7 +115,7 @@ async fn a_day_in_the_greenhouse_sends_the_commands_it_is_pinned_to() {
         ..Wiring::default()
     };
     let booted = orexis_agent::boot(&store, &world, "grower", clock.clone(), None, wiring).unwrap();
-    let running = booted.start().unwrap();
+    let running = booted.start().await.unwrap();
     for (at, topic, payload) in &readings {
         //  THE DAY RUNS TO EACH READING'S INSTANT, the grower doing what falls due on the way, and the reading arrives.
         let ahead = orexis::clock::seconds_of(at.checked_sub(clock.now()).unwrap());

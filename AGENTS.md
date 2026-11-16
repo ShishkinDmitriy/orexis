@@ -1051,17 +1051,18 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   protocol engine were refused, a protocol being what the actions' preconditions allow (a-question-is-answered-and-every-other-act-is-kept).
 - **A package brings its own documents, compiled into the binary beside its code, and the boot reads no tree of
   crates** — its ontology, rules and actions are named in its registration (`orexis::documents!`) and put in the store
-  as it joins, so a binary holds the vocabulary of exactly the packages built into it; a role whose package was built
+  as the agent boots, whether or not the package runs, so a binary holds the vocabulary of exactly the packages built
+  into it and every agent's store holds it whole; a role whose package was built
   out is refused at boot; the image carried every crate's documents whatever the agent ran, and a package was loaded
   by the kernel walking its directory (package).
-- **A package decides in its own start whether the agent runs it, and the kernel names no package, role or
-  wiring** — the binary's feature and the agent's documents must both say yes; every package the binary holds is
-  given its start, which first asks its own reason of the store (`Handed::plays`, `joins`, `beside`), asked again
-  whenever another joined, since a joined package brings the ontology that may put a role beneath this one's, until
-  a round changes nothing; the kernel says `orexis:PackageStarting` and `orexis:PackageStarted`, and a start waits
-  for a package it needs started; a table in the kernel of which role loads which package and which pattern loads
-  which transport was what this replaced, and a `plays` function beside `start` in the registration was refused as
-  the kernel still doing the deciding (package).
+- **The agent starts every package it holds, and each decides in its own start whether it runs; nothing else knows a
+  package** — the binary's feature and the agent's documents must both say yes; every package's documents are in the
+  store before any start, so one look at the self's roles decides (`Handed::plays`), where packages were asked round
+  after round, each joined one bringing the ontology that may put a role beneath another's; a table in the kernel
+  of which role loads which package, a `plays` function beside `start` in the registration and a kernel that
+  ran the rounds and knew which joined were what this replaced; the cost, a check or a test binary built with every
+  feature holding every package's documents in every store, is none in a deployed image, built with its agent's
+  packages alone (package).
 - **A role names the service it is linked to, the world says where that answers, and a package reads both as it
   starts** — a recorder's role says `journal:tracedBy` and `journal:archivedIn`, so the journal's package joins for
   the role, what ships its activities for the first link and what archives it for the second; onboarding derives
@@ -1102,17 +1103,20 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   writes its scopes in its start, and where the agent is being checked (`orexis::task::Checking`) says that a desire
   holds the agent and which constraint the world as posed violates; the binary called the planner by name for all
   three, and its verdict named a desire and a contradiction, planning's words (package).
-- **The kernel keeps no order between packages: a start waits for the start it needs, and nothing else orders two**
-  — every start is begun and run until it says it has started, ends or waits (`Handed::after`), that each started
-  is said once all have, so the journal hears every one, and what several packages add to or read is shared (`Outside::share`) and
-  asked when read, as where the journal lies; a list of seventeen names in the kernel ordered them, and three
-  handoffs worked only in that order (package).
+- **The kernel keeps no order between packages, and `Handed` is the agent's services and nothing of its own** — the
+  store, the id, the clock, the events, what reaches outside and the run; every start is spawned as one task, saying
+  it started waits until every package has made its core, and so does starting the agent, refused where one could
+  not be made, so each listens before any speaks and the journal
+  hears every start; what several packages add to or read is shared (`Outside::share`) and asked when read, as where
+  the journal lies; a list of seventeen names in the kernel ordered them, then a lifecycle in `Handed` the kernel
+  kept of which had joined and which started, waited on by name (`Handed::after`) (package).
 - **A start is the whole of what a package does, and the package says when it has started** — it decides, makes its
-  core, says so (`Handed::started`) and goes on as its task, so what it says before is said as the agent starts and
+  core, says so (`Handed::started`), checked ends there, and goes on as its task, so what it says before is said as the agent starts and
   what it does after as the agent runs; a start answered the kernel a task to spawn, which was how the kernel
   told a package made from a package running, for a check that makes every core and runs none; and each package
-  checks its own (`Handed::checking`), saying what it found as it makes its core and ending its start there, where the
-  check was a runtime the binary never drove, which worked only while nothing a package did came before its first wait (package).
+  checks its own (`Handed::checking`), the check driving every start to its end and refusing one that went on to
+  run, where it was a runtime the binary never drove, which worked only while nothing a package did came before its
+  first wait (package).
 - **A package's struct for its role has a field per property of the role, named as the property is** — `Recorder`,
   `Meter`, `Predictor`, `Coordinator`, `Observer`, and the cores that bear the role's name; three roles had no
   struct, four fields went by another word than their property (`every_s`, `endpoint`, `archive`, `tracer`), and

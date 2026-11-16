@@ -36,23 +36,21 @@ pub struct Traced(pub Arc<Journal>);
 inventory::submit! { Package { name: "journal", documents: orexis::documents!("ontology.ttl"), start } }
 
 /// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
-const ROLE: &str = "http://example.org/orexis/journal#Recorder";
+pub const ROLE: &str = "http://example.org/orexis/journal#Recorder";
 
 /// ITS START, which every package this binary holds is given: it joins the agent or declines, by its own reason, and
 /// joined, makes its core.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        if !handed.plays(&[ROLE]).await? {
+        if !handed.plays(&[ROLE])? {
             return Ok(());
         }
-        let Some(task) = make(&handed)? else {
-            return Ok(());
-        };
-        if handed.checking().is_some() {
-            return Ok(());
+        let task = make(&handed)?;
+        handed.started("journal").await;
+        match task {
+            Some(task) if handed.checking().is_none() => task.await,
+            _ => Ok(()),
         }
-        handed.started().await;
-        task.await
     })
 }
 

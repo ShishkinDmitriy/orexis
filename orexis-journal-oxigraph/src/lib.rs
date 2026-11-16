@@ -146,20 +146,23 @@ inventory::submit! { Package { name: "journal-oxigraph", documents: &[], start }
 /// journal and an archive, its task.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        let archived = |handed: &Handed| {
-            Ok(handed.joined("journal") && orexis_journal::Recorder::new(&handed.store)?.archived_in.is_some())
-        };
-        if !handed.joins(archived).await? || !handed.after("journal").await {
+        //  IT RUNS WHERE THE RECORDER'S ROLE NAMES ITS SERVICE.
+        if !handed.plays(&[orexis_journal::ROLE])? {
             return Ok(());
         }
-        let Some(task) = make(&handed)? else {
+        let recorder = orexis_journal::Recorder::new(&handed.store)?;
+        if recorder.archived_in.is_none() {
             return Ok(());
-        };
+        }
+        //  ITS CORE IS MADE ONCE EVERY PACKAGE HAS MADE ITS OWN, so the journal it keeps house for is handed on.
+        handed.started("journal-oxigraph").await;
         if handed.checking().is_some() {
             return Ok(());
         }
-        handed.started().await;
-        task.await
+        match make(&handed)? {
+            Some(task) => task.await,
+            None => Ok(()),
+        }
     })
 }
 

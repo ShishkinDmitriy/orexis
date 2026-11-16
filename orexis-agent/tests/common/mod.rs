@@ -84,17 +84,18 @@ pub fn logged() {
     log::set_max_level(log::LevelFilter::Debug);
 }
 
-/// `loaded` WITH THE METRICS AMONG THEM, started where a meter's would be, after what keeps the journal: a world
-/// whose agent plays no meter is metered by the test that hands it a window, which names the package as whoever
-/// starts an agent may.
+/// THE SELF PLAYS A METER, said in its self graph: a world whose agent plays none is metered by a test that hands it a
+/// window, and the metrics run where the self plays their role, as every package does.
 #[allow(dead_code)]
-pub fn metered(mut loaded: Vec<String>) -> Vec<String> {
-    if !loaded.iter().any(|p| p == "metrics") {
-        let at = loaded
-            .iter()
-            .position(|p| !p.starts_with("journal"))
-            .unwrap_or(loaded.len());
-        loaded.insert(at, "metrics".to_string());
-    }
-    loaded
+pub fn metered(store: &orexis::store::Store) {
+    let selves = store
+        .graphs_of(&[orexis::ontology::SELF_GRAPH], &orexis::store::Within::default())
+        .unwrap();
+    store
+        .update(&format!(
+            "INSERT {{ GRAPH <{g}> {{ ?me orexis:plays [ a <http://example.org/orexis/metrics#Meter> ] }} }} \
+             WHERE {{ GRAPH <{g}> {{ ?me a orexis:Self }} }}",
+            g = selves[0]
+        ))
+        .unwrap();
 }
