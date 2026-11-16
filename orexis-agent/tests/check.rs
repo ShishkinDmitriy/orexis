@@ -217,23 +217,23 @@ fn the_journal_package_makes_its_own_journal_where_the_agent_is_deployed_and_non
             .build()
             .unwrap();
         let clock: std::sync::Arc<dyn orexis::clock::Clock> = std::sync::Arc::new(orexis::clock::Manual::at(now));
-        let outside = orexis::task::Outside::default();
+        let provided = orexis::task::Provided::default();
         if deployed {
-            outside.hand(orexis::task::Deployed {
+            provided.provide(orexis::task::Deployed {
                 world: "hanoi".to_string(),
             });
         }
         //  BOOTED AND STARTED AS THE BINARY DOES, until every package has made its core.
         let world = Path::new(TREE).join("world/hanoi");
         tasks.block_on(async {
-            let running = orexis_agent::boot(&store, &world, "hanoi", clock, outside)
+            let running = orexis_agent::boot(&store, &world, "hanoi", clock, provided)
                 .unwrap()
                 .start()
                 .await
                 .unwrap();
             let kept = running
                 .handed
-                .outside
+                .provided
                 .take::<orexis_journal::Traced>()
                 .map(|traced| traced.0.store.named_graphs().count());
             running.stop().await;

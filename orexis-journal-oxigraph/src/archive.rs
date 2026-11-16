@@ -114,7 +114,7 @@ impl Archive {
 }
 
 /// What archives: the archive written and how often, the journal read being the one the journal's package keeps.
-/// Handed outside by a test that reads it; a deployed agent is handed none and the package opens its own.
+/// Provided by a test that reads it; a deployed agent is handed none and the package opens its own.
 pub struct Archives {
     pub archive: Arc<Archive>,
     /// How often, in the agent's seconds: none, and as often as the recorder's role says.

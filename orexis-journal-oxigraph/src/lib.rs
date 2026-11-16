@@ -54,12 +54,12 @@ fn start(handed: Handed) -> orexis::task::Starting {
         //  archive the recorder's role names; and otherwise it has no task. Taken as often as the role says, unless
         //  the test says otherwise. A binary built without the volume has nowhere to keep one, says so, and what lasts
         //  stays in the journal.
-        let Some(orexis_journal::Traced(journal)) = handed.outside.read::<orexis_journal::Traced>() else {
+        let Some(orexis_journal::Traced(journal)) = handed.provided.read::<orexis_journal::Traced>() else {
             return Ok(());
         };
-        let (archive, every_s) = match handed.outside.take::<Archives>() {
+        let (archive, every_s) = match handed.provided.take::<Archives>() {
             Some(archives) => (archives.archive, archives.every_s),
-            None if handed.outside.has::<orexis::task::Deployed>() => {
+            None if handed.provided.has::<orexis::task::Deployed>() => {
                 #[cfg(feature = "volume")]
                 {
                     (std::sync::Arc::new(Archive::open(&path)?), None)
@@ -85,7 +85,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         //  READERS OF THE PAST ASK THE ARCHIVE from now on: the journal's endpoint, and a chat.
         journal.archived_in(archive.store.clone());
         handed
-            .outside
+            .provided
             .share::<orexis::task::Reads>()
             .journal
             .lies_in(archive.store.clone());

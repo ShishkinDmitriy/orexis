@@ -59,8 +59,8 @@ a role declared after birth reaches only a fresh volume.
 calls for, and each transport a loaded role needs — registered itself with the linker, and the binary starts each
 on a Tokio runtime (`orexis::task::start`): its start makes the package's [part](/domain/kernel/part.md),
 says it has started and goes on as its task. A task is handed the store, the clock, the events — where every package says its
-[events](/domain/kernel/event.md) and subscribes to what it hears, the one thing packages share — and what reaches
-outside. It does what the package does: belief revises what is written, planning plans where its policy hears a
+[events](/domain/kernel/event.md) and subscribes to what it hears, the one thing packages share — and what it is
+provided. It does what the package does: belief revises what is written, planning plans where its policy hears a
 trigger, the present reaches the next ground it laid, or a search was cut short, and holds back a plan that failed
 in the present it was found in until news is heard, execution walks what is due and whenever a revision changed the
 present, a transport listens or polls, sensing asks every minute what has fallen due, prediction offers its

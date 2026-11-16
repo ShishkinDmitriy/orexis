@@ -21,7 +21,7 @@ use orexis::clock::{Clock, instant, isoformat};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri, value};
-use orexis::task::Outside;
+use orexis::task::Provided;
 use orexis_transport_mqtt::driver::{Client, Mqtt};
 
 const L: &str = "http://example.org/orexis/world/layby#";
@@ -126,7 +126,7 @@ async fn walk(world: &Path, fixture: &str) -> (Drives, BTreeMap<String, (i64, i6
         world,
         "courier_a",
         clock.clone(),
-        Outside::default().with(member),
+        Provided::default().with(member),
     )
     .unwrap();
     let running = booted.start().await.unwrap();

@@ -21,7 +21,7 @@ use orexis::clock::{Clock, instant, isoformat};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, value};
-use orexis::task::{Outside, Running};
+use orexis::task::{Provided, Running};
 use orexis_transport_mqtt::driver::{Client, Inbox, Mqtt};
 
 const AL: &str = "http://example.org/orexis/world/allotment#";
@@ -137,7 +137,7 @@ async fn allotment(walk: impl AsyncFnOnce(&mut Market<'_>)) {
             .unwrap()
             .inboxes
             .insert(name.to_string(), member.inbox.clone());
-        let booted = orexis_agent::boot(store, &world, name, clock.clone(), Outside::default().with(member)).unwrap();
+        let booted = orexis_agent::boot(store, &world, name, clock.clone(), Provided::default().with(member)).unwrap();
         runnings.push(booted.start().await.unwrap());
     }
     let mut market = Market {

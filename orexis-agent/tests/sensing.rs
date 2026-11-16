@@ -12,7 +12,7 @@ use orexis::boot::TREE;
 use orexis::clock::instant;
 use orexis::namespaces::Namespaces;
 use orexis::store::{Store, Within, iri, value};
-use orexis::task::{Outside, UNFINISHED};
+use orexis::task::{Provided, UNFINISHED};
 use orexis_agent::booted;
 use orexis_transport_mqtt::driver::{Client, Mqtt};
 
@@ -93,7 +93,7 @@ async fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_
         &world(),
         "fern",
         common::clock(now),
-        Outside::default().with(member),
+        Provided::default().with(member),
     )
     .unwrap();
     let running = booted.start().await.unwrap();

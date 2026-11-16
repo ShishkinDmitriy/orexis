@@ -21,7 +21,7 @@ use orexis::clock::{Clock, instant, seconds};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri, value};
-use orexis::task::Outside;
+use orexis::task::Provided;
 use orexis::task::Running;
 use orexis_transport_mqtt::driver::{Client, Inbox, Mqtt};
 
@@ -92,15 +92,15 @@ struct Grower {
 }
 
 async fn grower(store: &Store) -> Grower {
-    grower_watched(store, Outside::default()).await
+    grower_watched(store, Provided::default()).await
 }
 
-async fn grower_watched(store: &Store, outside: Outside) -> Grower {
+async fn grower_watched(store: &Store, provided: Provided) -> Grower {
     let broker = Broker::default();
     let member = Mqtt::new(store, &format!("{GH}grower"), vec![(None, Box::new(broker.clone()))]);
     let inbox = member.inbox.clone();
     let clock = common::clock(noon());
-    let booted = orexis_agent::boot(store, &world(), "grower", clock.clone(), outside.with(member)).unwrap();
+    let booted = orexis_agent::boot(store, &world(), "grower", clock.clone(), provided.with(member)).unwrap();
     let running = booted.start().await.unwrap();
     Grower {
         running,
@@ -403,7 +403,7 @@ async fn the_events_are_taken_to_the_archive_and_the_activities_stay_in_the_jour
     let store = store();
     let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(noon)).unwrap());
     let archive = Arc::new(orexis_journal_oxigraph::Archive::new(None).unwrap());
-    let outside = Outside::default()
+    let provided = Provided::default()
         .with(orexis_journal::Keeps {
             journal: Some(journal.clone()),
         })
@@ -411,7 +411,7 @@ async fn the_events_are_taken_to_the_archive_and_the_activities_stay_in_the_jour
             archive: archive.clone(),
             every_s: Some(2.0),
         });
-    let g = grower_watched(&store, outside).await;
+    let g = grower_watched(&store, provided).await;
     reading(&g.inbox, r#"{"temperature": 21.0}"#, noon());
     reading(&g.inbox, r#"{"moisture": 0.2}"#, noon());
     common::settled(&g.running).await;
@@ -443,10 +443,10 @@ async fn the_events_are_taken_to_the_archive_and_the_activities_stay_in_the_jour
 async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journal_keeps() {
     let store = store();
     let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(noon)).unwrap());
-    let outside = Outside::default().with(orexis_journal::Keeps {
+    let provided = Provided::default().with(orexis_journal::Keeps {
         journal: Some(journal.clone()),
     });
-    let g = grower_watched(&store, outside).await;
+    let g = grower_watched(&store, provided).await;
     reading(&g.inbox, r#"{"temperature": 21.0}"#, noon());
     reading(&g.inbox, r#"{"moisture": 0.2}"#, noon());
     common::settled(&g.running).await;
@@ -540,14 +540,14 @@ async fn each_reading_is_archived_once_where_there_is_a_store_and_the_past_ones_
                 Ok(())
             }),
         );
-        let outside = Outside::default();
+        let provided = Provided::default();
         if archived {
-            outside.hand(orexis_sensing_influxdb::Archives {
+            provided.provide(orexis_sensing_influxdb::Archives {
                 sink: Arc::new(sink),
                 every_s: None,
             });
         }
-        let g = grower_watched(&store, outside).await;
+        let g = grower_watched(&store, provided).await;
         let readings = 12;
         for n in 0..readings {
             let at = plus(noon(), n as f64 * 600.0);
@@ -610,7 +610,7 @@ async fn history_holds_every_reading_and_the_journal_the_dose_published_taken_an
         }),
     );
     let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(noon)).unwrap());
-    let outside = Outside::default()
+    let provided = Provided::default()
         .with(orexis_journal::Keeps {
             journal: Some(journal.clone()),
         })
@@ -618,7 +618,7 @@ async fn history_holds_every_reading_and_the_journal_the_dose_published_taken_an
             sink: Arc::new(sink),
             every_s: None,
         });
-    let g = grower_watched(&store, outside).await;
+    let g = grower_watched(&store, provided).await;
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     {
         reading(&inbox, r#"{"temperature": 21.0}"#, noon());
@@ -736,13 +736,13 @@ async fn unanswered() -> (Vec<Vec<orexis::events::Point>>, Broker) {
             Ok(())
         }),
     );
-    let outside = Outside::default().with(orexis_metrics::Window::new(
+    let provided = Provided::default().with(orexis_metrics::Window::new(
         sink,
         0.0,
         Some("greenhouse"),
         Some("grower"),
     ));
-    let g = grower_watched(&store, outside).await;
+    let g = grower_watched(&store, provided).await;
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     {
         reading(&inbox, r#"{"temperature": 21.0}"#, noon());

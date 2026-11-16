@@ -7,7 +7,7 @@ description: >-
   The sovereign's ruling of 2026-11-12, after the runtime of tasks was built twice. A package is one async function
   that makes its own core object, awaits the events beneath its triggers and the clock, and says what happened; it
   registers itself by the linker, and the binary names no package beyond linking its crate. What it is handed is
-  plain - the store, the clock, the events, and what reaches outside - and there is no runtime object, no wait and no
+  plain - the store, the clock, the events, and what it is provided - and there is no runtime object, no wait and no
   pass. A unit test holds a package's core and never an async function; a world's test boots the agent on Tokio's
   paused time, feeds its bus and awaits an event. Refused - the kernel's wait that multiplexed what woke a package,
   a clock of the agent's own kinds, parts lent to tests, and links made by an assembler.

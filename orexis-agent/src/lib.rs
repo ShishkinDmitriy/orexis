@@ -1,6 +1,6 @@
 //! ONE AGENT'S PROCESS: the world booted into a store, the packages its roles load started — each a feature of this
 //! binary, so a package an agent does not run is compiled out — and run until nothing holds it. It links the packages
-//! and names none: what a caller hands one goes outside (`orexis::task::Outside`) as that package's own type, and
+//! and names none: what a caller provides one (`orexis::task::Provided`) is that package's own type, and
 //! what each makes of it, and of what it is not handed, is the package's to say.
 
 use std::path::Path;
@@ -11,7 +11,7 @@ use orexis::Error;
 use orexis::boot::Booting;
 use orexis::clock::Clock;
 use orexis::store::Store;
-use orexis::task::{Outside, Running};
+use orexis::task::{Provided, Running};
 
 //  EACH PACKAGE THIS BINARY IS BUILT WITH, LINKED: a crate nothing references is left out, and a package registers
 //  itself only where its crate is in. Nothing else here names one.
@@ -56,16 +56,16 @@ pub fn booted(store: &Store, world: &Path, agent: &str) -> Result<(), Error> {
     orexis::boot::boot(store, &Booting { world, agent })
 }
 
-/// BOOT `agent` of `world` into `store`, handed `outside`, and hold it ready to start (`orexis::task::boot`). What a
+/// BOOT `agent` of `world` into `store`, handed `provided`, and hold it ready to start (`orexis::task::boot`). What a
 /// deployed agent and a check do; `booted` is for a caller that starts nothing.
 pub fn boot(
     store: &Store,
     world: &Path,
     agent: &str,
     clock: Arc<dyn Clock>,
-    outside: Outside,
+    provided: Provided,
 ) -> Result<orexis::task::Booted, Error> {
-    orexis::task::boot(store, &Booting { world, agent }, clock, outside)
+    orexis::task::boot(store, &Booting { world, agent }, clock, provided)
 }
 
 /// What a check found of an agent that boots: the packages it loads, and what they said as each made its core
@@ -91,7 +91,7 @@ pub fn check(world: &Path, agent: &str, now: oxsdatatypes::DateTime, boot: Optio
     let clock: Arc<dyn Clock> = Arc::new(orexis::clock::Manual::at(now));
     //  A CHECK HANDS NOTHING BUT THAT IT IS ONE: each package handed no connector and not deployed makes one that
     //  reaches nothing, so no broker, no web, no bot and no model is dialled.
-    let booted = self::boot(&store, world, agent, clock, Outside::default().with(checking.clone()))?;
+    let booted = self::boot(&store, world, agent, clock, Provided::default().with(checking.clone()))?;
     //  EACH PACKAGE CHECKS ITS OWN: told it is checked, it decides whether it runs, makes its core, says what it found
     //  and that it started, and ends. The runtime is driven until every start has ended or waits.
     let tasks = tokio::runtime::Builder::new_current_thread()
@@ -141,14 +141,14 @@ pub fn built(package: &str) -> bool {
     inventory::iter::<orexis::task::Package>().any(|p| p.name == package)
 }
 
-/// START THE AGENT `agent` over `store`, for a test, on the Tokio runtime this is called in, handed `outside`: every
+/// START THE AGENT `agent` over `store`, for a test, on the Tokio runtime this is called in, handed `provided`: every
 /// package this binary holds, those `order` names first and in that order, each deciding for itself whether it runs.
 pub async fn start(
     store: &Store,
     agent: &str,
     clock: Arc<dyn Clock>,
     order: &[String],
-    outside: Outside,
+    provided: Provided,
 ) -> Result<Running, Error> {
-    orexis::task::start(store, agent, clock, outside, order).await
+    orexis::task::start(store, agent, clock, provided, order).await
 }

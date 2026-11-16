@@ -80,8 +80,8 @@ ENDED, so each is listening before any goes on to speak, and then says `orexis:P
 journal, made by then, keeps every start. Starting the agent ends there too (`Booted::start`, awaited): once every
 package has made its core or ended, refused where one could not be made. Nothing keeps an order between packages, and nothing knows which run but
 the events. What keeps house for the journal makes its core after saying it started, the journal's being made by
-then. What several packages add to is added outside as each makes its core (`Outside::alter`) and read once every core
-is made (`Outside::share`), as what a chat reads of what happened is. What a caller hands outside is a package's own
+then. What several packages add to is provided as each makes its core (`Provided::alter`) and read once every core
+is made (`Provided::share`), as what a chat reads of what happened is. What a caller provides is a package's own
 type, a test's journal or a deployment's word that it is deployed, and the binary assembles nothing of it: what a
 package makes of what it is handed, and of what it is not, is its own start's to say. The start makes the package's [part](/domain/kernel/part.md) and
 goes on as the one task that holds it — a loop of the package's own, awaiting the

@@ -1116,11 +1116,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   holds the agent and which constraint the world as posed violates; the binary called the planner by name for all
   three, and its verdict named a desire and a contradiction, planning's words (package).
 - **The kernel keeps no order between packages, and `Handed` is the agent's services and nothing of its own** — the
-  store, the id, the clock, the events, what reaches outside and the run; every start is spawned as one task, saying
+  store, the id, the clock, the events, what it is provided and the run; every start is spawned as one task, saying
   it started waits until every package has made its core, and so does starting the agent, refused where one could
   not be made, so each listens before any speaks and the journal
-  hears every start; what several packages add to is added as each makes its core (`Outside::alter`) and read once
-  every core is made (`Outside::share`), and what a caller hands is a package's own type, which the binary assembles
+  hears every start; what several packages add to is added as each makes its core (`Provided::alter`) and read once
+  every core is made (`Provided::share`), and what a caller provides is a package's own type, which the binary assembles
   nothing of, a struct in the binary with a field for every package's connectors being what this replaced; a list of seventeen names in the kernel ordered them, then a lifecycle in `Handed` the kernel
   kept of which had joined and which started, waited on by name (`Handed::after`) (package).
 - **A start is the whole of what a package does, and the package says when it has started** — it decides, makes its
@@ -1241,8 +1241,8 @@ a transport listens or polls, sensing asks after what has fallen due, prediction
 linked to another (a-package-starts-itself, packages-meet-by-events-policies-and-activities). **It registers itself by
 the linker** (`orexis::task::Package`), and the binary starts each one its roles load, naming none beyond linking its
 crate. **What a task is handed is plain** (`orexis::task::Handed`): the store, the clock, THE EVENTS - where every
-package says what happened and subscribes to what it hears, the one thing packages share - and what reaches outside,
-the connectors a deployment makes from its environment and a test hands in. There is no runtime object, no pass and
+package says what happened and subscribes to what it hears, the one thing packages share - and what it is provided
+(`orexis::task::Provided`), what a test hands in and the word that the agent is deployed. There is no runtime object, no pass and
 no order between two packages; what a task says while it handles what woke it is heard when it next waits, its
 graphs before its events, and a graph has one writing package. The run ends when nothing holds the agent
 (a-package-is-a-task-that-awaits-its-events, the-agent-is-a-runtime-of-tasks, #1119 step 8). **A unit test holds a

@@ -14,7 +14,7 @@ use orexis::boot::TREE;
 use orexis::clock::{Clock, instant};
 use orexis::namespaces::Namespaces;
 use orexis::store::{Store, iri, value};
-use orexis::task::{MET, Outside, UNFINISHED};
+use orexis::task::{MET, Provided, UNFINISHED};
 use orexis_agent::booted;
 
 fn tree() -> &'static Path {
@@ -31,11 +31,11 @@ fn now() -> DateTime {
 
 /// Boot `agent` of `world` and run it until nothing holds it or `within` seconds of its time are spent: the outcome.
 async fn run(store: &Store, world: &Path, agent: &str, within: u64, budget: Option<usize>) -> String {
-    let outside = Outside::default();
+    let provided = Provided::default();
     if let Some(budget) = budget {
-        outside.hand(orexis_planning::Budget(budget));
+        provided.provide(orexis_planning::Budget(budget));
     }
-    let booted = orexis_agent::boot(store, world, agent, common::clock(now()), outside).unwrap();
+    let booted = orexis_agent::boot(store, world, agent, common::clock(now()), provided).unwrap();
     let running = booted.start().await.unwrap();
     let outcome = common::outcome(&running, within).await;
     running.stop().await;
@@ -158,7 +158,7 @@ async fn metered_courier(watched: bool) -> (usize, usize, String, std::collectio
     booted(&store, &world("courier"), "courier").unwrap();
     let written: std::sync::Arc<std::sync::Mutex<Vec<orexis::events::Point>>> = Default::default();
     let kept = written.clone();
-    let outside = Outside::default().with(orexis_planning::Budget(128));
+    let provided = Provided::default().with(orexis_planning::Budget(128));
     if watched {
         let sink = orexis::series::Sink::new(
             "METRICS",
@@ -168,11 +168,11 @@ async fn metered_courier(watched: bool) -> (usize, usize, String, std::collectio
                 Ok(())
             }),
         );
-        outside.hand(orexis_metrics::Window::new(sink, 0.0, Some("courier"), Some("courier")));
+        provided.provide(orexis_metrics::Window::new(sink, 0.0, Some("courier"), Some("courier")));
     }
     //  The metrics start either way, handed a window or not, so the two runs differ in the window alone.
     common::metered(&store);
-    let running = orexis_agent::start(&store, "courier", clock.clone(), &[], outside)
+    let running = orexis_agent::start(&store, "courier", clock.clone(), &[], provided)
         .await
         .unwrap();
     let outcome = common::outcome(&running, 3600).await;

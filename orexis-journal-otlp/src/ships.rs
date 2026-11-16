@@ -18,7 +18,7 @@ pub const SHIPPED_TO: &str = "http://example.org/orexis#shippedTo";
 pub type Send = Arc<dyn Fn(String) -> bool + std::marker::Send + Sync>;
 
 /// What is shipped and where: made by this package from the journal handed on and the tracer the world names, or
-/// handed outside by a test that ships to an endpoint of its own.
+/// provided by a test that ships to an endpoint of its own.
 pub struct Ships {
     pub journal: Arc<Journal>,
     pub endpoint: String,

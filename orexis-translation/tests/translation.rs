@@ -18,7 +18,7 @@ use orexis::events::as_of;
 use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri, value};
-use orexis::task::{Heard, Outside, Package, Running, Turn as Handling, Wake, Woke};
+use orexis::task::{Heard, Package, Provided, Running, Turn as Handling, Wake, Woke};
 use orexis_speech::events::{Said, Statement};
 use orexis_speech::prose::{Carrier, PROSE_GRAPH, PROSE_KEPT, Prose, ProseKept, WRITING_ANNOUNCED, carry, kept};
 use orexis_translation::briefing::briefing;
@@ -476,15 +476,15 @@ struct Member {
     said: Vec<Said>,
 }
 
-//  THE MEMBER'S TASK, registered as a package registers itself: it takes the member the test handed outside, hears
+//  THE MEMBER'S TASK, registered as a package registers itself: it takes the member the test provided, hears
 //  the agent's words kept and its writing announced, and is rung for what the test queued on it.
 inventory::submit! { Package { name: "test/member", documents: &[], start: |handed| orexis::task::named(handed, "test/member", |handed| {
-    let member = handed.outside.take::<Arc<Mutex<Member>>>().expect("a member handed");
+    let member = handed.provided.take::<Arc<Mutex<Member>>>().expect("a member handed");
     let mut hears = handed.events.hears();
     hears.event(PROSE_KEPT, 1);
     hears.event(WRITING_ANNOUNCED, 1);
     let mut arrived = handed.arrived();
-    handed.outside.hand(arrived.wake());
+    handed.provided.provide(arrived.wake());
     let handed = handed.clone();
     Ok(Some(Box::pin(async move {
         loop {
@@ -670,18 +670,18 @@ impl<'s> Seeker<'s> {
             .start_paused(true)
             .build()
             .unwrap();
-        let outside = Outside::default();
-        outside.hand(member.clone());
-        outside.hand(model.clone() as Arc<dyn Model>);
-        outside.hand(Inline);
+        let provided = Provided::default();
+        provided.provide(member.clone());
+        provided.provide(model.clone() as Arc<dyn Model>);
+        provided.provide(Inline);
         let names = ["translation".to_string(), "test/member".to_string()];
         let running = {
             let clock = Arc::new(Elapsing::from(now()));
             tasks
-                .block_on(orexis::task::start(store, "seeker", clock, outside.clone(), &names))
+                .block_on(orexis::task::start(store, "seeker", clock, provided.clone(), &names))
                 .unwrap()
         };
-        let wake = outside.take::<Wake>().expect("the member's wake");
+        let wake = provided.take::<Wake>().expect("the member's wake");
         Seeker {
             store,
             tasks,

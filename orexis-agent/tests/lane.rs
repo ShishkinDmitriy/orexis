@@ -29,7 +29,7 @@ use orexis::clock::{Clock, instant, isoformat};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri, value};
-use orexis::task::{Outside, Running};
+use orexis::task::{Provided, Running};
 use orexis_transport_mqtt::driver::{Client, Inbox, Mqtt};
 use road::{Cell, Road};
 
@@ -323,10 +323,10 @@ async fn walked(name: &str, world: &Path, home: &[(&str, Cell)], dropping: Optio
             .unwrap()
             .inboxes
             .insert(name.to_string(), member.inbox.clone());
-        let outside = Outside::default().with(member).with(orexis_journal::Keeps {
+        let provided = Provided::default().with(member).with(orexis_journal::Keeps {
             journal: journals.get(runtimes.len()).cloned(),
         });
-        let booted = orexis_agent::boot(store, world, name, clock.clone(), outside).unwrap();
+        let booted = orexis_agent::boot(store, world, name, clock.clone(), provided).unwrap();
         if carried.lock().unwrap().road.is_none() {
             carried.lock().unwrap().road = Some(Road::of(store));
         }

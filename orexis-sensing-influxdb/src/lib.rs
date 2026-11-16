@@ -60,9 +60,9 @@ fn start(handed: Handed) -> orexis::task::Starting {
         //  HANDED A SINK, by a test that reads the series, it archives into that; deployed and handed none, it makes
         //  its own where the world says where the store its role names answers; and otherwise the readings stay in the
         //  beliefs.
-        let sink = match handed.outside.take::<Archives>() {
+        let sink = match handed.provided.take::<Archives>() {
             Some(archives) => Some((archives.sink, archives.every_s)),
-            None if handed.outside.has::<orexis::task::Deployed>() => {
+            None if handed.provided.has::<orexis::task::Deployed>() => {
                 Sink::deployed(&handed.store, orexis::series::HISTORY, &orexis::series::environment)?
                     .map(|(sink, _)| (Arc::new(sink), None))
             }
@@ -80,7 +80,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         //  WHAT A CHAT READS OF THE PAST is the series this writes.
         let reader = sink.reader();
         handed
-            .outside
+            .provided
             .alter(|reads: &mut orexis::task::Reads| reads.history = Some(reader));
         //  WHETHER SENSING OBSERVED ANYTHING SINCE THE LAST TURN: heard, so a quiet stretch asks the beliefs nothing.
         //  The readings a lived volume already holds are due at the first.

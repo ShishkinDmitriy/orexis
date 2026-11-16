@@ -21,7 +21,7 @@ use orexis::events::{Field, Point};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::{BELIEF, FORECAST, SELF_GRAPH};
 use orexis::store::{Store, Within, iri, value};
-use orexis::task::{Outside, Running, UNFINISHED};
+use orexis::task::{Provided, Running, UNFINISHED};
 use orexis_translation::model::{Answer, Failure, Model, Turn};
 use orexis_transport_mqtt::driver::{Client, Mqtt};
 
@@ -193,7 +193,7 @@ async fn terrace(
     web: Option<&'static [u8]>,
     api: &Api,
     model: Option<Arc<dyn Model>>,
-    outside: Outside,
+    provided: Provided,
     walk: impl AsyncFnOnce(&Terrace, &Running, &Arc<Elapsing>, &orexis_transport_mqtt::driver::Inbox),
 ) {
     let t = Terrace {
@@ -225,12 +225,12 @@ async fn terrace(
         api.call(),
     );
     telegram.spawn = Box::new(|work| work());
-    let outside = outside.with(member).with(http).with(telegram);
+    let provided = provided.with(member).with(http).with(telegram);
     if let Some(model) = model {
-        outside.hand(model);
+        provided.provide(model);
     }
     let clock = common::clock(noon());
-    let booted = orexis_agent::boot(&t.store, world, "terrace", clock.clone(), outside).unwrap();
+    let booted = orexis_agent::boot(&t.store, world, "terrace", clock.clone(), provided).unwrap();
     let running = booted.start().await.unwrap();
     let loaded = running.parts();
     for package in [
@@ -278,7 +278,7 @@ async fn the_agent_listens_on_the_boards_one_topic_alone_and_one_message_is_five
         None,
         &Api::default(),
         None,
-        Outside::default(),
+        Provided::default(),
         async |t, runtime, _, inbox| {
             assert_eq!(
                 t.broker.0.lock().unwrap().0,
@@ -353,7 +353,7 @@ async fn a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving() {
         None,
         &Api::default(),
         None,
-        Outside::default(),
+        Provided::default(),
         async |t, runtime, clock, inbox| {
             inbox.deliver(READINGS, MESSAGE.as_bytes(), Some(noon()));
             common::settled(runtime).await;
@@ -385,7 +385,7 @@ async fn a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving() {
     .await;
 }
 
-fn history() -> (Outside, Arc<Mutex<Vec<Point>>>) {
+fn history() -> (Provided, Arc<Mutex<Vec<Point>>>) {
     let written: Arc<Mutex<Vec<Point>>> = Arc::default();
     let kept = written.clone();
     let sink = orexis::series::Sink::new(
@@ -397,7 +397,7 @@ fn history() -> (Outside, Arc<Mutex<Vec<Point>>>) {
         }),
     );
     (
-        Outside::default().with(orexis_sensing_influxdb::Archives {
+        Provided::default().with(orexis_sensing_influxdb::Archives {
             sink: Arc::new(sink),
             every_s: None,
         }),
@@ -408,13 +408,13 @@ fn history() -> (Outside, Arc<Mutex<Vec<Point>>>) {
 #[tokio::test(start_paused = true)]
 async fn each_reading_reaches_the_series_under_its_own_property() {
     let world = variant("series", false, false);
-    let (outside, written) = history();
+    let (provided, written) = history();
     terrace(
         &world,
         None,
         &Api::default(),
         None,
-        outside,
+        provided,
         async |_, runtime, _, inbox| {
             inbox.deliver(READINGS, MESSAGE.as_bytes(), Some(noon()));
             common::settled(runtime).await;
@@ -490,8 +490,8 @@ async fn each_reading_reaches_the_series_under_its_own_property() {
 #[tokio::test(start_paused = true)]
 async fn an_alarm_is_two_points_in_the_history_and_a_step_not_a_slope() {
     let world = variant("alarm", false, false);
-    let (outside, written) = history();
-    terrace(&world, None, &Api::default(), None, outside, async |_, runtime, _, inbox| {
+    let (provided, written) = history();
+    terrace(&world, None, &Api::default(), None, provided, async |_, runtime, _, inbox| {
         let alarm = r#"{"moisture_raw": [{"value": 710, "age_s": 25}, {"value": 410, "age_s": 0}], "sensor": "moisture_sensor_terrace", "wake": "alarm"}"#;
         inbox.deliver(READINGS, alarm.as_bytes(), Some(noon()));
         common::settled(runtime).await;
@@ -524,7 +524,7 @@ async fn every_metric_the_terrace_writes_is_an_observers_and_no_planners() {
             Ok(())
         }),
     );
-    let outside = Outside::default().with(orexis_metrics::Window::new(
+    let provided = Provided::default().with(orexis_metrics::Window::new(
         sink,
         3600.0,
         Some("terrace"),
@@ -535,7 +535,7 @@ async fn every_metric_the_terrace_writes_is_an_observers_and_no_planners() {
         None,
         &Api::default(),
         None,
-        outside,
+        provided,
         async |_, runtime, _, inbox| {
             for _ in 0..2 {
                 inbox.deliver(READINGS, MESSAGE.as_bytes(), Some(noon()));
@@ -580,7 +580,7 @@ async fn a_forecast_is_fetched_for_the_terraces_place_and_written_an_hour_a_grap
         Some(FORECAST_BODY),
         &Api::default(),
         None,
-        Outside::default(),
+        Provided::default(),
         async |t, runtime, _, inbox| {
             inbox.deliver(READINGS, MESSAGE.as_bytes(), Some(noon()));
             common::settled(runtime).await;
@@ -630,7 +630,7 @@ async fn the_sovereign_says_through_the_agents_own_bot_that_the_probe_is_defecti
         None,
         &api,
         Some(shared),
-        Outside::default(),
+        Provided::default(),
         async |t, runtime, clock, inbox| {
             let texts = || {
                 api.sent

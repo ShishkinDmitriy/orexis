@@ -16,7 +16,7 @@ use orexis::clock::instant;
 use orexis::namespaces::Namespaces;
 use orexis::ontology::{BELIEF, PLAN, SELF_GRAPH};
 use orexis::store::{Store, Within, iri, value};
-use orexis::task::{Outside, PLANNED};
+use orexis::task::{PLANNED, Provided};
 use orexis_agent::booted;
 
 const WANT: &str = "http://example.org/orexis/planning#WantGraph";
@@ -123,8 +123,8 @@ fn own(store: &Store) -> Vec<String> {
 /// One run of the mover over `store` at `budget`, planning alone: how it ended within `within` seconds of its time.
 async fn ran(store: &Store, budget: usize, within: u64) -> String {
     let loaded = ["planning".to_string()];
-    let outside = Outside::default().with(orexis_planning::Budget(budget));
-    let running = orexis_agent::start(store, "hanoi", common::clock(now()), &loaded, outside)
+    let provided = Provided::default().with(orexis_planning::Budget(budget));
+    let running = orexis_agent::start(store, "hanoi", common::clock(now()), &loaded, provided)
         .await
         .unwrap();
     assert!(
@@ -164,7 +164,7 @@ fn the_boot_says_what_each_graph_is_and_planning_writes_its_scopes_as_it_starts(
         .build()
         .unwrap();
     tasks.block_on(async {
-        let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &[], Outside::default())
+        let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &[], Provided::default())
             .await
             .unwrap();
         assert!(scopes(&store) >= 1, "the scopes were written as planning started");
@@ -285,8 +285,8 @@ async fn metered(interval_s: f64) -> Vec<Vec<orexis::events::Point>> {
         }),
     );
     let window = orexis_metrics::Window::new(sink, interval_s, Some("hanoi"), Some("hanoi"));
-    let outside = Outside::default().with(window).with(orexis_planning::Budget(20));
-    let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, outside)
+    let provided = Provided::default().with(window).with(orexis_planning::Budget(20));
+    let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, provided)
         .await
         .unwrap();
     assert_eq!(common::outcome(&running, 30).await, PLANNED);
@@ -407,12 +407,12 @@ async fn a_plan_published_is_kept_in_the_journal_with_its_steps_in_the_words_of_
     boot(&store);
     let loaded: Vec<String> = Vec::new();
     let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(now)).unwrap());
-    let outside = Outside::default()
+    let provided = Provided::default()
         .with(orexis_journal::Keeps {
             journal: Some(journal.clone()),
         })
         .with(orexis_planning::Budget(400));
-    let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, outside)
+    let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, provided)
         .await
         .unwrap();
     common::settled(&running).await;
@@ -448,12 +448,12 @@ async fn the_history_part_marks_an_event_of_a_class_beneath_incident_and_no_othe
     boot(&store);
     let loaded: Vec<String> = Vec::new();
     let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(now)).unwrap());
-    let outside = Outside::default()
+    let provided = Provided::default()
         .with(orexis_journal::Keeps {
             journal: Some(journal.clone()),
         })
         .with(orexis_planning::Budget(1));
-    let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, outside)
+    let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, provided)
         .await
         .unwrap();
     let watch = running.handed.events.watch().clone();

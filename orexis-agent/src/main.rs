@@ -165,15 +165,15 @@ fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, 
     };
     //  DEPLOYED: what a package is not handed here it makes for itself from what the world says, its journal, its
     //  archive and its series sinks; and the log is handed to whichever package keeps it.
-    let outside = orexis::task::Outside::default().with(orexis::task::Deployed {
+    let provided = orexis::task::Provided::default().with(orexis::task::Deployed {
         world: world_name(&args.world),
     });
     if let Some(logger) = LOGGER.get() {
         let keep: Box<dyn FnOnce(orexis::task::Remark) + Send> = Box::new(move |remark| logger.attach(remark));
-        outside.hand(orexis::task::Said(keep));
+        provided.provide(orexis::task::Said(keep));
     }
     //  BOOTED, each package's start held where it decided, to be run on once the runtime is there.
-    let booted = orexis_agent::boot(&store, &args.world, &args.agent, clock.clone(), outside)?;
+    let booted = orexis_agent::boot(&store, &args.world, &args.agent, clock.clone(), provided)?;
     //  THE AGENT'S BODY IS A TOKIO RUNTIME, a worker a core, and each package its roles load is a task on it
     //  (a-package-is-a-task-that-awaits-its-events).
     let workers = std::thread::available_parallelism().map_or(1, |n| n.get());

@@ -18,7 +18,7 @@ use orexis::hash::hash_named_graph;
 use orexis::namespaces::Namespaces;
 use orexis::ontology::{BELIEF, SELF_GRAPH};
 use orexis::store::{Store, Within, iri, value};
-use orexis::task::{MET, Outside};
+use orexis::task::{MET, Provided};
 use orexis_agent::booted;
 
 const TOWER: &str = "http://example.org/orexis/world/tower#";
@@ -125,7 +125,7 @@ fn two_disks(store: &Store) {
 #[tokio::test(start_paused = true)]
 async fn the_agent_concludes_what_each_disk_is_on_from_where_it_stands() {
     let store = store();
-    let booted = orexis_agent::boot(&store, &world(), "mover", common::clock(now()), Outside::default()).unwrap();
+    let booted = orexis_agent::boot(&store, &world(), "mover", common::clock(now()), Provided::default()).unwrap();
     let running = booted.start().await.unwrap();
     let parts = running.parts();
     for package in ["belief", "planning", "execution"] {
@@ -140,7 +140,7 @@ async fn the_agent_concludes_what_each_disk_is_on_from_where_it_stands() {
 #[tokio::test(start_paused = true)]
 async fn the_puzzle_is_planned_above_and_carried_out_by_the_van_below() {
     let store = store();
-    let booted = orexis_agent::boot(&store, &world(), "mover", common::clock(now()), Outside::default()).unwrap();
+    let booted = orexis_agent::boot(&store, &world(), "mover", common::clock(now()), Provided::default()).unwrap();
     two_disks(&store);
     let running = booted.start().await.unwrap();
     let outcome = common::outcome(&running, 3600).await;
@@ -181,7 +181,7 @@ async fn walked(order: &[&str]) -> Walked {
     two_disks(&store);
     let order: Vec<String> = order.iter().map(|p| p.to_string()).collect();
     let clock = common::clock(now());
-    let running = orexis_agent::start(&store, "mover", clock.clone(), &order, Outside::default())
+    let running = orexis_agent::start(&store, "mover", clock.clone(), &order, Provided::default())
         .await
         .unwrap();
     //  THE ORDER THE STARTS ARE SPAWNED IN, not the order they say they started: an executor depends on a planner
@@ -235,8 +235,8 @@ async fn the_last_window_is_written_as_the_process_stops() {
             Ok(())
         }),
     );
-    let outside = Outside::default().with(orexis_metrics::Window::new(sink, 3600.0, Some("tower"), Some("mover")));
-    let running = orexis_agent::start(&store, "mover", common::clock(now()), &[], outside)
+    let provided = Provided::default().with(orexis_metrics::Window::new(sink, 3600.0, Some("tower"), Some("mover")));
+    let running = orexis_agent::start(&store, "mover", common::clock(now()), &[], provided)
         .await
         .unwrap();
     common::settled(&running).await;
