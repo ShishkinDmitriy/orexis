@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -29,7 +29,6 @@
+@@ -32,7 +32,6 @@
  GRAPH :actions {
    :fill a orexis:Action .
    :fill orexis:takes :tank .
@@ -8,7 +8,7 @@
    :fill planning:costs """PREFIX : <http://example.org/test#>
        SELECT (1 AS ?cost) WHERE { }""" .
    :fill planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
-@@ -37,6 +36,7 @@
+@@ -40,6 +39,7 @@
        INSERT { ?tank :level ?next } WHERE {
        $tank :level ?l .
        BIND($tank AS ?tank) BIND(?l + 5 AS ?next) }""" ] ] .
@@ -16,7 +16,7 @@
    :fill planning:precondition """PREFIX : <http://example.org/test#>
        SELECT ?tank WHERE {
        ?tank a :Tank ; :level ?l .
-@@ -56,7 +56,6 @@
+@@ -59,7 +59,6 @@
  }
  
  GRAPH :sensed {
@@ -24,7 +24,7 @@
  }
  
  GRAPH :scopes {
-@@ -82,6 +81,149 @@
+@@ -85,6 +84,149 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:ownedBy :keeper .

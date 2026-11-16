@@ -9,7 +9,8 @@ use orexis::Error;
 use orexis::document::Document;
 use orexis::events::Watch;
 use orexis::ontology::local_of;
-use orexis::store::Store;
+use orexis::ontology::{ONTOLOGY, SELF_GRAPH};
+use orexis::store::{Store, Within, value};
 use orexis::task::{Heard, Turn};
 use oxsdatatypes::DateTime;
 
@@ -20,7 +21,20 @@ use crate::events::{ASKED, Concluded, DrawWon, FORESEEN, Held, SAID, Told};
 use crate::holdings::{heard, walking_over};
 use crate::lay::{laid, lay};
 use crate::mint::mint;
-use crate::ontology::{self, COORDINATING, COORDINATION};
+use crate::ontology::{COORDINATING, COORDINATION};
+
+/// THE COORDINATOR THE SELF PLAYS, IN ONE QUERY: the self, and each figure the role says or, where it says none,
+/// the default the coordination's ontology states on its shape of the role (`sh:defaultValue`).
+const COORDINATOR_Q: &str = "SELECT DISTINCT ?me (COALESCE(?patienceSaid, ?patienceOwn) AS ?patience) \
+(COALESCE(?roundsSaid, ?roundsOwn) AS ?rounds) (COALESCE(?lookaheadSaid, ?lookaheadOwn) AS ?lookahead) WHERE { \
+?shape sh:targetClass <http://example.org/orexis/coordination#Coordinator> ; \
+  sh:property [ sh:path <http://example.org/orexis/coordination#patienceS> ; sh:defaultValue ?patienceOwn ] , \
+              [ sh:path <http://example.org/orexis/coordination#rounds> ; sh:defaultValue ?roundsOwn ] , \
+              [ sh:path <http://example.org/orexis/coordination#lookahead> ; sh:defaultValue ?lookaheadOwn ] . \
+OPTIONAL { ?me a orexis:Self } \
+OPTIONAL { ?me orexis:plays ?r1 . ?r1 <http://example.org/orexis/coordination#patienceS> ?patienceSaid } \
+OPTIONAL { ?me orexis:plays ?r2 . ?r2 <http://example.org/orexis/coordination#rounds> ?roundsSaid } \
+OPTIONAL { ?me orexis:plays ?r3 . ?r3 <http://example.org/orexis/coordination#lookahead> ?lookaheadSaid } }";
 
 pub(crate) const PASS: usize = 0;
 pub(crate) const QUESTIONED: usize = 1;
@@ -55,15 +69,33 @@ pub struct Coordinator {
 }
 
 impl Coordinator {
-    /// The coordinator the self plays, read off the store.
+    /// The coordinator the self plays, read off the store in one query: what its role says and, where it says
+    /// nothing, the default coordination's ontology states. THE SELF GRAPH WAS HELD TO ITS REQUIREMENTS AT
+    /// ONBOARDING (`requirements.ttl`), so each figure is stated once at most; nothing is picked between here.
+    /// Refused where the store states no default, the ontology being what the package brings as it joins.
     pub fn new(store: &Store) -> Result<Self, Error> {
-        let me = orexis::boot::selves(store)?.into_iter().next().unwrap_or_default();
+        let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
+        known.extend(store.graphs_of(&[ONTOLOGY], &Within::default())?);
+        let known: Vec<&str> = known.iter().map(String::as_str).collect();
+        let row = store
+            .rows(COORDINATOR_Q, &known)?
+            .into_iter()
+            .next()
+            .ok_or_else(|| Error::Document("the store states no coordinator's figures, and no default".into()))?;
+        let number = |name: &str| {
+            value(&row, name)
+                .and_then(|said| said.parse::<f64>().ok())
+                .ok_or_else(|| Error::Document(format!("a coordinator's {name} is no number")))
+        };
+        let lookahead = value(&row, "lookahead")
+            .and_then(|said| said.parse::<i64>().ok())
+            .ok_or_else(|| Error::Document("a coordinator's lookahead is no whole number".into()))?;
         Ok(Coordinator {
-            patience_s: ontology::figure_of(store, ontology::PATIENCE_S)?,
-            rounds: ontology::figure_of(store, ontology::ROUNDS)?,
-            lookahead: ontology::figure_of(store, ontology::LOOKAHEAD)? as i64,
+            patience_s: number("patience")?,
+            rounds: number("rounds")?,
+            lookahead,
             beliefs: store.clone(),
-            me,
+            me: value(&row, "me").unwrap_or_default(),
             pending: Vec::new(),
             watch: Watch::default(),
             told: BTreeMap::new(),

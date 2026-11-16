@@ -14,7 +14,7 @@
    coordinated:conflicts orexis:ownedBy :keeper .
  }
  GRAPH :constraints {
-@@ -79,11 +80,11 @@
+@@ -83,11 +84,11 @@
  }
  GRAPH coordinated:conflicts {
    conflict:2216b9a9c788124d a coordination:Conflict .

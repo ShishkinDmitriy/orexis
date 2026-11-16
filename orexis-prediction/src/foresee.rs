@@ -935,12 +935,7 @@ mod tests {
             }
             for pair in every.windows(2) {
                 assert!(
-                    pair[1].0 - pair[0].0
-                        <= crate::ontology::DEFAULTS
-                            .figure(crate::ontology::RATE_HELD_TERM)
-                            .unwrap()
-                            / 60.0
-                            + 1e-9,
+                    pair[1].0 - pair[0].0 <= crate::Predictor::new(&store).unwrap().rate_held_s / 60.0 + 1e-9,
                     "{stem}: {every:?}"
                 );
             }

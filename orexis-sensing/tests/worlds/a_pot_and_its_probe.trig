@@ -24,6 +24,9 @@
 @prefix prediction: <http://example.org/orexis/prediction#> .
 
 GRAPH :ontology {
+  :observer_shape <http://www.w3.org/ns/shacl#property> [ <http://www.w3.org/ns/shacl#defaultValue> 10 ; <http://www.w3.org/ns/shacl#path> sensing:archivedEveryS ] .
+  :observer_shape <http://www.w3.org/ns/shacl#property> [ <http://www.w3.org/ns/shacl#defaultValue> 60 ; <http://www.w3.org/ns/shacl#path> sensing:askedEveryS ] .
+  :observer_shape <http://www.w3.org/ns/shacl#targetClass> sensing:Observer .
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
   orexis:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .

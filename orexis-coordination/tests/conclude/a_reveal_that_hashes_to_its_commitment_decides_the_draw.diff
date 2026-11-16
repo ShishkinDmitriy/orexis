@@ -17,7 +17,7 @@
    coordinated:conflicts orexis:ownedBy :keeper .
  }
  GRAPH :constraints {
-@@ -138,7 +139,8 @@
+@@ -142,7 +143,8 @@
    conflict:2216b9a9c788124d coordination:draw conflict:2216b9a9c788124d.round.0 .
    conflict:2216b9a9c788124d coordination:over :no_two_vans .
    conflict:2216b9a9c788124d coordination:round 0 .

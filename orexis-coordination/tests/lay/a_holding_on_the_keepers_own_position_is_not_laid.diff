@@ -13,7 +13,7 @@
  }
  GRAPH :constraints {
    :no_two_vans a planning:Constraint .
-@@ -81,17 +87,17 @@
+@@ -85,17 +91,17 @@
    :answer coordination:over :no_two_vans .
    :holding_0 a coordination:Holding .
    :holding_0 coordination:of :van_p .
@@ -35,7 +35,7 @@
    :holding_2 coordination:of :van_p .
    :holding_2 courier:x 2 .
    :holding_2 courier:y 1 .
-@@ -101,7 +107,13 @@
+@@ -105,7 +111,13 @@
    conflict:2216b9a9c788124d coordination:draw conflict:2216b9a9c788124d.round.0 .
    conflict:2216b9a9c788124d coordination:over :no_two_vans .
    conflict:2216b9a9c788124d coordination:round 0 .

@@ -15,8 +15,9 @@ use orexis::Error;
 use orexis::document::Document;
 use orexis::events::Watch;
 use orexis::ontology::local_of;
+use orexis::ontology::{DEPLOYMENT, ONTOLOGY, SELF_GRAPH};
 use orexis::series::Reader;
-use orexis::store::Store;
+use orexis::store::{Store, Within, value};
 use orexis::task::{Heard, Turn};
 use orexis_speech::document_of;
 use orexis_speech::ontology::{STATEMENT, TO};
@@ -49,28 +50,25 @@ pub(crate) const PHRASING_TRIGGER: &str = "http://example.org/orexis/translation
 /// answers is handed back before the turn ends.
 pub struct Inline;
 
-/// WHERE THE MODEL THE TRANSLATOR THE SELF PLAYS NAMES ANSWERS (`translation:translatedBy`), as the world's
-/// deployment states it, a row per role's class.
-const MODEL_Q: &str = "SELECT ?kind ?model WHERE { \
-?me a orexis:Self ; orexis:plays ?role . ?role a ?kind ; \
-<http://example.org/orexis/translation#translatedBy> ?named . ?named <https://schema.org/url> ?model }";
-
-/// Where the model the translator the self plays names answers, read off its self graph and the world's
-/// deployment graph: None where the role names none or the world says nothing of the one named.
-fn translated_by(store: &orexis::store::Store) -> Result<Option<String>, Error> {
-    use orexis::ontology::{DEPLOYMENT, SELF_GRAPH};
-    use orexis::store::{Within, value};
-    let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
-    known.extend(store.graphs_of(&[DEPLOYMENT], &Within::common())?);
-    let known: Vec<&str> = known.iter().map(String::as_str).collect();
-    for row in store.rows(MODEL_Q, &known)? {
-        let kind = value(&row, "kind").unwrap_or_default();
-        if kind == ROLE || store.closed(&kind)?.iter().any(|class| class == ROLE) {
-            return Ok(value(&row, "model").filter(|url| !url.is_empty()));
-        }
-    }
-    Ok(None)
-}
+/// THE TRANSLATOR THE SELF PLAYS, IN ONE QUERY: the self, each figure its role says of talking with the model or,
+/// where it says none, the default translation's ontology states on its shape of the role (`sh:defaultValue`), and
+/// where the model a role names answers (`translation:translatedBy`), as the world's deployment states it, with the
+/// class of the role naming it.
+const TRANSLATOR_Q: &str = "SELECT DISTINCT ?me ?kind ?model (COALESCE(?turnsSaid, ?turnsOwn) AS ?turns) \
+(COALESCE(?rowsSaid, ?rowsOwn) AS ?rows) (COALESCE(?answeredSaid, ?answeredOwn) AS ?answered) \
+(COALESCE(?calledSaid, ?calledOwn) AS ?called) (COALESCE(?retriesSaid, ?retriesOwn) AS ?retries) WHERE { \
+?shape sh:targetClass <http://example.org/orexis/translation#Translator> ; \
+  sh:property [ sh:path <http://example.org/orexis/translation#turns> ; sh:defaultValue ?turnsOwn ] , [ sh:path <http://example.org/orexis/translation#rows> ; sh:defaultValue ?rowsOwn ] , \
+              [ sh:path <http://example.org/orexis/translation#answeredWithinS> ; sh:defaultValue ?answeredOwn ] , \
+              [ sh:path <http://example.org/orexis/translation#calledWithinS> ; sh:defaultValue ?calledOwn ] , \
+              [ sh:path <http://example.org/orexis/translation#retries> ; sh:defaultValue ?retriesOwn ] . \
+OPTIONAL { ?me a orexis:Self } \
+OPTIONAL { ?me orexis:plays ?r1 . ?r1 <http://example.org/orexis/translation#turns> ?turnsSaid } \
+OPTIONAL { ?me orexis:plays ?r2 . ?r2 <http://example.org/orexis/translation#rows> ?rowsSaid } \
+OPTIONAL { ?me orexis:plays ?r3 . ?r3 <http://example.org/orexis/translation#answeredWithinS> ?answeredSaid } \
+OPTIONAL { ?me orexis:plays ?r4 . ?r4 <http://example.org/orexis/translation#calledWithinS> ?calledSaid } \
+OPTIONAL { ?me orexis:plays ?r5 . ?r5 <http://example.org/orexis/translation#retries> ?retriesSaid } \
+OPTIONAL { ?me orexis:plays ?named . ?named a ?kind ; <http://example.org/orexis/translation#translatedBy> ?by . ?by <https://schema.org/url> ?model } }";
 
 /// THE TRANSLATOR THE SELF PLAYS, the package's core: a field for each thing `translation:Translator` may state, each
 /// what the role says in the agent's self graph and, where it says nothing, the default this package's ontology
@@ -111,13 +109,42 @@ pub struct Translator {
 }
 
 impl Translator {
-    /// The translator the self plays, read off the store: what its role says of talking with the model, and where the
-    /// model it names answers. It holds no model until it is handed one.
+    /// The translator the self plays, read off the store in one query: what its role says of talking with the model,
+    /// the default translation's ontology states where it says nothing, and where the model it names answers. THE
+    /// SELF GRAPH WAS HELD TO ITS REQUIREMENTS AT ONBOARDING, so each figure is stated once at most; nothing is picked
+    /// between here. It holds no model until it is handed one.
     pub fn new(beliefs: &Store) -> Result<Self, Error> {
+        let mut known = beliefs.graphs_of(&[SELF_GRAPH], &Within::default())?;
+        known.extend(beliefs.graphs_of(&[DEPLOYMENT], &Within::common())?);
+        known.extend(beliefs.graphs_of(&[ONTOLOGY], &Within::default())?);
+        let known: Vec<&str> = known.iter().map(String::as_str).collect();
+        let rows = beliefs.rows(TRANSLATOR_Q, &known)?;
+        let row = rows
+            .first()
+            .ok_or_else(|| Error::Document("the store states no translator's figures, and no default".into()))?;
+        let said = |name: &str| value(row, name).unwrap_or_default();
+        let whole = |name: &str| {
+            said(name)
+                .parse::<u32>()
+                .map_err(|_| Error::Document(format!("a translator's {name} of {} is no whole number", said(name))))
+        };
+        let seconds = |name: &str| {
+            said(name)
+                .parse::<f64>()
+                .map_err(|_| Error::Document(format!("a translator's {name} within {} is no number", said(name))))
+        };
+        let mut translated_by = None;
+        for row in &rows {
+            let Some(kind) = value(row, "kind") else { continue };
+            if kind == ROLE || beliefs.closed(&kind)?.iter().any(|class| class == ROLE) {
+                translated_by = value(row, "model").filter(|url| !url.is_empty());
+                break;
+            }
+        }
         let (tx, rx) = channel();
         Ok(Translator {
             beliefs: beliefs.clone(),
-            me: orexis::boot::selves(beliefs)?.into_iter().next().unwrap_or_default(),
+            me: said("me"),
             model: None,
             inline: false,
             writing: BTreeMap::new(),
@@ -126,15 +153,12 @@ impl Translator {
             history: None,
             metrics: None,
             watch: Watch::default(),
-            turns: crate::figures::figure(beliefs, crate::figures::TURNS) as usize,
-            rows: crate::figures::figure(beliefs, crate::figures::ROWS) as usize,
-            answered_within_s: crate::figures::figure(beliefs, crate::figures::ANSWERED_WITHIN_S),
-            called_within_s: crate::figures::figure(beliefs, crate::figures::CALLED_WITHIN_S),
-            retries: crate::figures::figure(beliefs, crate::figures::RETRIES) as u32,
-            translated_by: translated_by(beliefs).unwrap_or_else(|e| {
-                log::warn!("the model the translator's role names is not read: {e}");
-                None
-            }),
+            turns: whole("turns")? as usize,
+            rows: whole("rows")? as usize,
+            answered_within_s: seconds("answered")?,
+            called_within_s: seconds("called")?,
+            retries: whole("retries")?,
+            translated_by,
             tx,
             rx,
             pending: VecDeque::new(),

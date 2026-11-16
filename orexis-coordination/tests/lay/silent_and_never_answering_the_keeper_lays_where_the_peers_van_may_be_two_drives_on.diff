@@ -73,7 +73,7 @@
  }
  GRAPH :constraints {
    :no_two_vans a planning:Constraint .
-@@ -86,7 +152,74 @@
+@@ -90,7 +156,74 @@
    conflict:2216b9a9c788124d coordination:over :no_two_vans .
    conflict:2216b9a9c788124d coordination:round 0 .
    conflict:2216b9a9c788124d coordination:silent true .

@@ -26,6 +26,9 @@
 @prefix observed: <http://example.org/orexis/graph/observed/keeper/> .
 
 GRAPH :ontology {
+  :predictor_shape sh:property [ sh:defaultValue 3600 ; sh:path prediction:rateHeldS ] .
+  :predictor_shape sh:property [ sh:defaultValue 86400 ; sh:path prediction:horizonS ] .
+  :predictor_shape sh:targetClass prediction:Predictor .
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
   orexis:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .

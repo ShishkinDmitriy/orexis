@@ -21,7 +21,7 @@
  }
  GRAPH :constraints {
    :no_two_vans a planning:Constraint .
-@@ -84,3 +89,13 @@
+@@ -88,3 +93,13 @@
    :van_k a courier:Van .
    :van_p a courier:Van .
  }

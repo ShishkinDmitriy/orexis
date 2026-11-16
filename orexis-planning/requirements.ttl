@@ -45,3 +45,16 @@
     sh:targetClass planning:Desire , planning:Want ;
     sh:xone ( [ sh:path planning:metWhen ; sh:minCount 1 ] [ sh:path planning:unmetWhen ; sh:minCount 1 ] ) ;
     sh:message "is judged by neither test or by both: a desire or a want carries planning:metWhen or planning:unmetWhen, one of the two" .
+
+#  A PLANNER'S FIGURES, ONE EACH, on whichever role states them: a domain's role beneath the planner may, so each
+#  shape targets what states the figure. The planner reads them in one query as it is made and judges nothing of
+#  them, this being where they are judged; that two roles do not state two values of one figure is onboarding's
+#  own requirement, of every package's figures.
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf planning:budget ;
+    sh:property [ sh:path planning:budget ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minExclusive 0 ;
+                  sh:message "a planner's budget is one whole number of worlds above nought" ] .
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf planning:budgetEveryS ;
+    sh:property [ sh:path planning:budgetEveryS ; sh:maxCount 1 ; sh:minExclusive 0 ;
+                  sh:message "a planner's budget is for one number of seconds above nought" ] .

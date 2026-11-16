@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -68,17 +68,13 @@
+@@ -71,17 +71,13 @@
    :soil sosa:hasSimpleResult 0.2999 .
    :soil sosa:madeBySensor :probe .
    :soil sosa:observedProperty :moisture .
@@ -19,7 +19,7 @@
  }
  
  GRAPH :catalogue {
-@@ -86,6 +82,10 @@
+@@ -89,6 +85,10 @@
    :believed a orexis:Graph .
    :believed orexis:arrivedBy orexis:Derived .
    :believed orexis:ownedBy :keeper .
@@ -30,7 +30,7 @@
    :catalogue a orexis:CatalogueGraph .
    :catalogue a orexis:Graph .
    :flows a orexis:FlowGraph .
-@@ -93,19 +93,64 @@
+@@ -96,19 +96,64 @@
    :ontology a orexis:BeliefGraph .
    :ontology a orexis:Graph .
    :ontology a orexis:OntologyGraph .
