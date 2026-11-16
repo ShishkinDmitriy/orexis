@@ -215,14 +215,6 @@ fn exists(expression: &Expression, out: &mut BTreeSet<String>) -> bool {
 
 // --- what a search can change ------------------------------------------------------------------------------------
 
-/// ONE ROW PER RULE OF AN ACTION'S EFFECT, with the action's precondition on each.
-const ACTIONS_Q: &str = "
-SELECT ?action ?precondition ?update WHERE {
-  ?action a orexis:Action .
-  OPTIONAL { ?action planning:precondition ?precondition }
-  OPTIONAL { ?action planning:effect/sh:rule ?r . ?r a belief:Transition ; belief:update ?update }
-}";
-
 /// What a search can change, as patterns, sorted as the Python kernel sorts them — one per triple of every template
 /// of every writer: each effect of `actions` (every action's where `None`) and each transition. `None`, anything,
 /// where a writer's templates cannot be read.
@@ -270,6 +262,13 @@ pub fn sorted(patterns: impl IntoIterator<Item = Pattern>) -> Vec<Pattern> {
 
 /// Every action's effect as its update texts, in the order the actions were first met.
 fn effects(store: &Store, at: DateTime) -> Result<Vec<(String, Vec<String>)>, Error> {
+    /// ONE ROW PER RULE OF AN ACTION'S EFFECT, with the action's precondition on each.
+    const ACTIONS_Q: &str = "
+    SELECT ?action ?precondition ?update WHERE {
+      ?action a orexis:Action .
+      OPTIONAL { ?action planning:precondition ?precondition }
+      OPTIONAL { ?action planning:effect/sh:rule ?r . ?r a belief:Transition ; belief:update ?update }
+    }";
     let graphs = store.graphs_of(&[ACTION], &Within::at(at))?;
     let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
     let mut out: Vec<(String, Vec<String>)> = Vec::new();

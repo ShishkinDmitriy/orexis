@@ -14,22 +14,6 @@ use crate::find_scopes::Scopes;
 use crate::memo::Memo;
 use crate::world_at::{Asking, lexical, world_at};
 
-/// WHAT ONE DESIRE'S WEIGHINGS SAY, ground by ground.
-const TROUBLES_Q: &str = "
-SELECT ?start ?g ?met ?instance ?constraint ?about ?offending WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-    ?x a planning:Weighing ; planning:for $desire ; planning:weighs ?g .
-    ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start .
-    OPTIONAL { ?x planning:met ?met }
-    OPTIONAL { ?x planning:violation ?v . ?v planning:instance ?instance .
-               OPTIONAL { ?v planning:constraint ?constraint }
-               OPTIONAL { ?v planning:about ?about }
-               OPTIONAL { ?v planning:offending ?offending FILTER(isIRI(?offending)) } } } }
-ORDER BY ?start ?instance ?constraint ?offending";
-
-/// WHAT A NODE NAMES IN A GROUND, as the objects of its own facts.
-const NAMES_Q: &str = "SELECT DISTINCT ?o WHERE { $node ?p ?o FILTER(isIRI(?o)) }";
-
 /// A way of failing: the instance, the constraint, and the key.
 type Way = (String, String, Vec<String>);
 
@@ -42,6 +26,20 @@ pub(super) fn troubles(
     scopes: Option<&Scopes>,
     holder: &str,
 ) -> Result<Option<Vec<Witness>>, Error> {
+    /// WHAT ONE DESIRE'S WEIGHINGS SAY, ground by ground.
+    const TROUBLES_Q: &str = "
+    SELECT ?start ?g ?met ?instance ?constraint ?about ?offending WHERE {
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+        ?x a planning:Weighing ; planning:for $desire ; planning:weighs ?g .
+        ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start .
+        OPTIONAL { ?x planning:met ?met }
+        OPTIONAL { ?x planning:violation ?v . ?v planning:instance ?instance .
+                   OPTIONAL { ?v planning:constraint ?constraint }
+                   OPTIONAL { ?v planning:about ?about }
+                   OPTIONAL { ?v planning:offending ?offending FILTER(isIRI(?offending)) } } } }
+    ORDER BY ?start ?instance ?constraint ?offending";
+    /// WHAT A NODE NAMES IN A GROUND, as the objects of its own facts.
+    const NAMES_Q: &str = "SELECT DISTINCT ?o WHERE { $node ?p ?o FILTER(isIRI(?o)) }";
     let found = store.rows(&bind(TROUBLES_Q, &[("desire", Value::iri(desire))])?, &[])?;
     if found.is_empty() || found.iter().any(|r| !r.contains_key("met")) {
         return Ok(None);

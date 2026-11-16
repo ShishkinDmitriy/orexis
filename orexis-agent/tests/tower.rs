@@ -25,8 +25,6 @@ const TOWER: &str = "http://example.org/orexis/world/tower#";
 const REVISION: &str = "http://example.org/orexis/belief#RevisionGraph";
 const COMMITTED: &str = "http://example.org/orexis/execution#CommittedStepGraph";
 
-const ON_Q: &str = "PREFIX hanoi: <http://example.org/orexis/hanoi#>
-SELECT ?d ?below WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?d hanoi:on ?below } } ORDER BY ?d";
 const AT_Q: &str = "PREFIX courier: <http://example.org/orexis/courier#>
 SELECT ?s ?x ?y WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?s courier:x ?x ; courier:y ?y } } ORDER BY ?s";
 const REFINED_Q: &str = "SELECT (COUNT(?a) AS ?n) WHERE { GRAPH ?g { ?a execution:refinedBy ?w } }";
@@ -52,6 +50,8 @@ fn local(iri: &str) -> String {
 }
 
 fn on(store: &Store) -> BTreeSet<(String, String)> {
+    const ON_Q: &str = "PREFIX hanoi: <http://example.org/orexis/hanoi#>
+    SELECT ?d ?below WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?d hanoi:on ?below } } ORDER BY ?d";
     store
         .rows(ON_Q, &[])
         .unwrap()

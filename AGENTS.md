@@ -794,6 +794,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   to a refresh from nothing (#953).
 - **An update takes no dataset** — what chooses which graphs are the world at an instant is Python
   or a materialised view.
+- **A query is a `const` in the one function that asks it, and a query several places ask is a function of its
+  own** — what a query projects is its callers' contract, so its variables belong to one owner, and kept at a file's
+  head a query was read by scrolling up to it and back down (#1206).
 - **What ends by the clock is a graph with a period, and one sweep drops it** — what the ending
   MEANS stays the owner's (#645); **a row whose presence is meant to BE a fact is named for the
   state, not for the instant it ends**.

@@ -39,19 +39,6 @@ pub const STATE: &str = "state";
 /// THE MOST THINGS OF A WORD'S DOMAIN THE MODEL IS TOLD OF, where the chat lets it read none.
 pub const THINGS: usize = 40;
 
-const WORDS_Q: &str = "
-SELECT ?p (SAMPLE(?l) AS ?label) (SAMPLE(?c) AS ?comment) (SAMPLE(?d) AS ?domain) (SAMPLE(?r) AS ?range) WHERE {
-  ?p a ?t . VALUES ?t { rdf:Property owl:ObjectProperty owl:DatatypeProperty }
-  OPTIONAL { ?p rdfs:label ?l } OPTIONAL { ?p rdfs:comment ?c }
-  OPTIONAL { ?p rdfs:domain ?d } OPTIONAL { ?p rdfs:range ?r } } GROUP BY ?p ORDER BY ?p";
-const OF_Q: &str =
-    "SELECT ?c WHERE { $thing a ?c . FILTER(?c = $class || EXISTS { ?c rdfs:subClassOf $class }) } LIMIT 1";
-const THINGS_Q: &str = "SELECT DISTINCT ?i ?label WHERE { ?i a ?c . FILTER(isIRI(?i))
-  FILTER(?c = $class || EXISTS { ?c rdfs:subClassOf $class }) OPTIONAL { ?i rdfs:label ?label } } ORDER BY ?i";
-const START_Q: &str = "SELECT ?start WHERE { GRAPH $cat { $g dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1";
-const LABELS_Q: &str = "SELECT ?t ?label ?comment WHERE { VALUES ?t { $terms } OPTIONAL { ?t rdfs:label ?label }
-  OPTIONAL { ?t rdfs:comment ?comment } } ORDER BY ?t";
-
 /// A word a person may state: the property, its label and comment, and what it is said of and what it says.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Word {
@@ -73,6 +60,11 @@ fn strs(names: &[String]) -> Vec<&str> {
 /// The words a chat allowing `allows` lets a person state: each property a vocabulary declares that it names, or every
 /// one where it allows `rdf:Property`.
 pub fn words(store: &Store, allows: &[String]) -> Result<Vec<Word>, Error> {
+    const WORDS_Q: &str = "
+    SELECT ?p (SAMPLE(?l) AS ?label) (SAMPLE(?c) AS ?comment) (SAMPLE(?d) AS ?domain) (SAMPLE(?r) AS ?range) WHERE {
+      ?p a ?t . VALUES ?t { rdf:Property owl:ObjectProperty owl:DatatypeProperty }
+      OPTIONAL { ?p rdfs:label ?l } OPTIONAL { ?p rdfs:comment ?c }
+      OPTIONAL { ?p rdfs:domain ?d } OPTIONAL { ?p rdfs:range ?r } } GROUP BY ?p ORDER BY ?p";
     if allows.is_empty() {
         return Ok(Vec::new());
     }
@@ -122,6 +114,8 @@ pub fn listing(
     prefixes: &Prefixes,
     things: bool,
 ) -> Result<String, Error> {
+    const THINGS_Q: &str = "SELECT DISTINCT ?i ?label WHERE { ?i a ?c . FILTER(isIRI(?i))
+      FILTER(?c = $class || EXISTS { ?c rdfs:subClassOf $class }) OPTIONAL { ?i rdfs:label ?label } } ORDER BY ?i";
     if every {
         return Ok(
             "A person may state here anything in a word a vocabulary declares, of what its domain says it is \
@@ -326,6 +320,8 @@ fn subject_text(subject: &NamedOrBlankNode) -> String {
 
 /// Why one triple is outside what the chat allows and its word's bounds: nothing, where it is within them.
 fn outside(store: &Store, q: &Quad, by_word: &BTreeMap<&str, &Word>, every: bool) -> Result<Vec<String>, Error> {
+    const OF_Q: &str =
+        "SELECT ?c WHERE { $thing a ?c . FILTER(?c = $class || EXISTS { ?c rdfs:subClassOf $class }) } LIMIT 1";
     let p = q.predicate.as_str();
     let Some(word) = by_word.get(p) else {
         let tail = if every {
@@ -426,6 +422,8 @@ pub fn believed_of(statement: &str) -> String {
 /// holding from when it was said, replacing what was believed of it before. The graph written, or none where it says
 /// nothing.
 pub fn believe(store: &Store, statement: &str) -> Result<Vec<String>, Error> {
+    const START_Q: &str =
+        "SELECT ?start WHERE { GRAPH $cat { $g dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1";
     let target = believed_of(statement);
     store.forget_graph(&target, Some(BELIEF))?;
     let Some(cat) = store.catalogue()? else {
@@ -469,6 +467,8 @@ pub fn believe(store: &Store, statement: &str) -> Result<Vec<String>, Error> {
 /// A statement as the model reads it to say it to a person: its graphs' triples in Turtle, then what each word and
 /// thing in it is, by its label and the first sentence of its comment.
 pub fn rendered(store: &Store, doc: &Document, prefixes: &Prefixes) -> Result<String, Error> {
+    const LABELS_Q: &str = "SELECT ?t ?label ?comment WHERE { VALUES ?t { $terms } OPTIONAL { ?t rdfs:label ?label }
+      OPTIONAL { ?t rdfs:comment ?comment } } ORDER BY ?t";
     let triples: Vec<Triple> = doc
         .quads()
         .iter()

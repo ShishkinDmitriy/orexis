@@ -19,8 +19,6 @@ use crate::Said;
 use crate::implementation::operations;
 use crate::ontology::COMMAND;
 
-const TAKES_Q: &str = "SELECT ?takes WHERE { $action orexis:takes ?takes }";
-
 /// A step's parameter as the term it is: an IRI wrapped, anything else — a number's lexical form — as written.
 fn term(text: &str) -> Value {
     let iri = ["http://", "https://", "urn:", "mailto:", "file:"]
@@ -32,6 +30,7 @@ fn term(text: &str) -> Value {
 
 /// The `$tokens` a step's operation takes: `$now`, and each parameter its action takes that the step's rows hold.
 pub fn tokens(store: &Store, said: &Said, action: &str, now: DateTime) -> Result<Vec<(String, Value)>, Error> {
+    const TAKES_Q: &str = "SELECT ?takes WHERE { $action orexis:takes ?takes }";
     let actions = store.graphs_of(&[ACTION], &Within::default())?;
     let actions: Vec<&str> = actions.iter().map(String::as_str).collect();
     let mut out = vec![("now".to_string(), instant(now))];

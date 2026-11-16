@@ -173,10 +173,7 @@ fn write(
     if let Some(until) = until {
         period.push_str(&format!(" ; orexis:end \"{}\"^^xsd:dateTime", isoformat(until)));
     }
-    let forget = bind(
-        crate::withdraw::FORGET_ONE_U,
-        &[("graph", Value::iri(graph.as_str())), ("want", Value::iri(uri))],
-    )?;
+    let forget = crate::withdraw::forgetting(&graph, uri)?;
     store.update(&format!(
         "{forget} ;
 INSERT {{

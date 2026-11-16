@@ -20,35 +20,6 @@ use orexis::store::{Store, Within, instant, iri, value};
 
 use crate::ontology::default_of;
 
-const CADENCE_Q: &str = "
-SELECT ?every ?unit WHERE {
-  $sensor ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?f .
-  ?f a ssn-system:Frequency ; schema:value ?every .
-  OPTIONAL { ?f schema:unitCode ?unit } }";
-
-/// EVERY SENSOR WHOSE LATEST PERCEPT HAS LAPSED, with the instant it did: the latest is the one no percept names as
-/// its previous, and a revision, of the same kind, holds no `sosa:madeBySensor` and is no match.
-const LAPSED_Q: &str = "
-SELECT ?sensor ?end WHERE {
-  GRAPH $cat { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end <= $now) }
-  GRAPH ?g { ?obs sosa:madeBySensor ?sensor }
-  FILTER NOT EXISTS { GRAPH ?h { ?later sensing:previous ?obs } GRAPH $cat { ?h a sensing:ObservationGraph } } }
-ORDER BY ?end ?sensor";
-
-/// THE SOONEST INSTANT A LATEST PERCEPT LAPSES, not yet come: the one a reading falls due and its grace runs out.
-const NEXT_LAPSE_Q: &str = "
-SELECT (MIN(?end) AS ?next) WHERE {
-  GRAPH $cat { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end > $now) }
-  GRAPH ?g { ?obs sosa:madeBySensor ?sensor }
-  FILTER NOT EXISTS { GRAPH ?h { ?later sensing:previous ?obs } GRAPH $cat { ?h a sensing:ObservationGraph } } }";
-
-/// EVERY SENSOR THE AGENT READS: each an attention of the observer it plays names, in the self graph.
-const SENSORS_Q: &str = "SELECT DISTINCT ?sensor WHERE { ?me a orexis:Self ; orexis:plays/sensing:attends/sensing:sensor ?sensor } ORDER BY ?sensor";
-
-/// WHAT THE ATTENTION NAMING THIS SENSOR STATES OF A LIMIT, in the self graph where the observer is played.
-const LIMIT_Q: &str = "SELECT DISTINCT ?n WHERE { ?me a orexis:Self ; orexis:plays/sensing:attends ?attention . \
-?attention sensing:sensor $sensor ; $limit ?n }";
-
 /// A unit of time as its seconds, by the local name QUDT and UN/CEFACT spell it under.
 fn seconds_in(unit: &str) -> Option<f64> {
     match unit {
@@ -67,6 +38,11 @@ fn strs(names: &[String]) -> Vec<&str> {
 /// The seconds between one of `sensor`'s observations and the next, as the world states them, or None where it
 /// states no frequency, several, or a unit nothing here converts.
 pub fn cadence_of(store: &Store, sensor: &str) -> Result<Option<f64>, Error> {
+    const CADENCE_Q: &str = "
+    SELECT ?every ?unit WHERE {
+      $sensor ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?f .
+      ?f a ssn-system:Frequency ; schema:value ?every .
+      OPTIONAL { ?f schema:unitCode ?unit } }";
     let common = store.graphs_of(&[BELIEF], &Within::common())?;
     let found = store.rows(&bind(CADENCE_Q, &[("sensor", Value::iri(sensor))])?, &strs(&common))?;
     if found.len() != 1 {
@@ -96,6 +72,14 @@ pub fn cadence_of(store: &Store, sensor: &str) -> Result<Option<f64>, Error> {
 /// Every sensor whose latest percept had ended by `now` — its next reading due and a grace past it, and nothing
 /// arrived — with the instant it ended, earliest first. Writes nothing.
 pub fn lapsed(store: &Store, now: DateTime) -> Result<Vec<(String, DateTime)>, Error> {
+    /// EVERY SENSOR WHOSE LATEST PERCEPT HAS LAPSED, with the instant it did: the latest is the one no percept names as
+    /// its previous, and a revision, of the same kind, holds no `sosa:madeBySensor` and is no match.
+    const LAPSED_Q: &str = "
+    SELECT ?sensor ?end WHERE {
+      GRAPH $cat { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end <= $now) }
+      GRAPH ?g { ?obs sosa:madeBySensor ?sensor }
+      FILTER NOT EXISTS { GRAPH ?h { ?later sensing:previous ?obs } GRAPH $cat { ?h a sensing:ObservationGraph } } }
+    ORDER BY ?end ?sensor";
     let Some(cat) = store.catalogue()? else {
         return Ok(Vec::new());
     };
@@ -112,6 +96,12 @@ pub fn lapsed(store: &Store, now: DateTime) -> Result<Vec<(String, DateTime)>, E
 /// The soonest instant from `now` on that a sensor's latest percept ends and its cadence lapses, where one is yet to:
 /// when `lapsed` next answers anything new, so whoever asks it waits until then. Writes nothing.
 pub fn next_lapse(store: &Store, now: DateTime) -> Result<Option<DateTime>, Error> {
+    /// THE SOONEST INSTANT A LATEST PERCEPT LAPSES, not yet come: the one a reading falls due and its grace runs out.
+    const NEXT_LAPSE_Q: &str = "
+    SELECT (MIN(?end) AS ?next) WHERE {
+      GRAPH $cat { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end > $now) }
+      GRAPH ?g { ?obs sosa:madeBySensor ?sensor }
+      FILTER NOT EXISTS { GRAPH ?h { ?later sensing:previous ?obs } GRAPH $cat { ?h a sensing:ObservationGraph } } }";
     let Some(cat) = store.catalogue()? else {
         return Ok(None);
     };
@@ -125,6 +115,8 @@ pub fn next_lapse(store: &Store, now: DateTime) -> Result<Option<DateTime>, Erro
 /// Every sensor the agent reads: each an attention of the observer the self plays names (`sensing:sensor`), in its self
 /// graph, sorted — whose bytes a transport hands `received`.
 pub fn sensors(store: &Store) -> Result<Vec<String>, Error> {
+    /// EVERY SENSOR THE AGENT READS: each an attention of the observer it plays names, in the self graph.
+    const SENSORS_Q: &str = "SELECT DISTINCT ?sensor WHERE { ?me a orexis:Self ; orexis:plays/sensing:attends/sensing:sensor ?sensor } ORDER BY ?sensor";
     let selves = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
     Ok(store
         .rows(SENSORS_Q, &strs(&selves))?
@@ -137,6 +129,9 @@ pub fn sensors(store: &Store) -> Result<Vec<String>, Error> {
 /// figure the attention naming it states in the self graph, or the attention shape's default where it states
 /// none, several, or one that is no number, said in the log, since two answers are never picked between.
 pub fn limit_of(store: &Store, sensor: &str, limit: &str) -> Result<i64, Error> {
+    /// WHAT THE ATTENTION NAMING THIS SENSOR STATES OF A LIMIT, in the self graph where the observer is played.
+    const LIMIT_Q: &str = "SELECT DISTINCT ?n WHERE { ?me a orexis:Self ; orexis:plays/sensing:attends ?attention . \
+    ?attention sensing:sensor $sensor ; $limit ?n }";
     let selves = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
     let text = bind(LIMIT_Q, &[("sensor", Value::iri(sensor)), ("limit", Value::iri(limit))])?;
     let found: Vec<String> = store

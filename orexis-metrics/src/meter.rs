@@ -9,22 +9,14 @@ use orexis::task::PASS_METRIC;
 use crate::ROLE;
 use crate::window::Window;
 
-/// THE METER THE SELF PLAYS, IN ONE QUERY: where the series store it names answers, and how long a window is, the
-/// role's word or, where it says none, the default the metrics' ontology states on the meter's shape
-/// (`sh:defaultValue`).
-const METER_Q: &str = "SELECT ?role ?kind ?store (COALESCE(?windowSaid, ?windowOwn) AS ?window) WHERE { \
-?me a orexis:Self ; orexis:plays ?role . ?role a ?kind . \
-OPTIONAL { ?role <http://example.org/orexis/metrics#windowS> ?windowSaid FILTER(?windowSaid > 0) } \
-OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/metrics#windowS> ; sh:defaultValue ?windowOwn ] } \
-OPTIONAL { ?role <http://example.org/orexis/metrics#writtenTo> ?named . ?named <https://schema.org/url> ?store } }";
-
 /// THE METER THE SELF PLAYS, the package's core: a field for each thing `metrics:Meter` may say, and the window it
 /// tallies every reported event in.
 pub struct Meter {
     /// Where the series store the role names answers (`metrics:writtenTo`), as the world's deployment states it:
     /// None where the role names none or the world says nothing of the one named.
     pub written_to: Option<String>,
-    /// How long a window is, in real seconds (`metrics:windowS`), and the default the ontology states where the role states none.
+    /// How long a window is, in real seconds (`metrics:windowS`), and the default the ontology states where the role
+    /// states none.
     pub window_s: f64,
     /// The window every reported event is tallied in, once it is handed one or makes its own.
     pub window: Option<Arc<Mutex<Window>>>,
@@ -34,6 +26,14 @@ impl Meter {
     /// The meter the self plays, read off its self graph and the world's deployment graph by this package's own
     /// query. An agent plays one meter: two are refused, and where the self plays none nothing is said.
     pub fn new(store: &orexis::store::Store) -> Result<Self, orexis::Error> {
+        /// THE METER THE SELF PLAYS, IN ONE QUERY: where the series store it names answers, and how long a window is,
+        /// the role's word or, where it says none, the default the metrics' ontology states on the meter's shape
+        /// (`sh:defaultValue`).
+        const METER_Q: &str = "SELECT ?role ?kind ?store (COALESCE(?windowSaid, ?windowOwn) AS ?window) WHERE { \
+        ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind . \
+        OPTIONAL { ?role <http://example.org/orexis/metrics#windowS> ?windowSaid FILTER(?windowSaid > 0) } \
+        OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/metrics#windowS> ; sh:defaultValue ?windowOwn ] } \
+        OPTIONAL { ?role <http://example.org/orexis/metrics#writtenTo> ?named . ?named <https://schema.org/url> ?store } }";
         use orexis::ontology::{DEPLOYMENT, ONTOLOGY, SELF_GRAPH};
         use orexis::store::{Within, value};
         let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;

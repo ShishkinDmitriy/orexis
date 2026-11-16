@@ -35,41 +35,6 @@ const MET_WHEN: &str = "http://example.org/orexis/planning#metWhen";
 
 const UNMET_WHEN: &str = "http://example.org/orexis/planning#unmetWhen";
 
-/// WHAT A DESIRE SAYS, from the graphs of desires and wants: its met-test, its estimate, what it is about, its label.
-const SAID_Q: &str = "
-SELECT ?p ?o WHERE {
-  GRAPH ?g { $desire ?p ?o
-    FILTER(?p IN (planning:metWhen, planning:unmetWhen, planning:estimates, planning:about, rdfs:label)) }
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
-               VALUES ?kind { planning:DesireGraph planning:WantGraph } } }";
-
-/// WHAT THIS DERIVATION HAS MINTED UNDER ONE DESIRE, across all time: existence is not an instant question.
-const STANDING_Q: &str = "
-SELECT ?w WHERE {
-  GRAPH ?g { ?w a planning:Want ; prov:wasDerivedFrom $desire }
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-               ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }
-ORDER BY ?w";
-
-/// EVERY GRAPH OF WANTS THE DERIVATION WROTE THAT HOLDS ONE WANT, and how many wants each holds.
-const HOMES_Q: &str = "
-SELECT ?g (COUNT(DISTINCT ?w) AS ?wants) WHERE {
-  GRAPH ?g { $want a planning:Want . ?w a planning:Want }
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }
-GROUP BY ?g";
-
-const DESIRES_Q: &str = "
-SELECT DISTINCT ?holder ?desire WHERE {
-  GRAPH ?g { ?holder planning:holds ?desire . ?desire a planning:Desire }
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:DesireGraph } }
-ORDER BY ?holder ?desire";
-
-/// THE TIMELINE: every ground, earliest first.
-const GROUNDS_Q: &str = "
-SELECT ?g WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start } }
-ORDER BY ?start";
-
 /// One way a desire is failing, and the stretch it fails over: `at` the start of the earliest ground it reads unmet
 /// in, `until` the start of the first later ground it reads met in.
 #[derive(Clone, Debug)]
@@ -96,6 +61,11 @@ pub fn derive_wants(
     walking: &BTreeMap<String, DateTime>,
     reopen: &BTreeSet<String>,
 ) -> Result<BTreeSet<String>, Error> {
+    /// THE TIMELINE: every ground, earliest first.
+    const GROUNDS_Q: &str = "
+    SELECT ?g WHERE {
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start } }
+    ORDER BY ?start";
     let mut memo = Memo::default();
     let shapes = Shapes::of(
         store,
@@ -149,6 +119,13 @@ pub fn derive_wants(
 }
 
 fn standing_under(store: &Store, desire: &str) -> Result<BTreeSet<String>, Error> {
+    /// WHAT THIS DERIVATION HAS MINTED UNDER ONE DESIRE, across all time: existence is not an instant question.
+    const STANDING_Q: &str = "
+    SELECT ?w WHERE {
+      GRAPH ?g { ?w a planning:Want ; prov:wasDerivedFrom $desire }
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                   ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }
+    ORDER BY ?w";
     Ok(store
         .rows(&bind(STANDING_Q, &[("desire", Value::iri(desire))])?, &[])?
         .iter()
@@ -253,6 +230,12 @@ fn derive_under(
 
 /// Take `want` out of the graph of the stretch it was minted over: the graph goes where it held this want alone.
 fn unhome(store: &Store, want: &str) -> Result<(), Error> {
+    /// EVERY GRAPH OF WANTS THE DERIVATION WROTE THAT HOLDS ONE WANT, and how many wants each holds.
+    const HOMES_Q: &str = "
+    SELECT ?g (COUNT(DISTINCT ?w) AS ?wants) WHERE {
+      GRAPH ?g { $want a planning:Want . ?w a planning:Want }
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }
+    GROUP BY ?g";
     for r in store.rows(&bind(HOMES_Q, &[("want", Value::iri(want))])?, &[])? {
         let (Some(g), Some(n)) = (iri(&r, "g"), value(&r, "wants")) else {
             continue;
@@ -335,6 +318,14 @@ fn spelled(term: &Term) -> String {
 
 /// What the desire says, sorted by predicate and the term's spelling.
 fn said(store: &Store, desire: &str) -> Result<Said, Error> {
+    /// WHAT A DESIRE SAYS, from the graphs of desires and wants: its met-test, its estimate, what it is about, its
+    /// label.
+    const SAID_Q: &str = "
+    SELECT ?p ?o WHERE {
+      GRAPH ?g { $desire ?p ?o
+        FILTER(?p IN (planning:metWhen, planning:unmetWhen, planning:estimates, planning:about, rdfs:label)) }
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
+                   VALUES ?kind { planning:DesireGraph planning:WantGraph } } }";
     let mut out: Said = store
         .rows(&bind(SAID_Q, &[("desire", Value::iri(desire))])?, &[])?
         .into_iter()
@@ -345,6 +336,11 @@ fn said(store: &Store, desire: &str) -> Result<Said, Error> {
 }
 
 fn desires_in(store: &Store) -> Result<Vec<(String, String)>, Error> {
+    const DESIRES_Q: &str = "
+    SELECT DISTINCT ?holder ?desire WHERE {
+      GRAPH ?g { ?holder planning:holds ?desire . ?desire a planning:Desire }
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:DesireGraph } }
+    ORDER BY ?holder ?desire";
     Ok(store
         .rows(DESIRES_Q, &[])?
         .iter()
@@ -375,13 +371,6 @@ mod tests {
         snapshots::tree().join("orexis-planning/tests/derive_wants")
     }
 
-    /// What the intentions walk, as the executor's `walking` reads it: every want an unresolved intention pursues.
-    const WALKING_Q: &str = "
-SELECT DISTINCT ?want WHERE {
-  GRAPH ?g { ?i a execution:Intention ; execution:pursues ?want .
-             FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }
-ORDER BY ?want";
-
     fn laid_and_weighed(case: &std::path::Path) -> Store {
         let store = snapshots::stand_in(case);
         lay_ground(&store, snapshots::now(), &Laying::default()).unwrap();
@@ -404,6 +393,12 @@ ORDER BY ?want";
 
     #[test]
     fn derive_wants_leaves_the_store_as_the_diff_says() {
+        /// What the intentions walk, as the executor's `walking` reads it: every want an unresolved intention pursues.
+        const WALKING_Q: &str = "
+    SELECT DISTINCT ?want WHERE {
+      GRAPH ?g { ?i a execution:Intention ; execution:pursues ?want .
+                 FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }
+    ORDER BY ?want";
         for case in snapshots::cases_in(&cases()) {
             let store = laid_and_weighed(&case);
             let walking: BTreeSet<String> = store
@@ -481,14 +476,13 @@ SELECT ?w ?g ?start ?reopens WHERE {
         }
     }
 
-    const REMAINING_Q: &str = "
-SELECT ?for ?left WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-               ?x a planning:Weighing ; planning:for ?for ; planning:weighs ?g ; planning:remaining ?left .
-               ?g a planning:GroundGraph } }";
-
     #[test]
     fn two_wants_under_one_desire_read_two_estimates() {
+        const REMAINING_Q: &str = "
+    SELECT ?for ?left WHERE {
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                   ?x a planning:Weighing ; planning:for ?for ; planning:weighs ?g ; planning:remaining ?left .
+                   ?g a planning:GroundGraph } }";
         let store = laid_and_weighed(&cases().join("two_parcels_two_estimates.trig"));
         let wants = derive_wants(&store, snapshots::now(), &BTreeMap::new(), &BTreeSet::new()).unwrap();
         assert_eq!(wants.len(), 2, "{wants:?}");

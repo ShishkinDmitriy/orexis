@@ -41,12 +41,6 @@ const COLUMNS: &[&str] = &[
     "steps",
 ];
 
-const PLAN_Q: &str = "
-SELECT ?outcome ?costs (COUNT(?step) AS ?steps) WHERE {
-  GRAPH $plan { $plan planning:outcome ?outcome . OPTIONAL { $plan planning:spent ?costs }
-                OPTIONAL { ?step a execution:Step ; execution:partOf $plan } } }
-GROUP BY ?outcome ?costs";
-
 fn bench() -> PathBuf {
     snapshots::tree().join("orexis-planning/tests/bench")
 }
@@ -77,6 +71,11 @@ fn pass(case: &Path, budget: usize) -> (f64, (usize, usize), Found) {
 }
 
 fn plan(im: &Store, case: &Path) -> Found {
+    const PLAN_Q: &str = "
+    SELECT ?outcome ?costs (COUNT(?step) AS ?steps) WHERE {
+      GRAPH $plan { $plan planning:outcome ?outcome . OPTIONAL { $plan planning:spent ?costs }
+                    OPTIONAL { ?step a execution:Step ; execution:partOf $plan } } }
+    GROUP BY ?outcome ?costs";
     let graphs = im.graphs_of(&[PLAN_GRAPH], &Within::default()).expect("graphs by kind");
     let [graph] = graphs.as_slice() else {
         panic!("{}: one plan, found {graphs:?}", case.display())

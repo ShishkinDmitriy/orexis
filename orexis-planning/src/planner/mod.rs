@@ -54,63 +54,7 @@ use crate::world_at::{catalogue, lexical};
 
 pub(crate) use policy::{CHECK, HEAD_ASKED, REOPEN};
 
-const IN_SCOPE_Q: &str = r#"SELECT ?a WHERE { ?a planning:inScope $scope }"#;
-
-const REFINED_Q: &str = r#"
-SELECT ?want ?g ?step WHERE { GRAPH ?g { ?step execution:keptBy ?want }
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph } }"#;
-
-const WALKING_Q: &str = r#"
-SELECT DISTINCT ?want WHERE {
-  { GRAPH ?g { ?i a execution:Intention ; execution:pursues ?want .
-               FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }
-  UNION
-  { GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?plan execution:pursues ?want }
-    FILTER NOT EXISTS { GRAPH ?h { ?i execution:adopts ?plan } } } }
-ORDER BY ?want"#;
-
-const REOPENING_Q: &str = r#"
-SELECT ?w WHERE { GRAPH ?g { ?w planning:reopens ?w }
-  FILTER NOT EXISTS { GRAPH ?p { ?p a planning:Plan ; planning:for ?w ; planning:outcome planning:Satisfied } } }"#;
-
-const BESIDE_Q: &str = r#"SELECT DISTINCT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
-  VALUES ?kind { orexis:BeliefGraph planning:WantGraph planning:DesireGraph orexis:RecordGraph }
-  FILTER NOT EXISTS { ?g a planning:GroundGraph } FILTER NOT EXISTS { ?g a planning:PossibleGraph }
-  FILTER NOT EXISTS { ?g a planning:ChangeableGraph } FILTER NOT EXISTS { ?g a orexis:OntologyGraph } } }"#;
-
 const GROUND_HASHES_Q: &str = r#"SELECT ?h WHERE { GRAPH $cat { ?g a planning:GroundGraph ; orexis:hash ?h } }"#;
-
-const HASHES_Q: &str = r#"SELECT DISTINCT ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w orexis:hash ?h .
-  { ?w a planning:GroundGraph } UNION { ?w a planning:PossibleGraph } } }"#;
-
-const PREDICTS_Q: &str = r#"
-SELECT ?step ?lands ?adds ?retracts WHERE { GRAPH $plan { ?step a execution:Step .
-  OPTIONAL { ?step execution:landsAt ?lands } OPTIONAL { ?step execution:adds ?adds }
-  OPTIONAL { ?step execution:retracts ?retracts } } }"#;
-
-const KEPT_DUE_Q: &str = r#"
-SELECT ?step WHERE {
-  GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
-             FILTER NOT EXISTS { ?i execution:resolvedAt ?done } }
-  GRAPH ?plan { ?step execution:keptBelow true .
-                OPTIONAL { ?step execution:notBefore ?due } }
-  FILTER(!BOUND(?due) || ?due <= $now)
-  FILTER NOT EXISTS { GRAPH ?h { ?step execution:keptBy ?w } } }
-ORDER BY ?step"#;
-
-const MET_NOW_Q: &str = r#"
-SELECT DISTINCT ?for WHERE {
-  GRAPH ?cat { ?x planning:weighs $ground ; planning:for ?for ; planning:met true .
-               ?cat a orexis:CatalogueGraph .
-               ?d a planning:WantGraph . OPTIONAL { ?d dcterms:temporal/orexis:start ?ws } }
-  GRAPH ?d { ?for a planning:Want }
-  FILTER(!BOUND(?ws) || ?ws <= $now) }"#;
-
-const GROUND_STARTS_Q: &str = r#"
-SELECT ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?s } }
-ORDER BY ?s"#;
-
-const PURSUES_Q: &str = r#"SELECT ?want WHERE { GRAPH ?g { $plan execution:pursues ?want } } LIMIT 1"#;
 
 /// WHAT IS SAID OF A SEARCH AND A PLAN, as the Python Planner reads it for its events: how the want's search ended and
 /// what its plan spent, the desire it was derived under, what its estimate said was left at the present ground, and
@@ -118,43 +62,8 @@ const PURSUES_Q: &str = r#"SELECT ?want WHERE { GRAPH ?g { $plan execution:pursu
 const PLAN_OF_Q: &str = r#"
 SELECT ?outcome ?spent WHERE { GRAPH ?g { ?p a planning:Plan ; planning:for $want ; planning:outcome ?outcome .
   OPTIONAL { ?p planning:spent ?spent } } } LIMIT 1"#;
-const DESIRE_OF_Q: &str = r#"SELECT ?d WHERE { GRAPH ?g { $want a planning:Want ; prov:wasDerivedFrom ?d } } LIMIT 1"#;
-const ESTIMATE_Q: &str = r#"
-SELECT ?remaining WHERE { GRAPH $cat { ?x planning:weighs $ground ; planning:for $want ; planning:remaining ?remaining } } LIMIT 1"#;
-const PURSUERS_Q: &str =
-    r#"SELECT (COUNT(DISTINCT ?i) AS ?n) WHERE { GRAPH ?g { ?i a execution:Intention ; execution:pursues $want } }"#;
-
-/// WHAT AN IMAGINARIUM HOLDS: its possible worlds and the weighings of them, of those how many are on a frontier and
-/// how many met their want; and its plans, by why each search ended — counted by OPTIONAL rows inside the catalogue,
-/// as the Python Planner counts them.
-const IMAGINED_Q: &str = r#"
-SELECT ?worlds ?weighings ?open ?met WHERE {
-  { SELECT (COUNT(?w) AS ?worlds) WHERE { GRAPH $cat { ?w a planning:PossibleGraph } } }
-  { SELECT (COUNT(?x) AS ?weighings) (COUNT(?o) AS ?open) (COUNT(?m) AS ?met) WHERE {
-      GRAPH $cat { ?x a planning:Weighing .
-                   OPTIONAL { ?x planning:open true BIND(?x AS ?o) }
-                   OPTIONAL { ?x planning:met true BIND(?x AS ?m) } } } } }"#;
-const PLANS_HELD_Q: &str = r#"
-SELECT (SUM(IF(?outcome = planning:Satisfied, 1, 0)) AS ?satisfied)
-       (SUM(IF(?outcome = planning:Exhausted, 1, 0)) AS ?exhausted)
-       (SUM(IF(?outcome = planning:NoCandidate, 1, 0)) AS ?noCandidate)
-WHERE { GRAPH ?plan { ?p a planning:Plan ; planning:outcome ?outcome } }"#;
 
 const CONSTRAINTS_Q: &str = r#"SELECT ?c WHERE { $holder planning:holds ?c . ?c a planning:Constraint } ORDER BY ?c"#;
-
-const WEIGHED_IN_Q: &str =
-    r#"SELECT ?x WHERE { GRAPH $cat { ?x planning:weighs $world ; planning:for $for } } LIMIT 1"#;
-
-const ROWS_Q: &str = r#"
-SELECT ?i ?c ?a ?o WHERE {
-  GRAPH $cat { $x planning:violation ?v . ?v planning:instance ?i .
-               OPTIONAL { ?v planning:constraint ?c } OPTIONAL { ?v planning:about ?a } OPTIONAL { ?v planning:offending ?o } } }
-ORDER BY ?i ?c ?o"#;
-
-const SPENT_Q: &str = r#"
-SELECT (COUNT(?x) AS ?used) WHERE {
-  GRAPH $cat { ?x a planning:Weighing ; planning:for $want ; planning:weighs ?u .
-               FILTER NOT EXISTS { ?u a planning:GroundGraph } } }"#;
 
 /// THE WORLD OF A STORE THAT SCOPED NOTHING.
 pub const UNSCOPED: &str = "unscoped";
@@ -260,6 +169,10 @@ impl Planner {
 /// this, so a ground is laid again as it stood only where this stands too (#1158). In this process alone: it is
 /// compared with the digest the planning before left, never kept.
 fn beside(store: &Store) -> Result<u64, Error> {
+    const BESIDE_Q: &str = r#"SELECT DISTINCT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
+      VALUES ?kind { orexis:BeliefGraph planning:WantGraph planning:DesireGraph orexis:RecordGraph }
+      FILTER NOT EXISTS { ?g a planning:GroundGraph } FILTER NOT EXISTS { ?g a planning:PossibleGraph }
+      FILTER NOT EXISTS { ?g a planning:ChangeableGraph } FILTER NOT EXISTS { ?g a orexis:OntologyGraph } } }"#;
     use std::hash::{Hash, Hasher};
     let mut names: Vec<String> = store.rows(BESIDE_Q, &[])?.iter().filter_map(|r| iri(r, "g")).collect();
     names.sort();
@@ -358,6 +271,8 @@ fn desire_of(store: &Store, want: &str) -> Result<Option<String>, Error> {
 
 /// The desire `want` was derived under in `store`, or None.
 fn derived_from(store: &Store, want: &str) -> Result<Option<String>, Error> {
+    const DESIRE_OF_Q: &str =
+        r#"SELECT ?d WHERE { GRAPH ?g { $want a planning:Want ; prov:wasDerivedFrom ?d } } LIMIT 1"#;
     Ok(store
         .rows(&bind(DESIRE_OF_Q, &[("want", Value::iri(want))])?, &[])?
         .first()
@@ -366,6 +281,21 @@ fn derived_from(store: &Store, want: &str) -> Result<Option<String>, Error> {
 
 /// What the imaginarium of `scope` holds now.
 fn imagined(store: &Store, scope: &str, memo: &mut Memo) -> Result<Imagined, Error> {
+    /// WHAT AN IMAGINARIUM HOLDS: its possible worlds and the weighings of them, of those how many are on a frontier
+    /// and how many met their want; and its plans, by why each search ended — counted by OPTIONAL rows inside the
+    /// catalogue, as the Python Planner counts them.
+    const IMAGINED_Q: &str = r#"
+    SELECT ?worlds ?weighings ?open ?met WHERE {
+      { SELECT (COUNT(?w) AS ?worlds) WHERE { GRAPH $cat { ?w a planning:PossibleGraph } } }
+      { SELECT (COUNT(?x) AS ?weighings) (COUNT(?o) AS ?open) (COUNT(?m) AS ?met) WHERE {
+          GRAPH $cat { ?x a planning:Weighing .
+                       OPTIONAL { ?x planning:open true BIND(?x AS ?o) }
+                       OPTIONAL { ?x planning:met true BIND(?x AS ?m) } } } } }"#;
+    const PLANS_HELD_Q: &str = r#"
+    SELECT (SUM(IF(?outcome = planning:Satisfied, 1, 0)) AS ?satisfied)
+           (SUM(IF(?outcome = planning:Exhausted, 1, 0)) AS ?exhausted)
+           (SUM(IF(?outcome = planning:NoCandidate, 1, 0)) AS ?noCandidate)
+    WHERE { GRAPH ?plan { ?p a planning:Plan ; planning:outcome ?outcome } }"#;
     let cone = store.rows(&bind(IMAGINED_Q, &[("cat", cat(store, memo)?)])?, &[])?;
     let held = store.rows(PLANS_HELD_Q, &[])?;
     let number = |rows: &[orexis::store::Row], key: &str| -> i64 {
@@ -387,6 +317,10 @@ fn imagined(store: &Store, scope: &str, memo: &mut Memo) -> Result<Imagined, Err
 }
 
 fn spent(store: &Store, want: &str, memo: &mut Memo) -> Result<usize, Error> {
+    const SPENT_Q: &str = r#"
+    SELECT (COUNT(?x) AS ?used) WHERE {
+      GRAPH $cat { ?x a planning:Weighing ; planning:for $want ; planning:weighs ?u .
+                   FILTER NOT EXISTS { ?u a planning:GroundGraph } } }"#;
     let c = cat(store, memo)?;
     Ok(store
         .rows(&bind(SPENT_Q, &[("want", Value::iri(want)), ("cat", c)])?, &[])?
@@ -483,6 +417,13 @@ fn held_constraints(
 
 /// The ways `world` violates `constraint`, off its weighing there — weighing it first where no pass has.
 fn broken(store: &Store, constraint: &str, world: &str, memo: &mut Memo) -> Result<BTreeSet<Violation>, Error> {
+    const WEIGHED_IN_Q: &str =
+        r#"SELECT ?x WHERE { GRAPH $cat { ?x planning:weighs $world ; planning:for $for } } LIMIT 1"#;
+    const ROWS_Q: &str = r#"
+    SELECT ?i ?c ?a ?o WHERE {
+      GRAPH $cat { $x planning:violation ?v . ?v planning:instance ?i .
+                   OPTIONAL { ?v planning:constraint ?c } OPTIONAL { ?v planning:about ?a } OPTIONAL { ?v planning:offending ?o } } }
+    ORDER BY ?i ?c ?o"#;
     let key = (constraint.to_string(), world.to_string());
     if let Some(known) = memo.broken.get(&key) {
         return Ok(known.clone());
@@ -512,6 +453,58 @@ fn broken(store: &Store, constraint: &str, world: &str, memo: &mut Memo) -> Resu
     Ok(rows)
 }
 
+/// A want a kept step was refined into: the want, the graph it is held in, and the step it keeps.
+struct Refined {
+    want: String,
+    graph: String,
+    step: String,
+}
+
+/// Every want a kept step was refined into, across the want graphs.
+fn refined(beliefs: &Store) -> Result<Vec<Refined>, Error> {
+    const REFINED_Q: &str = r#"
+    SELECT ?want ?g ?step WHERE { GRAPH ?g { ?step execution:keptBy ?want }
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph } }"#;
+    Ok(beliefs
+        .rows(REFINED_Q, &[])?
+        .iter()
+        .filter_map(|r| {
+            Some(Refined {
+                want: iri(r, "want")?,
+                graph: iri(r, "g")?,
+                step: iri(r, "step")?,
+            })
+        })
+        .collect())
+}
+
+/// What a published plan says one of its steps predicts: where it lands, and the graphs its change is said in.
+struct Predicted {
+    lands: Option<Term>,
+    adds: Option<String>,
+    retracts: Option<String>,
+}
+
+/// What each step of `plan` predicts, by step.
+fn predicted(beliefs: &Store, plan: &str) -> Result<BTreeMap<String, Predicted>, Error> {
+    const PREDICTS_Q: &str = r#"
+    SELECT ?step ?lands ?adds ?retracts WHERE { GRAPH $plan { ?step a execution:Step .
+      OPTIONAL { ?step execution:landsAt ?lands } OPTIONAL { ?step execution:adds ?adds }
+      OPTIONAL { ?step execution:retracts ?retracts } } }"#;
+    Ok(beliefs
+        .rows(&bind(PREDICTS_Q, &[("plan", Value::iri(plan))])?, &[])?
+        .iter()
+        .filter_map(|r| {
+            let said = Predicted {
+                lands: r.get("lands").cloned(),
+                adds: iri(r, "adds"),
+                retracts: iri(r, "retracts"),
+            };
+            Some((iri(r, "step")?, said))
+        })
+        .collect())
+}
+
 /// What each step in flight of this scope changes where it lands, off the published plan.
 fn landed(beliefs: &Store, flights: &Flights, only: Option<&BTreeSet<String>>) -> Result<Vec<Landed>, Error> {
     let mut out = Vec::new();
@@ -520,15 +513,16 @@ fn landed(beliefs: &Store, flights: &Flights, only: Option<&BTreeSet<String>>) -
             if only.is_some_and(|o| !o.contains(action)) {
                 continue;
             }
-            let found = beliefs.rows(&bind(PREDICTS_Q, &[("plan", Value::iri(plan.as_str()))])?, &[])?;
-            let said = found.iter().find(|r| iri(r, "step").as_deref() == Some(step.as_str()));
-            let triples = |side: &str| -> Result<Vec<Triple>, Error> {
-                Ok(quads_of(beliefs, said.and_then(|r| iri(r, side)))?
+            let predicted = predicted(beliefs, plan)?;
+            let said = predicted.get(step.as_str());
+            let triples = |graph: Option<String>| -> Result<Vec<Triple>, Error> {
+                Ok(quads_of(beliefs, graph)?
                     .into_iter()
                     .map(|q| Triple::new(q.subject, q.predicate, q.object))
                     .collect())
             };
-            let (retracts, adds) = (triples("retracts")?, triples("adds")?);
+            let retracts = triples(said.and_then(|p| p.retracts.clone()))?;
+            let adds = triples(said.and_then(|p| p.adds.clone()))?;
             if !retracts.is_empty() || !adds.is_empty() {
                 out.push(Landed {
                     at: *lands,
@@ -551,6 +545,9 @@ fn of_scope(
     scopes: &Scopes,
     at: DateTime,
 ) -> Result<Vec<String>, Error> {
+    const GROUND_STARTS_Q: &str = r#"
+    SELECT ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?s } }
+    ORDER BY ?s"#;
     let all: Vec<String> = scopes.all().into_iter().collect();
     let first = all.first().cloned().unwrap_or_else(|| UNSCOPED.to_string());
     let written = written(store, at)?;
@@ -622,27 +619,22 @@ fn of_scope(
     Ok(mine)
 }
 
-/// THE PLANNER THE SELF PLAYS, IN ONE QUERY: the agent told `$id`, and each figure its role says or, where it says
-/// none, the default planning's ontology states on its shape of the role (`sh:defaultValue`).
-const PLANNER_Q: &str = "SELECT DISTINCT ?agent (COALESCE(?budgetSaid, ?budgetOwn) AS ?budget) \
-(COALESCE(?everySaid, ?everyOwn) AS ?budgetEvery) WHERE { \
-?shape sh:targetClass planning:Planner ; \
-  sh:property [ sh:path planning:budget ; sh:defaultValue ?budgetOwn ] , \
-              [ sh:path planning:budgetEveryS ; sh:defaultValue ?everyOwn ] . \
-OPTIONAL { ?agent a orexis:Agent ; orexis:localId $id } \
-OPTIONAL { ?me a orexis:Self ; orexis:plays ?r1 . ?r1 planning:budget ?budgetSaid } \
-OPTIONAL { ?me a orexis:Self ; orexis:plays ?r2 . ?r2 planning:budgetEveryS ?everySaid } }";
-
-/// THE EARLIEST GROUND BEGINNING AFTER `$at`, off an imaginarium's catalogue.
-const NEXT_GROUND_Q: &str = "SELECT (MIN(?start) AS ?start) WHERE { GRAPH $cat {
-  ?g a planning:GroundGraph ; dcterms:temporal ?period . ?period orexis:start ?start . FILTER (?start > $at) } }";
-
 impl Planner {
     /// The beliefs, the one identifier a process is told, and how much a search may spend: the agent and what its
     /// planner's role says, read in one query, with the default planning's ontology states where the role says
     /// nothing, and the budget the caller hands where it hands one. THE SELF GRAPH WAS HELD TO ITS REQUIREMENTS AT
     /// ONBOARDING, so each figure is stated once at most; nothing is picked between here.
     pub fn new(beliefs: &Store, agent_id: &str, budget: Option<usize>) -> Result<Self, Error> {
+        /// THE PLANNER THE SELF PLAYS, IN ONE QUERY: the agent told `$id`, and each figure its role says or, where it
+        /// says none, the default planning's ontology states on its shape of the role (`sh:defaultValue`).
+        const PLANNER_Q: &str = "SELECT DISTINCT ?agent (COALESCE(?budgetSaid, ?budgetOwn) AS ?budget) \
+        (COALESCE(?everySaid, ?everyOwn) AS ?budgetEvery) WHERE { \
+        ?shape sh:targetClass planning:Planner ; \
+          sh:property [ sh:path planning:budget ; sh:defaultValue ?budgetOwn ] , \
+                      [ sh:path planning:budgetEveryS ; sh:defaultValue ?everyOwn ] . \
+        OPTIONAL { ?agent a orexis:Agent ; orexis:localId $id } \
+        OPTIONAL { ?me a orexis:Self ; orexis:plays ?r1 . ?r1 planning:budget ?budgetSaid } \
+        OPTIONAL { ?me a orexis:Self ; orexis:plays ?r2 . ?r2 planning:budgetEveryS ?everySaid } }";
         let mut known = beliefs.graphs_of(&[BELIEF], &Within::common())?;
         known.extend(beliefs.graphs_of(&[SELF_GRAPH], &Within::default())?);
         known.extend(beliefs.graphs_of(&[ONTOLOGY], &Within::default())?);
@@ -787,6 +779,19 @@ impl Planner {
         searched: &mut BTreeSet<String>,
         at: DateTime,
     ) -> Result<Vec<String>, Error> {
+        const IN_SCOPE_Q: &str = r#"SELECT ?a WHERE { ?a planning:inScope $scope }"#;
+        const REOPENING_Q: &str = r#"
+        SELECT ?w WHERE { GRAPH ?g { ?w planning:reopens ?w }
+          FILTER NOT EXISTS { GRAPH ?p { ?p a planning:Plan ; planning:for ?w ; planning:outcome planning:Satisfied } } }"#;
+        const HASHES_Q: &str = r#"SELECT DISTINCT ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w orexis:hash ?h .
+          { ?w a planning:GroundGraph } UNION { ?w a planning:PossibleGraph } } }"#;
+        const MET_NOW_Q: &str = r#"
+        SELECT DISTINCT ?for WHERE {
+          GRAPH ?cat { ?x planning:weighs $ground ; planning:for ?for ; planning:met true .
+                       ?cat a orexis:CatalogueGraph .
+                       ?d a planning:WantGraph . OPTIONAL { ?d dcterms:temporal/orexis:start ?ws } }
+          GRAPH ?d { ?for a planning:Want }
+          FILTER(!BOUND(?ws) || ?ws <= $now) }"#;
         let beliefs = &self.beliefs.clone();
         let flights = flights.clone();
         let scope = scope.to_string();
@@ -1061,6 +1066,10 @@ impl Planner {
         memo: &mut Memo,
         at: DateTime,
     ) -> Result<Vec<PlanPublished>, Error> {
+        const PURSUES_Q: &str = r#"SELECT ?want WHERE { GRAPH ?g { $plan execution:pursues ?want } } LIMIT 1"#;
+        const ESTIMATE_Q: &str = r#"
+        SELECT ?remaining WHERE { GRAPH $cat { ?x planning:weighs $ground ; planning:for $want ; planning:remaining ?remaining } } LIMIT 1"#;
+        const PURSUERS_Q: &str = r#"SELECT (COUNT(DISTINCT ?i) AS ?n) WHERE { GRAPH ?g { ?i a execution:Intention ; execution:pursues $want } }"#;
         let beliefs = &self.beliefs;
         let mut out = Vec::new();
         for plan in handed {
@@ -1191,6 +1200,14 @@ impl Planner {
 
     /// Every want this agent is walking: pursued by a standing intention, or by a plan published and not yet adopted.
     pub fn walking(&self) -> Result<BTreeSet<String>, Error> {
+        const WALKING_Q: &str = r#"
+        SELECT DISTINCT ?want WHERE {
+          { GRAPH ?g { ?i a execution:Intention ; execution:pursues ?want .
+                       FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }
+          UNION
+          { GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?plan execution:pursues ?want }
+            FILTER NOT EXISTS { GRAPH ?h { ?i execution:adopts ?plan } } } }
+        ORDER BY ?want"#;
         let Some(catalogue) = self.beliefs.catalogue()? else {
             return Ok(BTreeSet::new());
         };
@@ -1204,16 +1221,24 @@ impl Planner {
 
     /// Give every step an intention stands at that is kept below and has fallen due the want that keeps it.
     fn keep_below(&self, at: DateTime) -> Result<Vec<String>, Error> {
+        const KEPT_DUE_Q: &str = r#"
+        SELECT ?step WHERE {
+          GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
+                     FILTER NOT EXISTS { ?i execution:resolvedAt ?done } }
+          GRAPH ?plan { ?step execution:keptBelow true .
+                        OPTIONAL { ?step execution:notBefore ?due } }
+          FILTER(!BOUND(?due) || ?due <= $now)
+          FILTER NOT EXISTS { GRAPH ?h { ?step execution:keptBy ?w } } }
+        ORDER BY ?step"#;
         let mut minted = Vec::new();
         for r in self.beliefs.rows(&bind(KEPT_DUE_Q, &[("now", instant(at))])?, &[])? {
             let Some(step) = iri(&r, "step") else { continue };
             if let Some(want) = refine(&self.beliefs, &self.uri, &step, at)? {
                 minted.extend(
-                    self.beliefs
-                        .rows(REFINED_Q, &[])?
-                        .iter()
-                        .filter(|g| iri(g, "want").as_deref() == Some(want.as_str()))
-                        .filter_map(|g| iri(g, "g")),
+                    refined(&self.beliefs)?
+                        .into_iter()
+                        .filter(|r| r.want == want)
+                        .map(|r| r.graph),
                 );
             }
         }
@@ -1232,6 +1257,9 @@ impl Planner {
     /// The earliest instant after `at` a ground the last pass laid begins, in any imaginarium: where the present
     /// reaches it, the world the derivation stands in has moved though nothing arrived.
     pub fn next_ground(&self, at: DateTime) -> Result<Option<DateTime>, Error> {
+        /// THE EARLIEST GROUND BEGINNING AFTER `$at`, off an imaginarium's catalogue.
+        const NEXT_GROUND_Q: &str = "SELECT (MIN(?start) AS ?start) WHERE { GRAPH $cat {
+          ?g a planning:GroundGraph ; dcterms:temporal ?period . ?period orexis:start ?start . FILTER (?start > $at) } }";
         let mut next: Option<DateTime> = None;
         for store in self.imaginaria.values() {
             let Some(cat) = store.catalogue()? else { continue };
@@ -1359,14 +1387,13 @@ mod tests {
         }
     }
 
-    const OPEN_Q: &str = "
-SELECT DISTINCT ?want WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-    ?x a planning:Weighing ; planning:for ?want ; planning:open true } }
-ORDER BY ?want";
-
     #[test]
     fn one_iteration_adds_the_layer_the_diff_says() {
+        const OPEN_Q: &str = "
+    SELECT DISTINCT ?want WHERE {
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+        ?x a planning:Weighing ; planning:for ?want ; planning:open true } }
+    ORDER BY ?want";
         for case in snapshots::cases_in(&snapshots::tree().join("orexis-planning/tests/expand")) {
             let store = snapshots::stand_in(&case);
             let planner = Planner::new(&store, snapshots::AGENT, None).unwrap();
@@ -1478,16 +1505,10 @@ ORDER BY ?want";
 
     // --- reruns: the imaginarium outlives the pass ----------------------------------------------------------------------
 
-    const STEPS_Q: &str = "SELECT (COUNT(?s) AS ?n) WHERE { GRAPH ?p { ?p a planning:Plan . ?s a execution:Step ; execution:partOf ?p } }";
-    const ROOTS_Q: &str = "
-SELECT DISTINCT ?root WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:PossibleGraph ; (planning:by/planning:from)+ ?root .
-               ?root a planning:GroundGraph } }";
     const WEIGHED_Q: &str = "
 SELECT (COUNT(?x) AS ?n) WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?x a planning:Weighing ; planning:weighs ?w .
                FILTER NOT EXISTS { ?w a planning:GroundGraph } } }";
-    const OUTCOME_Q: &str = "SELECT ?o WHERE { GRAPH ?p { ?p a planning:Plan ; planning:outcome ?o } }";
 
     fn count(store: &Store, text: &str) -> usize {
         value(&store.rows(text, &[]).unwrap()[0], "n").unwrap().parse().unwrap()
@@ -1502,10 +1523,12 @@ SELECT (COUNT(?x) AS ?n) WHERE {
     }
 
     fn steps(planner: &Planner) -> usize {
+        const STEPS_Q: &str = "SELECT (COUNT(?s) AS ?n) WHERE { GRAPH ?p { ?p a planning:Plan . ?s a execution:Step ; execution:partOf ?p } }";
         count(imagined(planner), STEPS_Q)
     }
 
     fn outcome(planner: &Planner) -> String {
+        const OUTCOME_Q: &str = "SELECT ?o WHERE { GRAPH ?p { ?p a planning:Plan ; planning:outcome ?o } }";
         local_of(&iri(&imagined(planner).rows(OUTCOME_Q, &[]).unwrap()[0], "o").unwrap())
     }
 
@@ -1602,6 +1625,10 @@ SELECT (COUNT(?x) AS ?n) WHERE {
 
     #[test]
     fn a_surprise_starts_the_search_afresh() {
+        const ROOTS_Q: &str = "
+    SELECT DISTINCT ?root WHERE {
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:PossibleGraph ; (planning:by/planning:from)+ ?root .
+                   ?root a planning:GroundGraph } }";
         let store = snapshots::stand_in(&bench("two_disk_hanoi"));
         let mut planner = Planner::new(&store, snapshots::AGENT, None).unwrap();
         planner.plan(snapshots::now()).unwrap();
@@ -1887,13 +1914,12 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         assert_eq!(planner.reached, walked);
     }
 
-    const PREDICTED_Q: &str = "
-SELECT DISTINCT ?side ?s ?o WHERE {
-  GRAPH ?p { ?step a execution:Step ; ?side ?g . VALUES ?side { execution:adds execution:retracts } }
-  GRAPH ?g { ?s ?pred ?o } }";
-
     #[test]
     fn a_step_landing_across_a_prediction_predicts_its_own_effect_alone() {
+        const PREDICTED_Q: &str = "
+    SELECT DISTINCT ?side ?s ?o WHERE {
+      GRAPH ?p { ?step a execution:Step ; ?side ?g . VALUES ?side { execution:adds execution:retracts } }
+      GRAPH ?g { ?s ?pred ?o } }";
         let store = snapshots::stand_in(&cases().join("a_step_lands_across_a_prediction_it_does_not_touch.trig"));
         let mut planner = Planner::new(&store, snapshots::AGENT, None).unwrap();
         planner.plan(snapshots::now()).unwrap();
@@ -2005,16 +2031,6 @@ SELECT ?g ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
 
     // --- one want's search ------------------------------------------------------------------------------------------------
 
-    const MADE_Q: &str = "
-SELECT (COUNT(DISTINCT ?w) AS ?worlds) (COUNT(DISTINCT ?x) AS ?weighings) WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-    { ?w a planning:PossibleGraph } UNION { ?x a planning:Weighing ; planning:for $want } } }";
-    const PLAN_Q: &str = "
-SELECT ?outcome (COUNT(?step) AS ?steps) WHERE {
-  GRAPH ?g { ?g a planning:Plan ; planning:for $want ; planning:outcome ?outcome .
-             OPTIONAL { ?step a execution:Step ; execution:partOf ?g } } }
-GROUP BY ?outcome";
-
     /// The low tank's imaginarium with its want derived — the store `search` is handed.
     fn derived_into(beliefs: &Store) -> (Store, String) {
         let store = Store::new(snapshots::namespaces()).unwrap();
@@ -2038,6 +2054,10 @@ GROUP BY ?outcome";
     }
 
     fn made(store: &Store, want: &str) -> (usize, usize) {
+        const MADE_Q: &str = "
+    SELECT (COUNT(DISTINCT ?w) AS ?worlds) (COUNT(DISTINCT ?x) AS ?weighings) WHERE {
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+        { ?w a planning:PossibleGraph } UNION { ?x a planning:Weighing ; planning:for $want } } }";
         let r = &store
             .rows(&bind(MADE_Q, &[("want", Value::iri(want))]).unwrap(), &[])
             .unwrap()[0];
@@ -2048,6 +2068,11 @@ GROUP BY ?outcome";
     }
 
     fn plan_of(store: &Store, want: &str) -> (String, usize) {
+        const PLAN_Q: &str = "
+    SELECT ?outcome (COUNT(?step) AS ?steps) WHERE {
+      GRAPH ?g { ?g a planning:Plan ; planning:for $want ; planning:outcome ?outcome .
+                 OPTIONAL { ?step a execution:Step ; execution:partOf ?g } } }
+    GROUP BY ?outcome";
         let r = &store
             .rows(&bind(PLAN_Q, &[("want", Value::iri(want))]).unwrap(), &[])
             .unwrap()[0];
@@ -2112,12 +2137,6 @@ GROUP BY ?outcome";
 
     // --- the plan read out, and handed down --------------------------------------------------------------------------------
 
-    const CHAIN_STEPS_Q: &str = "
-SELECT ?step ?fills ?of (COUNT(?before) AS ?n) WHERE {
-  GRAPH $plan { ?step a execution:Step ; planning:fills ?fills ; planning:of ?of .
-                OPTIONAL { ?before execution:then+ ?step } } }
-GROUP BY ?step ?fills ?of ORDER BY ?n";
-
     fn walked(beliefs: &Store) -> Planner {
         let mut planner = Planner::new(beliefs, snapshots::AGENT, None).unwrap();
         planner.plan(snapshots::now()).unwrap();
@@ -2125,6 +2144,11 @@ GROUP BY ?step ?fills ?of ORDER BY ?n";
     }
 
     fn plan_steps(store: &Store, graph: &str) -> Vec<orexis::store::Row> {
+        const CHAIN_STEPS_Q: &str = "
+    SELECT ?step ?fills ?of (COUNT(?before) AS ?n) WHERE {
+      GRAPH $plan { ?step a execution:Step ; planning:fills ?fills ; planning:of ?of .
+                    OPTIONAL { ?before execution:then+ ?step } } }
+    GROUP BY ?step ?fills ?of ORDER BY ?n";
         store
             .rows(&bind(CHAIN_STEPS_Q, &[("plan", Value::iri(graph))]).unwrap(), &[])
             .unwrap()

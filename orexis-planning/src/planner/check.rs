@@ -18,30 +18,6 @@ use crate::memo::Memo;
 use crate::ontology::CONSTRAINT_GRAPH;
 use crate::world_at::{Asking, lexical, world_at};
 
-const HEAD_Q: &str = r#"
-SELECT ?action WHERE { GRAPH ?p { $step planning:fills ?action }
-  FILTER NOT EXISTS { GRAPH ?k { $step execution:keptBelow true } } } LIMIT 1"#;
-
-const PRECONDITION_Q: &str =
-    r#"SELECT ?text ?takes WHERE { $action planning:precondition ?text . OPTIONAL { $action orexis:takes ?takes } }"#;
-
-const FILLING_Q: &str = r#"SELECT ?p ?v WHERE { GRAPH ?plan { $step ?p ?v } }"#;
-
-const CHANGE_Q: &str = r#"SELECT ?retracts ?adds WHERE { GRAPH ?p { $step a execution:Step .
-  OPTIONAL { $step execution:retracts ?retracts } OPTIONAL { $step execution:adds ?adds } }
-  FILTER(BOUND(?retracts) || BOUND(?adds)) } LIMIT 1"#;
-
-const BAND_Q: &str =
-    r#"SELECT ?due ?after WHERE { GRAPH ?p { $step execution:notBefore ?due ; execution:notAfter ?after } } LIMIT 1"#;
-
-const AHEAD_Q: &str = r#"
-SELECT ?g ?start ?end WHERE { GRAPH $cat { ?g a orexis:ForecastGraph . FILTER NOT EXISTS { ?g a execution:CommittedStepGraph }
-  OPTIONAL { ?g dcterms:temporal ?p . OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }"#;
-
-const CONSTRAINT_TEXTS_Q: &str = r#"
-SELECT ?c ?text WHERE { $holder planning:holds ?c . ?c a planning:Constraint .
-  { ?c planning:unmetWhen ?s . ?s sh:select ?text } UNION { ?c planning:metWhen ?shape . ?shape sh:sparql/sh:select ?text } }"#;
-
 const SCRATCH: &str = "urn:orexis:world";
 
 /// The rows a constraint's select yields over a world — none where its text will not run.
@@ -60,6 +36,11 @@ impl Planner {
     /// action's precondition admits it no more, where the world it lands in violates a constraint the world before
     /// does not, or where a world of its plan was foreseen impossible after it. A step kept below is not checked.
     pub fn check(&mut self, step: &str, at: DateTime) -> Result<bool, Error> {
+        const HEAD_Q: &str = r#"
+        SELECT ?action WHERE { GRAPH ?p { $step planning:fills ?action }
+          FILTER NOT EXISTS { GRAPH ?k { $step execution:keptBelow true } } } LIMIT 1"#;
+        const PRECONDITION_Q: &str = r#"SELECT ?text ?takes WHERE { $action planning:precondition ?text . OPTIONAL { $action orexis:takes ?takes } }"#;
+        const FILLING_Q: &str = r#"SELECT ?p ?v WHERE { GRAPH ?plan { $step ?p ?v } }"#;
         if self.doomed.values().any(|s| s == step) {
             log::info!(
                 "{}: {} is not taken — a world of its plan was foreseen impossible after it",
@@ -127,6 +108,16 @@ impl Planner {
     /// The constraint the world `step` lands in violates where the world before it does not, as the agent believes
     /// them now: the present beside every forecast holding in the step's band, and its change applied by key.
     fn lands_impossible(&self, step: &str, present: &[String], at: DateTime) -> Result<Option<String>, Error> {
+        const CHANGE_Q: &str = r#"SELECT ?retracts ?adds WHERE { GRAPH ?p { $step a execution:Step .
+          OPTIONAL { $step execution:retracts ?retracts } OPTIONAL { $step execution:adds ?adds } }
+          FILTER(BOUND(?retracts) || BOUND(?adds)) } LIMIT 1"#;
+        const BAND_Q: &str = r#"SELECT ?due ?after WHERE { GRAPH ?p { $step execution:notBefore ?due ; execution:notAfter ?after } } LIMIT 1"#;
+        const AHEAD_Q: &str = r#"
+        SELECT ?g ?start ?end WHERE { GRAPH $cat { ?g a orexis:ForecastGraph . FILTER NOT EXISTS { ?g a execution:CommittedStepGraph }
+          OPTIONAL { ?g dcterms:temporal ?p . OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }"#;
+        const CONSTRAINT_TEXTS_Q: &str = r#"
+        SELECT ?c ?text WHERE { $holder planning:holds ?c . ?c a planning:Constraint .
+          { ?c planning:unmetWhen ?s . ?s sh:select ?text } UNION { ?c planning:metWhen ?shape . ?shape sh:sparql/sh:select ?text } }"#;
         if !self.holds_a_constraint()? {
             return Ok(None);
         }

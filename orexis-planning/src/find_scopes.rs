@@ -8,14 +8,6 @@ use std::collections::{BTreeMap, BTreeSet};
 use orexis::Error;
 use orexis::store::{Store, iri};
 
-const SCOPES_Q: &str = "SELECT ?member ?scope WHERE { ?member planning:inScope ?scope }";
-
-/// EVERY STANDING SCOPE GRAPH, asked of the catalogue by class.
-pub(crate) const STANDING_Q: &str = "
-SELECT ?g WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:ScopeGraph } }
-ORDER BY ?g";
-
 /// The partition as read: every member — predicate, term or action — to the SET of scopes it is in, and the one
 /// question a reader asks of it, where a thing naming several members is.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -48,13 +40,24 @@ impl Scopes {
     }
 }
 
-/// Every member's scopes, from the scope graphs asked by class — or None where the store holds none at all.
-pub fn find_scopes(store: &Store) -> Result<Option<Scopes>, Error> {
-    let graphs: Vec<String> = store
+/// Every standing scope graph, asked of the catalogue by class, in name order.
+pub(crate) fn standing(store: &Store) -> Result<Vec<String>, Error> {
+    /// EVERY STANDING SCOPE GRAPH.
+    const STANDING_Q: &str = "
+    SELECT ?g WHERE {
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:ScopeGraph } }
+    ORDER BY ?g";
+    Ok(store
         .rows(STANDING_Q, &[])?
         .iter()
         .filter_map(|r| iri(r, "g"))
-        .collect();
+        .collect())
+}
+
+/// Every member's scopes, from the scope graphs asked by class — or None where the store holds none at all.
+pub fn find_scopes(store: &Store) -> Result<Option<Scopes>, Error> {
+    const SCOPES_Q: &str = "SELECT ?member ?scope WHERE { ?member planning:inScope ?scope }";
+    let graphs = standing(store)?;
     if graphs.is_empty() {
         return Ok(None);
     }

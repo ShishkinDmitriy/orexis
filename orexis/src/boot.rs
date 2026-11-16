@@ -70,20 +70,7 @@ const SECRETS: &str = "secrets";
 const BELIEFS: &str = "beliefs";
 const VOCABULARY: &str = "ontology.ttl";
 
-const ME_Q: &str = "SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id }";
 const PLAYED_Q: &str = "SELECT ?role ?kind WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind }";
-const SERVED_Q: &str = "SELECT ?class WHERE { ?class rdfs:subClassOf orexis:Role }";
-const DEPENDS_Q: &str = "SELECT ?needed WHERE { $class orexis:dependsOn ?needed }";
-const AGENTS_Q: &str = "SELECT DISTINCT ?a WHERE { ?a a orexis:Agent }";
-const SELVES_Q: &str = "SELECT DISTINCT ?self WHERE { GRAPH ?g { ?self a orexis:Self } } ORDER BY ?self";
-const STAMPED_Q: &str = "SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:hash ?hash } }";
-const ASSERTED_Q: &str =
-    "SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:arrivedBy orexis:Asserted } }";
-/// WHAT A BOOT PUT IN AND NOBODY HOLDS: asserted from a document, with no owner, and the closure.
-const FILES_Q: &str = "
-SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-  { ?g orexis:arrivedBy orexis:Asserted FILTER NOT EXISTS { ?g orexis:ownedBy ?who } }
-  UNION { VALUES ?g { $closure } ?g orexis:arrivedBy ?any } FILTER(?g != ?cat) } }";
 
 /// What the boot reads: the world, and the agent it was told to be.
 pub struct Booting<'a> {
@@ -196,6 +183,7 @@ pub fn plays(store: &Store, classes: &[&str]) -> Result<bool, Error> {
 /// THE ROLE CLASSES `package`'S OWN DOCUMENTS DECLARE, each beneath `orexis:Role` in a graph it brought: the roles
 /// the package serves, as the kernel learns it once the package has joined, reading no code of the package's.
 pub fn served(store: &Store, package: &str) -> Result<Vec<String>, Error> {
+    const SERVED_Q: &str = "SELECT ?class WHERE { ?class rdfs:subClassOf orexis:Role }";
     let own = brought_uri(&crate_of(package), "");
     let vocabularies = store.graphs_of(&[ONTOLOGY], &Within::default())?;
     let mut out = BTreeSet::new();
@@ -213,6 +201,7 @@ pub fn served(store: &Store, package: &str) -> Result<Vec<String>, Error> {
 /// EVERY ROLE CLASS `role` DEPENDS ON (`orexis:dependsOn`), or a class it is beneath does, by the vocabulary the
 /// store holds as it is asked: what `task::Handed::joins` orders the starts by.
 pub fn depended(store: &Store, role: &str) -> Result<Vec<String>, Error> {
+    const DEPENDS_Q: &str = "SELECT ?needed WHERE { $class orexis:dependsOn ?needed }";
     let vocabularies = store.graphs_of(&[ONTOLOGY], &Within::default())?;
     let vocabularies: Vec<&str> = vocabularies.iter().map(String::as_str).collect();
     let mut classes = vec![role.to_string()];
@@ -345,6 +334,7 @@ fn put(
 
 /// Each graph of an agent's own with whose its document says it is — refused where that is no agent of the world.
 fn owned(store: &Store, own: Vec<Held>, all: &[&Document]) -> Result<Vec<(Held, String)>, Error> {
+    const AGENTS_Q: &str = "SELECT DISTINCT ?a WHERE { ?a a orexis:Agent }";
     let graphs = store.graphs_of(&[SOCIETY_GRAPH, WORLD_GRAPH], &Within::default())?;
     let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
     let agents: BTreeSet<String> = store
@@ -368,6 +358,7 @@ fn owned(store: &Store, own: Vec<Held>, all: &[&Document]) -> Result<Vec<(Held, 
 
 /// Who the agent is, off the society or the world, by the one identifier the process is told.
 pub fn identity(store: &Store, agent: &str) -> Result<String, Error> {
+    const ME_Q: &str = "SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id }";
     let graphs = store.graphs_of(&[SOCIETY_GRAPH, WORLD_GRAPH], &Within::default())?;
     let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
     let text = bind(ME_Q, &[("id", Value::Term(Literal::new_simple_literal(agent).into()))])?;
@@ -383,6 +374,7 @@ pub fn identity(store: &Store, agent: &str) -> Result<String, Error> {
 
 /// Every agent the store says is the self, in any graph, sorted.
 pub fn selves(store: &Store) -> Result<Vec<String>, Error> {
+    const SELVES_Q: &str = "SELECT DISTINCT ?self WHERE { GRAPH ?g { ?self a orexis:Self } } ORDER BY ?self";
     Ok(store
         .rows(SELVES_Q, &[])?
         .iter()
@@ -427,6 +419,9 @@ fn hold_the_self(store: &Store, agent: &str, me: &str, mine: &[(&Document, &str)
 /// Every belief and every graph a document put, its row stamped with the hash of what it holds: each, or where
 /// `fresh`, each whose row says no hash yet, as a package joining put it in.
 fn stamp(store: &Store, fresh: bool) -> Result<(), Error> {
+    const STAMPED_Q: &str = "SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:hash ?hash } }";
+    const ASSERTED_Q: &str =
+        "SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:arrivedBy orexis:Asserted } }";
     let mut graphs: Vec<String> = store.graphs_of(&[BELIEF], &Within::default())?;
     for g in store.rows(ASSERTED_Q, &[])?.iter().filter_map(|r| iri(r, "g")) {
         if !graphs.contains(&g) {
@@ -457,6 +452,11 @@ pub struct Begun {
 
 /// BEGIN THE BOOT of `booting.agent` into `store`: the kernel's vocabulary and the world's documents, and the self.
 pub fn begin(store: &Store, booting: &Booting<'_>) -> Result<Begun, Error> {
+    /// WHAT A BOOT PUT IN AND NOBODY HOLDS: asserted from a document, with no owner, and the closure.
+    const FILES_Q: &str = "
+    SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+      { ?g orexis:arrivedBy orexis:Asserted FILTER NOT EXISTS { ?g orexis:ownedBy ?who } }
+      UNION { VALUES ?g { $closure } ?g orexis:arrivedBy ?any } FILTER(?g != ?cat) } }";
     let world = fs::canonicalize(booting.world)?;
     let booting = Booting {
         world: &world,

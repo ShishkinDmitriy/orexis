@@ -24,28 +24,6 @@ const AT_TIME: &str = "http://www.w3.org/ns/prov#atTime";
 
 /// Whoever walks what planning publishes: a role of this class, or one beneath it.
 const EXECUTOR: &str = "http://example.org/orexis/execution#Executor";
-const ROLES_Q: &str = "SELECT DISTINCT ?kind WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind }";
-
-/// How the intention `$intention` ended where none of its steps was taken, in execution's words: it ended before the
-/// agent acted, so neither the world nor the hour is other than the plan was found in. One that failed after a step
-/// was taken - a landing waited out - is planned again, since time has passed.
-const OUTCOME_Q: &str = "
-SELECT ?o WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a execution:IntentionGraph }
-                  GRAPH ?g { $intention execution:outcome ?o .
-                             FILTER NOT EXISTS { $intention execution:step ?step .
-                                                 ?act execution:of ?step ; execution:taken true } } }";
-
-/// The graphs of `$revised` that are not the agent's own record of what it did: a belief that came to it.
-const NEWS_Q: &str = "
-SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:Graph .
-                               FILTER NOT EXISTS { ?g orexis:arrivedBy orexis:Recorded } } } LIMIT 1";
-
-/// Whether any of the graphs revised is a belief a search reads: no percept, which is no belief, and no forecast
-/// the agent recorded of its own act, the executor's committed step. What a step wrote of the world as the agent took
-/// it is recorded too, and is the present.
-const BELIEVED_Q: &str = "
-SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:BeliefGraph .
-                               FILTER NOT EXISTS { ?g a orexis:ForecastGraph ; orexis:arrivedBy orexis:Recorded } } } LIMIT 1";
 
 impl Planner {
     /// What planning's policy does of a trigger: plan at the pass, keeping the walking wants it names to search
@@ -93,6 +71,10 @@ impl Planner {
     /// agent's own record of what it did - a committed step the executor wrote of a plan is none. What execution
     /// says of a plan is none either.
     fn news(&self, event: &Heard) -> Result<bool, Error> {
+        /// The graphs of `$revised` that are not the agent's own record of what it did: a belief that came to it.
+        const NEWS_Q: &str = "
+        SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:Graph .
+                                       FILTER NOT EXISTS { ?g orexis:arrivedBy orexis:Recorded } } } LIMIT 1";
         if event.kind != REVISED {
             return Ok(false);
         }
@@ -119,14 +101,20 @@ impl Planner {
         Ok(!self.beliefs.rows(&text, &[])?.is_empty())
     }
 
-    /// THE POLICY'S JUDGMENT: whether `event` calls for a planning. Every event beneath the trigger but a revision
-    /// was said to planning on purpose, and does. A revision does where it changed a state, or revised a belief a
-    /// search reads - a peer's places laid, the world as a step wrote it - never a percept, which is no belief, nor
-    /// the executor's own committed step, a forecast of what the plan already says. AND WHERE THE AGENT FORESEES, EVERY REVISION DOES: its flows are integrated from the latest
-    /// reading's number and over each committed step, so either moves the grounds ahead though no state changed -
-    /// with no planning after a dose was committed, planning woke at a ground the dose had taken away and read the
-    /// want reached.
+    /// THE POLICY'S JUDGMENT: whether `event` calls for a planning. Every event beneath the trigger but a revision was
+    /// said to planning on purpose, and does. A revision does where it changed a state, or revised a belief a search
+    /// reads - a peer's places laid, the world as a step wrote it - never a percept, which is no belief, nor the
+    /// executor's own committed step, a forecast of what the plan already says. AND WHERE THE AGENT FORESEES, EVERY
+    /// REVISION DOES: its flows are integrated from the latest reading's number and over each committed step, so either
+    /// moves the grounds ahead though no state changed - with no planning after a dose was committed, planning woke at
+    /// a ground the dose had taken away and read the want reached.
     fn calls(&self, event: &Heard) -> Result<bool, Error> {
+        /// Whether any of the graphs revised is a belief a search reads: no percept, which is no belief, and no
+        /// forecast the agent recorded of its own act, the executor's committed step. What a step wrote of the world as
+        /// the agent took it is recorded too, and is the present.
+        const BELIEVED_Q: &str = "
+        SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:BeliefGraph .
+                                       FILTER NOT EXISTS { ?g a orexis:ForecastGraph ; orexis:arrivedBy orexis:Recorded } } } LIMIT 1";
         if event.kind != REVISED || !event.all(CHANGED).is_empty() || self.foresee.is_some() {
             return Ok(true);
         }
@@ -148,6 +136,14 @@ impl Planner {
 
     /// Whether `event` says an intention ended `failed` with no step of it taken, read off the intention's own rows.
     fn failed(&self, event: &Heard) -> Result<bool, Error> {
+        /// How the intention `$intention` ended where none of its steps was taken, in execution's words: it ended
+        /// before the agent acted, so neither the world nor the hour is other than the plan was found in. One that
+        /// failed after a step was taken - a landing waited out - is planned again, since time has passed.
+        const OUTCOME_Q: &str = "
+        SELECT ?o WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a execution:IntentionGraph }
+                          GRAPH ?g { $intention execution:outcome ?o .
+                                     FILTER NOT EXISTS { $intention execution:step ?step .
+                                                         ?act execution:of ?step ; execution:taken true } } }";
         let Some(intention) = event.named(INTENTION) else {
             return Ok(false);
         };
@@ -253,6 +249,7 @@ impl Planner {
 
 /// Whether the self plays a role beneath `execution:Executor`, read off its self graph: what it publishes is walked.
 pub(super) fn walks(beliefs: &Store) -> Result<bool, Error> {
+    const ROLES_Q: &str = "SELECT DISTINCT ?kind WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind }";
     let selves = beliefs.graphs_of(&[SELF_GRAPH], &Within::default())?;
     let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
     for row in beliefs.rows(ROLES_Q, &selves)? {

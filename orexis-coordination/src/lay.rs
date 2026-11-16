@@ -22,33 +22,17 @@ use orexis::ontology::{BELIEF, FORECAST, RECEIVED};
 use orexis::store::{Store, iri, value};
 
 use crate::holdings::{
-    Holding, TEXTS_Q, asked, common, constraints_and_self, heard, holdings, key_of, of_kind, present, rows_of, scratch,
-    sorted,
+    Holding, asked, common, constraints_and_self, heard, holdings, key_of, of_kind, present, rows_of, scratch, sorted,
+    texts_of,
 };
-use crate::ontology::{CONSTRAINT_GRAPH, answer_graph, conflicts_graph, laid_graph, laid_root, question_graph};
-
-const STANDING_Q: &str = "
-SELECT ?c ?peer ?constraint ?draw ?silent WHERE { GRAPH $graph {
-  ?c a coordination:Conflict ; coordination:with ?peer ; coordination:over ?constraint ; coordination:draw ?draw ;
-     coordination:standing true . OPTIONAL { ?c coordination:silent ?silent } } }";
-
-const WON_Q: &str = "SELECT ?w WHERE { $draw coordination:wonBy ?w } LIMIT 1";
+use crate::ontology::{answer_graph, conflicts_graph, laid_graph, laid_root, question_graph};
 
 /// EVERY GRAPH THE AGENT LAID BEFORE: its own forecasts, named under its laid root.
 const LAID_Q: &str = "SELECT ?g WHERE { GRAPH $cat { ?g a orexis:ForecastGraph . FILTER(STRSTARTS(STR(?g), $root)) } }";
 
 const ACTS_FOR_Q: &str = "SELECT ?t WHERE { $peer orexis:actsFor ?t } ORDER BY ?t";
 
-const REACH_Q: &str = "SELECT ?text ?step WHERE { ?rule a coordination:Reach ; sh:construct ?text .
-                                         OPTIONAL { ?rule coordination:stepS ?step }
-                                         FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule";
-
 const RULES_GRAPH: &str = "http://www.w3.org/ns/shacl#RulesGraph";
-
-const PERIOD_Q: &str = "
-SELECT ?start ?end WHERE { GRAPH $cat { $graph dcterms:temporal ?p . OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } LIMIT 1";
-
-const HELD_Q: &str = "SELECT ?c WHERE { ?me a orexis:Self ; planning:holds ?c . ?c a planning:Constraint }";
 
 fn named(iri: &str) -> NamedNode {
     NamedNode::new_unchecked(iri)
@@ -61,6 +45,11 @@ fn between(from: DateTime, to: DateTime) -> f64 {
 /// Lay, as forecasts, the peers' holdings the self `me` of `store` yields to at `at`, and take back what it laid and
 /// yields to no more; every graph written or forgotten.
 pub fn lay(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Error> {
+    const STANDING_Q: &str = "
+    SELECT ?c ?peer ?constraint ?draw ?silent WHERE { GRAPH $graph {
+      ?c a coordination:Conflict ; coordination:with ?peer ; coordination:over ?constraint ; coordination:draw ?draw ;
+         coordination:standing true . OPTIONAL { ?c coordination:silent ?silent } } }";
+    const WON_Q: &str = "SELECT ?w WHERE { $draw coordination:wonBy ?w } LIMIT 1";
     let Some(cat) = store.catalogue()? else {
         return Ok(Vec::new());
     };
@@ -159,6 +148,9 @@ pub fn lay(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Error> 
 /// Every place a thing `peer` acts for may stand `ahead` of its steps on, as the world's reaches say: a holding per
 /// place, of a node standing for the thing there, from `at` for `ahead` of the longest step a reach says.
 fn reach(store: &Store, peer: &str, constraint: &str, ahead: i64, at: DateTime) -> Result<Vec<Holding>, Error> {
+    const REACH_Q: &str = "SELECT ?text ?step WHERE { ?rule a coordination:Reach ; sh:construct ?text .
+                                             OPTIONAL { ?rule coordination:stepS ?step }
+                                             FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule";
     let key = key_of(store, constraint)?;
     let reaches = rows_of(store, REACH_Q, &[], &of_kind(store, &[RULES_GRAPH])?)?;
     let texts: Vec<String> = reaches.iter().filter_map(|r| value(r, "text")).collect();
@@ -309,6 +301,8 @@ pub(crate) fn timeline(held: &[Holding]) -> Vec<Holding> {
 
 /// What a laid forecast holds, as the holding it was laid of.
 fn holding_in(store: &Store, graph: &str) -> Result<Option<Holding>, Error> {
+    const PERIOD_Q: &str = "
+    SELECT ?start ?end WHERE { GRAPH $cat { $graph dcterms:temporal ?p . OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } LIMIT 1";
     let quads = store.quads(graph)?;
     let Some(first) = quads.first() else { return Ok(None) };
     let thing = match &first.subject {
@@ -342,6 +336,7 @@ fn holding_in(store: &Store, graph: &str) -> Result<Option<Holding>, Error> {
 /// everything else the agent believes now — and again beside each of `landing`, a holding of the agent's own its step
 /// in flight lands in, that overlaps `held` in time.
 fn refused(store: &Store, held: &Holding, at: DateTime, landing: &[Holding]) -> Result<bool, Error> {
+    const HELD_Q: &str = "SELECT ?c WHERE { ?me a orexis:Self ; planning:holds ?c . ?c a planning:Constraint }";
     let present = present(store, at)?;
     let common = common(store)?;
     let mut graphs: Vec<String> = Vec::new();
@@ -356,20 +351,9 @@ fn refused(store: &Store, held: &Holding, at: DateTime, landing: &[Holding]) -> 
     }
     let thing = named(&held.thing);
     let mut texts = Vec::new();
-    let mut constraint_graphs = of_kind(store, &[CONSTRAINT_GRAPH])?;
-    constraint_graphs.extend(common.clone());
     for c in rows_of(store, HELD_Q, &[], &constraints_and_self(store)?)? {
         let Some(c) = iri(&c, "c") else { continue };
-        for r in rows_of(
-            store,
-            TEXTS_Q,
-            &[("constraint", Value::iri(c.as_str()))],
-            &constraint_graphs,
-        )? {
-            if let Some(text) = value(&r, "text") {
-                texts.push(text);
-            }
-        }
+        texts.extend(texts_of(store, &c)?);
     }
     let mut beside = vec![held];
     beside.extend(landing.iter().filter(|m| {
@@ -412,10 +396,6 @@ fn refused(store: &Store, held: &Holding, at: DateTime, landing: &[Holding]) -> 
     Ok(false)
 }
 
-/// EVERY CONFLICT THE AGENT HOLDS, by peer and constraint.
-const ALL_Q: &str = "SELECT DISTINCT ?peer ?constraint WHERE { GRAPH $graph { ?c a coordination:Conflict ; coordination:with ?peer ;
-                                                                   coordination:over ?constraint } } ORDER BY ?peer ?constraint";
-
 /// A peer and a constraint, and the holdings laid of the peer under it: as said, and as foreseen.
 pub(crate) type Laid = ((String, String), (Vec<Holding>, Vec<Holding>));
 
@@ -423,6 +403,9 @@ pub(crate) type Laid = ((String, String), (Vec<Holding>, Vec<Holding>));
 /// and those it foresaw of the peer — told apart by whether the peer acts for the thing. What a history view is told; a
 /// conflict laying nothing answers two empty lists.
 pub(crate) fn laid(store: &Store, me: &str) -> Result<Vec<Laid>, Error> {
+    /// EVERY CONFLICT THE AGENT HOLDS, by peer and constraint.
+    const ALL_Q: &str = "SELECT DISTINCT ?peer ?constraint WHERE { GRAPH $graph { ?c a coordination:Conflict ; coordination:with ?peer ;
+                                                                       coordination:over ?constraint } } ORDER BY ?peer ?constraint";
     let Some(cat) = store.catalogue()? else {
         return Ok(Vec::new());
     };

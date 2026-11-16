@@ -27,13 +27,6 @@ use orexis_sensing::received::received;
 /// HOW LONG ONE FETCH MAY TAKE, in real seconds: a figure a role states.
 pub const FETCHED_WITHIN_S: &str = "http://example.org/orexis/http#fetchedWithinS";
 
-const FORM_Q: &str = "ASK { $sensor td:hasForm ?form }";
-const TARGET_Q: &str =
-    "SELECT ?target WHERE { $sensor td:hasForm ?form . ?form hctl:hasTarget ?target } ORDER BY ?target";
-const WHERE_Q: &str = "
-SELECT ?property ?value WHERE {
-  $sensor sosa:isHostedBy ?host . ?host schema:geo ?geo . ?geo ?property ?value . FILTER(isLiteral(?value)) }";
-
 /// What fetches a URI's body, or says why not.
 pub type Client = Arc<dyn Fn(&str) -> Result<Vec<u8>, String> + Send + Sync>;
 /// What runs a fetch: on a thread of its own, or at once in a test.
@@ -124,6 +117,7 @@ impl Http {
 
     /// The sensors of the agent's this member reads.
     pub fn open(&self) -> Result<Vec<String>, Error> {
+        const FORM_Q: &str = "ASK { $sensor td:hasForm ?form }";
         let stated = common(&self.beliefs)?;
         let mut out = Vec::new();
         for sensor in observed(&self.beliefs)? {
@@ -157,6 +151,11 @@ impl Http {
 
     /// Fetch what `sensor` reads, on a thread of its own, unless it is being fetched already.
     pub fn sense_now(&self, sensor: &str) -> Result<(), Error> {
+        const TARGET_Q: &str =
+            "SELECT ?target WHERE { $sensor td:hasForm ?form . ?form hctl:hasTarget ?target } ORDER BY ?target";
+        const WHERE_Q: &str = "
+        SELECT ?property ?value WHERE {
+          $sensor sosa:isHostedBy ?host . ?host schema:geo ?geo . ?geo ?property ?value . FILTER(isLiteral(?value)) }";
         if self.fetching.lock().unwrap().contains(sensor) {
             return Ok(());
         }

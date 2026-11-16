@@ -26,10 +26,6 @@ use orexis_transport_mqtt::driver::{Client, Mqtt};
 
 const L: &str = "http://example.org/orexis/world/layby#";
 
-/// WHERE EVERYTHING THE COURIER BELIEVES STANDS, save where a parcel is owed, which is authored and never moves.
-const AT_Q: &str = "PREFIX courier: <http://example.org/orexis/courier#>
-SELECT ?s ?x ?y WHERE { ?s courier:x ?x ; courier:y ?y . FILTER(isIRI(?s)) FILTER NOT EXISTS { ?p courier:destination ?s } }";
-
 /// Each drive sent: the time of day it was sent at, and the cell it was to.
 type Drives = Vec<(String, i64, i64)>;
 
@@ -92,6 +88,9 @@ fn steps(fixture: &str) -> Vec<(DateTime, Vec<(String, String)>)> {
 }
 
 fn at(store: &Store) -> BTreeMap<String, (i64, i64)> {
+    /// WHERE EVERYTHING THE COURIER BELIEVES STANDS, save where a parcel is owed, which is authored and never moves.
+    const AT_Q: &str = "PREFIX courier: <http://example.org/orexis/courier#>
+    SELECT ?s ?x ?y WHERE { ?s courier:x ?x ; courier:y ?y . FILTER(isIRI(?s)) FILTER NOT EXISTS { ?p courier:destination ?s } }";
     let beliefs = store.graphs_of(&[BELIEF], &Within::default()).unwrap();
     let beliefs: Vec<&str> = beliefs.iter().map(String::as_str).collect();
     store

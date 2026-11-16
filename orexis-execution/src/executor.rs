@@ -55,145 +55,21 @@ const ADOPTED_AT: &str = "http://example.org/orexis/execution#adoptedAt";
 const ENDS_AFTER: &str = "http://example.org/orexis/execution#endsAfter";
 const WAITS_FOR: &str = "http://example.org/orexis/execution#waitsFor";
 
-const HEAD_Q: &str = "
-SELECT ?step WHERE {
-  GRAPH $plan {
-    ?step a execution:Step ; execution:partOf $root .
-    FILTER NOT EXISTS { ?other execution:then ?step } } }";
-
-const STEPS_Q: &str = "
-SELECT ?step WHERE { GRAPH $plan { ?step a execution:Step ; execution:partOf $root } }";
-
-const WALKING_Q: &str = "
-SELECT DISTINCT ?want WHERE {
-  GRAPH ?g { ?i a execution:Intention ; execution:pursues ?want .
-             FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }
-ORDER BY ?want";
-
-const STANDING_Q: &str = "
-SELECT ?intention ?want ?at ?adopted WHERE {
-  GRAPH $intentions {
-    ?intention a execution:Intention ;
-               execution:pursues ?want ;
-               execution:adoptedAt ?adopted .
-    OPTIONAL { ?intention execution:by ?at }
-    FILTER NOT EXISTS { ?intention execution:resolvedAt ?done } } }
-ORDER BY ?adopted";
-
-const HEADS_Q: &str = "
-SELECT ?intention ?step ?due ?kept ?act ?taken ?lands ?after ?adds ?retracts WHERE {
-  GRAPH $intentions {
-    ?intention a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
-    FILTER NOT EXISTS { ?intention execution:resolvedAt ?done }
-    OPTIONAL { ?act execution:of ?step ; execution:taken true ; execution:takenAt ?taken } }
-  OPTIONAL { GRAPH ?plan { ?step execution:notBefore ?due } }
-  OPTIONAL { GRAPH ?plan { ?step execution:keptBelow ?kept } }
-  OPTIONAL { GRAPH ?plan { ?step execution:landsAt ?lands } }
-  OPTIONAL { GRAPH ?plan { ?step execution:notAfter ?after } }
-  OPTIONAL { GRAPH ?plan { ?step execution:adds ?adds } }
-  OPTIONAL { GRAPH ?plan { ?step execution:retracts ?retracts } } }
-ORDER BY ?due ?intention";
-
 const PREDICTED_Q: &str = "
 SELECT ?adds ?retracts WHERE {
   OPTIONAL { GRAPH ?a { $step execution:adds ?adds } }
   OPTIONAL { GRAPH ?r { $step execution:retracts ?retracts } } } LIMIT 1";
 
-const STEP_GRAPHS_Q: &str =
-    "SELECT ?g ?side WHERE { GRAPH $plan { ?step ?side ?g . VALUES ?side { execution:adds execution:retracts } } }";
-
 const ADDS_MISSING: &str = "{ GRAPH $adds { ?s ?p ?o } FILTER NOT EXISTS { ?s ?p ?x . FILTER(?x = ?o) } }";
 const RETRACTS_STANDING: &str = "{ GRAPH $retracts { ?s ?p ?o } ?s ?p ?x . FILTER(?x = ?o) }";
 
-const RETRACT_U: &str =
-    "DELETE { GRAPH ?g { ?s ?p ?o } } WHERE { GRAPH $retracts { ?s ?p ?o } GRAPH ?g { ?s ?p ?o } VALUES ?g { $held } }";
-const ADD_U: &str = "INSERT { GRAPH $into { ?s ?p ?o } } WHERE { GRAPH $adds { ?s ?p ?o } }";
-
-const HELD_Q: &str = "
-SELECT DISTINCT ?g WHERE {
-  GRAPH $retracts { ?s ?p ?o }
-  GRAPH $cat { ?g a orexis:BeliefGraph .
-               ?g orexis:ownedBy ?owner .
-               FILTER NOT EXISTS { ?g a belief:RevisionGraph }
-               FILTER NOT EXISTS { ?g a execution:CommittedStepGraph } }
-  GRAPH ?g { ?s ?p ?o } } ORDER BY ?g";
-
-const CLASSIFIED_Q: &str = "SELECT ?k WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph a ?k } } LIMIT 1";
-const PLANS_Q: &str = "
-SELECT ?plan ?want WHERE { GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?plan execution:pursues ?want }
-  FILTER NOT EXISTS { GRAPH ?g { ?i execution:adopts ?plan } } }
-ORDER BY ?plan";
-
-const BEGUN_Q: &str = "SELECT DISTINCT ?intention WHERE { GRAPH $intentions {
-  ?intention a execution:Intention ; execution:step ?step . ?act execution:of ?step } }";
-
-const KEPT_BY_Q: &str = "SELECT ?want WHERE { GRAPH ?g { $step execution:keptBy ?want } } LIMIT 1";
-const ME_Q: &str = "SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id } LIMIT 1";
-
-const REFINED_Q: &str = "
-SELECT ?outcome WHERE { GRAPH $intentions { $act execution:refinedBy ?want .
-  ?below a execution:Intention ; execution:pursues ?want .
-  OPTIONAL { ?below execution:outcome ?outcome } } }";
-
-const BELOW_Q: &str = "
-SELECT DISTINCT ?below WHERE { GRAPH $intentions {
-  $intention execution:step ?step . ?act execution:of ?step ; execution:refinedBy ?want .
-  ?below a execution:Intention ; execution:pursues ?want .
-  FILTER NOT EXISTS { ?below execution:resolvedAt ?at } } }";
-
 /// THE WANT AN INTENTION PURSUES, and THE LATEST ACT RECORDED OF A STEP: what an event about a step carries.
 const PURSUED_Q: &str = "SELECT ?want WHERE { GRAPH $intentions { $intention execution:pursues ?want } }";
-const LAST_ACT_Q: &str = "
-SELECT ?act WHERE { GRAPH $intentions { ?act a execution:Act ; execution:of $step ; execution:takenAt ?t } }
-ORDER BY DESC(?t) LIMIT 1";
-
-const STEP_Q: &str = "
-SELECT ?p ?o WHERE {
-  GRAPH ?plan { $step ?p ?o . FILTER(!STRSTARTS(STR(?p), STR(execution:)) && ?p != rdf:type) } }
-ORDER BY ?p";
-
-const NEXT_Q: &str = "SELECT ?next WHERE { GRAPH ?plan { $step execution:then ?next } } LIMIT 1";
-
-const PLACED_Q: &str = "
-SELECT ?opens ?lands ?after WHERE { GRAPH $plan {
-  OPTIONAL { $step execution:notBefore ?opens } OPTIONAL { $step execution:landsAt ?lands }
-  OPTIONAL { $step execution:notAfter ?after } } }";
 
 const COMMITTED_Q: &str = "SELECT ?step WHERE { GRAPH $intentions { $intention execution:step ?step } }";
 
 const IN_FLIGHT_Q: &str =
     "SELECT ?act WHERE { GRAPH $intentions { ?act execution:of $step ; execution:taken true } } LIMIT 1";
-
-const RESOLVED_Q: &str = "SELECT ?at WHERE { GRAPH $intentions { $intention execution:resolvedAt ?at } } LIMIT 1";
-
-const WAITS_Q: &str = "SELECT ?for WHERE { GRAPH $intentions { $intention execution:waitsFor ?for .
-  FILTER NOT EXISTS { ?for execution:resolvedAt ?done } } } LIMIT 1";
-
-const ENDS_AFTER_Q: &str =
-    "SELECT ?i WHERE { GRAPH $intentions { $intention execution:endsAfter $step . BIND($intention AS ?i) } } LIMIT 1";
-const ENDING_Q: &str = "SELECT ?step WHERE { GRAPH $intentions { $intention execution:endsAfter ?step } } LIMIT 1";
-
-const WINDOW_Q: &str =
-    "SELECT ?end WHERE { GRAPH $cat { $g a $kind ; dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?end } } }";
-
-const CLOSE_U: &str = "
-DELETE { GRAPH $cat { ?p orexis:end ?old } }
-INSERT { GRAPH $cat { ?p orexis:end $now } }
-WHERE  { GRAPH $cat { $g dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?old } } }";
-
-const ENDED_Q: &str = "
-SELECT ?g WHERE { GRAPH $cat { ?g a $kind $owned ; dcterms:temporal ?p . ?p orexis:end ?end . FILTER(?end <= $now) } }
-ORDER BY ?g";
-
-const ACT_U: &str = "
-INSERT DATA { GRAPH $intentions { $act a execution:Act ; execution:of $step ;
-                              execution:takenAt $taken_at ; execution:doneAt $done_at ;
-                              execution:taken $taken } }";
-
-const ADVANCE_U: &str = "
-DELETE { GRAPH $intentions { $intention execution:by $step } }
-INSERT { GRAPH $intentions { $intention execution:by $next } }
-WHERE  { GRAPH $intentions { $intention execution:by $step } }";
 
 /// What a step says of itself in words other than this layer's, keyed by the local part of each predicate, with
 /// the step's own IRI under `step` — what a taker is handed.
@@ -257,13 +133,6 @@ pub struct Executor {
     since: usize,
     resolved_told: usize,
 }
-
-/// THE EXECUTOR THE SELF PLAYS, IN ONE QUERY: its patience as the role says or, where it says none, the default
-/// execution's ontology states on its shape of the role (`sh:defaultValue`).
-const EXECUTOR_Q: &str = "SELECT DISTINCT (COALESCE(?patienceSaid, ?patienceOwn) AS ?patience) WHERE { \
-?shape sh:targetClass <http://example.org/orexis/execution#Executor> ; \
-  sh:property [ sh:path <http://example.org/orexis/execution#patienceS> ; sh:defaultValue ?patienceOwn ] . \
-OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . ?role <http://example.org/orexis/execution#patienceS> ?patienceSaid } }";
 
 pub(crate) const PASS: usize = 0;
 const WALK: usize = 1;
@@ -339,6 +208,12 @@ impl Executor {
         holder: Option<&str>,
         clock: Arc<dyn Clock>,
     ) -> Result<Self, Error> {
+        /// THE EXECUTOR THE SELF PLAYS, IN ONE QUERY: its patience as the role says or, where it says none, the default
+        /// execution's ontology states on its shape of the role (`sh:defaultValue`).
+        const EXECUTOR_Q: &str = "SELECT DISTINCT (COALESCE(?patienceSaid, ?patienceOwn) AS ?patience) WHERE { \
+        ?shape sh:targetClass <http://example.org/orexis/execution#Executor> ; \
+          sh:property [ sh:path <http://example.org/orexis/execution#patienceS> ; sh:defaultValue ?patienceOwn ] . \
+        OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . ?role <http://example.org/orexis/execution#patienceS> ?patienceSaid } }";
         let mut known = beliefs.graphs_of(&[SELF_GRAPH], &Within::default())?;
         known.extend(beliefs.graphs_of(&[ONTOLOGY], &Within::default())?);
         let patience_s = beliefs
@@ -392,6 +267,7 @@ impl Executor {
 
     /// The agent the belief base holds with the id the executor was told, off what the world states.
     fn me(&self) -> Result<Option<String>, Error> {
+        const ME_Q: &str = "SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id } LIMIT 1";
         let common = self.beliefs.graphs_of(&[BELIEF], &Within::common())?;
         let text = bind(
             ME_Q,
@@ -416,6 +292,10 @@ impl Executor {
     /// Adopt every plan published and adopted by no intention yet, as a caller with no planning part linked would.
     /// The intentions graph where anything was committed.
     pub fn commit_plans(&mut self) -> Result<Vec<String>, Error> {
+        const PLANS_Q: &str = "
+        SELECT ?plan ?want WHERE { GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?plan execution:pursues ?want }
+          FILTER NOT EXISTS { GRAPH ?g { ?i execution:adopts ?plan } } }
+        ORDER BY ?plan";
         let Some(cat) = self.catalogue()? else {
             return Ok(Vec::new());
         };
@@ -444,6 +324,8 @@ impl Executor {
 
     /// End every standing intention pursuing `want` that has taken no step yet, with `outcome`.
     pub fn end_for(&mut self, want: &str, outcome: &str) -> Result<Vec<String>, Error> {
+        const BEGUN_Q: &str = "SELECT DISTINCT ?intention WHERE { GRAPH $intentions {
+          ?intention a execution:Intention ; execution:step ?step . ?act execution:of ?step } }";
         let begun: BTreeSet<String> = self
             .rows_of(BEGUN_Q, &[("intentions", self.mine())])?
             .iter()
@@ -533,6 +415,8 @@ impl Executor {
     /// Adopt the plan in `graph`, found in `source` or published in the beliefs, unless one for `want` stands younger
     /// than the patience. The intention, or None: nothing was committed.
     pub fn commit(&mut self, source: Option<&Store>, graph: &str, want: &str) -> Result<Option<String>, Error> {
+        const RESOLVED_Q: &str =
+            "SELECT ?at WHERE { GRAPH $intentions { $intention execution:resolvedAt ?at } } LIMIT 1";
         if let Some(held) = self.standing_for(want)? {
             let age = between(held.adopted, self.clock.now());
             if age < self.patience_s {
@@ -579,6 +463,16 @@ impl Executor {
     }
 
     fn adopt_plan(&mut self, source: Option<&Store>, graph: &str, want: &str) -> Result<Option<String>, Error> {
+        const HEAD_Q: &str = "
+        SELECT ?step WHERE {
+          GRAPH $plan {
+            ?step a execution:Step ; execution:partOf $root .
+            FILTER NOT EXISTS { ?other execution:then ?step } } }";
+        const STEPS_Q: &str = "
+        SELECT ?step WHERE { GRAPH $plan { ?step a execution:Step ; execution:partOf $root } }";
+        const STEP_GRAPHS_Q: &str = "SELECT ?g ?side WHERE { GRAPH $plan { ?step ?side ?g . VALUES ?side { execution:adds execution:retracts } } }";
+        const CLASSIFIED_Q: &str =
+            "SELECT ?k WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph a ?k } } LIMIT 1";
         let from = source.unwrap_or(&self.beliefs);
         let plan = Value::iri(graph);
         let mut steps: Vec<String> = from
@@ -686,6 +580,10 @@ impl Executor {
     // --- the committed steps, as beliefs over their landing windows -------------------------------------------
 
     fn commit_windows(&mut self, plan: &str, steps: &[String], now: DateTime) -> Result<(), Error> {
+        const PLACED_Q: &str = "
+        SELECT ?opens ?lands ?after WHERE { GRAPH $plan {
+          OPTIONAL { $step execution:notBefore ?opens } OPTIONAL { $step execution:landsAt ?lands }
+          OPTIONAL { $step execution:notAfter ?after } } }";
         if self.catalogue()?.is_none() {
             return Ok(());
         }
@@ -749,6 +647,12 @@ impl Executor {
     }
 
     fn close_window(&mut self, step: &str, now: DateTime) -> Result<(), Error> {
+        const WINDOW_Q: &str =
+            "SELECT ?end WHERE { GRAPH $cat { $g a $kind ; dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?end } } }";
+        const CLOSE_U: &str = "
+        DELETE { GRAPH $cat { ?p orexis:end ?old } }
+        INSERT { GRAPH $cat { ?p orexis:end $now } }
+        WHERE  { GRAPH $cat { $g dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?old } } }";
         let Some(cat) = self.catalogue()? else {
             return Ok(());
         };
@@ -784,6 +688,9 @@ impl Executor {
     }
 
     fn sweep(&mut self, now: DateTime) -> Result<(), Error> {
+        const ENDED_Q: &str = "
+        SELECT ?g WHERE { GRAPH $cat { ?g a $kind $owned ; dcterms:temporal ?p . ?p orexis:end ?end . FILTER(?end <= $now) } }
+        ORDER BY ?g";
         let Some(cat) = self.catalogue()? else {
             return Ok(());
         };
@@ -813,6 +720,15 @@ impl Executor {
 
     /// Every commitment adopted and not resolved, oldest first.
     pub fn standing(&self) -> Result<Vec<Standing>, Error> {
+        const STANDING_Q: &str = "
+        SELECT ?intention ?want ?at ?adopted WHERE {
+          GRAPH $intentions {
+            ?intention a execution:Intention ;
+                       execution:pursues ?want ;
+                       execution:adoptedAt ?adopted .
+            OPTIONAL { ?intention execution:by ?at }
+            FILTER NOT EXISTS { ?intention execution:resolvedAt ?done } } }
+        ORDER BY ?adopted";
         let mut out = Vec::new();
         for r in self.rows_of(STANDING_Q, &[("intentions", self.mine())])? {
             let (Some(uri), Some(want), Some(adopted)) = (iri(&r, "intention"), iri(&r, "want"), at_of(&r, "adopted")?)
@@ -831,6 +747,11 @@ impl Executor {
 
     /// Every want a standing commitment pursues — one this agent is walking.
     pub fn walking(&self) -> Result<Vec<String>, Error> {
+        const WALKING_Q: &str = "
+        SELECT DISTINCT ?want WHERE {
+          GRAPH ?g { ?i a execution:Intention ; execution:pursues ?want .
+                     FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }
+        ORDER BY ?want";
         Ok(self
             .intentions
             .rows(WALKING_Q, &[])?
@@ -841,6 +762,8 @@ impl Executor {
 
     /// The commitment standing for `want`, or None — never one ending after its step in flight (#921).
     pub fn standing_for(&self, want: &str) -> Result<Option<Standing>, Error> {
+        const ENDING_Q: &str =
+            "SELECT ?step WHERE { GRAPH $intentions { $intention execution:endsAfter ?step } } LIMIT 1";
         for s in self.standing()? {
             if s.want == want
                 && self
@@ -860,6 +783,11 @@ impl Executor {
 
     /// Say this commitment has ended, and how; it stays among the intentions, with its outcome.
     pub fn resolve(&mut self, intention: &str, outcome: &str) -> Result<(), Error> {
+        const BELOW_Q: &str = "
+        SELECT DISTINCT ?below WHERE { GRAPH $intentions {
+          $intention execution:step ?step . ?act execution:of ?step ; execution:refinedBy ?want .
+          ?below a execution:Intention ; execution:pursues ?want .
+          FILTER NOT EXISTS { ?below execution:resolvedAt ?at } } }";
         let now = self.clock.now();
         self.intentions.update(&format!(
             "INSERT DATA {{ GRAPH <{}> {{ <{intention}> execution:resolvedAt \"{}\"^^xsd:dateTime ; execution:outcome \"{outcome}\" . }} }}",
@@ -913,6 +841,25 @@ impl Executor {
     /// One pass of the timekeeper at `now`: hand every head due to the queue, and hold every head taken to what it
     /// predicted. The steps handed over; what is not yet due is `next_due`.
     pub fn tick(&mut self, now: DateTime) -> Result<Vec<String>, Error> {
+        const HEADS_Q: &str = "
+        SELECT ?intention ?step ?due ?kept ?act ?taken ?lands ?after ?adds ?retracts WHERE {
+          GRAPH $intentions {
+            ?intention a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
+            FILTER NOT EXISTS { ?intention execution:resolvedAt ?done }
+            OPTIONAL { ?act execution:of ?step ; execution:taken true ; execution:takenAt ?taken } }
+          OPTIONAL { GRAPH ?plan { ?step execution:notBefore ?due } }
+          OPTIONAL { GRAPH ?plan { ?step execution:keptBelow ?kept } }
+          OPTIONAL { GRAPH ?plan { ?step execution:landsAt ?lands } }
+          OPTIONAL { GRAPH ?plan { ?step execution:notAfter ?after } }
+          OPTIONAL { GRAPH ?plan { ?step execution:adds ?adds } }
+          OPTIONAL { GRAPH ?plan { ?step execution:retracts ?retracts } } }
+        ORDER BY ?due ?intention";
+        const REFINED_Q: &str = "
+        SELECT ?outcome WHERE { GRAPH $intentions { $act execution:refinedBy ?want .
+          ?below a execution:Intention ; execution:pursues ?want .
+          OPTIONAL { ?below execution:outcome ?outcome } } }";
+        const WAITS_Q: &str = "SELECT ?for WHERE { GRAPH $intentions { $intention execution:waitsFor ?for .
+          FILTER NOT EXISTS { ?for execution:resolvedAt ?done } } } LIMIT 1";
         self.sweep(now)?;
         self.moved = false;
         let mut due = Vec::new();
@@ -1029,6 +976,12 @@ impl Executor {
     }
 
     fn advance(&mut self, intention: &str, step: &str, now: Option<DateTime>) -> Result<(), Error> {
+        const NEXT_Q: &str = "SELECT ?next WHERE { GRAPH ?plan { $step execution:then ?next } } LIMIT 1";
+        const ENDS_AFTER_Q: &str = "SELECT ?i WHERE { GRAPH $intentions { $intention execution:endsAfter $step . BIND($intention AS ?i) } } LIMIT 1";
+        const ADVANCE_U: &str = "
+        DELETE { GRAPH $intentions { $intention execution:by $step } }
+        INSERT { GRAPH $intentions { $intention execution:by $next } }
+        WHERE  { GRAPH $intentions { $intention execution:by $step } }";
         let now = now.unwrap_or_else(|| self.clock.now());
         let ends = self.rows_of(
             ENDS_AFTER_Q,
@@ -1135,6 +1088,10 @@ impl Executor {
     }
 
     fn carry_out(&mut self, intention: &str, step: &str, taken_at: DateTime) -> Result<bool, Error> {
+        const ACT_U: &str = "
+        INSERT DATA { GRAPH $intentions { $act a execution:Act ; execution:of $step ;
+                                      execution:takenAt $taken_at ; execution:doneAt $done_at ;
+                                      execution:taken $taken } }";
         let said = self.step_of(step)?;
         let refined = self.kept_by(step)?;
         let outcome = match refined {
@@ -1220,6 +1177,9 @@ impl Executor {
     /// fills, the act recorded of it — `act`, or the latest — and what the journal keeps: the act's own triples, the
     /// step's as its plan states them, and the want the intention pursues.
     fn about(&self, intention: &str, step: &str, act: Option<&str>) -> Result<About, Error> {
+        const LAST_ACT_Q: &str = "
+        SELECT ?act WHERE { GRAPH $intentions { ?act a execution:Act ; execution:of $step ; execution:takenAt ?t } }
+        ORDER BY DESC(?t) LIMIT 1";
         let want = self
             .rows_of(
                 PURSUED_Q,
@@ -1285,6 +1245,7 @@ impl Executor {
     }
 
     fn kept_by(&self, step: &str) -> Result<Option<String>, Error> {
+        const KEPT_BY_Q: &str = "SELECT ?want WHERE { GRAPH ?g { $step execution:keptBy ?want } } LIMIT 1";
         let found = self
             .beliefs
             .rows(&bind(KEPT_BY_Q, &[("step", Value::iri(step))])?, &[])?;
@@ -1318,6 +1279,10 @@ impl Executor {
 
     /// A step's rows in words other than this layer's, keyed by the local part of each predicate.
     pub fn step_of(&self, step: &str) -> Result<Said, Error> {
+        const STEP_Q: &str = "
+        SELECT ?p ?o WHERE {
+          GRAPH ?plan { $step ?p ?o . FILTER(!STRSTARTS(STR(?p), STR(execution:)) && ?p != rdf:type) } }
+        ORDER BY ?p";
         let mut said = Said::new();
         said.insert("step".to_string(), step.to_string());
         for r in self.rows_of(STEP_Q, &[("intentions", self.mine()), ("step", Value::iri(step))])? {
@@ -1351,6 +1316,16 @@ impl Executor {
     /// The taking of a fictive step: say it, then write what it predicted into the beliefs — each retraction taken
     /// out wherever the agent holds it, each addition put where that stood, or in a belief of its own.
     fn fictive(&mut self, said: &Said, intention: &str) -> Result<(), Error> {
+        const RETRACT_U: &str = "DELETE { GRAPH ?g { ?s ?p ?o } } WHERE { GRAPH $retracts { ?s ?p ?o } GRAPH ?g { ?s ?p ?o } VALUES ?g { $held } }";
+        const ADD_U: &str = "INSERT { GRAPH $into { ?s ?p ?o } } WHERE { GRAPH $adds { ?s ?p ?o } }";
+        const HELD_Q: &str = "
+        SELECT DISTINCT ?g WHERE {
+          GRAPH $retracts { ?s ?p ?o }
+          GRAPH $cat { ?g a orexis:BeliefGraph .
+                       ?g orexis:ownedBy ?owner .
+                       FILTER NOT EXISTS { ?g a belief:RevisionGraph }
+                       FILTER NOT EXISTS { ?g a execution:CommittedStepGraph } }
+          GRAPH ?g { ?s ?p ?o } } ORDER BY ?g";
         self.say(said, intention);
         let step = said.get("step").cloned().unwrap_or_default();
         let predicted = self
@@ -1570,6 +1545,11 @@ impl Executor {
 /// state, or a source it revised is a belief of the agent's — no world's document, and no committed step the
 /// executor wrote itself, since a walk on those would read the clock for nothing.
 fn present(beliefs: &Store, revised: &[String], changed: &[String]) -> Result<bool, Error> {
+    /// WHETHER ANY OF SOME GRAPHS IS THE PRESENT: a belief of the agent's, by the catalogue.
+    const PRESENT_Q: &str = "
+    SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:BeliefGraph .
+                                   FILTER NOT EXISTS { ?g a execution:CommittedStepGraph }
+                                   ?g orexis:ownedBy ?owner . } } LIMIT 1";
     if !changed.is_empty() {
         return Ok(true);
     }
@@ -1583,12 +1563,6 @@ fn present(beliefs: &Store, revised: &[String], changed: &[String]) -> Result<bo
     let text = bind(PRESENT_Q, &[("cat", Value::iri(cat)), ("revised", Value::Raw(graphs))])?;
     Ok(!beliefs.rows(&text, &[])?.is_empty())
 }
-
-/// WHETHER ANY OF SOME GRAPHS IS THE PRESENT: a belief of the agent's, by the catalogue.
-const PRESENT_Q: &str = "
-SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:BeliefGraph .
-                               FILTER NOT EXISTS { ?g a execution:CommittedStepGraph }
-                               ?g orexis:ownedBy ?owner . } } LIMIT 1";
 
 /// When a taken head should show what it predicted, at the earliest and at the latest — each as long after it was
 /// taken as the plan placed it after its opening.

@@ -23,33 +23,6 @@ pub(crate) const ASK: usize = 0;
 pub(crate) const HEARD: usize = 1;
 pub(crate) const OBSERVE: usize = 2;
 
-/// THE SENSORS KEPT SILENT NOW: each silence graph holding, its end not yet said by a reading.
-const SILENT_Q: &str = "SELECT DISTINCT ?sensor WHERE { ?sensor sensing:silentSince ?since }";
-
-/// EVERY OBSERVATION RECEIVED THAT NOTHING WAS CONCLUDED OF, oldest first: what a pass cut short of being handed to
-/// belief left.
-const UNREVISED_Q: &str = "
-SELECT ?g WHERE {
-  GRAPH $cat { ?g a sensing:ObservationGraph ; orexis:arrivedBy orexis:Received
-               OPTIONAL { ?g dcterms:temporal/orexis:start ?start }
-               FILTER NOT EXISTS { ?r prov:wasDerivedFrom ?g ; a sensing:ObservationGraph } } }
-ORDER BY ?start ?g";
-
-/// WHAT AN OBSERVATION SAYS, read off the graph and what was concluded of it.
-const MADE_Q: &str = "SELECT ?t WHERE { $percept sosa:resultTime ?t } LIMIT 1";
-
-const STUCK_Q: &str = "SELECT DISTINCT ?sensor WHERE { ?sensor sensing:stuckOn ?number }";
-
-/// THE OBSERVER THE SELF PLAYS, IN ONE QUERY: the self, every role it plays with its class, every sensor an attention
-/// of a role names, and how often sensing asks after them as the role says or, where it says none, the default
-/// sensing's ontology states on its shape of the observer (`sh:defaultValue`). A row per role and sensor.
-const OBSERVER_Q: &str = "SELECT DISTINCT ?me ?role ?kind ?sensor (COALESCE(?askedSaid, ?askedOwn) AS ?asked) WHERE { \
-?shape sh:targetClass sensing:Observer ; sh:property [ sh:path sensing:askedEveryS ; sh:defaultValue ?askedOwn ] . \
-OPTIONAL { ?me a orexis:Self } \
-OPTIONAL { ?me orexis:plays ?role . ?role a ?kind } \
-OPTIONAL { ?me orexis:plays/sensing:attends/sensing:sensor ?sensor } \
-OPTIONAL { ?me orexis:plays ?asking . ?asking sensing:askedEveryS ?askedSaid } }";
-
 /// THE OBSERVER THE SELF PLAYS, the package's core: the sensors its attentions name and how often sensing asks after
 /// them, each what the role says in the agent's self graph and, where it says nothing, the default this package's
 /// ontology states; and what it keeps between two asks. How long a sensor may be silent or stuck is said per
@@ -76,6 +49,16 @@ impl Observer {
     /// nothing, the default sensing's ontology states. THE SELF GRAPH WAS HELD TO ITS REQUIREMENTS AT ONBOARDING, so
     /// each figure is stated once at most; nothing is picked between here.
     pub fn new(store: &Store) -> Result<Self, Error> {
+        /// THE OBSERVER THE SELF PLAYS, IN ONE QUERY: the self, every role it plays with its class, every sensor an
+        /// attention of a role names, and how often sensing asks after them as the role says or, where it says none,
+        /// the default sensing's ontology states on its shape of the observer (`sh:defaultValue`). A row per role and
+        /// sensor.
+        const OBSERVER_Q: &str = "SELECT DISTINCT ?me ?role ?kind ?sensor (COALESCE(?askedSaid, ?askedOwn) AS ?asked) WHERE { \
+        ?shape sh:targetClass sensing:Observer ; sh:property [ sh:path sensing:askedEveryS ; sh:defaultValue ?askedOwn ] . \
+        OPTIONAL { ?me a orexis:Self } \
+        OPTIONAL { ?me orexis:plays ?role . ?role a ?kind } \
+        OPTIONAL { ?me orexis:plays/sensing:attends/sensing:sensor ?sensor } \
+        OPTIONAL { ?me orexis:plays ?asking . ?asking sensing:askedEveryS ?askedSaid } }";
         let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
         known.extend(store.graphs_of(&[ONTOLOGY], &Within::default())?);
         let known: Vec<&str> = known.iter().map(String::as_str).collect();
@@ -134,6 +117,8 @@ impl Observer {
     }
 
     fn missed(&self, now: DateTime) -> Result<(Vec<String>, BTreeSet<String>), Error> {
+        /// THE SENSORS KEPT SILENT NOW: each silence graph holding, its end not yet said by a reading.
+        const SILENT_Q: &str = "SELECT DISTINCT ?sensor WHERE { ?sensor sensing:silentSince ?since }";
         let beliefs = &self.beliefs;
         let found = missed(beliefs, now)?;
         let silent: BTreeSet<String> = found.iter().map(|(s, _)| s.clone()).collect();
@@ -169,6 +154,7 @@ impl Observer {
     /// Which sensors are doubted at `now`, and how — `silent` as `missed` answered it; and, saying neither, each
     /// doubted at the last ask and no longer.
     fn doubted(&mut self, now: DateTime, silent: &BTreeSet<String>) -> Result<Vec<Doubted>, Error> {
+        const STUCK_Q: &str = "SELECT DISTINCT ?sensor WHERE { ?sensor sensing:stuckOn ?number }";
         let holding = self.beliefs.graphs_of(
             &[OBSERVATION_GRAPH],
             &Within {
@@ -204,6 +190,8 @@ impl Observer {
 
     /// Say the observation `graph` holds, with how long after the percept before it it came.
     fn observation(&self, graph: &str) -> Result<(), Error> {
+        /// WHAT AN OBSERVATION SAYS, read off the graph and what was concluded of it.
+        const MADE_Q: &str = "SELECT ?t WHERE { $percept sosa:resultTime ?t } LIMIT 1";
         let beliefs = &self.beliefs;
         let Some((mut observed, sensor, previous)) = crate::past::observed(beliefs, graph, OBSERVATION_GRAPH)? else {
             return Ok(());
@@ -239,6 +227,14 @@ impl Observer {
     /// What a restart finds unrevised: every percept nothing was concluded of, said at the first ask - said as it
     /// starts, nobody would hear it yet.
     pub(crate) fn unrevised(&mut self) -> Result<(), Error> {
+        /// EVERY OBSERVATION RECEIVED THAT NOTHING WAS CONCLUDED OF, oldest first: what a pass cut short of being
+        /// handed to belief left.
+        const UNREVISED_Q: &str = "
+        SELECT ?g WHERE {
+          GRAPH $cat { ?g a sensing:ObservationGraph ; orexis:arrivedBy orexis:Received
+                       OPTIONAL { ?g dcterms:temporal/orexis:start ?start }
+                       FILTER NOT EXISTS { ?r prov:wasDerivedFrom ?g ; a sensing:ObservationGraph } } }
+        ORDER BY ?start ?g";
         if let Some(cat) = self.beliefs.catalogue()? {
             self.due = self
                 .beliefs

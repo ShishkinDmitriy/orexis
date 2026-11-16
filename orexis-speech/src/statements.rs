@@ -41,9 +41,6 @@ pub fn statements(store: &Store, doc: &Document) -> Result<Document, Error> {
     Ok(Document::of_quads(out))
 }
 
-/// A STATEMENT'S PERIOD, as it was said.
-const PERIOD_Q: &str = "
-SELECT ?start ?end WHERE { GRAPH $cat { $graph dcterms:temporal ?p OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } LIMIT 1";
 const TEMPORAL: &str = "http://purl.org/dc/terms/temporal";
 const START: &str = "http://example.org/orexis#start";
 const END: &str = "http://example.org/orexis#end";
@@ -79,6 +76,9 @@ pub(crate) fn described(beliefs: &Store, graph: &str) -> Result<(Vec<String>, Ve
 /// is - the most specific, since the store wrote every kind each is beneath and the statement kind beside them - and
 /// its period, where it says one.
 pub fn document_of(beliefs: &Store, graphs: &[String]) -> Result<Document, Error> {
+    /// A STATEMENT'S PERIOD, as it was said.
+    const PERIOD_Q: &str = "
+    SELECT ?start ?end WHERE { GRAPH $cat { $graph dcterms:temporal ?p OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } LIMIT 1";
     let mut quads = Vec::new();
     let Some(cat) = beliefs.catalogue()? else {
         return Ok(Document::of_quads(quads));

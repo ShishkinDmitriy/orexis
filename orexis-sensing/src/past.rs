@@ -17,19 +17,6 @@ use orexis::store::{Store, Within, iri, value};
 use crate::events::{Observed, tag_of};
 use crate::ontology::{OBSERVATION_GRAPH, PAST_OBSERVATION_GRAPH};
 
-/// What an observation graph and its revisions say of the reading: asked over them alone.
-pub(crate) const OBSERVED_Q: &str = "
-SELECT ?sensor ?feature ?property ?value ?scaled ?defect ?t ?raw ?previous WHERE {
-  ?o sosa:madeBySensor ?sensor ; sosa:resultTime ?t ; sosa:hasFeatureOfInterest ?feature ;
-     sosa:observedProperty ?property
-  OPTIONAL { ?o sosa:hasSimpleResult ?value } OPTIONAL { ?o sensing:scaledResult ?scaled }
-  OPTIONAL { ?o sensing:defect ?defect }
-  OPTIONAL { ?o sensing:rawResult ?raw } OPTIONAL { ?o sensing:previous ?previous } } LIMIT 1";
-
-const REFILE_U: &str = "
-DELETE { GRAPH $cat { ?g a $from } } INSERT { GRAPH $cat { ?g a $to } }
-WHERE  { GRAPH $cat { VALUES ?g { $graphs } ?g a $from } }";
-
 /// What a percept says of its reading: the observation, the sensor that made it, and the percept before it where it
 /// names one.
 pub(crate) type Seen = (Observed, String, Option<String>);
@@ -37,6 +24,14 @@ pub(crate) type Seen = (Observed, String, Option<String>);
 /// The observation the percept `graph` holds, read with its revisions of `kind`. None where the graph holds no
 /// reading a point can be made of.
 pub(crate) fn observed(store: &Store, graph: &str, kind: &str) -> Result<Option<Seen>, Error> {
+    /// What an observation graph and its revisions say of the reading: asked over them alone.
+    const OBSERVED_Q: &str = "
+    SELECT ?sensor ?feature ?property ?value ?scaled ?defect ?t ?raw ?previous WHERE {
+      ?o sosa:madeBySensor ?sensor ; sosa:resultTime ?t ; sosa:hasFeatureOfInterest ?feature ;
+         sosa:observedProperty ?property
+      OPTIONAL { ?o sosa:hasSimpleResult ?value } OPTIONAL { ?o sensing:scaledResult ?scaled }
+      OPTIONAL { ?o sensing:defect ?defect }
+      OPTIONAL { ?o sensing:rawResult ?raw } OPTIONAL { ?o sensing:previous ?previous } } LIMIT 1";
     let mut read = vec![graph.to_string()];
     read.extend(store.revisions_of(&[graph], kind)?);
     let read: Vec<&str> = read.iter().map(String::as_str).collect();
@@ -71,6 +66,9 @@ pub(crate) fn observed(store: &Store, graph: &str, kind: &str) -> Result<Option<
 
 /// File the percept `graph` past, and what was concluded of it: sensing has done reading it.
 pub(crate) fn shelve(store: &Store, graph: &str) -> Result<(), Error> {
+    const REFILE_U: &str = "
+    DELETE { GRAPH $cat { ?g a $from } } INSERT { GRAPH $cat { ?g a $to } }
+    WHERE  { GRAPH $cat { VALUES ?g { $graphs } ?g a $from } }";
     let Some(cat) = store.catalogue()? else { return Ok(()) };
     let mut graphs = vec![graph.to_string()];
     graphs.extend(store.revisions_of(&[graph], OBSERVATION_GRAPH)?);

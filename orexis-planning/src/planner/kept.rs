@@ -8,33 +8,19 @@ use orexis::bind::{Value, bind};
 use orexis::ontology::{ACTION, BELIEF};
 use orexis::store::{Store, Within, iri, value};
 
-use super::{Planner, REFINED_Q, Said, graphs, strs};
+use super::{Planner, Refined, Said, graphs, refined, strs};
 use crate::admit::local_of;
 use crate::bridge::keeps;
 use crate::ontology::{EXHAUSTED, PLAN_GRAPH};
 use crate::withdraw::withdraw;
 
-const CHAIN_Q: &str = r#"
-SELECT ?step ?next ?action ?p ?v WHERE { GRAPH $plan { ?step a execution:Step ; planning:fills ?action ; ?p ?v .
-  OPTIONAL { ?step execution:then ?next } } }"#;
-
-const TAKES_Q: &str = r#"SELECT ?takes WHERE { $action orexis:takes ?takes }"#;
-
-const STANDING_AT_Q: &str = r#"
-SELECT DISTINCT ?step WHERE { GRAPH ?g { ?i a execution:Intention ; execution:by ?step .
-                                         FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }"#;
-
-const FICTIVE_STEPS_Q: &str = r#"
-SELECT ?step WHERE {
-  GRAPH $plan { ?step a execution:Step ; planning:fills ?action }
-  ?action execution:implementation/execution:operation ?op . ?op a execution:Fictive }
-ORDER BY ?step"#;
-
-const OUTCOMES_Q: &str = r#"SELECT ?o WHERE { GRAPH $plan { ?p a planning:Plan ; planning:outcome ?o } }"#;
-
 impl Planner {
     /// The steps of `plan` in `store`, in the order walked, each with the action it fills and its filling.
     pub(super) fn chain(&self, store: &Store, plan: &str) -> Result<Vec<(String, Said)>, Error> {
+        const CHAIN_Q: &str = r#"
+        SELECT ?step ?next ?action ?p ?v WHERE { GRAPH $plan { ?step a execution:Step ; planning:fills ?action ; ?p ?v .
+          OPTIONAL { ?step execution:then ?next } } }"#;
+        const TAKES_Q: &str = r#"SELECT ?takes WHERE { $action orexis:takes ?takes }"#;
         let actions = graphs(&self.beliefs, &[ACTION])?;
         let mut said: BTreeMap<String, (String, BTreeMap<String, String>)> = BTreeMap::new();
         let mut after: BTreeMap<String, String> = BTreeMap::new();
@@ -87,6 +73,11 @@ impl Planner {
 
     /// Say of every step of a plan published that a bridge keeps below that it is `execution:keptBelow`.
     pub(super) fn mark_kept(&self, handed: &[String]) -> Result<(), Error> {
+        const FICTIVE_STEPS_Q: &str = r#"
+        SELECT ?step WHERE {
+          GRAPH $plan { ?step a execution:Step ; planning:fills ?action }
+          ?action execution:implementation/execution:operation ?op . ?op a execution:Fictive }
+        ORDER BY ?step"#;
         let actions = graphs(&self.beliefs, &[ACTION])?;
         for plan in handed {
             for r in self.beliefs.rows(
@@ -106,16 +97,16 @@ impl Planner {
 
     /// A want kept below for a step no intention stands at any more is nothing's: withdrawn, here and everywhere.
     pub(super) fn withdraw_orphaned_refinements(&self, walking: &BTreeSet<String>) -> Result<(), Error> {
+        const STANDING_AT_Q: &str = r#"
+        SELECT DISTINCT ?step WHERE { GRAPH ?g { ?i a execution:Intention ; execution:by ?step .
+                                                 FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }"#;
         let standing_at: BTreeSet<String> = self
             .beliefs
             .rows(STANDING_AT_Q, &[])?
             .iter()
             .filter_map(|r| iri(r, "step"))
             .collect();
-        for r in self.beliefs.rows(REFINED_Q, &[])? {
-            let (Some(step), Some(want), Some(g)) = (iri(&r, "step"), iri(&r, "want"), iri(&r, "g")) else {
-                continue;
-            };
+        for Refined { want, graph: g, step } in refined(&self.beliefs)? {
             if standing_at.contains(&step) || walking.contains(&want) {
                 continue;
             }
@@ -135,6 +126,7 @@ impl Planner {
 
     /// Whether any search of the last pass stopped on its budget rather than on an answer.
     pub fn exhausted(&self) -> Result<bool, Error> {
+        const OUTCOMES_Q: &str = r#"SELECT ?o WHERE { GRAPH $plan { ?p a planning:Plan ; planning:outcome ?o } }"#;
         for store in self.imaginaria.values() {
             for plan in store.graphs_of(&[PLAN_GRAPH], &Within::default())? {
                 let found = store.rows(&bind(OUTCOMES_Q, &[("plan", Value::iri(plan.as_str()))])?, &[])?;

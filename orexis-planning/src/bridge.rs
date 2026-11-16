@@ -17,17 +17,6 @@ use orexis_belief::ontology::RULES_GRAPH;
 
 use crate::admit::local_of;
 
-const RULES_Q: &str = "
-SELECT ?rule ?text WHERE { ?rule a sh:SPARQLRule ; sh:construct ?text .
-                           FILTER NOT EXISTS { ?rule sh:deactivated true }
-                           FILTER NOT EXISTS { ?rule a belief:Transition } } ORDER BY ?rule";
-
-/// THE TWO GRAPHS A STEP PREDICTS IN, wherever its plan is.
-const PREDICTED_Q: &str = "
-SELECT ?adds ?retracts WHERE {
-  OPTIONAL { GRAPH ?a { $step execution:adds ?adds } }
-  OPTIONAL { GRAPH ?r { $step execution:retracts ?retracts } } } LIMIT 1";
-
 static PREFIX: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?im)^\s*PREFIX\s+(?:[A-Za-z][\w.-]*)?\s*:\s*<[^>]*>\s*$").expect("a valid pattern"));
 static PREFIX_PARTS: LazyLock<Regex> =
@@ -49,6 +38,10 @@ pub struct Bridge {
 
 /// Every bridge the store holds.
 pub fn heads(store: &Store) -> Result<Vec<Bridge>, Error> {
+    const RULES_Q: &str = "
+    SELECT ?rule ?text WHERE { ?rule a sh:SPARQLRule ; sh:construct ?text .
+                               FILTER NOT EXISTS { ?rule sh:deactivated true }
+                               FILTER NOT EXISTS { ?rule a belief:Transition } } ORDER BY ?rule";
     let graphs = store.graphs_of(&[RULES_GRAPH], &Within::default())?;
     let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
     let mut out = Vec::new();
@@ -81,6 +74,11 @@ pub fn keeps(store: &Store, step: &str) -> Result<bool, Error> {
 /// What `step` predicts, the facts of the graph it adds and of the one it retracts, each sorted as Python sorts a
 /// tuple of pyoxigraph's terms.
 pub fn predicted(store: &Store, step: &str) -> Result<(Vec<Triple>, Vec<Triple>), Error> {
+    /// THE TWO GRAPHS A STEP PREDICTS IN, wherever its plan is.
+    const PREDICTED_Q: &str = "
+    SELECT ?adds ?retracts WHERE {
+      OPTIONAL { GRAPH ?a { $step execution:adds ?adds } }
+      OPTIONAL { GRAPH ?r { $step execution:retracts ?retracts } } } LIMIT 1";
     let found = store.rows(&bind(PREDICTED_Q, &[("step", Value::iri(step))])?, &[])?;
     let row = found.first();
     let facts = |side: &str| -> Result<Vec<Triple>, Error> {

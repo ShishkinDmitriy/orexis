@@ -98,20 +98,6 @@ impl Within {
     }
 }
 
-const CATALOGUES_Q: &str = "SELECT ?g WHERE { GRAPH ?g { ?g a orexis:CatalogueGraph } }";
-
-/// WHICH GRAPHS, in one text: those of any kind named — every row carries every kind its class is beneath, so no
-/// path is walked — the holder's or the common ones where a holder is named, and holding at the instant where one
-/// is given.
-const GRAPHS_Q: &str = "
-SELECT DISTINCT ?g WHERE {
-  GRAPH ?cat {
-    ?cat a orexis:CatalogueGraph .
-    ?g a ?kind . FILTER(isIRI(?g)) VALUES ?kind { $kinds }
-    $owned
-    $holding } }
-ORDER BY ?g";
-
 const OWNED: &str = "OPTIONAL { ?g orexis:ownedBy ?owner } FILTER(!BOUND(?owner) || ?owner = $holder)";
 
 const COMMON: &str = "FILTER NOT EXISTS { ?g orexis:ownedBy ?anyone }";
@@ -123,27 +109,8 @@ const HOLDING: &str = "OPTIONAL { ?g dcterms:temporal ?period .
     BIND(IF(EXISTS { ?g a orexis:RecordGraph }, $now, $until) AS ?till)
     FILTER(!BOUND(?start) || ?when >= ?start) FILTER(!BOUND(?end) || ?till < ?end)";
 
-/// A class and every class the vocabulary puts it beneath: the closure is materialised at genesis, so one step is
-/// every step.
-const ROWS_Q: &str = "
-SELECT ?g ?class WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?class . FILTER(isIRI(?g)) } }";
-
-/// A GRAPH ENDS WHERE IT HELD PAST: its period's end moved to `$at`, or to its start where it begins later.
-const END_U: &str = "
-DELETE { GRAPH $cat { ?period orexis:end ?was } }
-INSERT { GRAPH $cat { ?period orexis:end ?end } }
-WHERE  { GRAPH $cat { VALUES ?g { $graphs } ?g dcterms:temporal ?period .
-                      OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?was }
-                      BIND(IF(BOUND(?start) && ?start > $at, ?start, $at) AS ?end)
-                      FILTER(!BOUND(?was) || ?was > ?end) } }";
-
 const PROV_DERIVED: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
 const DCTERMS_TEMPORAL: &str = "http://purl.org/dc/terms/temporal";
-
-const SUBCLASSES_Q: &str = "
-SELECT DISTINCT ?super WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }
-  GRAPH ?vocabulary { $cls rdfs:subClassOf ?super . FILTER(isIRI(?super)) } }";
 
 impl Store {
     /// An empty store, in memory, speaking `namespaces`.
@@ -395,6 +362,7 @@ impl Store {
     /// THE ONE GRAPH THAT DESCRIBES EVERY GRAPH AND ITSELF, found by its own row: None for a store nobody has told
     /// anything, and two refused, since a store with two catalogues has two truths about what its graphs are.
     pub fn catalogue(&self) -> Result<Option<String>, Error> {
+        const CATALOGUES_Q: &str = "SELECT ?g WHERE { GRAPH ?g { ?g a orexis:CatalogueGraph } }";
         let mut found: Vec<String> = self
             .rows_named(CATALOGUES_Q)?
             .into_iter()
@@ -413,6 +381,17 @@ impl Store {
     /// Every graph the catalogue types under any of `kinds` — beneath them too, the rows closed when written — as
     /// `within` narrows them, in name order. THE ONE LOOKUP A READER TAKES, and it decides nothing else.
     pub fn graphs_of(&self, kinds: &[&str], within: &Within) -> Result<Vec<String>, Error> {
+        /// WHICH GRAPHS, in one text: those of any kind named — every row carries every kind its class is beneath, so
+        /// no path is walked — the holder's or the common ones where a holder is named, and holding at the instant
+        /// where one is given.
+        const GRAPHS_Q: &str = "
+        SELECT DISTINCT ?g WHERE {
+          GRAPH ?cat {
+            ?cat a orexis:CatalogueGraph .
+            ?g a ?kind . FILTER(isIRI(?g)) VALUES ?kind { $kinds }
+            $owned
+            $holding } }
+        ORDER BY ?g";
         let mut owned = match &within.holder {
             Some(holder) => bind(OWNED, &[("holder", Value::iri(holder.clone()))])?,
             None => String::new(),
@@ -449,6 +428,10 @@ impl Store {
 
     /// `class` and every class the vocabulary puts it beneath, sorted; the class alone where no vocabulary is.
     pub fn closed(&self, class: &str) -> Result<Vec<String>, Error> {
+        const SUBCLASSES_Q: &str = "
+        SELECT DISTINCT ?super WHERE {
+          GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }
+          GRAPH ?vocabulary { $cls rdfs:subClassOf ?super . FILTER(isIRI(?super)) } }";
         let text = bind(SUBCLASSES_Q, &[("cls", Value::iri(class))])?;
         let mut out: Vec<String> = self
             .rows(&text, &[])?
@@ -697,6 +680,14 @@ impl Store {
     /// begins, holding at no instant — as `agent/store.py`'s `end_graph` says it. An observation's period is said
     /// when it arrives, until the next reading is due, and the next arriving earlier ends it there.
     pub fn end_graph(&self, graph: &str, at: DateTime, revisions: &str) -> Result<(), Error> {
+        /// A GRAPH ENDS WHERE IT HELD PAST: its period's end moved to `$at`, or to its start where it begins later.
+        const END_U: &str = "
+        DELETE { GRAPH $cat { ?period orexis:end ?was } }
+        INSERT { GRAPH $cat { ?period orexis:end ?end } }
+        WHERE  { GRAPH $cat { VALUES ?g { $graphs } ?g dcterms:temporal ?period .
+                              OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?was }
+                              BIND(IF(BOUND(?start) && ?start > $at, ?start, $at) AS ?end)
+                              FILTER(!BOUND(?was) || ?was > ?end) } }";
         let Some(catalogue) = self.catalogue()? else {
             return Ok(());
         };
@@ -760,6 +751,10 @@ impl Store {
     /// Say on every row each kind the vocabulary puts its class beneath — what `entry` writes on a new row, said
     /// again of every row there is. Idempotent.
     pub fn close_catalogue(&self) -> Result<(), Error> {
+        /// A class and every class the vocabulary puts it beneath: the closure is materialised at genesis, so one step
+        /// is every step.
+        const ROWS_Q: &str = "
+        SELECT ?g ?class WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?class . FILTER(isIRI(?g)) } }";
         let Some(catalogue) = self.catalogue()? else {
             return Ok(());
         };

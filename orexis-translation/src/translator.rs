@@ -50,26 +50,6 @@ pub(crate) const PHRASING_TRIGGER: &str = "http://example.org/orexis/translation
 /// answers is handed back before the turn ends.
 pub struct Inline;
 
-/// THE TRANSLATOR THE SELF PLAYS, IN ONE QUERY: the self, each figure its role says of talking with the model or,
-/// where it says none, the default translation's ontology states on its shape of the role (`sh:defaultValue`), and
-/// where the model a role names answers (`translation:translatedBy`), as the world's deployment states it, with the
-/// class of the role naming it.
-const TRANSLATOR_Q: &str = "SELECT DISTINCT ?me ?kind ?model (COALESCE(?turnsSaid, ?turnsOwn) AS ?turns) \
-(COALESCE(?rowsSaid, ?rowsOwn) AS ?rows) (COALESCE(?answeredSaid, ?answeredOwn) AS ?answered) \
-(COALESCE(?calledSaid, ?calledOwn) AS ?called) (COALESCE(?retriesSaid, ?retriesOwn) AS ?retries) WHERE { \
-?shape sh:targetClass <http://example.org/orexis/translation#Translator> ; \
-  sh:property [ sh:path <http://example.org/orexis/translation#turns> ; sh:defaultValue ?turnsOwn ] , [ sh:path <http://example.org/orexis/translation#rows> ; sh:defaultValue ?rowsOwn ] , \
-              [ sh:path <http://example.org/orexis/translation#answeredWithinS> ; sh:defaultValue ?answeredOwn ] , \
-              [ sh:path <http://example.org/orexis/translation#calledWithinS> ; sh:defaultValue ?calledOwn ] , \
-              [ sh:path <http://example.org/orexis/translation#retries> ; sh:defaultValue ?retriesOwn ] . \
-OPTIONAL { ?me a orexis:Self } \
-OPTIONAL { ?me orexis:plays ?r1 . ?r1 <http://example.org/orexis/translation#turns> ?turnsSaid } \
-OPTIONAL { ?me orexis:plays ?r2 . ?r2 <http://example.org/orexis/translation#rows> ?rowsSaid } \
-OPTIONAL { ?me orexis:plays ?r3 . ?r3 <http://example.org/orexis/translation#answeredWithinS> ?answeredSaid } \
-OPTIONAL { ?me orexis:plays ?r4 . ?r4 <http://example.org/orexis/translation#calledWithinS> ?calledSaid } \
-OPTIONAL { ?me orexis:plays ?r5 . ?r5 <http://example.org/orexis/translation#retries> ?retriesSaid } \
-OPTIONAL { ?me orexis:plays ?named . ?named a ?kind ; <http://example.org/orexis/translation#translatedBy> ?by . ?by <https://schema.org/url> ?model } }";
-
 /// THE TRANSLATOR THE SELF PLAYS, the package's core: a field for each thing `translation:Translator` may state, each
 /// what the role says in the agent's self graph and, where it says nothing, the default this package's ontology
 /// states; and what it holds across turns: the model, what is being thought in which chat, and what the model's
@@ -114,6 +94,25 @@ impl Translator {
     /// SELF GRAPH WAS HELD TO ITS REQUIREMENTS AT ONBOARDING, so each figure is stated once at most; nothing is picked
     /// between here. It holds no model until it is handed one.
     pub fn new(beliefs: &Store) -> Result<Self, Error> {
+        /// THE TRANSLATOR THE SELF PLAYS, IN ONE QUERY: the self, each figure its role says of talking with the model
+        /// or, where it says none, the default translation's ontology states on its shape of the role
+        /// (`sh:defaultValue`), and where the model a role names answers (`translation:translatedBy`), as the world's
+        /// deployment states it, with the class of the role naming it.
+        const TRANSLATOR_Q: &str = "SELECT DISTINCT ?me ?kind ?model (COALESCE(?turnsSaid, ?turnsOwn) AS ?turns) \
+        (COALESCE(?rowsSaid, ?rowsOwn) AS ?rows) (COALESCE(?answeredSaid, ?answeredOwn) AS ?answered) \
+        (COALESCE(?calledSaid, ?calledOwn) AS ?called) (COALESCE(?retriesSaid, ?retriesOwn) AS ?retries) WHERE { \
+        ?shape sh:targetClass <http://example.org/orexis/translation#Translator> ; \
+          sh:property [ sh:path <http://example.org/orexis/translation#turns> ; sh:defaultValue ?turnsOwn ] , [ sh:path <http://example.org/orexis/translation#rows> ; sh:defaultValue ?rowsOwn ] , \
+                      [ sh:path <http://example.org/orexis/translation#answeredWithinS> ; sh:defaultValue ?answeredOwn ] , \
+                      [ sh:path <http://example.org/orexis/translation#calledWithinS> ; sh:defaultValue ?calledOwn ] , \
+                      [ sh:path <http://example.org/orexis/translation#retries> ; sh:defaultValue ?retriesOwn ] . \
+        OPTIONAL { ?me a orexis:Self } \
+        OPTIONAL { ?me orexis:plays ?r1 . ?r1 <http://example.org/orexis/translation#turns> ?turnsSaid } \
+        OPTIONAL { ?me orexis:plays ?r2 . ?r2 <http://example.org/orexis/translation#rows> ?rowsSaid } \
+        OPTIONAL { ?me orexis:plays ?r3 . ?r3 <http://example.org/orexis/translation#answeredWithinS> ?answeredSaid } \
+        OPTIONAL { ?me orexis:plays ?r4 . ?r4 <http://example.org/orexis/translation#calledWithinS> ?calledSaid } \
+        OPTIONAL { ?me orexis:plays ?r5 . ?r5 <http://example.org/orexis/translation#retries> ?retriesSaid } \
+        OPTIONAL { ?me orexis:plays ?named . ?named a ?kind ; <http://example.org/orexis/translation#translatedBy> ?by . ?by <https://schema.org/url> ?model } }";
         let mut known = beliefs.graphs_of(&[SELF_GRAPH], &Within::default())?;
         known.extend(beliefs.graphs_of(&[DEPLOYMENT], &Within::common())?);
         known.extend(beliefs.graphs_of(&[ONTOLOGY], &Within::default())?);

@@ -43,14 +43,6 @@ fn boot(store: &Store) {
     booted(store, &world(), "hanoi", now()).unwrap()
 }
 
-const HOME_Q: &str = "PREFIX hanoi: <http://example.org/orexis/hanoi#>
-SELECT (COUNT(DISTINCT ?d) AS ?n) WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph }
-  GRAPH ?g { ?d (hanoi:on)+ hanoi:PegC } }";
-const STEPS_Q: &str = "PREFIX hanoi: <http://example.org/orexis/hanoi#>
-SELECT ?plan ?spent ?step ?next ?disk ?onto WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?plan a orexis:PlanGraph }
-  GRAPH ?plan { ?plan planning:spent ?spent . ?step a execution:Step ; hanoi:disk ?disk ; hanoi:onto ?onto .
-                OPTIONAL { ?step execution:then ?next } } }";
 const TEXTBOOK: [(&str, &str); 7] = [
     ("disk_1", "PegC"),
     ("disk_2", "PegB"),
@@ -62,6 +54,9 @@ const TEXTBOOK: [(&str, &str); 7] = [
 ];
 
 fn home(store: &Store) -> usize {
+    const HOME_Q: &str = "PREFIX hanoi: <http://example.org/orexis/hanoi#>
+    SELECT (COUNT(DISTINCT ?d) AS ?n) WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph }
+      GRAPH ?g { ?d (hanoi:on)+ hanoi:PegC } }";
     value(&store.rows(HOME_Q, &[]).unwrap()[0], "n")
         .unwrap()
         .parse()
@@ -74,6 +69,11 @@ fn local(iri: &str) -> String {
 
 /// The one plan published: what it spent, and its moves walked from its head.
 fn plan(store: &Store) -> (f64, Vec<(String, String)>) {
+    const STEPS_Q: &str = "PREFIX hanoi: <http://example.org/orexis/hanoi#>
+    SELECT ?plan ?spent ?step ?next ?disk ?onto WHERE {
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?plan a orexis:PlanGraph }
+      GRAPH ?plan { ?plan planning:spent ?spent . ?step a execution:Step ; hanoi:disk ?disk ; hanoi:onto ?onto .
+                    OPTIONAL { ?step execution:then ?next } } }";
     let found = store.rows(STEPS_Q, &[]).unwrap();
     let plans: std::collections::BTreeSet<String> = found.iter().filter_map(|r| iri(r, "plan")).collect();
     assert_eq!(plans.len(), 1, "one plan published");

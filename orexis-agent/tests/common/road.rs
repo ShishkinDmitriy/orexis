@@ -30,22 +30,6 @@ PREFIX sosa: <http://www.w3.org/ns/sosa/>
 PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
 PREFIX schema: <https://schema.org/>
 ";
-const VANS_Q: &str = "SELECT ?van ?x ?y ?xp ?yp ?delay WHERE {
-  ?van a courier:Van ; sim:simulatedBy ?model .
-  ?column a sosa:Sensor ; sosa:isHostedBy ?van ; sosa:observes courier:Column ; sim:simulatedBy ?cm ; sensing:readingPointer ?xp .
-  ?row a sosa:Sensor ; sosa:isHostedBy ?van ; sosa:observes courier:Row ; sim:simulatedBy ?rm ; sensing:readingPointer ?yp .
-  ?cm sim:initialValue ?x . ?rm sim:initialValue ?y .
-  OPTIONAL { ?model sim:delayS ?delay } } ORDER BY ?van";
-const CONTACTS_Q: &str = "SELECT ?contact ?van ?peer ?xp ?yp ?xmost ?ymost WHERE {
-  ?contact a sosa:Sample ; sosa:isHostedBy ?van .
-  ?column a sosa:Sensor ; sosa:isHostedBy ?contact ; sosa:observes courier:RelativeColumn ; sensing:readingPointer ?xp .
-  ?row a sosa:Sensor ; sosa:isHostedBy ?contact ; sosa:observes courier:RelativeRow ; sensing:readingPointer ?yp .
-  OPTIONAL { ?contact sosa:isSampleOf ?peer }
-  OPTIONAL { ?column ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?cr .
-             ?cr a ssn-system:MeasurementRange ; schema:maxValue ?xmost }
-  OPTIONAL { ?row ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?rr .
-             ?rr a ssn-system:MeasurementRange ; schema:maxValue ?ymost } } ORDER BY ?contact";
-const POSED_Q: &str = "SELECT ?thing ?x ?y WHERE { ?thing sim:simulatedBy ?model . ?model sim:x ?x ; sim:y ?y }";
 
 struct Van {
     at: Cell,
@@ -97,6 +81,23 @@ fn put(document: &mut Json, pointer: &str, number: f64) {
 impl Road {
     /// The road of the world `store` was booted from, as its documents pose it.
     pub fn of(store: &Store) -> Road {
+        const VANS_Q: &str = "SELECT ?van ?x ?y ?xp ?yp ?delay WHERE {
+          ?van a courier:Van ; sim:simulatedBy ?model .
+          ?column a sosa:Sensor ; sosa:isHostedBy ?van ; sosa:observes courier:Column ; sim:simulatedBy ?cm ; sensing:readingPointer ?xp .
+          ?row a sosa:Sensor ; sosa:isHostedBy ?van ; sosa:observes courier:Row ; sim:simulatedBy ?rm ; sensing:readingPointer ?yp .
+          ?cm sim:initialValue ?x . ?rm sim:initialValue ?y .
+          OPTIONAL { ?model sim:delayS ?delay } } ORDER BY ?van";
+        const CONTACTS_Q: &str = "SELECT ?contact ?van ?peer ?xp ?yp ?xmost ?ymost WHERE {
+          ?contact a sosa:Sample ; sosa:isHostedBy ?van .
+          ?column a sosa:Sensor ; sosa:isHostedBy ?contact ; sosa:observes courier:RelativeColumn ; sensing:readingPointer ?xp .
+          ?row a sosa:Sensor ; sosa:isHostedBy ?contact ; sosa:observes courier:RelativeRow ; sensing:readingPointer ?yp .
+          OPTIONAL { ?contact sosa:isSampleOf ?peer }
+          OPTIONAL { ?column ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?cr .
+                     ?cr a ssn-system:MeasurementRange ; schema:maxValue ?xmost }
+          OPTIONAL { ?row ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?rr .
+                     ?rr a ssn-system:MeasurementRange ; schema:maxValue ?ymost } } ORDER BY ?contact";
+        const POSED_Q: &str =
+            "SELECT ?thing ?x ?y WHERE { ?thing sim:simulatedBy ?model . ?model sim:x ?x ; sim:y ?y }";
         let graphs = store.graphs_of(&[BELIEF], &Within::common()).unwrap();
         let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
         let rows = |text: &str| store.rows(&format!("{PREFIXES}{text}"), &graphs).unwrap();

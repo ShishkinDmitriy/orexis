@@ -10,10 +10,9 @@ use orexis::store::Store;
 use crate::holdings::{of_kind, rows_of};
 use crate::ontology::{SECRET, secret_graph};
 
-const HELD_Q: &str = "SELECT ?s WHERE { ?me a orexis:Self ; coordination:secret ?s } LIMIT 1";
-
 /// Mint the secret of the self `me` of `store` where it holds none; the graph written, or none.
 pub fn mint(store: &Store, me: &str) -> Result<Vec<String>, Error> {
+    const HELD_Q: &str = "SELECT ?s WHERE { ?me a orexis:Self ; coordination:secret ?s } LIMIT 1";
     if !rows_of(store, HELD_Q, &[], &of_kind(store, &[BELIEF])?)?.is_empty() {
         return Ok(Vec::new());
     }

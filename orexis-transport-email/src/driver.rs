@@ -24,10 +24,6 @@ use orexis_speech::prose::{Carrier, Prose};
 pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
     std::sync::LazyLock::new(|| orexis::shape::Defaults::of("the email transport", include_str!("../ontology.ttl")));
 
-const CONTACT_Q: &str =
-    "SELECT ?contact WHERE { ?contact schema:email ?address FILTER (LCASE(STR(?address)) = LCASE($address)) }";
-const ADDRESS_Q: &str = "SELECT ?address WHERE { $contact schema:email ?address }";
-
 /// HOW OFTEN THE MAILBOX IS POLLED, in real seconds: what a role the self plays says in the agent's self graph
 /// (`email:polledEveryS`), and the default the transport's ontology states where none says.
 pub fn polled_every_s(beliefs: &Store) -> Result<f64, Error> {
@@ -226,6 +222,8 @@ impl Email {
     /// A message from an address: the prose it is, in the chat whose contact point has that address — its one person
     /// being who wrote, the channel names no sender; none where the world names the address in no chat.
     pub fn handle(&mut self, channel: &str, payload: &[u8], at: DateTime) -> Result<Option<Prose>, Error> {
+        const CONTACT_Q: &str =
+            "SELECT ?contact WHERE { ?contact schema:email ?address FILTER (LCASE(STR(?address)) = LCASE($address)) }";
         let common = self.common()?;
         let common: Vec<&str> = common.iter().map(String::as_str).collect();
         let address = Value::Term(Literal::new_simple_literal(channel).into());
@@ -253,6 +251,7 @@ impl Email {
 
 impl Carrier for Email {
     fn say_to(&mut self, channel: &str, text: &str, _reply: Option<&str>) -> bool {
+        const ADDRESS_Q: &str = "SELECT ?address WHERE { $contact schema:email ?address }";
         let Ok(common) = self.common() else { return false };
         let common: Vec<&str> = common.iter().map(String::as_str).collect();
         let Ok(query) = bind(ADDRESS_Q, &[("contact", Value::iri(channel))]) else {

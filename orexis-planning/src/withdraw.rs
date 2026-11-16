@@ -13,41 +13,6 @@ use orexis::store::{Store, iri, value};
 
 use crate::ontology::WANT;
 
-/// WHERE A WANT IS: the graph of wants or the record that holds it, and how many wants are in it.
-const HOME_Q: &str = "
-SELECT ?g ?kind (COUNT(DISTINCT ?w) AS ?wants) WHERE {
-  GRAPH ?g { $want a planning:Want . ?w a planning:Want }
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
-               VALUES ?kind { planning:WantGraph orexis:RecordGraph } } }
-GROUP BY ?g ?kind";
-
-/// TAKE ONE WANT OUT OF A GRAPH THAT HOLDS OTHERS: everything reachable from it by a path of any predicate, and the
-/// rows that point at it.
-pub const FORGET_ONE_U: &str = "DELETE { GRAPH $graph { ?s ?p ?o } }
-WHERE  { GRAPH $graph { $want (<urn:x>|!<urn:x>)* ?s . ?s ?p ?o } } ;
-DELETE { GRAPH $graph { ?s ?p $want } }
-WHERE  { GRAPH $graph { ?s ?p $want } }";
-
-/// EVERY WANT THE DERIVATION MINTED, across all time.
-const DERIVED_Q: &str = "
-SELECT ?w WHERE {
-  GRAPH ?g { ?w a planning:Want }
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-               ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }";
-
-const WEIGHINGS_U: &str = "
-DELETE { GRAPH ?cat { ?x ?p ?o . ?v ?vp ?vo } }
-WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                      ?x a planning:Weighing ; planning:for $want ; ?p ?o .
-                      OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }";
-
-const PLAN_Q: &str = "
-SELECT ?plan WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?plan a planning:PlanGraph }
-  GRAPH ?plan { ?plan planning:for $want } }";
-
-const STEP_GRAPHS_Q: &str = "SELECT ?g WHERE { GRAPH $plan { ?step execution:adds|execution:retracts ?g } }";
-
 /// Drop every derived want `wanted` does not name, and every want in `reached` however it arrived; what went, in
 /// name order. `wanted` None judges no derived want. `afresh` are wants whose search alone is withdrawn and which
 /// stay: a walking want a belief arriving reopened (#921).
@@ -57,6 +22,12 @@ pub fn withdraw(
     reached: &BTreeSet<String>,
     afresh: &BTreeSet<String>,
 ) -> Result<Vec<String>, Error> {
+    /// EVERY WANT THE DERIVATION MINTED, across all time.
+    const DERIVED_Q: &str = "
+    SELECT ?w WHERE {
+      GRAPH ?g { ?w a planning:Want }
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                   ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }";
     let standing: BTreeSet<String> = match wanted {
         Some(_) => store.rows(DERIVED_Q, &[])?.iter().filter_map(|r| iri(r, "w")).collect(),
         None => BTreeSet::new(),
@@ -94,6 +65,16 @@ pub fn withdraw(
 
 /// Drop what a search wrote about one want: every weighing for it and its plan, with the graphs its steps predict in.
 fn forget_search(store: &Store, uri: &str) -> Result<(), Error> {
+    const WEIGHINGS_U: &str = "
+    DELETE { GRAPH ?cat { ?x ?p ?o . ?v ?vp ?vo } }
+    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                          ?x a planning:Weighing ; planning:for $want ; ?p ?o .
+                          OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }";
+    const PLAN_Q: &str = "
+    SELECT ?plan WHERE {
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?plan a planning:PlanGraph }
+      GRAPH ?plan { ?plan planning:for $want } }";
+    const STEP_GRAPHS_Q: &str = "SELECT ?g WHERE { GRAPH $plan { ?step execution:adds|execution:retracts ?g } }";
     store.update(&bind(WEIGHINGS_U, &[("want", Value::iri(uri))])?)?;
     for row in store.rows(&bind(PLAN_Q, &[("want", Value::iri(uri))])?, &[])? {
         let Some(plan) = iri(&row, "plan") else { continue };
@@ -109,6 +90,13 @@ fn forget_search(store: &Store, uri: &str) -> Result<(), Error> {
 
 /// Remove one want, wherever it lives: its graph where a graph of wants holds it alone, the want alone otherwise.
 pub fn forget_want(store: &Store, uri: &str) -> Result<(), Error> {
+    /// WHERE A WANT IS: the graph of wants or the record that holds it, and how many wants are in it.
+    const HOME_Q: &str = "
+    SELECT ?g ?kind (COUNT(DISTINCT ?w) AS ?wants) WHERE {
+      GRAPH ?g { $want a planning:Want . ?w a planning:Want }
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
+                   VALUES ?kind { planning:WantGraph orexis:RecordGraph } } }
+    GROUP BY ?g ?kind";
     let mut home: Vec<(String, String, usize)> = store
         .rows(&bind(HOME_Q, &[("want", Value::iri(uri))])?, &[])?
         .iter()
@@ -127,10 +115,21 @@ pub fn forget_want(store: &Store, uri: &str) -> Result<(), Error> {
 
 /// Take `want` out of `graph`, leaving what else it holds.
 pub fn forget_one(store: &Store, graph: &str, want: &str) -> Result<(), Error> {
-    store.update(&bind(
+    store.update(&forgetting(graph, want)?)
+}
+
+/// The update that takes `want` out of `graph`, leaving what else it holds, for a writer that joins it to its own.
+pub(crate) fn forgetting(graph: &str, want: &str) -> Result<String, Error> {
+    /// TAKE ONE WANT OUT OF A GRAPH THAT HOLDS OTHERS: everything reachable from it by a path of any predicate, and
+    /// the rows that point at it.
+    const FORGET_ONE_U: &str = "DELETE { GRAPH $graph { ?s ?p ?o } }
+    WHERE  { GRAPH $graph { $want (<urn:x>|!<urn:x>)* ?s . ?s ?p ?o } } ;
+    DELETE { GRAPH $graph { ?s ?p $want } }
+    WHERE  { GRAPH $graph { ?s ?p $want } }";
+    bind(
         FORGET_ONE_U,
         &[("graph", Value::iri(graph)), ("want", Value::iri(want))],
-    )?)
+    )
 }
 
 #[cfg(test)]
