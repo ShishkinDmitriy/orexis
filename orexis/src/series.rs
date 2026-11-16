@@ -40,12 +40,11 @@ pub struct Served {
     pub organisation: String,
 }
 
-const SERVED_Q: &str = "SELECT ?url ?organisation WHERE { \
-?store a orexis:SeriesStore ; orexis:serves $purpose ; <https://schema.org/url> ?url ; orexis:organisation ?organisation } \
-ORDER BY ?url";
-
 /// THE STORE THE WORLD SAYS SERVES `purpose`, or None where its deployment graph names none.
 pub fn store(store: &crate::store::Store, purpose: &str) -> Result<Option<Served>, crate::Error> {
+    const SERVED_Q: &str = "SELECT ?url ?organisation WHERE { \
+    ?store a orexis:SeriesStore ; orexis:serves $purpose ; <https://schema.org/url> ?url ; orexis:organisation ?organisation } \
+    ORDER BY ?url";
     let Some(iri) = purpose_iri(purpose) else {
         return Ok(None);
     };

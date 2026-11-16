@@ -13,11 +13,6 @@ use orexis::Error;
 use orexis::ontology::{SELF_GRAPH, local_of};
 use orexis::store::{Store, Within, value};
 
-const ROLES_Q: &str = "
-SELECT DISTINCT ?label ?comment WHERE {
-  ?me a orexis:Self ; orexis:plays ?role . ?role a ?class .
-  ?class rdfs:label ?label . OPTIONAL { ?class rdfs:comment ?comment } } ORDER BY ?label";
-
 /// Who the agent is, what the chat lets the model read and what it lets a person state: one block, a name in the self
 /// graph written with `prefixes`, as the chat's queries write theirs.
 pub fn briefing(
@@ -28,6 +23,10 @@ pub fn briefing(
     stating: &str,
     prefixes: &[(String, String)],
 ) -> Result<String, Error> {
+    const ROLES_Q: &str = "
+    SELECT DISTINCT ?label ?comment WHERE {
+      ?me a orexis:Self ; orexis:plays ?role . ?role a ?class .
+      ?class rdfs:label ?label . OPTIONAL { ?class rdfs:comment ?comment } } ORDER BY ?label";
     let selves = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
     let kinds: Vec<&str> = reads.iter().map(String::as_str).collect();
     let readable: BTreeSet<String> = if reads.is_empty() {

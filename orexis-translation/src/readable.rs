@@ -499,22 +499,22 @@ fn prefix_of(store: &Store, quads: &[Quad]) -> Option<(String, String)> {
     (!name.is_empty()).then_some((name, most))
 }
 
-/// WHAT A GLOSSARY SAYS OF A TERM: its kind, one class it is beneath or a property's domain and range, and its comment.
-const GLOSSARY_Q: &str = "
-SELECT ?term (SAMPLE(?k) AS ?kind) (SAMPLE(?a) AS ?above) (SAMPLE(?d) AS ?domain) (SAMPLE(?r) AS ?range)
-       (SAMPLE(?c) AS ?comment) WHERE {
-  { ?term a ?t . VALUES ?t { owl:Class rdfs:Class } BIND(\"class\" AS ?k)
-    OPTIONAL { ?term rdfs:subClassOf ?a . FILTER(isIRI(?a)) } }
-  UNION
-  { ?term a ?t . VALUES ?t { owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty rdf:Property }
-    BIND(\"property\" AS ?k)
-    OPTIONAL { ?term rdfs:domain ?d . FILTER(isIRI(?d)) } OPTIONAL { ?term rdfs:range ?r . FILTER(isIRI(?r)) } }
-  FILTER(isIRI(?term))
-  OPTIONAL { ?term rdfs:comment ?c } } GROUP BY ?term";
-
 /// A vocabulary as one line per class and property it declares: the term, what it is beneath or its domain and range,
 /// and the first sentence of its comment, each name written as a row writes it.
 fn glossary(quads: &[Quad], prefixes: &Prefixes) -> Result<String, Error> {
+    /// WHAT A GLOSSARY SAYS OF A TERM: its kind, one class it is beneath or a property's domain and range, and its
+    /// comment.
+    const GLOSSARY_Q: &str = "
+    SELECT ?term (SAMPLE(?k) AS ?kind) (SAMPLE(?a) AS ?above) (SAMPLE(?d) AS ?domain) (SAMPLE(?r) AS ?range)
+           (SAMPLE(?c) AS ?comment) WHERE {
+      { ?term a ?t . VALUES ?t { owl:Class rdfs:Class } BIND(\"class\" AS ?k)
+        OPTIONAL { ?term rdfs:subClassOf ?a . FILTER(isIRI(?a)) } }
+      UNION
+      { ?term a ?t . VALUES ?t { owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty rdf:Property }
+        BIND(\"property\" AS ?k)
+        OPTIONAL { ?term rdfs:domain ?d . FILTER(isIRI(?d)) } OPTIONAL { ?term rdfs:range ?r . FILTER(isIRI(?r)) } }
+      FILTER(isIRI(?term))
+      OPTIONAL { ?term rdfs:comment ?c } } GROUP BY ?term";
     let vocabulary = Engine::new().map_err(failed)?;
     vocabulary
         .extend(quads.iter().map(|q| {

@@ -15,12 +15,6 @@ use orexis::store::{Store, Within, iri};
 use crate::admit::local_of;
 use crate::ontology::{ADDS_GRAPH, PLAN, PLAN_GRAPH, RETRACTS_GRAPH, WANT};
 
-const STANDS_Q: &str = "SELECT ?w WHERE { $want a planning:Want . BIND($want AS ?w) } LIMIT 1";
-const FOR_Q: &str = "SELECT ?want WHERE { GRAPH $plan { $plan planning:for ?want } }";
-const STEPS_Q: &str = "SELECT ?step WHERE { GRAPH $plan { ?step a execution:Step } }";
-const DERIVED_Q: &str = "SELECT ?d WHERE { GRAPH ?g { $want prov:wasDerivedFrom ?d } }";
-const STEP_GRAPHS_Q: &str = "SELECT ?step ?g ?side WHERE { GRAPH $plan { ?step ?side ?g . VALUES ?side { execution:adds execution:retracts } } }";
-
 /// Eight hex characters of fresh randomness, as Python's `uuid.uuid4().hex[:8]`: a name is for eyes.
 fn tag() -> String {
     let mut bytes = [0u8; 4];
@@ -37,6 +31,11 @@ pub fn publish_plan(
     walking: &BTreeSet<String>,
     kept: &BTreeMap<String, Vec<String>>,
 ) -> Result<Vec<String>, Error> {
+    const STANDS_Q: &str = "SELECT ?w WHERE { $want a planning:Want . BIND($want AS ?w) } LIMIT 1";
+    const FOR_Q: &str = "SELECT ?want WHERE { GRAPH $plan { $plan planning:for ?want } }";
+    const STEPS_Q: &str = "SELECT ?step WHERE { GRAPH $plan { ?step a execution:Step } }";
+    const DERIVED_Q: &str = "SELECT ?d WHERE { GRAPH ?g { $want prov:wasDerivedFrom ?d } }";
+    const STEP_GRAPHS_Q: &str = "SELECT ?step ?g ?side WHERE { GRAPH $plan { ?step ?side ?g . VALUES ?side { execution:adds execution:retracts } } }";
     let wants = imaginarium.graphs_of(&[WANT], &Within::default())?;
     let wants: Vec<&str> = wants.iter().map(String::as_str).collect();
     let mut handed = Vec::new();

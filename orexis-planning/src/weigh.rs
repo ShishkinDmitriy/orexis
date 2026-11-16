@@ -32,47 +32,20 @@ use crate::world_at::{Asking, catalogue, named, world_at};
 const SH_SELECT: &str = "http://www.w3.org/ns/shacl#select";
 const DERIVED_FROM: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
 
-const ABOUT_Q: &str = "
-SELECT ?from ?child ?hash ?impossible WHERE {
-  GRAPH $cat { OPTIONAL { $about planning:from ?from }
-    OPTIONAL { ?child planning:by $about ; orexis:hash ?hash .
-               OPTIONAL { ?child planning:impossible ?impossible } } } }";
-
-/// THE WORLDS ALREADY WEIGHED FOR THE WANT THAT HOLD THE CHILD'S HASH, asked apart from the child: inside its
-/// OPTIONAL, the group was evaluated on its own before the join, every weighing of the cone against every hash, and
-/// it was half of a five-disk pass.
-const SEEN_Q: &str = "
-SELECT ?seen WHERE { GRAPH $cat { ?seen orexis:hash $hash . ?x a planning:Weighing ; planning:for $for ; planning:weighs ?seen } }
-ORDER BY ?seen";
-
-const HELD_Q: &str = "
-SELECT ?holder ?want WHERE {
-  GRAPH ?g { ?holder planning:holds $for . OPTIONAL { $for a planning:Want . BIND(true AS ?want) } }
-  OPTIONAL { GRAPH ?s { ?holder a orexis:Self } BIND(true AS ?self) } }
-ORDER BY DESC(BOUND(?self)) ?holder LIMIT 1";
-
-const PRESENT_Q: &str = "
-SELECT (MIN(?start) AS ?now) WHERE {
-  GRAPH $cat { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start } }";
-
-const PERIOD_Q: &str = "
-SELECT ?start ?end ?reopens ?owed WHERE {
-  GRAPH $cat { ?d a planning:WantGraph ; dcterms:temporal ?p .
-               OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } }
-  GRAPH ?d { $for a planning:Want OPTIONAL { $for planning:reopens ?reopens } }
-  OPTIONAL { { GRAPH $cat { ?d orexis:arrivedBy orexis:Received } }
-             UNION
-             { GRAPH ?d { $for prov:wasDerivedFrom ?desire } GRAPH ?dg { ?desire a planning:Desire }
-               GRAPH $cat { ?dg orexis:arrivedBy orexis:Received } }
-             BIND(true AS ?owed) } } LIMIT 1";
-
-const LANDS_Q: &str = "
-SELECT ?start ?end WHERE { GRAPH $cat { $world dcterms:temporal ?p . ?p orexis:start ?start OPTIONAL { ?p orexis:end ?end } } }
-LIMIT 1";
-
 /// Weigh `about` — a world, a ground, or a candidate — for `for_`, a want or a desire, and write the weighing.
 /// Its node.
 pub fn weigh(store: &Store, for_: &str, about: &str, memo: &mut Memo) -> Result<String, Error> {
+    const ABOUT_Q: &str = "
+    SELECT ?from ?child ?hash ?impossible WHERE {
+      GRAPH $cat { OPTIONAL { $about planning:from ?from }
+        OPTIONAL { ?child planning:by $about ; orexis:hash ?hash .
+                   OPTIONAL { ?child planning:impossible ?impossible } } } }";
+    /// THE WORLDS ALREADY WEIGHED FOR THE WANT THAT HOLD THE CHILD'S HASH, asked apart from the child: inside its
+    /// OPTIONAL, the group was evaluated on its own before the join, every weighing of the cone against every hash, and
+    /// it was half of a five-disk pass.
+    const SEEN_Q: &str = "
+    SELECT ?seen WHERE { GRAPH $cat { ?seen orexis:hash $hash . ?x a planning:Weighing ; planning:for $for ; planning:weighs ?seen } }
+    ORDER BY ?seen";
     let cat = catalogue(store, memo)?;
     let text = bind(
         ABOUT_Q,
@@ -192,6 +165,11 @@ pub fn weigh(store: &Store, for_: &str, about: &str, memo: &mut Memo) -> Result<
 
 /// Who holds what is weighed for, the self first, and whether it is a want — once a pass.
 fn held(store: &Store, for_: &str, memo: &mut Memo) -> Result<Row, Error> {
+    const HELD_Q: &str = "
+    SELECT ?holder ?want WHERE {
+      GRAPH ?g { ?holder planning:holds $for . OPTIONAL { $for a planning:Want . BIND(true AS ?want) } }
+      OPTIONAL { GRAPH ?s { ?holder a orexis:Self } BIND(true AS ?self) } }
+    ORDER BY DESC(BOUND(?self)) ?holder LIMIT 1";
     if let Some(known) = memo.held.get(for_) {
         return Ok(known.clone());
     }
@@ -207,6 +185,19 @@ fn held(store: &Store, for_: &str, memo: &mut Memo) -> Result<Row, Error> {
 /// The instant `world` lands late at for the want `for_`, or None where it is on time, and whether it lands
 /// past the instant the want lifts by — must miss for a want of the agent's own, may miss for an obligation.
 fn when(store: &Store, for_: &str, world: &str, cat: &str, memo: &mut Memo) -> Result<(Option<DateTime>, bool), Error> {
+    const PERIOD_Q: &str = "
+    SELECT ?start ?end ?reopens ?owed WHERE {
+      GRAPH $cat { ?d a planning:WantGraph ; dcterms:temporal ?p .
+                   OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } }
+      GRAPH ?d { $for a planning:Want OPTIONAL { $for planning:reopens ?reopens } }
+      OPTIONAL { { GRAPH $cat { ?d orexis:arrivedBy orexis:Received } }
+                 UNION
+                 { GRAPH ?d { $for prov:wasDerivedFrom ?desire } GRAPH ?dg { ?desire a planning:Desire }
+                   GRAPH $cat { ?dg orexis:arrivedBy orexis:Received } }
+                 BIND(true AS ?owed) } } LIMIT 1";
+    const LANDS_Q: &str = "
+    SELECT ?start ?end WHERE { GRAPH $cat { $world dcterms:temporal ?p . ?p orexis:start ?start OPTIONAL { ?p orexis:end ?end } } }
+    LIMIT 1";
     if !memo.periods.contains_key(for_) {
         let text = bind(PERIOD_Q, &[("cat", Value::iri(cat)), ("for", Value::iri(for_))])?;
         let found = store.rows(&text, &[])?.into_iter().next().unwrap_or_default();
@@ -258,6 +249,9 @@ fn rank(late: Option<DateTime>, past: bool) -> (u8, Option<DateTime>) {
 
 /// Where the timeline begins, the earliest ground — once a pass.
 fn present(store: &Store, cat: &str, memo: &mut Memo) -> Result<Option<DateTime>, Error> {
+    const PRESENT_Q: &str = "
+    SELECT (MIN(?start) AS ?now) WHERE {
+      GRAPH $cat { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start } }";
     if let Some(known) = memo.present {
         return Ok(known);
     }

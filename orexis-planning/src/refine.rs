@@ -126,29 +126,28 @@ pub(crate) mod tests {
     const STEP: &str = "http://example.org/test#step";
     const T: &str = "http://example.org/test#";
 
-    const CASE: &str = r#"
-@prefix : <http://example.org/test#> .
-@prefix orexis: <http://example.org/orexis#> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph , orexis:Graph .
-  :rules a sh:RulesGraph , orexis:Graph .
-  :state a orexis:BeliefGraph , orexis:Graph .
-}
-GRAPH :rules {
-  :stands a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
-    CONSTRUCT { ?disk :on ?peg } WHERE { ?disk :at ?cell . ?peg a :Peg ; :at ?cell }""" .
-  :twice a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
-    CONSTRUCT { ?disk :near ?peg . ?peg :near ?disk } WHERE { ?disk :at ?cell . ?peg :at ?cell }""" .
-}
-GRAPH :state {
-  :pegA a :Peg ; :at :c1 .  :pegB a :Peg ; :at :c2 .
-  :d :at :c1 ; :on :pegA .  :e :at :c1 ; :on :pegA .
-}
-"#;
-
     pub(crate) fn store() -> Store {
+        const CASE: &str = r#"
+    @prefix : <http://example.org/test#> .
+    @prefix orexis: <http://example.org/orexis#> .
+    @prefix sh: <http://www.w3.org/ns/shacl#> .
+
+    GRAPH :catalogue {
+      :catalogue a orexis:CatalogueGraph , orexis:Graph .
+      :rules a sh:RulesGraph , orexis:Graph .
+      :state a orexis:BeliefGraph , orexis:Graph .
+    }
+    GRAPH :rules {
+      :stands a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+        CONSTRUCT { ?disk :on ?peg } WHERE { ?disk :at ?cell . ?peg a :Peg ; :at ?cell }""" .
+      :twice a sh:SPARQLRule ; sh:construct """PREFIX : <http://example.org/test#>
+        CONSTRUCT { ?disk :near ?peg . ?peg :near ?disk } WHERE { ?disk :at ?cell . ?peg :at ?cell }""" .
+    }
+    GRAPH :state {
+      :pegA a :Peg ; :at :c1 .  :pegB a :Peg ; :at :c2 .
+      :d :at :c1 ; :on :pegA .  :e :at :c1 ; :on :pegA .
+    }
+    "#;
         let store = Store::new(snapshots::namespaces()).expect("an empty store");
         store.put_trig(&format!("{T}state"), CASE).unwrap();
         store.close_catalogue().unwrap();

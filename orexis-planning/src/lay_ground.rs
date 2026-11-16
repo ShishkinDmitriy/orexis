@@ -60,19 +60,6 @@ pub struct Laying<'a> {
     pub as_stood: bool,
 }
 
-/// THE CHANGEABLE PART CUT FROM EVERY FORECAST.
-const FORECAST_PIECES_Q: &str = "
-SELECT ?piece WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                                   ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source . ?source a orexis:ForecastGraph } }";
-
-/// THE CHANGEABLE PART OF EVERY FORECAST THAT ENDS AFTER `$now`, and when.
-const PIECES_ENDING_Q: &str = "
-SELECT ?piece ?end WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-               ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source .
-               ?source a orexis:ForecastGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end > $now) } }
-ORDER BY ?end ?piece";
-
 /// THE CHANGEABLE PART OF EVERY BELIEF THAT BEGINS AFTER `$now`, the graph it was cut from and when.
 const PIECES_AHEAD_Q: &str = "
 SELECT ?piece ?source ?start WHERE {
@@ -81,41 +68,13 @@ SELECT ?piece ?source ?start WHERE {
                ?source dcterms:temporal/orexis:start ?start . FILTER(?start > $now) } }
 ORDER BY ?start ?piece";
 
-/// EVERY GRAPH CUT BY THE PATTERNS ASKED NOW, and saying which a graph was cut by.
-const CUT_BY_Q: &str = "SELECT ?g WHERE { GRAPH $cat { ?g planning:cutBy $by } }";
-const CUT_U: &str = "DELETE { GRAPH $cat { $g planning:cutBy ?was } } INSERT { GRAPH $cat { $g planning:cutBy $by } }
-WHERE { OPTIONAL { GRAPH $cat { $g planning:cutBy ?was } } }";
-
 /// EVERY CHANGEABLE GRAPH AND THE GRAPH IT WAS CUT FROM.
 const CUT_Q: &str = "
 SELECT ?piece ?source WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
   ?piece a planning:ChangeableGraph . OPTIONAL { ?piece prov:wasDerivedFrom ?source } } }";
 
-/// EVERY BELIEF WHOSE PERIOD BEGINS AFTER `$now`.
-const BELIEFS_AHEAD_Q: &str = "
-SELECT ?g WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-               ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start . FILTER(?start > $now) } }
-ORDER BY ?g";
-
-/// WHAT A BOUNDARY TAKES OUT OF THE GROUND IT MAKES: every triple under a key something there adds to.
-const SUPERSEDE_U: &str =
-    "DELETE { GRAPH $state { ?s ?p ?o } } WHERE { GRAPH $state { ?s ?p ?o } VALUES (?s ?p) { $keys } }";
-
-/// THE VERDICTS ABOUT A GROUND, with the violation rows hanging off each.
-const UNWEIGH_U: &str = "
-DELETE { GRAPH ?cat { ?x ?p ?o . ?v ?vp ?vo } }
-WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                      ?x a planning:Weighing ; planning:weighs $world ; ?p ?o .
-                      OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }";
-
 const STOOD_Q: &str =
     "SELECT ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $ground orexis:hash ?h } } LIMIT 1";
-
-const UNADMIT_U: &str = "
-DELETE { GRAPH ?cat { ?c ?p ?o } }
-WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                      ?c a planning:Candidate ; planning:from $world ; ?p ?o } }";
 
 /// Build one ground world per period the agent can see, classified with its stretch; the graphs made, earliest
 /// first. In place: it lays the grounds into whichever store it is handed. Handed no foresight.
@@ -277,14 +236,6 @@ fn graphs_at(
     Ok(out)
 }
 
-/// THE BELIEFS THE AGENT DERIVED — what the transitions wrote of each arrival of testimony — as against those it
-/// received: no revision, and nothing everyone reads; as `trigger` reads the agent's own state.
-const DERIVED_Q: &str = "
-SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                               ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
-                               FILTER NOT EXISTS { ?g a belief:RevisionGraph }
-                               ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
-
 /// WHERE THE AGENT'S OWN STATE IS KEPT WHILE THE GROUNDS ARE LAID: a working graph, not a belief.
 const OWN: &str = "http://example.org/orexis/graph/ground/own-state";
 
@@ -295,6 +246,13 @@ const ARRIVAL: &str = "http://example.org/orexis/graph/ground/arrival";
 /// nothing everyone reads, copied into a working graph of its own, APART FROM THE GROUND, because a transition is
 /// handed the arrival and no other testimony (#947) — and the working graph's name.
 fn own_state(store: &Store) -> Result<String, Error> {
+    /// THE BELIEFS THE AGENT DERIVED — what the transitions wrote of each arrival of testimony — as against those it
+    /// received: no revision, and nothing everyone reads; as `trigger` reads the agent's own state.
+    const DERIVED_Q: &str = "
+    SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                                   ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
+                                   FILTER NOT EXISTS { ?g a belief:RevisionGraph }
+                                   ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
     store.clear_graph(OWN)?;
     let derived: Vec<String> = store.rows(DERIVED_Q, &[])?.iter().filter_map(|r| iri(r, "g")).collect();
     for g in whole(store, derived)? {
@@ -430,6 +388,13 @@ fn foreseen(store: &Store, now: DateTime) -> Result<Vec<(DateTime, String, Strin
 
 /// Every forecast's end ahead of `now` — the instant, and the changeable part cut from it — earliest first.
 fn ending(store: &Store, now: DateTime) -> Result<Vec<(DateTime, String)>, Error> {
+    /// THE CHANGEABLE PART OF EVERY FORECAST THAT ENDS AFTER `$now`, and when.
+    const PIECES_ENDING_Q: &str = "
+    SELECT ?piece ?end WHERE {
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                   ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source .
+                   ?source a orexis:ForecastGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end > $now) } }
+    ORDER BY ?end ?piece";
     let text = bind(PIECES_ENDING_Q, &[("now", orexis::store::instant(now))])?;
     let mut out = Vec::new();
     for row in store.rows(&text, &[])? {
@@ -454,6 +419,10 @@ fn lexical(row: &orexis::store::Row, variable: &str) -> Option<Result<DateTime, 
 
 /// Every subject nothing but a forecast says anything of, which a forecast's end may take back whole.
 fn foreseen_alone(store: &Store) -> Result<HashSet<NamedOrBlankNode>, Error> {
+    /// THE CHANGEABLE PART CUT FROM EVERY FORECAST.
+    const FORECAST_PIECES_Q: &str = "
+    SELECT ?piece WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                                       ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source . ?source a orexis:ForecastGraph } }";
     let mut forecasts: BTreeSet<String> = store.graphs_of(&[FORECAST], &Within::default())?.into_iter().collect();
     forecasts.extend(
         store
@@ -544,6 +513,11 @@ fn split(
     at: DateTime,
     gate: Option<&BTreeSet<String>>,
 ) -> Result<Vec<String>, Error> {
+    /// EVERY GRAPH CUT BY THE PATTERNS ASKED NOW, and saying which a graph was cut by.
+    const CUT_BY_Q: &str = "SELECT ?g WHERE { GRAPH $cat { ?g planning:cutBy $by } }";
+    const CUT_U: &str =
+        "DELETE { GRAPH $cat { $g planning:cutBy ?was } } INSERT { GRAPH $cat { $g planning:cutBy $by } }
+    WHERE { OPTIONAL { GRAPH $cat { $g planning:cutBy ?was } } }";
     let cat = store
         .catalogue()?
         .ok_or_else(|| Error::Catalogue("no graph describes itself as the catalogue".into()))?;
@@ -658,6 +632,12 @@ fn signature(patterns: Option<&[Pattern]>) -> String {
 /// What every belief beginning after `now` that something reads writes, as patterns: each predicate it adds, a
 /// type with its class. `gate` is what is read; `None` reads anything, and lays every belief ahead.
 fn predicted(store: &Store, now: DateTime, gate: Option<&BTreeSet<String>>) -> Result<Vec<Pattern>, Error> {
+    /// EVERY BELIEF WHOSE PERIOD BEGINS AFTER `$now`.
+    const BELIEFS_AHEAD_Q: &str = "
+    SELECT ?g WHERE {
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                   ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start . FILTER(?start > $now) } }
+    ORDER BY ?g";
     let text = bind(BELIEFS_AHEAD_Q, &[("now", orexis::store::instant(now))])?;
     let ahead: Vec<String> = store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "g")).collect();
     let mut read: Vec<Vec<String>> = Vec::new();
@@ -746,6 +726,9 @@ fn marked(store: &Store, ground: &str, within: Option<&BTreeSet<String>>) -> Res
 /// The ground one boundary past `parent`: its facts, less whatever stood under a key what is added there adds to,
 /// plus what is added — and which ground it came from, on its row.
 fn fork(store: &Store, parent: &str, name: &str, added: &[Triple]) -> Result<(String, Option<String>), Error> {
+    /// WHAT A BOUNDARY TAKES OUT OF THE GROUND IT MAKES: every triple under a key something there adds to.
+    const SUPERSEDE_U: &str =
+        "DELETE { GRAPH $state { ?s ?p ?o } } WHERE { GRAPH $state { ?s ?p ?o } VALUES (?s ?p) { $keys } }";
     let stood = relaid(store, name)?;
     let mut keys: Vec<(&NamedNode, &NamedNode)> = added
         .iter()
@@ -800,6 +783,16 @@ fn relaid(store: &Store, name: &str) -> Result<Option<String>, Error> {
 /// every planning of that instant (#1158). The ground's hash alone is not enough: a desire is weighed in the ground
 /// and what is beside it, and a supplier whose ground stood while a call arrived beside it kept reading no call.
 fn settled(store: &Store, name: &str, stood: Option<String>, beside: bool) -> Result<(), Error> {
+    /// THE VERDICTS ABOUT A GROUND, with the violation rows hanging off each.
+    const UNWEIGH_U: &str = "
+    DELETE { GRAPH ?cat { ?x ?p ?o . ?v ?vp ?vo } }
+    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                          ?x a planning:Weighing ; planning:weighs $world ; ?p ?o .
+                          OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }";
+    const UNADMIT_U: &str = "
+    DELETE { GRAPH ?cat { ?c ?p ?o } }
+    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                          ?c a planning:Candidate ; planning:from $world ; ?p ?o } }";
     let now = store
         .rows(&bind(STOOD_Q, &[("ground", Value::iri(name))])?, &[])?
         .first()
@@ -1055,18 +1048,6 @@ mod tests {
         );
     }
 
-    const OPENING: &str = r#"
-PREFIX : <http://example.org/test#>
-PREFIX orexis: <http://example.org/orexis#>
-PREFIX planning: <http://example.org/orexis/planning#>
-PREFIX belief: <http://example.org/orexis/belief#>
-PREFIX sh: <http://www.w3.org/ns/shacl#>
-INSERT DATA { GRAPH :actions {
-  :open a orexis:Action ; orexis:takes :tank ;
-    planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
-      DELETE { $tank :lid :closed } INSERT { ?tank :lid :open } WHERE { $tank :lid :closed . BIND($tank AS ?tank) }""" ] ] .
-} }"#;
-
     /// What every graph but the catalogue holds, by name.
     fn held(store: &Store) -> BTreeMap<String, HashSet<Triple>> {
         let cat = store.catalogue().unwrap().unwrap();
@@ -1081,6 +1062,17 @@ INSERT DATA { GRAPH :actions {
 
     #[test]
     fn an_action_added_makes_what_it_writes_changeable_and_nothing_else() {
+        const OPENING: &str = r#"
+    PREFIX : <http://example.org/test#>
+    PREFIX orexis: <http://example.org/orexis#>
+    PREFIX planning: <http://example.org/orexis/planning#>
+    PREFIX belief: <http://example.org/orexis/belief#>
+    PREFIX sh: <http://www.w3.org/ns/shacl#>
+    INSERT DATA { GRAPH :actions {
+      :open a orexis:Action ; orexis:takes :tank ;
+        planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
+          DELETE { $tank :lid :closed } INSERT { ?tank :lid :open } WHERE { $tank :lid :closed . BIND($tank AS ?tank) }""" ] ] .
+    } }"#;
         let store =
             snapshots::stand_in(&snapshots::tree().join("orexis-planning/tests/plans/a_low_tank_is_filled.trig"));
         let world = format!("{T}world");

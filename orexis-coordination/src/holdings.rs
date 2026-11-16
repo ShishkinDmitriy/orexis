@@ -94,31 +94,28 @@ pub(crate) fn at_of(text: Option<String>) -> Result<Option<DateTime>, Error> {
     text.map(|t| instant(&t)).transpose()
 }
 
-/// WHAT A CONSTRAINT SAYS IS UNMET OR MET: the select under either polarity.
-pub(crate) const TEXTS_Q: &str = "
-SELECT ?text WHERE {
-  { $constraint planning:unmetWhen ?s . ?s sh:select ?text }
-  UNION { $constraint planning:metWhen ?shape . ?shape sh:sparql ?c . ?c sh:select ?text } }";
-
-/// THE THINGS THE AGENT ACTS FOR.
-const THINGS_Q: &str = "SELECT ?t WHERE { ?me a orexis:Self ; orexis:actsFor ?t } ORDER BY ?t";
-const VALUES_Q: &str = "SELECT ?p ?v WHERE { $thing ?p ?v }";
-
-/// EVERY STANDING INTENTION, the plan it adopts, the step it stands at and the want it pursues; and whether it ends
-/// after it.
-const STANDING_Q: &str = "
-SELECT ?plan ?step ?ending ?act ?want WHERE { GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
-  FILTER NOT EXISTS { ?i execution:resolvedAt ?done } OPTIONAL { ?i execution:endsAfter ?ending } OPTIONAL { ?i execution:pursues ?want }
-  OPTIONAL { ?act execution:of ?step ; execution:taken true } } }";
-
-/// A PLAN'S STEPS: each, the one after it, the graph naming what it adds, and the two ends of its landing.
-const STEPS_Q: &str = "
-SELECT ?step ?next ?adds ?lands ?latest WHERE { GRAPH $plan { ?step a execution:Step .
-  OPTIONAL { ?step execution:then ?next } OPTIONAL { ?step execution:adds ?adds }
-  OPTIONAL { ?step execution:landsAt ?lands } OPTIONAL { ?step execution:notAfter ?latest } } }";
+/// What `constraint` says is unmet or met: the select under either polarity, read off the constraints and the common
+/// beliefs.
+pub(crate) fn texts_of(store: &Store, constraint: &str) -> Result<Vec<String>, Error> {
+    /// WHAT A CONSTRAINT SAYS IS UNMET OR MET.
+    const TEXTS_Q: &str = "
+    SELECT ?text WHERE {
+      { $constraint planning:unmetWhen ?s . ?s sh:select ?text }
+      UNION { $constraint planning:metWhen ?shape . ?shape sh:sparql ?c . ?c sh:select ?text } }";
+    let mut graphs = of_kind(store, &[CONSTRAINT_GRAPH])?;
+    graphs.extend(common(store)?);
+    Ok(
+        rows_of(store, TEXTS_Q, &[("constraint", Value::iri(constraint))], &graphs)?
+            .iter()
+            .filter_map(|r| value(r, "text"))
+            .collect(),
+    )
+}
 
 /// The things the self of `store` acts for.
 pub(crate) fn things(store: &Store) -> Result<Vec<String>, Error> {
+    /// THE THINGS THE AGENT ACTS FOR.
+    const THINGS_Q: &str = "SELECT ?t WHERE { ?me a orexis:Self ; orexis:actsFor ?t } ORDER BY ?t";
     let mut graphs = common(store)?;
     graphs.extend(of_kind(store, &[SELF_GRAPH])?);
     Ok(rows_of(store, THINGS_Q, &[], &graphs)?
@@ -129,6 +126,7 @@ pub(crate) fn things(store: &Store) -> Result<Vec<String>, Error> {
 
 /// Every holding of the things the self of `store` acts for under `constraint`, standing at `at`.
 pub fn holdings(store: &Store, constraint: &str, at: DateTime) -> Result<Vec<Holding>, Error> {
+    const VALUES_Q: &str = "SELECT ?p ?v WHERE { $thing ?p ?v }";
     let key = key_of(store, constraint)?;
     if key.is_empty() {
         return Ok(Vec::new());
@@ -190,13 +188,9 @@ pub fn walking_over(store: &Store, constraint: &str) -> Result<BTreeSet<String>,
 
 /// The predicates `constraint` joins two subjects on. Empty where its text will not parse or joins nothing.
 pub fn key_of(store: &Store, constraint: &str) -> Result<BTreeSet<String>, Error> {
-    let mut graphs = of_kind(store, &[CONSTRAINT_GRAPH])?;
-    graphs.extend(common(store)?);
     let mut out = BTreeSet::new();
-    for r in rows_of(store, TEXTS_Q, &[("constraint", Value::iri(constraint))], &graphs)? {
-        if let Some(text) = value(&r, "text") {
-            out.extend(key(store, &text));
-        }
+    for text in texts_of(store, constraint)? {
+        out.extend(key(store, &text));
     }
     Ok(out)
 }
@@ -308,6 +302,17 @@ pub(crate) struct Change {
 
 /// Per thing, every change a walking plan's steps make to its values on the key, in the order they are walked.
 fn changes(store: &Store, things: &[String], key: &BTreeSet<String>) -> Result<BTreeMap<String, Vec<Change>>, Error> {
+    /// EVERY STANDING INTENTION, the plan it adopts, the step it stands at and the want it pursues; and whether it ends
+    /// after it.
+    const STANDING_Q: &str = "
+    SELECT ?plan ?step ?ending ?act ?want WHERE { GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
+      FILTER NOT EXISTS { ?i execution:resolvedAt ?done } OPTIONAL { ?i execution:endsAfter ?ending } OPTIONAL { ?i execution:pursues ?want }
+      OPTIONAL { ?act execution:of ?step ; execution:taken true } } }";
+    /// A PLAN'S STEPS: each, the one after it, the graph naming what it adds, and the two ends of its landing.
+    const STEPS_Q: &str = "
+    SELECT ?step ?next ?adds ?lands ?latest WHERE { GRAPH $plan { ?step a execution:Step .
+      OPTIONAL { ?step execution:then ?next } OPTIONAL { ?step execution:adds ?adds }
+      OPTIONAL { ?step execution:landsAt ?lands } OPTIONAL { ?step execution:notAfter ?latest } } }";
     let mut out: BTreeMap<String, Vec<Change>> = BTreeMap::new();
     for r in store.rows(STANDING_Q, &[])? {
         let (Some(plan), Some(first)) = (iri(&r, "plan"), iri(&r, "step")) else {
@@ -357,10 +362,6 @@ fn changes(store: &Store, things: &[String], key: &BTreeSet<String>) -> Result<B
 }
 
 // --- holdings in what is said: one shape, written by `ask` and `answer`, read by both and by `lay` -----------------
-
-const HOLDINGS_Q: &str = "
-SELECT ?h ?t ?p ?v ?from ?until ?taken WHERE { GRAPH $graph { ?n coordination:holding ?h . ?h coordination:of ?t ; ?p ?v .
-  OPTIONAL { ?h coordination:from ?from } OPTIONAL { ?h coordination:until ?until } OPTIONAL { ?h coordination:taken ?taken } } }";
 
 fn named(iri: &str) -> NamedNode {
     NamedNode::new_unchecked(iri)
@@ -434,6 +435,9 @@ pub(crate) fn said(
 
 /// The holdings a question or an answer in `graph` carries, as the terms they were said in.
 pub(crate) fn heard(store: &Store, graph: &str) -> Result<Vec<Holding>, Error> {
+    const HOLDINGS_Q: &str = "
+    SELECT ?h ?t ?p ?v ?from ?until ?taken WHERE { GRAPH $graph { ?n coordination:holding ?h . ?h coordination:of ?t ; ?p ?v .
+      OPTIONAL { ?h coordination:from ?from } OPTIONAL { ?h coordination:until ?until } OPTIONAL { ?h coordination:taken ?taken } } }";
     struct Found {
         thing: String,
         from: Option<String>,
@@ -510,11 +514,10 @@ pub(crate) fn asked(scratch: &Store, text: &str) -> Result<Vec<Row>, Error> {
     scratch.rows(text, &[SCRATCH])
 }
 
-const KINDS_Q: &str = "SELECT ?k WHERE { $thing a ?k }";
-
 /// Whether `constraint` reads a violation where `mine` and `theirs` hold at once: its own select, asked of the two
 /// things with the kinds the agent believes them of and the values the holdings give them, and nothing else.
 pub(crate) fn violates(store: &Store, constraint: &str, mine: &Holding, theirs: &Holding) -> Result<bool, Error> {
+    const KINDS_Q: &str = "SELECT ?k WHERE { $thing a ?k }";
     if !mine.overlaps(theirs) {
         return Ok(false);
     }
@@ -532,10 +535,7 @@ pub(crate) fn violates(store: &Store, constraint: &str, mine: &Holding, theirs: 
         }
     }
     let scratch = scratch(store, quads)?;
-    let mut graphs = of_kind(store, &[CONSTRAINT_GRAPH])?;
-    graphs.extend(common);
-    for r in rows_of(store, TEXTS_Q, &[("constraint", Value::iri(constraint))], &graphs)? {
-        let Some(text) = value(&r, "text") else { continue };
+    for text in texts_of(store, constraint)? {
         match asked(&scratch, &text) {
             Ok(found) if !found.is_empty() => return Ok(true),
             Ok(_) => {}

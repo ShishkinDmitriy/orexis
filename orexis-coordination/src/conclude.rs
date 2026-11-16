@@ -24,15 +24,6 @@ use crate::ontology::{
     CONFLICT, COORDINATION, QUESTION_GRAPH, WON_BY, answer_graph, conflict_of, conflicts_graph, draw_of, question_graph,
 };
 
-/// EVERY ANSWER BETWEEN THE AGENT AND A PEER, said or heard, with the constraint and whether it carries a holding.
-const ANSWERS_Q: &str = "
-SELECT ?g ?asker ?answerer ?constraint (COUNT(?h) AS ?held) WHERE {
-  GRAPH $cat { ?g a coordination:AnswerGraph ; orexis:arrivedBy ?arrival . VALUES ?arrival { $recorded $received } }
-  GRAPH ?g { ?a a coordination:Answer ; coordination:answeredBy ?answerer ; coordination:over ?constraint ; coordination:answers ?q .
-             OPTIONAL { ?a coordination:holding ?h } }
-  GRAPH ?qg { ?q coordination:asks ?asker } }
-GROUP BY ?g ?asker ?answerer ?constraint";
-
 /// WHAT THE AGENT CONCLUDED BEFORE.
 pub(crate) const PRIOR_Q: &str = "
 SELECT ?c ?peer ?constraint ?round ?since ?standing ?silent ?winner WHERE { GRAPH $graph {
@@ -40,24 +31,7 @@ SELECT ?c ?peer ?constraint ?round ?since ?standing ?silent ?winner WHERE { GRAP
      coordination:since ?since ; coordination:draw ?draw . OPTIONAL { ?c coordination:standing ?standing }
   OPTIONAL { ?c coordination:silent ?silent } OPTIONAL { ?draw coordination:wonBy ?winner } } }";
 
-/// THE LATEST ROUND A PEER WAS HEARD DRAWING A CONFLICT IN.
-const HEARD_Q: &str = "SELECT (MAX(?r) AS ?round) WHERE { $conflict coordination:drawnIn ?r }";
-
-/// EVERY OUTCOME THE WORLD'S RULES SHIP, with its text.
-const OUTCOMES_Q: &str = "
-SELECT ?rule ?text WHERE { ?rule a coordination:Outcome ; sh:construct ?text .
-                           FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule";
-
 const RULES_GRAPH: &str = "http://www.w3.org/ns/shacl#RulesGraph";
-
-const ASKED_Q: &str = "SELECT ?start WHERE { GRAPH $cat { $graph orexis:arrivedBy $recorded ; dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1";
-const HEARD_ANSWER_Q: &str =
-    "SELECT ?g WHERE { GRAPH $cat { $graph orexis:arrivedBy $received . BIND($graph AS ?g) } } LIMIT 1";
-
-/// EVERY DRAW THE AGENT CONCLUDED A WINNER OF, with the winner and the constraint its conflict is over.
-const WINS_Q: &str =
-    "SELECT ?draw ?constraint ?w WHERE { GRAPH $graph { ?c coordination:over ?constraint ; coordination:draw ?draw .
-                                                          ?draw coordination:wonBy ?w } }";
 
 /// One conflict as concluded.
 #[derive(Clone, Debug, PartialEq)]
@@ -115,6 +89,16 @@ pub(crate) fn prior(store: &Store, me: &str) -> Result<BTreeMap<String, Conclude
 /// Conclude the conflicts of the self `me` of `store` at `at`, and write them where they changed; the graph written,
 /// or none.
 pub fn conclude(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Error> {
+    /// EVERY ANSWER BETWEEN THE AGENT AND A PEER, said or heard, with the constraint and whether it carries a holding.
+    const ANSWERS_Q: &str = "
+    SELECT ?g ?asker ?answerer ?constraint (COUNT(?h) AS ?held) WHERE {
+      GRAPH $cat { ?g a coordination:AnswerGraph ; orexis:arrivedBy ?arrival . VALUES ?arrival { $recorded $received } }
+      GRAPH ?g { ?a a coordination:Answer ; coordination:answeredBy ?answerer ; coordination:over ?constraint ; coordination:answers ?q .
+                 OPTIONAL { ?a coordination:holding ?h } }
+      GRAPH ?qg { ?q coordination:asks ?asker } }
+    GROUP BY ?g ?asker ?answerer ?constraint";
+    /// THE LATEST ROUND A PEER WAS HEARD DRAWING A CONFLICT IN.
+    const HEARD_Q: &str = "SELECT (MAX(?r) AS ?round) WHERE { $conflict coordination:drawnIn ?r }";
     let Some(cat) = store.catalogue()? else {
         return Ok(Vec::new());
     };
@@ -228,6 +212,9 @@ fn unanswered(
     concluded: &BTreeMap<String, Concluded>,
     asking: &BTreeSet<String>,
 ) -> Result<BTreeMap<String, Concluded>, Error> {
+    const ASKED_Q: &str = "SELECT ?start WHERE { GRAPH $cat { $graph orexis:arrivedBy $recorded ; dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1";
+    const HEARD_ANSWER_Q: &str =
+        "SELECT ?g WHERE { GRAPH $cat { $graph orexis:arrivedBy $received . BIND($graph AS ?g) } } LIMIT 1";
     let mut out = BTreeMap::new();
     for constraint in held(store)? {
         for peer in in_range(store, me, &key_of(store, &constraint)?, at)? {
@@ -301,6 +288,10 @@ fn unanswered(
 
 /// Every draw the self `me` of `store` concluded it won, with the constraint its conflict is over.
 pub fn wins(store: &Store, me: &str) -> Result<BTreeMap<String, String>, Error> {
+    /// EVERY DRAW THE AGENT CONCLUDED A WINNER OF, with the winner and the constraint its conflict is over.
+    const WINS_Q: &str =
+        "SELECT ?draw ?constraint ?w WHERE { GRAPH $graph { ?c coordination:over ?constraint ; coordination:draw ?draw .
+                                                              ?draw coordination:wonBy ?w } }";
     let mut out = BTreeMap::new();
     for r in store.rows(&bind(WINS_Q, &[("graph", Value::iri(conflicts_graph(me)))])?, &[])? {
         if iri(&r, "w").as_deref() == Some(me)
@@ -314,6 +305,10 @@ pub fn wins(store: &Store, me: &str) -> Result<BTreeMap<String, String>, Error> 
 
 /// Who won each draw, as every outcome the world's rules ship concludes it over what the agent believes.
 fn won(store: &Store) -> Result<BTreeMap<String, String>, Error> {
+    /// EVERY OUTCOME THE WORLD'S RULES SHIP, with its text.
+    const OUTCOMES_Q: &str = "
+    SELECT ?rule ?text WHERE { ?rule a coordination:Outcome ; sh:construct ?text .
+                               FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule";
     let beliefs = of_kind(store, &[BELIEF])?;
     let beliefs: Vec<&str> = beliefs.iter().map(String::as_str).collect();
     let mut out = BTreeMap::new();

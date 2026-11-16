@@ -10,19 +10,18 @@ use oxsdatatypes::DateTime;
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::ontology::{ACTION, DERIVED, GRAPH_PREFIX};
-use orexis::store::{Store, Within, iri};
+use orexis::store::{Store, Within};
 
-use crate::find_scopes::STANDING_Q;
+use crate::find_scopes::standing;
 use crate::footprint::{Atom, Filling, Side, atoms_of, spelled, stored_edges};
 use crate::ontology::{DERIVATION_GRAPH, WAIT};
-
-const WAIT_Q: &str = "SELECT ?w WHERE { $wait a orexis:Action BIND($wait AS ?w) } LIMIT 1";
 
 /// Cluster every action the store holds into scopes and write them, replacing what stood. An action is in every
 /// scope a filling of it lies in, and a predicate or a term in every scope an atom of it falls in; an action
 /// stating no effect, or with no filling here, is in none — save the wait, which is in every one (#920); one whose
 /// effect cannot be read joins everything.
 pub fn scope_actions(store: &Store, now: DateTime) -> Result<(), Error> {
+    const WAIT_Q: &str = "SELECT ?w WHERE { $wait a orexis:Action BIND($wait AS ?w) } LIMIT 1";
     let atoms = atoms_of(store, now)?;
     let derivations = store.graphs_of(&[DERIVATION_GRAPH], &Within::default())?;
     let derivations: Vec<&str> = derivations.iter().map(String::as_str).collect();
@@ -91,11 +90,7 @@ fn scope_name(n: usize) -> String {
 /// Replace the store's scopes with these, classified even when empty: a store with no scope graph has never been
 /// scoped. One update: every standing scope graph dropped with its row, then the graph and its row together.
 fn save(store: &Store, scopes: &[(String, BTreeSet<String>)]) -> Result<(), Error> {
-    let standing: Vec<String> = store
-        .rows(STANDING_Q, &[])?
-        .iter()
-        .filter_map(|r| iri(r, "g"))
-        .collect();
+    let standing = standing(store)?;
     let blocks: Vec<String> = scopes
         .iter()
         .map(|(scope, members)| {

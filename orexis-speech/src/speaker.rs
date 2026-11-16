@@ -20,13 +20,6 @@ pub(crate) const STATED: usize = 0;
 const EXTRACTED: usize = 1;
 pub(crate) const SPEAK: usize = 2;
 
-/// EVERY STATEMENT NOTHING WAS EXTRACTED FROM YET: one no graph says it was derived from.
-const UNEXTRACTED_Q: &str = "
-SELECT ?g WHERE { GRAPH $cat { ?g a speech:StatementGraph FILTER NOT EXISTS { ?b prov:wasDerivedFrom ?g } } } ORDER BY ?g";
-
-/// HOW A STATEMENT ARRIVED, and THE KINDS IT SAYS IT IS: what is said of it.
-const ARRIVAL_Q: &str = "SELECT ?arrival WHERE { GRAPH $cat { $graph orexis:arrivedBy ?arrival } }";
-
 /// THE SPEAKER THE SELF PLAYS, the package's core: who says, whoever watches it say, and the beliefs extracted as it
 /// started for the first turn to hand on. `speech:Speaker` states no figure.
 pub struct Speaker {
@@ -51,6 +44,9 @@ impl Speaker {
     /// What a restart finds unextracted: every statement nothing was extracted from, extracted now and handed on at
     /// the first turn.
     pub(crate) fn unextracted(&mut self) -> Result<(), Error> {
+        /// EVERY STATEMENT NOTHING WAS EXTRACTED FROM YET: one no graph says it was derived from.
+        const UNEXTRACTED_Q: &str = "
+        SELECT ?g WHERE { GRAPH $cat { ?g a speech:StatementGraph FILTER NOT EXISTS { ?b prov:wasDerivedFrom ?g } } } ORDER BY ?g";
         if let Some(cat) = self.beliefs.catalogue()? {
             let unextracted: Vec<String> = self
                 .beliefs
@@ -96,6 +92,8 @@ impl Speaker {
     }
 
     fn arrival(&self, graph: &str) -> Result<Option<String>, Error> {
+        /// HOW A STATEMENT ARRIVED, and THE KINDS IT SAYS IT IS: what is said of it.
+        const ARRIVAL_Q: &str = "SELECT ?arrival WHERE { GRAPH $cat { $graph orexis:arrivedBy ?arrival } }";
         let Some(cat) = self.beliefs.catalogue()? else {
             return Ok(None);
         };

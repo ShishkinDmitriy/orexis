@@ -44,22 +44,6 @@ pub const CROSSING: &[&str] = &[
     CONSTRAINT_GRAPH,
 ];
 
-/// EVERY ROW'S HASH, and every changeable graph with the graph it was cut from.
-const HASHES_Q: &str = "SELECT ?g ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:hash ?h } }";
-const PIECES_Q: &str = "SELECT ?piece ?source WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-  ?piece a planning:ChangeableGraph . OPTIONAL { ?piece prov:wasDerivedFrom ?source } } }";
-/// A ROW TAKEN BACK, its period with it, and the cut it says it carries left: the graph is the one cut.
-const UNDESCRIBE_U: &str = "DELETE { GRAPH $cat { $g ?p ?o . ?o ?pp ?po } }
-WHERE { GRAPH $cat { $g ?p ?o . FILTER(?p != planning:cutBy)
-                     OPTIONAL { ?o ?pp ?po . FILTER(?p = dcterms:temporal) } } }";
-
-/// WHAT THE STORE MADE FOR ITSELF, which a refresh keeps: planning's kinds, and the wants the derivation minted.
-const MADE_Q: &str = "
-SELECT ?g WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-    { ?g a ?kind . VALUES ?kind { planning:GroundGraph planning:PossibleGraph planning:PlanGraph } }
-    UNION { ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } } }";
-
 /// Fill `into` with what a search over `scope` needs from `beliefs`, or refresh what an earlier filling left there.
 /// `scopes` is the store's partition as `find_scopes` reads it; handed neither, everything crosses.
 pub fn prepare_ground(
@@ -68,6 +52,18 @@ pub fn prepare_ground(
     scope: Option<&str>,
     scopes: Option<&Scopes>,
 ) -> Result<(), Error> {
+    const PIECES_Q: &str = "SELECT ?piece ?source WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+      ?piece a planning:ChangeableGraph . OPTIONAL { ?piece prov:wasDerivedFrom ?source } } }";
+    /// A ROW TAKEN BACK, its period with it, and the cut it says it carries left: the graph is the one cut.
+    const UNDESCRIBE_U: &str = "DELETE { GRAPH $cat { $g ?p ?o . ?o ?pp ?po } }
+    WHERE { GRAPH $cat { $g ?p ?o . FILTER(?p != planning:cutBy)
+                         OPTIONAL { ?o ?pp ?po . FILTER(?p = dcterms:temporal) } } }";
+    /// WHAT THE STORE MADE FOR ITSELF, which a refresh keeps: planning's kinds, and the wants the derivation minted.
+    const MADE_Q: &str = "
+    SELECT ?g WHERE {
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+        { ?g a ?kind . VALUES ?kind { planning:GroundGraph planning:PossibleGraph planning:PlanGraph } }
+        UNION { ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } } }";
     let every = Within::default();
     let made: BTreeSet<String> = into.rows(MADE_Q, &[])?.iter().filter_map(|r| iri(r, "g")).collect();
     let behind = of_another_scope(beliefs, scope, scopes)?;
@@ -123,6 +119,8 @@ pub fn prepare_ground(
 
 /// Every graph `store`'s catalogue says the hash of, and the hash.
 fn hashes(store: &Store) -> Result<HashMap<String, String>, Error> {
+    /// EVERY ROW'S HASH, and every changeable graph with the graph it was cut from.
+    const HASHES_Q: &str = "SELECT ?g ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:hash ?h } }";
     Ok(store
         .rows(HASHES_Q, &[])?
         .iter()

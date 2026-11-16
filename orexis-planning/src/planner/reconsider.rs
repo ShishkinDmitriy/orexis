@@ -13,42 +13,16 @@ use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, instant, iri};
 
 use super::{
-    Flight, Flights, PREDICTS_Q, Planner, Reconsidered, Said, broken, graphs, later, quads_of, said, strs, zero,
+    Flight, Flights, Planner, Reconsidered, Said, broken, graphs, later, predicted, quads_of, said, strs, zero,
 };
 use crate::admit::local_of;
 use crate::memo::Memo;
 use crate::ontology::{CONSTRAINT_GRAPH, GROUND_GRAPH, SATISFIED};
 use crate::world_at::lexical;
 
-const STANDS_AT_Q: &str = r#"
-SELECT ?intention ?want ?plan ?step ?action ?due ?taken ?lands ?ending WHERE {
-  GRAPH ?g { ?intention a execution:Intention ; execution:pursues ?want ; execution:by ?step ; execution:adopts ?plan .
-             FILTER NOT EXISTS { ?intention execution:resolvedAt ?done }
-             OPTIONAL { ?act execution:of ?step ; execution:taken true ; execution:takenAt ?taken }
-             OPTIONAL { ?intention execution:endsAfter ?ending } }
-  GRAPH ?plan { ?step planning:fills ?action .
-                OPTIONAL { ?step execution:notBefore ?due } OPTIONAL { ?step execution:landsAt ?lands } } }
-ORDER BY ?intention"#;
-
-const REOPENS_Q: &str = r#"SELECT ?w WHERE { GRAPH ?g { $want planning:reopens ?w } } ORDER BY ?w"#;
-
-const PLAN_FOR_Q: &str = r#"SELECT ?plan ?outcome WHERE { GRAPH ?plan { ?plan a planning:Plan ; planning:for $want ; planning:outcome ?outcome } } LIMIT 1"#;
-
 const DERIVED_Q: &str = r#"
 SELECT ?w WHERE { GRAPH ?g { ?w a planning:Want }
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }"#;
-
-const FORESEEN_U: &str = r#"
-INSERT { GRAPH ?cat { $world dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start $start ] } }
-WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph } }"#;
-
-const UNWEIGH_U: &str = r#"
-DELETE { GRAPH ?cat { ?x ?p ?o . ?v ?vp ?vo } }
-WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                      ?x planning:weighs $world ; ?p ?o .
-                      OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }"#;
-
-const HOLDS_CONSTRAINT_Q: &str = r#"SELECT ?c WHERE { $holder planning:holds ?c . ?c a planning:Constraint } LIMIT 1"#;
 
 impl Planner {
     /// Ask that each of `wants` an intention walks be searched again in the next pass.
@@ -87,6 +61,8 @@ impl Planner {
 
     /// Whether this agent holds any constraint — the one thing a walking want can be reopened by.
     pub(super) fn holds_a_constraint(&self) -> Result<bool, Error> {
+        const HOLDS_CONSTRAINT_Q: &str =
+            r#"SELECT ?c WHERE { $holder planning:holds ?c . ?c a planning:Constraint } LIMIT 1"#;
         let held = graphs(&self.beliefs, &[CONSTRAINT_GRAPH])?;
         Ok(!self
             .beliefs
@@ -99,6 +75,15 @@ impl Planner {
 
     /// Where every standing intention stands, by the want it pursues.
     pub(super) fn flights(&self, at: DateTime) -> Result<Flights, Error> {
+        const STANDS_AT_Q: &str = r#"
+        SELECT ?intention ?want ?plan ?step ?action ?due ?taken ?lands ?ending WHERE {
+          GRAPH ?g { ?intention a execution:Intention ; execution:pursues ?want ; execution:by ?step ; execution:adopts ?plan .
+                     FILTER NOT EXISTS { ?intention execution:resolvedAt ?done }
+                     OPTIONAL { ?act execution:of ?step ; execution:taken true ; execution:takenAt ?taken }
+                     OPTIONAL { ?intention execution:endsAfter ?ending } }
+          GRAPH ?plan { ?step planning:fills ?action .
+                        OPTIONAL { ?step execution:notBefore ?due } OPTIONAL { ?step execution:landsAt ?lands } } }
+        ORDER BY ?intention"#;
         let mut held: BTreeMap<String, Vec<(Flight, String)>> = BTreeMap::new();
         for r in self.beliefs.rows(STANDS_AT_Q, &[])? {
             let (Some(want), Some(plan), Some(head), Some(action)) =
@@ -174,6 +159,14 @@ impl Planner {
         only: Option<&BTreeSet<String>>,
         memo: &mut Memo,
     ) -> Result<BTreeSet<String>, Error> {
+        const FORESEEN_U: &str = r#"
+        INSERT { GRAPH ?cat { $world dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start $start ] } }
+        WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph } }"#;
+        const UNWEIGH_U: &str = r#"
+        DELETE { GRAPH ?cat { ?x ?p ?o . ?v ?vp ?vo } }
+        WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                              ?x planning:weighs $world ; ?p ?o .
+                              OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }"#;
         let derived: BTreeSet<String> = store.rows(DERIVED_Q, &[])?.iter().filter_map(|r| iri(r, "w")).collect();
         let mut out = BTreeSet::new();
         for (want, flight) in flights {
@@ -190,19 +183,14 @@ impl Planner {
             if untaken.is_empty() || (untaken.len() == 1 && flight.in_flight) {
                 continue;
             }
-            let predicts: BTreeMap<String, orexis::store::Row> = self
-                .beliefs
-                .rows(&bind(PREDICTS_Q, &[("plan", Value::iri(flight.plan.as_str()))])?, &[])?
-                .into_iter()
-                .filter_map(|r| Some((iri(&r, "step")?, r)))
-                .collect();
+            let predicts = predicted(&self.beliefs, flight.plan.as_str())?;
             let mut foreseen: Vec<String> = Vec::new();
             let found = (|| -> Result<Option<bool>, Error> {
                 let mut changes: Vec<(Vec<Quad>, Vec<Quad>)> = Vec::new();
                 let (mut before, mut world): (Option<String>, Option<String>) = (None, None);
                 for step in untaken {
                     let row = predicts.get(step);
-                    let lands = match row.and_then(|r| r.get("lands")) {
+                    let lands = match row.and_then(|p| p.lands.as_ref()) {
                         Some(l) => lexical(l)?
                             .checked_add_day_time_duration(flight.late)
                             .unwrap_or(flight.landing),
@@ -213,8 +201,8 @@ impl Planner {
                         return Ok(None);
                     };
                     let change = (
-                        quads_of(&self.beliefs, row.and_then(|r| iri(r, "retracts")))?,
-                        quads_of(&self.beliefs, row.and_then(|r| iri(r, "adds")))?,
+                        quads_of(&self.beliefs, row.and_then(|p| p.retracts.clone()))?,
+                        quads_of(&self.beliefs, row.and_then(|p| p.adds.clone()))?,
                     );
                     changes.push(change.clone());
                     let (base, applying) = match (&before, &world) {
@@ -298,6 +286,8 @@ impl Planner {
         flights: &Flights,
         kept: &mut BTreeMap<String, Vec<String>>,
     ) -> Result<(), Error> {
+        const REOPENS_Q: &str = r#"SELECT ?w WHERE { GRAPH ?g { $want planning:reopens ?w } } ORDER BY ?w"#;
+        const PLAN_FOR_Q: &str = r#"SELECT ?plan ?outcome WHERE { GRAPH ?plan { ?plan a planning:Plan ; planning:for $want ; planning:outcome ?outcome } } LIMIT 1"#;
         let reopened: Vec<String> = store
             .rows(&bind(REOPENS_Q, &[("want", Value::iri(want))])?, &[])?
             .iter()

@@ -26,26 +26,6 @@ pub fn possible() -> String {
     format!("{GRAPH_PREFIX}possible/")
 }
 
-/// WHETHER THE STORE HOLDS THE WAIT, among the actions.
-const WAIT_Q: &str = "SELECT ?w WHERE { $wait a orexis:Action BIND($wait AS ?w) } LIMIT 1";
-
-/// Each action with its precondition and the parameters it declares. `STR(?takes)` because `GROUP_CONCAT` over
-/// an IRI binds nothing in this engine.
-const ACTIONS_Q: &str =
-    "SELECT ?action ?precondition (GROUP_CONCAT(DISTINCT STR(?takes); separator=\" \") AS ?takes_) WHERE {
-  ?action a orexis:Action ; planning:precondition ?precondition .
-  OPTIONAL { ?action orexis:takes ?takes }
-} GROUP BY ?action ?precondition";
-
-/// WHAT THE WORLD ALREADY ADMITS: each candidate leaving it, the action it fills and every parameter.
-const ADMITTED_Q: &str = "
-SELECT ?c ?action ?p ?v WHERE {
-  GRAPH $cat { ?c a planning:Candidate ; planning:from $world ; planning:fills ?action .
-               OPTIONAL { ?c ?p ?v . FILTER(?p NOT IN (planning:from, planning:fills, planning:minted, rdf:type)) } } }";
-
-/// THE HIGHEST MINT NUMBER IN THE STORE, candidate or world.
-const MINTED_Q: &str = "SELECT (MAX(?m) AS ?n) WHERE { GRAPH $cat { ?w planning:minted ?m } }";
-
 /// Which actions a scope asks, and which values are another scope's.
 #[derive(Clone, Debug, Default)]
 pub struct Scope<'a> {
@@ -55,6 +35,13 @@ pub struct Scope<'a> {
 
 /// Write every candidate `world` admits for the self.
 pub fn admit(store: &Store, world: &str, scope: &Scope<'_>, memo: &mut Memo) -> Result<(), Error> {
+    /// WHAT THE WORLD ALREADY ADMITS: each candidate leaving it, the action it fills and every parameter.
+    const ADMITTED_Q: &str = "
+    SELECT ?c ?action ?p ?v WHERE {
+      GRAPH $cat { ?c a planning:Candidate ; planning:from $world ; planning:fills ?action .
+                   OPTIONAL { ?c ?p ?v . FILTER(?p NOT IN (planning:from, planning:fills, planning:minted, rdf:type)) } } }";
+    /// THE HIGHEST MINT NUMBER IN THE STORE, candidate or world.
+    const MINTED_Q: &str = "SELECT (MAX(?m) AS ?n) WHERE { GRAPH $cat { ?w planning:minted ?m } }";
     let graphs = world_at(store, Some(world), &Asking::default(), memo)?;
     let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
     let cat = catalogue(store, memo)?;
@@ -171,6 +158,13 @@ fn key((action, filling): &(String, Filling)) -> (String, Vec<(String, String, S
 
 /// The actions the store declares, sorted by action, once a pass.
 fn actions(store: &Store, memo: &mut Memo) -> Result<Vec<Declared>, Error> {
+    /// Each action with its precondition and the parameters it declares. `STR(?takes)` because `GROUP_CONCAT` over
+    /// an IRI binds nothing in this engine.
+    const ACTIONS_Q: &str =
+        "SELECT ?action ?precondition (GROUP_CONCAT(DISTINCT STR(?takes); separator=\" \") AS ?takes_) WHERE {
+      ?action a orexis:Action ; planning:precondition ?precondition .
+      OPTIONAL { ?action orexis:takes ?takes }
+    } GROUP BY ?action ?precondition";
     if let Some(known) = &memo.actions {
         return Ok(known.clone());
     }
@@ -198,6 +192,8 @@ fn actions(store: &Store, memo: &mut Memo) -> Result<Vec<Declared>, Error> {
 
 /// Whether the store holds the wait among its actions, once a pass.
 fn waits(store: &Store, memo: &mut Memo) -> Result<bool, Error> {
+    /// WHETHER THE STORE HOLDS THE WAIT, among the actions.
+    const WAIT_Q: &str = "SELECT ?w WHERE { $wait a orexis:Action BIND($wait AS ?w) } LIMIT 1";
     if let Some(known) = memo.waits {
         return Ok(known);
     }
@@ -232,18 +228,14 @@ mod tests {
 
     use super::*;
 
-    const PRESENT_Q: &str = "
-SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start } }
-ORDER BY ?start LIMIT 1";
-
-    const CANDIDATES_Q: &str =
-        "SELECT ?c WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?c a planning:Candidate } }";
-
     fn directory() -> PathBuf {
         snapshots::tree().join("orexis-planning/tests/admit")
     }
 
     fn present(store: &Store) -> String {
+        const PRESENT_Q: &str = "
+    SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start } }
+    ORDER BY ?start LIMIT 1";
         iri(&store.rows(PRESENT_Q, &[]).unwrap()[0], "g").unwrap()
     }
 
@@ -262,6 +254,8 @@ ORDER BY ?start LIMIT 1";
     }
 
     fn candidates(store: &Store) -> BTreeSet<String> {
+        const CANDIDATES_Q: &str =
+            "SELECT ?c WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?c a planning:Candidate } }";
         store
             .rows(CANDIDATES_Q, &[])
             .unwrap()

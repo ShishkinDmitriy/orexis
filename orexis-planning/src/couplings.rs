@@ -42,14 +42,6 @@ pub const REACH_GRAPH: &str = "http://example.org/orexis/graph/reach";
 /// A round is every construct asked once over what stands; the reach closes on its own, so this is a guard.
 pub const ROUNDS: usize = 64;
 
-const CONSTRAINTS_Q: &str = "SELECT ?c WHERE { $holder planning:holds ?c . ?c a planning:Constraint } ORDER BY ?c";
-
-const ACTIONS_Q: &str = "
-SELECT ?action ?precondition ?update WHERE {
-  ?action a orexis:Action ; planning:precondition ?precondition ;
-          planning:effect/sh:rule ?r . ?r a belief:Transition ; belief:update ?update }
-ORDER BY ?action ?update";
-
 static TOKEN: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\$([A-Za-z_][A-Za-z0-9_]*)\b").expect("a valid pattern"));
 static HEAD: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(?is)^(\s*(?:PREFIX\s+\S+\s+<[^>]*>\s*)*)SELECT\s+(?:DISTINCT\s+|REDUCED\s+)?(.*?)\s+WHERE\b")
@@ -100,6 +92,12 @@ pub fn couplings(
     now: DateTime,
     memo: &mut Memo,
 ) -> Result<Option<Couplings>, Error> {
+    const CONSTRAINTS_Q: &str = "SELECT ?c WHERE { $holder planning:holds ?c . ?c a planning:Constraint } ORDER BY ?c";
+    const ACTIONS_Q: &str = "
+    SELECT ?action ?precondition ?update WHERE {
+      ?action a orexis:Action ; planning:precondition ?precondition ;
+              planning:effect/sh:rule ?r . ?r a belief:Transition ; belief:update ?update }
+    ORDER BY ?action ?update";
     let constraint_graphs = store.graphs_of(&[CONSTRAINT_GRAPH], &Within::default())?;
     let graphs: Vec<&str> = constraint_graphs.iter().map(String::as_str).collect();
     let constraints: Vec<String> = store

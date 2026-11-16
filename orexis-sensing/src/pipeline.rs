@@ -132,14 +132,6 @@ fn number(pointer: &str, node: &Json) -> Result<f64, Unread> {
         .ok_or_else(|| Unread::Pointer(format!("'{pointer}': what is there is not a number")))
 }
 
-/// THE BINDING: what the world derives onto a sensor about its bytes, every part optional.
-const BINDING_Q: &str = "
-SELECT ?codec ?pointer ?starts ?ends WHERE {
-  OPTIONAL { $sensor sensing:decodedBy ?codec }
-  OPTIONAL { $sensor sensing:readingPointer ?pointer }
-  OPTIONAL { $sensor sensing:startsPointer ?starts }
-  OPTIONAL { $sensor sensing:endsPointer ?ends } }";
-
 #[derive(Default)]
 struct Binding {
     codec: Option<String>,
@@ -149,6 +141,13 @@ struct Binding {
 }
 
 fn binding(store: &Store, sensor: &str) -> Result<Binding, Error> {
+    /// THE BINDING: what the world derives onto a sensor about its bytes, every part optional.
+    const BINDING_Q: &str = "
+    SELECT ?codec ?pointer ?starts ?ends WHERE {
+      OPTIONAL { $sensor sensing:decodedBy ?codec }
+      OPTIONAL { $sensor sensing:readingPointer ?pointer }
+      OPTIONAL { $sensor sensing:startsPointer ?starts }
+      OPTIONAL { $sensor sensing:endsPointer ?ends } }";
     let common = store.graphs_of(&[BELIEF], &Within::common())?;
     let graphs: Vec<&str> = common.iter().map(String::as_str).collect();
     let found = store.rows(&bind(BINDING_Q, &[("sensor", Value::iri(sensor))])?, &graphs)?;

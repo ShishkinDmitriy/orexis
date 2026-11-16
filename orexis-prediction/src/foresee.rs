@@ -45,34 +45,6 @@ pub const NUMBERS: &str = "http://example.org/orexis/graph/ground/foreseen-numbe
 
 const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 
-/// EVERY SENSOR WITH A PERCEPT IN HAND, by sensing's kind and SOSA's pattern.
-const SENSORS_Q: &str = "
-SELECT DISTINCT ?sensor WHERE {
-  GRAPH $cat { ?g a sensing:ObservationGraph }
-  GRAPH ?g { ?o sosa:madeBySensor ?sensor } }
-ORDER BY ?sensor";
-
-/// THE OBSERVATION IN HAND: the percept begun last, and of two begun at once the one still holding.
-const OBSERVATION_Q: &str = "
-SELECT ?graph ?node ?taken ?from WHERE {
-  GRAPH $cat { ?graph a sensing:ObservationGraph ; dcterms:temporal ?p . ?p orexis:start ?from .
-               OPTIONAL { ?p orexis:end ?until } }
-  GRAPH ?graph { ?node sosa:madeBySensor $sensor . OPTIONAL { ?node sosa:resultTime ?taken } } }
-ORDER BY DESC(?from) ASC(BOUND(?until)) DESC(?until) LIMIT 1";
-
-const KEY_Q: &str = "
-SELECT ?feature ?property ?value WHERE {
-  $node sosa:hasFeatureOfInterest ?feature ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value } LIMIT 1";
-
-/// EVERY FLOW MOVING THE PROPERTY, off the graphs of flows alone.
-const FLOWS_Q: &str = "SELECT ?flow ?rate WHERE { ?flow a $flow ; $moves $property ; $rate_of ?rate } ORDER BY ?flow";
-
-/// THE HAPPENINGS: every instant inside a stretch at which a belief begins or stops holding.
-const HAPPENINGS_Q: &str = "
-SELECT DISTINCT ?t WHERE {
-  GRAPH $cat { ?g a orexis:BeliefGraph ; dcterms:temporal ?p . { ?p orexis:start ?t } UNION { ?p orexis:end ?t } }
-  FILTER(?t > $from && ?t < $to) }";
-
 /// One flow moving a key: its name, and the select answering its rate.
 #[derive(Clone, Debug)]
 struct Flow {
@@ -305,6 +277,11 @@ impl Foresight {
     /// The instants between `t0` and `t1` a segment must end at: every happening, each key's horizon, the hour's end
     /// and `t1`.
     fn marks(&self, store: &Store, t0: f64, t1: f64, cap: f64) -> Result<Vec<f64>, Error> {
+        /// THE HAPPENINGS: every instant inside a stretch at which a belief begins or stops holding.
+        const HAPPENINGS_Q: &str = "
+        SELECT DISTINCT ?t WHERE {
+          GRAPH $cat { ?g a orexis:BeliefGraph ; dcterms:temporal ?p . { ?p orexis:start ?t } UNION { ?p orexis:end ?t } }
+          FILTER(?t > $from && ?t < $to) }";
         let mut out: Vec<f64> = vec![t1];
         if let Some(cat) = store.catalogue()? {
             let text = bind(
@@ -463,6 +440,25 @@ pub fn foresee(
     now: DateTime,
     placed: Option<&Placed<'_>>,
 ) -> Result<Option<Foresight>, Error> {
+    /// EVERY SENSOR WITH A PERCEPT IN HAND, by sensing's kind and SOSA's pattern.
+    const SENSORS_Q: &str = "
+    SELECT DISTINCT ?sensor WHERE {
+      GRAPH $cat { ?g a sensing:ObservationGraph }
+      GRAPH ?g { ?o sosa:madeBySensor ?sensor } }
+    ORDER BY ?sensor";
+    /// THE OBSERVATION IN HAND: the percept begun last, and of two begun at once the one still holding.
+    const OBSERVATION_Q: &str = "
+    SELECT ?graph ?node ?taken ?from WHERE {
+      GRAPH $cat { ?graph a sensing:ObservationGraph ; dcterms:temporal ?p . ?p orexis:start ?from .
+                   OPTIONAL { ?p orexis:end ?until } }
+      GRAPH ?graph { ?node sosa:madeBySensor $sensor . OPTIONAL { ?node sosa:resultTime ?taken } } }
+    ORDER BY DESC(?from) ASC(BOUND(?until)) DESC(?until) LIMIT 1";
+    const KEY_Q: &str = "
+    SELECT ?feature ?property ?value WHERE {
+      $node sosa:hasFeatureOfInterest ?feature ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value } LIMIT 1";
+    /// EVERY FLOW MOVING THE PROPERTY, off the graphs of flows alone.
+    const FLOWS_Q: &str =
+        "SELECT ?flow ?rate WHERE { ?flow a $flow ; $moves $property ; $rate_of ?rate } ORDER BY ?flow";
     let Some(cat) = beliefs.catalogue()? else {
         return Ok(None);
     };

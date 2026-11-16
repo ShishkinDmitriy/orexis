@@ -34,23 +34,6 @@ use crate::ontology::{BUDGET_TERM, DELIBERATOR, INTO, REVISES, REVISING, REVISIO
 use crate::revise::{self, revise, say_settled};
 use crate::trigger::{trigger, triggers_any};
 
-/// THE DELIBERATOR THE SELF PLAYS, IN ONE QUERY: what a role the self plays states of its budget and, where none
-/// does, the default belief's ontology states on the role's shape (`sh:defaultValue`). Whichever role states it: a
-/// domain's role beneath the deliberator is one too.
-const DELIBERATOR_Q: &str = "SELECT DISTINCT (COALESCE(?said, ?own) AS ?budget) WHERE { \
-?shape sh:targetClass $deliberator ; sh:property ?property . \
-?property sh:path $budgeted ; sh:defaultValue ?own . \
-OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . ?role $budgeted ?said } }";
-
-/// EVERY SOURCE WHOSE RULES DID NOT SETTLE, off the revision graphs' rows.
-const UNSETTLED_Q: &str = "
-SELECT ?source WHERE { GRAPH $cat { ?g $settled false ; prov:wasDerivedFrom ?source } } ORDER BY ?source";
-
-/// THE REVISIONS THE CATALOGUE DESCRIBES, and how many are unsettled.
-const HELD_Q: &str = "
-SELECT (COUNT(?g) AS ?revisions) (SUM(IF(?settled, 0, 1)) AS ?unsettled)
-WHERE { GRAPH $cat { ?g a $revision ; $settled ?settled } }";
-
 /// Where a queued source stands: its rules not yet settled, or settled and its transitions applied up to an order.
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum Stage {
@@ -120,6 +103,13 @@ impl Deliberator {
     /// Refused where the store states no budget at all, the ontology being what the package brings as it joins, and
     /// where what it states is no whole number, which onboarding meets as it boots the agent.
     pub fn new(beliefs: &Store) -> Result<Self, Error> {
+        /// THE DELIBERATOR THE SELF PLAYS, IN ONE QUERY: what a role the self plays states of its budget and, where
+        /// none does, the default belief's ontology states on the role's shape (`sh:defaultValue`). Whichever role
+        /// states it: a domain's role beneath the deliberator is one too.
+        const DELIBERATOR_Q: &str = "SELECT DISTINCT (COALESCE(?said, ?own) AS ?budget) WHERE { \
+        ?shape sh:targetClass $deliberator ; sh:property ?property . \
+        ?property sh:path $budgeted ; sh:defaultValue ?own . \
+        OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . ?role $budgeted ?said } }";
         let mut known = beliefs.graphs_of(&[SELF_GRAPH], &Within::default())?;
         known.extend(beliefs.graphs_of(&[ONTOLOGY], &Within::default())?);
         let known: Vec<&str> = known.iter().map(String::as_str).collect();
@@ -286,6 +276,10 @@ impl Deliberator {
 
     /// The revisions the catalogue describes now, and how many are unsettled.
     pub fn held(&self) -> Result<RevisionsHeld, Error> {
+        /// THE REVISIONS THE CATALOGUE DESCRIBES, and how many are unsettled.
+        const HELD_Q: &str = "
+        SELECT (COUNT(?g) AS ?revisions) (SUM(IF(?settled, 0, 1)) AS ?unsettled)
+        WHERE { GRAPH $cat { ?g a $revision ; $settled ?settled } }";
         let Some(cat) = self.beliefs.catalogue()? else {
             return Ok(RevisionsHeld::default());
         };
@@ -328,6 +322,9 @@ impl Deliberator {
     }
 
     fn unsettled(&self) -> Result<Vec<String>, Error> {
+        /// EVERY SOURCE WHOSE RULES DID NOT SETTLE, off the revision graphs' rows.
+        const UNSETTLED_Q: &str = "
+        SELECT ?source WHERE { GRAPH $cat { ?g $settled false ; prov:wasDerivedFrom ?source } } ORDER BY ?source";
         let Some(cat) = self.beliefs.catalogue()? else {
             return Ok(Vec::new());
         };
@@ -402,10 +399,6 @@ mod tests {
 
     const SENSED: &str = "http://example.org/test#sensed";
     const T: &str = "http://example.org/test#";
-    const COUNTER_Q: &str = "SELECT ?p ?o WHERE { <http://example.org/test#counter> ?p ?o FILTER(?p != rdf:type) }";
-    const OWN_STATE_Q: &str = "SELECT ?g WHERE { GRAPH ?c { ?c a orexis:CatalogueGraph .
-    ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
-    FILTER NOT EXISTS { ?g a belief:RevisionGraph } ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
 
     /// `store` with belief's ontology in it, as the package brings it when it joins: the deliberator's shape, whose
     /// default the role's budget is where no role states one.
@@ -485,6 +478,9 @@ mod tests {
     }
 
     fn own_state(store: &Store) -> Vec<String> {
+        const OWN_STATE_Q: &str = "SELECT ?g WHERE { GRAPH ?c { ?c a orexis:CatalogueGraph .
+        ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
+        FILTER NOT EXISTS { ?g a belief:RevisionGraph } ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
         store
             .rows(OWN_STATE_Q, &[])
             .unwrap()
@@ -494,6 +490,7 @@ mod tests {
     }
 
     fn counter_in(store: &Store, graphs: &[String]) -> BTreeMap<String, String> {
+        const COUNTER_Q: &str = "SELECT ?p ?o WHERE { <http://example.org/test#counter> ?p ?o FILTER(?p != rdf:type) }";
         let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
         store
             .rows(COUNTER_Q, &graphs)

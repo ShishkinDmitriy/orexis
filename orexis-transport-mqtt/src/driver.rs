@@ -40,43 +40,6 @@ use orexis_speech::heard::heard;
 /// (`cadence::next_lapse`).
 pub const ASKED_AGAIN_AFTER_S: &str = "http://example.org/orexis/mqtt#askedAgainAfterS";
 
-/// THE PATTERNS OF THE FILTERS THAT MATCH THE TOPIC A SENSOR'S BOARD LISTENS ON.
-const COMMANDS_Q: &str = "
-SELECT ?pattern WHERE {
-  ?board ssn:hasSubSystem $sensor ; mqtt4ssn:listensToTopic ?topic .
-  ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
-ORDER BY ?pattern";
-
-/// WHERE AN ACTUATOR TAKES COMMANDS: a topic it listens to itself, or its board's.
-const ACTUATES_Q: &str = "
-SELECT ?pattern WHERE {
-  { $actuator mqtt4ssn:listensToTopic ?topic } UNION { ?board ssn:hasSubSystem $actuator ; mqtt4ssn:listensToTopic ?topic }
-  ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
-ORDER BY ?pattern";
-
-/// EVERY PATTERN NAMING A TOPIC A SENSOR PUBLISHES ON, for the sensors the agent reads.
-const TOPICS_Q: &str = "
-SELECT ?sensor ?pattern WHERE {
-  VALUES ?sensor { $sensors } ?sensor mqtt4ssn:observesTopic ?topic .
-  ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
-ORDER BY ?sensor ?pattern";
-
-/// WHAT THIS MEMBER REACHES: a device that publishes on a topic, or listens on one, or whose board does.
-const REACHES_Q: &str = "
-ASK { { $device mqtt4ssn:observesTopic ?topic } UNION { $device mqtt4ssn:listensToTopic ?topic }
-      UNION { ?board ssn:hasSubSystem $device ; mqtt4ssn:listensToTopic ?topic } }";
-
-/// THE BROKERS A THING IS REACHED OVER: the ones it is connected to where it is a client, and otherwise the ones of
-/// the client hosting it or the system it is part of.
-const BROKERS_Q: &str = "
-SELECT DISTINCT ?broker WHERE {
-  { $thing mqtt4ssn:isConnectedToBroker ?broker }
-  UNION { ?client mqtt4ssn:hosts ?system ; mqtt4ssn:isConnectedToBroker ?broker . ?system ssn:hasSubSystem* $thing } }
-ORDER BY ?broker";
-
-/// WHETHER WHOM A DOCUMENT IS TOLD TO IS AN AGENT, since a person's is not the bus's.
-const AGENT_Q: &str = "ASK { $who a orexis:Agent }";
-
 /// WHERE AN AGENT IS TOLD THINGS: the topic it listens to itself.
 const LISTENS_Q: &str = "
 SELECT ?pattern WHERE {
@@ -255,6 +218,13 @@ impl Mqtt {
     /// The clients `thing` is reached over, by index: each broker this member is connected to that the world says
     /// carries it; the one client, where the member has one.
     fn over(&self, thing: &str) -> Result<Vec<usize>, Error> {
+        /// THE BROKERS A THING IS REACHED OVER: the ones it is connected to where it is a client, and otherwise the
+        /// ones of the client hosting it or the system it is part of.
+        const BROKERS_Q: &str = "
+        SELECT DISTINCT ?broker WHERE {
+          { $thing mqtt4ssn:isConnectedToBroker ?broker }
+          UNION { ?client mqtt4ssn:hosts ?system ; mqtt4ssn:isConnectedToBroker ?broker . ?system ssn:hasSubSystem* $thing } }
+        ORDER BY ?broker";
         if let Some(i) = self.clients.iter().position(|(b, _)| b.is_none()) {
             return Ok(vec![i]);
         }
@@ -271,6 +241,12 @@ impl Mqtt {
 
     /// Every sensor the agent reads that publishes on a topic, with each pattern naming it.
     fn topics(&self) -> Result<Vec<(String, String)>, Error> {
+        /// EVERY PATTERN NAMING A TOPIC A SENSOR PUBLISHES ON, for the sensors the agent reads.
+        const TOPICS_Q: &str = "
+        SELECT ?sensor ?pattern WHERE {
+          VALUES ?sensor { $sensors } ?sensor mqtt4ssn:observesTopic ?topic .
+          ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
+        ORDER BY ?sensor ?pattern";
         let mine = sensors(&self.beliefs)?;
         if mine.is_empty() {
             return Ok(Vec::new());
@@ -319,9 +295,9 @@ impl Mqtt {
     }
 
     /// Route one message: on the topic the agent listens to, a peer's document, kept by speech's `heard`, each graph
-    /// answered with no sensor; otherwise to sensing, for every sensor of the agent's whose topic's filter matches `topic`, the
-    /// observation `received` writes of `payload` at `at`. The sensor and the graph written, first sensor first, and
-    /// none where the topic is nobody's of the agent's.
+    /// answered with no sensor; otherwise to sensing, for every sensor of the agent's whose topic's filter matches
+    /// `topic`, the observation `received` writes of `payload` at `at`. The sensor and the graph written, first sensor
+    /// first, and none where the topic is nobody's of the agent's.
     pub fn handle(
         &mut self,
         topic: &str,
@@ -371,8 +347,8 @@ impl Mqtt {
     }
 
     /// Tell the board of every sensor of this member's whose reading has fallen due to sense now, and say when to ask
-    /// again: a nudge later where a board was told, since it may not have heard, and otherwise when a reading next falls
-    /// due. Which readings have fallen due, and when one next will, is sensing's to say (`cadence`).
+    /// again: a nudge later where a board was told, since it may not have heard, and otherwise when a reading next
+    /// falls due. Which readings have fallen due, and when one next will, is sensing's to say (`cadence`).
     pub fn nudge_until(&mut self, now: DateTime) -> Result<Option<DateTime>, Error> {
         let told = self.nudge(now)?;
         let next = next_lapse(&self.beliefs, now)?;
@@ -407,6 +383,10 @@ impl Mqtt {
 
     /// Whether this member reaches `device`.
     pub fn reaches(&self, device: &str) -> Result<bool, Error> {
+        /// WHAT THIS MEMBER REACHES: a device that publishes on a topic, or listens on one, or whose board does.
+        const REACHES_Q: &str = "
+        ASK { { $device mqtt4ssn:observesTopic ?topic } UNION { $device mqtt4ssn:listensToTopic ?topic }
+              UNION { ?board ssn:hasSubSystem $device ; mqtt4ssn:listensToTopic ?topic } }";
         let common = self.common()?;
         self.beliefs
             .ask(&bind(REACHES_Q, &[("device", Value::iri(device))])?, &strs(&common))
@@ -439,6 +419,12 @@ impl Mqtt {
     /// Publish a step's command on the topic the actuator listens to, or its board's; not retained, since a command is
     /// an act and a retained one would be taken again by a device that reconnects.
     pub fn actuate(&mut self, actuator: &str, payload: &Json) -> Result<bool, Error> {
+        /// WHERE AN ACTUATOR TAKES COMMANDS: a topic it listens to itself, or its board's.
+        const ACTUATES_Q: &str = "
+        SELECT ?pattern WHERE {
+          { $actuator mqtt4ssn:listensToTopic ?topic } UNION { ?board ssn:hasSubSystem $actuator ; mqtt4ssn:listensToTopic ?topic }
+          ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
+        ORDER BY ?pattern";
         let names: Vec<String> = self
             .patterns(ACTUATES_Q, &[("actuator", Value::iri(actuator))])?
             .into_iter()
@@ -458,6 +444,8 @@ impl Mqtt {
     /// Publish a document on the topic the agent `to` listens to, by a pattern with no wildcard; not retained. A
     /// document to a person is not the bus's, and is passed over in silence.
     pub fn tell(&mut self, to: &str, document: &[u8]) -> Result<bool, Error> {
+        /// WHETHER WHOM A DOCUMENT IS TOLD TO IS AN AGENT, since a person's is not the bus's.
+        const AGENT_Q: &str = "ASK { $who a orexis:Agent }";
         let common = self.common()?;
         if !self
             .beliefs
@@ -524,6 +512,12 @@ impl Mqtt {
     /// sensor, where the board listens nowhere or every pattern is a wildcard: said at every nudge, a minute's five
     /// silent sensors were five incidents a minute, each keeping the log's window in the journal.
     fn command_topic(&mut self, sensor: &str) -> Result<Option<String>, Error> {
+        /// THE PATTERNS OF THE FILTERS THAT MATCH THE TOPIC A SENSOR'S BOARD LISTENS ON.
+        const COMMANDS_Q: &str = "
+        SELECT ?pattern WHERE {
+          ?board ssn:hasSubSystem $sensor ; mqtt4ssn:listensToTopic ?topic .
+          ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
+        ORDER BY ?pattern";
         let patterns = self.patterns(COMMANDS_Q, &[("sensor", Value::iri(sensor))])?;
         let name = patterns.iter().find(|p| no_wildcard(p)).cloned();
         if name.is_none() && self.unreachable.insert(sensor.to_string()) {
@@ -557,16 +551,15 @@ pub struct Session {
     pub tls: Option<(String, String, String)>,
 }
 
-/// THE BROKERS THE SELF IS CONNECTED TO, AND WHERE EACH ANSWERS: connected as the society says
-/// (`mqtt4ssn:isConnectedToBroker`), answering at the `schema:url` the world's deployment graph states of it.
-const REACHED_Q: &str = "
-SELECT ?broker ?url WHERE { $me mqtt4ssn:isConnectedToBroker ?broker
-  OPTIONAL { ?broker <https://schema.org/url> ?url } } ORDER BY ?broker ?url";
-
 /// Each broker `me` is connected to, by its IRI, with the url the world's deployment graph says it answers at.
 /// Refused where the world says nothing of where one answers, since a guess puts a misconfigured agent on the real
 /// topics; empty where the agent is connected to none.
 pub fn reached(beliefs: &Store, me: &str) -> Result<Vec<(String, String)>, Error> {
+    /// THE BROKERS THE SELF IS CONNECTED TO, AND WHERE EACH ANSWERS: connected as the society says
+    /// (`mqtt4ssn:isConnectedToBroker`), answering at the `schema:url` the world's deployment graph states of it.
+    const REACHED_Q: &str = "
+    SELECT ?broker ?url WHERE { $me mqtt4ssn:isConnectedToBroker ?broker
+      OPTIONAL { ?broker <https://schema.org/url> ?url } } ORDER BY ?broker ?url";
     let mut known = beliefs.graphs_of(&[BELIEF], &Within::common())?;
     known.extend(beliefs.graphs_of(&[orexis::ontology::DEPLOYMENT], &Within::common())?);
     let mut out: Vec<(String, String)> = Vec::new();

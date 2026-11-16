@@ -15,17 +15,15 @@ use orexis::store::{Store, iri};
 use crate::holdings::{RDF_TYPE, constraints_and_self, heard, holdings, rows_of, said, violates};
 use crate::ontology::{ANSWER, ANSWER_GRAPH, COORDINATION, answer_graph};
 
-/// WHAT A QUESTION HEARD SAYS: who asks, and under which constraint; only one that arrived from a peer.
-const QUESTION_Q: &str = "
-SELECT ?asker ?constraint WHERE { GRAPH $cat { $graph orexis:arrivedBy $received }
-  GRAPH $graph { ?q a coordination:Question ; coordination:asks ?asker ; coordination:over ?constraint } } LIMIT 1";
-
-const HOLDS_Q: &str =
-    "SELECT ?c WHERE { ?me a orexis:Self ; planning:holds $constraint . BIND($constraint AS ?c) } LIMIT 1";
-
 /// The answer the self `me` of `store` says to the question heard in the graph `question`, with the peer it is to — or
 /// None where the question is no peer's, or names a constraint the agent does not hold.
 pub fn answer(store: &Store, me: &str, question: &str, at: DateTime) -> Result<Option<(String, Document)>, Error> {
+    /// WHAT A QUESTION HEARD SAYS: who asks, and under which constraint; only one that arrived from a peer.
+    const QUESTION_Q: &str = "
+    SELECT ?asker ?constraint WHERE { GRAPH $cat { $graph orexis:arrivedBy $received }
+      GRAPH $graph { ?q a coordination:Question ; coordination:asks ?asker ; coordination:over ?constraint } } LIMIT 1";
+    const HOLDS_Q: &str =
+        "SELECT ?c WHERE { ?me a orexis:Self ; planning:holds $constraint . BIND($constraint AS ?c) } LIMIT 1";
     let Some(cat) = store.catalogue()? else { return Ok(None) };
     let text = bind(
         QUESTION_Q,

@@ -10,14 +10,13 @@ use orexis::store::{Store, value};
 use crate::Memo;
 use crate::world_at::{catalogue, when};
 
-/// EVERY GROUND, ITS START AND WHAT IT HOLDS BY HASH, earliest first — once a pass.
-const GROUNDS_Q: &str = "
-SELECT ?at ?hash WHERE { GRAPH $cat { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?at ; orexis:hash ?hash } }
-ORDER BY ?at";
-
 /// The instant the first ground after the one `world` stands in that holds something else, as the search reads
 /// it, begins — or None where nothing laid after it does.
 pub fn next_ground(store: &Store, world: &str, memo: &mut Memo) -> Result<Option<DateTime>, Error> {
+    /// EVERY GROUND, ITS START AND WHAT IT HOLDS BY HASH, earliest first — once a pass.
+    const GROUNDS_Q: &str = "
+    SELECT ?at ?hash WHERE { GRAPH $cat { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?at ; orexis:hash ?hash } }
+    ORDER BY ?at";
     if let Some(known) = memo.next_ground.get(world) {
         return Ok(*known);
     }

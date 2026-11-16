@@ -20,26 +20,6 @@ pub struct Keeps {
 #[derive(Clone)]
 pub struct Traced(pub Arc<Journal>);
 
-/// THE RECORDER THE SELF PLAYS, IN ONE QUERY: each figure and word the role says or, where it says none, the
-/// default the journal's ontology states on its shape of the role (`sh:defaultValue`); and where each service the
-/// role names answers, as the world's deployment states it.
-const RECORDER_Q: &str = "SELECT ?role ?kind (COALESCE(?windowSaid, ?windowOwn) AS ?window) (COALESCE(?fromSaid, ?fromOwn) AS ?from) \
-?incident ?served ?archive (COALESCE(?archivedEverySaid, ?archivedEveryOwn) AS ?archivedEvery) ?tracer \
-(COALESCE(?tracedEverySaid, ?tracedEveryOwn) AS ?tracedEvery) WHERE { \
-?me a orexis:Self ; orexis:plays ?role . ?role a ?kind . \
-OPTIONAL { ?role <http://example.org/orexis/journal#windowS> ?windowSaid FILTER(?windowSaid > 0) } \
-OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/journal#windowS> ; sh:defaultValue ?windowOwn ] } \
-OPTIONAL { ?role <http://example.org/orexis/journal#incidentFrom> ?fromSaid } \
-OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/journal#incidentFrom> ; sh:defaultValue ?fromOwn ] } \
-OPTIONAL { ?role <http://example.org/orexis/journal#archivedEveryS> ?archivedEverySaid FILTER(?archivedEverySaid > 0) } \
-OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/journal#archivedEveryS> ; sh:defaultValue ?archivedEveryOwn ] } \
-OPTIONAL { ?role <http://example.org/orexis/journal#tracedEveryS> ?tracedEverySaid FILTER(?tracedEverySaid > 0) } \
-OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/journal#tracedEveryS> ; sh:defaultValue ?tracedEveryOwn ] } \
-OPTIONAL { ?role <http://example.org/orexis/journal#incident> ?incident } \
-OPTIONAL { ?role <http://example.org/orexis/journal#servedAt> ?endpoint . ?endpoint <https://schema.org/url> ?served } \
-OPTIONAL { ?role <http://example.org/orexis/journal#archivedIn> ?kept . ?kept <https://schema.org/url> ?archive } \
-OPTIONAL { ?role <http://example.org/orexis/journal#tracedBy> ?traced . ?traced <https://schema.org/url> ?tracer } }";
-
 /// THE RECORDER THE SELF PLAYS, AS THE JOURNAL'S CRATES READ IT: a field for each thing `journal:Recorder` may say,
 /// how the journal is kept and what it is linked to. A figure the role does not state is the journal's own, and a
 /// link is where the service the role names answers, as the world's deployment states it: None where the role
@@ -68,6 +48,25 @@ impl Recorder {
     /// The recorder the self plays, read off its self graph and the world's deployment graph by this package's own
     /// query. An agent plays one recorder: two are refused, and where the self plays none nothing is said.
     pub fn new(store: &orexis::store::Store) -> Result<Self, Error> {
+        /// THE RECORDER THE SELF PLAYS, IN ONE QUERY: each figure and word the role says or, where it says none, the
+        /// default the journal's ontology states on its shape of the role (`sh:defaultValue`); and where each service
+        /// the role names answers, as the world's deployment states it.
+        const RECORDER_Q: &str = "SELECT ?role ?kind (COALESCE(?windowSaid, ?windowOwn) AS ?window) (COALESCE(?fromSaid, ?fromOwn) AS ?from) \
+        ?incident ?served ?archive (COALESCE(?archivedEverySaid, ?archivedEveryOwn) AS ?archivedEvery) ?tracer \
+        (COALESCE(?tracedEverySaid, ?tracedEveryOwn) AS ?tracedEvery) WHERE { \
+        ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind . \
+        OPTIONAL { ?role <http://example.org/orexis/journal#windowS> ?windowSaid FILTER(?windowSaid > 0) } \
+        OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/journal#windowS> ; sh:defaultValue ?windowOwn ] } \
+        OPTIONAL { ?role <http://example.org/orexis/journal#incidentFrom> ?fromSaid } \
+        OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/journal#incidentFrom> ; sh:defaultValue ?fromOwn ] } \
+        OPTIONAL { ?role <http://example.org/orexis/journal#archivedEveryS> ?archivedEverySaid FILTER(?archivedEverySaid > 0) } \
+        OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/journal#archivedEveryS> ; sh:defaultValue ?archivedEveryOwn ] } \
+        OPTIONAL { ?role <http://example.org/orexis/journal#tracedEveryS> ?tracedEverySaid FILTER(?tracedEverySaid > 0) } \
+        OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/journal#tracedEveryS> ; sh:defaultValue ?tracedEveryOwn ] } \
+        OPTIONAL { ?role <http://example.org/orexis/journal#incident> ?incident } \
+        OPTIONAL { ?role <http://example.org/orexis/journal#servedAt> ?endpoint . ?endpoint <https://schema.org/url> ?served } \
+        OPTIONAL { ?role <http://example.org/orexis/journal#archivedIn> ?kept . ?kept <https://schema.org/url> ?archive } \
+        OPTIONAL { ?role <http://example.org/orexis/journal#tracedBy> ?traced . ?traced <https://schema.org/url> ?tracer } }";
         use orexis::ontology::{DEPLOYMENT, ONTOLOGY, SELF_GRAPH};
         use orexis::store::{Within, value};
         let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;

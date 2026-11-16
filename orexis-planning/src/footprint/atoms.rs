@@ -46,15 +46,6 @@ pub fn spelled(atom: &Atom) -> String {
     format!("({}, {key})", py_str(&atom.0))
 }
 
-const ACTIONS_Q: &str = "
-SELECT ?action ?precondition ?update WHERE {
-  ?action a orexis:Action .
-  OPTIONAL { ?action planning:precondition ?precondition }
-  OPTIONAL { ?action planning:effect/sh:rule ?r . ?r a belief:Transition ; belief:update ?update }
-}";
-
-const TAKES_Q: &str = "SELECT ?action ?takes WHERE { ?action a orexis:Action ; orexis:takes ?takes }";
-
 /// An action's precondition and its effect's updates, each read as the machine reads it — `None` for one the
 /// machine refuses, which writes anything.
 struct Effect {
@@ -72,6 +63,12 @@ impl Effect {
 }
 
 fn effects(store: &Store, at: DateTime) -> Result<BTreeMap<String, Effect>, Error> {
+    const ACTIONS_Q: &str = "
+    SELECT ?action ?precondition ?update WHERE {
+      ?action a orexis:Action .
+      OPTIONAL { ?action planning:precondition ?precondition }
+      OPTIONAL { ?action planning:effect/sh:rule ?r . ?r a belief:Transition ; belief:update ?update }
+    }";
     let graphs = store.graphs_of(&[ACTION], &Within::at(at))?;
     let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
     let mut out: BTreeMap<String, Effect> = BTreeMap::new();
@@ -225,6 +222,7 @@ pub fn written(store: &Store, at: DateTime) -> Result<BTreeSet<String>, Error> {
 /// Every action the store holds as its fillings — `None` where its texts cannot be read so. An action stating no
 /// effect has no entry, and one every row of which leaves unbound a parameter the world alone decides has none.
 pub fn atoms_of(store: &Store, at: DateTime) -> Result<BTreeMap<String, Option<Vec<Filling>>>, Error> {
+    const TAKES_Q: &str = "SELECT ?action ?takes WHERE { ?action a orexis:Action ; orexis:takes ?takes }";
     let mut out = BTreeMap::new();
     let effects = effects(store, at)?;
     if effects.is_empty() {
@@ -416,17 +414,16 @@ fn fillings(
 
 // --- the derivations' edges --------------------------------------------------------------------------------------
 
-const EDGES_Q: &str = "
-SELECT ?d ?reads ?writes WHERE {
-  ?d a planning:Derivation .
-  OPTIONAL { ?d planning:reads ?reads }
-  OPTIONAL { ?d planning:writes ?writes } }";
-
 /// One side of an edge: the predicates, or `None` for anything.
 pub type Side = Option<BTreeSet<String>>;
 
 /// The derivations' `(reads, writes)` edges read back from `graphs`, by the derivation's name.
 pub fn stored_edges(store: &Store, graphs: &[&str]) -> Result<Vec<(Side, Side)>, Error> {
+    const EDGES_Q: &str = "
+    SELECT ?d ?reads ?writes WHERE {
+      ?d a planning:Derivation .
+      OPTIONAL { ?d planning:reads ?reads }
+      OPTIONAL { ?d planning:writes ?writes } }";
     let mut sides: BTreeMap<String, (BTreeSet<String>, BTreeSet<String>)> = BTreeMap::new();
     for row in store.rows(EDGES_Q, graphs)? {
         let Some(d) = row.get("d").map(|t| t.to_string()) else {
@@ -450,10 +447,6 @@ mod tests {
 
     use super::*;
 
-    const A_LIST_UNDER_A_FILTER: &str = "SELECT ?v WHERE { ?me <urn:m:bidsIn> ?v . FILTER NOT EXISTS { ?c <urn:m:calledBy> ?me ; <urn:m:calledOn> ?v } }";
-    const A_FILTER_IN_A_FILTER: &str = "SELECT ?v WHERE { ?me <urn:m:bidsIn> ?v . \
-     FILTER NOT EXISTS { ?c <urn:m:calledOn> ?v . FILTER NOT EXISTS { ?c <urn:m:answered> true } } }";
-
     fn empty() -> Store {
         Store::new(snapshots::namespaces()).expect("an empty store")
     }
@@ -468,6 +461,9 @@ mod tests {
 
     #[test]
     fn the_patterns_of_a_precondition_are_every_pattern_once_in_rdflibs_order() {
+        const A_LIST_UNDER_A_FILTER: &str = "SELECT ?v WHERE { ?me <urn:m:bidsIn> ?v . FILTER NOT EXISTS { ?c <urn:m:calledBy> ?me ; <urn:m:calledOn> ?v } }";
+        const A_FILTER_IN_A_FILTER: &str = "SELECT ?v WHERE { ?me <urn:m:bidsIn> ?v . \
+         FILTER NOT EXISTS { ?c <urn:m:calledOn> ?v . FILTER NOT EXISTS { ?c <urn:m:answered> true } } }";
         let store = empty();
         assert_eq!(
             patterns_of(&store, A_LIST_UNDER_A_FILTER).unwrap(),

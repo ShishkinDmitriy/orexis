@@ -44,31 +44,6 @@ const PERIOD_OF_TIME: &str = "http://purl.org/dc/terms/PeriodOfTime";
 const ARRIVED_BY: &str = "http://example.org/orexis#arrivedBy";
 const WAS_DERIVED_FROM: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
 
-/// THE ACTION'S TEXTS, off what the world states.
-const RULE_Q: &str = "
-SELECT ?rule ?lands ?costs WHERE {
-  $rule a orexis:Action .
-  OPTIONAL { $rule planning:landsAfter ?lands }
-  OPTIONAL { $rule planning:costs ?costs }
-  BIND($rule AS ?rule) } LIMIT 1";
-
-/// ITS EFFECT'S RULES, by order — an absent order is 0, as SHACL says — and whether each is a transition.
-const EFFECT_Q: &str = "
-SELECT ?r ?order ?update ?transition WHERE {
-  $rule planning:effect/sh:rule ?r .
-  OPTIONAL { ?r sh:order ?o } OPTIONAL { ?r belief:update ?update }
-  BIND(EXISTS { ?r a belief:Transition } AS ?transition)
-  BIND(COALESCE(?o, 0) AS ?order) }
-ORDER BY ?order";
-
-/// WHOM THE SELF ACTS FOR, off the world graph — `$subject` in a rule text.
-const ACTS_FOR_Q: &str = "SELECT ?for WHERE { ?me a orexis:Self ; orexis:actsFor ?for } LIMIT 1";
-
-/// THE PATH TO A WORLD: every candidate taken from the ground down to the world itself, in mint order.
-const PATH_Q: &str = "
-SELECT ?c WHERE { GRAPH $cat { $world (planning:by/planning:from)* ?w . ?w planning:by ?c ; planning:minted ?m } }
-ORDER BY ?m";
-
 /// What the Python kernel's binder wraps as an IRI where it is handed a value's text.
 static IRI: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^(https?://|urn:|mailto:|file:)\S*$").expect("a valid pattern"));
@@ -212,6 +187,10 @@ fn replayed(
     into: Option<&str>,
     memo: &mut Memo,
 ) -> Result<String, Error> {
+    /// THE PATH TO A WORLD: every candidate taken from the ground down to the world itself, in mint order.
+    const PATH_Q: &str = "
+    SELECT ?c WHERE { GRAPH $cat { $world (planning:by/planning:from)* ?w . ?w planning:by ?c ; planning:minted ?m } }
+    ORDER BY ?m";
     let binding = binding(store, cand, memo)?;
     let base = into.map(String::from).unwrap_or_else(|| format!("{child}.base"));
     store.clear_graph(&base)?;
@@ -407,6 +386,8 @@ fn binding(store: &Store, cand: &str, memo: &mut Memo) -> Result<Binding, Error>
 
 /// Whom the self acts for, once a pass.
 fn acts_for(store: &Store, memo: &mut Memo) -> Result<Option<String>, Error> {
+    /// WHOM THE SELF ACTS FOR, off the world graph — `$subject` in a rule text.
+    const ACTS_FOR_Q: &str = "SELECT ?for WHERE { ?me a orexis:Self ; orexis:actsFor ?for } LIMIT 1";
     if let Some(known) = &memo.acts_for {
         return Ok(known.clone());
     }
@@ -421,6 +402,21 @@ fn acts_for(store: &Store, memo: &mut Memo) -> Result<Option<String>, Error> {
 /// What an action carries for a search, once a pass: its texts and its effect's transitions in order, a rule
 /// that is no transition said in the log and left out; None for no action at all.
 fn carried(store: &Store, action: &str, memo: &mut Memo) -> Result<Option<Carried>, Error> {
+    /// THE ACTION'S TEXTS, off what the world states.
+    const RULE_Q: &str = "
+    SELECT ?rule ?lands ?costs WHERE {
+      $rule a orexis:Action .
+      OPTIONAL { $rule planning:landsAfter ?lands }
+      OPTIONAL { $rule planning:costs ?costs }
+      BIND($rule AS ?rule) } LIMIT 1";
+    /// ITS EFFECT'S RULES, by order — an absent order is 0, as SHACL says — and whether each is a transition.
+    const EFFECT_Q: &str = "
+    SELECT ?r ?order ?update ?transition WHERE {
+      $rule planning:effect/sh:rule ?r .
+      OPTIONAL { ?r sh:order ?o } OPTIONAL { ?r belief:update ?update }
+      BIND(EXISTS { ?r a belief:Transition } AS ?transition)
+      BIND(COALESCE(?o, 0) AS ?order) }
+    ORDER BY ?order";
     if let Some(known) = memo.carried.get(action) {
         return Ok(known.clone());
     }
@@ -552,26 +548,22 @@ mod tests {
     use super::*;
     use crate::admit::{Scope, admit};
 
-    const UNTAKEN_Q: &str = "
-SELECT ?cand WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?cand a planning:Candidate ; planning:minted ?m .
-               FILTER NOT EXISTS { ?w planning:by ?cand } } }
-ORDER BY ?m";
-
     const EDGES_Q: &str = "
 SELECT ?cand ?m ?w ?wm WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?cand a planning:Candidate ; planning:minted ?m .
                OPTIONAL { ?w planning:by ?cand ; planning:minted ?wm } } }
 ORDER BY ?m";
 
-    const PRESENT_Q: &str =
-        "SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph } } LIMIT 1";
-
     fn cases() -> PathBuf {
         snapshots::tree().join("orexis-planning/tests/take")
     }
 
     fn untaken(store: &Store) -> Vec<String> {
+        const UNTAKEN_Q: &str = "
+    SELECT ?cand WHERE {
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?cand a planning:Candidate ; planning:minted ?m .
+                   FILTER NOT EXISTS { ?w planning:by ?cand } } }
+    ORDER BY ?m";
         store
             .rows(UNTAKEN_Q, &[])
             .unwrap()
@@ -600,6 +592,8 @@ ORDER BY ?m";
     }
 
     fn admitted(memo: &mut Memo) -> Store {
+        const PRESENT_Q: &str =
+            "SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph } } LIMIT 1";
         let store =
             snapshots::stand_in(&snapshots::tree().join("orexis-planning/tests/admit/one_lever_two_tanks.trig"));
         let present = iri(&store.rows(PRESENT_Q, &[]).unwrap()[0], "g").unwrap();

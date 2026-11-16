@@ -48,16 +48,6 @@ fn count(store: &Store, text: &str) -> usize {
 }
 
 const ACTS_Q: &str = "SELECT (COUNT(?a) AS ?n) WHERE { GRAPH ?g { ?a a execution:Act } }";
-const INTENTIONS_Q: &str = "SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a execution:Intention } }";
-const OUTCOMES_Q: &str = "SELECT ?o WHERE { GRAPH ?g { ?i a execution:Intention ; execution:outcome ?o } }";
-const STANDS_Q: &str = "PREFIX courier: <http://example.org/orexis/courier#>
-SELECT ?x ?cx ?cy WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph ; orexis:ownedBy ?o }
-  GRAPH ?g { ?x courier:x ?cx ; courier:y ?cy } } ORDER BY ?x";
-const ABOARD_Q: &str = "PREFIX courier: <http://example.org/orexis/courier#>
-SELECT ?van WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph }
-  GRAPH ?g { ?d courier:aboard ?van } }";
-const WANTS_Q: &str =
-    "SELECT (COUNT(?g) AS ?n) WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph } }";
 
 fn local(iri: &str) -> &str {
     iri.rsplit('#').next().unwrap()
@@ -65,6 +55,9 @@ fn local(iri: &str) -> &str {
 
 /// Where each thing the agent believes of stands, by name, as two coordinates.
 fn stands(store: &Store) -> Vec<(String, i64, i64)> {
+    const STANDS_Q: &str = "PREFIX courier: <http://example.org/orexis/courier#>
+    SELECT ?x ?cx ?cy WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph ; orexis:ownedBy ?o }
+      GRAPH ?g { ?x courier:x ?cx ; courier:y ?cy } } ORDER BY ?x";
     store
         .rows(STANDS_Q, &[])
         .unwrap()
@@ -82,6 +75,8 @@ fn stands(store: &Store) -> Vec<(String, i64, i64)> {
 
 #[tokio::test(start_paused = true)]
 async fn the_parcel_is_delivered_in_eight_steps_and_the_runtime_stops() {
+    const WANTS_Q: &str =
+        "SELECT (COUNT(?g) AS ?n) WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph } }";
     let store = store();
     assert_eq!(run(&store, &world("courier"), "courier", 3600, None).await, MET);
     assert_eq!(
@@ -106,6 +101,11 @@ async fn a_budget_that_cuts_the_search_short_is_finished_by_the_passes_after() {
 
 #[tokio::test(start_paused = true)]
 async fn walked_the_drivers_one_plan_moves_both_parcels_and_leaves_the_driver_aboard_van_b() {
+    const INTENTIONS_Q: &str = "SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a execution:Intention } }";
+    const OUTCOMES_Q: &str = "SELECT ?o WHERE { GRAPH ?g { ?i a execution:Intention ; execution:outcome ?o } }";
+    const ABOARD_Q: &str = "PREFIX courier: <http://example.org/orexis/courier#>
+    SELECT ?van WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph }
+      GRAPH ?g { ?d courier:aboard ?van } }";
     let store = store();
     assert_eq!(
         run(&store, &world("driver"), "dispatcher", 3600, None).await,
@@ -139,9 +139,9 @@ async fn walked_the_drivers_one_plan_moves_both_parcels_and_leaves_the_driver_ab
     }
 }
 
-/// The courier at 128 candidates for forty passes on a clock that ticks per read, enough for a drive to land now that an idle
-/// pass reads it twice, with a metrics window written every
-/// pass or none: how often the clock was read, how many points were written, how the run ended, and what was measured.
+/// The courier at 128 candidates for forty passes on a clock that ticks per read, enough for a drive to land now that
+/// an idle pass reads it twice, with a metrics window written every pass or none: how often the clock was read, how
+/// many points were written, how the run ended, and what was measured.
 async fn metered_courier(watched: bool) -> (usize, usize, String, std::collections::BTreeSet<String>) {
     struct Counting(orexis::clock::Elapsing, Mutex<usize>);
     impl Clock for Counting {

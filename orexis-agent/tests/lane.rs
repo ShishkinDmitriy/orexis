@@ -35,7 +35,6 @@ use orexis_transport_mqtt::driver::{Client, Inbox, Mqtt};
 use road::{Cell, Road};
 
 const L: &str = "http://example.org/orexis/world/lane#";
-const WON_Q: &str = "SELECT ?w WHERE { ?draw <http://example.org/orexis/coordination#wonBy> ?w }";
 const KINDS: [&str; 4] = [
     "coordination#Question",
     "coordination#Answer",
@@ -252,6 +251,7 @@ fn passing_place() -> Vec<Edit> {
 }
 
 fn won(store: &Store) -> String {
+    const WON_Q: &str = "SELECT ?w WHERE { ?draw <http://example.org/orexis/coordination#wonBy> ?w }";
     let beliefs = store.graphs_of(&[BELIEF], &Within::default()).unwrap();
     let beliefs: Vec<&str> = beliefs.iter().map(String::as_str).collect();
     let mut found: Vec<String> = store
@@ -283,9 +283,6 @@ impl Walked {
     }
 }
 
-const PARCEL_Q: &str = "PREFIX courier: <http://example.org/orexis/courier#>
-SELECT ?p ?x ?y WHERE { ?p a courier:Parcel ; courier:x ?x ; courier:y ?y }";
-
 fn start() -> DateTime {
     instant("2026-01-01T12:00:00+00:00").unwrap()
 }
@@ -293,6 +290,8 @@ fn start() -> DateTime {
 /// Walk the two couriers of `world` on its road until the vans stand at `home`, the bus losing what `dropping` says,
 /// and hold the walk to the road's rules. A walk not home within forty minutes of the world's time has failed.
 async fn walked(name: &str, world: &Path, home: &[(&str, Cell)], dropping: Option<&str>, kept: bool) -> Walked {
+    const PARCEL_Q: &str = "PREFIX courier: <http://example.org/orexis/courier#>
+    SELECT ?p ?x ?y WHERE { ?p a courier:Parcel ; courier:x ?x ; courier:y ?y }";
     let namespaces = Arc::new(Namespaces::linked().unwrap());
     let stores = [Store::new(namespaces.clone()).unwrap(), Store::new(namespaces).unwrap()];
     let clock: Arc<dyn Clock> = common::clock(start());
@@ -474,8 +473,8 @@ async fn two_couriers_each_drive_their_own_van_and_see_the_other_within_four_cel
 }
 
 /// The two meet head on in the single-track lane, each owed where the other came from: they draw lots, both conclude
-/// the same winner, and both get home without ever standing on one cell, which only one giving way allows. And each one's journal holds
-/// the exchange.
+/// the same winner, and both get home without ever standing on one cell, which only one giving way allows. And each
+/// one's journal holds the exchange.
 #[tokio::test(start_paused = true)]
 async fn two_couriers_meeting_head_on_draw_lots_and_the_loser_gives_way() {
     let home = [("van_a", (6, 1)), ("van_b", (0, 0))];

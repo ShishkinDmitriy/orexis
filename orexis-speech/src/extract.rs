@@ -18,18 +18,16 @@ use crate::ontology::believed_graph;
 
 const RULES_GRAPH: &str = "http://www.w3.org/ns/shacl#RulesGraph";
 
-const EXTRACTIONS_Q: &str = "
-SELECT ?rule ?text WHERE { ?rule a speech:Extraction ; sh:construct ?text .
-                           FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule";
-
-const ROW_Q: &str = "
-SELECT ?owner ?start ?end WHERE { GRAPH $cat { OPTIONAL { $g orexis:ownedBy ?owner }
-  OPTIONAL { $g dcterms:temporal ?p . OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
-LIMIT 1";
-
 /// Write what every extraction concludes of `statement` into the belief graph derived from it, replacing what was
 /// extracted of it before; the belief graph written, or none where nothing was.
 pub fn extract(store: &Store, statement: &str) -> Result<Vec<String>, Error> {
+    const EXTRACTIONS_Q: &str = "
+    SELECT ?rule ?text WHERE { ?rule a speech:Extraction ; sh:construct ?text .
+                               FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule";
+    const ROW_Q: &str = "
+    SELECT ?owner ?start ?end WHERE { GRAPH $cat { OPTIONAL { $g orexis:ownedBy ?owner }
+      OPTIONAL { $g dcterms:temporal ?p . OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
+    LIMIT 1";
     let target = believed_graph(statement);
     store.forget_graph(&target, Some(BELIEF))?;
     let Some(cat) = store.catalogue()? else {

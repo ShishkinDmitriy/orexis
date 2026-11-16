@@ -20,15 +20,6 @@ use crate::Memo;
 use crate::ontology::{CHANGEABLE_GRAPH, GROUND_GRAPH, KNOWN, POSSIBLE_GRAPH};
 use crate::terms::{RDF_TYPE, TEMPORAL};
 
-/// EVERY BELIEF THAT BEGINS AFTER `$now`, and the changeable part cut from one: a forecast the present has not
-/// reached (#987).
-const AHEAD_Q: &str = "
-SELECT ?g WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-               { ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start }
-               UNION { ?g a planning:ChangeableGraph ; prov:wasDerivedFrom/dcterms:temporal/orexis:start ?start }
-               FILTER(?start > $now) } }";
-
 /// Who is asking and when the present is, for a reader that is not standing in a world.
 #[derive(Clone, Debug, Default)]
 pub struct Asking {
@@ -38,6 +29,14 @@ pub struct Asking {
 
 /// The graphs a rule reads in `world`, or in the present where `world` is None, which is then read at `now`.
 pub fn world_at(store: &Store, world: Option<&str>, asking: &Asking, memo: &mut Memo) -> Result<Vec<String>, Error> {
+    /// EVERY BELIEF THAT BEGINS AFTER `$now`, and the changeable part cut from one: a forecast the present has not
+    /// reached (#987).
+    const AHEAD_Q: &str = "
+    SELECT ?g WHERE {
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+                   { ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start }
+                   UNION { ?g a planning:ChangeableGraph ; prov:wasDerivedFrom/dcterms:temporal/orexis:start ?start }
+                   FILTER(?start > $now) } }";
     let (at, until) = match world {
         None => {
             let now = asking.now.ok_or_else(|| {

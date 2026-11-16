@@ -22,20 +22,11 @@ use crate::holdings::{
 };
 use crate::ontology::{COORDINATION, QUESTION, QUESTION_GRAPH, question_graph};
 
-/// THE CONSTRAINTS THE AGENT HOLDS.
-pub(crate) const HELD_Q: &str =
-    "SELECT ?c WHERE { ?me a orexis:Self ; planning:holds ?c . ?c a planning:Constraint } ORDER BY ?c";
-
-/// EVERY OTHER AGENT, and each thing it acts for.
-const PEERS_Q: &str = "SELECT ?peer ?t WHERE { ?me a orexis:Self . ?peer a orexis:Agent ; orexis:actsFor ?t . FILTER(?peer != ?me) } ORDER BY ?peer ?t";
-
-const HOLDS_Q: &str = "SELECT ?v WHERE { $thing $p ?v } LIMIT 1";
-
-const BEGAN_Q: &str =
-    "SELECT ?start WHERE { GRAPH $cat { $graph dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1";
-
 /// The constraints the self of `store` holds.
 pub(crate) fn held(store: &Store) -> Result<Vec<String>, Error> {
+    /// THE CONSTRAINTS THE AGENT HOLDS.
+    const HELD_Q: &str =
+        "SELECT ?c WHERE { ?me a orexis:Self ; planning:holds ?c . ?c a planning:Constraint } ORDER BY ?c";
     Ok(rows_of(store, HELD_Q, &[], &constraints_and_self(store)?)?
         .iter()
         .filter_map(|r| iri(r, "c"))
@@ -89,6 +80,8 @@ pub fn ask(store: &Store, me: &str, at: DateTime) -> Result<Vec<(String, Documen
 
 /// When the agent first asked a question it has said before: the start of its period, kept each time it is said.
 fn began(store: &Store, graph: &str) -> Result<Option<DateTime>, Error> {
+    const BEGAN_Q: &str =
+        "SELECT ?start WHERE { GRAPH $cat { $graph dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1";
     let Some(cat) = store.catalogue()? else { return Ok(None) };
     let text = bind(BEGAN_Q, &[("cat", Value::iri(cat)), ("graph", Value::iri(graph))])?;
     store
@@ -101,6 +94,9 @@ fn began(store: &Store, graph: &str) -> Result<Option<DateTime>, Error> {
 
 /// Every peer acting for a thing the agent believes now to hold a value on `key`.
 pub(crate) fn in_range(store: &Store, _me: &str, key: &BTreeSet<String>, at: DateTime) -> Result<Vec<String>, Error> {
+    /// EVERY OTHER AGENT, and each thing it acts for.
+    const PEERS_Q: &str = "SELECT ?peer ?t WHERE { ?me a orexis:Self . ?peer a orexis:Agent ; orexis:actsFor ?t . FILTER(?peer != ?me) } ORDER BY ?peer ?t";
+    const HOLDS_Q: &str = "SELECT ?v WHERE { $thing $p ?v } LIMIT 1";
     let present = present(store, at)?;
     let mut graphs = common(store)?;
     graphs.extend(of_kind(store, &[SELF_GRAPH])?);

@@ -31,29 +31,6 @@ use crate::pipeline::{decode, decode_series, reads_series};
 /// instrument's and the path its bytes take.
 pub const GRACE: f64 = 1.0;
 
-/// THE KEY: what the sensor observes, of what it is mounted in — read for a series alone.
-const KEY_Q: &str = "SELECT ?feature ?property WHERE { $sensor sosa:observes ?property ; sosa:isHostedBy ?feature }";
-
-/// EVERY PERCEPT OF THIS SENSOR KEPT, newest first, and whether a percept names it as its previous.
-const KEPT_Q: &str = "
-SELECT ?g ?o ?t (BOUND(?later) AS ?followed) WHERE {
-  GRAPH $cat { ?g a sensing:ObservationGraph }
-  GRAPH ?g { ?o sosa:madeBySensor $sensor OPTIONAL { ?o sosa:resultTime ?t } }
-  OPTIONAL { GRAPH ?h { ?later sensing:previous ?o } GRAPH $cat { ?h a sensing:ObservationGraph } } }
-ORDER BY DESC(?t) DESC(?g)";
-
-/// WHETHER A GRAPH OF THIS NAME IS ALREADY SAID — a second reading of one sensor at one instant.
-const SAID_Q: &str = "SELECT ?p WHERE { GRAPH $cat { $g ?p ?o } } LIMIT 1";
-
-/// THE SILENCE A READING ENDS: each kept of this sensor whose end is not yet said, found by its content.
-const SILENT_Q: &str = "
-SELECT ?g ?since WHERE { GRAPH $cat { ?g a sensing:SilenceGraph }
-  GRAPH ?g { $sensor sensing:silentSince ?since FILTER NOT EXISTS { $sensor sensing:silentUntil ?until } } }";
-
-/// THE FORECAST THIS SENSOR GAVE BEFORE: every graph of it, found by its content.
-const FORECAST_Q: &str =
-    "SELECT ?g WHERE { GRAPH $cat { ?g a orexis:ForecastGraph } GRAPH ?g { ?o sosa:madeBySensor $sensor } }";
-
 fn later(at: DateTime, by: f64) -> Result<DateTime, Error> {
     at.checked_add_day_time_duration(microseconds(by))
         .ok_or_else(|| Error::Evaluation(format!("{} past {}", by, isoformat(at))))
@@ -82,6 +59,20 @@ pub fn received_by(
     procedure: Option<&str>,
     phenomenon_at: Option<DateTime>,
 ) -> Result<Vec<String>, Error> {
+    /// THE KEY: what the sensor observes, of what it is mounted in — read for a series alone.
+    const KEY_Q: &str =
+        "SELECT ?feature ?property WHERE { $sensor sosa:observes ?property ; sosa:isHostedBy ?feature }";
+    /// EVERY PERCEPT OF THIS SENSOR KEPT, newest first, and whether a percept names it as its previous.
+    const KEPT_Q: &str = "
+    SELECT ?g ?o ?t (BOUND(?later) AS ?followed) WHERE {
+      GRAPH $cat { ?g a sensing:ObservationGraph }
+      GRAPH ?g { ?o sosa:madeBySensor $sensor OPTIONAL { ?o sosa:resultTime ?t } }
+      OPTIONAL { GRAPH ?h { ?later sensing:previous ?o } GRAPH $cat { ?h a sensing:ObservationGraph } } }
+    ORDER BY DESC(?t) DESC(?g)";
+    /// THE SILENCE A READING ENDS: each kept of this sensor whose end is not yet said, found by its content.
+    const SILENT_Q: &str = "
+    SELECT ?g ?since WHERE { GRAPH $cat { ?g a sensing:SilenceGraph }
+      GRAPH ?g { $sensor sensing:silentSince ?since FILTER NOT EXISTS { $sensor sensing:silentUntil ?until } } }";
     if reads_series(store, sensor)? {
         let common = store.graphs_of(&[BELIEF], &Within::common())?;
         let common: Vec<&str> = common.iter().map(String::as_str).collect();
@@ -210,6 +201,8 @@ fn py_g(n: f64) -> String {
 /// The node and the graph of the reading `sensor` made at `when` — the second of that instant named apart from the
 /// first, so a sensor read twice in one instant keeps both.
 fn named(store: &Store, cat: &str, me: &str, sensor: &str, when: DateTime) -> Result<(String, String), Error> {
+    /// WHETHER A GRAPH OF THIS NAME IS ALREADY SAID — a second reading of one sensor at one instant.
+    const SAID_Q: &str = "SELECT ?p WHERE { GRAPH $cat { $g ?p ?o } } LIMIT 1";
     let agent = local_of(me);
     let mut n = 1;
     while !store
@@ -295,6 +288,9 @@ fn forecast(
     payload: &[u8],
     at: DateTime,
 ) -> Result<Vec<String>, Error> {
+    /// THE FORECAST THIS SENSOR GAVE BEFORE: every graph of it, found by its content.
+    const FORECAST_Q: &str =
+        "SELECT ?g WHERE { GRAPH $cat { ?g a orexis:ForecastGraph } GRAPH ?g { ?o sosa:madeBySensor $sensor } }";
     let Some(stretches) = decode_series(store, sensor, payload)? else {
         return Ok(Vec::new());
     };
@@ -483,18 +479,13 @@ pub(crate) mod tests {
         assert_eq!(got, [("probe".to_string(), 0.22), ("thermo".to_string(), 21.5)]);
     }
 
-    const CHAIN_Q: &str = "
-SELECT ?o ?n ?t ?previous WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a sensing:ObservationGraph }
-  GRAPH ?g { ?o sosa:madeBySensor $sensor ; sensing:rawResult ?n ; sosa:resultTime ?t
-             OPTIONAL { ?o sensing:previous ?previous } } }
-ORDER BY ?t";
-
-    const PERIOD_Q: &str =
-        "SELECT ?start ?end WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g dcterms:temporal ?p .
-               ?p orexis:start ?start . OPTIONAL { ?p orexis:end ?end } } }";
-
     fn chain(store: &Store) -> Vec<(String, f64, Option<String>)> {
+        const CHAIN_Q: &str = "
+    SELECT ?o ?n ?t ?previous WHERE {
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a sensing:ObservationGraph }
+      GRAPH ?g { ?o sosa:madeBySensor $sensor ; sensing:rawResult ?n ; sosa:resultTime ?t
+                 OPTIONAL { ?o sensing:previous ?previous } } }
+    ORDER BY ?t";
         store
             .rows(&bind(CHAIN_Q, &[("sensor", Value::iri(probe()))]).unwrap(), &[])
             .unwrap()
@@ -510,6 +501,9 @@ ORDER BY ?t";
     }
 
     fn period(store: &Store, graph: &str) -> (DateTime, Option<DateTime>) {
+        const PERIOD_Q: &str =
+            "SELECT ?start ?end WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g dcterms:temporal ?p .
+                   ?p orexis:start ?start . OPTIONAL { ?p orexis:end ?end } } }";
         let found = store
             .rows(&bind(PERIOD_Q, &[("g", Value::iri(graph))]).unwrap(), &[])
             .unwrap();

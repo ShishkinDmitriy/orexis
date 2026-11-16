@@ -7,17 +7,16 @@ use orexis::bind::{Value, bind};
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, value};
 
-const BOUNDS_Q: &str = "
-SELECT DISTINCT ?low ?high WHERE {
-  $sensor (sosa:isHostedBy/(sosa:isSampleOf)?)? ?holder .
-  ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
-  ?range ssn-system:inCondition ?condition .
-  ?condition ssn:forProperty $property ; schema:minValue ?low ; schema:maxValue ?high }
-ORDER BY ?low ?high";
-
 /// The floor and the ceiling of every range that applies to what `sensor` observes of `property`, off what the
 /// world states.
 pub fn ranges_of(store: &Store, sensor: &str, property: &str) -> Result<Vec<(f64, f64)>, Error> {
+    const BOUNDS_Q: &str = "
+    SELECT DISTINCT ?low ?high WHERE {
+      $sensor (sosa:isHostedBy/(sosa:isSampleOf)?)? ?holder .
+      ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .
+      ?range ssn-system:inCondition ?condition .
+      ?condition ssn:forProperty $property ; schema:minValue ?low ; schema:maxValue ?high }
+    ORDER BY ?low ?high";
     let common = store.graphs_of(&[BELIEF], &Within::common())?;
     let common: Vec<&str> = common.iter().map(String::as_str).collect();
     let text = bind(

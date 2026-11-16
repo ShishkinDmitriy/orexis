@@ -234,16 +234,15 @@ async fn a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_rea
     );
 }
 
-/// THE BED'S SOIL IN EVERY GROUND THE GROWER LAYS, and when each begins — read off the planner's imaginaria.
-const FORESEEN_Q: &str = "
-SELECT ?start ?state WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start }
-  GRAPH ?g { <http://example.org/orexis/world/greenhouse#bed> <http://example.org/orexis/climate#soil> ?state } }
-ORDER BY ?start";
-
 /// The grounds a planner lays over the grower's beliefs at `now`: one of the test's own, with prediction's
 /// foresight, since the grower's is its task's alone.
 fn foreseen(store: &Store, now: DateTime) -> Vec<(DateTime, String)> {
+    /// THE BED'S SOIL IN EVERY GROUND THE GROWER LAYS, and when each begins — read off the planner's imaginaria.
+    const FORESEEN_Q: &str = "
+    SELECT ?start ?state WHERE {
+      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start }
+      GRAPH ?g { <http://example.org/orexis/world/greenhouse#bed> <http://example.org/orexis/climate#soil> ?state } }
+    ORDER BY ?start";
     orexis_planning::Planner::scope(store, now).unwrap();
     let mut planner = orexis_planning::Planner::new(store, "grower", None).unwrap();
     planner.foresee = Some(orexis_prediction::Predictor::new(store).unwrap().offered());
@@ -400,18 +399,6 @@ async fn a_foreseen_crossing_is_planned_ahead_and_dosed_when_it_arrives() {
         "the foreseen crossing came, and the dose with it"
     );
 }
-
-/// WHAT THE JOURNAL HOLDS OF THE DOSE: the plan published and each step's taking and verdict, the action each step
-/// fills and the values it takes in the domain's words, each at its instant.
-const DOSE_Q: &str = "
-PREFIX planning: <http://example.org/orexis/planning#> PREFIX execution: <http://example.org/orexis/execution#>
-PREFIX prov: <http://www.w3.org/ns/prov#>
-SELECT ?kind ?at ?action ?valve ?subject ?taken ?landed WHERE { GRAPH ?e {
-  { ?e a planning:PlanPublished ; planning:published ?plan . ?step execution:partOf ?plan BIND(planning:PlanPublished AS ?kind) }
-  UNION { ?e a ?kind ; execution:act ?act . ?act execution:of ?step ; execution:taken ?taken
-          FILTER(?kind IN (execution:StepTaken, execution:StepAnswered)) OPTIONAL { ?e execution:landed ?landed } }
-  ?e prov:atTime ?at . ?step planning:fills ?action ; ?v ?valve ; ?s ?subject .
-  FILTER(STRENDS(STR(?v), \"#valve\") && STRENDS(STR(?s), \"#subject\")) } } ORDER BY ?at ?kind";
 
 /// WHAT LASTS IS TAKEN TO THE ARCHIVE, where the deployment keeps one: a stretch of the archiver's after a dry
 /// reading was walked, every event of it is in the archive and none in the journal, and the activities, which no
@@ -604,6 +591,17 @@ async fn each_reading_is_archived_once_where_there_is_a_store_and_the_past_ones_
 
 #[tokio::test(start_paused = true)]
 async fn history_holds_every_reading_and_the_journal_the_dose_published_taken_and_landed() {
+    /// WHAT THE JOURNAL HOLDS OF THE DOSE: the plan published and each step's taking and verdict, the action each step
+    /// fills and the values it takes in the domain's words, each at its instant.
+    const DOSE_Q: &str = "
+    PREFIX planning: <http://example.org/orexis/planning#> PREFIX execution: <http://example.org/orexis/execution#>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
+    SELECT ?kind ?at ?action ?valve ?subject ?taken ?landed WHERE { GRAPH ?e {
+      { ?e a planning:PlanPublished ; planning:published ?plan . ?step execution:partOf ?plan BIND(planning:PlanPublished AS ?kind) }
+      UNION { ?e a ?kind ; execution:act ?act . ?act execution:of ?step ; execution:taken ?taken
+              FILTER(?kind IN (execution:StepTaken, execution:StepAnswered)) OPTIONAL { ?e execution:landed ?landed } }
+      ?e prov:atTime ?at . ?step planning:fills ?action ; ?v ?valve ; ?s ?subject .
+      FILTER(STRENDS(STR(?v), \"#valve\") && STRENDS(STR(?s), \"#subject\")) } } ORDER BY ?at ?kind";
     use orexis::events::{Field, Point};
     let store = store();
     let written: Arc<Mutex<Vec<Point>>> = Arc::default();

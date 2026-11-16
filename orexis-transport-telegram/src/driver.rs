@@ -70,17 +70,12 @@ pub fn figure_of(store: &orexis::store::Store, term: &str) -> Result<f64, orexis
 /// HOW LONG ONE CALL OF THE BOT API MAY TAKE, in real seconds: a figure a role states.
 pub const CALLED_WITHIN_S: &str = "http://example.org/orexis/telegram#calledWithinS";
 
-const CHAT_Q: &str = "SELECT ?chat WHERE { ?chat a telegram:Chat ; telegram:chatId ?id FILTER (STR(?id) = $id) }";
-const USER_Q: &str = "SELECT ?person WHERE { ?person telegram:userId ?id FILTER (STR(?id) = $id) }";
-const ID_Q: &str = "SELECT ?id WHERE { $chat a telegram:Chat ; telegram:chatId ?id }";
-
-/// WHERE THE SELF'S BOT ANSWERS: the `schema:url` the world's deployment graph states of the bot the society says
-/// the agent speaks through.
-const ANSWERS_Q: &str =
-    "SELECT ?url WHERE { $me telegram:hasBot ?bot . ?bot <https://schema.org/url> ?url } ORDER BY ?url";
-
 /// Where the bot `me` speaks through answers, as the world's deployment graph says, or None where it says nothing.
 pub fn answers(beliefs: &Store, me: &str) -> Result<Option<String>, Error> {
+    /// WHERE THE SELF'S BOT ANSWERS: the `schema:url` the world's deployment graph states of the bot the society says
+    /// the agent speaks through.
+    const ANSWERS_Q: &str =
+        "SELECT ?url WHERE { $me telegram:hasBot ?bot . ?bot <https://schema.org/url> ?url } ORDER BY ?url";
     let mut known = beliefs.graphs_of(&[orexis::ontology::BELIEF], &orexis::store::Within::common())?;
     known.extend(beliefs.graphs_of(&[orexis::ontology::DEPLOYMENT], &orexis::store::Within::common())?);
     let known: Vec<&str> = known.iter().map(String::as_str).collect();
@@ -410,6 +405,9 @@ impl Telegram {
     /// A message on a chat the world names by its id: the prose it is, in the chat, by the person writing as the user;
     /// none where the world names no chat by that id.
     pub fn handle(&mut self, channel: &str, payload: &[u8], at: DateTime) -> Result<Option<Prose>, Error> {
+        const CHAT_Q: &str =
+            "SELECT ?chat WHERE { ?chat a telegram:Chat ; telegram:chatId ?id FILTER (STR(?id) = $id) }";
+        const USER_Q: &str = "SELECT ?person WHERE { ?person telegram:userId ?id FILTER (STR(?id) = $id) }";
         let common = self.common()?;
         let common: Vec<&str> = common.iter().map(String::as_str).collect();
         let literal = |s: &str| Value::Term(Literal::new_simple_literal(s).into());
@@ -448,6 +446,7 @@ impl Telegram {
     /// `method` posted to the chat the world names `channel` by its id; false where it names none, or the API refuses
     /// or fails.
     fn posted(&self, channel: &str, method: &str, body: Json) -> bool {
+        const ID_Q: &str = "SELECT ?id WHERE { $chat a telegram:Chat ; telegram:chatId ?id }";
         let Ok(common) = self.common() else { return false };
         let common: Vec<&str> = common.iter().map(String::as_str).collect();
         let Ok(text) = bind(ID_Q, &[("chat", Value::iri(channel))]) else {

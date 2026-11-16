@@ -10,12 +10,11 @@ use orexis::store::{Store, iri};
 
 use crate::statements::statements;
 
-const ARRIVED_Q: &str = "
-SELECT ?arrival ?owner WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph orexis:arrivedBy ?arrival .
-                                            OPTIONAL { $graph orexis:ownedBy ?owner } } }";
-
 /// Keep `doc` as this agent said it; the names written, sorted.
 pub fn said(store: &Store, me: &str, doc: &Document) -> Result<Vec<String>, Error> {
+    const ARRIVED_Q: &str = "
+    SELECT ?arrival ?owner WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph orexis:arrivedBy ?arrival .
+                                                OPTIONAL { $graph orexis:ownedBy ?owner } } }";
     doc.refuse_the_sovereigns(&format!("what {} said", local_of(me)))?;
     for graph in doc.kinds().into_keys() {
         for r in store.rows(&bind(ARRIVED_Q, &[("graph", Value::iri(graph.as_str()))])?, &[])? {

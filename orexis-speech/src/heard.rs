@@ -11,9 +11,6 @@ use orexis::store::{Store, iri};
 
 use crate::statements::statements;
 
-const ARRIVED_Q: &str =
-    "SELECT ?arrival WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph orexis:arrivedBy ?arrival } }";
-
 /// Keep the document `payload` holds as a peer said it; the names written, sorted, and none where it was refused.
 pub fn heard(store: &Store, me: &str, payload: &[u8]) -> Result<Vec<String>, Error> {
     let doc = match refused(store, payload) {
@@ -27,6 +24,8 @@ pub fn heard(store: &Store, me: &str, payload: &[u8]) -> Result<Vec<String>, Err
 }
 
 fn refused(store: &Store, payload: &[u8]) -> Result<Document, Error> {
+    const ARRIVED_Q: &str =
+        "SELECT ?arrival WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph orexis:arrivedBy ?arrival } }";
     let doc = Document::of(payload)?;
     for graph in doc.kinds().into_keys() {
         let arrived: Vec<String> = store
