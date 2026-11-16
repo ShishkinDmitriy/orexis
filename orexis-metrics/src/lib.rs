@@ -67,6 +67,11 @@ fn start(handed: Handed) -> orexis::task::Starting {
             handed.started("metrics").await;
             return Ok(());
         };
+        //  WHAT A CHAT READS OF THE METRICS is the series this writes.
+        let reader = window.sink.reader();
+        handed
+            .outside
+            .alter(|reads: &mut orexis::task::Reads| reads.metrics = Some(reader));
         meter.tally(window, handed.events.watch());
         handed.started("metrics").await;
         if handed.checking().is_some() {

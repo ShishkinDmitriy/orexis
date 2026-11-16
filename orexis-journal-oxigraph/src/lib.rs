@@ -49,27 +49,23 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if handed.checking().is_some() {
             return Ok(());
         }
-        //  HANDED A JOURNAL AND AN ARCHIVE, by a test that reads both, it archives into that; deployed and handed
-        //  none, it opens its own on disk at the path the world states of the archive the recorder's role names, over
-        //  the journal that package handed on, taken as often as the role says; and otherwise it has no task. A binary
-        //  built without the volume has nowhere to keep one, says so, and what lasts stays in the journal.
-        let archives = match handed.outside.take::<Archives>() {
-            Some(archives) => archives,
+        //  OVER THE JOURNAL that package handed on, where it keeps one: handed an archive, by a test that reads it, it
+        //  archives into that; deployed and handed none, it opens its own on disk at the path the world states of the
+        //  archive the recorder's role names; and otherwise it has no task. Taken as often as the role says, unless
+        //  the test says otherwise. A binary built without the volume has nowhere to keep one, says so, and what lasts
+        //  stays in the journal.
+        let Some(orexis_journal::Traced(journal)) = handed.outside.read::<orexis_journal::Traced>() else {
+            return Ok(());
+        };
+        let (archive, every_s) = match handed.outside.take::<Archives>() {
+            Some(archives) => (archives.archive, archives.every_s),
             None if handed.outside.has::<orexis::task::Deployed>() => {
-                let Some(journal) = handed.outside.read::<orexis_journal::Traced>() else {
-                    return Ok(());
-                };
                 #[cfg(feature = "volume")]
                 {
-                    Archives {
-                        journal: journal.0,
-                        archive: std::sync::Arc::new(Archive::open(&path)?),
-                        every_s: recorder.archived_every_s,
-                    }
+                    (std::sync::Arc::new(Archive::open(&path)?), None)
                 }
                 #[cfg(not(feature = "volume"))]
                 {
-                    let _ = journal;
                     log::warn!(
                         "{}: this binary was built without the volume feature, so no archive is kept at {} and what \
                          lasts stays in the journal",
@@ -81,52 +77,52 @@ fn start(handed: Handed) -> orexis::task::Starting {
             }
             None => return Ok(()),
         };
+        let every_s = every_s.unwrap_or(recorder.archived_every_s);
         log::info!(
-            "{} archives what its journal keeps for good every {}s",
-            handed.id,
-            archives.every_s
+            "{} archives what its journal keeps for good every {every_s}s",
+            handed.id
         );
         //  READERS OF THE PAST ASK THE ARCHIVE from now on: the journal's endpoint, and a chat.
-        archives.journal.archived_in(archives.archive.store.clone());
+        journal.archived_in(archive.store.clone());
         handed
             .outside
             .share::<orexis::task::Reads>()
             .journal
-            .lies_in(archives.archive.store.clone());
+            .lies_in(archive.store.clone());
         //  THE LAST WORD: what was said after this task's last turn, while the others stopped, is taken too, and
         //  reaches the disk.
-        let (journal, archive, agent) = (archives.journal.clone(), archives.archive.clone(), handed.id.clone());
+        let (last, kept, agent) = (journal.clone(), archive.clone(), handed.id.clone());
         handed.finally(move || {
-            if let Err(e) = archive.take(&journal) {
+            if let Err(e) = kept.take(&last) {
                 eprintln!("{agent}: the journal's last entries were not archived: {e}");
             }
-            archive.flush();
+            kept.flush();
         });
         loop {
             let at = handed
                 .clock
                 .now()
-                .checked_add_day_time_duration(orexis::clock::seconds(archives.every_s));
+                .checked_add_day_time_duration(orexis::clock::seconds(every_s));
             let over = tokio::select! {
                 biased;
                 _ = handed.stopped() => true,
-                _ = archives.journal.incident.notified() => false,
+                _ = journal.incident.notified() => false,
                 _ = handed.sleep_until(at) => false,
             };
-            if archives.journal.news() || over {
-                let (journal, archive) = (archives.journal.clone(), archives.archive.clone());
-                let took = tokio::task::spawn_blocking(move || archive.take(&journal)).await;
+            if journal.news() || over {
+                let (taken, into) = (journal.clone(), archive.clone());
+                let took = tokio::task::spawn_blocking(move || into.take(&taken)).await;
                 match took {
                     Ok(Ok(wrote)) => log::debug!("{}: {wrote} journal entries archived", handed.id),
                     Ok(Err(e)) => {
-                        archives.journal.renew();
+                        journal.renew();
                         log::warn!(
                             "{}: the archive refused the journal's entries, and they stay: {e}",
                             handed.id
                         );
                     }
                     Err(e) => {
-                        archives.journal.renew();
+                        journal.renew();
                         log::warn!("{}: archiving the journal did not finish: {e}", handed.id);
                     }
                 }

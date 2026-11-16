@@ -19,7 +19,8 @@ pub fn archived_every_s() -> Result<f64, orexis::Error> {
 /// handed none and the package makes its own sink, where the world names a store that serves history.
 pub struct Archives {
     pub sink: Arc<Sink>,
-    pub every_s: f64,
+    /// How often, in the agent's seconds: none, and as often as the observer's role says.
+    pub every_s: Option<f64>,
 }
 
 /// What the store took this run: each reading still held, by its percept, with the point it was written as.

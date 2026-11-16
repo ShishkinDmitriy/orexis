@@ -60,30 +60,28 @@ fn start(handed: Handed) -> orexis::task::Starting {
         //  HANDED A SINK, by a test that reads the series, it archives into that; deployed and handed none, it makes
         //  its own where the world says where the store its role names answers; and otherwise the readings stay in the
         //  beliefs.
-        let archives = match handed.outside.take::<Archives>() {
-            Some(archives) => Some(archives),
+        let sink = match handed.outside.take::<Archives>() {
+            Some(archives) => Some((archives.sink, archives.every_s)),
             None if handed.outside.has::<orexis::task::Deployed>() => {
-                match Sink::deployed(&handed.store, orexis::series::HISTORY, &orexis::series::environment)? {
-                    Some((sink, _)) => {
-                        let every_s = observer.archived_every_s;
-                        log::info!(
-                            "{} archives its readings to the history store every {every_s}s",
-                            handed.id
-                        );
-                        Some(Archives {
-                            sink: Arc::new(sink),
-                            every_s,
-                        })
-                    }
-                    None => None,
-                }
+                Sink::deployed(&handed.store, orexis::series::HISTORY, &orexis::series::environment)?
+                    .map(|(sink, _)| (Arc::new(sink), None))
             }
             None => None,
         };
-        let Some(archives) = archives else {
+        let Some((sink, every_s)) = sink else {
             handed.started("sensing-influxdb").await;
             return Ok(());
         };
+        let every_s = every_s.unwrap_or(observer.archived_every_s);
+        log::info!(
+            "{} archives its readings to the history store every {every_s}s",
+            handed.id
+        );
+        //  WHAT A CHAT READS OF THE PAST is the series this writes.
+        let reader = sink.reader();
+        handed
+            .outside
+            .alter(|reads: &mut orexis::task::Reads| reads.history = Some(reader));
         //  WHETHER SENSING OBSERVED ANYTHING SINCE THE LAST TURN: heard, so a quiet stretch asks the beliefs nothing.
         //  The readings a lived volume already holds are due at the first.
         let news = Arc::new(AtomicBool::new(true));
@@ -102,7 +100,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
             let at = handed
                 .clock
                 .now()
-                .checked_add_day_time_duration(orexis::clock::seconds(archives.every_s));
+                .checked_add_day_time_duration(orexis::clock::seconds(every_s));
             let over = tokio::select! {
                 biased;
                 _ = handed.stopped() => true,
@@ -111,7 +109,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
             if news.swap(false, Ordering::Relaxed) || over {
                 let due = due(&handed.store, &shipped)?;
                 let points: Vec<Point> = due.points.iter().map(|(_, p)| p.clone()).collect();
-                let sink = archives.sink.clone();
+                let sink = sink.clone();
                 let wanted = points.len();
                 let wrote = tokio::task::spawn_blocking(move || sink.write(&points))
                     .await

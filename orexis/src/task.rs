@@ -741,6 +741,23 @@ impl Outside {
         held.insert(TypeId::of::<T>(), Box::new(thing));
     }
 
+    /// `thing` handed, and what is handed: for whoever runs the agent, handing several in one expression.
+    #[must_use]
+    pub fn with<T: Any + Send>(self, thing: T) -> Self {
+        self.hand(thing);
+        self
+    }
+
+    /// What was handed of type `T` changed by `change`, a default one handed first where nothing was: for what several
+    /// packages each add to, whichever starts first, so no package's addition is lost to another's.
+    pub fn alter<T: Any + Send + Default>(&self, change: impl FnOnce(&mut T)) {
+        let mut held = self.0.lock().expect("an outside nobody poisoned");
+        let thing = held.entry(TypeId::of::<T>()).or_insert_with(|| Box::new(T::default()));
+        if let Some(thing) = thing.downcast_mut::<T>() {
+            change(thing);
+        }
+    }
+
     /// Whether anything of type `T` is handed, taking nothing.
     pub fn has<T: Any + Send>(&self) -> bool {
         self.0
@@ -846,8 +863,9 @@ impl Journaled {
     }
 }
 
-/// WHAT THE AGENT KEEPS OF WHAT HAPPENED, as a chat reads it: its journal where it lies, and its two series. Shared
-/// outside (`Outside::share`) by whoever runs the agent and by each package that keeps or reads any of it.
+/// WHAT THE AGENT KEEPS OF WHAT HAPPENED, as a chat reads it: its journal where it lies, and its two series. Each
+/// package that keeps any of it says so outside as it makes its core (`Outside::alter`), the journal's where it lies
+/// and each series' package the sink it writes, and a reader reads it once every core is made.
 #[derive(Clone, Default)]
 pub struct Reads {
     pub journal: Journaled,

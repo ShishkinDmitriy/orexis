@@ -71,25 +71,20 @@ fn start(handed: Handed) -> orexis::task::Starting {
             };
         }
         translator.inline = handed.outside.take::<Inline>().is_some();
-        //  WHAT A CHAT READS OF WHAT HAPPENED: the journal where what keeps it said where it lies, and the two series —
-        //  handed, by a test that answers for them, or, where the agent is deployed, read through a sink of its own
-        //  wherever the world names a store that serves the purpose.
-        let mut reads = handed.outside.share::<Reads>();
+        //  AND WHERE THE AGENT IS DEPLOYED and nothing writes a series a chat reads, read through a sink of its own
+        //  wherever the world names a store that serves the purpose: made here, so a deployment that names a store
+        //  wrongly refuses the start.
+        let mut own = Reads::default();
         if handed.outside.has::<orexis::task::Deployed>() {
-            let own = |purpose: &'static str| -> Result<Option<Reader>, orexis::Error> {
+            let sink = |purpose: &'static str| -> Result<Option<Reader>, orexis::Error> {
                 Ok(
                     orexis::series::Sink::deployed(&handed.store, purpose, &orexis::series::environment)?
                         .map(|(sink, _)| sink.reader()),
                 )
             };
-            if reads.history.is_none() {
-                reads.history = own(orexis::series::HISTORY)?;
-            }
-            if reads.metrics.is_none() {
-                reads.metrics = own(orexis::series::METRICS)?;
-            }
+            own.history = sink(orexis::series::HISTORY)?;
+            own.metrics = sink(orexis::series::METRICS)?;
         }
-        (translator.journaled, translator.history, translator.metrics) = (reads.journal, reads.history, reads.metrics);
         translator.watch = handed.events.watch().clone();
         let mut hears = handed.events.hears();
         hears.event(TRANSLATING_TRIGGER, TRANSLATE);
@@ -100,6 +95,12 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if handed.checking().is_some() {
             return Ok(());
         }
+        //  WHAT A CHAT READS OF WHAT HAPPENED, asked once every package has made its core: the journal where what keeps
+        //  it said where it lies, and the two series where what writes each said so.
+        let reads = handed.outside.share::<Reads>();
+        translator.journaled = reads.journal;
+        translator.history = reads.history.or(own.history);
+        translator.metrics = reads.metrics.or(own.metrics);
         let mut heard = None;
         let mut due = None;
         loop {
