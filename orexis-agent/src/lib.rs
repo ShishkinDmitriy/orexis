@@ -83,7 +83,7 @@ pub struct Checked {
 }
 
 /// CHECK `agent` of `world` as its container would boot it, and run nothing: booted into a store in memory from the
-/// world's documents and its packages', and every part its roles load made and started, on a runtime that is never run, over members
+/// world's documents and its packages', and every part its roles load made, each package ending its start there as it is checked, over members
 /// that reach nothing — no broker, no web, no bot and no model — so every text a part parses at its making is parsed. What it found, or why it would not boot; and,
 /// where `boot` names a file, the store as booted, in N-Quads, before any part is made — which is what onboarding
 /// holds to the requirements, so the world is booted once, by the agent that will run it.
@@ -114,13 +114,21 @@ pub fn check(world: &Path, agent: &str, now: oxsdatatypes::DateTime, boot: Optio
         loaded: booted.loaded().to_vec(),
         ..Checked::default()
     };
-    //  STARTED AND NEVER RUN: on a runtime nothing drives, each package makes its core and its task is dropped.
+    //  EACH PACKAGE CHECKS ITS OWN: told it is checked, it makes its core, says what it found and ends its start,
+    //  so nothing runs. The runtime is entered for what a making spawns, and nothing is spawned after it.
     let tasks = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
         .map_err(|e| Error::Evaluation(format!("the tasks could not start: {e}")))?;
     let _entered = tasks.enter();
-    booted.start()?;
+    let running = booted.start()?;
+    //  A PACKAGE THAT WENT ON TO ITS TASK did not check its own, and would run as it is checked.
+    if !running.parts().is_empty() {
+        return Err(Error::Evaluation(format!(
+            "{} went on to run as it was checked: a package being checked ends its start once its core is made",
+            running.parts().join(", ")
+        )));
+    }
     //  WHAT EACH PACKAGE SAID AS IT MADE ITS CORE: the binary asks none of them by name.
     let found = checking.found();
     checked.held = found.held;

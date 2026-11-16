@@ -70,14 +70,18 @@ refused, its package having been built out. A domain that speaks a package's wor
 prediction's, is read whether the package is loaded or not.
 
 **Then each start goes on, and its lifecycle is two events.** The kernel keeps no order between packages: every
-start is begun and run until it ends or waits for another's, so the order they end in follows from those waits
-alone. A package whose start needs what another's made waits for that one: translation waits for speech
-(`handed.started("speech")`), and what keeps house for the journal waits for the journal. Once all have started
-the kernel says `orexis:PackageStarting` and `orexis:PackageStarted` of each, at the instants it began and ended and
+start is begun and run until it says it has started, ends, or waits for another's, so the order they start in
+follows from those waits alone. A START IS THE WHOLE OF WHAT THE PACKAGE DOES: it makes its core, SAYS IT HAS
+STARTED (`handed.started().await`) and goes on as its task, and the kernel is handed no task back; one that ends
+without saying so has nothing to run. A package being checked (`handed.checking()`) says what the check asks of it as it makes
+its core and ends its start there, before it says it has started: each package checks its own. A package whose making needs what another's made waits for that one to have
+said it: what keeps house for the journal waits for the journal (`handed.after("journal")`), and nothing else
+waits, translation's wait for speech having ordered two packages that needed nothing of each other. Once all have
+started the kernel says `orexis:PackageStarting` and `orexis:PackageStarted` of each, at the instants it began and said so and
 naming the package (`orexis:package`), so the journal keeps which packages run whichever started first. What
 several packages add to or read is shared outside (`Outside::share`) and asked when it is read, as where the
 journal lies is: none of them waits for another for it. The start makes the package's [part](/domain/kernel/part.md) and
-answers the one task that holds it — a loop of the package's own, awaiting the
+goes on as the one task that holds it — a loop of the package's own, awaiting the
 [events](/domain/kernel/event.md) beneath its triggers, the kinds of graph written it asked to hear, an arrival
 and the clock ([a-package-starts-itself](/decisions/a-package-starts-itself.md),
 [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).

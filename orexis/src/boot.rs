@@ -108,7 +108,7 @@ fn under(directory: &Path) -> Vec<PathBuf> {
 }
 
 /// Every package this binary holds, by its name: the kernel keeps no order between them, and the order they start
-/// in follows from what each start waits for (`Handed::started`).
+/// in follows from what each start waits for (`Handed::after`).
 pub fn every_package() -> Vec<String> {
     inventory::iter::<Package>()
         .map(|p| p.name.to_string())

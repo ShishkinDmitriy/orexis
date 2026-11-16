@@ -133,9 +133,16 @@ fn start(handed: Handed) -> orexis::task::Starting {
             .joins(|handed| orexis::boot::wired(&handed.store, WORDS, WIRED))
             .await?
         {
-            return Ok(None);
+            return Ok(());
         }
-        make(&handed)
+        let Some(task) = make(&handed)? else {
+            return Ok(());
+        };
+        if handed.checking().is_some() {
+            return Ok(());
+        }
+        handed.started().await;
+        task.await
     })
 }
 
@@ -155,7 +162,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
         None => crate::driver::Mqtt::new(&handed.store, &me, Vec::new()),
     };
     //  CHECKED, it says what a check asks of it: it listens, so it holds the agent for as long as its process runs.
-    if let Some(checking) = handed.outside.read::<orexis::task::Checking>() {
+    if let Some(checking) = handed.checking() {
         checking.holds("transport/mqtt");
     }
     let mut part = Transport::new(member);

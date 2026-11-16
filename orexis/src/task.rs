@@ -846,13 +846,15 @@ struct Life {
     started: BTreeMap<String, bool>,
     begun: Option<crate::boot::Begun>,
     moved: u64,
+    /// Each package that started, and when, in the order they did.
+    said: Vec<(String, DateTime)>,
     /// What packages asked to be done once every task has ended (`Handed::finally`), in the order asked.
     ending: Vec<Box<dyn FnOnce() + Send>>,
 }
 
 /// A PACKAGE STARTING, or STARTED: the two events of a package's lifecycle, said by the kernel to whoever watches
 /// the agent as a package's start begins and as it ends, so the journal keeps which packages run and a package
-/// that needs another started may wait for it (`Handed::started`).
+/// that needs another started may wait for it (`Handed::after`).
 pub struct Lifecycle {
     pub package: String,
     pub started: bool,
@@ -1009,9 +1011,39 @@ impl Handed {
         self.life().decided.get(package).copied().unwrap_or(false)
     }
 
-    /// WAIT UNTIL `package` HAS STARTED - its start ended, its core made - and answer whether it runs: false where
-    /// it declined, or is no package of this binary. For a package whose own start needs what another's made.
-    pub async fn started(&self, package: &str) -> bool {
+    /// THIS PACKAGE HAS STARTED: its core is made, and what follows is its task. Said by the package itself, once,
+    /// as the last thing of its making, and waited on: whoever starts the agent runs a start as far as this and
+    /// spawns what follows as the package's task, so what is said before it is said as the agent starts and what is
+    /// done after it is done as the agent runs. A start that ends without saying it has nothing to run, and has
+    /// started all the same. The kernel says `orexis:PackageStarted` of it once every package has.
+    pub async fn started(&self) {
+        let mut said = false;
+        std::future::poll_fn(|context| {
+            if said {
+                return std::task::Poll::Ready(());
+            }
+            said = true;
+            let mut life = self.life();
+            life.started.insert(self.me.clone(), true);
+            life.said.push((self.me.clone(), self.clock.now()));
+            life.moved += 1;
+            context.waker().wake_by_ref();
+            std::task::Poll::Pending
+        })
+        .await
+    }
+
+    /// WHETHER THE AGENT IS BEING CHECKED, and where to say what the check asks: handed outside by whoever checks an
+    /// agent before anything is granted. A package being checked says what it found as it makes its core - that it
+    /// holds the agent, why it refuses the world as posed - and ENDS ITS START THERE, its core made and nothing run:
+    /// each package checks its own, and the kernel knows nothing of checks.
+    pub fn checking(&self) -> Option<Checking> {
+        self.outside.read::<Checking>()
+    }
+
+    /// WAIT UNTIL `package` HAS STARTED - it said so, or its start ended - and answer whether it runs: false where
+    /// it declined, or is no package of this binary. For a package whose own making needs what another's made.
+    pub async fn after(&self, package: &str) -> bool {
         std::future::poll_fn(|_| {
             let life = self.life();
             match (life.started.get(package), life.decided.get(package)) {
@@ -1032,18 +1064,20 @@ impl Handed {
     }
 }
 
-/// A task: what a package's start answers, to be spawned.
+/// A task: what a package runs once it has started, where it keeps that apart from its making.
 pub type Task = Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;
 
-/// A package's start, running: it ends in the package's task, or in nothing.
-pub type Starting = Pin<Box<dyn Future<Output = Result<Option<Task>, Error>> + Send>>;
+/// A package's start, running: the whole of what the package does, from deciding whether it joins to the end of its
+/// task. It says when it has started (`Handed::started`), and ends where it has nothing more to do.
+pub type Starting = Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;
 
 /// A PACKAGE, AS IT REGISTERS ITSELF: its name, THE DOCUMENTS IT BRINGS - its ontology, its rules, its actions, each
 /// a file of its crate compiled into the binary (`documents!`) and put in the store as the package joins - and ITS
 /// START, which every package this binary holds is given. A start first decides whether the agent runs the package
 /// (`Handed::joins`, `plays`, `beside`), by a reason the package knows and the kernel does not; declined, it ends
-/// in nothing; joined, it waits for what it needs started (`Handed::started`), makes its core from what it is
-/// handed and answers its task - or nothing, where what it is handed gives it nothing to do. A START DOES NOTHING
+/// there; joined, it waits for what it needs started (`Handed::after`), makes its core from what it is handed, says
+/// it has started (`Handed::started`) and goes on as its task - or ends, where what it is handed gives it nothing
+/// to do. The kernel is handed no task back and keeps no order between two packages. A START DOES NOTHING
 /// BEFORE IT HAS JOINED: the boot runs every start as far as its decision and holds it there (`boot`), and
 /// starting the agent runs it on (`Booted::start`).
 pub struct Package {
@@ -1080,9 +1114,16 @@ pub struct Running {
 pub fn named(handed: Handed, make: fn(&Handed) -> Result<Option<Task>, Error>) -> Starting {
     Box::pin(async move {
         if !handed.joins(|_| Ok(false)).await? {
-            return Ok(None);
+            return Ok(());
         }
-        make(&handed)
+        let Some(task) = make(&handed)? else {
+            return Ok(());
+        };
+        if handed.checking().is_some() {
+            return Ok(());
+        }
+        handed.started().await;
+        task.await
     })
 }
 
@@ -1254,9 +1295,10 @@ pub fn start(
     run(handed, stop, waiting)
 }
 
-/// EVERY START IS RUN until it ends or waits for another's (`Handed::started`): the order they end in follows from
-/// those waits alone, and the kernel keeps none. A round in which none ended while some still wait is a wait for
-/// what never comes.
+/// EVERY START IS RUN until it says it has started, ends, or waits for another's (`Handed::after`): the order they
+/// start in follows from those waits alone, and the kernel keeps none. One that said it started goes on as the
+/// package's task, spawned; one that ended has none. A round in which nothing moved while some still wait is a
+/// wait for what never comes.
 fn run(
     handed: Handed,
     stop: watch::Sender<bool>,
@@ -1270,43 +1312,30 @@ fn run(
         halt: None,
         halted: Arc::new(Notify::new()),
     };
-    let mut lives = Vec::new();
+    let mut began = BTreeMap::new();
+    let mut tasks: BTreeMap<String, Starting> = BTreeMap::new();
     while !waiting.is_empty() {
         let mut still = Vec::new();
         let before = waiting.len();
-        for (name, began, mut starting) in waiting {
-            let ended = match starting
+        for (name, at, mut starting) in waiting {
+            let polled = starting
                 .as_mut()
-                .poll(&mut std::task::Context::from_waker(std::task::Waker::noop()))
-            {
-                std::task::Poll::Ready(ended) => ended?,
-                std::task::Poll::Pending => {
-                    still.push((name, began, starting));
-                    continue;
-                }
-            };
-            handed.life().started.insert(name.clone(), true);
-            lives.push((name.clone(), began, handed.clock.now()));
-            let Some(task) = ended else {
-                continue;
-            };
-            let events = handed.events.clone();
-            //  A TASK IS BUSY FROM ITS START until it first waits: the run is not over before every policy decided once.
-            events.0.busy.up();
-            let scoped = TURN.scope(
-                RefCell::new(Local {
-                    said: Vec::new(),
-                    in_hand: 1,
-                }),
-                async move {
-                    if let Err(e) = task.await {
-                        events.failed(e);
+                .poll(&mut std::task::Context::from_waker(std::task::Waker::noop()));
+            began.insert(name.clone(), at);
+            match polled {
+                std::task::Poll::Ready(ended) => {
+                    ended?;
+                    //  A START THAT ENDED WITHOUT SAYING SO has started all the same, with nothing to run.
+                    let mut life = handed.life();
+                    if life.started.insert(name.clone(), true).is_none() {
+                        life.said.push((name.clone(), handed.clock.now()));
                     }
-                    events.rest();
-                },
-            );
-            running.names.push(name.clone());
-            running.joins.push(tokio::spawn(scoped));
+                }
+                std::task::Poll::Pending if handed.life().started.contains_key(&name) => {
+                    tasks.insert(name, starting);
+                }
+                std::task::Poll::Pending => still.push((name, at, starting)),
+            }
         }
         if still.len() == before {
             let names: Vec<&str> = still.iter().map(|(name, _, _)| name.as_str()).collect();
@@ -1317,10 +1346,33 @@ fn run(
         }
         waiting = still;
     }
+    let said = handed.life().said.clone();
+    //  WHAT FOLLOWS A PACKAGE'S SAYING IT STARTED IS ITS TASK, spawned in the order they started.
+    for (name, _) in &said {
+        let Some(task) = tasks.remove(name) else { continue };
+        let events = handed.events.clone();
+        //  A TASK IS BUSY FROM ITS START until it first waits: the run is not over before every policy decided once.
+        events.0.busy.up();
+        let scoped = TURN.scope(
+            RefCell::new(Local {
+                said: Vec::new(),
+                in_hand: 1,
+            }),
+            async move {
+                if let Err(e) = task.await {
+                    events.failed(e);
+                }
+                events.rest();
+            },
+        );
+        running.names.push(name.clone());
+        running.joins.push(tokio::spawn(scoped));
+    }
     //  THAT EACH STARTED IS SAID ONCE ALL HAVE, in the order they did and at the instants they did: whichever
-    //  package keeps what is said hears every start, its own and those that ended before it.
-    for (name, began, ended) in lives {
-        for (started, at) in [(false, began), (true, ended)] {
+    //  package keeps what is said hears every start, its own and those that started before it.
+    for (name, ended) in said {
+        let at = began.get(&name).copied().unwrap_or(ended);
+        for (started, at) in [(false, at), (true, ended)] {
             handed.events.0.watch.emit(&Lifecycle {
                 package: name.clone(),
                 started,
@@ -1332,7 +1384,7 @@ fn run(
 }
 
 impl Running {
-    /// The packages whose tasks run, in the order their starts ended.
+    /// The packages whose tasks run, in the order they started.
     pub fn parts(&self) -> Vec<&str> {
         self.names.iter().map(String::as_str).collect()
     }

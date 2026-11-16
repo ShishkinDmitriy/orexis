@@ -835,12 +835,16 @@ fn translated_by(store: &orexis::store::Store) -> Result<Option<String>, Error> 
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         if !handed.plays(&[ROLE]).await? {
-            return Ok(None);
+            return Ok(());
         }
-        //  A TRANSLATOR IS A SPEAKER: what it hears and says is speech's to keep, so where speech runs it is
-        //  started first. Translation's own making needs nothing of it, so one started alone, as a test does, starts.
-        handed.started("speech").await;
-        make(&handed)
+        let Some(task) = make(&handed)? else {
+            return Ok(());
+        };
+        if handed.checking().is_some() {
+            return Ok(());
+        }
+        handed.started().await;
+        task.await
     })
 }
 

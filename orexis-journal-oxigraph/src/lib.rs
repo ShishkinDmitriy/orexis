@@ -149,10 +149,17 @@ fn start(handed: Handed) -> orexis::task::Starting {
         let archived = |handed: &Handed| {
             Ok(handed.joined("journal") && orexis_journal::Recorder::new(&handed.store)?.archived_in.is_some())
         };
-        if !handed.joins(archived).await? || !handed.started("journal").await {
-            return Ok(None);
+        if !handed.joins(archived).await? || !handed.after("journal").await {
+            return Ok(());
         }
-        make(&handed)
+        let Some(task) = make(&handed)? else {
+            return Ok(());
+        };
+        if handed.checking().is_some() {
+            return Ok(());
+        }
+        handed.started().await;
+        task.await
     })
 }
 

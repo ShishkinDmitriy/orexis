@@ -215,9 +215,16 @@ const ROLE: &str = "http://example.org/orexis/planning#Planner";
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         if !handed.plays(&[ROLE]).await? {
-            return Ok(None);
+            return Ok(());
         }
-        make(&handed)
+        let Some(task) = make(&handed)? else {
+            return Ok(());
+        };
+        if handed.checking().is_some() {
+            return Ok(());
+        }
+        handed.started().await;
+        task.await
     })
 }
 
@@ -230,7 +237,7 @@ fn make(handed: &Handed) -> Result<Option<Task>, Error> {
     let mut planning = Planning::new(&handed.store, &handed.id, budget)?;
     //  CHECKED, it says what a check asks of it: that a desire holds the agent, and each constraint the agent holds
     //  that the world as posed violates, which no agent repairs (constraint.md).
-    if let Some(checking) = handed.outside.read::<orexis::task::Checking>() {
+    if let Some(checking) = handed.checking() {
         if planning.planner.holds_a_desire()? {
             checking.holds("planning");
         }
