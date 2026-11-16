@@ -14,6 +14,8 @@ use orexis::clock::isoformat;
 use orexis::ontology::GRAPH_PREFIX;
 
 pub const SENSING: &str = "http://example.org/orexis/sensing#";
+/// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
+pub const OBSERVER: &str = "http://example.org/orexis/sensing#Observer";
 /// The graph a percept is kept in.
 pub const OBSERVATION_GRAPH: &str = "http://example.org/orexis/sensing#ObservationGraph";
 /// The graph a percept sensing has done reading is filed in, and its revisions with it.

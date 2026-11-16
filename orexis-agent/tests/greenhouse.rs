@@ -246,7 +246,7 @@ ORDER BY ?start";
 fn foreseen(store: &Store, now: DateTime) -> Vec<(DateTime, String)> {
     orexis_planning::Planner::scope(store, now).unwrap();
     let mut planner = orexis_planning::Planner::new(store, "grower", None).unwrap();
-    planner.foresee = Some(orexis_prediction::Prediction.offered());
+    planner.foresee = Some(orexis_prediction::Predictor::new(store).unwrap().offered());
     planner.plan(now).unwrap();
     let mut out: Vec<(DateTime, String)> = planner
         .imaginaria

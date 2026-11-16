@@ -14,6 +14,7 @@
 
 mod check;
 mod kept;
+mod policy;
 mod reconsider;
 mod search;
 
@@ -52,6 +53,8 @@ use crate::unweighed::unweighed;
 use crate::weigh::{shapes, weigh};
 use crate::withdraw::withdraw;
 use crate::world_at::{catalogue, lexical};
+
+pub(crate) use policy::{CHECK, HEAD_ASKED, REOPEN};
 
 const IN_SCOPE_Q: &str = r#"SELECT ?a WHERE { ?a planning:inScope $scope }"#;
 
@@ -227,7 +230,25 @@ pub struct Planner {
     laps: Option<Laps>,
     /// Each want searched and not yet published: when it was first searched, and in how many passes.
     searches: Mutex<BTreeMap<String, (Instant, usize)>>,
+    /// Whether any part walks what it publishes: the self plays a role beneath `execution:Executor`.
+    pub walked: bool,
+    /// The events heard beneath its trigger since it last planned, which the planning names as what triggered it.
+    triggers: Vec<NamedNode>,
+    /// Whether to plan at the next pass whatever was heard: the first, and one after a search the budget cut short.
+    due: bool,
+    /// The instant the next ground the last planning laid begins, where it laid one.
+    next: Option<DateTime>,
+    /// Whether nothing new was heard since planning last published: the present is the one its plans were found in.
+    fresh: bool,
+    /// Whether a plan failed in the present it was found in: planning holds back until news is heard.
+    held: bool,
+    /// When a search the budget cut short is given its next budget, where one waits for it.
+    continues: Option<DateTime>,
 }
+
+/// How many worlds planning's search may weigh a pass, where whoever runs the agent sizes it: none reads the
+/// planner's role's figure.
+pub struct Budget(pub usize);
 
 impl Planner {
     /// What the texts the last pass evaluated read, None where one of them could read anything.
@@ -648,6 +669,13 @@ impl Planner {
             doomed: BTreeMap::new(),
             asked: BTreeSet::new(),
             foresee: None,
+            walked: policy::walks(beliefs)?,
+            triggers: Vec::new(),
+            due: true,
+            next: None,
+            fresh: false,
+            held: false,
+            continues: None,
         })
     }
 

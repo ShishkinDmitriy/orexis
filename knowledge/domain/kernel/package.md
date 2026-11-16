@@ -79,9 +79,11 @@ goes on as the one task that holds it — a loop of the package's own, awaiting 
 and the clock ([a-package-starts-itself](/decisions/a-package-starts-itself.md),
 [planning-and-execution-meet-at-the-store](/decisions/planning-and-execution-meet-at-the-store.md)).
 
-**A package's start is in its crate's `lib.rs`.** Below what the crate is and its modules: what a test hands it, the
-[role](/domain/kernel/role.md) it is loaded for, its registration, `start`, `make` and its task, the same in every
-crate. The work is in the modules.
+**A package's start is in its crate's `lib.rs`, and nothing else is.** Below what the crate is and its modules: its
+registration, the [role](/domain/kernel/role.md) it is loaded for, and `start`, one function from the decision to the
+end of its task, the same in every crate. The work is in the modules: the [part](/domain/kernel/part.md) in a file
+named for the role, what the package says happened in `events.rs`, and what a test hands it beside what it is
+handed to.
 
 **A deployed agent's package makes what it is not handed.** Whoever runs an agent for good hands
 `orexis::task::Deployed` outside, and a package then makes its own from what the world says: the journal package

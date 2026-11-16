@@ -276,11 +276,8 @@ fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_ro
         archived_every_s: 10.0,
     };
     assert_eq!(orexis_sensing_influxdb::Observer::new(&store).unwrap(), observer);
-    let meter = orexis_metrics::Meter {
-        written_to: series,
-        window_s: 60.0,
-    };
-    assert_eq!(orexis_metrics::Meter::new(&store).unwrap(), meter);
+    let meter = orexis_metrics::Meter::new(&store).unwrap();
+    assert_eq!((meter.written_to, meter.window_s), (series.clone(), 60.0));
     //  AND THE ROLES THAT STATE FIGURES ALONE read the same way, each its struct.
     assert_eq!(
         orexis_prediction::Predictor::new(&store).unwrap(),
@@ -289,17 +286,14 @@ fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_ro
             rate_held_s: 3600.0
         }
     );
+    let coordinator = orexis_coordination::Coordinator::new(&store).unwrap();
     assert_eq!(
-        orexis_coordination::Coordinator::new(&store).unwrap(),
-        orexis_coordination::Coordinator {
-            patience_s: 60.0,
-            rounds: 3.0,
-            lookahead: 2
-        }
+        (coordinator.patience_s, coordinator.rounds, coordinator.lookahead),
+        (60.0, 3.0, 2)
     );
     let sensed = orexis_sensing::Observer::new(&store).unwrap();
     assert!(!sensed.sensors.is_empty() && sensed.asked_every_s == 60.0);
-    let translator = orexis_translation::Translator::new(&store, "", None);
+    let translator = orexis_translation::Translator::new(&store).unwrap();
     assert_eq!(
         (translator.turns, translator.rows, translator.retries),
         (8, 50, 3),
@@ -307,7 +301,7 @@ fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_ro
     );
     assert_eq!((translator.answered_within_s, translator.called_within_s), (60.0, 60.0));
     assert_eq!(
-        orexis_translation::Translator::new(&store, "", None).translated_by,
+        orexis_translation::Translator::new(&store).unwrap().translated_by,
         Some("https://api.anthropic.com".to_string())
     );
     assert_eq!(orexis_transport_telegram::driver::polled_every_s(&store).unwrap(), 3.0);
@@ -344,13 +338,8 @@ fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_ro
             ..observer
         }
     );
-    assert_eq!(
-        orexis_metrics::Meter::new(&store).unwrap(),
-        orexis_metrics::Meter {
-            window_s: 300.0,
-            ..meter
-        }
-    );
+    let meter = orexis_metrics::Meter::new(&store).unwrap();
+    assert_eq!((meter.written_to, meter.window_s), (series, 300.0));
     assert_eq!(orexis_transport_telegram::driver::polled_every_s(&store).unwrap(), 7.0);
     //  AN AGENT PLAYS ONE OF EACH: a second role of the class is a second answer to what its package is told once,
     //  and is refused, never merged or picked between; the same figure said by two roles is one answer.
@@ -380,10 +369,7 @@ fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_ro
     //  A PACKAGE THAT DID NOT JOIN BROUGHT NO ONTOLOGY, so its role's figures have no default and it is refused.
     assert!(orexis_sensing_influxdb::Observer::new(&store).is_err());
     assert!(orexis_metrics::Meter::new(&store).is_err());
-    assert_eq!(
-        orexis_translation::Translator::new(&store, "", None).translated_by,
-        None
-    );
+    assert_eq!(orexis_translation::Translator::new(&store).unwrap().translated_by, None);
 }
 
 /// WHERE A BROKER, A BOT AND A MODEL ANSWER IS THE WORLD'S TO SAY, and no environment's: the terrace's agent is
@@ -412,15 +398,12 @@ fn the_world_says_where_each_broker_bot_and_model_an_agent_reaches_answers() {
         Some("https://api.telegram.org".to_string())
     );
     assert_eq!(
-        orexis_translation::Translator::new(&store, "", None).translated_by,
+        orexis_translation::Translator::new(&store).unwrap().translated_by,
         Some("https://api.anthropic.com".to_string())
     );
     let (store, me) = booted("hanoi", "hanoi");
     assert!(orexis_transport_mqtt::driver::reached(&store, &me).unwrap().is_empty());
-    assert_eq!(
-        orexis_translation::Translator::new(&store, "", None).translated_by,
-        None
-    );
+    assert_eq!(orexis_translation::Translator::new(&store).unwrap().translated_by, None);
 }
 
 /// WHERE A SERIES IS WRITTEN IS THE WORLD'S TO SAY, of each store a role names: the terrace's agent plays an observer

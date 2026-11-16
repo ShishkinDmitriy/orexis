@@ -15,7 +15,7 @@ use oxsdatatypes::DateTime;
 
 use orexis::events::{Event, Mark, Number, boolean, node, triple, typed};
 
-use crate::ontology::EXECUTION;
+use crate::ontology::{COMMANDED, COMMANDS, EXECUTION, SPEECH_STATEMENT, SPEECH_TO, TOLD};
 
 /// An intention adopted, one ended, and a step recorded taken: each heard by whoever is above execution, by its
 /// class.
@@ -269,5 +269,45 @@ impl Event for Walked {
 
     fn marks(&self) -> Vec<(&'static str, Mark)> {
         vec![("standing", Mark::Level(self.standing.map(Number::Int)))]
+    }
+}
+
+/// A step's commands at one order were kept: the command graph, for the transport that sends them.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Commanded {
+    pub commands: String,
+}
+
+impl Event for Commanded {
+    fn kind(&self) -> Option<&'static str> {
+        Some(COMMANDED)
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        NamedNode::new(self.commands.as_str())
+            .map(|g| vec![(COMMANDS, Term::NamedNode(g))])
+            .unwrap_or_default()
+    }
+}
+
+/// A step said statements the agent now believes it said, to the agents named: in speech's words, for speech to tell.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Told {
+    pub statements: Vec<String>,
+    pub to: Vec<String>,
+}
+
+impl Event for Told {
+    fn kind(&self) -> Option<&'static str> {
+        Some(TOLD)
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        let named = |p: &'static str, iri: &str| NamedNode::new(iri).ok().map(|n| (p, Term::NamedNode(n)));
+        self.statements
+            .iter()
+            .filter_map(|s| named(SPEECH_STATEMENT, s))
+            .chain(self.to.iter().filter_map(|a| named(SPEECH_TO, a)))
+            .collect()
     }
 }

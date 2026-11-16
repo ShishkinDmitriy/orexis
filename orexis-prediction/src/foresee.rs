@@ -455,13 +455,17 @@ impl Integration for Foresight {
 
 /// The agent's foresight from `now`: every key some flow moves, read off the belief base — each sensor's latest
 /// percept with what the rules concluded of it, the flows moving its property, the ranges that apply to it and the
-/// horizon the agent looks to. None where no key is moved by any flow. `placed` says, of a key's feature and
+/// horizon the predictor looks to. None where no key is moved by any flow. `placed` says, of a key's feature and
 /// property, whether a crossing of it is the caller's to lay; None lays every key.
-pub fn foresee(beliefs: &Store, now: DateTime, placed: Option<&Placed<'_>>) -> Result<Option<Foresight>, Error> {
+pub fn foresee(
+    beliefs: &Store,
+    predictor: &crate::Predictor,
+    now: DateTime,
+    placed: Option<&Placed<'_>>,
+) -> Result<Option<Foresight>, Error> {
     let Some(cat) = beliefs.catalogue()? else {
         return Ok(None);
     };
-    let predictor = crate::Predictor::new(beliefs)?;
     let (horizon, held_s) = (predictor.horizon_s, predictor.rate_held_s);
     let flow_graphs = beliefs.graphs_of(&[FLOW_GRAPH], &Within::default())?;
     let flow_graphs: Vec<&str> = flow_graphs.iter().map(String::as_str).collect();
@@ -900,7 +904,7 @@ mod tests {
         for case in all {
             let stem = case.file_stem().unwrap().to_string_lossy().into_owned();
             let store = stand_in(&case);
-            let foresight = foresee(&store, now(), None).unwrap();
+            let foresight = foresee(&store, &crate::Predictor::new(&store).unwrap(), now(), None).unwrap();
             let Some(table) = expected(&stem) else {
                 if let Some(mut foresight) = foresight {
                     assert!(every_knot(&store, &mut foresight, now()).is_empty(), "{stem}");
@@ -951,7 +955,9 @@ mod tests {
     #[test]
     fn two_keys_advance_together_and_one_reads_the_other_as_it_stands() {
         let store = stand_in(&cases().join("a_key_is_predicted_from_another_keys_prediction.trig"));
-        let mut foresight = foresee(&store, now(), None).unwrap().unwrap();
+        let mut foresight = foresee(&store, &crate::Predictor::new(&store).unwrap(), now(), None)
+            .unwrap()
+            .unwrap();
         let mut sensors: Vec<String> = foresight.keys.iter().map(|k| local_of(&k.sensor)).collect();
         sensors.sort();
         assert_eq!(sensors, ["hygrometer", "probe"]);
@@ -989,7 +995,9 @@ mod tests {
                                 orexis:ownedBy <{ME}> }} }}"
             ))
             .unwrap();
-        let mut foresight = foresee(&store, now(), None).unwrap().unwrap();
+        let mut foresight = foresee(&store, &crate::Predictor::new(&store).unwrap(), now(), None)
+            .unwrap()
+            .unwrap();
         assert_eq!(
             foresight.horizon(),
             now().checked_add_day_time_duration(seconds(8.0 * 3600.0)).unwrap()
