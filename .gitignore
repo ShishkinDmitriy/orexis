@@ -59,3 +59,6 @@ node_modules/
 
 # the Rust agent's build output, at the workspace root
 /target/
+
+# cowork records a global install on this machine; Skills.toml is the project's
+.cowork/Skills.lock
