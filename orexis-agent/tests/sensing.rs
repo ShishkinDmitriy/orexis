@@ -13,7 +13,7 @@ use orexis::clock::instant;
 use orexis::namespaces::Namespaces;
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::{Provided, UNFINISHED};
-use orexis_agent::booted;
+use orexis_agent::boot_without_starting;
 use orexis_transport_mqtt::driver::{Client, Mqtt};
 
 const W: &str = "http://example.org/orexis/world/sensing#";
@@ -57,7 +57,7 @@ fn store() -> Store {
 #[test]
 fn booted_from_its_directory_the_agent_holds_no_hardware() {
     let store = store();
-    booted(&store, &world(), "fern").unwrap();
+    boot_without_starting(&store, &world(), "fern").unwrap();
     let hardware = orexis::document::file_uri(&world().join("hardware.ttl")).unwrap();
     let held = store
         .rows(
@@ -148,7 +148,7 @@ async fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_
     );
     assert!(broker.0.lock().unwrap().1.is_empty());
     let store2 = self::store();
-    orexis_agent::booted(&store2, &world(), "fern").unwrap();
+    orexis_agent::boot_without_starting(&store2, &world(), "fern").unwrap();
     let cadence = Broker::default();
     let mut member = Mqtt::new(
         &store2,

@@ -15,7 +15,7 @@ use orexis::clock::{Clock, instant};
 use orexis::namespaces::Namespaces;
 use orexis::store::{Store, iri, value};
 use orexis::task::{MET, Provided, UNFINISHED};
-use orexis_agent::booted;
+use orexis_agent::boot_without_starting;
 
 fn tree() -> &'static Path {
     Path::new(TREE)
@@ -155,7 +155,7 @@ async fn metered_courier(watched: bool) -> (usize, usize, String, std::collectio
     }
     let store = store();
     let clock = Arc::new(Counting(orexis::clock::Elapsing::from(now()), Mutex::new(0)));
-    booted(&store, &world("courier"), "courier").unwrap();
+    boot_without_starting(&store, &world("courier"), "courier").unwrap();
     let written: std::sync::Arc<std::sync::Mutex<Vec<orexis::events::Point>>> = Default::default();
     let kept = written.clone();
     let provided = Provided::default().with(orexis_planning::Budget(128));

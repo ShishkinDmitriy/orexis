@@ -17,7 +17,7 @@ use orexis::namespaces::Namespaces;
 use orexis::ontology::{BELIEF, PLAN, SELF_GRAPH};
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::{PLANNED, Provided};
-use orexis_agent::booted;
+use orexis_agent::boot_without_starting;
 
 const WANT: &str = "http://example.org/orexis/planning#WantGraph";
 const REVISION: &str = "http://example.org/orexis/belief#RevisionGraph";
@@ -40,7 +40,7 @@ fn store() -> Store {
 }
 
 fn boot(store: &Store) {
-    booted(store, &world(), "hanoi").unwrap()
+    boot_without_starting(store, &world(), "hanoi").unwrap()
 }
 
 const TEXTBOOK: [(&str, &str); 7] = [

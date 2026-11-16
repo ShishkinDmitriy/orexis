@@ -19,7 +19,7 @@ use orexis::namespaces::Namespaces;
 use orexis::ontology::{BELIEF, SELF_GRAPH};
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::{MET, Provided};
-use orexis_agent::booted;
+use orexis_agent::boot_without_starting;
 
 const TOWER: &str = "http://example.org/orexis/world/tower#";
 const REVISION: &str = "http://example.org/orexis/belief#RevisionGraph";
@@ -174,7 +174,7 @@ type Walked = (
 async fn walked(order: &[&str]) -> Walked {
     use orexis::clock::Clock;
     let store = store();
-    booted(&store, &world(), "mover").unwrap();
+    boot_without_starting(&store, &world(), "mover").unwrap();
     //  THE RECORDER'S PACKAGE, WHAT KEEPS HOUSE FOR IT AND THE METRICS begin on no event and are handed nothing
     //  here, so no order is asked of them.
     let watching = ["journal", "journal-oxigraph", "journal-otlp", "metrics"];
@@ -223,7 +223,7 @@ async fn the_puzzle_ends_the_same_whichever_of_planning_and_execution_hears_a_re
 #[tokio::test(start_paused = true)]
 async fn the_last_window_is_written_as_the_process_stops() {
     let store = store();
-    booted(&store, &world(), "mover").unwrap();
+    boot_without_starting(&store, &world(), "mover").unwrap();
     common::metered(&store);
     let written: std::sync::Arc<std::sync::Mutex<Vec<orexis::events::Point>>> = Default::default();
     let kept = written.clone();

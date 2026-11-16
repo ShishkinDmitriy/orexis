@@ -50,14 +50,16 @@ use orexis_transport_mqtt as _;
 #[cfg(feature = "telegram")]
 use orexis_transport_telegram as _;
 
-/// Boot `agent` of `world` into `store` from the world's documents and those of every package this binary holds, run
-/// or not, and start nothing (`orexis::boot::boot`): for a test that calls a package's core itself.
-pub fn booted(store: &Store, world: &Path, agent: &str) -> Result<(), Error> {
+/// BOOT `agent` of `world` into `store` WHOLE and start nothing (`orexis::boot::boot`): the world's documents and those
+/// of every package this binary holds, run or not, so the store may hold more vocabulary than a running agent's. For a
+/// test that calls a package's core itself, or that starts the packages over it after (`start`). An agent that runs is
+/// booted by `boot`, which only begins, its packages' starts bringing the documents of those that join.
+pub fn boot_without_starting(store: &Store, world: &Path, agent: &str) -> Result<(), Error> {
     orexis::boot::boot(store, &Booting { world, agent })
 }
 
 /// BOOT `agent` of `world` into `store`, handed `provided`, and hold it ready to start (`orexis::task::boot`). What a
-/// deployed agent and a check do; `booted` is for a caller that starts nothing.
+/// deployed agent and a check do; `boot_without_starting` is for a caller that starts nothing.
 pub fn boot(
     store: &Store,
     world: &Path,
