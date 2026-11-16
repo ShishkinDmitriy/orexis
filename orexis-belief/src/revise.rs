@@ -640,4 +640,23 @@ INSERT DATA { GRAPH <http://example.org/test#rules> {
             "{said:?}"
         );
     }
+
+    #[test]
+    fn a_name_that_would_break_out_of_its_text_is_refused_before_anything_is_written() {
+        let store = Store::new(snapshots::namespaces()).unwrap();
+        let cat = "urn:test:cat";
+        say_settled(&store, cat, "urn:test:g", true).unwrap();
+        let smuggled = "urn:test:g> <urn:test:p> <urn:test:o";
+        assert!(matches!(
+            say_settled(&store, cat, smuggled, true),
+            Err(Error::Evaluation(_))
+        ));
+        assert!(
+            store
+                .rows("SELECT * WHERE { GRAPH ?g { ?s ?p ?o } }", &[])
+                .unwrap()
+                .is_empty(),
+            "nothing was written"
+        );
+    }
 }
