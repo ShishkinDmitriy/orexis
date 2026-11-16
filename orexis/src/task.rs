@@ -465,6 +465,15 @@ impl Events {
         }
     }
 
+    /// WHAT THE TASK SAID IS TOLD, and it stays busy: what a start waiting on the other starts does, its sayings heard
+    /// as when it rests, while it is still counted as starting.
+    fn spoke(&self) {
+        let said = TURN.try_with(|turn| std::mem::take(&mut turn.borrow_mut().said));
+        for heard in said.unwrap_or_default() {
+            self.tell(heard);
+        }
+    }
+
     /// The task took something it was sent, counted busy since it was sent: it is in hand until the task next waits.
     /// Whoever is no task of the agent's is done with it at once.
     fn took(&self) {
@@ -865,12 +874,12 @@ pub struct Handed {
 #[derive(Clone)]
 struct Run {
     stop: watch::Receiver<bool>,
-    making: Arc<watch::Sender<usize>>,
+    making: Arc<Gate<usize>>,
     started: Arc<Mutex<Vec<String>>>,
     ending: Arc<Mutex<Vec<Ending>>>,
     boot: Arc<Mutex<Boot>>,
-    finished: Arc<watch::Sender<bool>>,
-    cores: Arc<watch::Sender<BTreeSet<String>>>,
+    finished: Arc<Gate<bool>>,
+    cores: Arc<Gate<BTreeSet<String>>>,
 }
 
 /// THE BOOT AS THE STARTS FINISH IT: what is begun and not yet finished, where the agent was booted by `boot`; how many
@@ -889,16 +898,57 @@ struct Boot {
 /// What a package owes once every task has ended.
 type Ending = Box<dyn FnOnce() + Send>;
 
+/// A VALUE THE STARTS WAIT ON, WAKING THEM IN THE ORDER THEY CAME: a `watch` spreads its waiters over notifiers picked
+/// at random, so starts waiting on one went on in an order no two runs shared, and a test's paused run was no longer
+/// one run. One `Notify` wakes its waiters as they queued.
+struct Gate<T> {
+    value: Mutex<T>,
+    changed: Notify,
+}
+
+impl<T> Gate<T> {
+    fn new(value: T) -> Self {
+        Gate {
+            value: Mutex::new(value),
+            changed: Notify::new(),
+        }
+    }
+
+    /// Change the value, and wake whoever waits on it.
+    fn modify(&self, change: impl FnOnce(&mut T)) {
+        change(&mut self.value.lock().expect("a gate nobody poisoned"));
+        self.changed.notify_waiters();
+    }
+
+    /// The value, as it stands.
+    fn read<R>(&self, look: impl FnOnce(&T) -> R) -> R {
+        look(&self.value.lock().expect("a gate nobody poisoned"))
+    }
+
+    /// Wait until `open` holds of the value.
+    async fn wait_for(&self, open: impl Fn(&T) -> bool) {
+        loop {
+            let changed = self.changed.notified();
+            tokio::pin!(changed);
+            changed.as_mut().enable();
+            if self.read(&open) {
+                return;
+            }
+            changed.await;
+        }
+    }
+}
+
 impl Run {
     fn new(stop: watch::Receiver<bool>) -> Self {
         Run {
             stop,
-            making: Arc::new(watch::channel(0).0),
+            making: Arc::new(Gate::new(0)),
             started: Arc::default(),
             ending: Arc::default(),
             boot: Arc::default(),
-            finished: Arc::new(watch::channel(false).0),
-            cores: Arc::new(watch::channel(BTreeSet::new()).0),
+            finished: Arc::new(Gate::new(false)),
+            cores: Arc::new(Gate::new(BTreeSet::new())),
         }
     }
 
@@ -927,13 +977,13 @@ impl Run {
             Err(e) => boot.refused = boot.refused.take().or(Some(e.to_string())),
         }
         drop(boot);
-        self.finished.send_replace(true);
+        self.finished.modify(|f| *f = true);
     }
 
     /// `package`'s start is done waiting on: its core is made, or its start ended without one, so no start waiting
     /// for it waits for ever.
     fn done(&self, package: &str) {
-        self.cores.send_modify(|made| {
+        self.cores.modify(|made| {
             made.insert(package.to_string());
         });
     }
@@ -947,7 +997,7 @@ impl Run {
                 .push(package.to_string());
             self.done(package);
         }
-        self.making.send_modify(|n| *n = n.saturating_sub(1));
+        self.making.modify(|n| *n = n.saturating_sub(1));
     }
 }
 
@@ -1070,12 +1120,14 @@ impl Handed {
         }
         self.run.decided(&self.store);
         //  A START JOINING IS STILL MAKING ITS CORE, so it waits busy: the run is not over, and no stretch ends, while
-        //  it waits for the boot to finish and for what its roles depend on.
-        let mut finished = self.run.finished.subscribe();
-        let _ = finished.wait_for(|f| *f).await;
+        //  it waits for the boot to finish and for what its roles depend on; what it said is told as it waits.
+        self.events.spoke();
+        self.run.finished.wait_for(|f| *f).await;
         let needs = self.needs(package)?;
-        let mut cores = self.run.cores.subscribe();
-        let _ = cores.wait_for(|made| needs.iter().all(|n| made.contains(n))).await;
+        self.run
+            .cores
+            .wait_for(|made| needs.iter().all(|n| made.contains(n)))
+            .await;
         Ok(())
     }
 
@@ -1118,9 +1170,10 @@ impl Handed {
             self.run.made(Some(package));
         }
         //  A START WAITING FOR THE OTHERS TO MAKE THEIR CORES IS STILL STARTING, so it waits busy: woken as the last
-        //  is made, every start goes on counted, and no stretch ends while one is still to be polled.
-        let mut making = self.run.making.subscribe();
-        let _ = making.wait_for(|n| *n == 0).await;
+        //  is made, every start goes on counted, and no stretch ends while one is still to be polled; what it said is
+        //  told as it waits, as it is when a task rests.
+        self.events.spoke();
+        self.run.making.wait_for(|n| *n == 0).await;
         for (started, at) in [(false, began.unwrap_or(now)), (true, now)] {
             self.events.0.watch.emit(&Lifecycle {
                 package: package.to_string(),
@@ -1347,10 +1400,10 @@ fn spawn(handed: Handed, stop: watch::Sender<bool>, order: Vec<String>) -> Runni
         halt: None,
         halted: Arc::new(Notify::new()),
     };
-    handed.run.making.send_modify(|n| *n += order.len());
+    handed.run.making.modify(|n| *n += order.len());
     handed.run.boot.lock().expect("a boot nobody poisoned").deciding += order.len();
     if order.is_empty() {
-        handed.run.finished.send_replace(true);
+        handed.run.finished.modify(|f| *f = true);
     }
     for name in order {
         let package = inventory::iter::<Package>()
@@ -1401,8 +1454,7 @@ impl Running {
 
     /// The run once every package has made its core, or ended: refused where one could not be made.
     async fn made(self) -> Result<Self, Error> {
-        let mut making = self.handed.run.making.subscribe();
-        let _ = making.wait_for(|n| *n == 0).await;
+        self.handed.run.making.wait_for(|n| *n == 0).await;
         if let Some(why) = self
             .handed
             .run

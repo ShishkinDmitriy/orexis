@@ -1143,6 +1143,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   resting at the barrier, the starts woken as the last core was made were not yet counted when the last went straight
   on to plan, so a stretch ended with three to run and its length, read off the next one's beginning, was a
   ten-thousandth of the plan inside it (package).
+- **What the starts wait on wakes them in the order they came, never by a `watch`** — Tokio's `watch` spreads its
+  waiters over notifiers picked at random, so starts waiting on one went on in an order no two runs shared, and the
+  courier's paused run read its clock 162 times or 164; the kernel's gate is one `Notify` (package).
 - **A check hands nothing but that it is one, and a transport not deployed and handed no member reaches nothing** —
   each transport makes its own member: the one a test hands, one from the environment where the agent is deployed, and
   otherwise one every call of which is refused; and each that listens says it holds the agent, so onboarding names no
