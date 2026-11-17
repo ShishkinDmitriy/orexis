@@ -62,7 +62,9 @@ impl Coordinator {
     pub fn new(store: &Store) -> Result<Self, Error> {
         /// THE COORDINATOR THE SELF PLAYS, IN ONE QUERY: the self, and each figure the role says or, where it says
         /// none, the default the coordination's ontology states on its shape of the role (`sh:defaultValue`).
-        const COORDINATOR_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX sh: <http://www.w3.org/ns/shacl#> SELECT DISTINCT ?me (COALESCE(?patienceSaid, ?patienceOwn) AS ?patience) \
+        const COORDINATOR_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
+        SELECT DISTINCT ?me (COALESCE(?patienceSaid, ?patienceOwn) AS ?patience) \
         (COALESCE(?roundsSaid, ?roundsOwn) AS ?rounds) (COALESCE(?lookaheadSaid, ?lookaheadOwn) AS ?lookahead) WHERE { \
         ?shape sh:targetClass <http://example.org/orexis/coordination#Coordinator> ; \
           sh:property [ sh:path <http://example.org/orexis/coordination#patienceS> ; sh:defaultValue ?patienceOwn ] , \

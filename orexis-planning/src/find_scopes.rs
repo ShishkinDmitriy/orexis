@@ -43,8 +43,8 @@ impl Scopes {
 /// Every standing scope graph, asked of the catalogue by class, in name order.
 pub(crate) fn standing(store: &Store) -> Result<Vec<String>, Error> {
     /// EVERY STANDING SCOPE GRAPH.
-    const STANDING_Q: &str =
-        "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
+    const STANDING_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+    PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?g WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:ScopeGraph } }
     ORDER BY ?g";
@@ -57,7 +57,8 @@ pub(crate) fn standing(store: &Store) -> Result<Vec<String>, Error> {
 
 /// Every member's scopes, from the scope graphs asked by class — or None where the store holds none at all.
 pub fn find_scopes(store: &Store) -> Result<Option<Scopes>, Error> {
-    const SCOPES_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#> SELECT ?member ?scope WHERE { ?member planning:inScope ?scope }";
+    const SCOPES_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#>
+        SELECT ?member ?scope WHERE { ?member planning:inScope ?scope }";
     let graphs = standing(store)?;
     if graphs.is_empty() {
         return Ok(None);
@@ -81,7 +82,10 @@ mod tests {
     fn store() -> Store {
         let store = Store::new().expect("an empty store");
         store
-            .update("PREFIX orexis: <http://example.org/orexis#> INSERT DATA { GRAPH <urn:test:catalogue> { <urn:test:catalogue> a orexis:CatalogueGraph } }")
+            .update(
+                "PREFIX orexis: <http://example.org/orexis#>
+                INSERT DATA { GRAPH <urn:test:catalogue> { <urn:test:catalogue> a orexis:CatalogueGraph } }",
+            )
             .unwrap();
         store
     }
@@ -95,7 +99,10 @@ mod tests {
         let store = store();
         assert_eq!(find_scopes(&store).unwrap(), None, "never scoped");
         store
-            .update("PREFIX planning: <http://example.org/orexis/planning#> INSERT DATA { GRAPH <urn:test:catalogue> { <urn:test:scopes> a planning:ScopeGraph } }")
+            .update(
+                "PREFIX planning: <http://example.org/orexis/planning#>
+                INSERT DATA { GRAPH <urn:test:catalogue> { <urn:test:scopes> a planning:ScopeGraph } }",
+            )
             .unwrap();
         assert_eq!(
             find_scopes(&store).unwrap(),
@@ -109,7 +116,8 @@ mod tests {
         let store = store();
         store
             .update(
-                "PREFIX planning: <http://example.org/orexis/planning#> INSERT DATA {
+                "PREFIX planning: <http://example.org/orexis/planning#>
+  INSERT DATA {
   GRAPH <urn:test:scopes> { <urn:test:s1> a planning:Scope . <urn:test:s2> a planning:Scope .
                             <urn:test:level> planning:inScope <urn:test:s1> .
                             <urn:test:fill> planning:inScope <urn:test:s1> .
@@ -137,7 +145,8 @@ mod tests {
         let store = store();
         store
             .update(
-                "PREFIX planning: <http://example.org/orexis/planning#> INSERT DATA {
+                "PREFIX planning: <http://example.org/orexis/planning#>
+  INSERT DATA {
   GRAPH <urn:test:scopes> { <urn:test:level> planning:inScope <urn:test:s1> .
                             <urn:test:bed> planning:inScope <urn:test:s1> , <urn:test:s2> .
                             <urn:test:temperature> planning:inScope <urn:test:s2> }

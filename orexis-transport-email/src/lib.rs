@@ -23,7 +23,10 @@ const WIRED: &[(&str, &str)] = &[(
     "http://example.org/orexis/translation#Translator",
     "?chat speech:participant ?me ; speech:channel ?channel . ?channel schema:email ?address",
 )];
-const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX speech: <http://example.org/orexis/speech#> PREFIX schema: <https://schema.org/> ";
+const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
+    PREFIX speech: <http://example.org/orexis/speech#>
+    PREFIX schema: <https://schema.org/>
+    ";
 
 /// ITS START, which every package this binary holds is given: it joins where a role the self plays needs what it
 /// carries and the world wires it, and declines otherwise; joined, its member is made; checked, it says it holds the

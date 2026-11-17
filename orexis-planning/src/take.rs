@@ -188,7 +188,7 @@ fn replayed(
     memo: &mut Memo,
 ) -> Result<String, Error> {
     /// THE PATH TO A WORLD: every candidate taken from the ground down to the world itself, in mint order.
-    const PATH_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#> 
+    const PATH_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?c WHERE { GRAPH $cat { $world (planning:by/planning:from)* ?w . ?w planning:by ?c ; planning:minted ?m } }
     ORDER BY ?m";
     let binding = binding(store, cand, memo)?;
@@ -387,7 +387,8 @@ fn binding(store: &Store, cand: &str, memo: &mut Memo) -> Result<Binding, Error>
 /// Whom the self acts for, once a pass.
 fn acts_for(store: &Store, memo: &mut Memo) -> Result<Option<String>, Error> {
     /// WHOM THE SELF ACTS FOR, off the world graph — `$subject` in a rule text.
-    const ACTS_FOR_Q: &str = "PREFIX orexis: <http://example.org/orexis#> SELECT ?for WHERE { ?me a orexis:Self ; orexis:actsFor ?for } LIMIT 1";
+    const ACTS_FOR_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+        SELECT ?for WHERE { ?me a orexis:Self ; orexis:actsFor ?for } LIMIT 1";
     if let Some(known) = &memo.acts_for {
         return Ok(known.clone());
     }
@@ -403,15 +404,17 @@ fn acts_for(store: &Store, memo: &mut Memo) -> Result<Option<String>, Error> {
 /// that is no transition said in the log and left out; None for no action at all.
 fn carried(store: &Store, action: &str, memo: &mut Memo) -> Result<Option<Carried>, Error> {
     /// THE ACTION'S TEXTS, off what the world states.
-    const RULE_Q: &str =
-        "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
+    const RULE_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+    PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?rule ?lands ?costs WHERE {
       $rule a orexis:Action .
       OPTIONAL { $rule planning:landsAfter ?lands }
       OPTIONAL { $rule planning:costs ?costs }
       BIND($rule AS ?rule) } LIMIT 1";
     /// ITS EFFECT'S RULES, by order — an absent order is 0, as SHACL says — and whether each is a transition.
-    const EFFECT_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#> PREFIX planning: <http://example.org/orexis/planning#> PREFIX sh: <http://www.w3.org/ns/shacl#> 
+    const EFFECT_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
+    PREFIX planning: <http://example.org/orexis/planning#>
+    PREFIX sh: <http://www.w3.org/ns/shacl#>
     SELECT ?r ?order ?update ?transition WHERE {
       $rule planning:effect/sh:rule ?r .
       OPTIONAL { ?r sh:order ?o } OPTIONAL { ?r belief:update ?update }
@@ -549,8 +552,8 @@ mod tests {
     use super::*;
     use crate::admit::{Scope, admit};
 
-    const EDGES_Q: &str =
-        "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
+    const EDGES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+PREFIX planning: <http://example.org/orexis/planning#>
 SELECT ?cand ?m ?w ?wm WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?cand a planning:Candidate ; planning:minted ?m .
                OPTIONAL { ?w planning:by ?cand ; planning:minted ?wm } } }
@@ -561,8 +564,8 @@ ORDER BY ?m";
     }
 
     fn untaken(store: &Store) -> Vec<String> {
-        const UNTAKEN_Q: &str =
-            "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
+        const UNTAKEN_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+    PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?cand WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?cand a planning:Candidate ; planning:minted ?m .
                    FILTER NOT EXISTS { ?w planning:by ?cand } } }
@@ -595,7 +598,9 @@ ORDER BY ?m";
     }
 
     fn admitted(memo: &mut Memo) -> Store {
-        const PRESENT_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph } } LIMIT 1";
+        const PRESENT_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+            PREFIX planning: <http://example.org/orexis/planning#>
+            SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph } } LIMIT 1";
         let store =
             snapshots::stand_in(&snapshots::tree().join("orexis-planning/tests/admit/one_lever_two_tanks.trig"));
         let present = iri(&store.rows(PRESENT_Q, &[]).unwrap()[0], "g").unwrap();

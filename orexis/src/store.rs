@@ -361,8 +361,8 @@ impl Store {
         /// WHICH GRAPHS, in one text: those of any kind named — every row carries every kind its class is beneath, so
         /// no path is walked — the holder's or the common ones where a holder is named, and holding at the instant
         /// where one is given.
-        const GRAPHS_Q: &str =
-            "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> 
+        const GRAPHS_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
+        PREFIX orexis: <http://example.org/orexis#>
         SELECT DISTINCT ?g WHERE {
           GRAPH ?cat {
             ?cat a orexis:CatalogueGraph .
@@ -406,8 +406,8 @@ impl Store {
 
     /// `class` and every class the vocabulary puts it beneath, sorted; the class alone where no vocabulary is.
     pub fn closed(&self, class: &str) -> Result<Vec<String>, Error> {
-        const SUBCLASSES_Q: &str =
-            "PREFIX orexis: <http://example.org/orexis#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+        const SUBCLASSES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
         SELECT DISTINCT ?super WHERE {
           GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }
           GRAPH ?vocabulary { $cls rdfs:subClassOf ?super . FILTER(isIRI(?super)) } }";
@@ -476,11 +476,19 @@ impl Store {
     ) -> Result<(), Error> {
         let block = self.entry(graph, &[class], arrival, owner, start, end)?;
         if start.is_none() && end.is_none() {
-            return self.update(&format!("PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{ {block} }}"));
+            return self.update(&format!(
+                "PREFIX dcterms: <http://purl.org/dc/terms/>
+                PREFIX orexis: <http://example.org/orexis#>
+                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                INSERT DATA {{ {block} }}"
+            ));
         }
         let catalogue = self.catalogue()?.unwrap_or_default();
         self.update(&format!(
-            "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT {{ {block} }}\nWHERE  {{ GRAPH <{catalogue}> {{ }}\n          FILTER NOT EXISTS {{ GRAPH \
+            "PREFIX dcterms: <http://purl.org/dc/terms/>
+             PREFIX orexis: <http://example.org/orexis#>
+             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+             INSERT {{ {block} }}\nWHERE  {{ GRAPH <{catalogue}> {{ }}\n          FILTER NOT EXISTS {{ GRAPH \
              <{catalogue}> {{ <{graph}> dcterms:temporal ?period }} }} }}"
         ))
     }
@@ -662,7 +670,8 @@ impl Store {
     /// when it arrives, until the next reading is due, and the next arriving earlier ends it there.
     pub fn end_graph(&self, graph: &str, at: DateTime, revisions: &str) -> Result<(), Error> {
         /// A GRAPH ENDS WHERE IT HELD PAST: its period's end moved to `$at`, or to its start where it begins later.
-        const END_U: &str = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> 
+        const END_U: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
+        PREFIX orexis: <http://example.org/orexis#>
         DELETE { GRAPH $cat { ?period orexis:end ?was } }
         INSERT { GRAPH $cat { ?period orexis:end ?end } }
         WHERE  { GRAPH $cat { VALUES ?g { $graphs } ?g dcterms:temporal ?period .
@@ -734,7 +743,7 @@ impl Store {
     pub fn close_catalogue(&self) -> Result<(), Error> {
         /// A class and every class the vocabulary puts it beneath: the closure is materialised at genesis, so one step
         /// is every step.
-        const ROWS_Q: &str = "PREFIX orexis: <http://example.org/orexis#> 
+        const ROWS_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
         SELECT ?g ?class WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?class . FILTER(isIRI(?g)) } }";
         let Some(catalogue) = self.catalogue()? else {
             return Ok(());
@@ -964,7 +973,10 @@ mod tests {
             .unwrap();
         store
             .update(&format!(
-                "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{ GRAPH <{T}state> {{ <{T}bed> <{T}believed> <{T}wet> }} {entry} }}"
+                "PREFIX dcterms: <http://purl.org/dc/terms/>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                    INSERT DATA {{ GRAPH <{T}state> {{ <{T}bed> <{T}believed> <{T}wet> }} {entry} }}"
             ))
             .unwrap();
         let mine = Within {
@@ -1003,7 +1015,17 @@ mod tests {
         let once = KEPT.get() + 1;
         for i in 0..once {
             store.ask(asked, &[]).unwrap();
-            store.ask(&format!("PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> ASK {{ <urn:once:{i}> ?p ?o }}"), &[]).unwrap();
+            store
+                .ask(
+                    &format!(
+                        "PREFIX dcterms: <http://purl.org/dc/terms/>
+                PREFIX orexis: <http://example.org/orexis#>
+                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                ASK {{ <urn:once:{i}> ?p ?o }}"
+                    ),
+                    &[],
+                )
+                .unwrap();
         }
         let (parsed, run) = store.statements();
         assert_eq!(
@@ -1018,7 +1040,11 @@ mod tests {
     fn a_prefix_the_tree_declares_is_spoken_without_a_header() {
         let store = store();
         let rows = store
-            .rows("PREFIX orexis: <http://example.org/orexis#> SELECT ?g WHERE { GRAPH ?g { ?g a orexis:CatalogueGraph } }", &[])
+            .rows(
+                "PREFIX orexis: <http://example.org/orexis#>
+                SELECT ?g WHERE { GRAPH ?g { ?g a orexis:CatalogueGraph } }",
+                &[],
+            )
             .unwrap();
         assert_eq!(rows.len(), 1);
         assert!(
@@ -1069,7 +1095,8 @@ mod tests {
     #[test]
     fn a_fork_copies_then_deletes_then_adds_and_leaves_its_parent_as_it_was() {
         let store = parent();
-        let retract = "PREFIX t: <urn:test:> DELETE { GRAPH <urn:test:child> { t:s t:level ?l } } \
+        let retract = "PREFIX t: <urn:test:>
+                   DELETE { GRAPH <urn:test:child> { t:s t:level ?l } } \
                    WHERE { GRAPH <urn:test:child> { t:s t:level ?l } }";
         store
             .fork(
@@ -1093,9 +1120,11 @@ mod tests {
     #[test]
     fn two_retractions_spelling_one_label_two_ways_both_run() {
         let store = parent();
-        let one = "PREFIX : <urn:test:> DELETE { GRAPH <urn:test:child> { :s :level ?l } } \
+        let one = "PREFIX : <urn:test:>
+               DELETE { GRAPH <urn:test:child> { :s :level ?l } } \
                WHERE { GRAPH <urn:test:child> { :s :level ?l } }";
-        let two = "PREFIX : <urn:other:> DELETE { GRAPH <urn:test:child> { <urn:test:s> <urn:test:temp> ?t } } \
+        let two = "PREFIX : <urn:other:>
+               DELETE { GRAPH <urn:test:child> { <urn:test:s> <urn:test:temp> ?t } } \
                WHERE { GRAPH <urn:test:child> { <urn:test:s> <urn:test:temp> ?t } }";
         store
             .fork(
@@ -1129,7 +1158,10 @@ mod tests {
         let store = bare();
         store
             .update(
-                "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX prov: <http://www.w3.org/ns/prov#> INSERT DATA {
+                "PREFIX dcterms: <http://purl.org/dc/terms/>
+      PREFIX orexis: <http://example.org/orexis#>
+      PREFIX prov: <http://www.w3.org/ns/prov#>
+      INSERT DATA {
       GRAPH <urn:cat> { <urn:cat> a orexis:CatalogueGraph .
         <urn:g> a orexis:Graph , orexis:ForecastGraph ; dcterms:temporal [ orexis:start \"2026-01-01T00:00:00Z\" ] .
         <urn:g/rev> a orexis:Graph , orexis:BeliefGraph ; prov:wasDerivedFrom <urn:g> .
@@ -1144,7 +1176,11 @@ mod tests {
         assert!(store.revisions_of(&["urn:g"], BELIEF).unwrap().is_empty());
         assert_eq!(
             store
-                .rows("PREFIX orexis: <http://example.org/orexis#> SELECT ?g WHERE { GRAPH <urn:cat> { ?g a orexis:Graph } }", &[])
+                .rows(
+                    "PREFIX orexis: <http://example.org/orexis#>
+                    SELECT ?g WHERE { GRAPH <urn:cat> { ?g a orexis:Graph } }",
+                    &[]
+                )
                 .unwrap()
                 .iter()
                 .filter_map(|r| iri(r, "g"))
@@ -1176,7 +1212,10 @@ mod tests {
         };
         store
             .update(&format!(
-                "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{ GRAPH <{T}catalogue> {{ <{T}lately> a <{T}StateGraph> }} }}"
+                "PREFIX dcterms: <http://purl.org/dc/terms/>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                    INSERT DATA {{ GRAPH <{T}catalogue> {{ <{T}lately> a <{T}StateGraph> }} }}"
             ))
             .unwrap();
         assert!(!store.graphs_of(&[BELIEF], &state).unwrap().contains(&t("lately")));

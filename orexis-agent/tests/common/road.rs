@@ -81,13 +81,19 @@ fn put(document: &mut Json, pointer: &str, number: f64) {
 impl Road {
     /// The road of the world `store` was booted from, as its documents pose it.
     pub fn of(store: &Store) -> Road {
-        const VANS_Q: &str = "PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX sosa: <http://www.w3.org/ns/sosa/> SELECT ?van ?x ?y ?xp ?yp ?delay WHERE {
+        const VANS_Q: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
+          PREFIX sosa: <http://www.w3.org/ns/sosa/>
+          SELECT ?van ?x ?y ?xp ?yp ?delay WHERE {
           ?van a courier:Van ; sim:simulatedBy ?model .
           ?column a sosa:Sensor ; sosa:isHostedBy ?van ; sosa:observes courier:Column ; sim:simulatedBy ?cm ; sensing:readingPointer ?xp .
           ?row a sosa:Sensor ; sosa:isHostedBy ?van ; sosa:observes courier:Row ; sim:simulatedBy ?rm ; sensing:readingPointer ?yp .
           ?cm sim:initialValue ?x . ?rm sim:initialValue ?y .
           OPTIONAL { ?model sim:delayS ?delay } } ORDER BY ?van";
-        const CONTACTS_Q: &str = "PREFIX schema: <https://schema.org/> PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/> SELECT ?contact ?van ?peer ?xp ?yp ?xmost ?ymost WHERE {
+        const CONTACTS_Q: &str = "PREFIX schema: <https://schema.org/>
+          PREFIX sensing: <http://example.org/orexis/sensing#>
+          PREFIX sosa: <http://www.w3.org/ns/sosa/>
+          PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
+          SELECT ?contact ?van ?peer ?xp ?yp ?xmost ?ymost WHERE {
           ?contact a sosa:Sample ; sosa:isHostedBy ?van .
           ?column a sosa:Sensor ; sosa:isHostedBy ?contact ; sosa:observes courier:RelativeColumn ; sensing:readingPointer ?xp .
           ?row a sosa:Sensor ; sosa:isHostedBy ?contact ; sosa:observes courier:RelativeRow ; sensing:readingPointer ?yp .

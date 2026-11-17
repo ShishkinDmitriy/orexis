@@ -197,7 +197,9 @@ impl Executor {
     ) -> Result<Self, Error> {
         /// THE EXECUTOR THE SELF PLAYS, IN ONE QUERY: its patience as the role says or, where it says none, the default
         /// execution's ontology states on its shape of the role (`sh:defaultValue`).
-        const EXECUTOR_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX sh: <http://www.w3.org/ns/shacl#> SELECT DISTINCT (COALESCE(?patienceSaid, ?patienceOwn) AS ?patience) WHERE { \
+        const EXECUTOR_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
+        SELECT DISTINCT (COALESCE(?patienceSaid, ?patienceOwn) AS ?patience) WHERE { \
         ?shape sh:targetClass <http://example.org/orexis/execution#Executor> ; \
           sh:property [ sh:path <http://example.org/orexis/execution#patienceS> ; sh:defaultValue ?patienceOwn ] . \
         OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . ?role <http://example.org/orexis/execution#patienceS> ?patienceSaid } }";
@@ -250,7 +252,7 @@ impl Executor {
 
     /// The graphs `step`'s prediction is stated in: what it adds, and what it retracts.
     fn predicted(&self, step: &str) -> Result<(Option<String>, Option<String>), Error> {
-        const PREDICTED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> 
+        const PREDICTED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         SELECT ?adds ?retracts WHERE {
           OPTIONAL { GRAPH ?a { $step execution:adds ?adds } }
           OPTIONAL { GRAPH ?r { $step execution:retracts ?retracts } } } LIMIT 1";
@@ -261,7 +263,8 @@ impl Executor {
 
     /// The want `intention` pursues: what an event about one of its steps carries.
     fn pursued(&self, intention: &str) -> Result<Option<String>, Error> {
-        const PURSUED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> SELECT ?want WHERE { GRAPH $intentions { $intention execution:pursues ?want } }";
+        const PURSUED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+            SELECT ?want WHERE { GRAPH $intentions { $intention execution:pursues ?want } }";
         let found = self.rows_of(
             PURSUED_Q,
             &[("intentions", self.mine()), ("intention", Value::iri(intention))],
@@ -271,7 +274,8 @@ impl Executor {
 
     /// The steps `intention` committed.
     fn committed(&self, intention: &str) -> Result<Vec<String>, Error> {
-        const COMMITTED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> SELECT ?step WHERE { GRAPH $intentions { $intention execution:step ?step } }";
+        const COMMITTED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+            SELECT ?step WHERE { GRAPH $intentions { $intention execution:step ?step } }";
         let found = self.rows_of(
             COMMITTED_Q,
             &[("intentions", self.mine()), ("intention", Value::iri(intention))],
@@ -285,7 +289,8 @@ impl Executor {
 
     /// The agent the belief base holds with the id the executor was told, off what the world states.
     fn me(&self) -> Result<Option<String>, Error> {
-        const ME_Q: &str = "PREFIX orexis: <http://example.org/orexis#> SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id } LIMIT 1";
+        const ME_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+            SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id } LIMIT 1";
         let common = self.beliefs.graphs_of(&[BELIEF], &Within::common())?;
         let text = bind(
             ME_Q,
@@ -310,8 +315,8 @@ impl Executor {
     /// Adopt every plan published and adopted by no intention yet, as a caller with no planning part linked would.
     /// The intentions graph where anything was committed.
     pub fn commit_plans(&mut self) -> Result<Vec<String>, Error> {
-        const PLANS_Q: &str =
-            "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> 
+        const PLANS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+        PREFIX orexis: <http://example.org/orexis#>
         SELECT ?plan ?want WHERE { GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?plan execution:pursues ?want }
           FILTER NOT EXISTS { GRAPH ?g { ?i execution:adopts ?plan } } }
         ORDER BY ?plan";
@@ -343,7 +348,8 @@ impl Executor {
 
     /// End every standing intention pursuing `want` that has taken no step yet, with `outcome`.
     pub fn end_for(&mut self, want: &str, outcome: &str) -> Result<Vec<String>, Error> {
-        const BEGUN_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> SELECT DISTINCT ?intention WHERE { GRAPH $intentions {
+        const BEGUN_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+          SELECT DISTINCT ?intention WHERE { GRAPH $intentions {
           ?intention a execution:Intention ; execution:step ?step . ?act execution:of ?step } }";
         let begun: BTreeSet<String> = self
             .rows_of(BEGUN_Q, &[("intentions", self.mine())])?
@@ -387,7 +393,8 @@ impl Executor {
     /// End the standing intention that stands at `step` AFTER it, `superseded`: the plan for `by` replaces its untaken
     /// steps, and waits for it when adopted. A step in flight is never cancelled; one untaken resolves at once.
     pub fn supersede_after(&mut self, step: &str, by: Option<&str>) -> Result<Vec<String>, Error> {
-        const IN_FLIGHT_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> SELECT ?act WHERE { GRAPH $intentions { ?act execution:of $step ; execution:taken true } } LIMIT 1";
+        const IN_FLIGHT_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+            SELECT ?act WHERE { GRAPH $intentions { ?act execution:of $step ; execution:taken true } } LIMIT 1";
         for held in self.standing()? {
             if held.at.as_deref() != Some(step) {
                 continue;
@@ -398,7 +405,9 @@ impl Executor {
                 continue;
             }
             self.intentions.update(&format!(
-                "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{}> {{ <{}> <{ENDS_AFTER}> <{step}> }} }}",
+                "PREFIX execution: <http://example.org/orexis/execution#>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    INSERT DATA {{ GRAPH <{}> {{ <{}> <{ENDS_AFTER}> <{step}> }} }}",
                 self.graph, held.uri
             ))?;
             if let Some(by) = by {
@@ -430,7 +439,8 @@ impl Executor {
     /// Adopt the plan in `graph`, found in `source` or published in the beliefs, unless one for `want` stands younger
     /// than the patience. The intention, or None: nothing was committed.
     pub fn commit(&mut self, source: Option<&Store>, graph: &str, want: &str) -> Result<Option<String>, Error> {
-        const RESOLVED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> SELECT ?at WHERE { GRAPH $intentions { $intention execution:resolvedAt ?at } } LIMIT 1";
+        const RESOLVED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+            SELECT ?at WHERE { GRAPH $intentions { $intention execution:resolvedAt ?at } } LIMIT 1";
         if let Some(held) = self.standing_for(want)? {
             let age = between(held.adopted, self.clock.now());
             if age < self.patience_s {
@@ -460,7 +470,9 @@ impl Executor {
             }
             if !waits.is_empty() {
                 self.intentions.update(&format!(
-                    "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{}> {{ {} }} }}",
+                    "PREFIX execution: <http://example.org/orexis/execution#>
+                        PREFIX orexis: <http://example.org/orexis#>
+                        INSERT DATA {{ GRAPH <{}> {{ {} }} }}",
                     self.graph,
                     waits.join(" ")
                 ))?;
@@ -477,15 +489,17 @@ impl Executor {
     }
 
     fn adopt_plan(&mut self, source: Option<&Store>, graph: &str, want: &str) -> Result<Option<String>, Error> {
-        const HEAD_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> 
+        const HEAD_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         SELECT ?step WHERE {
           GRAPH $plan {
             ?step a execution:Step ; execution:partOf $root .
             FILTER NOT EXISTS { ?other execution:then ?step } } }";
-        const STEPS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> 
+        const STEPS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         SELECT ?step WHERE { GRAPH $plan { ?step a execution:Step ; execution:partOf $root } }";
-        const STEP_GRAPHS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> SELECT ?g ?side WHERE { GRAPH $plan { ?step ?side ?g . VALUES ?side { execution:adds execution:retracts } } }";
-        const CLASSIFIED_Q: &str = "PREFIX orexis: <http://example.org/orexis#> SELECT ?k WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph a ?k } } LIMIT 1";
+        const STEP_GRAPHS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+            SELECT ?g ?side WHERE { GRAPH $plan { ?step ?side ?g . VALUES ?side { execution:adds execution:retracts } } }";
+        const CLASSIFIED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+            SELECT ?k WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph a ?k } } LIMIT 1";
         let from = source.unwrap_or(&self.beliefs);
         let plan = Value::iri(graph);
         let mut steps: Vec<String> = from
@@ -593,7 +607,7 @@ impl Executor {
     // --- the committed steps, as beliefs over their landing windows -------------------------------------------
 
     fn commit_windows(&mut self, plan: &str, steps: &[String], now: DateTime) -> Result<(), Error> {
-        const PLACED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> 
+        const PLACED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         SELECT ?opens ?lands ?after WHERE { GRAPH $plan {
           OPTIONAL { $step execution:notBefore ?opens } OPTIONAL { $step execution:landsAt ?lands }
           OPTIONAL { $step execution:notAfter ?after } } }";
@@ -660,8 +674,11 @@ impl Executor {
     }
 
     fn close_window(&mut self, step: &str, now: DateTime) -> Result<(), Error> {
-        const WINDOW_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> SELECT ?end WHERE { GRAPH $cat { $g a $kind ; dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?end } } }";
-        const CLOSE_U: &str = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> 
+        const WINDOW_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
+            PREFIX orexis: <http://example.org/orexis#>
+            SELECT ?end WHERE { GRAPH $cat { $g a $kind ; dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?end } } }";
+        const CLOSE_U: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
+        PREFIX orexis: <http://example.org/orexis#>
         DELETE { GRAPH $cat { ?p orexis:end ?old } }
         INSERT { GRAPH $cat { ?p orexis:end $now } }
         WHERE  { GRAPH $cat { $g dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?old } } }";
@@ -700,7 +717,8 @@ impl Executor {
     }
 
     fn sweep(&mut self, now: DateTime) -> Result<(), Error> {
-        const ENDED_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> 
+        const ENDED_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
+        PREFIX orexis: <http://example.org/orexis#>
         SELECT ?g WHERE { GRAPH $cat { ?g a $kind $owned ; dcterms:temporal ?p . ?p orexis:end ?end . FILTER(?end <= $now) } }
         ORDER BY ?g";
         let Some(cat) = self.catalogue()? else {
@@ -732,7 +750,7 @@ impl Executor {
 
     /// Every commitment adopted and not resolved, oldest first.
     pub fn standing(&self) -> Result<Vec<Standing>, Error> {
-        const STANDING_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> 
+        const STANDING_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         SELECT ?intention ?want ?at ?adopted WHERE {
           GRAPH $intentions {
             ?intention a execution:Intention ;
@@ -759,7 +777,7 @@ impl Executor {
 
     /// Every want a standing commitment pursues — one this agent is walking.
     pub fn walking(&self) -> Result<Vec<String>, Error> {
-        const WALKING_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> 
+        const WALKING_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         SELECT DISTINCT ?want WHERE {
           GRAPH ?g { ?i a execution:Intention ; execution:pursues ?want .
                      FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }
@@ -774,7 +792,8 @@ impl Executor {
 
     /// The commitment standing for `want`, or None — never one ending after its step in flight (#921).
     pub fn standing_for(&self, want: &str) -> Result<Option<Standing>, Error> {
-        const ENDING_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> SELECT ?step WHERE { GRAPH $intentions { $intention execution:endsAfter ?step } } LIMIT 1";
+        const ENDING_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+            SELECT ?step WHERE { GRAPH $intentions { $intention execution:endsAfter ?step } } LIMIT 1";
         for s in self.standing()? {
             if s.want == want
                 && self
@@ -794,14 +813,17 @@ impl Executor {
 
     /// Say this commitment has ended, and how; it stays among the intentions, with its outcome.
     pub fn resolve(&mut self, intention: &str, outcome: &str) -> Result<(), Error> {
-        const BELOW_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> 
+        const BELOW_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         SELECT DISTINCT ?below WHERE { GRAPH $intentions {
           $intention execution:step ?step . ?act execution:of ?step ; execution:refinedBy ?want .
           ?below a execution:Intention ; execution:pursues ?want .
           FILTER NOT EXISTS { ?below execution:resolvedAt ?at } } }";
         let now = self.clock.now();
         self.intentions.update(&format!(
-            "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{ GRAPH <{}> {{ <{intention}> execution:resolvedAt \"{}\"^^xsd:dateTime ; execution:outcome \"{outcome}\" . }} }}",
+            "PREFIX execution: <http://example.org/orexis/execution#>
+                PREFIX orexis: <http://example.org/orexis#>
+                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                INSERT DATA {{ GRAPH <{}> {{ <{intention}> execution:resolvedAt \"{}\"^^xsd:dateTime ; execution:outcome \"{outcome}\" . }} }}",
             self.graph,
             isoformat(now)
         ))?;
@@ -840,7 +862,7 @@ impl Executor {
     /// One pass of the timekeeper at `now`: hand every head due to the queue, and hold every head taken to what it
     /// predicted. The steps handed over; what is not yet due is `next_due`.
     pub fn tick(&mut self, now: DateTime) -> Result<Vec<String>, Error> {
-        const HEADS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> 
+        const HEADS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         SELECT ?intention ?step ?due ?kept ?act ?taken ?lands ?after ?adds ?retracts WHERE {
           GRAPH $intentions {
             ?intention a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
@@ -853,11 +875,12 @@ impl Executor {
           OPTIONAL { GRAPH ?plan { ?step execution:adds ?adds } }
           OPTIONAL { GRAPH ?plan { ?step execution:retracts ?retracts } } }
         ORDER BY ?due ?intention";
-        const REFINED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> 
+        const REFINED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         SELECT ?outcome WHERE { GRAPH $intentions { $act execution:refinedBy ?want .
           ?below a execution:Intention ; execution:pursues ?want .
           OPTIONAL { ?below execution:outcome ?outcome } } }";
-        const WAITS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> SELECT ?for WHERE { GRAPH $intentions { $intention execution:waitsFor ?for .
+        const WAITS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+          SELECT ?for WHERE { GRAPH $intentions { $intention execution:waitsFor ?for .
           FILTER NOT EXISTS { ?for execution:resolvedAt ?done } } } LIMIT 1";
         self.sweep(now)?;
         self.moved = false;
@@ -969,15 +992,23 @@ impl Executor {
         if let Some(retracts) = retracts {
             failing.push(bind(RETRACTS_STANDING, &[("retracts", Value::iri(retracts))])?);
         }
-        Ok(!self
-            .beliefs
-            .ask(&format!("PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> ASK {{ {} }}", failing.join(" UNION ")), &strs(&present))?)
+        Ok(!self.beliefs.ask(
+            &format!(
+                "PREFIX execution: <http://example.org/orexis/execution#>
+                PREFIX orexis: <http://example.org/orexis#>
+                ASK {{ {} }}",
+                failing.join(" UNION ")
+            ),
+            &strs(&present),
+        )?)
     }
 
     fn advance(&mut self, intention: &str, step: &str, now: Option<DateTime>) -> Result<(), Error> {
-        const NEXT_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> SELECT ?next WHERE { GRAPH ?plan { $step execution:then ?next } } LIMIT 1";
-        const ENDS_AFTER_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> SELECT ?i WHERE { GRAPH $intentions { $intention execution:endsAfter $step . BIND($intention AS ?i) } } LIMIT 1";
-        const ADVANCE_U: &str = "PREFIX execution: <http://example.org/orexis/execution#> 
+        const NEXT_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+            SELECT ?next WHERE { GRAPH ?plan { $step execution:then ?next } } LIMIT 1";
+        const ENDS_AFTER_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+            SELECT ?i WHERE { GRAPH $intentions { $intention execution:endsAfter $step . BIND($intention AS ?i) } } LIMIT 1";
+        const ADVANCE_U: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         DELETE { GRAPH $intentions { $intention execution:by $step } }
         INSERT { GRAPH $intentions { $intention execution:by $next } }
         WHERE  { GRAPH $intentions { $intention execution:by $step } }";
@@ -1087,7 +1118,7 @@ impl Executor {
     }
 
     fn carry_out(&mut self, intention: &str, step: &str, taken_at: DateTime) -> Result<bool, Error> {
-        const ACT_U: &str = "PREFIX execution: <http://example.org/orexis/execution#> 
+        const ACT_U: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         INSERT DATA { GRAPH $intentions { $act a execution:Act ; execution:of $step ;
                                       execution:takenAt $taken_at ; execution:doneAt $done_at ;
                                       execution:taken $taken } }";
@@ -1119,7 +1150,9 @@ impl Executor {
         )?)?;
         if let Some(refined) = refined {
             self.intentions.update(&format!(
-                "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{}> {{ <{act}> <{EXECUTION}refinedBy> <{refined}> }} }}",
+                "PREFIX execution: <http://example.org/orexis/execution#>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    INSERT DATA {{ GRAPH <{}> {{ <{act}> <{EXECUTION}refinedBy> <{refined}> }} }}",
                 self.graph
             ))?;
         }
@@ -1176,7 +1209,7 @@ impl Executor {
     /// fills, the act recorded of it — `act`, or the latest — and what the journal keeps: the act's own triples, the
     /// step's as its plan states them, and the want the intention pursues.
     fn about(&self, intention: &str, step: &str, act: Option<&str>) -> Result<About, Error> {
-        const LAST_ACT_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> 
+        const LAST_ACT_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         SELECT ?act WHERE { GRAPH $intentions { ?act a execution:Act ; execution:of $step ; execution:takenAt ?t } }
         ORDER BY DESC(?t) LIMIT 1";
         let want = self.pursued(intention)?;
@@ -1238,7 +1271,8 @@ impl Executor {
     }
 
     fn kept_by(&self, step: &str) -> Result<Option<String>, Error> {
-        const KEPT_BY_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> SELECT ?want WHERE { GRAPH ?g { $step execution:keptBy ?want } } LIMIT 1";
+        const KEPT_BY_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+            SELECT ?want WHERE { GRAPH ?g { $step execution:keptBy ?want } } LIMIT 1";
         let found = self
             .beliefs
             .rows(&bind(KEPT_BY_Q, &[("step", Value::iri(step))])?, &[])?;
@@ -1272,7 +1306,8 @@ impl Executor {
 
     /// A step's rows in words other than this layer's, keyed by the local part of each predicate.
     pub fn step_of(&self, step: &str) -> Result<Said, Error> {
-        const STEP_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> 
+        const STEP_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         SELECT ?p ?o WHERE {
           GRAPH ?plan { $step ?p ?o . FILTER(!STRSTARTS(STR(?p), STR(execution:)) && ?p != rdf:type) } }
         ORDER BY ?p";
@@ -1311,7 +1346,9 @@ impl Executor {
     fn fictive(&mut self, said: &Said, intention: &str) -> Result<(), Error> {
         const RETRACT_U: &str = "DELETE { GRAPH ?g { ?s ?p ?o } } WHERE { GRAPH $retracts { ?s ?p ?o } GRAPH ?g { ?s ?p ?o } VALUES ?g { $held } }";
         const ADD_U: &str = "INSERT { GRAPH $into { ?s ?p ?o } } WHERE { GRAPH $adds { ?s ?p ?o } }";
-        const HELD_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#> PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> 
+        const HELD_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
+        PREFIX execution: <http://example.org/orexis/execution#>
+        PREFIX orexis: <http://example.org/orexis#>
         SELECT DISTINCT ?g WHERE {
           GRAPH $retracts { ?s ?p ?o }
           GRAPH $cat { ?g a orexis:BeliefGraph .
@@ -1534,8 +1571,8 @@ impl Executor {
 /// executor wrote itself, since a walk on those would read the clock for nothing.
 fn present(beliefs: &Store, revised: &[String], changed: &[String]) -> Result<bool, Error> {
     /// WHETHER ANY OF SOME GRAPHS IS THE PRESENT: a belief of the agent's, by the catalogue.
-    const PRESENT_Q: &str =
-        "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> 
+    const PRESENT_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+    PREFIX orexis: <http://example.org/orexis#>
     SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:BeliefGraph .
                                    FILTER NOT EXISTS { ?g a execution:CommittedStepGraph }
                                    ?g orexis:ownedBy ?owner . } } LIMIT 1";
@@ -1643,8 +1680,13 @@ GRAPH <http://example.org/test#catalogue> { <http://example.org/test#catalogue> 
                 format!("<{plan}.{n}> a execution:Step ; execution:partOf <{plan}> {then}.")
             })
             .collect();
-        st.update(&format!("PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{plan}> {{ {} }} }}", chain.join("\n")))
-            .unwrap();
+        st.update(&format!(
+            "PREFIX execution: <http://example.org/orexis/execution#>
+            PREFIX orexis: <http://example.org/orexis#>
+            INSERT DATA {{ GRAPH <{plan}> {{ {} }} }}",
+            chain.join("\n")
+        ))
+        .unwrap();
         st
     }
 
@@ -1669,7 +1711,9 @@ GRAPH <http://example.org/test#catalogue> {{
     fn predicting(source: Store, step: &str, adds: &str, retracts: &str, plan: &str) -> Store {
         source
             .update(&format!(
-                "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{
+                "PREFIX execution: <http://example.org/orexis/execution#>
+  PREFIX orexis: <http://example.org/orexis#>
+  INSERT DATA {{
   GRAPH <{plan}> {{ <{step}> execution:adds <{step}.adds> ; execution:retracts <{step}.retracts> }}
   GRAPH <{step}.adds> {{ {adds} }}
   GRAPH <{step}.retracts> {{ {retracts} }} }}"
@@ -1689,7 +1733,10 @@ GRAPH <http://example.org/test#catalogue> {{
         );
         source
             .update(&format!(
-                "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{ GRAPH <{plan}> {{ <{plan}.0> execution:landsAt \"{}\"^^xsd:dateTime }} }}",
+                "PREFIX execution: <http://example.org/orexis/execution#>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                    INSERT DATA {{ GRAPH <{plan}> {{ <{plan}.0> execution:landsAt \"{}\"^^xsd:dateTime }} }}",
                 isoformat(now())
             ))
             .unwrap();
@@ -1699,7 +1746,9 @@ GRAPH <http://example.org/test#catalogue> {{
     fn moved(beliefs: &Store) {
         beliefs
             .update(&format!(
-                "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> DELETE DATA {{ GRAPH <{STATE}> {{ <{DISK}> <{ON}> <{PEG_A}> }} }} ; INSERT DATA {{ GRAPH <{STATE}> {{ <{DISK}> <{ON}> <{PEG_B}> }} }}"
+                "PREFIX execution: <http://example.org/orexis/execution#>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    DELETE DATA {{ GRAPH <{STATE}> {{ <{DISK}> <{ON}> <{PEG_A}> }} }} ; INSERT DATA {{ GRAPH <{STATE}> {{ <{DISK}> <{ON}> <{PEG_B}> }} }}"
             ))
             .unwrap();
     }
@@ -1707,7 +1756,11 @@ GRAPH <http://example.org/test#catalogue> {{
     fn resolved(x: &Executor, intention: &str) -> Vec<String> {
         x.intentions
             .rows(
-                &format!("PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> SELECT ?o WHERE {{ <{intention}> execution:outcome ?o }}"),
+                &format!(
+                    "PREFIX execution: <http://example.org/orexis/execution#>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    SELECT ?o WHERE {{ <{intention}> execution:outcome ?o }}"
+                ),
                 &[&x.graph],
             )
             .unwrap()
@@ -1719,7 +1772,8 @@ GRAPH <http://example.org/test#catalogue> {{
     fn acts(x: &Executor) -> Vec<(String, DateTime, DateTime)> {
         x.intentions
             .rows(
-                "PREFIX execution: <http://example.org/orexis/execution#> SELECT ?a ?taken ?at ?done WHERE { ?a a execution:Act ; execution:taken ?taken ; execution:takenAt ?at ; execution:doneAt ?done } ORDER BY ?a",
+                "PREFIX execution: <http://example.org/orexis/execution#>
+                    SELECT ?a ?taken ?at ?done WHERE { ?a a execution:Act ; execution:taken ?taken ; execution:takenAt ?at ; execution:doneAt ?done } ORDER BY ?a",
                 &[&x.graph],
             )
             .unwrap()
@@ -1732,7 +1786,9 @@ GRAPH <http://example.org/test#catalogue> {{
         beliefs
             .rows(
                 &bind(
-                    "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> SELECT ?g ?start ?end WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a $kind ; dcterms:temporal ?p .
+                    "PREFIX dcterms: <http://purl.org/dc/terms/>
+  PREFIX orexis: <http://example.org/orexis#>
+  SELECT ?g ?start ?end WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a $kind ; dcterms:temporal ?p .
   ?p orexis:start ?start ; orexis:end ?end } } ORDER BY ?g",
                     &[("kind", Value::iri(COMMITTED_STEP_GRAPH))],
                 )
@@ -1741,7 +1797,13 @@ GRAPH <http://example.org/test#catalogue> {{
             )
             .unwrap()
             .iter()
-            .map(|r| (iri(r, "g").unwrap(), at_of(r, "start").unwrap().unwrap(), at_of(r, "end").unwrap().unwrap()))
+            .map(|r| {
+                (
+                    iri(r, "g").unwrap(),
+                    at_of(r, "start").unwrap().unwrap(),
+                    at_of(r, "end").unwrap().unwrap(),
+                )
+            })
             .collect()
     }
 
@@ -1786,7 +1848,11 @@ GRAPH <http://example.org/test#catalogue> {{
         assert_eq!(steps(&x.graph), 0, "no step is copied into the intentions");
         let adopts = i
             .rows(
-                &format!("PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> SELECT ?p WHERE {{ <{intention}> execution:adopts ?p }}"),
+                &format!(
+                    "PREFIX execution: <http://example.org/orexis/execution#>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    SELECT ?p WHERE {{ <{intention}> execution:adopts ?p }}"
+                ),
                 &[&x.graph],
             )
             .unwrap();
@@ -1847,7 +1913,14 @@ GRAPH <http://example.org/test#catalogue> {{
         x.resolve(&intention, "done").unwrap();
         assert!(x.standing().unwrap().is_empty());
         let kept = i
-            .rows(&format!("PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> SELECT ?p WHERE {{ <{intention}> ?p ?o }}"), &[&x.graph])
+            .rows(
+                &format!(
+                    "PREFIX execution: <http://example.org/orexis/execution#>
+                PREFIX orexis: <http://example.org/orexis#>
+                SELECT ?p WHERE {{ <{intention}> ?p ?o }}"
+                ),
+                &[&x.graph],
+            )
             .unwrap();
         assert!(
             !kept.is_empty(),
@@ -1898,7 +1971,10 @@ GRAPH <http://example.org/test#catalogue> {{
         let later = after(3600.0);
         source
             .update(&format!(
-                "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:notBefore \"{}\"^^xsd:dateTime }} }}",
+                "PREFIX execution: <http://example.org/orexis/execution#>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                    INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:notBefore \"{}\"^^xsd:dateTime }} }}",
                 isoformat(later)
             ))
             .unwrap();
@@ -1949,7 +2025,9 @@ GRAPH <http://example.org/test#catalogue> {{
         let revisions = format!("{STATE}/revisions");
         let b = beliefs(PEG_A);
         b.update(&format!(
-            "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{revisions}> {{ <{soil}> <{below}> <{range}> }}
+            "PREFIX execution: <http://example.org/orexis/execution#>
+        PREFIX orexis: <http://example.org/orexis#>
+        INSERT DATA {{ GRAPH <{revisions}> {{ <{soil}> <{below}> <{range}> }}
         GRAPH <http://example.org/test#catalogue> {{ <{revisions}> <http://www.w3.org/ns/prov#wasDerivedFrom> <{STATE}> ; a <http://example.org/orexis#BeliefGraph> }} }}"
         ))
         .unwrap();
@@ -1962,7 +2040,10 @@ GRAPH <http://example.org/test#catalogue> {{
         );
         source
             .update(&format!(
-                "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:landsAt \"{}\"^^xsd:dateTime }} }}",
+                "PREFIX execution: <http://example.org/orexis/execution#>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                    INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:landsAt \"{}\"^^xsd:dateTime }} }}",
                 isoformat(now())
             ))
             .unwrap();
@@ -1978,7 +2059,9 @@ GRAPH <http://example.org/test#catalogue> {{
             "still below"
         );
         b.update(&format!(
-            "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> DELETE DATA {{ GRAPH <{revisions}> {{ <{soil}> <{below}> <{range}> }} }} ; INSERT DATA {{ GRAPH <{revisions}> {{ <{soil}> <{inside}> <{range}> }} }}"
+            "PREFIX execution: <http://example.org/orexis/execution#>
+                PREFIX orexis: <http://example.org/orexis#>
+                DELETE DATA {{ GRAPH <{revisions}> {{ <{soil}> <{below}> <{range}> }} }} ; INSERT DATA {{ GRAPH <{revisions}> {{ <{soil}> <{inside}> <{range}> }} }}"
         ))
         .unwrap();
         assert!(x.tick(now()).unwrap().is_empty());
@@ -1991,8 +2074,15 @@ GRAPH <http://example.org/test#catalogue> {{
 
     fn on(b: &Store) -> String {
         iri(
-            &b.rows(&format!("PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> SELECT ?on WHERE {{ <{DISK}> <{ON}> ?on }}"), &[STATE])
-                .unwrap()[0],
+            &b.rows(
+                &format!(
+                    "PREFIX execution: <http://example.org/orexis/execution#>
+                PREFIX orexis: <http://example.org/orexis#>
+                SELECT ?on WHERE {{ <{DISK}> <{ON}> ?on }}"
+                ),
+                &[STATE],
+            )
+            .unwrap()[0],
             "on",
         )
         .unwrap()
@@ -2003,7 +2093,9 @@ GRAPH <http://example.org/test#catalogue> {{
         let b = beliefs(PEG_A);
         let mv = "http://example.org/test#Move";
         b.update(&format!(
-            "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{
+            "PREFIX execution: <http://example.org/orexis/execution#>
+  PREFIX orexis: <http://example.org/orexis#>
+  INSERT DATA {{
   GRAPH <http://example.org/test#actions> {{ <{mv}> a orexis:Action ;
       execution:implementation [ execution:operation [ a execution:Fictive ] ] }}
   GRAPH <http://example.org/test#catalogue> {{ <http://example.org/test#actions> a orexis:ActionGraph }} }}"
@@ -2014,7 +2106,9 @@ GRAPH <http://example.org/test#catalogue> {{
         let source = predicting_move(1, PLAN);
         source
             .update(&format!(
-                "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> <http://example.org/orexis/planning#fills> <{mv}> }} }}"
+                "PREFIX execution: <http://example.org/orexis/execution#>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> <http://example.org/orexis/planning#fills> <{mv}> }} }}"
             ))
             .unwrap();
         let intention = x.commit(Some(&source), PLAN, WANT).unwrap().unwrap();
@@ -2065,7 +2159,9 @@ GRAPH <http://example.org/test#catalogue> {{
         let b = beliefs(PEG_A);
         let me_self = "http://example.org/test#self";
         b.update(&format!(
-            "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{
+            "PREFIX execution: <http://example.org/orexis/execution#>
+  PREFIX orexis: <http://example.org/orexis#>
+  INSERT DATA {{
   GRAPH <{me_self}> {{ <{ME}> a orexis:Self ; orexis:plays [ <{PATIENCE_S}> 5 ] }}
   GRAPH <http://example.org/test#catalogue> {{ <{me_self}> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy <{ME}> }} }}"
         ))
@@ -2089,7 +2185,10 @@ GRAPH <http://example.org/test#catalogue> {{
         let latest = after(600.0);
         source
             .update(&format!(
-                "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:notAfter \"{}\"^^xsd:dateTime }} }}",
+                "PREFIX execution: <http://example.org/orexis/execution#>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                    INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:notAfter \"{}\"^^xsd:dateTime }} }}",
                 isoformat(latest)
             ))
             .unwrap();
@@ -2115,7 +2214,10 @@ GRAPH <http://example.org/test#catalogue> {{
         let later = after(3600.0);
         source
             .update(&format!(
-                "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> DELETE {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:landsAt ?t }} }} INSERT {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:landsAt \"{}\"^^xsd:dateTime }} }} WHERE {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:landsAt ?t }} }}",
+                "PREFIX execution: <http://example.org/orexis/execution#>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                    DELETE {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:landsAt ?t }} }} INSERT {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:landsAt \"{}\"^^xsd:dateTime }} }} WHERE {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:landsAt ?t }} }}",
                 isoformat(later)
             ))
             .unwrap();
@@ -2135,7 +2237,10 @@ GRAPH <http://example.org/test#catalogue> {{
         let source = predicting_move(1, PLAN);
         source
             .update(&format!(
-                "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:notBefore \"{}\"^^xsd:dateTime }} }}",
+                "PREFIX execution: <http://example.org/orexis/execution#>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                    INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:notBefore \"{}\"^^xsd:dateTime }} }}",
                 isoformat(now())
             ))
             .unwrap();
@@ -2181,7 +2286,10 @@ GRAPH <http://example.org/test#catalogue> {{
     /// The first step placed: due in five minutes, landing a quarter past, filling a disk.
     fn placed(plan: Store) -> Store {
         plan.update(&format!(
-            "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{ GRAPH <{PLAN}> {{
+            "PREFIX execution: <http://example.org/orexis/execution#>
+      PREFIX orexis: <http://example.org/orexis#>
+      PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      INSERT DATA {{ GRAPH <{PLAN}> {{
       <{PLAN}.0> execution:notBefore \"{}\"^^xsd:dateTime ;
                  execution:landsAt \"{}\"^^xsd:dateTime ;
                  <http://example.org/test#disk> <{DISK}> }} }}",
@@ -2197,7 +2305,10 @@ GRAPH <http://example.org/test#catalogue> {{
         let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
         let plan = placed(predicting_move(1, PLAN));
         plan.update(&format!(
-            "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:notAfter \"{}\"^^xsd:dateTime }} }}",
+            "PREFIX execution: <http://example.org/orexis/execution#>
+                PREFIX orexis: <http://example.org/orexis#>
+                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:notAfter \"{}\"^^xsd:dateTime }} }}",
             isoformat(after(1500.0))
         ))
         .unwrap();
@@ -2318,7 +2429,11 @@ GRAPH <http://example.org/test#catalogue> {{
             .unwrap();
         let waits = i
             .rows(
-                &format!("PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> SELECT ?f WHERE {{ GRAPH ?g {{ <{second}> execution:waitsFor ?f }} }}"),
+                &format!(
+                    "PREFIX execution: <http://example.org/orexis/execution#>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    SELECT ?f WHERE {{ GRAPH ?g {{ <{second}> execution:waitsFor ?f }} }}"
+                ),
                 &[],
             )
             .unwrap();
@@ -2424,7 +2539,9 @@ GRAPH <http://example.org/test#catalogue> {{
     fn filled_move() -> Store {
         let plan = predicting_move(1, PLAN);
         plan.update(&format!(
-            "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> <{FILLS}> <{T}Move> ; <{T}disk> <{DISK}> ; <{T}to> <{PEG_B}> }} }}"
+            "PREFIX execution: <http://example.org/orexis/execution#>
+                PREFIX orexis: <http://example.org/orexis#>
+                INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> <{FILLS}> <{T}Move> ; <{T}disk> <{DISK}> ; <{T}to> <{PEG_B}> }} }}"
         ))
         .unwrap();
         plan
@@ -2434,7 +2551,9 @@ GRAPH <http://example.org/test#catalogue> {{
     /// action the step fills, the values it takes and the want its intention pursues.
     fn step_events(journal: &orexis_journal::journal::Journal) -> Vec<Vec<String>> {
         let text = format!(
-            "PREFIX orexis: <http://example.org/orexis#> PREFIX execution: <http://example.org/orexis/execution#> PREFIX prov: <http://www.w3.org/ns/prov#>
+            "PREFIX orexis: <http://example.org/orexis#>
+PREFIX execution: <http://example.org/orexis/execution#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
 SELECT ?kind ?taken ?landed ?failed ?action ?disk ?to ?want WHERE {{ GRAPH ?e {{
   ?e a ?kind ; prov:atTime ?at ; execution:act ?act . ?act execution:of ?step ; execution:taken ?taken .
   ?step <{FILLS}> ?action ; <{T}disk> ?disk ; <{T}to> ?to . ?i execution:pursues ?want

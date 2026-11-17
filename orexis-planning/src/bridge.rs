@@ -38,7 +38,8 @@ pub struct Bridge {
 
 /// Every bridge the store holds.
 pub fn heads(store: &Store) -> Result<Vec<Bridge>, Error> {
-    const RULES_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#> PREFIX sh: <http://www.w3.org/ns/shacl#> 
+    const RULES_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
+    PREFIX sh: <http://www.w3.org/ns/shacl#>
     SELECT ?rule ?text WHERE { ?rule a sh:SPARQLRule ; sh:construct ?text .
                                FILTER NOT EXISTS { ?rule sh:deactivated true }
                                FILTER NOT EXISTS { ?rule a belief:Transition } } ORDER BY ?rule";
@@ -75,7 +76,7 @@ pub fn keeps(store: &Store, step: &str) -> Result<bool, Error> {
 /// tuple of pyoxigraph's terms.
 pub fn predicted(store: &Store, step: &str) -> Result<(Vec<Triple>, Vec<Triple>), Error> {
     /// THE TWO GRAPHS A STEP PREDICTS IN, wherever its plan is.
-    const PREDICTED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> 
+    const PREDICTED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
     SELECT ?adds ?retracts WHERE {
       OPTIONAL { GRAPH ?a { $step execution:adds ?adds } }
       OPTIONAL { GRAPH ?r { $step execution:retracts ?retracts } } } LIMIT 1";
@@ -276,7 +277,9 @@ mod tests {
         let store = store();
         store
             .update(
-                r#"PREFIX belief: <http://example.org/orexis/belief#> PREFIX sh: <http://www.w3.org/ns/shacl#> INSERT DATA { GRAPH <http://example.org/test#rules> {
+                r#"PREFIX belief: <http://example.org/orexis/belief#>
+  PREFIX sh: <http://www.w3.org/ns/shacl#>
+  INSERT DATA { GRAPH <http://example.org/test#rules> {
   <http://example.org/test#moved> a sh:SPARQLRule , belief:Transition ;
     sh:construct """PREFIX : <http://example.org/test#>
     CONSTRUCT { ?disk :was ?cell } WHERE { ?disk :at ?cell }""" } }"#,

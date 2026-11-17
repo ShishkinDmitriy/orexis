@@ -109,7 +109,9 @@ GRAPH :question {
 }
 GRAPH :rules {
   :winner a coordination:Outcome .
-  :winner sh:construct """PREFIX coordination: <http://example.org/orexis/coordination#> PREFIX orexis: <http://example.org/orexis#> PREFIX draw: <http://example.org/orexis/draw#>
+  :winner sh:construct """PREFIX coordination: <http://example.org/orexis/coordination#>
+        PREFIX orexis: <http://example.org/orexis#>
+        PREFIX draw: <http://example.org/orexis/draw#>
         CONSTRUCT { ?draw coordination:wonBy ?winner }
         WHERE {
             ?me a orexis:Self ; coordination:secret ?secret .

@@ -1795,7 +1795,8 @@ mod tests {
         let store = Store::new().unwrap();
         store
             .update(&format!(
-                "PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph . \
+                "PREFIX orexis: <http://example.org/orexis#>
+                 INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph . \
                  <urn:test:one> a orexis:BeliefGraph . <urn:test:other> a orexis:ActionGraph . \
                  <urn:test:two> a orexis:BeliefGraph }} }}"
             ))

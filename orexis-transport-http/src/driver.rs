@@ -154,8 +154,11 @@ impl Http {
 
     /// Fetch what `sensor` reads, on a thread of its own, unless it is being fetched already.
     pub fn sense_now(&self, sensor: &str) -> Result<(), Error> {
-        const TARGET_Q: &str = "PREFIX hctl: <https://www.w3.org/2019/wot/hypermedia#> PREFIX td: <https://www.w3.org/2019/wot/td#> SELECT ?target WHERE { $sensor td:hasForm ?form . ?form hctl:hasTarget ?target } ORDER BY ?target";
-        const WHERE_Q: &str = "PREFIX schema: <https://schema.org/> PREFIX sosa: <http://www.w3.org/ns/sosa/> 
+        const TARGET_Q: &str = "PREFIX hctl: <https://www.w3.org/2019/wot/hypermedia#>
+            PREFIX td: <https://www.w3.org/2019/wot/td#>
+            SELECT ?target WHERE { $sensor td:hasForm ?form . ?form hctl:hasTarget ?target } ORDER BY ?target";
+        const WHERE_Q: &str = "PREFIX schema: <https://schema.org/>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
         SELECT ?property ?value WHERE {
           $sensor sosa:isHostedBy ?host . ?host schema:geo ?geo . ?geo ?property ?value . FILTER(isLiteral(?value)) }";
         if self.fetching.lock().unwrap().contains(sensor) {
@@ -291,7 +294,11 @@ mod tests {
     fn with_no_location_nothing_is_fetched() {
         let store = balcony();
         store
-            .update("PREFIX schema: <https://schema.org/> PREFIX : <http://example.org/test#> DELETE WHERE { GRAPH :world { :balcony schema:geo ?g } }")
+            .update(
+                "PREFIX schema: <https://schema.org/>
+                PREFIX : <http://example.org/test#>
+                DELETE WHERE { GRAPH :world { :balcony schema:geo ?g } }",
+            )
             .unwrap();
         let (member, asked) = member(&store);
         member.sense_now(&format!("{TEST}weather")).unwrap();

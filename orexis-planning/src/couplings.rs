@@ -92,8 +92,12 @@ pub fn couplings(
     now: DateTime,
     memo: &mut Memo,
 ) -> Result<Option<Couplings>, Error> {
-    const CONSTRAINTS_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#> SELECT ?c WHERE { $holder planning:holds ?c . ?c a planning:Constraint } ORDER BY ?c";
-    const ACTIONS_Q: &str = "PREFIX sh: <http://www.w3.org/ns/shacl#> PREFIX belief: <http://example.org/orexis/belief#> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
+    const CONSTRAINTS_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#>
+        SELECT ?c WHERE { $holder planning:holds ?c . ?c a planning:Constraint } ORDER BY ?c";
+    const ACTIONS_Q: &str = "PREFIX sh: <http://www.w3.org/ns/shacl#>
+    PREFIX belief: <http://example.org/orexis/belief#>
+    PREFIX orexis: <http://example.org/orexis#>
+    PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?action ?precondition ?update WHERE {
       ?action a orexis:Action ; planning:precondition ?precondition ;
               planning:effect/sh:rule ?r . ?r a belief:Transition ; belief:update ?update }

@@ -170,7 +170,11 @@ mod tests {
     fn store() -> Store {
         let st = Store::new().unwrap();
         st.update(&format!(
-            r#"PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX sh: <http://www.w3.org/ns/shacl#> INSERT DATA {{
+            r#"PREFIX execution: <http://example.org/orexis/execution#>
+  PREFIX orexis: <http://example.org/orexis#>
+  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  PREFIX sh: <http://www.w3.org/ns/shacl#>
+  INSERT DATA {{
   GRAPH <{T}vocabulary> {{ <{T}NoteGraph> rdfs:subClassOf orexis:BeliefGraph , orexis:Graph . }}
   GRAPH <{T}actions> {{
     <{T}Noting> a orexis:Action ; orexis:takes <{T}topic> ;

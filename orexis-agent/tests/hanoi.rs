@@ -53,7 +53,8 @@ const TEXTBOOK: [(&str, &str); 7] = [
 ];
 
 fn home(store: &Store) -> usize {
-    const HOME_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX hanoi: <http://example.org/orexis/hanoi#>
+    const HOME_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+    PREFIX hanoi: <http://example.org/orexis/hanoi#>
     SELECT (COUNT(DISTINCT ?d) AS ?n) WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph }
       GRAPH ?g { ?d (hanoi:on)+ hanoi:PegC } }";
     value(&store.rows(HOME_Q, &[]).unwrap()[0], "n")
@@ -68,7 +69,10 @@ fn local(iri: &str) -> String {
 
 /// The one plan published: what it spent, and its moves walked from its head.
 fn plan(store: &Store) -> (f64, Vec<(String, String)>) {
-    const STEPS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> PREFIX hanoi: <http://example.org/orexis/hanoi#>
+    const STEPS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+    PREFIX orexis: <http://example.org/orexis#>
+    PREFIX planning: <http://example.org/orexis/planning#>
+    PREFIX hanoi: <http://example.org/orexis/hanoi#>
     SELECT ?plan ?spent ?step ?next ?disk ?onto WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?plan a orexis:PlanGraph }
       GRAPH ?plan { ?plan planning:spent ?spent . ?step a execution:Step ; hanoi:disk ?disk ; hanoi:onto ?onto .
@@ -151,7 +155,8 @@ fn the_boot_says_what_each_graph_is_and_planning_writes_its_scopes_as_it_starts(
     let scopes = |store: &Store| {
         let rows = store
             .rows(
-                "PREFIX planning: <http://example.org/orexis/planning#> SELECT (COUNT(?s) AS ?n) WHERE { GRAPH ?g { ?s a planning:Scope } }",
+                "PREFIX planning: <http://example.org/orexis/planning#>
+                    SELECT (COUNT(?s) AS ?n) WHERE { GRAPH ?g { ?s a planning:Scope } }",
                 &[],
             )
             .unwrap();
@@ -417,7 +422,8 @@ async fn a_plan_published_is_kept_in_the_journal_with_its_steps_in_the_words_of_
         .unwrap();
     common::settled(&running).await;
     running.stop().await;
-    let text = "PREFIX planning: <http://example.org/orexis/planning#> PREFIX execution: <http://example.org/orexis/execution#>
+    let text = "PREFIX planning: <http://example.org/orexis/planning#>
+PREFIX execution: <http://example.org/orexis/execution#>
 PREFIX hanoi: <http://example.org/orexis/hanoi#>
 SELECT ?step ?disk ?onto (COUNT(?before) AS ?order) WHERE {
   ?e a planning:PlanPublished ; planning:published ?plan . ?step execution:partOf ?plan ; planning:fills hanoi:Move ;

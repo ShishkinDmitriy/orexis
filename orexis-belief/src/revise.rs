@@ -253,12 +253,13 @@ fn layers(store: &Store) -> Result<Layers, Error> {
     const PROCESSOR_Q: &str =
         "PREFIX sh: <http://www.w3.org/ns/shacl#> SELECT ?x ?processor WHERE { ?x sh:ruleProcessor ?processor }";
     /// WHAT A RULE'S `sh:prefixes` DECLARE, as SHACL-SPARQL spells it.
-    const DECLARED_Q: &str = "PREFIX sh: <http://www.w3.org/ns/shacl#> 
+    const DECLARED_Q: &str = "PREFIX sh: <http://www.w3.org/ns/shacl#>
     SELECT ?rule ?prefix ?namespace WHERE {
       ?rule sh:prefixes ?ontology . ?ontology sh:declare ?d . ?d sh:prefix ?prefix ; sh:namespace ?namespace }";
     /// THE DEFAULT RULE SET of every rules graph: every active rule of any kind, with where the draft places it, its
     /// construct, and whether a shape links it, so that what cannot be run is reported. No transition is of it.
-    const RULES_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#> PREFIX sh: <http://www.w3.org/ns/shacl#> 
+    const RULES_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
+    PREFIX sh: <http://www.w3.org/ns/shacl#>
     SELECT ?rule ?type ?construct ?layer ?order ?once ?shape ?condition ?expects WHERE {
       ?rule a ?type . FILTER(?type IN (sh:SPARQLRule, sh:TripleRule, sh:Rule))
       OPTIONAL { ?rule sh:construct ?construct }
@@ -393,7 +394,8 @@ fn describe(
     /// THE REVISION GRAPH'S ROW beside its entry: derived from its source, and whether its rules settled.
     const DESCRIBED_Q: &str = "GRAPH $cat { $into $derived $source ; $settled $value . }";
     /// WHOSE THE SOURCE IS AND WHEN IT HOLDS, off its row: the revisions are the same.
-    const SOURCE_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> 
+    const SOURCE_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX orexis: <http://example.org/orexis#>
     SELECT ?owner ?start ?end WHERE {
       GRAPH $cat { OPTIONAL { $source orexis:ownedBy ?owner }
                    OPTIONAL { $source dcterms:temporal ?p .
@@ -524,7 +526,8 @@ mod tests {
         assert!(!concluded(&store).is_empty());
         store
             .update(&format!(
-                "PREFIX sh: <http://www.w3.org/ns/shacl#> DELETE {{ GRAPH <{SENSED}> {{ ?o <http://example.org/test#reads> ?v }} }} INSERT {{ GRAPH <{SENSED}> \
+                "PREFIX sh: <http://www.w3.org/ns/shacl#>
+                 DELETE {{ GRAPH <{SENSED}> {{ ?o <http://example.org/test#reads> ?v }} }} INSERT {{ GRAPH <{SENSED}> \
                  {{ ?o <http://example.org/test#reads> 0.2 }} }} WHERE {{ GRAPH <{SENSED}> {{ ?o \
                  <http://example.org/test#reads> ?v }} }}"
             ))

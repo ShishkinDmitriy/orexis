@@ -142,7 +142,7 @@ struct Binding {
 
 fn binding(store: &Store, sensor: &str) -> Result<Binding, Error> {
     /// THE BINDING: what the world derives onto a sensor about its bytes, every part optional.
-    const BINDING_Q: &str = "PREFIX sensing: <http://example.org/orexis/sensing#> 
+    const BINDING_Q: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
     SELECT ?codec ?pointer ?starts ?ends WHERE {
       OPTIONAL { $sensor sensing:decodedBy ?codec }
       OPTIONAL { $sensor sensing:readingPointer ?pointer }
@@ -475,7 +475,8 @@ mod tests {
         let store = series();
         store
             .update(
-                "PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX : <http://example.org/test#>
+                "PREFIX sensing: <http://example.org/orexis/sensing#>
+                 PREFIX : <http://example.org/test#>
                  DELETE WHERE { GRAPH :world { :weather sensing:endsPointer ?p } } ;
                  INSERT DATA { GRAPH :world { :weather sensing:startsPointer \"/hourly/time\" } }",
             )

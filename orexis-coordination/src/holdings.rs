@@ -97,8 +97,8 @@ pub(crate) fn at_of(text: Option<String>) -> Result<Option<DateTime>, Error> {
 /// beliefs.
 pub(crate) fn texts_of(store: &Store, constraint: &str) -> Result<Vec<String>, Error> {
     /// WHAT A CONSTRAINT SAYS IS UNMET OR MET.
-    const TEXTS_Q: &str =
-        "PREFIX planning: <http://example.org/orexis/planning#> PREFIX sh: <http://www.w3.org/ns/shacl#> 
+    const TEXTS_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#>
+    PREFIX sh: <http://www.w3.org/ns/shacl#>
     SELECT ?text WHERE {
       { $constraint planning:unmetWhen ?s . ?s sh:select ?text }
       UNION { $constraint planning:metWhen ?shape . ?shape sh:sparql ?c . ?c sh:select ?text } }";
@@ -115,7 +115,8 @@ pub(crate) fn texts_of(store: &Store, constraint: &str) -> Result<Vec<String>, E
 /// The things the self of `store` acts for.
 pub(crate) fn things(store: &Store) -> Result<Vec<String>, Error> {
     /// THE THINGS THE AGENT ACTS FOR.
-    const THINGS_Q: &str = "PREFIX orexis: <http://example.org/orexis#> SELECT ?t WHERE { ?me a orexis:Self ; orexis:actsFor ?t } ORDER BY ?t";
+    const THINGS_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+        SELECT ?t WHERE { ?me a orexis:Self ; orexis:actsFor ?t } ORDER BY ?t";
     let mut graphs = common(store)?;
     graphs.extend(of_kind(store, &[SELF_GRAPH])?);
     Ok(rows_of(store, THINGS_Q, &[], &graphs)?
@@ -304,12 +305,12 @@ pub(crate) struct Change {
 fn changes(store: &Store, things: &[String], key: &BTreeSet<String>) -> Result<BTreeMap<String, Vec<Change>>, Error> {
     /// EVERY STANDING INTENTION, the plan it adopts, the step it stands at and the want it pursues; and whether it ends
     /// after it.
-    const STANDING_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> 
+    const STANDING_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
     SELECT ?plan ?step ?ending ?act ?want WHERE { GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
       FILTER NOT EXISTS { ?i execution:resolvedAt ?done } OPTIONAL { ?i execution:endsAfter ?ending } OPTIONAL { ?i execution:pursues ?want }
       OPTIONAL { ?act execution:of ?step ; execution:taken true } } }";
     /// A PLAN'S STEPS: each, the one after it, the graph naming what it adds, and the two ends of its landing.
-    const STEPS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> 
+    const STEPS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
     SELECT ?step ?next ?adds ?lands ?latest WHERE { GRAPH $plan { ?step a execution:Step .
       OPTIONAL { ?step execution:then ?next } OPTIONAL { ?step execution:adds ?adds }
       OPTIONAL { ?step execution:landsAt ?lands } OPTIONAL { ?step execution:notAfter ?latest } } }";
@@ -435,7 +436,7 @@ pub(crate) fn said(
 
 /// The holdings a question or an answer in `graph` carries, as the terms they were said in.
 pub(crate) fn heard(store: &Store, graph: &str) -> Result<Vec<Holding>, Error> {
-    const HOLDINGS_Q: &str = "PREFIX coordination: <http://example.org/orexis/coordination#> 
+    const HOLDINGS_Q: &str = "PREFIX coordination: <http://example.org/orexis/coordination#>
     SELECT ?h ?t ?p ?v ?from ?until ?taken WHERE { GRAPH $graph { ?n coordination:holding ?h . ?h coordination:of ?t ; ?p ?v .
       OPTIONAL { ?h coordination:from ?from } OPTIONAL { ?h coordination:until ?until } OPTIONAL { ?h coordination:taken ?taken } } }";
     struct Found {

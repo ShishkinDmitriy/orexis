@@ -204,7 +204,12 @@ fn each_vocabulary_is_listed_by_its_prefix_and_read_as_a_glossary() {
             .unwrap()
             .is_match(&r.listing())
     );
-    let whole = r.query("PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX speech: <http://example.org/orexis/speech#> SELECT ?c WHERE { speech:Chat rdfs:comment ?c }", &beliefs());
+    let whole = r.query(
+        "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX speech: <http://example.org/orexis/speech#>
+        SELECT ?c WHERE { speech:Chat rdfs:comment ?c }",
+        &beliefs(),
+    );
     assert!(whole.contains("the thing their prose goes through") && whole.len() > 150);
 }
 
@@ -213,7 +218,8 @@ fn a_query_reads_the_chats_graphs_as_one_and_writes_a_name_with_its_prefix() {
     let r = readable();
     assert!(
         r.query(
-            "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> SELECT ?l WHERE { ?l rdfs:label ?n FILTER(CONTAINS(STR(?l), \"flat\")) }",
+            "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                SELECT ?l WHERE { ?l rdfs:label ?n FILTER(CONTAINS(STR(?l), \"flat\")) }",
             &beliefs()
         )
         .contains("flat_12")
@@ -246,7 +252,8 @@ fn a_query_reads_the_chats_graphs_as_one_and_writes_a_name_with_its_prefix() {
     );
     assert_eq!(
         r.query(
-            "PREFIX speech: <http://example.org/orexis/speech#> ASK { ?c a speech:Chat ; speech:participant viewing:seeker }",
+            "PREFIX speech: <http://example.org/orexis/speech#>
+                ASK { ?c a speech:Chat ; speech:participant viewing:seeker }",
             &beliefs()
         ),
         "true"
@@ -290,7 +297,9 @@ fn a_query_that_could_do_anything_but_read_the_chats_graphs_is_refused_with_why(
 fn a_query_reads_the_kinds_it_names_and_the_catalogue_is_never_merged_into_them() {
     let r = readable();
     let found = r.query(
-        "PREFIX orexis: <http://example.org/orexis#> PREFIX speech: <http://example.org/orexis/speech#> SELECT DISTINCT ?g ?how WHERE { GRAPH ?g { ?c a speech:Chat } GRAPH ?cat { ?g orexis:arrivedBy ?how } }",
+        "PREFIX orexis: <http://example.org/orexis#>
+            PREFIX speech: <http://example.org/orexis/speech#>
+            SELECT DISTINCT ?g ?how WHERE { GRAPH ?g { ?c a speech:Chat } GRAPH ?cat { ?g orexis:arrivedBy ?how } }",
         &beliefs(),
     );
     assert!(
@@ -333,7 +342,8 @@ fn a_query_reads_the_kinds_it_names_and_the_catalogue_is_never_merged_into_them(
     assert_eq!(
         r.call(
             QUERY,
-            &json!({"sparql": "PREFIX speech: <http://example.org/orexis/speech#> ASK { ?c a speech:Chat }", "kinds": beliefs()})
+            &json!({"sparql": "PREFIX speech: <http://example.org/orexis/speech#>
+                ASK { ?c a speech:Chat }", "kinds": beliefs()})
         )
         .as_deref(),
         Some("true")
@@ -791,7 +801,9 @@ impl<'s> Seeker<'s> {
         let rows = self
             .store
             .rows(
-                "PREFIX orexis: <http://example.org/orexis#> PREFIX : <http://example.org/orexis/world/viewing#>\nSELECT ?flat ?at ?owner WHERE { GRAPH ?g { ?flat :viewingAt ?at } \
+                "PREFIX orexis: <http://example.org/orexis#>
+                 PREFIX : <http://example.org/orexis/world/viewing#>
+                 \nSELECT ?flat ?at ?owner WHERE { GRAPH ?g { ?flat :viewingAt ?at } \
                  GRAPH ?c { ?c a orexis:CatalogueGraph . ?g a orexis:BeliefGraph OPTIONAL { ?g orexis:ownedBy ?owner } } }",
                 &[],
             )
@@ -827,7 +839,8 @@ fn offer() -> Json {
 fn viewings() -> (&'static str, Json) {
     (
         "query",
-        json!({"sparql": "PREFIX v: <http://example.org/orexis/world/viewing#>\nSELECT ?flat ?at WHERE { ?flat v:viewingAt ?at }",
+        json!({"sparql": "PREFIX v: <http://example.org/orexis/world/viewing#>
+            \nSELECT ?flat ?at WHERE { ?flat v:viewingAt ?at }",
                "kinds": ["orexis:BeliefGraph"]}),
     )
 }
@@ -860,7 +873,8 @@ fn a_persons_prose_becomes_a_statement_the_agent_hears_and_believes_as_the_world
     let by = store
         .rows(
             &format!(
-                "PREFIX speech: <http://example.org/orexis/speech#> SELECT ?by WHERE {{ GRAPH <{0}> {{ <{0}> speech:saidBy ?by }} }}",
+                "PREFIX speech: <http://example.org/orexis/speech#>
+                    SELECT ?by WHERE {{ GRAPH <{0}> {{ <{0}> speech:saidBy ?by }} }}",
                 statements[0]
             ),
             &[],
@@ -1017,7 +1031,8 @@ fn the_model_loads_a_vocabulary_and_queries_what_the_chat_reads() {
             ("vocabulary", json!({"name": "speech"})),
             (
                 "query",
-                json!({"sparql": "PREFIX speech: <http://example.org/orexis/speech#> SELECT ?c WHERE { ?c a speech:Chat }", "kinds": ["orexis:BeliefGraph"]}),
+                json!({"sparql": "PREFIX speech: <http://example.org/orexis/speech#>
+                    SELECT ?c WHERE { ?c a speech:Chat }", "kinds": ["orexis:BeliefGraph"]}),
             ),
             (
                 "query",

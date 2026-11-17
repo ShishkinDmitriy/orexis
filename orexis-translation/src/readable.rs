@@ -531,7 +531,9 @@ fn prefix_of(quads: &[Quad]) -> Option<(String, String)> {
 fn glossary(quads: &[Quad], prefixes: &Prefixes) -> Result<String, Error> {
     /// WHAT A GLOSSARY SAYS OF A TERM: its kind, one class it is beneath or a property's domain and range, and its
     /// comment.
-    const GLOSSARY_Q: &str = "PREFIX owl: <http://www.w3.org/2002/07/owl#> PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
+    const GLOSSARY_Q: &str = "PREFIX owl: <http://www.w3.org/2002/07/owl#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     SELECT ?term (SAMPLE(?k) AS ?kind) (SAMPLE(?a) AS ?above) (SAMPLE(?d) AS ?domain) (SAMPLE(?r) AS ?range)
            (SAMPLE(?c) AS ?comment) WHERE {
       { ?term a ?t . VALUES ?t { owl:Class rdfs:Class } BIND(\"class\" AS ?k)

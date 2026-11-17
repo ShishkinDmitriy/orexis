@@ -180,7 +180,9 @@ mod tests {
         store
             .update(
                 &bind(
-                    "PREFIX orexis: <http://example.org/orexis#> PREFIX sensing: <http://example.org/orexis/sensing#> INSERT DATA { GRAPH <http://example.org/test#world> {
+                    "PREFIX orexis: <http://example.org/orexis#>
+  PREFIX sensing: <http://example.org/orexis/sensing#>
+  INSERT DATA { GRAPH <http://example.org/test#world> {
   $me orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor $probe ; sensing:silentAfter 1 ] ] } }",
                     &[("me", Value::iri(ME)), ("probe", Value::iri(PROBE))],
                 )
@@ -208,7 +210,9 @@ mod tests {
             .unwrap();
         store
             .update(&format!(
-                "PREFIX orexis: <http://example.org/orexis#> PREFIX sensing: <http://example.org/orexis/sensing#> INSERT DATA {{ GRAPH <{}> {{ <{ME}> orexis:plays [ a sensing:Observer ; sensing:attends \
+                "PREFIX orexis: <http://example.org/orexis#>
+                 PREFIX sensing: <http://example.org/orexis/sensing#>
+                 INSERT DATA {{ GRAPH <{}> {{ <{ME}> orexis:plays [ a sensing:Observer ; sensing:attends \
                  [ sensing:sensor <{PROBE}> ; sensing:silentAfter 1 ] , \
                  [ sensing:sensor <urn:other> , <urn:both> ; sensing:silentAfter 7 ] , \
                  [ sensing:sensor <urn:both> ; sensing:silentAfter 9 ] , [ sensing:sensor <urn:plain> ] ] }} }}",

@@ -579,7 +579,10 @@ mod tests {
         let store = Store::new().unwrap();
         store
             .update(&format!(
-                "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> INSERT DATA {{ GRAPH <{CATALOGUE}> {{ <{CATALOGUE}> a orexis:CatalogueGraph }} }}"
+                "PREFIX dcterms: <http://purl.org/dc/terms/>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    PREFIX planning: <http://example.org/orexis/planning#>
+                    INSERT DATA {{ GRAPH <{CATALOGUE}> {{ <{CATALOGUE}> a orexis:CatalogueGraph }} }}"
             ))
             .unwrap();
         store
@@ -592,7 +595,10 @@ mod tests {
     /// What the catalogue says of `graph`, each predicate and object by its local part.
     fn said(store: &Store, graph: &str) -> BTreeSet<(String, String)> {
         let text = format!(
-            "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> SELECT ?p ?o WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{graph}> ?p ?o }} }}"
+            "PREFIX dcterms: <http://purl.org/dc/terms/>
+                PREFIX orexis: <http://example.org/orexis#>
+                PREFIX planning: <http://example.org/orexis/planning#>
+                SELECT ?p ?o WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{graph}> ?p ?o }} }}"
         );
         let local = |s: String| s.rsplit('#').next().unwrap().to_string();
         store
@@ -653,14 +659,17 @@ mod tests {
             .unwrap()[0]
             .clone();
         let starts = store
-        .rows(
-            &format!(
-                "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> SELECT ?start WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{name}> dcterms:temporal ?p . \
+            .rows(
+                &format!(
+                    "PREFIX dcterms: <http://purl.org/dc/terms/>
+                 PREFIX orexis: <http://example.org/orexis#>
+                 PREFIX planning: <http://example.org/orexis/planning#>
+                 SELECT ?start WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{name}> dcterms:temporal ?p . \
                  ?p orexis:start ?start }} }}"
-            ),
-            &[],
-        )
-        .unwrap();
+                ),
+                &[],
+            )
+            .unwrap();
         assert_eq!(value(&starts[0], "start").as_deref(), Some("2026-01-01T00:00:00Z"));
         assert_eq!(store.rows("SELECT ?s WHERE { ?s ?p ?o }", &[&name]).unwrap().len(), 1);
     }

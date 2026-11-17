@@ -24,7 +24,8 @@ const COMMITTED: &str = "http://example.org/orexis/execution#CommittedStepGraph"
 
 /// Where each of the tower's things is believed to stand, by its local name.
 fn positions(store: &Store) -> BTreeMap<String, (i64, i64)> {
-    const AT_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX courier: <http://example.org/orexis/courier#>
+    const AT_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+PREFIX courier: <http://example.org/orexis/courier#>
 SELECT ?s ?x ?y WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?s courier:x ?x ; courier:y ?y } } ORDER BY ?s";
     store
         .rows(AT_Q, &[])
@@ -45,7 +46,8 @@ SELECT ?s ?x ?y WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:
 
 /// How many steps were refined.
 fn refined(store: &Store) -> usize {
-    const REFINED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> SELECT (COUNT(?a) AS ?n) WHERE { GRAPH ?g { ?a execution:refinedBy ?w } }";
+    const REFINED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+        SELECT (COUNT(?a) AS ?n) WHERE { GRAPH ?g { ?a execution:refinedBy ?w } }";
     value(&store.rows(REFINED_Q, &[]).unwrap()[0], "n")
         .unwrap()
         .parse()
@@ -73,7 +75,8 @@ fn local(iri: &str) -> String {
 }
 
 fn on(store: &Store) -> BTreeSet<(String, String)> {
-    const ON_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX hanoi: <http://example.org/orexis/hanoi#>
+    const ON_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+    PREFIX hanoi: <http://example.org/orexis/hanoi#>
     SELECT ?d ?below WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?d hanoi:on ?below } } ORDER BY ?d";
     store
         .rows(ON_Q, &[])

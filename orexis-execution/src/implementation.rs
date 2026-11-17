@@ -17,8 +17,8 @@ pub struct Operation {
 
 /// Every operation `action`'s implementation holds, in order — none for an action stating no implementation.
 pub fn operations(store: &Store, action: &str) -> Result<Vec<Operation>, Error> {
-    const OPERATIONS_Q: &str =
-        "PREFIX execution: <http://example.org/orexis/execution#> PREFIX sh: <http://www.w3.org/ns/shacl#> 
+    const OPERATIONS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+    PREFIX sh: <http://www.w3.org/ns/shacl#>
     SELECT ?kind ?order ?text WHERE {
       $action execution:implementation/execution:operation ?op .
       ?op a ?kind . VALUES ?kind { execution:Command execution:Saying execution:Fictive }

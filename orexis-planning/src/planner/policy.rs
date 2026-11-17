@@ -72,7 +72,7 @@ impl Planner {
     /// says of a plan is none either.
     fn news(&self, event: &Heard) -> Result<bool, Error> {
         /// The graphs of `$revised` that are not the agent's own record of what it did: a belief that came to it.
-        const NEWS_Q: &str = "PREFIX orexis: <http://example.org/orexis#> 
+        const NEWS_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
         SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:Graph .
                                        FILTER NOT EXISTS { ?g orexis:arrivedBy orexis:Recorded } } } LIMIT 1";
         if event.kind != REVISED {
@@ -112,7 +112,7 @@ impl Planner {
         /// Whether any of the graphs revised is a belief a search reads: no percept, which is no belief, and no
         /// forecast the agent recorded of its own act, the executor's committed step. What a step wrote of the world as
         /// the agent took it is recorded too, and is the present.
-        const BELIEVED_Q: &str = "PREFIX orexis: <http://example.org/orexis#> 
+        const BELIEVED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
         SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:BeliefGraph .
                                        FILTER NOT EXISTS { ?g a orexis:ForecastGraph ; orexis:arrivedBy orexis:Recorded } } } LIMIT 1";
         if event.kind != REVISED || !event.all(CHANGED).is_empty() || self.foresee.is_some() {
@@ -139,8 +139,8 @@ impl Planner {
         /// How the intention `$intention` ended where none of its steps was taken, in execution's words: it ended
         /// before the agent acted, so neither the world nor the hour is other than the plan was found in. One that
         /// failed after a step was taken - a landing waited out - is planned again, since time has passed.
-        const OUTCOME_Q: &str =
-            "PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> 
+        const OUTCOME_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+        PREFIX orexis: <http://example.org/orexis#>
         SELECT ?o WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a execution:IntentionGraph }
                           GRAPH ?g { $intention execution:outcome ?o .
                                      FILTER NOT EXISTS { $intention execution:step ?step .
@@ -250,7 +250,8 @@ impl Planner {
 
 /// Whether the self plays a role beneath `execution:Executor`, read off its self graph: what it publishes is walked.
 pub(super) fn walks(beliefs: &Store) -> Result<bool, Error> {
-    const ROLES_Q: &str = "PREFIX orexis: <http://example.org/orexis#> SELECT DISTINCT ?kind WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind }";
+    const ROLES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+        SELECT DISTINCT ?kind WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind }";
     let selves = beliefs.graphs_of(&[SELF_GRAPH], &Within::default())?;
     let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
     for row in beliefs.rows(ROLES_Q, &selves)? {

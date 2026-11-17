@@ -177,7 +177,8 @@ pub fn plays(store: &Store, classes: &[&str]) -> Result<bool, Error> {
 /// Every role the self plays with each class it is typed, off the self graphs: the role's IRI where it has one, since
 /// a role stated in place (`orexis:plays [ … ]`) is a blank node and is played all the same.
 fn played(store: &Store) -> Result<Vec<(Option<String>, String)>, Error> {
-    const PLAYED_Q: &str = "PREFIX orexis: <http://example.org/orexis#> SELECT ?role ?kind WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind }";
+    const PLAYED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+        SELECT ?role ?kind WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind }";
     let selves = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
     let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
     Ok(store
@@ -190,7 +191,9 @@ fn played(store: &Store) -> Result<Vec<(Option<String>, String)>, Error> {
 /// THE ROLE CLASSES `package`'S OWN DOCUMENTS DECLARE, each beneath `orexis:Role` in a graph it brought: the roles
 /// the package serves, as the kernel learns it once the package has joined, reading no code of the package's.
 pub fn served(store: &Store, package: &str) -> Result<Vec<String>, Error> {
-    const SERVED_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> SELECT ?class WHERE { ?class rdfs:subClassOf orexis:Role }";
+    const SERVED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        SELECT ?class WHERE { ?class rdfs:subClassOf orexis:Role }";
     let own = brought_uri(&crate_of(package), "");
     let vocabularies = store.graphs_of(&[ONTOLOGY], &Within::default())?;
     let mut out = BTreeSet::new();
@@ -286,7 +289,9 @@ fn close_vocabulary(store: &Store) -> Result<(), Error> {
     let using: String = vocabularies.iter().map(|g| format!("USING <{g}>\n")).collect();
     store.forget_graph(CLOSURE_GRAPH, Some(BELIEF))?;
     store.update(&format!(
-        "PREFIX orexis: <http://example.org/orexis#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> INSERT {{ GRAPH <{CLOSURE_GRAPH}> {{ ?a rdfs:subClassOf ?c }} }}\n{using}WHERE  {{ ?a rdfs:subClassOf+ ?c FILTER(isIRI(?a) && isIRI(?c) && ?a != ?c) }}"
+        "PREFIX orexis: <http://example.org/orexis#>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            INSERT {{ GRAPH <{CLOSURE_GRAPH}> {{ ?a rdfs:subClassOf ?c }} }}\n{using}WHERE  {{ ?a rdfs:subClassOf+ ?c FILTER(isIRI(?a) && isIRI(?c) && ?a != ?c) }}"
     ))?;
     store.classify(CLOSURE_GRAPH, ONTOLOGY, DERIVED, None, None, None)
 }
@@ -386,7 +391,8 @@ pub fn identity(store: &Store, agent: &str) -> Result<String, Error> {
 
 /// Every agent the store says is the self, in any graph, sorted.
 pub fn selves(store: &Store) -> Result<Vec<String>, Error> {
-    const SELVES_Q: &str = "PREFIX orexis: <http://example.org/orexis#> SELECT DISTINCT ?self WHERE { GRAPH ?g { ?self a orexis:Self } } ORDER BY ?self";
+    const SELVES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+        SELECT DISTINCT ?self WHERE { GRAPH ?g { ?self a orexis:Self } } ORDER BY ?self";
     Ok(store
         .rows(SELVES_Q, &[])?
         .iter()
@@ -431,8 +437,10 @@ fn hold_the_self(store: &Store, agent: &str, me: &str, mine: &[(&Document, &str)
 /// Every belief and every graph a document put, its row stamped with the hash of what it holds: each, or where
 /// `fresh`, each whose row says no hash yet, as a package joining put it in.
 fn stamp(store: &Store, fresh: bool) -> Result<(), Error> {
-    const STAMPED_Q: &str = "PREFIX orexis: <http://example.org/orexis#> SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:hash ?hash } }";
-    const ASSERTED_Q: &str = "PREFIX orexis: <http://example.org/orexis#> SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:arrivedBy orexis:Asserted } }";
+    const STAMPED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+        SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:hash ?hash } }";
+    const ASSERTED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+        SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:arrivedBy orexis:Asserted } }";
     let mut graphs: Vec<String> = store.graphs_of(&[BELIEF], &Within::default())?;
     for g in store.rows(ASSERTED_Q, &[])?.iter().filter_map(|r| iri(r, "g")) {
         if !graphs.contains(&g) {
@@ -464,7 +472,7 @@ pub(crate) struct Begun {
 /// BEGIN THE BOOT of `booting.agent` into `store`: the kernel's vocabulary and the world's documents, and the self.
 pub(crate) fn begin(store: &Store, booting: &Booting<'_>) -> Result<Begun, Error> {
     /// WHAT A BOOT PUT IN AND NOBODY HOLDS: asserted from a document, with no owner, and the closure.
-    const FILES_Q: &str = "PREFIX orexis: <http://example.org/orexis#> 
+    const FILES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
       { ?g orexis:arrivedBy orexis:Asserted FILTER NOT EXISTS { ?g orexis:ownedBy ?who } }
       UNION { VALUES ?g { $closure } ?g orexis:arrivedBy ?any } FILTER(?g != ?cat) } }";
@@ -481,7 +489,8 @@ pub(crate) fn begin(store: &Store, booting: &Booting<'_>) -> Result<Begun, Error
         }
     } else {
         store.update(&format!(
-            "PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}"
+            "PREFIX orexis: <http://example.org/orexis#>
+                INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}"
         ))?;
     }
     let mut read = vec![brought(KERNEL, VOCABULARY, KERNEL_VOCABULARY)?];

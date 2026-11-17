@@ -93,7 +93,13 @@ pub fn refine(store: &Store, me: &str, step: &str, now: DateTime) -> Result<Opti
     let shape = format!("{want}.met");
     let name = local_of(step);
     store.update(&format!(
-        "PREFIX execution: <http://example.org/orexis/execution#> PREFIX planning: <http://example.org/orexis/planning#> PREFIX prov: <http://www.w3.org/ns/prov#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX sh: <http://www.w3.org/ns/shacl#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{ GRAPH <{graph}> {{
+        "PREFIX execution: <http://example.org/orexis/execution#>
+  PREFIX planning: <http://example.org/orexis/planning#>
+  PREFIX prov: <http://www.w3.org/ns/prov#>
+  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  PREFIX sh: <http://www.w3.org/ns/shacl#>
+  PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+  INSERT DATA {{ GRAPH <{graph}> {{
   <{me}> planning:holds <{want}> .
   <{step}> execution:keptBy <{want}> .
   <{want}> a planning:Want ; planning:metWhen <{shape}> ;
@@ -158,7 +164,8 @@ pub(crate) mod tests {
     pub(crate) fn predicting(store: &Store, adds: &str, retracts: &str) -> String {
         store
             .update(&format!(
-                "PREFIX execution: <http://example.org/orexis/execution#> PREFIX : <{T}>
+                "PREFIX execution: <http://example.org/orexis/execution#>
+PREFIX : <{T}>
 INSERT DATA {{
   GRAPH <{T}plan> {{ <{STEP}> a execution:Step ; execution:adds <{STEP}.adds> ; execution:retracts <{STEP}.retracts> }}
   GRAPH <{STEP}.adds> {{ {adds} }}
@@ -201,7 +208,11 @@ INSERT DATA {{
         let graphs = wants(&store);
         let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
         let found = store
-            .rows("PREFIX execution: <http://example.org/orexis/execution#> SELECT ?step WHERE { ?step execution:keptBy ?w }", &graphs)
+            .rows(
+                "PREFIX execution: <http://example.org/orexis/execution#>
+                SELECT ?step WHERE { ?step execution:keptBy ?w }",
+                &graphs,
+            )
             .unwrap();
         assert_eq!(orexis::store::iri(&found[0], "step").as_deref(), Some(STEP));
         assert!(!met(&store, &format!("{T}state")), "the disk still stands on A's cell");

@@ -126,7 +126,8 @@ async fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_
     let observed: Vec<&str> = observed.iter().map(String::as_str).collect();
     let read: std::collections::BTreeMap<String, f64> = store
         .rows(
-            "PREFIX sosa: <http://www.w3.org/ns/sosa/> SELECT ?p ?v WHERE { ?o sosa:observedProperty ?p ; sosa:hasSimpleResult ?v }",
+            "PREFIX sosa: <http://www.w3.org/ns/sosa/>
+                SELECT ?p ?v WHERE { ?o sosa:observedProperty ?p ; sosa:hasSimpleResult ?v }",
             &observed,
         )
         .unwrap()

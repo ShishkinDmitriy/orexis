@@ -37,7 +37,12 @@
 
 :soilRule a belief:Transition ;
     rdfs:label "the soil's state, held past its range's margin by the state before" ;
-    belief:update """PREFIX schema: <https://schema.org/> PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX ssn: <http://www.w3.org/ns/ssn/> PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/> PREFIX climate: <http://example.org/orexis/climate#>
+    belief:update """PREFIX schema: <https://schema.org/>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        PREFIX ssn: <http://www.w3.org/ns/ssn/>
+        PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
+        PREFIX climate: <http://example.org/orexis/climate#>
         DELETE { ?subject climate:soil ?before }
         INSERT { ?subject climate:soil ?state }
         WHERE {
@@ -55,7 +60,12 @@
 
 :airRule a belief:Transition ;
     rdfs:label "the air's state, held past its range's margin by the state before" ;
-    belief:update """PREFIX schema: <https://schema.org/> PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX ssn: <http://www.w3.org/ns/ssn/> PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/> PREFIX climate: <http://example.org/orexis/climate#>
+    belief:update """PREFIX schema: <https://schema.org/>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        PREFIX ssn: <http://www.w3.org/ns/ssn/>
+        PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
+        PREFIX climate: <http://example.org/orexis/climate#>
         DELETE { ?subject climate:air ?before }
         INSERT { ?subject climate:air ?state }
         WHERE {

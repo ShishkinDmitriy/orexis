@@ -467,7 +467,8 @@ mod tests {
         let found = past
             .call(
                 JOURNAL,
-                &json!({"sparql": "PREFIX prov: <http://www.w3.org/ns/prov#> SELECT ?c ?t WHERE { ?e a ?c ; prov:atTime ?t } ORDER BY DESC(?t)"}),
+                &json!({"sparql": "PREFIX prov: <http://www.w3.org/ns/prov#>
+                    SELECT ?c ?t WHERE { ?e a ?c ; prov:atTime ?t } ORDER BY DESC(?t)"}),
             )
             .unwrap();
         assert!(

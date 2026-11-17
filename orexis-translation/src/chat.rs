@@ -34,13 +34,17 @@ impl Chat {
 
 /// Every chat the self is in, read off the common beliefs beside its self graph.
 pub fn chats_of(store: &Store) -> Result<Vec<Chat>, Error> {
-    const CHATS_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX schema: <https://schema.org/> PREFIX speech: <http://example.org/orexis/speech#> 
+    const CHATS_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+    PREFIX schema: <https://schema.org/>
+    PREFIX speech: <http://example.org/orexis/speech#>
     SELECT ?chat ?channel ?who ?kind ?name ?id WHERE {
       ?me a orexis:Self . ?chat a speech:Chat ; speech:participant ?me , ?who ; speech:channel ?channel .
       ?who a ?kind . VALUES ?kind { schema:Person orexis:Agent }
       OPTIONAL { ?who schema:name ?name } OPTIONAL { ?who orexis:localId ?id } } ORDER BY ?chat ?who";
-    const READS_Q: &str = "PREFIX speech: <http://example.org/orexis/speech#> SELECT ?chat ?kind WHERE { ?chat a speech:Chat ; speech:reads ?kind } ORDER BY ?chat ?kind";
-    const ALLOWS_Q: &str = "PREFIX speech: <http://example.org/orexis/speech#> SELECT ?chat ?word WHERE { ?chat a speech:Chat ; speech:allows ?word } ORDER BY ?chat ?word";
+    const READS_Q: &str = "PREFIX speech: <http://example.org/orexis/speech#>
+        SELECT ?chat ?kind WHERE { ?chat a speech:Chat ; speech:reads ?kind } ORDER BY ?chat ?kind";
+    const ALLOWS_Q: &str = "PREFIX speech: <http://example.org/orexis/speech#>
+        SELECT ?chat ?word WHERE { ?chat a speech:Chat ; speech:allows ?word } ORDER BY ?chat ?word";
     let mut graphs = store.graphs_of(&[BELIEF], &Within::common())?;
     graphs.extend(store.graphs_of(&[SELF_GRAPH], &Within::default())?);
     let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();

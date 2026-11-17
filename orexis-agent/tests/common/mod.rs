@@ -93,7 +93,8 @@ pub fn metered(store: &orexis::store::Store) {
         .unwrap();
     store
         .update(&format!(
-            "PREFIX orexis: <http://example.org/orexis#> INSERT {{ GRAPH <{g}> {{ ?me orexis:plays [ a <http://example.org/orexis/metrics#Meter> ] }} }} \
+            "PREFIX orexis: <http://example.org/orexis#>
+             INSERT {{ GRAPH <{g}> {{ ?me orexis:plays [ a <http://example.org/orexis/metrics#Meter> ] }} }} \
              WHERE {{ GRAPH <{g}> {{ ?me a orexis:Self }} }}",
             g = selves[0]
         ))

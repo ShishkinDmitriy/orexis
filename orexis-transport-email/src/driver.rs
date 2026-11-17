@@ -33,7 +33,9 @@ pub fn polled_every_s(beliefs: &Store) -> Result<f64, Error> {
     //  ONE QUERY: what a role the self plays says or, where none says, the default the transport's ontology states.
     beliefs
         .rows(
-            "PREFIX orexis: <http://example.org/orexis#> PREFIX sh: <http://www.w3.org/ns/shacl#> SELECT (COALESCE(?said, ?own) AS ?every) WHERE { \
+            "PREFIX orexis: <http://example.org/orexis#>
+             PREFIX sh: <http://www.w3.org/ns/shacl#>
+             SELECT (COALESCE(?said, ?own) AS ?every) WHERE { \
              OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . \
                         ?role <http://example.org/orexis/email#polledEveryS> ?said FILTER(?said > 0) } \
              OPTIONAL { ?shape sh:property [ sh:path <http://example.org/orexis/email#polledEveryS> ; \
@@ -222,7 +224,8 @@ impl Email {
     /// A message from an address: the prose it is, in the chat whose contact point has that address — its one person
     /// being who wrote, the channel names no sender; none where the world names the address in no chat.
     pub fn handle(&mut self, channel: &str, payload: &[u8], at: DateTime) -> Result<Option<Prose>, Error> {
-        const CONTACT_Q: &str = "PREFIX schema: <https://schema.org/> SELECT ?contact WHERE { ?contact schema:email ?address FILTER (LCASE(STR(?address)) = LCASE($address)) }";
+        const CONTACT_Q: &str = "PREFIX schema: <https://schema.org/>
+            SELECT ?contact WHERE { ?contact schema:email ?address FILTER (LCASE(STR(?address)) = LCASE($address)) }";
         let common = self.common()?;
         let common: Vec<&str> = common.iter().map(String::as_str).collect();
         let address = Value::Term(Literal::new_simple_literal(channel).into());
@@ -394,7 +397,8 @@ mod tests {
         //  THE TRANSPORT'S ONTOLOGY STATES HOW OFTEN WHERE NO ROLE DOES, as the package brings it.
         store
             .update(
-                "PREFIX sh: <http://www.w3.org/ns/shacl#> INSERT DATA { GRAPH <http://example.org/test#ontology> { [] sh:property \
+                "PREFIX sh: <http://www.w3.org/ns/shacl#>
+                 INSERT DATA { GRAPH <http://example.org/test#ontology> { [] sh:property \
                  [ sh:path <http://example.org/orexis/email#polledEveryS> ; sh:defaultValue 30 ] } }",
             )
             .unwrap();

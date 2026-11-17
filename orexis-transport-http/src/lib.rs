@@ -23,7 +23,10 @@ const WIRED: &[(&str, &str)] = &[(
     "http://example.org/orexis/sensing#Observer",
     "?me orexis:plays/sensing:attends/sensing:sensor ?sensor . ?sensor td:hasForm ?form",
 )];
-const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX speech: <http://example.org/orexis/speech#> PREFIX td: <https://www.w3.org/2019/wot/td#> ";
+const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
+    PREFIX speech: <http://example.org/orexis/speech#>
+    PREFIX td: <https://www.w3.org/2019/wot/td#>
+    ";
 
 /// ITS START, which every package this binary holds is given: it joins where a role the self plays needs what it
 /// reads and the world wires it, and declines otherwise; joined, its member is made and each sensor opened; checked,

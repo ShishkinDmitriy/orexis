@@ -422,7 +422,10 @@ mod tests {
     fn store() -> Store {
         let store = Store::new().unwrap();
         store
-            .update("PREFIX orexis: <http://example.org/orexis#> INSERT DATA { GRAPH <urn:test:catalogue> { <urn:test:catalogue> a orexis:CatalogueGraph } }")
+            .update(
+                "PREFIX orexis: <http://example.org/orexis#>
+                INSERT DATA { GRAPH <urn:test:catalogue> { <urn:test:catalogue> a orexis:CatalogueGraph } }",
+            )
             .unwrap();
         store
     }

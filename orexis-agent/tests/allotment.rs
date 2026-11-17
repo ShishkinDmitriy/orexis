@@ -405,7 +405,9 @@ async fn a_plot_that_dries_below_its_floor_is_watered_with_bought_water() {
 /// Every scope `store` holds, each as the set of its members' local names.
 fn scopes(store: &Store) -> Vec<BTreeSet<String>> {
     let mut held: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-    let text = "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> SELECT ?m ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:ScopeGraph } \
+    let text = "PREFIX orexis: <http://example.org/orexis#>
+                PREFIX planning: <http://example.org/orexis/planning#>
+                SELECT ?m ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:ScopeGraph } \
                 GRAPH ?g { ?m planning:inScope ?s } }";
     for r in store.rows(text, &[]).unwrap() {
         let member = value(&r, "m").unwrap();
@@ -508,7 +510,10 @@ async fn the_present_reading_and_its_foreseen_prediction_are_one_way_of_failing(
         );
         m.read("rose_grower", r#"{"rose_moisture": 0.2}"#);
         m.pass("rose_grower");
-        let text = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> SELECT ?g ?s ?e WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . \
+        let text = "PREFIX dcterms: <http://purl.org/dc/terms/>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    PREFIX planning: <http://example.org/orexis/planning#>
+                    SELECT ?g ?s ?e WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . \
                     ?g a planning:WantGraph ; dcterms:temporal ?p . ?p orexis:start ?s OPTIONAL { ?p orexis:end ?e } } }";
         let planning = m.planning("rose_grower");
         let planner = &planning.planner;
@@ -534,7 +539,10 @@ async fn the_present_reading_and_its_foreseen_prediction_are_one_way_of_failing(
         let committed = m
             .store("rose_grower")
             .rows(
-                "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> SELECT ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . \
+                "PREFIX dcterms: <http://purl.org/dc/terms/>
+                 PREFIX execution: <http://example.org/orexis/execution#>
+                 PREFIX orexis: <http://example.org/orexis#>
+                 SELECT ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . \
                  ?g a execution:CommittedStepGraph ; dcterms:temporal/orexis:start ?s } }",
                 &[],
             )

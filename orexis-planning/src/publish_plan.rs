@@ -31,12 +31,16 @@ pub fn publish_plan(
     walking: &BTreeSet<String>,
     kept: &BTreeMap<String, Vec<String>>,
 ) -> Result<Vec<String>, Error> {
-    const STANDS_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#> SELECT ?w WHERE { $want a planning:Want . BIND($want AS ?w) } LIMIT 1";
-    const FOR_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#> SELECT ?want WHERE { GRAPH $plan { $plan planning:for ?want } }";
-    const STEPS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> SELECT ?step WHERE { GRAPH $plan { ?step a execution:Step } }";
+    const STANDS_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#>
+        SELECT ?w WHERE { $want a planning:Want . BIND($want AS ?w) } LIMIT 1";
+    const FOR_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#>
+        SELECT ?want WHERE { GRAPH $plan { $plan planning:for ?want } }";
+    const STEPS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+        SELECT ?step WHERE { GRAPH $plan { ?step a execution:Step } }";
     const DERIVED_Q: &str =
         "PREFIX prov: <http://www.w3.org/ns/prov#> SELECT ?d WHERE { GRAPH ?g { $want prov:wasDerivedFrom ?d } }";
-    const STEP_GRAPHS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> SELECT ?step ?g ?side WHERE { GRAPH $plan { ?step ?side ?g . VALUES ?side { execution:adds execution:retracts } } }";
+    const STEP_GRAPHS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+        SELECT ?step ?g ?side WHERE { GRAPH $plan { ?step ?side ?g . VALUES ?side { execution:adds execution:retracts } } }";
     let wants = imaginarium.graphs_of(&[WANT], &Within::default())?;
     let wants: Vec<&str> = wants.iter().map(String::as_str).collect();
     let mut handed = Vec::new();
@@ -128,7 +132,9 @@ pub fn publish_plan(
             .map(|d| format!("<{want}> prov:wasDerivedFrom <{d}> ."))
             .collect();
         beliefs.update(&format!(
-            "PREFIX execution: <http://example.org/orexis/execution#> PREFIX prov: <http://www.w3.org/ns/prov#> INSERT DATA {{
+            "PREFIX execution: <http://example.org/orexis/execution#>
+  PREFIX prov: <http://www.w3.org/ns/prov#>
+  INSERT DATA {{
   GRAPH <{published}> {{ <{published}> execution:pursues <{want}> . {} }}
   {} {} }}",
             derived.join(" "),
