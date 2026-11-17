@@ -527,7 +527,10 @@ mod tests {
         );
         journal.sweep(Some(at("2026-01-02T12:00:00+00:00"))).unwrap();
         assert_eq!(
-            count(&journal, "SELECT ?e WHERE { ?e a <http://example.org/test#Happened> }"),
+            count(
+                &journal,
+                "PREFIX : <http://example.org/test#> SELECT ?e WHERE { ?e a :Happened }"
+            ),
             1,
             "an event is kept for good"
         );

@@ -164,10 +164,10 @@ pub(crate) mod tests {
     pub(crate) fn predicting(store: &Store, adds: &str, retracts: &str) -> String {
         store
             .update(&format!(
-                "PREFIX execution: <http://example.org/orexis/execution#>
-PREFIX : <{T}>
+                "PREFIX : <{T}>
+PREFIX execution: <http://example.org/orexis/execution#>
 INSERT DATA {{
-  GRAPH <{T}plan> {{ <{STEP}> a execution:Step ; execution:adds <{STEP}.adds> ; execution:retracts <{STEP}.retracts> }}
+  GRAPH :plan {{ <{STEP}> a execution:Step ; execution:adds <{STEP}.adds> ; execution:retracts <{STEP}.retracts> }}
   GRAPH <{STEP}.adds> {{ {adds} }}
   GRAPH <{STEP}.retracts> {{ {retracts} }} }}"
             ))

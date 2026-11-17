@@ -931,7 +931,7 @@ mod tests {
     #[test]
     fn a_reader_reads_the_union_of_the_graphs_it_is_handed() {
         let store = store();
-        let text = "SELECT ?p ?o WHERE { <http://example.org/test#bed> ?p ?o } ORDER BY ?p";
+        let text = "PREFIX : <http://example.org/test#> SELECT ?p ?o WHERE { :bed ?p ?o } ORDER BY ?p";
         let both = store.rows(text, &[&t("world"), &t("mine")]).unwrap();
         assert_eq!(
             both.iter().filter_map(|r| value(r, "p")).collect::<Vec<_>>(),
@@ -973,10 +973,11 @@ mod tests {
             .unwrap();
         store
             .update(&format!(
-                "PREFIX dcterms: <http://purl.org/dc/terms/>
+                "PREFIX : <http://example.org/test#>
+                    PREFIX dcterms: <http://purl.org/dc/terms/>
                     PREFIX orexis: <http://example.org/orexis#>
                     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                    INSERT DATA {{ GRAPH <{T}state> {{ <{T}bed> <{T}believed> <{T}wet> }} {entry} }}"
+                    INSERT DATA {{ GRAPH :state {{ :bed :believed :wet }} {entry} }}"
             ))
             .unwrap();
         let mine = Within {
@@ -1211,12 +1212,10 @@ mod tests {
             ..Within::default()
         };
         store
-            .update(&format!(
-                "PREFIX dcterms: <http://purl.org/dc/terms/>
-                    PREFIX orexis: <http://example.org/orexis#>
-                    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                    INSERT DATA {{ GRAPH <{T}catalogue> {{ <{T}lately> a <{T}StateGraph> }} }}"
-            ))
+            .update(
+                "PREFIX : <http://example.org/test#>
+                    INSERT DATA { GRAPH :catalogue { :lately a :StateGraph } }",
+            )
             .unwrap();
         assert!(!store.graphs_of(&[BELIEF], &state).unwrap().contains(&t("lately")));
         store.close_catalogue().unwrap();

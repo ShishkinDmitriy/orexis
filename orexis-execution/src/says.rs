@@ -170,24 +170,25 @@ mod tests {
     fn store() -> Store {
         let st = Store::new().unwrap();
         st.update(&format!(
-            r#"PREFIX execution: <http://example.org/orexis/execution#>
+            r#"PREFIX : <http://example.org/test#>
+  PREFIX execution: <http://example.org/orexis/execution#>
   PREFIX orexis: <http://example.org/orexis#>
   PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
   PREFIX sh: <http://www.w3.org/ns/shacl#>
   INSERT DATA {{
-  GRAPH <{T}vocabulary> {{ <{T}NoteGraph> rdfs:subClassOf orexis:BeliefGraph , orexis:Graph . }}
-  GRAPH <{T}actions> {{
-    <{T}Noting> a orexis:Action ; orexis:takes <{T}topic> ;
+  GRAPH :vocabulary {{ :NoteGraph rdfs:subClassOf orexis:BeliefGraph , orexis:Graph . }}
+  GRAPH :actions {{
+    :Noting a orexis:Action ; orexis:takes :topic ;
       execution:implementation [ execution:operation [ a execution:Saying ; sh:construct """PREFIX execution: <http://example.org/orexis/execution#> CONSTRUCT {{ ?note a <{T}Note> , <{T}NoteGraph> ; <{T}about> $topic ; <{T}at> $now ;
                                               execution:to ?peer }}
           WHERE {{ ?peer <{T}reads> $topic . BIND(IRI(CONCAT(STR($topic), "-note")) AS ?note) }}""" ] ] .
-    <{T}Looking> a orexis:Action ; orexis:takes <{T}topic> . }}
-  GRAPH <{T}world> {{ <{T}ann> <{T}reads> <{T}rain> . <{T}bob> <{T}reads> <{T}rain> . }}
-  GRAPH <{T}catalogue> {{
-    <{T}catalogue> a orexis:CatalogueGraph .
-    <{T}vocabulary> a orexis:OntologyGraph , orexis:BeliefGraph .
-    <{T}actions> a orexis:ActionGraph .
-    <{T}world> a orexis:BeliefGraph . }} }}"#
+    :Looking a orexis:Action ; orexis:takes :topic . }}
+  GRAPH :world {{ :ann :reads :rain . :bob :reads :rain . }}
+  GRAPH :catalogue {{
+    :catalogue a orexis:CatalogueGraph .
+    :vocabulary a orexis:OntologyGraph , orexis:BeliefGraph .
+    :actions a orexis:ActionGraph .
+    :world a orexis:BeliefGraph . }} }}"#
         ))
         .unwrap();
         st

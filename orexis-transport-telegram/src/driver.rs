@@ -832,9 +832,10 @@ mod tests {
         //  THE TRANSPORT'S ONTOLOGY STATES HOW OFTEN WHERE NO ROLE DOES, as the package brings it.
         store
             .update(
-                "PREFIX sh: <http://www.w3.org/ns/shacl#>
+                "PREFIX : <http://example.org/test#>
+                 PREFIX sh: <http://www.w3.org/ns/shacl#>
                  PREFIX telegram: <http://example.org/orexis/telegram#>
-                 INSERT DATA { GRAPH <http://example.org/test#ontology> { [] sh:property \
+                 INSERT DATA { GRAPH :ontology { [] sh:property \
                  [ sh:path telegram:polledEveryS ; sh:defaultValue 3 ] } }",
             )
             .unwrap();

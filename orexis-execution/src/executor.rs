@@ -2026,11 +2026,12 @@ GRAPH <http://example.org/test#catalogue> {{
         let revisions = format!("{STATE}/revisions");
         let b = beliefs(PEG_A);
         b.update(&format!(
-            "PREFIX execution: <http://example.org/orexis/execution#>
+            "PREFIX : <http://example.org/test#>
+        PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX orexis: <http://example.org/orexis#>
         PREFIX prov: <http://www.w3.org/ns/prov#>
         INSERT DATA {{ GRAPH <{revisions}> {{ <{soil}> <{below}> <{range}> }}
-        GRAPH <http://example.org/test#catalogue> {{ <{revisions}> prov:wasDerivedFrom <{STATE}> ; a orexis:BeliefGraph }} }}"
+        GRAPH :catalogue {{ <{revisions}> prov:wasDerivedFrom <{STATE}> ; a orexis:BeliefGraph }} }}"
         ))
         .unwrap();
         let source = predicting(
@@ -2095,12 +2096,13 @@ GRAPH <http://example.org/test#catalogue> {{
         let b = beliefs(PEG_A);
         let mv = "http://example.org/test#Move";
         b.update(&format!(
-            "PREFIX execution: <http://example.org/orexis/execution#>
+            "PREFIX : <http://example.org/test#>
+  PREFIX execution: <http://example.org/orexis/execution#>
   PREFIX orexis: <http://example.org/orexis#>
   INSERT DATA {{
-  GRAPH <http://example.org/test#actions> {{ <{mv}> a orexis:Action ;
+  GRAPH :actions {{ <{mv}> a orexis:Action ;
       execution:implementation [ execution:operation [ a execution:Fictive ] ] }}
-  GRAPH <http://example.org/test#catalogue> {{ <http://example.org/test#actions> a orexis:ActionGraph }} }}"
+  GRAPH :catalogue {{ :actions a orexis:ActionGraph }} }}"
         ))
         .unwrap();
         let (i, clock) = (store(), Arc::new(Manual::at(now())));
@@ -2162,11 +2164,12 @@ GRAPH <http://example.org/test#catalogue> {{
         let b = beliefs(PEG_A);
         let me_self = "http://example.org/test#self";
         b.update(&format!(
-            "PREFIX execution: <http://example.org/orexis/execution#>
+            "PREFIX : <http://example.org/test#>
+  PREFIX execution: <http://example.org/orexis/execution#>
   PREFIX orexis: <http://example.org/orexis#>
   INSERT DATA {{
   GRAPH <{me_self}> {{ <{ME}> a orexis:Self ; orexis:plays [ <{PATIENCE_S}> 5 ] }}
-  GRAPH <http://example.org/test#catalogue> {{ <{me_self}> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy <{ME}> }} }}"
+  GRAPH :catalogue {{ <{me_self}> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy <{ME}> }} }}"
         ))
         .unwrap();
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
@@ -2289,13 +2292,14 @@ GRAPH <http://example.org/test#catalogue> {{
     /// The first step placed: due in five minutes, landing a quarter past, filling a disk.
     fn placed(plan: Store) -> Store {
         plan.update(&format!(
-            "PREFIX execution: <http://example.org/orexis/execution#>
+            "PREFIX : <http://example.org/test#>
+      PREFIX execution: <http://example.org/orexis/execution#>
       PREFIX orexis: <http://example.org/orexis#>
       PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
       INSERT DATA {{ GRAPH <{PLAN}> {{
       <{PLAN}.0> execution:notBefore \"{}\"^^xsd:dateTime ;
                  execution:landsAt \"{}\"^^xsd:dateTime ;
-                 <http://example.org/test#disk> <{DISK}> }} }}",
+                 :disk <{DISK}> }} }}",
             isoformat(after(300.0)),
             isoformat(after(900.0))
         ))
@@ -2523,7 +2527,6 @@ GRAPH <http://example.org/test#catalogue> {{
 
     // --- what the executor says happened: held to `agent/execution/tests/test_events.py` ----------------------
 
-    const T: &str = "http://example.org/test#";
     const FILLS: &str = "http://example.org/orexis/planning#fills";
 
     /// Every event the executor says, kept in a journal as the history part keeps them.
@@ -2542,9 +2545,10 @@ GRAPH <http://example.org/test#catalogue> {{
     fn filled_move() -> Store {
         let plan = predicting_move(1, PLAN);
         plan.update(&format!(
-            "PREFIX execution: <http://example.org/orexis/execution#>
+            "PREFIX : <http://example.org/test#>
+                PREFIX execution: <http://example.org/orexis/execution#>
                 PREFIX orexis: <http://example.org/orexis#>
-                INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> <{FILLS}> <{T}Move> ; <{T}disk> <{DISK}> ; <{T}to> <{PEG_B}> }} }}"
+                INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> <{FILLS}> :Move ; :disk <{DISK}> ; :to <{PEG_B}> }} }}"
         ))
         .unwrap();
         plan
@@ -2554,12 +2558,13 @@ GRAPH <http://example.org/test#catalogue> {{
     /// action the step fills, the values it takes and the want its intention pursues.
     fn step_events(journal: &orexis_journal::journal::Journal) -> Vec<Vec<String>> {
         let text = format!(
-            "PREFIX execution: <http://example.org/orexis/execution#>
+            "PREFIX : <http://example.org/test#>
+PREFIX execution: <http://example.org/orexis/execution#>
 PREFIX orexis: <http://example.org/orexis#>
 PREFIX prov: <http://www.w3.org/ns/prov#>
 SELECT ?kind ?taken ?landed ?failed ?action ?disk ?to ?want WHERE {{ GRAPH ?e {{
   ?e a ?kind ; prov:atTime ?at ; execution:act ?act . ?act execution:of ?step ; execution:taken ?taken .
-  ?step <{FILLS}> ?action ; <{T}disk> ?disk ; <{T}to> ?to . ?i execution:pursues ?want
+  ?step <{FILLS}> ?action ; :disk ?disk ; :to ?to . ?i execution:pursues ?want
   OPTIONAL {{ ?e execution:landed ?landed }}
   BIND(EXISTS {{ ?e a execution:StepFailed }} AS ?failed)
   FILTER(?kind IN (execution:StepTaken, execution:StepAnswered)) }} }} ORDER BY ?at ?kind"
