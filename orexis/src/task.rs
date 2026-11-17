@@ -729,23 +729,42 @@ impl Turn<'_> {
     }
 }
 
-/// WHAT REACHES OUTSIDE THE AGENT, by its type: the connectors a deployment makes from its environment, and a test
-/// hands in - a bus, a web, a bot, a model, a sink. A package takes the one it knows, where one was handed.
+/// WHAT THE AGENT IS PROVIDED, by its type, by whoever runs it - the binary, a check or a test: the connectors a test
+/// makes, a bus, a web, a bot, a model, a sink, and the word that the agent is deployed or checked; and what one
+/// package provides another, the journal it keeps. A package takes the one it knows, where one was provided, and one
+/// value of a type is provided at a time.
 #[derive(Clone, Default)]
-pub struct Outside(Arc<Mutex<HashMap<TypeId, Box<dyn Any + Send>>>>);
+pub struct Provided(Arc<Mutex<HashMap<TypeId, Box<dyn Any + Send>>>>);
 
-impl Outside {
-    /// Hand `thing` to whichever package takes its type.
-    pub fn hand<T: Any + Send>(&self, thing: T) {
-        let mut held = self.0.lock().expect("an outside nobody poisoned");
+impl Provided {
+    /// Provide `thing` to whichever package takes its type.
+    pub fn provide<T: Any + Send>(&self, thing: T) {
+        let mut held = self.0.lock().expect("what is provided, poisoned by nobody");
         held.insert(TypeId::of::<T>(), Box::new(thing));
+    }
+
+    /// `thing` provided, and what is provided: for whoever runs the agent, providing several in one expression.
+    #[must_use]
+    pub fn with<T: Any + Send>(self, thing: T) -> Self {
+        self.provide(thing);
+        self
+    }
+
+    /// What was handed of type `T` changed by `change`, a default one handed first where nothing was: for what several
+    /// packages each add to, whichever starts first, so no package's addition is lost to another's.
+    pub fn alter<T: Any + Send + Default>(&self, change: impl FnOnce(&mut T)) {
+        let mut held = self.0.lock().expect("what is provided, poisoned by nobody");
+        let thing = held.entry(TypeId::of::<T>()).or_insert_with(|| Box::new(T::default()));
+        if let Some(thing) = thing.downcast_mut::<T>() {
+            change(thing);
+        }
     }
 
     /// Whether anything of type `T` is handed, taking nothing.
     pub fn has<T: Any + Send>(&self) -> bool {
         self.0
             .lock()
-            .expect("an outside nobody poisoned")
+            .expect("what is provided, poisoned by nobody")
             .contains_key(&TypeId::of::<T>())
     }
 
@@ -753,7 +772,7 @@ impl Outside {
     pub fn read<T: Any + Send + Clone>(&self) -> Option<T> {
         self.0
             .lock()
-            .expect("an outside nobody poisoned")
+            .expect("what is provided, poisoned by nobody")
             .get(&TypeId::of::<T>())
             .and_then(|thing| thing.downcast_ref::<T>())
             .cloned()
@@ -762,7 +781,7 @@ impl Outside {
     /// What was handed of type `T`, shared: read and left where it is, and where nothing was handed, a default one
     /// handed now. For what several packages each add to or read, whichever starts first.
     pub fn share<T: Any + Send + Clone + Default>(&self) -> T {
-        let mut held = self.0.lock().expect("an outside nobody poisoned");
+        let mut held = self.0.lock().expect("what is provided, poisoned by nobody");
         if let Some(thing) = held.get(&TypeId::of::<T>()).and_then(|thing| thing.downcast_ref::<T>()) {
             return thing.clone();
         }
@@ -773,14 +792,14 @@ impl Outside {
 
     /// Take what was handed of type `T`, where anything was: it is the taker's from now on.
     pub fn take<T: Any + Send>(&self) -> Option<T> {
-        let mut held = self.0.lock().expect("an outside nobody poisoned");
+        let mut held = self.0.lock().expect("what is provided, poisoned by nobody");
         held.remove(&TypeId::of::<T>())
             .and_then(|thing| thing.downcast().ok())
             .map(|thing| *thing)
     }
 }
 
-/// THE AGENT IS DEPLOYED: handed outside by whoever runs it for good, and by no check and no test. Where it is
+/// THE AGENT IS DEPLOYED: provided by whoever runs it for good, and by no check and no test. Where it is
 /// handed, a package makes for itself what it was not handed, from what the world says: its journal, its archive.
 /// Where it is not, a package handed nothing has nothing, so a check reaches no disk and no port. It says the one
 /// thing whoever runs the agent knows and no document states: the name of the world's directory, which its buckets
@@ -790,7 +809,7 @@ pub struct Deployed {
     pub world: String,
 }
 
-/// THE AGENT IS BEING CHECKED: handed outside by whoever checks an agent before anything is granted, and by no run
+/// THE AGENT IS BEING CHECKED: provided by whoever checks an agent before anything is granted, and by no run
 /// and no test of a run. A package handed it says, as it makes its core, the two things a check asks of every
 /// package and no document states alone: that it HOLDS the agent, which then runs for as long as its process
 /// does, and why it REFUSES the world as posed. The kernel knows neither reason; whoever checks reads what was found.
@@ -824,7 +843,7 @@ impl Checking {
 /// What keeps a line of the process's log: its logger, its level and its message.
 pub type Remark = Box<dyn Fn(&str, log::Level, &str) + Send + Sync>;
 
-/// THE PROCESS'S LOG, for whoever keeps it: handed outside by whoever owns the log, and called once by the package
+/// THE PROCESS'S LOG, for whoever keeps it: provided by whoever owns the log, and called once by the package
 /// that keeps it, with how each line is kept. What was said before is kept first.
 pub struct Said(pub Box<dyn FnOnce(Remark) + Send>);
 
@@ -846,8 +865,9 @@ impl Journaled {
     }
 }
 
-/// WHAT THE AGENT KEEPS OF WHAT HAPPENED, as a chat reads it: its journal where it lies, and its two series. Shared
-/// outside (`Outside::share`) by whoever runs the agent and by each package that keeps or reads any of it.
+/// WHAT THE AGENT KEEPS OF WHAT HAPPENED, as a chat reads it: its journal where it lies, and its two series. Each
+/// package that keeps any of it says so as it makes its core (`Provided::alter`), the journal's where it lies
+/// and each series' package the sink it writes, and a reader reads it once every core is made.
 #[derive(Clone, Default)]
 pub struct Reads {
     pub journal: Journaled,
@@ -856,14 +876,14 @@ pub struct Reads {
 }
 
 /// WHAT A PACKAGE'S TASK IS HANDED: the agent's services, and nothing of its own - its store, its id, the clock, the
-/// events, what reaches outside, and the run it is part of. Every package is handed the same.
+/// events, what is provided, and the run it is part of. Every package is handed the same.
 #[derive(Clone)]
 pub struct Handed {
     pub store: Store,
     pub id: String,
     pub clock: Arc<dyn Clock>,
     pub events: Events,
-    pub outside: Outside,
+    pub provided: Provided,
     run: Run,
 }
 
@@ -1183,12 +1203,12 @@ impl Handed {
         }
     }
 
-    /// WHETHER THE AGENT IS BEING CHECKED, and where to say what the check asks: handed outside by whoever checks an
+    /// WHETHER THE AGENT IS BEING CHECKED, and where to say what the check asks: provided by whoever checks an
     /// agent before anything is granted. A package being checked says what it found as it makes its core - that it
     /// holds the agent, why it refuses the world as posed - and ENDS ITS START THERE, its core made and nothing run:
     /// each package checks its own, and the kernel knows nothing of checks.
     pub fn checking(&self) -> Option<Checking> {
-        self.outside.read::<Checking>()
+        self.provided.read::<Checking>()
     }
 
     /// Wait until the run is over: the task stops itself.
@@ -1242,7 +1262,7 @@ pub struct Running {
     halted: Arc<Notify>,
 }
 
-/// THE PACKAGES A TEST NAMES, handed outside by whoever starts the agent for a test (`start`): a test's member runs
+/// THE PACKAGES A TEST NAMES, provided by whoever starts the agent for a test (`start`): a test's member runs
 /// where it is named, as a package runs where the self plays its role.
 #[derive(Clone, Default)]
 pub struct Named(pub Vec<String>);
@@ -1252,7 +1272,7 @@ pub struct Named(pub Vec<String>);
 pub fn named(handed: Handed, name: &'static str, make: fn(&Handed) -> Result<Option<Task>, Error>) -> Starting {
     Box::pin(async move {
         if !handed
-            .outside
+            .provided
             .read::<Named>()
             .is_some_and(|named| named.0.iter().any(|n| n == name))
         {
@@ -1320,13 +1340,13 @@ fn every() -> Vec<String> {
 }
 
 /// What every package of an agent is handed.
-fn handed(store: &Store, id: &str, clock: Arc<dyn Clock>, outside: Outside, stop: watch::Receiver<bool>) -> Handed {
+fn handed(store: &Store, id: &str, clock: Arc<dyn Clock>, provided: Provided, stop: watch::Receiver<bool>) -> Handed {
     Handed {
         store: store.clone(),
         id: id.to_string(),
         clock,
         events: Events::new(store),
-        outside,
+        provided,
         run: Run::new(stop),
     }
 }
@@ -1344,11 +1364,11 @@ pub fn boot(
     store: &Store,
     booting: &crate::boot::Booting<'_>,
     clock: Arc<dyn Clock>,
-    outside: Outside,
+    provided: Provided,
 ) -> Result<Booted, Error> {
     let begun = crate::boot::begin(store, booting)?;
     let (stop, stopped) = watch::channel(false);
-    let handed = handed(store, booting.agent, clock, outside, stopped);
+    let handed = handed(store, booting.agent, clock, provided, stopped);
     handed.run.boot.lock().expect("a boot nobody poisoned").begun = Some(begun);
     Ok(Booted { handed, stop })
 }
@@ -1370,7 +1390,7 @@ pub async fn start(
     store: &Store,
     id: &str,
     clock: Arc<dyn Clock>,
-    outside: Outside,
+    provided: Provided,
     names: &[String],
 ) -> Result<Running, Error> {
     started();
@@ -1380,11 +1400,11 @@ pub async fn start(
             "no package registered itself as {name}: this binary was built without it"
         )));
     }
-    outside.hand(Named(names.to_vec()));
+    provided.provide(Named(names.to_vec()));
     let (stop, stopped) = watch::channel(false);
     let mut order = names.to_vec();
     order.extend(every.into_iter().filter(|n| !names.contains(n)));
-    spawn(handed(store, id, clock, outside, stopped), stop, order)
+    spawn(handed(store, id, clock, provided, stopped), stop, order)
         .made()
         .await
 }
@@ -1598,7 +1618,7 @@ mod tests {
 
     const STEP: &str = "http://example.org/test#Stepping";
 
-    /// What a test's packages write down, handed outside.
+    /// What a test's packages write down, provided.
     type Seen = Arc<Mutex<Vec<String>>>;
 
     fn noon() -> DateTime {
@@ -1607,19 +1627,25 @@ mod tests {
 
     async fn running(names: &[&str], seen: &Seen) -> Running {
         let store = Store::new(crate::snapshots::namespaces()).unwrap();
-        let outside = Outside::default();
-        outside.hand(seen.clone());
+        let provided = Provided::default();
+        provided.provide(seen.clone());
         let names: Vec<String> = names.iter().map(|n| n.to_string()).collect();
-        start(&store, "urn:test:me", Arc::new(Elapsing::from(noon())), outside, &names)
-            .await
-            .unwrap()
+        start(
+            &store,
+            "urn:test:me",
+            Arc::new(Elapsing::from(noon())),
+            provided,
+            &names,
+        )
+        .await
+        .unwrap()
     }
 
     fn seen_by(handed: &Handed) -> Seen {
         handed
-            .outside
+            .provided
             .take::<Seen>()
-            .inspect(|s| handed.outside.hand(s.clone()))
+            .inspect(|s| handed.provided.provide(s.clone()))
             .unwrap()
     }
 
@@ -1791,7 +1817,7 @@ mod tests {
             &store,
             "urn:test:me",
             clock,
-            Outside::default(),
+            Provided::default(),
             &["test/absent".to_string()],
         )
         .await;

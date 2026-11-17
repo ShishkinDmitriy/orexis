@@ -40,9 +40,11 @@ fn start(handed: Handed) -> orexis::task::Starting {
             return Ok(());
         }
         handed.joins("journal").await?;
-        let journal = match handed.outside.take::<Keeps>().and_then(|keeps| keeps.journal) {
+        let journal = match handed.provided.take::<Keeps>().and_then(|keeps| keeps.journal) {
             Some(journal) => Some(journal),
-            None if handed.outside.has::<orexis::task::Deployed>() => Some(Recorder::new(&handed.store)?.own(&handed)?),
+            None if handed.provided.has::<orexis::task::Deployed>() => {
+                Some(Recorder::new(&handed.store)?.own(&handed)?)
+            }
             None => None,
         };
         if let Some(journal) = journal {
@@ -54,12 +56,12 @@ fn start(handed: Handed) -> orexis::task::Starting {
             activities::connect(handed.events.watch(), journal.clone());
             //  WHAT A CHAT READS OF WHAT HAPPENED is this journal, until what archives it says otherwise.
             handed
-                .outside
+                .provided
                 .share::<orexis::task::Reads>()
                 .journal
                 .lies_in(journal.store.clone());
             //  AND HANDED ON to its housekeepers, which wait for this start and make themselves.
-            handed.outside.hand(Traced(journal));
+            handed.provided.provide(Traced(journal));
         }
         handed.started("journal").await;
         Ok(())

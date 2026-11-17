@@ -9,7 +9,7 @@ use orexis::task::Handed;
 use crate::ROLE;
 use crate::journal::{self, Journal};
 
-/// The journal to keep, handed outside by a test that reads what it kept. A deployed agent is handed none and the
+/// The journal to keep, provided by a test that reads what it kept. A deployed agent is handed none and the
 /// package makes its own (`orexis::task::Deployed`).
 #[derive(Default)]
 pub struct Keeps {
@@ -135,7 +135,7 @@ impl Recorder {
         journal.incident_level = kept.incident_from;
         journal.incidents = kept.incidents;
         let journal = Arc::new(journal);
-        if let Some(orexis::task::Said(keep)) = handed.outside.take::<orexis::task::Said>() {
+        if let Some(orexis::task::Said(keep)) = handed.provided.take::<orexis::task::Said>() {
             let into = journal.clone();
             keep(Box::new(move |logger, level, message| {
                 let _ = into.remark(logger, level, message, None);

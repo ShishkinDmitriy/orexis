@@ -15,11 +15,12 @@ pub fn archived_every_s() -> Result<f64, orexis::Error> {
     orexis_sensing::ontology::DEFAULTS.figure("http://example.org/orexis/sensing#archivedEveryS")
 }
 
-/// Where readings are archived and how often. Handed outside by a test that reads the series; a deployed agent is
+/// Where readings are archived and how often. Provided by a test that reads the series; a deployed agent is
 /// handed none and the package makes its own sink, where the world names a store that serves history.
 pub struct Archives {
     pub sink: Arc<Sink>,
-    pub every_s: f64,
+    /// How often, in the agent's seconds: none, and as often as the observer's role says.
+    pub every_s: Option<f64>,
 }
 
 /// What the store took this run: each reading still held, by its percept, with the point it was written as.

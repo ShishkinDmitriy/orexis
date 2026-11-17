@@ -181,7 +181,7 @@ fn a_housekeeper_of_the_journal_joins_where_the_recorders_role_names_its_service
         let store =
             orexis::store::Store::new(std::sync::Arc::new(orexis::namespaces::Namespaces::linked().unwrap())).unwrap();
         let at = Path::new(TREE).join("world").join(world);
-        orexis_agent::booted(&store, &at, agent, now).unwrap();
+        orexis_agent::boot_without_starting(&store, &at, agent).unwrap();
         let loaded = check(&at, agent, now, None).unwrap().loaded;
         let joined = |package: &str| loaded.iter().any(|p| p == package);
         let recorder = orexis_journal::Recorder::new(&store).unwrap();
@@ -217,21 +217,23 @@ fn the_journal_package_makes_its_own_journal_where_the_agent_is_deployed_and_non
             .build()
             .unwrap();
         let clock: std::sync::Arc<dyn orexis::clock::Clock> = std::sync::Arc::new(orexis::clock::Manual::at(now));
-        let wiring = orexis_agent::Wiring {
-            deployed: deployed.then(|| "hanoi".to_string()),
-            ..orexis_agent::Wiring::default()
-        };
+        let provided = orexis::task::Provided::default();
+        if deployed {
+            provided.provide(orexis::task::Deployed {
+                world: "hanoi".to_string(),
+            });
+        }
         //  BOOTED AND STARTED AS THE BINARY DOES, until every package has made its core.
         let world = Path::new(TREE).join("world/hanoi");
         tasks.block_on(async {
-            let running = orexis_agent::boot(&store, &world, "hanoi", clock, None, wiring)
+            let running = orexis_agent::boot(&store, &world, "hanoi", clock, provided)
                 .unwrap()
                 .start()
                 .await
                 .unwrap();
             let kept = running
                 .handed
-                .outside
+                .provided
                 .take::<orexis_journal::Traced>()
                 .map(|traced| traced.0.store.named_graphs().count());
             running.stop().await;
@@ -251,11 +253,10 @@ fn the_journal_package_makes_its_own_journal_where_the_agent_is_deployed_and_non
 /// agent, which plays a recorder alone, holds no ontology of the metrics or of sensing, so neither is read.
 #[test]
 fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_role_may_say() {
-    let now = oxsdatatypes::DateTime::now();
     let booted = |world: &str, agent: &str| {
         let store =
             orexis::store::Store::new(std::sync::Arc::new(orexis::namespaces::Namespaces::linked().unwrap())).unwrap();
-        orexis_agent::booted(&store, &Path::new(TREE).join("world").join(world), agent, now).unwrap();
+        orexis_agent::boot_without_starting(&store, &Path::new(TREE).join("world").join(world), agent).unwrap();
         store
     };
     let store = booted("terrace", "terrace");
@@ -377,11 +378,10 @@ fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_ro
 /// where the bot it speaks through and the model its translator's role names answer; Hanoi's is connected to none.
 #[test]
 fn the_world_says_where_each_broker_bot_and_model_an_agent_reaches_answers() {
-    let now = oxsdatatypes::DateTime::now();
     let booted = |world: &str, agent: &str| {
         let store =
             orexis::store::Store::new(std::sync::Arc::new(orexis::namespaces::Namespaces::linked().unwrap())).unwrap();
-        orexis_agent::booted(&store, &Path::new(TREE).join("world").join(world), agent, now).unwrap();
+        orexis_agent::boot_without_starting(&store, &Path::new(TREE).join("world").join(world), agent).unwrap();
         let me = orexis::boot::selves(&store).unwrap().remove(0);
         (store, me)
     };
@@ -412,11 +412,10 @@ fn the_world_says_where_each_broker_bot_and_model_an_agent_reaches_answers() {
 /// what archives readings nor the metrics joins it.
 #[test]
 fn the_world_names_the_series_store_for_each_purpose_its_agents_write() {
-    let now = oxsdatatypes::DateTime::now();
     let served = |world: &str, agent: &str, purpose: &str| {
         let store =
             orexis::store::Store::new(std::sync::Arc::new(orexis::namespaces::Namespaces::linked().unwrap())).unwrap();
-        orexis_agent::booted(&store, &Path::new(TREE).join("world").join(world), agent, now).unwrap();
+        orexis_agent::boot_without_starting(&store, &Path::new(TREE).join("world").join(world), agent).unwrap();
         orexis::series::store(&store, purpose).unwrap()
     };
     let at = Some(orexis::series::Served {
@@ -434,7 +433,7 @@ fn the_world_names_the_series_store_for_each_purpose_its_agents_write() {
     let sink = |world: &str, agent: &str, purpose: &'static str, told: &[(&str, &str)]| {
         let store =
             orexis::store::Store::new(std::sync::Arc::new(orexis::namespaces::Namespaces::linked().unwrap())).unwrap();
-        orexis_agent::booted(&store, &Path::new(TREE).join("world").join(world), agent, now).unwrap();
+        orexis_agent::boot_without_starting(&store, &Path::new(TREE).join("world").join(world), agent).unwrap();
         let env = |key: &str| told.iter().find(|(k, _)| *k == key).map(|(_, v)| v.to_string());
         orexis::series::Sink::deployed(&store, purpose, &env)
             .unwrap()

@@ -21,7 +21,7 @@ use orexis::clock::{Clock, instant, isoformat};
 use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri, value};
-use orexis_agent::Wiring;
+use orexis::task::Provided;
 use orexis_transport_mqtt::driver::{Client, Mqtt};
 
 const L: &str = "http://example.org/orexis/world/layby#";
@@ -121,11 +121,14 @@ async fn walk(world: &Path, fixture: &str) -> (Drives, BTreeMap<String, (i64, i6
     };
     let member = Mqtt::new(&store, &format!("{L}courier_a"), vec![(None, Box::new(bus))]);
     let inbox = member.inbox.clone();
-    let wiring = Wiring {
-        mqtt: Some(member),
-        ..Wiring::default()
-    };
-    let booted = orexis_agent::boot(&store, world, "courier_a", clock.clone(), None, wiring).unwrap();
+    let booted = orexis_agent::boot(
+        &store,
+        world,
+        "courier_a",
+        clock.clone(),
+        Provided::default().with(member),
+    )
+    .unwrap();
     let running = booted.start().await.unwrap();
     //  THE WANTS THE COURIER IS WALKING, read off its intentions by an executor of the test's own.
     let reader = orexis_execution::Executor::new(&store, "courier_a", None, None, clock.clone()).unwrap();

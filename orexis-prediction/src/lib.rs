@@ -31,7 +31,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         }
         handed.joins("prediction").await?;
         let predictor = Predictor::new(&handed.store)?;
-        handed.outside.hand::<Foresees>(predictor.offered());
+        handed.provided.provide::<Foresees>(predictor.offered());
         handed.started("prediction").await;
         Ok(())
     })

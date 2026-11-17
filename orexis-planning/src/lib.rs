@@ -75,7 +75,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         //  act, and planning's own.
         let now = handed.clock.now();
         Planner::scope(&handed.store, now)?;
-        let budget = handed.outside.take::<Budget>().map(|b| b.0);
+        let budget = handed.provided.take::<Budget>().map(|b| b.0);
         let mut planner = Planner::new(&handed.store, &handed.id, budget)?;
         //  CHECKED, it says what a check asks of it: that a desire holds the agent, and each constraint the agent
         //  holds that the world as posed violates, which no agent repairs (constraint.md).
@@ -113,7 +113,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
             return Ok(());
         }
         //  PREDICTION'S FORESIGHT, where the agent plays a predictor: offered at its start, taken as the run begins.
-        planner.foresee = handed.outside.take::<Foresees>();
+        planner.foresee = handed.provided.take::<Foresees>();
         let mut heard = None;
         let mut due = None;
         loop {

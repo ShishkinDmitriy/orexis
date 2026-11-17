@@ -113,12 +113,12 @@ impl Archive {
     }
 }
 
-/// What archives: the journal read, the archive written and how often. Handed outside by a test that reads both; a
-/// deployed agent is handed none and the package opens its own.
+/// What archives: the archive written and how often, the journal read being the one the journal's package keeps.
+/// Provided by a test that reads it; a deployed agent is handed none and the package opens its own.
 pub struct Archives {
-    pub journal: Arc<Journal>,
     pub archive: Arc<Archive>,
-    pub every_s: f64,
+    /// How often, in the agent's seconds: none, and as often as the recorder's role says.
+    pub every_s: Option<f64>,
 }
 
 #[cfg(test)]

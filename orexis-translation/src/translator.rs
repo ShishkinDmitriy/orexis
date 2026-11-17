@@ -46,7 +46,7 @@ pub(crate) const PHRASE: usize = 3;
 const PHRASING: &str = "http://example.org/orexis/translation#Phrasing";
 pub(crate) const PHRASING_TRIGGER: &str = "http://example.org/orexis/translation#PhrasingTrigger";
 
-/// Handed outside by a test: the model is asked in the task's own turn and not on a thread of its own, so what it
+/// Provided by a test: the model is asked in the task's own turn and not on a thread of its own, so what it
 /// answers is handed back before the turn ends.
 pub struct Inline;
 

@@ -56,10 +56,10 @@ fn start(handed: Handed) -> orexis::task::Starting {
             return Ok(());
         }
         //  HANDED ONE, by a test that ships to its own endpoint, it ships that; otherwise it makes its own.
-        let ships = match handed.outside.take::<Ships>() {
+        let ships = match handed.provided.take::<Ships>() {
             Some(ships) => ships,
             None => {
-                let (Some(endpoint), Some(journal)) = (recorder.traced_by, handed.outside.read::<Traced>()) else {
+                let (Some(endpoint), Some(journal)) = (recorder.traced_by, handed.provided.read::<Traced>()) else {
                     return Ok(());
                 };
                 Ships {
