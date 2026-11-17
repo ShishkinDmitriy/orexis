@@ -106,27 +106,27 @@ mod tests {
 
     fn store() -> Store {
         let (me, round, claim) = (format!("{T}me"), round(), claim());
-        let believed =
-            format!("CONSTRUCT {{ ?s ?p ?o }} WHERE {{ ?s a ?c ; ?p ?o . VALUES ?c {{ <{T}Round> <{T}Claim> }} }}");
+        let believed = "PREFIX : <http://example.org/test#> CONSTRUCT { ?s ?p ?o } WHERE { ?s a ?c ; ?p ?o . VALUES ?c { :Round :Claim } }";
         let st = Store::new().unwrap();
         st.update(&format!(
-            "PREFIX dcterms: <http://purl.org/dc/terms/>
+            "PREFIX : <http://example.org/test#>
+  PREFIX dcterms: <http://purl.org/dc/terms/>
   PREFIX orexis: <http://example.org/orexis#>
   PREFIX sh: <http://www.w3.org/ns/shacl#>
   PREFIX speech: <http://example.org/orexis/speech#>
   PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
   INSERT DATA {{
   GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph .
-      <{T}rules> a sh:RulesGraph . <{T}world> a orexis:BeliefGraph .
+      :rules a sh:RulesGraph . :world a orexis:BeliefGraph .
       <{round}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy <{me}> ;
                 dcterms:temporal [ orexis:start \"2026-01-01T12:00:00+00:00\"^^xsd:dateTime ] .
       <{claim}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy <{me}> .
-      <{T}held> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy <{me}> . }}
-  GRAPH <{T}rules> {{ <{T}believed> a speech:Extraction ; sh:construct \"{believed}\" . }}
-  GRAPH <{T}world> {{ <{T}water> a <{T}Venue> . }}
-  GRAPH <{round}> {{ <{round}> a <{T}Round> ; <{T}lot> 40 ; <{T}onVenue> <{T}water> . }}
-  GRAPH <{claim}> {{ <{claim}> a <{T}Claim> ; <{T}inRound> <{round}> . }}
-  GRAPH <{T}held> {{ <{round}> a <{T}Round> ; <{T}lot> 40 . }} }}"
+      :held a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy <{me}> . }}
+  GRAPH :rules {{ :believed a speech:Extraction ; sh:construct \"{believed}\" . }}
+  GRAPH :world {{ :water a :Venue . }}
+  GRAPH <{round}> {{ <{round}> a :Round ; :lot 40 ; :onVenue :water . }}
+  GRAPH <{claim}> {{ <{claim}> a :Claim ; :inRound <{round}> . }}
+  GRAPH :held {{ <{round}> a :Round ; :lot 40 . }} }}"
         ))
         .unwrap();
         st
@@ -180,7 +180,7 @@ mod tests {
         extract(&store, &round).unwrap();
         store
             .update(&format!(
-                "DELETE DATA {{ GRAPH <{round}> {{ <{round}> <{T}lot> 40 }} }} ; INSERT DATA {{ GRAPH <{round}> {{ <{round}> <{T}lot> 20 }} }}"
+                "PREFIX : <http://example.org/test#> DELETE DATA {{ GRAPH <{round}> {{ <{round}> :lot 40 }} }} ; INSERT DATA {{ GRAPH <{round}> {{ <{round}> :lot 20 }} }}"
             ))
             .unwrap();
         extract(&store, &round).unwrap();
@@ -203,11 +203,12 @@ mod tests {
     fn an_extraction_that_will_not_run_extracts_nothing_and_the_rest_still_run() {
         let store = store();
         store
-            .update(&format!(
-                "PREFIX sh: <http://www.w3.org/ns/shacl#>
+            .update(
+                "PREFIX : <http://example.org/test#>
+                    PREFIX sh: <http://www.w3.org/ns/shacl#>
                     PREFIX speech: <http://example.org/orexis/speech#>
-                    INSERT DATA {{ GRAPH <{T}rules> {{ <{T}broken> a speech:Extraction ; sh:construct \"CONSTRUCT {{\" . }} }}"
-            ))
+                    INSERT DATA { GRAPH :rules { :broken a speech:Extraction ; sh:construct \"CONSTRUCT {\" . } }",
+            )
             .unwrap();
         assert_eq!(
             extract(&store, &round()).unwrap(),
@@ -222,11 +223,12 @@ mod tests {
         let rumour = format!("{T}rumour");
         store
             .update(&format!(
-                "PREFIX orexis: <http://example.org/orexis#>
+                "PREFIX : <http://example.org/test#>
+  PREFIX orexis: <http://example.org/orexis#>
   PREFIX speech: <http://example.org/orexis/speech#>
   INSERT DATA {{
-  GRAPH <{CATALOGUE_GRAPH}> {{ <{rumour}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy <{T}me> . }}
-  GRAPH <{rumour}> {{ <{T}bed> <http://example.org/orexis/climate#soil> <http://example.org/orexis/climate#Dry> . }} }}"
+  GRAPH <{CATALOGUE_GRAPH}> {{ <{rumour}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy :me . }}
+  GRAPH <{rumour}> {{ :bed <http://example.org/orexis/climate#soil> <http://example.org/orexis/climate#Dry> . }} }}"
             ))
             .unwrap();
         assert!(extract(&store, &rumour).unwrap().is_empty());

@@ -265,8 +265,9 @@ mod tests {
         SELECT ?g WHERE { GRAPH ?c { ?c a orexis:CatalogueGraph .
         ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
         FILTER NOT EXISTS { ?g a belief:RevisionGraph } ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
-        const HELD_Q: &str = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-            SELECT ?p ?o WHERE { <http://example.org/test#counter> ?p ?o FILTER(?p != rdf:type) }";
+        const HELD_Q: &str = "PREFIX : <http://example.org/test#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            SELECT ?p ?o WHERE { :counter ?p ?o FILTER(?p != rdf:type) }";
         let own: Vec<String> = store
             .rows(OWN_STATE_Q, &[])
             .unwrap()
@@ -363,8 +364,9 @@ mod tests {
         let store = case("a_state_is_replaced_where_it_stood");
         store
             .update(
-                r#"PREFIX sh: <http://www.w3.org/ns/shacl#>
-        INSERT DATA { GRAPH <http://example.org/test#rules> { <http://example.org/test#countRule>
+                r#"PREFIX : <http://example.org/test#>
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
+        INSERT DATA { GRAPH :rules { :countRule
         a sh:SPARQLRule , sh:Rule ;
         sh:construct "CONSTRUCT { ?c <http://example.org/test#count> 9 } WHERE { ?c a <http://example.org/test#Counter> }" } }"#,
             )

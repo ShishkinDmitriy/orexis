@@ -277,10 +277,11 @@ mod tests {
         let store = store();
         store
             .update(
-                r#"PREFIX belief: <http://example.org/orexis/belief#>
+                r#"PREFIX : <http://example.org/test#>
+  PREFIX belief: <http://example.org/orexis/belief#>
   PREFIX sh: <http://www.w3.org/ns/shacl#>
-  INSERT DATA { GRAPH <http://example.org/test#rules> {
-  <http://example.org/test#moved> a sh:SPARQLRule , belief:Transition ;
+  INSERT DATA { GRAPH :rules {
+  :moved a sh:SPARQLRule , belief:Transition ;
     sh:construct """PREFIX : <http://example.org/test#>
     CONSTRUCT { ?disk :was ?cell } WHERE { ?disk :at ?cell }""" } }"#,
             )

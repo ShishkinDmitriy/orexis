@@ -180,9 +180,10 @@ mod tests {
         store
             .update(
                 &bind(
-                    "PREFIX orexis: <http://example.org/orexis#>
+                    "PREFIX : <http://example.org/test#>
+  PREFIX orexis: <http://example.org/orexis#>
   PREFIX sensing: <http://example.org/orexis/sensing#>
-  INSERT DATA { GRAPH <http://example.org/test#world> {
+  INSERT DATA { GRAPH :world {
   $me orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor $probe ; sensing:silentAfter 1 ] ] } }",
                     &[("me", Value::iri(ME)), ("probe", Value::iri(PROBE))],
                 )
