@@ -29,26 +29,28 @@ pub use events::Revised;
 const HEARD: usize = 0;
 const REVISE: usize = 1;
 
-inventory::submit! { Package { name: "belief", documents: orexis::documents!("ontology.ttl"), start } }
+inventory::submit! { Package { name: "belief", start } }
+
+/// THE DOCUMENTS THIS PACKAGE BRINGS as it joins, in the order it puts them in.
+const DOCUMENTS: orexis::task::Documents = orexis::documents!("ontology.ttl");
 
 /// BELIEF'S START, which every package this binary holds is given: it joins where the self plays a deliberator and
 /// declines otherwise; joined, its deliberator is made and what the world authored as the agent's state revised,
-/// once; checked, it ends there; otherwise it says it has started, and what follows is ITS TASK, which waits for a belief written or an event beneath
+/// once; it says it booted, and checked it ends there; otherwise what follows is ITS TASK, which waits for a belief written or an event beneath
 /// its trigger, and revises.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         if !handed.plays(&[crate::ontology::DELIBERATOR])? {
             return Ok(());
         }
-        handed.joins("belief").await?;
+        handed.joins(&DOCUMENTS).await?;
         let mut deliberator = Deliberator::new(&handed.store)?;
         deliberator.watch = handed.events.watch().clone();
         deliberator.unrevised(handed.clock.now())?;
         let mut hears = handed.events.hears();
         hears.graph(BELIEF, HEARD);
         hears.event(REVISING_TRIGGER, REVISE);
-        handed.started("belief").await;
-        if handed.checking().is_some() {
+        if !handed.booted().await? {
             return Ok(());
         }
         loop {

@@ -29,18 +29,21 @@ pub mod received;
 
 pub use observer::Observer;
 
-inventory::submit! { Package { name: "sensing", documents: orexis::documents!("ontology.ttl", "rules.ttl"), start } }
+inventory::submit! { Package { name: "sensing", start } }
+
+/// THE DOCUMENTS THIS PACKAGE BRINGS as it joins, in the order it puts them in.
+const DOCUMENTS: orexis::task::Documents = orexis::documents!("ontology.ttl", "rules.ttl");
 
 /// SENSING'S START, which every package this binary holds is given: it joins where the self plays an observer and
 /// declines otherwise; joined, its observer is made and what a restart finds unrevised queued for the first ask;
-/// checked, it ends there; otherwise it says it has started, and what follows is ITS TASK, which waits for what it
+/// it says it booted, and checked it ends there; otherwise what follows is ITS TASK, which waits for what it
 /// hears, an arrival or the instant it is next due, and once nothing more waits to be heard asks what has fallen due.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         if !handed.plays(&[OBSERVER])? {
             return Ok(());
         }
-        handed.joins("sensing").await?;
+        handed.joins(&DOCUMENTS).await?;
         let mut observer = Observer::new(&handed.store)?;
         observer.watch = handed.events.watch().clone();
         observer.unrevised()?;
@@ -50,8 +53,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         let mut arrived = handed.arrived();
         //  HOW OFTEN IT ASKS WHAT HAS FALLEN DUE is the observer's role's to say (`sensing:askedEveryS`).
         let mut timers = vec![(Every::new(observer.asked_every_s), ASK)];
-        handed.started("sensing").await;
-        if handed.checking().is_some() {
+        if !handed.booted().await? {
             return Ok(());
         }
         let mut heard = None;

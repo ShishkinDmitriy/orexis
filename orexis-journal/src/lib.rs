@@ -24,7 +24,10 @@ mod recorder;
 pub use journal::Journal;
 pub use recorder::{Keeps, Recorder, Traced};
 
-inventory::submit! { Package { name: "journal", documents: orexis::documents!("ontology.ttl"), start } }
+inventory::submit! { Package { name: "journal", start } }
+
+/// THE DOCUMENTS THIS PACKAGE BRINGS as it joins, in the order it puts them in.
+const DOCUMENTS: orexis::task::Documents = orexis::documents!("ontology.ttl");
 
 /// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
 pub const ROLE: &str = "http://example.org/orexis/journal#Recorder";
@@ -39,7 +42,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.plays(&[ROLE])? {
             return Ok(());
         }
-        handed.joins("journal").await?;
+        handed.joins(&DOCUMENTS).await?;
         let journal = match handed.provided.take::<Keeps>().and_then(|keeps| keeps.journal) {
             Some(journal) => Some(journal),
             None if handed.provided.has::<orexis::task::Deployed>() => {
@@ -63,7 +66,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
             //  AND HANDED ON to its housekeepers, which wait for this start and make themselves.
             handed.provided.provide(Traced(journal));
         }
-        handed.started("journal").await;
+        handed.booted().await?;
         Ok(())
     })
 }

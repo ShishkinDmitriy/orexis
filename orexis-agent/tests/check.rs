@@ -284,7 +284,8 @@ fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_ro
             rate_held_s: 3600.0
         }
     );
-    let coordinator = orexis_coordination::Coordinator::new(&store).unwrap();
+    //  A COORDINATOR'S, of a courier on the lane: an agent holds the words of the packages it runs alone.
+    let coordinator = orexis_coordination::Coordinator::new(&booted("lane", "courier_a")).unwrap();
     assert_eq!(
         (coordinator.patience_s, coordinator.rounds, coordinator.lookahead),
         (60.0, 3.0, 2)
@@ -369,7 +370,7 @@ fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_ro
     //  A PACKAGE THAT DID NOT JOIN BROUGHT NO ONTOLOGY, so its role's figures have no default and it is refused.
     assert!(orexis_sensing_influxdb::Observer::new(&store).is_err());
     assert!(orexis_metrics::Meter::new(&store).is_err());
-    assert_eq!(orexis_translation::Translator::new(&store).unwrap().translated_by, None);
+    assert!(orexis_translation::Translator::new(&store).is_err());
 }
 
 /// WHERE A BROKER, A BOT AND A MODEL ANSWER IS THE WORLD'S TO SAY, and no environment's: the terrace's agent is
@@ -401,7 +402,10 @@ fn the_world_says_where_each_broker_bot_and_model_an_agent_reaches_answers() {
     );
     let (store, me) = booted("hanoi", "hanoi");
     assert!(orexis_transport_mqtt::driver::reached(&store, &me).unwrap().is_empty());
-    assert_eq!(orexis_translation::Translator::new(&store).unwrap().translated_by, None);
+    assert!(
+        orexis_translation::Translator::new(&store).is_err(),
+        "Hanoi's agent plays no translator, so it holds none of translation's words to read one by"
+    );
 }
 
 /// WHERE A SERIES IS WRITTEN IS THE WORLD'S TO SAY, of each store a role names: the terrace's agent plays an observer

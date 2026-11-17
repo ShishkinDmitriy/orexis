@@ -15,7 +15,10 @@ mod transport;
 
 pub use transport::Transport;
 
-inventory::submit! { Package { name: "transport/email", documents: orexis::documents!("ontology.ttl"), start } }
+inventory::submit! { Package { name: "transport/email", start } }
+
+/// THE DOCUMENTS THIS PACKAGE BRINGS as it joins, in the order it puts them in.
+const DOCUMENTS: orexis::task::Documents = orexis::documents!("ontology.ttl");
 
 /// A TRANSPORT IS NO ROLE: this member joins the agent where a role the self plays needs bytes and the world wires
 /// them through it - each a role's class with what the world must state of the self, in words declared here.
@@ -30,7 +33,7 @@ const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
 
 /// ITS START, which every package this binary holds is given: it joins where a role the self plays needs what it
 /// carries and the world wires it, and declines otherwise; joined, its member is made; checked, it says it holds the
-/// agent and ends there; otherwise it says it has started, and what follows is ITS TASK, which waits for an event
+/// agent and ends there as it boots; otherwise what follows is ITS TASK, which waits for an event
 /// beneath its trigger, an arrival or the instant it next polls, and once nothing more waits to be heard handles what
 /// the member handed on.
 fn start(handed: Handed) -> orexis::task::Starting {
@@ -38,7 +41,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !orexis::boot::wired(&handed.store, WORDS, WIRED)? {
             return Ok(());
         }
-        handed.joins("transport/email").await?;
+        handed.joins(&DOCUMENTS).await?;
         let me = orexis::boot::selves(&handed.store)?
             .into_iter()
             .next()
@@ -63,8 +66,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         transport.member.inbox.wakes(arrived.wake());
         let mut timers = vec![(Every::new(transport.member.polled_every_s), POLL)];
         hears.event(CARRYING_TRIGGER, CARRY);
-        handed.started("transport/email").await;
-        if handed.checking().is_some() {
+        if !handed.booted().await? {
             return Ok(());
         }
         let mut heard = None;

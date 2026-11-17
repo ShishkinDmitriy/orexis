@@ -11,7 +11,7 @@
 
 use std::time::Instant;
 
-use oxigraph::model::NamedNode;
+use oxigraph::model::{NamedNode, Term};
 use oxsdatatypes::DateTime;
 
 use crate::events::{Event, mint, round6};
@@ -45,6 +45,18 @@ impl Activity {
     }
 }
 
+/// AN ACTIVITY THAT LASTS ACROSS TURNS - the agent's booting, running and stopping, and each package's within them,
+/// begun and ended by the kernel: the activity it is part of, what it is about, each under the predicate that says its
+/// part, and when it began. Its start and its end each say it whole, so whoever hears only the end - the journal, made
+/// inside the booting - keeps it all the same; and it is open beside a task's turns, never one a turn's activity is
+/// begun inside.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Lasting {
+    pub part_of: Option<NamedNode>,
+    pub about: Vec<(&'static str, Term)>,
+    pub began: DateTime,
+}
+
 /// An activity started at `at`, by every entity in `triggers` (`prov:entity`).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Started {
@@ -52,6 +64,7 @@ pub struct Started {
     pub kind: &'static str,
     pub triggers: Vec<NamedNode>,
     pub at: DateTime,
+    pub lasting: Option<Lasting>,
 }
 
 impl Event for Started {
@@ -66,6 +79,10 @@ impl Event for Started {
     fn activity(&self) -> Option<(&NamedNode, &'static str)> {
         Some((&self.activity, self.kind))
     }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        self.lasting.as_ref().map(|l| l.about.clone()).unwrap_or_default()
+    }
 }
 
 /// An activity ended at `at`, having taken `duration_s` real seconds.
@@ -75,6 +92,7 @@ pub struct Ended {
     pub kind: &'static str,
     pub at: DateTime,
     pub duration_s: f64,
+    pub lasting: Option<Lasting>,
 }
 
 impl Event for Ended {
@@ -88,6 +106,10 @@ impl Event for Ended {
 
     fn activity(&self) -> Option<(&NamedNode, &'static str)> {
         Some((&self.activity, self.kind))
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        self.lasting.as_ref().map(|l| l.about.clone()).unwrap_or_default()
     }
 }
 

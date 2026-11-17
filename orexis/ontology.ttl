@@ -150,17 +150,60 @@ orexis:Incident
     rdfs:label "Incident" ;
     rdfs:comment "An event after which the journal keeps the log before it: the window's records, which it would sweep, are kept for good beside it (`orexis:keptBy`). A package says which of its events are incidents by putting their classes beneath this one — a step that did not land, an intention failed, a want nothing reaches; a world's deployment may count more classes, and says from which level a line of the log is one, WARNING where it says nothing (`onboarding:incident`, `onboarding:incidentLevel`)." .
 
-orexis:PackageStarting
+orexis:AgentBooting
     a owl:Class ;
-    rdfs:subClassOf orexis:Event ;
-    rdfs:label "Package starting" ;
-    rdfs:comment "A package's start began: the package (`orexis:package`) joined the agent, by its own reason, and is about to make its core. Said by the kernel, once for each package that joined, in the order they start (knowledge/domain/kernel/package.md)." .
+    rdfs:subClassOf prov:Activity ;
+    rdfs:label "Agent booting" ;
+    rdfs:comment "The agent's boot, an activity of the kernel's: the kernel's vocabulary, the world's documents and the self put in, and every package's booting inside it (`dcterms:isPartOf`). It ends once every package's has, the boot finished there or refused; a check is this activity alone (knowledge/domain/kernel/package.md)." .
 
-orexis:PackageStarted
+orexis:AgentRunning
+    a owl:Class ;
+    rdfs:subClassOf prov:Activity ;
+    rdfs:label "Agent running" ;
+    rdfs:comment "The agent's run: begun as its booting ends, holding every running package's running, and ending once every one has." .
+
+orexis:AgentStopping
+    a owl:Class ;
+    rdfs:subClassOf prov:Activity ;
+    rdfs:label "Agent stopping" ;
+    rdfs:comment "What the agent does once its running has ended: begun then, holding the stopping of each package that has work left after the others' last word, and ending as the last task does." .
+
+orexis:PackageBooting
+    a owl:Class ;
+    rdfs:subClassOf prov:Activity ;
+    rdfs:label "Package booting" ;
+    rdfs:comment "One package's booting, begun by the kernel inside the agent's for every package the binary holds: the package decides whether it runs, joins bringing its documents (`orexis:PackageJoined`), waits for the bootings of the packages serving the roles its own depend on, and makes its core. It ends saying the package (`orexis:package`), whether it runs (`orexis:runs`), and each role class it serves (`orexis:serves`), which is how a package depending on a role hears that it may go on." .
+
+orexis:PackageRunning
+    a owl:Class ;
+    rdfs:subClassOf prov:Activity ;
+    rdfs:label "Package running" ;
+    rdfs:comment "One package's task, its loop: begun as the agent's booting ends, inside the agent's running, and ending as the loop does." .
+
+orexis:PackageStopping
+    a owl:Class ;
+    rdfs:subClassOf prov:Activity ;
+    rdfs:label "Package stopping" ;
+    rdfs:comment "What a package does once the agent's running has ended, inside the agent's stopping: what archives the journal takes the entries the others said as they stopped." .
+
+orexis:PackageJoined
     a owl:Class ;
     rdfs:subClassOf orexis:Event ;
-    rdfs:label "Package started" ;
-    rdfs:comment "A package's start ended: its core is made, and its task, where it has one, is about to run. A package whose own start needs what another's made waits for this of it (`task::Handed::started`)." .
+    rdfs:label "Package joined" ;
+    rdfs:comment "A package joined the agent: its documents are brought, said inside its booting. Once every package has joined or ended its booting the vocabulary is whole, and a package reads off it which roles its own depend on." .
+
+orexis:serves
+    a owl:ObjectProperty ;
+    rdfs:domain orexis:PackageBooting ;
+    rdfs:label "serves" ;
+    rdfs:comment "A role class the package of a booting serves and the self plays, said as the booting ends: what a package whose role depends on it waits to hear." .
+
+orexis:runs
+    a owl:DatatypeProperty ;
+    rdfs:domain orexis:PackageBooting ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "runs" ;
+    rdfs:comment "Whether the package of a booting made its core and runs: false where it declined, or its start ended before it booted." .
 
 orexis:LogRecord
     a owl:Class ;
@@ -193,7 +236,7 @@ orexis:tookS
 orexis:package
     a owl:DatatypeProperty ;
     rdfs:label "package" ;
-    rdfs:comment "The package a lifecycle event is about, by the name it registered itself under: `planning`, `transport/mqtt`." .
+    rdfs:comment "The package a lifecycle activity or event is about, by the name it registered itself under: `planning`, `transport/mqtt`." .
 
 orexis:logger
     a owl:DatatypeProperty ;

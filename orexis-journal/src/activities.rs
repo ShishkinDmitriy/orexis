@@ -53,16 +53,45 @@ struct Open {
     generated: Vec<(NamedNode, Option<&'static str>, DateTime)>,
 }
 
-/// The activities open on each thread, innermost last.
+/// The activities open on each thread, innermost last, and those that last across turns, by name.
 struct Keeper {
     journal: Arc<Journal>,
     open: HashMap<ThreadId, Vec<Open>>,
+    lasting: HashMap<NamedNode, Open>,
 }
 
 impl Keeper {
     fn heard(&mut self, event: &dyn Event, said: &NamedNode) {
         let thread = std::thread::current().id();
-        if let Some(started) = as_of::<Started>(event) {
+        if let Some(started) = as_of::<Started>(event)
+            && let Some(lasting) = &started.lasting
+        {
+            //  AN ACTIVITY LASTING ACROSS TURNS is open beside the thread's: a turn's activity is never begun in it.
+            self.lasting.insert(
+                started.activity.clone(),
+                Open {
+                    activity: started.activity.clone(),
+                    kind: started.kind,
+                    triggers: started.triggers.clone(),
+                    began: lasting.began,
+                    parent: lasting.part_of.clone(),
+                    generated: Vec::new(),
+                },
+            );
+        } else if let Some(ended) = as_of::<Ended>(event)
+            && let Some(lasting) = &ended.lasting
+        {
+            //  AND KEPT AS IT ENDS, its start heard or not: the end says it whole.
+            let open = self.lasting.remove(&ended.activity).unwrap_or_else(|| Open {
+                activity: ended.activity.clone(),
+                kind: ended.kind,
+                triggers: Vec::new(),
+                began: lasting.began,
+                parent: lasting.part_of.clone(),
+                generated: Vec::new(),
+            });
+            self.keep(open, ended);
+        } else if let Some(started) = as_of::<Started>(event) {
             let open = self.open.entry(thread).or_default();
             let parent = open.last().map(|o| o.activity.clone());
             open.push(Open {
@@ -131,6 +160,7 @@ pub fn connect(watch: &Watch, journal: Arc<Journal>) {
     let keeper = Arc::new(Mutex::new(Keeper {
         journal,
         open: HashMap::new(),
+        lasting: HashMap::new(),
     }));
     watch.connect(move |event, said| keeper.lock().unwrap().heard(event, said));
 }
@@ -175,6 +205,7 @@ mod tests {
             kind,
             triggers: triggers.to_vec(),
             at: at(when),
+            lasting: None,
         });
         activity
     }
@@ -185,6 +216,7 @@ mod tests {
             kind: activity.kind,
             at: at(when),
             duration_s: 0.25,
+            lasting: None,
         });
     }
 
