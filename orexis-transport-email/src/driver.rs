@@ -33,12 +33,13 @@ pub fn polled_every_s(beliefs: &Store) -> Result<f64, Error> {
     //  ONE QUERY: what a role the self plays says or, where none says, the default the transport's ontology states.
     beliefs
         .rows(
-            "PREFIX orexis: <http://example.org/orexis#>
+            "PREFIX email: <http://example.org/orexis/email#>
+             PREFIX orexis: <http://example.org/orexis#>
              PREFIX sh: <http://www.w3.org/ns/shacl#>
              SELECT (COALESCE(?said, ?own) AS ?every) WHERE { \
              OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . \
-                        ?role <http://example.org/orexis/email#polledEveryS> ?said FILTER(?said > 0) } \
-             OPTIONAL { ?shape sh:property [ sh:path <http://example.org/orexis/email#polledEveryS> ; \
+                        ?role email:polledEveryS ?said FILTER(?said > 0) } \
+             OPTIONAL { ?shape sh:property [ sh:path email:polledEveryS ; \
                         sh:defaultValue ?own ] } } ORDER BY ?every",
             &known,
         )?
@@ -397,9 +398,10 @@ mod tests {
         //  THE TRANSPORT'S ONTOLOGY STATES HOW OFTEN WHERE NO ROLE DOES, as the package brings it.
         store
             .update(
-                "PREFIX sh: <http://www.w3.org/ns/shacl#>
+                "PREFIX email: <http://example.org/orexis/email#>
+                 PREFIX sh: <http://www.w3.org/ns/shacl#>
                  INSERT DATA { GRAPH <http://example.org/test#ontology> { [] sh:property \
-                 [ sh:path <http://example.org/orexis/email#polledEveryS> ; sh:defaultValue 30 ] } }",
+                 [ sh:path email:polledEveryS ; sh:defaultValue 30 ] } }",
             )
             .unwrap();
         let me = format!("{TEST}keeper");

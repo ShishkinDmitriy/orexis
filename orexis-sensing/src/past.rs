@@ -112,7 +112,7 @@ fn is_revision(store: &Store, graph: &str) -> Result<bool, Error> {
         return Ok(false);
     };
     store.ask(
-        &format!("ASK {{ GRAPH <{cat}> {{ <{graph}> <http://www.w3.org/ns/prov#wasDerivedFrom> ?source }} }}"),
+        &format!("PREFIX prov: <http://www.w3.org/ns/prov#> ASK {{ GRAPH <{cat}> {{ <{graph}> prov:wasDerivedFrom ?source }} }}"),
         &[],
     )
 }

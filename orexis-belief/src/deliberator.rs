@@ -583,8 +583,9 @@ mod tests {
         assert_eq!(Deliberator::new(&store).unwrap().budget, 256);
         store
             .update(&format!(
-                "PREFIX orexis: <http://example.org/orexis#>
-                    INSERT DATA {{ GRAPH <{T}self> {{ <{T}keeper> a orexis:Self ; orexis:plays [ <http://example.org/orexis/belief#budget> 2 ] }} {} }}",
+                "PREFIX belief: <http://example.org/orexis/belief#>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    INSERT DATA {{ GRAPH <{T}self> {{ <{T}keeper> a orexis:Self ; orexis:plays [ belief:budget 2 ] }} {} }}",
                 store
                     .entry(
                         &format!("{T}self"),

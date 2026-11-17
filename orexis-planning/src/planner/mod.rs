@@ -1634,8 +1634,9 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         let (d, g) = (iri(&found[0], "d").unwrap(), iri(&found[0], "g").unwrap());
         store
             .update(&format!(
-                "DELETE WHERE {{ GRAPH <{g}> {{ <{d}> <http://www.w3.org/ns/sosa/resultTime> ?t }} }} ; \
-             INSERT DATA {{ GRAPH <{g}> {{ <{d}> <http://www.w3.org/ns/sosa/resultTime> \"{at}\" }} }}"
+                "PREFIX sosa: <http://www.w3.org/ns/sosa/>
+             DELETE WHERE {{ GRAPH <{g}> {{ <{d}> sosa:resultTime ?t }} }} ; \
+             INSERT DATA {{ GRAPH <{g}> {{ <{d}> sosa:resultTime \"{at}\" }} }}"
             ))
             .unwrap();
     }
@@ -1711,8 +1712,9 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         if !estimate {
             store
                 .update(
-                    "DELETE { GRAPH ?g { ?d <http://example.org/orexis/planning#estimates> ?e } } \
-                 WHERE { GRAPH ?g { ?d <http://example.org/orexis/planning#estimates> ?e } }",
+                    "PREFIX planning: <http://example.org/orexis/planning#>
+                 DELETE { GRAPH ?g { ?d planning:estimates ?e } } \
+                 WHERE { GRAPH ?g { ?d planning:estimates ?e } }",
                 )
                 .unwrap();
         }
@@ -1885,9 +1887,9 @@ SELECT (COUNT(?x) AS ?n) WHERE {
     #[test]
     fn scope_is_the_boots_act_and_writes_what_a_pass_reads() {
         let store = snapshots::stand_in(&bench("two_disk_hanoi"));
-        let scopes = "SELECT (COUNT(?s) AS ?n) WHERE { GRAPH ?g { ?s a <http://example.org/orexis/planning#Scope> } }";
+        let scopes = "PREFIX planning: <http://example.org/orexis/planning#> SELECT (COUNT(?s) AS ?n) WHERE { GRAPH ?g { ?s a planning:Scope } }";
         store
-            .update("DELETE WHERE { GRAPH ?g { ?s ?p <http://example.org/orexis/planning#Scope> } }")
+            .update("PREFIX planning: <http://example.org/orexis/planning#> DELETE WHERE { GRAPH ?g { ?s ?p planning:Scope } }")
             .unwrap();
         assert_eq!(count(&store, scopes), 0);
         Planner::scope(&store, snapshots::now()).unwrap();

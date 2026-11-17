@@ -249,7 +249,7 @@ fn passing_place() -> Vec<Edit> {
 }
 
 fn won(store: &Store) -> String {
-    const WON_Q: &str = "SELECT ?w WHERE { ?draw <http://example.org/orexis/coordination#wonBy> ?w }";
+    const WON_Q: &str = "PREFIX coordination: <http://example.org/orexis/coordination#> SELECT ?w WHERE { ?draw coordination:wonBy ?w }";
     let beliefs = store.graphs_of(&[BELIEF], &Within::default()).unwrap();
     let beliefs: Vec<&str> = beliefs.iter().map(String::as_str).collect();
     let mut found: Vec<String> = store
@@ -574,7 +574,7 @@ fn the_meeting_is_journaled_and_both_agree_who_won(journals: &[Arc<orexis_journa
         .map(|j| {
             rows(
                 j,
-                "SELECT DISTINCT ?w WHERE { ?c <http://example.org/orexis/coordination#wonBy> ?w }",
+                "PREFIX coordination: <http://example.org/orexis/coordination#> SELECT DISTINCT ?w WHERE { ?c coordination:wonBy ?w }",
             )
         })
         .collect();
@@ -590,7 +590,7 @@ fn the_meeting_is_journaled_and_both_agree_who_won(journals: &[Arc<orexis_journa
     for journal in journals {
         let body = rows(
             journal,
-            "SELECT ?k ?t WHERE { ?e a ?k ; <http://example.org/orexis/speech#statement> ?g . ?g a ?t }",
+            "PREFIX speech: <http://example.org/orexis/speech#> SELECT ?k ?t WHERE { ?e a ?k ; speech:statement ?g . ?g a ?t }",
         );
         let values = winner(&body);
         for pair in values.chunks(2) {

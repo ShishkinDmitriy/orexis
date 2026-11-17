@@ -24,12 +24,14 @@ impl Observer {
         /// readings are archived, the role's word or, where it says none, the default sensing's ontology states on the
         /// observer's shape (`sh:defaultValue`).
         const OBSERVER_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+        PREFIX schema: <https://schema.org/>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
         PREFIX sh: <http://www.w3.org/ns/shacl#>
         SELECT ?role ?kind ?archive (COALESCE(?everySaid, ?everyOwn) AS ?every) WHERE { \
         ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind . \
-        OPTIONAL { ?role <http://example.org/orexis/sensing#archivedEveryS> ?everySaid FILTER(?everySaid > 0) } \
-        OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/sensing#archivedEveryS> ; sh:defaultValue ?everyOwn ] } \
-        OPTIONAL { ?role <http://example.org/orexis/sensing#archivedIn> ?store . ?store <https://schema.org/url> ?archive } }";
+        OPTIONAL { ?role sensing:archivedEveryS ?everySaid FILTER(?everySaid > 0) } \
+        OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path sensing:archivedEveryS ; sh:defaultValue ?everyOwn ] } \
+        OPTIONAL { ?role sensing:archivedIn ?store . ?store schema:url ?archive } }";
         use orexis::ontology::{DEPLOYMENT, ONTOLOGY, SELF_GRAPH};
         use orexis::store::{Within, value};
         let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;

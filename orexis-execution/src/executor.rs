@@ -197,12 +197,13 @@ impl Executor {
     ) -> Result<Self, Error> {
         /// THE EXECUTOR THE SELF PLAYS, IN ONE QUERY: its patience as the role says or, where it says none, the default
         /// execution's ontology states on its shape of the role (`sh:defaultValue`).
-        const EXECUTOR_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+        const EXECUTOR_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+        PREFIX orexis: <http://example.org/orexis#>
         PREFIX sh: <http://www.w3.org/ns/shacl#>
         SELECT DISTINCT (COALESCE(?patienceSaid, ?patienceOwn) AS ?patience) WHERE { \
-        ?shape sh:targetClass <http://example.org/orexis/execution#Executor> ; \
-          sh:property [ sh:path <http://example.org/orexis/execution#patienceS> ; sh:defaultValue ?patienceOwn ] . \
-        OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . ?role <http://example.org/orexis/execution#patienceS> ?patienceSaid } }";
+        ?shape sh:targetClass execution:Executor ; \
+          sh:property [ sh:path execution:patienceS ; sh:defaultValue ?patienceOwn ] . \
+        OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . ?role execution:patienceS ?patienceSaid } }";
         let mut known = beliefs.graphs_of(&[SELF_GRAPH], &Within::default())?;
         known.extend(beliefs.graphs_of(&[ONTOLOGY], &Within::default())?);
         let patience_s = beliefs
@@ -2027,8 +2028,9 @@ GRAPH <http://example.org/test#catalogue> {{
         b.update(&format!(
             "PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX orexis: <http://example.org/orexis#>
+        PREFIX prov: <http://www.w3.org/ns/prov#>
         INSERT DATA {{ GRAPH <{revisions}> {{ <{soil}> <{below}> <{range}> }}
-        GRAPH <http://example.org/test#catalogue> {{ <{revisions}> <http://www.w3.org/ns/prov#wasDerivedFrom> <{STATE}> ; a <http://example.org/orexis#BeliefGraph> }} }}"
+        GRAPH <http://example.org/test#catalogue> {{ <{revisions}> prov:wasDerivedFrom <{STATE}> ; a orexis:BeliefGraph }} }}"
         ))
         .unwrap();
         let source = predicting(
@@ -2108,7 +2110,8 @@ GRAPH <http://example.org/test#catalogue> {{
             .update(&format!(
                 "PREFIX execution: <http://example.org/orexis/execution#>
                     PREFIX orexis: <http://example.org/orexis#>
-                    INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> <http://example.org/orexis/planning#fills> <{mv}> }} }}"
+                    PREFIX planning: <http://example.org/orexis/planning#>
+                    INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> planning:fills <{mv}> }} }}"
             ))
             .unwrap();
         let intention = x.commit(Some(&source), PLAN, WANT).unwrap().unwrap();
@@ -2551,8 +2554,8 @@ GRAPH <http://example.org/test#catalogue> {{
     /// action the step fills, the values it takes and the want its intention pursues.
     fn step_events(journal: &orexis_journal::journal::Journal) -> Vec<Vec<String>> {
         let text = format!(
-            "PREFIX orexis: <http://example.org/orexis#>
-PREFIX execution: <http://example.org/orexis/execution#>
+            "PREFIX execution: <http://example.org/orexis/execution#>
+PREFIX orexis: <http://example.org/orexis#>
 PREFIX prov: <http://www.w3.org/ns/prov#>
 SELECT ?kind ?taken ?landed ?failed ?action ?disk ?to ?want WHERE {{ GRAPH ?e {{
   ?e a ?kind ; prov:atTime ?at ; execution:act ?act . ?act execution:of ?step ; execution:taken ?taken .

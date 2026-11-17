@@ -206,7 +206,7 @@ mod tests {
         assert!(
             rows(
                 &journal,
-                "SELECT ?a WHERE { GRAPH ?a { ?a a <http://www.w3.org/ns/prov#Activity> } }"
+                "PREFIX prov: <http://www.w3.org/ns/prov#> SELECT ?a WHERE { GRAPH ?a { ?a a prov:Activity } }"
             )
             .is_empty(),
             "nothing is kept of an activity still open"
@@ -299,7 +299,7 @@ mod tests {
         connect(&watch, journal.clone());
         let planning = begin(&watch, PLANNING, &[], "2026-01-01T12:00:00+00:00");
         end(&watch, &planning, "2026-01-01T12:00:00+00:00");
-        let kept = "SELECT ?a WHERE { GRAPH ?a { ?a a <http://www.w3.org/ns/prov#Activity> } }";
+        let kept = "PREFIX prov: <http://www.w3.org/ns/prov#> SELECT ?a WHERE { GRAPH ?a { ?a a prov:Activity } }";
         assert_eq!(rows(&journal, kept).len(), 1);
         assert_eq!(journal.sweep(Some(at("2026-01-01T12:05:00+00:00"))).unwrap(), 0);
         assert_eq!(journal.sweep(Some(at("2026-01-01T12:11:00+00:00"))).unwrap(), 1);

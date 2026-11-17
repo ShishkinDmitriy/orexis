@@ -101,7 +101,7 @@ mod tests {
         watch.emit(&Published);
         let (_, body) = crate::journal::answer(
             &journal.store,
-            "SELECT ?k WHERE { ?e a <http://example.org/orexis#Incident>, ?k FILTER(?k != <http://example.org/orexis#Incident>) }",
+            "PREFIX orexis: <http://example.org/orexis#> SELECT ?k WHERE { ?e a orexis:Incident, ?k FILTER(?k != orexis:Incident) }",
         )
         .unwrap();
         let body = String::from_utf8(body).unwrap();

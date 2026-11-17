@@ -134,7 +134,7 @@ fn the_boot_is_written_as_the_agent_believes_it_and_a_desire_is_told_from_wants_
         )
         .unwrap();
     let QueryResults::Boolean(catalogued) = SparqlEvaluator::new()
-        .parse_query("ASK { GRAPH ?c { ?c a <http://example.org/orexis#CatalogueGraph> } }")
+        .parse_query("PREFIX orexis: <http://example.org/orexis#> ASK { GRAPH ?c { ?c a orexis:CatalogueGraph } }")
         .unwrap()
         .on_store(&store)
         .execute()
@@ -314,8 +314,9 @@ fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_ro
     ] {
         store
             .update(&format!(
-                "INSERT {{ GRAPH ?g {{ ?role <http://example.org/orexis/{figure}> {said} }} }} WHERE {{ GRAPH ?g {{ \
-                 ?me a <http://example.org/orexis#Self> ; <http://example.org/orexis#plays> ?role . \
+                "PREFIX orexis: <http://example.org/orexis#>
+                 INSERT {{ GRAPH ?g {{ ?role <http://example.org/orexis/{figure}> {said} }} }} WHERE {{ GRAPH ?g {{ \
+                 ?me a orexis:Self ; orexis:plays ?role . \
                  ?role <http://example.org/orexis/{link}> ?service }} }}"
             ))
             .unwrap();
@@ -348,8 +349,9 @@ fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_ro
     ] {
         store
             .update(&format!(
-                "INSERT {{ GRAPH ?g {{ ?me <http://example.org/orexis#plays> [ a <http://example.org/orexis/{class}> ; \
-                 <http://example.org/orexis/{figure}> 1 ] }} }} WHERE {{ GRAPH ?g {{ ?me a <http://example.org/orexis#Self> }} }}"
+                "PREFIX orexis: <http://example.org/orexis#>
+                 INSERT {{ GRAPH ?g {{ ?me orexis:plays [ a <http://example.org/orexis/{class}> ; \
+                 <http://example.org/orexis/{figure}> 1 ] }} }} WHERE {{ GRAPH ?g {{ ?me a orexis:Self }} }}"
             ))
             .unwrap();
     }

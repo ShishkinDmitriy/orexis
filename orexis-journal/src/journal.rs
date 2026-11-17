@@ -571,7 +571,7 @@ mod tests {
         journal.sweep(Some(at("2026-01-01T13:00:00+00:00"))).unwrap();
         let mut left = rows(
             &journal,
-            "SELECT ?m WHERE { ?r a <http://example.org/orexis#LogRecord> ; <http://example.org/orexis#message> ?m }",
+            "PREFIX orexis: <http://example.org/orexis#> SELECT ?m WHERE { ?r a orexis:LogRecord ; orexis:message ?m }",
         );
         left.sort();
         assert_eq!(
@@ -582,13 +582,13 @@ mod tests {
         assert_eq!(
             rows(
                 &journal,
-                "SELECT ?r WHERE { ?r a <http://example.org/orexis#Incident> }"
+                "PREFIX orexis: <http://example.org/orexis#> SELECT ?r WHERE { ?r a orexis:Incident }"
             ),
             [failed.to_string()]
         );
         let mut kept = rows(
             &journal,
-            "SELECT ?l WHERE { ?r <http://example.org/orexis#keptBy> ?i ; <http://example.org/orexis#level> ?l }",
+            "PREFIX orexis: <http://example.org/orexis#> SELECT ?l WHERE { ?r orexis:keptBy ?i ; orexis:level ?l }",
         );
         kept.sort();
         assert_eq!(
@@ -678,7 +678,7 @@ mod tests {
         assert_eq!(
             count(
                 &journal,
-                "SELECT ?e WHERE { ?e a <http://example.org/orexis#Incident> }"
+                "PREFIX orexis: <http://example.org/orexis#> SELECT ?e WHERE { ?e a orexis:Incident }"
             ),
             1
         );
@@ -699,7 +699,7 @@ mod tests {
         assert_eq!(kind, "application/n-triples");
         let (kind, body) = answer(
             &journal.store,
-            "SELECT ?m WHERE { ?r <http://example.org/orexis#message> ?m }",
+            "PREFIX orexis: <http://example.org/orexis#> SELECT ?m WHERE { ?r orexis:message ?m }",
         )
         .unwrap();
         assert_eq!(kind, "application/sparql-results+json");

@@ -547,10 +547,11 @@ mod tests {
         let store = case("a_reading_below_its_range_is_concluded_below");
         store
             .update(
-                r#"INSERT DATA { GRAPH <http://example.org/test#rules> {
-  <http://example.org/test#restless> a <http://www.w3.org/ns/shacl#RuleSet> ;
-    <http://www.w3.org/ns/shacl#hasRule> [ a <http://www.w3.org/ns/shacl#SPARQLRule> ;
-      <http://www.w3.org/ns/shacl#construct> "PREFIX : <http://example.org/test#> CONSTRUCT { ?s :token ?u } WHERE { ?s a :Pot BIND(STRUUID() AS ?u) }" ] } }"#,
+                r#"PREFIX sh: <http://www.w3.org/ns/shacl#>
+  INSERT DATA { GRAPH <http://example.org/test#rules> {
+  <http://example.org/test#restless> a sh:RuleSet ;
+    sh:hasRule [ a sh:SPARQLRule ;
+      sh:construct "PREFIX : <http://example.org/test#> CONSTRUCT { ?s :token ?u } WHERE { ?s a :Pot BIND(STRUUID() AS ?u) }" ] } }"#,
             )
             .unwrap();
         assert_eq!(revise(&store, SENSED, &known(&store), 12, BELIEF).unwrap().spent, 12);
@@ -581,12 +582,13 @@ mod tests {
         let store = case("a_reading_below_its_range_is_concluded_below");
         store
             .update(
-                r#"INSERT DATA { GRAPH <http://example.org/test#rules> {
-  <http://example.org/test#triple> a <http://www.w3.org/ns/shacl#TripleRule> .
-  <http://example.org/test#shape> a <http://www.w3.org/ns/shacl#NodeShape> ;
-    <http://www.w3.org/ns/shacl#rule> <http://example.org/test#per_focus> .
-  <http://example.org/test#per_focus> a <http://www.w3.org/ns/shacl#SPARQLRule> ;
-    <http://www.w3.org/ns/shacl#construct> "CONSTRUCT { <http://example.org/test#zz> a <http://example.org/test#Seen> } WHERE { }" } }"#,
+                r#"PREFIX sh: <http://www.w3.org/ns/shacl#>
+  INSERT DATA { GRAPH <http://example.org/test#rules> {
+  <http://example.org/test#triple> a sh:TripleRule .
+  <http://example.org/test#shape> a sh:NodeShape ;
+    sh:rule <http://example.org/test#per_focus> .
+  <http://example.org/test#per_focus> a sh:SPARQLRule ;
+    sh:construct "CONSTRUCT { <http://example.org/test#zz> a <http://example.org/test#Seen> } WHERE { }" } }"#,
             )
             .unwrap();
         revise(&store, SENSED, &known(&store), BUDGET, BELIEF).unwrap();

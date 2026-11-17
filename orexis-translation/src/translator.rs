@@ -99,22 +99,24 @@ impl Translator {
         /// (`sh:defaultValue`), and where the model a role names answers (`translation:translatedBy`), as the world's
         /// deployment states it, with the class of the role naming it.
         const TRANSLATOR_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+        PREFIX schema: <https://schema.org/>
         PREFIX sh: <http://www.w3.org/ns/shacl#>
+        PREFIX translation: <http://example.org/orexis/translation#>
         SELECT DISTINCT ?me ?kind ?model (COALESCE(?turnsSaid, ?turnsOwn) AS ?turns) \
         (COALESCE(?rowsSaid, ?rowsOwn) AS ?rows) (COALESCE(?answeredSaid, ?answeredOwn) AS ?answered) \
         (COALESCE(?calledSaid, ?calledOwn) AS ?called) (COALESCE(?retriesSaid, ?retriesOwn) AS ?retries) WHERE { \
-        ?shape sh:targetClass <http://example.org/orexis/translation#Translator> ; \
-          sh:property [ sh:path <http://example.org/orexis/translation#turns> ; sh:defaultValue ?turnsOwn ] , [ sh:path <http://example.org/orexis/translation#rows> ; sh:defaultValue ?rowsOwn ] , \
-                      [ sh:path <http://example.org/orexis/translation#answeredWithinS> ; sh:defaultValue ?answeredOwn ] , \
-                      [ sh:path <http://example.org/orexis/translation#calledWithinS> ; sh:defaultValue ?calledOwn ] , \
-                      [ sh:path <http://example.org/orexis/translation#retries> ; sh:defaultValue ?retriesOwn ] . \
+        ?shape sh:targetClass translation:Translator ; \
+          sh:property [ sh:path translation:turns ; sh:defaultValue ?turnsOwn ] , [ sh:path translation:rows ; sh:defaultValue ?rowsOwn ] , \
+                      [ sh:path translation:answeredWithinS ; sh:defaultValue ?answeredOwn ] , \
+                      [ sh:path translation:calledWithinS ; sh:defaultValue ?calledOwn ] , \
+                      [ sh:path translation:retries ; sh:defaultValue ?retriesOwn ] . \
         OPTIONAL { ?me a orexis:Self } \
-        OPTIONAL { ?me orexis:plays ?r1 . ?r1 <http://example.org/orexis/translation#turns> ?turnsSaid } \
-        OPTIONAL { ?me orexis:plays ?r2 . ?r2 <http://example.org/orexis/translation#rows> ?rowsSaid } \
-        OPTIONAL { ?me orexis:plays ?r3 . ?r3 <http://example.org/orexis/translation#answeredWithinS> ?answeredSaid } \
-        OPTIONAL { ?me orexis:plays ?r4 . ?r4 <http://example.org/orexis/translation#calledWithinS> ?calledSaid } \
-        OPTIONAL { ?me orexis:plays ?r5 . ?r5 <http://example.org/orexis/translation#retries> ?retriesSaid } \
-        OPTIONAL { ?me orexis:plays ?named . ?named a ?kind ; <http://example.org/orexis/translation#translatedBy> ?by . ?by <https://schema.org/url> ?model } }";
+        OPTIONAL { ?me orexis:plays ?r1 . ?r1 translation:turns ?turnsSaid } \
+        OPTIONAL { ?me orexis:plays ?r2 . ?r2 translation:rows ?rowsSaid } \
+        OPTIONAL { ?me orexis:plays ?r3 . ?r3 translation:answeredWithinS ?answeredSaid } \
+        OPTIONAL { ?me orexis:plays ?r4 . ?r4 translation:calledWithinS ?calledSaid } \
+        OPTIONAL { ?me orexis:plays ?r5 . ?r5 translation:retries ?retriesSaid } \
+        OPTIONAL { ?me orexis:plays ?named . ?named a ?kind ; translation:translatedBy ?by . ?by schema:url ?model } }";
         let mut known = beliefs.graphs_of(&[SELF_GRAPH], &Within::default())?;
         known.extend(beliefs.graphs_of(&[DEPLOYMENT], &Within::common())?);
         known.extend(beliefs.graphs_of(&[ONTOLOGY], &Within::default())?);

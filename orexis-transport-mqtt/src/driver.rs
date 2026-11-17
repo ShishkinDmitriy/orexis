@@ -560,8 +560,9 @@ pub fn reached(beliefs: &Store, me: &str) -> Result<Vec<(String, String)>, Error
     /// THE BROKERS THE SELF IS CONNECTED TO, AND WHERE EACH ANSWERS: connected as the society says
     /// (`mqtt4ssn:isConnectedToBroker`), answering at the `schema:url` the world's deployment graph states of it.
     const REACHED_Q: &str = "PREFIX mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#>
+    PREFIX schema: <https://schema.org/>
     SELECT ?broker ?url WHERE { $me mqtt4ssn:isConnectedToBroker ?broker
-      OPTIONAL { ?broker <https://schema.org/url> ?url } } ORDER BY ?broker ?url";
+      OPTIONAL { ?broker schema:url ?url } } ORDER BY ?broker ?url";
     let mut known = beliefs.graphs_of(&[BELIEF], &Within::common())?;
     known.extend(beliefs.graphs_of(&[orexis::ontology::DEPLOYMENT], &Within::common())?);
     let mut out: Vec<(String, String)> = Vec::new();
