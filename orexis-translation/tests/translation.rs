@@ -10,7 +10,7 @@ use std::sync::{Arc, Mutex};
 use oxsdatatypes::DateTime;
 use serde_json::{Value as Json, json};
 
-use orexis::boot::{Booting, boot};
+use orexis::boot::boot;
 //  LINKED FOR THE DOCUMENTS THEY BRING: the world's chats are carried by these, and the boot refuses a carrier the
 //  binary was built without.
 use orexis::clock::{Elapsing, instant};
@@ -51,15 +51,13 @@ fn now() -> DateTime {
 
 fn seeker() -> Store {
     let store = Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap();
-    boot(
-        &store,
-        &Booting {
-            world: &world(),
-            agent: "seeker",
-        },
-    )
-    .unwrap();
+    boot(&store, &world(), "seeker").unwrap();
     store
+}
+
+/// A store nothing is booted into yet: the seeker boots into it as it starts.
+fn unbooted() -> Store {
+    Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap()
 }
 
 fn me() -> String {
@@ -677,9 +675,10 @@ impl<'s> Seeker<'s> {
         let names = ["translation".to_string(), "test/member".to_string()];
         let running = {
             let clock = Arc::new(Elapsing::from(now()));
-            tasks
-                .block_on(orexis::task::start(store, "seeker", clock, provided.clone(), &names))
-                .unwrap()
+            let booted = orexis::task::boot(store, &world(), "seeker", clock, provided.clone())
+                .and_then(|b| b.first(&names))
+                .unwrap();
+            tasks.block_on(booted.start()).unwrap()
         };
         let wake = provided.take::<Wake>().expect("the member's wake");
         Seeker {
@@ -818,7 +817,7 @@ fn viewings() -> (&'static str, Json) {
 
 #[test]
 fn a_persons_prose_becomes_a_statement_the_agent_hears_and_believes_as_the_worlds_word() {
-    let store = seeker();
+    let store = unbooted();
     let mut s = Seeker::new(&store);
     let (model, asked) = StandIn::new(vec![("state", offer())], "Thank you, Clara: Tuesday at six.");
     s.model(model);
@@ -870,7 +869,7 @@ fn a_persons_prose_becomes_a_statement_the_agent_hears_and_believes_as_the_world
 
 #[test]
 fn said_again_of_a_subject_a_word_replaces_what_was_said_and_unsaid_it_is_believed_no_more() {
-    let store = seeker();
+    let store = unbooted();
     let mut s = Seeker::new(&store);
     s.model(StandIn::new(vec![("state", offer())], "ok").0);
     s.write("clara_telegram", "Tuesday at six", None, None, None);
@@ -906,7 +905,7 @@ fn said_again_of_a_subject_a_word_replaces_what_was_said_and_unsaid_it_is_believ
 
 #[test]
 fn what_a_person_states_is_held_to_the_words_the_chat_allows_and_to_their_domain_and_range() {
-    let store = seeker();
+    let store = unbooted();
     let mut s = Seeker::new(&store);
     for (says, why) in [
         (
@@ -965,7 +964,7 @@ fn what_a_person_states_is_held_to_the_words_the_chat_allows_and_to_their_domain
 
 #[test]
 fn the_model_is_briefed_with_who_the_agent_is_what_the_chat_reads_and_what_a_person_may_state() {
-    let store = seeker();
+    let store = unbooted();
     let mut s = Seeker::new(&store);
     let (model, asked) = StandIn::new(vec![], "I am the seeker; I look for a flat.");
     s.model(model);
@@ -994,7 +993,7 @@ fn the_model_is_briefed_with_who_the_agent_is_what_the_chat_reads_and_what_a_per
 
 #[test]
 fn the_model_loads_a_vocabulary_and_queries_what_the_chat_reads() {
-    let store = seeker();
+    let store = unbooted();
     let mut s = Seeker::new(&store);
     let (model, asked) = StandIn::new(
         vec![
@@ -1027,7 +1026,7 @@ fn the_model_loads_a_vocabulary_and_queries_what_the_chat_reads() {
 
 #[test]
 fn a_chat_reading_nothing_offers_no_query_and_names_the_things_a_person_may_state_something_of() {
-    let store = seeker();
+    let store = unbooted();
     let mut s = Seeker::new(&store);
     let (model, asked) = StandIn::new(vec![], "I am looking at two flats.");
     s.model(model);
@@ -1060,7 +1059,7 @@ fn a_chat_reading_nothing_offers_no_query_and_names_the_things_a_person_may_stat
 
 #[test]
 fn a_question_is_answered_by_as_many_queries_as_it_needs_and_writes_nothing() {
-    let store = seeker();
+    let store = unbooted();
     let mut s = Seeker::new(&store);
     s.model(StandIn::new(vec![("state", offer())], "").0);
     s.write(
@@ -1109,7 +1108,7 @@ fn a_question_is_answered_by_as_many_queries_as_it_needs_and_writes_nothing() {
 
 #[test]
 fn a_conversation_says_what_it_spent_and_what_was_written_called_and_answered_where_it_is_heard() {
-    let store = seeker();
+    let store = unbooted();
     let mut s = Seeker::new(&store);
     let spent: Arc<Mutex<Vec<Translated>>> = Arc::default();
     let conversed: Arc<Mutex<Vec<Conversed>>> = Arc::default();
@@ -1154,7 +1153,7 @@ fn a_conversation_says_what_it_spent_and_what_was_written_called_and_answered_wh
 
 #[test]
 fn a_conversation_ends_in_words_by_its_last_turn_and_a_model_writing_none_has_failed() {
-    let store = seeker();
+    let store = unbooted();
     let mut s = Seeker::new(&store);
     let (model, asked) = StandIn::new(vec![viewings(); 10], "I could not find out.");
     s.model(model);
@@ -1178,7 +1177,7 @@ fn a_conversation_ends_in_words_by_its_last_turn_and_a_model_writing_none_has_fa
 
 #[test]
 fn in_a_group_an_agent_answers_when_named_keeps_silent_when_another_is_and_says_nothing_it_does_not_know() {
-    let store = seeker();
+    let store = unbooted();
     let mut s = Seeker::new(&store);
     let (model, asked) = StandIn::new(vec![], "I am looking at two flats.");
     s.model(model);
@@ -1238,7 +1237,7 @@ fn in_a_group_an_agent_answers_when_named_keeps_silent_when_another_is_and_says_
 
 #[test]
 fn in_a_group_words_that_tag_or_reply_to_the_agent_are_its_own_and_its_answer_replies_to_them() {
-    let store = seeker();
+    let store = unbooted();
     let mut s = Seeker::new(&store);
     let (model, asked) = StandIn::new(vec![], "I am looking at two flats.");
     s.model(model);
@@ -1276,7 +1275,7 @@ fn in_a_group_words_that_tag_or_reply_to_the_agent_are_its_own_and_its_answer_re
 
 #[test]
 fn what_the_agent_says_to_a_person_is_rendered_and_sent_through_their_chat() {
-    let store = seeker();
+    let store = unbooted();
     let mut s = Seeker::new(&store);
     let words = "Dear Clara, could I view the studio on Rigaer Straße? Weekday evenings suit me. — seeker";
     let (model, asked) = StandIn::new(vec![], words);
@@ -1311,7 +1310,7 @@ fn what_the_agent_says_to_a_person_is_rendered_and_sent_through_their_chat() {
 
 #[test]
 fn the_person_sees_the_agent_writing_from_the_words_heard_to_the_answer_said() {
-    let store = seeker();
+    let store = unbooted();
     let mut s = Seeker::new(&store);
     s.model(StandIn::new(vec![viewings()], "The seeker has nothing to say yet.").0);
     s.write("clara_telegram", "what are you doing?", None, None, None);
@@ -1343,7 +1342,7 @@ fn the_person_sees_the_agent_writing_from_the_words_heard_to_the_answer_said() {
 
 #[test]
 fn a_model_that_fails_says_so_in_the_chat_where_the_agent_was_addressed() {
-    let store = seeker();
+    let store = unbooted();
     let mut s = Seeker::new(&store);
     let (mut model, _) = StandIn::new(vec![], "");
     model.fails = Some(Failure::Other("HTTP Error 401: Unauthorized".into()));

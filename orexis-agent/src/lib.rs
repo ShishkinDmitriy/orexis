@@ -8,10 +8,9 @@ use std::path::Path;
 use std::sync::Arc;
 
 use orexis::Error;
-use orexis::boot::Booting;
 use orexis::clock::Clock;
 use orexis::store::Store;
-use orexis::task::{Provided, Running};
+use orexis::task::Provided;
 
 //  EACH PACKAGE THIS BINARY IS BUILT WITH, LINKED: a crate nothing references is left out, and a package registers
 //  itself only where its crate is in. Nothing else here names one.
@@ -50,16 +49,10 @@ use orexis_transport_mqtt as _;
 #[cfg(feature = "telegram")]
 use orexis_transport_telegram as _;
 
-/// BOOT `agent` of `world` into `store` WHOLE and start nothing (`orexis::boot::boot`): the world's documents and those
-/// of every package this binary holds, run or not, so the store may hold more vocabulary than a running agent's. For a
-/// test that calls a package's core itself, or that starts the packages over it after (`start`). An agent that runs is
-/// booted by `boot`, which only begins, its packages' starts bringing the documents of those that join.
-pub fn boot_without_starting(store: &Store, world: &Path, agent: &str) -> Result<(), Error> {
-    orexis::boot::boot(store, &Booting { world, agent })
-}
-
-/// BOOT `agent` of `world` into `store`, handed `provided`, and hold it ready to start (`orexis::task::boot`). What a
-/// deployed agent and a check do; `boot_without_starting` is for a caller that starts nothing.
+/// BOOT `agent` of `world` into `store`, handed `provided`, ready to start (`orexis::task::boot`): what the binary, a
+/// check and a world's test do. The boot is begun here and finished by the starts, each package that joins bringing
+/// its documents. A test fixes which packages start first with `Booted::first`. Called here, not in the kernel, since
+/// calling into this crate is what links the packages.
 pub fn boot(
     store: &Store,
     world: &Path,
@@ -67,7 +60,13 @@ pub fn boot(
     clock: Arc<dyn Clock>,
     provided: Provided,
 ) -> Result<orexis::task::Booted, Error> {
-    orexis::task::boot(store, &Booting { world, agent }, clock, provided)
+    orexis::task::boot(store, world, agent, clock, provided)
+}
+
+/// BOOT `agent` of `world` into `store` WHOLE and start nothing (`orexis::boot::boot`): the world's documents and those
+/// of every package this binary holds, run or not, for a test that calls a package's core itself.
+pub fn boot_without_starting(store: &Store, world: &Path, agent: &str) -> Result<(), Error> {
+    orexis::boot::boot(store, world, agent)
 }
 
 /// What a check found of an agent that boots: the packages it loads, and what they said as each made its core
@@ -141,16 +140,4 @@ pub fn check(world: &Path, agent: &str, now: oxsdatatypes::DateTime, boot: Optio
 /// Whether this binary holds `package`: its crate was built in, and registered itself.
 pub fn built(package: &str) -> bool {
     inventory::iter::<orexis::task::Package>().any(|p| p.name == package)
-}
-
-/// START THE AGENT `agent` over `store`, for a test, on the Tokio runtime this is called in, handed `provided`: every
-/// package this binary holds, those `order` names first and in that order, each deciding for itself whether it runs.
-pub async fn start(
-    store: &Store,
-    agent: &str,
-    clock: Arc<dyn Clock>,
-    order: &[String],
-    provided: Provided,
-) -> Result<Running, Error> {
-    orexis::task::start(store, agent, clock, provided, order).await
 }

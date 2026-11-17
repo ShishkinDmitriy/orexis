@@ -1141,8 +1141,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   struct named `Role` was built and refused, and a part struct beside the role's (`Sensing`, `Execution`,
   `Coordination`) was folded into it, as `Belief` into the `Deliberator` (package, part).
 - **A start runs once for a boot** — the boot begins before any start and the starts finish it, each package
-  bringing its documents as it joins (`task::boot`, `Booted::start`); each ran twice, the first dropped at its
-  decision, while the binary made the journal between the two (package, #1173).
+  bringing its documents as it joins (`task::boot`, `Booted::start`), which is why booting is the tasks' and not the
+  boot module's alone; each ran twice, the first dropped at its decision, while the binary made the journal between
+  the two (package, #1173); and a test that orders the starts boots the same way (`Booted::first`), where a second
+  `start` over a store booted whole was one more path to boot by.
 - **A start waiting on the others is still starting, so it waits busy, and a stretch's length is taken as it ends** —
   resting at the barrier, the starts woken as the last core was made were not yet counted when the last went straight
   on to plan, so a stretch ended with three to run and its length, read off the next one's beginning, was a

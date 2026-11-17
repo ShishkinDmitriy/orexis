@@ -57,7 +57,7 @@ a role declared after birth reaches only a fresh volume.
 
 **Each package is a task, and the run is those tasks.** Every package the agent loads — each a declared role
 calls for, and each transport a loaded role needs — registered itself with the linker, and the binary starts each
-on a Tokio runtime (`orexis::task::start`): its start makes the package's [part](/domain/kernel/part.md),
+on a Tokio runtime (`Booted::start`): its start makes the package's [part](/domain/kernel/part.md),
 says it has started and goes on as its task. A task is handed the store, the clock, the events — where every package says its
 [events](/domain/kernel/event.md) and subscribes to what it hears, the one thing packages share — and what it is
 provided. It does what the package does: belief revises what is written, planning plans where its policy hears a

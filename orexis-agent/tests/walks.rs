@@ -15,7 +15,6 @@ use orexis::clock::{Clock, instant};
 use orexis::namespaces::Namespaces;
 use orexis::store::{Store, iri, value};
 use orexis::task::{MET, Provided, UNFINISHED};
-use orexis_agent::boot_without_starting;
 
 fn tree() -> &'static Path {
     Path::new(TREE)
@@ -155,7 +154,6 @@ async fn metered_courier(watched: bool) -> (usize, usize, String, std::collectio
     }
     let store = store();
     let clock = Arc::new(Counting(orexis::clock::Elapsing::from(now()), Mutex::new(0)));
-    boot_without_starting(&store, &world("courier"), "courier").unwrap();
     let written: std::sync::Arc<std::sync::Mutex<Vec<orexis::events::Point>>> = Default::default();
     let kept = written.clone();
     let provided = Provided::default().with(orexis_planning::Budget(128));
@@ -171,10 +169,9 @@ async fn metered_courier(watched: bool) -> (usize, usize, String, std::collectio
         provided.provide(orexis_metrics::Window::new(sink, 0.0, Some("courier"), Some("courier")));
     }
     //  The metrics start either way, handed a window or not, so the two runs differ in the window alone.
+    let booted = orexis_agent::boot(&store, &world("courier"), "courier", clock.clone(), provided).unwrap();
     common::metered(&store);
-    let running = orexis_agent::start(&store, "courier", clock.clone(), &[], provided)
-        .await
-        .unwrap();
+    let running = booted.start().await.unwrap();
     let outcome = common::outcome(&running, 3600).await;
     running.stop().await;
     let reads = *clock.1.lock().unwrap();
