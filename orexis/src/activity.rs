@@ -46,15 +46,12 @@ impl Activity {
 }
 
 /// AN ACTIVITY THAT LASTS ACROSS TURNS - the agent's booting, running and stopping, and each package's within them,
-/// begun and ended by the kernel: the activity it is part of, what it is about, each under the predicate that says its
-/// part, and when it began. Its start and its end each say it whole, so whoever hears only the end - the journal, made
-/// inside the booting - keeps it all the same; and it is open beside a task's turns, never one a turn's activity is
-/// begun inside.
+/// begun and ended by the kernel: the activity it is part of, and what it is about, each under the predicate that says
+/// its part. It is open beside a task's turns, never one a turn's activity is begun inside, so it names its own.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Lasting {
     pub part_of: Option<NamedNode>,
     pub about: Vec<(&'static str, Term)>,
-    pub began: DateTime,
 }
 
 /// An activity started at `at`, by every entity in `triggers` (`prov:entity`).
