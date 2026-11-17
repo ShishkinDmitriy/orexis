@@ -8,6 +8,7 @@
 //!   the frequency the sensor states.
 
 use orexis::task::{Handed, Package, Woke, sooner};
+use orexis_transport::Jobs;
 
 pub mod driver;
 pub mod figures;
@@ -37,7 +38,7 @@ const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
 /// arrival or the instant a sensor is next polled, and once nothing more waits does what has fallen due.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        if !orexis::boot::wired(&handed.store, WORDS, WIRED)? {
+        if !orexis_transport::wired(&handed, WORDS, WIRED)? {
             return Ok(());
         }
         handed.joins(&DOCUMENTS).await?;

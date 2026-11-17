@@ -8,7 +8,10 @@
 
 use orexis::task::{Every, Handed, Package, Woke, sooner};
 
-use crate::transport::{CARRY, CARRYING_TRIGGER, POLL};
+use orexis_transport::Jobs;
+use orexis_transport::chat::{CARRY, POLL};
+
+use crate::transport::CARRYING_TRIGGER;
 
 pub mod driver;
 mod transport;
@@ -35,7 +38,7 @@ const WORDS: &str = "PREFIX telegram: <http://example.org/orexis/telegram#> ";
 /// the member handed on.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        if !orexis::boot::wired(&handed.store, WORDS, WIRED)? {
+        if !orexis_transport::wired(&handed, WORDS, WIRED)? {
             return Ok(());
         }
         handed.joins(&DOCUMENTS).await?;

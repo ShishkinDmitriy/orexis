@@ -18,6 +18,7 @@ COPY orexis-sensing/ tree/orexis-sensing/
 COPY orexis-sensing-influxdb/ tree/orexis-sensing-influxdb/
 COPY orexis-speech/ tree/orexis-speech/
 COPY orexis-translation/ tree/orexis-translation/
+COPY orexis-transport/ tree/orexis-transport/
 COPY orexis-transport-email/ tree/orexis-transport-email/
 COPY orexis-transport-http/ tree/orexis-transport-http/
 COPY orexis-transport-mqtt/ tree/orexis-transport-mqtt/

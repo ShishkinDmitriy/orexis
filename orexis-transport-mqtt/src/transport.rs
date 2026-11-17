@@ -1,8 +1,6 @@
 //! THE MEMBER'S PART: the member, the messages it handed on for a turn to hand to sensing, and when it next asks after
 //! its sensors; a document the agent said told on the bus, a step's commands sent, and a chat's words carried.
 
-use std::collections::VecDeque;
-
 use oxigraph::model::NamedNode;
 use oxsdatatypes::DateTime;
 
@@ -12,7 +10,9 @@ use orexis_speech::document_of;
 use orexis_speech::ontology::{STATEMENT, TO};
 use orexis_speech::prose::{ProseKept, carry, kept};
 
-use crate::driver::{Message, Mqtt};
+use orexis_transport::{Jobs, Pending};
+
+use crate::driver::Mqtt;
 
 /// The commands a command graph keeps, in the order kept: each actuator and its payload.
 fn commands_of(store: &orexis::store::Store, graph: &str) -> Result<Vec<(String, serde_json::Value)>, Error> {
@@ -74,7 +74,7 @@ const HOLDER: &str = "transport/mqtt";
 /// The member's part: the member, shared with whoever links to it, and the messages handed to the pass.
 pub struct Transport {
     pub member: Mqtt,
-    pending: VecDeque<Message>,
+    pending: Pending,
     /// Whether to nudge at the next pass whatever is due: the first, and one after a message arrived, which may move
     /// when a reading next falls due.
     nudge: bool,
@@ -86,23 +86,9 @@ impl Transport {
     pub fn new(member: Mqtt) -> Self {
         Transport {
             member,
-            pending: VecDeque::new(),
+            pending: Pending::default(),
             nudge: true,
             next: None,
-        }
-    }
-
-    /// What it queued for itself, each in turn and what each wrote told, until nothing is left.
-    pub(crate) fn queued(&mut self, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
-        loop {
-            let jobs = self.submitted();
-            if jobs.is_empty() {
-                return Ok(Vec::new());
-            }
-            for job in jobs {
-                let wrote = self.run(job, pass)?;
-                pass.told(wrote)?;
-            }
         }
     }
 
@@ -160,7 +146,17 @@ impl Transport {
         Ok(Vec::new())
     }
 
-    pub(crate) fn run(&mut self, job: usize, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+    pub(crate) fn stop(&mut self) {
+        self.member.stop();
+    }
+}
+
+impl Jobs for Transport {
+    fn submitted(&mut self) -> Vec<usize> {
+        vec![HANDLE; self.pending.arrived(&self.member.inbox)]
+    }
+
+    fn run(&mut self, job: usize, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         match job {
             NUDGE => {
                 //  A MEMBER KEEPS THE AGENT RUNNING: what it senses goes on arriving whatever is wanted.
@@ -177,7 +173,7 @@ impl Transport {
                 Ok(Vec::new())
             }
             HANDLE => {
-                let Some(message) = self.pending.pop_front() else {
+                let Some(message) = self.pending.oldest() else {
                     return Ok(Vec::new());
                 };
                 self.nudge = true;
@@ -198,16 +194,5 @@ impl Transport {
             }
             _ => Ok(Vec::new()),
         }
-    }
-
-    fn submitted(&mut self) -> Vec<usize> {
-        let arrived = self.member.inbox.take();
-        let n = arrived.len();
-        self.pending.extend(arrived);
-        vec![HANDLE; n]
-    }
-
-    pub(crate) fn stop(&mut self) {
-        self.member.stop();
     }
 }

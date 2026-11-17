@@ -35,6 +35,7 @@ COPY orexis-sensing/ orexis-sensing/
 COPY orexis-sensing-influxdb/ orexis-sensing-influxdb/
 COPY orexis-speech/ orexis-speech/
 COPY orexis-translation/ orexis-translation/
+COPY orexis-transport/ orexis-transport/
 COPY orexis-transport-email/ orexis-transport-email/
 COPY orexis-transport-http/ orexis-transport-http/
 COPY orexis-transport-mqtt/ orexis-transport-mqtt/

@@ -3,7 +3,7 @@ type: Service
 title: Transport
 description: >-
   How an agent reaches the devices, services, peers and people of its world - a family whose
-  contract the container holds (`agent/transport/transport.py`), with four members that ship: MQTT,
+  contract is a crate its members share (`orexis-transport/`), with four members that ship: MQTT,
   speaking MQTT4SSN, HTTP, speaking the WoT Thing Description, Telegram and email. It hands sensing
   bytes, sends what a step commands, carries documents between agents and a person's prose to and
   from the agent; sensing, speech and translation know nothing of it.
@@ -11,17 +11,15 @@ description: >-
 
 # The contract
 
-What the container asks of any member: bring itself up from the environment where the agent is deployed (`connect`, handed
-the container's `deliver`) and as a member that reaches nothing where it is checked, subscribe to the agent's
-channels (`open`), turn a message into observations by calling sensing's `received` once per
-sensor it is for (`handle`), and send what a device may be told — a cadence, a sense-now, and the
-payload a step's command answers (`actuate`), say whether it `reaches` a sensor or an actuator,
-and **start itself** (`create::start`, as every package does): its session's messages handed to its inbox, which
-wakes its part's task to handle them, what it listens on opened, what it does of its own accord scheduled, and
-the agent held running, since what it senses goes on arriving. A member is a [part](/domain/kernel/part.md) of its own:
-execution's part and speech's, linked to it, hand it a step's command (`command`) and a document
-told (`tell_to`), which it sends where it reaches the recipient. Several are held behind
-`Transports`, which sends a nudge or a command to the member that reaches its device.
+The family's contract is `orexis-transport/`, a crate each member depends on and nothing else reads: it is no
+package, registers nothing and plays no role. It holds what every member does alike. A member's own thread leaves
+each message it receives in an `Inbox`, which rings the member's task awake; the task's core queues what arrived
+(`Pending`) and runs its jobs until none is left (`Jobs::queued`); and the first thing its start asks is whether the
+world wires the self through it (`wired`). A member that carries a [chat](/domain/speech/chat.md)'s words is a chat
+carrier, Telegram and email the two that ship: each says only how it polls, reads a message and says a text
+(`chat::ChatMember`), and one core runs both (`chat::ChatTransport`). MQTT and HTTP keep a core of their own on the
+same queue, since nudging a sensor, telling a peer a document, sending a step's command and polling a url per sensor
+are theirs alone. A member in a check is handed nothing and reaches nothing.
 
 **A channel is the transport's, and what points at it says which row reads it.** A member carries
 bytes on a channel — a topic, a url, a Telegram chat, a mailbox — and none of it means anything to

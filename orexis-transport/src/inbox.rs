@@ -1,14 +1,12 @@
-//! THE TRANSPORT FAMILY'S CONTRACT, as `agent/transport/transport.py` keeps what is the same of every member: a
-//! member's task or thread leaves what it receives in an INBOX for the one executing thread to handle, ringing the mind awake, and a CHANNEL IS THE
-//! TRANSPORT'S — a member carries bytes on a topic, a chat, a mailbox or a url and knows nothing of what they mean. Words
-//! on a `speech:Chat`'s channel are speech's (`orexis_speech::prose`).
+//! WHAT A MEMBER RECEIVES: each message on a channel, left in an INBOX by the member's own thread for its task to
+//! handle, ringing the task awake.
 
 use std::collections::VecDeque;
 use std::sync::{Arc, Mutex, OnceLock};
 
 use oxsdatatypes::DateTime;
 
-use crate::task::Wake;
+use orexis::task::Wake;
 
 /// A message on a channel, and the instant it arrived where whoever handed it knows one — a network thread knows none
 /// of the agent's timeline, so it is stamped with the instant of the pass that handles it.

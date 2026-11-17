@@ -17,8 +17,8 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::ontology::{BELIEF, local_of};
 use orexis::store::{Store, Within, iri, value};
-use orexis::transport::Inbox;
 use orexis_speech::prose::{Carrier, Prose};
+use orexis_transport::Inbox;
 
 /// WHAT HOLDS WHERE NO ROLE SAYS HOW OFTEN: the defaults this transport's ontology states (`sh:defaultValue`).
 pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =

@@ -1,0 +1,19 @@
+# THE TRANSPORT FAMILY'S CONTRACT: what every member of `orexis-transport-*` shares and nothing else reads. No package:
+# it registers nothing, plays no role and runs no task, and a member depends on it as it depends on the kernel.
+[package]
+name = "orexis-transport"
+version = "0.2.0"
+edition.workspace = true
+license.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+orexis = { workspace = true }
+orexis-speech = { workspace = true, optional = true }
+oxsdatatypes = "0.2"
+
+[features]
+# A CHAT CARRIER, a member that carries a person's prose: speech's words, so only the members that need it pull speech in.
+chat = ["dep:orexis-speech"]

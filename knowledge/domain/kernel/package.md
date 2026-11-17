@@ -53,7 +53,7 @@ thing a start does is decide:
 | a package | runs where | asked by |
 |---|---|---|
 | with a role | the self plays a role of its class, or of a domain's class beneath it | `handed.plays(&[ROLE])` |
-| a transport | a role the self plays needs bytes and the world wires them through this member | `boot::wired` |
+| a transport | a role the self plays needs bytes and the world wires them through this member | `orexis_transport::wired` |
 | keeping house for a role linked to a service | the self plays the role, the role names the service and the world says where it answers | the role the package reads (`Recorder::new`) |
 
 Its own class decides, since no package's role is beneath another package's, and a domain's role class beneath

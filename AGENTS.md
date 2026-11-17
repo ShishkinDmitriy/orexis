@@ -1143,6 +1143,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   `Meter`, `Predictor`, `Coordinator`, `Observer`, and the cores that bear the role's name; three roles had no
   struct, four fields went by another word than their property (`every_s`, `endpoint`, `archive`, `tracer`), and
   half of what a translator's role says lay on its model's client (role).
+- **What only one family's members share is the family's crate, not the kernel's** — `Inbox`, the job loop, `wired` and
+  the chat carrier's core were the kernel's while every transport used them and nothing else did, and email's core
+  and telegram's were one file twice; `orexis-transport/` registers no package, and its chat carrier is a feature,
+  so a member that carries no prose pulls in no speech.
 - **A package's start is in its crate's `lib.rs`, in every crate, and nothing else is** — the registration, the role
   it is loaded for and `start`, one function from the decision to the end of its task, below the crate's description
   and its modules; its core is the role's struct, in a file named for the role, and what it says happened is
@@ -1190,7 +1194,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
    is the one identifier a process is handed at boot: its own agent id. Everything else is
    discovered from the documents. See [capability-packages](knowledge/decisions/capability-packages.md).
 2. **A package is a crate at the repo's root, flat and named for it — `transport/mqtt` is `orexis-transport-mqtt/`,
-   the kernel `orexis/` and the binary `orexis-agent/` — and a term lives in the namespace of the package that
+   the kernel `orexis/` and the binary `orexis-agent/`, and what a family's members alone share a crate named for
+   the family, `orexis-transport/`, which is no package — and a term lives in the namespace of the package that
    owns the concept.** journal, belief, sensing, prediction, planning, execution, speech, coordination and the MQTT
    transport each declare their words in their own `ontology.ttl`, beside the code that reads
    them; the kernel's `orexis:` keeps only what packages meet at. A package imports what lies

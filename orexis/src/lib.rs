@@ -10,7 +10,6 @@
 //! - [`events`]: what a package says happened, said whole to whoever watches the agent;
 //! - [`series`]: the points an event answers, written to the store the environment names for their purpose;
 //! - [`runtime`]: one agent's process, a lifecycle container for its packages' parts, run pass by pass;
-//! - [`transport`]: what is the same of every transport member — the inbox, a person's prose, what carries a chat;
 //! - [`rdf`]: what a graph is built of — a node, a triple, a literal, a fresh name — and the one spelling of a number;
 //! - [`ontology`]: the kernel's terms code may name (rule 1: a T-Box term, never an instance);
 //! - [`snapshots`]: the case runner, holding a store to its `.trig` and `.diff` and writing the diff on request.
@@ -32,6 +31,5 @@ pub mod shape;
 pub mod snapshots;
 pub mod store;
 pub mod task;
-pub mod transport;
 
 pub use error::Error;
