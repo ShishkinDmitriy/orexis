@@ -1171,6 +1171,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   process's log in it and serves it, and what archives it opens its own archive and takes the last entries in its
   stopping, once every running package has ended (`Handed::stopping`); a check and a test say nothing, so a package handed nothing has nothing
   and a check reaches no disk and no port (package).
+- **What a package keeps out of the process's log it says itself** (`orexis::task::Hush`, registered by the linker) —
+  the Telegram transport hushes its HTTP client below WARN, a Bot API url carrying the bot's token, and the journal
+  keeps nothing it logs of itself; the binary asks of every record and names neither, where it had spelled both.
 - **Each agent's image holds only what it runs** — `orexis-compose` builds `orexis-<world>-<agent>:local` with a feature of the binary for each
   package the agent loads and each whose crate those depend on; one image carrying everything was refused (a-package-brings-its-own-dependencies).
 - **A CRL is always written, empty where nobody is revoked, and its horizon is the authority's** —

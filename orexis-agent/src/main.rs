@@ -67,12 +67,8 @@ fn logger_of(target: &str) -> String {
 
 impl log::Log for Logger {
     fn enabled(&self, metadata: &log::Metadata<'_>) -> bool {
-        //  A CLIENT'S OWN DEBUG names every url it calls, and a Bot API url carries the bot's token: below WARN, the
-        //  HTTP client says nothing, whatever the agent's level.
-        if metadata.target().starts_with("ureq") && metadata.level() > log::Level::Warn {
-            return false;
-        }
-        metadata.level() <= self.level
+        //  WHAT A PACKAGE HUSHES is said from where it says, whatever the agent's level (`orexis::task::Hush`).
+        metadata.level() <= self.level && orexis::task::said(metadata.target(), metadata.level())
     }
 
     fn log(&self, record: &log::Record<'_>) {
@@ -85,8 +81,8 @@ impl log::Log for Logger {
             logger_of(record.target()),
             level_name(record.level())
         );
-        //  THE JOURNAL SAYS NOTHING OF ITSELF, and keeps what is said from INFO on.
-        if record.level() <= log::Level::Info && !record.target().starts_with("orexis_journal::journal") {
+        //  KEPT FROM INFO ON, but what a package keeps out of the journal.
+        if record.level() <= log::Level::Info && orexis::task::journaled(record.target()) {
             let logger = logger_of(record.target());
             match self.remark.get() {
                 Some(remark) => remark(&logger, record.level(), &message),

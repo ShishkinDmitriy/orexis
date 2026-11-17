@@ -922,6 +922,27 @@ pub type Remark = Box<dyn Fn(&str, log::Level, &str) + Send + Sync>;
 /// that keeps it, with how each line is kept. What was said before is kept first.
 pub struct Said(pub Box<dyn FnOnce(Remark) + Send>);
 
+/// WHAT A PACKAGE KEEPS OUT OF THE PROCESS'S LOG, registered by the linker as the package itself is: a record whose
+/// target begins with `target` is said only from `said_from` on, and kept in the journal only where `journaled`.
+/// Whoever owns the log asks of every record (`said`, `journaled`), and names no package.
+pub struct Hush {
+    pub target: &'static str,
+    pub said_from: log::Level,
+    pub journaled: bool,
+}
+
+inventory::collect!(Hush);
+
+/// Whether a record of `target` at `level` is said at all, by what every package linked in hushes.
+pub fn said(target: &str, level: log::Level) -> bool {
+    inventory::iter::<Hush>().all(|h| !target.starts_with(h.target) || level <= h.said_from)
+}
+
+/// Whether a record of `target` is kept in the journal, by what every package linked in hushes.
+pub fn journaled(target: &str) -> bool {
+    inventory::iter::<Hush>().all(|h| !target.starts_with(h.target) || h.journaled)
+}
+
 /// WHERE THE AGENT'S JOURNAL LIES, said by whoever keeps it whenever that starts, and asked by a reader when it
 /// reads: so no reader waits for a keeper's start, and no order between them is kept. What archives the journal
 /// says the archive, after the journal it waits for said itself.
@@ -2004,6 +2025,23 @@ mod tests {
             Ok(())
         })))
     }) } }
+
+    //  A TEST'S HUSH: said from WARN on, and never journaled.
+    inventory::submit! { Hush { target: "test_hushed", said_from: log::Level::Warn, journaled: false } }
+
+    #[test]
+    fn what_a_package_hushes_is_said_from_its_level_and_kept_only_where_it_says() {
+        assert!(said("test_hushed::client", log::Level::Warn));
+        assert!(
+            !said("test_hushed::client", log::Level::Debug),
+            "quieter than its level, it says nothing"
+        );
+        assert!(
+            said("test_heard", log::Level::Debug),
+            "a target nobody hushes says everything"
+        );
+        assert!(!journaled("test_hushed::client") && journaled("test_heard"));
+    }
 
     #[tokio::test(start_paused = true)]
     async fn an_activitys_start_is_heard_by_class_once_its_sayer_waits() {

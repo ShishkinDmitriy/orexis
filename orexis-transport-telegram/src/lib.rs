@@ -17,6 +17,10 @@ pub use transport::Transport;
 
 inventory::submit! { Package { name: "transport/telegram", start } }
 
+//  A CLIENT'S OWN DEBUG NAMES EVERY URL IT CALLS, and a Bot API url carries the bot's token: below WARN, the HTTP
+//  client says nothing, whatever the agent's level.
+inventory::submit! { orexis::task::Hush { target: "ureq", said_from: log::Level::Warn, journaled: true } }
+
 /// THE DOCUMENTS THIS PACKAGE BRINGS as it joins, in the order it puts them in.
 const DOCUMENTS: orexis::task::Documents = orexis::documents!("ontology.ttl");
 
