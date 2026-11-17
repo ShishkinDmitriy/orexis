@@ -1059,6 +1059,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "orexis-transport"
+version = "0.2.0"
+dependencies = [
+ "orexis",
+ "orexis-speech",
+ "oxsdatatypes",
+]
+
+[[package]]
 name = "orexis-transport-email"
 version = "0.2.0"
 dependencies = [
@@ -1069,6 +1078,7 @@ dependencies = [
  "mail-parser",
  "orexis",
  "orexis-speech",
+ "orexis-transport",
  "oxigraph",
  "oxsdatatypes",
  "rustls 0.23.46",
@@ -1083,6 +1093,7 @@ dependencies = [
  "log",
  "orexis",
  "orexis-sensing",
+ "orexis-transport",
  "oxsdatatypes",
  "regex",
  "tokio",
@@ -1098,6 +1109,7 @@ dependencies = [
  "orexis",
  "orexis-sensing",
  "orexis-speech",
+ "orexis-transport",
  "oxigraph",
  "oxsdatatypes",
  "rumqttc",
@@ -1113,6 +1125,7 @@ dependencies = [
  "log",
  "orexis",
  "orexis-speech",
+ "orexis-transport",
  "oxigraph",
  "oxsdatatypes",
  "serde_json",

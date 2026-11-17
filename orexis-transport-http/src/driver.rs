@@ -20,9 +20,9 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::ontology::{BELIEF, local_of};
 use orexis::store::{Store, Within, iri, value};
-use orexis::transport::Inbox;
 use orexis_sensing::cadence::sensors as observed;
 use orexis_sensing::received::received;
+use orexis_transport::Inbox;
 
 /// HOW LONG ONE FETCH MAY TAKE, in real seconds: a figure a role states.
 pub const FETCHED_WITHIN_S: &str = "http://example.org/orexis/http#fetchedWithinS";

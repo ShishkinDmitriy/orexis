@@ -13,6 +13,7 @@
 use orexis::task::{Every, Handed, Package, Woke, sooner};
 
 use crate::transport::{ACTUATE, ACTUATING_TRIGGER, CARRY, CARRYING_TRIGGER, NUDGE, TELL, TELLING_TRIGGER};
+use orexis_transport::Jobs;
 
 pub mod driver;
 pub mod figures;
@@ -53,7 +54,7 @@ const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
 /// be heard hands on what arrived; and it stops the member as it ends.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
-        if !orexis::boot::wired(&handed.store, WORDS, WIRED)? {
+        if !orexis_transport::wired(&handed, WORDS, WIRED)? {
             return Ok(());
         }
         handed.joins(&DOCUMENTS).await?;

@@ -14,6 +14,7 @@ path = "src/lib.rs"
 inventory.workspace = true
 tokio.workspace = true
 orexis = { workspace = true }
+orexis-transport = { workspace = true }
 orexis-sensing = { workspace = true }
 orexis-speech = { workspace = true }
 oxigraph.workspace = true

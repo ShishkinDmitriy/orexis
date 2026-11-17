@@ -26,6 +26,7 @@ orexis-sensing = { path = "orexis-sensing" }
 orexis-sensing-influxdb = { path = "orexis-sensing-influxdb" }
 orexis-speech = { path = "orexis-speech" }
 orexis-translation = { path = "orexis-translation" }
+orexis-transport = { path = "orexis-transport" }
 orexis-transport-email = { path = "orexis-transport-email" }
 orexis-transport-http = { path = "orexis-transport-http" }
 orexis-transport-mqtt = { path = "orexis-transport-mqtt" }

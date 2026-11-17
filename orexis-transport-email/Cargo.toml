@@ -14,6 +14,7 @@ inventory.workspace = true
 tokio.workspace = true
 orexis = { workspace = true }
 orexis-speech = { workspace = true }
+orexis-transport = { workspace = true, features = ["chat"] }
 oxigraph.workspace = true
 oxsdatatypes = "0.2"
 log = "0.4"

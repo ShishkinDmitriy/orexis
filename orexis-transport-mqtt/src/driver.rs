@@ -112,7 +112,7 @@ pub trait Client: Send {
     fn stop(&mut self) {}
 }
 
-pub use orexis::transport::{Inbox, Message};
+pub use orexis_transport::{Inbox, Message};
 
 /// A session's listening, for the part to run as a task once it starts.
 pub type Listening = Pin<Box<dyn Future<Output = ()> + Send>>;

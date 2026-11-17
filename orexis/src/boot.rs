@@ -168,26 +168,6 @@ fn played(store: &Store) -> Result<Vec<(Option<String>, String)>, Error> {
         .collect())
 }
 
-/// WHETHER THE WORLD WIRES THE SELF THROUGH A TRANSPORT: one of `wired` holds, each a role's class the self plays
-/// with a pattern about `?me` the common beliefs and the self graph answer, in the `words` the transport declares.
-/// What a transport member asks as it starts: the kernel names no transport and no pattern.
-pub fn wired(store: &Store, words: &str, wired: &[(&str, &str)]) -> Result<bool, Error> {
-    let mut known = store.graphs_of(&[BELIEF], &Within::common())?;
-    known.extend(store.graphs_of(&[SELF_GRAPH], &Within::default())?);
-    let known: Vec<&str> = known.iter().map(String::as_str).collect();
-    for (role, pattern) in wired {
-        if plays(store, &[role])?
-            && store.ask(
-                &format!("PREFIX orexis: <http://example.org/orexis#> {words}ASK {{ ?me a orexis:Self . {pattern} }}"),
-                &known,
-            )?
-        {
-            return Ok(true);
-        }
-    }
-    Ok(false)
-}
-
 /// A ROLE THE SELF PLAYS THAT NO PACKAGE OF THIS BINARY DECLARES: the role's classes, none beneath `orexis:Role` by
 /// the vocabulary the store holds once every package's documents are in. Its package was built out, and with it the
 /// ontology that would have said so.
