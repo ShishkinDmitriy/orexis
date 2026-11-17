@@ -287,7 +287,7 @@ pub fn records(csv: &str) -> Vec<BTreeMap<String, String>> {
 /// One cell as Python's client reads its type and `str` says it.
 fn said(cell: &str, kind: &str) -> String {
     match kind {
-        "double" => cell.parse::<f64>().map_or(cell.to_string(), crate::events::repr),
+        "double" => cell.parse::<f64>().map_or(cell.to_string(), crate::rdf::repr),
         k if k.starts_with("dateTime") => match crate::clock::instant(cell) {
             Ok(at) => {
                 let iso = crate::clock::isoformat(at);
@@ -376,7 +376,7 @@ pub fn line(point: &Point) -> String {
         .iter()
         .map(|(k, v)| {
             let value = match v {
-                Field::Float(f) => crate::events::repr(*f),
+                Field::Float(f) => crate::rdf::repr(*f),
                 Field::Int(i) => format!("{i}i"),
                 Field::Bool(b) => b.to_string(),
                 Field::Text(t) => format!("\"{}\"", t.replace('\\', "\\\\").replace('"', "\\\"")),
@@ -390,6 +390,16 @@ pub fn line(point: &Point) -> String {
         out.push_str(&format!(" {ns}"));
     }
     out
+}
+
+/// WHAT THE AGENT KEEPS OF WHAT HAPPENED, as a chat reads it: its journal where it lies, and its two series. Each
+/// package that keeps any of it says so as it makes its core (`Provided::alter`), the journal's where it lies
+/// and each series' package the sink it writes, and a reader reads it once every core is made.
+#[derive(Clone, Default)]
+pub struct Reads {
+    pub journal: crate::task::Journaled,
+    pub history: Option<Reader>,
+    pub metrics: Option<Reader>,
 }
 
 #[cfg(test)]

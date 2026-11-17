@@ -11,7 +11,7 @@ use oxigraph::model::Term;
 use oxsdatatypes::DateTime;
 
 use orexis::Error;
-use orexis::bind::bind;
+use orexis::bind::{Value, bind};
 use orexis::clock::instant;
 use orexis::ontology::{BELIEF, END, START};
 use orexis::store::{Store, Within, iri};
@@ -82,7 +82,7 @@ pub fn world_at(store: &Store, world: Option<&str>, asking: &Asking, memo: &mut 
         Some(world) => Ok([known, vec![world.to_string()]].concat()),
         None => {
             let now = asking.now.expect("asked above");
-            let text = bind(AHEAD_Q, &[("now", orexis::store::instant(now))])?;
+            let text = bind(AHEAD_Q, &[("now", Value::instant(now))])?;
             let ahead: HashSet<String> = store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "g")).collect();
             let beliefs: Vec<String> = store
                 .graphs_of(&[BELIEF], &Within::default())?

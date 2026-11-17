@@ -11,7 +11,7 @@ use spargebra::algebra::GraphPattern;
 use spargebra::term::{GroundTermPattern, NamedNodePattern, TermPattern};
 
 use orexis::Error;
-use orexis::hash::py_str;
+use orexis::hash::quoted;
 use orexis::ontology::{ACTION, BELIEF};
 use orexis::store::{Row, Store, Within, iri, value};
 use orexis_belief::transition::Parts;
@@ -40,10 +40,10 @@ pub struct Filling {
 pub fn spelled(atom: &Atom) -> String {
     let key = match &atom.1 {
         None => "None".to_string(),
-        Some(values) if values.len() == 1 => format!("({},)", py_str(&values[0])),
-        Some(values) => format!("({})", values.iter().map(|v| py_str(v)).collect::<Vec<_>>().join(", ")),
+        Some(values) if values.len() == 1 => format!("({},)", quoted(&values[0])),
+        Some(values) => format!("({})", values.iter().map(|v| quoted(v)).collect::<Vec<_>>().join(", ")),
     };
-    format!("({}, {key})", py_str(&atom.0))
+    format!("({}, {key})", quoted(&atom.0))
 }
 
 /// An action's precondition and its effect's updates, each read as the machine reads it — `None` for one the

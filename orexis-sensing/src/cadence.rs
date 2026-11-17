@@ -16,7 +16,7 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::instant as parse_instant;
 use orexis::ontology::{BELIEF, SELF_GRAPH, local_of};
-use orexis::store::{Store, Within, instant, iri, value};
+use orexis::store::{Store, Within, iri, value};
 
 use crate::ontology::default_of;
 
@@ -87,7 +87,7 @@ pub fn lapsed(store: &Store, now: DateTime) -> Result<Vec<(String, DateTime)>, E
     let Some(cat) = store.catalogue()? else {
         return Ok(Vec::new());
     };
-    let text = bind(LAPSED_Q, &[("cat", Value::iri(cat)), ("now", instant(now))])?;
+    let text = bind(LAPSED_Q, &[("cat", Value::iri(cat)), ("now", Value::instant(now))])?;
     let mut out = Vec::new();
     for row in store.rows(&text, &[])? {
         if let (Some(sensor), Some(end)) = (iri(&row, "sensor"), value(&row, "end")) {
@@ -112,7 +112,7 @@ pub fn next_lapse(store: &Store, now: DateTime) -> Result<Option<DateTime>, Erro
     let Some(cat) = store.catalogue()? else {
         return Ok(None);
     };
-    let text = bind(NEXT_LAPSE_Q, &[("cat", Value::iri(cat)), ("now", instant(now))])?;
+    let text = bind(NEXT_LAPSE_Q, &[("cat", Value::iri(cat)), ("now", Value::instant(now))])?;
     match store.rows(&text, &[])?.first().and_then(|r| value(r, "next")) {
         Some(next) => Ok(Some(parse_instant(&next)?)),
         None => Ok(None),

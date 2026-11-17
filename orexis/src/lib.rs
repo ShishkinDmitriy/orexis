@@ -11,6 +11,7 @@
 //! - [`series`]: the points an event answers, written to the store the environment names for their purpose;
 //! - [`runtime`]: one agent's process, a lifecycle container for its packages' parts, run pass by pass;
 //! - [`transport`]: what is the same of every transport member — the inbox, a person's prose, what carries a chat;
+//! - [`rdf`]: what a graph is built of — a node, a triple, a literal, a fresh name — and the one spelling of a number;
 //! - [`ontology`]: the kernel's terms code may name (rule 1: a T-Box term, never an instance);
 //! - [`snapshots`]: the case runner, holding a store to its `.trig` and `.diff` and writing the diff on request.
 
@@ -24,6 +25,7 @@ pub mod events;
 pub mod foresight;
 pub mod hash;
 pub mod ontology;
+pub mod rdf;
 pub mod series;
 pub mod shape;
 #[cfg(any(test, feature = "snapshots"))]

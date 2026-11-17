@@ -21,8 +21,8 @@ use std::sync::{Arc, Mutex};
 
 use lru::LruCache;
 use oxigraph::io::RdfFormat;
-use oxigraph::model::vocab::{rdf, xsd};
-use oxigraph::model::{GraphName, GraphNameRef, Literal, NamedNode, NamedOrBlankNode, Quad, Term, Triple};
+use oxigraph::model::vocab::rdf;
+use oxigraph::model::{GraphName, GraphNameRef, NamedNode, NamedOrBlankNode, Quad, Term, Triple};
 use oxigraph::sparql::{PreparedSparqlQuery, PreparedSparqlUpdate, QueryResults, SparqlEvaluator};
 use oxigraph::store::Store as Engine;
 use oxsdatatypes::DateTime;
@@ -381,9 +381,9 @@ impl Store {
             Some(at) => bind(
                 HOLDING,
                 &[
-                    ("at", instant(at)),
-                    ("until", instant(within.until.unwrap_or(at))),
-                    ("now", instant(within.now.unwrap_or(at))),
+                    ("at", Value::instant(at)),
+                    ("until", Value::instant(within.until.unwrap_or(at))),
+                    ("now", Value::instant(within.now.unwrap_or(at))),
                 ],
             )?,
             None => String::new(),
@@ -605,37 +605,6 @@ impl Store {
         }))
     }
 
-    /// Everything `parent` holds, under `name` as well, copied by the engine. The name, for chaining.
-    pub fn copy_graph(&self, parent: &str, name: &str) -> Result<String, Error> {
-        let into = named(name)?;
-        let copied: Vec<Quad> = self
-            .quads(parent)?
-            .into_iter()
-            .map(|q| Quad::new(q.subject, q.predicate, q.object, into.clone()))
-            .collect();
-        self.add(copied)?;
-        Ok(name.to_string())
-    }
-
-    /// `parent`'s facts under `name`, less what each retraction takes, plus `added` — THE ORDER IS THE WHOLE OF
-    /// IT: copy, every delete, then the adds, since a construct reuses the very node its retraction names. The
-    /// name.
-    ///
-    /// A RETRACTION THAT WILL NOT RUN RETRACTS NOTHING, LOUDLY, and the fork exists either way: it is a package's
-    /// bug and must not take an agent down. Each runs on its own, parsed once by its text, so the Python kernel's
-    /// joining of them into one text — a round trip saved — has nothing to save here.
-    pub fn fork(&self, parent: &str, name: &str, added: &[Triple], retracts: &[String]) -> Result<String, Error> {
-        self.copy_graph(parent, name)?;
-        for text in retracts {
-            if let Err(refused) = self.update(text) {
-                log::error!("a retraction would not run, so it retracts nothing: {refused}");
-            }
-        }
-        let into = named(name)?;
-        self.add(added.iter().map(|t| t.clone().in_graph(into.clone())))?;
-        Ok(name.to_string())
-    }
-
     /// Every graph of `kind` the catalogue says was derived from one of `sources`, sorted: what the rules
     /// concluded of them, their revisions.
     pub fn revisions_of(&self, sources: &[&str], kind: &str) -> Result<Vec<String>, Error> {
@@ -688,7 +657,7 @@ impl Store {
             END_U,
             &[
                 ("cat", Value::iri(catalogue)),
-                ("at", instant(at)),
+                ("at", Value::instant(at)),
                 ("graphs", Value::raw(listed)),
             ],
         )?)
@@ -783,11 +752,6 @@ fn named(iri: &str) -> Result<NamedNode, Error> {
 
 fn engine(e: impl std::fmt::Display) -> Error {
     Error::Evaluation(e.to_string())
-}
-
-/// An instant as the term a query compares it as, spelled as the Python kernel spells it.
-pub fn instant(at: DateTime) -> Value {
-    Value::Term(Literal::new_typed_literal(crate::clock::isoformat(at), xsd::DATE_TIME).into())
 }
 
 /// The IRI a row binds `variable` to, where it binds one.
@@ -1057,7 +1021,7 @@ mod tests {
         );
     }
 
-    // --- forking, forgetting and closing: the store's writes, as `agent/tests/test_fork.py` and `test_store.py` ----
+    // --- forgetting and closing: the store's writes, as `agent/tests/test_store.py` -----------------------------------
 
     fn bare() -> Store {
         let _tree = Path::new(crate::boot::TREE);
@@ -1071,87 +1035,6 @@ mod tests {
             .into_iter()
             .map(|t| t.to_string())
             .collect()
-    }
-
-    fn parent() -> Store {
-        let store = bare();
-        store
-            .update("INSERT DATA { GRAPH <urn:test:parent> { <urn:test:s> <urn:test:level> 5 ; <urn:test:temp> 20 } }")
-            .unwrap();
-        store
-    }
-
-    const LEVEL_10: &str = "<urn:test:s> <urn:test:level> \"10\"^^<http://www.w3.org/2001/XMLSchema#integer>";
-    const LEVEL_5: &str = "<urn:test:s> <urn:test:level> \"5\"^^<http://www.w3.org/2001/XMLSchema#integer>";
-    const TEMP_20: &str = "<urn:test:s> <urn:test:temp> \"20\"^^<http://www.w3.org/2001/XMLSchema#integer>";
-
-    fn level_10() -> oxigraph::model::Triple {
-        oxigraph::model::Triple::new(
-            NamedNode::new("urn:test:s").unwrap(),
-            NamedNode::new("urn:test:level").unwrap(),
-            Literal::new_typed_literal("10", oxigraph::model::vocab::xsd::INTEGER),
-        )
-    }
-
-    #[test]
-    fn a_fork_copies_then_deletes_then_adds_and_leaves_its_parent_as_it_was() {
-        let store = parent();
-        let retract = "PREFIX t: <urn:test:>
-                   DELETE { GRAPH <urn:test:child> { t:s t:level ?l } } \
-                   WHERE { GRAPH <urn:test:child> { t:s t:level ?l } }";
-        store
-            .fork(
-                "urn:test:parent",
-                "urn:test:child",
-                &[level_10()],
-                &[retract.to_string()],
-            )
-            .unwrap();
-        assert_eq!(
-            facts(&store, "urn:test:child"),
-            [LEVEL_10.to_string(), TEMP_20.to_string()].into()
-        );
-        assert_eq!(
-            facts(&store, "urn:test:parent"),
-            [LEVEL_5.to_string(), TEMP_20.to_string()].into(),
-            "the parent is untouched — a world is a value"
-        );
-    }
-
-    #[test]
-    fn two_retractions_spelling_one_label_two_ways_both_run() {
-        let store = parent();
-        let one = "PREFIX : <urn:test:>
-               DELETE { GRAPH <urn:test:child> { :s :level ?l } } \
-               WHERE { GRAPH <urn:test:child> { :s :level ?l } }";
-        let two = "PREFIX : <urn:other:>
-               DELETE { GRAPH <urn:test:child> { <urn:test:s> <urn:test:temp> ?t } } \
-               WHERE { GRAPH <urn:test:child> { <urn:test:s> <urn:test:temp> ?t } }";
-        store
-            .fork(
-                "urn:test:parent",
-                "urn:test:child",
-                &[],
-                &[one.to_string(), two.to_string()],
-            )
-            .unwrap();
-        assert!(facts(&store, "urn:test:child").is_empty(), "both deletions applied");
-    }
-
-    #[test]
-    fn a_retraction_that_will_not_run_retracts_nothing_and_the_fork_still_exists() {
-        let store = parent();
-        store
-            .fork(
-                "urn:test:parent",
-                "urn:test:child",
-                &[level_10()],
-                &["DELETE nonsense".to_string()],
-            )
-            .unwrap();
-        let child = facts(&store, "urn:test:child");
-        assert!(child.contains(LEVEL_5), "the old reading stands");
-        assert!(child.contains(LEVEL_10), "and the adds went in");
     }
 
     #[test]

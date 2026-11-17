@@ -16,9 +16,9 @@ use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex, OnceLock};
 
 use orexis::Error;
-use orexis::clock::Paced;
 use orexis::store::Store;
 use orexis::task::{MET, PLANNED, UNREACHABLE};
+use orexis_agent::paced::Paced;
 
 use orexis::task::Remark;
 

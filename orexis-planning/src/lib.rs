@@ -33,6 +33,7 @@ mod extract_plan;
 mod find_scopes;
 mod find_wants;
 mod footprint;
+mod fork;
 mod lay_ground;
 mod memo;
 mod next_ground;

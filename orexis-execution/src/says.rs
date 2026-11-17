@@ -20,7 +20,7 @@ use crate::command::tokens;
 use crate::implementation::operations;
 use crate::ontology::{EXECUTION, SAYING};
 
-const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+use orexis::rdf::RDF_TYPE;
 const TEMPORAL: &str = "http://purl.org/dc/terms/temporal";
 
 /// Every document the step `said` tells, with the agents it is to, made over the beliefs holding at `now`: every

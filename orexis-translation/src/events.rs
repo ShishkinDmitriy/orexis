@@ -8,7 +8,9 @@ use oxigraph::model::{BlankNode, NamedNode, Triple};
 use oxsdatatypes::DateTime;
 use serde_json::Value as Json;
 
-use orexis::events::{Event, Mark, integer, node, text, triple, typed};
+use orexis::events::{Event, Mark};
+
+use orexis::rdf::{integer, node, text, triple, typed};
 
 pub const TRANSLATION: &str = "http://example.org/orexis/translation#";
 /// HOW MUCH OF A TOOL'S ANSWER IS JOURNALED: past it the answer says it was cut.

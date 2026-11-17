@@ -14,8 +14,8 @@ use oxsdatatypes::DateTime;
 use orexis::bind::{Value, bind};
 use orexis::clock::seconds;
 use orexis::document::Document;
-use orexis::hash::py_round;
 use orexis::ontology::{BELIEF, RECORD};
+use orexis::rdf::round6;
 use orexis::snapshots::{ME, now, stand_in};
 use orexis::store::{Store, Within, iri, value};
 use orexis_belief::Deliberator;
@@ -431,7 +431,7 @@ fn a_calibration_corrects_the_scaled_quantity_in_its_own_unit() {
     let store = pot();
     stated(&store, &[SCALING, CALIBRATION]);
     assert_eq!(scaled(&store, "2250"), Some((0.5, 0.5)));
-    assert_eq!(scaled(&store, "1300"), Some((1.0, py_round(0.98 / 0.96))));
+    assert_eq!(scaled(&store, "1300"), Some((1.0, round6(0.98 / 0.96))));
 }
 
 #[test]

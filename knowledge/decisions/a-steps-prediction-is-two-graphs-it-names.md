@@ -74,7 +74,7 @@ is the same move at one grain finer.
   `INSERT { GRAPH ?adds { ?s ?p ?o } } WHERE { GRAPH ?w { ?s ?p ?o } FILTER NOT EXISTS { GRAPH ?in
   { ?s ?p ?o } } }`, once per world on the ancestry, and the mirror for the retracts. The docstring
   that said "a diff of two graphs is not a pattern" was wrong: it is one `FILTER NOT EXISTS`. A blank
-  node keeps its identity across a fork (`copy_graph` is the engine's), so a term diff is at least as
+  node keeps its identity across a fork (planning's `fork` copies quad by quad), so a term diff is at least as
   faithful as the canonical-form diff it replaces. (Amended: where the world was forked from a
   later ground, the diff is against that ground, as `take` wrote it before the ground went.)
 - **The verdict is one `ASK`.** The executor asks, over the readings and their revisions as the

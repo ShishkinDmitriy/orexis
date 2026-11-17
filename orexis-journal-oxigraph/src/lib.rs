@@ -85,7 +85,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         journal.archived_in(archive.store.clone());
         handed
             .provided
-            .share::<orexis::task::Reads>()
+            .share::<orexis::series::Reads>()
             .journal
             .lies_in(archive.store.clone());
         //  THE LAST WORD: what was said after this task's last turn, while the others stopped, is taken too, and

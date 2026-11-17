@@ -44,6 +44,11 @@ impl Value {
         Value::Raw(text.into())
     }
 
+    /// An instant as the term a query compares it as (`rdf::instant`).
+    pub fn instant(at: oxsdatatypes::DateTime) -> Self {
+        Value::Term(crate::rdf::instant(at).into())
+    }
+
     /// The SPARQL text of the term the value is.
     pub fn render(&self) -> String {
         match self {

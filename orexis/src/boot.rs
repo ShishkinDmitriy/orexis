@@ -32,7 +32,6 @@ use crate::ontology::{
     BELIEF, CATALOGUE_GRAPH, CLOSURE_GRAPH, DERIVED, GRAPH, ONTOLOGY, ROLE, SELF_GRAPH, SOCIETY_GRAPH, WORLD_GRAPH,
 };
 use crate::store::{Store, Within, iri};
-use crate::task::Package;
 
 /// The tree this kernel was built from: the repo's root, where a test finds the worlds and the cases. The boot reads
 /// nothing of it.
@@ -85,16 +84,6 @@ fn under(directory: &Path) -> Vec<PathBuf> {
         .unwrap_or_default();
     out.sort();
     out
-}
-
-/// Every package this binary holds, by its name: the kernel keeps no order between them, and each decides in its own
-/// start whether it runs.
-pub fn every_package() -> Vec<String> {
-    inventory::iter::<Package>()
-        .map(|p| p.name.to_string())
-        .collect::<BTreeSet<_>>()
-        .into_iter()
-        .collect()
 }
 
 /// What a boot reads first off the disk: the world's directory, the agent's own `secrets/<agent>/`, and `beliefs/`.
@@ -154,7 +143,7 @@ fn is_a(store: &Store, kind: &str, class: &str) -> Result<bool, Error> {
 /// WHETHER THE SELF PLAYS A ROLE of one of `classes` — read off the self graph alone, by the vocabulary the store
 /// holds as it is asked: a role's class beneath one of them counts, where an ontology in the store says so. What a
 /// package asks of its own role as it starts (`task::Handed::plays`).
-pub fn plays(store: &Store, classes: &[&str]) -> Result<bool, Error> {
+pub(crate) fn plays(store: &Store, classes: &[&str]) -> Result<bool, Error> {
     for (_, kind) in played(store)? {
         for class in classes {
             if is_a(store, &kind, class)? {
@@ -177,48 +166,6 @@ fn played(store: &Store) -> Result<Vec<(Option<String>, String)>, Error> {
         .iter()
         .filter_map(|r| Some((iri(r, "role"), iri(r, "kind")?)))
         .collect())
-}
-
-/// THE ROLE CLASSES THE DOCUMENTS OF `krate` DECLARE, each beneath `orexis:Role` in a graph it brought: the roles its
-/// package serves, as the kernel learns it once the package has joined, reading no code of the package's.
-pub fn served(store: &Store, krate: &str) -> Result<Vec<String>, Error> {
-    const SERVED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        SELECT ?class WHERE { ?class rdfs:subClassOf orexis:Role }";
-    let own = brought_uri(krate, "");
-    let vocabularies = store.graphs_of(&[ONTOLOGY], &Within::default())?;
-    let mut out = BTreeSet::new();
-    for graph in vocabularies.iter().filter(|g| g.starts_with(&own)) {
-        out.extend(
-            store
-                .rows(SERVED_Q, &[graph.as_str()])?
-                .iter()
-                .filter_map(|r| iri(r, "class")),
-        );
-    }
-    Ok(out.into_iter().collect())
-}
-
-/// EVERY ROLE CLASS `role` DEPENDS ON (`orexis:dependsOn`), or a class it is beneath does, by the vocabulary the
-/// store holds as it is asked: what `task::Handed::joins` orders the starts by.
-pub fn depended(store: &Store, role: &str) -> Result<Vec<String>, Error> {
-    const DEPENDS_Q: &str =
-        "PREFIX orexis: <http://example.org/orexis#> SELECT ?needed WHERE { $class orexis:dependsOn ?needed }";
-    let vocabularies = store.graphs_of(&[ONTOLOGY], &Within::default())?;
-    let vocabularies: Vec<&str> = vocabularies.iter().map(String::as_str).collect();
-    let mut classes = vec![role.to_string()];
-    classes.extend(store.closed(role)?);
-    let mut out = BTreeSet::new();
-    for class in classes {
-        let text = bind(DEPENDS_Q, &[("class", Value::iri(&class))])?;
-        out.extend(
-            store
-                .rows(&text, &vocabularies)?
-                .iter()
-                .filter_map(|r| iri(r, "needed")),
-        );
-    }
-    Ok(out.into_iter().collect())
 }
 
 /// WHETHER THE WORLD WIRES THE SELF THROUGH A TRANSPORT: one of `wired` holds, each a role's class the self plays
@@ -364,7 +311,7 @@ fn owned(store: &Store, own: Vec<Held>, all: &[&Document]) -> Result<Vec<(Held, 
 }
 
 /// Who the agent is, off the society or the world, by the one identifier the process is told.
-pub fn identity(store: &Store, agent: &str) -> Result<String, Error> {
+fn identity(store: &Store, agent: &str) -> Result<String, Error> {
     const ME_Q: &str =
         "PREFIX orexis: <http://example.org/orexis#> SELECT ?me WHERE { ?me a orexis:Agent ; orexis:localId $id }";
     let graphs = store.graphs_of(&[SOCIETY_GRAPH, WORLD_GRAPH], &Within::default())?;

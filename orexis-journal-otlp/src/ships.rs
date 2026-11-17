@@ -8,7 +8,7 @@ use std::time::Duration;
 use oxigraph::model::{Literal, NamedNode};
 use serde_json::{Value, json};
 
-use orexis::events::triple;
+use orexis::rdf::triple;
 use orexis_journal::journal::{ACTIVITY, Journal};
 
 /// An activity shipped says to which cold store, so two may each have their own.
@@ -267,7 +267,7 @@ mod tests {
     use super::*;
     use std::sync::Mutex;
 
-    use orexis::events::{double, instant, mint, typed};
+    use orexis::rdf::{double, instant, mint, typed};
     use oxigraph::model::Triple;
 
     const PLANNING: &str = "http://example.org/orexis/planning#Planning";

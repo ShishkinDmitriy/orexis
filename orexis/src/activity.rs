@@ -14,7 +14,9 @@ use std::time::Instant;
 use oxigraph::model::{NamedNode, Term};
 use oxsdatatypes::DateTime;
 
-use crate::events::{Event, mint, round6};
+use crate::events::Event;
+
+use crate::rdf::{mint, round6};
 
 /// An activity's start, an instant: PROV's.
 pub const STARTED: &str = "http://www.w3.org/ns/prov#Start";

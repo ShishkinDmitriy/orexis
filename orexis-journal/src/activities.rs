@@ -33,7 +33,8 @@ use oxsdatatypes::DateTime;
 
 use crate::journal::{ACTIVITY, Journal};
 use orexis::activity::{Ended, Started, Wrote};
-use orexis::events::{Event, Watch, as_of, double, instant, triple, typed};
+use orexis::events::{Event, Watch, as_of};
+use orexis::rdf::{double, instant, triple, typed};
 
 pub const STARTED_AT: &str = "http://www.w3.org/ns/prov#startedAtTime";
 pub const ENDED_AT: &str = "http://www.w3.org/ns/prov#endedAtTime";
@@ -145,7 +146,7 @@ pub fn connect(watch: &Watch, journal: Arc<Journal>) {
 mod tests {
     use super::*;
     use orexis::activity::Activity;
-    use orexis::events::mint;
+    use orexis::rdf::mint;
 
     const PLANNING: &str = "http://example.org/orexis/planning#Planning";
     const SEARCHING: &str = "http://example.org/test#Searching";

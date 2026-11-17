@@ -3,6 +3,8 @@
 //! and names none: what a caller provides one (`orexis::task::Provided`) is that package's own type, and
 //! what each makes of it, and of what it is not handed, is the package's to say.
 
+pub mod paced;
+
 use std::path::Path;
 
 use std::sync::Arc;
@@ -76,7 +78,7 @@ pub fn boot_without_starting(store: &Store, world: &Path, agent: &str) -> Result
                     .build()
                     .map_err(|e| Error::Evaluation(format!("the tasks could not start: {e}")))?;
                 tasks.block_on(async {
-                    let clock: Arc<dyn Clock> = Arc::new(orexis::clock::Paced::wall());
+                    let clock: Arc<dyn Clock> = Arc::new(crate::paced::Paced::wall());
                     let booted = self::boot(&store, &world, &agent, clock, Provided::default())?;
                     booted.without_starting().await?.stop().await;
                     Ok(())

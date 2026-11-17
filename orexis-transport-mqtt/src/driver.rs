@@ -28,8 +28,8 @@ use serde_json::Value as Json;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
-use orexis::hash::py_float_repr;
 use orexis::ontology::{BELIEF, local_of};
+use orexis::rdf::repr;
 use orexis::store::{Store, Within, iri, value};
 use orexis_sensing::cadence::{lapsed, next_lapse, sensors};
 use orexis_sensing::received::received;
@@ -67,7 +67,7 @@ pub fn dumps(document: &Json) -> String {
         Json::Number(n) => match (n.as_i64(), n.as_u64()) {
             (Some(i), _) => i.to_string(),
             (_, Some(u)) => u.to_string(),
-            _ => py_float_repr(n.as_f64().unwrap_or(0.0)),
+            _ => repr(n.as_f64().unwrap_or(0.0)),
         },
         Json::String(s) => quoted(s),
         Json::Array(items) => format!("[{}]", items.iter().map(dumps).collect::<Vec<_>>().join(", ")),
