@@ -55,14 +55,17 @@ mod world_at;
 pub use memo::Memo;
 pub use planner::{Budget, Planner};
 
-inventory::submit! { Package { name: "planning", documents: orexis::documents!("ontology.ttl", "wait.ttl"), start } }
+inventory::submit! { Package { name: "planning", start } }
+
+/// THE DOCUMENTS THIS PACKAGE BRINGS as it joins, in the order it puts them in.
+const DOCUMENTS: orexis::task::Documents = orexis::documents!("ontology.ttl", "wait.ttl");
 
 /// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
 const ROLE: &str = "http://example.org/orexis/planning#Planner";
 
 /// PLANNING'S START, which every package this binary holds is given: it joins where the self plays a planner and
 /// declines otherwise; joined, it writes the scopes a pass reads and makes its planner; checked, it says what a check
-/// asks of it and ends there; otherwise it says it has started, and what follows is ITS TASK, which takes the
+/// asks of it and ends there as it boots; otherwise what follows is ITS TASK, which takes the
 /// foresight offered, then waits for an event beneath its trigger, a head asked or the instant it is next due, and
 /// plans once nothing more waits to be heard.
 fn start(handed: Handed) -> orexis::task::Starting {
@@ -70,7 +73,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.plays(&[ROLE])? {
             return Ok(());
         }
-        handed.joins("planning").await?;
+        handed.joins(&DOCUMENTS).await?;
         //  THE SCOPES A PASS READS are written as planning starts, over the store as the boot left it: the boot's
         //  act, and planning's own.
         let now = handed.clock.now();
@@ -108,8 +111,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         let mut hears = handed.events.hears();
         hears.event(PLANNING_TRIGGER, REOPEN);
         hears.event(HEAD_ASKED, CHECK);
-        handed.started("planning").await;
-        if handed.checking().is_some() {
+        if !handed.booted().await? {
             return Ok(());
         }
         //  PREDICTION'S FORESIGHT, where the agent plays a predictor: offered at its start, taken as the run begins.

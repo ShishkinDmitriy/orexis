@@ -32,11 +32,11 @@ mod ships;
 
 pub use ships::{SHIPPED_TO, Send, Ships, batch, mark, post, ship};
 
-inventory::submit! { Package { name: "journal-otlp", documents: &[], start } }
+inventory::submit! { Package { name: "journal-otlp", start } }
 
 /// ITS START, which every package this binary holds is given: it keeps house for the journal, so it joins where the
 /// journal did AND THE RECORDER'S ROLE NAMES A TRACER the world says where to reach, and where the role names none
-/// its start ends there. Joined, it says it has started, which waits for the journal's start; checked, it ends there;
+/// its start ends there. It says it booted, which waits until the journal's package has; checked, it ends there;
 /// otherwise it takes what a test hands it to ship or the journal handed on, and what follows is ITS TASK, which every
 /// stretch of the agent's time ships what the journal holds unshipped, off the agent's threads, and once more as the
 /// run ends: where to ship is the world's word, and how often the role's.
@@ -51,8 +51,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
             return Ok(());
         }
         //  ITS CORE IS MADE ONCE EVERY PACKAGE HAS MADE ITS OWN, so the journal it keeps house for is handed on.
-        handed.started("journal-otlp").await;
-        if handed.checking().is_some() {
+        if !handed.booted().await? {
             return Ok(());
         }
         //  HANDED ONE, by a test that ships to its own endpoint, it ships that; otherwise it makes its own.

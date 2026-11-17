@@ -20,7 +20,10 @@ mod transport;
 
 pub use transport::Transport;
 
-inventory::submit! { Package { name: "transport/mqtt", documents: orexis::documents!("ontology.ttl"), start } }
+inventory::submit! { Package { name: "transport/mqtt", start } }
+
+/// THE DOCUMENTS THIS PACKAGE BRINGS as it joins, in the order it puts them in.
+const DOCUMENTS: orexis::task::Documents = orexis::documents!("ontology.ttl");
 
 /// A TRANSPORT IS NO ROLE: this member joins the agent where a role the self plays needs bytes and the world wires
 /// them through it - each a role's class with what the world must state of the self, in words declared here.
@@ -45,7 +48,7 @@ const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
 
 /// ITS START, which every package this binary holds is given: it joins where a role the self plays needs what it
 /// carries and the world wires it, and declines otherwise; joined, its member is made and listens; checked, it says
-/// it holds the agent and ends there; otherwise it says it has started, and what follows is ITS TASK, which waits for
+/// it holds the agent and ends there as it boots; otherwise what follows is ITS TASK, which waits for
 /// an event beneath its triggers, an arrival or the instant a reading next falls due, and once nothing more waits to
 /// be heard hands on what arrived; and it stops the member as it ends.
 fn start(handed: Handed) -> orexis::task::Starting {
@@ -53,7 +56,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !orexis::boot::wired(&handed.store, WORDS, WIRED)? {
             return Ok(());
         }
-        handed.joins("transport/mqtt").await?;
+        handed.joins(&DOCUMENTS).await?;
         let me = orexis::boot::selves(&handed.store)?
             .into_iter()
             .next()
@@ -80,8 +83,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         hears.event(CARRYING_TRIGGER, CARRY);
         hears.event(TELLING_TRIGGER, TELL);
         hears.event(ACTUATING_TRIGGER, ACTUATE);
-        handed.started("transport/mqtt").await;
-        if handed.checking().is_some() {
+        if !handed.booted().await? {
             return Ok(());
         }
         let mut heard = None;

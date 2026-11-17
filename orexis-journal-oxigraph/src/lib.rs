@@ -11,7 +11,7 @@
 //! it: until then a later incident keeps it again, and what ships the activities reads it there. One that changes
 //! after it was taken, an activity told the graphs it wrote, is taken again whole.
 //!
-//! WHEN: every two of the agent's seconds where anything was written; at once as an incident is kept; and once more as the run ends. So an agent killed outright
+//! WHEN: every two of the agent's seconds where anything was written; at once as an incident is kept; and once more in its stopping, once the others have stopped. So an agent killed outright
 //! loses what it said in its last stretch, and one that stops, nothing.
 //!
 //! THE ARCHIVE IS WHAT A READER OF THE PAST IS HANDED: the endpoint's `/sparql`, a chat's journal tool and a stopped
@@ -26,14 +26,14 @@ mod archive;
 
 pub use archive::{Archive, Archives};
 
-inventory::submit! { Package { name: "journal-oxigraph", documents: &[], start } }
+inventory::submit! { Package { name: "journal-oxigraph", start } }
 
 /// ITS START, which every package this binary holds is given: it keeps house for the journal, so it joins where the
 /// journal did AND THE RECORDER'S ROLE NAMES AN ARCHIVE the world says where to find, and where the role names none
-/// its start ends there, and what lasts stays in the journal. Joined, it says it has started, which waits for the
-/// journal's start; checked, it ends there; otherwise it takes the journal and the archive a test hands it, or,
+/// its start ends there, and what lasts stays in the journal. It says it booted, which waits until the journal's
+/// package has; checked, it ends there; otherwise it takes the journal and the archive a test hands it, or,
 /// deployed, opens its own; and what follows is ITS TASK, which every stretch of the agent's time, or as an incident
-/// is kept, takes what lasts where anything was written, off the agent's threads, and once more as the run ends.
+/// is kept, takes what lasts where anything was written, off the agent's threads, and once more in its stopping, once the others have stopped.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         //  IT RUNS WHERE THE RECORDER'S ROLE NAMES ITS SERVICE.
@@ -45,8 +45,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
             return Ok(());
         };
         //  ITS CORE IS MADE ONCE EVERY PACKAGE HAS MADE ITS OWN, so the journal it keeps house for is handed on.
-        handed.started("journal-oxigraph").await;
-        if handed.checking().is_some() {
+        if !handed.booted().await? {
             return Ok(());
         }
         //  OVER THE JOURNAL that package handed on, where it keeps one: handed an archive, by a test that reads it, it
@@ -91,13 +90,6 @@ fn start(handed: Handed) -> orexis::task::Starting {
             .lies_in(archive.store.clone());
         //  THE LAST WORD: what was said after this task's last turn, while the others stopped, is taken too, and
         //  reaches the disk.
-        let (last, kept, agent) = (journal.clone(), archive.clone(), handed.id.clone());
-        handed.finally(move || {
-            if let Err(e) = kept.take(&last) {
-                eprintln!("{agent}: the journal's last entries were not archived: {e}");
-            }
-            kept.flush();
-        });
         loop {
             let at = handed
                 .clock
@@ -131,6 +123,12 @@ fn start(handed: Handed) -> orexis::task::Starting {
                 break;
             }
         }
+        //  AND ONCE EVERY RUNNING PACKAGE HAS ENDED, inside its stopping, the entries the others said as they stopped.
+        handed.stopping().await?;
+        if let Err(e) = archive.take(&journal) {
+            log::warn!("{}: the journal's last entries were not archived: {e}", handed.id);
+        }
+        archive.flush();
         Ok(())
     })
 }

@@ -58,29 +58,33 @@ thing a start does is decide:
 
 Its own class decides, since no package's role is beneath another package's, and a domain's role class beneath
 one is the world's to say, in the store as the boot began. **A package that runs joins, bringing its own documents**
-(`handed.joins("speech")`): its `ontology.ttl` and where it has them its rules and its actions, each a file of its
-crate compiled into the binary beside its code (`orexis::documents!` in the crate's registration), are put in, and
-every graph of the world passed over until then, a kind its vocabulary declares, with them. So an agent's store holds
-the documents of the packages it runs and of no other. **The order the packages make their cores in is the
-vocabulary's** ([role](/domain/kernel/role.md)): joining waits until every start has decided and the boot is
-finished, every package that joins having brought its documents; the kernel then reads which of the self's roles each
-joined package's own documents declare, and what those roles depend on (`orexis:dependsOn`), and holds a package
-until every package serving a role its roles depend on has made its core, and refuses the boot where the
-dependencies go round a cycle; that the self plays every role depended on is onboarding's to hold. A package whose role depends on
-nothing goes straight on; a coordinator makes its core after planning, execution and speech have made theirs, and no
-package names another. The package knows its own role; nothing
+(`handed.joins(&DOCUMENTS)`): its `ontology.ttl` and where it has them its rules and its actions, each a file of its
+crate compiled into the binary beside its code and named by it in the order it wants them (`orexis::documents!`),
+are put in, and every graph of the world passed over until then, a kind its vocabulary declares, with them, and it
+says it joined (`orexis:PackageJoined`). So an agent's store holds the documents of the packages it runs and of no
+other. **The order the packages make their cores in is the vocabulary's** ([role](/domain/kernel/role.md)): once
+every package has joined or ended its booting, the vocabulary is whole, and a package reads which of the self's roles
+its own documents declare and what those depend on (`orexis:dependsOn`), refused where they go round a cycle; it
+then waits to hear the end of the booting of each package serving one, since a booting ends saying the roles its
+package serves (`orexis:serves`). That the self plays every role depended on is onboarding's to hold. A package whose
+role depends on nothing goes straight on; a coordinator makes its core after planning, execution and speech have
+made theirs, and no package names another. The package knows its own role; nothing
 decides for it, and the kernel names no package, no role and no transport's wiring. Once every start has decided, a
 role the self plays that no package of the binary declares is refused, its package having been built out.
 
-**A package's start is the whole of what it does, and its lifecycle is two events.** It decides, makes its core,
-SAYS IT HAS STARTED (`handed.started("belief").await`), and checked (`handed.checking()`), ends there: each package
-checks its own; otherwise it goes on as its task. Saying it started WAITS UNTIL EVERY PACKAGE HAS MADE ITS CORE OR
-ENDED, so each is listening before any goes on to speak, and then says `orexis:PackageStarting` and
-`orexis:PackageStarted`, at the instants it began and made its core and naming the package (`orexis:package`), so the
-journal, made by then, keeps every start. Starting the agent ends there too (`Booted::start`, awaited): once every
-package has made its core or ended, refused where one could not be made. Nothing keeps an order between packages, and nothing knows which run but
-the events. What keeps house for the journal makes its core after saying it started, the journal's being made by
-then. What several packages add to is provided as each makes its core (`Provided::alter`) and read once every core
+**A package's start is the whole of what it does, and its lifecycle is activities inside the agent's**
+([the-lifecycle-is-activities-the-packages-hear](/decisions/the-lifecycle-is-activities-the-packages-hear.md)). The
+kernel begins the agent's booting (`orexis:AgentBooting`) and, inside it, a booting for every package the binary holds
+(`orexis:PackageBooting`): the package decides, joins, makes its core and SAYS IT BOOTED (`handed.booted().await`),
+which ends its booting, naming the package (`orexis:package`), and WAITS UNTIL THE AGENT'S BOOTING HAS ENDED, every
+package booted or declined and the boot finished, so each is listening before any goes on to speak. Where the agent
+runs, its running (`orexis:AgentRunning`) holds each package's (`orexis:PackageRunning`), the package's task; where it
+is checked, the booting is all there is, and a package told so ends there, having said what the check asks
+(`handed.checking()`). Starting the agent ends as its booting does (`Booted::start`, awaited), refused where a package
+could not boot. Nothing keeps an order between packages, and nothing knows which run but the events, the lifecycle's
+among them. What keeps house for the journal makes its core after the agent has booted, the journal's being made by
+then, and what it owes once the others are done it does in its stopping (`handed.stopping()`), inside the agent's
+(`orexis:AgentStopping`). What several packages add to is provided as each makes its core (`Provided::alter`) and read once every core
 is made (`Provided::share`), as what a chat reads of what happened is. What a caller provides is a package's own
 type, a test's journal or a deployment's word that it is deployed, and the binary assembles nothing of it: what a
 package makes of what it is handed, and of what it is not, is its own start's to say. The start makes the package's [part](/domain/kernel/part.md) and

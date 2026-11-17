@@ -5,15 +5,16 @@
 //! checked and never minted. A volume lived in forgets every common graph and reads the documents again, and keeps
 //! the agent's own.
 //!
-//! JOINED, PACKAGE BY PACKAGE (`Begun::bring`): each package this binary holds decides in its own start whether the
+//! JOINED, PACKAGE BY PACKAGE (`Begun::bring`): each package this binary holds decides in its own booting whether the
 //! agent runs it — by the role the self plays, which the package knows as its own class, or by what it needs of the
-//! world — and one that joins brings its documents, compiled in beside its code (`task::Package::documents`): they
-//! are put in, the vocabulary closed again, and the world's graphs passed over until now offered again. The kernel
-//! names no package and no role, and knows no package's reason to join (`task::Handed::joins`). Every graph is put
-//! in, the agent's own among them, and its row stamped, as soon as the vocabulary declares its kind.
+//! world — and one that joins brings its documents, compiled in beside its code and named by it in the order it wants
+//! (`task::Documents`): they are put in, the vocabulary closed again, and the world's graphs passed over until now
+//! offered again. The kernel names no package and no role, and knows no package's reason to join
+//! (`task::Handed::joins`). Every graph is put in, the agent's own among them, and its row stamped, as soon as the
+//! vocabulary declares its kind.
 //!
-//! FINISHED (`Begun::finish`), once every package has decided: a role the self plays that no package of this binary
-//! declares is refused, the package that would have declared it having been built out.
+//! FINISHED (`Begun::finish`), once every package's booting has ended: a role the self plays that no package of this
+//! binary declares is refused, the package that would have declared it having been built out.
 //!
 //! Writing the scopes is planning's, which the kernel names nothing of: whoever boots an agent that plans says so.
 
@@ -43,11 +44,6 @@ const KERNEL: &str = "orexis";
 /// THE KERNEL'S T-BOX, compiled in, as each package's documents are.
 const KERNEL_VOCABULARY: &str = include_str!("../ontology.ttl");
 
-/// A PACKAGE'S CRATE: `transport/mqtt` is `orexis-transport-mqtt`.
-pub fn crate_of(package: &str) -> String {
-    format!("{KERNEL}-{}", package.replace('/', "-"))
-}
-
 /// THE NAME OF THE GRAPH A BROUGHT DOCUMENT IS: the file `name` of `krate`, which is no file where the agent runs, so
 /// it is named for the crate and the file and not for a place on a disk. A name is for eyes.
 pub fn brought_uri(krate: &str, name: &str) -> String {
@@ -58,11 +54,6 @@ pub fn brought_uri(krate: &str, name: &str) -> String {
 fn brought(krate: &str, name: &str, text: &str) -> Result<(PathBuf, Document), Error> {
     let doc = Document::brought(&format!("{krate}/{name}"), text, &brought_uri(krate, name))?;
     Ok((PathBuf::from(krate).join(name), doc))
-}
-
-/// The package that registered itself as `name`, where this binary holds it.
-fn registered(name: &str) -> Option<&'static Package> {
-    inventory::iter::<Package>().find(|p| p.name == name)
 }
 
 const DOCUMENTS: [&str; 2] = ["ttl", "trig"];
@@ -188,13 +179,13 @@ fn played(store: &Store) -> Result<Vec<(Option<String>, String)>, Error> {
         .collect())
 }
 
-/// THE ROLE CLASSES `package`'S OWN DOCUMENTS DECLARE, each beneath `orexis:Role` in a graph it brought: the roles
-/// the package serves, as the kernel learns it once the package has joined, reading no code of the package's.
-pub fn served(store: &Store, package: &str) -> Result<Vec<String>, Error> {
+/// THE ROLE CLASSES THE DOCUMENTS OF `krate` DECLARE, each beneath `orexis:Role` in a graph it brought: the roles its
+/// package serves, as the kernel learns it once the package has joined, reading no code of the package's.
+pub fn served(store: &Store, krate: &str) -> Result<Vec<String>, Error> {
     const SERVED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
         SELECT ?class WHERE { ?class rdfs:subClassOf orexis:Role }";
-    let own = brought_uri(&crate_of(package), "");
+    let own = brought_uri(krate, "");
     let vocabularies = store.graphs_of(&[ONTOLOGY], &Within::default())?;
     let mut out = BTreeSet::new();
     for graph in vocabularies.iter().filter(|g| g.starts_with(&own)) {
@@ -524,14 +515,13 @@ pub(crate) fn begin(store: &Store, booting: &Booting<'_>) -> Result<Begun, Error
 impl Begun {
     /// `package`'S DOCUMENTS ARE BROUGHT: put in, the vocabulary closed again, and every graph of the world passed
     /// over until now offered again, since a kind this package declares is now one the agent reads.
-    pub(crate) fn bring(&mut self, store: &Store, package: &str) -> Result<(), Error> {
-        let documents = registered(package).map(|p| p.documents).unwrap_or_default();
-        if documents.is_empty() {
+    pub(crate) fn bring(&mut self, store: &Store, documents: &crate::task::Documents) -> Result<(), Error> {
+        if documents.files.is_empty() {
             return Ok(());
         }
         let offset = self.read.len();
-        for (name, text) in documents {
-            self.read.push(brought(&crate_of(package), name, text)?);
+        for (name, text) in documents.files {
+            self.read.push(brought(documents.krate, name, text)?);
         }
         let all: Vec<&Document> = self.read.iter().map(|(_, d)| d).collect();
         let passed = std::mem::take(&mut self.passed);
@@ -593,16 +583,4 @@ impl Begun {
         );
         Ok(())
     }
-}
-
-/// BOOT `agent` of `world` into `store` WITH THE DOCUMENTS OF EVERY PACKAGE THIS BINARY HOLDS, whether or not it would
-/// run: no start decides and nothing runs, for a test that calls a package's core itself. An agent that runs is
-/// booted by `task::boot`, where each package brings its own as it joins.
-pub fn boot(store: &Store, world: &Path, agent: &str) -> Result<(), Error> {
-    let mut begun = begin(store, &Booting { world, agent })?;
-    let names = every_package();
-    for name in &names {
-        begun.bring(store, name)?;
-    }
-    begun.finish(store, &names)
 }

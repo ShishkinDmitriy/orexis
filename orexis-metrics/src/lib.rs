@@ -27,21 +27,24 @@ mod window;
 pub use meter::Meter;
 pub use window::Window;
 
-inventory::submit! { Package { name: "metrics", documents: orexis::documents!("ontology.ttl"), start } }
+inventory::submit! { Package { name: "metrics", start } }
+
+/// THE DOCUMENTS THIS PACKAGE BRINGS as it joins, in the order it puts them in.
+const DOCUMENTS: orexis::task::Documents = orexis::documents!("ontology.ttl");
 
 /// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
 const ROLE: &str = "http://example.org/orexis/metrics#Meter";
 
 /// THE METRICS' START, which every package this binary holds is given: it joins where the self plays a meter and
 /// declines otherwise; joined, its meter is made and its window taken where a test hands one, made where the agent is
-/// deployed and the world says where the store its role names answers, and none otherwise; it says it has started;
+/// deployed and the world says where the store its role names answers, and none otherwise; it says it booted;
 /// and unless checked, it waits for the agent to stop and writes what the window holds.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         if !handed.plays(&[ROLE])? {
             return Ok(());
         }
-        handed.joins("metrics").await?;
+        handed.joins(&DOCUMENTS).await?;
         let mut meter = Meter::new(&handed.store)?;
         let window = match handed.provided.take::<Window>() {
             Some(window) => Some(window),
@@ -64,7 +67,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
             },
         };
         let Some(window) = window else {
-            handed.started("metrics").await;
+            handed.booted().await?;
             return Ok(());
         };
         //  WHAT A CHAT READS OF THE METRICS is the series this writes.
@@ -73,8 +76,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
             .provided
             .alter(|reads: &mut orexis::task::Reads| reads.metrics = Some(reader));
         meter.tally(window, handed.events.watch());
-        handed.started("metrics").await;
-        if handed.checking().is_some() {
+        if !handed.booted().await? {
             return Ok(());
         }
         handed.stopped().await;

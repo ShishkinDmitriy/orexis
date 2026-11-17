@@ -27,21 +27,24 @@ pub mod statements;
 pub use speaker::Speaker;
 pub use statements::document_of;
 
-inventory::submit! { Package { name: "speech", documents: orexis::documents!("ontology.ttl"), start } }
+inventory::submit! { Package { name: "speech", start } }
+
+/// THE DOCUMENTS THIS PACKAGE BRINGS as it joins, in the order it puts them in.
+const DOCUMENTS: orexis::task::Documents = orexis::documents!("ontology.ttl");
 
 /// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
 const ROLE: &str = "http://example.org/orexis/speech#Speaker";
 
 /// SPEECH'S START, which every package this binary holds is given: it joins where the self plays a speaker and
-/// declines otherwise; joined, its speaker is made and what a restart finds unextracted extracted; checked, it ends
-/// there; otherwise it says it has started, and what follows is ITS TASK, which waits for a statement written or an
+/// declines otherwise; joined, its speaker is made and what a restart finds unextracted extracted; it says it booted, and checked it ends
+/// there; otherwise what follows is ITS TASK, which waits for a statement written or an
 /// event beneath its trigger, and once nothing more waits to be heard hands on what it queued for itself.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         if !handed.plays(&[ROLE])? {
             return Ok(());
         }
-        handed.joins("speech").await?;
+        handed.joins(&DOCUMENTS).await?;
         let mut speaker = Speaker::new(&handed.store)?;
         speaker.watch = handed.events.watch().clone();
         speaker.unextracted()?;
@@ -49,8 +52,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         hears.graph(STATEMENT_GRAPH, STATED);
         hears.event(SPEAKING_TRIGGER, SPEAK);
         let mut arrived = handed.arrived();
-        handed.started("speech").await;
-        if handed.checking().is_some() {
+        if !handed.booted().await? {
             return Ok(());
         }
         let mut heard = None;

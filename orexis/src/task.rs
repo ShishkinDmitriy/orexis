@@ -3,7 +3,9 @@
 //! (`Arrived::wait`), the clock (`Handed::sleep_until`) or the run's end (`Handed::stopped`), calls its core, and
 //! says what happened. The kernel knows no package and no word of what one does: a package REGISTERS ITSELF, its
 //! crate submitting its name and its start (`Package`) to a registry the linker collects, and whoever runs an agent
-//! starts each one its roles load (`start`).
+//! starts each one (`Booted::start`), inside the agent's booting: a package decides whether it runs, joins bringing its
+//! documents, says it booted, and goes on as its task - THE LIFECYCLE, activities of the kernel's the packages hear on
+//! the events as they hear any other (the-lifecycle-is-activities-the-packages-hear).
 //!
 //! WHAT IT IS HANDED (`Handed`) is plain: the store, the agent's id, the clock, THE EVENTS - where every package says
 //! what happened and subscribes to what it hears, the one thing packages share - and what reaches OUTSIDE, the
@@ -28,12 +30,12 @@ use std::sync::{Arc, Mutex, RwLock};
 
 use oxsdatatypes::DateTime;
 
-use oxigraph::model::{NamedNode, Term};
+use oxigraph::model::{Literal, NamedNode, Term};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel};
 use tokio::sync::{Notify, watch};
 
 use crate::Error;
-use crate::activity::{Activity, Ended, Started, Wrote};
+use crate::activity::{Activity, Ended, Lasting, Started, Wrote};
 use crate::clock::Clock;
 use crate::events::{Event, Laps, Mark, Number, Watch, round6};
 use crate::store::Store;
@@ -156,11 +158,6 @@ tokio::task_local! {
 struct Local {
     said: Vec<Heard>,
     in_hand: usize,
-    /// When the task's start began, whether it has decided whether its package runs, and whether it has said it
-    /// made its core.
-    began: Option<DateTime>,
-    decided: bool,
-    made: bool,
 }
 
 /// Run `work`, a computation of seconds, so the tasks beside it keep their workers: where the runtime has several,
@@ -251,7 +248,9 @@ struct Bus {
 
 struct Hearer {
     to: UnboundedSender<Woke>,
-    events: Vec<(String, usize)>,
+    /// Each class of event heard, with the class of activity it must start or end where it is an activity's, and
+    /// its tag.
+    events: Vec<(String, Option<String>, usize)>,
     graphs: Vec<(String, usize)>,
 }
 
@@ -321,7 +320,7 @@ impl Events {
         let hearers = self.0.hearers.read().expect("hearers nobody poisoned");
         hearers
             .iter()
-            .any(|h| h.events.iter().any(|(c, _)| classes.contains(c)))
+            .any(|h| h.events.iter().any(|(c, _, _)| classes.contains(c)))
     }
 
     /// Hear the watch, once somebody hears events: what is said on it is told to the tasks that hear its class.
@@ -344,6 +343,31 @@ impl Events {
                 }
             }
         });
+    }
+
+    /// SAY `event` TO WHOEVER WATCHES AND TO EVERY TASK HEARING ITS CLASS, connecting nothing: what the kernel says of
+    /// the lifecycle, which every package hears, so the watch is still told no where nothing else watches it. Where the
+    /// tasks already hear the watch, it tells them; otherwise it is told them here, held until the sayer next waits.
+    fn say(&self, event: &dyn Event) {
+        let named = self.0.watch.emit(event);
+        if self.0.listening.load(Ordering::SeqCst) {
+            return;
+        }
+        let Some(kind) = event.kind() else {
+            return;
+        };
+        let heard = Heard {
+            node: named.unwrap_or_else(crate::events::mint),
+            kind: kind.to_string(),
+            activity: event.activity().map(|(a, k)| (a.clone(), k.to_string())),
+            about: event.about().into_iter().map(|(p, t)| (p.to_string(), t)).collect(),
+        };
+        if let Err(heard) = TURN
+            .try_with(|turn| turn.borrow_mut().said.push(heard.clone()))
+            .map_err(|_| heard)
+        {
+            self.tell(heard);
+        }
     }
 
     /// Every class `class` is beneath, itself among them.
@@ -377,8 +401,13 @@ impl Events {
                 .flat_map(|h| {
                     h.events
                         .iter()
-                        .filter(|(class, _)| classes.contains(class))
-                        .map(|(_, tag)| (h.to.clone(), *tag))
+                        .filter(|(class, of, _)| {
+                            classes.contains(class)
+                                && of
+                                    .as_ref()
+                                    .is_none_or(|of| event.activity.as_ref().is_some_and(|(_, k)| k == of))
+                        })
+                        .map(|(_, _, tag)| (h.to.clone(), *tag))
                 })
                 .collect()
         };
@@ -509,7 +538,22 @@ impl Hears {
     pub fn event(&mut self, class: &str, tag: usize) {
         self.events.listen();
         let mut hearers = self.events.0.hearers.write().expect("hearers nobody poisoned");
-        hearers[self.index].events.push((class.to_string(), tag));
+        hearers[self.index].events.push((class.to_string(), None, tag));
+    }
+
+    /// Hear every event of `class` the kernel says (`Events::say`), with `tag`, connecting nothing.
+    fn said(&mut self, class: &str, tag: usize) {
+        let mut hearers = self.events.0.hearers.write().expect("hearers nobody poisoned");
+        hearers[self.index].events.push((class.to_string(), None, tag));
+    }
+
+    /// Hear every start or end - `phase`, `activity::STARTED` or `activity::ENDED` - of an activity of `kind`, with
+    /// `tag`: what a package hears of another's lifecycle, and of the agent's.
+    pub fn activity(&mut self, phase: &str, kind: &str, tag: usize) {
+        let mut hearers = self.events.0.hearers.write().expect("hearers nobody poisoned");
+        hearers[self.index]
+            .events
+            .push((phase.to_string(), Some(kind.to_string()), tag));
     }
 
     /// Hear every graph of `kind` written, with `tag`.
@@ -526,6 +570,16 @@ impl Hears {
     /// WAIT FOR WHAT IS HEARD NEXT; nothing once nobody can say anything more.
     pub async fn next(&mut self) -> Option<Woke> {
         self.events.rest();
+        let woke = self.inbox.recv().await?;
+        self.events.took();
+        Some(woke)
+    }
+
+    /// WAIT FOR WHAT IS HEARD NEXT AND STAY BUSY: what a package booting waits with, what it said told as it waits,
+    /// while it is still counted as booting - so no stretch ends, and the run is not over, while a booting waits on
+    /// the others.
+    async fn next_busy(&mut self) -> Option<Woke> {
+        self.events.spoke();
         let woke = self.inbox.recv().await?;
         self.events.took();
         Some(woke)
@@ -686,6 +740,7 @@ impl Turn<'_> {
                 kind,
                 triggers: triggers.to_vec(),
                 at: self.now,
+                lasting: None,
             });
         }
         activity
@@ -705,6 +760,7 @@ impl Turn<'_> {
                 kind: activity.kind,
                 at: self.now,
                 duration_s: activity.took(),
+                lasting: None,
             });
         }
     }
@@ -876,7 +932,9 @@ pub struct Reads {
 }
 
 /// WHAT A PACKAGE'S TASK IS HANDED: the agent's services, and nothing of its own - its store, its id, the clock, the
-/// events, what is provided, and the run it is part of. Every package is handed the same.
+/// events, what is provided, and the run it is part of; and, handed to a package's start, THE PACKAGE'S LIFECYCLE,
+/// which the kernel begins and the package goes on with: it joins (`joins`), says it booted (`booted`) and, where it
+/// has work left once the agent's running ends, stops (`stopping`).
 #[derive(Clone)]
 pub struct Handed {
     pub store: Store,
@@ -885,172 +943,219 @@ pub struct Handed {
     pub events: Events,
     pub provided: Provided,
     run: Run,
+    life: Option<Arc<tokio::sync::Mutex<Life>>>,
 }
 
-/// THE RUN THE PACKAGES ARE PART OF, a service each is handed: the signal that stops it, HOW MANY STARTS ARE STILL
-/// MAKING THEIR CORE, which every package waits on before it goes on so each listens before any speaks, the packages
-/// that said they started, in the order they did, and what is owed once every task has ended. It names no package
-/// but as one says it started.
+/// THE AGENT'S LIFECYCLE AND EACH PACKAGE'S, as activities of the kernel's classes, each said by one start and one end
+/// (`activity::Lasting`): the agent's booting holds every package's, its running every running package's, its stopping
+/// every package's that stops - and a check is the agent's booting alone.
+pub const AGENT_BOOTING: &str = "http://example.org/orexis#AgentBooting";
+pub const AGENT_RUNNING: &str = "http://example.org/orexis#AgentRunning";
+pub const AGENT_STOPPING: &str = "http://example.org/orexis#AgentStopping";
+pub const PACKAGE_BOOTING: &str = "http://example.org/orexis#PackageBooting";
+pub const PACKAGE_RUNNING: &str = "http://example.org/orexis#PackageRunning";
+pub const PACKAGE_STOPPING: &str = "http://example.org/orexis#PackageStopping";
+/// A package joined the agent, its documents brought: said inside its booting.
+pub const PACKAGE_JOINED: &str = "http://example.org/orexis#PackageJoined";
+const PACKAGE: &str = "http://example.org/orexis#package";
+const SERVES: &str = "http://example.org/orexis#serves";
+const RUNS: &str = "http://example.org/orexis#runs";
+
+/// What a lifecycle is told under: a package's booting ended, a package joined, the agent's booting ended, the agent's
+/// running ended, and a package's running ended.
+const BOOTED: usize = 0;
+const JOINED: usize = 1;
+const AGENT_BOOTED: usize = 2;
+const AGENT_RAN: usize = 3;
+const RAN: usize = 4;
+
+/// THE RUN THE PACKAGES ARE PART OF, a service each is handed: the signal that stops it, whether the packages run
+/// once booted - not where the agent is checked or booted without starting - how many packages boot, the packages
+/// that booted with a core, in the order they did, the boot the bootings finish, and the agent's own activities,
+/// named as the run begins so each package's is said part of its.
 #[derive(Clone)]
 struct Run {
     stop: watch::Receiver<bool>,
-    making: Arc<Gate<usize>>,
+    runs: bool,
+    packages: usize,
     started: Arc<Mutex<Vec<String>>>,
-    ending: Arc<Mutex<Vec<Ending>>>,
     boot: Arc<Mutex<Boot>>,
-    finished: Arc<Gate<bool>>,
-    cores: Arc<Gate<BTreeSet<String>>>,
+    booting: NamedNode,
+    running: NamedNode,
+    stopping: Arc<Mutex<Option<Span>>>,
 }
 
-/// THE BOOT AS THE STARTS FINISH IT: what is begun and not yet finished, where the agent was booted by `boot`; how many
-/// starts have not yet decided whether their package runs; the packages that joined and brought their documents; each
-/// role class the self plays by the package that serves it, its own documents declaring it, once the boot is
-/// finished; and why the boot was refused as it finished.
+/// THE BOOT AS THE BOOTINGS FINISH IT: what is begun and not yet finished, where the agent was booted by `boot`; the
+/// packages that joined and brought their documents, each with its crate; and why the boot was refused as it finished.
 #[derive(Default)]
 struct Boot {
     begun: Option<crate::boot::Begun>,
-    deciding: usize,
-    joined: Vec<String>,
-    serving: BTreeMap<String, String>,
+    joined: Vec<(String, &'static str)>,
     refused: Option<String>,
-}
-
-/// What a package owes once every task has ended.
-type Ending = Box<dyn FnOnce() + Send>;
-
-/// A VALUE THE STARTS WAIT ON, WAKING THEM IN THE ORDER THEY CAME: a `watch` spreads its waiters over notifiers picked
-/// at random, so starts waiting on one went on in an order no two runs shared, and a test's paused run was no longer
-/// one run. One `Notify` wakes its waiters as they queued.
-struct Gate<T> {
-    value: Mutex<T>,
-    changed: Notify,
-}
-
-impl<T> Gate<T> {
-    fn new(value: T) -> Self {
-        Gate {
-            value: Mutex::new(value),
-            changed: Notify::new(),
-        }
-    }
-
-    /// Change the value, and wake whoever waits on it.
-    fn modify(&self, change: impl FnOnce(&mut T)) {
-        change(&mut self.value.lock().expect("a gate nobody poisoned"));
-        self.changed.notify_waiters();
-    }
-
-    /// The value, as it stands.
-    fn read<R>(&self, look: impl FnOnce(&T) -> R) -> R {
-        look(&self.value.lock().expect("a gate nobody poisoned"))
-    }
-
-    /// Wait until `open` holds of the value.
-    async fn wait_for(&self, open: impl Fn(&T) -> bool) {
-        loop {
-            let changed = self.changed.notified();
-            tokio::pin!(changed);
-            changed.as_mut().enable();
-            if self.read(&open) {
-                return;
-            }
-            changed.await;
-        }
-    }
 }
 
 impl Run {
     fn new(stop: watch::Receiver<bool>) -> Self {
         Run {
             stop,
-            making: Arc::new(Gate::new(0)),
+            runs: true,
+            packages: 0,
             started: Arc::default(),
-            ending: Arc::default(),
             boot: Arc::default(),
-            finished: Arc::new(Gate::new(false)),
-            cores: Arc::new(Gate::new(BTreeSet::new())),
+            booting: crate::events::mint(),
+            running: crate::events::mint(),
+            stopping: Arc::default(),
         }
     }
 
-    /// A START HAS DECIDED whether its package runs, once: the last to decide finishes the boot, before anyone waiting
-    /// on it hears it is finished.
-    fn decided(&self, store: &Store) {
-        let first = TURN
-            .try_with(|turn| !std::mem::replace(&mut turn.borrow_mut().decided, true))
-            .unwrap_or(true);
-        if !first {
-            return;
-        }
-        let mut boot = self.boot.lock().expect("a boot nobody poisoned");
-        boot.deciding = boot.deciding.saturating_sub(1);
-        if boot.deciding > 0 {
-            return;
-        }
-        if let Some(begun) = boot.begun.take() {
-            let joined = boot.joined.clone();
-            if let Err(e) = begun.finish(store, &joined) {
-                boot.refused = Some(e.to_string());
-            }
-        }
-        match serving(store, &boot.joined) {
-            Ok(serving) => boot.serving = serving,
-            Err(e) => boot.refused = boot.refused.take().or(Some(e.to_string())),
-        }
-        drop(boot);
-        self.finished.modify(|f| *f = true);
-    }
-
-    /// `package`'s start is done waiting on: its core is made, or its start ended without one, so no start waiting
-    /// for it waits for ever.
-    fn done(&self, package: &str) {
-        self.cores.modify(|made| {
-            made.insert(package.to_string());
-        });
-    }
-
-    /// A start is done making its core: `package` started, or the start ended with nothing to run.
-    fn made(&self, package: Option<&str>) {
-        if let Some(package) = package {
-            self.started
-                .lock()
-                .expect("starts nobody poisoned")
-                .push(package.to_string());
-            self.done(package);
-        }
-        self.making.modify(|n| *n = n.saturating_sub(1));
+    fn refused(&self) -> Option<String> {
+        self.boot.lock().expect("a boot nobody poisoned").refused.clone()
     }
 }
 
-/// A PACKAGE STARTING, or STARTED: the two events of a package's lifecycle, said by the kernel to whoever watches
-/// the agent as a package's start begins and as it ends, so the journal keeps which packages run and a package
-/// that needs another's core waits until every package has made its own (`Handed::started`).
-pub struct Lifecycle {
+/// AN ACTIVITY OF THE LIFECYCLE, OPEN: said whole as it begins and again as it ends (`activity::Lasting`).
+struct Span {
+    node: NamedNode,
+    kind: &'static str,
+    part_of: Option<NamedNode>,
+    about: Vec<(&'static str, Term)>,
+    began: DateTime,
+    real: std::time::Instant,
+}
+
+impl Span {
+    fn begin(
+        events: &Events,
+        kind: &'static str,
+        node: NamedNode,
+        part_of: Option<NamedNode>,
+        about: Vec<(&'static str, Term)>,
+        at: DateTime,
+    ) -> Span {
+        events.say(&Started {
+            activity: node.clone(),
+            kind,
+            triggers: Vec::new(),
+            at,
+            lasting: Some(Lasting {
+                part_of: part_of.clone(),
+                about: about.clone(),
+                began: at,
+            }),
+        });
+        Span {
+            node,
+            kind,
+            part_of,
+            about,
+            began: at,
+            real: std::time::Instant::now(),
+        }
+    }
+
+    /// End it at `at`, saying `more` of it besides what it began saying.
+    fn end(self, events: &Events, at: DateTime, more: Vec<(&'static str, Term)>) {
+        let mut about = self.about;
+        about.extend(more);
+        events.say(&Ended {
+            activity: self.node,
+            kind: self.kind,
+            at,
+            duration_s: round6(self.real.elapsed().as_secs_f64()),
+            lasting: Some(Lasting {
+                part_of: self.part_of,
+                about,
+                began: self.began,
+            }),
+        });
+    }
+}
+
+/// A PACKAGE'S LIFECYCLE: which package, what it hears of the others' and of the agent's, which of its activities is
+/// open, and the crate whose documents it brought.
+struct Life {
+    package: String,
+    hears: Hears,
+    booting: Option<Span>,
+    running: Option<Span>,
+    stopping: Option<Span>,
+    krate: Option<&'static str>,
+}
+
+impl Life {
+    /// End whichever of its activities is open, as its start ends: a booting that never said it booted ends having
+    /// made no core.
+    fn end(&mut self, events: &Events, at: DateTime) {
+        if let Some(booting) = self.booting.take() {
+            booting.end(events, at, vec![(RUNS, Literal::from(false).into())]);
+        }
+        for span in [self.running.take(), self.stopping.take()].into_iter().flatten() {
+            span.end(events, at, Vec::new());
+        }
+    }
+}
+
+/// WHAT A PACKAGE JOINING HAS HEARD OF THE OTHERS: which have joined or ended their booting, which have ended it,
+/// and the roles those that ended serve.
+#[derive(Default)]
+struct Settling {
+    settled: BTreeSet<String>,
+    ended: BTreeSet<String>,
+    served: BTreeSet<String>,
+}
+
+impl Settling {
+    fn hear(&mut self, woke: Woke) {
+        if let Woke::Event(tag, heard) = woke
+            && let Some(package) = package_of(&heard)
+        {
+            if tag == BOOTED {
+                self.served
+                    .extend(heard.all(SERVES).into_iter().map(|c| c.as_str().to_string()));
+                self.ended.insert(package.clone());
+            }
+            if tag == BOOTED || tag == JOINED {
+                self.settled.insert(package);
+            }
+        }
+    }
+}
+
+/// The name of the package a lifecycle event says it is of.
+fn package_of(heard: &Heard) -> Option<String> {
+    heard.about.iter().find_map(|(p, t)| match t {
+        Term::Literal(l) if p == PACKAGE => Some(l.value().to_string()),
+        _ => None,
+    })
+}
+
+/// Whether a booting ended having made the package's core, which then runs.
+fn runs(heard: &Heard) -> bool {
+    heard
+        .about
+        .iter()
+        .any(|(p, t)| p == RUNS && *t == Term::from(Literal::from(true)))
+}
+
+/// A PACKAGE JOINED THE AGENT: its documents brought, said inside its booting, so a package that waits on another's
+/// knows when every package's vocabulary is in.
+pub struct Joined {
     pub package: String,
-    pub started: bool,
     pub at: DateTime,
 }
 
-pub const PACKAGE_STARTING: &str = "http://example.org/orexis#PackageStarting";
-pub const PACKAGE_STARTED: &str = "http://example.org/orexis#PackageStarted";
-const PACKAGE: &str = "http://example.org/orexis#package";
-
-impl Event for Lifecycle {
+impl Event for Joined {
     fn statements(&self, entry: &NamedNode) -> Option<Vec<oxigraph::model::Triple>> {
-        let class = if self.started {
-            PACKAGE_STARTED
-        } else {
-            PACKAGE_STARTING
-        };
         Some(vec![
             oxigraph::model::Triple::new(
                 entry.clone(),
                 NamedNode::new_unchecked("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-                NamedNode::new_unchecked(class),
+                NamedNode::new_unchecked(PACKAGE_JOINED),
             ),
             oxigraph::model::Triple::new(
                 entry.clone(),
                 NamedNode::new_unchecked(PACKAGE),
-                oxigraph::model::Literal::new_simple_literal(&self.package),
+                Literal::new_simple_literal(&self.package),
             ),
         ])
     }
@@ -1060,25 +1165,15 @@ impl Event for Lifecycle {
     }
 
     fn kind(&self) -> Option<&'static str> {
-        Some(if self.started {
-            PACKAGE_STARTED
-        } else {
-            PACKAGE_STARTING
-        })
+        Some(PACKAGE_JOINED)
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        vec![(PACKAGE, Literal::new_simple_literal(&self.package).into())]
     }
 }
 
 impl Handed {
-    /// DO `last` ONCE EVERY TASK HAS ENDED, as the run stops: what a package owes after the others' last word, as
-    /// what archives the journal takes what they said while stopping.
-    pub fn finally(&self, last: impl FnOnce() + Send + 'static) {
-        self.run
-            .ending
-            .lock()
-            .expect("endings nobody poisoned")
-            .push(Box::new(last));
-    }
-
     /// A turn at the instant the clock reads.
     pub fn turn(&self) -> Turn<'_> {
         Turn {
@@ -1122,91 +1217,169 @@ impl Handed {
         crate::boot::plays(&self.store, roles)
     }
 
-    /// `package` JOINS THE AGENT, AND WAITS FOR WHAT ITS ROLES DEPEND ON: its documents are brought
-    /// (`Package::documents`), put in, and every graph of the world passed over until now offered again, and its start
-    /// has decided; then, once every start has decided and the boot is finished, it waits until every package serving
-    /// a role its roles depend on (`orexis:dependsOn`) has made its core - a role depending on nothing waiting on
-    /// nobody. What a package does once it has
-    /// decided it runs and before it makes its core, which may then read what those packages brought and made. The
-    /// order is the vocabulary's: the package names no other. Over a store booted already, with every package's
-    /// documents in, nothing is brought.
-    pub async fn joins(&self, package: &str) -> Result<(), Error> {
+    fn life(&self) -> Result<Arc<tokio::sync::Mutex<Life>>, Error> {
+        self.life.clone().ok_or_else(|| {
+            Error::Evaluation("nothing was handed a lifecycle: only a package's start joins, boots and stops".into())
+        })
+    }
+
+    /// THE PACKAGE JOINS THE AGENT, BRINGING `documents`, AND WAITS FOR WHAT ITS ROLES DEPEND ON, inside its booting:
+    /// its documents, which it names in the order it wants them, are put in and every graph of the world passed over
+    /// until now offered again, and it says it joined (`orexis:PackageJoined`); then, once every package has joined or
+    /// ended its booting, so the vocabulary is whole, it waits to hear the end of the booting of each package serving
+    /// a role its roles depend on (`orexis:dependsOn`) - a role depending on nothing waiting on nobody, and none
+    /// waiting once every other booting has ended. The order is the vocabulary's: the package names no other.
+    pub async fn joins(&self, documents: &Documents) -> Result<(), Error> {
+        let life = self.life()?;
+        let mut life = life.lock().await;
         {
             let mut boot = self.run.boot.lock().expect("a boot nobody poisoned");
             if let Some(begun) = boot.begun.as_mut() {
-                begun.bring(&self.store, package)?;
+                begun.bring(&self.store, documents)?;
             }
-            boot.joined.push(package.to_string());
+            boot.joined.push((life.package.clone(), documents.krate));
         }
-        self.run.decided(&self.store);
-        //  A START JOINING IS STILL MAKING ITS CORE, so it waits busy: the run is not over, and no stretch ends, while
-        //  it waits for the boot to finish and for what its roles depend on; what it said is told as it waits.
-        self.events.spoke();
-        self.run.finished.wait_for(|f| *f).await;
-        let needs = self.needs(package)?;
-        self.run
-            .cores
-            .wait_for(|made| needs.iter().all(|n| made.contains(n)))
-            .await;
+        life.krate = Some(documents.krate);
+        self.events.say(&Joined {
+            package: life.package.clone(),
+            at: self.clock.now(),
+        });
+        let mut heard = Settling::default();
+        heard.settled.insert(life.package.clone());
+        while heard.settled.len() < self.run.packages {
+            let Some(woke) = life.hears.next_busy().await else {
+                break;
+            };
+            heard.hear(woke);
+        }
+        let needs = self.needs(documents.krate)?;
+        while !needs.iter().all(|n| heard.served.contains(n)) && heard.ended.len() + 1 < self.run.packages {
+            let Some(woke) = life.hears.next_busy().await else {
+                break;
+            };
+            heard.hear(woke);
+        }
         Ok(())
     }
 
-    /// THE PACKAGES `package` WAITS FOR: each serving a role that a role it serves and the self plays depends on, once
-    /// the boot is finished, refused where the boot was. A role depended on that the self plays none of is waited for
-    /// by nobody: that the self plays it is onboarding's to hold (`onboarding/requirements.ttl`), not the boot's.
-    fn needs(&self, package: &str) -> Result<BTreeSet<String>, Error> {
-        let boot = self.run.boot.lock().expect("a boot nobody poisoned");
-        if let Some(why) = boot.refused.clone() {
-            return Err(Error::Evaluation(why));
+    /// THE ROLES THE PACKAGE OF `krate` WAITS FOR: each a role it serves and the self plays depends on, that the self
+    /// plays and it does not serve; refused where they depend back on its own round a cycle, which no booting could
+    /// wait out. A role depended on that the self plays none of is waited for by nobody: that the self plays it is
+    /// onboarding's to hold (`onboarding/requirements.ttl`), not the boot's.
+    fn needs(&self, krate: &str) -> Result<BTreeSet<String>, Error> {
+        let played = |role: &str| crate::boot::plays(&self.store, &[role]);
+        let mut mine = Vec::new();
+        for role in crate::boot::served(&self.store, krate)? {
+            if played(&role)? {
+                mine.push(role);
+            }
         }
         let mut needs = BTreeSet::new();
-        for (role, serving) in &boot.serving {
-            if serving != package {
-                continue;
-            }
+        for role in &mine {
             for needed in crate::boot::depended(&self.store, role)? {
-                if let Some(other) = boot.serving.get(&needed).filter(|other| *other != package) {
-                    needs.insert(other.clone());
+                if !mine.contains(&needed) && played(&needed)? {
+                    needs.insert(needed);
+                }
+            }
+        }
+        let (mut seen, mut frontier): (BTreeSet<String>, Vec<String>) =
+            (needs.clone(), needs.iter().cloned().collect());
+        while let Some(role) = frontier.pop() {
+            for needed in crate::boot::depended(&self.store, &role)? {
+                if mine.contains(&needed) {
+                    return Err(Error::Evaluation(format!(
+                        "the roles of {krate} depend on each other round a cycle through {role}, so none could boot"
+                    )));
+                }
+                if played(&needed)? && seen.insert(needed.clone()) {
+                    frontier.push(needed);
                 }
             }
         }
         Ok(needs)
     }
 
-    /// `package` HAS STARTED: its core is made. Said by the package itself, once, as its making ends, and it WAITS
-    /// HERE UNTIL EVERY PACKAGE OF THE AGENT HAS MADE ITS CORE OR ENDED, so each is listening before any goes on to
-    /// speak; then it says `orexis:PackageStarting` and `orexis:PackageStarted`, at the instants it began and made
-    /// its core, which the journal, made by then, keeps. A start that ends without saying it has nothing to run.
-    pub async fn started(&self, package: &str) {
-        let now = self.clock.now();
-        let (began, first) = TURN
-            .try_with(|turn| {
-                let mut turn = turn.borrow_mut();
-                (turn.began, !std::mem::replace(&mut turn.made, true))
-            })
-            .unwrap_or((None, true));
-        self.run.decided(&self.store);
-        if first {
-            self.run.made(Some(package));
+    /// THE PACKAGE HAS BOOTED: its core is made, and its booting ends, saying the roles it serves. It WAITS HERE UNTIL
+    /// THE AGENT'S BOOTING HAS ENDED - every package booted or declined, and the boot finished - so each is listening
+    /// before any speaks; then, where the agent runs, its running begins, and it goes on as its task. False where the
+    /// agent does not run - it is checked, or booted without starting - and the package ends there; refused where the
+    /// boot was.
+    pub async fn booted(&self) -> Result<bool, Error> {
+        let life = self.life()?;
+        let mut life = life.lock().await;
+        let mut serves = Vec::new();
+        if let Some(krate) = life.krate {
+            for role in crate::boot::served(&self.store, krate)? {
+                if crate::boot::plays(&self.store, &[&role])? {
+                    serves.push(role);
+                }
+            }
         }
-        //  A START WAITING FOR THE OTHERS TO MAKE THEIR CORES IS STILL STARTING, so it waits busy: woken as the last
-        //  is made, every start goes on counted, and no stretch ends while one is still to be polled; what it said is
-        //  told as it waits, as it is when a task rests.
-        self.events.spoke();
-        self.run.making.wait_for(|n| *n == 0).await;
-        for (started, at) in [(false, began.unwrap_or(now)), (true, now)] {
-            self.events.0.watch.emit(&Lifecycle {
-                package: package.to_string(),
-                started,
-                at,
-            });
+        self.run
+            .started
+            .lock()
+            .expect("starts nobody poisoned")
+            .push(life.package.clone());
+        if let Some(booting) = life.booting.take() {
+            let mut more: Vec<(&'static str, Term)> = vec![(RUNS, Literal::from(true).into())];
+            more.extend(serves.iter().map(|c| (SERVES, NamedNode::new_unchecked(c).into())));
+            booting.end(&self.events, self.clock.now(), more);
         }
+        while let Some(woke) = life.hears.next_busy().await {
+            if matches!(woke, Woke::Event(AGENT_BOOTED, _)) {
+                break;
+            }
+        }
+        if let Some(why) = self.run.refused() {
+            return Err(Error::Evaluation(why));
+        }
+        if !self.run.runs {
+            return Ok(false);
+        }
+        let about = vec![(PACKAGE, Literal::new_simple_literal(&life.package).into())];
+        life.running = Some(Span::begin(
+            &self.events,
+            PACKAGE_RUNNING,
+            crate::events::mint(),
+            Some(self.run.running.clone()),
+            about,
+            self.clock.now(),
+        ));
+        Ok(true)
+    }
+
+    /// THE PACKAGE STOPS: its running ends, and it WAITS UNTIL THE AGENT'S RUNNING HAS ENDED - every running package's
+    /// ended - so what it does next comes after the others' last word, inside its stopping, which ends with its start:
+    /// what archives the journal takes what they said while they stopped.
+    pub async fn stopping(&self) -> Result<(), Error> {
+        let life = self.life()?;
+        let mut life = life.lock().await;
+        if let Some(running) = life.running.take() {
+            running.end(&self.events, self.clock.now(), Vec::new());
+        }
+        while let Some(woke) = life.hears.next_busy().await {
+            if matches!(woke, Woke::Event(AGENT_RAN, _)) {
+                break;
+            }
+        }
+        let about = vec![(PACKAGE, Literal::new_simple_literal(&life.package).into())];
+        let stopping = self.run.stopping.lock().expect("a stopping nobody poisoned");
+        let part_of = stopping.as_ref().map(|s| s.node.clone());
+        drop(stopping);
+        life.stopping = Some(Span::begin(
+            &self.events,
+            PACKAGE_STOPPING,
+            crate::events::mint(),
+            part_of,
+            about,
+            self.clock.now(),
+        ));
+        Ok(())
     }
 
     /// WHETHER THE AGENT IS BEING CHECKED, and where to say what the check asks: provided by whoever checks an
     /// agent before anything is granted. A package being checked says what it found as it makes its core - that it
-    /// holds the agent, why it refuses the world as posed - and ENDS ITS START THERE, its core made and nothing run:
-    /// each package checks its own, and the kernel knows nothing of checks.
+    /// holds the agent, why it refuses the world as posed; a check is the agent's booting alone, so nothing runs.
     pub fn checking(&self) -> Option<Checking> {
         self.provided.read::<Checking>()
     }
@@ -1223,31 +1396,38 @@ impl Handed {
 pub type Task = Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;
 
 /// A package's start, running: the whole of what the package does, from deciding whether it runs to the end of its
-/// task. It says when it has started (`Handed::started`), and ends where it has nothing more to do.
+/// task - its booting, its running and its stopping.
 pub type Starting = Pin<Box<dyn Future<Output = Result<(), Error>> + Send>>;
 
-/// A PACKAGE, AS IT REGISTERS ITSELF: its name, THE DOCUMENTS IT BRINGS - its ontology, its rules, its actions, each
-/// a file of its crate compiled into the binary (`documents!`) and put in the store as it joins - and ITS START. THE
-/// AGENT STARTS EVERY PACKAGE IT HOLDS, and each is responsible for its own: it decides whether it runs
-/// (`Handed::plays`, or a reason of its own), and declined, it ends; it joins (`Handed::joins`), bringing its
-/// documents and waiting until the packages serving the roles its own depend on have made their cores; it makes its core,
-/// says it started (`Handed::started`), and checked, ends there; otherwise it goes on as its task. Nothing decides
-/// for a package, knows which run, or keeps an order between two.
+/// A PACKAGE, AS IT REGISTERS ITSELF: its name and ITS START. THE AGENT STARTS EVERY PACKAGE IT HOLDS, each inside a
+/// booting of its own, and each is responsible for its own: it decides whether it runs (`Handed::plays`, or a reason of
+/// its own), and declined, it ends; it joins (`Handed::joins`), bringing its documents and waiting until the packages
+/// serving the roles its own depend on have booted; it makes its core, says it booted (`Handed::booted`), and where the
+/// agent does not run, ends there; otherwise it goes on as its task, its running. Nothing decides for a package,
+/// knows which run, or keeps an order between two.
 pub struct Package {
     pub name: &'static str,
-    pub documents: &'static [(&'static str, &'static str)],
     pub start: fn(Handed) -> Starting,
 }
 
 inventory::collect!(Package);
 
-/// THE DOCUMENTS A PACKAGE BRINGS, each named as the file of its crate it is: `documents!("ontology.ttl", "rules.ttl")`
-/// is each file's name with its text, read as the crate is compiled. So a binary holds the documents of the packages
-/// built into it and of no other, and the boot reads no tree.
+/// THE DOCUMENTS A PACKAGE BRINGS as it joins, of its crate, each named as the file it is, in the order the package
+/// wants them put in: read as the crate is compiled, so a binary holds the documents of the packages built into it
+/// and of no other, and the boot reads no tree.
+pub struct Documents {
+    pub krate: &'static str,
+    pub files: &'static [(&'static str, &'static str)],
+}
+
+/// THE DOCUMENTS OF THE CRATE THIS IS WRITTEN IN, each a file of it: `documents!("ontology.ttl", "rules.ttl")`.
 #[macro_export]
 macro_rules! documents {
     ($($name:literal),* $(,)?) => {
-        &[$(($name, include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", $name)))),*]
+        $crate::task::Documents {
+            krate: env!("CARGO_PKG_NAME"),
+            files: &[$(($name, include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/", $name)))),*],
+        }
     };
 }
 
@@ -1256,13 +1436,14 @@ pub struct Running {
     pub handed: Handed,
     names: Vec<String>,
     joins: Vec<tokio::task::JoinHandle<()>>,
+    agent: Option<tokio::task::JoinHandle<()>>,
     stop: watch::Sender<bool>,
     /// RAISED TO STOP THE RUN, by a signal the process was sent.
     pub halt: Option<Arc<AtomicBool>>,
     halted: Arc<Notify>,
 }
 
-/// THE PACKAGES A TEST NAMES, provided by whoever starts the agent for a test (`start`): a test's member runs
+/// THE PACKAGES A TEST NAMES, provided by whoever starts the agent for a test (`Booted::first`): a test's member runs
 /// where it is named, as a package runs where the self plays its role.
 #[derive(Clone, Default)]
 pub struct Named(pub Vec<String>);
@@ -1279,59 +1460,14 @@ pub fn named(handed: Handed, name: &'static str, make: fn(&Handed) -> Result<Opt
             return Ok(());
         }
         let task = make(&handed)?;
-        handed.started(name).await;
+        if !handed.booted().await? {
+            return Ok(());
+        }
         match task {
-            Some(task) if handed.checking().is_none() => task.await,
-            _ => Ok(()),
+            Some(task) => task.await,
+            None => Ok(()),
         }
     })
-}
-
-/// EACH ROLE CLASS THE SELF PLAYS BY THE PACKAGE THAT SERVES IT, of the packages `joined`, each read off its own
-/// documents; refused where the roles depend on each other round a cycle, which no start could wait out.
-fn serving(store: &Store, joined: &[String]) -> Result<BTreeMap<String, String>, Error> {
-    let mut serving = BTreeMap::new();
-    for package in joined {
-        for class in crate::boot::served(store, package)? {
-            if crate::boot::plays(store, &[&class])? {
-                serving.insert(class, package.clone());
-            }
-        }
-    }
-    let mut edges: BTreeMap<&str, BTreeSet<&str>> = BTreeMap::new();
-    let depended: Vec<(String, Vec<String>)> = serving
-        .keys()
-        .map(|role| crate::boot::depended(store, role).map(|d| (role.clone(), d)))
-        .collect::<Result<_, _>>()?;
-    for (role, needed) in &depended {
-        for n in needed {
-            if let Some(other) = serving.get(n) {
-                edges.entry(serving[role].as_str()).or_default().insert(other.as_str());
-            }
-        }
-    }
-    fn round(at: &str, edges: &BTreeMap<&str, BTreeSet<&str>>, path: &mut Vec<String>) -> Option<Vec<String>> {
-        if let Some(i) = path.iter().position(|p| p == at) {
-            return Some(path[i..].to_vec());
-        }
-        path.push(at.to_string());
-        for next in edges.get(at).into_iter().flatten() {
-            if let Some(cycle) = round(next, edges, path) {
-                return Some(cycle);
-            }
-        }
-        path.pop();
-        None
-    }
-    for start in edges.keys() {
-        if let Some(cycle) = round(start, &edges, &mut Vec::new()) {
-            return Err(Error::Evaluation(format!(
-                "the roles of {} depend on each other round a cycle, so none could start",
-                cycle.join(", ")
-            )));
-        }
-    }
-    Ok(serving)
 }
 
 /// Every package this binary holds, by its name.
@@ -1348,13 +1484,14 @@ fn handed(store: &Store, id: &str, clock: Arc<dyn Clock>, provided: Provided, st
         events: Events::new(store),
         provided,
         run: Run::new(stop),
+        life: None,
     }
 }
 
 /// AN AGENT BOOTED AND NOT YET STARTED: its boot begun, the world's documents and the self in, and no package's. Its
-/// starts finish the boot, which is why booting is the tasks' and not the boot's alone: which packages' documents an
-/// agent holds is what each start decides (`Handed::joins`), and a role no package declares is refused once every
-/// start has.
+/// packages' bootings finish the boot, which is why booting is the tasks' and not the boot's alone: which packages'
+/// documents an agent holds is what each booting decides (`Handed::joins`), and a role no package declares is refused
+/// once every booting has ended.
 pub struct Booted {
     handed: Handed,
     stop: watch::Sender<bool>,
@@ -1397,62 +1534,181 @@ impl Booted {
         Ok(self)
     }
 
-    /// START THE AGENT, on the Tokio runtime this is called in: every package this binary holds is started, each
-    /// deciding for itself whether it runs, and this ends once every one has made its core or ended - refused where
-    /// one could not be made, or where the boot it finished was.
+    /// START THE AGENT, on the Tokio runtime this is called in: its booting, every package this binary holds booting
+    /// inside it, each deciding for itself whether it runs, and then its running. This ends once the booting has -
+    /// refused where a package could not boot, or where the boot it finished was.
     pub async fn start(self) -> Result<Running, Error> {
+        self.go(true).await
+    }
+
+    /// BOOT THE AGENT AND START NOTHING: its booting alone, every package booting inside it and ending there, its core
+    /// made and nothing run. What a check does, and a test that calls a package's core itself.
+    pub async fn without_starting(self) -> Result<Running, Error> {
+        self.go(false).await
+    }
+
+    async fn go(mut self, runs: bool) -> Result<Running, Error> {
         started();
         let rest: Vec<String> = every().into_iter().filter(|n| !self.first.contains(n)).collect();
-        let order = [self.first, rest].concat();
-        spawn(self.handed, self.stop, order).made().await
+        let order = [std::mem::take(&mut self.first), rest].concat();
+        self.handed.run.runs = runs;
+        self.handed.run.packages = order.len();
+        let (said, booted) = tokio::sync::oneshot::channel();
+        let running = spawn(self.handed, self.stop, order, said);
+        let _ = booted.await;
+        running.booted()
     }
 }
 
-/// EVERY START IS SPAWNED AS A TASK, in `order`: each is the whole of its package's life. A start that ends without
-/// saying it started is done making its core all the same, so nobody waits for it.
-fn spawn(handed: Handed, stop: watch::Sender<bool>, order: Vec<String>) -> Running {
+/// THE AGENT'S OWN TASK: it hears every package's booting end, finishes the boot once all have and ends its booting -
+/// telling whoever started it - and where the agent runs, begins its running, hears every running package's running
+/// end, and ends its running as its stopping begins.
+async fn agent(handed: Handed, mut hears: Hears, booting: Span, said: tokio::sync::oneshot::Sender<()>) {
+    let run = &handed.run;
+    let (mut bootings, mut running) = (0, 0);
+    while bootings < run.packages {
+        match hears.next().await {
+            Some(Woke::Event(BOOTED, heard)) => {
+                bootings += 1;
+                if runs(&heard) {
+                    running += 1;
+                }
+            }
+            Some(_) => {}
+            None => break,
+        }
+    }
+    {
+        let mut boot = run.boot.lock().expect("a boot nobody poisoned");
+        if let Some(begun) = boot.begun.take() {
+            let joined: Vec<String> = boot.joined.iter().map(|(p, _)| p.clone()).collect();
+            if let Err(e) = begun.finish(&handed.store, &joined) {
+                boot.refused = Some(e.to_string());
+            }
+        }
+    }
+    booting.end(&handed.events, handed.clock.now(), Vec::new());
+    let runs = run.runs && run.refused().is_none();
+    let agent_running = runs.then(|| {
+        Span::begin(
+            &handed.events,
+            AGENT_RUNNING,
+            run.running.clone(),
+            None,
+            Vec::new(),
+            handed.clock.now(),
+        )
+    });
+    handed.events.spoke();
+    let _ = said.send(());
+    let Some(agent_running) = agent_running else {
+        handed.events.rest();
+        return;
+    };
+    let mut ran = 0;
+    while ran < running {
+        match hears.next().await {
+            Some(Woke::Event(RAN, _)) => ran += 1,
+            Some(_) => {}
+            None => break,
+        }
+    }
+    agent_running.end(&handed.events, handed.clock.now(), Vec::new());
+    *run.stopping.lock().expect("a stopping nobody poisoned") = Some(Span::begin(
+        &handed.events,
+        AGENT_STOPPING,
+        crate::events::mint(),
+        None,
+        Vec::new(),
+        handed.clock.now(),
+    ));
+    handed.events.rest();
+}
+
+/// EVERY START IS SPAWNED AS A TASK, in `order`, inside a booting of its own the kernel begins: each is the whole of
+/// its package's life. What every lifecycle hears is asked before any task runs, so none misses what another says
+/// first; and a start that ends with its booting, running or stopping open ends it.
+fn spawn(
+    handed: Handed,
+    stop: watch::Sender<bool>,
+    order: Vec<String>,
+    said: tokio::sync::oneshot::Sender<()>,
+) -> Running {
+    let events = handed.events.clone();
+    let mut hears = events.hears();
+    hears.activity(crate::activity::ENDED, PACKAGE_BOOTING, BOOTED);
+    hears.activity(crate::activity::ENDED, PACKAGE_RUNNING, RAN);
+    let lives: Vec<Arc<tokio::sync::Mutex<Life>>> = order
+        .iter()
+        .map(|name| {
+            let mut hears = events.hears();
+            hears.activity(crate::activity::ENDED, PACKAGE_BOOTING, BOOTED);
+            hears.said(PACKAGE_JOINED, JOINED);
+            hears.activity(crate::activity::ENDED, AGENT_BOOTING, AGENT_BOOTED);
+            hears.activity(crate::activity::ENDED, AGENT_RUNNING, AGENT_RAN);
+            Arc::new(tokio::sync::Mutex::new(Life {
+                package: name.clone(),
+                hears,
+                booting: None,
+                running: None,
+                stopping: None,
+                krate: None,
+            }))
+        })
+        .collect();
+    let booting = Span::begin(
+        &events,
+        AGENT_BOOTING,
+        handed.run.booting.clone(),
+        None,
+        Vec::new(),
+        handed.clock.now(),
+    );
     let mut running = Running {
         handed: handed.clone(),
         names: Vec::new(),
         joins: Vec::new(),
+        agent: None,
         stop,
         halt: None,
         halted: Arc::new(Notify::new()),
     };
-    handed.run.making.modify(|n| *n += order.len());
-    handed.run.boot.lock().expect("a boot nobody poisoned").deciding += order.len();
-    if order.is_empty() {
-        handed.run.finished.modify(|f| *f = true);
-    }
-    for name in order {
+    events.0.busy.up();
+    running.agent = Some(tokio::spawn(TURN.scope(
+        RefCell::new(Local {
+            said: Vec::new(),
+            in_hand: 1,
+        }),
+        agent(handed.clone(), hears, booting, said),
+    )));
+    for (name, life) in order.into_iter().zip(lives) {
         let package = inventory::iter::<Package>()
             .find(|p| p.name == name)
             .expect("a package found is registered");
-        let start = (package.start)(handed.clone());
-        let (events, run, at, store) = (
-            handed.events.clone(),
-            handed.run.clone(),
-            handed.clock.now(),
-            handed.store.clone(),
-        );
-        let ending = name.clone();
+        let mut own = handed.clone();
+        own.life = Some(life.clone());
+        let start = (package.start)(own);
+        let (events, clock, part_of) = (handed.events.clone(), handed.clock.clone(), handed.run.booting.clone());
         //  A TASK IS BUSY FROM ITS START until it first waits: the run is not over before every policy decided once.
         events.0.busy.up();
+        let named = name.clone();
         let scoped = TURN.scope(
             RefCell::new(Local {
                 said: Vec::new(),
                 in_hand: 1,
-                began: Some(at),
-                decided: false,
-                made: false,
             }),
             async move {
+                let about = vec![(PACKAGE, Literal::new_simple_literal(&named).into())];
+                life.lock().await.booting = Some(Span::begin(
+                    &events,
+                    PACKAGE_BOOTING,
+                    crate::events::mint(),
+                    Some(part_of),
+                    about,
+                    clock.now(),
+                ));
                 let ended = start.await;
-                run.decided(&store);
-                if !TURN.with(|turn| turn.borrow().made) {
-                    run.made(None);
-                    run.done(&ending);
-                }
+                life.lock().await.end(&events, clock.now());
                 if let Err(e) = ended {
                     events.failed(e);
                 }
@@ -1466,23 +1722,14 @@ fn spawn(handed: Handed, stop: watch::Sender<bool>, order: Vec<String>) -> Runni
 }
 
 impl Running {
-    /// The packages that said they started, in the order they did.
+    /// The packages that booted with a core, in the order they did.
     pub fn parts(&self) -> Vec<String> {
         self.handed.run.started.lock().expect("starts nobody poisoned").clone()
     }
 
-    /// The run once every package has made its core, or ended: refused where one could not be made.
-    async fn made(self) -> Result<Self, Error> {
-        self.handed.run.making.wait_for(|n| *n == 0).await;
-        if let Some(why) = self
-            .handed
-            .run
-            .boot
-            .lock()
-            .expect("a boot nobody poisoned")
-            .refused
-            .clone()
-        {
+    /// The run once the agent's booting has ended: refused where a package could not boot, or the boot was.
+    fn booted(self) -> Result<Self, Error> {
+        if let Some(why) = self.handed.run.refused() {
             return Err(Error::Evaluation(why));
         }
         self.checked()?;
@@ -1596,16 +1843,25 @@ impl Running {
         Ok(())
     }
 
-    /// Stop every task, each stopping itself where it waits, and wait for them to end.
+    /// STOP EVERY TASK, each stopping itself where it waits, and wait for them to end: every package's running ends,
+    /// then the agent's, and what stops does so inside the agent's stopping, which ends as the last task does.
     pub async fn stop(self) {
         let _ = self.stop.send(true);
         for join in self.joins {
             let _ = join.await;
         }
-        //  AND WHAT WAS ASKED FOR ONCE THEY HAVE ALL ENDED, in the order asked.
-        let ending = std::mem::take(&mut *self.handed.run.ending.lock().expect("endings nobody poisoned"));
-        for last in ending {
-            last();
+        if let Some(agent) = self.agent {
+            let _ = agent.await;
+        }
+        let stopping = self
+            .handed
+            .run
+            .stopping
+            .lock()
+            .expect("a stopping nobody poisoned")
+            .take();
+        if let Some(stopping) = stopping {
+            stopping.end(&self.handed.events, self.handed.clock.now(), Vec::new());
         }
     }
 }
@@ -1656,7 +1912,7 @@ mod tests {
     }
 
     //  BEGINS AND ENDS AN ACTIVITY as the run begins, writes down that it did, and then that it waited.
-    inventory::submit! { Package { name: "test/begins", documents: &[], start: |handed| named(handed, "test/begins", |handed| {
+    inventory::submit! { Package { name: "test/begins", start: |handed| named(handed, "test/begins", |handed| {
         let (handed, seen) = (handed.clone(), seen_by(handed));
         Ok(Some(Box::pin(async move {
             let mut turn = handed.turn();
@@ -1668,8 +1924,8 @@ mod tests {
         })))
     }) } }
 
-    //  HEARS EVERY START said, and writes each down.
-    inventory::submit! { Package { name: "test/hears", documents: &[], start: |handed| named(handed, "test/hears", |handed| {
+    //  HEARS EVERY START said, and writes each down but the lifecycle's, which the kernel says of every package.
+    inventory::submit! { Package { name: "test/hears", start: |handed| named(handed, "test/hears", |handed| {
         let (handed, seen) = (handed.clone(), seen_by(handed));
         let mut hears = handed.events.hears();
         hears.event(crate::activity::STARTED, 7);
@@ -1683,7 +1939,9 @@ mod tests {
                 match woke {
                     Some(Woke::Event(tag, event)) => {
                         let kind = event.activity.map(|(_, k)| k).unwrap_or_default();
-                        seen.lock().unwrap().push(format!("heard {tag} {kind}"));
+                        if !kind.starts_with("http://example.org/orexis#") {
+                            seen.lock().unwrap().push(format!("heard {tag} {kind}"));
+                        }
                     }
                     _ => break,
                 }
@@ -1693,7 +1951,7 @@ mod tests {
     }) } }
 
     //  HOLDS THE AGENT, and lets it go an hour on by the clock.
-    inventory::submit! { Package { name: "test/holds", documents: &[], start: |handed| named(handed, "test/holds", |handed| {
+    inventory::submit! { Package { name: "test/holds", start: |handed| named(handed, "test/holds", |handed| {
         let (handed, seen) = (handed.clone(), seen_by(handed));
         Ok(Some(Box::pin(async move {
             let mut turn = handed.turn();
@@ -1709,7 +1967,7 @@ mod tests {
     }) } }
 
     //  WAITS FOR AN ARRIVAL, rung from outside the agent a moment after the run begins, and holds until then.
-    inventory::submit! { Package { name: "test/arrives", documents: &[], start: |handed| named(handed, "test/arrives", |handed| {
+    inventory::submit! { Package { name: "test/arrives", start: |handed| named(handed, "test/arrives", |handed| {
         let (handed, seen) = (handed.clone(), seen_by(handed));
         let mut arrived = handed.arrived();
         let wake = arrived.wake();

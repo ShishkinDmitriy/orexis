@@ -15,7 +15,10 @@ mod transport;
 
 pub use transport::Transport;
 
-inventory::submit! { Package { name: "transport/http", documents: orexis::documents!("ontology.ttl"), start } }
+inventory::submit! { Package { name: "transport/http", start } }
+
+/// THE DOCUMENTS THIS PACKAGE BRINGS as it joins, in the order it puts them in.
+const DOCUMENTS: orexis::task::Documents = orexis::documents!("ontology.ttl");
 
 /// A TRANSPORT IS NO ROLE: this member joins the agent where a role the self plays needs bytes and the world wires
 /// them through it - each a role's class with what the world must state of the self, in words declared here.
@@ -30,14 +33,14 @@ const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
 
 /// ITS START, which every package this binary holds is given: it joins where a role the self plays needs what it
 /// reads and the world wires it, and declines otherwise; joined, its member is made and each sensor opened; checked,
-/// it ends there; otherwise it says it has started, and what follows is ITS TASK, which hears nothing and waits for an
+/// it ends there as it boots; otherwise what follows is ITS TASK, which hears nothing and waits for an
 /// arrival or the instant a sensor is next polled, and once nothing more waits does what has fallen due.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         if !orexis::boot::wired(&handed.store, WORDS, WIRED)? {
             return Ok(());
         }
-        handed.joins("transport/http").await?;
+        handed.joins(&DOCUMENTS).await?;
         let me = orexis::boot::selves(&handed.store)?
             .into_iter()
             .next()
@@ -66,8 +69,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         let mut arrived = handed.arrived();
         transport.member.inbox.wakes(arrived.wake());
         let mut timers = transport.open()?;
-        handed.started("transport/http").await;
-        if handed.checking().is_some() {
+        if !handed.booted().await? {
             return Ok(());
         }
         let mut heard = None;

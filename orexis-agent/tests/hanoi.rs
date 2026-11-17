@@ -146,7 +146,7 @@ async fn ran(store: &Store, budget: usize, within: u64) -> String {
 }
 
 #[test]
-fn the_boot_says_what_each_graph_is_and_planning_writes_its_scopes_as_it_starts() {
+fn the_boot_says_what_each_graph_is_and_planning_writes_its_scopes_as_it_boots() {
     let store = store();
     boot(&store);
     assert_eq!(store.graphs_of(&[WANT], &Within::default()).unwrap().len(), 1);
@@ -162,25 +162,10 @@ fn the_boot_says_what_each_graph_is_and_planning_writes_its_scopes_as_it_starts(
             .unwrap();
         value(&rows[0], "n").unwrap().parse::<usize>().unwrap()
     };
-    assert_eq!(
-        scopes(&store),
-        0,
-        "the boot writes no scope: they are planning's to write"
+    assert!(
+        scopes(&store) >= 1,
+        "the scopes were written as planning booted, the binary asking nothing of it"
     );
-    //  AND PLANNING WRITES ITS SCOPES AS IT STARTS, the binary asking nothing of it.
-    let tasks = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .unwrap();
-    tasks.block_on(async {
-        let running = orexis_agent::boot(&store, &world(), "hanoi", common::clock(now()), Provided::default())
-            .unwrap()
-            .start()
-            .await
-            .unwrap();
-        assert!(scopes(&store) >= 1, "the scopes were written as planning started");
-        running.stop().await;
-    });
 }
 
 #[test]
@@ -194,8 +179,7 @@ fn the_mover_runs_planning_and_its_journal_and_nothing_else() {
         "a recorder with what archives its journal, and a planner: its role names no tracer, so what ships the \
          journal's activities ended its start, and it plays no meter, so nothing is tallied"
     );
-    //  THE STORE HOLDS THE DOCUMENTS OF EVERY PACKAGE THIS BINARY HOLDS, whether or not the package runs: each
-    //  decides in its own start, and none is looked for by another.
+    //  THE STORE HOLDS THE DOCUMENTS OF THE PACKAGES THE AGENT RUNS, each brought as it joined, and of no other.
     let store = store();
     boot(&store);
     let held = |p: &str| {
@@ -212,10 +196,12 @@ fn the_mover_runs_planning_and_its_journal_and_nothing_else() {
     for p in [
         "orexis/ontology.ttl",
         "orexis-planning/ontology.ttl",
-        "orexis-execution/ontology.ttl",
-        "orexis-sensing/rules.ttl",
+        "orexis-journal/ontology.ttl",
     ] {
         assert!(held(p), "{p} is held");
+    }
+    for p in ["orexis-execution/ontology.ttl", "orexis-sensing/rules.ttl"] {
+        assert!(!held(p), "{p} is not held: the mover runs no executor and no observer");
     }
 }
 

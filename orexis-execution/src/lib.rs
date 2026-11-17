@@ -25,13 +25,16 @@ mod taker;
 pub use executor::{Executor, Said, Standing, Take};
 pub use taker::{commanded, taker};
 
-inventory::submit! { Package { name: "execution", documents: orexis::documents!("ontology.ttl"), start } }
+inventory::submit! { Package { name: "execution", start } }
+
+/// THE DOCUMENTS THIS PACKAGE BRINGS as it joins, in the order it puts them in.
+const DOCUMENTS: orexis::task::Documents = orexis::documents!("ontology.ttl");
 
 /// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
 const ROLE: &str = "http://example.org/orexis/execution#Executor";
 
 /// EXECUTION'S START, which every package this binary holds is given: it joins where the self plays an executor and
-/// declines otherwise; joined, its executor is made; checked, it ends there; otherwise it says it has started, and
+/// declines otherwise; joined, its executor is made; it says it booted, and checked it ends there; otherwise
 /// what follows is ITS TASK, which asks who hears what it would say, then waits for an event beneath one of its
 /// triggers or the instant it is next due, and once nothing more waits to be heard does the walk it queued, once,
 /// and decides.
@@ -40,7 +43,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.plays(&[ROLE])? {
             return Ok(());
         }
-        handed.joins("execution").await?;
+        handed.joins(&DOCUMENTS).await?;
         let mut executor = Executor::new(&handed.store, &handed.id, None, None, handed.clock.clone())?;
         executor.watch = handed.events.watch().clone();
         let mut hears = handed.events.hears();
@@ -48,8 +51,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         hears.event(SUPERSEDING_TRIGGER, SUPERSEDE);
         hears.event(RESOLVING_TRIGGER, RESOLVE);
         hears.event(WALKING_TRIGGER, REVISED);
-        handed.started("execution").await;
-        if handed.checking().is_some() {
+        if !handed.booted().await? {
             return Ok(());
         }
         //  WHO HEARS WHAT IT WOULD SAY, asked as the run begins, every package having started: a head is asked where

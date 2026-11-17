@@ -1116,20 +1116,24 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   holds the agent and which constraint the world as posed violates; the binary called the planner by name for all
   three, and its verdict named a desire and a contradiction, planning's words (package).
 - **The kernel keeps no order between packages, and `Handed` is the agent's services and nothing of its own** — the
-  store, the id, the clock, the events, what it is provided and the run; every start is spawned as one task, saying
-  it started waits until every package has made its core, and so does starting the agent, refused where one could
-  not be made, so each listens before any speaks and the journal
-  hears every start; what several packages add to is added as each makes its core (`Provided::alter`) and read once
+  store, the id, the clock, the events, what it is provided and the run; every start is spawned as one task inside a
+  booting of its own, saying it booted waits until the agent's booting has ended, and so does starting the agent,
+  refused where a package could not boot, so each listens before any speaks; what several packages add to is added as each makes its core (`Provided::alter`) and read once
   every core is made (`Provided::share`), and what a caller provides is a package's own type, which the binary assembles
   nothing of, a struct in the binary with a field for every package's connectors being what this replaced; a list of seventeen names in the kernel ordered them, then a lifecycle in `Handed` the kernel
   kept of which had joined and which started, waited on by name (`Handed::after`) (package).
-- **A start is the whole of what a package does, and the package says when it has started** — it decides, makes its
-  core, says so (`Handed::started`), checked ends there, and goes on as its task, so what it says before is said as the agent starts and
-  what it does after as the agent runs; a start answered the kernel a task to spawn, which was how the kernel
+- **A start is the whole of what a package does, and the package says when it has booted** — it decides, makes its
+  core, says so (`Handed::booted`), ends there where the agent does not run, and goes on as its task, so what it says
+  before is said as the agent boots and what it does after as the agent runs; a start answered the kernel a task to spawn, which was how the kernel
   told a package made from a package running, for a check that makes every core and runs none; and each package
-  checks its own (`Handed::checking`), the check driving every start to its end and refusing one that went on to
-  run, where it was a runtime the binary never drove, which worked only while nothing a package did came before its
-  first wait (package).
+  checks its own (`Handed::checking`), a check being the agent's booting alone, where it was a runtime the binary
+  never drove, which worked only while nothing a package did came before its first wait (package).
+- **The agent boots, runs and stops as activities holding each package's, and a package waits by hearing their ends** —
+  `orexis:AgentBooting` holds every `orexis:PackageBooting`, `orexis:AgentRunning` every `orexis:PackageRunning` and
+  `orexis:AgentStopping` every `orexis:PackageStopping`, each said by one start and one end; a booting ends saying the
+  roles its package serves, which a role depending on one waits to hear once every package has joined, and a package
+  brings its own documents in the order it names them; the kernel's gate, flag and set of cores made, and a
+  registration listing a package's documents, were refused (the-lifecycle-is-activities-the-packages-hear).
 - **A package's struct for its role has a field per property of the role, named as the property is** — `Recorder`,
   `Meter`, `Predictor`, `Coordinator`, `Observer`, and the cores that bear the role's name; three roles had no
   struct, four fields went by another word than their property (`every_s`, `endpoint`, `archive`, `tracer`), and
@@ -1145,21 +1149,22 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   boot module's alone; each ran twice, the first dropped at its decision, while the binary made the journal between
   the two (package, #1173); and a test that orders the starts boots the same way (`Booted::first`), where a second
   `start` over a store booted whole was one more path to boot by.
-- **A start waiting on the others is still starting, so it waits busy, and a stretch's length is taken as it ends** —
+- **A booting waiting on the others is still booting, so it waits busy, and a stretch's length is taken as it ends** —
   resting at the barrier, the starts woken as the last core was made were not yet counted when the last went straight
   on to plan, so a stretch ended with three to run and its length, read off the next one's beginning, was a
   ten-thousandth of the plan inside it (package).
-- **What the starts wait on wakes them in the order they came, never by a `watch`** — Tokio's `watch` spreads its
+- **What the bootings wait on wakes them in the order they came, never by a `watch`** — Tokio's `watch` spreads its
   waiters over notifiers picked at random, so starts waiting on one went on in an order no two runs shared, and the
-  courier's paused run read its clock 162 times or 164; the kernel's gate is one `Notify` (package).
+  courier's paused run read its clock 162 times or 164; each hearer of the events is a channel of its own, sent to in
+  the order it subscribed (package).
 - **A check hands nothing but that it is one, and a transport not deployed and handed no member reaches nothing** —
   each transport makes its own member: the one a test hands, one from the environment where the agent is deployed, and
   otherwise one every call of which is refused; and each that listens says it holds the agent, so onboarding names no
   transport to know an agent lasts; the binary built all four unreachable members by name (package).
 - **A deployed agent's package makes what it is not handed, and the binary makes no journal** — whoever runs the
   agent for good says so (`orexis::task::Deployed`), and the journal package then makes its journal, keeps the
-  process's log in it and serves it, and what archives it opens its own archive and takes the last entries once
-  every task has ended (`Handed::finally`); a check and a test say nothing, so a package handed nothing has nothing
+  process's log in it and serves it, and what archives it opens its own archive and takes the last entries in its
+  stopping, once every running package has ended (`Handed::stopping`); a check and a test say nothing, so a package handed nothing has nothing
   and a check reaches no disk and no port (package).
 - **Each agent's image holds only what it runs** — `orexis-compose` builds `orexis-<world>-<agent>:local` with a feature of the binary for each
   package the agent loads and each whose crate those depend on; one image carrying everything was refused (a-package-brings-its-own-dependencies).

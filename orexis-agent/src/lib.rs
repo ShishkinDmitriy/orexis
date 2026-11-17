@@ -63,10 +63,28 @@ pub fn boot(
     orexis::task::boot(store, world, agent, clock, provided)
 }
 
-/// BOOT `agent` of `world` into `store` WHOLE and start nothing (`orexis::boot::boot`): the world's documents and those
-/// of every package this binary holds, run or not, for a test that calls a package's core itself.
+/// BOOT `agent` of `world` into `store` AND START NOTHING (`Booted::without_starting`): the agent's booting alone, each
+/// package its roles load joining, bringing its documents and making its core, handed nothing and on the wall's clock,
+/// for a test that calls a package's core itself. On a runtime of its own, so a test on one may call it too.
 pub fn boot_without_starting(store: &Store, world: &Path, agent: &str) -> Result<(), Error> {
-    orexis::boot::boot(store, world, agent)
+    let (store, world, agent) = (store.clone(), world.to_path_buf(), agent.to_string());
+    std::thread::scope(|scope| {
+        scope
+            .spawn(move || {
+                let tasks = tokio::runtime::Builder::new_current_thread()
+                    .enable_all()
+                    .build()
+                    .map_err(|e| Error::Evaluation(format!("the tasks could not start: {e}")))?;
+                tasks.block_on(async {
+                    let clock: Arc<dyn Clock> = Arc::new(orexis::clock::Paced::wall());
+                    let booted = self::boot(&store, &world, &agent, clock, Provided::default())?;
+                    booted.without_starting().await?.stop().await;
+                    Ok(())
+                })
+            })
+            .join()
+            .map_err(|_| Error::Evaluation("the boot panicked".into()))?
+    })
 }
 
 /// What a check found of an agent that boots: the packages it loads, and what they said as each made its core
@@ -80,7 +98,7 @@ pub struct Checked {
 }
 
 /// CHECK `agent` of `world` as its container would boot it, and run nothing: booted into a store in memory from the
-/// world's documents and its packages', and every part its roles load made, each package ending its start there as it is checked, over members
+/// world's documents and its packages', and every part its roles load made, the agent's booting alone, over members
 /// that reach nothing — no broker, no web, no bot and no model — so every text a part parses at its making is parsed. What it found, or why it would not boot; and,
 /// where `boot` names a file, the store as booted, in N-Quads, once every part is made and before any runs — which is what onboarding
 /// holds to the requirements, so the world is booted once, by the agent that will run it.
@@ -93,14 +111,14 @@ pub fn check(world: &Path, agent: &str, now: oxsdatatypes::DateTime, boot: Optio
     //  reaches nothing, so no broker, no web, no bot and no model is dialled.
     let booted = self::boot(&store, world, agent, clock, Provided::default().with(checking.clone()))?;
     //  EACH PACKAGE CHECKS ITS OWN: told it is checked, it decides whether it runs, makes its core, says what it found
-    //  and that it started, and ends. The runtime is driven until every start has ended or waits.
+    //  and that it booted, and ends, the agent not running. The runtime is driven until every start has ended or waits.
     let tasks = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
         .map_err(|e| Error::Evaluation(format!("the tasks could not start: {e}")))?;
     let loaded = tasks.block_on(async {
-        let running = booted.start().await?;
-        //  THE BOOT IS FINISHED ONCE EVERY START HAS DECIDED, each package that joins having brought its documents
+        let running = booted.without_starting().await?;
+        //  THE BOOT IS FINISHED AS THE AGENT'S BOOTING ENDS, each package that joins having brought its documents
         //  (`Handed::joins`): the store is written there, with every core made and none run.
         if let Some(path) = boot {
             let file = std::io::BufWriter::new(std::fs::File::create(path)?);

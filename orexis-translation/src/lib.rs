@@ -35,14 +35,17 @@ mod translator;
 pub use conversation::{CONVERSE_SYSTEM, SAY_SYSTEM, SILENT, UNADDRESSED, WRITING_S};
 pub use translator::{Inline, Translator};
 
-inventory::submit! { Package { name: "translation", documents: orexis::documents!("ontology.ttl"), start } }
+inventory::submit! { Package { name: "translation", start } }
+
+/// THE DOCUMENTS THIS PACKAGE BRINGS as it joins, in the order it puts them in.
+const DOCUMENTS: orexis::task::Documents = orexis::documents!("ontology.ttl");
 
 /// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
 const ROLE: &str = "http://example.org/orexis/translation#Translator";
 
 /// TRANSLATION'S START, which every package this binary holds is given: it joins where the self plays a translator
 /// and declines otherwise; joined, its translator is made, handed the model a test answers for or, deployed, the one
-/// its role names, and what a chat reads of what happened; checked, it ends there; otherwise it says it has started,
+/// its role names, and what a chat reads of what happened; checked, it ends there; otherwise it says it booted,
 /// and what follows is ITS TASK, which waits for an event beneath its triggers, an arrival or the instant it is next
 /// due, and once nothing more waits to be heard does what the model's threads handed back.
 fn start(handed: Handed) -> orexis::task::Starting {
@@ -50,7 +53,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.plays(&[ROLE])? {
             return Ok(());
         }
-        handed.joins("translation").await?;
+        handed.joins(&DOCUMENTS).await?;
         let mut translator = Translator::new(&handed.store)?;
         //  HANDED A MODEL, by a test that answers for it, it is that; deployed and handed none, the one its role
         //  names (`translation:translatedBy`), where the world's deployment says that answers, under the name and key
@@ -91,8 +94,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         hears.event(PHRASING_TRIGGER, PHRASE);
         let mut arrived = handed.arrived();
         let mut timers = vec![(Every::new(WRITING_S), STILL)];
-        handed.started("translation").await;
-        if handed.checking().is_some() {
+        if !handed.booted().await? {
             return Ok(());
         }
         //  WHAT A CHAT READS OF WHAT HAPPENED, asked once every package has made its core: the journal where what keeps

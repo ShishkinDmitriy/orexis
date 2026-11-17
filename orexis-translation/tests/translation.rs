@@ -10,7 +10,6 @@ use std::sync::{Arc, Mutex};
 use oxsdatatypes::DateTime;
 use serde_json::{Value as Json, json};
 
-use orexis::boot::boot;
 //  LINKED FOR THE DOCUMENTS THEY BRING: the world's chats are carried by these, and the boot refuses a carrier the
 //  binary was built without.
 use orexis::clock::{Elapsing, instant};
@@ -50,7 +49,22 @@ fn now() -> DateTime {
 
 fn seeker() -> Store {
     let store = Store::new().unwrap();
-    boot(&store, &world(), "seeker").unwrap();
+    //  BOOTED AND NOTHING STARTED, on a runtime of its own: every package the seeker's roles load joining and making
+    //  its core, for the cases that call a core themselves.
+    let booting = store.clone();
+    std::thread::spawn(move || {
+        let tasks = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        tasks.block_on(async {
+            let clock = Arc::new(Elapsing::from(now()));
+            let booted = orexis::task::boot(&booting, &world(), "seeker", clock, Provided::default()).unwrap();
+            booted.without_starting().await.unwrap().stop().await;
+        });
+    })
+    .join()
+    .unwrap();
     store
 }
 
@@ -503,7 +517,7 @@ struct Member {
 
 //  THE MEMBER'S TASK, registered as a package registers itself: it takes the member the test provided, hears
 //  the agent's words kept and its writing announced, and is rung for what the test queued on it.
-inventory::submit! { Package { name: "test/member", documents: &[], start: |handed| orexis::task::named(handed, "test/member", |handed| {
+inventory::submit! { Package { name: "test/member", start: |handed| orexis::task::named(handed, "test/member", |handed| {
     let member = handed.provided.take::<Arc<Mutex<Member>>>().expect("a member handed");
     let mut hears = handed.events.hears();
     hears.event(PROSE_KEPT, 1);

@@ -18,7 +18,7 @@ happened all read what a recorder kept.
 
 # What it does
 
-Each package says it started once every package has made its core, so the journal holds every start whichever started first. It hears the
+The agent's booting and each package's are activities whose end says them whole, so the journal holds every booting though it is made inside one. It hears the
 agent's [events](/domain/kernel/event.md) and writes the [journal](/domain/kernel/journal.md): each event that states
 triples as an entry in its package's words, and each [activity](/domain/kernel/activity.md) as it ends. What the role is
 linked to decides which of the two crates that keep house for the journal are started with it:

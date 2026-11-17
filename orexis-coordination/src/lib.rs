@@ -32,21 +32,24 @@ pub mod ontology;
 
 pub use coordinator::Coordinator;
 
-inventory::submit! { Package { name: "coordination", documents: orexis::documents!("ontology.ttl"), start } }
+inventory::submit! { Package { name: "coordination", start } }
+
+/// THE DOCUMENTS THIS PACKAGE BRINGS as it joins, in the order it puts them in.
+const DOCUMENTS: orexis::task::Documents = orexis::documents!("ontology.ttl");
 
 /// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
 const ROLE: &str = "http://example.org/orexis/coordination#Coordinator";
 
 /// COORDINATION'S START, which every package this binary holds is given: it joins where the self plays a coordinator
-/// and declines otherwise; joined, its coordinator is made and its secret minted; checked, it ends there; otherwise it
-/// says it has started, and what follows is ITS TASK, which waits for what it hears, an arrival or the instant it is
+/// and declines otherwise; joined, its coordinator is made and its secret minted; it says it booted, and checked it ends there; otherwise
+///  what follows is ITS TASK, which waits for what it hears, an arrival or the instant it is
 /// next due, and once nothing more waits to be heard does what it queued for itself and what has fallen due.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         if !handed.plays(&[ROLE])? {
             return Ok(());
         }
-        handed.joins("coordination").await?;
+        handed.joins(&DOCUMENTS).await?;
         let mut coordinator = Coordinator::new(&handed.store)?;
         coordinator.watch = handed.events.watch().clone();
         coordinator.mint()?;
@@ -56,8 +59,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         hears.event(COORDINATING_TRIGGER, PASS);
         let mut arrived = handed.arrived();
         let mut timers = vec![(Every::new(0.0), PASS)];
-        handed.started("coordination").await;
-        if handed.checking().is_some() {
+        if !handed.booted().await? {
             return Ok(());
         }
         let mut heard = None;

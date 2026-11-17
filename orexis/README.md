@@ -11,15 +11,17 @@ makes one agent's store from its world's documents, and **the events**, the one 
 ## What it gives a package
 
 A package is one task registered by the linker (`task::Package`) and handed four things (`task::Handed`):
-the store, the clock, the events, and what reaches outside. It registers the documents it brings with it
-(`orexis::documents!("ontology.ttl", "rules.ttl")`), compiled into the binary; they are put in the store as the
-package joins the agent, which it decides itself, and the boot reads no directory of crates.
+the store, the clock, the events, and what reaches outside. It brings its documents itself as it joins the agent,
+which it decides itself, each a file of its crate compiled into the binary (`orexis::documents!("ontology.ttl",
+"rules.ttl")`), and the boot reads no directory of crates.
 
 | A package | by |
 |---|---|
 | decides whether it runs, first thing in its start | `Handed::plays` (its role), or a reason of its own |
-| says it has started, its core made, and waits until every package has made its own | `Handed::started` |
-| is checked: says what it found as its core is made, and ends its start | `Handed::checking` |
+| joins, bringing its documents, and waits for what its roles depend on | `Handed::joins` |
+| says it booted, its core made, and waits until every package has; runs only where the agent does | `Handed::booted` |
+| is checked: says what it found as its core is made | `Handed::checking` |
+| has work left once every running package has ended | `Handed::stopping` |
 | subscribes to an event class or a graph kind | `Events::hears()`, `Hears::event`, `Hears::graph` |
 | waits for an event, a graph written, an arrival or the clock | `Hears::next`, `Arrived::wait`, `Handed::sleep_until` |
 | starts and ends an activity | `Turn::begin`, `Turn::end` |
@@ -29,6 +31,7 @@ package joins the agent, which it decides itself, and the boot reads no director
 
 ## Triggering events and activities
 
-It says the two events of a package's lifecycle, `orexis:PackageStarting` as a joined package's start is resumed
-and `orexis:PackageStarted` as it ends, each naming the package. It starts no activity. It declares the top classes: an event is an instant, an activity is a span with a start and an
+It begins and ends the activities of the agent's lifecycle, `orexis:AgentBooting`, `orexis:AgentRunning` and
+`orexis:AgentStopping`, and each package's inside them, `orexis:PackageBooting`, `orexis:PackageRunning` and
+`orexis:PackageStopping`; inside a booting a package says `orexis:PackageJoined`. It declares the top classes: an event is an instant, an activity is a span with a start and an
 end, and a package's policy starts an activity for an event beneath that activity's trigger class.

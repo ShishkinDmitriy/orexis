@@ -39,14 +39,14 @@ mod observer;
 pub use archives::{Archives, Due, Shipped, archive, archived_every_s, due, took};
 pub use observer::Observer;
 
-inventory::submit! { Package { name: "sensing-influxdb", documents: &[], start } }
+inventory::submit! { Package { name: "sensing-influxdb", start } }
 
 /// ITS START, which every package this binary holds is given: it keeps house for sensing, so it joins where sensing
 /// did AND THE OBSERVER'S ROLE NAMES A SERIES STORE the world says where to reach (`sensing:archivedIn`), and where
 /// the role names none its start ends there and the readings stay in the beliefs. Joined, it archives into the sink a
-/// test hands it or, deployed, one of its own, and hears whether sensing observed anything; it says it has started;
+/// test hands it or, deployed, one of its own, and hears whether sensing observed anything; it says it booted;
 /// checked, it ends there; otherwise what follows is ITS TASK, which every stretch of the agent's time archives what
-/// is due, the write off the agent's threads, and once more as the run ends. It needs nothing of sensing's start.
+/// is due, the write off the agent's threads, and once more in its stopping, once the others have stopped. It needs nothing of sensing's start.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         //  IT RUNS WHERE THE OBSERVER'S ROLE NAMES A SERIES STORE.
@@ -69,7 +69,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
             None => None,
         };
         let Some((sink, every_s)) = sink else {
-            handed.started("sensing-influxdb").await;
+            handed.booted().await?;
             return Ok(());
         };
         let every_s = every_s.unwrap_or(observer.archived_every_s);
@@ -91,8 +91,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
                 heard.store(true, Ordering::Relaxed);
             }
         });
-        handed.started("sensing-influxdb").await;
-        if handed.checking().is_some() {
+        if !handed.booted().await? {
             return Ok(());
         }
         let mut shipped = Shipped::new();

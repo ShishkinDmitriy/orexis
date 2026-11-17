@@ -16,23 +16,26 @@ pub mod ranges;
 
 pub use predictor::Predictor;
 
-inventory::submit! { Package { name: "prediction", documents: orexis::documents!("ontology.ttl"), start } }
+inventory::submit! { Package { name: "prediction", start } }
+
+/// THE DOCUMENTS THIS PACKAGE BRINGS as it joins, in the order it puts them in.
+const DOCUMENTS: orexis::task::Documents = orexis::documents!("ontology.ttl");
 
 /// THE ROLE THIS PACKAGE IS LOADED FOR, its own word: the self playing one joins it to the agent.
 const ROLE: &str = "http://example.org/orexis/prediction#Predictor";
 
 /// PREDICTION'S START, which every package this binary holds is given: it joins where the self plays a predictor and
 /// declines otherwise; joined, its predictor is made and its foresight offered, for whoever lays the grounds to take,
-/// and it says it has started - and has no task, what it offers being asked for where the grounds are laid.
+/// and it says it booted - and has no task, what it offers being asked for where the grounds are laid.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         if !handed.plays(&[ROLE])? {
             return Ok(());
         }
-        handed.joins("prediction").await?;
+        handed.joins(&DOCUMENTS).await?;
         let predictor = Predictor::new(&handed.store)?;
         handed.provided.provide::<Foresees>(predictor.offered());
-        handed.started("prediction").await;
+        handed.booted().await?;
         Ok(())
     })
 }
