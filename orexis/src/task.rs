@@ -1351,62 +1351,61 @@ fn handed(store: &Store, id: &str, clock: Arc<dyn Clock>, provided: Provided, st
     }
 }
 
-/// AN AGENT BOOTED AND NOT YET STARTED: its boot begun, the world's documents and the self in, and no package's.
+/// AN AGENT BOOTED AND NOT YET STARTED: its boot begun, the world's documents and the self in, and no package's. Its
+/// starts finish the boot, which is why booting is the tasks' and not the boot's alone: which packages' documents an
+/// agent holds is what each start decides (`Handed::joins`), and a role no package declares is refused once every
+/// start has.
 pub struct Booted {
     handed: Handed,
     stop: watch::Sender<bool>,
+    first: Vec<String>,
 }
 
-/// BEGIN TO BOOT `booting.agent` INTO `store`: the kernel's vocabulary, the world's documents and the self. The
-/// starts finish it: each package that joins brings its documents (`Handed::joins`), and once every start has decided
-/// the boot is finished, refused where the self plays a role no package of this binary declares.
+/// BEGIN TO BOOT `agent` of `world` INTO `store`, handed `provided`: the kernel's vocabulary, the world's documents and
+/// the self. Nothing runs until `Booted::start`.
 pub fn boot(
     store: &Store,
-    booting: &crate::boot::Booting<'_>,
+    world: &std::path::Path,
+    agent: &str,
     clock: Arc<dyn Clock>,
     provided: Provided,
 ) -> Result<Booted, Error> {
-    let begun = crate::boot::begin(store, booting)?;
+    let begun = crate::boot::begin(store, &crate::boot::Booting { world, agent })?;
     let (stop, stopped) = watch::channel(false);
-    let handed = handed(store, booting.agent, clock, provided, stopped);
+    let handed = handed(store, agent, clock, provided, stopped);
     handed.run.boot.lock().expect("a boot nobody poisoned").begun = Some(begun);
-    Ok(Booted { handed, stop })
+    Ok(Booted {
+        handed,
+        stop,
+        first: Vec::new(),
+    })
 }
 
 impl Booted {
+    /// THOSE `names` NAMES START FIRST, and in that order, the rest after them, and a test's member runs where it is
+    /// named (`Named`): for a test, which holds a run the same whichever package hears first. A name no package
+    /// registered under is an error: its crate was not built in.
+    pub fn first(mut self, names: &[String]) -> Result<Self, Error> {
+        let every = every();
+        if let Some(name) = names.iter().find(|n| !every.contains(n)) {
+            return Err(Error::Evaluation(format!(
+                "no package registered itself as {name}: this binary was built without it"
+            )));
+        }
+        self.handed.provided.provide(Named(names.to_vec()));
+        self.first = names.to_vec();
+        Ok(self)
+    }
+
     /// START THE AGENT, on the Tokio runtime this is called in: every package this binary holds is started, each
     /// deciding for itself whether it runs, and this ends once every one has made its core or ended - refused where
-    /// one could not be made.
+    /// one could not be made, or where the boot it finished was.
     pub async fn start(self) -> Result<Running, Error> {
         started();
-        spawn(self.handed, self.stop, every()).made().await
+        let rest: Vec<String> = every().into_iter().filter(|n| !self.first.contains(n)).collect();
+        let order = [self.first, rest].concat();
+        spawn(self.handed, self.stop, order).made().await
     }
-}
-
-/// START THE AGENT `id` over `store`, booted already, for a test: every package this binary holds is started, those
-/// `names` names first and in that order, and a test's member runs where it is named (`Named`). A name no package
-/// registered under is an error: its crate was not built in.
-pub async fn start(
-    store: &Store,
-    id: &str,
-    clock: Arc<dyn Clock>,
-    provided: Provided,
-    names: &[String],
-) -> Result<Running, Error> {
-    started();
-    let every = every();
-    if let Some(name) = names.iter().find(|n| !every.contains(n)) {
-        return Err(Error::Evaluation(format!(
-            "no package registered itself as {name}: this binary was built without it"
-        )));
-    }
-    provided.provide(Named(names.to_vec()));
-    let (stop, stopped) = watch::channel(false);
-    let mut order = names.to_vec();
-    order.extend(every.into_iter().filter(|n| !names.contains(n)));
-    spawn(handed(store, id, clock, provided, stopped), stop, order)
-        .made()
-        .await
 }
 
 /// EVERY START IS SPAWNED AS A TASK, in `order`: each is the whole of its package's life. A start that ends without
@@ -1625,20 +1624,27 @@ mod tests {
         "2026-11-12T12:00:00Z".parse().unwrap()
     }
 
+    /// An agent over `store` with no world, so no boot is begun: what the kernel's own cases start.
+    fn booted(store: &Store, clock: Arc<dyn Clock>, provided: Provided) -> Booted {
+        let (stop, stopped) = watch::channel(false);
+        Booted {
+            handed: handed(store, "urn:test:me", clock, provided, stopped),
+            stop,
+            first: Vec::new(),
+        }
+    }
+
     async fn running(names: &[&str], seen: &Seen) -> Running {
         let store = Store::new(crate::snapshots::namespaces()).unwrap();
         let provided = Provided::default();
         provided.provide(seen.clone());
         let names: Vec<String> = names.iter().map(|n| n.to_string()).collect();
-        start(
-            &store,
-            "urn:test:me",
-            Arc::new(Elapsing::from(noon())),
-            provided,
-            &names,
-        )
-        .await
-        .unwrap()
+        booted(&store, Arc::new(Elapsing::from(noon())), provided)
+            .first(&names)
+            .unwrap()
+            .start()
+            .await
+            .unwrap()
     }
 
     fn seen_by(handed: &Handed) -> Seen {
@@ -1809,18 +1815,11 @@ mod tests {
         assert!(hears.inbox.try_recv().is_err(), "told once");
     }
 
-    #[tokio::test]
-    async fn a_package_nobody_registered_is_refused() {
+    #[test]
+    fn a_package_nobody_registered_is_refused() {
         let store = Store::new(crate::snapshots::namespaces()).unwrap();
         let clock = Arc::new(crate::clock::Manual::at(noon()));
-        let refused = start(
-            &store,
-            "urn:test:me",
-            clock,
-            Provided::default(),
-            &["test/absent".to_string()],
-        )
-        .await;
+        let refused = booted(&store, clock, Provided::default()).first(&["test/absent".to_string()]);
         assert!(refused.is_err());
     }
 }

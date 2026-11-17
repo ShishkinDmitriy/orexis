@@ -19,7 +19,6 @@ use orexis::namespaces::Namespaces;
 use orexis::ontology::{BELIEF, SELF_GRAPH};
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::{MET, Provided};
-use orexis_agent::boot_without_starting;
 
 const TOWER: &str = "http://example.org/orexis/world/tower#";
 const REVISION: &str = "http://example.org/orexis/belief#RevisionGraph";
@@ -174,16 +173,14 @@ type Walked = (
 async fn walked(order: &[&str]) -> Walked {
     use orexis::clock::Clock;
     let store = store();
-    boot_without_starting(&store, &world(), "mover").unwrap();
+    let clock = common::clock(now());
+    let booted = orexis_agent::boot(&store, &world(), "mover", clock.clone(), Provided::default()).unwrap();
     //  THE RECORDER'S PACKAGE, WHAT KEEPS HOUSE FOR IT AND THE METRICS begin on no event and are handed nothing
     //  here, so no order is asked of them.
     let watching = ["journal", "journal-oxigraph", "journal-otlp", "metrics"];
     two_disks(&store);
     let order: Vec<String> = order.iter().map(|p| p.to_string()).collect();
-    let clock = common::clock(now());
-    let running = orexis_agent::start(&store, "mover", clock.clone(), &order, Provided::default())
-        .await
-        .unwrap();
+    let running = booted.first(&order).unwrap().start().await.unwrap();
     //  THE ORDER THE STARTS ARE SPAWNED IN, not the order they say they started: an executor depends on a planner
     //  (`orexis:dependsOn`), so execution makes its core once planning has made its own, whichever was spawned first.
     let started: BTreeSet<String> = running
@@ -223,8 +220,6 @@ async fn the_puzzle_ends_the_same_whichever_of_planning_and_execution_hears_a_re
 #[tokio::test(start_paused = true)]
 async fn the_last_window_is_written_as_the_process_stops() {
     let store = store();
-    boot_without_starting(&store, &world(), "mover").unwrap();
-    common::metered(&store);
     let written: std::sync::Arc<std::sync::Mutex<Vec<orexis::events::Point>>> = Default::default();
     let kept = written.clone();
     let sink = orexis::series::Sink::new(
@@ -236,9 +231,9 @@ async fn the_last_window_is_written_as_the_process_stops() {
         }),
     );
     let provided = Provided::default().with(orexis_metrics::Window::new(sink, 3600.0, Some("tower"), Some("mover")));
-    let running = orexis_agent::start(&store, "mover", common::clock(now()), &[], provided)
-        .await
-        .unwrap();
+    let booted = orexis_agent::boot(&store, &world(), "mover", common::clock(now()), provided).unwrap();
+    common::metered(&store);
+    let running = booted.start().await.unwrap();
     common::settled(&running).await;
     running.stop().await;
     let by: BTreeMap<String, orexis::events::Point> = written

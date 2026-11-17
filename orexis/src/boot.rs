@@ -71,7 +71,7 @@ const BELIEFS: &str = "beliefs";
 const VOCABULARY: &str = "ontology.ttl";
 
 /// What the boot reads: the world, and the agent it was told to be.
-pub struct Booting<'a> {
+pub(crate) struct Booting<'a> {
     pub world: &'a Path,
     pub agent: &'a str,
 }
@@ -445,7 +445,7 @@ fn stamp(store: &Store, fresh: bool) -> Result<(), Error> {
 }
 
 /// A BOOT BEGUN: what was read and what is still to be put, held while the packages' documents are brought.
-pub struct Begun {
+pub(crate) struct Begun {
     world: PathBuf,
     agent: String,
     lived_in: bool,
@@ -456,7 +456,7 @@ pub struct Begun {
 }
 
 /// BEGIN THE BOOT of `booting.agent` into `store`: the kernel's vocabulary and the world's documents, and the self.
-pub fn begin(store: &Store, booting: &Booting<'_>) -> Result<Begun, Error> {
+pub(crate) fn begin(store: &Store, booting: &Booting<'_>) -> Result<Begun, Error> {
     /// WHAT A BOOT PUT IN AND NOBODY HOLDS: asserted from a document, with no owner, and the closure.
     const FILES_Q: &str = "
     SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
@@ -509,7 +509,7 @@ pub fn begin(store: &Store, booting: &Booting<'_>) -> Result<Begun, Error> {
 impl Begun {
     /// `package`'S DOCUMENTS ARE BROUGHT: put in, the vocabulary closed again, and every graph of the world passed
     /// over until now offered again, since a kind this package declares is now one the agent reads.
-    pub fn bring(&mut self, store: &Store, package: &str) -> Result<(), Error> {
+    pub(crate) fn bring(&mut self, store: &Store, package: &str) -> Result<(), Error> {
         let documents = registered(package).map(|p| p.documents).unwrap_or_default();
         if documents.is_empty() {
             return Ok(());
@@ -549,7 +549,7 @@ impl Begun {
     }
 
     /// EVERY PACKAGE HAS DECIDED, and those `brought` names brought their documents: the boot is finished.
-    pub fn finish(self, store: &Store, brought: &[String]) -> Result<(), Error> {
+    pub(crate) fn finish(self, store: &Store, brought: &[String]) -> Result<(), Error> {
         let unserved = unserved(store)?;
         if !unserved.is_empty() {
             return Err(Error::Evaluation(format!(
@@ -580,11 +580,11 @@ impl Begun {
     }
 }
 
-/// BOOT `booting.agent` into `store` WITH THE DOCUMENTS OF EVERY PACKAGE THIS BINARY HOLDS, whether or not it would
-/// run: no start decides and nothing runs, for a caller that wants the store as booted and calls a package's core
-/// itself. An agent that runs is booted by `task::boot`, where each package brings its own as it joins.
-pub fn boot(store: &Store, booting: &Booting<'_>) -> Result<(), Error> {
-    let mut begun = begin(store, booting)?;
+/// BOOT `agent` of `world` into `store` WITH THE DOCUMENTS OF EVERY PACKAGE THIS BINARY HOLDS, whether or not it would
+/// run: no start decides and nothing runs, for a test that calls a package's core itself. An agent that runs is
+/// booted by `task::boot`, where each package brings its own as it joins.
+pub fn boot(store: &Store, world: &Path, agent: &str) -> Result<(), Error> {
+    let mut begun = begin(store, &Booting { world, agent })?;
     let names = every_package();
     for name in &names {
         begun.bring(store, name)?;

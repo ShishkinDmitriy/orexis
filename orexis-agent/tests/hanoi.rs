@@ -120,11 +120,16 @@ fn own(store: &Store) -> Vec<String> {
         .collect()
 }
 
-/// One run of the mover over `store` at `budget`, planning alone: how it ended within `within` seconds of its time.
+/// One run of the mover booted into `store` at `budget`, planning first: how it ended within `within` seconds of its
+/// time. A store booted before is a volume lived in, booted again.
 async fn ran(store: &Store, budget: usize, within: u64) -> String {
     let loaded = ["planning".to_string()];
     let provided = Provided::default().with(orexis_planning::Budget(budget));
-    let running = orexis_agent::start(store, "hanoi", common::clock(now()), &loaded, provided)
+    let running = orexis_agent::boot(store, &world(), "hanoi", common::clock(now()), provided)
+        .unwrap()
+        .first(&loaded)
+        .unwrap()
+        .start()
         .await
         .unwrap();
     assert!(
@@ -164,7 +169,9 @@ fn the_boot_says_what_each_graph_is_and_planning_writes_its_scopes_as_it_starts(
         .build()
         .unwrap();
     tasks.block_on(async {
-        let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &[], Provided::default())
+        let running = orexis_agent::boot(&store, &world(), "hanoi", common::clock(now()), Provided::default())
+            .unwrap()
+            .start()
             .await
             .unwrap();
         assert!(scopes(&store) >= 1, "the scopes were written as planning started");
@@ -211,7 +218,6 @@ fn the_mover_runs_planning_and_its_journal_and_nothing_else() {
 #[tokio::test(start_paused = true)]
 async fn the_plan_is_the_seven_textbook_moves() {
     let store = store();
-    boot(&store);
     assert_eq!(ran(&store, 64, 20).await, PLANNED);
     let (spent, moves) = plan(&store);
     assert_eq!((spent, moves), (7.0, textbook()));
@@ -228,7 +234,6 @@ async fn the_plan_is_the_seven_textbook_moves() {
 #[tokio::test(start_paused = true)]
 async fn a_budget_that_cuts_the_search_short_is_finished_by_the_plannings_after() {
     let store = store();
-    boot(&store);
     assert_eq!(ran(&store, 20, 30).await, PLANNED);
     assert_eq!(plan(&store), (7.0, textbook()));
 }
@@ -240,7 +245,6 @@ async fn a_lived_in_volume_keeps_the_plan_and_does_not_search_again() {
     let _ = std::fs::remove_dir_all(&path);
     {
         let store = Store::open(&path, Arc::new(Namespaces::linked().unwrap())).unwrap();
-        boot(&store);
         assert_eq!(ran(&store, 64, 20).await, PLANNED);
     }
     let store = Store::open(&path, Arc::new(Namespaces::linked().unwrap())).unwrap();
@@ -271,9 +275,6 @@ async fn a_lived_in_volume_keeps_the_plan_and_does_not_search_again() {
 async fn metered(interval_s: f64) -> Vec<Vec<orexis::events::Point>> {
     use orexis::events::Point;
     let store = store();
-    boot(&store);
-    common::metered(&store);
-    let loaded: Vec<String> = Vec::new();
     let writes: std::sync::Arc<std::sync::Mutex<Vec<Vec<Point>>>> = Default::default();
     let kept = writes.clone();
     let sink = orexis::series::Sink::new(
@@ -286,9 +287,9 @@ async fn metered(interval_s: f64) -> Vec<Vec<orexis::events::Point>> {
     );
     let window = orexis_metrics::Window::new(sink, interval_s, Some("hanoi"), Some("hanoi"));
     let provided = Provided::default().with(window).with(orexis_planning::Budget(20));
-    let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, provided)
-        .await
-        .unwrap();
+    let booted = orexis_agent::boot(&store, &world(), "hanoi", common::clock(now()), provided).unwrap();
+    common::metered(&store);
+    let running = booted.start().await.unwrap();
     assert_eq!(common::outcome(&running, 30).await, PLANNED);
     running.stop().await;
     writes
@@ -404,15 +405,15 @@ async fn every_search_and_the_publishing_are_tallied_into_one_window_and_never_b
 #[tokio::test(start_paused = true)]
 async fn a_plan_published_is_kept_in_the_journal_with_its_steps_in_the_words_of_the_domain() {
     let store = store();
-    boot(&store);
-    let loaded: Vec<String> = Vec::new();
     let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(now)).unwrap());
     let provided = Provided::default()
         .with(orexis_journal::Keeps {
             journal: Some(journal.clone()),
         })
         .with(orexis_planning::Budget(400));
-    let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, provided)
+    let running = orexis_agent::boot(&store, &world(), "hanoi", common::clock(now()), provided)
+        .unwrap()
+        .start()
         .await
         .unwrap();
     common::settled(&running).await;
@@ -445,15 +446,15 @@ async fn the_history_part_marks_an_event_of_a_class_beneath_incident_and_no_othe
     use orexis::events::Event;
     use orexis_planning::events::{PlanPublished, WantUnreachable};
     let store = store();
-    boot(&store);
-    let loaded: Vec<String> = Vec::new();
     let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(now)).unwrap());
     let provided = Provided::default()
         .with(orexis_journal::Keeps {
             journal: Some(journal.clone()),
         })
         .with(orexis_planning::Budget(1));
-    let running = orexis_agent::start(&store, "hanoi", common::clock(now()), &loaded, provided)
+    let running = orexis_agent::boot(&store, &world(), "hanoi", common::clock(now()), provided)
+        .unwrap()
+        .start()
         .await
         .unwrap();
     let watch = running.handed.events.watch().clone();
