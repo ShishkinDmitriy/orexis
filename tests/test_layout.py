@@ -2224,11 +2224,11 @@ def test_a_crates_readme_names_every_activity_and_trigger_its_ontology_declares(
 
 @pytest.mark.parametrize("crate", sorted(CRATES))
 def test_a_crate_brings_every_document_it_holds_and_names_none_it_does_not(crate):
-    """A PACKAGE BRINGS ITS OWN DOCUMENTS: the boot reads no tree of crates, so a document a crate holds and does not
-    name in its registration (`orexis::documents!`) is one no agent ever reads, silently — an empty result is no
-    error. So every `.ttl` and `.trig` at a crate's root is named there, and every name there is a file; but for
-    `requirements.ttl`, which is onboarding's and no agent's, and the kernel's ontology, which the boot compiles in
-    itself."""
+    """A PACKAGE BRINGS ITS OWN DOCUMENTS as it joins (`handed.joins(&DOCUMENTS)`): the boot reads no tree of crates,
+    so a document a crate holds and does not name in its documents (`orexis::documents!`) is one no agent ever reads,
+    silently — an empty result is no error. So every `.ttl` and `.trig` at a crate's root is named there, and every
+    name there is a file, and a crate naming any brings them; but for `requirements.ttl`, which is onboarding's and no
+    agent's, and the kernel's ontology, which the boot compiles in itself."""
     root = REPO_ROOT / crate
     held = {p.name for p in root.iterdir() if p.suffix in {".ttl", ".trig"}} - {"requirements.ttl"}
     sources = "\n".join(p.read_text() for p in sorted((root / "src").rglob("*.rs")))
@@ -2236,9 +2236,11 @@ def test_a_crate_brings_every_document_it_holds_and_names_none_it_does_not(crate
         assert held == {"ontology.ttl"} and 'include_str!("../ontology.ttl")' in sources
         return
     named = set()
-    for listed in re.findall(r"documents:\s*orexis::documents!\(([^)]*)\)", sources):
+    for listed in re.findall(r"DOCUMENTS:\s*orexis::task::Documents\s*=\s*orexis::documents!\(([^)]*)\)", sources):
         named |= set(re.findall(r'"([^"]+)"', listed))
-    assert named == held, f"{crate}/ holds {sorted(held)} and its registration brings {sorted(named)}"
+    assert named == held, f"{crate}/ holds {sorted(held)} and its documents name {sorted(named)}"
+    if named:
+        assert "joins(&DOCUMENTS)" in sources, f"{crate}/ names its documents and its start never brings them"
     nested = [p for p in root.rglob("*") if p.suffix in {".ttl", ".trig"} and p.parent != root
               and not ({"tests", "target", "node_modules"} & set(p.relative_to(root).parts))]
     assert not nested, f"{crate}/ holds documents below its root, which nothing brings: {nested}"
