@@ -39,6 +39,9 @@ pub const OREXIS: &str = "http://example.org/orexis#";
 pub const EVENT: &str = "http://example.org/orexis#Event";
 pub const INCIDENT: &str = "http://example.org/orexis#Incident";
 pub const LOG_RECORD: &str = "http://example.org/orexis#LogRecord";
+/// The target of what this module logs, which the journal keeps nothing of: what it says while it keeps a line would
+/// be a line kept while it keeps one.
+pub const TARGET: &str = module_path!();
 pub const AT: &str = "http://www.w3.org/ns/prov#atTime";
 pub const KEPT_BY: &str = "http://example.org/orexis#keptBy";
 /// An activity a package did, kept as one entry when it ended: PROV's class. Kept for the window, as a log record is.

@@ -141,8 +141,11 @@ impl Recorder {
         let journal = Arc::new(journal);
         if let Some(orexis::task::Said(keep)) = handed.provided.take::<orexis::task::Said>() {
             let into = journal.clone();
-            keep(Box::new(move |logger, level, message| {
-                let _ = into.remark(logger, level, message, None);
+            keep(Box::new(move |target, logger, level, message| {
+                //  THE JOURNAL KEEPS NOTHING IT SAYS OF ITSELF.
+                if !target.starts_with(journal::TARGET) {
+                    let _ = into.remark(logger, level, message, None);
+                }
             }));
         }
         #[cfg(feature = "serve")]

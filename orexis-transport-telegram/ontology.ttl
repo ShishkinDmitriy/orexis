@@ -52,7 +52,11 @@ telegram:polledEveryS a owl:DatatypeProperty ; rdfs:label "polled every, in seco
 [] a sh:NodeShape ;
     sh:targetClass orexis:Role ;
     sh:property [ sh:path telegram:polledEveryS ; sh:defaultValue 3 ] ,
-                [ sh:path telegram:calledWithinS ; sh:defaultValue 30 ] .
+                [ sh:path telegram:calledWithinS ; sh:defaultValue 30 ] ,
+                [ sh:path telegram:clientLoggedFrom ; sh:defaultValue "WARNING" ] .
 
 telegram:calledWithinS a owl:DatatypeProperty ; rdfs:label "called within, in seconds" ;
     rdfs:comment "How long one call of the Bot API may take before it is given up, in real seconds, said of a role the agent plays that speaks through the bot. Thirty where no role says." .
+
+telegram:clientLoggedFrom a owl:DatatypeProperty ; rdfs:label "client logged from" ;
+    rdfs:comment "From which level what the HTTP client calling the Bot API logs of itself is said: a level's name, DEBUG, INFO, WARNING, ERROR or CRITICAL, said of a role the agent plays that speaks through the bot. WARNING where no role says: below it the client names every url it calls, and a Bot API url carries the bot's token." .

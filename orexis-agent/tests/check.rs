@@ -304,6 +304,11 @@ fn a_package_reads_its_own_role_into_a_struct_with_a_field_for_each_thing_the_ro
         Some("https://api.anthropic.com".to_string())
     );
     assert_eq!(orexis_transport_telegram::driver::polled_every_s(&store).unwrap(), 3.0);
+    assert_eq!(
+        orexis_transport_telegram::driver::client_logged_from(&store).unwrap(),
+        log::Level::Warn,
+        "the HTTP client is said from WARNING where no role says otherwise"
+    );
     //  SAID ON THE ROLE, each figure is what is read, and nothing else of the struct changes.
     for (link, figure, said) in [
         ("sensing#archivedIn", "sensing#archivedEveryS", 30),

@@ -27,15 +27,19 @@ use orexis::task::Remark;
 /// journal as it is attached, or dropped where the agent plays no recorder.
 struct Logger {
     level: log::LevelFilter,
+    hushed: orexis::task::Hushed,
     remark: OnceLock<Remark>,
-    early: Mutex<Option<Vec<(String, log::Level, String)>>>,
+    early: Mutex<Option<Vec<Line>>>,
 }
+
+/// A line of the log held until somebody keeps it: its target, its logger, its level and its message.
+type Line = (String, String, log::Level, String);
 
 impl Logger {
     /// Keep every record from here on by `remark`, and what was said before it first.
     fn attach(&self, remark: Remark) {
-        for (logger, level, message) in self.early.lock().unwrap().take().unwrap_or_default() {
-            remark(&logger, level, &message);
+        for (target, logger, level, message) in self.early.lock().unwrap().take().unwrap_or_default() {
+            remark(&target, &logger, level, &message);
         }
         let _ = self.remark.set(remark);
     }
@@ -65,21 +69,22 @@ fn logger_of(target: &str) -> String {
     }
 }
 
-/// Whether a record of `target` at `level` is said at all, by what every package linked in hushes
-/// (`orexis::task::Hush`).
-fn said(target: &str, level: log::Level) -> bool {
-    inventory::iter::<orexis::task::Hush>().all(|h| !target.starts_with(h.target) || level <= h.said_from)
-}
-
-/// Whether a record of `target` is kept in the journal, by what every package linked in hushes.
-fn journaled(target: &str) -> bool {
-    inventory::iter::<orexis::task::Hush>().all(|h| !target.starts_with(h.target) || h.journaled)
+impl Logger {
+    /// Whether a record of `target` at `level` is said at all, by what the packages hush (`orexis::task::Hushed`).
+    fn said(&self, target: &str, level: log::Level) -> bool {
+        self.hushed
+            .0
+            .read()
+            .expect("hushes nobody poisoned")
+            .iter()
+            .all(|(hushed, from)| !target.starts_with(hushed) || level <= *from)
+    }
 }
 
 impl log::Log for Logger {
     fn enabled(&self, metadata: &log::Metadata<'_>) -> bool {
-        //  WHAT A PACKAGE HUSHES is said from where it says, whatever the agent's level (`orexis::task::Hush`).
-        metadata.level() <= self.level && said(metadata.target(), metadata.level())
+        //  WHAT A PACKAGE HUSHES is said from where its role says, whatever the agent's level.
+        metadata.level() <= self.level && self.said(metadata.target(), metadata.level())
     }
 
     fn log(&self, record: &log::Record<'_>) {
@@ -92,14 +97,14 @@ impl log::Log for Logger {
             logger_of(record.target()),
             level_name(record.level())
         );
-        //  KEPT FROM INFO ON, but what a package keeps out of the journal.
-        if record.level() <= log::Level::Info && journaled(record.target()) {
-            let logger = logger_of(record.target());
+        //  KEPT FROM INFO ON, by whichever package keeps the log.
+        if record.level() <= log::Level::Info {
+            let (target, logger) = (record.target(), logger_of(record.target()));
             match self.remark.get() {
-                Some(remark) => remark(&logger, record.level(), &message),
+                Some(remark) => remark(target, &logger, record.level(), &message),
                 None => {
                     if let Some(early) = self.early.lock().unwrap().as_mut() {
-                        early.push((logger, record.level(), message));
+                        early.push((target.to_string(), logger, record.level(), message));
                     }
                 }
             }
@@ -176,6 +181,7 @@ fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, 
     if let Some(logger) = LOGGER.get() {
         let keep: Box<dyn FnOnce(orexis::task::Remark) + Send> = Box::new(move |remark| logger.attach(remark));
         provided.provide(orexis::task::Said(keep));
+        provided.provide(logger.hushed.clone());
     }
     //  BOOTED, each package's start held where it decided, to be run on once the runtime is there.
     let booted = orexis_agent::boot(&store, &args.world, &args.agent, clock.clone(), provided)?;
@@ -225,6 +231,7 @@ fn main() {
     };
     let logger = LOGGER.get_or_init(|| Logger {
         level,
+        hushed: orexis::task::Hushed::default(),
         remark: OnceLock::new(),
         early: Mutex::new(Some(Vec::new())),
     });
@@ -296,20 +303,23 @@ fn main() {
 mod tests {
     use super::*;
 
-    //  A TEST'S HUSH: said from WARN on, and never journaled.
-    inventory::submit! { orexis::task::Hush { target: "test_hushed", said_from: log::Level::Warn, journaled: false } }
-
     #[test]
-    fn what_a_package_hushes_is_said_from_its_level_and_kept_only_where_it_says() {
-        assert!(said("test_hushed::client", log::Level::Warn));
+    fn what_a_package_hushes_is_said_from_its_level() {
+        let logger = Logger {
+            level: log::LevelFilter::Debug,
+            hushed: orexis::task::Hushed::default(),
+            remark: OnceLock::new(),
+            early: Mutex::new(None),
+        };
+        logger.hushed.0.write().unwrap().push(("ureq", log::Level::Warn));
+        assert!(logger.said("ureq::unit", log::Level::Warn));
         assert!(
-            !said("test_hushed::client", log::Level::Debug),
+            !logger.said("ureq::unit", log::Level::Debug),
             "quieter than its level, it says nothing"
         );
         assert!(
-            said("test_heard", log::Level::Debug),
+            logger.said("orexis_planning", log::Level::Debug),
             "a target nobody hushes says everything"
         );
-        assert!(!journaled("test_hushed::client") && journaled("test_heard"));
     }
 }

@@ -17,10 +17,6 @@ pub use transport::Transport;
 
 inventory::submit! { Package { name: "transport/telegram", start } }
 
-//  A CLIENT'S OWN DEBUG NAMES EVERY URL IT CALLS, and a Bot API url carries the bot's token: below WARN, the HTTP
-//  client says nothing, whatever the agent's level.
-inventory::submit! { orexis::task::Hush { target: "ureq", said_from: log::Level::Warn, journaled: true } }
-
 /// THE DOCUMENTS THIS PACKAGE BRINGS as it joins, in the order it puts them in.
 const DOCUMENTS: orexis::task::Documents = orexis::documents!("ontology.ttl");
 
@@ -43,6 +39,12 @@ fn start(handed: Handed) -> orexis::task::Starting {
             return Ok(());
         }
         handed.joins(&DOCUMENTS).await?;
+        //  THE HTTP CLIENT IS SAID FROM WHERE A ROLE SAYS, WARNING where none does: below it the client names every url
+        //  it calls, and a Bot API url carries the bot's token.
+        if let Some(hushed) = handed.provided.read::<orexis::task::Hushed>() {
+            let from = crate::driver::client_logged_from(&handed.store)?;
+            hushed.0.write().expect("hushes nobody poisoned").push(("ureq", from));
+        }
         let me = orexis::boot::selves(&handed.store)?
             .into_iter()
             .next()

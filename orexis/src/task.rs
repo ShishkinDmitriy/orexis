@@ -915,23 +915,18 @@ impl Checking {
     }
 }
 
-/// What keeps a line of the process's log: its logger, its level and its message.
-pub type Remark = Box<dyn Fn(&str, log::Level, &str) + Send + Sync>;
+/// What keeps a line of the process's log: its target, its logger, its level and its message.
+pub type Remark = Box<dyn Fn(&str, &str, log::Level, &str) + Send + Sync>;
 
 /// THE PROCESS'S LOG, for whoever keeps it: provided by whoever owns the log, and called once by the package
 /// that keeps it, with how each line is kept. What was said before is kept first.
 pub struct Said(pub Box<dyn FnOnce(Remark) + Send>);
 
-/// WHAT A PACKAGE KEEPS OUT OF THE PROCESS'S LOG, registered by the linker as the package itself is: a record whose
-/// target begins with `target` is said only from `said_from` on, and kept in the journal only where `journaled`.
-/// Whoever owns the log reads every one, and names no package.
-pub struct Hush {
-    pub target: &'static str,
-    pub said_from: log::Level,
-    pub journaled: bool,
-}
-
-inventory::collect!(Hush);
+/// WHAT THE PROCESS'S LOG HUSHES: each target, by the start of its name, and the quietest level of it that is said.
+/// Provided by whoever owns the log, and added to by a package as it boots, from what its role says; so the log
+/// names no package.
+#[derive(Clone, Default)]
+pub struct Hushed(pub Arc<RwLock<Vec<(&'static str, log::Level)>>>);
 
 /// WHERE THE AGENT'S JOURNAL LIES, said by whoever keeps it whenever that starts, and asked by a reader when it
 /// reads: so no reader waits for a keeper's start, and no order between them is kept. What archives the journal

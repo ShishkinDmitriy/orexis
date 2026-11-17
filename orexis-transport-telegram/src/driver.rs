@@ -113,6 +113,38 @@ pub fn polled_every_s(beliefs: &Store) -> Result<f64, Error> {
         .ok_or_else(|| Error::Document("the telegram transport's ontology states no default for polledEveryS".into()))
 }
 
+/// FROM WHICH LEVEL THE HTTP CLIENT'S OWN LOG IS SAID: what a role the self plays says in the agent's self graph
+/// (`telegram:clientLoggedFrom`), a level's name, and the default the transport's ontology states where none says.
+pub fn client_logged_from(beliefs: &Store) -> Result<log::Level, Error> {
+    let mut known = beliefs.graphs_of(&[orexis::ontology::SELF_GRAPH], &orexis::store::Within::default())?;
+    known.extend(beliefs.graphs_of(&[orexis::ontology::ONTOLOGY], &orexis::store::Within::default())?);
+    let known: Vec<&str> = known.iter().map(String::as_str).collect();
+    let said = beliefs
+        .rows(
+            "PREFIX orexis: <http://example.org/orexis#>
+             PREFIX sh: <http://www.w3.org/ns/shacl#>
+             PREFIX telegram: <http://example.org/orexis/telegram#>
+             SELECT (COALESCE(?said, ?own) AS ?from) WHERE { \
+             OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . ?role telegram:clientLoggedFrom ?said } \
+             OPTIONAL { ?shape sh:property [ sh:path telegram:clientLoggedFrom ; sh:defaultValue ?own ] } }",
+            &known,
+        )?
+        .iter()
+        .find_map(|row| orexis::store::value(row, "from"))
+        .ok_or_else(|| {
+            Error::Document("the telegram transport's ontology states no default for clientLoggedFrom".into())
+        })?;
+    match said.as_str() {
+        "DEBUG" => Ok(log::Level::Debug),
+        "INFO" => Ok(log::Level::Info),
+        "WARNING" => Ok(log::Level::Warn),
+        "ERROR" | "CRITICAL" => Ok(log::Level::Error),
+        other => Err(Error::Document(format!(
+            "telegram:clientLoggedFrom says {other:?}, which is no level: DEBUG, INFO, WARNING, ERROR or CRITICAL"
+        ))),
+    }
+}
+
 /// The Bot API as the driver calls it: a method's URL and its JSON body, answered with JSON.
 pub type Call = Arc<dyn Fn(&str, &Json) -> Result<Json, String> + Send + Sync>;
 /// What runs a poll: on a thread of its own, or at once in a test.

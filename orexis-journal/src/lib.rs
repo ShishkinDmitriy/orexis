@@ -26,9 +26,6 @@ pub use recorder::{Keeps, Recorder, Traced};
 
 inventory::submit! { Package { name: "journal", start } }
 
-//  THE JOURNAL SAYS NOTHING OF ITSELF: what it logs is said, and never kept in it.
-inventory::submit! { orexis::task::Hush { target: "orexis_journal::journal", said_from: log::Level::Trace, journaled: false } }
-
 /// THE DOCUMENTS THIS PACKAGE BRINGS as it joins, in the order it puts them in.
 const DOCUMENTS: orexis::task::Documents = orexis::documents!("ontology.ttl");
 
