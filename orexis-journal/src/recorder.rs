@@ -51,7 +51,7 @@ impl Recorder {
         /// THE RECORDER THE SELF PLAYS, IN ONE QUERY: each figure and word the role says or, where it says none, the
         /// default the journal's ontology states on its shape of the role (`sh:defaultValue`); and where each service
         /// the role names answers, as the world's deployment states it.
-        const RECORDER_Q: &str = "SELECT ?role ?kind (COALESCE(?windowSaid, ?windowOwn) AS ?window) (COALESCE(?fromSaid, ?fromOwn) AS ?from) \
+        const RECORDER_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX sh: <http://www.w3.org/ns/shacl#> SELECT ?role ?kind (COALESCE(?windowSaid, ?windowOwn) AS ?window) (COALESCE(?fromSaid, ?fromOwn) AS ?from) \
         ?incident ?served ?archive (COALESCE(?archivedEverySaid, ?archivedEveryOwn) AS ?archivedEvery) ?tracer \
         (COALESCE(?tracedEverySaid, ?tracedEveryOwn) AS ?tracedEvery) WHERE { \
         ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind . \

@@ -142,7 +142,7 @@ struct Binding {
 
 fn binding(store: &Store, sensor: &str) -> Result<Binding, Error> {
     /// THE BINDING: what the world derives onto a sensor about its bytes, every part optional.
-    const BINDING_Q: &str = "
+    const BINDING_Q: &str = "PREFIX sensing: <http://example.org/orexis/sensing#> 
     SELECT ?codec ?pointer ?starts ?ends WHERE {
       OPTIONAL { $sensor sensing:decodedBy ?codec }
       OPTIONAL { $sensor sensing:readingPointer ?pointer }

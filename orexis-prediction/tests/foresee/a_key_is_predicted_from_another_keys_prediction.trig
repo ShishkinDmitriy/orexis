@@ -72,7 +72,7 @@ GRAPH :world {
 GRAPH :actions {
   :Drying a prediction:Flow .
   :Drying prediction:moves :moisture .
-  :Drying prediction:rate """PREFIX : <http://example.org/test#>
+  :Drying prediction:rate """PREFIX schema: <https://schema.org/> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> PREFIX : <http://example.org/test#>
       SELECT ?rate ?until WHERE {
           $feature :driesPerDay ?perDay ; schema:containedInPlace ?room .
           ?air sosa:hasFeatureOfInterest ?room ; sosa:observedProperty :humidity ; sosa:hasSimpleResult ?h .

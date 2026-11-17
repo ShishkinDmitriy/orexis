@@ -12,7 +12,7 @@ use crate::statements::statements;
 
 /// Keep `doc` as this agent said it; the names written, sorted.
 pub fn said(store: &Store, me: &str, doc: &Document) -> Result<Vec<String>, Error> {
-    const ARRIVED_Q: &str = "
+    const ARRIVED_Q: &str = "PREFIX orexis: <http://example.org/orexis#> 
     SELECT ?arrival ?owner WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph orexis:arrivedBy ?arrival .
                                                 OPTIONAL { $graph orexis:ownedBy ?owner } } }";
     doc.refuse_the_sovereigns(&format!("what {} said", local_of(me)))?;
@@ -39,7 +39,6 @@ pub(crate) mod tests {
     use oxigraph::model::{GraphName, Literal, NamedNode, Quad};
 
     use orexis::ontology::{BELIEF, CATALOGUE_GRAPH, OREXIS};
-    use orexis::snapshots::namespaces;
     use orexis::store::value;
 
     use super::*;
@@ -52,9 +51,9 @@ pub(crate) mod tests {
     }
 
     pub(crate) fn store() -> Store {
-        let st = Store::new(namespaces()).unwrap();
+        let st = Store::new().unwrap();
         st.update(&format!(
-            "INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph .
+            "PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph .
         <{T}heard> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy <{}> . }} }}",
             me()
         ))
@@ -89,7 +88,7 @@ pub(crate) mod tests {
             std::slice::from_ref(&round)
         );
         let q = format!(
-            "SELECT ?a ?o WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{round}> orexis:arrivedBy ?a ; orexis:ownedBy ?o }} }}"
+            "PREFIX orexis: <http://example.org/orexis#> SELECT ?a ?o WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{round}> orexis:arrivedBy ?a ; orexis:ownedBy ?o }} }}"
         );
         let found = store.rows(&q, &[]).unwrap();
         assert_eq!(value(&found[0], "a").unwrap(), format!("{OREXIS}Recorded"));

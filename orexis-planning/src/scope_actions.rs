@@ -21,7 +21,7 @@ use crate::ontology::{DERIVATION_GRAPH, WAIT};
 /// stating no effect, or with no filling here, is in none — save the wait, which is in every one (#920); one whose
 /// effect cannot be read joins everything.
 pub fn scope_actions(store: &Store, now: DateTime) -> Result<(), Error> {
-    const WAIT_Q: &str = "SELECT ?w WHERE { $wait a orexis:Action BIND($wait AS ?w) } LIMIT 1";
+    const WAIT_Q: &str = "PREFIX orexis: <http://example.org/orexis#> SELECT ?w WHERE { $wait a orexis:Action BIND($wait AS ?w) } LIMIT 1";
     let atoms = atoms_of(store, now)?;
     let derivations = store.graphs_of(&[DERIVATION_GRAPH], &Within::default())?;
     let derivations: Vec<&str> = derivations.iter().map(String::as_str).collect();
@@ -105,13 +105,13 @@ fn save(store: &Store, scopes: &[(String, BTreeSet<String>)]) -> Result<(), Erro
         .iter()
         .map(|g| {
             format!(
-                "DROP SILENT GRAPH <{g}> ;\nDELETE {{ GRAPH ?cat {{ <{g}> ?p ?o }} }} WHERE {{ GRAPH ?cat {{ ?cat a \
+                "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> DROP SILENT GRAPH <{g}> ;\nDELETE {{ GRAPH ?cat {{ <{g}> ?p ?o }} }} WHERE {{ GRAPH ?cat {{ ?cat a \
                  orexis:CatalogueGraph . <{g}> ?p ?o }} }} ;\n"
             )
         })
         .collect();
     store.update(&format!(
-        "{dropped}
+        "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> {dropped}
 INSERT {{
   GRAPH <{SCOPES_GRAPH}> {{
 {}

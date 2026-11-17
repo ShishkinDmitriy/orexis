@@ -15,7 +15,6 @@ use orexis::boot::boot;
 //  binary was built without.
 use orexis::clock::{Elapsing, instant};
 use orexis::events::as_of;
-use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::{Heard, Package, Provided, Running, Turn as Handling, Wake, Woke};
@@ -50,14 +49,14 @@ fn now() -> DateTime {
 }
 
 fn seeker() -> Store {
-    let store = Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap();
+    let store = Store::new().unwrap();
     boot(&store, &world(), "seeker").unwrap();
     store
 }
 
 /// A store nothing is booted into yet: the seeker boots into it as it starts.
 fn unbooted() -> Store {
-    Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap()
+    Store::new().unwrap()
 }
 
 fn me() -> String {
@@ -205,7 +204,7 @@ fn each_vocabulary_is_listed_by_its_prefix_and_read_as_a_glossary() {
             .unwrap()
             .is_match(&r.listing())
     );
-    let whole = r.query("SELECT ?c WHERE { speech:Chat rdfs:comment ?c }", &beliefs());
+    let whole = r.query("PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX speech: <http://example.org/orexis/speech#> SELECT ?c WHERE { speech:Chat rdfs:comment ?c }", &beliefs());
     assert!(whole.contains("the thing their prose goes through") && whole.len() > 150);
 }
 
@@ -214,28 +213,40 @@ fn a_query_reads_the_chats_graphs_as_one_and_writes_a_name_with_its_prefix() {
     let r = readable();
     assert!(
         r.query(
-            "SELECT ?l WHERE { ?l rdfs:label ?n FILTER(CONTAINS(STR(?l), \"flat\")) }",
+            "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> SELECT ?l WHERE { ?l rdfs:label ?n FILTER(CONTAINS(STR(?l), \"flat\")) }",
             &beliefs()
         )
         .contains("flat_12")
     );
-    assert_eq!(r.query("ASK { ?c a speech:Chat }", &beliefs()), "true");
+    assert_eq!(
+        r.query(
+            "PREFIX speech: <http://example.org/orexis/speech#> ASK { ?c a speech:Chat }",
+            &beliefs()
+        ),
+        "true"
+    );
     assert_eq!(
         r.query("SELECT ?x WHERE { ?x a <http://example.org/none> }", &beliefs()),
         "(no rows)"
     );
     assert!(
-        r.query("SELECT ?c WHERE { ?x a ?c } VALUES ?c { speech:Chat }", &beliefs())
-            .contains("c: speech:Chat")
+        r.query(
+            "PREFIX speech: <http://example.org/orexis/speech#> SELECT ?c WHERE { ?x a ?c } VALUES ?c { speech:Chat }",
+            &beliefs()
+        )
+        .contains("c: speech:Chat")
     );
-    let named = r.query("SELECT ?c WHERE { ?c a speech:Chat }", &beliefs());
+    let named = r.query(
+        "PREFIX speech: <http://example.org/orexis/speech#> SELECT ?c WHERE { ?c a speech:Chat }",
+        &beliefs(),
+    );
     assert!(
         named.starts_with("c: viewing:") && !named.contains("http://"),
         "{named}"
     );
     assert_eq!(
         r.query(
-            "ASK { ?c a speech:Chat ; speech:participant viewing:seeker }",
+            "PREFIX speech: <http://example.org/orexis/speech#> ASK { ?c a speech:Chat ; speech:participant viewing:seeker }",
             &beliefs()
         ),
         "true"
@@ -279,7 +290,7 @@ fn a_query_that_could_do_anything_but_read_the_chats_graphs_is_refused_with_why(
 fn a_query_reads_the_kinds_it_names_and_the_catalogue_is_never_merged_into_them() {
     let r = readable();
     let found = r.query(
-        "SELECT DISTINCT ?g ?how WHERE { GRAPH ?g { ?c a speech:Chat } GRAPH ?cat { ?g orexis:arrivedBy ?how } }",
+        "PREFIX orexis: <http://example.org/orexis#> PREFIX speech: <http://example.org/orexis/speech#> SELECT DISTINCT ?g ?how WHERE { GRAPH ?g { ?c a speech:Chat } GRAPH ?cat { ?g orexis:arrivedBy ?how } }",
         &beliefs(),
     );
     assert!(
@@ -287,12 +298,18 @@ fn a_query_reads_the_kinds_it_names_and_the_catalogue_is_never_merged_into_them(
         "{found}"
     );
     assert_eq!(
-        r.query("ASK { ?g orexis:arrivedBy ?how }", &beliefs()),
+        r.query(
+            "PREFIX orexis: <http://example.org/orexis#> ASK { ?g orexis:arrivedBy ?how }",
+            &beliefs()
+        ),
         "false",
         "statements about graphs are no data"
     );
     assert_eq!(
-        r.query("ASK { ?c a speech:Chat }", &["orexis:OntologyGraph".to_string()]),
+        r.query(
+            "PREFIX speech: <http://example.org/orexis/speech#> ASK { ?c a speech:Chat }",
+            &["orexis:OntologyGraph".to_string()]
+        ),
         "false"
     );
     assert!(r.listing().contains("orexis:OntologyGraph (") && r.listing().contains("Kinds of graph"));
@@ -316,7 +333,7 @@ fn a_query_reads_the_kinds_it_names_and_the_catalogue_is_never_merged_into_them(
     assert_eq!(
         r.call(
             QUERY,
-            &json!({"sparql": "ASK { ?c a speech:Chat }", "kinds": beliefs()})
+            &json!({"sparql": "PREFIX speech: <http://example.org/orexis/speech#> ASK { ?c a speech:Chat }", "kinds": beliefs()})
         )
         .as_deref(),
         Some("true")
@@ -774,7 +791,7 @@ impl<'s> Seeker<'s> {
         let rows = self
             .store
             .rows(
-                "PREFIX : <http://example.org/orexis/world/viewing#>\nSELECT ?flat ?at ?owner WHERE { GRAPH ?g { ?flat :viewingAt ?at } \
+                "PREFIX orexis: <http://example.org/orexis#> PREFIX : <http://example.org/orexis/world/viewing#>\nSELECT ?flat ?at ?owner WHERE { GRAPH ?g { ?flat :viewingAt ?at } \
                  GRAPH ?c { ?c a orexis:CatalogueGraph . ?g a orexis:BeliefGraph OPTIONAL { ?g orexis:ownedBy ?owner } } }",
                 &[],
             )
@@ -843,7 +860,7 @@ fn a_persons_prose_becomes_a_statement_the_agent_hears_and_believes_as_the_world
     let by = store
         .rows(
             &format!(
-                "SELECT ?by WHERE {{ GRAPH <{0}> {{ <{0}> speech:saidBy ?by }} }}",
+                "PREFIX speech: <http://example.org/orexis/speech#> SELECT ?by WHERE {{ GRAPH <{0}> {{ <{0}> speech:saidBy ?by }} }}",
                 statements[0]
             ),
             &[],
@@ -1000,7 +1017,7 @@ fn the_model_loads_a_vocabulary_and_queries_what_the_chat_reads() {
             ("vocabulary", json!({"name": "speech"})),
             (
                 "query",
-                json!({"sparql": "SELECT ?c WHERE { ?c a speech:Chat }", "kinds": ["orexis:BeliefGraph"]}),
+                json!({"sparql": "PREFIX speech: <http://example.org/orexis/speech#> SELECT ?c WHERE { ?c a speech:Chat }", "kinds": ["orexis:BeliefGraph"]}),
             ),
             (
                 "query",

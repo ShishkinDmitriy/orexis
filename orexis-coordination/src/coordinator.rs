@@ -3,7 +3,6 @@
 //! conflicts and lay what it yields to.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::sync::Arc;
 
 use orexis::Error;
 use orexis::document::Document;
@@ -63,7 +62,7 @@ impl Coordinator {
     pub fn new(store: &Store) -> Result<Self, Error> {
         /// THE COORDINATOR THE SELF PLAYS, IN ONE QUERY: the self, and each figure the role says or, where it says
         /// none, the default the coordination's ontology states on its shape of the role (`sh:defaultValue`).
-        const COORDINATOR_Q: &str = "SELECT DISTINCT ?me (COALESCE(?patienceSaid, ?patienceOwn) AS ?patience) \
+        const COORDINATOR_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX sh: <http://www.w3.org/ns/shacl#> SELECT DISTINCT ?me (COALESCE(?patienceSaid, ?patienceOwn) AS ?patience) \
         (COALESCE(?roundsSaid, ?roundsOwn) AS ?rounds) (COALESCE(?lookaheadSaid, ?lookaheadOwn) AS ?lookahead) WHERE { \
         ?shape sh:targetClass <http://example.org/orexis/coordination#Coordinator> ; \
           sh:property [ sh:path <http://example.org/orexis/coordination#patienceS> ; sh:defaultValue ?patienceOwn ] , \
@@ -114,7 +113,7 @@ impl Coordinator {
 
     fn said(&mut self, peer: &str, document: &Document, at: DateTime) -> Result<Vec<String>, Error> {
         if self.watch.connected() {
-            let scratch = Store::new(Arc::new(self.beliefs.namespaces().clone()))?;
+            let scratch = Store::new()?;
             scratch
                 .engine()
                 .extend(document.quads().iter().cloned())

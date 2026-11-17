@@ -98,7 +98,7 @@ impl Translator {
         /// or, where it says none, the default translation's ontology states on its shape of the role
         /// (`sh:defaultValue`), and where the model a role names answers (`translation:translatedBy`), as the world's
         /// deployment states it, with the class of the role naming it.
-        const TRANSLATOR_Q: &str = "SELECT DISTINCT ?me ?kind ?model (COALESCE(?turnsSaid, ?turnsOwn) AS ?turns) \
+        const TRANSLATOR_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX sh: <http://www.w3.org/ns/shacl#> SELECT DISTINCT ?me ?kind ?model (COALESCE(?turnsSaid, ?turnsOwn) AS ?turns) \
         (COALESCE(?rowsSaid, ?rowsOwn) AS ?rows) (COALESCE(?answeredSaid, ?answeredOwn) AS ?answered) \
         (COALESCE(?calledSaid, ?calledOwn) AS ?called) (COALESCE(?retriesSaid, ?retriesOwn) AS ?retries) WHERE { \
         ?shape sh:targetClass <http://example.org/orexis/translation#Translator> ; \

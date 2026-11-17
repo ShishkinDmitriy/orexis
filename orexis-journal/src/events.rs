@@ -17,7 +17,7 @@ use orexis::store::{Store, Within, iri};
 /// Every class `beliefs` holds beneath `orexis:Incident`, read off the common beliefs, where the closure is.
 pub fn incidents(beliefs: &Store) -> Result<BTreeSet<String>, Error> {
     /// What the vocabulary says is an incident: every class beneath it, off the closure.
-    const INCIDENTS_Q: &str = "SELECT DISTINCT ?c WHERE { ?c rdfs:subClassOf orexis:Incident }";
+    const INCIDENTS_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> SELECT DISTINCT ?c WHERE { ?c rdfs:subClassOf orexis:Incident }";
     let common = beliefs.graphs_of(
         &[BELIEF],
         &Within {

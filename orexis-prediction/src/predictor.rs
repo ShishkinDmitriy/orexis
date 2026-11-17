@@ -29,7 +29,7 @@ impl Predictor {
     pub fn new(store: &Store) -> Result<Self, Error> {
         /// THE PREDICTOR THE SELF PLAYS, IN ONE QUERY: each figure its role says or, where it says none, the default
         /// prediction's ontology states on its shape of the role (`sh:defaultValue`).
-        const PREDICTOR_Q: &str = "SELECT DISTINCT (COALESCE(?horizonSaid, ?horizonOwn) AS ?horizon) \
+        const PREDICTOR_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX sh: <http://www.w3.org/ns/shacl#> SELECT DISTINCT (COALESCE(?horizonSaid, ?horizonOwn) AS ?horizon) \
         (COALESCE(?heldSaid, ?heldOwn) AS ?held) WHERE { \
         ?shape sh:targetClass <http://example.org/orexis/prediction#Predictor> ; \
           sh:property [ sh:path <http://example.org/orexis/prediction#horizonS> ; sh:defaultValue ?horizonOwn ] , \

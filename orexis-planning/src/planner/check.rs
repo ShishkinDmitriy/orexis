@@ -2,7 +2,6 @@
 //! precondition holds and whether the world it lands in is one the agent believes possible.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::sync::Arc;
 
 use oxigraph::model::{GraphName, NamedNode, Quad};
 use oxsdatatypes::DateTime;
@@ -36,10 +35,10 @@ impl Planner {
     /// action's precondition admits it no more, where the world it lands in violates a constraint the world before
     /// does not, or where a world of its plan was foreseen impossible after it. A step kept below is not checked.
     pub fn check(&mut self, step: &str, at: DateTime) -> Result<bool, Error> {
-        const HEAD_Q: &str = r#"
+        const HEAD_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#> PREFIX planning: <http://example.org/orexis/planning#> 
         SELECT ?action WHERE { GRAPH ?p { $step planning:fills ?action }
           FILTER NOT EXISTS { GRAPH ?k { $step execution:keptBelow true } } } LIMIT 1"#;
-        const PRECONDITION_Q: &str = r#"SELECT ?text ?takes WHERE { $action planning:precondition ?text . OPTIONAL { $action orexis:takes ?takes } }"#;
+        const PRECONDITION_Q: &str = r#"PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> SELECT ?text ?takes WHERE { $action planning:precondition ?text . OPTIONAL { $action orexis:takes ?takes } }"#;
         const FILLING_Q: &str = r#"SELECT ?p ?v WHERE { GRAPH ?plan { $step ?p ?v } }"#;
         if self.doomed.values().any(|s| s == step) {
             log::info!(
@@ -108,14 +107,14 @@ impl Planner {
     /// The constraint the world `step` lands in violates where the world before it does not, as the agent believes
     /// them now: the present beside every forecast holding in the step's band, and its change applied by key.
     fn lands_impossible(&self, step: &str, present: &[String], at: DateTime) -> Result<Option<String>, Error> {
-        const CHANGE_Q: &str = r#"SELECT ?retracts ?adds WHERE { GRAPH ?p { $step a execution:Step .
+        const CHANGE_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#> SELECT ?retracts ?adds WHERE { GRAPH ?p { $step a execution:Step .
           OPTIONAL { $step execution:retracts ?retracts } OPTIONAL { $step execution:adds ?adds } }
           FILTER(BOUND(?retracts) || BOUND(?adds)) } LIMIT 1"#;
-        const BAND_Q: &str = r#"SELECT ?due ?after WHERE { GRAPH ?p { $step execution:notBefore ?due ; execution:notAfter ?after } } LIMIT 1"#;
-        const AHEAD_Q: &str = r#"
+        const BAND_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#> SELECT ?due ?after WHERE { GRAPH ?p { $step execution:notBefore ?due ; execution:notAfter ?after } } LIMIT 1"#;
+        const AHEAD_Q: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> 
         SELECT ?g ?start ?end WHERE { GRAPH $cat { ?g a orexis:ForecastGraph . FILTER NOT EXISTS { ?g a execution:CommittedStepGraph }
           OPTIONAL { ?g dcterms:temporal ?p . OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }"#;
-        const CONSTRAINT_TEXTS_Q: &str = r#"
+        const CONSTRAINT_TEXTS_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#> PREFIX sh: <http://www.w3.org/ns/shacl#> 
         SELECT ?c ?text WHERE { $holder planning:holds ?c . ?c a planning:Constraint .
           { ?c planning:unmetWhen ?s . ?s sh:select ?text } UNION { ?c planning:metWhen ?shape . ?shape sh:sparql/sh:select ?text } }"#;
         if !self.holds_a_constraint()? {
@@ -149,7 +148,7 @@ impl Planner {
                 ahead.push(g);
             }
         }
-        let world = Store::new(Arc::new(beliefs.namespaces().clone()))?;
+        let world = Store::new()?;
         let scratch = GraphName::NamedNode(NamedNode::new_unchecked(SCRATCH));
         for g in present.iter().chain(&ahead) {
             world.add(

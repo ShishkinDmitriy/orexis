@@ -22,7 +22,7 @@ use crate::world_at::lexical;
 
 /// Every want `store` derived, across its want graphs.
 fn derived(store: &Store) -> Result<BTreeSet<String>, Error> {
-    const DERIVED_Q: &str = r#"
+    const DERIVED_Q: &str = r#"PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
     SELECT ?w WHERE { GRAPH ?g { ?w a planning:Want }
       GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }"#;
     Ok(store.rows(DERIVED_Q, &[])?.iter().filter_map(|r| iri(r, "w")).collect())
@@ -65,8 +65,7 @@ impl Planner {
 
     /// Whether this agent holds any constraint — the one thing a walking want can be reopened by.
     pub(super) fn holds_a_constraint(&self) -> Result<bool, Error> {
-        const HOLDS_CONSTRAINT_Q: &str =
-            r#"SELECT ?c WHERE { $holder planning:holds ?c . ?c a planning:Constraint } LIMIT 1"#;
+        const HOLDS_CONSTRAINT_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#> SELECT ?c WHERE { $holder planning:holds ?c . ?c a planning:Constraint } LIMIT 1"#;
         let held = graphs(&self.beliefs, &[CONSTRAINT_GRAPH])?;
         Ok(!self
             .beliefs
@@ -79,7 +78,7 @@ impl Planner {
 
     /// Where every standing intention stands, by the want it pursues.
     pub(super) fn flights(&self, at: DateTime) -> Result<Flights, Error> {
-        const STANDS_AT_Q: &str = r#"
+        const STANDS_AT_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#> PREFIX planning: <http://example.org/orexis/planning#> 
         SELECT ?intention ?want ?plan ?step ?action ?due ?taken ?lands ?ending WHERE {
           GRAPH ?g { ?intention a execution:Intention ; execution:pursues ?want ; execution:by ?step ; execution:adopts ?plan .
                      FILTER NOT EXISTS { ?intention execution:resolvedAt ?done }
@@ -163,10 +162,10 @@ impl Planner {
         only: Option<&BTreeSet<String>>,
         memo: &mut Memo,
     ) -> Result<BTreeSet<String>, Error> {
-        const FORESEEN_U: &str = r#"
+        const FORESEEN_U: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> 
         INSERT { GRAPH ?cat { $world dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start $start ] } }
         WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph } }"#;
-        const UNWEIGH_U: &str = r#"
+        const UNWEIGH_U: &str = r#"PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
         DELETE { GRAPH ?cat { ?x ?p ?o . ?v ?vp ?vo } }
         WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                               ?x planning:weighs $world ; ?p ?o .
@@ -290,8 +289,8 @@ impl Planner {
         flights: &Flights,
         kept: &mut BTreeMap<String, Vec<String>>,
     ) -> Result<(), Error> {
-        const REOPENS_Q: &str = r#"SELECT ?w WHERE { GRAPH ?g { $want planning:reopens ?w } } ORDER BY ?w"#;
-        const PLAN_FOR_Q: &str = r#"SELECT ?plan ?outcome WHERE { GRAPH ?plan { ?plan a planning:Plan ; planning:for $want ; planning:outcome ?outcome } } LIMIT 1"#;
+        const REOPENS_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#> SELECT ?w WHERE { GRAPH ?g { $want planning:reopens ?w } } ORDER BY ?w"#;
+        const PLAN_FOR_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#> SELECT ?plan ?outcome WHERE { GRAPH ?plan { ?plan a planning:Plan ; planning:for $want ; planning:outcome ?outcome } } LIMIT 1"#;
         let reopened: Vec<String> = store
             .rows(&bind(REOPENS_Q, &[("want", Value::iri(want))])?, &[])?
             .iter()

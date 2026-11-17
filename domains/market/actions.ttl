@@ -26,7 +26,7 @@
 market:Calling a orexis:Action ;
     rdfs:label "call for a round on a venue I bid in" ;
     orexis:takes market:venue ;
-    planning:precondition """PREFIX market: <http://example.org/orexis/market#>
+    planning:precondition """PREFIX orexis: <http://example.org/orexis#> PREFIX market: <http://example.org/orexis/market#>
         SELECT DISTINCT ?venue WHERE {
             ?me a orexis:Self ; market:bidsIn ?venue .
             FILTER NOT EXISTS { ?venue market:open true }
@@ -38,7 +38,7 @@ market:Calling a orexis:Action ;
         sh:rule [ a belief:Transition ; belief:update """PREFIX market: <http://example.org/orexis/market#>
         INSERT { $venue market:open true } WHERE {}""" ] ] ;
     execution:implementation [ a execution:Implementation ;
-        execution:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
+        execution:operation [ a execution:Saying ; sh:construct """PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { ?call a market:Call , market:CallGraph ; market:calledOn $venue ; market:calledBy ?me ;
                           market:calledAt $now ; execution:to ?host }
         WHERE { ?me a orexis:Self . ?host market:hosts $venue .
@@ -47,7 +47,7 @@ market:Calling a orexis:Action ;
 market:Tendering a orexis:Action ;
     rdfs:label "tender a bid into the round open on a venue" ;
     orexis:takes market:venue ;
-    planning:precondition """PREFIX market: <http://example.org/orexis/market#>
+    planning:precondition """PREFIX orexis: <http://example.org/orexis#> PREFIX market: <http://example.org/orexis/market#>
         SELECT DISTINCT ?venue WHERE {
             ?me a orexis:Self ; market:bidsIn ?venue . ?venue market:open true .
             FILTER NOT EXISTS { ?bid market:bidder ?me ; market:inRound ?round .
@@ -59,7 +59,7 @@ market:Tendering a orexis:Action ;
     planning:landsAfter """PREFIX market: <http://example.org/orexis/market#>
         SELECT ?least ?most WHERE { $venue market:bidWindowS ?least . BIND(?least AS ?most) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a belief:Transition ; belief:update """PREFIX market: <http://example.org/orexis/market#>
+        sh:rule [ a belief:Transition ; belief:update """PREFIX orexis: <http://example.org/orexis#> PREFIX market: <http://example.org/orexis/market#>
         DELETE { $venue market:open true }
         INSERT { ?me market:holdsClaimOn $venue }
         WHERE  { ?me a orexis:Self . $venue market:open true }""" ] ] ;
@@ -68,7 +68,7 @@ market:Tendering a orexis:Action ;
     #  the observation holding at `$now`, which the saying is not handed — it is sensing's, and no
     #  belief — and finds by the kind it is kept in, `sensing:ObservationGraph` (#944).
     execution:implementation [ a execution:Implementation ;
-        execution:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
+        execution:operation [ a execution:Saying ; sh:construct """PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> PREFIX schema: <https://schema.org/> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX ssn: <http://www.w3.org/ns/ssn/> PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> PREFIX market: <http://example.org/orexis/market#>
         PREFIX climate: <http://example.org/orexis/climate#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
         CONSTRUCT { ?bid a market:Bid , market:BidGraph ; market:inRound ?round ; market:bidder ?me ;
@@ -97,7 +97,7 @@ market:Tendering a orexis:Action ;
 market:Presenting a orexis:Action ;
     rdfs:label "present a claim I hold on a venue for my subject whose soil is believed dry" ;
     orexis:takes market:venue , actuation:subject ;
-    planning:precondition """PREFIX market: <http://example.org/orexis/market#>
+    planning:precondition """PREFIX orexis: <http://example.org/orexis#> PREFIX market: <http://example.org/orexis/market#>
         PREFIX climate: <http://example.org/orexis/climate#>
         SELECT DISTINCT ?venue ?subject WHERE {
             VALUES ?property { climate:SoilMoisture }
@@ -111,7 +111,7 @@ market:Presenting a orexis:Action ;
     #  reads again - nothing at the least, its cadence at the most. Declared as nothing, a presentation landed
     #  the instant it was taken and failed a patience later, and a grower whose probe reports every ten minutes
     #  bought and presented again once a minute until it did: four doses where one was owed (#1148).
-    planning:landsAfter """PREFIX climate: <http://example.org/orexis/climate#>
+    planning:landsAfter """PREFIX schema: <https://schema.org/> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> PREFIX climate: <http://example.org/orexis/climate#>
         PREFIX unit: <http://qudt.org/vocab/unit/>
         SELECT ?least ?most WHERE {
             ?sensor sosa:isHostedBy/(sosa:isSampleOf)? $subject ; sosa:observes climate:SoilMoisture ;
@@ -124,13 +124,13 @@ market:Presenting a orexis:Action ;
             BIND(xsd:double(?every) * ?per AS ?most)
         }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a belief:Transition ; belief:update """PREFIX market: <http://example.org/orexis/market#>
+        sh:rule [ a belief:Transition ; belief:update """PREFIX orexis: <http://example.org/orexis#> PREFIX market: <http://example.org/orexis/market#>
         PREFIX climate: <http://example.org/orexis/climate#>
         DELETE { $subject climate:soil climate:Dry . ?me market:holdsClaimOn $venue }
         INSERT { $subject climate:soil climate:Moist }
         WHERE  { ?me a orexis:Self ; market:holdsClaimOn $venue . $subject climate:soil climate:Dry }""" ] ] ;
     execution:implementation [ a execution:Implementation ;
-        execution:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
+        execution:operation [ a execution:Saying ; sh:construct """PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { ?presentation a market:Presentation , market:PresentationGraph ; market:presents ?claim ;
                                   execution:to ?host }
         WHERE { ?host market:hosts $venue .
@@ -143,7 +143,7 @@ market:Presenting a orexis:Action ;
 market:Offering a orexis:Action ;
     rdfs:label "open a round on a venue I host, for the calls on it" ;
     orexis:takes market:venue ;
-    planning:precondition """PREFIX market: <http://example.org/orexis/market#>
+    planning:precondition """PREFIX orexis: <http://example.org/orexis#> PREFIX market: <http://example.org/orexis/market#>
         SELECT DISTINCT ?venue WHERE {
             ?me a orexis:Self ; market:hosts ?venue .
             FILTER NOT EXISTS { ?venue market:open true }
@@ -163,7 +163,7 @@ market:Offering a orexis:Action ;
         INSERT { $venue market:open true . ?call market:offered true }
         WHERE { ?call market:calledOn $venue . FILTER NOT EXISTS { ?call market:answered true } }""" ] ] ;
     execution:implementation [ a execution:Implementation ;
-        execution:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
+        execution:operation [ a execution:Saying ; sh:construct """PREFIX execution: <http://example.org/orexis/execution#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { ?round a market:Round , market:RoundGraph ; market:onVenue $venue ; market:lotL ?lot ;
                            market:reservePerL ?reserve ; market:openedAt $now ; market:closesAt ?closes ;
                            market:answers ?call ; execution:to ?bidder }
@@ -176,7 +176,7 @@ market:Offering a orexis:Action ;
 market:Clearing a orexis:Action ;
     rdfs:label "clear the round open on a venue I host" ;
     orexis:takes market:venue ;
-    planning:precondition """PREFIX market: <http://example.org/orexis/market#>
+    planning:precondition """PREFIX orexis: <http://example.org/orexis#> PREFIX market: <http://example.org/orexis/market#>
         SELECT DISTINCT ?venue WHERE { ?me a orexis:Self ; market:hosts ?venue . ?venue market:open true }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     planning:effect [ a planning:Effect ;
@@ -186,7 +186,7 @@ market:Clearing a orexis:Action ;
         WHERE  { $venue market:open true . OPTIONAL { ?call market:calledOn $venue ; market:offered true } }""" ] ] ;
     #  THE ROUND, SAID AGAIN CLEARED, to everybody it was said to.
     execution:implementation [ a execution:Implementation ;
-        execution:operation [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
+        execution:operation [ a execution:Saying ; sh:construct """PREFIX execution: <http://example.org/orexis/execution#> PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { ?round a market:Round , market:RoundGraph ; market:onVenue $venue ; market:lotL ?lot ;
                            market:reservePerL ?reserve ; market:openedAt ?opened ; market:closesAt ?closes ;
                            market:clearedAt $now ; market:answers ?call ; execution:to ?bidder }
@@ -198,7 +198,7 @@ market:Clearing a orexis:Action ;
                          #  THE CLAIMS, BY PAY-AS-BID: the bids ranked by price, the dearest first and a tie by the
                          #  bidder's name, each awarded what it asked or what is left of the lot, whichever is less,
                          #  and paying what it bid; a bid under the reserve is not matched.
-                         [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
+                         [ a execution:Saying ; sh:construct """PREFIX execution: <http://example.org/orexis/execution#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { ?claim a market:Claim , market:ClaimGraph ; market:inRound ?round ; market:onVenue $venue ;
                            market:heldBy ?bidder ; market:amountL ?amount ; market:pricePerL ?price ;
                            execution:to ?bidder }
@@ -223,7 +223,7 @@ market:Clearing a orexis:Action ;
 market:Serving a orexis:Action ;
     rdfs:label "serve a presented claim through the device that reaches its holder's subject" ;
     orexis:takes market:claim ;
-    planning:precondition """PREFIX market: <http://example.org/orexis/market#>
+    planning:precondition """PREFIX orexis: <http://example.org/orexis#> PREFIX market: <http://example.org/orexis/market#>
         SELECT DISTINCT ?claim WHERE {
             ?me a orexis:Self ; market:hosts ?venue .
             ?claim a market:Claim ; market:onVenue ?venue ; market:presented true .
@@ -235,7 +235,7 @@ market:Serving a orexis:Action ;
         INSERT { $claim market:discharged true } WHERE {}""" ] ] ;
     #  THE DOSE, the claim's amount at most the device's cap.
     execution:implementation [ a execution:Implementation ;
-        execution:operation [ a execution:Command ; sh:select """PREFIX market: <http://example.org/orexis/market#>
+        execution:operation [ a execution:Command ; sh:select """PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> PREFIX market: <http://example.org/orexis/market#>
         PREFIX actuation: <http://example.org/orexis/actuation#>
         SELECT ?actuator ?payload WHERE {
             $claim market:heldBy ?holder ; market:amountL ?litres .
@@ -246,7 +246,7 @@ market:Serving a orexis:Action ;
             BIND(CONCAT('{"dose_ml": ', STR(xsd:integer(ROUND(?ml))), '}') AS ?payload)
         }""" ] ,
                          #  THE CLAIM, SAID AGAIN DISCHARGED, to its holder.
-                         [ a execution:Saying ; sh:construct """PREFIX market: <http://example.org/orexis/market#>
+                         [ a execution:Saying ; sh:construct """PREFIX execution: <http://example.org/orexis/execution#> PREFIX market: <http://example.org/orexis/market#>
         CONSTRUCT { $claim a market:Claim , market:ClaimGraph ; market:inRound ?round ; market:onVenue ?venue ;
                            market:heldBy ?holder ; market:amountL ?litres ; market:pricePerL ?price ;
                            market:discharged true ; market:dischargedAt $now ; execution:to ?holder }

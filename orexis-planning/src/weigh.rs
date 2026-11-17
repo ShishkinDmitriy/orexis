@@ -35,7 +35,8 @@ const DERIVED_FROM: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
 /// Weigh `about` — a world, a ground, or a candidate — for `for_`, a want or a desire, and write the weighing.
 /// Its node.
 pub fn weigh(store: &Store, for_: &str, about: &str, memo: &mut Memo) -> Result<String, Error> {
-    const ABOUT_Q: &str = "
+    const ABOUT_Q: &str =
+        "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
     SELECT ?from ?child ?hash ?impossible WHERE {
       GRAPH $cat { OPTIONAL { $about planning:from ?from }
         OPTIONAL { ?child planning:by $about ; orexis:hash ?hash .
@@ -43,7 +44,7 @@ pub fn weigh(store: &Store, for_: &str, about: &str, memo: &mut Memo) -> Result<
     /// THE WORLDS ALREADY WEIGHED FOR THE WANT THAT HOLD THE CHILD'S HASH, asked apart from the child: inside its
     /// OPTIONAL, the group was evaluated on its own before the join, every weighing of the cone against every hash, and
     /// it was half of a five-disk pass.
-    const SEEN_Q: &str = "
+    const SEEN_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
     SELECT ?seen WHERE { GRAPH $cat { ?seen orexis:hash $hash . ?x a planning:Weighing ; planning:for $for ; planning:weighs ?seen } }
     ORDER BY ?seen";
     let cat = catalogue(store, memo)?;
@@ -165,7 +166,8 @@ pub fn weigh(store: &Store, for_: &str, about: &str, memo: &mut Memo) -> Result<
 
 /// Who holds what is weighed for, the self first, and whether it is a want — once a pass.
 fn held(store: &Store, for_: &str, memo: &mut Memo) -> Result<Row, Error> {
-    const HELD_Q: &str = "
+    const HELD_Q: &str =
+        "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
     SELECT ?holder ?want WHERE {
       GRAPH ?g { ?holder planning:holds $for . OPTIONAL { $for a planning:Want . BIND(true AS ?want) } }
       OPTIONAL { GRAPH ?s { ?holder a orexis:Self } BIND(true AS ?self) } }
@@ -185,7 +187,7 @@ fn held(store: &Store, for_: &str, memo: &mut Memo) -> Result<Row, Error> {
 /// The instant `world` lands late at for the want `for_`, or None where it is on time, and whether it lands
 /// past the instant the want lifts by — must miss for a want of the agent's own, may miss for an obligation.
 fn when(store: &Store, for_: &str, world: &str, cat: &str, memo: &mut Memo) -> Result<(Option<DateTime>, bool), Error> {
-    const PERIOD_Q: &str = "
+    const PERIOD_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> PREFIX prov: <http://www.w3.org/ns/prov#> 
     SELECT ?start ?end ?reopens ?owed WHERE {
       GRAPH $cat { ?d a planning:WantGraph ; dcterms:temporal ?p .
                    OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } }
@@ -195,7 +197,7 @@ fn when(store: &Store, for_: &str, world: &str, cat: &str, memo: &mut Memo) -> R
                  { GRAPH ?d { $for prov:wasDerivedFrom ?desire } GRAPH ?dg { ?desire a planning:Desire }
                    GRAPH $cat { ?dg orexis:arrivedBy orexis:Received } }
                  BIND(true AS ?owed) } } LIMIT 1";
-    const LANDS_Q: &str = "
+    const LANDS_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> 
     SELECT ?start ?end WHERE { GRAPH $cat { $world dcterms:temporal ?p . ?p orexis:start ?start OPTIONAL { ?p orexis:end ?end } } }
     LIMIT 1";
     if !memo.periods.contains_key(for_) {
@@ -249,7 +251,8 @@ fn rank(late: Option<DateTime>, past: bool) -> (u8, Option<DateTime>) {
 
 /// Where the timeline begins, the earliest ground — once a pass.
 fn present(store: &Store, cat: &str, memo: &mut Memo) -> Result<Option<DateTime>, Error> {
-    const PRESENT_Q: &str = "
+    const PRESENT_Q: &str =
+        "PREFIX orexis: <http://example.org/orexis#> PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX planning: <http://example.org/orexis/planning#> 
     SELECT (MIN(?start) AS ?now) WHERE {
       GRAPH $cat { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start } }";
     if let Some(known) = memo.present {
@@ -340,7 +343,7 @@ fn select(store: &Store, for_: &str, memo: &mut Memo) -> Result<Option<String>, 
         return Ok(known.clone());
     }
     let shapes = shapes(store, memo)?;
-    let compiled = match select_of(&shapes, &named(for_)?.into(), store.namespaces()) {
+    let compiled = match select_of(&shapes, &named(for_)?.into()) {
         Ok(found) => found,
         Err(Compiled::Unsupported(u)) => {
             log::warn!(

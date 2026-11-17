@@ -10,7 +10,6 @@ use std::sync::{Arc, Mutex};
 use orexis::Error;
 use orexis::boot::TREE;
 use orexis::clock::instant;
-use orexis::namespaces::Namespaces;
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::{Provided, UNFINISHED};
 use orexis_agent::boot_without_starting;
@@ -51,7 +50,7 @@ fn world() -> PathBuf {
 }
 
 fn store() -> Store {
-    Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap()
+    Store::new().unwrap()
 }
 
 #[test]
@@ -127,7 +126,7 @@ async fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_
     let observed: Vec<&str> = observed.iter().map(String::as_str).collect();
     let read: std::collections::BTreeMap<String, f64> = store
         .rows(
-            "SELECT ?p ?v WHERE { ?o sosa:observedProperty ?p ; sosa:hasSimpleResult ?v }",
+            "PREFIX sosa: <http://www.w3.org/ns/sosa/> SELECT ?p ?v WHERE { ?o sosa:observedProperty ?p ; sosa:hasSimpleResult ?v }",
             &observed,
         )
         .unwrap()

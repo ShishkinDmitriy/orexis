@@ -27,7 +27,7 @@ pub(super) fn troubles(
     holder: &str,
 ) -> Result<Option<Vec<Witness>>, Error> {
     /// WHAT ONE DESIRE'S WEIGHINGS SAY, ground by ground.
-    const TROUBLES_Q: &str = "
+    const TROUBLES_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
     SELECT ?start ?g ?met ?instance ?constraint ?about ?offending WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph .
         ?x a planning:Weighing ; planning:for $desire ; planning:weighs ?g .

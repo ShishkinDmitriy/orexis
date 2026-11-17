@@ -16,7 +16,7 @@ draw:committed a sh:NodeShape ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "the conflict's draw has no commitment of mine" ;
         planning:about sh:this ;
-        sh:select """PREFIX draw: <http://example.org/orexis/draw#>
+        sh:select """PREFIX coordination: <http://example.org/orexis/coordination#> PREFIX orexis: <http://example.org/orexis#> PREFIX draw: <http://example.org/orexis/draw#>
         SELECT $this WHERE {
             $this coordination:standing true ; coordination:draw ?draw .
             ?me a orexis:Self .
@@ -31,7 +31,7 @@ draw:revealed a sh:NodeShape ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "the peer has committed and I have not revealed" ;
         planning:about sh:this ;
-        sh:select """PREFIX draw: <http://example.org/orexis/draw#>
+        sh:select """PREFIX coordination: <http://example.org/orexis/coordination#> PREFIX orexis: <http://example.org/orexis#> PREFIX draw: <http://example.org/orexis/draw#>
         SELECT $this WHERE {
             $this coordination:standing true ; coordination:draw ?draw ; coordination:with ?peer .
             ?me a orexis:Self .

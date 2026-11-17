@@ -63,7 +63,7 @@ impl Effect {
 }
 
 fn effects(store: &Store, at: DateTime) -> Result<BTreeMap<String, Effect>, Error> {
-    const ACTIONS_Q: &str = "
+    const ACTIONS_Q: &str = "PREFIX sh: <http://www.w3.org/ns/shacl#> PREFIX belief: <http://example.org/orexis/belief#> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
     SELECT ?action ?precondition ?update WHERE {
       ?action a orexis:Action .
       OPTIONAL { ?action planning:precondition ?precondition }
@@ -222,7 +222,7 @@ pub fn written(store: &Store, at: DateTime) -> Result<BTreeSet<String>, Error> {
 /// Every action the store holds as its fillings — `None` where its texts cannot be read so. An action stating no
 /// effect has no entry, and one every row of which leaves unbound a parameter the world alone decides has none.
 pub fn atoms_of(store: &Store, at: DateTime) -> Result<BTreeMap<String, Option<Vec<Filling>>>, Error> {
-    const TAKES_Q: &str = "SELECT ?action ?takes WHERE { ?action a orexis:Action ; orexis:takes ?takes }";
+    const TAKES_Q: &str = "PREFIX orexis: <http://example.org/orexis#> SELECT ?action ?takes WHERE { ?action a orexis:Action ; orexis:takes ?takes }";
     let mut out = BTreeMap::new();
     let effects = effects(store, at)?;
     if effects.is_empty() {
@@ -419,7 +419,7 @@ pub type Side = Option<BTreeSet<String>>;
 
 /// The derivations' `(reads, writes)` edges read back from `graphs`, by the derivation's name.
 pub fn stored_edges(store: &Store, graphs: &[&str]) -> Result<Vec<(Side, Side)>, Error> {
-    const EDGES_Q: &str = "
+    const EDGES_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#> 
     SELECT ?d ?reads ?writes WHERE {
       ?d a planning:Derivation .
       OPTIONAL { ?d planning:reads ?reads }
@@ -448,7 +448,7 @@ mod tests {
     use super::*;
 
     fn empty() -> Store {
-        Store::new(snapshots::namespaces()).expect("an empty store")
+        Store::new().expect("an empty store")
     }
 
     fn var(n: &str) -> Node {
@@ -522,7 +522,7 @@ mod tests {
         let actions = store.graphs_of(&[ACTION], &Within::at(snapshots::now())).unwrap()[0].clone();
         store
         .update(&format!(
-            r#"PREFIX : <http://example.org/test#> INSERT DATA {{ GRAPH <{actions}> {{
+            r#"PREFIX belief: <http://example.org/orexis/belief#> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> PREFIX sh: <http://www.w3.org/ns/shacl#> PREFIX : <http://example.org/test#> INSERT DATA {{ GRAPH <{actions}> {{
         :drain a orexis:Action ; planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ;
             belief:update "PREFIX : <http://example.org/test#> DELETE {{ ?t :spilt ?x }} INSERT {{ ?t :level 0 }} WHERE {{ ?t :spilt ?x }}" ] ] .
         :spill a orexis:Action ; planning:effect [ a planning:Effect ; sh:rule [ a sh:SPARQLRule ;
@@ -549,7 +549,7 @@ mod tests {
         let store = empty();
         store
         .update(
-            "INSERT DATA {
+            "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> INSERT DATA {
   GRAPH <urn:test:derivations> {
     <urn:test:d1> a planning:Derivation ; planning:reads <urn:test:p> ; planning:writes <urn:test:q> .
     <urn:test:d2> a planning:Derivation ; planning:reads planning:Anything }

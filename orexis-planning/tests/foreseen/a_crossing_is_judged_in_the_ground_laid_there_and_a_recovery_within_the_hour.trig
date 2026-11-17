@@ -68,7 +68,7 @@ GRAPH :world {
 
 GRAPH :rules {
   :soilRule a belief:Transition .
-  :soilRule belief:update """PREFIX : <http://example.org/test#>
+  :soilRule belief:update """PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX : <http://example.org/test#>
       DELETE { ?subject :soil ?before }
       INSERT { ?subject :soil ?state }
       WHERE {
@@ -82,7 +82,7 @@ GRAPH :rules {
 GRAPH :flows {
   :Raining a prediction:Flow .
   :Raining prediction:moves :moisture .
-  :Raining prediction:rate """PREFIX : <http://example.org/test#>
+  :Raining prediction:rate """PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> PREFIX : <http://example.org/test#>
       SELECT ?rate ?until WHERE {
           ?rain sosa:observedProperty :precipitation ; sosa:hasSimpleResult ?mm .
           BIND(xsd:double(?mm) * 0.005 / 3600.0 AS ?rate)

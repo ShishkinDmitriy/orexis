@@ -15,7 +15,7 @@
 climate:Drying a prediction:Flow ;
     rdfs:label "what a subject's soil loses while nobody waters it" ;
     prediction:moves climate:SoilMoisture ;
-    prediction:rate """PREFIX climate: <http://example.org/orexis/climate#>
+    prediction:rate """PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> PREFIX climate: <http://example.org/orexis/climate#>
         SELECT ?rate ?until WHERE {
             $feature climate:driesPerDay ?perDay .
             BIND(-xsd:double(?perDay) / 86400.0 AS ?rate)
@@ -28,7 +28,7 @@ climate:Drying a prediction:Flow ;
 climate:Raining a prediction:Flow ;
     rdfs:label "what rain on a subject's place gives its soil" ;
     prediction:moves climate:SoilMoisture ;
-    prediction:rate """PREFIX climate: <http://example.org/orexis/climate#>
+    prediction:rate """PREFIX schema: <https://schema.org/> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> PREFIX climate: <http://example.org/orexis/climate#>
         SELECT ?low ?high ?until WHERE {
             $feature climate:wetsPerMm ?perMm ; schema:containedInPlace ?place .
             ?rain sosa:hasFeatureOfInterest ?place ; sosa:observedProperty climate:Precipitation .

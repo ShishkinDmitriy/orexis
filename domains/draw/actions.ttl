@@ -18,7 +18,7 @@
 draw:Committing a orexis:Action ;
     rdfs:label "commit to my number in a standing conflict's draw" ;
     orexis:takes draw:peer ;
-    planning:precondition """PREFIX draw: <http://example.org/orexis/draw#>
+    planning:precondition """PREFIX coordination: <http://example.org/orexis/coordination#> PREFIX orexis: <http://example.org/orexis#> PREFIX draw: <http://example.org/orexis/draw#>
         SELECT DISTINCT ?peer WHERE {
             ?me a orexis:Self . ?peer a orexis:Agent .
             ?conflict a coordination:Conflict ; coordination:with ?peer ; coordination:standing true ; coordination:draw ?draw .
@@ -28,11 +28,11 @@ draw:Committing a orexis:Action ;
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a belief:Transition ; belief:update """PREFIX draw: <http://example.org/orexis/draw#>
+        sh:rule [ a belief:Transition ; belief:update """PREFIX coordination: <http://example.org/orexis/coordination#> PREFIX orexis: <http://example.org/orexis#> PREFIX draw: <http://example.org/orexis/draw#>
         INSERT { ?draw draw:committedBy ?me } WHERE { ?me a orexis:Self . ?conflict coordination:with $peer ; coordination:standing true ; coordination:draw ?draw .
             FILTER NOT EXISTS { ?draw coordination:wonBy ?winner } }""" ] ] ;
     execution:implementation [ a execution:Implementation ;
-        execution:operation [ a execution:Saying ; sh:construct """PREFIX draw: <http://example.org/orexis/draw#>
+        execution:operation [ a execution:Saying ; sh:construct """PREFIX coordination: <http://example.org/orexis/coordination#> PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> PREFIX draw: <http://example.org/orexis/draw#>
         CONSTRUCT { ?said a draw:Commitment , draw:CommitmentGraph ; draw:of ?draw ; draw:by ?me ; draw:about ?conflict ;
                           draw:round ?round ; draw:hash ?hash ; execution:to $peer }
         WHERE { ?me a orexis:Self ; coordination:secret ?secret .
@@ -47,7 +47,7 @@ draw:Revealing a orexis:Action ;
     rdfs:label "reveal my number in a draw the peer has committed to" ;
     orexis:takes draw:peer ;
     #  ONLY ONCE THE PEER'S COMMITMENT IS HEARD: a number shown first would let the peer choose its own after.
-    planning:precondition """PREFIX draw: <http://example.org/orexis/draw#>
+    planning:precondition """PREFIX coordination: <http://example.org/orexis/coordination#> PREFIX orexis: <http://example.org/orexis#> PREFIX draw: <http://example.org/orexis/draw#>
         SELECT DISTINCT ?peer WHERE {
             ?me a orexis:Self . ?peer a orexis:Agent .
             ?conflict a coordination:Conflict ; coordination:with ?peer ; coordination:standing true ; coordination:draw ?draw .
@@ -57,11 +57,11 @@ draw:Revealing a orexis:Action ;
         }""" ;
     planning:costs """SELECT ?cost WHERE { BIND(1.0 AS ?cost) }""" ;
     planning:effect [ a planning:Effect ;
-        sh:rule [ a belief:Transition ; belief:update """PREFIX draw: <http://example.org/orexis/draw#>
+        sh:rule [ a belief:Transition ; belief:update """PREFIX coordination: <http://example.org/orexis/coordination#> PREFIX orexis: <http://example.org/orexis#> PREFIX draw: <http://example.org/orexis/draw#>
         INSERT { ?draw draw:revealedBy ?me } WHERE { ?me a orexis:Self . ?conflict coordination:with $peer ; coordination:standing true ; coordination:draw ?draw .
             FILTER NOT EXISTS { ?draw coordination:wonBy ?winner } }""" ] ] ;
     execution:implementation [ a execution:Implementation ;
-        execution:operation [ a execution:Saying ; sh:construct """PREFIX draw: <http://example.org/orexis/draw#>
+        execution:operation [ a execution:Saying ; sh:construct """PREFIX coordination: <http://example.org/orexis/coordination#> PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> PREFIX draw: <http://example.org/orexis/draw#>
         CONSTRUCT { ?said a draw:Reveal , draw:RevealGraph ; draw:of ?draw ; draw:by ?me ; draw:about ?conflict ;
                           draw:round ?round ; draw:number ?number ; execution:to $peer }
         WHERE { ?me a orexis:Self ; coordination:secret ?secret .

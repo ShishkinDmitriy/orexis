@@ -539,7 +539,7 @@ mod tests {
 
     use super::*;
     use crate::ontology::CATALOGUE;
-    use crate::snapshots;
+
     use crate::store::{Within, iri, value};
 
     const PREFIXES: &str = "@prefix orexis: <http://example.org/orexis#> .\n\
@@ -576,10 +576,10 @@ mod tests {
     }
 
     fn store() -> Store {
-        let store = Store::new(snapshots::namespaces()).unwrap();
+        let store = Store::new().unwrap();
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <{CATALOGUE}> {{ <{CATALOGUE}> a orexis:CatalogueGraph }} }}"
+                "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> INSERT DATA {{ GRAPH <{CATALOGUE}> {{ <{CATALOGUE}> a orexis:CatalogueGraph }} }}"
             ))
             .unwrap();
         store
@@ -591,7 +591,9 @@ mod tests {
 
     /// What the catalogue says of `graph`, each predicate and object by its local part.
     fn said(store: &Store, graph: &str) -> BTreeSet<(String, String)> {
-        let text = format!("SELECT ?p ?o WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{graph}> ?p ?o }} }}");
+        let text = format!(
+            "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> SELECT ?p ?o WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{graph}> ?p ?o }} }}"
+        );
         let local = |s: String| s.rsplit('#').next().unwrap().to_string();
         store
             .rows(&text, &[])
@@ -653,7 +655,7 @@ mod tests {
         let starts = store
         .rows(
             &format!(
-                "SELECT ?start WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{name}> dcterms:temporal ?p . \
+                "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> SELECT ?start WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{name}> dcterms:temporal ?p . \
                  ?p orexis:start ?start }} }}"
             ),
             &[],

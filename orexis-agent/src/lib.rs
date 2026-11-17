@@ -86,8 +86,7 @@ pub struct Checked {
 /// holds to the requirements, so the world is booted once, by the agent that will run it.
 /// `orexis-onboard` asks it of every agent before anything is granted, and `orexis-agent/tests/check.rs` of every world.
 pub fn check(world: &Path, agent: &str, now: oxsdatatypes::DateTime, boot: Option<&Path>) -> Result<Checked, Error> {
-    let namespaces = Arc::new(orexis::namespaces::Namespaces::linked()?);
-    let store = Store::new(namespaces)?;
+    let store = Store::new()?;
     let checking = orexis::task::Checking::default();
     let clock: Arc<dyn Clock> = Arc::new(orexis::clock::Manual::at(now));
     //  A CHECK HANDS NOTHING BUT THAT IT IS ONE: each package handed no connector and not deployed makes one that

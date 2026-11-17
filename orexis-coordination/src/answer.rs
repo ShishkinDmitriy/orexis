@@ -19,11 +19,11 @@ use crate::ontology::{ANSWER, ANSWER_GRAPH, COORDINATION, answer_graph};
 /// None where the question is no peer's, or names a constraint the agent does not hold.
 pub fn answer(store: &Store, me: &str, question: &str, at: DateTime) -> Result<Option<(String, Document)>, Error> {
     /// WHAT A QUESTION HEARD SAYS: who asks, and under which constraint; only one that arrived from a peer.
-    const QUESTION_Q: &str = "
+    const QUESTION_Q: &str =
+        "PREFIX coordination: <http://example.org/orexis/coordination#> PREFIX orexis: <http://example.org/orexis#> 
     SELECT ?asker ?constraint WHERE { GRAPH $cat { $graph orexis:arrivedBy $received }
       GRAPH $graph { ?q a coordination:Question ; coordination:asks ?asker ; coordination:over ?constraint } } LIMIT 1";
-    const HOLDS_Q: &str =
-        "SELECT ?c WHERE { ?me a orexis:Self ; planning:holds $constraint . BIND($constraint AS ?c) } LIMIT 1";
+    const HOLDS_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> SELECT ?c WHERE { ?me a orexis:Self ; planning:holds $constraint . BIND($constraint AS ?c) } LIMIT 1";
     let Some(cat) = store.catalogue()? else { return Ok(None) };
     let text = bind(
         QUESTION_Q,

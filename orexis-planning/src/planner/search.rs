@@ -58,7 +58,7 @@ impl Planner {
         scoped: &Searching<'_>,
         memo: &mut Memo,
     ) -> Result<Option<usize>, Error> {
-        const FRONTIER_Q: &str = r#"
+        const FRONTIER_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#> 
         SELECT ?w ?spent ?remaining ?minted ?weighing ?late ?lands ?best ?bestLate ?bestLands WHERE {
           GRAPH $cat { ?weighing a planning:Weighing ; planning:for $want ; planning:open true ; planning:weighs ?w .
             OPTIONAL { ?w planning:spent ?s } OPTIONAL { ?w planning:minted ?m }
@@ -73,7 +73,7 @@ impl Planner {
           BIND(COALESCE(?s, 0.0) AS ?spent) BIND(COALESCE(?m, 0) AS ?minted) BIND(COALESCE(?r, 0.0) AS ?remaining)
           BIND(IF(BOUND(?lands), 1, 0) AS ?late) }
         ORDER BY ?late ?lands (?spent + ?remaining) ?minted LIMIT 1"#;
-        const CLOSE_U: &str = r#"
+        const CLOSE_U: &str = r#"PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
         DELETE { GRAPH ?cat { $weighing planning:open ?o } }
         INSERT { GRAPH ?cat { $weighing planning:expanded true } }
         WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $weighing planning:open ?o } }"#;
@@ -124,10 +124,10 @@ impl Planner {
 
     /// Mark the world `weighing` is of impossible where some constraint yields a row there.
     fn mark(&self, store: &Store, weighing: &str, constraints: &[String], memo: &mut Memo) -> Result<(), Error> {
-        const REACHED_Q: &str = r#"
+        const REACHED_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#> 
         SELECT ?w ?marked WHERE { GRAPH $cat { $x planning:weighs ?w . ?w a planning:PossibleGraph .
                                                OPTIONAL { ?w planning:impossible ?marked } } } LIMIT 1"#;
-        const MARK_U: &str = r#"
+        const MARK_U: &str = r#"PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
         DELETE { GRAPH ?cat { $weighing planning:open ?o . $weighing planning:met ?m . $weighing planning:remaining ?r .
                               $weighing planning:late ?l . $weighing planning:violation ?v . ?v ?p ?x } }
         INSERT { GRAPH ?cat { $world planning:impossible $by } }

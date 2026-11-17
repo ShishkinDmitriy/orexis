@@ -1635,7 +1635,7 @@ mod tests {
     }
 
     async fn running(names: &[&str], seen: &Seen) -> Running {
-        let store = Store::new(crate::snapshots::namespaces()).unwrap();
+        let store = Store::new().unwrap();
         let provided = Provided::default();
         provided.provide(seen.clone());
         let names: Vec<String> = names.iter().map(|n| n.to_string()).collect();
@@ -1792,10 +1792,10 @@ mod tests {
     #[test]
     fn what_one_turn_wrote_of_a_kind_is_told_as_one_thing() {
         use crate::ontology::{BELIEF, CATALOGUE_GRAPH};
-        let store = Store::new(crate::snapshots::namespaces()).unwrap();
+        let store = Store::new().unwrap();
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph . \
+                "PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph . \
                  <urn:test:one> a orexis:BeliefGraph . <urn:test:other> a orexis:ActionGraph . \
                  <urn:test:two> a orexis:BeliefGraph }} }}"
             ))
@@ -1817,7 +1817,7 @@ mod tests {
 
     #[test]
     fn a_package_nobody_registered_is_refused() {
-        let store = Store::new(crate::snapshots::namespaces()).unwrap();
+        let store = Store::new().unwrap();
         let clock = Arc::new(crate::clock::Manual::at(noon()));
         let refused = booted(&store, clock, Provided::default()).first(&["test/absent".to_string()]);
         assert!(refused.is_err());

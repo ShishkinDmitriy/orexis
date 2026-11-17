@@ -29,7 +29,6 @@ use oxsdatatypes::DateTime;
 
 use crate::Error;
 use crate::bind::{Value, bind};
-use crate::namespaces::Namespaces;
 use crate::ontology::BELIEF;
 
 /// One solution: each variable it binds, to the term it binds.
@@ -58,10 +57,9 @@ impl Deref for Store {
     }
 }
 
-/// The engine, the namespaces every text may speak, and what has been parsed.
+/// The engine, and what has been parsed: every text declares the prefixes it speaks.
 pub struct Held {
     engine: Engine,
-    namespaces: Arc<Namespaces>,
     queries: Parsed<PreparedSparqlQuery>,
     updates: Parsed<PreparedSparqlUpdate>,
     algebra: Parsed<spargebra::Update>,
@@ -111,13 +109,14 @@ const HOLDING: &str = "OPTIONAL { ?g dcterms:temporal ?period .
 
 const PROV_DERIVED: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
 const DCTERMS_TEMPORAL: &str = "http://purl.org/dc/terms/temporal";
+const ORE: &str = "http://example.org/orexis#";
+const XSD_DATETIME: &str = "http://www.w3.org/2001/XMLSchema#dateTime";
 
 impl Store {
-    /// An empty store, in memory, speaking `namespaces`.
-    pub fn new(namespaces: Arc<Namespaces>) -> Result<Self, Error> {
+    /// An empty store, in memory.
+    pub fn new() -> Result<Self, Error> {
         Ok(Store(Arc::new(Held {
             engine: Engine::new().map_err(|e| Error::Evaluation(e.to_string()))?,
-            namespaces,
             queries: parsed_cache(),
             updates: parsed_cache(),
             algebra: parsed_cache(),
@@ -127,12 +126,11 @@ impl Store {
         })))
     }
 
-    /// A store on disk at `path`, opened or made, speaking `namespaces`: a volume an agent lives in.
+    /// A store on disk at `path`, opened or made: a volume an agent lives in.
     #[cfg(feature = "volume")]
-    pub fn open(path: &std::path::Path, namespaces: Arc<Namespaces>) -> Result<Self, Error> {
+    pub fn open(path: &std::path::Path) -> Result<Self, Error> {
         Ok(Store(Arc::new(Held {
             engine: Engine::open(path).map_err(|e| Error::Evaluation(e.to_string()))?,
-            namespaces,
             queries: parsed_cache(),
             updates: parsed_cache(),
             algebra: parsed_cache(),
@@ -145,10 +143,6 @@ impl Store {
     /// The engine itself, for a reader of quads.
     pub fn engine(&self) -> &Engine {
         &self.engine
-    }
-
-    pub fn namespaces(&self) -> &Namespaces {
-        &self.namespaces
     }
 
     /// How many texts were parsed, and how many statements run: what parsing once saved.
@@ -170,13 +164,7 @@ impl Store {
     }
 
     fn evaluator(&self) -> SparqlEvaluator {
-        self.namespaces
-            .iter()
-            .fold(SparqlEvaluator::new(), |evaluator, (label, iri)| {
-                evaluator
-                    .with_prefix(label, iri)
-                    .expect("a namespace the tree declares is an IRI")
-            })
+        SparqlEvaluator::new()
     }
 
     fn query(&self, text: &str) -> Result<PreparedSparqlQuery, Error> {
@@ -311,7 +299,7 @@ impl Store {
             .map_err(|e| Error::Evaluation(e.to_string()))
     }
 
-    /// An update text as its ALGEBRA, parsed once by its text with every prefix the tree declares — for a runner
+    /// An update text as its ALGEBRA, parsed once by its text, which declares its own prefixes — for a runner
     /// that says on the parse what the text does not: which graph it changes and which it reads.
     pub fn parse_update(&self, text: &str) -> Result<spargebra::Update, Error> {
         self.run.fetch_add(1, Ordering::Relaxed);
@@ -320,13 +308,7 @@ impl Store {
         if let Some(update) = parsed.get(text) {
             return Ok(update.clone());
         }
-        let parser = self
-            .namespaces
-            .iter()
-            .try_fold(spargebra::SparqlParser::new(), |parser, (label, iri)| {
-                parser.with_prefix(label, iri)
-            })
-            .map_err(|e| Error::Syntax(e.to_string()))?;
+        let parser = spargebra::SparqlParser::new();
         let update = parser
             .parse_update(text)
             .map_err(|e| Error::Syntax(format!("{e}: {text}")))?;
@@ -335,16 +317,10 @@ impl Store {
         Ok(update)
     }
 
-    /// A query text as its ALGEBRA, with every prefix the tree declares — for a reader of what a text says, never
+    /// A query text as its ALGEBRA, declaring its own prefixes — for a reader of what a text says, never
     /// to run it.
     pub fn parse_query(&self, text: &str) -> Result<spargebra::Query, Error> {
-        let parser = self
-            .namespaces
-            .iter()
-            .try_fold(spargebra::SparqlParser::new(), |parser, (label, iri)| {
-                parser.with_prefix(label, iri)
-            })
-            .map_err(|e| Error::Syntax(e.to_string()))?;
+        let parser = spargebra::SparqlParser::new();
         parser
             .parse_query(text)
             .map_err(|e| Error::Syntax(format!("{e}: {text}")))
@@ -362,7 +338,8 @@ impl Store {
     /// THE ONE GRAPH THAT DESCRIBES EVERY GRAPH AND ITSELF, found by its own row: None for a store nobody has told
     /// anything, and two refused, since a store with two catalogues has two truths about what its graphs are.
     pub fn catalogue(&self) -> Result<Option<String>, Error> {
-        const CATALOGUES_Q: &str = "SELECT ?g WHERE { GRAPH ?g { ?g a orexis:CatalogueGraph } }";
+        const CATALOGUES_Q: &str =
+            "PREFIX orexis: <http://example.org/orexis#> SELECT ?g WHERE { GRAPH ?g { ?g a orexis:CatalogueGraph } }";
         let mut found: Vec<String> = self
             .rows_named(CATALOGUES_Q)?
             .into_iter()
@@ -384,7 +361,8 @@ impl Store {
         /// WHICH GRAPHS, in one text: those of any kind named — every row carries every kind its class is beneath, so
         /// no path is walked — the holder's or the common ones where a holder is named, and holding at the instant
         /// where one is given.
-        const GRAPHS_Q: &str = "
+        const GRAPHS_Q: &str =
+            "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> 
         SELECT DISTINCT ?g WHERE {
           GRAPH ?cat {
             ?cat a orexis:CatalogueGraph .
@@ -428,7 +406,8 @@ impl Store {
 
     /// `class` and every class the vocabulary puts it beneath, sorted; the class alone where no vocabulary is.
     pub fn closed(&self, class: &str) -> Result<Vec<String>, Error> {
-        const SUBCLASSES_Q: &str = "
+        const SUBCLASSES_Q: &str =
+            "PREFIX orexis: <http://example.org/orexis#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
         SELECT DISTINCT ?super WHERE {
           GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }
           GRAPH ?vocabulary { $cls rdfs:subClassOf ?super . FILTER(isIRI(?super)) } }";
@@ -446,7 +425,7 @@ impl Store {
 
     /// What the catalogue says of a graph, as the `GRAPH … { … }` block a writer puts beside the graph's own in ONE
     /// update, so a graph and its description land together or not at all: every kind it is, how it arrived,
-    /// whose, and the period it holds over.
+    /// whose, and the period it holds over. Written in whole IRIs, so it needs no prefix of the text it is put in.
     pub fn entry(
         &self,
         graph: &str,
@@ -459,15 +438,17 @@ impl Store {
         let catalogue = self.catalogue()?.ok_or_else(|| {
             Error::Catalogue("no graph describes itself as the catalogue — nothing has said what the graphs are".into())
         })?;
-        let whose = owner.map(|o| format!(" ; orexis:ownedBy <{o}>")).unwrap_or_default();
+        let whose = owner.map(|o| format!(" ; <{ORE}ownedBy> <{o}>")).unwrap_or_default();
         let bounds: String = [("start", start), ("end", end)]
             .iter()
-            .filter_map(|(k, v)| v.map(|v| format!(" ; orexis:{k} \"{}\"^^xsd:dateTime", crate::clock::isoformat(v))))
+            .filter_map(|(k, v)| {
+                v.map(|v| format!(" ; <{ORE}{k}> \"{}\"^^<{XSD_DATETIME}>", crate::clock::isoformat(v)))
+            })
             .collect();
         let when = if bounds.is_empty() {
             String::new()
         } else {
-            format!(" ; dcterms:temporal [ a dcterms:PeriodOfTime{bounds} ]")
+            format!(" ; <{DCTERMS_TEMPORAL}> [ a <http://purl.org/dc/terms/PeriodOfTime>{bounds} ]")
         };
         let mut kinds = Vec::new();
         for class in classes {
@@ -477,7 +458,7 @@ impl Store {
         kinds.dedup();
         let kinds = kinds.iter().map(|k| format!("<{k}>")).collect::<Vec<_>>().join(" , ");
         Ok(format!(
-            "GRAPH <{catalogue}> {{ <{graph}> a {kinds} ; orexis:arrivedBy <{arrival}>{whose}{when} . }}"
+            "GRAPH <{catalogue}> {{ <{graph}> a {kinds} ; <{ORE}arrivedBy> <{arrival}>{whose}{when} . }}"
         ))
     }
 
@@ -495,11 +476,11 @@ impl Store {
     ) -> Result<(), Error> {
         let block = self.entry(graph, &[class], arrival, owner, start, end)?;
         if start.is_none() && end.is_none() {
-            return self.update(&format!("INSERT DATA {{ {block} }}"));
+            return self.update(&format!("PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{ {block} }}"));
         }
         let catalogue = self.catalogue()?.unwrap_or_default();
         self.update(&format!(
-            "INSERT {{ {block} }}\nWHERE  {{ GRAPH <{catalogue}> {{ }}\n          FILTER NOT EXISTS {{ GRAPH \
+            "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT {{ {block} }}\nWHERE  {{ GRAPH <{catalogue}> {{ }}\n          FILTER NOT EXISTS {{ GRAPH \
              <{catalogue}> {{ <{graph}> dcterms:temporal ?period }} }} }}"
         ))
     }
@@ -681,7 +662,7 @@ impl Store {
     /// when it arrives, until the next reading is due, and the next arriving earlier ends it there.
     pub fn end_graph(&self, graph: &str, at: DateTime, revisions: &str) -> Result<(), Error> {
         /// A GRAPH ENDS WHERE IT HELD PAST: its period's end moved to `$at`, or to its start where it begins later.
-        const END_U: &str = "
+        const END_U: &str = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> 
         DELETE { GRAPH $cat { ?period orexis:end ?was } }
         INSERT { GRAPH $cat { ?period orexis:end ?end } }
         WHERE  { GRAPH $cat { VALUES ?g { $graphs } ?g dcterms:temporal ?period .
@@ -753,7 +734,7 @@ impl Store {
     pub fn close_catalogue(&self) -> Result<(), Error> {
         /// A class and every class the vocabulary puts it beneath: the closure is materialised at genesis, so one step
         /// is every step.
-        const ROWS_Q: &str = "
+        const ROWS_Q: &str = "PREFIX orexis: <http://example.org/orexis#> 
         SELECT ?g ?class WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?class . FILTER(isIRI(?g)) } }";
         let Some(catalogue) = self.catalogue()? else {
             return Ok(());
@@ -822,11 +803,9 @@ mod tests {
     //! The store's reads, held to what `agent/store.py` answers over the same catalogue.
 
     use std::path::Path;
-    use std::sync::Arc;
 
     use super::*;
     use crate::clock::instant as at;
-    use crate::namespaces::Namespaces;
     use crate::ontology::{BELIEF, DERIVED, RECORD};
 
     const T: &str = "http://example.org/test#";
@@ -857,8 +836,8 @@ mod tests {
 "#;
 
     fn store() -> Store {
-        let tree = Path::new(crate::boot::TREE);
-        let store = Store::new(Arc::new(Namespaces::of_tree(tree).unwrap())).unwrap();
+        let _tree = Path::new(crate::boot::TREE);
+        let store = Store::new().unwrap();
         store.load_trig(CATALOGUED).unwrap();
         store
     }
@@ -985,7 +964,7 @@ mod tests {
             .unwrap();
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <{T}state> {{ <{T}bed> <{T}believed> <{T}wet> }} {entry} }}"
+                "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{ GRAPH <{T}state> {{ <{T}bed> <{T}believed> <{T}wet> }} {entry} }}"
             ))
             .unwrap();
         let mine = Within {
@@ -1024,7 +1003,7 @@ mod tests {
         let once = KEPT.get() + 1;
         for i in 0..once {
             store.ask(asked, &[]).unwrap();
-            store.ask(&format!("ASK {{ <urn:once:{i}> ?p ?o }}"), &[]).unwrap();
+            store.ask(&format!("PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> ASK {{ <urn:once:{i}> ?p ?o }}"), &[]).unwrap();
         }
         let (parsed, run) = store.statements();
         assert_eq!(
@@ -1039,7 +1018,7 @@ mod tests {
     fn a_prefix_the_tree_declares_is_spoken_without_a_header() {
         let store = store();
         let rows = store
-            .rows("SELECT ?g WHERE { GRAPH ?g { ?g a orexis:CatalogueGraph } }", &[])
+            .rows("PREFIX orexis: <http://example.org/orexis#> SELECT ?g WHERE { GRAPH ?g { ?g a orexis:CatalogueGraph } }", &[])
             .unwrap();
         assert_eq!(rows.len(), 1);
         assert!(
@@ -1054,8 +1033,8 @@ mod tests {
     // --- forking, forgetting and closing: the store's writes, as `agent/tests/test_fork.py` and `test_store.py` ----
 
     fn bare() -> Store {
-        let tree = Path::new(crate::boot::TREE);
-        Store::new(Arc::new(Namespaces::of_tree(tree).unwrap())).unwrap()
+        let _tree = Path::new(crate::boot::TREE);
+        Store::new().unwrap()
     }
 
     fn facts(store: &Store, graph: &str) -> std::collections::BTreeSet<String> {
@@ -1150,7 +1129,7 @@ mod tests {
         let store = bare();
         store
             .update(
-                "INSERT DATA {
+                "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX prov: <http://www.w3.org/ns/prov#> INSERT DATA {
       GRAPH <urn:cat> { <urn:cat> a orexis:CatalogueGraph .
         <urn:g> a orexis:Graph , orexis:ForecastGraph ; dcterms:temporal [ orexis:start \"2026-01-01T00:00:00Z\" ] .
         <urn:g/rev> a orexis:Graph , orexis:BeliefGraph ; prov:wasDerivedFrom <urn:g> .
@@ -1165,7 +1144,7 @@ mod tests {
         assert!(store.revisions_of(&["urn:g"], BELIEF).unwrap().is_empty());
         assert_eq!(
             store
-                .rows("SELECT ?g WHERE { GRAPH <urn:cat> { ?g a orexis:Graph } }", &[])
+                .rows("PREFIX orexis: <http://example.org/orexis#> SELECT ?g WHERE { GRAPH <urn:cat> { ?g a orexis:Graph } }", &[])
                 .unwrap()
                 .iter()
                 .filter_map(|r| iri(r, "g"))
@@ -1197,7 +1176,7 @@ mod tests {
         };
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <{T}catalogue> {{ <{T}lately> a <{T}StateGraph> }} }}"
+                "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{ GRAPH <{T}catalogue> {{ <{T}lately> a <{T}StateGraph> }} }}"
             ))
             .unwrap();
         assert!(!store.graphs_of(&[BELIEF], &state).unwrap().contains(&t("lately")));

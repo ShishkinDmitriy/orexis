@@ -53,7 +53,7 @@ impl Observer {
         /// attention of a role names, and how often sensing asks after them as the role says or, where it says none,
         /// the default sensing's ontology states on its shape of the observer (`sh:defaultValue`). A row per role and
         /// sensor.
-        const OBSERVER_Q: &str = "SELECT DISTINCT ?me ?role ?kind ?sensor (COALESCE(?askedSaid, ?askedOwn) AS ?asked) WHERE { \
+        const OBSERVER_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX sh: <http://www.w3.org/ns/shacl#> SELECT DISTINCT ?me ?role ?kind ?sensor (COALESCE(?askedSaid, ?askedOwn) AS ?asked) WHERE { \
         ?shape sh:targetClass sensing:Observer ; sh:property [ sh:path sensing:askedEveryS ; sh:defaultValue ?askedOwn ] . \
         OPTIONAL { ?me a orexis:Self } \
         OPTIONAL { ?me orexis:plays ?role . ?role a ?kind } \
@@ -118,7 +118,7 @@ impl Observer {
 
     fn missed(&self, now: DateTime) -> Result<(Vec<String>, BTreeSet<String>), Error> {
         /// THE SENSORS KEPT SILENT NOW: each silence graph holding, its end not yet said by a reading.
-        const SILENT_Q: &str = "SELECT DISTINCT ?sensor WHERE { ?sensor sensing:silentSince ?since }";
+        const SILENT_Q: &str = "PREFIX sensing: <http://example.org/orexis/sensing#> SELECT DISTINCT ?sensor WHERE { ?sensor sensing:silentSince ?since }";
         let beliefs = &self.beliefs;
         let found = missed(beliefs, now)?;
         let silent: BTreeSet<String> = found.iter().map(|(s, _)| s.clone()).collect();
@@ -137,7 +137,7 @@ impl Observer {
             let graph = silence_graph(&local_of(&self.me), &sensor, since);
             let entry = beliefs.entry(&graph, &[SILENCE_GRAPH], DERIVED, Some(&self.me), Some(since), None)?;
             beliefs.update(&format!(
-                "INSERT DATA {{\n  GRAPH <{graph}> {{ <{sensor}> sensing:silentSince \"{}\"^^xsd:dateTime . }}\n  {entry} }}",
+                "PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{\n  GRAPH <{graph}> {{ <{sensor}> sensing:silentSince \"{}\"^^xsd:dateTime . }}\n  {entry} }}",
                 isoformat(since)
             ))?;
             log::warn!(
@@ -154,7 +154,7 @@ impl Observer {
     /// Which sensors are doubted at `now`, and how — `silent` as `missed` answered it; and, saying neither, each
     /// doubted at the last ask and no longer.
     fn doubted(&mut self, now: DateTime, silent: &BTreeSet<String>) -> Result<Vec<Doubted>, Error> {
-        const STUCK_Q: &str = "SELECT DISTINCT ?sensor WHERE { ?sensor sensing:stuckOn ?number }";
+        const STUCK_Q: &str = "PREFIX sensing: <http://example.org/orexis/sensing#> SELECT DISTINCT ?sensor WHERE { ?sensor sensing:stuckOn ?number }";
         let holding = self.beliefs.graphs_of(
             &[OBSERVATION_GRAPH],
             &Within {
@@ -191,7 +191,8 @@ impl Observer {
     /// Say the observation `graph` holds, with how long after the percept before it it came.
     fn observation(&self, graph: &str) -> Result<(), Error> {
         /// WHAT AN OBSERVATION SAYS, read off the graph and what was concluded of it.
-        const MADE_Q: &str = "SELECT ?t WHERE { $percept sosa:resultTime ?t } LIMIT 1";
+        const MADE_Q: &str =
+            "PREFIX sosa: <http://www.w3.org/ns/sosa/> SELECT ?t WHERE { $percept sosa:resultTime ?t } LIMIT 1";
         let beliefs = &self.beliefs;
         let Some((mut observed, sensor, previous)) = crate::past::observed(beliefs, graph, OBSERVATION_GRAPH)? else {
             return Ok(());
@@ -229,7 +230,7 @@ impl Observer {
     pub(crate) fn unrevised(&mut self) -> Result<(), Error> {
         /// EVERY OBSERVATION RECEIVED THAT NOTHING WAS CONCLUDED OF, oldest first: what a pass cut short of being
         /// handed to belief left.
-        const UNREVISED_Q: &str = "
+        const UNREVISED_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX prov: <http://www.w3.org/ns/prov#> PREFIX sensing: <http://example.org/orexis/sensing#> 
         SELECT ?g WHERE {
           GRAPH $cat { ?g a sensing:ObservationGraph ; orexis:arrivedBy orexis:Received
                        OPTIONAL { ?g dcterms:temporal/orexis:start ?start }
@@ -341,8 +342,7 @@ mod tests {
             Vec::<String>::new(),
             "and not again by a restart"
         );
-        let said =
-            "SELECT ?since ?until WHERE { ?s sensing:silentSince ?since OPTIONAL { ?s sensing:silentUntil ?until } }";
+        let said = "PREFIX sensing: <http://example.org/orexis/sensing#> SELECT ?since ?until WHERE { ?s sensing:silentSince ?since OPTIONAL { ?s sensing:silentUntil ?until } }";
         let read = |store: &Store| {
             let found = store.rows(said, &[&silence]).unwrap();
             assert_eq!(found.len(), 1);

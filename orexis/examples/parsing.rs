@@ -5,10 +5,8 @@
 //! in the order the pass ran them.
 
 use std::collections::HashSet;
-use std::path::Path;
 use std::time::Instant;
 
-use orexis::namespaces::Namespaces;
 use oxigraph::sparql::SparqlEvaluator;
 
 fn main() {
@@ -21,12 +19,7 @@ fn main() {
             (kind == "\"query\"", unquote(text.trim_end_matches(']')))
         })
         .collect();
-    let namespaces = Namespaces::of_tree(Path::new(orexis::boot::TREE)).unwrap();
-    let evaluator = || {
-        namespaces
-            .iter()
-            .fold(SparqlEvaluator::new(), |e, (l, i)| e.with_prefix(l, i).unwrap())
-    };
+    let evaluator = SparqlEvaluator::new;
     let parse = |query: bool, text: &str| {
         if query {
             drop(evaluator().parse_query(text).unwrap());

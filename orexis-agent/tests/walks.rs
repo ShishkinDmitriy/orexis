@@ -12,7 +12,6 @@ use oxsdatatypes::DateTime;
 
 use orexis::boot::TREE;
 use orexis::clock::{Clock, instant};
-use orexis::namespaces::Namespaces;
 use orexis::store::{Store, iri, value};
 use orexis::task::{MET, Provided, UNFINISHED};
 
@@ -42,7 +41,7 @@ async fn run(store: &Store, world: &Path, agent: &str, within: u64, budget: Opti
 }
 
 fn store() -> Store {
-    Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap()
+    Store::new().unwrap()
 }
 
 fn count(store: &Store, text: &str) -> usize {
@@ -51,7 +50,7 @@ fn count(store: &Store, text: &str) -> usize {
 
 /// How many acts the executor recorded.
 fn acts(store: &Store) -> usize {
-    const ACTS_Q: &str = "SELECT (COUNT(?a) AS ?n) WHERE { GRAPH ?g { ?a a execution:Act } }";
+    const ACTS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> SELECT (COUNT(?a) AS ?n) WHERE { GRAPH ?g { ?a a execution:Act } }";
     count(store, ACTS_Q)
 }
 
@@ -61,7 +60,8 @@ fn local(iri: &str) -> &str {
 
 /// Where each thing the agent believes of stands, by name, as two coordinates.
 fn stands(store: &Store) -> Vec<(String, i64, i64)> {
-    const STANDS_Q: &str = "PREFIX courier: <http://example.org/orexis/courier#>
+    const STANDS_Q: &str =
+        "PREFIX orexis: <http://example.org/orexis#> PREFIX courier: <http://example.org/orexis/courier#>
     SELECT ?x ?cx ?cy WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph ; orexis:ownedBy ?o }
       GRAPH ?g { ?x courier:x ?cx ; courier:y ?cy } } ORDER BY ?x";
     store
@@ -81,8 +81,7 @@ fn stands(store: &Store) -> Vec<(String, i64, i64)> {
 
 #[tokio::test(start_paused = true)]
 async fn the_parcel_is_delivered_in_eight_steps_and_the_runtime_stops() {
-    const WANTS_Q: &str =
-        "SELECT (COUNT(?g) AS ?n) WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph } }";
+    const WANTS_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> SELECT (COUNT(?g) AS ?n) WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph } }";
     let store = store();
     assert_eq!(run(&store, &world("courier"), "courier", 3600, None).await, MET);
     assert_eq!(acts(&store), 8, "three drives, the pick, three drives, the drop");
@@ -103,9 +102,10 @@ async fn a_budget_that_cuts_the_search_short_is_finished_by_the_passes_after() {
 
 #[tokio::test(start_paused = true)]
 async fn walked_the_drivers_one_plan_moves_both_parcels_and_leaves_the_driver_aboard_van_b() {
-    const INTENTIONS_Q: &str = "SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a execution:Intention } }";
-    const OUTCOMES_Q: &str = "SELECT ?o WHERE { GRAPH ?g { ?i a execution:Intention ; execution:outcome ?o } }";
-    const ABOARD_Q: &str = "PREFIX courier: <http://example.org/orexis/courier#>
+    const INTENTIONS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> SELECT (COUNT(?i) AS ?n) WHERE { GRAPH ?g { ?i a execution:Intention } }";
+    const OUTCOMES_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> SELECT ?o WHERE { GRAPH ?g { ?i a execution:Intention ; execution:outcome ?o } }";
+    const ABOARD_Q: &str =
+        "PREFIX orexis: <http://example.org/orexis#> PREFIX courier: <http://example.org/orexis/courier#>
     SELECT ?van WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph }
       GRAPH ?g { ?d courier:aboard ?van } }";
     let store = store();

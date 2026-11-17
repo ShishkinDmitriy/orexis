@@ -106,7 +106,7 @@ impl Deliberator {
         /// THE DELIBERATOR THE SELF PLAYS, IN ONE QUERY: what a role the self plays states of its budget and, where
         /// none does, the default belief's ontology states on the role's shape (`sh:defaultValue`). Whichever role
         /// states it: a domain's role beneath the deliberator is one too.
-        const DELIBERATOR_Q: &str = "SELECT DISTINCT (COALESCE(?said, ?own) AS ?budget) WHERE { \
+        const DELIBERATOR_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX sh: <http://www.w3.org/ns/shacl#> SELECT DISTINCT (COALESCE(?said, ?own) AS ?budget) WHERE { \
         ?shape sh:targetClass $deliberator ; sh:property ?property . \
         ?property sh:path $budgeted ; sh:defaultValue ?own . \
         OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . ?role $budgeted ?said } }";
@@ -323,7 +323,7 @@ impl Deliberator {
 
     fn unsettled(&self) -> Result<Vec<String>, Error> {
         /// EVERY SOURCE WHOSE RULES DID NOT SETTLE, off the revision graphs' rows.
-        const UNSETTLED_Q: &str = "
+        const UNSETTLED_Q: &str = "PREFIX prov: <http://www.w3.org/ns/prov#> 
         SELECT ?source WHERE { GRAPH $cat { ?g $settled false ; prov:wasDerivedFrom ?source } } ORDER BY ?source";
         let Some(cat) = self.beliefs.catalogue()? else {
             return Ok(Vec::new());
@@ -423,7 +423,7 @@ mod tests {
     fn row_settled(store: &Store, graph: &str) -> Option<String> {
         let found = store
             .rows(
-                &format!("SELECT ?v WHERE {{ GRAPH ?c {{ <{graph}/revisions> <{SETTLED}> ?v }} }}"),
+                &format!("PREFIX orexis: <http://example.org/orexis#> SELECT ?v WHERE {{ GRAPH ?c {{ <{graph}/revisions> <{SETTLED}> ?v }} }}"),
                 &[],
             )
             .unwrap();
@@ -433,7 +433,7 @@ mod tests {
     fn concluded(store: &Store) -> Vec<String> {
         store
             .rows(
-                &format!("SELECT ?p WHERE {{ GRAPH <{SENSED}/revisions> {{ ?s ?p ?o }} }}"),
+                &format!("PREFIX orexis: <http://example.org/orexis#> SELECT ?p WHERE {{ GRAPH <{SENSED}/revisions> {{ ?s ?p ?o }} }}"),
                 &[],
             )
             .unwrap()
@@ -471,14 +471,14 @@ mod tests {
         };
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <{graph}> {{ <{T}{name}_t> a <{T}Tick> {loudly} }} {entry} }}"
+                "PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{graph}> {{ <{T}{name}_t> a <{T}Tick> {loudly} }} {entry} }}"
             ))
             .unwrap();
         graph
     }
 
     fn own_state(store: &Store) -> Vec<String> {
-        const OWN_STATE_Q: &str = "SELECT ?g WHERE { GRAPH ?c { ?c a orexis:CatalogueGraph .
+        const OWN_STATE_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#> PREFIX orexis: <http://example.org/orexis#> SELECT ?g WHERE { GRAPH ?c { ?c a orexis:CatalogueGraph .
         ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
         FILTER NOT EXISTS { ?g a belief:RevisionGraph } ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
         store
@@ -490,7 +490,7 @@ mod tests {
     }
 
     fn counter_in(store: &Store, graphs: &[String]) -> BTreeMap<String, String> {
-        const COUNTER_Q: &str = "SELECT ?p ?o WHERE { <http://example.org/test#counter> ?p ?o FILTER(?p != rdf:type) }";
+        const COUNTER_Q: &str = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> SELECT ?p ?o WHERE { <http://example.org/test#counter> ?p ?o FILTER(?p != rdf:type) }";
         let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
         store
             .rows(COUNTER_Q, &graphs)
@@ -571,7 +571,7 @@ mod tests {
         assert_eq!(Deliberator::new(&store).unwrap().budget, 256);
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <{T}self> {{ <{T}keeper> a orexis:Self ; orexis:plays [ <http://example.org/orexis/belief#budget> 2 ] }} {} }}",
+                "PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{T}self> {{ <{T}keeper> a orexis:Self ; orexis:plays [ <http://example.org/orexis/belief#budget> 2 ] }} {} }}",
                 store
                     .entry(
                         &format!("{T}self"),
@@ -684,7 +684,7 @@ mod tests {
             .unwrap();
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <{note}> {{ <{T}note_t> a <{T}Tick> ; <{T}loud> true }} {entry} }}"
+                "PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{note}> {{ <{T}note_t> a <{T}Tick> ; <{T}loud> true }} {entry} }}"
             ))
             .unwrap();
         let mut deliberator = Deliberator::new(&store).unwrap();
@@ -720,7 +720,7 @@ mod tests {
         assert_eq!(counter(&store)["last"], "loud_t");
         let found = store
             .rows(
-                &format!("SELECT ?s WHERE {{ GRAPH ?c {{ <{loud}/believed> dcterms:temporal/orexis:start ?s }} }}"),
+                &format!("PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> SELECT ?s WHERE {{ GRAPH ?c {{ <{loud}/believed> dcterms:temporal/orexis:start ?s }} }}"),
                 &[],
             )
             .unwrap();
@@ -776,10 +776,10 @@ mod tests {
     }
 
     fn bare() -> Store {
-        let store = Store::new(snapshots::namespaces()).unwrap();
+        let store = Store::new().unwrap();
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph }} }}"
+                "PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph }} }}"
             ))
             .unwrap();
         with_ontology(store)
@@ -799,7 +799,7 @@ mod tests {
         part.unrevised(snapshots::now()).unwrap();
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <urn:test:nothing> a orexis:BeliefGraph }} }}"
+                "PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <urn:test:nothing> a orexis:BeliefGraph }} }}"
             ))
             .unwrap();
         part.revise(&["urn:test:nothing".to_string()], BELIEF, snapshots::now())
@@ -834,7 +834,9 @@ mod tests {
         ];
         let rows: String = said.iter().map(|(g, s)| format!("<{g}> a {s} . ")).collect();
         store
-            .update(&format!("INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ {rows} }} }}"))
+            .update(&format!(
+                "PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ {rows} }} }}"
+            ))
             .unwrap();
         let mut part = Deliberator::new(&store).unwrap();
         part.revise(&["urn:test:reading".to_string()], BELIEF, snapshots::now())

@@ -263,7 +263,7 @@ pub fn sorted(patterns: impl IntoIterator<Item = Pattern>) -> Vec<Pattern> {
 /// Every action's effect as its update texts, in the order the actions were first met.
 fn effects(store: &Store, at: DateTime) -> Result<Vec<(String, Vec<String>)>, Error> {
     /// ONE ROW PER RULE OF AN ACTION'S EFFECT, with the action's precondition on each.
-    const ACTIONS_Q: &str = "
+    const ACTIONS_Q: &str = "PREFIX sh: <http://www.w3.org/ns/shacl#> PREFIX belief: <http://example.org/orexis/belief#> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
     SELECT ?action ?precondition ?update WHERE {
       ?action a orexis:Action .
       OPTIONAL { ?action planning:precondition ?precondition }
@@ -528,8 +528,8 @@ mod tests {
         assert!(!parseable("INSERT { GRAPH $into(x:G) { ?s ?p ?o } } WHERE { ?s ?p ?o }").contains("$into("));
         let free = "SELECT ?x WHERE { ?me <urn:test:p> ?x . ?x <urn:test:q> ?y }";
         for anchored in [
-            "SELECT ?x WHERE { ?me a orexis:Self ; <urn:test:p> ?x . ?x <urn:test:q> ?y }",
-            "SELECT ?x WHERE { ?me a orexis:Self . ?me <urn:test:p> ?x . ?x <urn:test:q> ?y }",
+            "PREFIX orexis: <http://example.org/orexis#> SELECT ?x WHERE { ?me a orexis:Self ; <urn:test:p> ?x . ?x <urn:test:q> ?y }",
+            "PREFIX orexis: <http://example.org/orexis#> SELECT ?x WHERE { ?me a orexis:Self . ?me <urn:test:p> ?x . ?x <urn:test:q> ?y }",
             "SELECT ?x WHERE { ?me <urn:test:p> ?x . ?x <urn:test:q> ?y . ?me a <http://example.org/orexis#Self> }",
         ] {
             let text = parseable(anchored);
@@ -578,7 +578,7 @@ GRAPH :catalogue {
 "#;
 
     fn store_of(trig: &str) -> Store {
-        let store = Store::new(snapshots::namespaces()).expect("an empty store");
+        let store = Store::new().expect("an empty store");
         store.put_trig(snapshots::WORLD, trig).expect("the actions");
         store
     }

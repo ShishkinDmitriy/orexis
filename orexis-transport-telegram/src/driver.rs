@@ -44,7 +44,7 @@ pub fn figure_of(store: &orexis::store::Store, term: &str) -> Result<f64, orexis
     let selves = store.graphs_of(&[orexis::ontology::SELF_GRAPH], &Within::default())?;
     let selves: Vec<&str> = selves.iter().map(String::as_str).collect();
     let text = bind(
-        "SELECT DISTINCT ?n WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role $figure ?n }",
+        "PREFIX orexis: <http://example.org/orexis#> SELECT DISTINCT ?n WHERE { ?me a orexis:Self ; orexis:plays ?role . ?role $figure ?n }",
         &[("figure", Value::iri(term))],
     )?;
     let said: Vec<String> = store
@@ -74,8 +74,7 @@ pub const CALLED_WITHIN_S: &str = "http://example.org/orexis/telegram#calledWith
 pub fn answers(beliefs: &Store, me: &str) -> Result<Option<String>, Error> {
     /// WHERE THE SELF'S BOT ANSWERS: the `schema:url` the world's deployment graph states of the bot the society says
     /// the agent speaks through.
-    const ANSWERS_Q: &str =
-        "SELECT ?url WHERE { $me telegram:hasBot ?bot . ?bot <https://schema.org/url> ?url } ORDER BY ?url";
+    const ANSWERS_Q: &str = "PREFIX telegram: <http://example.org/orexis/telegram#> SELECT ?url WHERE { $me telegram:hasBot ?bot . ?bot <https://schema.org/url> ?url } ORDER BY ?url";
     let mut known = beliefs.graphs_of(&[orexis::ontology::BELIEF], &orexis::store::Within::common())?;
     known.extend(beliefs.graphs_of(&[orexis::ontology::DEPLOYMENT], &orexis::store::Within::common())?);
     let known: Vec<&str> = known.iter().map(String::as_str).collect();
@@ -96,7 +95,7 @@ pub fn polled_every_s(beliefs: &Store) -> Result<f64, Error> {
     //  ONE QUERY: what a role the self plays says or, where none says, the default the transport's ontology states.
     beliefs
         .rows(
-            "SELECT (COALESCE(?said, ?own) AS ?every) WHERE { \
+            "PREFIX orexis: <http://example.org/orexis#> PREFIX sh: <http://www.w3.org/ns/shacl#> SELECT (COALESCE(?said, ?own) AS ?every) WHERE { \
              OPTIONAL { ?me a orexis:Self ; orexis:plays ?role . \
                         ?role <http://example.org/orexis/telegram#polledEveryS> ?said FILTER(?said > 0) } \
              OPTIONAL { ?shape sh:property [ sh:path <http://example.org/orexis/telegram#polledEveryS> ; \
@@ -405,9 +404,8 @@ impl Telegram {
     /// A message on a chat the world names by its id: the prose it is, in the chat, by the person writing as the user;
     /// none where the world names no chat by that id.
     pub fn handle(&mut self, channel: &str, payload: &[u8], at: DateTime) -> Result<Option<Prose>, Error> {
-        const CHAT_Q: &str =
-            "SELECT ?chat WHERE { ?chat a telegram:Chat ; telegram:chatId ?id FILTER (STR(?id) = $id) }";
-        const USER_Q: &str = "SELECT ?person WHERE { ?person telegram:userId ?id FILTER (STR(?id) = $id) }";
+        const CHAT_Q: &str = "PREFIX telegram: <http://example.org/orexis/telegram#> SELECT ?chat WHERE { ?chat a telegram:Chat ; telegram:chatId ?id FILTER (STR(?id) = $id) }";
+        const USER_Q: &str = "PREFIX telegram: <http://example.org/orexis/telegram#> SELECT ?person WHERE { ?person telegram:userId ?id FILTER (STR(?id) = $id) }";
         let common = self.common()?;
         let common: Vec<&str> = common.iter().map(String::as_str).collect();
         let literal = |s: &str| Value::Term(Literal::new_simple_literal(s).into());
@@ -446,7 +444,7 @@ impl Telegram {
     /// `method` posted to the chat the world names `channel` by its id; false where it names none, or the API refuses
     /// or fails.
     fn posted(&self, channel: &str, method: &str, body: Json) -> bool {
-        const ID_Q: &str = "SELECT ?id WHERE { $chat a telegram:Chat ; telegram:chatId ?id }";
+        const ID_Q: &str = "PREFIX telegram: <http://example.org/orexis/telegram#> SELECT ?id WHERE { $chat a telegram:Chat ; telegram:chatId ?id }";
         let Ok(common) = self.common() else { return false };
         let common: Vec<&str> = common.iter().map(String::as_str).collect();
         let Ok(text) = bind(ID_Q, &[("chat", Value::iri(channel))]) else {
@@ -825,7 +823,7 @@ mod tests {
         //  THE TRANSPORT'S ONTOLOGY STATES HOW OFTEN WHERE NO ROLE DOES, as the package brings it.
         store
             .update(
-                "INSERT DATA { GRAPH <http://example.org/test#ontology> { [] sh:property \
+                "PREFIX sh: <http://www.w3.org/ns/shacl#> INSERT DATA { GRAPH <http://example.org/test#ontology> { [] sh:property \
                  [ sh:path <http://example.org/orexis/telegram#polledEveryS> ; sh:defaultValue 3 ] } }",
             )
             .unwrap();

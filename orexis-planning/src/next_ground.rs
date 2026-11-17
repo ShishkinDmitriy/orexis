@@ -14,7 +14,7 @@ use crate::world_at::{catalogue, when};
 /// it, begins — or None where nothing laid after it does.
 pub fn next_ground(store: &Store, world: &str, memo: &mut Memo) -> Result<Option<DateTime>, Error> {
     /// EVERY GROUND, ITS START AND WHAT IT HOLDS BY HASH, earliest first — once a pass.
-    const GROUNDS_Q: &str = "
+    const GROUNDS_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
     SELECT ?at ?hash WHERE { GRAPH $cat { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?at ; orexis:hash ?hash } }
     ORDER BY ?at";
     if let Some(known) = memo.next_ground.get(world) {

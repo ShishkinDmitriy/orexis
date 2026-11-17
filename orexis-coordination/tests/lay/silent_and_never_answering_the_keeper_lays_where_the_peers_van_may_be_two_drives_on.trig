@@ -69,7 +69,7 @@ GRAPH :ontology {
 GRAPH :rules {
   :a_drive_ahead a coordination:Reach .
   :a_drive_ahead coordination:stepS 60 .
-  :a_drive_ahead sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+  :a_drive_ahead sh:construct """PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> PREFIX courier: <http://example.org/orexis/courier#>
 CONSTRUCT { ?at a courier:Van ; courier:x ?nx ; courier:y ?ny }
 WHERE { $this a courier:Van ; courier:x ?x ; courier:y ?y .
         VALUES (?dx ?dy) { (0 0) (1 0) (-1 0) (0 1) (0 -1) }

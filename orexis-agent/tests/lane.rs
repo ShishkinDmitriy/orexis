@@ -26,7 +26,6 @@ use serde_json::Value as Json;
 use orexis::Error;
 use orexis::boot::TREE;
 use orexis::clock::{Clock, instant, isoformat};
-use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::{Provided, Running};
@@ -291,8 +290,7 @@ fn start() -> DateTime {
 async fn walked(name: &str, world: &Path, home: &[(&str, Cell)], dropping: Option<&str>, kept: bool) -> Walked {
     const PARCEL_Q: &str = "PREFIX courier: <http://example.org/orexis/courier#>
     SELECT ?p ?x ?y WHERE { ?p a courier:Parcel ; courier:x ?x ; courier:y ?y }";
-    let namespaces = Arc::new(Namespaces::linked().unwrap());
-    let stores = [Store::new(namespaces.clone()).unwrap(), Store::new(namespaces).unwrap()];
+    let stores = [Store::new().unwrap(), Store::new().unwrap()];
     let clock: Arc<dyn Clock> = common::clock(start());
     let carried = Arc::new(Mutex::new(Carried {
         dropping: dropping.map(str::to_string),

@@ -232,7 +232,8 @@ const ARRIVAL: &str = "http://example.org/orexis/graph/ground/arrival";
 fn own_state(store: &Store) -> Result<String, Error> {
     /// THE BELIEFS THE AGENT DERIVED — what the transitions wrote of each arrival of testimony — as against those it
     /// received: no revision, and nothing everyone reads; as `trigger` reads the agent's own state.
-    const DERIVED_Q: &str = "
+    const DERIVED_Q: &str =
+        "PREFIX belief: <http://example.org/orexis/belief#> PREFIX orexis: <http://example.org/orexis#> 
     SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                                    ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
                                    FILTER NOT EXISTS { ?g a belief:RevisionGraph }
@@ -354,7 +355,7 @@ impl Ground<'_> {
 /// earliest first.
 fn foreseen(store: &Store, now: DateTime) -> Result<Vec<(DateTime, String, String)>, Error> {
     /// THE CHANGEABLE PART OF EVERY BELIEF THAT BEGINS AFTER `$now`, the graph it was cut from and when.
-    const PIECES_AHEAD_Q: &str = "
+    const PIECES_AHEAD_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> PREFIX prov: <http://www.w3.org/ns/prov#> 
     SELECT ?piece ?source ?start WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                    ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source .
@@ -380,7 +381,7 @@ fn foreseen(store: &Store, now: DateTime) -> Result<Vec<(DateTime, String, Strin
 /// Every forecast's end ahead of `now` — the instant, and the changeable part cut from it — earliest first.
 fn ending(store: &Store, now: DateTime) -> Result<Vec<(DateTime, String)>, Error> {
     /// THE CHANGEABLE PART OF EVERY FORECAST THAT ENDS AFTER `$now`, and when.
-    const PIECES_ENDING_Q: &str = "
+    const PIECES_ENDING_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> PREFIX prov: <http://www.w3.org/ns/prov#> 
     SELECT ?piece ?end WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                    ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source .
@@ -411,7 +412,7 @@ fn lexical(row: &orexis::store::Row, variable: &str) -> Option<Result<DateTime, 
 /// Every subject nothing but a forecast says anything of, which a forecast's end may take back whole.
 fn foreseen_alone(store: &Store) -> Result<HashSet<NamedOrBlankNode>, Error> {
     /// THE CHANGEABLE PART CUT FROM EVERY FORECAST.
-    const FORECAST_PIECES_Q: &str = "
+    const FORECAST_PIECES_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> PREFIX prov: <http://www.w3.org/ns/prov#> 
     SELECT ?piece WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                                        ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source . ?source a orexis:ForecastGraph } }";
     let mut forecasts: BTreeSet<String> = store.graphs_of(&[FORECAST], &Within::default())?.into_iter().collect();
@@ -504,9 +505,9 @@ fn split(
     gate: Option<&BTreeSet<String>>,
 ) -> Result<Vec<String>, Error> {
     /// EVERY GRAPH CUT BY THE PATTERNS ASKED NOW, and saying which a graph was cut by.
-    const CUT_BY_Q: &str = "SELECT ?g WHERE { GRAPH $cat { ?g planning:cutBy $by } }";
+    const CUT_BY_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#> SELECT ?g WHERE { GRAPH $cat { ?g planning:cutBy $by } }";
     const CUT_U: &str =
-        "DELETE { GRAPH $cat { $g planning:cutBy ?was } } INSERT { GRAPH $cat { $g planning:cutBy $by } }
+        "PREFIX planning: <http://example.org/orexis/planning#> DELETE { GRAPH $cat { $g planning:cutBy ?was } } INSERT { GRAPH $cat { $g planning:cutBy $by } }
     WHERE { OPTIONAL { GRAPH $cat { $g planning:cutBy ?was } } }";
     let cat = store
         .catalogue()?
@@ -622,7 +623,8 @@ fn signature(patterns: Option<&[Pattern]>) -> String {
 /// type with its class. `gate` is what is read; `None` reads anything, and lays every belief ahead.
 fn predicted(store: &Store, now: DateTime, gate: Option<&BTreeSet<String>>) -> Result<Vec<Pattern>, Error> {
     /// EVERY BELIEF WHOSE PERIOD BEGINS AFTER `$now`.
-    const BELIEFS_AHEAD_Q: &str = "
+    const BELIEFS_AHEAD_Q: &str =
+        "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> 
     SELECT ?g WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                    ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start . FILTER(?start > $now) } }
@@ -695,7 +697,7 @@ fn whole(store: &Store, mut graphs: Vec<String>) -> Result<Vec<String>, Error> {
 /// Every changeable graph, and the graph it was cut from where its row says.
 fn cut(store: &Store) -> Result<Vec<(String, Option<String>)>, Error> {
     /// EVERY CHANGEABLE GRAPH AND THE GRAPH IT WAS CUT FROM.
-    const CUT_Q: &str = "
+    const CUT_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> PREFIX prov: <http://www.w3.org/ns/prov#> 
     SELECT ?piece ?source WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
       ?piece a planning:ChangeableGraph . OPTIONAL { ?piece prov:wasDerivedFrom ?source } } }";
     Ok(store
@@ -707,8 +709,7 @@ fn cut(store: &Store) -> Result<Vec<(String, Option<String>)>, Error> {
 
 /// The hash `ground`'s row says it holds, where a row stands.
 fn hash_of(store: &Store, ground: &str) -> Result<Option<String>, Error> {
-    const STOOD_Q: &str =
-        "SELECT ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $ground orexis:hash ?h } } LIMIT 1";
+    const STOOD_Q: &str = "PREFIX orexis: <http://example.org/orexis#> SELECT ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $ground orexis:hash ?h } } LIMIT 1";
     Ok(store
         .rows(&bind(STOOD_Q, &[("ground", Value::iri(ground))])?, &[])?
         .first()
@@ -791,12 +792,14 @@ fn relaid(store: &Store, name: &str) -> Result<Option<String>, Error> {
 /// and what is beside it, and a supplier whose ground stood while a call arrived beside it kept reading no call.
 fn settled(store: &Store, name: &str, stood: Option<String>, beside: bool) -> Result<(), Error> {
     /// THE VERDICTS ABOUT A GROUND, with the violation rows hanging off each.
-    const UNWEIGH_U: &str = "
+    const UNWEIGH_U: &str =
+        "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
     DELETE { GRAPH ?cat { ?x ?p ?o . ?v ?vp ?vo } }
     WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                           ?x a planning:Weighing ; planning:weighs $world ; ?p ?o .
                           OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }";
-    const UNADMIT_U: &str = "
+    const UNADMIT_U: &str =
+        "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
     DELETE { GRAPH ?cat { ?c ?p ?o } }
     WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                           ?c a planning:Candidate ; planning:from $world ; ?p ?o } }";
@@ -859,10 +862,10 @@ mod tests {
         let store = snapshots::stand_in(&case);
         let present = lay_ground(&store, snapshots::now(), &Laying::default()).unwrap()[0].clone();
         let cat = store.catalogue().unwrap().unwrap();
-        let candidates = "SELECT ?c WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?c a planning:Candidate } }";
+        let candidates = "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> SELECT ?c WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?c a planning:Candidate } }";
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <{cat}> {{ <urn:test:candidate> a planning:Candidate ; planning:from <{present}> ; \
+                "PREFIX planning: <http://example.org/orexis/planning#> INSERT DATA {{ GRAPH <{cat}> {{ <urn:test:candidate> a planning:Candidate ; planning:from <{present}> ; \
                  planning:fills <urn:test:Action> ; planning:minted 1 . \
                  <urn:test:elsewhere> a planning:Candidate ; planning:from <urn:test:world> ; planning:minted 2 }} }}"
             ))
@@ -915,8 +918,9 @@ mod tests {
     }
 
     fn hash_of(store: &Store, ground: &str) -> String {
-        let text =
-            format!("SELECT ?h WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{ground}> orexis:hash ?h }} }}");
+        let text = format!(
+            "PREFIX orexis: <http://example.org/orexis#> SELECT ?h WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{ground}> orexis:hash ?h }} }}"
+        );
         orexis::store::value(&store.rows(&text, &[]).unwrap()[0], "h").unwrap()
     }
 

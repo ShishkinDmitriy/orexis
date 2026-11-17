@@ -56,7 +56,7 @@ GRAPH :world {
 GRAPH :actions {
   :Drying a prediction:Flow .
   :Drying prediction:moves :moisture .
-  :Drying prediction:rate """PREFIX : <http://example.org/test#>
+  :Drying prediction:rate """PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> PREFIX : <http://example.org/test#>
       SELECT ?rate ?until WHERE {
           $feature :driesPerDay ?perDay .
           BIND(-xsd:double(?perDay) / 86400.0 AS ?rate)
@@ -64,7 +64,7 @@ GRAPH :actions {
       }""" .
   :Leaking a prediction:Flow .
   :Leaking prediction:moves :moisture .
-  :Leaking prediction:rate """PREFIX : <http://example.org/test#>
+  :Leaking prediction:rate """PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> PREFIX : <http://example.org/test#>
       SELECT ?rate ?until WHERE {
           $feature :leaksPerDay ?perDay .
           BIND(-xsd:double(?perDay) / 86400.0 AS ?rate)

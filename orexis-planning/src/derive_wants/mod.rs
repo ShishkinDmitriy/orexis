@@ -62,7 +62,7 @@ pub fn derive_wants(
     reopen: &BTreeSet<String>,
 ) -> Result<BTreeSet<String>, Error> {
     /// THE TIMELINE: every ground, earliest first.
-    const GROUNDS_Q: &str = "
+    const GROUNDS_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
     SELECT ?g WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start } }
     ORDER BY ?start";
@@ -120,7 +120,7 @@ pub fn derive_wants(
 
 fn standing_under(store: &Store, desire: &str) -> Result<BTreeSet<String>, Error> {
     /// WHAT THIS DERIVATION HAS MINTED UNDER ONE DESIRE, across all time: existence is not an instant question.
-    const STANDING_Q: &str = "
+    const STANDING_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> PREFIX prov: <http://www.w3.org/ns/prov#> 
     SELECT ?w WHERE {
       GRAPH ?g { ?w a planning:Want ; prov:wasDerivedFrom $desire }
       GRAPH ?cat { ?cat a orexis:CatalogueGraph .
@@ -231,7 +231,8 @@ fn derive_under(
 /// Take `want` out of the graph of the stretch it was minted over: the graph goes where it held this want alone.
 fn unhome(store: &Store, want: &str) -> Result<(), Error> {
     /// EVERY GRAPH OF WANTS THE DERIVATION WROTE THAT HOLDS ONE WANT, and how many wants each holds.
-    const HOMES_Q: &str = "
+    const HOMES_Q: &str =
+        "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
     SELECT ?g (COUNT(DISTINCT ?w) AS ?wants) WHERE {
       GRAPH ?g { $want a planning:Want . ?w a planning:Want }
       GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }
@@ -320,7 +321,7 @@ fn spelled(term: &Term) -> String {
 fn said(store: &Store, desire: &str) -> Result<Said, Error> {
     /// WHAT A DESIRE SAYS, from the graphs of desires and wants: its met-test, its estimate, what it is about, its
     /// label.
-    const SAID_Q: &str = "
+    const SAID_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
     SELECT ?p ?o WHERE {
       GRAPH ?g { $desire ?p ?o
         FILTER(?p IN (planning:metWhen, planning:unmetWhen, planning:estimates, planning:about, rdfs:label)) }
@@ -336,7 +337,8 @@ fn said(store: &Store, desire: &str) -> Result<Said, Error> {
 }
 
 fn desires_in(store: &Store) -> Result<Vec<(String, String)>, Error> {
-    const DESIRES_Q: &str = "
+    const DESIRES_Q: &str =
+        "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
     SELECT DISTINCT ?holder ?desire WHERE {
       GRAPH ?g { ?holder planning:holds ?desire . ?desire a planning:Desire }
       GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:DesireGraph } }
@@ -394,7 +396,7 @@ mod tests {
     #[test]
     fn derive_wants_leaves_the_store_as_the_diff_says() {
         /// What the intentions walk, as the executor's `walking` reads it: every want an unresolved intention pursues.
-        const WALKING_Q: &str = "
+        const WALKING_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> 
     SELECT DISTINCT ?want WHERE {
       GRAPH ?g { ?i a execution:Intention ; execution:pursues ?want .
                  FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }
@@ -421,7 +423,7 @@ mod tests {
         snapshots::all_read(&cases(), 14);
     }
 
-    const HOMES: &str = "
+    const HOMES: &str = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
 SELECT ?w ?g ?start ?reopens WHERE {
   GRAPH ?g { ?w a planning:Want . OPTIONAL { ?w planning:reopens ?reopens } }
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph .
@@ -478,7 +480,8 @@ SELECT ?w ?g ?start ?reopens WHERE {
 
     #[test]
     fn two_wants_under_one_desire_read_two_estimates() {
-        const REMAINING_Q: &str = "
+        const REMAINING_Q: &str =
+            "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
     SELECT ?for ?left WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                    ?x a planning:Weighing ; planning:for ?for ; planning:weighs ?g ; planning:remaining ?left .

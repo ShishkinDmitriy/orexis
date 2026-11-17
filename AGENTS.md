@@ -1459,14 +1459,13 @@ hand-rolled walk was once refused for exactly that reason. See
   reader that must name it in a `GRAPH` clause — never spelled, since genesis alone creates it.
   Every row carries every kind its class is beneath, so a text asks `?g a planning:WantGraph`
   and walks no path.
-- **SPARQL prefixes.** Only what `store.NAMESPACES` declares may be used. rdflib silently
-  pre-binds common prefixes and Fuseki does not, so a query can pass every test and 400 in
-  production. `tests/test_store.py` checks this by scanning the source text of the agent, the
-  operator's tools, the simulator, the domains and the worlds — and asserts each source tree is
-  still *found*, because moving files has twice emptied one of its globs and taken cases off the
-  guard without failing anything. **A text speaking words the store never loaded declares them
-  itself**, `PREFIX name: <iri>` at its head as SPARQL says it: a domain's namespace is not the
-  store's, so every action text, rule and desire select in `domains/` and `world/` carries its own.
+- **SPARQL prefixes: every text the agent runs declares its own**, `PREFIX name: <iri>` at its head as SPARQL
+  says it — a query in Rust, a rule in a package's documents, an action text, a rule and a desire select in
+  `domains/` and `world/` alike. The binary's store parses with no prefix of its own: a table gathered by walking
+  every linked package's documents was refused, since a text is parsed once and kept by its text, so its length
+  costs nothing after, and the table made every text depend on which packages were built in. A piece spliced into a
+  text is declared by the text it is spliced into. The Python tools keep `documents.store.NAMESPACES` for what they
+  read, which `tests/test_store.py` holds the domains and the worlds to.
 - **A test that asserts inside a loop can assert nothing.** An empty result set is not an error,
   so the body never runs and the test is green. The repo-root `conftest.py` traces the at-risk
   tests — an `assert` inside a loop over something that could be empty — and fails the run if a

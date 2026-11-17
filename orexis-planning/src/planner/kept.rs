@@ -17,10 +17,11 @@ use crate::withdraw::withdraw;
 impl Planner {
     /// The steps of `plan` in `store`, in the order walked, each with the action it fills and its filling.
     pub(super) fn chain(&self, store: &Store, plan: &str) -> Result<Vec<(String, Said)>, Error> {
-        const CHAIN_Q: &str = r#"
+        const CHAIN_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#> PREFIX planning: <http://example.org/orexis/planning#> 
         SELECT ?step ?next ?action ?p ?v WHERE { GRAPH $plan { ?step a execution:Step ; planning:fills ?action ; ?p ?v .
           OPTIONAL { ?step execution:then ?next } } }"#;
-        const TAKES_Q: &str = r#"SELECT ?takes WHERE { $action orexis:takes ?takes }"#;
+        const TAKES_Q: &str =
+            r#"PREFIX orexis: <http://example.org/orexis#> SELECT ?takes WHERE { $action orexis:takes ?takes }"#;
         let actions = graphs(&self.beliefs, &[ACTION])?;
         let mut said: BTreeMap<String, (String, BTreeMap<String, String>)> = BTreeMap::new();
         let mut after: BTreeMap<String, String> = BTreeMap::new();
@@ -73,7 +74,7 @@ impl Planner {
 
     /// Say of every step of a plan published that a bridge keeps below that it is `execution:keptBelow`.
     pub(super) fn mark_kept(&self, handed: &[String]) -> Result<(), Error> {
-        const FICTIVE_STEPS_Q: &str = r#"
+        const FICTIVE_STEPS_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#> PREFIX planning: <http://example.org/orexis/planning#> 
         SELECT ?step WHERE {
           GRAPH $plan { ?step a execution:Step ; planning:fills ?action }
           ?action execution:implementation/execution:operation ?op . ?op a execution:Fictive }
@@ -87,7 +88,7 @@ impl Planner {
                 let Some(step) = iri(&r, "step") else { continue };
                 if keeps(&self.beliefs, &step)? {
                     self.beliefs.update(&format!(
-                        "INSERT DATA {{ GRAPH <{plan}> {{ <{step}> execution:keptBelow true }} }}"
+                        "PREFIX execution: <http://example.org/orexis/execution#> INSERT DATA {{ GRAPH <{plan}> {{ <{step}> execution:keptBelow true }} }}"
                     ))?;
                 }
             }
@@ -97,7 +98,7 @@ impl Planner {
 
     /// A want kept below for a step no intention stands at any more is nothing's: withdrawn, here and everywhere.
     pub(super) fn withdraw_orphaned_refinements(&self, walking: &BTreeSet<String>) -> Result<(), Error> {
-        const STANDING_AT_Q: &str = r#"
+        const STANDING_AT_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#> 
         SELECT DISTINCT ?step WHERE { GRAPH ?g { ?i a execution:Intention ; execution:by ?step .
                                                  FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }"#;
         let standing_at: BTreeSet<String> = self
@@ -126,7 +127,7 @@ impl Planner {
 
     /// Whether any search of the last pass stopped on its budget rather than on an answer.
     pub fn exhausted(&self) -> Result<bool, Error> {
-        const OUTCOMES_Q: &str = r#"SELECT ?o WHERE { GRAPH $plan { ?p a planning:Plan ; planning:outcome ?o } }"#;
+        const OUTCOMES_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#> SELECT ?o WHERE { GRAPH $plan { ?p a planning:Plan ; planning:outcome ?o } }"#;
         for store in self.imaginaria.values() {
             for plan in store.graphs_of(&[PLAN_GRAPH], &Within::default())? {
                 let found = store.rows(&bind(OUTCOMES_Q, &[("plan", Value::iri(plan.as_str()))])?, &[])?;

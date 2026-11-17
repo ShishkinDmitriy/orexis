@@ -60,17 +60,17 @@ pub fn received_by(
     phenomenon_at: Option<DateTime>,
 ) -> Result<Vec<String>, Error> {
     /// THE KEY: what the sensor observes, of what it is mounted in — read for a series alone.
-    const KEY_Q: &str =
-        "SELECT ?feature ?property WHERE { $sensor sosa:observes ?property ; sosa:isHostedBy ?feature }";
+    const KEY_Q: &str = "PREFIX sosa: <http://www.w3.org/ns/sosa/> SELECT ?feature ?property WHERE { $sensor sosa:observes ?property ; sosa:isHostedBy ?feature }";
     /// EVERY PERCEPT OF THIS SENSOR KEPT, newest first, and whether a percept names it as its previous.
-    const KEPT_Q: &str = "
+    const KEPT_Q: &str =
+        "PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX sosa: <http://www.w3.org/ns/sosa/> 
     SELECT ?g ?o ?t (BOUND(?later) AS ?followed) WHERE {
       GRAPH $cat { ?g a sensing:ObservationGraph }
       GRAPH ?g { ?o sosa:madeBySensor $sensor OPTIONAL { ?o sosa:resultTime ?t } }
       OPTIONAL { GRAPH ?h { ?later sensing:previous ?o } GRAPH $cat { ?h a sensing:ObservationGraph } } }
     ORDER BY DESC(?t) DESC(?g)";
     /// THE SILENCE A READING ENDS: each kept of this sensor whose end is not yet said, found by its content.
-    const SILENT_Q: &str = "
+    const SILENT_Q: &str = "PREFIX sensing: <http://example.org/orexis/sensing#> 
     SELECT ?g ?since WHERE { GRAPH $cat { ?g a sensing:SilenceGraph }
       GRAPH ?g { $sensor sensing:silentSince ?since FILTER NOT EXISTS { $sensor sensing:silentUntil ?until } } }";
     if reads_series(store, sensor)? {
@@ -127,7 +127,7 @@ pub fn received_by(
     for silence in silences {
         let Some(g) = iri(&silence, "g") else { continue };
         store.update(&format!(
-            "INSERT DATA {{ GRAPH <{g}> {{ <{sensor}> sensing:silentUntil {} }} }}",
+            "PREFIX prov: <http://www.w3.org/ns/prov#> PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{ GRAPH <{g}> {{ <{sensor}> sensing:silentUntil {} }} }}",
             literal(instants[0])
         ))?;
         store.end_graph(&g, instants[0], SILENCE_GRAPH)?;
@@ -260,7 +260,7 @@ fn write(store: &Store, p: &Percept<'_>) -> Result<(), Error> {
     }
     let entry = store.entry(p.graph, &[OBSERVATION_GRAPH], RECEIVED, Some(p.me), Some(p.at), p.until)?;
     store.update(&format!(
-        "INSERT DATA {{\n  GRAPH <{}> {{ {} . }}\n  {entry} }}",
+        "PREFIX prov: <http://www.w3.org/ns/prov#> PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{\n  GRAPH <{}> {{ {} . }}\n  {entry} }}",
         p.graph,
         said.join(" . ")
     ))
@@ -289,8 +289,7 @@ fn forecast(
     at: DateTime,
 ) -> Result<Vec<String>, Error> {
     /// THE FORECAST THIS SENSOR GAVE BEFORE: every graph of it, found by its content.
-    const FORECAST_Q: &str =
-        "SELECT ?g WHERE { GRAPH $cat { ?g a orexis:ForecastGraph } GRAPH ?g { ?o sosa:madeBySensor $sensor } }";
+    const FORECAST_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX sosa: <http://www.w3.org/ns/sosa/> SELECT ?g WHERE { GRAPH $cat { ?g a orexis:ForecastGraph } GRAPH ?g { ?o sosa:madeBySensor $sensor } }";
     let Some(stretches) = decode_series(store, sensor, payload)? else {
         return Ok(Vec::new());
     };
@@ -330,7 +329,7 @@ fn forecast(
         ];
         let entry = store.entry(&graph, &[FORECAST], RECEIVED, Some(me), Some(*start), Some(*end))?;
         store.update(&format!(
-            "INSERT DATA {{\n  GRAPH <{graph}> {{ {} . }}\n  {entry} }}",
+            "PREFIX prov: <http://www.w3.org/ns/prov#> PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{\n  GRAPH <{graph}> {{ {} . }}\n  {entry} }}",
             said.join(" . ")
         ))?;
         hash_named_graph(store, &graph, None)?;
@@ -445,7 +444,7 @@ pub(crate) mod tests {
         );
         assert!(
             store
-                .rows("SELECT ?f WHERE { GRAPH ?g { ?o sosa:hasFeatureOfInterest ?f } }", &[])
+                .rows("PREFIX sosa: <http://www.w3.org/ns/sosa/> SELECT ?f WHERE { GRAPH ?g { ?o sosa:hasFeatureOfInterest ?f } }", &[])
                 .unwrap()
                 .is_empty()
         );
@@ -468,7 +467,7 @@ pub(crate) mod tests {
         );
         let found = store
             .rows(
-                "SELECT ?s ?v WHERE { GRAPH ?g { ?o a sosa:Observation ; sosa:madeBySensor ?s ; sensing:rawResult ?v } } ORDER BY ?s",
+                "PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX sosa: <http://www.w3.org/ns/sosa/> SELECT ?s ?v WHERE { GRAPH ?g { ?o a sosa:Observation ; sosa:madeBySensor ?s ; sensing:rawResult ?v } } ORDER BY ?s",
                 &[],
             )
             .unwrap();
@@ -480,7 +479,7 @@ pub(crate) mod tests {
     }
 
     fn chain(store: &Store) -> Vec<(String, f64, Option<String>)> {
-        const CHAIN_Q: &str = "
+        const CHAIN_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX sosa: <http://www.w3.org/ns/sosa/> 
     SELECT ?o ?n ?t ?previous WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a sensing:ObservationGraph }
       GRAPH ?g { ?o sosa:madeBySensor $sensor ; sensing:rawResult ?n ; sosa:resultTime ?t
@@ -502,7 +501,7 @@ pub(crate) mod tests {
 
     fn period(store: &Store, graph: &str) -> (DateTime, Option<DateTime>) {
         const PERIOD_Q: &str =
-            "SELECT ?start ?end WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g dcterms:temporal ?p .
+            "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> SELECT ?start ?end WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g dcterms:temporal ?p .
                    ?p orexis:start ?start . OPTIONAL { ?p orexis:end ?end } } }";
         let found = store
             .rows(&bind(PERIOD_Q, &[("g", Value::iri(graph))]).unwrap(), &[])
@@ -700,7 +699,7 @@ pub(crate) mod tests {
         let figures: String = limits.iter().map(|(t, n)| format!(" ; <{t}> {n}")).collect();
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <{}> {{ <{ME}> orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor <{sensor}>{figures} ] ] }} }}",
+                "PREFIX orexis: <http://example.org/orexis#> PREFIX prov: <http://www.w3.org/ns/prov#> PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX sosa: <http://www.w3.org/ns/sosa/> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> INSERT DATA {{ GRAPH <{}> {{ <{ME}> orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor <{sensor}>{figures} ] ] }} }}",
                 selves[0]
             ))
             .unwrap();

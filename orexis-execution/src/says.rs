@@ -162,20 +162,19 @@ mod tests {
     //! content.
 
     use orexis::clock::instant;
-    use orexis::snapshots::namespaces;
 
     use super::*;
 
     const T: &str = "http://example.org/test#";
 
     fn store() -> Store {
-        let st = Store::new(namespaces()).unwrap();
+        let st = Store::new().unwrap();
         st.update(&format!(
-            r#"INSERT DATA {{
+            r#"PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX sh: <http://www.w3.org/ns/shacl#> INSERT DATA {{
   GRAPH <{T}vocabulary> {{ <{T}NoteGraph> rdfs:subClassOf orexis:BeliefGraph , orexis:Graph . }}
   GRAPH <{T}actions> {{
     <{T}Noting> a orexis:Action ; orexis:takes <{T}topic> ;
-      execution:implementation [ execution:operation [ a execution:Saying ; sh:construct """CONSTRUCT {{ ?note a <{T}Note> , <{T}NoteGraph> ; <{T}about> $topic ; <{T}at> $now ;
+      execution:implementation [ execution:operation [ a execution:Saying ; sh:construct """PREFIX execution: <http://example.org/orexis/execution#> CONSTRUCT {{ ?note a <{T}Note> , <{T}NoteGraph> ; <{T}about> $topic ; <{T}at> $now ;
                                               execution:to ?peer }}
           WHERE {{ ?peer <{T}reads> $topic . BIND(IRI(CONCAT(STR($topic), "-note")) AS ?note) }}""" ] ] .
     <{T}Looking> a orexis:Action ; orexis:takes <{T}topic> . }}

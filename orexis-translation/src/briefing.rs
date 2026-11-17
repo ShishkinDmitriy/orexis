@@ -23,7 +23,8 @@ pub fn briefing(
     stating: &str,
     prefixes: &[(String, String)],
 ) -> Result<String, Error> {
-    const ROLES_Q: &str = "
+    const ROLES_Q: &str =
+        "PREFIX orexis: <http://example.org/orexis#> PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> 
     SELECT DISTINCT ?label ?comment WHERE {
       ?me a orexis:Self ; orexis:plays ?role . ?role a ?class .
       ?class rdfs:label ?label . OPTIONAL { ?class rdfs:comment ?comment } } ORDER BY ?label";

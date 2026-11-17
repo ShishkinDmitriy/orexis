@@ -29,7 +29,7 @@ impl Meter {
         /// THE METER THE SELF PLAYS, IN ONE QUERY: where the series store it names answers, and how long a window is,
         /// the role's word or, where it says none, the default the metrics' ontology states on the meter's shape
         /// (`sh:defaultValue`).
-        const METER_Q: &str = "SELECT ?role ?kind ?store (COALESCE(?windowSaid, ?windowOwn) AS ?window) WHERE { \
+        const METER_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX sh: <http://www.w3.org/ns/shacl#> SELECT ?role ?kind ?store (COALESCE(?windowSaid, ?windowOwn) AS ?window) WHERE { \
         ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind . \
         OPTIONAL { ?role <http://example.org/orexis/metrics#windowS> ?windowSaid FILTER(?windowSaid > 0) } \
         OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/metrics#windowS> ; sh:defaultValue ?windowOwn ] } \

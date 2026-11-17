@@ -19,7 +19,6 @@ use sha2::{Digest, Sha256};
 use orexis::Error;
 use orexis::boot::TREE;
 use orexis::clock::{Clock, instant, isoformat};
-use orexis::namespaces::Namespaces;
 use orexis::store::Store;
 use orexis::task::Provided;
 use orexis_transport_mqtt::driver::{Client, Mqtt, dumps};
@@ -101,7 +100,7 @@ async fn a_day_in_the_greenhouse_sends_the_commands_it_is_pinned_to() {
         })
         .collect();
     assert_eq!(readings.len(), 144, "a reading every ten minutes for a day");
-    let store = Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap();
+    let store = Store::new().unwrap();
     let clock: Arc<dyn Clock> = common::clock(readings[0].0);
     let commands = Arc::new(Mutex::new(Vec::new()));
     let bus = Bus {

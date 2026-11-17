@@ -23,7 +23,8 @@ pub fn withdraw(
     afresh: &BTreeSet<String>,
 ) -> Result<Vec<String>, Error> {
     /// EVERY WANT THE DERIVATION MINTED, across all time.
-    const DERIVED_Q: &str = "
+    const DERIVED_Q: &str =
+        "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
     SELECT ?w WHERE {
       GRAPH ?g { ?w a planning:Want }
       GRAPH ?cat { ?cat a orexis:CatalogueGraph .
@@ -65,16 +66,18 @@ pub fn withdraw(
 
 /// Drop what a search wrote about one want: every weighing for it and its plan, with the graphs its steps predict in.
 fn forget_search(store: &Store, uri: &str) -> Result<(), Error> {
-    const WEIGHINGS_U: &str = "
+    const WEIGHINGS_U: &str =
+        "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
     DELETE { GRAPH ?cat { ?x ?p ?o . ?v ?vp ?vo } }
     WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                           ?x a planning:Weighing ; planning:for $want ; ?p ?o .
                           OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }";
-    const PLAN_Q: &str = "
+    const PLAN_Q: &str =
+        "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
     SELECT ?plan WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?plan a planning:PlanGraph }
       GRAPH ?plan { ?plan planning:for $want } }";
-    const STEP_GRAPHS_Q: &str = "SELECT ?g WHERE { GRAPH $plan { ?step execution:adds|execution:retracts ?g } }";
+    const STEP_GRAPHS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#> SELECT ?g WHERE { GRAPH $plan { ?step execution:adds|execution:retracts ?g } }";
     store.update(&bind(WEIGHINGS_U, &[("want", Value::iri(uri))])?)?;
     for row in store.rows(&bind(PLAN_Q, &[("want", Value::iri(uri))])?, &[])? {
         let Some(plan) = iri(&row, "plan") else { continue };
@@ -91,7 +94,8 @@ fn forget_search(store: &Store, uri: &str) -> Result<(), Error> {
 /// Remove one want, wherever it lives: its graph where a graph of wants holds it alone, the want alone otherwise.
 pub fn forget_want(store: &Store, uri: &str) -> Result<(), Error> {
     /// WHERE A WANT IS: the graph of wants or the record that holds it, and how many wants are in it.
-    const HOME_Q: &str = "
+    const HOME_Q: &str =
+        "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> 
     SELECT ?g ?kind (COUNT(DISTINCT ?w) AS ?wants) WHERE {
       GRAPH ?g { $want a planning:Want . ?w a planning:Want }
       GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .

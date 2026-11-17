@@ -278,7 +278,7 @@ impl Foresight {
     /// and `t1`.
     fn marks(&self, store: &Store, t0: f64, t1: f64, cap: f64) -> Result<Vec<f64>, Error> {
         /// THE HAPPENINGS: every instant inside a stretch at which a belief begins or stops holding.
-        const HAPPENINGS_Q: &str = "
+        const HAPPENINGS_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> 
         SELECT DISTINCT ?t WHERE {
           GRAPH $cat { ?g a orexis:BeliefGraph ; dcterms:temporal ?p . { ?p orexis:start ?t } UNION { ?p orexis:end ?t } }
           FILTER(?t > $from && ?t < $to) }";
@@ -441,19 +441,20 @@ pub fn foresee(
     placed: Option<&Placed<'_>>,
 ) -> Result<Option<Foresight>, Error> {
     /// EVERY SENSOR WITH A PERCEPT IN HAND, by sensing's kind and SOSA's pattern.
-    const SENSORS_Q: &str = "
+    const SENSORS_Q: &str =
+        "PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX sosa: <http://www.w3.org/ns/sosa/> 
     SELECT DISTINCT ?sensor WHERE {
       GRAPH $cat { ?g a sensing:ObservationGraph }
       GRAPH ?g { ?o sosa:madeBySensor ?sensor } }
     ORDER BY ?sensor";
     /// THE OBSERVATION IN HAND: the percept begun last, and of two begun at once the one still holding.
-    const OBSERVATION_Q: &str = "
+    const OBSERVATION_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX sosa: <http://www.w3.org/ns/sosa/> 
     SELECT ?graph ?node ?taken ?from WHERE {
       GRAPH $cat { ?graph a sensing:ObservationGraph ; dcterms:temporal ?p . ?p orexis:start ?from .
                    OPTIONAL { ?p orexis:end ?until } }
       GRAPH ?graph { ?node sosa:madeBySensor $sensor . OPTIONAL { ?node sosa:resultTime ?taken } } }
     ORDER BY DESC(?from) ASC(BOUND(?until)) DESC(?until) LIMIT 1";
-    const KEY_Q: &str = "
+    const KEY_Q: &str = "PREFIX sosa: <http://www.w3.org/ns/sosa/> 
     SELECT ?feature ?property ?value WHERE {
       $node sosa:hasFeatureOfInterest ?feature ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value } LIMIT 1";
     /// EVERY FLOW MOVING THE PROPERTY, off the graphs of flows alone.
@@ -885,7 +886,7 @@ mod tests {
         let percepts: Vec<&str> = percepts.iter().map(String::as_str).collect();
         let found = store
             .rows(
-                &format!("SELECT ?v WHERE {{ ?o sosa:madeBySensor <{PROBE}> ; sosa:hasSimpleResult ?v }}"),
+                &format!("PREFIX sosa: <http://www.w3.org/ns/sosa/> SELECT ?v WHERE {{ ?o sosa:madeBySensor <{PROBE}> ; sosa:hasSimpleResult ?v }}"),
                 &percepts,
             )
             .unwrap();
@@ -981,7 +982,7 @@ mod tests {
         let cat = store.catalogue().unwrap().unwrap();
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <urn:test:self> {{ <{ME}> a orexis:Self ; orexis:plays [ prediction:horizonS 28800 ] }}
+                "PREFIX orexis: <http://example.org/orexis#> PREFIX prediction: <http://example.org/orexis/prediction#> INSERT DATA {{ GRAPH <urn:test:self> {{ <{ME}> a orexis:Self ; orexis:plays [ prediction:horizonS 28800 ] }}
                GRAPH <{cat}> {{ <urn:test:self> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ;
                                 orexis:ownedBy <{ME}> }} }}"
             ))

@@ -36,7 +36,7 @@ GRAPH :world {
 
 GRAPH :rules {
   :spoilRule a belief:Transition .
-  :spoilRule belief:update """PREFIX : <http://example.org/test#>
+  :spoilRule belief:update """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> PREFIX : <http://example.org/test#>
       DELETE { ?t a :Tick ; :ticked true . ?c a :Counter ; :count ?n . :Counter rdfs:label ?l }
       WHERE  { ?t a :Tick ; :ticked true . ?c a :Counter ; :count ?n . :Counter rdfs:label ?l }""" .
   :spoilRule rdfs:label "a transition that tries to delete testimony" .

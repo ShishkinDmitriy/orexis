@@ -18,7 +18,6 @@ use orexis::Error;
 use orexis::boot::TREE;
 use orexis::clock::Elapsing;
 use orexis::clock::{Clock, instant, isoformat};
-use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, value};
 use orexis::task::{Provided, Running};
@@ -118,8 +117,7 @@ fn facts(store: &Store, predicate: &str) -> BTreeSet<(String, String)> {
 
 /// The allotment's three agents, booted at noon on the first of January, on one clock, and walked.
 async fn allotment(walk: impl AsyncFnOnce(&mut Market<'_>)) {
-    let namespaces = Arc::new(Namespaces::linked().unwrap());
-    let stores: Vec<Store> = NAMES.iter().map(|_| Store::new(namespaces.clone()).unwrap()).collect();
+    let stores: Vec<Store> = NAMES.iter().map(|_| Store::new().unwrap()).collect();
     let noon = instant("2026-01-01T12:00:00+00:00").unwrap();
     let clock = common::clock(noon);
     let carried = Arc::new(Mutex::new(Carried::default()));
@@ -407,7 +405,7 @@ async fn a_plot_that_dries_below_its_floor_is_watered_with_bought_water() {
 /// Every scope `store` holds, each as the set of its members' local names.
 fn scopes(store: &Store) -> Vec<BTreeSet<String>> {
     let mut held: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-    let text = "SELECT ?m ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:ScopeGraph } \
+    let text = "PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> SELECT ?m ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:ScopeGraph } \
                 GRAPH ?g { ?m planning:inScope ?s } }";
     for r in store.rows(text, &[]).unwrap() {
         let member = value(&r, "m").unwrap();
@@ -510,7 +508,7 @@ async fn the_present_reading_and_its_foreseen_prediction_are_one_way_of_failing(
         );
         m.read("rose_grower", r#"{"rose_moisture": 0.2}"#);
         m.pass("rose_grower");
-        let text = "SELECT ?g ?s ?e WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . \
+        let text = "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#> PREFIX planning: <http://example.org/orexis/planning#> SELECT ?g ?s ?e WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . \
                     ?g a planning:WantGraph ; dcterms:temporal ?p . ?p orexis:start ?s OPTIONAL { ?p orexis:end ?e } } }";
         let planning = m.planning("rose_grower");
         let planner = &planning.planner;
@@ -536,7 +534,7 @@ async fn the_present_reading_and_its_foreseen_prediction_are_one_way_of_failing(
         let committed = m
             .store("rose_grower")
             .rows(
-                "SELECT ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . \
+                "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX execution: <http://example.org/orexis/execution#> PREFIX orexis: <http://example.org/orexis#> SELECT ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . \
                  ?g a execution:CommittedStepGraph ; dcterms:temporal/orexis:start ?s } }",
                 &[],
             )

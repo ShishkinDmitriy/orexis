@@ -23,7 +23,7 @@ impl Observer {
         /// THE OBSERVER THE SELF PLAYS, IN ONE QUERY: where the series store it names answers, and how often its
         /// readings are archived, the role's word or, where it says none, the default sensing's ontology states on the
         /// observer's shape (`sh:defaultValue`).
-        const OBSERVER_Q: &str = "SELECT ?role ?kind ?archive (COALESCE(?everySaid, ?everyOwn) AS ?every) WHERE { \
+        const OBSERVER_Q: &str = "PREFIX orexis: <http://example.org/orexis#> PREFIX sh: <http://www.w3.org/ns/shacl#> SELECT ?role ?kind ?archive (COALESCE(?everySaid, ?everyOwn) AS ?every) WHERE { \
         ?me a orexis:Self ; orexis:plays ?role . ?role a ?kind . \
         OPTIONAL { ?role <http://example.org/orexis/sensing#archivedEveryS> ?everySaid FILTER(?everySaid > 0) } \
         OPTIONAL { ?shape sh:targetClass <{ROLE}> ; sh:property [ sh:path <http://example.org/orexis/sensing#archivedEveryS> ; sh:defaultValue ?everyOwn ] } \
