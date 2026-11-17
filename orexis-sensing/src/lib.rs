@@ -14,6 +14,7 @@
 //! The Python copy's `account`, sensing's word of itself for a person, is read by nothing, and is not ported.
 
 use orexis::task::{Every, Handed, Package, Woke, sooner};
+use orexis_transport::Members;
 
 use crate::observer::{ASK, HEARD, OBSERVE};
 use crate::ontology::{OBSERVATION_GRAPH, OBSERVER, OBSERVING_TRIGGER};
@@ -51,11 +52,15 @@ fn start(handed: Handed) -> orexis::task::Starting {
         hears.graph(OBSERVATION_GRAPH, HEARD);
         hears.event(OBSERVING_TRIGGER, OBSERVE);
         let mut arrived = handed.arrived();
+        observer.replies.wakes(arrived.wake());
         //  HOW OFTEN IT ASKS WHAT HAS FALLEN DUE is the observer's role's to say (`sensing:askedEveryS`).
         let mut timers = vec![(Every::new(observer.asked_every_s), ASK)];
         if !handed.booted().await? {
             return Ok(());
         }
+        //  THE SENSORS IT READS BY ASKING, once every member has added itself: each asked on its cadence.
+        let (asked, mut once) = observer.request(&handed.provided.share::<Members>())?;
+        timers.extend(asked);
         let mut heard = None;
         let mut due = None;
         loop {
@@ -72,6 +77,12 @@ fn start(handed: Handed) -> orexis::task::Starting {
                 _ => {}
             }
             if hears.is_empty() {
+                let wrote = observer.answered(&mut turn);
+                turn.done(wrote)?;
+                for job in std::mem::take(&mut once) {
+                    let wrote = observer.run(job, &mut turn);
+                    turn.done(wrote)?;
+                }
                 for (every, tag) in &mut timers {
                     if every.due(turn.now) {
                         let wrote = observer.run(*tag, &mut turn);

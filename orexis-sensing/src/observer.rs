@@ -2,6 +2,7 @@
 //! often and of what it hears - ask after silence, hand each percept to belief, say each observation.
 
 use std::collections::BTreeSet;
+use std::sync::Arc;
 
 use oxigraph::model::NamedNode;
 use oxsdatatypes::DateTime;
@@ -12,16 +13,25 @@ use orexis::clock::{instant, isoformat, seconds_of};
 use orexis::events::Watch;
 use orexis::ontology::{DERIVED, ONTOLOGY, SELF_GRAPH, local_of};
 use orexis::store::{Store, Within, iri, value};
-use orexis::task::{Heard, Turn};
+use orexis::task::{Every, Heard, Turn};
+use orexis_transport::{Exchange, Inbox, Member, Members};
 
 use crate::cadence::cadence_of;
 use crate::events::{Doubted, Perceived, Silence, tag_of};
 use crate::missed::missed;
 use crate::ontology::{OBSERVATION_GRAPH, OBSERVER, OBSERVING, REVISED_SOURCE, SILENCE_GRAPH, silence_graph};
+use crate::received::received;
 
 pub(crate) const ASK: usize = 0;
 pub(crate) const HEARD: usize = 1;
 pub(crate) const OBSERVE: usize = 2;
+/// The first of the jobs that each ask one sensor for its reading, one per sensor read by asking.
+pub(crate) const REQUEST: usize = 3;
+/// The timers of the jobs that ask a sensor on its cadence, each with its job.
+pub(crate) type Timers = Vec<(Every, usize)>;
+
+/// The name sensing holds the agent running under, while it asks a sensor on a cadence.
+const HOLDER: &str = "sensing";
 
 /// THE OBSERVER THE SELF PLAYS, the package's core: the sensors its attentions name and how often sensing asks after
 /// them, each what the role says in the agent's self graph and, where it says nothing, the default this package's
@@ -42,6 +52,10 @@ pub struct Observer {
     pub watch: Watch,
     /// The sensors doubted at the last ask.
     doubts: BTreeSet<String>,
+    /// Each sensor read by asking, with the member asked, its job the index after `REQUEST`.
+    requested: Vec<(String, Arc<dyn Member>)>,
+    /// Where each asked sensor's answer is left.
+    pub replies: Inbox,
 }
 
 impl Observer {
@@ -100,6 +114,8 @@ impl Observer {
             due: Vec::new(),
             watch: Watch::default(),
             doubts: BTreeSet::new(),
+            requested: Vec::new(),
+            replies: Inbox::default(),
         })
     }
 
@@ -257,6 +273,48 @@ impl Observer {
         Ok(())
     }
 
+    /// EVERY SENSOR READ BY ASKING, a job each: a sensor of the observer's that a member of the agent's answers when
+    /// asked (`Exchange::Requested`), asked at the cadence the sensor states, or once where it states none. POLLING
+    /// IS A REQUEST IN A LOOP, AND THE LOOP IS SENSING'S, since the cadence is
+    /// (the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop). The timers, and the jobs run once.
+    pub(crate) fn request(&mut self, members: &Members) -> Result<(Timers, Vec<usize>), Error> {
+        let (mut timers, mut once) = (Vec::new(), Vec::new());
+        for sensor in &self.sensors {
+            let Some((member, Exchange::Requested)) = members.reaching(sensor)? else {
+                continue;
+            };
+            let job = REQUEST + self.requested.len();
+            match cadence_of(&self.beliefs, sensor)? {
+                Some(every) => timers.push((Every::new(every), job)),
+                None => once.push(job),
+            }
+            self.requested.push((sensor.clone(), member));
+        }
+        if !self.requested.is_empty() {
+            log::info!(
+                "{} asks {} for its readings",
+                local_of(&self.me),
+                self.requested
+                    .iter()
+                    .map(|(s, _)| local_of(s))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            );
+        }
+        Ok((timers, once))
+    }
+
+    /// What each asked sensor answered since the last take, each handed to `received` as it arrived: the percepts
+    /// written.
+    pub(crate) fn answered(&mut self, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+        let mut written = Vec::new();
+        for message in self.replies.take() {
+            let at = message.at.unwrap_or(pass.now);
+            written.extend(received(&self.beliefs, &self.me, &message.topic, &message.payload, at)?);
+        }
+        Ok(written)
+    }
+
     pub(crate) fn run(&mut self, job: usize, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         match job {
             ASK => {
@@ -264,6 +322,14 @@ impl Observer {
                 let due = std::mem::take(&mut self.due);
                 self.perceived(due);
                 self.ask(pass.now)
+            }
+            job if job >= REQUEST => {
+                //  A SENSOR ASKED ON A CADENCE KEEPS THE AGENT RUNNING: what it reads goes on arriving.
+                pass.hold(HOLDER);
+                if let Some((sensor, member)) = self.requested.get(job - REQUEST) {
+                    member.send(sensor, b"", Some(self.replies.clone()))?;
+                }
+                Ok(Vec::new())
             }
             _ => Ok(Vec::new()),
         }

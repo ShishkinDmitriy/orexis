@@ -184,7 +184,8 @@ Refused:
 
 - **A second observer role per limit**, for the costs above.
 - **Listener and poller as the object's word.** Pushed against polled is the transport's distinction,
-  and sensing knows no transport; how often a polled sensor is asked is the sensor's cadence.
+  and sensing names no member; how often a polled sensor is asked is the sensor's cadence (since #1219
+  sensing asks the transport's contract whether a sensor's channel is asked or listened to, and does the asking).
 - **One attention per sensor.** The lane's couriers hold eight sensors to one limit, and eight nodes
   repeating it are eight places to change it. A sensor two attentions name is refused instead.
 - **Scopes as objects of the planner**, each with figures of its own. A scope is written by planning as

@@ -711,7 +711,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   is the other two detectors' (#462, #944).
 - **Sensing speaks SOSA and SSN, and declares only what they lack** — the observation graph's kind,
   the link to the percept before, the silence, the number a stuck sensor gives and the pipeline's
-  words; a transport hands `received` bytes and sensing knows no transport.
+  words; sensing asks a sensor a member answers when asked, on its cadence, and hands the answer to `received`
+  itself, knowing the transport's contract and no member (the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop).
 - **An observation is concluded from the number a sensor gave** — its quantity through the scaling,
   its reading through the calibration; what the subject is then is a domain's transition's
   (an-observation-is-concluded-from-the-number-a-sensor-gave).
@@ -742,7 +743,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **The claims a host issued are its demand** — a debt with a window is an occurrence about the
   window (#626).
 - **A forecast is a series a sensor reads, and a public service's address is wiring** — one graph per
-  stretch, the HTTP member polls, the location lives in the agent's own `secrets/<agent>/` (a-forecast-is-a-series-a-sensor-reads).
+  stretch, sensing asks it over HTTP on its cadence, the location lives in the agent's own `secrets/<agent>/` (a-forecast-is-a-series-a-sensor-reads).
 - **Several transport members are one to the container** — a message goes back to the member that
   queued it, a command to the member that `reaches` the device.
 - **The transport speaks MQTT4SSN, and a topic is named by the filters that match it, which no society

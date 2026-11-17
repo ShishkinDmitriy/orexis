@@ -39,7 +39,7 @@ the package's name and knows no word of what it does.
   timeline after. The runtime does the waiting and the package says what it waits for, which is
   the principle "the layer that waits does the waiting" kept rather than broken: MQTT asks
   after its sensors' missing readings as one falls due (`wake_at`, since #1119), HTTP polls each sensor at its
-  `ssn-system:Frequency`, sensing asks after silence every minute.
+  `ssn-system:Frequency` (sensing asks it since #1219, the loop being sensing's), sensing asks after silence every minute.
 - ~~`gauge(read)` reports what a package samples at a metrics window's end~~ — retired by
   [metrics-and-history-are-what-events-say](/decisions/metrics-and-history-are-what-events-say.md):
   what a store holds is a level on an event its owner says.
@@ -76,7 +76,7 @@ attached; a step's command goes out through it because execution's part, linked 
   the packages' jobs, then plans and walks, on one thread.
 - [a-forecast-is-a-series-a-sensor-reads](/decisions/a-forecast-is-a-series-a-sensor-reads.md),
   in part: a forecast is no longer asked for by `missed`; the HTTP member polls it at the
-  sensor's frequency.
+  sensor's frequency — sensing, since #1219.
 - #853's pacing: MQTT no longer paces calls it is handed; it asks after missing readings on its
   own minute.
 

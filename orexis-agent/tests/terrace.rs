@@ -207,15 +207,14 @@ async fn terrace(
     );
     let inbox = member.inbox.clone();
     let asked = t.asked.clone();
-    let mut http = orexis_transport_http::driver::Http::new(
+    let http = orexis_transport_http::driver::Http::new(
         &t.store,
         &format!("{T}terrace_agent"),
-        Arc::new(move |url| {
+        orexis_transport_http::driver::answering(move |url| {
             asked.lock().unwrap().push(url.to_string());
             web.map(<[u8]>::to_vec).ok_or_else(|| "no web here".to_string())
         }),
     );
-    http.spawn = Box::new(|work| work());
     let mut telegram = orexis_transport_telegram::driver::Telegram::new(
         &t.store,
         &format!("{T}terrace_agent"),

@@ -12,7 +12,9 @@ does alike, and nothing else reads.
 
 | A member | by |
 |---|---|
-| leaves what its thread receives for its task, ringing it awake | `Inbox::deliver`, `Inbox::wakes` |
+| offers the rows above a channel it reaches, to listen on or send on, a request a send with a reply | `Member`, `Exchange` |
+| is found by a row above, which names no member | `Members::add` (`Provided::alter`), `Members::reaching` |
+| leaves what it receives for whoever listens or asked, ringing it awake | `Inbox::deliver`, `Inbox::wakes` |
 | queues what arrived, a job to handle each | `Pending::arrived`, `Pending::oldest` |
 | runs what it queued until nothing is left | `Jobs::queued` |
 | decides whether it joins: the world wires the self through it | `wired` |

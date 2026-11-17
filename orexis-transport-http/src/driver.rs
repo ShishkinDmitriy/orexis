@@ -5,32 +5,40 @@
 //! said of the `schema:geo` of what the sensor is hosted by, by local name. A template with a variable nothing fills is
 //! not fetched, and says so: a world whose location is kept in its `secrets/` and was not given it still boots.
 //!
-//! **A RESPONSE BECOMES OBSERVATIONS THROUGH SENSING, AND THE MEMBER KNOWS NO CODEC.** `handle` hands the body to
-//! sensing's `received`. A fetch runs on a thread of its own, one at a time per sensor, and the body waits in the
-//! inbox for the one executing thread.
+//! **A SENSOR IS A CHANNEL THIS MEMBER IS ASKED ON, AND WHAT THE BODY MEANS IS NOT ITS OWN.** It reaches a `td:Thing`
+//! with a form as a channel it is sent on and answers (`Exchange::Requested`); a request is one fetch, awaited as a
+//! Tokio task, one at a time per channel, and the body is left in the inbox the requester handed. Who asks, and how
+//! often, is the row above's: sensing, on the sensor's cadence (the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop).
 
 use std::collections::BTreeSet;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use oxsdatatypes::DateTime;
 use regex::Regex;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::ontology::{BELIEF, local_of};
 use orexis::store::{Store, Within, iri, value};
-use orexis_sensing::cadence::sensors as observed;
-use orexis_sensing::received::received;
-use orexis_transport::Inbox;
+use orexis_transport::{Exchange, Inbox, Member};
 
 /// HOW LONG ONE FETCH MAY TAKE, in real seconds: a figure a role states.
 pub const FETCHED_WITHIN_S: &str = "http://example.org/orexis/http#fetchedWithinS";
 
-/// What fetches a URI's body, or says why not.
-pub type Client = Arc<dyn Fn(&str) -> Result<Vec<u8>, String> + Send + Sync>;
-/// What runs a fetch: on a thread of its own, or at once in a test.
-pub type Spawn = Box<dyn Fn(Box<dyn FnOnce() + Send>) + Send + Sync>;
+/// A fetch under way: the body, or why there is none.
+pub type Fetched = Pin<Box<dyn Future<Output = Result<Vec<u8>, String>> + Send>>;
+/// What fetches a URI's body.
+pub type Client = Arc<dyn Fn(String) -> Fetched + Send + Sync>;
+
+/// A client that answers each URI at once with what `answer` says of it: a test's web.
+pub fn answering(answer: impl Fn(&str) -> Result<Vec<u8>, String> + Send + Sync + 'static) -> Client {
+    Arc::new(move |url: String| {
+        let answered = answer(&url);
+        Box::pin(async move { answered })
+    })
+}
 
 /// The URI a template names with its simple `{name}` variables filled from `values`, each percent-encoded; None where
 /// one names a value that is not there.
@@ -59,31 +67,33 @@ fn quote(text: &str) -> String {
         .collect()
 }
 
-/// The web as a deployed agent reads it, a fetch given up after `within_s` real seconds.
-pub fn get(within_s: f64) -> Client {
-    let agent = ureq::AgentBuilder::new()
+/// The web as a deployed agent reads it, over rustls, a fetch given up after `within_s` real seconds.
+pub fn get(within_s: f64) -> Result<Client, Error> {
+    let client = reqwest::Client::builder()
         .timeout(Duration::from_secs_f64(within_s))
-        .build();
-    Arc::new(move |url| {
-        let response = agent
-            .get(url)
-            .set("Accept", "application/json")
-            .set("User-Agent", "orexis-agent")
-            .call()
-            .map_err(|e| e.to_string())?;
-        let mut body = Vec::new();
-        std::io::Read::read_to_end(&mut response.into_reader(), &mut body).map_err(|e| e.to_string())?;
-        Ok(body)
-    })
+        .user_agent("orexis-agent")
+        .build()
+        .map_err(|e| Error::Evaluation(format!("no web client: {e}")))?;
+    Ok(Arc::new(move |url: String| {
+        let client = client.clone();
+        Box::pin(async move {
+            let response = client
+                .get(&url)
+                .header(reqwest::header::ACCEPT, "application/json")
+                .send()
+                .await
+                .and_then(reqwest::Response::error_for_status)
+                .map_err(|e| e.to_string())?;
+            Ok(response.bytes().await.map_err(|e| e.to_string())?.to_vec())
+        })
+    }))
 }
 
 /// One agent's side of the web, answered from the world in the Thing Description's words.
 pub struct Http {
     beliefs: Store,
     pub me: String,
-    pub inbox: Inbox,
     pub client: Client,
-    pub spawn: Spawn,
     fetching: Arc<Mutex<BTreeSet<String>>>,
 }
 
@@ -96,16 +106,12 @@ fn strs(names: &[String]) -> Vec<&str> {
 }
 
 impl Http {
-    /// The member over `client`, each fetch on a thread of its own.
+    /// The member over `client`.
     pub fn new(beliefs: &Store, me: &str, client: Client) -> Self {
         Http {
             beliefs: beliefs.clone(),
             me: me.to_string(),
-            inbox: Inbox::default(),
             client,
-            spawn: Box::new(|work| {
-                std::thread::spawn(work);
-            }),
             fetching: Arc::default(),
         }
     }
@@ -113,31 +119,6 @@ impl Http {
     /// The store the member reads the world off.
     pub fn beliefs(&self) -> &Store {
         &self.beliefs
-    }
-
-    /// The sensors of the agent's this member reads.
-    pub fn open(&self) -> Result<Vec<String>, Error> {
-        const FORM_Q: &str = "PREFIX td: <https://www.w3.org/2019/wot/td#> ASK { $sensor td:hasForm ?form }";
-        let stated = common(&self.beliefs)?;
-        let mut out = Vec::new();
-        for sensor in observed(&self.beliefs)? {
-            if self.beliefs.ask(
-                &bind(FORM_Q, &[("sensor", Value::iri(sensor.as_str()))])?,
-                &strs(&stated),
-            )? {
-                out.push(sensor);
-            }
-        }
-        log::info!(
-            "{} reads {} over HTTP",
-            local_of(&self.me),
-            if out.is_empty() {
-                "nothing".to_string()
-            } else {
-                out.iter().map(|s| local_of(s)).collect::<Vec<_>>().join(", ")
-            }
-        );
-        Ok(out)
     }
 
     /// Whether this member reaches `device`.
@@ -152,8 +133,8 @@ impl Http {
         )
     }
 
-    /// Fetch what `sensor` reads, on a thread of its own, unless it is being fetched already.
-    pub fn sense_now(&self, sensor: &str) -> Result<(), Error> {
+    /// Fetch what `sensor` reads, as a task of its own, its body left in `reply` — unless it is being fetched already.
+    pub fn fetch(&self, sensor: &str, reply: Inbox) -> Result<(), Error> {
         const TARGET_Q: &str = "PREFIX hctl: <https://www.w3.org/2019/wot/hypermedia#>
             PREFIX td: <https://www.w3.org/2019/wot/td#>
             SELECT ?target WHERE { $sensor td:hasForm ?form . ?form hctl:hasTarget ?target } ORDER BY ?target";
@@ -186,15 +167,10 @@ impl Http {
             return Ok(());
         };
         self.fetching.lock().unwrap().insert(sensor.to_string());
-        let (client, inbox, fetching, sensor) = (
-            self.client.clone(),
-            self.inbox.clone(),
-            self.fetching.clone(),
-            sensor.to_string(),
-        );
-        (self.spawn)(Box::new(move || {
-            match client(&url) {
-                Ok(body) => inbox.deliver(&sensor, &body, None),
+        let (fetched, fetching, sensor) = ((self.client)(url.clone()), self.fetching.clone(), sensor.to_string());
+        tokio::spawn(async move {
+            match fetched.await {
+                Ok(body) => reply.deliver(&sensor, &body, None),
                 Err(e) => log::warn!(
                     "{}: {} would not answer: {e}",
                     local_of(&sensor),
@@ -202,28 +178,42 @@ impl Http {
                 ),
             }
             fetching.lock().unwrap().remove(&sensor);
-        }));
+        });
         Ok(())
     }
+}
 
-    /// What `channel`, a sensor of this member's, read: handed to sensing's `received`, each graph written answered
-    /// with the sensor.
-    pub fn handle(&self, channel: &str, payload: &[u8], at: DateTime) -> Result<Vec<(String, String)>, Error> {
-        Ok(received(&self.beliefs, &self.me, channel, payload, at)?
-            .into_iter()
-            .map(|graph| (channel.to_string(), graph))
-            .collect())
+impl Member for Http {
+    /// A thing with a form is a channel this member is asked on.
+    fn reaches(&self, channel: &str) -> Result<Option<Exchange>, Error> {
+        Ok(Http::reaches(self, channel)?.then_some(Exchange::Requested))
+    }
+
+    /// The web is asked, never listened to.
+    fn listen(&self, channel: &str, _inbox: Inbox) -> Result<(), Error> {
+        Err(Error::Evaluation(format!(
+            "{channel} is read over HTTP by asking, and nothing listens to it"
+        )))
+    }
+
+    /// A request: what the thing reads, fetched once; the payload is nothing a fetch sends.
+    fn send(&self, channel: &str, _payload: &[u8], reply: Option<Inbox>) -> Result<(), Error> {
+        match reply {
+            Some(reply) => self.fetch(channel, reply),
+            None => Ok(()),
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    //! The driver over a balcony and its weather service, held to `agent/transport/http/tests/test_driver.py`.
+    //! The driver over a balcony and its weather service, held to `agent/transport/http/tests/test_driver.py`: what it
+    //! reaches, and what one request fetches.
 
     use std::path::Path;
 
     use super::*;
-    use orexis::snapshots::{now, stand_in};
+    use orexis::snapshots::stand_in;
 
     const TEST: &str = "http://example.org/test#";
     const BODY: &[u8] =
@@ -236,62 +226,85 @@ mod tests {
     fn member(store: &Store) -> (Http, Arc<Mutex<Vec<String>>>) {
         let asked: Arc<Mutex<Vec<String>>> = Arc::default();
         let kept = asked.clone();
-        let mut member = Http::new(
+        let member = Http::new(
             store,
             &format!("{TEST}keeper"),
-            Arc::new(move |url| {
+            answering(move |url| {
                 kept.lock().unwrap().push(url.to_string());
                 Ok(BODY.to_vec())
             }),
         );
-        member.spawn = Box::new(|work| work());
         (member, asked)
     }
 
-    #[test]
-    fn the_members_sensors_are_the_agents_things_with_a_form() {
-        let store = balcony();
-        let (member, _) = member(&store);
-        assert_eq!(member.open().unwrap(), [format!("{TEST}weather")]);
-        assert!(member.reaches(&format!("{TEST}weather")).unwrap());
-        assert!(!member.reaches(&format!("{TEST}probe")).unwrap());
+    /// Every task spawned so far run as far as it goes.
+    async fn settled() {
+        for _ in 0..8 {
+            tokio::task::yield_now().await;
+        }
     }
 
     #[test]
-    fn a_nudge_fetches_the_target_filled_from_the_place_and_the_body_becomes_forecast() {
+    fn a_thing_with_a_form_is_a_channel_the_member_is_asked_on() {
+        let store = balcony();
+        let (member, _) = member(&store);
+        assert_eq!(
+            Member::reaches(&member, &format!("{TEST}weather")).unwrap(),
+            Some(Exchange::Requested)
+        );
+        assert_eq!(Member::reaches(&member, &format!("{TEST}probe")).unwrap(), None);
+        assert!(member.listen(&format!("{TEST}weather"), Inbox::default()).is_err());
+    }
+
+    #[tokio::test]
+    async fn a_request_fetches_the_target_filled_from_the_place_and_leaves_the_body_where_it_was_asked() {
         let store = balcony();
         let (member, asked) = member(&store);
-        member.sense_now(&format!("{TEST}weather")).unwrap();
+        let reply = Inbox::default();
+        member
+            .send(&format!("{TEST}weather"), b"", Some(reply.clone()))
+            .unwrap();
+        settled().await;
         assert_eq!(
             *asked.lock().unwrap(),
             ["https://forecast.example/v1?latitude=52.52&longitude=13.4&hourly=precipitation"]
         );
-        let queued = member.inbox.take();
-        assert_eq!(queued.len(), 1);
-        let written = member.handle(&queued[0].topic, &queued[0].payload, now()).unwrap();
-        assert_eq!(written.len(), 2, "one graph per hour still ahead: {written:?}");
+        let answered = reply.take();
+        assert_eq!(answered.len(), 1);
+        assert_eq!(answered[0].topic, format!("{TEST}weather"));
+        assert_eq!(answered[0].payload, BODY);
     }
 
-    #[test]
-    fn a_sensor_being_fetched_is_not_fetched_again_until_it_answers() {
+    #[tokio::test]
+    async fn a_sensor_being_fetched_is_not_fetched_again_until_it_answers() {
         let store = balcony();
-        let (mut member, asked) = member(&store);
-        type Held = Arc<Mutex<Vec<Box<dyn FnOnce() + Send>>>>;
-        let held: Held = Arc::default();
-        let into = held.clone();
-        member.spawn = Box::new(move |work| into.lock().unwrap().push(work));
-        member.sense_now(&format!("{TEST}weather")).unwrap();
-        member.sense_now(&format!("{TEST}weather")).unwrap();
-        assert_eq!(held.lock().unwrap().len(), 1);
-        let first = held.lock().unwrap().pop().unwrap();
-        first();
-        member.spawn = Box::new(|work| work());
-        member.sense_now(&format!("{TEST}weather")).unwrap();
-        assert_eq!(asked.lock().unwrap().len(), 2);
+        let asked: Arc<Mutex<usize>> = Arc::default();
+        let open = Arc::new(tokio::sync::Notify::new());
+        let (counted, waited) = (asked.clone(), open.clone());
+        let mut member = Http::new(&store, &format!("{TEST}keeper"), answering(|_| Ok(Vec::new())));
+        member.client = Arc::new(move |_url: String| {
+            *counted.lock().unwrap() += 1;
+            let waited = waited.clone();
+            Box::pin(async move {
+                waited.notified().await;
+                Ok(BODY.to_vec())
+            })
+        });
+        let reply = Inbox::default();
+        let weather = format!("{TEST}weather");
+        member.send(&weather, b"", Some(reply.clone())).unwrap();
+        member.send(&weather, b"", Some(reply.clone())).unwrap();
+        settled().await;
+        assert_eq!(*asked.lock().unwrap(), 1);
+        open.notify_waiters();
+        settled().await;
+        assert_eq!(reply.take().len(), 1);
+        member.send(&weather, b"", Some(reply.clone())).unwrap();
+        assert_eq!(*asked.lock().unwrap(), 2);
     }
 
-    #[test]
-    fn with_no_location_nothing_is_fetched() {
+    #[tokio::test]
+    async fn with_no_location_nothing_is_fetched() {
         let store = balcony();
         store
             .update(
@@ -301,17 +314,24 @@ mod tests {
             )
             .unwrap();
         let (member, asked) = member(&store);
-        member.sense_now(&format!("{TEST}weather")).unwrap();
+        member
+            .send(&format!("{TEST}weather"), b"", Some(Inbox::default()))
+            .unwrap();
+        settled().await;
         assert!(asked.lock().unwrap().is_empty());
     }
 
-    #[test]
-    fn a_service_that_does_not_answer_delivers_nothing() {
+    #[tokio::test]
+    async fn a_service_that_does_not_answer_leaves_nothing() {
         let store = balcony();
         let (mut member, _) = member(&store);
-        member.client = Arc::new(|_| Err("connection refused".into()));
-        member.sense_now(&format!("{TEST}weather")).unwrap();
-        assert!(member.inbox.take().is_empty());
+        member.client = answering(|_| Err("connection refused".into()));
+        let reply = Inbox::default();
+        member
+            .send(&format!("{TEST}weather"), b"", Some(reply.clone()))
+            .unwrap();
+        settled().await;
+        assert!(reply.take().is_empty());
     }
 
     #[test]
