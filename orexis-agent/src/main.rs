@@ -65,10 +65,21 @@ fn logger_of(target: &str) -> String {
     }
 }
 
+/// Whether a record of `target` at `level` is said at all, by what every package linked in hushes
+/// (`orexis::task::Hush`).
+fn said(target: &str, level: log::Level) -> bool {
+    inventory::iter::<orexis::task::Hush>().all(|h| !target.starts_with(h.target) || level <= h.said_from)
+}
+
+/// Whether a record of `target` is kept in the journal, by what every package linked in hushes.
+fn journaled(target: &str) -> bool {
+    inventory::iter::<orexis::task::Hush>().all(|h| !target.starts_with(h.target) || h.journaled)
+}
+
 impl log::Log for Logger {
     fn enabled(&self, metadata: &log::Metadata<'_>) -> bool {
         //  WHAT A PACKAGE HUSHES is said from where it says, whatever the agent's level (`orexis::task::Hush`).
-        metadata.level() <= self.level && orexis::task::said(metadata.target(), metadata.level())
+        metadata.level() <= self.level && said(metadata.target(), metadata.level())
     }
 
     fn log(&self, record: &log::Record<'_>) {
@@ -82,7 +93,7 @@ impl log::Log for Logger {
             level_name(record.level())
         );
         //  KEPT FROM INFO ON, but what a package keeps out of the journal.
-        if record.level() <= log::Level::Info && orexis::task::journaled(record.target()) {
+        if record.level() <= log::Level::Info && journaled(record.target()) {
             let logger = logger_of(record.target());
             match self.remark.get() {
                 Some(remark) => remark(&logger, record.level(), &message),
@@ -278,5 +289,27 @@ fn main() {
             log::error!("{}: {e}", args.agent);
             std::process::exit(3);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    //  A TEST'S HUSH: said from WARN on, and never journaled.
+    inventory::submit! { orexis::task::Hush { target: "test_hushed", said_from: log::Level::Warn, journaled: false } }
+
+    #[test]
+    fn what_a_package_hushes_is_said_from_its_level_and_kept_only_where_it_says() {
+        assert!(said("test_hushed::client", log::Level::Warn));
+        assert!(
+            !said("test_hushed::client", log::Level::Debug),
+            "quieter than its level, it says nothing"
+        );
+        assert!(
+            said("test_heard", log::Level::Debug),
+            "a target nobody hushes says everything"
+        );
+        assert!(!journaled("test_hushed::client") && journaled("test_heard"));
     }
 }
