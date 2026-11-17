@@ -26,7 +26,7 @@ use orexis::store::{Row, Store, Within, iri, value};
 
 use crate::ontology::{COMMITTED_STEP_GRAPH, CONSTRAINT_GRAPH, COORDINATION};
 
-pub(crate) const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+pub(crate) use orexis::rdf::RDF_TYPE;
 const XSD_DATETIME: &str = "http://www.w3.org/2001/XMLSchema#dateTime";
 const XSD_BOOLEAN: &str = "http://www.w3.org/2001/XMLSchema#boolean";
 const TEMPORAL: &str = "http://purl.org/dc/terms/temporal";

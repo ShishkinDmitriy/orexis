@@ -33,7 +33,7 @@ use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::clock::{isoformat, seconds};
-use orexis::events::{RDF_TYPE, instant, mint, node, text, typed};
+use orexis::rdf::{RDF_TYPE, instant, mint, node, text, typed};
 
 pub const OREXIS: &str = "http://example.org/orexis#";
 pub const EVENT: &str = "http://example.org/orexis#Event";

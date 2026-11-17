@@ -13,7 +13,7 @@ use serde_json::Value as Json;
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::ontology::{ACTION, BELIEF, RECORD, local_of};
-use orexis::store::{Store, Within, instant, iri, value};
+use orexis::store::{Store, Within, iri, value};
 
 use crate::Said;
 use crate::implementation::operations;
@@ -34,7 +34,7 @@ pub fn tokens(store: &Store, said: &Said, action: &str, now: DateTime) -> Result
         "PREFIX orexis: <http://example.org/orexis#> SELECT ?takes WHERE { $action orexis:takes ?takes }";
     let actions = store.graphs_of(&[ACTION], &Within::default())?;
     let actions: Vec<&str> = actions.iter().map(String::as_str).collect();
-    let mut out = vec![("now".to_string(), instant(now))];
+    let mut out = vec![("now".to_string(), Value::instant(now))];
     for row in store.rows(&bind(TAKES_Q, &[("action", Value::iri(action))])?, &actions)? {
         let Some(takes) = iri(&row, "takes") else { continue };
         let local = local_of(&takes);

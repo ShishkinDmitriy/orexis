@@ -74,7 +74,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         let reader = window.sink.reader();
         handed
             .provided
-            .alter(|reads: &mut orexis::task::Reads| reads.metrics = Some(reader));
+            .alter(|reads: &mut orexis::series::Reads| reads.metrics = Some(reader));
         meter.tally(window, handed.events.watch());
         if !handed.booted().await? {
             return Ok(());

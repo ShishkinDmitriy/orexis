@@ -27,10 +27,11 @@ use oxsdatatypes::{DateTime, DayTimeDuration};
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
-use orexis::events::{Laps, Watch, round6};
+use orexis::events::{Laps, Watch};
 use orexis::foresight::{Foresees, Foresight};
 use orexis::ontology::{ACTION, BELIEF, ONTOLOGY, RECORD, SELF_GRAPH};
-use orexis::store::{Store, Within, instant, iri, value};
+use orexis::rdf::round6;
+use orexis::store::{Store, Within, iri, value};
 
 use crate::admit::local_of;
 use crate::derive_wants::derive_wants;
@@ -967,7 +968,7 @@ impl Planner {
                 .rows(
                     &bind(
                         MET_NOW_Q,
-                        &[("ground", Value::iri(present.as_str())), ("now", instant(at))],
+                        &[("ground", Value::iri(present.as_str())), ("now", Value::instant(at))],
                     )?,
                     &[],
                 )?
@@ -1255,7 +1256,10 @@ impl Planner {
           FILTER NOT EXISTS { GRAPH ?h { ?step execution:keptBy ?w } } }
         ORDER BY ?step"#;
         let mut minted = Vec::new();
-        for r in self.beliefs.rows(&bind(KEPT_DUE_Q, &[("now", instant(at))])?, &[])? {
+        for r in self
+            .beliefs
+            .rows(&bind(KEPT_DUE_Q, &[("now", Value::instant(at))])?, &[])?
+        {
             let Some(step) = iri(&r, "step") else { continue };
             if let Some(want) = refine(&self.beliefs, &self.uri, &step, at)? {
                 minted.extend(
@@ -1290,7 +1294,7 @@ impl Planner {
         let mut next: Option<DateTime> = None;
         for store in self.imaginaria.values() {
             let Some(cat) = store.catalogue()? else { continue };
-            let text = bind(NEXT_GROUND_Q, &[("cat", Value::iri(cat)), ("at", instant(at))])?;
+            let text = bind(NEXT_GROUND_Q, &[("cat", Value::iri(cat)), ("at", Value::instant(at))])?;
             for row in store.rows(&text, &[])? {
                 if let Some(start) = value(&row, "start").and_then(|s| s.parse::<DateTime>().ok())
                     && next.is_none_or(|n| start < n)

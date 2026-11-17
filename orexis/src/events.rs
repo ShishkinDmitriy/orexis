@@ -15,20 +15,14 @@
 //! never the agent's (`Laps`).
 
 use std::any::Any;
-use std::collections::BTreeMap;
-use std::collections::hash_map::RandomState;
-use std::hash::{BuildHasher, Hasher};
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
-use oxigraph::model::vocab::xsd;
-use oxigraph::model::{Literal, NamedNode, NamedOrBlankNode, Term, Triple};
+use oxigraph::model::{NamedNode, Term, Triple};
 use oxsdatatypes::DateTime;
 
-use crate::clock::isoformat;
-
-pub const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+use crate::rdf::{mint, round6};
 
 /// A figure that is the state now, in the type it was said in: a count an integer, a measure a float.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -288,7 +282,7 @@ impl std::fmt::Debug for Watch {
 /// and never the agent's, which may run fast or tick per read.
 #[derive(Clone, Debug)]
 pub struct Laps {
-    pub spent: Vec<(String, f64)>,
+    pub spent: Vec<(&'static str, f64)>,
     mark: Instant,
 }
 
@@ -314,7 +308,7 @@ impl Laps {
     pub fn lap(&mut self, part: &str) {
         let now = Instant::now();
         let took = now.duration_since(self.mark).as_secs_f64();
-        let name = format!("{part}_s");
+        let name = seconds_of(part);
         match self.spent.iter_mut().find(|(n, _)| *n == name) {
             Some((_, s)) => *s = round6(*s + took),
             None => self.spent.push((name, round6(took))),
@@ -329,80 +323,17 @@ impl Laps {
     }
 }
 
-/// A figure rounded to six places, as every derived number here is written.
-pub fn round6(x: f64) -> f64 {
-    (x * 1e6).round() / 1e6
-}
-
-/// A name for a journal entry: a UUID's URN, unique across every agent's journal.
-pub fn mint() -> NamedNode {
-    static COUNT: AtomicU64 = AtomicU64::new(0);
-    let state = RandomState::new();
-    let mut high = state.build_hasher();
-    high.write_u64(COUNT.fetch_add(1, Ordering::Relaxed));
-    let mut low = RandomState::new().build_hasher();
-    low.write_u128(Instant::now().elapsed().as_nanos() ^ u128::from(high.finish()));
-    let (a, b) = (high.finish(), low.finish());
-    //  A VERSION-4 UUID's shape: the version nibble 4 and the variant bits 10.
-    let a = (a & 0xffff_ffff_ffff_0fff) | 0x0000_0000_0000_4000;
-    let b = (b & 0x3fff_ffff_ffff_ffff) | 0x8000_0000_0000_0000;
-    NamedNode::new_unchecked(format!(
-        "urn:uuid:{:08x}-{:04x}-{:04x}-{:04x}-{:012x}",
-        a >> 32,
-        (a >> 16) & 0xffff,
-        a & 0xffff,
-        b >> 48,
-        b & 0xffff_ffff_ffff
-    ))
-}
-
-/// An IRI as a node.
-pub fn node(iri: &str) -> NamedNode {
-    NamedNode::new_unchecked(iri)
-}
-
-/// A triple of `subject`, `predicate` and `object`.
-pub fn triple(subject: impl Into<NamedOrBlankNode>, predicate: &str, object: impl Into<Term>) -> Triple {
-    Triple::new(subject, node(predicate), object)
-}
-
-/// `subject` a `class`.
-pub fn typed(subject: impl Into<NamedOrBlankNode>, class: &str) -> Triple {
-    triple(subject, RDF_TYPE, node(class))
-}
-
-/// An instant as the journal writes it: an `xsd:dateTime`, with its zone, spelled as the Python kernel spells it.
-pub fn instant(at: DateTime) -> Literal {
-    Literal::new_typed_literal(isoformat(at), xsd::DATE_TIME)
-}
-
-/// A truth as the literal it is.
-pub fn boolean(value: bool) -> Literal {
-    Literal::new_typed_literal(if value { "true" } else { "false" }, xsd::BOOLEAN)
-}
-
-/// An integer as the literal it is.
-pub fn integer(value: i64) -> Literal {
-    Literal::new_typed_literal(value.to_string(), xsd::INTEGER)
-}
-
-/// A text as the literal it is.
-pub fn text(value: &str) -> Literal {
-    Literal::new_simple_literal(value)
-}
-
-/// A float spelled as Python's `repr` spells it: `3.0` and not `3`, `0.1` and not `0.1000…`.
-pub fn repr(value: f64) -> String {
-    if value.is_finite() && value == value.trunc() && value.abs() < 1e16 {
-        format!("{value:.1}")
-    } else {
-        format!("{value}")
+/// `<part>_s`, as a mark's name: a part is one of the few a package marks, so each name is made once and kept.
+fn seconds_of(part: &str) -> &'static str {
+    static NAMES: Mutex<BTreeSet<&'static str>> = Mutex::new(BTreeSet::new());
+    let name = format!("{part}_s");
+    let mut names = NAMES.lock().expect("mark names nobody poisoned");
+    if let Some(kept) = names.get(name.as_str()) {
+        return kept;
     }
-}
-
-/// A double as the literal it is.
-pub fn double(value: f64) -> Literal {
-    Literal::new_typed_literal(repr(value), xsd::DOUBLE)
+    let kept: &'static str = Box::leak(name.into_boxed_str());
+    names.insert(kept);
+    kept
 }
 
 /// A downcast of `event` to the type it is, for a test reading what was said.
@@ -446,30 +377,13 @@ mod tests {
     }
 
     #[test]
-    fn an_entry_is_named_by_a_uuid_urn_and_never_twice() {
-        let (a, b) = (mint(), mint());
-        assert_ne!(a, b);
-        let re = regex::Regex::new("^urn:uuid:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
-            .unwrap();
-        assert!(re.is_match(a.as_str()), "{a}");
-    }
-
-    #[test]
-    fn a_literal_is_spelled_as_the_python_journal_spells_it() {
-        assert_eq!(double(3.0).value(), "3.0");
-        assert_eq!(double(0.25).value(), "0.25");
-        assert_eq!(integer(7).value(), "7");
-        assert_eq!(boolean(false).value(), "false");
-    }
-
-    #[test]
     fn a_lap_is_from_the_last_mark_and_adds_to_its_part() {
         let mut laps = Laps::default();
         laps.lap("drain");
         laps.lap("plan");
         laps.lap("drain");
         assert_eq!(
-            laps.spent.iter().map(|(n, _)| n.as_str()).collect::<Vec<_>>(),
+            laps.spent.iter().map(|(n, _)| *n).collect::<Vec<_>>(),
             ["drain_s", "plan_s"]
         );
         assert!(laps.of("drain").is_some() && laps.of("execute").is_none());

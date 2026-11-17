@@ -9,7 +9,9 @@
 use oxigraph::model::{Literal, NamedNode, Term, Triple};
 use oxsdatatypes::DateTime;
 
-use orexis::events::{Event, Mark, Number, node, triple, typed};
+use orexis::events::{Event, Mark, Number};
+
+use orexis::rdf::{node, triple, typed};
 
 pub const PLANNING: &str = "http://example.org/orexis/planning#";
 
@@ -230,7 +232,7 @@ impl Event for SearchEnded {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Planned {
     pub wants: Option<f64>,
-    pub laps: Vec<(String, f64)>,
+    pub laps: Vec<(&'static str, f64)>,
 }
 
 impl Event for Planned {
@@ -239,7 +241,7 @@ impl Event for Planned {
     }
 
     fn marks(&self) -> Vec<(&'static str, Mark)> {
-        let lap = |part: &str| self.laps.iter().find(|(n, _)| n == part).map(|(_, s)| *s);
+        let lap = |part: &str| self.laps.iter().find(|(n, _)| *n == part).map(|(_, s)| *s);
         vec![
             ("wants", Mark::Value(self.wants)),
             ("ground_s", Mark::Value(lap("ground_s"))),

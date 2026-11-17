@@ -9,8 +9,9 @@ use serde_json::Value as Json;
 use orexis::Error;
 use orexis::clock::Clock;
 use orexis::document::Document;
-use orexis::events::{Watch, mint};
+use orexis::events::Watch;
 use orexis::ontology::RECORDED;
+use orexis::rdf::mint;
 use orexis::store::Store;
 
 use crate::command::command;
@@ -20,7 +21,7 @@ use crate::implementation::operations;
 use crate::ontology::{ACTUATOR, COMMAND, COMMAND_GRAPH, PAYLOAD, SAYING};
 use crate::says::says;
 
-const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+use orexis::rdf::RDF_TYPE;
 
 /// The taker of an agent that carries out its steps, as Python's `_take` takes a step: the action's implementation,
 /// order by order, each command sized from the present at the clock's instant, kept and said `execution:Commanded` where

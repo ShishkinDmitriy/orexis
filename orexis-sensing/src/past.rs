@@ -11,7 +11,8 @@
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::instant;
-use orexis::events::{Point, round6};
+use orexis::events::Point;
+use orexis::rdf::round6;
 use orexis::store::{Store, Within, iri, value};
 
 use crate::events::{Observed, tag_of};

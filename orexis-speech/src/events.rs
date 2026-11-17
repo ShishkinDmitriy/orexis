@@ -9,7 +9,9 @@
 use oxigraph::model::{NamedNode, Term, Triple};
 use oxsdatatypes::DateTime;
 
-use orexis::events::{Event, node, triple, typed};
+use orexis::events::Event;
+
+use orexis::rdf::{node, triple, typed};
 
 use crate::ontology::{SAID, STATEMENT, TO};
 

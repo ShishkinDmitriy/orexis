@@ -364,7 +364,7 @@ fn foreseen(store: &Store, now: DateTime) -> Result<Vec<(DateTime, String, Strin
                    ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source .
                    ?source dcterms:temporal/orexis:start ?start . FILTER(?start > $now) } }
     ORDER BY ?start ?piece";
-    let text = bind(PIECES_AHEAD_Q, &[("now", orexis::store::instant(now))])?;
+    let text = bind(PIECES_AHEAD_Q, &[("now", Value::instant(now))])?;
     let mut out = Vec::new();
     for row in store.rows(&text, &[])? {
         if let (Some(piece), Some(source), Some(start)) =
@@ -393,7 +393,7 @@ fn ending(store: &Store, now: DateTime) -> Result<Vec<(DateTime, String)>, Error
                    ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source .
                    ?source a orexis:ForecastGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end > $now) } }
     ORDER BY ?end ?piece";
-    let text = bind(PIECES_ENDING_Q, &[("now", orexis::store::instant(now))])?;
+    let text = bind(PIECES_ENDING_Q, &[("now", Value::instant(now))])?;
     let mut out = Vec::new();
     for row in store.rows(&text, &[])? {
         if let (Some(piece), Some(end)) = (iri(&row, "piece"), lexical(&row, "end")) {
@@ -638,7 +638,7 @@ fn predicted(store: &Store, now: DateTime, gate: Option<&BTreeSet<String>>) -> R
       GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                    ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start . FILTER(?start > $now) } }
     ORDER BY ?g";
-    let text = bind(BELIEFS_AHEAD_Q, &[("now", orexis::store::instant(now))])?;
+    let text = bind(BELIEFS_AHEAD_Q, &[("now", Value::instant(now))])?;
     let ahead: Vec<String> = store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "g")).collect();
     let mut read: Vec<Vec<String>> = Vec::new();
     for g in &ahead {
@@ -775,7 +775,7 @@ fn fork(store: &Store, parent: &str, name: &str, added: &[Triple]) -> Result<(St
             &[("state", Value::raw(format!("<{name}>"))), ("keys", Value::raw(keys))],
         )?]
     };
-    store.fork(parent, name, added, &supersede)?;
+    crate::fork::fork(store, parent, name, added, &supersede)?;
     let cat = store.catalogue()?.unwrap_or_default();
     store.add([Quad::new(
         named(name)?,

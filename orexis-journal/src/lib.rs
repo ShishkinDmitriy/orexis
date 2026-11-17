@@ -60,7 +60,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
             //  WHAT A CHAT READS OF WHAT HAPPENED is this journal, until what archives it says otherwise.
             handed
                 .provided
-                .share::<orexis::task::Reads>()
+                .share::<orexis::series::Reads>()
                 .journal
                 .lies_in(journal.store.clone());
             //  AND HANDED ON to its housekeepers, which wait for this start and make themselves.

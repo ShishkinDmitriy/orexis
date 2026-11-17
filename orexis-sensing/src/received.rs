@@ -16,8 +16,9 @@ use oxsdatatypes::DateTime;
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::{isoformat, microseconds};
-use orexis::hash::{hash_named_graph, py_float_repr, py_round};
+use orexis::hash::hash_named_graph;
 use orexis::ontology::{BELIEF, FORECAST, RECEIVED, local_of};
+use orexis::rdf::{repr, round6};
 use orexis::store::{Store, Within, iri, value};
 
 use crate::cadence::{cadence_of, limit_of};
@@ -179,7 +180,7 @@ pub fn received_by(
         "{}: {} reads {}{earlier}",
         local_of(me),
         local_of(sensor),
-        py_float_repr(readings[readings.len() - 1].0)
+        repr(readings[readings.len() - 1].0)
     );
     //  AS DEEP AS SENSING'S RULES READ: the sensor's last `stuckAfter` percepts, and never fewer than the latest.
     let depth = limit_of(store, sensor, STUCK_AFTER_TERM)?.max(1) as usize;
@@ -246,10 +247,7 @@ fn write(store: &Store, p: &Percept<'_>) -> Result<(), Error> {
     let node = p.node;
     let mut said = vec![
         format!("<{node}> a sosa:Observation"),
-        format!(
-            "<{node}> sensing:rawResult \"{}\"^^xsd:decimal",
-            py_float_repr(py_round(p.number))
-        ),
+        format!("<{node}> sensing:rawResult \"{}\"^^xsd:decimal", repr(round6(p.number))),
         format!("<{node}> sosa:resultTime {}", literal(p.at)),
         format!("<{node}> sosa:madeBySensor <{}>", p.sensor),
         format!("<{node}> prov:wasGeneratedBy <{}>", p.me),
@@ -277,7 +275,7 @@ fn write(store: &Store, p: &Percept<'_>) -> Result<(), Error> {
 
 /// A forecast's number as the Python writer spells it: six places, trailing noughts cut, a whole number keeping one.
 fn forecast_number(value: f64) -> String {
-    let fixed = format!("{:.6}", py_round(value) + 0.0);
+    let fixed = format!("{:.6}", round6(value) + 0.0);
     let cut = fixed.trim_end_matches('0');
     if cut.ends_with('.') {
         format!("{cut}0")
@@ -575,9 +573,7 @@ pub(crate) mod tests {
     fn each_reading_names_the_one_before_it_and_only_the_last_stuck_after_are_kept() {
         let stuck_after = default_of(STUCK_AFTER_TERM).unwrap() as usize;
         let store = world("a_pot_and_its_probe.trig");
-        let numbers: Vec<f64> = (0..stuck_after + 2)
-            .map(|n| py_round(0.20 + n as f64 / 100.0))
-            .collect();
+        let numbers: Vec<f64> = (0..stuck_after + 2).map(|n| round6(0.20 + n as f64 / 100.0)).collect();
         every_cadence(&store, &numbers, now());
         let chain = chain(&store);
         let kept: Vec<f64> = chain.iter().map(|(_, n, _)| *n).collect();

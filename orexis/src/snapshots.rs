@@ -173,7 +173,7 @@ static BLOCK: LazyLock<Regex> = LazyLock::new(|| {
 static BARE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(?:[-+]?\d+(?:\.\d+)?|true|false)$").unwrap());
 static LOCAL: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[\w.\-]*$").unwrap());
 
-const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+use crate::rdf::RDF_TYPE;
 const RDF_FIRST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#first";
 const RDF_REST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest";
 const RDF_NIL: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil";

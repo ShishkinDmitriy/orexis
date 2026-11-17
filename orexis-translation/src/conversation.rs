@@ -9,7 +9,7 @@ use oxsdatatypes::DateTime;
 use serde_json::{Value as Json, json};
 
 use orexis::clock::isoformat;
-use orexis::events::round6;
+use orexis::rdf::round6;
 use orexis::store::Store;
 
 use crate::events::{Conversed, Translated};

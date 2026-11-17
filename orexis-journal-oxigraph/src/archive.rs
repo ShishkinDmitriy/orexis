@@ -124,7 +124,7 @@ pub struct Archives {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use orexis::events::{mint, node, text, typed};
+    use orexis::rdf::{mint, node, text, typed};
     use oxigraph::model::Triple;
     use oxsdatatypes::DateTime;
 

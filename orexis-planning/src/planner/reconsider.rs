@@ -10,7 +10,7 @@ use oxsdatatypes::DateTime;
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::ontology::BELIEF;
-use orexis::store::{Store, Within, instant, iri};
+use orexis::store::{Store, Within, iri};
 
 use super::{
     Flight, Flights, Planner, Reconsidered, Said, broken, graphs, later, predicted, quads_of, said, strs, zero,
@@ -219,7 +219,7 @@ impl Planner {
                     };
                     let next = format!("{step}.foreseen");
                     foreseen.push(next.clone());
-                    store.copy_graph(&base, &next)?;
+                    crate::fork::fork(store, &base, &next, &[], &[])?;
                     let target = GraphName::NamedNode(NamedNode::new_unchecked(next.clone()));
                     for (retracts, adds) in &applying {
                         let at_target = |q: &Quad| {
@@ -240,7 +240,7 @@ impl Planner {
                     }
                     store.update(&bind(
                         FORESEEN_U,
-                        &[("world", Value::iri(next.as_str())), ("start", instant(lands))],
+                        &[("world", Value::iri(next.as_str())), ("start", Value::instant(lands))],
                     )?)?;
                     before = Some(ground);
                     world = Some(next.clone());

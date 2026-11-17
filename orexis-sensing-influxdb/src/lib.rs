@@ -81,7 +81,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         let reader = sink.reader();
         handed
             .provided
-            .alter(|reads: &mut orexis::task::Reads| reads.history = Some(reader));
+            .alter(|reads: &mut orexis::series::Reads| reads.history = Some(reader));
         //  WHETHER SENSING OBSERVED ANYTHING SINCE THE LAST TURN: heard, so a quiet stretch asks the beliefs nothing.
         //  The readings a lived volume already holds are due at the first.
         let news = Arc::new(AtomicBool::new(true));

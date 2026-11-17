@@ -13,7 +13,9 @@ use oxigraph::model::vocab::xsd;
 use oxigraph::model::{Literal, NamedNode, Term, Triple};
 use oxsdatatypes::DateTime;
 
-use orexis::events::{Event, Mark, Number, boolean, node, triple, typed};
+use orexis::events::{Event, Mark, Number};
+
+use orexis::rdf::{boolean, node, triple, typed};
 
 use crate::ontology::{COMMANDED, COMMANDS, EXECUTION, SPEECH_STATEMENT, SPEECH_TO, TOLD};
 

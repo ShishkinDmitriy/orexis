@@ -44,7 +44,7 @@ pub(crate) mod tests {
     use super::*;
 
     pub(crate) const T: &str = "http://example.org/test#";
-    const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+    use orexis::rdf::RDF_TYPE;
 
     pub(crate) fn me() -> String {
         format!("{T}me")

@@ -6,7 +6,9 @@ use std::time::Instant;
 
 use oxsdatatypes::DateTime;
 
-use orexis::events::{Event, Field, Mark, Number, Point, counted, round6};
+use orexis::events::{Event, Field, Mark, Number, Point, counted};
+
+use orexis::rdf::round6;
 use orexis::series::Sink;
 
 #[derive(Default)]

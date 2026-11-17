@@ -17,7 +17,7 @@ use crate::Error;
 use crate::ontology::{ASSERTED, BELIEF, CATALOGUE, OREXIS, SELF, SELF_GRAPH};
 use crate::store::Store;
 
-const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+use crate::rdf::RDF_TYPE;
 const OWL_IMPORTS: &str = "http://www.w3.org/2002/07/owl#imports";
 
 fn arrived_by() -> String {
@@ -260,7 +260,7 @@ impl Document {
         if authored {
             self.one_home(name)?;
         } else {
-            self.no_sovereigns(name)?;
+            self.refuse_the_sovereigns(name)?;
         }
         Ok(self)
     }
@@ -274,15 +274,9 @@ impl Document {
         out.finish().map_err(|e| Error::Document(e.to_string()))
     }
 
-    /// Where nothing in the document says whose a graph is, that anything is the self, or that a graph is a self
-    /// graph — what a document the world did not author is held to: a peer's, and the agent's own saying.
-    pub fn refuse_the_sovereigns(&self, name: &str) -> Result<(), Error> {
-        self.no_sovereigns(name)
-    }
-
     /// Nothing says whose a graph is, that anything is the self, or that a graph is a self graph: what a document
     /// the world did not author is held to.
-    fn no_sovereigns(&self, name: &str) -> Result<(), Error> {
+    pub fn refuse_the_sovereigns(&self, name: &str) -> Result<(), Error> {
         let owner = owned_by();
         if let Some(q) = self.rows().find(|q| q.predicate.as_str() == owner) {
             return Err(refused(format!(

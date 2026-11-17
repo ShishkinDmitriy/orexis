@@ -26,9 +26,9 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::{instant as parse_instant, isoformat, microseconds, seconds_of};
 use orexis::foresight::{Foresight as Integration, GraphsAt, Placed};
-use orexis::hash::py_float_repr;
 use orexis::ontology::{FLOW_GRAPH, local_of};
-use orexis::store::{Store, Within, instant, iri, value};
+use orexis::rdf::repr;
+use orexis::store::{Store, Within, iri, value};
 
 use crate::ontology::{FEATURE, FLOW, MOVES, OBSERVATION_GRAPH, PROPERTY, RATE, RESULT, SOSA, predicted_of};
 use crate::ranges::{ranges_of, side};
@@ -43,7 +43,7 @@ const PLACES: i32 = 6;
 /// are laid in, classified as nothing, rewritten at every instant the flows are asked at.
 pub const NUMBERS: &str = "http://example.org/orexis/graph/ground/foreseen-numbers";
 
-const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+use orexis::rdf::RDF_TYPE;
 
 /// One flow moving a key: its name, and the select answering its rate.
 #[derive(Clone, Debug)]
@@ -289,8 +289,8 @@ impl Foresight {
                 HAPPENINGS_Q,
                 &[
                     ("cat", Value::iri(cat)),
-                    ("from", instant(self.instant(t0))),
-                    ("to", instant(self.instant(t1))),
+                    ("from", Value::instant(self.instant(t0))),
+                    ("to", Value::instant(self.instant(t1))),
                 ],
             )?;
             for row in store.rows(&text, &[])? {
@@ -354,14 +354,14 @@ impl Foresight {
     /// Every contribution the key's flows answer at `t` for the subject holding `value`.
     fn rates(&self, store: &Store, key: &Key, value_now: f64, t: f64, graphs: &[String]) -> Result<Vec<Said>, Error> {
         let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
-        let number = Literal::new_typed_literal(py_float_repr(value_now), xsd::DOUBLE);
+        let number = Literal::new_typed_literal(repr(value_now), xsd::DOUBLE);
         let mut said = Vec::new();
         for flow in &key.flows {
             let answered = bind(
                 &flow.rate,
                 &[
                     ("feature", Value::iri(key.feature.as_str())),
-                    ("at", instant(self.instant(t))),
+                    ("at", Value::instant(self.instant(t))),
                     ("value", Value::Term(number.clone().into())),
                 ],
             )

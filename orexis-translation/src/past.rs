@@ -408,7 +408,7 @@ mod tests {
     use oxigraph::model::NamedNode;
 
     use super::*;
-    use orexis::events::typed;
+    use orexis::rdf::typed;
     use orexis_journal::journal::Journal;
 
     fn prefixes() -> Prefixes {

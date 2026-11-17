@@ -4,7 +4,7 @@
 use oxigraph::model::vocab::rdf;
 use oxigraph::model::{NamedNode, Term};
 
-pub(crate) const RDF_TYPE: &str = rdf::TYPE.as_str();
+pub(crate) use orexis::rdf::RDF_TYPE;
 pub(crate) const RDF_FIRST: &str = rdf::FIRST.as_str();
 pub(crate) const SH: &str = "http://www.w3.org/ns/shacl#";
 pub(crate) const TEMPORAL: &str = "http://purl.org/dc/terms/temporal";

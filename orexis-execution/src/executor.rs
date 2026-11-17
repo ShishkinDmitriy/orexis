@@ -35,7 +35,7 @@ use orexis::clock::{Clock, instant as parse_instant, isoformat, seconds, seconds
 use orexis::events::{Event, Watch};
 use orexis::hash::hash_named_graph;
 use orexis::ontology::{BELIEF, DERIVED, ONTOLOGY, OREXIS, RECORDED, SELF_GRAPH, local_of};
-use orexis::store::{Row, Store, Within, instant, iri, value};
+use orexis::store::{Row, Store, Within, iri, value};
 use orexis::task::{Heard, Turn};
 
 use crate::events::{About, HeadAsked, IntentionAdopted, IntentionResolved, StepAnswered, StepTaken, Walked};
@@ -577,7 +577,7 @@ impl Executor {
         let intention = named(&format!("{OREXIS}intention_{}_{hex}", self.id))?;
         let node = GraphName::NamedNode(named(&self.graph)?);
         let now = self.clock.now();
-        let Value::Term(adopted) = instant(now) else {
+        let Value::Term(adopted) = Value::instant(now) else {
             unreachable!("an instant is a term")
         };
         let subject = NamedOrBlankNode::from(intention.clone());
@@ -711,7 +711,7 @@ impl Executor {
             &[
                 ("cat", Value::iri(cat)),
                 ("g", Value::iri(graph.clone())),
-                ("now", instant(now)),
+                ("now", Value::instant(now)),
             ],
         )?)?;
         self.wrote(graph)
@@ -733,7 +733,7 @@ impl Executor {
                 &[
                     ("cat", Value::iri(cat)),
                     ("kind", Value::iri(COMMITTED_STEP_GRAPH)),
-                    ("now", instant(now)),
+                    ("now", Value::instant(now)),
                     ("owned", Value::raw(owned)),
                 ],
             )?,
@@ -1144,8 +1144,8 @@ impl Executor {
                 ("intentions", self.mine()),
                 ("act", Value::iri(act.clone())),
                 ("step", Value::iri(step)),
-                ("taken_at", instant(taken_at)),
-                ("done_at", instant(done_at)),
+                ("taken_at", Value::instant(taken_at)),
+                ("done_at", Value::instant(done_at)),
                 ("taken", Value::raw(if taken { "true" } else { "false" })),
             ],
         )?)?;

@@ -11,8 +11,9 @@ use oxsdatatypes::DateTime;
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::document::Document;
-use orexis::events::{Event, mint};
+use orexis::events::Event;
 use orexis::ontology::{RECEIVED, RECORDED};
+use orexis::rdf::mint;
 use orexis::store::Store;
 use orexis::task::{Heard, Turn};
 
@@ -208,7 +209,7 @@ impl Event for WritingAnnounced {
     }
 }
 
-const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+use orexis::rdf::RDF_TYPE;
 const AT_TIME: &str = "http://www.w3.org/ns/prov#atTime";
 /// A person's words kept, as the event it is said as, and what it names.
 pub const PROSE_KEPT: &str = "http://example.org/orexis/speech#ProseKept";

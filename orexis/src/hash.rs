@@ -1,16 +1,15 @@
-//! WHAT ONE NAMED GRAPH HOLDS, as a hash — and the hash written onto the graph's own row, as
-//! `agent/hash_named_graph.py` writes it, digit for digit: a case's diff records the digest, so the two kernels
-//! hashing one graph alike is what the case holds them to.
+//! WHAT ONE NAMED GRAPH HOLDS, as a hash — and the hash written onto the graph's own row. A case's diff records
+//! the digest and a volume lived in keeps it on every row, so the spelling below is held fixed digit for digit:
+//! it was the retired Python kernel's, and changing it would make every stored world a surprise once.
 //!
 //! **IT IS THE CONTENT AND NOTHING ELSE**: a blank node is its content, not its label; a number is its value
 //! rounded to six decimals; every other term is its kind and its text. **A WORLD IS HASHED WITHIN WHAT IS READ**:
 //! where a caller names the predicates and classes a world is identified by, only those facts count, a type fact
-//! by its class. The argument for each lives in the Python module's docstring, which this follows.
+//! by its class.
 //!
-//! **THE DIGEST IS PYTHON'S `repr` OF THE CANONICAL FACTS**, sorted, joined by newlines and hashed with SHA-256,
-//! because that is what the Python kernel writes, and a Rust agent and a Python one keeping one world's volume
-//! must agree on where it stands. So each form below is spelled as Python spells the tuple it is: strings quoted
-//! as `repr` quotes them, a float as `repr` writes it, a one-element tuple with its trailing comma.
+//! **THE DIGEST IS THE CANONICAL FORMS OF THE FACTS**, sorted, joined by newlines and hashed with SHA-256. Each form
+//! is spelled as a Python tuple literal, as it always was: a string quoted as `repr` quotes it (`quoted`), a number
+//! by `rdf::repr`, a one-element tuple with its trailing comma.
 
 use std::collections::{BTreeSet, HashMap};
 
@@ -19,12 +18,8 @@ use sha2::{Digest, Sha256};
 
 use crate::Error;
 use crate::ontology::HASH;
+use crate::rdf::{RDF_TYPE, repr, round6};
 use crate::store::Store;
-
-const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-
-/// How far a number is trusted: two worlds whose readings agree to six decimals are one place.
-const ROUND: i32 = 6;
 
 /// SHA-256, named in the value, so a digest says how it was made.
 const ALGORITHM: &str = "sha256";
@@ -134,7 +129,7 @@ pub fn forms(triples: &[Triple]) -> Vec<String> {
         .map(|t| {
             let s = world.term(&t.subject.clone().into());
             let o = world.term(&t.object);
-            format!("({s}, {}, {o})", py_str(t.predicate.as_str()))
+            format!("({s}, {}, {o})", quoted(t.predicate.as_str()))
         })
         .collect()
 }
@@ -175,18 +170,18 @@ impl World {
             .get(node)
             .into_iter()
             .flatten()
-            .map(|(p, o)| format!("({}, {})", py_str(p.as_str()), self.leaf(o, &seen)))
+            .map(|(p, o)| format!("({}, {})", quoted(p.as_str()), self.leaf(o, &seen)))
             .collect();
         let mut into: Vec<String> = self
             .incoming
             .get(node)
             .into_iter()
             .flatten()
-            .map(|(s, p)| format!("({}, {})", self.leaf(s, &seen), py_str(p.as_str())))
+            .map(|(s, p)| format!("({}, {})", self.leaf(s, &seen), quoted(p.as_str())))
             .collect();
         out.sort();
         into.sort();
-        format!("('bnode', {}, {})", py_tuple(&out), py_tuple(&into))
+        format!("('bnode', {}, {})", tuple(&out), tuple(&into))
     }
 
     fn leaf(&self, x: &Term, seen: &BTreeSet<String>) -> String {
@@ -200,9 +195,9 @@ impl World {
 /// A term that is no blank node: an IRI as its kind and text, a literal as `literal` says.
 fn leaf(x: &Term) -> String {
     match x {
-        Term::NamedNode(node) => format!("('iri', {})", py_str(node.as_str())),
+        Term::NamedNode(node) => format!("('iri', {})", quoted(node.as_str())),
         Term::Literal(lit) => literal(lit),
-        Term::BlankNode(node) => format!("('iri', {})", py_str(node.as_str())),
+        Term::BlankNode(node) => format!("('iri', {})", quoted(node.as_str())),
     }
 }
 
@@ -212,22 +207,22 @@ fn literal(lit: &Literal) -> String {
     let datatype = lit.datatype().as_str();
     if let Some(local) = datatype.strip_prefix(XSD)
         && NUMERIC.contains(&local)
-        && let Some(x) = py_float(lit.value())
+        && let Some(x) = float_of(lit.value())
     {
-        return format!("('num', {})", py_float_repr(py_round(x)));
+        return format!("('num', {})", repr(round6(x)));
     }
     let tag = lit.language().unwrap_or(datatype);
-    format!("('lit', {}, {})", py_str(lit.value()), py_str(tag))
+    format!("('lit', {}, {})", quoted(lit.value()), quoted(tag))
 }
 
 fn named(iri: &str) -> Result<NamedNode, Error> {
     NamedNode::new(iri).map_err(|e| Error::Evaluation(e.to_string()))
 }
 
-// --- Python's spelling -----------------------------------------------------------------------------------------
+// --- The forms' spelling --------------------------------------------------------------------------------------
 
 /// A tuple of already-spelled items, as `repr` writes one: `()`, `(a,)`, `(a, b)`.
-fn py_tuple(items: &[String]) -> String {
+fn tuple(items: &[String]) -> String {
     match items {
         [] => "()".to_string(),
         [one] => format!("({one},)"),
@@ -242,8 +237,7 @@ fn py_tuple(items: &[String]) -> String {
 /// Python's printability is its Unicode database's; this asks what Rust can — control, whitespace other than a
 /// space, the format characters and the private and unpaired ranges — and an unassigned code point, which
 /// Python escapes, is printed. No document this project hashes holds one.
-/// A string as Python's `repr` spells it.
-pub fn py_str(text: &str) -> String {
+pub fn quoted(text: &str) -> String {
     let quote = if text.contains('\'') && !text.contains('"') {
         '"'
     } else {
@@ -282,52 +276,8 @@ fn printable(c: char) -> bool {
 }
 
 /// A literal's text as Python's `float()` reads it, where it does.
-fn py_float(text: &str) -> Option<f64> {
+fn float_of(text: &str) -> Option<f64> {
     text.trim().parse::<f64>().ok()
-}
-
-/// `round(x, 6)`: correctly rounded to six decimals, the way Python rounds, and read back. A tie is never met,
-/// since no binary fraction ends in a five at the seventh decimal.
-pub fn py_round(x: f64) -> f64 {
-    if !x.is_finite() {
-        return x;
-    }
-    format!("{x:.prec$}", prec = ROUND as usize).parse().unwrap_or(x)
-}
-
-/// A float as `repr` writes it: the shortest digits that read back, fixed between 1e-4 and 1e16 with a `.0` where
-/// it has no fraction, and an exponent of two digits at least outside.
-pub fn py_float_repr(x: f64) -> String {
-    if x.is_nan() {
-        return "nan".to_string();
-    }
-    if x.is_infinite() {
-        return if x > 0.0 { "inf" } else { "-inf" }.to_string();
-    }
-    let sci = format!("{:e}", x.abs());
-    let (mantissa, exponent) = sci.split_once('e').expect("Rust's exponent form has an e");
-    let digits: String = mantissa.chars().filter(|c| *c != '.').collect();
-    let point: i32 = exponent.parse::<i32>().expect("an exponent") + 1;
-    let sign = if x.is_sign_negative() { "-" } else { "" };
-    let n = digits.len() as i32;
-    let body = if (-4 < point) && (point <= 16) {
-        if point <= 0 {
-            format!("0.{}{digits}", "0".repeat((-point) as usize))
-        } else if point >= n {
-            format!("{digits}{}.0", "0".repeat((point - n) as usize))
-        } else {
-            format!("{}.{}", &digits[..point as usize], &digits[point as usize..])
-        }
-    } else {
-        let mantissa = if n == 1 {
-            digits.clone()
-        } else {
-            format!("{}.{}", &digits[..1], &digits[1..])
-        };
-        let e = point - 1;
-        format!("{mantissa}e{}{:02}", if e < 0 { '-' } else { '+' }, e.abs())
-    };
-    format!("{sign}{body}")
 }
 
 #[cfg(test)]
@@ -502,43 +452,16 @@ mod tests {
         assert_eq!(other, bare, "and one it does not name is not");
     }
 
-    // --- Python's spelling, where a case does not reach it ---------------------------------------------------------
-
-    #[test]
-    fn a_float_is_spelled_as_python_spells_it() {
-        for (x, spelled) in [
-            (0.0, "0.0"),
-            (-0.0, "-0.0"),
-            (1.0, "1.0"),
-            (0.3, "0.3"),
-            (21.0, "21.0"),
-            (0.0001, "0.0001"),
-            (1e-5, "1e-05"),
-            (1.5e-6, "1.5e-06"),
-            (1e15, "1000000000000000.0"),
-            (1e16, "1e+16"),
-            (1.2345e20, "1.2345e+20"),
-            (123.456, "123.456"),
-            (f64::INFINITY, "inf"),
-        ] {
-            assert_eq!(py_float_repr(x), spelled, "{x}");
-        }
-        assert_eq!(py_round(1.0000001), 1.0);
-        assert_eq!(
-            py_round(0.1234565),
-            0.123456,
-            "rounded by the binary value, as Python rounds it"
-        );
-    }
+    // --- The forms' spelling, where a case does not reach it ---------------------------------------------------------
 
     #[test]
     fn a_string_is_quoted_as_python_quotes_it() {
-        assert_eq!(py_str("plain"), "'plain'");
-        assert_eq!(py_str("it's"), "\"it's\"");
-        assert_eq!(py_str("both ' and \""), "'both \\' and \"'");
-        assert_eq!(py_str("a\\b\n\tc\u{1}"), "'a\\\\b\\n\\tc\\x01'");
-        assert_eq!(py_str("été"), "'été'");
-        assert_eq!(py_str("\u{a0}"), "'\\xa0'");
-        assert_eq!(py_tuple(&["x".into()]), "(x,)");
+        assert_eq!(quoted("plain"), "'plain'");
+        assert_eq!(quoted("it's"), "\"it's\"");
+        assert_eq!(quoted("both ' and \""), "'both \\' and \"'");
+        assert_eq!(quoted("a\\b\n\tc\u{1}"), "'a\\\\b\\n\\tc\\x01'");
+        assert_eq!(quoted("été"), "'été'");
+        assert_eq!(quoted("\u{a0}"), "'\\xa0'");
+        assert_eq!(tuple(&["x".into()]), "(x,)");
     }
 }

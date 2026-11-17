@@ -27,13 +27,15 @@ use regex::Regex;
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::microseconds;
-use orexis::hash::{digest_of, py_float_repr, py_round};
+use orexis::hash::digest_of;
 use orexis::ontology::{ACTION, BELIEF, DERIVED, END, HASH, SELF_GRAPH, START};
-use orexis::store::{Store, Within, instant, iri, value};
+use orexis::rdf::{repr, round6};
+use orexis::store::{Store, Within, iri, value};
 use orexis_belief::transition::{Rule, run};
 
 use crate::Memo;
 use crate::admit::{local_of, possible};
+use crate::fork::fork;
 use crate::memo::{Binding, Carried};
 use crate::next_ground::next_ground;
 use crate::ontology::{ADDS_GRAPH, BY, FILLS, FROM, GROUND_GRAPH, MINTED, POSSIBLE_GRAPH, RETRACTS_GRAPH, SPENT, WAIT};
@@ -110,7 +112,7 @@ pub fn take(
     for kind in &kinds {
         quads.push(row(RDF_TYPE, named(kind)?.into())?);
     }
-    let spent = py_float_repr(py_round(binding.spent + cost));
+    let spent = repr(round6(binding.spent + cost));
     let spent_type = if spent.contains('e') { xsd::DOUBLE } else { xsd::DECIMAL };
     let period = BlankNode::default();
     quads.extend([
@@ -157,7 +159,7 @@ fn apply(
         Some(graphs) => graphs,
         None => world_at(store, Some(&binding.from), &Asking::default(), memo)?,
     };
-    store.copy_graph(&source, into)?;
+    fork(store, &source, into, &[], &[])?;
     let reading: Vec<String> = leaves
         .into_iter()
         .map(|g| if g == source { into.to_string() } else { g })
@@ -194,7 +196,7 @@ fn replayed(
     let binding = binding(store, cand, memo)?;
     let base = into.map(String::from).unwrap_or_else(|| format!("{child}.base"));
     store.clear_graph(&base)?;
-    store.copy_graph(ground, &base)?;
+    fork(store, ground, &base, &[], &[])?;
     let graphs: Vec<String> = world_at(store, Some(ground), &Asking::default(), memo)?
         .into_iter()
         .map(|g| if g == ground { base.clone() } else { g })
@@ -258,7 +260,7 @@ fn tokens(binding: &Binding) -> Vec<(String, Value)> {
     let mut out: Vec<(String, Value)> = vec![
         ("state".into(), Value::raw(format!("<{}>", binding.from))),
         ("subject".into(), as_text(&binding.subject)),
-        ("now".into(), instant(binding.start)),
+        ("now".into(), Value::instant(binding.start)),
     ];
     for (p, v) in &binding.filled {
         let local = local_of(p);

@@ -147,7 +147,7 @@ pub fn extract_plan(store: &Store, want: &str) -> Result<String, Error> {
 fn py_float(lexical: &str) -> String {
     lexical
         .parse::<f64>()
-        .map_or_else(|_| lexical.to_string(), orexis::hash::py_float_repr)
+        .map_or_else(|_| lexical.to_string(), orexis::rdf::repr)
 }
 
 /// The graph one want's plan is written into — one per want, replaced whole.

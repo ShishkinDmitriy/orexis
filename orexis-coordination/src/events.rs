@@ -10,7 +10,9 @@
 use oxigraph::model::{NamedNode, Term, Triple};
 use oxsdatatypes::DateTime;
 
-use orexis::events::{Event, RDF_TYPE, boolean, instant, integer, mint, node, triple, typed};
+use orexis::events::Event;
+
+use orexis::rdf::{RDF_TYPE, boolean, instant, integer, mint, node, triple, typed};
 
 use crate::holdings::Holding;
 use crate::ontology::{COORDINATION, DRAW_WON, REOPENS, STATEMENT, TO, TOLD};

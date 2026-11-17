@@ -12,7 +12,7 @@ use orexis::store::{Store, iri};
 
 use crate::ontology::STATEMENT_GRAPH;
 
-const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+use orexis::rdf::RDF_TYPE;
 
 /// `doc` with every graph it holds a statement.
 pub fn statements(store: &Store, doc: &Document) -> Result<Document, Error> {

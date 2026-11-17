@@ -25,7 +25,7 @@ use orexis::store::{Store, Within};
 
 pub const VOCABULARY: &str = "vocabulary";
 pub const QUERY: &str = "query";
-const RDF_TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+use orexis::rdf::RDF_TYPE;
 /// HOW LONG A GLOSSARY'S SENTENCE MAY RUN: past it the sentence is cut, and the query tool reads the rest.
 pub const SENTENCE: usize = 200;
 

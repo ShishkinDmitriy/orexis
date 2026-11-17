@@ -10,8 +10,9 @@ use oxigraph::model::Term;
 
 use crate::journal::Journal;
 use orexis::Error;
-use orexis::events::{RDF_TYPE, Watch};
+use orexis::events::Watch;
 use orexis::ontology::BELIEF;
+use orexis::rdf::RDF_TYPE;
 use orexis::store::{Store, Within, iri};
 
 /// Every class `beliefs` holds beneath `orexis:Incident`, read off the common beliefs, where the closure is.
@@ -65,7 +66,8 @@ mod tests {
     use oxsdatatypes::DateTime;
 
     use super::*;
-    use orexis::events::{Event, typed};
+    use orexis::events::Event;
+    use orexis::rdf::typed;
     use std::sync::Arc;
 
     struct Unreachable;

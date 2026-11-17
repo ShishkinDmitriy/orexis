@@ -17,7 +17,8 @@
 use std::sync::Arc;
 
 use orexis::series::Reader;
-use orexis::task::{Every, Handed, Package, Reads, Woke, sooner};
+use orexis::series::Reads;
+use orexis::task::{Every, Handed, Package, Woke, sooner};
 
 use crate::translator::{PHRASE, PHRASING_TRIGGER, STILL, TRANSLATE, TRANSLATING_TRIGGER};
 
