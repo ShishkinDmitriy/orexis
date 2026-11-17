@@ -74,6 +74,7 @@ services:
       - ../../orexis-sensing-influxdb:/app/orexis-sensing-influxdb:ro
       - ../../orexis-speech:/app/orexis-speech:ro
       - ../../orexis-translation:/app/orexis-translation:ro
+      - ../../orexis-transport:/app/orexis-transport:ro
       - ../../orexis-transport-email:/app/orexis-transport-email:ro
       - ../../orexis-transport-http:/app/orexis-transport-http:ro
       - ../../orexis-transport-mqtt:/app/orexis-transport-mqtt:ro
