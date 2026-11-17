@@ -20,12 +20,13 @@
 //! is, unless an incident keeps the minutes before it. Sending them to a tracer as spans, and keeping them longer, is
 //! another crate's, `orexis-journal-otlp/`, which reads them here. It knows no package's words: a class is whatever the event said it is.
 //!
-//! WHICH ACTIVITY AN EVENT IS SAID IN is told by the thread that says it: a task begins and ends an activity within
-//! one turn, on one thread, and two tasks' turns may run side by side.
+//! WHICH ACTIVITY AN EVENT IS SAID IN is what the watch says of it, the activity open in the turn that said it
+//! (`Watch::connect_within`), and an activity of the lifecycle names the one it is part of itself; so an activity is
+//! made of its events alone, wherever and whenever they are heard. And the journal, made inside the agent's booting,
+//! is told what was said before it connected (`Watch::remember`), so it keeps the booting from its beginning.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::thread::ThreadId;
 
 use oxigraph::model::{NamedNode, Triple};
 use oxsdatatypes::DateTime;
@@ -53,62 +54,34 @@ struct Open {
     generated: Vec<(NamedNode, Option<&'static str>, DateTime)>,
 }
 
-/// The activities open on each thread, innermost last, and those that last across turns, by name.
+/// The activities open, by name.
 struct Keeper {
     journal: Arc<Journal>,
-    open: HashMap<ThreadId, Vec<Open>>,
-    lasting: HashMap<NamedNode, Open>,
+    open: HashMap<NamedNode, Open>,
 }
 
 impl Keeper {
-    fn heard(&mut self, event: &dyn Event, said: &NamedNode) {
-        let thread = std::thread::current().id();
-        if let Some(started) = as_of::<Started>(event)
-            && let Some(lasting) = &started.lasting
-        {
-            //  AN ACTIVITY LASTING ACROSS TURNS is open beside the thread's: a turn's activity is never begun in it.
-            self.lasting.insert(
+    fn heard(&mut self, event: &dyn Event, said: &NamedNode, within: Option<&NamedNode>) {
+        if let Some(started) = as_of::<Started>(event) {
+            //  PART OF the activity a lifecycle's names, or of the one open where it was begun.
+            let parent = started
+                .lasting
+                .as_ref()
+                .and_then(|l| l.part_of.clone())
+                .or_else(|| within.cloned());
+            self.open.insert(
                 started.activity.clone(),
                 Open {
                     activity: started.activity.clone(),
                     kind: started.kind,
                     triggers: started.triggers.clone(),
-                    began: lasting.began,
-                    parent: lasting.part_of.clone(),
+                    began: started.at,
+                    parent,
                     generated: Vec::new(),
                 },
             );
-        } else if let Some(ended) = as_of::<Ended>(event)
-            && let Some(lasting) = &ended.lasting
-        {
-            //  AND KEPT AS IT ENDS, its start heard or not: the end says it whole.
-            let open = self.lasting.remove(&ended.activity).unwrap_or_else(|| Open {
-                activity: ended.activity.clone(),
-                kind: ended.kind,
-                triggers: Vec::new(),
-                began: lasting.began,
-                parent: lasting.part_of.clone(),
-                generated: Vec::new(),
-            });
-            self.keep(open, ended);
-        } else if let Some(started) = as_of::<Started>(event) {
-            let open = self.open.entry(thread).or_default();
-            let parent = open.last().map(|o| o.activity.clone());
-            open.push(Open {
-                activity: started.activity.clone(),
-                kind: started.kind,
-                triggers: started.triggers.clone(),
-                began: started.at,
-                parent,
-                generated: Vec::new(),
-            });
         } else if let Some(ended) = as_of::<Ended>(event) {
-            //  WHEREVER IT WAS BEGUN: an activity ended on another thread than it began on is still the one named.
-            let found = self.open.iter_mut().find_map(|(_, open)| {
-                let i = open.iter().rposition(|o| o.activity == ended.activity)?;
-                Some(open.remove(i))
-            });
-            if let Some(open) = found {
+            if let Some(open) = self.open.remove(&ended.activity) {
                 self.keep(open, ended);
             }
         } else if let Some(wrote) = as_of::<Wrote>(event) {
@@ -121,7 +94,7 @@ impl Keeper {
             if let Err(e) = self.journal.add(&wrote.by, triples) {
                 log::warn!("the journal refused what an activity wrote: {e}");
             }
-        } else if let Some(open) = self.open.get_mut(&thread).and_then(|o| o.last_mut()) {
+        } else if let Some(open) = within.and_then(|w| self.open.get_mut(w)) {
             let at = event.at().unwrap_or_else(|| self.journal.now());
             open.generated.push((said.clone(), event.kind(), at));
         }
@@ -142,6 +115,10 @@ impl Keeper {
         if let Some(parent) = open.parent {
             triples.push(triple(activity.clone(), PART_OF, parent));
         }
+        //  AND WHAT AN ACTIVITY OF THE LIFECYCLE IS ABOUT, as it ended: the package, whether it runs, what it serves.
+        for (predicate, term) in ended.lasting.iter().flat_map(|l| l.about.iter()) {
+            triples.push(triple(activity.clone(), predicate, term.clone()));
+        }
         for (said, kind, at) in open.generated {
             triples.push(triple(said.clone(), GENERATED_BY, activity.clone()));
             triples.push(triple(said.clone(), GENERATED_AT, instant(at)));
@@ -160,9 +137,8 @@ pub fn connect(watch: &Watch, journal: Arc<Journal>) {
     let keeper = Arc::new(Mutex::new(Keeper {
         journal,
         open: HashMap::new(),
-        lasting: HashMap::new(),
     }));
-    watch.connect(move |event, said| keeper.lock().unwrap().heard(event, said));
+    watch.connect_within(move |event, said, within| keeper.lock().unwrap().heard(event, said, within));
 }
 
 #[cfg(test)]
@@ -199,14 +175,28 @@ mod tests {
     }
 
     fn begin(watch: &Watch, kind: &'static str, triggers: &[NamedNode], when: &str) -> Activity {
+        begin_in(watch, None, kind, triggers, when)
+    }
+
+    /// An activity begun inside `within`, as a turn begins one inside the activity it has open.
+    fn begin_in(
+        watch: &Watch,
+        within: Option<&Activity>,
+        kind: &'static str,
+        triggers: &[NamedNode],
+        when: &str,
+    ) -> Activity {
         let activity = Activity::begin(kind);
-        watch.emit(&Started {
-            activity: activity.node.clone(),
-            kind,
-            triggers: triggers.to_vec(),
-            at: at(when),
-            lasting: None,
-        });
+        watch.emit_within(
+            &Started {
+                activity: activity.node.clone(),
+                kind,
+                triggers: triggers.to_vec(),
+                at: at(when),
+                lasting: None,
+            },
+            within.map(|w| w.node.clone()),
+        );
         activity
     }
 
@@ -233,8 +223,8 @@ mod tests {
             std::slice::from_ref(&trigger),
             "2026-01-01T12:00:00+00:00",
         );
-        let searching = begin(&watch, SEARCHING, &[], "2026-01-01T12:00:00+00:00");
-        let revised = watch.emit(&Revised).unwrap();
+        let searching = begin_in(&watch, Some(&planning), SEARCHING, &[], "2026-01-01T12:00:00+00:00");
+        let revised = watch.emit_within(&Revised, Some(searching.node.clone())).unwrap();
         assert!(
             rows(
                 &journal,
@@ -304,7 +294,7 @@ mod tests {
         let (watch, journal) = (Watch::default(), journal());
         connect(&watch, journal.clone());
         let first = begin(&watch, SEARCHING, &[], "2026-01-01T12:00:00+00:00");
-        let revised = watch.emit(&Revised).unwrap();
+        let revised = watch.emit_within(&Revised, Some(first.node.clone())).unwrap();
         end(&watch, &first, "2026-01-01T12:00:00+00:00");
         let second = begin(
             &watch,

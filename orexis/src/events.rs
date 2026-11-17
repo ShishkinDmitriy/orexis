@@ -111,14 +111,24 @@ pub fn counted(marks: &[(&'static str, Mark)]) -> bool {
     valued || tags
 }
 
-type Hearer = Arc<dyn Fn(&dyn Event, &NamedNode) + Send + Sync>;
+type Hearer = Arc<dyn Fn(&dyn Event, &NamedNode, Option<&NamedNode>) + Send + Sync>;
+
+/// What is said while the watch remembers: each event as it was said, the name it was said under, and the activity
+/// open where it was said.
+type Remembered = Vec<(Arc<dyn Event + Send + Sync>, NamedNode, Option<NamedNode>)>;
 
 /// Whoever watches one agent: every event its parts say, named as it is said and heard by each hearer connected, at
 /// once, on the thread of the part that said it, so the journal keeps it and a later event names it by one IRI —
-/// and the instant the pass stands at, which the runtime says as each pass begins, for an event said by a part that
-/// is handed no pass, so nothing reads the clock for it.
+/// with the activity open in the turn that said it — and the instant the pass stands at, which the runtime says as
+/// each pass begins, for an event said by a part that is handed no pass, so nothing reads the clock for it. WHILE IT
+/// REMEMBERS - from the agent's booting begun to its end - it keeps what is said, and whoever connects in that while
+/// hears it first, so the journal, made inside the booting, keeps the booting from its beginning.
 #[derive(Clone, Default)]
-pub struct Watch(Arc<Mutex<Vec<Hearer>>>, Arc<Mutex<Option<DateTime>>>);
+pub struct Watch(
+    Arc<Mutex<Vec<Hearer>>>,
+    Arc<Mutex<Option<DateTime>>>,
+    Arc<Mutex<Option<Remembered>>>,
+);
 
 impl Watch {
     /// The instant the pass in progress stands at.
@@ -131,27 +141,140 @@ impl Watch {
         *self.1.lock().expect("an instant nobody poisoned") = Some(at);
     }
 
-    /// Call `hearer` with every event said from here on, and the name it was said under.
+    /// Call `hearer` with every event said from here on, and the name it was said under - and first, where the watch
+    /// remembers, with what was said before.
     pub fn connect(&self, hearer: impl Fn(&dyn Event, &NamedNode) + Send + Sync + 'static) {
+        self.connect_within(move |event, named, _| hearer(event, named));
+    }
+
+    /// Call `hearer` with every event said, the name it was said under and the activity open in the turn that said
+    /// it, where one was: what was said while the watch remembers, then everything said from here on. What it is
+    /// told first it is told with the watch held, so it says nothing itself.
+    pub fn connect_within(&self, hearer: impl Fn(&dyn Event, &NamedNode, Option<&NamedNode>) + Send + Sync + 'static) {
+        let remembered = self.2.lock().expect("a memory nobody poisoned");
+        if let Some(said) = remembered.as_ref() {
+            for (event, named, within) in said {
+                hearer(event.as_ref(), named, within.as_ref());
+            }
+        }
         self.0.lock().expect("hearers nobody poisoned").push(Arc::new(hearer));
     }
 
-    /// Whether anybody watches.
-    pub fn connected(&self) -> bool {
-        !self.0.lock().expect("hearers nobody poisoned").is_empty()
+    /// Call `hearer` with every event said from here on, and nothing said before: the events' own hearer, which tells
+    /// the packages what they hear, and told what they were told already would tell them twice.
+    pub(crate) fn connect_live(
+        &self,
+        hearer: impl Fn(&dyn Event, &NamedNode, Option<&NamedNode>) + Send + Sync + 'static,
+    ) {
+        let _remembered = self.2.lock().expect("a memory nobody poisoned");
+        self.0.lock().expect("hearers nobody poisoned").push(Arc::new(hearer));
     }
 
-    /// Say `event` to every hearer, under a name minted for it: the name, where anybody heard.
+    /// Whether anybody watches, or may yet: the watch remembers.
+    pub fn connected(&self) -> bool {
+        !self.0.lock().expect("hearers nobody poisoned").is_empty()
+            || self.2.lock().expect("a memory nobody poisoned").is_some()
+    }
+
+    /// REMEMBER WHAT IS SAID from here on, for whoever connects before `forget`: the agent's booting.
+    pub fn remember(&self) {
+        *self.2.lock().expect("a memory nobody poisoned") = Some(Vec::new());
+    }
+
+    /// Remember nothing more, and forget what was: whoever was to hear it has connected.
+    pub fn forget(&self) {
+        *self.2.lock().expect("a memory nobody poisoned") = None;
+    }
+
+    /// Say `event` to every hearer, under a name minted for it, and remember it where the watch does: the name, where
+    /// anybody heard or may.
     pub fn emit(&self, event: &dyn Event) -> Option<NamedNode> {
+        self.emit_within(event, crate::task::within())
+    }
+
+    /// Say `event` as said within the activity `within`, where it names one: what `emit` does with the activity open
+    /// in the task saying it, and a case with the activity it means.
+    pub fn emit_within(&self, event: &dyn Event, within: Option<NamedNode>) -> Option<NamedNode> {
+        let mut remembered = self.2.lock().expect("a memory nobody poisoned");
         let hearers: Vec<Hearer> = self.0.lock().expect("hearers nobody poisoned").clone();
-        if hearers.is_empty() {
+        if hearers.is_empty() && remembered.is_none() {
             return None;
         }
         let named = mint();
+        if let Some(said) = remembered.as_mut() {
+            said.push((Kept::of(event, &named), named.clone(), within.clone()));
+        }
+        drop(remembered);
         for hearer in hearers {
-            hearer(event, &named);
+            hearer(event, &named, within.as_ref());
         }
         Some(named)
+    }
+}
+
+/// AN EVENT AS IT WAS SAID, kept whole for whoever connects later: everything a hearer reads of it, and where it is an
+/// activity's start or end or what a turn wrote, the event itself, which a hearer tells by its type.
+struct Kept {
+    metric: Option<&'static str>,
+    marks: Vec<(&'static str, Mark)>,
+    statements: Option<Vec<Triple>>,
+    at: Option<DateTime>,
+    kind: Option<&'static str>,
+    activity: Option<(NamedNode, &'static str)>,
+    about: Vec<(&'static str, Term)>,
+}
+
+impl Kept {
+    fn of(event: &dyn Event, named: &NamedNode) -> Arc<dyn Event + Send + Sync> {
+        use crate::activity::{Ended, Started, Wrote};
+        if let Some(started) = as_of::<Started>(event) {
+            return Arc::new(started.clone());
+        }
+        if let Some(ended) = as_of::<Ended>(event) {
+            return Arc::new(ended.clone());
+        }
+        if let Some(wrote) = as_of::<Wrote>(event) {
+            return Arc::new(wrote.clone());
+        }
+        Arc::new(Kept {
+            metric: event.metric(),
+            marks: event.marks(),
+            statements: event.statements(named),
+            at: event.at(),
+            kind: event.kind(),
+            activity: event.activity().map(|(a, k)| (a.clone(), k)),
+            about: event.about(),
+        })
+    }
+}
+
+impl Event for Kept {
+    fn metric(&self) -> Option<&'static str> {
+        self.metric
+    }
+
+    fn marks(&self) -> Vec<(&'static str, Mark)> {
+        self.marks.clone()
+    }
+
+    fn statements(&self, _node: &NamedNode) -> Option<Vec<Triple>> {
+        self.statements.clone()
+    }
+
+    fn at(&self) -> Option<DateTime> {
+        self.at
+    }
+
+    fn kind(&self) -> Option<&'static str> {
+        self.kind
+    }
+
+    fn activity(&self) -> Option<(&NamedNode, &'static str)> {
+        self.activity.as_ref().map(|(a, k)| (a, *k))
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        self.about.clone()
     }
 }
 

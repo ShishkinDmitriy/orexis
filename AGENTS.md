@@ -1016,6 +1016,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   ships it to a cold store, a tracer or the series, is a crate of its own that reads it there on a timer and marks
   what the store accepted, named for the pair: `orexis-journal/` with `orexis-journal-oxigraph/` and `orexis-journal-otlp/`, `orexis-sensing/` and
   `orexis-sensing-influxdb/`; the events and the activities were two crates writing one journal, and are one.
+- **An activity is made of its events alone, and the journal is told what was said before it connected** — the watch
+  says each event with the activity open in the turn that said it (`Watch::connect_within`), and remembers what is
+  said from the agent's booting begun to its end (`Watch::remember`), telling whoever connects in that while first; so
+  the journal, made inside the booting, keeps it from its beginning, where it read an event's activity off the thread
+  it heard it on and dropped every activity that began before it connected (journal, activity).
 - **The journal is in memory and its archive is on disk** — `orexis-journal-oxigraph/` takes what the journal keeps for
   good to a triplestore on the agent's volume every two seconds, at once on an incident and as the run ends, and the
   journal forgets it; readers of the past ask the archive, and the journal answers at `/live/sparql`. An agent killed

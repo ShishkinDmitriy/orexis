@@ -158,6 +158,23 @@ tokio::task_local! {
 struct Local {
     said: Vec<Heard>,
     in_hand: usize,
+    /// The activities open in this task, innermost last: what an event it says is said within.
+    open: Vec<NamedNode>,
+}
+
+/// THE ACTIVITY OPEN IN THE TASK SAYING SOMETHING NOW, innermost: what the watch says an event was said within, so a
+/// hearer reads the activity off the event and never off the thread it is heard on. None outside any task.
+pub(crate) fn within() -> Option<NamedNode> {
+    TURN.try_with(|turn| turn.borrow().open.last().cloned()).ok().flatten()
+}
+
+/// `activity` is open in this task from here, or no longer.
+fn opened(activity: &NamedNode) {
+    let _ = TURN.try_with(|turn| turn.borrow_mut().open.push(activity.clone()));
+}
+
+fn closed(activity: &NamedNode) {
+    let _ = TURN.try_with(|turn| turn.borrow_mut().open.retain(|a| a != activity));
 }
 
 /// Run `work`, a computation of seconds, so the tasks beside it keep their workers: where the runtime has several,
@@ -329,7 +346,7 @@ impl Events {
             return;
         }
         let weak = Arc::downgrade(&self.0);
-        self.0.watch.connect(move |event, named| {
+        self.0.watch.connect_live(move |event, named, _| {
             if let (Some(kind), Some(bus)) = (event.kind(), weak.upgrade()) {
                 let heard = Heard {
                     node: named.clone(),
@@ -743,6 +760,7 @@ impl Turn<'_> {
                 lasting: None,
             });
         }
+        opened(&activity.node);
         activity
     }
 
@@ -754,6 +772,7 @@ impl Turn<'_> {
     /// End `activity`, and say that it ended.
     pub fn end(&mut self, activity: Activity) {
         self.last = Some(activity.node.clone());
+        closed(&activity.node);
         if self.events.0.watch.connected() {
             self.events.0.watch.emit(&Ended {
                 activity: activity.node.clone(),
@@ -1013,13 +1032,14 @@ impl Run {
     }
 }
 
-/// AN ACTIVITY OF THE LIFECYCLE, OPEN: said whole as it begins and again as it ends (`activity::Lasting`).
+/// AN ACTIVITY OF THE LIFECYCLE, OPEN: said as it begins and as it ends, naming the activity it is part of
+/// (`activity::Lasting`). It is never what a turn's events are said within: a running is open for the agent's life,
+/// and what its task says outside a turn's activity is no part of it.
 struct Span {
     node: NamedNode,
     kind: &'static str,
     part_of: Option<NamedNode>,
     about: Vec<(&'static str, Term)>,
-    began: DateTime,
     real: std::time::Instant,
 }
 
@@ -1040,7 +1060,6 @@ impl Span {
             lasting: Some(Lasting {
                 part_of: part_of.clone(),
                 about: about.clone(),
-                began: at,
             }),
         });
         Span {
@@ -1048,7 +1067,6 @@ impl Span {
             kind,
             part_of,
             about,
-            began: at,
             real: std::time::Instant::now(),
         }
     }
@@ -1065,7 +1083,6 @@ impl Span {
             lasting: Some(Lasting {
                 part_of: self.part_of,
                 about,
-                began: self.began,
             }),
         });
     }
@@ -1588,6 +1605,7 @@ async fn agent(handed: Handed, mut hears: Hears, booting: Span, said: tokio::syn
         }
     }
     booting.end(&handed.events, handed.clock.now(), Vec::new());
+    handed.events.0.watch.forget();
     let runs = run.runs && run.refused().is_none();
     let agent_running = runs.then(|| {
         Span::begin(
@@ -1656,6 +1674,8 @@ fn spawn(
             }))
         })
         .collect();
+    //  WHAT IS SAID AS THE AGENT BOOTS IS REMEMBERED, for whoever connects to the watch inside the booting.
+    events.0.watch.remember();
     let booting = Span::begin(
         &events,
         AGENT_BOOTING,
@@ -1676,8 +1696,8 @@ fn spawn(
     events.0.busy.up();
     running.agent = Some(tokio::spawn(TURN.scope(
         RefCell::new(Local {
-            said: Vec::new(),
             in_hand: 1,
+            ..Local::default()
         }),
         agent(handed.clone(), hears, booting, said),
     )));
@@ -1694,8 +1714,8 @@ fn spawn(
         let named = name.clone();
         let scoped = TURN.scope(
             RefCell::new(Local {
-                said: Vec::new(),
                 in_hand: 1,
+                ..Local::default()
             }),
             async move {
                 let about = vec![(PACKAGE, Literal::new_simple_literal(&named).into())];

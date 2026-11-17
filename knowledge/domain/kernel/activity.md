@@ -48,7 +48,11 @@ journal's window: its class, when it started and ended on the agent's clock, how
 entity its start names), the activity it was begun inside (`dcterms:isPartOf`), and what it generated
 (`prov:wasGeneratedBy`): each event said while it was open, with the class the event said it is and the instant it was said at
 (`prov:generatedAtTime`), and each graph
-its turn wrote, which the kernel says of the activity the turn ended last.
+its turn wrote, which the kernel says of the activity the turn ended last. Which activity an event was said in the
+watch says of it, the activity open in the turn that said it (`Watch::connect_within`), so an activity is made of its
+events alone, wherever and whenever they are heard; and what is said as the agent boots the watch remembers until the
+booting ends (`Watch::remember`), so the journal, made inside the booting, is told it first and keeps the agent's
+booting from its beginning, each package's booting part of it with its package and whether it runs.
 
 So what caused what is a query over the journal and no package is asked: an activity started by something another
 generated was caused by it, `?b prov:wasStartedBy ?x . ?x prov:wasGeneratedBy ?a`, and a cycle through four

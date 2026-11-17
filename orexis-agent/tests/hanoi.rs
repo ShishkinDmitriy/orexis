@@ -392,6 +392,56 @@ async fn every_search_and_the_publishing_are_tallied_into_one_window_and_never_b
     assert!(window.len() < 20, "a point per measurement and tag set a window");
 }
 
+/// THE JOURNAL KEEPS THE AGENT'S BOOTING FROM ITS BEGINNING, though it is made inside it: what was said before it
+/// connected is told it first, so the agent's booting is an entry, with every package's booting part of it - the
+/// journal's own among them, begun before the journal was - each saying its package and whether it runs, and the
+/// running that followed.
+#[tokio::test(start_paused = true)]
+async fn the_journal_keeps_the_agents_booting_from_its_beginning() {
+    let store = store();
+    let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(now)).unwrap());
+    let provided = Provided::default()
+        .with(orexis_journal::Keeps {
+            journal: Some(journal.clone()),
+        })
+        .with(orexis_planning::Budget(400));
+    let running = orexis_agent::boot(&store, &world(), "hanoi", common::clock(now()), provided)
+        .unwrap()
+        .start()
+        .await
+        .unwrap();
+    common::settled(&running).await;
+    running.stop().await;
+    let text = "PREFIX orexis: <http://example.org/orexis#> PREFIX dcterms: <http://purl.org/dc/terms/>
+SELECT ?package ?runs WHERE {
+  ?agent a orexis:AgentBooting .
+  ?booting a orexis:PackageBooting ; dcterms:isPartOf ?agent ; orexis:package ?package ; orexis:runs ?runs }
+ORDER BY ?package";
+    let (_, body) = orexis_journal::journal::answer(&journal.store, text).unwrap();
+    let body = String::from_utf8(body).unwrap();
+    let said = |package: &str, runs: &str| {
+        body.contains(&format!(
+            "\"value\":\"{package}\"}},\"runs\":{{\"type\":\"literal\",\"value\":\"{runs}\""
+        ))
+    };
+    assert!(
+        said("journal", "true"),
+        "the journal's own booting, begun before it was: {body}"
+    );
+    assert!(said("planning", "true"), "{body}");
+    assert!(
+        said("execution", "false"),
+        "a package that declined ends its booting having made no core: {body}"
+    );
+    let ran = "PREFIX orexis: <http://example.org/orexis#> PREFIX dcterms: <http://purl.org/dc/terms/>
+ASK { ?running a orexis:PackageRunning ; orexis:package \"planning\" ; dcterms:isPartOf ?agent . ?agent a orexis:AgentRunning }";
+    let (_, body) = orexis_journal::journal::answer(&journal.store, ran).unwrap();
+    assert!(
+        String::from_utf8(body).unwrap().contains("true"),
+        "and planning's running, part of the agent's"
+    );
+}
+
 #[tokio::test(start_paused = true)]
 async fn a_plan_published_is_kept_in_the_journal_with_its_steps_in_the_words_of_the_domain() {
     let store = store();
