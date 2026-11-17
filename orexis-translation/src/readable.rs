@@ -32,13 +32,41 @@ pub const SENTENCE: usize = 200;
 /// The prefixes a chat's rows are written with, by name.
 pub type Prefixes = BTreeMap<String, String>;
 
-/// The store's own prefixes, as `NAMESPACES` names them.
+/// THE STANDARDS' LABELS, as a chat's rows write them: every vocabulary the agent reads that no ontology of its own
+/// names, since a namespace's local name is no label for these.
+const WELL_KNOWN: &[(&str, &str)] = &[
+    ("dcterms", "http://purl.org/dc/terms/"),
+    ("hctl", "https://www.w3.org/2019/wot/hypermedia#"),
+    ("owl", "http://www.w3.org/2002/07/owl#"),
+    ("prov", "http://www.w3.org/ns/prov#"),
+    ("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
+    ("rdfs", "http://www.w3.org/2000/01/rdf-schema#"),
+    ("schema", "https://schema.org/"),
+    ("sh", "http://www.w3.org/ns/shacl#"),
+    ("sosa", "http://www.w3.org/ns/sosa/"),
+    ("ssn", "http://www.w3.org/ns/ssn/"),
+    ("ssn-system", "http://www.w3.org/ns/ssn/systems/"),
+    ("td", "https://www.w3.org/2019/wot/td#"),
+    ("xsd", "http://www.w3.org/2001/XMLSchema#"),
+];
+
+/// The labels a chat's rows are written with where it reads no vocabulary of its own: the standards', and each
+/// ontology the store holds by the local name of its namespace, as `prefix_of` names one.
 pub fn namespaces(store: &Store) -> Prefixes {
-    store
-        .namespaces()
-        .iter()
-        .map(|(l, i)| (l.to_string(), i.to_string()))
-        .collect()
+    let mut out: Prefixes = WELL_KNOWN.iter().map(|(l, i)| (l.to_string(), i.to_string())).collect();
+    let Ok(ontologies) = store.graphs_of(&[ONTOLOGY], &Within::default()) else {
+        return out;
+    };
+    for graph in ontologies.iter().filter(|g| *g != CLOSURE_GRAPH) {
+        if let Ok(quads) = store.quads(graph)
+            && let Some((name, ns)) = prefix_of(&quads)
+            && !out.contains_key(&name)
+            && !out.values().any(|v| *v == ns)
+        {
+            out.insert(name, ns);
+        }
+    }
+    out
 }
 
 /// What one chat may read: the graphs of its kinds, copied, and each vocabulary among them by its prefix.
@@ -111,7 +139,7 @@ impl Readable {
                 }
             }
             if ontologies.contains(&graph) && !quads.is_empty() {
-                let (mut name, ns) = prefix_of(store, &quads).unwrap_or_else(|| (local_of(&graph), String::new()));
+                let (mut name, ns) = prefix_of(&quads).unwrap_or_else(|| (local_of(&graph), String::new()));
                 while read.contains_key(&name) {
                     name.push('_');
                 }
@@ -467,7 +495,7 @@ fn exists_serviced(expression: &Expression) -> bool {
 
 /// The name a vocabulary goes by, and its namespace: the store's prefix for the namespace most of its subjects are
 /// named in, or the namespace's last word where the store has none for it.
-fn prefix_of(store: &Store, quads: &[Quad]) -> Option<(String, String)> {
+fn prefix_of(quads: &[Quad]) -> Option<(String, String)> {
     let mut counts: BTreeMap<String, usize> = BTreeMap::new();
     let mut order: Vec<String> = Vec::new();
     for q in quads {
@@ -484,8 +512,7 @@ fn prefix_of(store: &Store, quads: &[Quad]) -> Option<(String, String)> {
         .iter()
         .max_by(|a, b| counts[*a].cmp(&counts[*b]).then(std::cmp::Ordering::Greater))?
         .clone();
-    let known = store
-        .namespaces()
+    let known = WELL_KNOWN
         .iter()
         .find(|(_, iri)| *iri == most)
         .map(|(l, _)| l.to_string());
@@ -504,7 +531,9 @@ fn prefix_of(store: &Store, quads: &[Quad]) -> Option<(String, String)> {
 fn glossary(quads: &[Quad], prefixes: &Prefixes) -> Result<String, Error> {
     /// WHAT A GLOSSARY SAYS OF A TERM: its kind, one class it is beneath or a property's domain and range, and its
     /// comment.
-    const GLOSSARY_Q: &str = "
+    const GLOSSARY_Q: &str = "PREFIX owl: <http://www.w3.org/2002/07/owl#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     SELECT ?term (SAMPLE(?k) AS ?kind) (SAMPLE(?a) AS ?above) (SAMPLE(?d) AS ?domain) (SAMPLE(?r) AS ?range)
            (SAMPLE(?c) AS ?comment) WHERE {
       { ?term a ?t . VALUES ?t { owl:Class rdfs:Class } BIND(\"class\" AS ?k)

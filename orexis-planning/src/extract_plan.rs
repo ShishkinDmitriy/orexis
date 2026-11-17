@@ -15,7 +15,14 @@ use crate::ontology::{EXHAUSTED, NO_CANDIDATE, SATISFIED};
 /// Mint `want`'s plan from what its search left, into its own graph, replaced whole with its steps' graphs. The
 /// graph's name. Refused where nothing was weighed for the want.
 pub fn extract_plan(store: &Store, want: &str) -> Result<String, Error> {
-    const PLAN_U: &str = r#"
+    const PLAN_U: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX execution: <http://example.org/orexis/execution#>
+    PREFIX orexis: <http://example.org/orexis#>
+    PREFIX planning: <http://example.org/orexis/planning#>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
     INSERT { GRAPH $plan { $plan a planning:Plan ; planning:for $want ; planning:outcome $outcome $costs } }
     WHERE  {} ;
     INSERT { GRAPH $plan { ?step a execution:Step ; execution:partOf $plan ;
@@ -75,7 +82,8 @@ pub fn extract_plan(store: &Store, want: &str) -> Result<String, Error> {
              GRAPH $plan { ?step execution:adds|execution:retracts ?g }
              GRAPH ?vocabulary { ?class rdfs:subClassOf ?kind } }"#;
     /// THE BEST WORLD WHERE THE WANT IS MET: on time and cheapest, or the soonest and then the cheapest.
-    const BEST_Q: &str = "
+    const BEST_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+    PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?w ?spent WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph .
         ?x a planning:Weighing ; planning:for $want ; planning:met true ; planning:weighs ?w .
@@ -84,7 +92,8 @@ pub fn extract_plan(store: &Store, want: &str) -> Result<String, Error> {
       BIND(COALESCE(?s, 0.0) AS ?spent) BIND(COALESCE(?m, 0) AS ?minted) BIND(IF(BOUND(?lands), 1, 0) AS ?late) }
     ORDER BY ?late ?lands ?spent ?minted LIMIT 1";
     /// THE GROUND THE SEARCH STOOD IN, and what the search spent, which tells the two silences apart.
-    const ROOT_Q: &str = "
+    const ROOT_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+    PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?g (COUNT(?y) AS ?spent) WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph .
         ?x a planning:Weighing ; planning:for $want ; planning:weighs ?g . ?g a planning:GroundGraph .
@@ -92,7 +101,8 @@ pub fn extract_plan(store: &Store, want: &str) -> Result<String, Error> {
                    FILTER NOT EXISTS { ?w a planning:GroundGraph } } } }
     GROUP BY ?g";
     /// THE GRAPHS A PLAN'S STEPS NAME — what goes when the plan is replaced.
-    const STEP_GRAPHS_Q: &str = "SELECT ?g WHERE { GRAPH $plan { ?step execution:adds|execution:retracts ?g } }";
+    const STEP_GRAPHS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+        SELECT ?g WHERE { GRAPH $plan { ?step execution:adds|execution:retracts ?g } }";
     let found = store.rows(&bind(BEST_Q, &[("want", Value::iri(want))])?, &[])?;
     let (world, outcome, cost) = match found.first().and_then(|b| Some((iri(b, "w")?, value(b, "spent")?))) {
         Some((world, spent)) => (world, SATISFIED, Some(spent)),

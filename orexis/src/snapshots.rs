@@ -11,7 +11,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, LazyLock};
+use std::sync::LazyLock;
 
 use oxigraph::model::dataset::CanonicalizationAlgorithm;
 use oxigraph::model::{BlankNodeRef, Dataset, Graph, LiteralRef, NamedOrBlankNodeRef, TermRef};
@@ -19,7 +19,6 @@ use oxsdatatypes::DateTime;
 use regex::Regex;
 use similar::TextDiff;
 
-use crate::namespaces::Namespaces;
 use crate::ontology::ONTOLOGY;
 use crate::store::{Store, Within};
 
@@ -39,16 +38,9 @@ pub fn now() -> DateTime {
     crate::clock::instant("2026-01-01T12:00:00Z").expect("a valid instant")
 }
 
-/// The agent's tree, whose ontologies say what a text may spell.
+/// The agent's tree.
 pub fn tree() -> &'static Path {
     Path::new(crate::boot::TREE)
-}
-
-/// The namespaces of the tree, read once a test process.
-pub fn namespaces() -> Arc<Namespaces> {
-    static FOUND: LazyLock<Arc<Namespaces>> =
-        LazyLock::new(|| Arc::new(Namespaces::of_tree(tree()).expect("the tree's prefixes agree")));
-    FOUND.clone()
 }
 
 /// The cases of one directory, sorted: `<case>.trig`, never a `<case>.actual.trig`.
@@ -72,7 +64,7 @@ pub fn stand_in(case: &Path) -> Store {
 /// The store a case describes with `more` TriG after it, in the case's prefixes — as the Python stand-in takes a
 /// case's text with a test's additions.
 pub fn stand_in_with(case: &Path, more: &str) -> Store {
-    let store = Store::new(namespaces()).expect("an empty store");
+    let store = Store::new().expect("an empty store");
     store
         .put_trig(WORLD, &format!("{}\n{more}", read(case)))
         .unwrap_or_else(|e| panic!("{}: {e}", name(case)));
@@ -146,7 +138,7 @@ pub fn held_to_diff(case: &Path, store: &Store, function: &str) {
         name(case),
         name(&path)
     );
-    let expected = Store::new(namespaces()).expect("an empty store");
+    let expected = Store::new().expect("an empty store");
     expected
         .put_trig(WORLD, &patched(&read(case), &read(&path)))
         .unwrap_or_else(|e| panic!("{} with its diff: {e}", name(case)));
@@ -518,7 +510,7 @@ mod tests {
     }
 
     fn store_of(trig: &str) -> Store {
-        let store = Store::new(namespaces()).expect("an empty store");
+        let store = Store::new().expect("an empty store");
         store.put_trig(WORLD, trig).expect("the case");
         store
     }

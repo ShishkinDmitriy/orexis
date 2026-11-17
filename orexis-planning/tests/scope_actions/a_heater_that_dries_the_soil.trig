@@ -36,7 +36,9 @@ GRAPH :actions {
   :dose a orexis:Action .
   :dose planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
         DELETE { $reading :below ?range } INSERT { $reading :inside ?range } WHERE { $reading :below ?range }""" ] ] .
-  :dose planning:precondition """PREFIX : <http://example.org/test#>
+  :dose planning:precondition """PREFIX orexis: <http://example.org/orexis#>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        PREFIX : <http://example.org/test#>
         SELECT DISTINCT ?valve ?reading WHERE {
             ?me a orexis:Self ; :hasActuator ?valve ; orexis:actsFor ?subject .
             ?valve :actuates ?subject ; :actuatesProperty ?property .
@@ -44,7 +46,9 @@ GRAPH :actions {
   :heat a orexis:Action .
   :heat planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
         DELETE { $reading :below ?range . $soil :inside ?dry } INSERT { $reading :inside ?range . $soil :below ?dry } WHERE { $reading :below ?range . OPTIONAL { $soil :inside ?dry } }""" ] ] .
-  :heat planning:precondition """PREFIX : <http://example.org/test#>
+  :heat planning:precondition """PREFIX orexis: <http://example.org/orexis#>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        PREFIX : <http://example.org/test#>
         SELECT DISTINCT ?heater ?reading ?soil WHERE {
             ?me a orexis:Self ; :hasActuator ?heater ; orexis:actsFor ?subject .
             ?heater :warms ?subject ; :warmsProperty ?property .

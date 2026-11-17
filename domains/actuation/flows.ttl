@@ -32,7 +32,11 @@
 actuation:Dosed a prediction:Flow ;
     rdfs:label "what a dose the agent is committed to gives its subject's soil over the step's landing window" ;
     prediction:moves climate:SoilMoisture ;
-    prediction:rate """PREFIX actuation: <http://example.org/orexis/actuation#>
+    prediction:rate """PREFIX schema: <https://schema.org/>
+        PREFIX ssn: <http://www.w3.org/ns/ssn/>
+        PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        PREFIX actuation: <http://example.org/orexis/actuation#>
         PREFIX climate: <http://example.org/orexis/climate#>
         PREFIX execution: <http://example.org/orexis/execution#>
         SELECT ?low ?high ?until WHERE {

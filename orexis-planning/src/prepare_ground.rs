@@ -52,14 +52,20 @@ pub fn prepare_ground(
     scope: Option<&str>,
     scopes: Option<&Scopes>,
 ) -> Result<(), Error> {
-    const PIECES_Q: &str = "SELECT ?piece ?source WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+    const PIECES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+      PREFIX planning: <http://example.org/orexis/planning#>
+      PREFIX prov: <http://www.w3.org/ns/prov#>
+      SELECT ?piece ?source WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
       ?piece a planning:ChangeableGraph . OPTIONAL { ?piece prov:wasDerivedFrom ?source } } }";
     /// A ROW TAKEN BACK, its period with it, and the cut it says it carries left: the graph is the one cut.
-    const UNDESCRIBE_U: &str = "DELETE { GRAPH $cat { $g ?p ?o . ?o ?pp ?po } }
+    const UNDESCRIBE_U: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX planning: <http://example.org/orexis/planning#>
+    DELETE { GRAPH $cat { $g ?p ?o . ?o ?pp ?po } }
     WHERE { GRAPH $cat { $g ?p ?o . FILTER(?p != planning:cutBy)
                          OPTIONAL { ?o ?pp ?po . FILTER(?p = dcterms:temporal) } } }";
     /// WHAT THE STORE MADE FOR ITSELF, which a refresh keeps: planning's kinds, and the wants the derivation minted.
-    const MADE_Q: &str = "
+    const MADE_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+    PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?g WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph .
         { ?g a ?kind . VALUES ?kind { planning:GroundGraph planning:PossibleGraph planning:PlanGraph } }
@@ -120,7 +126,8 @@ pub fn prepare_ground(
 /// Every graph `store`'s catalogue says the hash of, and the hash.
 fn hashes(store: &Store) -> Result<HashMap<String, String>, Error> {
     /// EVERY ROW'S HASH, and every changeable graph with the graph it was cut from.
-    const HASHES_Q: &str = "SELECT ?g ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:hash ?h } }";
+    const HASHES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+        SELECT ?g ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:hash ?h } }";
     Ok(store
         .rows(HASHES_Q, &[])?
         .iter()
@@ -189,7 +196,7 @@ mod tests {
     }
 
     fn empty() -> Store {
-        Store::new(snapshots::namespaces()).expect("an empty store")
+        Store::new().expect("an empty store")
     }
 
     #[test]
@@ -219,7 +226,9 @@ mod tests {
         let minted = "urn:test:minted";
         let catalogue = into.catalogue().unwrap().unwrap();
         into.update(&format!(
-            "INSERT DATA {{ GRAPH <{minted}> {{ <urn:test:w> a planning:Want }}
+            "PREFIX orexis: <http://example.org/orexis#>
+           PREFIX planning: <http://example.org/orexis/planning#>
+           INSERT DATA {{ GRAPH <{minted}> {{ <urn:test:w> a planning:Want }}
            GRAPH <{catalogue}> {{ <{minted}> a planning:WantGraph ; orexis:arrivedBy orexis:Derived }} }}"
         ))
         .unwrap();

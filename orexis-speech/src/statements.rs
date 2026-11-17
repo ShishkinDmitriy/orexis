@@ -46,7 +46,8 @@ const START: &str = "http://example.org/orexis#start";
 const END: &str = "http://example.org/orexis#end";
 /// The kinds the catalogue `cat` says `graph` is, but a statement's own and the bare graph, in name order.
 fn kinds_of(beliefs: &Store, cat: &str, graph: &str) -> Result<Vec<String>, Error> {
-    const KINDS_Q: &str = "
+    const KINDS_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+    PREFIX speech: <http://example.org/orexis/speech#>
     SELECT ?k WHERE { GRAPH $cat { $graph a ?k FILTER(?k NOT IN (speech:StatementGraph, orexis:Graph)) } } ORDER BY ?k";
     Ok(beliefs
         .rows(
@@ -81,7 +82,8 @@ pub(crate) fn described(beliefs: &Store, graph: &str) -> Result<(Vec<String>, Ve
 /// its period, where it says one.
 pub fn document_of(beliefs: &Store, graphs: &[String]) -> Result<Document, Error> {
     /// A STATEMENT'S PERIOD, as it was said.
-    const PERIOD_Q: &str = "
+    const PERIOD_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX orexis: <http://example.org/orexis#>
     SELECT ?start ?end WHERE { GRAPH $cat { $graph dcterms:temporal ?p OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } LIMIT 1";
     let mut quads = Vec::new();
     let Some(cat) = beliefs.catalogue()? else {

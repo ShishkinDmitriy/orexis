@@ -26,7 +26,6 @@ use serde_json::Value as Json;
 use orexis::Error;
 use orexis::boot::TREE;
 use orexis::clock::{Clock, instant, isoformat};
-use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::{Provided, Running};
@@ -250,7 +249,7 @@ fn passing_place() -> Vec<Edit> {
 }
 
 fn won(store: &Store) -> String {
-    const WON_Q: &str = "SELECT ?w WHERE { ?draw <http://example.org/orexis/coordination#wonBy> ?w }";
+    const WON_Q: &str = "PREFIX coordination: <http://example.org/orexis/coordination#> SELECT ?w WHERE { ?draw coordination:wonBy ?w }";
     let beliefs = store.graphs_of(&[BELIEF], &Within::default()).unwrap();
     let beliefs: Vec<&str> = beliefs.iter().map(String::as_str).collect();
     let mut found: Vec<String> = store
@@ -291,8 +290,7 @@ fn start() -> DateTime {
 async fn walked(name: &str, world: &Path, home: &[(&str, Cell)], dropping: Option<&str>, kept: bool) -> Walked {
     const PARCEL_Q: &str = "PREFIX courier: <http://example.org/orexis/courier#>
     SELECT ?p ?x ?y WHERE { ?p a courier:Parcel ; courier:x ?x ; courier:y ?y }";
-    let namespaces = Arc::new(Namespaces::linked().unwrap());
-    let stores = [Store::new(namespaces.clone()).unwrap(), Store::new(namespaces).unwrap()];
+    let stores = [Store::new().unwrap(), Store::new().unwrap()];
     let clock: Arc<dyn Clock> = common::clock(start());
     let carried = Arc::new(Mutex::new(Carried {
         dropping: dropping.map(str::to_string),
@@ -576,7 +574,7 @@ fn the_meeting_is_journaled_and_both_agree_who_won(journals: &[Arc<orexis_journa
         .map(|j| {
             rows(
                 j,
-                "SELECT DISTINCT ?w WHERE { ?c <http://example.org/orexis/coordination#wonBy> ?w }",
+                "PREFIX coordination: <http://example.org/orexis/coordination#> SELECT DISTINCT ?w WHERE { ?c coordination:wonBy ?w }",
             )
         })
         .collect();
@@ -592,7 +590,7 @@ fn the_meeting_is_journaled_and_both_agree_who_won(journals: &[Arc<orexis_journa
     for journal in journals {
         let body = rows(
             journal,
-            "SELECT ?k ?t WHERE { ?e a ?k ; <http://example.org/orexis/speech#statement> ?g . ?g a ?t }",
+            "PREFIX speech: <http://example.org/orexis/speech#> SELECT ?k ?t WHERE { ?e a ?k ; speech:statement ?g . ?g a ?t }",
         );
         let values = winner(&body);
         for pair in values.chunks(2) {

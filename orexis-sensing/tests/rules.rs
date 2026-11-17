@@ -98,7 +98,11 @@ fn holding(at: DateTime) -> Within {
 fn stuck(store: &Store, at: DateTime) -> Vec<(String, f64)> {
     let graphs = store.graphs_of(&[OBSERVATION_GRAPH], &holding(at)).unwrap();
     store
-        .rows("SELECT ?sensor ?n WHERE { ?sensor sensing:stuckOn ?n }", &strs(&graphs))
+        .rows(
+            "PREFIX sensing: <http://example.org/orexis/sensing#>
+            SELECT ?sensor ?n WHERE { ?sensor sensing:stuckOn ?n }",
+            &strs(&graphs),
+        )
         .unwrap()
         .iter()
         .map(|r| {
@@ -137,7 +141,8 @@ fn what_is_concluded_of_a_percept_is_a_percept_and_no_belief() {
     assert!(
         !world
             .rows(
-                "SELECT ?f ?v WHERE { ?o sosa:hasFeatureOfInterest ?f ; sosa:hasSimpleResult ?v }",
+                "PREFIX sosa: <http://www.w3.org/ns/sosa/>
+                    SELECT ?f ?v WHERE { ?o sosa:hasFeatureOfInterest ?f ; sosa:hasSimpleResult ?v }",
                 &[&revisions[0]]
             )
             .unwrap()
@@ -146,7 +151,8 @@ fn what_is_concluded_of_a_percept_is_a_percept_and_no_belief() {
     let kinds: Vec<String> = world
         .rows(
             &bind(
-                "SELECT ?k WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g a ?k } }",
+                "PREFIX orexis: <http://example.org/orexis#>
+                    SELECT ?k WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g a ?k } }",
                 &[("g", Value::iri(revisions[0].as_str()))],
             )
             .unwrap(),
@@ -179,7 +185,10 @@ fn a_samples_observation_is_of_the_sample() {
     let graph = read_at(&world, "0.05", now()).remove(0);
     let revisions = world.revisions_of(&[&graph], OBSERVATION_GRAPH).unwrap();
     let of = world
-        .rows("SELECT ?f WHERE { ?o sosa:hasFeatureOfInterest ?f }", &strs(&revisions))
+        .rows(
+            "PREFIX sosa: <http://www.w3.org/ns/sosa/> SELECT ?f WHERE { ?o sosa:hasFeatureOfInterest ?f }",
+            &strs(&revisions),
+        )
         .unwrap();
     assert_eq!(of.len(), 1);
     assert!(iri(&of[0], "f").unwrap().ends_with("#patch"));
@@ -278,7 +287,10 @@ fn the_stuck_limit_is_the_attentions_where_it_states_one() {
         .unwrap();
     store
         .update(&format!(
-            "INSERT DATA {{ GRAPH <{}> {{ <{ME}> orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor <{PROBE}> ; <{STUCK_AFTER_TERM}> 2 ] ] }} }}",
+            "PREFIX orexis: <http://example.org/orexis#>
+                PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                PREFIX sensing: <http://example.org/orexis/sensing#>
+                INSERT DATA {{ GRAPH <{}> {{ <{ME}> orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor <{PROBE}> ; <{STUCK_AFTER_TERM}> 2 ] ] }} }}",
             selves[0]
         ))
         .unwrap();
@@ -293,7 +305,9 @@ fn a_defective_sensors_percept_keeps_its_number_carries_why_and_is_no_reading() 
     let world = with_rules("a_pot_and_its_probe.trig");
     world
         .update(&format!(
-            "INSERT DATA {{ GRAPH <{TEST}world> {{ <{PROBE}> sensing:defect \"its channel reads another's charge\" }} }}"
+            "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                PREFIX sensing: <http://example.org/orexis/sensing#>
+                INSERT DATA {{ GRAPH <{TEST}world> {{ <{PROBE}> sensing:defect \"its channel reads another's charge\" }} }}"
         ))
         .unwrap();
     let graph = read_at(&world, "0.05", now()).remove(0);
@@ -301,7 +315,8 @@ fn a_defective_sensors_percept_keeps_its_number_carries_why_and_is_no_reading() 
     percept.extend(world.revisions_of(&[&graph], OBSERVATION_GRAPH).unwrap());
     let found = world
         .rows(
-            "SELECT ?given ?why WHERE { ?o sensing:scaledResult ?given ; sensing:defect ?why }",
+            "PREFIX sensing: <http://example.org/orexis/sensing#>
+                SELECT ?given ?why WHERE { ?o sensing:scaledResult ?given ; sensing:defect ?why }",
             &strs(&percept),
         )
         .unwrap();
@@ -313,7 +328,10 @@ fn a_defective_sensors_percept_keeps_its_number_carries_why_and_is_no_reading() 
     );
     assert!(
         world
-            .rows("SELECT ?v WHERE { ?o sosa:hasSimpleResult ?v }", &strs(&percept))
+            .rows(
+                "PREFIX sosa: <http://www.w3.org/ns/sosa/> SELECT ?v WHERE { ?o sosa:hasSimpleResult ?v }",
+                &strs(&percept)
+            )
             .unwrap()
             .is_empty(),
         "no reading of it"
@@ -354,7 +372,9 @@ fn stated(store: &Store, said: &[&str]) {
         .unwrap();
     store
         .update(&format!(
-            "INSERT DATA {{ GRAPH <{graph}> {{ {} }}\n  {entry} }}",
+            "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                PREFIX sensing: <http://example.org/orexis/sensing#>
+                INSERT DATA {{ GRAPH <{graph}> {{ {} }}\n  {entry} }}",
             said.join(" ")
         ))
         .unwrap();
@@ -375,7 +395,9 @@ fn scaled(store: &Store, number: &str) -> Option<(f64, f64)> {
     .remove(0);
     let found = store
         .rows(
-            "SELECT ?scaled ?reading WHERE { ?o sensing:scaledResult ?scaled ; sosa:hasSimpleResult ?reading }",
+            "PREFIX sensing: <http://example.org/orexis/sensing#>
+                PREFIX sosa: <http://www.w3.org/ns/sosa/>
+                SELECT ?scaled ?reading WHERE { ?o sensing:scaledResult ?scaled ; sosa:hasSimpleResult ?reading }",
             &[&graph, &format!("{graph}/revisions")],
         )
         .unwrap();

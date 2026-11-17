@@ -17,7 +17,6 @@ use std::sync::{Arc, Mutex, OnceLock};
 
 use orexis::Error;
 use orexis::clock::Paced;
-use orexis::namespaces::Namespaces;
 use orexis::store::Store;
 use orexis::task::{MET, PLANNED, UNREACHABLE};
 
@@ -151,17 +150,16 @@ fn world_name(world: &Path) -> String {
 }
 
 fn run(args: &Args, clock: Arc<Paced>, halt: Arc<AtomicBool>) -> Result<String, Error> {
-    let namespaces = Arc::new(Namespaces::linked()?);
     let store = match &args.volume {
         #[cfg(feature = "volume")]
-        Some(path) => Store::open(path, namespaces)?,
+        Some(path) => Store::open(path)?,
         #[cfg(not(feature = "volume"))]
         Some(_) => {
             return Err(Error::Evaluation(
                 "this binary was built without the volume feature".into(),
             ));
         }
-        None => Store::new(namespaces)?,
+        None => Store::new()?,
     };
     //  DEPLOYED: what a package is not handed here it makes for itself from what the world says, its journal, its
     //  archive and its series sinks; and the log is handed to whichever package keeps it.

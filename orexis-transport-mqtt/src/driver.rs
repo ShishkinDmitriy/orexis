@@ -204,7 +204,7 @@ impl Mqtt {
 
     /// The filter patterns of the topic `agent` listens to itself: where it is told things.
     fn listens(&self, agent: &str) -> Result<Vec<String>, Error> {
-        const LISTENS_Q: &str = "
+        const LISTENS_Q: &str = "PREFIX mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#>
         SELECT ?pattern WHERE {
           $agent mqtt4ssn:listensToTopic ?topic .
           ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
@@ -214,7 +214,8 @@ impl Mqtt {
 
     /// The topics of the chats this agent is in, each with a filter pattern matching it, by topic.
     fn chat_topics(&self) -> Result<Vec<(String, String)>, Error> {
-        const CHAT_TOPICS_Q: &str = "
+        const CHAT_TOPICS_Q: &str = "PREFIX mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#>
+        PREFIX speech: <http://example.org/orexis/speech#>
         SELECT ?topic ?pattern WHERE {
           ?chat a speech:Chat ; speech:participant $agent ; speech:channel ?topic . ?topic a mqtt4ssn:Topic .
           ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern } ORDER BY ?topic ?pattern";
@@ -230,7 +231,8 @@ impl Mqtt {
     fn over(&self, thing: &str) -> Result<Vec<usize>, Error> {
         /// THE BROKERS A THING IS REACHED OVER: the ones it is connected to where it is a client, and otherwise the
         /// ones of the client hosting it or the system it is part of.
-        const BROKERS_Q: &str = "
+        const BROKERS_Q: &str = "PREFIX mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#>
+        PREFIX ssn: <http://www.w3.org/ns/ssn/>
         SELECT DISTINCT ?broker WHERE {
           { $thing mqtt4ssn:isConnectedToBroker ?broker }
           UNION { ?client mqtt4ssn:hosts ?system ; mqtt4ssn:isConnectedToBroker ?broker . ?system ssn:hasSubSystem* $thing } }
@@ -252,7 +254,7 @@ impl Mqtt {
     /// Every sensor the agent reads that publishes on a topic, with each pattern naming it.
     fn topics(&self) -> Result<Vec<(String, String)>, Error> {
         /// EVERY PATTERN NAMING A TOPIC A SENSOR PUBLISHES ON, for the sensors the agent reads.
-        const TOPICS_Q: &str = "
+        const TOPICS_Q: &str = "PREFIX mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#>
         SELECT ?sensor ?pattern WHERE {
           VALUES ?sensor { $sensors } ?sensor mqtt4ssn:observesTopic ?topic .
           ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
@@ -385,7 +387,8 @@ impl Mqtt {
     /// Whether this member reaches `device`.
     pub fn reaches(&self, device: &str) -> Result<bool, Error> {
         /// WHAT THIS MEMBER REACHES: a device that publishes on a topic, or listens on one, or whose board does.
-        const REACHES_Q: &str = "
+        const REACHES_Q: &str = "PREFIX mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#>
+        PREFIX ssn: <http://www.w3.org/ns/ssn/>
         ASK { { $device mqtt4ssn:observesTopic ?topic } UNION { $device mqtt4ssn:listensToTopic ?topic }
               UNION { ?board ssn:hasSubSystem $device ; mqtt4ssn:listensToTopic ?topic } }";
         let common = self.common()?;
@@ -421,7 +424,8 @@ impl Mqtt {
     /// an act and a retained one would be taken again by a device that reconnects.
     pub fn actuate(&mut self, actuator: &str, payload: &Json) -> Result<bool, Error> {
         /// WHERE AN ACTUATOR TAKES COMMANDS: a topic it listens to itself, or its board's.
-        const ACTUATES_Q: &str = "
+        const ACTUATES_Q: &str = "PREFIX mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#>
+        PREFIX ssn: <http://www.w3.org/ns/ssn/>
         SELECT ?pattern WHERE {
           { $actuator mqtt4ssn:listensToTopic ?topic } UNION { ?board ssn:hasSubSystem $actuator ; mqtt4ssn:listensToTopic ?topic }
           ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
@@ -446,7 +450,7 @@ impl Mqtt {
     /// document to a person is not the bus's, and is passed over in silence.
     pub fn tell(&mut self, to: &str, document: &[u8]) -> Result<bool, Error> {
         /// WHETHER WHOM A DOCUMENT IS TOLD TO IS AN AGENT, since a person's is not the bus's.
-        const AGENT_Q: &str = "ASK { $who a orexis:Agent }";
+        const AGENT_Q: &str = "PREFIX orexis: <http://example.org/orexis#> ASK { $who a orexis:Agent }";
         let common = self.common()?;
         if !self
             .beliefs
@@ -510,7 +514,8 @@ impl Mqtt {
     /// silent sensors were five incidents a minute, each keeping the log's window in the journal.
     fn command_topic(&mut self, sensor: &str) -> Result<Option<String>, Error> {
         /// THE PATTERNS OF THE FILTERS THAT MATCH THE TOPIC A SENSOR'S BOARD LISTENS ON.
-        const COMMANDS_Q: &str = "
+        const COMMANDS_Q: &str = "PREFIX mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#>
+        PREFIX ssn: <http://www.w3.org/ns/ssn/>
         SELECT ?pattern WHERE {
           ?board ssn:hasSubSystem $sensor ; mqtt4ssn:listensToTopic ?topic .
           ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
@@ -554,9 +559,10 @@ pub struct Session {
 pub fn reached(beliefs: &Store, me: &str) -> Result<Vec<(String, String)>, Error> {
     /// THE BROKERS THE SELF IS CONNECTED TO, AND WHERE EACH ANSWERS: connected as the society says
     /// (`mqtt4ssn:isConnectedToBroker`), answering at the `schema:url` the world's deployment graph states of it.
-    const REACHED_Q: &str = "
+    const REACHED_Q: &str = "PREFIX mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#>
+    PREFIX schema: <https://schema.org/>
     SELECT ?broker ?url WHERE { $me mqtt4ssn:isConnectedToBroker ?broker
-      OPTIONAL { ?broker <https://schema.org/url> ?url } } ORDER BY ?broker ?url";
+      OPTIONAL { ?broker schema:url ?url } } ORDER BY ?broker ?url";
     let mut known = beliefs.graphs_of(&[BELIEF], &Within::common())?;
     known.extend(beliefs.graphs_of(&[orexis::ontology::DEPLOYMENT], &Within::common())?);
     let mut out: Vec<(String, String)> = Vec::new();
@@ -854,7 +860,9 @@ mod tests {
     fn results(store: &Store) -> Vec<(String, f64)> {
         store
             .rows(
-                "SELECT ?s ?v WHERE { GRAPH ?g { ?o a sosa:Observation ; sosa:madeBySensor ?s ; sensing:rawResult ?v } } ORDER BY ?s",
+                "PREFIX sensing: <http://example.org/orexis/sensing#>
+                    PREFIX sosa: <http://www.w3.org/ns/sosa/>
+                    SELECT ?s ?v WHERE { GRAPH ?g { ?o a sosa:Observation ; sosa:madeBySensor ?s ; sensing:rawResult ?v } } ORDER BY ?s",
                 &[],
             )
             .unwrap()

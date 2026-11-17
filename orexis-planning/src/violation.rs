@@ -17,7 +17,6 @@ use regex::Regex;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
-use orexis::namespaces::Namespaces;
 
 use crate::ontology::PLANNING;
 use crate::shapes::Shapes;
@@ -116,7 +115,7 @@ fn unsupported<T>(message: impl Into<String>) -> Result<T> {
 
 /// The select whose rows are `subject`'s violations, under whichever polarity it carries: `planning:metWhen` a
 /// shape, `planning:unmetWhen` an avoided state. None where it carries neither; refused where it carries both.
-pub fn select_of(shapes: &Shapes, subject: &Term, namespaces: &Namespaces) -> Result<Option<String>> {
+pub fn select_of(shapes: &Shapes, subject: &Term) -> Result<Option<String>> {
     let shape = shapes.value(subject, &format!("{PLANNING}metWhen"));
     let avoided = shapes.value(subject, &format!("{PLANNING}unmetWhen"));
     match (shape, avoided) {
@@ -124,27 +123,23 @@ pub fn select_of(shapes: &Shapes, subject: &Term, namespaces: &Namespaces) -> Re
             "{subject} carries both planning:metWhen and planning:unmetWhen"
         )),
         (None, None) => Ok(None),
-        (Some(shape), None) => Compiler::new(shapes.cbd(&shape), namespaces).report(&shape),
-        (None, Some(avoided)) => Compiler::new(shapes.cbd(&avoided), namespaces)
-            .entered(&avoided)
-            .map(Some),
+        (Some(shape), None) => Compiler::new(shapes.cbd(&shape)).report(&shape),
+        (None, Some(avoided)) => Compiler::new(shapes.cbd(&avoided)).entered(&avoided).map(Some),
     }
 }
 
-struct Compiler<'a> {
+struct Compiler {
     g: Shapes,
     vars: usize,
     prefixes: BTreeMap<String, String>,
-    namespaces: &'a Namespaces,
 }
 
-impl<'a> Compiler<'a> {
-    fn new(g: Shapes, namespaces: &'a Namespaces) -> Self {
+impl Compiler {
+    fn new(g: Shapes) -> Self {
         Compiler {
             g,
             vars: 0,
             prefixes: BTreeMap::new(),
-            namespaces,
         }
     }
 
@@ -155,13 +150,6 @@ impl<'a> Compiler<'a> {
     }
 
     fn declare(&mut self, name: &str, iri: &str) -> Result<()> {
-        if let Some(known) = self.namespaces.get(name)
-            && known != iri
-        {
-            return unsupported(format!(
-                "a select declares {name}: as <{iri}>, and the store calls that prefix <{known}>"
-            ));
-        }
         if let Some(prior) = self.prefixes.get(name)
             && prior != iri
         {
@@ -169,9 +157,7 @@ impl<'a> Compiler<'a> {
                 "two selects declare {name}: differently — <{iri}> and <{prior}>"
             ));
         }
-        if self.namespaces.get(name).is_none() {
-            self.prefixes.insert(name.to_string(), iri.to_string());
-        }
+        self.prefixes.insert(name.to_string(), iri.to_string());
         Ok(())
     }
 
@@ -716,7 +702,6 @@ mod tests {
 
     use oxigraph::model::NamedNode;
 
-    use orexis::snapshots;
     use orexis::store::{Store, iri, value};
 
     use super::*;
@@ -743,7 +728,7 @@ mod tests {
 
     /// A store of two tanks, the shapes in a graph of their own.
     fn store(shapes: &str) -> Store {
-        let store = Store::new(snapshots::namespaces()).unwrap();
+        let store = Store::new().unwrap();
         store
             .put_trig(
                 &format!("{T}default"),
@@ -758,11 +743,7 @@ mod tests {
 
     fn compiled(store: &Store, subject: &str) -> Result<Option<String>> {
         let shapes = Shapes::of(store, &[format!("{T}shapes")]).unwrap();
-        select_of(
-            &shapes,
-            &NamedNode::new(format!("{T}{subject}")).unwrap().into(),
-            &snapshots::namespaces(),
-        )
+        select_of(&shapes, &NamedNode::new(format!("{T}{subject}")).unwrap().into())
     }
 
     fn rows(store: &Store, select: &str) -> Vec<orexis::store::Row> {

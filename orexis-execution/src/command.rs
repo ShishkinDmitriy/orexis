@@ -30,7 +30,8 @@ fn term(text: &str) -> Value {
 
 /// The `$tokens` a step's operation takes: `$now`, and each parameter its action takes that the step's rows hold.
 pub fn tokens(store: &Store, said: &Said, action: &str, now: DateTime) -> Result<Vec<(String, Value)>, Error> {
-    const TAKES_Q: &str = "SELECT ?takes WHERE { $action orexis:takes ?takes }";
+    const TAKES_Q: &str =
+        "PREFIX orexis: <http://example.org/orexis#> SELECT ?takes WHERE { $action orexis:takes ?takes }";
     let actions = store.graphs_of(&[ACTION], &Within::default())?;
     let actions: Vec<&str> = actions.iter().map(String::as_str).collect();
     let mut out = vec![("now".to_string(), instant(now))];

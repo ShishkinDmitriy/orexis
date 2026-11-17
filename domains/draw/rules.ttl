@@ -13,7 +13,8 @@
 
 :committed a speech:Extraction ;
     rdfs:label "a commitment is believed as said, and who committed to which draw in which round" ;
-    sh:construct """PREFIX draw: <http://example.org/orexis/draw#>
+    sh:construct """PREFIX coordination: <http://example.org/orexis/coordination#>
+        PREFIX draw: <http://example.org/orexis/draw#>
         CONSTRUCT { ?c a draw:Commitment ; draw:of ?draw ; draw:by ?by ; draw:hash ?hash .
                     ?draw draw:committedBy ?by . ?conflict coordination:drawnIn ?round }
         WHERE { ?c a draw:Commitment ; draw:of ?draw ; draw:by ?by ; draw:hash ?hash ; draw:about ?conflict ; draw:round ?round }""" .
@@ -31,7 +32,9 @@
 #  the next round.
 :winner a coordination:Outcome ;
     rdfs:label "a draw is won by whichever agent the two numbers name, once a peer's reveal matches its commitment" ;
-    sh:construct """PREFIX draw: <http://example.org/orexis/draw#>
+    sh:construct """PREFIX coordination: <http://example.org/orexis/coordination#>
+        PREFIX orexis: <http://example.org/orexis#>
+        PREFIX draw: <http://example.org/orexis/draw#>
         CONSTRUCT { ?draw coordination:wonBy ?winner }
         WHERE {
             ?me a orexis:Self ; coordination:secret ?secret .
@@ -57,7 +60,9 @@
 #  no number a commitment ever said.
 :lot a coordination:Outcome ;
     rdfs:label "a silent peer's draw is won as a lot the agent draws alone says" ;
-    sh:construct """CONSTRUCT { ?draw coordination:wonBy ?winner }
+    sh:construct """PREFIX coordination: <http://example.org/orexis/coordination#>
+        PREFIX orexis: <http://example.org/orexis#>
+        CONSTRUCT { ?draw coordination:wonBy ?winner }
         WHERE {
             ?me a orexis:Self ; coordination:secret ?secret .
             ?conflict a coordination:Conflict ; coordination:with ?peer ; coordination:silent true ; coordination:draw ?draw .

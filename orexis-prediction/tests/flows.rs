@@ -70,7 +70,10 @@ fn number(store: &Store, graph: &str) -> f64 {
     graphs.extend(store.revisions_of(&[graph], OBSERVATION_GRAPH).unwrap());
     let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
     let found = store
-        .rows("SELECT ?v WHERE { ?o sosa:hasSimpleResult ?v }", &graphs)
+        .rows(
+            "PREFIX sosa: <http://www.w3.org/ns/sosa/> SELECT ?v WHERE { ?o sosa:hasSimpleResult ?v }",
+            &graphs,
+        )
         .unwrap();
     assert_eq!(found.len(), 1);
     value(&found[0], "v").unwrap().parse().unwrap()

@@ -31,7 +31,8 @@
 actuation:Dosing a orexis:Action ;
     rdfs:label "dose a subject from a valve until its soil is believed moist" ;
     orexis:takes actuation:valve , actuation:subject ;
-    planning:precondition """PREFIX actuation: <http://example.org/orexis/actuation#>
+    planning:precondition """PREFIX orexis: <http://example.org/orexis#>
+        PREFIX actuation: <http://example.org/orexis/actuation#>
         PREFIX climate: <http://example.org/orexis/climate#>
         SELECT DISTINCT ?valve ?subject WHERE {
             VALUES ?property { climate:SoilMoisture }
@@ -48,7 +49,11 @@ actuation:Dosing a orexis:Action ;
     #  moisture — since no belief says when the subject is next revised. The executor looks for the
     #  answer from the step, and a patience past the cadence with no answer is a dose the world did not
     #  take.
-    planning:landsAfter """PREFIX climate: <http://example.org/orexis/climate#>
+    planning:landsAfter """PREFIX schema: <https://schema.org/>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        PREFIX climate: <http://example.org/orexis/climate#>
         PREFIX unit: <http://qudt.org/vocab/unit/>
         SELECT ?least ?most WHERE {
             ?sensor sosa:isHostedBy/(sosa:isSampleOf)? $subject ; sosa:observes climate:SoilMoisture ;
@@ -66,7 +71,14 @@ actuation:Dosing a orexis:Action ;
         INSERT { $subject climate:soil climate:Moist }
         WHERE  { $subject climate:soil climate:Dry }""" ] ] ;
     execution:implementation [ a execution:Implementation ;
-        execution:operation [ a execution:Command ; sh:select """PREFIX actuation: <http://example.org/orexis/actuation#>
+        execution:operation [ a execution:Command ; sh:select """PREFIX dcterms: <http://purl.org/dc/terms/>
+        PREFIX orexis: <http://example.org/orexis#>
+        PREFIX schema: <https://schema.org/>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        PREFIX ssn: <http://www.w3.org/ns/ssn/>
+        PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        PREFIX actuation: <http://example.org/orexis/actuation#>
         PREFIX climate: <http://example.org/orexis/climate#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
         SELECT ?actuator ?payload WHERE {

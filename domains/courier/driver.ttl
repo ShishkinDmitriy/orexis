@@ -32,7 +32,8 @@ courier:Board a orexis:Action ;
     #  ONLY A DRIVER THE AGENT PLAYS BOARDS (#929, #1002): `orexis:plays`, the kernel's word for a role the
     #  agent holds, stated by the world, so of two agents in one world neither's search moves the other's
     #  driver into a van; and only into a van the driver `drives`, the role's context.
-    planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
+    planning:precondition """PREFIX orexis: <http://example.org/orexis#>
+        PREFIX courier: <http://example.org/orexis/courier#>
         SELECT ?driver ?van WHERE {
             ?driver courier:aboard ?from .
             ?driver a courier:Driver .

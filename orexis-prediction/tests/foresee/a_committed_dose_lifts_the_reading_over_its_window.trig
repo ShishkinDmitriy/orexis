@@ -72,7 +72,8 @@ GRAPH :world {
 GRAPH :actions {
   :Dosed a prediction:Flow .
   :Dosed prediction:moves :moisture .
-  :Dosed prediction:rate """PREFIX : <http://example.org/test#>
+  :Dosed prediction:rate """PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      PREFIX : <http://example.org/test#>
       PREFIX execution: <http://example.org/orexis/execution#>
       SELECT ?low ?high ?until WHERE {
           ?step :tap ?tap ; execution:landsWithinS ?soon ; execution:answeredWithinS ?late .
@@ -82,7 +83,8 @@ GRAPH :actions {
       }""" .
   :Drying a prediction:Flow .
   :Drying prediction:moves :moisture .
-  :Drying prediction:rate """PREFIX : <http://example.org/test#>
+  :Drying prediction:rate """PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      PREFIX : <http://example.org/test#>
       SELECT ?rate ?until WHERE {
           $feature :driesPerDay ?perDay .
           BIND(-xsd:double(?perDay) / 86400.0 AS ?rate)

@@ -38,7 +38,10 @@ const WIRED: &[(&str, &str)] = &[
         "?chat speech:participant ?me ; speech:channel ?channel . ?channel a mqtt4ssn:Topic",
     ),
 ];
-const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX speech: <http://example.org/orexis/speech#> PREFIX mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> ";
+const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
+    PREFIX speech: <http://example.org/orexis/speech#>
+    PREFIX mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#>
+    ";
 
 /// ITS START, which every package this binary holds is given: it joins where a role the self plays needs what it
 /// carries and the world wires it, and declines otherwise; joined, its member is made and listens; checked, it says

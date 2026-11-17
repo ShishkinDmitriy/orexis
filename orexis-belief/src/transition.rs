@@ -48,7 +48,8 @@ impl Rule {
 /// `belief:update` changes nothing, said in the log once as it is read.
 pub fn transitions(store: &Store) -> Result<Vec<Vec<Rule>>, Error> {
     /// EVERY TRANSITION, over the rules graphs: each active one, with its order and its update.
-    const TRANSITIONS_Q: &str = "
+    const TRANSITIONS_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
+    PREFIX sh: <http://www.w3.org/ns/shacl#>
     SELECT DISTINCT ?rule ?order ?update WHERE {
       ?rule a belief:Transition .
       FILTER NOT EXISTS { ?rule sh:deactivated true }
@@ -390,12 +391,12 @@ mod tests {
     }
 
     fn p(text: &str) -> String {
-        format!("PREFIX : <{T}>\n{text}")
+        format!("PREFIX belief: <http://example.org/orexis/belief#> PREFIX : <{T}>\n{text}")
     }
 
     /// A lamp lit in one graph and, the same fact, in another; a switch saying off.
     fn store() -> Store {
-        let store = Store::new(snapshots::namespaces()).unwrap();
+        let store = Store::new().unwrap();
         let n = |l: &str| NamedNode::new(t(l)).unwrap();
         for g in ["state", "other"] {
             store.add([Quad::new(n("lamp"), n("is"), n("Lit"), n(g))]).unwrap();
@@ -470,11 +471,14 @@ mod tests {
             "its text and its order travel with it"
         );
         store
-        .update(&format!(
-            "PREFIX : <{T}> INSERT DATA {{ GRAPH :rules {{ :sawRule sh:deactivated true . :inference a sh:SPARQLRule ; \
+            .update(&format!(
+                "PREFIX belief: <http://example.org/orexis/belief#>
+             PREFIX sh: <http://www.w3.org/ns/shacl#>
+             PREFIX : <{T}>
+             INSERT DATA {{ GRAPH :rules {{ :sawRule sh:deactivated true . :inference a sh:SPARQLRule ; \
              sh:construct \"CONSTRUCT {{}} WHERE {{}}\" }} }}"
-        ))
-        .unwrap();
+            ))
+            .unwrap();
         assert_eq!(
             named(transitions(&store).unwrap()),
             [vec!["countRule"], vec!["echoRule"]]

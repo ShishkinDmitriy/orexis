@@ -52,7 +52,7 @@ pub fn received(store: &Store, graph: &str) -> Result<bool, Error> {
         return Ok(false);
     };
     let text = bind(
-        "ASK { GRAPH $cat { $graph orexis:arrivedBy $received } }",
+        "PREFIX orexis: <http://example.org/orexis#> ASK { GRAPH $cat { $graph orexis:arrivedBy $received } }",
         &[
             ("cat", Value::iri(cat.as_str())),
             ("graph", Value::iri(graph)),

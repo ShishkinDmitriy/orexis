@@ -86,8 +86,10 @@ pub fn batch(journal: &Journal, agent: &str, endpoint: &str) -> Option<(String, 
     let unshipped = rows(
         journal,
         &format!(
-            "SELECT ?a ?kind ?start ?took WHERE {{ GRAPH ?a {{ ?a a <{ACTIVITY}> , ?kind ; \
-             <http://www.w3.org/ns/prov#startedAtTime> ?start ; <http://example.org/orexis#tookS> ?took . \
+            "PREFIX orexis: <http://example.org/orexis#>
+             PREFIX prov: <http://www.w3.org/ns/prov#>
+             SELECT ?a ?kind ?start ?took WHERE {{ GRAPH ?a {{ ?a a <{ACTIVITY}> , ?kind ; \
+             prov:startedAtTime ?start ; orexis:tookS ?took . \
              FILTER(?kind != <{ACTIVITY}>) FILTER NOT EXISTS {{ ?a <{SHIPPED_TO}> \"{endpoint}\" }} }} }} ORDER BY ?start ?a"
         ),
     );
@@ -97,7 +99,7 @@ pub fn batch(journal: &Journal, agent: &str, endpoint: &str) -> Option<(String, 
     //  WHAT EACH ACTIVITY WAS BEGUN INSIDE, over everything the journal holds: a trace is named for the outermost.
     let parents: BTreeMap<String, String> = rows(
         journal,
-        "SELECT ?a ?p WHERE { GRAPH ?a { ?a <http://purl.org/dc/terms/isPartOf> ?p } }",
+        "PREFIX dcterms: <http://purl.org/dc/terms/> SELECT ?a ?p WHERE { GRAPH ?a { ?a dcterms:isPartOf ?p } }",
     )
     .into_iter()
     .filter_map(|r| Some((r.get("a")?.clone(), r.get("p")?.clone())))
@@ -115,7 +117,7 @@ pub fn batch(journal: &Journal, agent: &str, endpoint: &str) -> Option<(String, 
     let mut triggers: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for r in rows(
         journal,
-        "SELECT ?a ?x WHERE { GRAPH ?a { ?a <http://www.w3.org/ns/prov#wasStartedBy> ?x } } ORDER BY ?a ?x",
+        "PREFIX prov: <http://www.w3.org/ns/prov#> SELECT ?a ?x WHERE { GRAPH ?a { ?a prov:wasStartedBy ?x } } ORDER BY ?a ?x",
     ) {
         if let (Some(a), Some(x)) = (r.get("a"), r.get("x")) {
             triggers.entry(a.clone()).or_default().push(x.clone());
@@ -127,8 +129,9 @@ pub fn batch(journal: &Journal, agent: &str, endpoint: &str) -> Option<(String, 
     let mut said: BTreeMap<String, Vec<(String, String, Option<String>)>> = BTreeMap::new();
     for r in rows(
         journal,
-        "SELECT ?x ?c ?k ?t WHERE { GRAPH ?c { ?x <http://www.w3.org/ns/prov#wasGeneratedBy> ?c \
-         OPTIONAL { ?x a ?k } OPTIONAL { ?x <http://www.w3.org/ns/prov#generatedAtTime> ?t } } } ORDER BY ?c ?t ?x",
+        "PREFIX prov: <http://www.w3.org/ns/prov#>
+         SELECT ?x ?c ?k ?t WHERE { GRAPH ?c { ?x prov:wasGeneratedBy ?c \
+         OPTIONAL { ?x a ?k } OPTIONAL { ?x prov:generatedAtTime ?t } } } ORDER BY ?c ?t ?x",
     ) {
         if let (Some(x), Some(c)) = (r.get("x"), r.get("c")) {
             generated.insert(x.clone(), c.clone());

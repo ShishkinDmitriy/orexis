@@ -18,7 +18,6 @@ use orexis::Error;
 use orexis::boot::TREE;
 use orexis::clock::{Elapsing, instant};
 use orexis::events::{Field, Point};
-use orexis::namespaces::Namespaces;
 use orexis::ontology::{BELIEF, FORECAST, SELF_GRAPH};
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::{Provided, Running, UNFINISHED};
@@ -184,7 +183,7 @@ async fn until(running: &Running, clock: &Arc<Elapsing>, at: oxsdatatypes::DateT
 }
 
 fn store() -> Store {
-    Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap()
+    Store::new().unwrap()
 }
 
 /// Run the terrace of `world` through `walk`, its parts lent to a runtime on a clock standing where the walk sets it.
@@ -292,7 +291,8 @@ async fn the_agent_listens_on_the_boards_one_topic_alone_and_one_message_is_five
             let read: std::collections::BTreeMap<String, f64> = t
                 .store
                 .rows(
-                    "SELECT ?p ?v WHERE { ?o sosa:observedProperty ?p ; sosa:hasSimpleResult ?v }",
+                    "PREFIX sosa: <http://www.w3.org/ns/sosa/>
+                        SELECT ?p ?v WHERE { ?o sosa:observedProperty ?p ; sosa:hasSimpleResult ?v }",
                     &observed,
                 )
                 .unwrap()
@@ -363,7 +363,11 @@ async fn a_board_that_goes_quiet_is_said_silent_with_nothing_else_arriving() {
             let silences: Vec<&str> = silences.iter().map(String::as_str).collect();
             let mut silent: Vec<String> = t
                 .store
-                .rows("SELECT ?s WHERE { ?s sensing:silentSince ?since }", &silences)
+                .rows(
+                    "PREFIX sensing: <http://example.org/orexis/sensing#>
+                    SELECT ?s WHERE { ?s sensing:silentSince ?since }",
+                    &silences,
+                )
                 .unwrap()
                 .iter()
                 .map(|r| local(&iri(r, "s").unwrap()))
@@ -596,7 +600,9 @@ async fn a_forecast_is_fetched_for_the_terraces_place_and_written_an_hour_a_grap
                 .store
                 .rows(
                     &format!(
-                        "SELECT ?v WHERE {{ ?o sosa:madeBySensor <{T}forecast_terrace> ; sosa:hasSimpleResult ?v }}"
+                        "PREFIX sensing: <http://example.org/orexis/sensing#>
+                            PREFIX sosa: <http://www.w3.org/ns/sosa/>
+                            SELECT ?v WHERE {{ ?o sosa:madeBySensor <{T}forecast_terrace> ; sosa:hasSimpleResult ?v }}"
                     ),
                     &forecasts,
                 )
@@ -667,7 +673,9 @@ async fn the_sovereign_says_through_the_agents_own_bot_that_the_probe_is_defecti
                 .store
                 .rows(
                     &format!(
-                        "SELECT ?v ?why WHERE {{ ?o sosa:resultTime ?t ; sosa:madeBySensor <{PROBE}> \
+                        "PREFIX sensing: <http://example.org/orexis/sensing#>
+                         PREFIX sosa: <http://www.w3.org/ns/sosa/>
+                         SELECT ?v ?why WHERE {{ ?o sosa:resultTime ?t ; sosa:madeBySensor <{PROBE}> \
                          OPTIONAL {{ ?o sosa:hasSimpleResult ?v }} OPTIONAL {{ ?o sensing:defect ?why }} }} ORDER BY DESC(?t) LIMIT 1"
                     ),
                     &observed,

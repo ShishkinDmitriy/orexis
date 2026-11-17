@@ -18,7 +18,6 @@ use orexis::Error;
 use orexis::boot::TREE;
 use orexis::clock::Elapsing;
 use orexis::clock::{Clock, instant, seconds};
-use orexis::namespaces::Namespaces;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::Provided;
@@ -80,7 +79,7 @@ impl Client for Broker {
 }
 
 fn store() -> Store {
-    Store::new(Arc::new(Namespaces::linked().unwrap())).unwrap()
+    Store::new().unwrap()
 }
 
 /// The grower booted and started over the fake broker, on a clock from noon.
@@ -233,7 +232,9 @@ async fn a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_rea
 /// foresight, since the grower's is its task's alone.
 fn foreseen(store: &Store, now: DateTime) -> Vec<(DateTime, String)> {
     /// THE BED'S SOIL IN EVERY GROUND THE GROWER LAYS, and when each begins — read off the planner's imaginaria.
-    const FORESEEN_Q: &str = "
+    const FORESEEN_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX orexis: <http://example.org/orexis#>
+    PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?start ?state WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start }
       GRAPH ?g { <http://example.org/orexis/world/greenhouse#bed> <http://example.org/orexis/climate#soil> ?state } }
@@ -271,7 +272,9 @@ async fn a_committed_dose_is_a_flow_the_beds_prediction_accumulates() {
     let period = store
         .rows(
             &format!(
-                "SELECT ?s ?e WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{}> dcterms:temporal ?p . \
+                "PREFIX dcterms: <http://purl.org/dc/terms/>
+                 PREFIX orexis: <http://example.org/orexis#>
+                 SELECT ?s ?e WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{}> dcterms:temporal ?p . \
                  ?p orexis:start ?s ; orexis:end ?e }} }}",
                 windows[0]
             ),

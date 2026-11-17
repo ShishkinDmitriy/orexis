@@ -250,14 +250,16 @@ struct About {
 /// SPARQL rule, or linked to a shape — is the failure the draft says to report, logged and left out.
 fn layers(store: &Store) -> Result<Layers, Error> {
     /// A CUSTOM RULE PROCESSOR named anywhere in a rules graph: an instruction this engine cannot follow.
-    const PROCESSOR_Q: &str = "SELECT ?x ?processor WHERE { ?x sh:ruleProcessor ?processor }";
+    const PROCESSOR_Q: &str =
+        "PREFIX sh: <http://www.w3.org/ns/shacl#> SELECT ?x ?processor WHERE { ?x sh:ruleProcessor ?processor }";
     /// WHAT A RULE'S `sh:prefixes` DECLARE, as SHACL-SPARQL spells it.
-    const DECLARED_Q: &str = "
+    const DECLARED_Q: &str = "PREFIX sh: <http://www.w3.org/ns/shacl#>
     SELECT ?rule ?prefix ?namespace WHERE {
       ?rule sh:prefixes ?ontology . ?ontology sh:declare ?d . ?d sh:prefix ?prefix ; sh:namespace ?namespace }";
     /// THE DEFAULT RULE SET of every rules graph: every active rule of any kind, with where the draft places it, its
     /// construct, and whether a shape links it, so that what cannot be run is reported. No transition is of it.
-    const RULES_Q: &str = "
+    const RULES_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
+    PREFIX sh: <http://www.w3.org/ns/shacl#>
     SELECT ?rule ?type ?construct ?layer ?order ?once ?shape ?condition ?expects WHERE {
       ?rule a ?type . FILTER(?type IN (sh:SPARQLRule, sh:TripleRule, sh:Rule))
       OPTIONAL { ?rule sh:construct ?construct }
@@ -335,9 +337,7 @@ fn layers(store: &Store) -> Result<Layers, Error> {
             );
         }
         let empty = BTreeMap::new();
-        let Some(construct) = prefixed(store, &rule, &construct, declared.get(&rule).unwrap_or(&empty)) else {
-            continue;
-        };
+        let construct = prefixed(&construct, declared.get(&rule).unwrap_or(&empty));
         let figure = |f: &Option<String>| f.as_deref().and_then(|f| f.parse().ok()).unwrap_or(0.0);
         let once = about.once.as_deref().is_some_and(|o| o.eq_ignore_ascii_case("true"));
         found.push((
@@ -363,32 +363,21 @@ fn layers(store: &Store) -> Result<Layers, Error> {
 }
 
 /// `text` with a `PREFIX` line at its head for each name its `sh:prefixes` declare and the text does not declare
-/// itself; None, and the rule refused, where a declared name is one the store's dictionary spells differently.
-fn prefixed(store: &Store, rule: &str, text: &str, declared: &BTreeMap<String, String>) -> Option<String> {
+/// itself.
+fn prefixed(text: &str, declared: &BTreeMap<String, String>) -> String {
     let own: BTreeSet<String> = PREFIX_LINE
         .captures_iter(text)
         .map(|c| c.get(1).map(|m| m.as_str().to_string()).unwrap_or_default())
         .collect();
     let mut lines = Vec::new();
     for (label, namespace) in declared {
-        if let Some(known) = store.namespaces().get(label)
-            && known != namespace
-        {
-            log::error!(
-                "rule {rule} declares {label}: as <{namespace}>, and the store spells that name <{known}>; refused"
-            );
-            return None;
-        }
         if own.contains(label) {
             continue;
         }
         lines.push(format!("PREFIX {label}: <{namespace}>"));
     }
-    if lines.is_empty() {
-        return Some(text.to_string());
-    }
     lines.push(text.to_string());
-    Some(lines.join("\n"))
+    lines.join("\n")
 }
 
 /// The revision graph's row: a revision and of `kind`, derived, from `source`, the source's owner's, for the
@@ -405,7 +394,8 @@ fn describe(
     /// THE REVISION GRAPH'S ROW beside its entry: derived from its source, and whether its rules settled.
     const DESCRIBED_Q: &str = "GRAPH $cat { $into $derived $source ; $settled $value . }";
     /// WHOSE THE SOURCE IS AND WHEN IT HOLDS, off its row: the revisions are the same.
-    const SOURCE_Q: &str = "
+    const SOURCE_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX orexis: <http://example.org/orexis#>
     SELECT ?owner ?start ?end WHERE {
       GRAPH $cat { OPTIONAL { $source orexis:ownedBy ?owner }
                    OPTIONAL { $source dcterms:temporal ?p .
@@ -440,7 +430,9 @@ fn describe(
             ("value", Value::Bool(settled)),
         ],
     )?;
-    store.update(&format!("INSERT DATA {{\n  {entry}\n  {described} }}"))
+    store.update(&format!(
+        "PREFIX sh: <http://www.w3.org/ns/shacl#> INSERT DATA {{\n  {entry}\n  {described} }}"
+    ))
 }
 
 /// Say on `graph`'s row whether its rules — or its arrival — are done, replacing what it said.
@@ -503,7 +495,7 @@ mod tests {
         let found = store
             .rows(
                 &format!(
-                    "SELECT ?v WHERE {{ GRAPH ?c {{ <{}> <{SETTLED}> ?v }} }}",
+                    "PREFIX sh: <http://www.w3.org/ns/shacl#> SELECT ?v WHERE {{ GRAPH ?c {{ <{}> <{SETTLED}> ?v }} }}",
                     revision_graph(SENSED)
                 ),
                 &[],
@@ -534,7 +526,8 @@ mod tests {
         assert!(!concluded(&store).is_empty());
         store
             .update(&format!(
-                "DELETE {{ GRAPH <{SENSED}> {{ ?o <http://example.org/test#reads> ?v }} }} INSERT {{ GRAPH <{SENSED}> \
+                "PREFIX sh: <http://www.w3.org/ns/shacl#>
+                 DELETE {{ GRAPH <{SENSED}> {{ ?o <http://example.org/test#reads> ?v }} }} INSERT {{ GRAPH <{SENSED}> \
                  {{ ?o <http://example.org/test#reads> 0.2 }} }} WHERE {{ GRAPH <{SENSED}> {{ ?o \
                  <http://example.org/test#reads> ?v }} }}"
             ))
@@ -554,10 +547,11 @@ mod tests {
         let store = case("a_reading_below_its_range_is_concluded_below");
         store
             .update(
-                r#"INSERT DATA { GRAPH <http://example.org/test#rules> {
-  <http://example.org/test#restless> a <http://www.w3.org/ns/shacl#RuleSet> ;
-    <http://www.w3.org/ns/shacl#hasRule> [ a <http://www.w3.org/ns/shacl#SPARQLRule> ;
-      <http://www.w3.org/ns/shacl#construct> "PREFIX : <http://example.org/test#> CONSTRUCT { ?s :token ?u } WHERE { ?s a :Pot BIND(STRUUID() AS ?u) }" ] } }"#,
+                r#"PREFIX sh: <http://www.w3.org/ns/shacl#>
+  INSERT DATA { GRAPH <http://example.org/test#rules> {
+  <http://example.org/test#restless> a sh:RuleSet ;
+    sh:hasRule [ a sh:SPARQLRule ;
+      sh:construct "PREFIX : <http://example.org/test#> CONSTRUCT { ?s :token ?u } WHERE { ?s a :Pot BIND(STRUUID() AS ?u) }" ] } }"#,
             )
             .unwrap();
         assert_eq!(revise(&store, SENSED, &known(&store), 12, BELIEF).unwrap().spent, 12);
@@ -588,12 +582,13 @@ mod tests {
         let store = case("a_reading_below_its_range_is_concluded_below");
         store
             .update(
-                r#"INSERT DATA { GRAPH <http://example.org/test#rules> {
-  <http://example.org/test#triple> a <http://www.w3.org/ns/shacl#TripleRule> .
-  <http://example.org/test#shape> a <http://www.w3.org/ns/shacl#NodeShape> ;
-    <http://www.w3.org/ns/shacl#rule> <http://example.org/test#per_focus> .
-  <http://example.org/test#per_focus> a <http://www.w3.org/ns/shacl#SPARQLRule> ;
-    <http://www.w3.org/ns/shacl#construct> "CONSTRUCT { <http://example.org/test#zz> a <http://example.org/test#Seen> } WHERE { }" } }"#,
+                r#"PREFIX sh: <http://www.w3.org/ns/shacl#>
+  INSERT DATA { GRAPH <http://example.org/test#rules> {
+  <http://example.org/test#triple> a sh:TripleRule .
+  <http://example.org/test#shape> a sh:NodeShape ;
+    sh:rule <http://example.org/test#per_focus> .
+  <http://example.org/test#per_focus> a sh:SPARQLRule ;
+    sh:construct "CONSTRUCT { <http://example.org/test#zz> a <http://example.org/test#Seen> } WHERE { }" } }"#,
             )
             .unwrap();
         revise(&store, SENSED, &known(&store), BUDGET, BELIEF).unwrap();
@@ -606,7 +601,7 @@ mod tests {
     }
 
     #[test]
-    fn a_prefix_the_store_spells_differently_refuses_its_rule_and_the_others_conclude() {
+    fn a_rule_stating_a_condition_this_engine_cannot_honour_concludes_beside_the_others() {
         let store = case("a_reading_below_its_range_is_concluded_below");
         store
             .update(
@@ -616,11 +611,7 @@ INSERT DATA { GRAPH <http://example.org/test#rules> {
   <http://example.org/test#rules> sh:ruleProcessor <http://example.org/test#somebody> .
   <http://example.org/test#conditioned> a sh:SPARQLRule ;
     sh:construct "CONSTRUCT { <http://example.org/test#zz> <http://example.org/test#noted> true } WHERE { }" ;
-    sh:condition <http://example.org/test#some_shape> ; sh:expectedPredicate <http://example.org/test#reads> .
-  <http://example.org/test#misspelt> a sh:SPARQLRule ;
-    sh:construct "CONSTRUCT { <http://example.org/test#zz> orexis:wrong true } WHERE { }" ;
-    sh:prefixes <http://example.org/test#other> .
-  <http://example.org/test#other> sh:declare [ sh:prefix "orexis" ; sh:namespace "http://example.org/elsewhere#"^^xsd:anyURI ] } }"#,
+    sh:condition <http://example.org/test#some_shape> ; sh:expectedPredicate <http://example.org/test#reads> . } }"#,
             )
             .unwrap();
         revise(&store, SENSED, &known(&store), BUDGET, BELIEF).unwrap();
@@ -628,15 +619,12 @@ INSERT DATA { GRAPH <http://example.org/test#rules> {
             .into_iter()
             .map(|(_, p, _)| p.rsplit('#').next().unwrap().to_string())
             .collect();
-        assert!(
-            said.contains("side") && said.contains("noted") && !said.contains("wrong"),
-            "{said:?}"
-        );
+        assert!(said.contains("side") && said.contains("noted"), "{said:?}");
     }
 
     #[test]
     fn a_name_that_would_break_out_of_its_text_is_refused_before_anything_is_written() {
-        let store = Store::new(snapshots::namespaces()).unwrap();
+        let store = Store::new().unwrap();
         let cat = "urn:test:cat";
         say_settled(&store, cat, "urn:test:g", true).unwrap();
         let smuggled = "urn:test:g> <urn:test:p> <urn:test:o";

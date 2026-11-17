@@ -175,7 +175,13 @@ fn write(
     }
     let forget = crate::withdraw::forgetting(&graph, uri)?;
     store.update(&format!(
-        "{forget} ;
+        "PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX orexis: <http://example.org/orexis#>
+PREFIX planning: <http://example.org/orexis/planning#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+{forget} ;
 INSERT {{
   GRAPH <{graph}> {{
   <{holder}> planning:holds <{uri}> .

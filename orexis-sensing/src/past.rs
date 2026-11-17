@@ -25,7 +25,8 @@ pub(crate) type Seen = (Observed, String, Option<String>);
 /// reading a point can be made of.
 pub(crate) fn observed(store: &Store, graph: &str, kind: &str) -> Result<Option<Seen>, Error> {
     /// What an observation graph and its revisions say of the reading: asked over them alone.
-    const OBSERVED_Q: &str = "
+    const OBSERVED_Q: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
+    PREFIX sosa: <http://www.w3.org/ns/sosa/>
     SELECT ?sensor ?feature ?property ?value ?scaled ?defect ?t ?raw ?previous WHERE {
       ?o sosa:madeBySensor ?sensor ; sosa:resultTime ?t ; sosa:hasFeatureOfInterest ?feature ;
          sosa:observedProperty ?property
@@ -111,7 +112,7 @@ fn is_revision(store: &Store, graph: &str) -> Result<bool, Error> {
         return Ok(false);
     };
     store.ask(
-        &format!("ASK {{ GRAPH <{cat}> {{ <{graph}> <http://www.w3.org/ns/prov#wasDerivedFrom> ?source }} }}"),
+        &format!("PREFIX prov: <http://www.w3.org/ns/prov#> ASK {{ GRAPH <{cat}> {{ <{graph}> prov:wasDerivedFrom ?source }} }}"),
         &[],
     )
 }

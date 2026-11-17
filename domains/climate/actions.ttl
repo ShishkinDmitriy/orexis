@@ -22,7 +22,8 @@
 climate:Heating a orexis:Action ;
     rdfs:label "heat a subject until its air is believed comfortable" ;
     orexis:takes climate:heater , actuation:subject ;
-    planning:precondition """PREFIX climate: <http://example.org/orexis/climate#>
+    planning:precondition """PREFIX orexis: <http://example.org/orexis#>
+        PREFIX climate: <http://example.org/orexis/climate#>
         PREFIX actuation: <http://example.org/orexis/actuation#>
         SELECT DISTINCT ?heater ?subject WHERE {
             VALUES ?property { climate:AirTemperature }
@@ -37,7 +38,11 @@ climate:Heating a orexis:Action ;
     #  again. The sensor is the one the world says is hosted by the subject, or a sample of it, and
     #  observes its air's temperature. The executor looks for the answer from the step, and a patience
     #  past the cadence with no answer is a heating the world did not take.
-    planning:landsAfter """PREFIX climate: <http://example.org/orexis/climate#>
+    planning:landsAfter """PREFIX schema: <https://schema.org/>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        PREFIX climate: <http://example.org/orexis/climate#>
         PREFIX unit: <http://qudt.org/vocab/unit/>
         SELECT ?least ?most WHERE {
             ?sensor sosa:isHostedBy/(sosa:isSampleOf)? $subject ; sosa:observes climate:AirTemperature ;
@@ -55,7 +60,14 @@ climate:Heating a orexis:Action ;
         INSERT { $subject climate:air climate:Comfortable }
         WHERE  { $subject climate:air climate:Cold }""" ] ] ;
     execution:implementation [ a execution:Implementation ;
-        execution:operation [ a execution:Command ; sh:select """PREFIX climate: <http://example.org/orexis/climate#>
+        execution:operation [ a execution:Command ; sh:select """PREFIX dcterms: <http://purl.org/dc/terms/>
+        PREFIX orexis: <http://example.org/orexis#>
+        PREFIX schema: <https://schema.org/>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        PREFIX ssn: <http://www.w3.org/ns/ssn/>
+        PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        PREFIX climate: <http://example.org/orexis/climate#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
         SELECT ?actuator ?payload WHERE {
             GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?held a sensing:ObservationGraph ; dcterms:temporal ?p .

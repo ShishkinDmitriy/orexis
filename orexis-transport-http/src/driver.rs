@@ -117,7 +117,7 @@ impl Http {
 
     /// The sensors of the agent's this member reads.
     pub fn open(&self) -> Result<Vec<String>, Error> {
-        const FORM_Q: &str = "ASK { $sensor td:hasForm ?form }";
+        const FORM_Q: &str = "PREFIX td: <https://www.w3.org/2019/wot/td#> ASK { $sensor td:hasForm ?form }";
         let stated = common(&self.beliefs)?;
         let mut out = Vec::new();
         for sensor in observed(&self.beliefs)? {
@@ -144,16 +144,21 @@ impl Http {
     pub fn reaches(&self, device: &str) -> Result<bool, Error> {
         let stated = common(&self.beliefs)?;
         self.beliefs.ask(
-            &bind("ASK { $device td:hasForm ?form }", &[("device", Value::iri(device))])?,
+            &bind(
+                "PREFIX td: <https://www.w3.org/2019/wot/td#> ASK { $device td:hasForm ?form }",
+                &[("device", Value::iri(device))],
+            )?,
             &strs(&stated),
         )
     }
 
     /// Fetch what `sensor` reads, on a thread of its own, unless it is being fetched already.
     pub fn sense_now(&self, sensor: &str) -> Result<(), Error> {
-        const TARGET_Q: &str =
-            "SELECT ?target WHERE { $sensor td:hasForm ?form . ?form hctl:hasTarget ?target } ORDER BY ?target";
-        const WHERE_Q: &str = "
+        const TARGET_Q: &str = "PREFIX hctl: <https://www.w3.org/2019/wot/hypermedia#>
+            PREFIX td: <https://www.w3.org/2019/wot/td#>
+            SELECT ?target WHERE { $sensor td:hasForm ?form . ?form hctl:hasTarget ?target } ORDER BY ?target";
+        const WHERE_Q: &str = "PREFIX schema: <https://schema.org/>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
         SELECT ?property ?value WHERE {
           $sensor sosa:isHostedBy ?host . ?host schema:geo ?geo . ?geo ?property ?value . FILTER(isLiteral(?value)) }";
         if self.fetching.lock().unwrap().contains(sensor) {
@@ -289,7 +294,11 @@ mod tests {
     fn with_no_location_nothing_is_fetched() {
         let store = balcony();
         store
-            .update("PREFIX schema: <https://schema.org/> PREFIX : <http://example.org/test#> DELETE WHERE { GRAPH :world { :balcony schema:geo ?g } }")
+            .update(
+                "PREFIX schema: <https://schema.org/>
+                PREFIX : <http://example.org/test#>
+                DELETE WHERE { GRAPH :world { :balcony schema:geo ?g } }",
+            )
             .unwrap();
         let (member, asked) = member(&store);
         member.sense_now(&format!("{TEST}weather")).unwrap();

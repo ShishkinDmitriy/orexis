@@ -13,7 +13,10 @@ use crate::world_at::catalogue;
 /// Every `(for, about)` still to be weighed, desires and wants in grounds first, then candidates in mint order —
 /// each candidate's row with `from`, the world it leaves, and `child`, where it reached one.
 pub fn unweighed(store: &Store, for_: Option<&str>, leaving: Option<&str>, memo: &mut Memo) -> Result<Vec<Row>, Error> {
-    const IN_GROUNDS_Q: &str = "
+    const IN_GROUNDS_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+    PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX planning: <http://example.org/orexis/planning#>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
     SELECT DISTINCT ?for ?about WHERE {
       { GRAPH $cat { ?d a planning:DesireGraph } GRAPH ?d { ?holder planning:holds ?for . ?for a planning:Desire $narrow }
         GRAPH $cat { ?about a planning:GroundGraph } }
@@ -26,7 +29,7 @@ pub fn unweighed(store: &Store, for_: Option<&str>, leaving: Option<&str>, memo:
                                          FILTER((?os <= ?at && ?os > ?gs) || (?gs > ?at && ?os < ?gs)) } } }
       FILTER NOT EXISTS { GRAPH $cat { ?x planning:weighs ?about ; planning:for ?for } } }
     ORDER BY ?for ?about";
-    const CANDIDATES_Q: &str = "
+    const CANDIDATES_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#>
     SELECT DISTINCT ?for ?about ?from ?child WHERE {
       GRAPH $cat { ?d a planning:WantGraph }
       GRAPH ?d { ?holder planning:holds ?for . ?for a planning:Want $narrow }

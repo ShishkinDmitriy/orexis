@@ -50,7 +50,8 @@ impl Triggered {
 /// The catalogue and `arrival`'s row, where the arrival is testimony: None where it is not, or there is no catalogue.
 fn testimony(store: &Store, arrival: &str) -> Result<Option<(String, Row)>, Error> {
     /// WHETHER THE ARRIVAL IS TESTIMONY, WHOSE IT IS AND WHEN IT HOLDS, off its row.
-    const ARRIVAL_Q: &str = "
+    const ARRIVAL_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX orexis: <http://example.org/orexis#>
     SELECT ?owner ?start ?end WHERE {
       GRAPH $cat { $arrival orexis:arrivedBy orexis:Received .
                    OPTIONAL { $arrival orexis:ownedBy ?owner }
@@ -195,7 +196,8 @@ fn deleted_from(store: &Store, change: &Change, targets: &[&str]) -> Result<Vec<
 /// Every state graph the agent derived, whatever its period.
 fn derived(store: &Store, cat: &str) -> Result<Vec<String>, Error> {
     /// EVERY BELIEF THE AGENT DERIVED, of any period, that is no revision: its own state.
-    const DERIVED_Q: &str = "
+    const DERIVED_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
+    PREFIX orexis: <http://example.org/orexis#>
     SELECT ?g WHERE { GRAPH $cat { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
                                    FILTER NOT EXISTS { ?g a belief:RevisionGraph }
                                    ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
@@ -210,7 +212,7 @@ fn derived(store: &Store, cat: &str) -> Result<Vec<String>, Error> {
 /// taken back first.
 fn describe(store: &Store, cat: &str, into: &str, row: &Row) -> Result<(), Error> {
     /// A ROW, AND ITS PERIOD, TAKEN BACK — for an arrival's state graph said again of a later arrival.
-    const UNDESCRIBE_U: &str = "
+    const UNDESCRIBE_U: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
     DELETE { GRAPH $cat { $graph ?p ?o . ?period ?pp ?po } }
     WHERE  { GRAPH $cat { $graph ?p ?o . OPTIONAL { $graph dcterms:temporal ?period . ?period ?pp ?po } } }";
     store.update(&bind(
@@ -258,10 +260,13 @@ mod tests {
     }
 
     fn held(store: &Store) -> BTreeMap<String, String> {
-        const OWN_STATE_Q: &str = "SELECT ?g WHERE { GRAPH ?c { ?c a orexis:CatalogueGraph .
+        const OWN_STATE_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
+        PREFIX orexis: <http://example.org/orexis#>
+        SELECT ?g WHERE { GRAPH ?c { ?c a orexis:CatalogueGraph .
         ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
         FILTER NOT EXISTS { ?g a belief:RevisionGraph } ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
-        const HELD_Q: &str = "SELECT ?p ?o WHERE { <http://example.org/test#counter> ?p ?o FILTER(?p != rdf:type) }";
+        const HELD_Q: &str = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            SELECT ?p ?o WHERE { <http://example.org/test#counter> ?p ?o FILTER(?p != rdf:type) }";
         let own: Vec<String> = store
             .rows(OWN_STATE_Q, &[])
             .unwrap()
@@ -358,7 +363,8 @@ mod tests {
         let store = case("a_state_is_replaced_where_it_stood");
         store
             .update(
-                r#"INSERT DATA { GRAPH <http://example.org/test#rules> { <http://example.org/test#countRule>
+                r#"PREFIX sh: <http://www.w3.org/ns/shacl#>
+        INSERT DATA { GRAPH <http://example.org/test#rules> { <http://example.org/test#countRule>
         a sh:SPARQLRule , sh:Rule ;
         sh:construct "CONSTRUCT { ?c <http://example.org/test#count> 9 } WHERE { ?c a <http://example.org/test#Counter> }" } }"#,
             )
@@ -368,7 +374,11 @@ mod tests {
         assert_eq!(held(&store), map(&[("count", "1")]));
         assert!(
             store
-                .rows("SELECT ?g WHERE { GRAPH ?c { ?g a belief:RevisionGraph } }", &[])
+                .rows(
+                    "PREFIX belief: <http://example.org/orexis/belief#>
+                    SELECT ?g WHERE { GRAPH ?c { ?g a belief:RevisionGraph } }",
+                    &[]
+                )
                 .unwrap()
                 .is_empty()
         );
@@ -380,7 +390,10 @@ mod tests {
         trigger(&store, TICK, BUDGET, 0).unwrap();
         store
             .update(&format!(
-                r#"DELETE {{ GRAPH ?c {{ ?p orexis:start ?s . ?p orexis:end ?e }} }}
+                r#"PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX orexis: <http://example.org/orexis#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+DELETE {{ GRAPH ?c {{ ?p orexis:start ?s . ?p orexis:end ?e }} }}
 INSERT {{ GRAPH ?c {{ ?p orexis:start "2026-01-01T12:20:00+00:00"^^xsd:dateTime .
                      ?p orexis:end "2026-01-01T12:40:00+00:00"^^xsd:dateTime }} }}
 WHERE {{ GRAPH ?c {{ <{TICK}> dcterms:temporal ?p . ?p orexis:start ?s ; orexis:end ?e }} }}"#
@@ -390,7 +403,9 @@ WHERE {{ GRAPH ?c {{ <{TICK}> dcterms:temporal ?p . ?p orexis:start ?s ; orexis:
         let periods = store
             .rows(
                 &format!(
-                    "SELECT ?s ?e WHERE {{ GRAPH ?c {{ <{TICK}/believed> dcterms:temporal ?p . ?p orexis:start ?s ; \
+                    "PREFIX dcterms: <http://purl.org/dc/terms/>
+                     PREFIX orexis: <http://example.org/orexis#>
+                     SELECT ?s ?e WHERE {{ GRAPH ?c {{ <{TICK}/believed> dcterms:temporal ?p . ?p orexis:start ?s ; \
                      orexis:end ?e }} }}"
                 ),
                 &[],

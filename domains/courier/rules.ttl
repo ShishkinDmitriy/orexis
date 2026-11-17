@@ -26,7 +26,9 @@
 
 :columnRule a belief:Transition ; sh:order 0 ;
     rdfs:label "the column a van stands in, concluded of its fix" ;
-    belief:update """PREFIX courier: <http://example.org/orexis/courier#>
+    belief:update """PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        PREFIX courier: <http://example.org/orexis/courier#>
         DELETE { ?van courier:x ?was }
         INSERT { ?van courier:x ?x }
         WHERE {
@@ -39,7 +41,9 @@
 
 :rowRule a belief:Transition ; sh:order 0 ;
     rdfs:label "the row a van stands in, concluded of its fix" ;
-    belief:update """PREFIX courier: <http://example.org/orexis/courier#>
+    belief:update """PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        PREFIX courier: <http://example.org/orexis/courier#>
         DELETE { ?van courier:y ?was }
         INSERT { ?van courier:y ?y }
         WHERE {
@@ -52,7 +56,11 @@
 
 :relativeColumnRule a belief:Transition ; sh:order 0 ;
     rdfs:label "the column of what a contact stands for, its vector added to the carrying van's, inside the sensor's range" ;
-    belief:update """PREFIX courier: <http://example.org/orexis/courier#>
+    belief:update """PREFIX schema: <https://schema.org/>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        PREFIX courier: <http://example.org/orexis/courier#>
         DELETE { ?subject courier:x ?was }
         INSERT { ?subject courier:x ?x }
         WHERE {
@@ -69,7 +77,11 @@
 
 :relativeRowRule a belief:Transition ; sh:order 0 ;
     rdfs:label "the row of what a contact stands for, its vector added to the carrying van's, inside the sensor's range" ;
-    belief:update """PREFIX courier: <http://example.org/orexis/courier#>
+    belief:update """PREFIX schema: <https://schema.org/>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        PREFIX courier: <http://example.org/orexis/courier#>
         DELETE { ?subject courier:y ?was }
         INSERT { ?subject courier:y ?y }
         WHERE {
@@ -93,7 +105,8 @@
 :a_drive_ahead a coordination:Reach ;
     rdfs:label "a van stands, a drive on, where it stands or at a neighbour" ;
     coordination:stepS 60 ;    # the top of a drive's band, thirty to sixty seconds (actions.answered.ttl)
-    sh:construct """PREFIX courier: <http://example.org/orexis/courier#>
+    sh:construct """PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        PREFIX courier: <http://example.org/orexis/courier#>
         CONSTRUCT { ?at a courier:Van ; courier:x ?nx ; courier:y ?ny }
         WHERE {
             $this a courier:Van ; courier:x ?x ; courier:y ?y .

@@ -25,7 +25,9 @@ fn graphs(names: &[String]) -> Value {
 
 /// The world the present is: of the worlds holding the ground's facts, the largest cone, then the earliest minted.
 fn matched(store: &Store, ground: &str, hash: &str, cat: &Value) -> Result<Option<String>, Error> {
-    const MATCHES_Q: &str = r#"
+    const MATCHES_Q: &str = r#"PREFIX orexis: <http://example.org/orexis#>
+    PREFIX planning: <http://example.org/orexis/planning#>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
     SELECT ?w ?minted WHERE {
       GRAPH $cat {
         ?w orexis:hash $hash . FILTER(?w != $ground)
@@ -34,7 +36,7 @@ fn matched(store: &Store, ground: &str, hash: &str, cat: &Value) -> Result<Optio
         FILTER NOT EXISTS { ?w (planning:by/planning:from)+ $ground }
         OPTIONAL { ?w planning:minted ?m } }
       BIND(COALESCE(?m, 0) AS ?minted) }"#;
-    const CONE_SIZE_Q: &str = r#"
+    const CONE_SIZE_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
     SELECT (COUNT(DISTINCT ?w) AS ?n) WHERE { GRAPH $cat { ?w (planning:by/planning:from)+ $match } }"#;
     let tied = store.rows(
         &bind(
@@ -72,15 +74,19 @@ fn matched(store: &Store, ground: &str, hash: &str, cat: &Value) -> Result<Optio
 /// Find the world the last pass imagined that `ground` landed in, hand its cone to the ground, and drop everything
 /// else the last pass made. Refused where the ground has no hash.
 pub fn reroot(store: &Store, ground: &str) -> Result<Rerooting, Error> {
-    const CONE_Q: &str = r#"
+    const CONE_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
     SELECT DISTINCT ?w WHERE { GRAPH $cat { ?w (planning:by/planning:from)+ $match } }"#;
-    const HASH_Q: &str = r#"SELECT ?h WHERE { GRAPH $cat { $ground orexis:hash ?h } }"#;
-    const LAID_Q: &str = r#"
+    const HASH_Q: &str =
+        r#"PREFIX orexis: <http://example.org/orexis#> SELECT ?h WHERE { GRAPH $cat { $ground orexis:hash ?h } }"#;
+    const LAID_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
     SELECT ?g WHERE { GRAPH $cat { ?g prov:wasDerivedFrom* $ground . ?g a planning:GroundGraph } }"#;
-    const MADE_Q: &str = r#"
+    const MADE_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?w WHERE { GRAPH $cat { ?w a ?kind . VALUES ?kind { planning:PossibleGraph planning:GroundGraph }
                                   FILTER(isIRI(?w)) } }"#;
-    const RESTAMP_U: &str = r#"
+    const RESTAMP_U: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX orexis: <http://example.org/orexis#>
+    PREFIX planning: <http://example.org/orexis/planning#>
     DELETE { GRAPH $cat { ?period orexis:start ?a ; orexis:end ?b . ?w planning:spent ?s } }
     INSERT { GRAPH $cat { ?period orexis:start ?a2 ; orexis:end ?b2 . ?w planning:spent ?s2 } }
     WHERE  { GRAPH $cat {
@@ -90,25 +96,27 @@ pub fn reroot(store: &Store, ground: &str) -> Result<Rerooting, Error> {
       ?w (planning:by/planning:from)+ $match ; planning:spent ?s ; dcterms:temporal ?period .
       ?period orexis:start ?a ; orexis:end ?b }
       BIND(?a - (?m - ?g0) AS ?a2) BIND(?b - (?m - ?g0) AS ?b2) BIND(?s - COALESCE(?ms, 0.0) AS ?s2) }"#;
-    const REPARENT_U: &str = r#"
+    const REPARENT_U: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
     DELETE { GRAPH $cat { ?c planning:from $match } }
     INSERT { GRAPH $cat { ?c planning:from $ground } }
     WHERE  { GRAPH $cat { ?c planning:from $match } }"#;
-    const CHANGES_Q: &str = r#"
+    const CHANGES_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
     SELECT ?g WHERE { GRAPH $cat { VALUES ?w { $worlds } ?g prov:wasDerivedFrom ?w ; a ?kind .
                                    VALUES ?kind { execution:AddsGraph execution:RetractsGraph } } }"#;
-    const DROP_GRAPHS_U: &str = r#"
+    const DROP_GRAPHS_U: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
     DELETE { GRAPH $cat { ?g ?p ?o . ?period ?pp ?po } }
     WHERE  { GRAPH $cat { VALUES ?g { $graphs } ?g ?p ?o .
                           OPTIONAL { ?g dcterms:temporal ?period . ?period ?pp ?po } } }"#;
-    const DROP_ROWS_U: &str = r#"
+    const DROP_ROWS_U: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
     DELETE { GRAPH $cat { ?x ?p ?o . ?v ?vp ?vo } }
     WHERE  { GRAPH $cat {
       { ?x a planning:Weighing ; planning:weighs ?w . OPTIONAL { ?w planning:from ?f } }
       UNION { ?x a planning:Candidate ; planning:from ?f }
       BIND(COALESCE(?f, ?w) AS ?home) FILTER NOT EXISTS { ?home a ?kind }
       ?x ?p ?o . OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }"#;
-    const POSSIBLE_Q: &str = r#"SELECT ?m WHERE { GRAPH $cat { $match a planning:PossibleGraph } BIND($match AS ?m) }"#;
+    const POSSIBLE_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
+        SELECT ?m WHERE { GRAPH $cat { $match a planning:PossibleGraph } BIND($match AS ?m) }"#;
     let catalogue = store
         .catalogue()?
         .ok_or_else(|| Error::Evaluation("a store with no catalogue".into()))?;
@@ -227,7 +235,9 @@ mod tests {
         snapshots::tree().join("orexis-planning/tests/reroot")
     }
 
-    const WORLDS_Q: &str = "
+    const WORLDS_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX orexis: <http://example.org/orexis#>
+PREFIX planning: <http://example.org/orexis/planning#>
 SELECT ?w ?at ?until ?spent WHERE {
   GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:PossibleGraph .
                OPTIONAL { ?w dcterms:temporal ?p . ?p orexis:start ?at . OPTIONAL { ?p orexis:end ?until } }
@@ -235,7 +245,10 @@ SELECT ?w ?at ?until ?spent WHERE {
 
     fn present(store: &Store) -> String {
         /// THE PRESENT: the newest ground laid from nothing.
-        const PRESENT_Q: &str = "
+        const PRESENT_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX orexis: <http://example.org/orexis#>
+    PREFIX planning: <http://example.org/orexis/planning#>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
     SELECT ?g WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start .
                    FILTER NOT EXISTS { ?g prov:wasDerivedFrom ?parent } } }
@@ -297,13 +310,18 @@ SELECT ?w ?at ?until ?spent WHERE {
                 format!("{GROUND}2026-01-01T120030p0000"),
             );
             store
-            .update(&format!(
-                "INSERT {{ GRAPH <{cat}> {{ <{landing}> a planning:GroundGraph ; orexis:arrivedBy orexis:Derived ; orexis:hash ?h ;
+                .update(&format!(
+                    "PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX orexis: <http://example.org/orexis#>
+    PREFIX planning: <http://example.org/orexis/planning#>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
+    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    INSERT {{ GRAPH <{cat}> {{ <{landing}> a planning:GroundGraph ; orexis:arrivedBy orexis:Derived ; orexis:hash ?h ;
     prov:wasDerivedFrom <{old}> ;
     dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start \"2026-01-01T12:00:30+00:00\"^^xsd:dateTime ] }} }}
 WHERE {{ GRAPH <{cat}> {{ <{old}> orexis:hash ?h }} }}"
-            ))
-            .unwrap();
+                ))
+                .unwrap();
             let (held, bare) = if holder_is_old {
                 (&old, &landing)
             } else {
@@ -311,11 +329,12 @@ WHERE {{ GRAPH <{cat}> {{ <{old}> orexis:hash ?h }} }}"
             };
             if !holder_is_old {
                 store
-                .update(&format!(
-                    "DELETE {{ GRAPH <{cat}> {{ ?c planning:from <{old}> }} }} INSERT {{ GRAPH <{cat}> {{ ?c planning:from <{landing}> }} }}
+                    .update(&format!(
+                        "PREFIX planning: <http://example.org/orexis/planning#>
+DELETE {{ GRAPH <{cat}> {{ ?c planning:from <{old}> }} }} INSERT {{ GRAPH <{cat}> {{ ?c planning:from <{landing}> }} }}
 WHERE {{ GRAPH <{cat}> {{ ?c planning:from <{old}> }} }}"
-                ))
-                .unwrap();
+                    ))
+                    .unwrap();
             }
             let whole = store.rows(WORLDS_Q, &[]).unwrap().len();
             let found = reroot(&store, &present(&store)).unwrap();

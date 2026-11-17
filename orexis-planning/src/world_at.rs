@@ -31,7 +31,10 @@ pub struct Asking {
 pub fn world_at(store: &Store, world: Option<&str>, asking: &Asking, memo: &mut Memo) -> Result<Vec<String>, Error> {
     /// EVERY BELIEF THAT BEGINS AFTER `$now`, and the changeable part cut from one: a forecast the present has not
     /// reached (#987).
-    const AHEAD_Q: &str = "
+    const AHEAD_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX orexis: <http://example.org/orexis#>
+    PREFIX planning: <http://example.org/orexis/planning#>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
     SELECT ?g WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                    { ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start }

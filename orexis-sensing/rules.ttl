@@ -44,7 +44,8 @@
 :ofRule a sh:SPARQLRule ;
     rdfs:label "what the sensor observes, of what hosts it" ;
     sh:layer 0 ;
-    sh:construct """
+    sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
         CONSTRUCT { ?obs sosa:hasFeatureOfInterest ?feature ; sosa:observedProperty ?property }
         WHERE {
             ?obs a sosa:Observation ; sosa:madeBySensor ?sensor ; sensing:rawResult ?raw .
@@ -54,7 +55,8 @@
 :asGivenRule a sh:SPARQLRule ;
     rdfs:label "a number that is already a quantity in its property's unit" ;
     sh:layer 0 ;
-    sh:construct """
+    sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
         CONSTRUCT { ?obs sensing:scaledResult ?raw }
         WHERE {
             ?obs a sosa:Observation ; sosa:madeBySensor ?sensor ; sensing:rawResult ?raw .
@@ -64,7 +66,9 @@
 :scaledRule a sh:SPARQLRule ;
     rdfs:label "a number on the line through a two-point scaling's points" ;
     sh:layer 0 ;
-    sh:construct """
+    sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
         CONSTRUCT { ?obs sensing:scaledResult ?value }
         WHERE {
             ?obs a sosa:Observation ; sosa:madeBySensor ?sensor ; sensing:rawResult ?raw .
@@ -80,7 +84,8 @@
 :defectRule a sh:SPARQLRule ;
     rdfs:label "an observation of a defective sensor carries why" ;
     sh:layer 0 ;
-    sh:construct """
+    sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
         CONSTRUCT { ?obs sensing:defect ?why }
         WHERE {
             ?obs a sosa:Observation ; sosa:madeBySensor ?sensor ; sensing:rawResult ?raw .
@@ -93,7 +98,8 @@
 :asScaledRule a sh:SPARQLRule ;
     rdfs:label "a quantity no calibration corrects" ;
     sh:layer 1 ;
-    sh:construct """
+    sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
         CONSTRUCT { ?obs sosa:hasSimpleResult ?scaled }
         WHERE {
             ?obs a sosa:Observation ; sosa:madeBySensor ?sensor ; sensing:scaledResult ?scaled .
@@ -104,7 +110,9 @@
 :correctedRule a sh:SPARQLRule ;
     rdfs:label "a quantity on the line through a two-point calibration's points" ;
     sh:layer 1 ;
-    sh:construct """
+    sh:construct """PREFIX sensing: <http://example.org/orexis/sensing#>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
         CONSTRUCT { ?obs sosa:hasSimpleResult ?value }
         WHERE {
             ?obs a sosa:Observation ; sosa:madeBySensor ?sensor ; sensing:scaledResult ?scaled .
@@ -139,7 +147,11 @@
     rdfs:label "a sensor whose last stuckAfter readings all gave one number" ;
     sh:layer 0 ;
     sh:runOnce true ;
-    sh:construct """
+    sh:construct """PREFIX orexis: <http://example.org/orexis#>
+        PREFIX sensing: <http://example.org/orexis/sensing#>
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
+        PREFIX sosa: <http://www.w3.org/ns/sosa/>
+        PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
         CONSTRUCT { ?sensor sensing:stuckOn ?raw }
         WHERE {
             ?obs a sosa:Observation ; sosa:madeBySensor ?sensor ; sensing:rawResult ?raw .

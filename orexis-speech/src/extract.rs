@@ -21,10 +21,12 @@ const RULES_GRAPH: &str = "http://www.w3.org/ns/shacl#RulesGraph";
 /// Write what every extraction concludes of `statement` into the belief graph derived from it, replacing what was
 /// extracted of it before; the belief graph written, or none where nothing was.
 pub fn extract(store: &Store, statement: &str) -> Result<Vec<String>, Error> {
-    const EXTRACTIONS_Q: &str = "
+    const EXTRACTIONS_Q: &str = "PREFIX sh: <http://www.w3.org/ns/shacl#>
+    PREFIX speech: <http://example.org/orexis/speech#>
     SELECT ?rule ?text WHERE { ?rule a speech:Extraction ; sh:construct ?text .
                                FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule";
-    const ROW_Q: &str = "
+    const ROW_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX orexis: <http://example.org/orexis#>
     SELECT ?owner ?start ?end WHERE { GRAPH $cat { OPTIONAL { $g orexis:ownedBy ?owner }
       OPTIONAL { $g dcterms:temporal ?p . OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
     LIMIT 1";
@@ -76,7 +78,8 @@ pub fn extract(store: &Store, statement: &str) -> Result<Vec<String>, Error> {
     let end = value(&row, "end").map(|s| instant(&s)).transpose()?;
     let entry = store.entry(&target, &[BELIEF], DERIVED, owner.as_deref(), start, end)?;
     store.update(&format!(
-        "INSERT DATA {{ {entry}\n  GRAPH <{cat}> {{ <{target}> prov:wasDerivedFrom <{statement}> }} }}"
+        "PREFIX prov: <http://www.w3.org/ns/prov#>
+            INSERT DATA {{ {entry}\n  GRAPH <{cat}> {{ <{target}> prov:wasDerivedFrom <{statement}> }} }}"
     ))?;
     hash_named_graph(store, &target, None)?;
     Ok(vec![target])
@@ -88,7 +91,6 @@ mod tests {
     //! what its extractions conclude of it alone — one belief derived from it, its own, over its period.
 
     use orexis::ontology::{CATALOGUE_GRAPH, OREXIS};
-    use orexis::snapshots::namespaces;
 
     use super::*;
 
@@ -106,9 +108,14 @@ mod tests {
         let (me, round, claim) = (format!("{T}me"), round(), claim());
         let believed =
             format!("CONSTRUCT {{ ?s ?p ?o }} WHERE {{ ?s a ?c ; ?p ?o . VALUES ?c {{ <{T}Round> <{T}Claim> }} }}");
-        let st = Store::new(namespaces()).unwrap();
+        let st = Store::new().unwrap();
         st.update(&format!(
-            "INSERT DATA {{
+            "PREFIX dcterms: <http://purl.org/dc/terms/>
+  PREFIX orexis: <http://example.org/orexis#>
+  PREFIX sh: <http://www.w3.org/ns/shacl#>
+  PREFIX speech: <http://example.org/orexis/speech#>
+  PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+  INSERT DATA {{
   GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph .
       <{T}rules> a sh:RulesGraph . <{T}world> a orexis:BeliefGraph .
       <{round}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy <{me}> ;
@@ -146,7 +153,10 @@ mod tests {
                 .contains(&believed_graph(&round()))
         );
         let q = format!(
-            "SELECT ?a ?o ?from ?start WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph .
+            "PREFIX dcterms: <http://purl.org/dc/terms/>
+  PREFIX orexis: <http://example.org/orexis#>
+  PREFIX prov: <http://www.w3.org/ns/prov#>
+  SELECT ?a ?o ?from ?start WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph .
   <{}> orexis:arrivedBy ?a ; orexis:ownedBy ?o ; prov:wasDerivedFrom ?from ; dcterms:temporal ?p . ?p orexis:start ?start }} }}",
             believed_graph(&round())
         );
@@ -194,7 +204,9 @@ mod tests {
         let store = store();
         store
             .update(&format!(
-                "INSERT DATA {{ GRAPH <{T}rules> {{ <{T}broken> a speech:Extraction ; sh:construct \"CONSTRUCT {{\" . }} }}"
+                "PREFIX sh: <http://www.w3.org/ns/shacl#>
+                    PREFIX speech: <http://example.org/orexis/speech#>
+                    INSERT DATA {{ GRAPH <{T}rules> {{ <{T}broken> a speech:Extraction ; sh:construct \"CONSTRUCT {{\" . }} }}"
             ))
             .unwrap();
         assert_eq!(
@@ -210,7 +222,9 @@ mod tests {
         let rumour = format!("{T}rumour");
         store
             .update(&format!(
-                "INSERT DATA {{
+                "PREFIX orexis: <http://example.org/orexis#>
+  PREFIX speech: <http://example.org/orexis/speech#>
+  INSERT DATA {{
   GRAPH <{CATALOGUE_GRAPH}> {{ <{rumour}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy <{T}me> . }}
   GRAPH <{rumour}> {{ <{T}bed> <http://example.org/orexis/climate#soil> <http://example.org/orexis/climate#Dry> . }} }}"
             ))

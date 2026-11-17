@@ -3,7 +3,6 @@
 //! conflicts and lay what it yields to.
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::sync::Arc;
 
 use orexis::Error;
 use orexis::document::Document;
@@ -63,16 +62,19 @@ impl Coordinator {
     pub fn new(store: &Store) -> Result<Self, Error> {
         /// THE COORDINATOR THE SELF PLAYS, IN ONE QUERY: the self, and each figure the role says or, where it says
         /// none, the default the coordination's ontology states on its shape of the role (`sh:defaultValue`).
-        const COORDINATOR_Q: &str = "SELECT DISTINCT ?me (COALESCE(?patienceSaid, ?patienceOwn) AS ?patience) \
+        const COORDINATOR_Q: &str = "PREFIX coordination: <http://example.org/orexis/coordination#>
+        PREFIX orexis: <http://example.org/orexis#>
+        PREFIX sh: <http://www.w3.org/ns/shacl#>
+        SELECT DISTINCT ?me (COALESCE(?patienceSaid, ?patienceOwn) AS ?patience) \
         (COALESCE(?roundsSaid, ?roundsOwn) AS ?rounds) (COALESCE(?lookaheadSaid, ?lookaheadOwn) AS ?lookahead) WHERE { \
-        ?shape sh:targetClass <http://example.org/orexis/coordination#Coordinator> ; \
-          sh:property [ sh:path <http://example.org/orexis/coordination#patienceS> ; sh:defaultValue ?patienceOwn ] , \
-                      [ sh:path <http://example.org/orexis/coordination#rounds> ; sh:defaultValue ?roundsOwn ] , \
-                      [ sh:path <http://example.org/orexis/coordination#lookahead> ; sh:defaultValue ?lookaheadOwn ] . \
+        ?shape sh:targetClass coordination:Coordinator ; \
+          sh:property [ sh:path coordination:patienceS ; sh:defaultValue ?patienceOwn ] , \
+                      [ sh:path coordination:rounds ; sh:defaultValue ?roundsOwn ] , \
+                      [ sh:path coordination:lookahead ; sh:defaultValue ?lookaheadOwn ] . \
         OPTIONAL { ?me a orexis:Self } \
-        OPTIONAL { ?me orexis:plays ?r1 . ?r1 <http://example.org/orexis/coordination#patienceS> ?patienceSaid } \
-        OPTIONAL { ?me orexis:plays ?r2 . ?r2 <http://example.org/orexis/coordination#rounds> ?roundsSaid } \
-        OPTIONAL { ?me orexis:plays ?r3 . ?r3 <http://example.org/orexis/coordination#lookahead> ?lookaheadSaid } }";
+        OPTIONAL { ?me orexis:plays ?r1 . ?r1 coordination:patienceS ?patienceSaid } \
+        OPTIONAL { ?me orexis:plays ?r2 . ?r2 coordination:rounds ?roundsSaid } \
+        OPTIONAL { ?me orexis:plays ?r3 . ?r3 coordination:lookahead ?lookaheadSaid } }";
         let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
         known.extend(store.graphs_of(&[ONTOLOGY], &Within::default())?);
         let known: Vec<&str> = known.iter().map(String::as_str).collect();
@@ -114,7 +116,7 @@ impl Coordinator {
 
     fn said(&mut self, peer: &str, document: &Document, at: DateTime) -> Result<Vec<String>, Error> {
         if self.watch.connected() {
-            let scratch = Store::new(Arc::new(self.beliefs.namespaces().clone()))?;
+            let scratch = Store::new()?;
             scratch
                 .engine()
                 .extend(document.quads().iter().cloned())

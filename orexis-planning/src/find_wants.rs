@@ -67,7 +67,11 @@ pub fn find_wants(store: &Store, at: DateTime, finding: &Finding<'_>) -> Result<
     //  `?g a ?kind` IS THE JOIN, not only the filter: without it `?g` is bound solely inside the OPTIONAL, and binds
     //  to whichever graph has a period rather than to this want's.
     let text = format!(
-        "
+        "PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX orexis: <http://example.org/orexis#>
+PREFIX planning: <http://example.org/orexis/planning#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 SELECT DISTINCT ?w WHERE {{
   GRAPH ?g {{ {where} }}
   GRAPH ?catalogue {{
@@ -102,7 +106,6 @@ pub(crate) mod tests {
     use oxsdatatypes::DateTime;
 
     use orexis::clock::isoformat;
-    use orexis::snapshots;
 
     use super::*;
 
@@ -114,10 +117,12 @@ pub(crate) mod tests {
     }
 
     pub(crate) fn store() -> Store {
-        let store = Store::new(snapshots::namespaces()).expect("an empty store");
+        let store = Store::new().expect("an empty store");
         store
         .update(
-            "INSERT DATA {
+            "PREFIX orexis: <http://example.org/orexis#>
+  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  INSERT DATA {
   GRAPH <urn:test:catalogue> { <urn:test:catalogue> a orexis:CatalogueGraph . <urn:test:ontology> a orexis:OntologyGraph }
   GRAPH <urn:test:ontology> { <urn:test:ObligationsGraph> rdfs:subClassOf orexis:RecordGraph } }",
         )
@@ -143,7 +148,12 @@ pub(crate) mod tests {
         }
         store
             .update(&format!(
-            "INSERT DATA {{
+            "PREFIX orexis: <http://example.org/orexis#>
+  PREFIX planning: <http://example.org/orexis/planning#>
+  PREFIX prov: <http://www.w3.org/ns/prov#>
+  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+  INSERT DATA {{
   GRAPH <{graph}> {{
     <{HOLDER}> planning:holds <{uri}> .
     <{uri}> a planning:Want ; prov:wasDerivedFrom <{DESIRE}> ; rdfs:label \"a want under test\" . }}
@@ -152,12 +162,17 @@ pub(crate) mod tests {
         ))
             .unwrap();
         store
-        .update(&format!(
-            "INSERT {{ GRAPH <urn:test:catalogue> {{ <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime{period} ] . }} }}
+            .update(&format!(
+                "PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX orexis: <http://example.org/orexis#>
+PREFIX planning: <http://example.org/orexis/planning#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+INSERT {{ GRAPH <urn:test:catalogue> {{ <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime{period} ] . }} }}
 WHERE {{ GRAPH <urn:test:catalogue> {{ }}
          FILTER NOT EXISTS {{ GRAPH <urn:test:catalogue> {{ <{graph}> dcterms:temporal ?h }} }} }}"
-        ))
-        .unwrap();
+            ))
+            .unwrap();
     }
 
     /// A debt, written the way a ledger writes one: its own graph, a record of the case's own family.
@@ -168,7 +183,12 @@ WHERE {{ GRAPH <urn:test:catalogue> {{ }}
         );
         store
             .update(&format!(
-                "INSERT DATA {{
+                "PREFIX orexis: <http://example.org/orexis#>
+  PREFIX planning: <http://example.org/orexis/planning#>
+  PREFIX prov: <http://www.w3.org/ns/prov#>
+  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+  INSERT DATA {{
   GRAPH <{graph}> {{ <{uri}> a planning:Want ; prov:wasDerivedFrom <{DESIRE}> ; rdfs:label \"a debt under test\" . }}
   GRAPH <urn:test:catalogue> {{ <{graph}> a <urn:test:ObligationsGraph> , orexis:RecordGraph . }} }}"
             ))

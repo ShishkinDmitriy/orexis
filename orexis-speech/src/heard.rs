@@ -24,8 +24,8 @@ pub fn heard(store: &Store, me: &str, payload: &[u8]) -> Result<Vec<String>, Err
 }
 
 fn refused(store: &Store, payload: &[u8]) -> Result<Document, Error> {
-    const ARRIVED_Q: &str =
-        "SELECT ?arrival WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph orexis:arrivedBy ?arrival } }";
+    const ARRIVED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+        SELECT ?arrival WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph orexis:arrivedBy ?arrival } }";
     let doc = Document::of(payload)?;
     for graph in doc.kinds().into_keys() {
         let arrived: Vec<String> = store
@@ -51,7 +51,6 @@ mod tests {
     use oxigraph::model::{GraphNameRef, NamedNodeRef};
 
     use orexis::ontology::{ACTION, BELIEF, CATALOGUE_GRAPH, OREXIS};
-    use orexis::snapshots::namespaces;
     use orexis::store::{Within, value};
 
     use super::*;
@@ -64,9 +63,11 @@ mod tests {
     }
 
     pub(crate) fn store() -> Store {
-        let st = Store::new(namespaces()).unwrap();
+        let st = Store::new().unwrap();
         st.update(&format!(
-            "INSERT DATA {{
+            "PREFIX orexis: <http://example.org/orexis#>
+  PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  INSERT DATA {{
   GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph . <{T}vocabulary> a orexis:OntologyGraph .
                                <{T}mine> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Recorded . }}
   GRAPH <{T}vocabulary> {{ <{T}RoundGraph> rdfs:subClassOf <{STATEMENT}> , orexis:Graph .
@@ -119,7 +120,8 @@ mod tests {
         );
         assert!(!kinds(&store, BELIEF).contains(&round), "and no belief");
         let q = format!(
-            "SELECT ?a ?o WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{round}> orexis:arrivedBy ?a ; orexis:ownedBy ?o }} }}"
+            "PREFIX orexis: <http://example.org/orexis#>
+                SELECT ?a ?o WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{round}> orexis:arrivedBy ?a ; orexis:ownedBy ?o }} }}"
         );
         let found = store.rows(&q, &[]).unwrap();
         assert_eq!(found.len(), 1);

@@ -38,7 +38,8 @@ fn strs(names: &[String]) -> Vec<&str> {
 /// The seconds between one of `sensor`'s observations and the next, as the world states them, or None where it
 /// states no frequency, several, or a unit nothing here converts.
 pub fn cadence_of(store: &Store, sensor: &str) -> Result<Option<f64>, Error> {
-    const CADENCE_Q: &str = "
+    const CADENCE_Q: &str = "PREFIX schema: <https://schema.org/>
+    PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
     SELECT ?every ?unit WHERE {
       $sensor ssn-system:hasSystemCapability/ssn-system:hasSystemProperty ?f .
       ?f a ssn-system:Frequency ; schema:value ?every .
@@ -74,7 +75,10 @@ pub fn cadence_of(store: &Store, sensor: &str) -> Result<Option<f64>, Error> {
 pub fn lapsed(store: &Store, now: DateTime) -> Result<Vec<(String, DateTime)>, Error> {
     /// EVERY SENSOR WHOSE LATEST PERCEPT HAS LAPSED, with the instant it did: the latest is the one no percept names as
     /// its previous, and a revision, of the same kind, holds no `sosa:madeBySensor` and is no match.
-    const LAPSED_Q: &str = "
+    const LAPSED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+    PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX sensing: <http://example.org/orexis/sensing#>
+    PREFIX sosa: <http://www.w3.org/ns/sosa/>
     SELECT ?sensor ?end WHERE {
       GRAPH $cat { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end <= $now) }
       GRAPH ?g { ?obs sosa:madeBySensor ?sensor }
@@ -97,7 +101,10 @@ pub fn lapsed(store: &Store, now: DateTime) -> Result<Vec<(String, DateTime)>, E
 /// when `lapsed` next answers anything new, so whoever asks it waits until then. Writes nothing.
 pub fn next_lapse(store: &Store, now: DateTime) -> Result<Option<DateTime>, Error> {
     /// THE SOONEST INSTANT A LATEST PERCEPT LAPSES, not yet come: the one a reading falls due and its grace runs out.
-    const NEXT_LAPSE_Q: &str = "
+    const NEXT_LAPSE_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+    PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX sensing: <http://example.org/orexis/sensing#>
+    PREFIX sosa: <http://www.w3.org/ns/sosa/>
     SELECT (MIN(?end) AS ?next) WHERE {
       GRAPH $cat { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end > $now) }
       GRAPH ?g { ?obs sosa:madeBySensor ?sensor }
@@ -116,7 +123,9 @@ pub fn next_lapse(store: &Store, now: DateTime) -> Result<Option<DateTime>, Erro
 /// graph, sorted — whose bytes a transport hands `received`.
 pub fn sensors(store: &Store) -> Result<Vec<String>, Error> {
     /// EVERY SENSOR THE AGENT READS: each an attention of the observer it plays names, in the self graph.
-    const SENSORS_Q: &str = "SELECT DISTINCT ?sensor WHERE { ?me a orexis:Self ; orexis:plays/sensing:attends/sensing:sensor ?sensor } ORDER BY ?sensor";
+    const SENSORS_Q: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
+        PREFIX orexis: <http://example.org/orexis#>
+        SELECT DISTINCT ?sensor WHERE { ?me a orexis:Self ; orexis:plays/sensing:attends/sensing:sensor ?sensor } ORDER BY ?sensor";
     let selves = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
     Ok(store
         .rows(SENSORS_Q, &strs(&selves))?
@@ -130,7 +139,9 @@ pub fn sensors(store: &Store) -> Result<Vec<String>, Error> {
 /// none, several, or one that is no number, said in the log, since two answers are never picked between.
 pub fn limit_of(store: &Store, sensor: &str, limit: &str) -> Result<i64, Error> {
     /// WHAT THE ATTENTION NAMING THIS SENSOR STATES OF A LIMIT, in the self graph where the observer is played.
-    const LIMIT_Q: &str = "SELECT DISTINCT ?n WHERE { ?me a orexis:Self ; orexis:plays/sensing:attends ?attention . \
+    const LIMIT_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+    PREFIX sensing: <http://example.org/orexis/sensing#>
+    SELECT DISTINCT ?n WHERE { ?me a orexis:Self ; orexis:plays/sensing:attends ?attention . \
     ?attention sensing:sensor $sensor ; $limit ?n }";
     let selves = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
     let text = bind(LIMIT_Q, &[("sensor", Value::iri(sensor)), ("limit", Value::iri(limit))])?;

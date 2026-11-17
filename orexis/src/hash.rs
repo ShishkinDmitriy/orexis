@@ -420,9 +420,12 @@ mod tests {
     // --- what a case cannot reach ----------------------------------------------------------------------------------
 
     fn store() -> Store {
-        let store = Store::new(snapshots::namespaces()).unwrap();
+        let store = Store::new().unwrap();
         store
-            .update("INSERT DATA { GRAPH <urn:test:catalogue> { <urn:test:catalogue> a orexis:CatalogueGraph } }")
+            .update(
+                "PREFIX orexis: <http://example.org/orexis#>
+                INSERT DATA { GRAPH <urn:test:catalogue> { <urn:test:catalogue> a orexis:CatalogueGraph } }",
+            )
             .unwrap();
         store
     }

@@ -10,7 +10,10 @@ use orexis::store::{Store, Within, value};
 /// The floor and the ceiling of every range that applies to what `sensor` observes of `property`, off what the
 /// world states.
 pub fn ranges_of(store: &Store, sensor: &str, property: &str) -> Result<Vec<(f64, f64)>, Error> {
-    const BOUNDS_Q: &str = "
+    const BOUNDS_Q: &str = "PREFIX schema: <https://schema.org/>
+    PREFIX sosa: <http://www.w3.org/ns/sosa/>
+    PREFIX ssn: <http://www.w3.org/ns/ssn/>
+    PREFIX ssn-system: <http://www.w3.org/ns/ssn/systems/>
     SELECT DISTINCT ?low ?high WHERE {
       $sensor (sosa:isHostedBy/(sosa:isSampleOf)?)? ?holder .
       ?holder ssn-system:hasOperatingRange|ssn-system:hasSurvivalRange ?range .

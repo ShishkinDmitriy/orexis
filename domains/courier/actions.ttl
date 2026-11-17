@@ -32,7 +32,8 @@ courier:Drive a orexis:Action ;
     #  agents each have a driver, neither's search drives the other's van. A driver no agent has is
     #  nobody's to drive, the same refusal as a driver elsewhere. The inner filter opens on the
     #  pattern both its variables are bound in, since a `NOT EXISTS` is evaluated per row from there.
-    planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
+    planning:precondition """PREFIX orexis: <http://example.org/orexis#>
+        PREFIX courier: <http://example.org/orexis/courier#>
         SELECT ?van ?toX ?toY WHERE {
             ?van courier:x ?x ; courier:y ?y .
             ?van a courier:Van .
@@ -69,7 +70,8 @@ courier:Pick a orexis:Action ;
     #  A VAN SOMEBODY DRIVES IS LOADED ONLY WITH THEM ABOARD, AND ONLY BY THE AGENT THAT HAS THEM (#931):
     #  the drive's last filter, word for word, since the driver is the one body where a van stands and a
     #  van it has left stands where nobody is to load it. A van no driver is named for is refused nothing.
-    planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
+    planning:precondition """PREFIX orexis: <http://example.org/orexis#>
+        PREFIX courier: <http://example.org/orexis/courier#>
         SELECT ?parcel ?van WHERE {
             ?van courier:x ?x ; courier:y ?y . ?parcel courier:x ?x ; courier:y ?y .
             ?parcel a courier:Parcel .
@@ -96,7 +98,8 @@ courier:Drop a orexis:Action ;
         execution:operation [ a execution:Fictive ] ] ;
     #  AND UNLOADED THE SAME WAY (#931): the van is the one carrying the parcel, bound by the first
     #  pattern though the drop does not take it, and the filter is the pick's.
-    planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
+    planning:precondition """PREFIX orexis: <http://example.org/orexis#>
+        PREFIX courier: <http://example.org/orexis/courier#>
         SELECT ?parcel WHERE {
             ?parcel courier:carriedBy ?van .
             ?parcel a courier:Parcel .

@@ -45,7 +45,8 @@ impl Speaker {
     /// the first turn.
     pub(crate) fn unextracted(&mut self) -> Result<(), Error> {
         /// EVERY STATEMENT NOTHING WAS EXTRACTED FROM YET: one no graph says it was derived from.
-        const UNEXTRACTED_Q: &str = "
+        const UNEXTRACTED_Q: &str = "PREFIX prov: <http://www.w3.org/ns/prov#>
+        PREFIX speech: <http://example.org/orexis/speech#>
         SELECT ?g WHERE { GRAPH $cat { ?g a speech:StatementGraph FILTER NOT EXISTS { ?b prov:wasDerivedFrom ?g } } } ORDER BY ?g";
         if let Some(cat) = self.beliefs.catalogue()? {
             let unextracted: Vec<String> = self
@@ -93,7 +94,8 @@ impl Speaker {
 
     fn arrival(&self, graph: &str) -> Result<Option<String>, Error> {
         /// HOW A STATEMENT ARRIVED, and THE KINDS IT SAYS IT IS: what is said of it.
-        const ARRIVAL_Q: &str = "SELECT ?arrival WHERE { GRAPH $cat { $graph orexis:arrivedBy ?arrival } }";
+        const ARRIVAL_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
+            SELECT ?arrival WHERE { GRAPH $cat { $graph orexis:arrivedBy ?arrival } }";
         let Some(cat) = self.beliefs.catalogue()? else {
             return Ok(None);
         };
