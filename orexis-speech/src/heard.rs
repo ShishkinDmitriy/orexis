@@ -65,12 +65,13 @@ mod tests {
     pub(crate) fn store() -> Store {
         let st = Store::new().unwrap();
         st.update(&format!(
-            "PREFIX orexis: <http://example.org/orexis#>
+            "PREFIX : <http://example.org/test#>
+  PREFIX orexis: <http://example.org/orexis#>
   PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
   INSERT DATA {{
-  GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph . <{T}vocabulary> a orexis:OntologyGraph .
-                               <{T}mine> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Recorded . }}
-  GRAPH <{T}vocabulary> {{ <{T}RoundGraph> rdfs:subClassOf <{STATEMENT}> , orexis:Graph .
+  GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph . :vocabulary a orexis:OntologyGraph .
+                               :mine a orexis:BeliefGraph ; orexis:arrivedBy orexis:Recorded . }}
+  GRAPH :vocabulary {{ :RoundGraph rdfs:subClassOf <{STATEMENT}> , orexis:Graph .
                            <{STATEMENT}> rdfs:subClassOf orexis:Graph . }} }}"
         ))
         .unwrap();

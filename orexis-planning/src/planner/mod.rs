@@ -2306,7 +2306,7 @@ SELECT ?g ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
     fn an_answer_is_not_handed_down() {
         let beliefs = snapshots::stand_in(&cases().join("a_low_tank_is_filled.trig"));
         beliefs
-            .update("DELETE WHERE { GRAPH <http://example.org/test#actions> { ?s ?p ?o } }")
+            .update("PREFIX : <http://example.org/test#> DELETE WHERE { GRAPH :actions { ?s ?p ?o } }")
             .unwrap();
         scope_actions(&beliefs, snapshots::now()).unwrap();
         let mut planner = Planner::new(&beliefs, snapshots::AGENT, None).unwrap();

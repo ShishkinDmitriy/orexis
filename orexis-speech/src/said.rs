@@ -53,9 +53,10 @@ pub(crate) mod tests {
     pub(crate) fn store() -> Store {
         let st = Store::new().unwrap();
         st.update(&format!(
-            "PREFIX orexis: <http://example.org/orexis#>
+            "PREFIX : <http://example.org/test#>
+        PREFIX orexis: <http://example.org/orexis#>
         INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph .
-        <{T}heard> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy <{}> . }} }}",
+        :heard a orexis:BeliefGraph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy <{}> . }} }}",
             me()
         ))
         .unwrap();

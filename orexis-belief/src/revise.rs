@@ -526,10 +526,11 @@ mod tests {
         assert!(!concluded(&store).is_empty());
         store
             .update(&format!(
-                "PREFIX sh: <http://www.w3.org/ns/shacl#>
-                 DELETE {{ GRAPH <{SENSED}> {{ ?o <http://example.org/test#reads> ?v }} }} INSERT {{ GRAPH <{SENSED}> \
-                 {{ ?o <http://example.org/test#reads> 0.2 }} }} WHERE {{ GRAPH <{SENSED}> {{ ?o \
-                 <http://example.org/test#reads> ?v }} }}"
+                "PREFIX : <http://example.org/test#>
+                 PREFIX sh: <http://www.w3.org/ns/shacl#>
+                 DELETE {{ GRAPH <{SENSED}> {{ ?o :reads ?v }} }} INSERT {{ GRAPH <{SENSED}> \
+                 {{ ?o :reads 0.2 }} }} WHERE {{ GRAPH <{SENSED}> {{ ?o \
+                 :reads ?v }} }}"
             ))
             .unwrap();
         assert!(revise(&store, SENSED, &read, BUDGET, BELIEF).unwrap().spent > 0);
@@ -547,9 +548,10 @@ mod tests {
         let store = case("a_reading_below_its_range_is_concluded_below");
         store
             .update(
-                r#"PREFIX sh: <http://www.w3.org/ns/shacl#>
-  INSERT DATA { GRAPH <http://example.org/test#rules> {
-  <http://example.org/test#restless> a sh:RuleSet ;
+                r#"PREFIX : <http://example.org/test#>
+  PREFIX sh: <http://www.w3.org/ns/shacl#>
+  INSERT DATA { GRAPH :rules {
+  :restless a sh:RuleSet ;
     sh:hasRule [ a sh:SPARQLRule ;
       sh:construct "PREFIX : <http://example.org/test#> CONSTRUCT { ?s :token ?u } WHERE { ?s a :Pot BIND(STRUUID() AS ?u) }" ] } }"#,
             )
@@ -582,12 +584,13 @@ mod tests {
         let store = case("a_reading_below_its_range_is_concluded_below");
         store
             .update(
-                r#"PREFIX sh: <http://www.w3.org/ns/shacl#>
-  INSERT DATA { GRAPH <http://example.org/test#rules> {
-  <http://example.org/test#triple> a sh:TripleRule .
-  <http://example.org/test#shape> a sh:NodeShape ;
-    sh:rule <http://example.org/test#per_focus> .
-  <http://example.org/test#per_focus> a sh:SPARQLRule ;
+                r#"PREFIX : <http://example.org/test#>
+  PREFIX sh: <http://www.w3.org/ns/shacl#>
+  INSERT DATA { GRAPH :rules {
+  :triple a sh:TripleRule .
+  :shape a sh:NodeShape ;
+    sh:rule :per_focus .
+  :per_focus a sh:SPARQLRule ;
     sh:construct "CONSTRUCT { <http://example.org/test#zz> a <http://example.org/test#Seen> } WHERE { }" } }"#,
             )
             .unwrap();
@@ -605,13 +608,14 @@ mod tests {
         let store = case("a_reading_below_its_range_is_concluded_below");
         store
             .update(
-                r#"PREFIX sh: <http://www.w3.org/ns/shacl#>
+                r#"PREFIX : <http://example.org/test#>
+PREFIX sh: <http://www.w3.org/ns/shacl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-INSERT DATA { GRAPH <http://example.org/test#rules> {
-  <http://example.org/test#rules> sh:ruleProcessor <http://example.org/test#somebody> .
-  <http://example.org/test#conditioned> a sh:SPARQLRule ;
+INSERT DATA { GRAPH :rules {
+  :rules sh:ruleProcessor :somebody .
+  :conditioned a sh:SPARQLRule ;
     sh:construct "CONSTRUCT { <http://example.org/test#zz> <http://example.org/test#noted> true } WHERE { }" ;
-    sh:condition <http://example.org/test#some_shape> ; sh:expectedPredicate <http://example.org/test#reads> . } }"#,
+    sh:condition :some_shape ; sh:expectedPredicate :reads . } }"#,
             )
             .unwrap();
         revise(&store, SENSED, &known(&store), BUDGET, BELIEF).unwrap();

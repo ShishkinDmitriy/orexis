@@ -479,8 +479,9 @@ mod tests {
         };
         store
             .update(&format!(
-                "PREFIX orexis: <http://example.org/orexis#>
-                    INSERT DATA {{ GRAPH <{graph}> {{ <{T}{name}_t> a <{T}Tick> {loudly} }} {entry} }}"
+                "PREFIX : <http://example.org/test#>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    INSERT DATA {{ GRAPH <{graph}> {{ <{T}{name}_t> a :Tick {loudly} }} {entry} }}"
             ))
             .unwrap();
         graph
@@ -501,8 +502,9 @@ mod tests {
     }
 
     fn counter_in(store: &Store, graphs: &[String]) -> BTreeMap<String, String> {
-        const COUNTER_Q: &str = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-            SELECT ?p ?o WHERE { <http://example.org/test#counter> ?p ?o FILTER(?p != rdf:type) }";
+        const COUNTER_Q: &str = "PREFIX : <http://example.org/test#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            SELECT ?p ?o WHERE { :counter ?p ?o FILTER(?p != rdf:type) }";
         let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
         store
             .rows(COUNTER_Q, &graphs)
@@ -583,9 +585,10 @@ mod tests {
         assert_eq!(Deliberator::new(&store).unwrap().budget, 256);
         store
             .update(&format!(
-                "PREFIX belief: <http://example.org/orexis/belief#>
+                "PREFIX : <http://example.org/test#>
+                    PREFIX belief: <http://example.org/orexis/belief#>
                     PREFIX orexis: <http://example.org/orexis#>
-                    INSERT DATA {{ GRAPH <{T}self> {{ <{T}keeper> a orexis:Self ; orexis:plays [ belief:budget 2 ] }} {} }}",
+                    INSERT DATA {{ GRAPH :self {{ :keeper a orexis:Self ; orexis:plays [ belief:budget 2 ] }} {} }}",
                 store
                     .entry(
                         &format!("{T}self"),
@@ -698,8 +701,9 @@ mod tests {
             .unwrap();
         store
             .update(&format!(
-                "PREFIX orexis: <http://example.org/orexis#>
-                    INSERT DATA {{ GRAPH <{note}> {{ <{T}note_t> a <{T}Tick> ; <{T}loud> true }} {entry} }}"
+                "PREFIX : <http://example.org/test#>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    INSERT DATA {{ GRAPH <{note}> {{ :note_t a :Tick ; :loud true }} {entry} }}"
             ))
             .unwrap();
         let mut deliberator = Deliberator::new(&store).unwrap();
