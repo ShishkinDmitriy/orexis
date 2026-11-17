@@ -3,7 +3,7 @@ type: Service
 title: Sensing
 term: http://example.org/orexis/sensing#ObservationGraph
 description: >-
-  The translation row of the agent stack: a transport hands it an instrument's bytes, and it keeps
+  The translation row of the agent stack: an instrument's bytes reach it through a transport, and it keeps
   the number they hold as an observation per reading - a percept, in a graph of its own, linked to
   the one before it, the latest holding until the next reading is due and a grace past it - and a
   sensor's last few, as deep as its rules read. Its rules conclude what a reading is of, its quantity
@@ -13,7 +13,13 @@ description: >-
 
 # What it does
 
-**`received`** is the callback a transport calls with a sensor's IRI and the bytes it read. The
+**`received`** is handed a sensor's IRI and the bytes it read. A sensor a member of the agent's answers when asked
+(`orexis_transport::Exchange::Requested`, the web's) sensing ASKS, on the sensor's `ssn-system:Frequency` or once
+where it states none, and hands the answer to `received` itself: polling is a request in a loop, and the loop is
+sensing's, since the cadence is
+([the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop](/decisions/the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop.md));
+asking keeps the agent running. A sensor on a topic is still handed to `received` by the MQTT member, until it too is
+listened to through the contract (#1220). The
 pipeline makes a number of them — the codec the sensor is bound to (`sensing:decodedBy`, JSON the
 member that ships) and the pointer to its value in the document (`sensing:readingPointer`, a JSON
 Pointer). Each reading is one [observation](/domain/sensing/observation.md), named for its sensor and

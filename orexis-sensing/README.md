@@ -5,14 +5,16 @@ no reader of the mind is handed one.
 
 - **Loaded for:** `sensing:Observer`, which is beneath `belief:Deliberator`.
 - **Words:** `ontology.ttl` (`sensing:`), speaking SOSA and SSN. **Dictionary:** `knowledge/domain/sensing/`.
-- **Imports:** the kernel alone.
+- **Imports:** the kernel, and the transport family's contract (`orexis-transport/`), naming no member.
 - **Its housekeeper:** `orexis-sensing-influxdb/` writes each reading to the series store.
 
 ## What starts it
 
 | Heard | Said by | Starts |
 |---|---|---|
-| bytes a transport read for a sensor (`received`, a call, not an event) | a transport member | a percept written per reading, then `sensing:Perceived` said |
+| bytes a transport read for a sensor (`received`, a call, not an event) | the MQTT member, for a sensor on a topic | a percept written per reading, then `sensing:Perceived` said |
+| the clock, at the frequency a sensor a member answers when asked states, and once at start | | the sensor asked, through the member that reaches it |
+| an asked sensor's answer (an arrival) | the member asked | handed to `received`: a percept written per reading |
 | a graph of kind `sensing:ObservationGraph` written | itself | `sensing:Perceived` said to belief |
 | `sensing:ObservingTrigger`: `belief:Revised` | belief | `sensing:Observing` |
 | the clock, as often as the observer's role says (`sensing:askedEveryS`), every 60 s of the agent's time where it says nothing | | the ask after silent sensors (`missed`) |

@@ -1,7 +1,7 @@
 # orexis-transport-http
 
-The HTTP member of the transport family: it polls a web service a sensor reads, in the words of the W3C Web of
-Things Thing Description. A forecast is a series such a sensor reads.
+The HTTP member of the transport family: it answers a request for what a web service a sensor reads says, in the
+words of the W3C Web of Things Thing Description. A forecast is a series such a sensor reads.
 
 - **Loaded for:** no role of its own. It is loaded where the agent reads a sensor over HTTP.
 - **Words:** `ontology.ttl`. **Dictionary:** `knowledge/domain/transport/transport.md`.
@@ -9,9 +9,8 @@ Things Thing Description. A forecast is a series such a sensor reads.
 
 ## What starts it
 
-| Woken by | Does |
-|---|---|
-| the clock: at start, then at the frequency each sensor states | fetches the sensor's address on a thread of its own |
-| the body fetched (an arrival) | hands it to sensing (`received`) |
+It adds its member to the agent's members (`orexis_transport::Members`) and runs no task. A request, sensing's at
+the frequency each sensor states, is one fetch of the sensor's address, awaited as a Tokio task, its body left where
+the requester asked.
 
-It hears no event and starts no activity. It holds the agent running.
+It hears no event and starts no activity.

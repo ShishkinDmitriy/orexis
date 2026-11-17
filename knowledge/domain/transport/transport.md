@@ -39,9 +39,10 @@ the agent is declared in needs bytes and the society wires a bus — MQTT for an
 [observer](/domain/sensing/observer.md)'s sensor on a topic or a [speaker](/domain/speech/speaker.md)
 listening to one or a translator in a chat over one, HTTP for an observer's sensor with a form,
 Telegram for a translator speaking through a bot, email for one in a chat by mail — read off the world before anything of
-the member is ([package](/domain/kernel/package.md)). A member imports sensing's `received` and
-speech's `heard` only where a message is for one of them, so an agent that only listens never loads
-sensing. The MQTT member's ontology ships the speaker's one need, a topic it listens to, since a
+the member is ([package](/domain/kernel/package.md)). A member offers the rows above it a channel it
+reaches and the acts on one (`orexis_transport::Member`), and adds itself to the agent's `Members` as it
+makes its core; HTTP imports nothing above it, and MQTT still hands sensing's `received` and speech's
+`heard` what arrives, until it is moved onto the contract (#1220). The MQTT member's ontology ships the speaker's one need, a topic it listens to, since a
 topic is its word.
 
 # The member that ships: MQTT
@@ -77,9 +78,10 @@ again after `mqtt:askedAgainAfterS`, a figure a role the agent plays may state, 
 It adopts the W3C WoT Thing Description as it stands and declares no word of its own. A sensor
 reached over HTTP is also a `td:Thing`, and its `td:hasForm` is a form whose `hctl:hasTarget` is a
 URI template; `{latitude}` and `{longitude}` are filled from the `schema:geo` of what the sensor is
-hosted by, variable by local name. Started, it polls each sensor at once and then every
-`ssn-system:Frequency` the sensor states; a fetch runs on a thread of its own, one at a time per
-sensor, and the response is submitted like a message.
+hosted by, variable by local name. Such a thing is a channel the member is asked on
+(`Exchange::Requested`): a request is one fetch with `reqwest`, awaited as a Tokio task, one at a time
+per sensor, and the body is left in the inbox of whoever asked; who asks, and how often, is
+[sensing](/domain/sensing/sensing.md)'s. The member runs no task of its own.
 The one sensor it serves today is a [forecast](/domain/kernel/forecast.md) service, whose
 address is public and is read off the world, not told
 ([a-forecast-is-a-series-a-sensor-reads](/decisions/a-forecast-is-a-series-a-sensor-reads.md)). A fetch is given
