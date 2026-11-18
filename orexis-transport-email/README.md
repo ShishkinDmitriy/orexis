@@ -11,7 +11,7 @@ The email member of the transport family: a person's mail in, the agent's own wo
 
 | Heard | Said by | Starts |
 |---|---|---|
-| the clock, as often as a role says (`email:polledEveryS`), every 30 s where none says | | the mailbox polled on a thread of its own |
+| the clock, as often as a role says (`email:polledEveryS`), every 30 s where none says | | the mailbox polled, awaited as a Tokio task, one poll at a time |
 | a message polled (an arrival) | the mail server | left with speech, listening on the chat, as the chat's words (`orexis_transport::chat::Words`) |
 
 ## Activities

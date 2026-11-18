@@ -108,7 +108,8 @@ thirty seconds where no role states them.
 
 # The member that ships: email
 
-The agent's own mailbox, named by `MAIL_ADDRESS` and the rest, over `imaplib` and `smtplib`. Started,
-it polls the unseen messages every half minute; a message's channel is its sender's address, matched to
-the `schema:ContactPoint` whose `schema:email` it is, and `say_to` sends to that address. It declares no
-word of its own but its trigger.
+The agent's own mailbox, named by `MAIL_ADDRESS` and the rest, over `async-imap` and `lettre`'s Tokio
+SMTP, each call awaited as a Tokio task, one poll at a time and what the agent says sent by one task in the
+order it was said. It polls the unseen messages every half minute where no role says otherwise
+(`email:polledEveryS`); a message's channel is its sender's address, matched to the `schema:ContactPoint`
+whose `schema:email` it is, and what the agent says on that contact point is sent to that address.
