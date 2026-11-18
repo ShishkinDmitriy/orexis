@@ -1,14 +1,17 @@
 //! THE MQTT DRIVER, as `agent/transport/mqtt/driver.py` answers the transport family's contract from MQTT4SSN's
 //! words, with the topic filter matching MQTT itself specifies.
 //!
-//! **WHAT THE WORLD SAYS AND WHAT FOLLOWS**: a sensor speaks MQTT when it `mqtt4ssn:observesTopic` a topic; the agent
-//! subscribes to the pattern of every `mqtt4ssn:TopicFilter` matching a topic one of its sensors publishes on, and a
-//! message is a sensor's when a pattern of its topic matches the channel. A command goes to the topic the device or
-//! its board `mqtt4ssn:listensToTopic`, by a pattern with no wildcard, not retained: a step's command and a nudge
-//! alike, each the document the operator made. Which sensors are the agent's is its observer role's (`cadence::sensors`).
+//! **WHAT THE WORLD SAYS AND WHAT FOLLOWS**: a sensor speaks MQTT when it `mqtt4ssn:observesTopic` a topic; a row
+//! above that listens to it (`listen_on`) has the agent subscribe to the pattern of every `mqtt4ssn:TopicFilter`
+//! matching that topic, over the brokers the sensor's client is on, and every message a pattern matches is left in the
+//! row's inbox with the sensor as its channel. A command goes to the topic the device or its board
+//! `mqtt4ssn:listensToTopic`, by a pattern with no wildcard, not retained: a step's command and a nudge alike, each the
+//! document the operator made.
 //!
-//! **A MESSAGE BECOMES OBSERVATIONS THROUGH SENSING, AND THE TRANSPORT KNOWS NO CODEC**: `handle` calls sensing's
-//! `received` once per sensor of the agent's whose pattern matches the topic.
+//! **THE TRANSPORT KNOWS NO CODEC AND NO SENSOR OF THE AGENT'S**: which sensors are the agent's, and what a message
+//! says of each, are sensing's, which listens to the ones it attends through the contract
+//! (the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop). A peer's document on the agent's own topic is
+//! still kept by speech's `heard` here, and a chat's prose here, until speech listens through the contract too (#1221).
 //!
 //! **THE MEMBER BRINGS ITSELF UP, AND THE THREAD IS THE CONTAINER'S**: `connect` makes a client per broker the
 //! world says the agent is connected to, at the url the world's deployment graph states of it, under the credential
@@ -31,8 +34,6 @@ use orexis::bind::{Value, bind};
 use orexis::ontology::{BELIEF, local_of};
 use orexis::rdf::repr;
 use orexis::store::{Store, Within, iri, value};
-use orexis_sensing::cadence::sensors;
-use orexis_sensing::received::received;
 use orexis_speech::heard::heard;
 
 /// Whether a topic filter matches a topic name, as MQTT specifies: `+` matches one level, `#` the rest and may only
@@ -125,7 +126,18 @@ pub struct Mqtt {
     /// A person's prose heard on a chat's topic, for the part to hand translation once it lets the member go.
     pub prose: Vec<orexis_speech::prose::Prose>,
     unreachable: BTreeSet<String>,
+    /// WHO LISTENS ON WHAT: each channel a row above listens to, the patterns of the topics it is on, and the inbox
+    /// every message on one is left in (`Member::listen`).
+    listeners: Vec<(String, Vec<String>, Inbox)>,
+    /// The patterns each client is subscribed to, by client.
+    subscribed: Vec<BTreeSet<String>>,
+    /// Messages no row listened for yet, the latest few, handed to the first that listens on a channel they are on:
+    /// what arrives between the boot and a row's first listening is not lost.
+    unheard: Vec<Message>,
 }
+
+/// How many messages no row listened for are kept for one that has yet to.
+const UNHEARD_KEPT: usize = 64;
 
 fn strs(names: &[String]) -> Vec<&str> {
     names.iter().map(String::as_str).collect()
@@ -150,6 +162,9 @@ impl Mqtt {
             listening: Vec::new(),
             prose: Vec::new(),
             unreachable: BTreeSet::new(),
+            listeners: Vec::new(),
+            subscribed: Vec::new(),
+            unheard: Vec::new(),
         }
     }
 
@@ -246,72 +261,83 @@ impl Mqtt {
             .collect())
     }
 
-    /// Every sensor the agent reads that publishes on a topic, with each pattern naming it.
-    fn topics(&self) -> Result<Vec<(String, String)>, Error> {
-        /// EVERY PATTERN NAMING A TOPIC A SENSOR PUBLISHES ON, for the sensors the agent reads.
-        const TOPICS_Q: &str = "PREFIX mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#>
-        SELECT ?sensor ?pattern WHERE {
-          VALUES ?sensor { $sensors } ?sensor mqtt4ssn:observesTopic ?topic .
+    /// The filter patterns of the topics a row above would listen to `channel` on: a sensor's, where it publishes.
+    fn patterns_of(&self, channel: &str) -> Result<Vec<String>, Error> {
+        const OBSERVES_Q: &str = "PREFIX mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#>
+        SELECT ?pattern WHERE {
+          $sensor mqtt4ssn:observesTopic ?topic .
           ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
-        ORDER BY ?sensor ?pattern";
-        let mine = sensors(&self.beliefs)?;
-        if mine.is_empty() {
-            return Ok(Vec::new());
-        }
-        let listed: String = mine.iter().map(|s| format!("<{s}> ")).collect();
-        Ok(self
-            .rows_of(TOPICS_Q, &[("sensors", Value::raw(listed))])?
-            .iter()
-            .filter_map(|r| Some((iri(r, "sensor")?, value(r, "pattern")?)))
-            .collect())
+        ORDER BY ?pattern";
+        self.patterns(OBSERVES_Q, &[("sensor", Value::iri(channel))])
     }
 
-    /// Subscribe to every pattern the world implies for the agent's sensors, and to the topic it listens to itself;
-    /// the patterns.
-    pub fn open(&mut self) -> Result<Vec<String>, Error> {
-        let mut own: BTreeSet<String> = self.listens(&self.me)?.into_iter().collect();
-        own.extend(self.chat_topics()?.into_iter().map(|(_, pattern)| pattern));
-        let mut on: Vec<BTreeSet<String>> = vec![own; self.clients.len()];
-        for (sensor, pattern) in self.topics()? {
-            for i in self.over(&sensor)? {
-                on[i].insert(pattern.clone());
-            }
-        }
-        let mut all = BTreeSet::new();
-        for (i, patterns) in on.iter().enumerate() {
-            for pattern in patterns {
+    /// Whether a row above may listen to `channel` on the bus: a sensor publishing on a topic.
+    pub fn listened(&self, channel: &str) -> Result<bool, Error> {
+        Ok(!self.patterns_of(channel)?.is_empty())
+    }
+
+    /// Subscribe each client in `over` to `pattern`, once.
+    fn subscribe(&mut self, over: &[usize], pattern: &str) -> Result<(), Error> {
+        self.subscribed.resize_with(self.clients.len(), BTreeSet::new);
+        for &i in over {
+            if self.subscribed[i].insert(pattern.to_string()) {
                 self.clients[i].1.subscribe(pattern)?;
-                all.insert(pattern.clone());
             }
         }
-        let all: Vec<String> = all.into_iter().collect();
-        log::info!(
-            "{} listening on {}",
-            local_of(&self.me),
-            if all.is_empty() {
-                "nothing".to_string()
-            } else {
-                format!("{all:?}")
-            }
-        );
-        Ok(all)
+        Ok(())
     }
 
-    /// Route one message: on the topic the agent listens to, a peer's document, kept by speech's `heard`, each graph
-    /// answered with no sensor; otherwise to sensing, for every sensor of the agent's whose topic's filter matches
-    /// `topic`, the observation `received` writes of `payload` at `at`. The sensor and the graph written, first sensor
-    /// first, and none where the topic is nobody's of the agent's.
-    pub fn handle(
-        &mut self,
-        topic: &str,
-        payload: &[u8],
-        at: DateTime,
-    ) -> Result<Vec<(Option<String>, String)>, Error> {
-        if self.listens(&self.me)?.iter().any(|p| matches(p, topic)) {
-            return Ok(heard(&self.beliefs, &self.me, payload)?
+    /// LISTEN TO `channel` FOR A ROW ABOVE: every pattern of its topics subscribed to over each broker it is reached
+    /// over, and every message on one left in `inbox`, those that arrived before anybody listened among them; the
+    /// patterns.
+    pub fn listen_on(&mut self, channel: &str, inbox: Inbox) -> Result<Vec<String>, Error> {
+        let patterns = self.patterns_of(channel)?;
+        let over = self.over(channel)?;
+        for pattern in &patterns {
+            self.subscribe(&over, pattern)?;
+        }
+        log::info!(
+            "{} listening on {patterns:?} for {}",
+            local_of(&self.me),
+            local_of(channel)
+        );
+        let (early, rest): (Vec<Message>, Vec<Message>) = std::mem::take(&mut self.unheard)
+            .into_iter()
+            .partition(|m| patterns.iter().any(|p| matches(p, &m.topic)));
+        self.unheard = rest;
+        inbox.deliver_all(
+            early
                 .into_iter()
-                .map(|g| (None, g))
-                .collect());
+                .map(|m| Message {
+                    topic: channel.to_string(),
+                    ..m
+                })
+                .collect(),
+        );
+        self.listeners.push((channel.to_string(), patterns.clone(), inbox));
+        Ok(patterns)
+    }
+
+    /// Subscribe to the topic the agent listens to itself, where speech's documents arrive, and to the topics of the
+    /// chats it is in, whose prose this member keeps itself, over every broker it is connected to; the patterns. A
+    /// sensor's topic is subscribed to as a row listens to it (`listen_on`).
+    pub fn open(&mut self) -> Result<Vec<String>, Error> {
+        let all: Vec<usize> = (0..self.clients.len()).collect();
+        let mut patterns: BTreeSet<String> = self.listens(&self.me)?.into_iter().collect();
+        patterns.extend(self.chat_topics()?.into_iter().map(|(_, pattern)| pattern));
+        for pattern in &patterns {
+            self.subscribe(&all, pattern)?;
+        }
+        Ok(patterns.into_iter().collect())
+    }
+
+    /// ROUTE ONE MESSAGE: on the topic the agent listens to, a peer's document, kept by speech's `heard`, the graphs
+    /// written; on a chat's topic, a person's prose, kept for the part to say; otherwise left, as one, with every row
+    /// listening on a channel whose topic's filter matches `topic`, the channel as the message's topic, and kept for
+    /// one yet to listen where none does. The graphs written, none but a document's.
+    pub fn handle(&mut self, topic: &str, payload: &[u8], at: DateTime) -> Result<Vec<String>, Error> {
+        if self.listens(&self.me)?.iter().any(|p| matches(p, topic)) {
+            return heard(&self.beliefs, &self.me, payload);
         }
         let chats: Vec<String> = self
             .chat_topics()?
@@ -325,23 +351,45 @@ impl Mqtt {
             }
             return Ok(Vec::new());
         }
-        let mut mine: Vec<String> = Vec::new();
-        for (sensor, pattern) in self.topics()? {
-            if matches(&pattern, topic) && !mine.contains(&sensor) {
-                mine.push(sensor);
+        let mut handed: Vec<String> = Vec::new();
+        let mut batches: Vec<(Inbox, Vec<Message>)> = Vec::new();
+        for (channel, patterns, inbox) in &self.listeners {
+            if !patterns.iter().any(|p| matches(p, topic)) || handed.contains(channel) {
+                continue;
+            }
+            handed.push(channel.clone());
+            let message = Message {
+                topic: channel.clone(),
+                payload: payload.to_vec(),
+                at: Some(at),
+            };
+            match batches.iter_mut().find(|(i, _)| i.is(inbox)) {
+                Some((_, batch)) => batch.push(message),
+                None => batches.push((inbox.clone(), vec![message])),
             }
         }
-        if mine.is_empty() {
-            log::debug!("{}: a message on {topic} is nobody's of mine", local_of(&self.me));
-            return Ok(Vec::new());
+        for (inbox, batch) in batches {
+            inbox.deliver_all(batch);
         }
-        let mut written = Vec::new();
-        for sensor in mine {
-            for graph in received(&self.beliefs, &self.me, &sensor, payload, at)? {
-                written.push((Some(sensor.clone()), graph));
-            }
+        if handed.is_empty() {
+            log::debug!("{}: a message on {topic} nobody listens for yet", local_of(&self.me));
+            self.unheard.push(Message {
+                topic: topic.to_string(),
+                payload: payload.to_vec(),
+                at: Some(at),
+            });
+            let over = self.unheard.len().saturating_sub(UNHEARD_KEPT);
+            self.unheard.drain(..over);
         }
-        Ok(written)
+        Ok(Vec::new())
+    }
+
+    /// Whether `who` is an agent, whom a document is told to on the bus, since a person's is not the bus's.
+    pub fn is_agent(&self, who: &str) -> Result<bool, Error> {
+        const AGENT_Q: &str = "PREFIX orexis: <http://example.org/orexis#> ASK { $who a orexis:Agent }";
+        let common = self.common()?;
+        self.beliefs
+            .ask(&bind(AGENT_Q, &[("who", Value::iri(who))])?, &strs(&common))
     }
 
     /// Whether this member reaches `device`.
@@ -395,13 +443,7 @@ impl Mqtt {
     /// Publish a document on the topic the agent `to` listens to, by a pattern with no wildcard; not retained. A
     /// document to a person is not the bus's, and is passed over in silence.
     pub fn tell(&mut self, to: &str, document: &[u8]) -> Result<bool, Error> {
-        /// WHETHER WHOM A DOCUMENT IS TOLD TO IS AN AGENT, since a person's is not the bus's.
-        const AGENT_Q: &str = "PREFIX orexis: <http://example.org/orexis#> ASK { $who a orexis:Agent }";
-        let common = self.common()?;
-        if !self
-            .beliefs
-            .ask(&bind(AGENT_Q, &[("who", Value::iri(to))])?, &strs(&common))?
-        {
+        if !self.is_agent(to)? {
             return Ok(false);
         }
         let names: Vec<String> = self.listens(to)?.into_iter().filter(|p| no_wildcard(p)).collect();
@@ -728,7 +770,6 @@ mod tests {
         drop(listening);
         drop(client);
     }
-    const OBSERVED: &str = "http://example.org/orexis/graph/observed/keeper/";
     const BOARD_MESSAGE: &[u8] = br#"{"temperature": 21.5, "humidity": 0.61}"#;
 
     /// What a client was asked: the patterns subscribed and what was published, as (topic, payload, retained).
@@ -771,37 +812,37 @@ mod tests {
         format!("{TEST}{local}")
     }
 
-    fn results(store: &Store) -> Vec<(String, f64)> {
-        store
-            .rows(
-                "PREFIX sensing: <http://example.org/orexis/sensing#>
-                    PREFIX sosa: <http://www.w3.org/ns/sosa/>
-                    SELECT ?s ?v WHERE { GRAPH ?g { ?o a sosa:Observation ; sosa:madeBySensor ?s ; sensing:rawResult ?v } } ORDER BY ?s",
-                &[],
-            )
-            .unwrap()
-            .iter()
-            .map(|r| (local_of(&iri(r, "s").unwrap()), value(r, "v").unwrap().parse().unwrap()))
-            .collect()
-    }
-
     fn sent(topic: &str, payload: &str, retained: bool) -> (String, String, bool) {
         (topic.to_string(), payload.to_string(), retained)
     }
 
     #[test]
-    fn the_driver_listens_where_the_agents_sensors_publish() {
+    fn the_driver_listens_where_a_sensor_a_row_listens_to_publishes() {
         let store = stand_in(&world());
         let (mut driver, client) = bus(&store);
-        assert_eq!(
-            driver.open().unwrap(),
-            ["sensors/board/reading"],
-            "one board, one topic, two sensors"
+        assert!(
+            driver.open().unwrap().is_empty(),
+            "the board's world has no inbox and no chat"
         );
+        assert!(driver.listened(&t("hygro")).unwrap());
+        assert!(
+            driver.listened(&t("photometer")).unwrap(),
+            "the neighbour's lamp is on the bus too: which sensors are the agent's is sensing's to say"
+        );
+        assert!(
+            !driver.listened(&t("board")).unwrap(),
+            "a board publishes nothing of its own"
+        );
+        let inbox = Inbox::default();
+        assert_eq!(
+            driver.listen_on(&t("hygro"), inbox.clone()).unwrap(),
+            ["sensors/board/reading"]
+        );
+        driver.listen_on(&t("thermo"), inbox).unwrap();
         assert_eq!(
             client.0.lock().unwrap().subscribed,
             ["sensors/board/reading"],
-            "the lamp's is the neighbour's"
+            "one board, one topic, two sensors, subscribed once"
         );
     }
 
@@ -834,53 +875,46 @@ mod tests {
     }
 
     #[test]
-    fn one_message_on_the_boards_topic_is_two_observations() {
+    fn one_message_on_the_boards_topic_is_left_once_with_each_sensor_listened_to_on_it() {
         let store = stand_in(&world());
         let (mut driver, _) = bus(&store);
-        let written = driver.handle("sensors/board/reading", BOARD_MESSAGE, now()).unwrap();
+        let inbox = Inbox::default();
+        driver.listen_on(&t("hygro"), inbox.clone()).unwrap();
+        driver.listen_on(&t("thermo"), inbox.clone()).unwrap();
+        driver.handle("sensors/board/reading", BOARD_MESSAGE, now()).unwrap();
+        let left: Vec<(String, Vec<u8>)> = inbox.take().into_iter().map(|m| (m.topic, m.payload)).collect();
         assert_eq!(
-            written,
+            left,
             [
-                (Some(t("hygro")), format!("{OBSERVED}hygro_20260101T120000Z")),
-                (Some(t("thermo")), format!("{OBSERVED}thermo_20260101T120000Z"))
-            ]
-        );
-        assert_eq!(
-            results(&store),
-            [("hygro".to_string(), 0.61), ("thermo".to_string(), 21.5)]
+                (t("hygro"), BOARD_MESSAGE.to_vec()),
+                (t("thermo"), BOARD_MESSAGE.to_vec())
+            ],
+            "each sensor's channel, the message as it came"
         );
     }
 
     #[test]
-    fn a_neighbours_message_on_the_same_broker_is_not_received() {
+    fn a_neighbours_message_on_the_same_broker_is_left_with_nobody() {
         let store = stand_in(&world());
         let (mut driver, _) = bus(&store);
-        assert!(
-            driver
-                .handle("sensors/lamp/reading", br#"{"value": 300}"#, now())
-                .unwrap()
-                .is_empty()
-        );
-        assert!(
-            driver
-                .handle("sensors/nowhere", BOARD_MESSAGE, now())
-                .unwrap()
-                .is_empty()
-        );
-        assert!(results(&store).is_empty());
-    }
-
-    #[test]
-    fn a_message_a_sensor_cannot_read_writes_nothing_for_it() {
-        let store = stand_in(&world());
-        let (mut driver, _) = bus(&store);
-        let written = driver
-            .handle("sensors/board/reading", br#"{"temperature": 21.5}"#, now())
+        let inbox = Inbox::default();
+        driver.listen_on(&t("hygro"), inbox.clone()).unwrap();
+        driver
+            .handle("sensors/lamp/reading", br#"{"value": 300}"#, now())
             .unwrap();
-        assert_eq!(
-            written,
-            [(Some(t("thermo")), format!("{OBSERVED}thermo_20260101T120000Z"))]
-        );
+        driver.handle("sensors/nowhere", BOARD_MESSAGE, now()).unwrap();
+        assert!(inbox.take().is_empty());
+    }
+
+    #[test]
+    fn a_message_that_came_before_anybody_listened_is_left_with_the_first_that_does() {
+        let store = stand_in(&world());
+        let (mut driver, _) = bus(&store);
+        driver.handle("sensors/board/reading", BOARD_MESSAGE, now()).unwrap();
+        let inbox = Inbox::default();
+        driver.listen_on(&t("thermo"), inbox.clone()).unwrap();
+        let left: Vec<String> = inbox.take().into_iter().map(|m| m.topic).collect();
+        assert_eq!(left, [t("thermo")]);
     }
 
     fn env(pairs: &[(&str, &str)]) -> impl Fn(&str) -> Option<String> + use<> {
@@ -966,7 +1000,7 @@ GRAPH :world {
                 (Some(t("elsewhere")), Box::new(there.clone())),
             ],
         );
-        mqtt.open().unwrap();
+        mqtt.listen_on(&t("hygro"), Inbox::default()).unwrap();
         assert_eq!(here.0.lock().unwrap().subscribed, ["sensors/board/reading"]);
         assert!(there.0.lock().unwrap().subscribed.is_empty());
         assert!(mqtt.actuate(&t("board"), &serde_json::json!({"dose_ml": 250})).unwrap());
@@ -1065,7 +1099,7 @@ GRAPH :world {
             format!("<{TEST}note> {{ <{TEST}note> <{TEST}says> \"hello\" }}\n<{TEST}note> a <{TEST}NoteGraph> .");
         assert_eq!(
             mqtt.handle("agents/keeper/inbox", document.as_bytes(), now()).unwrap(),
-            [(None, t("note"))]
+            [t("note")]
         );
     }
 

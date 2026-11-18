@@ -185,8 +185,8 @@ impl Http {
 
 impl Member for Http {
     /// A thing with a form is a channel this member is asked on.
-    fn reaches(&self, channel: &str) -> Result<Option<Exchange>, Error> {
-        Ok(Http::reaches(self, channel)?.then_some(Exchange::Requested))
+    fn reaches(&self, channel: &str, exchange: Exchange) -> Result<bool, Error> {
+        Ok(exchange == Exchange::Requested && Http::reaches(self, channel)?)
     }
 
     /// The web is asked, never listened to.
@@ -248,11 +248,12 @@ mod tests {
     fn a_thing_with_a_form_is_a_channel_the_member_is_asked_on() {
         let store = balcony();
         let (member, _) = member(&store);
-        assert_eq!(
-            Member::reaches(&member, &format!("{TEST}weather")).unwrap(),
-            Some(Exchange::Requested)
+        assert!(Member::reaches(&member, &format!("{TEST}weather"), Exchange::Requested).unwrap());
+        assert!(
+            !Member::reaches(&member, &format!("{TEST}weather"), Exchange::Listened).unwrap(),
+            "asked, never listened to"
         );
-        assert_eq!(Member::reaches(&member, &format!("{TEST}probe")).unwrap(), None);
+        assert!(!Member::reaches(&member, &format!("{TEST}probe"), Exchange::Requested).unwrap());
         assert!(member.listen(&format!("{TEST}weather"), Inbox::default()).is_err());
     }
 

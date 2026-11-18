@@ -294,15 +294,21 @@ impl Observer {
         Ok(())
     }
 
-    /// EVERY SENSOR READ BY ASKING, a job each: a sensor of the observer's that a member of the agent's answers when
-    /// asked (`Exchange::Requested`), asked at the cadence the sensor states, or once where it states none. POLLING
+    /// EVERY SENSOR OF THE OBSERVER'S, READ THROUGH THE MEMBER THAT REACHES IT: one a member answers when asked
+    /// (`Exchange::Requested`) a job each, asked at the cadence the sensor states, or once where it states none - POLLING
     /// IS A REQUEST IN A LOOP, AND THE LOOP IS SENSING'S, since the cadence is
-    /// (the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop). The timers, and the jobs run once.
+    /// (the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop) - and one whose readings arrive of their own
+    /// accord (`Exchange::Listened`) listened to, every message on it left with the answers. The timers, and the jobs
+    /// run once.
     pub(crate) fn request(&mut self, members: &Members) -> Result<(Timers, Vec<usize>), Error> {
         self.members = members.clone();
         let (mut timers, mut once) = (Vec::new(), Vec::new());
         for sensor in &self.sensors {
-            let Some((member, Exchange::Requested)) = members.reaching(sensor)? else {
+            if let Some(member) = members.reaching(sensor, Exchange::Listened)? {
+                member.listen(sensor, self.replies.clone())?;
+                continue;
+            }
+            let Some(member) = members.reaching(sensor, Exchange::Requested)? else {
                 continue;
             };
             let job = REQUEST + self.requested.len();
@@ -326,8 +332,8 @@ impl Observer {
         Ok((timers, once))
     }
 
-    /// What each asked sensor answered since the last take, each handed to `received` as it arrived: the percepts
-    /// written.
+    /// What each sensor asked answered, and each listened to said, since the last take, each handed to `received` as it
+    /// arrived: the percepts written, of one message together.
     pub(crate) fn answered(&mut self, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         let mut written = Vec::new();
         for message in self.replies.take() {
@@ -378,7 +384,7 @@ impl Observer {
                 if due.contains(&sensor) || self.requested.iter().any(|(s, _)| *s == sensor) {
                     continue;
                 }
-                if let Some((_, Exchange::Sent)) = self.members.reaching(&sensor)? {
+                if self.members.reaching(&sensor, Exchange::Sent)?.is_some() {
                     due.push(sensor);
                 }
             }
@@ -508,8 +514,8 @@ mod tests {
     struct Board;
 
     impl Member for Board {
-        fn reaches(&self, _channel: &str) -> Result<Option<Exchange>, Error> {
-            Ok(Some(Exchange::Sent))
+        fn reaches(&self, _channel: &str, exchange: Exchange) -> Result<bool, Error> {
+            Ok(exchange == Exchange::Sent)
         }
         fn listen(&self, _channel: &str, _inbox: Inbox) -> Result<(), Error> {
             Ok(())

@@ -18,8 +18,9 @@ description: >-
 where it states none, and hands the answer to `received` itself: polling is a request in a loop, and the loop is
 sensing's, since the cadence is
 ([the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop](/decisions/the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop.md));
-asking keeps the agent running. A sensor on a topic is still handed to `received` by the MQTT member, until it too is
-listened to through the contract (#1220). The
+asking keeps the agent running. A sensor whose readings arrive of their own accord, one on a topic
+(`Exchange::Listened`), sensing LISTENS to through the member that reaches it, and hands each message to `received`
+the same way, every sensor of one message in one turn. The
 pipeline makes a number of them — the codec the sensor is bound to (`sensing:decodedBy`, JSON the
 member that ships) and the pointer to its value in the document (`sensing:readingPointer`, a JSON
 Pointer). Each reading is one [observation](/domain/sensing/observation.md), named for its sensor and

@@ -10,7 +10,7 @@ The MQTT member of the transport family: readings and peers' documents in, comma
 
 | Heard | Said by | Starts |
 |---|---|---|
-| a message on a subscribed topic (an arrival) | the broker | handed to sensing (`received`) for a reading, to speech (`heard`) for a peer's document, or kept as prose for a chat's topic |
+| a message on a subscribed topic (an arrival) | the broker | left with each row listening on a sensor the topic is of, kept by speech (`heard`) for a peer's document, or kept as prose for a chat's topic |
 | `mqtt:TellingTrigger`: `speech:Said` | speech | `mqtt:Telling` |
 | `mqtt:CarryingTrigger`: `speech:ProseKept` | translation | `mqtt:Carrying`, where the words are the agent's own |
 
