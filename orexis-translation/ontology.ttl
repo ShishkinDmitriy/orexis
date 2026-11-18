@@ -5,6 +5,10 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix owl:  <http://www.w3.org/2002/07/owl#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix schema: <https://schema.org/> .
+@prefix telegram: <http://example.org/orexis/telegram#> .
+@prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
@@ -136,3 +140,32 @@ translation:retries a owl:DatatypeProperty ; rdfs:label "retries" ;
                 [ sh:path translation:answeredWithinS ; sh:defaultValue 60 ] ,
                 [ sh:path translation:calledWithinS ; sh:defaultValue 60 ] ,
                 [ sh:path translation:retries ; sh:defaultValue 3 ] .
+
+#  HOW THE AGENT WRITES ON A CHAT (knowledge/domain/translation/style.md): a style is translation's, since translation
+#  writes the words, and the carrier only carries them, the same way whichever it is. A chat may say its own; otherwise
+#  the style of its channel's kind holds, stated here of each kind of channel a member carries.
+
+translation:Style a owl:Class ; rdfs:label "Style" ;
+    rdfs:comment "How the agent writes to a person on a chat: what the model is told of writing there (`translation:guidance`), and how many messages one answer may be (`translation:messagesAtMost`). A chat's own (`translation:writtenAs` on the chat), or its channel's kind's." .
+
+translation:writtenAs a owl:ObjectProperty ; rdfs:range translation:Style ; rdfs:label "written as" ;
+    rdfs:comment "The style the agent writes in: said of a `speech:Chat` by the world, for that chat alone, or of a kind of channel here, for every chat over one. A chat's own wins." .
+
+translation:guidance a owl:DatatypeProperty ; rdfs:domain translation:Style ; rdfs:range xsd:string ; rdfs:label "guidance" ;
+    rdfs:comment "What the model is told of how to write in a style, beside what it is told of every answer." .
+
+translation:messagesAtMost a owl:DatatypeProperty ; rdfs:domain translation:Style ; rdfs:range xsd:integer ; rdfs:label "messages at most" ;
+    rdfs:comment "How many messages one answer may be sent as; one where a style says none. Above one, the model separates them by a line holding `---` alone, and each is kept and carried as words of their own." .
+
+translation:Chatty a translation:Style ; rdfs:label "chatty" ;
+    translation:guidance "This is a chat on a phone: write as a person types there, in short lines, and where the answer is long, send it as a few short messages rather than one long one." ;
+    translation:messagesAtMost 3 .
+
+translation:Letter a translation:Style ; rdfs:label "letter" ;
+    translation:guidance "This is a letter by email: one complete message, with a greeting by the person's name, the answer in whole sentences and paragraphs, and a closing signed with the agent's name." ;
+    translation:messagesAtMost 1 .
+
+telegram:Chat translation:writtenAs translation:Chatty .
+mqtt4ssn:Topic translation:writtenAs translation:Chatty .
+schema:ContactPoint translation:writtenAs translation:Letter .
+

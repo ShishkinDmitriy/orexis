@@ -1025,7 +1025,12 @@ fn the_model_is_briefed_with_who_the_agent_is_what_the_chat_reads_and_what_a_per
     let (system, _, offered) = &asked[0];
     assert_eq!(system[0], CONVERSE_SYSTEM);
     assert!(system[1].starts_with("YOU SPEAK FOR seeker."));
-    assert!(system[2].starts_with("IT IS NOW 2026-11-01T09:00"), "{}", system[2]);
+    assert!(
+        system[2].starts_with("How to write on this chat: "),
+        "the chat's style, Telegram's: {}",
+        system[2]
+    );
+    assert!(system[3].starts_with("IT IS NOW 2026-11-01T09:00"), "{}", system[3]);
     assert!(system[1].contains("WHAT THIS CHAT LETS YOU READ") && system[1].contains(" - speech ("));
     assert!(
         system[1].contains("WHAT A PERSON MAY STATE HERE")
@@ -1327,6 +1332,55 @@ fn in_a_group_words_that_tag_or_reply_to_the_agent_are_its_own_and_its_answer_re
 }
 
 #[test]
+fn a_chat_is_written_in_its_channels_style_chatty_on_telegram_in_messages_and_a_letter_by_email_in_one() {
+    let store = unbooted();
+    let mut s = Seeker::new(&store);
+    let (model, asked) = StandIn::new(vec![], "Two flats so far.\n---\nThe studio is the better one.");
+    s.model(model);
+    s.write("clara_telegram", "how is it going?", Some("clara"), None, Some("7"));
+    let (system, _, _) = asked.lock().unwrap()[0].clone();
+    assert!(
+        system
+            .iter()
+            .any(|b| b.starts_with("How to write on this chat: This is a chat on a phone")),
+        "the chatty style, Telegram's: {system:?}"
+    );
+    assert_eq!(
+        s.said(),
+        [
+            (format!("{V}clara_telegram"), "Two flats so far.".to_string()),
+            (
+                format!("{V}clara_telegram"),
+                "The studio is the better one.".to_string()
+            )
+        ],
+        "one answer, two messages"
+    );
+    assert_eq!(
+        s.bot.lock().unwrap().replies,
+        [Some("7".to_string()), None],
+        "the first replies to what it answers"
+    );
+    s.bot.lock().unwrap().said.clear();
+    s.write("anna_mail", "how is it going?", None, None, None);
+    let (system, _, _) = asked.lock().unwrap()[1].clone();
+    assert!(
+        system
+            .iter()
+            .any(|b| b.starts_with("How to write on this chat: This is a letter by email")),
+        "the letter, email's: {system:?}"
+    );
+    assert_eq!(
+        s.said(),
+        [(
+            format!("{V}anna_mail"),
+            "Two flats so far.\n---\nThe studio is the better one.".to_string()
+        )],
+        "a letter is one message, as written"
+    );
+}
+
+#[test]
 fn what_the_agent_says_to_a_person_is_rendered_and_sent_through_their_chat() {
     let store = unbooted();
     let mut s = Seeker::new(&store);
@@ -1339,7 +1393,10 @@ fn what_the_agent_says_to_a_person_is_rendered_and_sent_through_their_chat() {
     s.say(statement, "clara");
     let (system, text, _) = asked.lock().unwrap()[0].clone();
     let text = text[0].as_str().unwrap().to_string();
-    assert_eq!(system, [SAY_SYSTEM]);
+    assert!(
+        system.len() == 1 && system[0].starts_with(SAY_SYSTEM) && system[0].contains("How to write on this chat: "),
+        "rendered in her chat's style, Telegram's: {system:?}"
+    );
     assert!(
         text.contains("To: Clara") && text.contains("\"weekday evenings\""),
         "{text}"

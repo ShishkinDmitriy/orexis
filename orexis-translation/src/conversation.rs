@@ -50,6 +50,65 @@ statement the agent is making, in Turtle, with the labels and comments of the wo
 short, plain, courteous message in the person's language, never in IRIs or Turtle, saying exactly what the \
 statement says and nothing more: invent no detail, make no promise the statement does not make, and sign as \
 the agent.";
+/// What separates two messages of one answer, where its chat's style lets it be several.
+pub const BETWEEN_MESSAGES: &str = "---";
+
+/// WHAT THE MODEL IS TOLD OF WRITING ON A CHAT, beside what it is told of every answer: the style's guidance, and where
+/// one answer may be several messages, how to part them; nothing where the style says nothing.
+///
+/// ```
+/// use orexis_translation::chat::Style;
+/// use orexis_translation::written_as;
+///
+/// assert_eq!(written_as(&Style::default()), None);
+/// let letter = Style { guidance: Some("One letter.".into()), messages_at_most: 1 };
+/// assert_eq!(written_as(&letter).as_deref(), Some("How to write on this chat: One letter."));
+/// let chatty = Style { guidance: Some("Short lines.".into()), messages_at_most: 3 };
+/// assert!(written_as(&chatty).unwrap().ends_with("a line holding only --- between two, and at most 3 messages."));
+/// ```
+pub fn written_as(style: &crate::chat::Style) -> Option<String> {
+    let guidance = style.guidance.as_deref()?;
+    let parted = if style.messages_at_most > 1 {
+        format!(
+            " Where you send more than one message, put a line holding only {BETWEEN_MESSAGES} between two, and at most {} messages.",
+            style.messages_at_most
+        )
+    } else {
+        String::new()
+    };
+    Some(format!("How to write on this chat: {guidance}{parted}"))
+}
+
+/// THE MESSAGES ONE ANSWER IS SENT AS: parted at each line holding only `---`, the empty ones dropped, and the last
+/// taking whatever is past `at_most`; one message where the style lets it be no more, as the model wrote it.
+///
+/// ```
+/// use orexis_translation::sent_as;
+///
+/// assert_eq!(sent_as("Hello.\n---\nThe fern is dry.", 3), ["Hello.", "The fern is dry."]);
+/// assert_eq!(sent_as("a\n---\nb\n---\nc", 2), ["a", "b\n\nc"]);
+/// assert_eq!(sent_as("Dear Anna,\n---\nyours", 1), ["Dear Anna,\n---\nyours"]);
+/// assert_eq!(sent_as("\n---\nonly", 3), ["only"]);
+/// ```
+pub fn sent_as(words: &str, at_most: usize) -> Vec<String> {
+    if at_most <= 1 {
+        return vec![words.trim().to_string()];
+    }
+    let parts: Vec<String> = words
+        .split('\n')
+        .collect::<Vec<_>>()
+        .split(|line| line.trim() == BETWEEN_MESSAGES)
+        .map(|lines| lines.join("\n").trim().to_string())
+        .filter(|part| !part.is_empty())
+        .collect();
+    if parts.len() <= at_most {
+        return parts;
+    }
+    let mut kept = parts[..at_most - 1].to_vec();
+    kept.push(parts[at_most - 1..].join("\n\n"));
+    kept
+}
+
 /// HOW OFTEN THE AGENT IS SHOWN WRITING AGAIN, in seconds of the one timeline: Telegram shows a chat action for five.
 pub const WRITING_S: f64 = 4.0;
 /// WHAT A CHAT READS TO READ WHAT HAPPENED: the kernel's event.
@@ -169,6 +228,8 @@ pub(crate) struct Conversation {
     pub(crate) at: DateTime,
     /// How many turns it may take (`translation:turns`): the last offers no tool, so the model answers in words.
     pub(crate) turns: usize,
+    /// How many messages the answer may be sent as, by the chat's style.
+    pub(crate) messages_at_most: usize,
 }
 
 fn sum(spent: &mut BTreeMap<String, i64>, tokens: &BTreeMap<String, i64>) {
@@ -333,11 +394,14 @@ pub(crate) fn converse(c: Conversation, model: &dyn Model, mind: &dyn Mind, back
         at: Some(c.at),
     }));
     if !words.is_empty() && words != SILENT {
-        let _ = back.send(Back::Said {
-            channel: c.channel.clone(),
-            words,
-            reply: c.reply.clone(),
-        });
+        //  ONE ANSWER, AS MANY MESSAGES AS ITS CHAT'S STYLE LETS IT BE: the first replying to what it answers.
+        for (n, part) in sent_as(&words, c.messages_at_most).into_iter().enumerate() {
+            let _ = back.send(Back::Said {
+                channel: c.channel.clone(),
+                words: part,
+                reply: if n == 0 { c.reply.clone() } else { None },
+            });
+        }
     }
     if !c.unaddressed {
         let _ = back.send(Back::Ended(c.chat.clone()));

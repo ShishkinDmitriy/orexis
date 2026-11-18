@@ -28,7 +28,7 @@ use crate::briefing::briefing;
 use crate::chat::{Chat, chats_of, named};
 use crate::conversation::{
     Asked, Back, CONVERSE_SYSTEM, Conversation, Direct, EVENT, SAY_SYSTEM, UNADDRESSED, converse, instant_block,
-    prefixes_of, translated,
+    prefixes_of, sent_as, translated, written_as,
 };
 use crate::model::Model;
 use crate::past::Past;
@@ -241,7 +241,7 @@ impl Translator {
         } else {
             listing(store, &allowed, every, &prefixes, readable.is_none())?
         };
-        let system = vec![
+        let mut system = vec![
             CONVERSE_SYSTEM.to_string() + if unaddressed { UNADDRESSED } else { "" },
             briefing(
                 store,
@@ -251,8 +251,10 @@ impl Translator {
                 &stated,
                 &pairs,
             )?,
-            instant_block(now),
         ];
+        //  HOW TO WRITE ON THIS CHAT, by its style: a block of its own, before the instant, which is never cached.
+        system.extend(written_as(&chat.style));
+        system.push(instant_block(now));
         if !unaddressed {
             self.begin(&chat);
         }
@@ -270,6 +272,7 @@ impl Translator {
             me: local_of(&self.me),
             at: now,
             turns: self.turns,
+            messages_at_most: chat.style.messages_at_most,
         };
         let within_s = self.answered_within_s;
         if self.inline {
@@ -330,9 +333,13 @@ impl Translator {
             rendered(store, doc, &prefixes_of(store, &self.me))?
         );
         let (back, channel) = (self.tx.clone(), chat.channel.clone());
+        let (system, at_most) = match written_as(&chat.style) {
+            Some(style) => (format!("{SAY_SYSTEM} {style}"), chat.style.messages_at_most),
+            None => (SAY_SYSTEM.to_string(), 1),
+        };
         let render = move || {
             let began = Instant::now();
-            match model.ask(SAY_SYSTEM, &text) {
+            match model.ask(&system, &text) {
                 Ok(answer) => {
                     let words = answer.text.trim().to_string();
                     let outcome = if words.is_empty() { "no words" } else { "said" };
@@ -345,11 +352,13 @@ impl Translator {
                         began,
                     )));
                     if !words.is_empty() {
-                        let _ = back.send(Back::Said {
-                            channel,
-                            words,
-                            reply: None,
-                        });
+                        for part in sent_as(&words, at_most) {
+                            let _ = back.send(Back::Said {
+                                channel: channel.clone(),
+                                words: part,
+                                reply: None,
+                            });
+                        }
                     }
                 }
                 Err(e) => log::warn!("the model would not render what was said: {e}"),

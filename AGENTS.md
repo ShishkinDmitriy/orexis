@@ -1069,6 +1069,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   keeps its own words the same way, and each acts on the words whose provenance is its to act on, speech carrying the
   agent's back, so no member imports speech or translation, and Telegram and email are members beside MQTT and HTTP
   (an-agent-translates-for-itself, transport).
+- **How the agent writes on a chat is translation's, chosen from the world, and every carrier is sent words the same
+  way** — a `translation:Style` a chat names, or its channel's kind's, stated in translation's ontology: chatty on
+  Telegram in a few messages, one letter by email; a style stated by each member's ontology was refused, a member
+  speaking the word of the row above it (style).
 - **A chat is who speaks with whom through what, and the channel's type is the carrier** — `speech:Chat` with
   its participants and one channel, a topic, a contact point with an email or a `telegram:Chat`, speech naming
   no carrier; a person connects by a user agent that `prov:actedOnBehalfOf` them, each agent speaks through a
