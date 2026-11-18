@@ -58,6 +58,9 @@ speech's `told`. It hands the model the statement's triples in Turtle, with the 
 each word and thing in it, and who it is for, and sends the words through the person's own chat with
 the agent, or a group they are in where they have none.
 
+Whether it answers or renders, it writes in the chat's [style](/domain/translation/style.md), the chat's own or its
+channel's kind's: what the model is told of writing there, and as how many messages.
+
 # What it needs
 
 A chat it is in, of which onboarding's [requirement](/domain/onboarding/requirement.md) holds a

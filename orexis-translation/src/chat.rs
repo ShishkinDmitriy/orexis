@@ -19,6 +19,25 @@ pub struct Chat {
     pub agents: Vec<(String, Vec<String>)>,
     pub reads: Vec<String>,
     pub allows: Vec<String>,
+    /// How the agent writes on it: the chat's own style, or its channel's kind's (`translation:writtenAs`).
+    pub style: Style,
+}
+
+/// HOW THE AGENT WRITES ON A CHAT: what the model is told of writing there, where a style says, and how many messages
+/// one answer may be, one where it says none.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Style {
+    pub guidance: Option<String>,
+    pub messages_at_most: usize,
+}
+
+impl Default for Style {
+    fn default() -> Self {
+        Style {
+            guidance: None,
+            messages_at_most: 1,
+        }
+    }
 }
 
 impl Chat {
@@ -45,6 +64,16 @@ pub fn chats_of(store: &Store) -> Result<Vec<Chat>, Error> {
         SELECT ?chat ?kind WHERE { ?chat a speech:Chat ; speech:reads ?kind } ORDER BY ?chat ?kind";
     const ALLOWS_Q: &str = "PREFIX speech: <http://example.org/orexis/speech#>
         SELECT ?chat ?word WHERE { ?chat a speech:Chat ; speech:allows ?word } ORDER BY ?chat ?word";
+    /// THE STYLE EACH CHAT IS WRITTEN IN: its own, or else its channel's kind's.
+    const STYLE_Q: &str = "PREFIX speech: <http://example.org/orexis/speech#>
+        PREFIX translation: <http://example.org/orexis/translation#>
+        SELECT ?chat ?guidance ?most WHERE {
+          ?chat a speech:Chat ; speech:channel ?channel .
+          OPTIONAL { ?chat translation:writtenAs ?own }
+          OPTIONAL { ?channel a ?kind . ?kind translation:writtenAs ?given }
+          BIND(COALESCE(?own, ?given) AS ?style)
+          ?style translation:guidance ?guidance . OPTIONAL { ?style translation:messagesAtMost ?most } }
+        ORDER BY ?chat";
     let mut graphs = store.graphs_of(&[BELIEF], &Within::common())?;
     graphs.extend(store.graphs_of(&[SELF_GRAPH], &Within::default())?);
     let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
@@ -88,6 +117,15 @@ pub fn chats_of(store: &Store) -> Result<Vec<Chat>, Error> {
             allows.entry(c).or_default().push(w);
         }
     }
+    let mut styles: BTreeMap<String, Style> = BTreeMap::new();
+    for r in store.rows(STYLE_Q, &graphs)? {
+        if let (Some(c), Some(guidance)) = (iri(&r, "chat"), value(&r, "guidance")) {
+            styles.entry(c).or_insert(Style {
+                guidance: Some(guidance),
+                messages_at_most: value(&r, "most").and_then(|m| m.parse().ok()).unwrap_or(1).max(1),
+            });
+        }
+    }
     Ok(found
         .into_iter()
         .map(|(iri, (channel, people, agents))| {
@@ -101,6 +139,7 @@ pub fn chats_of(store: &Store) -> Result<Vec<Chat>, Error> {
                 agents: agents.into_iter().collect(),
                 reads: r,
                 allows: a,
+                style: styles.get(&iri).cloned().unwrap_or_default(),
                 iri,
             }
         })
