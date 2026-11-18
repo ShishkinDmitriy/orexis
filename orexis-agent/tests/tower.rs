@@ -228,7 +228,7 @@ async fn the_last_window_is_written_as_the_process_stops() {
         "m",
         Box::new(move |_, points| {
             kept.lock().unwrap().extend(points.iter().cloned());
-            Ok(())
+            orexis::series::ready(Ok(()))
         }),
     );
     let provided = Provided::default().with(orexis_metrics::Window::new(sink, 3600.0, Some("tower"), Some("mover")));

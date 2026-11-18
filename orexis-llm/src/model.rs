@@ -10,6 +10,8 @@
 //! asking role names, and `MODEL_API_KEY` and `MODEL_NAME` are environment.
 
 use std::collections::BTreeMap;
+use std::future::Future;
+use std::pin::Pin;
 use std::time::Duration;
 
 use serde_json::{Value as Json, json};
@@ -75,16 +77,26 @@ pub struct Turn {
     pub tokens: BTreeMap<String, i64>,
 }
 
-/// A language model, as a package asks it: a conversation's turn, or one call. A test stands one in.
+/// A call to the model under way, awaited on the agent's runtime.
+pub type Pending<'a, T> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
+
+/// A LANGUAGE MODEL, as a package asks it: a conversation's turn, or one call, each awaited as a task of the asking
+/// package's. A test stands one in, answering at once.
 pub trait Model: Send + Sync {
     /// Which model, for what is said of its use.
     fn name(&self) -> Option<String> {
         None
     }
 
-    fn converse(&self, system: &[String], messages: &[Json], tools: &[Json], last: bool) -> Result<Turn, Failure>;
+    fn converse<'a>(
+        &'a self,
+        system: &'a [String],
+        messages: &'a [Json],
+        tools: &'a [Json],
+        last: bool,
+    ) -> Pending<'a, Result<Turn, Failure>>;
 
-    fn ask(&self, system: &str, text: &str) -> Result<Answer, Failure>;
+    fn ask<'a>(&'a self, system: &'a str, text: &'a str) -> Pending<'a, Result<Answer, Failure>>;
 }
 
 /// A language model reached over the Messages API: which, where, and with what key.
@@ -95,7 +107,7 @@ pub struct Anthropic {
     pub max_tokens: u32,
     /// How often a failing API is asked again (`llm:retries`).
     pub retries: u32,
-    agent: ureq::Agent,
+    client: reqwest::Client,
 }
 
 /// What this family's ontology states of a figure where no role is read: a model made by a test.
@@ -113,7 +125,7 @@ impl Anthropic {
             url: url.trim_end_matches('/').to_string(),
             max_tokens: 1024,
             retries: 0,
-            agent: ureq::AgentBuilder::new().build(),
+            client: reqwest::Client::new(),
         }
         .paced(defaulted(crate::CALLED_WITHIN_S), defaulted(crate::RETRIES) as u32)
     }
@@ -123,9 +135,14 @@ impl Anthropic {
     /// The model called within `within_s` real seconds a call (`llm:calledWithinS`) and asked again `retries`
     /// times where it fails (`llm:retries`): the asking role's figures.
     pub fn paced(mut self, within_s: f64, retries: u32) -> Self {
-        self.agent = ureq::AgentBuilder::new()
+        match reqwest::Client::builder()
             .timeout(Duration::from_secs_f64(within_s))
-            .build();
+            .user_agent("orexis-agent")
+            .build()
+        {
+            Ok(client) => self.client = client,
+            Err(e) => log::warn!("the model is called with no timeout: {e}"),
+        }
         self.retries = retries;
         self
     }
@@ -144,23 +161,26 @@ impl Anthropic {
 
     /// One request, asked again where the API is overloaded, rate-limited, timing out or unreachable, with the SDK's
     /// backoff between.
-    fn post(&self, body: &Json) -> Result<Json, Failure> {
+    async fn post(&self, body: &Json) -> Result<Json, Failure> {
         let mut attempt = 0;
         loop {
             let reply = self
-                .agent
-                .post(&format!("{}/v1/messages", self.url))
-                .set("x-api-key", &self.key)
-                .set("anthropic-version", VERSION)
-                .set("content-type", "application/json")
-                .send_string(&body.to_string());
+                .client
+                .post(format!("{}/v1/messages", self.url))
+                .header("x-api-key", &self.key)
+                .header("anthropic-version", VERSION)
+                .header("content-type", "application/json")
+                .body(body.to_string())
+                .send()
+                .await;
             let failure = match reply {
-                Ok(response) => {
-                    let text = response.into_string().map_err(|e| Failure::Other(e.to_string()))?;
+                Ok(response) if response.status().is_success() => {
+                    let text = response.text().await.map_err(|e| Failure::Other(e.to_string()))?;
                     return serde_json::from_str(&text).map_err(|e| Failure::Other(e.to_string()));
                 }
-                Err(ureq::Error::Status(code, response)) => {
-                    let said = response.into_string().unwrap_or_default();
+                Ok(response) => {
+                    let code = response.status().as_u16();
+                    let said = response.text().await.unwrap_or_default();
                     let said = format!("Error code: {code} - {said}");
                     match code {
                         401 | 403 => return Err(Failure::Refused(said)),
@@ -176,7 +196,7 @@ impl Anthropic {
                 return Err(failure);
             }
             //  THE SDK'S BACKOFF: half a second doubled each time, at most eight.
-            std::thread::sleep(Duration::from_secs_f64((0.5 * 2f64.powi(attempt as i32)).min(8.0)));
+            tokio::time::sleep(Duration::from_secs_f64((0.5 * 2f64.powi(attempt as i32)).min(8.0))).await;
             attempt += 1;
         }
     }
@@ -250,74 +270,96 @@ impl Model for Anthropic {
         Some(self.name.clone())
     }
 
-    fn converse(&self, system: &[String], messages: &[Json], tools: &[Json], last: bool) -> Result<Turn, Failure> {
-        let reply = self.post(&turn_body(&self.name, self.max_tokens, system, messages, tools, last))?;
-        let mut turn = Turn {
-            stop: reply
-                .get("stop_reason")
-                .and_then(Json::as_str)
-                .unwrap_or_default()
-                .to_string(),
-            tokens: tokens(&reply),
-            ..Turn::default()
-        };
-        for block in reply
-            .get("content")
-            .and_then(Json::as_array)
-            .cloned()
-            .unwrap_or_default()
-        {
-            match block.get("type").and_then(Json::as_str) {
-                Some("text") => {
-                    let text = block.get("text").and_then(Json::as_str).unwrap_or_default();
-                    turn.text += text;
-                    turn.content.push(json!({"type": "text", "text": text}));
-                }
-                Some("tool_use") => {
-                    let (id, name) = (
-                        block.get("id").and_then(Json::as_str).unwrap_or_default().to_string(),
-                        block.get("name").and_then(Json::as_str).unwrap_or_default().to_string(),
-                    );
-                    let input = block
-                        .get("input")
-                        .cloned()
-                        .filter(|i| !i.is_null())
-                        .unwrap_or(json!({}));
-                    turn.content
-                        .push(json!({"type": "tool_use", "id": id, "name": name, "input": input}));
-                    turn.calls.push((id, name, input));
-                }
-                _ => {}
-            }
-        }
-        Ok(turn)
+    fn converse<'a>(
+        &'a self,
+        system: &'a [String],
+        messages: &'a [Json],
+        tools: &'a [Json],
+        last: bool,
+    ) -> Pending<'a, Result<Turn, Failure>> {
+        Box::pin(async move {
+            let reply = self
+                .post(&turn_body(&self.name, self.max_tokens, system, messages, tools, last))
+                .await?;
+            Ok(turn_of(&reply))
+        })
     }
 
-    fn ask(&self, system: &str, text: &str) -> Result<Answer, Failure> {
-        let body = json!({"model": self.name, "max_tokens": self.max_tokens, "system": system,
-                          "messages": [{"role": "user", "content": text}]});
-        let reply = self.post(&body)?;
-        let mut answer = Answer {
-            tokens: tokens(&reply),
-            ..Answer::default()
-        };
-        for block in reply
-            .get("content")
-            .and_then(Json::as_array)
-            .cloned()
-            .unwrap_or_default()
-        {
-            match block.get("type").and_then(Json::as_str) {
-                Some("text") => answer.text += block.get("text").and_then(Json::as_str).unwrap_or_default(),
-                Some("tool_use") => answer.calls.push((
-                    block.get("name").and_then(Json::as_str).unwrap_or_default().to_string(),
-                    block.get("input").cloned().unwrap_or(json!({})),
-                )),
-                _ => {}
-            }
-        }
-        Ok(answer)
+    fn ask<'a>(&'a self, system: &'a str, text: &'a str) -> Pending<'a, Result<Answer, Failure>> {
+        Box::pin(async move {
+            let body = json!({"model": self.name, "max_tokens": self.max_tokens, "system": system,
+                              "messages": [{"role": "user", "content": text}]});
+            Ok(answer_of(&self.post(&body).await?))
+        })
     }
+}
+
+/// What a turn's reply says: its text, each tool it called and the content to hand back, why it stopped and what it
+/// spent.
+fn turn_of(reply: &Json) -> Turn {
+    let mut turn = Turn {
+        stop: reply
+            .get("stop_reason")
+            .and_then(Json::as_str)
+            .unwrap_or_default()
+            .to_string(),
+        tokens: tokens(reply),
+        ..Turn::default()
+    };
+    for block in reply
+        .get("content")
+        .and_then(Json::as_array)
+        .cloned()
+        .unwrap_or_default()
+    {
+        match block.get("type").and_then(Json::as_str) {
+            Some("text") => {
+                let text = block.get("text").and_then(Json::as_str).unwrap_or_default();
+                turn.text += text;
+                turn.content.push(json!({"type": "text", "text": text}));
+            }
+            Some("tool_use") => {
+                let (id, name) = (
+                    block.get("id").and_then(Json::as_str).unwrap_or_default().to_string(),
+                    block.get("name").and_then(Json::as_str).unwrap_or_default().to_string(),
+                );
+                let input = block
+                    .get("input")
+                    .cloned()
+                    .filter(|i| !i.is_null())
+                    .unwrap_or(json!({}));
+                turn.content
+                    .push(json!({"type": "tool_use", "id": id, "name": name, "input": input}));
+                turn.calls.push((id, name, input));
+            }
+            _ => {}
+        }
+    }
+    turn
+}
+
+/// What one call's reply says: its text, each tool it called, and what it spent.
+fn answer_of(reply: &Json) -> Answer {
+    let mut answer = Answer {
+        tokens: tokens(reply),
+        ..Answer::default()
+    };
+    for block in reply
+        .get("content")
+        .and_then(Json::as_array)
+        .cloned()
+        .unwrap_or_default()
+    {
+        match block.get("type").and_then(Json::as_str) {
+            Some("text") => answer.text += block.get("text").and_then(Json::as_str).unwrap_or_default(),
+            Some("tool_use") => answer.calls.push((
+                block.get("name").and_then(Json::as_str).unwrap_or_default().to_string(),
+                block.get("input").cloned().unwrap_or(json!({})),
+            )),
+            _ => {}
+        }
+    }
+    answer
 }
 
 #[cfg(test)]

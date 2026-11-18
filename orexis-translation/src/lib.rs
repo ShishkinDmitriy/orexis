@@ -33,7 +33,7 @@ pub mod stated;
 mod translator;
 
 pub use conversation::{BETWEEN_MESSAGES, SILENT, UNADDRESSED, WRITING_S, sent_as, written_as};
-pub use translator::{Inline, Translator};
+pub use translator::Translator;
 
 inventory::submit! { Package { name: "translation", start } }
 
@@ -47,7 +47,7 @@ const ROLE: &str = "http://example.org/orexis/translation#Translator";
 /// and declines otherwise; joined, its translator is made, handed the model a test answers for or, deployed, the one
 /// its role names, and what a chat reads of what happened; checked, it ends there; otherwise it says it booted,
 /// and what follows is ITS TASK, which waits for an event beneath its triggers, an arrival or the instant it is next
-/// due, and once nothing more waits to be heard does what the model's threads handed back.
+/// due, and once nothing more waits to be heard does what the model's conversations handed back.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         if !handed.plays(&[ROLE])? {
@@ -77,7 +77,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
                 }
             };
         }
-        translator.inline = handed.provided.take::<Inline>().is_some();
+        translator.events = Some(handed.events.clone());
         //  AND WHERE THE AGENT IS DEPLOYED and nothing writes a series a chat reads, read through a sink of its own
         //  wherever the world names a store that serves the purpose: made here, so a deployment that names a store
         //  wrongly refuses the start.
@@ -97,6 +97,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         hears.event(TRANSLATING_TRIGGER, TRANSLATE);
         hears.event(PHRASING_TRIGGER, PHRASE);
         let mut arrived = handed.arrived();
+        translator.wake = arrived.wake();
         let mut timers = vec![(Every::new(WRITING_S), STILL)];
         if !handed.booted().await? {
             return Ok(());

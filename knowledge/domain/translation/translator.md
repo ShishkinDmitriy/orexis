@@ -23,8 +23,9 @@ self graph as any [role](/domain/kernel/role.md) is. It is a [speaker](/domain/s
 too, so what a person states is kept as any peer's document. Its part, `orexis-translation/src/translator.rs`,
 is linked to every transport member that says `prose` and to speech's `told`, and holds the language
 model at the one run-time edge where a model translates
-([an-agent-translates-for-itself](/decisions/an-agent-translates-for-itself.md)). The model's call
-runs on a thread of its own, and what comes of it is submitted back as a job.
+([an-agent-translates-for-itself](/decisions/an-agent-translates-for-itself.md)). The model's
+conversation is a Tokio task of its own, the agent held busy while it runs, and what comes of it is handed back and rings
+the translator's task, which does it as a job.
 
 # Heard
 

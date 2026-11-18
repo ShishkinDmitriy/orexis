@@ -13,6 +13,8 @@
 //! archives sensing's readings, the metrics, and a chat that reads the past.
 
 use std::collections::BTreeMap;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 
 use oxsdatatypes::DateTime;
@@ -64,13 +66,21 @@ pub fn store(store: &crate::store::Store, purpose: &str) -> Result<Option<Served
     }))
 }
 
+/// A call to the store under way, awaited on the agent's runtime: what it answers.
+pub type Pending<T> = Pin<Box<dyn Future<Output = T> + Send>>;
+/// What answers at once: a test's store.
+pub fn ready<T: Send + 'static>(answer: T) -> Pending<T> {
+    Box::pin(async move { answer })
+}
+/// The records a Flux query answers: each as its columns.
+pub type Records = Vec<BTreeMap<String, String>>;
 /// How a batch of points reaches a bucket: the client's own call, refused with why.
-pub type Write = Box<dyn Fn(&str, &[Point]) -> Result<(), String> + Send + Sync>;
+pub type Write = Box<dyn Fn(&str, &[Point]) -> Pending<Result<(), String>> + Send + Sync>;
 /// How a Flux query of the bucket is answered: each record as its columns, each value as Python's client reads it and
-/// `str` says it, or why not. Shared with the model's thread, which reads the past off it.
-pub type Read = Arc<dyn Fn(&str) -> Result<Vec<BTreeMap<String, String>>, String> + Send + Sync>;
+/// `str` says it, or why not. Shared with the model's conversation, which reads the past off it.
+pub type Read = Arc<dyn Fn(&str) -> Pending<Result<Records, String>> + Send + Sync>;
 
-/// One purpose's bucket as a chat reads it: what a Flux query of it answers, off any thread.
+/// One purpose's bucket as a chat reads it: what a Flux query of it answers, from any task.
 #[derive(Clone)]
 pub struct Reader {
     pub purpose: &'static str,
@@ -89,14 +99,17 @@ impl Reader {
     }
 
     /// The records a Flux query of this bucket answers; why not, where the store refuses or the sink reads nothing.
-    pub fn read(&self, flux: &str) -> Result<Vec<BTreeMap<String, String>>, String> {
+    pub fn read(&self, flux: &str) -> Pending<Result<Records, String>> {
+        let purpose = self.purpose.to_lowercase();
         match &self.read {
-            None => Err(format!(
-                "the {} store is written here and never read",
-                self.purpose.to_lowercase()
-            )),
+            None => ready(Err(format!("the {purpose} store is written here and never read"))),
             Some(read) => {
-                read(flux).map_err(|e| format!("the {} store would not answer: {e}", self.purpose.to_lowercase()))
+                let reading = read(flux);
+                Box::pin(async move {
+                    reading
+                        .await
+                        .map_err(|e| format!("the {purpose} store would not answer: {e}"))
+                })
             }
         }
     }
@@ -168,40 +181,59 @@ impl Sink {
 
     #[cfg(feature = "series")]
     fn influx(purpose: &'static str, url: &str, org: &str, bucket: &str, token: &str) -> Self {
-        let agent = ureq::AgentBuilder::new()
+        let client = match reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(10))
-            .build();
+            .user_agent("orexis-agent")
+            .build()
+        {
+            Ok(client) => client,
+            Err(e) => {
+                log::warn!("no client for the {} store: {e}", purpose.to_lowercase());
+                return Sink::new(purpose, bucket, Box::new(|_, _| ready(Err("no client".into()))));
+            }
+        };
         let (url, org, token) = (
             url.trim_end_matches('/').to_string(),
             org.to_string(),
-            token.to_string(),
+            format!("Token {token}"),
         );
-        let (reading, read_url, read_org, read_token) = (agent.clone(), url.clone(), org.clone(), token.clone());
+        let (reading, read_url, read_org, read_token) = (client.clone(), url.clone(), org.clone(), token.clone());
         let read: Read = Arc::new(move |flux| {
-            let body = reading
-                .post(&format!("{read_url}/api/v2/query"))
-                .query("org", &read_org)
-                .set("Authorization", &format!("Token {read_token}"))
-                .set("Content-Type", "application/vnd.flux")
-                .set("Accept", "application/csv")
-                .send_string(flux)
-                .map_err(|e| e.to_string())?
-                .into_string()
-                .map_err(|e| e.to_string())?;
-            Ok(records(&body))
+            let asked = reading
+                .post(format!("{read_url}/api/v2/query"))
+                .query(&[("org", &read_org)])
+                .header("Authorization", &read_token)
+                .header("Content-Type", "application/vnd.flux")
+                .header("Accept", "application/csv")
+                .body(flux.to_string());
+            Box::pin(async move {
+                let body = asked
+                    .send()
+                    .await
+                    .and_then(reqwest::Response::error_for_status)
+                    .map_err(|e| e.to_string())?
+                    .text()
+                    .await
+                    .map_err(|e| e.to_string())?;
+                Ok(records(&body))
+            })
         });
         let write: Write = Box::new(move |bucket, points| {
             let body: Vec<String> = points.iter().map(line).collect();
-            agent
-                .post(&format!("{url}/api/v2/write"))
-                .query("org", &org)
-                .query("bucket", bucket)
-                .query("precision", "ns")
-                .set("Authorization", &format!("Token {token}"))
-                .set("Content-Type", "text/plain; charset=utf-8")
-                .send_string(&body.join("\n"))
-                .map(|_| ())
-                .map_err(|e| e.to_string())
+            let asked = client
+                .post(format!("{url}/api/v2/write"))
+                .query(&[("org", org.as_str()), ("bucket", bucket), ("precision", "ns")])
+                .header("Authorization", &token)
+                .header("Content-Type", "text/plain; charset=utf-8")
+                .body(body.join("\n"));
+            Box::pin(async move {
+                asked
+                    .send()
+                    .await
+                    .and_then(reqwest::Response::error_for_status)
+                    .map(|_| ())
+                    .map_err(|e| e.to_string())
+            })
         });
         Sink {
             read: Some(read),
@@ -215,33 +247,37 @@ impl Sink {
             "a {} store is named and this binary was built without the series: nothing is written",
             purpose.to_lowercase()
         );
-        Sink::new(purpose, bucket, Box::new(|_, _| Err("built without the series".into())))
+        Sink::new(
+            purpose,
+            bucket,
+            Box::new(|_, _| ready(Err("built without the series".into()))),
+        )
     }
 
-    /// Write `points`; how many. A store that refuses is said in the log, never raised.
-    pub fn write(&self, points: &[Point]) -> usize {
+    /// Write `points`, awaited where the caller likes, owing nothing to the sink; how many. A store that refuses is
+    /// said in the log, never raised.
+    pub fn write(&self, points: &[Point]) -> Pending<usize> {
         if points.is_empty() {
-            return 0;
+            return ready(0);
         }
-        match (self.write)(&self.bucket, points) {
-            Ok(()) => points.len(),
-            Err(e) => {
-                log::warn!(
-                    "the {} store refused {} point(s): {e}",
-                    self.purpose.to_lowercase(),
-                    points.len()
-                );
-                0
+        let (writing, purpose, n) = ((self.write)(&self.bucket, points), self.purpose, points.len());
+        Box::pin(async move {
+            match writing.await {
+                Ok(()) => n,
+                Err(e) => {
+                    log::warn!("the {} store refused {n} point(s): {e}", purpose.to_lowercase());
+                    0
+                }
             }
-        }
+        })
     }
 
     /// The records a Flux query of this sink's bucket answers; why not, where the store refuses or reads nothing.
-    pub fn read(&self, flux: &str) -> Result<Vec<BTreeMap<String, String>>, String> {
+    pub fn read(&self, flux: &str) -> Pending<Result<Records, String>> {
         self.reader().read(flux)
     }
 
-    /// The bucket as a chat reads it, off any thread.
+    /// The bucket as a chat reads it, from any task.
     pub fn reader(&self) -> Reader {
         Reader::new(self.purpose, &self.bucket, self.read.clone())
     }
@@ -419,8 +455,8 @@ mod tests {
         }
     }
 
-    #[test]
-    fn a_sink_writes_what_it_is_handed_to_its_bucket_and_nothing_handed_is_nothing_written() {
+    #[tokio::test]
+    async fn a_sink_writes_what_it_is_handed_to_its_bucket_and_nothing_handed_is_nothing_written() {
         let written = Arc::new(Mutex::new(Vec::new()));
         let kept = written.clone();
         let sink = Sink::new(
@@ -428,18 +464,18 @@ mod tests {
             "b",
             Box::new(move |bucket, points| {
                 kept.lock().unwrap().push((bucket.to_string(), points.to_vec()));
-                Ok(())
+                ready(Ok(()))
             }),
         );
-        assert_eq!(sink.write(&[point()]), 1);
-        assert_eq!(sink.write(&[]), 0);
+        assert_eq!(sink.write(&[point()]).await, 1);
+        assert_eq!(sink.write(&[]).await, 0);
         assert_eq!(*written.lock().unwrap(), [("b".to_string(), vec![point()])]);
     }
 
-    #[test]
-    fn a_store_that_refuses_costs_the_agent_nothing() {
-        let sink = Sink::new(HISTORY, "b", Box::new(|_, _| Err("down".into())));
-        assert_eq!(sink.write(&[point()]), 0);
+    #[tokio::test]
+    async fn a_store_that_refuses_costs_the_agent_nothing() {
+        let sink = Sink::new(HISTORY, "b", Box::new(|_, _| ready(Err("down".into()))));
+        assert_eq!(sink.write(&[point()]).await, 0);
     }
 
     #[test]

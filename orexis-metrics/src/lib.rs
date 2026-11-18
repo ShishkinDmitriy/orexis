@@ -80,7 +80,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
             return Ok(());
         }
         handed.stopped().await;
-        meter.flush();
+        meter.flush().await;
         Ok(())
     })
 }

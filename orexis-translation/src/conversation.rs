@@ -1,8 +1,9 @@
 //! A CONVERSATION WITH THE MODEL, at a run-time edge and never in a pass: what the model is told, the tools it is
-//! offered, each turn's calls answered, and what comes of it handed back to the mind's thread.
+//! offered, each turn's calls answered, and what comes of it handed back to the translator's task, rung awake for it.
+//! The conversation is a Tokio task of its own, the agent held busy while it runs.
 
 use std::collections::BTreeMap;
-use std::sync::mpsc::{Sender, SyncSender, sync_channel};
+use std::sync::mpsc::Sender;
 use std::time::{Duration, Instant};
 
 use oxsdatatypes::DateTime;
@@ -11,11 +12,12 @@ use serde_json::{Value as Json, json};
 use orexis::clock::isoformat;
 use orexis::rdf::round6;
 use orexis::store::Store;
+use orexis::task::Wake;
 
 use crate::events::{Conversed, Translated};
 use crate::past::Past;
 use crate::readable::{Prefixes, Readable, namespace_of, namespaces};
-use crate::stated::{STATE, Stating, statement_of, tool};
+use crate::stated::{STATE, Stating, tool};
 use orexis_llm::model::{Model, TOKENS, why_not};
 
 /// WHERE THE CHAT HAS OTHER AGENTS AND NOBODY WAS NAMED: the agent answers only where what it holds speaks to it.
@@ -105,7 +107,22 @@ pub(crate) fn prefixes_of(store: &Store, me: &str) -> Prefixes {
     out
 }
 
-/// What the model's thread hands back to the mind's.
+/// What the model's conversation hands back to the translator, and what rings the translator's task to take it.
+#[derive(Clone)]
+pub(crate) struct Backs {
+    pub(crate) tx: Sender<Back>,
+    pub(crate) wake: Wake,
+}
+
+impl Backs {
+    /// `back` handed to the translator, and its task rung.
+    pub(crate) fn send(&self, back: Back) {
+        let _ = self.tx.send(back);
+        self.wake.ring();
+    }
+}
+
+/// What the model's conversation hands back to the translator.
 pub(crate) enum Back {
     /// A person's statement, held to its bounds: kept as any peer's document and believed.
     Keep(Vec<u8>),
@@ -119,72 +136,51 @@ pub(crate) enum Back {
     Ended(String),
     Spent(Translated),
     Conversed(Conversed),
-    /// A statement to hold to its words' bounds on the mind's thread, the answer waited for.
+    /// A statement to hold to its words' bounds on the translator's task, the answer awaited.
     Ask {
         stating: Stating,
         inputs: Json,
         person: String,
         prose: String,
         at: DateTime,
-        answer: SyncSender<Answered>,
+        answer: tokio::sync::oneshot::Sender<Answered>,
     },
 }
 
 pub(crate) type Answered = Result<(Option<Vec<u8>>, Vec<String>), String>;
 
-/// What the conversation asks of the mind's thread: a statement held to its words' bounds.
-pub(crate) trait Mind {
-    fn state(&self, inputs: &Json, person: &str, prose: &str) -> Answered;
-}
-
-/// The mind asked over the channel, from the model's thread.
+/// What the conversation asks of the translator: a statement held to its words' bounds, over the channel back.
 pub(crate) struct Asked {
-    pub(crate) back: Sender<Back>,
+    pub(crate) back: Backs,
     pub(crate) at: DateTime,
     pub(crate) stating: Option<Stating>,
-    /// How long the model's thread waits for the mind's answer, in real seconds (`translation:answeredWithinS`).
+    /// How long the conversation waits for the translator's answer, in seconds (`translation:answeredWithinS`).
     pub(crate) within_s: f64,
 }
 
-impl Mind for Asked {
-    fn state(&self, inputs: &Json, person: &str, prose: &str) -> Answered {
+impl Asked {
+    async fn state(&self, inputs: &Json, person: &str, prose: &str) -> Answered {
         let Some(stating) = self.stating.clone() else {
             return Ok((None, vec!["nothing is said".into()]));
         };
-        let (answer, waited) = sync_channel(1);
-        self.back
-            .send(Back::Ask {
-                stating,
-                inputs: inputs.clone(),
-                person: person.to_string(),
-                prose: prose.to_string(),
-                at: self.at,
-                answer,
-            })
-            .map_err(|e| e.to_string())?;
-        waited
-            .recv_timeout(Duration::from_secs_f64(self.within_s))
-            .map_err(|e| e.to_string())?
+        let (answer, waited) = tokio::sync::oneshot::channel();
+        self.back.send(Back::Ask {
+            stating,
+            inputs: inputs.clone(),
+            person: person.to_string(),
+            prose: prose.to_string(),
+            at: self.at,
+            answer,
+        });
+        match tokio::time::timeout(Duration::from_secs_f64(self.within_s), waited).await {
+            Ok(Ok(answered)) => answered,
+            Ok(Err(e)) => Err(e.to_string()),
+            Err(_) => Err(format!("the agent did not answer within {}s", self.within_s)),
+        }
     }
 }
 
-/// The mind asked at once, where the conversation runs on the mind's own thread, as a test runs it.
-pub(crate) struct Direct<'s> {
-    pub(crate) store: &'s Store,
-    pub(crate) stating: Option<Stating>,
-    pub(crate) at: DateTime,
-}
-
-impl Mind for Direct<'_> {
-    fn state(&self, inputs: &Json, person: &str, prose: &str) -> Answered {
-        let Some(stating) = &self.stating else {
-            return Ok((None, vec!["nothing is said".into()]));
-        };
-        statement_of(self.store, stating, inputs, person, prose, self.at).map_err(|e| e.to_string())
-    }
-}
-
-/// One conversation, everything it needs read on the mind's thread and handed to the model's.
+/// One conversation, everything it needs read on the translator's task and handed to the conversation's.
 pub(crate) struct Conversation {
     pub(crate) chat: String,
     pub(crate) channel: String,
@@ -233,8 +229,8 @@ pub(crate) fn translated(
 }
 
 /// The conversation: each turn's tool calls answered and handed back, until the model answers in words or keeps
-/// silent — what comes of it handed back to the mind's thread.
-pub(crate) fn converse(c: Conversation, model: &dyn Model, mind: &dyn Mind, back: &Sender<Back>) {
+/// silent — what comes of it handed back to the translator.
+pub(crate) async fn converse(c: Conversation, model: &dyn Model, mind: &Asked, back: &Backs) {
     let mut tools: Vec<Json> = Vec::new();
     if let Some(stating) = &c.stating {
         tools.push(tool(&stating.prefixes));
@@ -254,11 +250,11 @@ pub(crate) fn converse(c: Conversation, model: &dyn Model, mind: &dyn Mind, back
     for n in 0..c.turns {
         requests += 1;
         taken = n + 1;
-        let answered = model.converse(&c.system, &messages, &tools, n + 1 == c.turns);
+        let answered = model.converse(&c.system, &messages, &tools, n + 1 == c.turns).await;
         let t = match answered {
             Ok(t) => t,
             Err(e) => {
-                let _ = back.send(Back::Spent(translated(
+                back.send(Back::Spent(translated(
                     "answer",
                     "failed",
                     model.name(),
@@ -266,7 +262,7 @@ pub(crate) fn converse(c: Conversation, model: &dyn Model, mind: &dyn Mind, back
                     &spent,
                     began,
                 )));
-                let _ = back.send(Back::Conversed(Conversed {
+                back.send(Back::Conversed(Conversed {
                     chat: c.chat.clone(),
                     person: c.person.0.clone(),
                     wrote: c.text.clone(),
@@ -283,12 +279,12 @@ pub(crate) fn converse(c: Conversation, model: &dyn Model, mind: &dyn Mind, back
                 );
                 if !c.unaddressed {
                     let words = format!("{} could not answer: {}.", c.me, why_not(&e));
-                    let _ = back.send(Back::Said {
+                    back.send(Back::Said {
                         channel: c.channel.clone(),
                         words,
                         reply: c.reply.clone(),
                     });
-                    let _ = back.send(Back::Ended(c.chat.clone()));
+                    back.send(Back::Ended(c.chat.clone()));
                 }
                 return;
             }
@@ -301,7 +297,7 @@ pub(crate) fn converse(c: Conversation, model: &dyn Model, mind: &dyn Mind, back
         messages.push(json!({"role": "assistant", "content": t.content}));
         let mut results = Vec::new();
         for (id, name, inputs) in &t.calls {
-            let found = called(&c, name, inputs, mind, back);
+            let found = called(&c, name, inputs, mind, back).await;
             calls.push((name.clone(), inputs.clone(), found.clone()));
             results.push(json!({"type": "tool_result", "tool_use_id": id, "content": found}));
         }
@@ -347,7 +343,7 @@ pub(crate) fn converse(c: Conversation, model: &dyn Model, mind: &dyn Mind, back
             );
         }
     }
-    let _ = back.send(Back::Spent(translated(
+    back.send(Back::Spent(translated(
         "answer",
         outcome,
         model.name(),
@@ -355,7 +351,7 @@ pub(crate) fn converse(c: Conversation, model: &dyn Model, mind: &dyn Mind, back
         &spent,
         began,
     )));
-    let _ = back.send(Back::Conversed(Conversed {
+    back.send(Back::Conversed(Conversed {
         chat: c.chat.clone(),
         person: c.person.0.clone(),
         wrote: c.text.clone(),
@@ -368,7 +364,7 @@ pub(crate) fn converse(c: Conversation, model: &dyn Model, mind: &dyn Mind, back
     if !words.is_empty() && words != SILENT {
         //  ONE ANSWER, AS MANY MESSAGES AS ITS CHAT'S STYLE LETS IT BE: the first replying to what it answers.
         for (n, part) in sent_as(&words, c.messages_at_most).into_iter().enumerate() {
-            let _ = back.send(Back::Said {
+            back.send(Back::Said {
                 channel: c.channel.clone(),
                 words: part,
                 reply: if n == 0 { c.reply.clone() } else { None },
@@ -376,18 +372,19 @@ pub(crate) fn converse(c: Conversation, model: &dyn Model, mind: &dyn Mind, back
         }
     }
     if !c.unaddressed {
-        let _ = back.send(Back::Ended(c.chat.clone()));
+        back.send(Back::Ended(c.chat.clone()));
     }
 }
 
 /// What a tool call answers: a vocabulary or a query's rows off the chat's copy, the journal's entries or the series'
 /// points; a statement kept, or why it is refused.
-fn called(c: &Conversation, name: &str, inputs: &Json, mind: &dyn Mind, back: &Sender<Back>) -> String {
-    let read = c
-        .readable
-        .as_ref()
-        .and_then(|r| r.call(name, inputs))
-        .or_else(|| c.past.as_ref().and_then(|p| p.call(name, inputs)));
+async fn called(c: &Conversation, name: &str, inputs: &Json, mind: &Asked, back: &Backs) -> String {
+    let mut read = c.readable.as_ref().and_then(|r| r.call(name, inputs));
+    if read.is_none()
+        && let Some(past) = &c.past
+    {
+        read = past.call(name, inputs).await;
+    }
     if let Some(found) = read {
         log::info!("{} read for {}: {name} {inputs}", c.me, c.person.1);
         return found;
@@ -396,9 +393,9 @@ fn called(c: &Conversation, name: &str, inputs: &Json, mind: &dyn Mind, back: &S
         log::warn!("the model called {name:?}, which this chat offers no tool of");
         return format!("no tool is named {name}");
     }
-    match mind.state(inputs, &c.person.0, &c.text) {
+    match mind.state(inputs, &c.person.0, &c.text).await {
         Ok((Some(payload), _)) => {
-            let _ = back.send(Back::Keep(payload));
+            back.send(Back::Keep(payload));
             "kept: the agent believes it now".into()
         }
         Ok((None, why)) => {

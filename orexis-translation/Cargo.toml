@@ -23,7 +23,6 @@ spargebra = "0.4"
 serde_json = { version = "1", features = ["preserve_order"] }
 uuid = { version = "1", features = ["v5"] }
 regex = "1"
-ureq = "2"
 log = "0.4"
 
 [dev-dependencies]

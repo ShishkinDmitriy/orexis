@@ -272,17 +272,20 @@ the sum of a `_sum` field or of `count`, never of a mean or a max.", LISTED_SINC
     }
 
     /// What one of the tools answers, or None where `name` is neither.
-    pub fn call(&self, tool: &str, inputs: &Json) -> Option<String> {
+    pub async fn call(&self, tool: &str, inputs: &Json) -> Option<String> {
         match tool {
             JOURNAL => self
                 .journal
                 .as_ref()
                 .map(|j| self.journaled(j, inputs.get("sparql").and_then(Json::as_str).unwrap_or_default())),
-            SERIES => self.history.as_ref().map(|h| self.points(h, &filled(inputs, &FIELDS))),
-            METRICS => self
-                .metrics
-                .as_ref()
-                .map(|m| self.windows(m, &filled(inputs, &METRIC_FIELDS))),
+            SERIES => match &self.history {
+                Some(h) => Some(self.points(h, &filled(inputs, &FIELDS)).await),
+                None => None,
+            },
+            METRICS => match &self.metrics {
+                Some(m) => Some(self.windows(m, &filled(inputs, &METRIC_FIELDS)).await),
+                None => None,
+            },
             _ => None,
         }
     }
@@ -299,7 +302,7 @@ the sum of a `_sum` field or of `count`, never of a mean or a max.", LISTED_SINC
     }
 
     /// The series' points the fields ask for, a line each; the reason, where a field will not do.
-    fn points(&self, history: &Reader, f: &BTreeMap<&str, String>) -> String {
+    async fn points(&self, history: &Reader, f: &BTreeMap<&str, String>) -> String {
         let measurement = f.get("measurement").map(String::as_str);
         let start = f
             .get("start")
@@ -318,7 +321,7 @@ the sum of a `_sum` field or of `count`, never of a mean or a max.", LISTED_SINC
             Ok(t) => t,
             Err(why) => return format!("refused: {why}"),
         };
-        let found = match history.read(&text) {
+        let found = match history.read(&text).await {
             Ok(found) => found,
             Err(why) => return why,
         };
@@ -348,7 +351,7 @@ the sum of a `_sum` field or of `count`, never of a mean or a max.", LISTED_SINC
     }
 
     /// The metrics the fields ask for, a line each; the reason, where a field will not do.
-    fn windows(&self, metrics: &Reader, f: &BTreeMap<&str, String>) -> String {
+    async fn windows(&self, metrics: &Reader, f: &BTreeMap<&str, String>) -> String {
         let measurement = f.get("measurement").map(String::as_str);
         let by = f.get("by").map(String::as_str);
         let start = f
@@ -369,7 +372,7 @@ the sum of a `_sum` field or of `count`, never of a mean or a max.", LISTED_SINC
             Ok(t) => t,
             Err(why) => return format!("refused: {why}"),
         };
-        let found = match metrics.read(&text) {
+        let found = match metrics.read(&text).await {
             Ok(found) => found,
             Err(why) => return why,
         };
@@ -429,7 +432,7 @@ mod tests {
         let kept = asked.clone();
         let read: orexis::series::Read = Arc::new(move |flux| {
             kept.lock().unwrap().push(flux.to_string());
-            Ok(rows.clone())
+            orexis::series::ready(Ok(rows.clone()))
         });
         (Reader::new(purpose, bucket, Some(read)), asked)
     }
@@ -438,8 +441,8 @@ mod tests {
         pairs.iter().map(|(a, b)| (a.to_string(), b.to_string())).collect()
     }
 
-    #[test]
-    fn the_journal_is_read_where_it_is_and_newest_first() {
+    #[tokio::test]
+    async fn the_journal_is_read_where_it_is_and_newest_first() {
         let at = instant("2026-11-02T21:00:00+00:00").unwrap();
         let journal = Journal::new(600.0, Arc::new(move || at)).unwrap();
         let entry = NamedNode::new_unchecked("urn:uuid:one");
@@ -470,6 +473,7 @@ mod tests {
                 &json!({"sparql": "PREFIX prov: <http://www.w3.org/ns/prov#>
                     SELECT ?c ?t WHERE { ?e a ?c ; prov:atTime ?t } ORDER BY DESC(?t)"}),
             )
+            .await
             .unwrap();
         assert!(
             found.contains("c: sensing:Observed, t: 2026-11-02T21:00:00Z"),
@@ -480,14 +484,15 @@ mod tests {
                 JOURNAL,
                 &json!({"sparql": "SELECT * WHERE { SERVICE <http://x.example/> { ?s ?p ?o } }"})
             )
+            .await
             .unwrap()
             .starts_with("refused: it holds a SERVICE clause")
         );
-        assert!(past.call(SERIES, &json!({})).is_none() && past.call("query", &json!({})).is_none());
+        assert!(past.call(SERIES, &json!({})).await.is_none() && past.call("query", &json!({})).await.is_none());
     }
 
-    #[test]
-    fn the_series_is_read_by_the_fields_and_the_tool_writes_the_flux() {
+    #[tokio::test]
+    async fn the_series_is_read_by_the_fields_and_the_tool_writes_the_flux() {
         let (history, asked) = reader(
             "HISTORY",
             "terrace-terrace",
@@ -511,6 +516,7 @@ mod tests {
                 &json!({"measurement": "SoilMoisture", "sensor": "moisture_sensor_terrace", "start": "-7d",
                         "every": "1h", "fn": "max", "flux": "drop everything"}),
             )
+            .await
             .unwrap();
         assert_eq!(
             found,
@@ -523,14 +529,14 @@ mod tests {
                 && flux.contains("r.sensor == \"moisture_sensor_terrace\"")
         );
         assert!(flux.contains("aggregateWindow(every: 1h, fn: max") && flux.contains("limit(n: 50)"));
-        past.call(SERIES, &json!({"start": "2026-10-16T00:00:00Z"}));
+        past.call(SERIES, &json!({"start": "2026-10-16T00:00:00Z"})).await;
         let last = asked.lock().unwrap().last().unwrap().clone();
         assert!(last.contains("group(columns: [\"_measurement\", \"sensor\"])"));
         assert!(last.contains("time(v: \"2026-10-16T00:00:00+00:00\")"), "{last}");
     }
 
-    #[test]
-    fn a_field_that_is_no_stretch_window_aggregate_or_name_is_refused_before_anything_is_read() {
+    #[tokio::test]
+    async fn a_field_that_is_no_stretch_window_aggregate_or_name_is_refused_before_anything_is_read() {
         let (history, asked) = reader("HISTORY", "b", Vec::new());
         let past = Past {
             journal: None,
@@ -553,18 +559,19 @@ mod tests {
                 "refused: fn is one of",
             ),
         ] {
-            assert!(past.call(SERIES, &fields).unwrap().starts_with(why), "{fields}");
+            assert!(past.call(SERIES, &fields).await.unwrap().starts_with(why), "{fields}");
         }
         assert!(asked.lock().unwrap().is_empty());
         past.call(
             SERIES,
             &json!({"measurement": "x\") |> drop(columns: [\"_value\"]) //"}),
-        );
+        )
+        .await;
         assert!(asked.lock().unwrap()[0].contains(r#"r._measurement == "x\") |> drop(columns: [\"_value\"]) //""#));
     }
 
-    #[test]
-    fn a_store_that_reads_nothing_or_refuses_says_so() {
+    #[tokio::test]
+    async fn a_store_that_reads_nothing_or_refuses_says_so() {
         let unread = Past {
             journal: None,
             history: Some(Reader::new("HISTORY", "b", None)),
@@ -573,22 +580,22 @@ mod tests {
             rows: 50,
         };
         assert_eq!(
-            unread.call(SERIES, &json!({})).unwrap(),
+            unread.call(SERIES, &json!({})).await.unwrap(),
             "the history store is written here and never read"
         );
-        let refuse: orexis::series::Read = Arc::new(|_| Err("unauthorized".into()));
+        let refuse: orexis::series::Read = Arc::new(|_| orexis::series::ready(Err("unauthorized".into())));
         let refused = Past {
             history: Some(Reader::new("HISTORY", "b", Some(refuse))),
             ..unread
         };
         assert_eq!(
-            refused.call(SERIES, &json!({})).unwrap(),
+            refused.call(SERIES, &json!({})).await.unwrap(),
             "the history store would not answer: unauthorized"
         );
     }
 
-    #[test]
-    fn the_metrics_are_aggregated_by_the_fields_and_a_total_is_one_figure() {
+    #[tokio::test]
+    async fn the_metrics_are_aggregated_by_the_fields_and_a_total_is_one_figure() {
         let (metrics, asked) = reader(
             "METRICS",
             "terrace-terrace-metrics",
@@ -611,6 +618,7 @@ mod tests {
                 METRICS,
                 &json!({"measurement": "translated", "field": "output_tokens_sum", "by": "outcome", "start": "-7d"}),
             )
+            .await
             .unwrap();
         assert_eq!(
             found,
@@ -626,10 +634,11 @@ mod tests {
         past.call(
             METRICS,
             &json!({"measurement": "translated", "field": "count", "every": "1d", "fn": "sum"}),
-        );
+        )
+        .await;
         let last = asked.lock().unwrap().last().unwrap().clone();
         assert!(last.contains("aggregateWindow(every: 1d, fn: sum") && last.contains("group(columns: [])"));
-        past.call(METRICS, &json!({}));
+        past.call(METRICS, &json!({})).await;
         assert!(
             asked
                 .lock()
@@ -653,7 +662,7 @@ mod tests {
                 "refused: fn is one of",
             ),
         ] {
-            assert!(past.call(METRICS, &fields).unwrap().starts_with(why), "{fields}");
+            assert!(past.call(METRICS, &fields).await.unwrap().starts_with(why), "{fields}");
         }
     }
 }

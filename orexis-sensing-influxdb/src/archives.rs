@@ -60,10 +60,10 @@ pub fn took(store: &Store, due: Due, shipped: &mut Shipped) -> Result<usize, ore
 }
 
 /// Archive what is due in `store` to `sink` and remove the past readings it took; how many past readings went.
-pub fn archive(store: &Store, sink: &Sink, shipped: &mut Shipped) -> Result<usize, orexis::Error> {
+pub async fn archive(store: &Store, sink: &Sink, shipped: &mut Shipped) -> Result<usize, orexis::Error> {
     let due = due(store, shipped)?;
     let points: Vec<Point> = due.points.iter().map(|(_, p)| p.clone()).collect();
-    if sink.write(&points) != points.len() {
+    if sink.write(&points).await != points.len() {
         return Ok(0);
     }
     took(store, due, shipped)

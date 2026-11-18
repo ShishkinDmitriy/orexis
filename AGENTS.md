@@ -771,6 +771,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   belief came from is a GRAPH away, no SERVICE or FROM, the rows capped; a chat reading `orexis:Event` reads the
   journal where it lies and its series and metrics by fields the tool turns into Flux, the past apart from the present; an askable per question and a briefing of
   every belief were both built and refused (the-model-queries-what-its-chat-may-read).
+- **Every call the agent makes over HTTP is `reqwest`, awaited on the agent's runtime** — the model, the Bot API, the
+  web, the series and the tracer; a call a package sets going off its turn holds the agent busy while it runs
+  (`Events::working`), and a series write a watch makes is spawned, never waited on in the event; a blocking client on
+  a thread of its own was a second way of waiting beside the runtime the agent is.
 - **A client earns a library by what one POST does not do** — the model's SDK retries an overloaded API and
   names each failure, which a person in a chat otherwise met as "could not answer"; a thinking model refuses
   a forced tool choice, so the hearing call offers its tools and the model chooses.

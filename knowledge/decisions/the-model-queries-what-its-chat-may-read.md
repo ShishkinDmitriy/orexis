@@ -58,8 +58,8 @@ refused the model writing SPARQL on three premises, each answered here:
   asked the terrace how it knew their name, and it could not say). Merging every graph into one, as first
   built, was the union-by-default the store refused, and a tool per purpose - observations, provenance - a
   fixed list of questions again.
-- **An unbounded cost.** The query runs on the model's thread over the copy, so a slow one never stalls a
-  pass; its rows are capped at fifty; a conversation is `TURNS` turns at most.
+- **An unbounded cost.** The query runs in the model's conversation, a task of its own, over the copy, so a slow one never
+  stalls a pass, though it holds one of the runtime's workers while it runs; its rows are capped at fifty; a conversation is `TURNS` turns at most.
 
 The boundary is the chat's reads, which the world states and the code applies: whatever the model writes,
 it reads nothing the chat does not.
@@ -75,7 +75,7 @@ it reads nothing the chat does not.
 
 # Seams left open
 
-- **No timeout.** The engine takes none, so a pathological query occupies the model's thread until it ends; a
+- **No timeout.** The engine takes none, so a pathological query occupies the conversation's worker until it ends; a
   pass is never held, but the person waits.
 - **What a sovereign keeps private.** A chat reading everything reads the terrace's location, a belief under
   `secrets/`, and hands it to the model's provider if the model asks for it.

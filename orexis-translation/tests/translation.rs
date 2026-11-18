@@ -17,7 +17,7 @@ use orexis::events::as_of;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::{Package, Provided, Running, Turn as Handling, Wake, Woke};
-use orexis_llm::model::{Answer, Failure, Model, Turn};
+use orexis_llm::model::{Answer, Failure, Model, Pending, Turn};
 use orexis_speech::events::{Said, Statement};
 use orexis_speech::prose::{PROSE_GRAPH, Prose, ProseKept, kept};
 use orexis_translation::briefing::briefing;
@@ -25,7 +25,7 @@ use orexis_translation::chat::chats_of;
 use orexis_translation::events::{Conversed, Translated};
 use orexis_translation::readable::{QUERY, Readable, VOCABULARY};
 use orexis_translation::stated::{PROPERTY, Stating, believe, listing, rendered, statement_of, words};
-use orexis_translation::{Inline, SILENT, UNADDRESSED};
+use orexis_translation::{SILENT, UNADDRESSED};
 use orexis_transport::chat::Words;
 use orexis_transport::{Exchange, Inbox, Members};
 use orexis_transport_email as _;
@@ -640,8 +640,8 @@ impl StandIn {
     }
 }
 
-impl Model for StandIn {
-    fn converse(&self, system: &[String], messages: &[Json], tools: &[Json], last: bool) -> Result<Turn, Failure> {
+impl StandIn {
+    fn turn(&self, system: &[String], messages: &[Json], tools: &[Json], last: bool) -> Result<Turn, Failure> {
         self.asked.lock().unwrap().push((
             system.to_vec(),
             messages.to_vec(),
@@ -670,7 +670,7 @@ impl Model for StandIn {
         })
     }
 
-    fn ask(&self, system: &str, text: &str) -> Result<Answer, Failure> {
+    fn answer(&self, system: &str, text: &str) -> Result<Answer, Failure> {
         self.asked
             .lock()
             .unwrap()
@@ -679,6 +679,23 @@ impl Model for StandIn {
             text: self.text.clone(),
             ..Answer::default()
         })
+    }
+}
+
+/// The stand-in as the translator asks a model: answered at once.
+impl Model for StandIn {
+    fn converse<'a>(
+        &'a self,
+        system: &'a [String],
+        messages: &'a [Json],
+        tools: &'a [Json],
+        last: bool,
+    ) -> Pending<'a, Result<Turn, Failure>> {
+        Box::pin(std::future::ready(self.turn(system, messages, tools, last)))
+    }
+
+    fn ask<'a>(&'a self, system: &'a str, text: &'a str) -> Pending<'a, Result<Answer, Failure>> {
+        Box::pin(std::future::ready(self.answer(system, text)))
     }
 }
 
@@ -728,12 +745,20 @@ impl Model for Switch {
         self.0.lock().unwrap().as_ref().and_then(|m| m.name())
     }
 
-    fn converse(&self, system: &[String], messages: &[Json], tools: &[Json], last: bool) -> Result<Turn, Failure> {
-        self.now().converse(system, messages, tools, last)
+    fn converse<'a>(
+        &'a self,
+        system: &'a [String],
+        messages: &'a [Json],
+        tools: &'a [Json],
+        last: bool,
+    ) -> Pending<'a, Result<Turn, Failure>> {
+        let model = self.now();
+        Box::pin(async move { model.converse(system, messages, tools, last).await })
     }
 
-    fn ask(&self, system: &str, text: &str) -> Result<Answer, Failure> {
-        self.now().ask(system, text)
+    fn ask<'a>(&'a self, system: &'a str, text: &'a str) -> Pending<'a, Result<Answer, Failure>> {
+        let model = self.now();
+        Box::pin(async move { model.ask(system, text).await })
     }
 }
 
@@ -756,7 +781,6 @@ impl<'s> Seeker<'s> {
         let provided = Provided::default();
         provided.provide(member.clone());
         provided.provide(model.clone() as Arc<dyn Model>);
-        provided.provide(Inline);
         let names = ["translation".to_string(), "test/member".to_string()];
         let running = {
             let clock = Arc::new(Elapsing::from(now()));

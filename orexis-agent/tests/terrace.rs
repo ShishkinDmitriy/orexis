@@ -21,7 +21,7 @@ use orexis::events::{Field, Point};
 use orexis::ontology::{BELIEF, FORECAST, SELF_GRAPH};
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::{Provided, Running, UNFINISHED};
-use orexis_llm::model::{Answer, Failure, Model, Turn};
+use orexis_llm::model::{Answer, Failure, Model, Pending, Turn};
 use orexis_transport_mqtt::driver::{Client, Mqtt};
 
 const T: &str = "http://example.org/orexis/world/terrace#";
@@ -140,8 +140,8 @@ struct Stating {
     answers: Arc<Mutex<Vec<String>>>,
 }
 
-impl Model for Stating {
-    fn converse(&self, _system: &[String], messages: &[Json], _tools: &[Json], _last: bool) -> Result<Turn, Failure> {
+impl Stating {
+    fn turn(&self, messages: &[Json]) -> Result<Turn, Failure> {
         if messages.len() == 1 {
             let inputs = self.inputs.lock().unwrap().clone();
             return Ok(Turn {
@@ -161,9 +161,22 @@ impl Model for Stating {
             ..Turn::default()
         })
     }
+}
 
-    fn ask(&self, _system: &str, _text: &str) -> Result<Answer, Failure> {
-        Ok(Answer::default())
+/// The model as the translator asks it: answered at once.
+impl Model for Stating {
+    fn converse<'a>(
+        &'a self,
+        _system: &'a [String],
+        messages: &'a [Json],
+        _tools: &'a [Json],
+        _last: bool,
+    ) -> Pending<'a, Result<Turn, Failure>> {
+        Box::pin(std::future::ready(self.turn(messages)))
+    }
+
+    fn ask<'a>(&'a self, _system: &'a str, _text: &'a str) -> Pending<'a, Result<Answer, Failure>> {
+        Box::pin(std::future::ready(Ok(Answer::default())))
     }
 }
 
@@ -395,7 +408,7 @@ fn history() -> (Provided, Arc<Mutex<Vec<Point>>>) {
         "terrace-terrace",
         Box::new(move |_, points| {
             kept.lock().unwrap().extend(points.iter().cloned());
-            Ok(())
+            orexis::series::ready(Ok(()))
         }),
     );
     (
@@ -523,7 +536,7 @@ async fn every_metric_the_terrace_writes_is_an_observers_and_no_planners() {
         "terrace-terrace-metrics",
         Box::new(move |_, points| {
             kept.lock().unwrap().extend(points.iter().cloned());
-            Ok(())
+            orexis::series::ready(Ok(()))
         }),
     );
     let provided = Provided::default().with(orexis_metrics::Window::new(

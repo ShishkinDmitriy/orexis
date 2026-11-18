@@ -30,7 +30,7 @@ use orexis_journal::Traced;
 
 mod ships;
 
-pub use ships::{SHIPPED_TO, Send, Ships, batch, mark, post, ship};
+pub use ships::{SHIPPED_TO, Send, Sending, Ships, batch, mark, post, ship};
 
 inventory::submit! { Package { name: "journal-otlp", start } }
 
@@ -77,7 +77,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         let send = post(&ships.endpoint);
         let agent = handed.id.clone();
         let shipping = |journal: Arc<orexis_journal::Journal>, endpoint: String, send: Send, agent: String| async move {
-            let _ = tokio::task::spawn_blocking(move || ship(&journal, &agent, &endpoint, &send)).await;
+            ship(&journal, &agent, &endpoint, &send).await;
         };
         loop {
             let due = handed

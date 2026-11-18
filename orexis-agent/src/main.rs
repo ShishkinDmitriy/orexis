@@ -69,7 +69,11 @@ impl log::Log for Logger {
     fn enabled(&self, metadata: &log::Metadata<'_>) -> bool {
         //  A CLIENT'S OWN DEBUG names every url it calls, and a Bot API url carries the bot's token: below WARN, the
         //  HTTP client says nothing, whatever the agent's level.
-        if metadata.target().starts_with("ureq") && metadata.level() > log::Level::Warn {
+        if ["reqwest", "hyper", "rustls"]
+            .iter()
+            .any(|client| metadata.target().starts_with(client))
+            && metadata.level() > log::Level::Warn
+        {
             return false;
         }
         metadata.level() <= self.level
