@@ -1299,9 +1299,9 @@ dependencies = [
  "orexis-transport",
  "oxigraph",
  "oxsdatatypes",
+ "reqwest",
  "serde_json",
  "tokio",
- "ureq",
 ]
 
 [[package]]

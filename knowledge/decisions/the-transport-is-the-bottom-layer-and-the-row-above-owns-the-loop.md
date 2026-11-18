@@ -97,6 +97,12 @@ of it. The retained `{"sleep_s": n}` went with the MQTT member's code and is not
 agent decides a board's interval, and it returns as a setting, retained by the member where the world says so, when
 something does.
 
+**Telegram is on `reqwest`, with a client of its own** (#1221). Its member awaits each call of the Bot API as a Tokio
+task, a poll one at a time and what the agent says posted by one task in the order it was said, where a thread per
+poll and a blocking post on speech's turn were. The one client HTTP and Telegram were to share was not built: each
+member makes its client with its own figure for how long a call may take (`http:fetchedWithinS`,
+`telegram:calledWithinS`), and one agent's two connection pools cost nothing a plan branches on.
+
 # What was refused
 
 - **A member calling up into the row its message is for.** It is what the code did: the bottom of the stack
