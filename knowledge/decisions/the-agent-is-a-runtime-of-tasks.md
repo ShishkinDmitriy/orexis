@@ -132,7 +132,7 @@ half-written work.
 
 **A search runs in place** (`runtime::long`, Tokio's `block_in_place`): its worker hands its other tasks on, so the
 sessions and the other policies keep theirs. `spawn_blocking`, which this record named, needs the search to own what
-it searches; it waits for the scopes to run free, the part of #1119 step 8 not yet built.
+it searches; it waits for the scopes to run free, which #1100 tracks.
 
 Refused:
 

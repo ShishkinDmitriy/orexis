@@ -115,5 +115,5 @@ candidates its earlier facts had admitted, one of which a later search took.
 
 # Seams left open
 
-- **Scopes searched free of the task** (#1119 step 8) are still not built: planning's search runs in place.
+- **Scopes searched free of the task** (#1100) are still not built: planning's search runs in place.
 - **A package reading across several queries during another's write** copies first, as before; nothing audits it.
