@@ -11,7 +11,7 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::document::Document;
 use orexis::ontology::{BELIEF, RECORDED, local_of};
-use orexis::rdf::{RDF_TYPE, instant, mint};
+use orexis::rdf::{RDF_TYPE, boolean, instant, mint};
 use orexis::store::{Store, Within, value};
 use orexis::task::{Heard, Turn};
 use orexis_transport::{Exchange, Members};
@@ -20,6 +20,13 @@ use crate::encode::{document, json_of};
 
 /// What the operator does as an activity, and the graph it keeps of what it made.
 const ACTUATING: &str = "http://example.org/orexis/actuation#Actuating";
+const NUDGING: &str = "http://example.org/orexis/actuation#Nudging";
+/// What a nudge sets, and the sensors a reading due names, in sensing's words.
+const SENSE_NOW: &str = "http://example.org/orexis/actuation#SenseNow";
+const LAPSED: &str = "http://example.org/orexis/sensing#lapsed";
+/// The operator's jobs: a step's commands, and a reading due.
+pub(crate) const ACTUATE: usize = 0;
+pub(crate) const NUDGE: usize = 1;
 const ACTUATION_GRAPH: &str = "http://example.org/orexis/actuation#ActuationGraph";
 /// What a step's commands are kept as, in execution's words, which the operator reads.
 const COMMANDS: &str = "http://example.org/orexis/execution#commands";
@@ -58,11 +65,20 @@ impl Operator {
         })
     }
 
-    /// What the operator's policy does of its trigger: each actuator the order the event names sets, sent the
-    /// document its settings make through the member that reaches it as a channel it is sent on, and each setting
-    /// sent kept as a `sosa:Actuation` in an `actuation:ActuationGraph`, the graph written. A setting whose property
-    /// says no pointer, and an actuator no member reaches, are passed over, in the log.
-    pub fn heard_event(&mut self, event: &Heard, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+    /// What the operator's policy does of its triggers: a step's commands actuated, or the boards of the sensors
+    /// whose readings are due nudged.
+    pub fn heard_event(&mut self, tag: usize, event: &Heard, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+        match tag {
+            NUDGE => self.nudge(event, pass),
+            _ => self.actuate(event, pass),
+        }
+    }
+
+    /// Each actuator the order the event names sets, sent the document its settings make through the member that
+    /// reaches it as a channel it is sent on, and each setting sent kept as a `sosa:Actuation` in an
+    /// `actuation:ActuationGraph`, the graph written. A setting whose property says no pointer, and an actuator no
+    /// member reaches, are passed over, in the log.
+    fn actuate(&mut self, event: &Heard, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         let Some(graph) = event.named(COMMANDS).cloned() else {
             return Ok(Vec::new());
         };
@@ -75,6 +91,30 @@ impl Operator {
             return Ok(Vec::new());
         }
         Ok(vec![actuated(&self.beliefs, &self.me, &made, pass.now)?])
+    }
+
+    /// Each sensor the event says is due told to sense, `actuation:SenseNow` set true, through the member that reaches
+    /// it; kept nowhere, a nudge being no step's act.
+    fn nudge(&mut self, event: &Heard, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+        let due: Vec<NamedNode> = event.all(LAPSED).into_iter().cloned().collect();
+        if due.is_empty() {
+            return Ok(Vec::new());
+        }
+        let nudges: BTreeMap<NamedNode, Vec<Setting>> = due
+            .iter()
+            .map(|sensor| {
+                let sense = Setting {
+                    property: NamedNode::new_unchecked(SENSE_NOW),
+                    value: boolean(true),
+                };
+                (sensor.clone(), vec![sense])
+            })
+            .collect();
+        let activity = pass.begin(NUDGING, &due);
+        let sent = self.send(&nudges);
+        pass.end(activity);
+        sent?;
+        Ok(Vec::new())
     }
 
     /// Each actuator's document sent; what was sent of each, the settings made.

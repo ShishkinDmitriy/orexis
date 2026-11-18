@@ -23,8 +23,8 @@ package ends is written as it is said. It knows no package's words.
 | Entry | Kept |
 |---|---|
 | an event | until the archive takes it; for good there |
-| a log record, an activity | for the journal's window, then swept |
-| a log record or an activity an incident kept (`orexis:keptBy`) | until the archive takes it; for good there |
+| a line logged, an activity | for the journal's window, then swept |
+| a line logged or an activity an incident kept (`orexis:keptBy`) | until the archive takes it; for good there |
 
 An incident is an event of a class beneath `orexis:Incident`. Kept, it wakes the archive at once.
 

@@ -58,7 +58,8 @@ beneath `mqtt:TellingTrigger`, which tells it to each agent on the bus, and `tra
 phrases it for each person in a chat; each reads the statements back from the store as speech said them.
 Execution's step taken says `execution:Commanded`, naming the command graph it kept, beneath
 `actuation:ActuatingTrigger` by actuation's ontology, since actuation is above the executor whose steps it carries
-out on a device; and `execution:Told`,
+out on a device, as sensing's `sensing:ReadingLapsed`, naming the sensors whose readings lapsed, is beneath its
+`actuation:NudgingTrigger`; and `execution:Told`,
 like coordination's, beneath `speech:SpeakingTrigger` by execution's.
 Planning's is built: belief's `belief:Revised` and execution's `execution:IntentionAdopted`,
 `execution:IntentionResolved` and `execution:StepTaken` are beneath `planning:PlanningTrigger` by planning's

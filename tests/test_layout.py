@@ -546,6 +546,22 @@ def test_onboarding_refuses_a_declared_role_whose_needs_its_world_lacks(tmp_path
     assert f"me: {message}" in refused, refused
 
 
+def test_onboarding_refuses_an_observer_whose_board_takes_commands_where_the_agent_plays_no_operator(tmp_path):
+    """Sensing says when a sensor's reading has lapsed and only the operator tells its board to sense, so an observer
+    attending a sensor whose board listens for commands is refused where the agent plays no operator, and not where
+    it plays one."""
+    from onboarding import reading
+
+    operator = ("http://example.org/orexis/actuation#Operator", "")
+    board = (":probe a sosa:Sensor ; sosa:isHostedBy :pot .\n"
+             ":board <http://www.w3.org/ns/ssn/hasSubSystem> :probe ; mqtt4ssn:listensToTopic :commands .\n")
+    observing = (OBSERVER, _attending(["probe"]))
+    said = "an observer attends a sensor whose board listens for commands and the agent plays no actuation:Operator"
+    refused = lambda *played: [line for line in reading.refused(_declared(tmp_path, [*played, DELIBERATED], board)) if said in line]
+    assert len(refused(observing)) == 1
+    assert refused(observing, operator) == []
+
+
 def test_onboarding_holds_an_observer_to_one_role_and_its_attentions_to_their_sensors(tmp_path):
     """An agent plays one observer, which attends: a second observer is refused by the binary's boot, as the
     self is held to one, and an observer attending nothing, an attention naming a sensor that does not report
@@ -606,8 +622,46 @@ def test_every_role_but_the_deliberators_and_the_recorders_states_a_need():
     assert depending, "no role depends on another — the guard would count nothing"
     targeted = {role for role, _ in NEEDS} | depending
     roles = set(_vocabularies()[0]) | {"http://example.org/orexis/market#Host", "http://example.org/orexis/market#Bidder"}
-    needless = {"http://example.org/orexis/belief#Deliberator", "http://example.org/orexis/journal#Recorder"}
+    #  THE OPERATOR NEEDS NOTHING OF ITS OWN: it is what is needed, by an agent holding an actuator and by an observer
+    #  whose board takes commands, each refused at onboarding where it plays none.
+    needless = {"http://example.org/orexis/belief#Deliberator", "http://example.org/orexis/journal#Recorder",
+                "http://example.org/orexis/actuation#Operator"}
     assert roles - targeted == needless, sorted(roles - targeted)
+
+
+#  WHAT AN EVENT AND AN ACTIVITY ARE CALLED: an event is something that happened, named in the past tense for what
+#  happened, of what where it is not the package's own act - `belief:Revised`, `execution:StepTaken`; an activity is a
+#  span, named for what is being done - `sensing:Observing`, `orexis:AgentBooting`. A category of events, a trigger or
+#  an incident, names a kind of happening, not one. The past tenses that do not end -ed are said here, so an event
+#  named for a state, as `sensing:ReadingDue` was, or for a thing, as `orexis:LogRecord` was, is refused.
+IRREGULAR_PAST = ("Said", "Told", "Heard", "Held", "Kept", "Taken", "Won", "Foreseen", "Found", "Made", "Sent", "Begun")
+
+
+def _local(term) -> str:
+    return re.split(r"[#/]", str(term))[-1]
+
+
+def test_an_event_is_named_in_the_past_tense_and_an_activity_for_what_is_being_done():
+    """Every class beneath `orexis:Event` a package or a domain declares says what happened, a word of its name a
+    past tense, `-ed` or one of `IRREGULAR_PAST` - `Revised`, `StepTaken`, `WantFoundUnreachable` - but a trigger and
+    `orexis:Incident`, which are categories of events; every class beneath `prov:Activity` ends in `-ing`."""
+    import rdflib
+    from rdflib.namespace import RDFS
+
+    g = rdflib.Graph()
+    for ontology in [*REPO_ROOT.glob("orexis*/ontology.ttl"), *REPO_ROOT.glob("domains/*/ontology.ttl")]:
+        g.parse(ontology)
+    event, activity = rdflib.URIRef("http://example.org/orexis#Event"), rdflib.URIRef("http://www.w3.org/ns/prov#Activity")
+    categories = {"http://example.org/orexis#Incident"}
+    events = {str(c) for c in g.transitive_subjects(RDFS.subClassOf, event)} - {str(event)} - categories
+    activities = {str(c) for c in g.transitive_subjects(RDFS.subClassOf, activity)} - {str(activity)}
+    assert events and activities, "no event or no activity found — the glob stopped matching"
+    past = lambda word: word.endswith("ed") or word in IRREGULAR_PAST
+    words = lambda term: re.findall(r"[A-Z][a-z]*", _local(term))
+    misnamed = sorted(e for e in events if not _local(e).endswith("Trigger") and not any(map(past, words(e))))
+    assert not misnamed, f"events named for no happening, in no past tense: {misnamed}"
+    spans = sorted(a for a in activities if not _local(a).endswith("ing"))
+    assert not spans, f"activities named for nothing being done: {spans}"
 
 
 def test_onboarding_refuses_a_role_played_without_a_role_it_depends_on(tmp_path):

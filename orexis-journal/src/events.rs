@@ -75,7 +75,7 @@ mod tests {
         fn statements(&self, node: &NamedNode) -> Option<Vec<Triple>> {
             Some(vec![typed(
                 node.clone(),
-                "http://example.org/orexis/planning#WantUnreachable",
+                "http://example.org/orexis/planning#WantFoundUnreachable",
             )])
         }
     }
@@ -97,7 +97,7 @@ mod tests {
         let _history = History::new(
             &watch,
             journal.clone(),
-            BTreeSet::from(["http://example.org/orexis/planning#WantUnreachable".to_string()]),
+            BTreeSet::from(["http://example.org/orexis/planning#WantFoundUnreachable".to_string()]),
         );
         watch.emit(&Unreachable);
         watch.emit(&Published);
@@ -108,7 +108,7 @@ mod tests {
         .unwrap();
         let body = String::from_utf8(body).unwrap();
         assert!(
-            body.contains("WantUnreachable") && !body.contains("PlanPublished"),
+            body.contains("WantFoundUnreachable") && !body.contains("PlanPublished"),
             "{body}"
         );
     }

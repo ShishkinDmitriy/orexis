@@ -40,6 +40,10 @@ series store (`sensing:archivedIn`); ten where it states none, read by `orexis-s
 **How often sensing asks after its sensors**, `sensing:askedEveryS` in the agent's seconds: how long a
 [silence](/domain/sensing/silence.md) may go unsaid, sixty where the role states none.
 
+**How soon a reading is said due again**, `sensing:askedAgainAfterS` in the agent's seconds: where the board of a
+sensor whose reading fell due was told to sense and nothing came, sixty where the role states none
+([operator](/domain/actuation/operator.md)).
+
 **One per agent.** What the role says besides its attentions is said to sensing once for the whole
 agent, so a second observer role would be a second answer to one question: sensing refuses it as it
 starts, which onboarding finds when it boots the agent to check its world.

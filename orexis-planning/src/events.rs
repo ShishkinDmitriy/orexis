@@ -3,7 +3,7 @@
 //! history and the metrics hear, each made only where somebody watches.
 //!
 //! WHAT IS HISTORY goes to the journal in planning's words: a plan published, `planning:PlanPublished`, carrying the
-//! plan graph whole as the beliefs hold it, and a want nothing reaches, `planning:WantUnreachable`, beneath
+//! plan graph whole as the beliefs hold it, and a want nothing reaches, `planning:WantFoundUnreachable`, beneath
 //! `orexis:Incident`. A want's name is on no metric: what a want reports is tagged by the DESIRE it was derived under.
 
 use oxigraph::model::{Literal, NamedNode, Term, Triple};
@@ -170,13 +170,13 @@ impl Event for HeadChecked {
 
 /// A want standing, walked by nothing, no search cut short: nothing this agent holds reaches it.
 #[derive(Clone, Debug, PartialEq)]
-pub struct WantUnreachable {
+pub struct WantFoundUnreachable {
     pub want: String,
     pub desire: Option<String>,
     pub at: Option<DateTime>,
 }
 
-impl Event for WantUnreachable {
+impl Event for WantFoundUnreachable {
     fn metric(&self) -> Option<&'static str> {
         Some("unreachable")
     }
@@ -187,7 +187,7 @@ impl Event for WantUnreachable {
 
     fn statements(&self, entry: &NamedNode) -> Option<Vec<Triple>> {
         Some(vec![
-            typed(entry.clone(), &term("WantUnreachable")),
+            typed(entry.clone(), &term("WantFoundUnreachable")),
             triple(entry.clone(), &term("want"), node(&self.want)),
         ])
     }

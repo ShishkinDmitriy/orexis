@@ -13,7 +13,7 @@ triplestore on the agent's volume, and has the journal forget what it took.
 
 | Woken by | Does |
 |---|---|
-| the clock, as often as the recorder's role says (`journal:archivedEveryS`), every 2 s of the agent's time where it says nothing, where anything was written | takes every event, and every log record and activity an incident kept |
+| the clock, as often as the recorder's role says (`journal:archivedEveryS`), every 2 s of the agent's time where it says nothing, where anything was written | takes every event, and every line logged and activity an incident kept |
 | an incident kept by the journal | takes at once |
 | the run ending | takes once more, then flushes |
 

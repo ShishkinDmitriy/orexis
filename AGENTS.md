@@ -868,6 +868,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   unreachable; a clock that does not tick is a test's mistake.
 - **A package starts itself, and the runtime is a lifecycle container** — each part says what it
   does by jobs it submits, kinds it hears and timers it asks for (a-package-starts-itself).
+- **An event is named in the past tense for what happened, and an activity for what is being done** — `belief:Revised`,
+  `execution:StepTaken`, `sensing:ReadingLapsed`; `sensing:Observing`, `orexis:AgentBooting`: the reading due named a
+  state and the log record a thing, and `tests/test_layout.py` refuses either.
 - **An event is an instant and triggers no event; each activity has a trigger class of its own, whose events a package's
   policy hears to start it, and an activity's start and end are events and it is a span** — who hears what is said by the
   higher ontology, the links between parts go, and "process" stays the OS's word (packages-meet-by-events-policies-and-activities, #1119).
@@ -1108,7 +1111,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   refused (role).
 - **How a package paces and bounds its work is its role's to say where an author would choose it** — a translator's
   turns, rows and the model's timeout and retries, how often sensing asks after its sensors, how long a predictor
-  holds a rate, a transport's timeouts and the MQTT member's nudge, each a word of its package with its default in
+  holds a rate, a transport's timeouts and how soon sensing says a reading due again, each a word of its package with its default in
   the ontology; a page of a read, a queue's length and a guard against a loop stay code (role).
 - **How often a package takes its turn is its role's to say** — `sensing:archivedEveryS`, `journal:archivedEveryS`,
   `journal:tracedEveryS`, `metrics:windowS`, `telegram:polledEveryS` and `email:polledEveryS`; the first three were

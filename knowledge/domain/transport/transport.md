@@ -61,17 +61,15 @@ and the rest), which [onboarding](/domain/onboarding/onboarding.md) writes; the 
 refuses to guess one, and holds a client per broker. A world may have any number of brokers, and
 MQTT4SSN says which each client `isConnectedToBroker`: a sensor's topic is subscribed to on every
 broker the agent shares with the sensor's client, its own on every broker it is connected to, and a
-command or a document goes out on the first broker it shares with whoever it is for. Started, it
-asks after its sensors' missing readings as one falls due, telling each such board to sense now, a
-minute later again while a board it told stays silent, and otherwise waits for the next reading to fall
-due ([sensing](/domain/sensing/sensing.md)'s `next_lapse`).
+command or a document goes out on the first broker it shares with whoever it is for. It tells no board
+anything of its own accord: a board told to sense is told by the [operator](/domain/actuation/operator.md),
+when sensing says a reading is due, through the bus as a channel it is sent on.
 
 A peer's document travels the same way: the member hears speech's `speech:Said` beneath its
 `mqtt:TellingTrigger`, reads the document back from the store, and `tell` publishes it on the topic each recipient listens to,
 and one arriving is handed to [speech](/domain/speech/speech.md)'s `heard`; a document to a person is
 not the bus's, and is passed over in silence. A chat's topic carries prose both ways, each message
-`{"from": …, "text": …}`, and the member skips its own when the broker hands it back. A board told to sense that sends no reading is told
-again after `mqtt:askedAgainAfterS`, a figure a role the agent plays may state, sixty seconds where none does.
+`{"from": …, "text": …}`, and the member skips its own when the broker hands it back.
 
 # The member that ships: HTTP
 

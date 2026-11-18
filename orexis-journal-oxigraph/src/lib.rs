@@ -3,11 +3,11 @@
 //! disk, on a timer, and has the journal forget what it took. One crate does a thing and another keeps house, as
 //! `orexis-sensing-influxdb/` does for sensing's readings and `orexis-journal-otlp/` for the activities.
 //!
-//! WHAT IS TAKEN is what lasts (`Journal::lasting`): each event, and each log record and activity an incident kept.
+//! WHAT IS TAKEN is what lasts (`Journal::lasting`): each event, and each line logged and activity an incident kept.
 //! An entry is a named graph in the archive as it is in the journal, so a text reads either alike. The log and the
 //! activities no incident kept are never taken: the journal sweeps them past its window.
 //!
-//! WHAT THE JOURNAL THEN FORGETS is an event at once, and a kept log record or activity once the window has passed
+//! WHAT THE JOURNAL THEN FORGETS is an event at once, and a kept line logged or activity once the window has passed
 //! it: until then a later incident keeps it again, and what ships the activities reads it there. One that changes
 //! after it was taken, an activity told the graphs it wrote, is taken again whole.
 //!

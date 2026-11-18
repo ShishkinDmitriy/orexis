@@ -205,10 +205,10 @@ orexis:runs
     rdfs:label "runs" ;
     rdfs:comment "Whether the package of a booting made its core and runs: false where it declined, or its start ended before it booted." .
 
-orexis:LogRecord
+orexis:Logged
     a owl:Class ;
     rdfs:subClassOf orexis:Event ;
-    rdfs:label "Log record" ;
+    rdfs:label "Logged" ;
     rdfs:comment "One line of the agent's log, as the code said it: its logger, its level and its message. Kept for the journal's window and swept after, unless an incident keeps it." .
 
 #################  Properties  #################
@@ -217,7 +217,7 @@ orexis:keptBy
     a owl:ObjectProperty ;
     rdfs:range orexis:Incident ;
     rdfs:label "kept by" ;
-    rdfs:comment "The incident a log record or an activity is kept for, past the window: it came in the minutes before it." .
+    rdfs:comment "The incident a line logged or an activity is kept for, past the window: it came in the minutes before it." .
 
 orexis:shippedTo
     a owl:DatatypeProperty ;
@@ -240,19 +240,19 @@ orexis:package
 
 orexis:logger
     a owl:DatatypeProperty ;
-    rdfs:domain orexis:LogRecord ;
+    rdfs:domain orexis:Logged ;
     rdfs:label "logger" ;
     rdfs:comment "The name of the logger that said it — the package or module of the code." .
 
 orexis:level
     a owl:DatatypeProperty ;
-    rdfs:domain orexis:LogRecord ;
+    rdfs:domain orexis:Logged ;
     rdfs:label "level" ;
     rdfs:comment "How loud it was said: DEBUG, INFO, WARNING, ERROR or CRITICAL." .
 
 orexis:message
     a owl:DatatypeProperty ;
-    rdfs:domain orexis:LogRecord ;
+    rdfs:domain orexis:Logged ;
     rdfs:label "message" ;
     rdfs:comment "What it said, its traceback after it where an exception was logged." .
 

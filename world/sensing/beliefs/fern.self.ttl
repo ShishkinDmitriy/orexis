@@ -1,3 +1,4 @@
+@prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix belief: <http://example.org/orexis/belief#> .
 @prefix : <http://example.org/orexis/world/sensing#> .
 @prefix orexis: <http://example.org/orexis#> .
@@ -12,14 +13,16 @@
 #  and never the id — the agent checks that this is so.
 #
 #  WHAT IT RUNS: it observes the fern's probe and foresees it, and wants nothing, so it is no planner
-#  and no executor; an observer is a deliberator too, so what its percepts are of is concluded.
+#  and no executor; an observer is a deliberator too, so what its percepts are of is concluded. Its board
+#  takes commands, so it is an operator too: telling the board to sense when a reading is due is acting on it.
 
 :fern_agent a orexis:Self ;
     orexis:plays [ a sensing:Observer ; sensing:archivedIn :series ;
                    sensing:attends [ sensing:sensor :air_humidity_fern ,
                                     :air_temp_fern ,
                                     :moisture_sensor_fern ] ] ,
-                 [ a prediction:Predictor ] .
+                 [ a prediction:Predictor ] ,
+                 [ a actuation:Operator ] .
 
 #  IT KEEPS A JOURNAL of what happened to it, so it is a recorder (knowledge/domain/journal/recorder.md): the
 #  history view and its own account of itself read what it kept. Without the role its packages say what happens

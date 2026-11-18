@@ -101,7 +101,8 @@
 [] a sh:NodeShape ;
     sh:targetClass :Observer ;
     sh:property [ sh:path :archivedEveryS ; sh:defaultValue 10 ] ,
-                [ sh:path :askedEveryS ; sh:defaultValue 60 ] .
+                [ sh:path :askedEveryS ; sh:defaultValue 60 ] ,
+                [ sh:path :askedAgainAfterS ; sh:defaultValue 60 ] .
 
 :ObservationGraph a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
@@ -376,6 +377,16 @@ sensing:ObservingTrigger a owl:Class ; rdfs:subClassOf sensing:Trigger ; rdfs:la
 
 belief:Revised rdfs:subClassOf sensing:ObservingTrigger .
 
+#  WHEN A READING HAS LAPSED is sensing's to say, and telling the board to sense is acting on it, actuation's
+#  (the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop): sensing says which sensors' readings have
+#  fallen due, and the operator, which puts this beneath its own trigger, tells each one's board.
+
+sensing:ReadingLapsed a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Reading lapsed" ;
+    rdfs:comment "Sensing found the readings of the sensors it names (`sensing:lapsed`) lapsed, fallen due with none come (`cadence::lapsed`): each a sensor of the observer's that no member answers when asked but one is sent on, its board told to sense by whoever hears this. Said as the agent starts, after each reading, when one next falls due, and again `sensing:askedAgainAfterS` on where the board was told and no reading came." .
+
+sensing:lapsed a owl:ObjectProperty ; rdfs:domain sensing:ReadingLapsed ; rdfs:range sosa:Sensor ; rdfs:label "lapsed" ;
+    rdfs:comment "A sensor whose reading a `sensing:ReadingLapsed` says has lapsed: fallen due, its grace run out, and none come." .
+
 #  WHERE AN OBSERVER'S READINGS ARE ARCHIVED (knowledge/domain/kernel/series.md): a link from the role to a series
 #  store, which decides whether what archives the readings (`orexis-sensing-influxdb/`) joins the agent.
 
@@ -390,3 +401,7 @@ sensing:archivedEveryS a owl:DatatypeProperty ; rdfs:label "archived every, in s
 sensing:askedEveryS a owl:DatatypeProperty ; rdfs:label "asked every, in seconds" ;
     rdfs:domain sensing:Observer ;
     rdfs:comment "How often sensing asks which of an observer's sensors have fallen due or gone silent, in the agent's seconds, said of the role: how long a silence may go unsaid. Sixty where the role says none." .
+
+sensing:askedAgainAfterS a owl:DatatypeProperty ; rdfs:label "asked again after, in seconds" ;
+    rdfs:domain sensing:Observer ;
+    rdfs:comment "How soon sensing says a reading due again where its board was told to sense and no reading came, in the agent's seconds, said of the role: the board may not have heard. Sixty where the role says none." .

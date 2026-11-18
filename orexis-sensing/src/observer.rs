@@ -16,8 +16,8 @@ use orexis::store::{Store, Within, iri, value};
 use orexis::task::{Every, Heard, Turn};
 use orexis_transport::{Exchange, Inbox, Member, Members};
 
-use crate::cadence::cadence_of;
-use crate::events::{Doubted, Perceived, Silence, tag_of};
+use crate::cadence::{cadence_of, lapsed, next_lapse};
+use crate::events::{Doubted, Perceived, ReadingLapsed, Silence, tag_of};
 use crate::missed::missed;
 use crate::ontology::{OBSERVATION_GRAPH, OBSERVER, OBSERVING, REVISED_SOURCE, SILENCE_GRAPH, silence_graph};
 use crate::received::received;
@@ -44,6 +44,9 @@ pub struct Observer {
     /// How often sensing asks which sensors have fallen due or gone silent, in the agent's seconds
     /// (`sensing:askedEveryS`).
     pub asked_every_s: f64,
+    /// How soon a reading is said due again where its board was told and no reading came, in the agent's seconds
+    /// (`sensing:askedAgainAfterS`).
+    pub asked_again_after_s: f64,
     beliefs: Store,
     me: String,
     /// The percepts a restart found unrevised, said at the first ask, once anybody hears.
@@ -56,6 +59,13 @@ pub struct Observer {
     requested: Vec<(String, Arc<dyn Member>)>,
     /// Where each asked sensor's answer is left.
     pub replies: Inbox,
+    /// The agent's members, read once every core is made.
+    members: Members,
+    /// Whether to say what is due at the next turn whatever the instant: at the start, and after a reading, which
+    /// moves when the next falls due.
+    told: bool,
+    /// When a reading next falls due, as the last saying worked out.
+    next_due: Option<DateTime>,
 }
 
 impl Observer {
@@ -70,12 +80,15 @@ impl Observer {
         const OBSERVER_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
         PREFIX sh: <http://www.w3.org/ns/shacl#>
-        SELECT DISTINCT ?me ?role ?kind ?sensor (COALESCE(?askedSaid, ?askedOwn) AS ?asked) WHERE { \
-        ?shape sh:targetClass sensing:Observer ; sh:property [ sh:path sensing:askedEveryS ; sh:defaultValue ?askedOwn ] . \
+        SELECT DISTINCT ?me ?role ?kind ?sensor (COALESCE(?askedSaid, ?askedOwn) AS ?asked) \
+        (COALESCE(?againSaid, ?againOwn) AS ?again) WHERE { \
+        ?shape sh:targetClass sensing:Observer ; sh:property [ sh:path sensing:askedEveryS ; sh:defaultValue ?askedOwn ] ; \
+            sh:property [ sh:path sensing:askedAgainAfterS ; sh:defaultValue ?againOwn ] . \
         OPTIONAL { ?me a orexis:Self } \
         OPTIONAL { ?me orexis:plays ?role . ?role a ?kind } \
         OPTIONAL { ?me orexis:plays/sensing:attends/sensing:sensor ?sensor } \
-        OPTIONAL { ?me orexis:plays ?asking . ?asking sensing:askedEveryS ?askedSaid } }";
+        OPTIONAL { ?me orexis:plays ?asking . ?asking sensing:askedEveryS ?askedSaid } \
+        OPTIONAL { ?me orexis:plays ?asking_again . ?asking_again sensing:askedAgainAfterS ?againSaid } }";
         let mut known = store.graphs_of(&[SELF_GRAPH], &Within::default())?;
         known.extend(store.graphs_of(&[ONTOLOGY], &Within::default())?);
         let known: Vec<&str> = known.iter().map(String::as_str).collect();
@@ -105,10 +118,15 @@ impl Observer {
                 "an observer asked after its sensors every {asked} is no number"
             ))
         })?;
+        let again = value(first, "again").unwrap_or_default();
+        let asked_again_after_s = again
+            .parse::<f64>()
+            .map_err(|_| Error::Document(format!("an observer asking again after {again} is no number")))?;
         let sensors: BTreeSet<String> = rows.iter().filter_map(|row| iri(row, "sensor")).collect();
         Ok(Observer {
             sensors: sensors.into_iter().collect(),
             asked_every_s,
+            asked_again_after_s,
             beliefs: store.clone(),
             me,
             due: Vec::new(),
@@ -116,6 +134,9 @@ impl Observer {
             doubts: BTreeSet::new(),
             requested: Vec::new(),
             replies: Inbox::default(),
+            members: Members::default(),
+            told: true,
+            next_due: None,
         })
     }
 
@@ -278,6 +299,7 @@ impl Observer {
     /// IS A REQUEST IN A LOOP, AND THE LOOP IS SENSING'S, since the cadence is
     /// (the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop). The timers, and the jobs run once.
     pub(crate) fn request(&mut self, members: &Members) -> Result<(Timers, Vec<usize>), Error> {
+        self.members = members.clone();
         let (mut timers, mut once) = (Vec::new(), Vec::new());
         for sensor in &self.sensors {
             let Some((member, Exchange::Requested)) = members.reaching(sensor)? else {
@@ -335,10 +357,47 @@ impl Observer {
         }
     }
 
-    /// The percepts one message wrote, said together: belief revises them as one, and says so once.
+    /// The percepts one message wrote, said together: belief revises them as one, and says so once; and what is due
+    /// is said again at the next turn, a reading having moved when the next falls due.
     pub(crate) fn heard(&mut self, _job: usize, graphs: &[String], _pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         self.perceived(graphs.to_vec());
+        self.told = true;
         Ok(Vec::new())
+    }
+
+    /// SENSING'S POLICY FOR A READING DUE: at the start, after a reading and when one next falls due, the sensors of
+    /// the observer's whose readings have fallen due (`cadence::lapsed`) that a member is sent on and none answers
+    /// when asked, said together as `sensing:ReadingLapsed` for the operator to tell their boards; and the turn woken
+    /// when the next falls due, or `asked_again_after_s` on where a board was told, since it may not have heard. A
+    /// sensor asked on its cadence is asked by sensing itself (`request`), and none is said due.
+    pub(crate) fn due(&mut self, pass: &mut Turn<'_>) -> Result<(), Error> {
+        if self.told || self.next_due.is_some_and(|next| next <= pass.now) {
+            self.told = false;
+            let mut due: Vec<String> = Vec::new();
+            for (sensor, _) in lapsed(&self.beliefs, pass.now)? {
+                if due.contains(&sensor) || self.requested.iter().any(|(s, _)| *s == sensor) {
+                    continue;
+                }
+                if let Some((_, Exchange::Sent)) = self.members.reaching(&sensor)? {
+                    due.push(sensor);
+                }
+            }
+            let next = next_lapse(&self.beliefs, pass.now)?;
+            self.next_due = if due.is_empty() {
+                next
+            } else {
+                pass.emit(&ReadingLapsed { sensors: due });
+                let again = pass
+                    .now
+                    .checked_add_day_time_duration(orexis::clock::seconds(self.asked_again_after_s))
+                    .unwrap_or(pass.now);
+                Some(next.map_or(again, |n| if n < again { n } else { again }))
+            };
+        }
+        if let Some(next) = self.next_due {
+            pass.wake_at(next);
+        }
+        Ok(())
     }
 
     /// What sensing's policy does of a revision pass: say each percept it revised as the observation it is.
@@ -385,7 +444,7 @@ mod tests {
     use orexis::store::value;
 
     use super::*;
-    use crate::ontology::{SILENT_AFTER_TERM, default_of};
+    use crate::ontology::{ASKED_AGAIN_AFTER_S_TERM, SILENT_AFTER_TERM, default_of};
     use crate::received::{GRACE, received};
     use std::sync::{Arc, Mutex};
 
@@ -442,6 +501,59 @@ mod tests {
                 .unwrap()
                 .is_empty(),
             "and holding no longer"
+        );
+    }
+
+    /// A member every channel of which is sent on, as a bus is for a board that takes commands.
+    struct Board;
+
+    impl Member for Board {
+        fn reaches(&self, _channel: &str) -> Result<Option<Exchange>, Error> {
+            Ok(Some(Exchange::Sent))
+        }
+        fn listen(&self, _channel: &str, _inbox: Inbox) -> Result<(), Error> {
+            Ok(())
+        }
+        fn send(&self, _channel: &str, _payload: &[u8], _reply: Option<Inbox>) -> Result<(), Error> {
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn a_reading_is_said_due_when_it_lapses_and_again_a_minute_on_while_none_comes() {
+        let store = pot();
+        received(&store, ME, PROBE, br#"{"value": 0.2}"#, now()).unwrap();
+        let mut part = Observer::new(&store).unwrap();
+        let mut members = Members::default();
+        members.add(Arc::new(Board));
+        part.request(&members).unwrap();
+        let events = orexis::task::Events::new(&store);
+        let said: Arc<Mutex<Vec<Vec<String>>>> = Arc::default();
+        let into = said.clone();
+        events.watch().connect(move |event, _| {
+            if let Some(due) = orexis::events::as_of::<ReadingLapsed>(event) {
+                into.lock().unwrap().push(due.sensors.clone());
+            }
+        });
+        let lapse = plus(now(), CADENCE * (1.0 + GRACE));
+        let mut turn = events.turn(now(), ME);
+        part.due(&mut turn).unwrap();
+        assert_eq!(
+            turn.next(),
+            Some(lapse),
+            "nothing due: it waits for the reading to lapse"
+        );
+        let mut turn = events.turn(lapse, ME);
+        part.due(&mut turn).unwrap();
+        let again = plus(lapse, default_of(ASKED_AGAIN_AFTER_S_TERM).unwrap() as f64);
+        assert_eq!(turn.next(), Some(again), "said due, and again a minute on");
+        let mut turn = events.turn(plus(lapse, 30.0), ME);
+        part.due(&mut turn).unwrap();
+        assert_eq!(turn.next(), Some(again), "not before");
+        assert_eq!(
+            *said.lock().unwrap(),
+            [vec![PROBE.to_string()]],
+            "said once, naming the probe"
         );
     }
 

@@ -11,7 +11,7 @@ description: >-
 # What it is
 
 A [recorder](/domain/journal/recorder.md)'s **archive** is a triplestore on a volume of the agent's own,
-holding what its [journal](/domain/kernel/journal.md) kept for good: each event, and each log record and activity an
+holding what its [journal](/domain/kernel/journal.md) kept for good: each event, and each line logged and activity an
 incident kept. An entry is the same named graph in both, so one text reads either.
 
 The journal is in memory, and is where a thing is written as it is said. `orexis-journal-oxigraph/` takes what lasts
@@ -19,10 +19,10 @@ out of it into the archive, and has the journal forget what was taken:
 
 - **when**: as often as the [recorder](/domain/journal/recorder.md)'s role says (`journal:archivedEveryS`), every two of the agent's seconds where it says nothing, where anything was written, at once when an incident is kept, and a last time as the run ends;
 - **an event** is forgotten by the journal as soon as the archive has it;
-- **a log record or an activity an incident kept** stays in the journal too until the window has passed it, since a
+- **a line logged or an activity an incident kept** stays in the journal too until the window has passed it, since a
   later incident keeps it again and `orexis-journal-otlp/` reads the activities there; one that changes after it was
   taken is taken again, whole;
-- **a log record or an activity no incident kept** never reaches the archive: the journal sweeps it.
+- **a line logged or an activity no incident kept** never reaches the archive: the journal sweeps it.
 
 # What it costs
 

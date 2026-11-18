@@ -10,7 +10,7 @@ use oxigraph::store::Store as Engine;
 
 use orexis::Error;
 use orexis_journal::Journal;
-use orexis_journal::journal::{ACTIVITY, KEPT_BY, LOG_RECORD};
+use orexis_journal::journal::{ACTIVITY, KEPT_BY, LOGGED};
 
 fn engine(e: impl std::fmt::Display) -> Error {
     Error::Evaluation(e.to_string())
@@ -49,11 +49,11 @@ impl Archive {
         Ok(archive)
     }
 
-    /// Take out every log record and activity no incident kept: a journal on disk held them there for its window,
+    /// Take out every line logged and activity no incident kept: a journal on disk held them there for its window,
     /// and an archive holds what lasts. How many.
     pub fn tidy(&self) -> Result<usize, Error> {
         let text = format!(
-            "SELECT DISTINCT ?r WHERE {{ VALUES ?c {{ <{LOG_RECORD}> <{ACTIVITY}> }} GRAPH ?r {{ ?r a ?c }} \
+            "SELECT DISTINCT ?r WHERE {{ VALUES ?c {{ <{LOGGED}> <{ACTIVITY}> }} GRAPH ?r {{ ?r a ?c }} \
              FILTER NOT EXISTS {{ GRAPH ?r {{ ?r <{KEPT_BY}> ?any }} }} }}"
         );
         let mut gone = Vec::new();

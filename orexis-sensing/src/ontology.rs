@@ -35,6 +35,10 @@ pub const SILENT_AFTER_TERM: &str = "http://example.org/orexis/sensing#silentAft
 pub const STUCK_AFTER_TERM: &str = "http://example.org/orexis/sensing#stuckAfter";
 /// How often sensing asks what has fallen due: a figure the observer's role states.
 pub const ASKED_EVERY_S_TERM: &str = "http://example.org/orexis/sensing#askedEveryS";
+pub const ASKED_AGAIN_AFTER_S_TERM: &str = "http://example.org/orexis/sensing#askedAgainAfterS";
+/// A reading fallen due, said for the operator to tell the board, and each sensor it names.
+pub const READING_LAPSED: &str = "http://example.org/orexis/sensing#ReadingLapsed";
+pub const LAPSED: &str = "http://example.org/orexis/sensing#lapsed";
 /// The codec that ships.
 pub const JSON_CODEC: &str = "http://example.org/orexis/sensing#Json";
 
