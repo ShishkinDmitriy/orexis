@@ -3,8 +3,8 @@
 //!
 //! - [`driver`]: what the agent subscribes to, whose a message is, where a command goes and as what, MQTT's own
 //!   filter matching, and the client per broker the environment names;
-//! - `transport`: the member's part, which hands each message to sensing, asks after missing readings and tells and
-//!   commands what the agent says and does;
+//! - `transport`: the member's part, which leaves each message with the row listening for it, keeps a peer's
+//!   document by speech, and tells and commands what the agent says and does;
 //! - the start, below the modules, and nothing else: the member made and listening, and the task that holds the agent.
 //!
 //! A CHAT ON A TOPIC is carried too: a person's prose heard there is kept for translation, which the part hands it to,

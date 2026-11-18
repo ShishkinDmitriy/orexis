@@ -143,8 +143,8 @@ impl Operator {
                 );
                 continue;
             };
-            match self.members.reaching(actuator.as_str())? {
-                Some((member, Exchange::Sent)) => {
+            match self.members.reaching(actuator.as_str(), Exchange::Sent)? {
+                Some(member) => {
                     member.send(actuator.as_str(), sent.as_bytes(), None)?;
                     made.extend(kept.into_iter().map(|s| (actuator.clone(), s.clone())));
                 }

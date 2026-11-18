@@ -44,6 +44,25 @@ impl Inbox {
         }
     }
 
+    /// Several messages arrived as one: each left before the task is rung, so what one message on the wire is to several
+    /// channels is taken in one turn, and said as one happening.
+    pub fn deliver_all(&self, messages: Vec<Message>) {
+        if messages.is_empty() {
+            return;
+        }
+        if let Ok(mut queue) = self.queue.lock() {
+            queue.extend(messages);
+        }
+        if let Some(wake) = self.wake.get() {
+            wake.ring();
+        }
+    }
+
+    /// Whether `other` is this inbox, handed twice.
+    pub fn is(&self, other: &Inbox) -> bool {
+        Arc::ptr_eq(&self.queue, &other.queue)
+    }
+
     /// Everything arrived since the last take, oldest first.
     pub fn take(&self) -> Vec<Message> {
         self.queue.lock().map(|mut q| q.drain(..).collect()).unwrap_or_default()

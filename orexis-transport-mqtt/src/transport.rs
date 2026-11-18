@@ -1,4 +1,5 @@
-//! THE MEMBER'S PART: the member, and the messages it handed on for a turn to hand to sensing; a document the agent said told on the bus and a chat's words carried — and the bus as the rows above
+//! THE MEMBER'S PART: the member, each message on the bus left with the row listening for it or, on the agent's own
+//! topic, kept by speech; a document the agent said told on the bus and a chat's words carried — and the bus as the rows above
 //! send on it (`Bus`).
 
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -119,7 +120,7 @@ impl Jobs for Transport {
                     let (store, me) = (member.beliefs().clone(), member.me.clone());
                     (written, std::mem::take(&mut member.prose), store, me)
                 };
-                let mut written: Vec<String> = written.into_iter().map(|(_, graph)| graph).collect();
+                let mut written = written;
                 //  A PERSON'S WORDS ON A CHAT'S TOPIC are kept, and said kept, for whoever translates.
                 for prose in &heard {
                     let graph = kept(&store, &me, prose)?;
@@ -133,30 +134,37 @@ impl Jobs for Transport {
     }
 }
 
-/// THE BUS AS THE ROWS ABOVE SEE IT (`orexis_transport::Member`): a device that takes commands on a topic, its own or its
-/// board's, is a channel sent on; what the operator sends there, a step's command or a nudge, is published as the
-/// document it is, not retained.
+/// THE BUS AS THE ROWS ABOVE SEE IT (`orexis_transport::Member`): a sensor that publishes on a topic is a channel
+/// LISTENED to, every message on it left in the listener's inbox; a device that takes commands on a topic, its own or
+/// its board's, is a channel SENT on, what the operator sends there, a step's command or a nudge, published as the JSON
+/// document the firmware reads, not retained.
 pub struct Bus(pub Arc<Mutex<Mqtt>>);
 
+impl Bus {
+    fn member(&self) -> MutexGuard<'_, Mqtt> {
+        self.0.lock().expect("a bus nobody poisoned")
+    }
+}
+
 impl Member for Bus {
-    fn reaches(&self, channel: &str) -> Result<Option<Exchange>, Error> {
-        let member = self.0.lock().expect("a bus nobody poisoned");
-        Ok(member.takes_commands(channel)?.then_some(Exchange::Sent))
+    fn reaches(&self, channel: &str, exchange: Exchange) -> Result<bool, Error> {
+        let member = self.member();
+        match exchange {
+            Exchange::Listened => member.listened(channel),
+            Exchange::Sent => member.takes_commands(channel),
+            Exchange::Requested => Ok(false),
+        }
     }
 
-    fn listen(&self, channel: &str, _inbox: Inbox) -> Result<(), Error> {
-        Err(Error::Evaluation(format!(
-            "{channel}: the bus is not yet listened to through the contract (#1220)"
-        )))
+    fn listen(&self, channel: &str, inbox: Inbox) -> Result<(), Error> {
+        self.member().listen_on(channel, inbox)?;
+        Ok(())
     }
 
     fn send(&self, channel: &str, payload: &[u8], _reply: Option<Inbox>) -> Result<(), Error> {
         let document: serde_json::Value = serde_json::from_slice(payload)
             .map_err(|e| Error::Evaluation(format!("{channel}: a command that is no JSON document: {e}")))?;
-        self.0
-            .lock()
-            .expect("a bus nobody poisoned")
-            .actuate(channel, &document)?;
+        self.member().actuate(channel, &document)?;
         Ok(())
     }
 }

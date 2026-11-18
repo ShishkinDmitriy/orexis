@@ -22,5 +22,5 @@ pub mod chat;
 
 pub use inbox::{Inbox, Message};
 pub use jobs::{Jobs, Pending};
-pub use member::{Exchange, Member, Members, Reached};
+pub use member::{Exchange, Member, Members};
 pub use wired::wired;

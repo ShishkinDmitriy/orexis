@@ -1268,7 +1268,6 @@ dependencies = [
  "inventory",
  "log",
  "orexis",
- "orexis-sensing",
  "orexis-speech",
  "orexis-transport",
  "oxigraph",

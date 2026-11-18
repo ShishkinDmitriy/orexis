@@ -744,6 +744,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   window (#626).
 - **A forecast is a series a sensor reads, and a public service's address is wiring** — one graph per
   stretch, sensing asks it over HTTP on its cadence, the location lives in the agent's own `secrets/<agent>/` (a-forecast-is-a-series-a-sensor-reads).
+- **A row asks a member for the way it will use a channel, listened to, asked or sent on** — `reaches(channel, exchange)`;
+  one answer per channel could not say that a chat's is listened to and sent on (the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop).
 - **Several transport members are one to the rows above** — each adds itself to the agent's `Members`, and a row sends
   on a channel through the member that says it reaches it: a step's command, actuation's, to the member reaching the
   actuator (the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop).
@@ -832,8 +834,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   `sensing:stuckAfter`; a second observer role per limit was what this replaced, two roles told apart by a number,
   whose other figures each reader merged its own way (attention); a sensor moved into a pot is not the
   agent's until an attention names it, onboarding refuses a declared sensor mounted on nothing the agent acts
-  for and a mounted one no role reads, the transports ask sensing which are the agent's
-  (`cadence.sensors`), and the broker's ACL is derived from the declarations.
+  for and a mounted one no role reads, sensing listens through the member to the ones it attends, and no
+  transport asks which are the agent's, and the broker's ACL is derived from the declarations.
 - **A world is held to its requirements at onboarding alone, read off the world and never an agent's
   boot** — the package, domain or world owning a word ships its shapes in a `requirements.ttl` of
   onboarding's kind, which no agent loads, since none reads it, and which is not `planning:ShapesGraph`,

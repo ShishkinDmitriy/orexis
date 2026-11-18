@@ -91,8 +91,8 @@ What sensing's rules conclude of one is a percept too: sensing hands each observ
 own, so belief revises it and runs the transitions it triggers knowing no word of sensing's. The
 other readers stand where they may speak the word or ask the package that has it: prediction, above
 sensing, names the kind to find the observation in hand; an [operation](/domain/execution/operation.md)
-names it in its own text, sized from the present when a step is taken; and a transport, beneath,
-asks sensing which readings have lapsed (`cadence.lapsed`).
+names it in its own text, sized from the present when a step is taken; and no transport, beneath,
+asks for it at all, sensing saying itself which readings have lapsed (`sensing:ReadingLapsed`).
 
 # What is not one
 

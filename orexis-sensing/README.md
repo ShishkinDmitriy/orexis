@@ -12,9 +12,8 @@ no reader of the mind is handed one.
 
 | Heard | Said by | Starts |
 |---|---|---|
-| bytes a transport read for a sensor (`received`, a call, not an event) | the MQTT member, for a sensor on a topic | a percept written per reading, then `sensing:Perceived` said |
 | the clock, at the frequency a sensor a member answers when asked states, and once at start | | the sensor asked, through the member that reaches it |
-| an asked sensor's answer (an arrival) | the member asked | handed to `received`: a percept written per reading |
+| an asked sensor's answer, or a message on a sensor listened to (an arrival) | the member that reaches it | handed to `received`: a percept written per reading |
 | a graph of kind `sensing:ObservationGraph` written | itself | `sensing:Perceived` said to belief |
 | `sensing:ObservingTrigger`: `belief:Revised` | belief | `sensing:Observing` |
 | the start, a percept written, and the clock when a reading next falls due | | `sensing:ReadingLapsed` said for the sensors lapsed that a member is sent on, again `sensing:askedAgainAfterS` on (60 s where the role says none) while no reading comes |

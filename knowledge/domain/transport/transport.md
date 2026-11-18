@@ -41,8 +41,10 @@ listening to one or a translator in a chat over one, HTTP for an observer's sens
 Telegram for a translator speaking through a bot, email for one in a chat by mail — read off the world before anything of
 the member is ([package](/domain/kernel/package.md)). A member offers the rows above it a channel it
 reaches and the acts on one (`orexis_transport::Member`), and adds itself to the agent's `Members` as it
-makes its core; HTTP imports nothing above it, and MQTT still hands sensing's `received` and speech's
-`heard` what arrives, until it is moved onto the contract (#1220). The MQTT member's ontology ships the speaker's one need, a topic it listens to, since a
+makes its core; a row asks a member for the way it means to use a channel (`Members::reaching(channel, exchange)`),
+since one channel may be reached two ways, a chat's listened to and sent on. HTTP imports nothing above it, and MQTT
+nothing of sensing's: sensing listens to its sensors through the contract, and MQTT still keeps a peer's document by
+speech's `heard` and a chat's prose itself, until speech listens through the contract too (#1221). The MQTT member's ontology ships the speaker's one need, a topic it listens to, since a
 topic is its word.
 
 # The member that ships: MQTT
@@ -54,13 +56,15 @@ pattern and publishes a command to a pattern with no wildcard. No society states
 names each topic by one convention, for its publisher or its listener, into a derived society document
 the member reads as any other ([requirement](/domain/onboarding/requirement.md)), so a board has one
 readings topic and its sensors each read their own value of the one message by pointer. Which sensors are the agent's is its
-[observer](/domain/sensing/observer.md) role's to declare, and the member asks sensing for them and
-names none of sensing's words. Which brokers the agent is connected to is the society's to say, where each answers the world's derived
+[observer](/domain/sensing/observer.md) role's to declare, and sensing listens to each through the member, which
+subscribes to the sensor's topic as it is listened to and leaves every message on it, the sensors of one message
+together, in sensing's inbox; a message that came before anyone listened is kept, the last sixty-four, for the first
+that does. Which brokers the agent is connected to is the society's to say, where each answers the world's derived
 [deployment](/domain/onboarding/deployment.md)'s, and the agent's credential the environment's (`MQTT_USERNAME`
 and the rest), which [onboarding](/domain/onboarding/onboarding.md) writes; the member
 refuses to guess one, and holds a client per broker. A world may have any number of brokers, and
 MQTT4SSN says which each client `isConnectedToBroker`: a sensor's topic is subscribed to on every
-broker the agent shares with the sensor's client, its own on every broker it is connected to, and a
+broker the agent shares with the sensor's client, the agent's own on every broker it is connected to, and a
 command or a document goes out on the first broker it shares with whoever it is for. It tells no board
 anything of its own accord: a board told to sense is told by the [operator](/domain/actuation/operator.md),
 when sensing says a reading is due, through the bus as a channel it is sent on.
