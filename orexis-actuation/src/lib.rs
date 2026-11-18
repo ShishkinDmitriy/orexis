@@ -3,12 +3,14 @@
 //! (the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop).
 //!
 //! - `operator`: the package's core, the operator the self plays, which sends each command of a step's order and
-//!   keeps the acts it made;
+//!   keeps the acts it made, and tells a board whose reading is due to sense;
 //! - `encode`: what a device is sent, each setting's value written at its property's pointer;
 //! - the start, below the modules, and nothing else: the operator made, and the task that hears a step's commands.
 
 use orexis::task::{Handed, Package, Woke};
 use orexis_transport::Members;
+
+use crate::operator::{ACTUATE, NUDGE};
 
 pub mod encode;
 mod operator;
@@ -24,11 +26,13 @@ const DOCUMENTS: orexis::task::Documents = orexis::documents!("ontology.ttl");
 const ROLE: &str = "http://example.org/orexis/actuation#Operator";
 /// What starts its actuating: execution's `execution:Commanded`, beneath it in this package's ontology.
 const ACTUATING_TRIGGER: &str = "http://example.org/orexis/actuation#ActuatingTrigger";
-const ACTUATE: usize = 0;
+/// What starts its nudging: sensing's `sensing:ReadingDue`, beneath it in this package's ontology.
+const NUDGING_TRIGGER: &str = "http://example.org/orexis/actuation#NudgingTrigger";
 
 /// ACTUATION'S START, which every package this binary holds is given: it joins where the self plays an operator and
 /// declines otherwise; it says it booted, and checked it ends there; otherwise what follows is ITS TASK, which reads
-/// the agent's members once every core is made, and sends each command of each step's order it hears.
+/// the agent's members once every core is made, sends each command of each step's order it hears, and tells the board
+/// of each sensor sensing says is due to sense.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         if !handed.plays(&[ROLE])? {
@@ -37,6 +41,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         handed.joins(&DOCUMENTS).await?;
         let mut hears = handed.events.hears();
         hears.event(ACTUATING_TRIGGER, ACTUATE);
+        hears.event(NUDGING_TRIGGER, NUDGE);
         if !handed.booted().await? {
             return Ok(());
         }
@@ -50,9 +55,9 @@ fn start(handed: Handed) -> orexis::task::Starting {
                     None => break,
                 },
             };
-            if let Woke::Event(_, event) = woke {
+            if let Woke::Event(tag, event) = woke {
                 let mut turn = handed.turn();
-                let wrote = operator.heard_event(&event, &mut turn);
+                let wrote = operator.heard_event(tag, &event, &mut turn);
                 turn.done(wrote)?;
             }
         }

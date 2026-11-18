@@ -1,4 +1,7 @@
+@prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix orexis: <http://example.org/orexis#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
+@prefix ssn: <http://www.w3.org/ns/ssn/> .
 @prefix mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh: <http://www.w3.org/ns/shacl#> .
@@ -23,3 +26,13 @@
         sh:select """SELECT $this WHERE { ?me orexis:plays $this FILTER NOT EXISTS { ?me mqtt4ssn:isConnectedToBroker ?broker }
   FILTER NOT EXISTS { ?chat speech:participant ?me } }""" ] .
 
+
+#  AN OBSERVER WHOSE SENSOR'S BOARD TAKES COMMANDS OPERATES IT: sensing says when the sensor's reading is due, and only
+#  the operator tells the board to sense, so an observer playing none would let a board that waits to be told go quiet.
+[] a sh:NodeShape ;
+    sh:targetClass sensing:Observer ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "an observer attends a sensor whose board listens for commands and the agent plays no actuation:Operator, so nothing would tell the board to sense" ;
+        sh:select """SELECT $this WHERE { ?me orexis:plays $this . $this sensing:attends/sensing:sensor ?sensor .
+  ?board ssn:hasSubSystem ?sensor ; mqtt4ssn:listensToTopic ?topic .
+  FILTER NOT EXISTS { ?me orexis:plays ?role . ?role a actuation:Operator } }""" ] .

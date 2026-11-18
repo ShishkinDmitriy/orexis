@@ -79,6 +79,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
             if hears.is_empty() {
                 let wrote = observer.answered(&mut turn);
                 turn.done(wrote)?;
+                observer.due(&mut turn)?;
                 for job in std::mem::take(&mut once) {
                     let wrote = observer.run(job, &mut turn);
                     turn.done(wrote)?;

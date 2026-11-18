@@ -1,6 +1,6 @@
 //! The sensing world on the binary, held to what `world/sensing/tests/test_sensing.py` holds the Python runtime to:
-//! the governed board's one message is three observations, the agent watches and keeps running, and a cadence it would
-//! set goes to the board's own command topic, retained.
+//! the governed board's one message is three observations, the agent watches and keeps running, and once the readings
+//! lapse the board is told to sense on its own command topic, not retained.
 
 mod common;
 
@@ -77,7 +77,7 @@ fn booted_from_its_directory_the_agent_holds_no_hardware() {
 }
 
 #[tokio::test(start_paused = true)]
-async fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_to_the_boards_command_topic() {
+async fn one_message_is_three_observations_the_agent_watches_and_the_board_is_told_to_sense_when_they_lapse() {
     let store = store();
     let now = instant("2026-01-01T12:00:00+00:00").unwrap();
     let broker = Broker::default();
@@ -116,7 +116,22 @@ async fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_
     });
     inbox.deliver("sensors/moisture_sensor_fern/reading", MESSAGE.as_bytes(), Some(now));
     assert_eq!(common::outcome(&running, 1).await, UNFINISHED);
+    assert!(broker.0.lock().unwrap().1.is_empty(), "nothing due yet");
+    //  THE READINGS LAPSE, AND THE BOARD IS TOLD TO SENSE: sensing says they are due, and the operator tells the board
+    //  on its own command topic, not retained.
+    common::pass(&running, 30.0).await;
     running.stop().await;
+    let published = broker.0.lock().unwrap().1.clone();
+    assert!(!published.is_empty(), "the board was told");
+    assert!(
+        published.iter().all(|p| *p
+            == (
+                "sensors/moisture_sensor_fern/command".to_string(),
+                r#"{"sense": true}"#.to_string(),
+                false
+            )),
+        "{published:?}"
+    );
     assert_eq!(
         *said.lock().unwrap(),
         [("Perceived".to_string(), 3), ("Revised".to_string(), 3)],
@@ -145,24 +160,5 @@ async fn one_message_is_three_observations_the_agent_watches_and_a_cadence_goes_
             .iter()
             .map(|(k, v)| (k.to_string(), *v))
             .collect()
-    );
-    assert!(broker.0.lock().unwrap().1.is_empty());
-    let store2 = self::store();
-    orexis_agent::boot_without_starting(&store2, &world(), "fern").unwrap();
-    let cadence = Broker::default();
-    let mut member = Mqtt::new(
-        &store2,
-        &format!("{W}fern_agent"),
-        vec![(None, Box::new(cadence.clone()))],
-    );
-    assert!(member.set_cadence(&format!("{W}moisture_sensor_fern"), 10).unwrap());
-    assert_eq!(
-        cadence.0.lock().unwrap().1,
-        [(
-            "sensors/moisture_sensor_fern/command".to_string(),
-            r#"{"sleep_s": 10}"#.to_string(),
-            true
-        )],
-        "the governed board keeps the interval it was last told, retained on the broker"
     );
 }

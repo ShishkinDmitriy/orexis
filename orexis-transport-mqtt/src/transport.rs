@@ -1,11 +1,9 @@
-//! THE MEMBER'S PART: the member, the messages it handed on for a turn to hand to sensing, and when it next asks after
-//! its sensors; a document the agent said told on the bus and a chat's words carried — and the bus as the rows above
+//! THE MEMBER'S PART: the member, and the messages it handed on for a turn to hand to sensing; a document the agent said told on the bus and a chat's words carried — and the bus as the rows above
 //! send on it (`Bus`).
 
 use std::sync::{Arc, Mutex, MutexGuard};
 
 use oxigraph::model::NamedNode;
-use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::task::{Arrived, Heard, Turn};
@@ -17,7 +15,7 @@ use orexis_transport::{Exchange, Inbox, Jobs, Member, Pending};
 
 use crate::driver::Mqtt;
 
-pub(crate) const NUDGE: usize = 0;
+pub(crate) const HOLD: usize = 0;
 const HANDLE: usize = 1;
 pub(crate) const CARRY: usize = 2;
 
@@ -35,11 +33,6 @@ const HOLDER: &str = "transport/mqtt";
 pub struct Transport {
     pub member: Arc<Mutex<Mqtt>>,
     pending: Pending,
-    /// Whether to nudge at the next pass whatever is due: the first, and one after a message arrived, which may move
-    /// when a reading next falls due.
-    nudge: bool,
-    /// When the member asks after its sensors next, as the last nudge said.
-    next: Option<DateTime>,
 }
 
 impl Transport {
@@ -47,8 +40,6 @@ impl Transport {
         Transport {
             member: Arc::new(Mutex::new(member)),
             pending: Pending::default(),
-            nudge: true,
-            next: None,
         }
     }
 
@@ -112,26 +103,16 @@ impl Jobs for Transport {
 
     fn run(&mut self, job: usize, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         match job {
-            NUDGE => {
-                //  A MEMBER KEEPS THE AGENT RUNNING: what it senses goes on arriving whatever is wanted.
+            HOLD => {
+                //  A MEMBER KEEPS THE AGENT RUNNING: what it senses goes on arriving whatever is wanted. When a reading
+                //  is due, and telling its board to sense, are sensing's and actuation's (#1220).
                 pass.hold(HOLDER);
-                //  THE MEMBER'S POLICY: ask after its sensors when a reading has fallen due, or a message arrived
-                //  since, and otherwise wait until one falls due.
-                if self.nudge || self.next.is_some_and(|next| next <= pass.now) {
-                    self.nudge = false;
-                    let next = self.bus().nudge_until(pass.now)?;
-                    self.next = next;
-                }
-                if let Some(next) = self.next {
-                    pass.wake_at(next);
-                }
                 Ok(Vec::new())
             }
             HANDLE => {
                 let Some(message) = self.pending.oldest() else {
                     return Ok(Vec::new());
                 };
-                self.nudge = true;
                 let (written, heard, store, me) = {
                     let mut member = self.bus();
                     let written = member.handle(&message.topic, &message.payload, message.at.unwrap_or(pass.now))?;
@@ -153,7 +134,8 @@ impl Jobs for Transport {
 }
 
 /// THE BUS AS THE ROWS ABOVE SEE IT (`orexis_transport::Member`): a device that takes commands on a topic, its own or its
-/// board's, is a channel sent on; what a step commands is published there as the document it is, not retained.
+/// board's, is a channel sent on; what the operator sends there, a step's command or a nudge, is published as the
+/// document it is, not retained.
 pub struct Bus(pub Arc<Mutex<Mqtt>>);
 
 impl Member for Bus {

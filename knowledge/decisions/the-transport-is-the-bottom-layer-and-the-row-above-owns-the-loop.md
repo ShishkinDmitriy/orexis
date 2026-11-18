@@ -66,7 +66,7 @@ advances only where the agent waits, never past a real socket.
 # Amended 2026-11-18: actuation's namespace, payload and nudge
 
 The sovereign ruled three things the record left open, as #1220 began. **The actuation package owns `actuation:`**:
-`orexis-actuation/` declares its role, `actuation:Operator`, which depends on the executor, and the words of what an
+`orexis-actuation/` declares its role, `actuation:Operator`, and the words of what an
 agent holds and what a device changes (`actuation:hasActuator`, `actuation:actuates`, `actuation:actuatesProperty`),
 while the watering domain keeps its valve. **Actuation makes the payload**: the executor says what to actuate and how
 much, and actuation turns it into a device's bytes and keeps each act as a `sosa:Actuation`, as sensing turns bytes
@@ -80,6 +80,14 @@ a van is set two properties by one drive, its column and its row, so a pointer o
 is which, and a device per property made the van two actuators reached as one; and the key was already the domain's,
 written into its command's text. No `actuation:encodedBy` is declared beside it, JSON being the one encoding a device
 here takes, until a second one is wanted.
+
+The nudge is a setting too, `actuation:SenseNow` at `/sense`, sent to the sensor whose board takes commands when
+sensing says `sensing:ReadingDue`, and sensing owns its timing, `sensing:askedAgainAfterS` where the MQTT member's
+`mqtt:askedAgainAfterS` was. So the operator depends on no role: it was first made to depend on the executor, and an
+agent that only observes through a board that waits to be told would have had to play an executor to be told nothing
+of it. The retained `{"sleep_s": n}` went with the MQTT member's code and is not yet the operator's: nothing in the
+agent decides a board's interval, and it returns as a setting, retained by the member where the world says so, when
+something does.
 
 # What was refused
 

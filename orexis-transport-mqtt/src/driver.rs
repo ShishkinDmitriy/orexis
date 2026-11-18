@@ -4,8 +4,8 @@
 //! **WHAT THE WORLD SAYS AND WHAT FOLLOWS**: a sensor speaks MQTT when it `mqtt4ssn:observesTopic` a topic; the agent
 //! subscribes to the pattern of every `mqtt4ssn:TopicFilter` matching a topic one of its sensors publishes on, and a
 //! message is a sensor's when a pattern of its topic matches the channel. A command goes to the topic the device or
-//! its board `mqtt4ssn:listensToTopic`, by a pattern with no wildcard; `{"sleep_s": n}` retained, `{"sense": true}`
-//! and a step's command not. Which sensors are the agent's is its observer role's (`cadence::sensors`).
+//! its board `mqtt4ssn:listensToTopic`, by a pattern with no wildcard, not retained: a step's command and a nudge
+//! alike, each the document the operator made. Which sensors are the agent's is its observer role's (`cadence::sensors`).
 //!
 //! **A MESSAGE BECOMES OBSERVATIONS THROUGH SENSING, AND THE TRANSPORT KNOWS NO CODEC**: `handle` calls sensing's
 //! `received` once per sensor of the agent's whose pattern matches the topic.
@@ -31,14 +31,9 @@ use orexis::bind::{Value, bind};
 use orexis::ontology::{BELIEF, local_of};
 use orexis::rdf::repr;
 use orexis::store::{Store, Within, iri, value};
-use orexis_sensing::cadence::{lapsed, next_lapse, sensors};
+use orexis_sensing::cadence::sensors;
 use orexis_sensing::received::received;
 use orexis_speech::heard::heard;
-
-/// HOW SOON THE MEMBER ASKS A BOARD AGAIN that it told to sense and that has not answered, in seconds of the one
-/// timeline: a figure a role states (`mqtt:askedAgainAfterS`). Otherwise it asks when a reading next falls due
-/// (`cadence::next_lapse`).
-pub const ASKED_AGAIN_AFTER_S: &str = "http://example.org/orexis/mqtt#askedAgainAfterS";
 
 /// Whether a topic filter matches a topic name, as MQTT specifies: `+` matches one level, `#` the rest and may only
 /// end a filter, and a topic beginning with `$` is matched by no wildcard at its first level.
@@ -349,41 +344,6 @@ impl Mqtt {
         Ok(written)
     }
 
-    /// Tell the board of every sensor of this member's whose reading has fallen due to sense now, and say when to ask
-    /// again: a nudge later where a board was told, since it may not have heard, and otherwise when a reading next
-    /// falls due. Which readings have fallen due, and when one next will, is sensing's to say (`cadence`).
-    pub fn nudge_until(&mut self, now: DateTime) -> Result<Option<DateTime>, Error> {
-        let told = self.nudge(now)?;
-        let next = next_lapse(&self.beliefs, now)?;
-        if told.is_empty() {
-            return Ok(next);
-        }
-        let after_s = crate::figures::figure_of(&self.beliefs, ASKED_AGAIN_AFTER_S)?;
-        let again = now
-            .checked_add_day_time_duration(orexis::clock::seconds(after_s))
-            .unwrap_or(now);
-        Ok(Some(next.map_or(again, |n| if n < again { n } else { again })))
-    }
-
-    /// Tell the board of every sensor of this member's whose reading has fallen due to sense now; the sensors whose
-    /// board was told. Which readings have fallen due is sensing's to say (`cadence::lapsed`).
-    pub fn nudge(&mut self, now: DateTime) -> Result<Vec<String>, Error> {
-        let mine: BTreeSet<String> = self.topics()?.into_iter().map(|(s, _)| s).collect();
-        let mut asked: Vec<String> = Vec::new();
-        for (sensor, _) in lapsed(&self.beliefs, now)? {
-            if mine.contains(&sensor) && !asked.contains(&sensor) {
-                asked.push(sensor);
-            }
-        }
-        let mut told = Vec::new();
-        for sensor in asked {
-            if self.sense_now(&sensor)? {
-                told.push(sensor);
-            }
-        }
-        Ok(told)
-    }
-
     /// Whether this member reaches `device`.
     pub fn reaches(&self, device: &str) -> Result<bool, Error> {
         /// WHAT THIS MEMBER REACHES: a device that publishes on a topic, or listens on one, or whose board does.
@@ -404,22 +364,6 @@ impl Mqtt {
         let common = self.common()?;
         self.beliefs
             .ask(&bind(TAKES_Q, &[("device", Value::iri(device))])?, &strs(&common))
-    }
-
-    /// Standing policy, where the device accepts instruction: retained, so a board deep asleep finds it on waking.
-    pub fn set_cadence(&mut self, sensor: &str, sleep_s: i64) -> Result<bool, Error> {
-        let Some(topic) = self.command_topic(sensor)? else {
-            return Ok(false);
-        };
-        self.publish(sensor, &topic, &serde_json::json!({ "sleep_s": sleep_s }), true)
-    }
-
-    /// Ask for a reading now, best-effort.
-    pub fn sense_now(&mut self, sensor: &str) -> Result<bool, Error> {
-        match self.command_topic(sensor)? {
-            Some(topic) => self.publish(sensor, &topic, &serde_json::json!({ "sense": true }), false),
-            None => Ok(false),
-        }
     }
 
     /// Publish a step's command on the topic the actuator listens to, or its board's; not retained, since a command is
@@ -509,33 +453,6 @@ impl Mqtt {
             );
         }
         false
-    }
-
-    /// The topic name the sensor's board takes commands on: a pattern with no wildcard. None, said in the log once per
-    /// sensor, where the board listens nowhere or every pattern is a wildcard: said at every nudge, a minute's five
-    /// silent sensors were five incidents a minute, each keeping the log's window in the journal.
-    fn command_topic(&mut self, sensor: &str) -> Result<Option<String>, Error> {
-        /// THE PATTERNS OF THE FILTERS THAT MATCH THE TOPIC A SENSOR'S BOARD LISTENS ON.
-        const COMMANDS_Q: &str = "PREFIX mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#>
-        PREFIX ssn: <http://www.w3.org/ns/ssn/>
-        SELECT ?pattern WHERE {
-          ?board ssn:hasSubSystem $sensor ; mqtt4ssn:listensToTopic ?topic .
-          ?filter mqtt4ssn:matchesTopic ?topic ; mqtt4ssn:hasFilterPattern ?pattern }
-        ORDER BY ?pattern";
-        let patterns = self.patterns(COMMANDS_Q, &[("sensor", Value::iri(sensor))])?;
-        let name = patterns.iter().find(|p| no_wildcard(p)).cloned();
-        if name.is_none() && self.unreachable.insert(sensor.to_string()) {
-            log::warn!(
-                "{}: its board listens on {}, and none is a topic name to publish to",
-                local_of(sensor),
-                if patterns.is_empty() {
-                    "no topic".to_string()
-                } else {
-                    format!("{patterns:?}")
-                }
-            );
-        }
-        Ok(name)
     }
 }
 
@@ -783,7 +700,6 @@ mod tests {
     use std::collections::BTreeMap;
     use std::path::{Path, PathBuf};
 
-    use orexis::clock::seconds;
     use orexis::snapshots::{ME, now, stand_in, stand_in_with};
 
     use super::*;
@@ -855,10 +771,6 @@ mod tests {
         format!("{TEST}{local}")
     }
 
-    fn plus(by: f64) -> DateTime {
-        now().checked_add_day_time_duration(seconds(by)).unwrap()
-    }
-
     fn results(store: &Store) -> Vec<(String, f64)> {
         store
             .rows(
@@ -894,83 +806,30 @@ mod tests {
     }
 
     #[test]
-    fn a_command_goes_to_the_topic_the_board_listens_on_as_the_firmwares_document() {
+    fn a_document_for_a_sensor_goes_to_the_topic_its_board_listens_on_not_retained() {
         let store = stand_in(&world());
         let (mut driver, client) = bus(&store);
-        assert!(driver.set_cadence(&t("thermo"), 60).unwrap());
-        driver.sense_now(&t("hygro")).unwrap();
+        assert!(
+            driver
+                .actuate(&t("hygro"), &serde_json::json!({"sense": true}))
+                .unwrap()
+        );
         assert_eq!(
             client.0.lock().unwrap().published,
-            [
-                sent("sensors/board/command", r#"{"sleep_s": 60}"#, true),
-                sent("sensors/board/command", r#"{"sense": true}"#, false)
-            ]
+            [sent("sensors/board/command", r#"{"sense": true}"#, false)]
         );
-    }
-
-    #[test]
-    fn a_board_is_asked_to_sense_where_its_readings_have_fallen_due() {
-        let store = stand_in(&world());
-        let (mut driver, client) = bus(&store);
-        driver.handle("sensors/board/reading", BOARD_MESSAGE, now()).unwrap();
-        driver.nudge(plus(60.0)).unwrap();
-        assert!(client.0.lock().unwrap().published.is_empty());
-        driver.nudge(plus(300.0)).unwrap();
-        let published = client.0.lock().unwrap().published.clone();
-        assert!(!published.is_empty());
-        assert!(
-            published
-                .iter()
-                .all(|p| *p == sent("sensors/board/command", r#"{"sense": true}"#, false))
-        );
-    }
-
-    #[test]
-    fn a_nudge_waits_for_the_next_reading_to_fall_due_and_asks_a_board_it_told_again_a_minute_on() {
-        let store = stand_in(&world());
-        let (mut driver, client) = bus(&store);
-        assert_eq!(
-            driver.nudge_until(now()).unwrap(),
-            None,
-            "nothing read, nothing falls due"
-        );
-        driver.handle("sensors/board/reading", BOARD_MESSAGE, now()).unwrap();
-        let due = driver.nudge_until(plus(60.0)).unwrap().expect("a reading falls due");
-        assert!(due > plus(60.0), "not yet");
-        assert!(client.0.lock().unwrap().published.is_empty());
-        let late = plus(300.0);
-        assert!(due <= late);
-        assert_eq!(
-            driver.nudge_until(late).unwrap(),
-            Some(
-                late.checked_add_day_time_duration(orexis::clock::seconds(
-                    crate::figures::DEFAULTS.figure(ASKED_AGAIN_AFTER_S).unwrap(),
-                ))
-                .unwrap()
-            ),
-            "told to sense, and asked again a minute on"
-        );
-        assert!(!client.0.lock().unwrap().published.is_empty());
-    }
-
-    #[test]
-    fn a_reading_followed_by_the_next_has_not_fallen_due() {
-        let store = stand_in(&world());
-        let (mut driver, client) = bus(&store);
-        driver.handle("sensors/board/reading", BOARD_MESSAGE, now()).unwrap();
-        driver
-            .handle("sensors/board/reading", BOARD_MESSAGE, plus(180.0))
-            .unwrap();
-        driver.nudge(plus(300.0)).unwrap();
-        assert!(client.0.lock().unwrap().published.is_empty());
     }
 
     #[test]
     fn a_sensor_whose_board_listens_nowhere_takes_no_command() {
         let store = stand_in(&world());
         let (mut driver, client) = bus(&store);
-        assert!(!driver.set_cadence(&t("photometer"), 60).unwrap());
-        driver.sense_now(&t("probe")).unwrap();
+        assert!(!driver.takes_commands(&t("photometer")).unwrap());
+        assert!(
+            !driver
+                .actuate(&t("probe"), &serde_json::json!({"sense": true}))
+                .unwrap()
+        );
         assert!(client.0.lock().unwrap().published.is_empty());
     }
 

@@ -4,6 +4,7 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sensing: <http://example.org/orexis/sensing#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
@@ -17,8 +18,7 @@
 
 #  THE ROLE THIS PACKAGE SERVES (knowledge/domain/actuation/operator.md).
 actuation:Operator a owl:Class ; rdfs:subClassOf orexis:Role ; rdfs:label "Operator" ;
-    orexis:dependsOn execution:Executor ;
-    rdfs:comment "An agent that operates devices: what a step it takes commands is sent to the device through the transport, by the actuation package this role loads. It works beside an executor, whose steps are what it carries out on a device." .
+    rdfs:comment "An agent that operates devices: what a step it takes commands, and a board whose reading sensing says is due, is told through the transport, by the actuation package this role loads. It depends on no role: it acts on what an executor commands where one is played, and on what an observer says due where one is." .
 
 #  WHAT AN AGENT OPERATES, and what a device changes.
 actuation:hasActuator a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range sosa:Actuator ;
@@ -41,6 +41,18 @@ actuation:ActuatingTrigger a owl:Class ; rdfs:subClassOf actuation:Trigger ; rdf
     rdfs:comment "What starts an actuating: execution's `execution:Commanded`, beneath it here, naming the command graph a step's order kept (`execution:commands`)." .
 
 execution:Commanded rdfs:subClassOf actuation:ActuatingTrigger .
+
+actuation:Nudging a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Nudging" ;
+    rdfs:comment "The boards of sensors whose readings are due told to sense: each sensor sent `actuation:SenseNow` set true, at its pointer, through the transport member that reaches it, not kept, since a nudge is no step's act; one no member reaches passed over, said in the log." .
+
+actuation:NudgingTrigger a owl:Class ; rdfs:subClassOf actuation:Trigger ; rdfs:label "Nudging trigger" ;
+    rdfs:comment "What starts a nudging: sensing's `sensing:ReadingDue`, beneath it here, naming each sensor due (`sensing:due`)." .
+
+sensing:ReadingDue rdfs:subClassOf actuation:NudgingTrigger .
+
+actuation:SenseNow a owl:Class ; rdfs:subClassOf sosa:ActuatableProperty ; rdfs:label "Sense now" ;
+    actuation:commandPointer "/sense" ;
+    rdfs:comment "Whether a board reads its sensors now: what a nudge sets true, sent as `sense`, so a board that wakes on its own time reports at once." .
 
 #  WHAT A DEVICE IS SENT, the mirror of what sensing reads: a property says where in the document its value is written,
 #  as a sensor says where in the document its reading is (`sensing:readingPointer`).

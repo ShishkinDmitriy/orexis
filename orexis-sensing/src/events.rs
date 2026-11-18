@@ -16,7 +16,7 @@ use oxsdatatypes::DateTime;
 use orexis::events::{Event, Field, Mark, Number, Point};
 use orexis::ontology::local_of;
 
-use crate::ontology::{INTO, OBSERVATION_GRAPH, PERCEIVED, REVISES};
+use crate::ontology::{DUE, INTO, OBSERVATION_GRAPH, PERCEIVED, READING_DUE, REVISES};
 
 pub const FIELD: &str = "value";
 pub const RAW: &str = "raw";
@@ -218,5 +218,26 @@ impl Event for Perceived {
             .collect();
         about.push((INTO, Term::NamedNode(NamedNode::new_unchecked(OBSERVATION_GRAPH))));
         about
+    }
+}
+
+/// The readings of these sensors have fallen due and none came: said for the operator, beneath its trigger, to tell
+/// each one's board to sense.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ReadingDue {
+    pub sensors: Vec<String>,
+}
+
+impl Event for ReadingDue {
+    fn kind(&self) -> Option<&'static str> {
+        Some(READING_DUE)
+    }
+
+    fn about(&self) -> Vec<(&'static str, Term)> {
+        self.sensors
+            .iter()
+            .filter_map(|s| NamedNode::new(s.as_str()).ok())
+            .map(|s| (DUE, Term::NamedNode(s)))
+            .collect()
     }
 }

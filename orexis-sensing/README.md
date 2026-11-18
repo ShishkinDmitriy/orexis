@@ -17,6 +17,7 @@ no reader of the mind is handed one.
 | an asked sensor's answer (an arrival) | the member asked | handed to `received`: a percept written per reading |
 | a graph of kind `sensing:ObservationGraph` written | itself | `sensing:Perceived` said to belief |
 | `sensing:ObservingTrigger`: `belief:Revised` | belief | `sensing:Observing` |
+| the start, a percept written, and the clock when a reading next falls due | | `sensing:ReadingDue` said for the sensors due that a member is sent on, again `sensing:askedAgainAfterS` on (60 s where the role says none) while no reading comes |
 | the clock, as often as the observer's role says (`sensing:askedEveryS`), every 60 s of the agent's time where it says nothing | | the ask after silent sensors (`missed`) |
 
 ## Activities
@@ -31,5 +32,5 @@ is said stuck by sensing's rule.
 
 ## What it says
 
-`sensing:Perceived` (beneath `belief:RevisingTrigger`), each observation, how many sensors are silent, and each
+`sensing:Perceived` (beneath `belief:RevisingTrigger`), `sensing:ReadingDue` (beneath `actuation:NudgingTrigger`), each observation, how many sensors are silent, and each
 sensor doubted or no longer doubted.

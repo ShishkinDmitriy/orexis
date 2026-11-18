@@ -14,12 +14,11 @@ use orexis::task::{Every, Handed, Package, Woke, sooner};
 
 use std::sync::Arc;
 
-use crate::transport::{Bus, CARRY, CARRYING_TRIGGER, NUDGE, TELL, TELLING_TRIGGER};
+use crate::transport::{Bus, CARRY, CARRYING_TRIGGER, HOLD, TELL, TELLING_TRIGGER};
 use orexis_transport::Jobs;
 use orexis_transport::Members;
 
 pub mod driver;
-pub mod figures;
 mod transport;
 
 pub use transport::Transport;
@@ -53,7 +52,7 @@ const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
 /// ITS START, which every package this binary holds is given: it joins where a role the self plays needs what it
 /// carries and the world wires it, and declines otherwise; joined, its member is made and listens; checked, it says
 /// it holds the agent and ends there as it boots; otherwise what follows is ITS TASK, which waits for
-/// an event beneath its triggers, an arrival or the instant a reading next falls due, and once nothing more waits to
+/// an event beneath its triggers or an arrival, and once nothing more waits to
 /// be heard hands on what arrived; and it stops the member as it ends.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
@@ -87,7 +86,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         let mut hears = handed.events.hears();
         let mut arrived = handed.arrived();
         transport.listen(&arrived)?;
-        let mut timers = vec![(Every::new(0.0), NUDGE)];
+        let mut timers = vec![(Every::new(0.0), HOLD)];
         hears.event(CARRYING_TRIGGER, CARRY);
         hears.event(TELLING_TRIGGER, TELL);
         if !handed.booted().await? {
