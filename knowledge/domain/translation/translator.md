@@ -99,3 +99,10 @@ answers in words; `translation:rows`, how many rows or points one read hands the
 how long the model's call waits for the agent to hold a statement to what the chat allows, sixty seconds; and
 `translation:calledWithinS` and `translation:retries`, how long one call of the model may take and how often a
 failing one is asked again, sixty seconds and three.
+
+And what the model is told first, on the role too, its default the package's ontology's whole text:
+`translation:conversePrompt`, when it answers a person, before the briefing, the chat's
+[style](/domain/translation/style.md) and the instant; and `translation:sayPrompt`, when it phrases a statement the
+agent says to one, before the style. A world states another of either on a translator's role, in another language or
+another voice, and every other agent keeps the default. What the code reads back of an answer stays the code's: the
+line parting two messages and the word an unaddressed agent keeps silent with.
