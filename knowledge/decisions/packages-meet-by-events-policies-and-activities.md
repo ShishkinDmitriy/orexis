@@ -10,7 +10,7 @@ description: >-
   start and end are events in turn and which says what happens inside it. The binary's links between parts go, and
   planning, execution and coordination stop running every pass for no cause. Refused - signals connected at link,
   events as telemetry alone, triggering on graph kinds alone, handlers as Tokio tasks, and a shared or static
-  Planner. Not built yet; issue #1119 holds the steps.
+  Planner. Built in the eight steps of #1119.
 ---
 
 # What was true (on main at d4dfd6f0)
