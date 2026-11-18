@@ -6,6 +6,9 @@ pub const STATEMENT_GRAPH: &str = "http://example.org/orexis/speech#StatementGra
 /// What speech does as an activity, what starts it, and what that names: each statement, each agent it is to.
 pub const SPEAKING: &str = "http://example.org/orexis/speech#Speaking";
 pub const SPEAKING_TRIGGER: &str = "http://example.org/orexis/speech#SpeakingTrigger";
+/// What carrying the agent's own words is, and what starts it.
+pub const CARRYING: &str = "http://example.org/orexis/speech#Carrying";
+pub const CARRYING_TRIGGER: &str = "http://example.org/orexis/speech#CarryingTrigger";
 pub const STATEMENT: &str = "http://example.org/orexis/speech#statement";
 pub const TO: &str = "http://example.org/orexis/speech#to";
 /// A document the agent said, as the event it is said as.

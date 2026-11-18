@@ -21,36 +21,7 @@
 #
 #  A TRANSPORT IS NO ROLE, so it declares none: it is loaded where a loaded role needs bytes and the
 #  society wires a bus (agent/runtime.py, `TRANSPORTS`). What it ships is the one need a role states
-#  in this transport's words — a SPEAKER HEARS ON A TOPIC IT LISTENS TO — since speech, beneath the
-#  transport, speaks none of them; `orexis-onboard` refuses a speaker whose world names no topic it
+#  in this transport's words — a SPEAKER HEARS ON A TOPIC IT LISTENS TO — since speech, above the
+#  transport, speaks none of any member's; `orexis-onboard` refuses a speaker whose world names no topic it
 #  listens to, as it refuses a topic an agent listens to that no speaker hears
 #  (a-package-is-loaded-only-for-a-role-the-agent-is-declared-in).
-
-@prefix speech: <http://example.org/orexis/speech#> .
-
-#  WHAT THE MEMBER DOES OVER A STRETCH OF TIME, a `prov:Activity`, and its trigger: the agent's own words translation
-#  kept for a channel, speech's event, which the member - above speech - puts beneath it
-#  (knowledge/domain/kernel/policy.md).
-
-mqtt:Trigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Trigger" ;
-    rdfs:comment "The MQTT transport's trigger, abstract: an event beneath it is beneath the one trigger below." .
-
-mqtt:Carrying a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Carrying" ;
-    rdfs:comment "Sending the agent's own words a prose graph keeps on their channel, where the MQTT member carries it, as a reply where the words name one and the carrier threads it." .
-
-mqtt:CarryingTrigger a owl:Class ; rdfs:subClassOf mqtt:Trigger ; rdfs:label "Carrying trigger" ;
-    rdfs:comment "What starts a carrying: speech's `speech:ProseKept`, beneath it here, naming the prose graph whose words it carries where they are the agent's own (`speech:kept`). The policy judges by the graph's provenance: a person's words it kept itself are translation's." .
-
-speech:ProseKept rdfs:subClassOf mqtt:CarryingTrigger .
-
-#  AND A DOCUMENT THE AGENT SAID, speech's `speech:Said`, which the member - above speech - puts beneath its telling
-#  trigger, since a peer is reached over the bus.
-
-mqtt:Telling a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Telling" ;
-    rdfs:comment "Publishing a document the agent said to each agent it is to that listens on a topic of the bus, the document read back from the store as it was said." .
-
-mqtt:TellingTrigger a owl:Class ; rdfs:subClassOf mqtt:Trigger ; rdfs:label "Telling trigger" ;
-    rdfs:comment "What starts a telling: speech's `speech:Said`, beneath it here, naming each statement of the document (`speech:statement`) and each agent it is to (`speech:to`). The policy tells it to each that listens on the bus, and passes over a person in silence." .
-
-speech:Said rdfs:subClassOf mqtt:TellingTrigger .
-

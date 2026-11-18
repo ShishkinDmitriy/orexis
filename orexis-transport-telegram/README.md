@@ -13,12 +13,8 @@ own bot.
 | Heard | Said by | Starts |
 |---|---|---|
 | the clock, as often as a role says (`telegram:polledEveryS`), every 3 s where none says | | the bot polled on a thread of its own |
-| a message polled (an arrival) | Telegram | the words kept as a `speech:ProseGraph`, `speech:ProseKept` said |
-| `telegram:CarryingTrigger`: `speech:ProseKept` | translation | `telegram:Carrying`, where the words are the agent's own |
-| `telegram:CarryingTrigger`: `speech:WritingAnnounced` | translation | `telegram:Carrying`, showing the agent writing |
+| a message polled (an arrival) | Telegram | left with speech, listening on the chat, as the chat's words (`orexis_transport::chat::Words`) |
 
 ## Activities
 
-| Activity | What happens |
-|---|---|
-| `telegram:Carrying` | the agent's own words are sent on the chat's channel, as a reply where the words name one; or the chat is shown the agent writing |
+None: what it is handed and sent is a row's above, which listens and sends through it.

@@ -35,3 +35,5 @@ orexis-journal = { workspace = true }
 orexis-transport-email = { workspace = true }
 orexis-transport-telegram = { workspace = true }
 orexis-transport-mqtt = { workspace = true }
+# THE TRANSPORT'S CONTRACT, for the stand-in carrier the test adds to the agent's members: a test's alone.
+orexis-transport = { workspace = true }

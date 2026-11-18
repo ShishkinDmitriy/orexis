@@ -3,18 +3,18 @@
 //!
 //! - [`driver`]: what the agent subscribes to, whose a message is, where a command goes and as what, MQTT's own
 //!   filter matching, and the client per broker the environment names;
-//! - `transport`: the member's part, which leaves each message with the row listening for it, keeps a peer's
-//!   document by speech, and tells and commands what the agent says and does;
+//! - `transport`: the member's part, which leaves each message with the row listening for it, and the bus as the
+//!   rows above listen and send on it;
 //! - the start, below the modules, and nothing else: the member made and listening, and the task that holds the agent.
 //!
-//! A CHAT ON A TOPIC is carried too: a person's prose heard there is kept for translation, which the part hands it to,
-//! and words said back are published as `{"from": the agent, "text": …}`.
+//! A CHAT ON A TOPIC is carried too: what is written there is left with speech as the words on a chat's channel, and
+//! words speech sends there are published as `{"from": the agent, "text": …}`.
 
-use orexis::task::{Every, Handed, Package, Woke, sooner};
+use orexis::task::{Every, Handed, Package, sooner};
 
 use std::sync::Arc;
 
-use crate::transport::{Bus, CARRY, CARRYING_TRIGGER, HOLD, TELL, TELLING_TRIGGER};
+use crate::transport::{Bus, HOLD};
 use orexis_transport::Jobs;
 use orexis_transport::Members;
 
@@ -51,9 +51,8 @@ const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
 
 /// ITS START, which every package this binary holds is given: it joins where a role the self plays needs what it
 /// carries and the world wires it, and declines otherwise; joined, its member is made and listens; checked, it says
-/// it holds the agent and ends there as it boots; otherwise what follows is ITS TASK, which waits for
-/// an event beneath its triggers or an arrival, and once nothing more waits to
-/// be heard hands on what arrived; and it stops the member as it ends.
+/// it holds the agent and ends there as it boots; otherwise what follows is ITS TASK, which waits for an arrival and
+/// leaves each message with the row listening for it; and it stops the member as it ends.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         if !orexis_transport::wired(&handed, WORDS, WIRED)? {
@@ -83,47 +82,33 @@ fn start(handed: Handed) -> orexis::task::Starting {
         handed
             .provided
             .alter(|members: &mut Members| members.add(Arc::new(bus)));
-        let mut hears = handed.events.hears();
         let mut arrived = handed.arrived();
-        transport.listen(&arrived)?;
+        transport.listen(&arrived);
         let mut timers = vec![(Every::new(0.0), HOLD)];
-        hears.event(CARRYING_TRIGGER, CARRY);
-        hears.event(TELLING_TRIGGER, TELL);
         if !handed.booted().await? {
             return Ok(());
         }
-        let mut heard = None;
-        let mut due = None;
+        let mut due;
         loop {
             let mut turn = handed.turn();
-            if let Some(Woke::Event(tag, event)) = heard.take() {
-                let wrote = transport.heard_event(tag, &event, &mut turn);
-                turn.done(wrote)?;
-            }
-            if hears.is_empty() {
-                let wrote = transport.queued(&mut turn);
-                turn.done(wrote)?;
-                for (every, tag) in &mut timers {
-                    if every.due(turn.now) {
-                        let wrote = transport.run(*tag, &mut turn);
-                        turn.done(wrote)?;
-                        let wrote = transport.queued(&mut turn);
-                        turn.done(wrote)?;
-                    }
+            let wrote = transport.queued(&mut turn);
+            turn.done(wrote)?;
+            for (every, tag) in &mut timers {
+                if every.due(turn.now) {
+                    let wrote = transport.run(*tag, &mut turn);
+                    turn.done(wrote)?;
+                    let wrote = transport.queued(&mut turn);
+                    turn.done(wrote)?;
                 }
-                due = timers
-                    .iter()
-                    .fold(turn.next(), |soonest, (every, _)| sooner(soonest, every.at()));
             }
-            heard = tokio::select! {
+            due = timers
+                .iter()
+                .fold(turn.next(), |soonest, (every, _)| sooner(soonest, every.at()));
+            tokio::select! {
                 biased;
                 _ = handed.stopped() => break,
-                woke = hears.next() => match woke {
-                    Some(woke) => Some(woke),
-                    None => break,
-                },
-                _ = arrived.wait() => None,
-                _ = handed.sleep_until(due) => None,
+                _ = arrived.wait() => {},
+                _ = handed.sleep_until(due) => {},
             };
         }
         transport.stop();

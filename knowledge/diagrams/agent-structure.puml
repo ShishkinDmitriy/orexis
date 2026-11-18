@@ -105,11 +105,11 @@ RT  --> acts
 RT  --> self
 RT  --> des
 RT  --> rules
-TR  --> prs : a person's words
-TR  --> TRL : speech:ProseKept
+SP  --> prs : a person's words
+SP  --> TRL : speech:ProseKept
 TRL --> SP : a statement
 TR  --> SEN : bytes
-TR  --> SP : a document
+TR  --> SP : a document · a chat's words
 SEN --> obs
 SEN --> past : an older one, re-filed
 SEN --> fc

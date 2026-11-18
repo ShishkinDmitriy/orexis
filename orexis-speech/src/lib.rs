@@ -12,8 +12,10 @@
 
 use orexis::task::{Handed, Package, Woke};
 
-use crate::ontology::{SPEAKING_TRIGGER, STATEMENT_GRAPH};
-use crate::speaker::{SPEAK, STATED};
+use orexis_transport::Members;
+
+use crate::ontology::{CARRYING_TRIGGER, SPEAKING_TRIGGER, STATEMENT_GRAPH};
+use crate::speaker::{CARRY, SPEAK, STATED};
 
 pub mod events;
 pub mod extract;
@@ -37,8 +39,9 @@ const ROLE: &str = "http://example.org/orexis/speech#Speaker";
 
 /// SPEECH'S START, which every package this binary holds is given: it joins where the self plays a speaker and
 /// declines otherwise; joined, its speaker is made and what a restart finds unextracted extracted; it says it booted, and checked it ends
-/// there; otherwise what follows is ITS TASK, which waits for a statement written or an
-/// event beneath its trigger, and once nothing more waits to be heard hands on what it queued for itself.
+/// there; otherwise what follows is ITS TASK, which listens on the agent's own channel and its chats' through the
+/// members, waits for a statement written, an event beneath its triggers or an arrival, and once nothing more waits to
+/// be heard keeps what arrived and hands on what it queued for itself.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         if !handed.plays(&[ROLE])? {
@@ -51,10 +54,14 @@ fn start(handed: Handed) -> orexis::task::Starting {
         let mut hears = handed.events.hears();
         hears.graph(STATEMENT_GRAPH, STATED);
         hears.event(SPEAKING_TRIGGER, SPEAK);
+        hears.event(CARRYING_TRIGGER, CARRY);
         let mut arrived = handed.arrived();
+        speaker.inbox.wakes(arrived.wake());
         if !handed.booted().await? {
             return Ok(());
         }
+        //  THE CHANNELS IT LISTENS ON, once every member has added itself: the agent's own and its chats'.
+        speaker.listen(&handed.provided.share::<Members>())?;
         let mut heard = None;
         let mut due = None;
         loop {
@@ -71,6 +78,8 @@ fn start(handed: Handed) -> orexis::task::Starting {
                 _ => {}
             }
             if hears.is_empty() {
+                let wrote = speaker.arrived(&mut turn);
+                turn.done(wrote)?;
                 let wrote = speaker.queued(&mut turn);
                 turn.done(wrote)?;
                 due = turn.next();

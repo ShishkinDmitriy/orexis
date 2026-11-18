@@ -84,8 +84,10 @@ here takes, until a second one is wanted.
 A row asks a member for the way it means to use a channel, `reaches(channel, exchange)`, where the contract first had a
 member answer the one way it reached it: a chat's channel is listened to and sent on, so one answer per channel could
 not say both. Sensing listens to its sensors on a topic through the contract, the bus subscribing as it is listened to;
-speech's listening, a peer's document and a chat's prose, moves with the chat carriers' (#1221), since speech cannot
-depend on the transport family while the family's `chat` feature depends on speech.
+and speech listens too: on the agent's own channel, where a peer's document arrives, and on each chat's, the words of a
+chat crossing the contract as `orexis_transport::chat::Words`, speech keeping a person's as prose and sending the
+agent's back, and telling a peer through the member that reaches it. The family's chat carrier was a feature depending
+on speech, which made that a cycle; it depends on nothing above it now, and no member imports speech.
 
 The nudge is a setting too, `actuation:SenseNow` at `/sense`, sent to the sensor whose board takes commands when
 sensing says `sensing:ReadingLapsed`, and sensing owns its timing, `sensing:askedAgainAfterS` where the MQTT member's

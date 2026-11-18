@@ -1193,6 +1193,7 @@ dependencies = [
  "inventory",
  "log",
  "orexis",
+ "orexis-transport",
  "oxigraph",
  "oxsdatatypes",
  "tokio",
@@ -1207,6 +1208,7 @@ dependencies = [
  "orexis",
  "orexis-journal",
  "orexis-speech",
+ "orexis-transport",
  "orexis-transport-email",
  "orexis-transport-mqtt",
  "orexis-transport-telegram",
@@ -1225,8 +1227,8 @@ name = "orexis-transport"
 version = "0.2.0"
 dependencies = [
  "orexis",
- "orexis-speech",
  "oxsdatatypes",
+ "serde_json",
 ]
 
 [[package]]
@@ -1239,7 +1241,6 @@ dependencies = [
  "log",
  "mail-parser",
  "orexis",
- "orexis-speech",
  "orexis-transport",
  "oxigraph",
  "oxsdatatypes",
@@ -1268,7 +1269,6 @@ dependencies = [
  "inventory",
  "log",
  "orexis",
- "orexis-speech",
  "orexis-transport",
  "oxigraph",
  "oxsdatatypes",
@@ -1284,7 +1284,6 @@ dependencies = [
  "inventory",
  "log",
  "orexis",
- "orexis-speech",
  "orexis-transport",
  "oxigraph",
  "oxsdatatypes",

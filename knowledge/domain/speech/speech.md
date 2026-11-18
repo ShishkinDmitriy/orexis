@@ -17,7 +17,8 @@ Agent 0.2.0 it is already a document when it arrives: its graphs are named, and 
 says what each one is. So there is no pipeline, only a door. It is loaded for an agent declared a
 [speaker](/domain/speech/speaker.md), and for no other.
 
-- **`heard(store, me, payload)`** keeps a document a transport received on the agent's own topic, as
+- **`heard(store, me, payload)`** keeps a document that arrived on the agent's own channel, which speech listens on
+  through the transport member that reaches it, as
   [statements](/domain/speech/statement.md): every graph it names, whatever kind it says, arrived
   `orexis:Received` and the agent's own. A graph of the same name already held must have arrived
   received too, so a host saying its round again replaces the round its bidders hold, and no peer
