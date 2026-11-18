@@ -103,6 +103,10 @@ poll and a blocking post on speech's turn were. The one client HTTP and Telegram
 member makes its client with its own figure for how long a call may take (`http:fetchedWithinS`,
 `telegram:calledWithinS`), and one agent's two connection pools cost nothing a plan branches on.
 
+**Email is on `async-imap` and `lettre`'s Tokio SMTP** (#1222), its TLS tokio-rustls over the webpki roots, as
+Telegram's is: a poll one at a time and the agent's letters sent by one task in the order they were said, where a
+thread per poll and a blocking send on speech's turn were. No member spawns an OS thread any more.
+
 # What was refused
 
 - **A member calling up into the row its message is for.** It is what the code did: the bottom of the stack

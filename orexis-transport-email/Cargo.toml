@@ -11,15 +11,20 @@ path = "src/lib.rs"
 
 [dependencies]
 inventory.workspace = true
-tokio.workspace = true
+tokio = { workspace = true, features = ["net"] }
 orexis = { workspace = true }
 orexis-transport = { workspace = true }
 oxigraph.workspace = true
 oxsdatatypes = "0.2"
 log = "0.4"
 # rustls, as the bus and the web are spoken, so the image needs no CA bundle and no OpenSSL.
-imap = { version = "3.0.0-alpha.15", default-features = false, features = ["rustls-tls"] }
-lettre = { version = "0.11", default-features = false, features = ["smtp-transport", "builder", "rustls-tls"] }
+# AWAITED ON THE AGENT'S RUNTIME, as every call it makes is: IMAP over a TLS stream of tokio's, and SMTP by lettre's
+# Tokio transport.
+async-imap = { version = "0.12", default-features = false, features = ["runtime-tokio"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring"] }
+webpki-roots = "1"
+futures-util = { version = "0.3", default-features = false }
+lettre = { version = "0.11", default-features = false, features = ["smtp-transport", "builder", "tokio1-rustls-tls"] }
 mail-parser = "0.11"
 # THE ONE CRYPTO PROVIDER the mailbox's TLS is spoken with, installed before it connects, since two crates beneath
 # would otherwise each bring one and rustls refuses to pick.
