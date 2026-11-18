@@ -28,7 +28,7 @@ agent's [journal](/domain/kernel/journal.md)'s, each saying which (`onboarding:a
 
 The installation also says **where the language model answers**, where an agent of this host may be
 a [translator](/domain/translation/translator.md): one `onboarding:Model` with the `schema:url` of its
-API, which onboarding states of each [model](/domain/translation/model.md) a translator's role names. Which model and the key are no deployment fact:
+API, which onboarding states of each [model](/domain/llm/model.md) a translator's role names. Which model and the key are no deployment fact:
 they are `infra/secrets/model.env`, template `infra/model.env.example`, mounted into each translating
 agent's container and no other, as the admin token is mounted into no agent's. An installation naming
 no model has no agent translate, and a world with one that does is refused, as a monitored world is

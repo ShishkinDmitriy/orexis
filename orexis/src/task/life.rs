@@ -321,11 +321,21 @@ impl Handed {
     /// a role its roles depend on (`orexis:dependsOn`) - a role depending on nothing waiting on nobody, and none
     /// waiting once every other booting has ended. The order is the vocabulary's: the package names no other.
     pub async fn joins(&self, documents: &Documents) -> Result<(), Error> {
+        self.joins_with(documents, &[]).await
+    }
+
+    /// THE PACKAGE JOINS BRINGING THE DOCUMENTS OF A FAMILY IT IS OF BESIDE ITS OWN, `beside` first, as `joins`: a
+    /// family's crate registers no package, so the words its members share are brought by each member that speaks
+    /// them, `orexis-llm/`'s by a package asking a model; brought twice, a document is one graph, named by its crate.
+    pub async fn joins_with(&self, documents: &Documents, beside: &[&Documents]) -> Result<(), Error> {
         let life = self.life()?;
         let mut life = life.lock().await;
         {
             let mut boot = self.run.boot.lock().expect("a boot nobody poisoned");
             if let Some(begun) = boot.begun.as_mut() {
+                for family in beside {
+                    begun.bring(&self.store, family)?;
+                }
                 begun.bring(&self.store, documents)?;
             }
             boot.joined.push((life.package.clone(), documents.krate));

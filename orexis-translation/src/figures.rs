@@ -10,5 +10,3 @@ pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
 pub const TURNS: &str = "http://example.org/orexis/translation#turns";
 pub const ROWS: &str = "http://example.org/orexis/translation#rows";
 pub const ANSWERED_WITHIN_S: &str = "http://example.org/orexis/translation#answeredWithinS";
-pub const CALLED_WITHIN_S: &str = "http://example.org/orexis/translation#calledWithinS";
-pub const RETRIES: &str = "http://example.org/orexis/translation#retries";

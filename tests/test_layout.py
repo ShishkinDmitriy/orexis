@@ -2278,7 +2278,9 @@ def test_a_crates_readme_names_every_activity_and_trigger_its_ontology_declares(
 
 @pytest.mark.parametrize("crate", sorted(CRATES))
 def test_a_crate_brings_every_document_it_holds_and_names_none_it_does_not(crate):
-    """A PACKAGE BRINGS ITS OWN DOCUMENTS as it joins (`handed.joins(&DOCUMENTS)`): the boot reads no tree of crates,
+    """A PACKAGE BRINGS ITS OWN DOCUMENTS as it joins (`handed.joins(&DOCUMENTS)`), and a family's crate, which registers
+    no package, has a package of it bring them beside its own (`joins_with(&DOCUMENTS, &[&orexis_llm::DOCUMENTS])`):
+    the boot reads no tree of crates,
     so a document a crate holds and does not name in its documents (`orexis::documents!`) is one no agent ever reads,
     silently — an empty result is no error. So every `.ttl` and `.trig` at a crate's root is named there, and every
     name there is a file, and a crate naming any brings them; but for `requirements.ttl`, which is onboarding's and no
@@ -2293,8 +2295,14 @@ def test_a_crate_brings_every_document_it_holds_and_names_none_it_does_not(crate
     for listed in re.findall(r"DOCUMENTS:\s*orexis::task::Documents\s*=\s*orexis::documents!\(([^)]*)\)", sources):
         named |= set(re.findall(r'"([^"]+)"', listed))
     assert named == held, f"{crate}/ holds {sorted(held)} and its documents name {sorted(named)}"
-    if named:
-        assert "joins(&DOCUMENTS)" in sources, f"{crate}/ names its documents and its start never brings them"
+    if named and "inventory::submit!" not in sources:
+        #  A FAMILY'S CRATE REGISTERS NO PACKAGE, so its documents are brought by a package of it, beside its own.
+        ident = crate.replace("-", "_")
+        bringers = [c for c in sorted(CRATES) if c != crate and f"&{ident}::DOCUMENTS" in "\n".join(
+            q.read_text() for q in sorted((REPO_ROOT / c / "src").rglob("*.rs")))]
+        assert bringers, f"{crate}/ registers no package and names its documents, and no package brings them beside its own"
+    elif named:
+        assert re.search(r"joins(_with)?\(&DOCUMENTS", sources), f"{crate}/ names its documents and its start never brings them"
     nested = [p for p in root.rglob("*") if p.suffix in {".ttl", ".trig"} and p.parent != root
               and not ({"tests", "target", "node_modules"} & set(p.relative_to(root).parts))]
     assert not nested, f"{crate}/ holds documents below its root, which nothing brings: {nested}"

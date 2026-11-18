@@ -59,6 +59,7 @@ SENSING = "http://example.org/orexis/sensing#"
 METRICS_NS = "http://example.org/orexis/metrics#"
 #  Each link a role names a service by, as this module's callers say it, with the property it is.
 TRANSLATION = "http://example.org/orexis/translation#"
+LLM = "http://example.org/orexis/llm#"
 _LINKS = {"tracedBy": JOURNAL + "tracedBy", "archivedIn": JOURNAL + "archivedIn", "servedAt": JOURNAL + "servedAt",
           "readingsArchivedIn": SENSING + "archivedIn", "writtenTo": METRICS_NS + "writtenTo",
           "translatedBy": TRANSLATION + "translatedBy"}
@@ -128,7 +129,7 @@ def derive(world: str) -> list[tuple[str, str, ox.NamedNode | ox.Literal]]:
                              f"(translation:translatedBy) and the installation names no onboarding:Model — state "
                              f"where one answers in infra/installation.ttl, or take the link off the role")
         for iri in models:
-            statements += [(iri, _TYPE, ox.NamedNode(TRANSLATION + "Model")), (iri, SCHEMA + "url", ox.Literal(url))]
+            statements += [(iri, _TYPE, ox.NamedNode(LLM + "Model")), (iri, SCHEMA + "url", ox.Literal(url))]
     #  EACH BROKER THE WORLD'S SOCIETY NAMES, at the url an agent reaches it at: TLS where the broker listens so,
     #  since an agent of a world with a bus holds a certificate. The society says which agent is connected to which.
     if reading.BUS in reading.premises(world_dir(world)):
@@ -155,7 +156,7 @@ def derivation_text(world: str, statements=None) -> str:
     statements = derive(world) if statements is None else statements
     spoken = {s.rsplit("#", 1)[0] + "#" for s, _, _ in statements if "#" in s} - {OREXIS}
     prefixes = {"journal": JOURNAL, "orexis": OREXIS, "schema": SCHEMA,
-                **({"translation": TRANSLATION} if any(str(o).find(TRANSLATION) >= 0 for _, _, o in statements) else {}), **({"": spoken.pop()} if len(spoken) == 1 else {})}
+                **({"llm": LLM} if any(str(o).find(LLM) >= 0 for _, _, o in statements) else {}), **({"": spoken.pop()} if len(spoken) == 1 else {})}
     return derived.text(DEPLOYMENT, statements, prefixes, _HEADER)
 
 

@@ -1,0 +1,17 @@
+# THE LANGUAGE MODEL FAMILY: what every package asking a language model shares and nothing else reads — the model's
+# client and its words, `llm:`. No package: it registers nothing, plays no role and runs no task, and a package asking
+# a model depends on it as a transport member depends on `orexis-transport`.
+[package]
+name = "orexis-llm"
+version = "0.2.0"
+edition.workspace = true
+license.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+orexis = { workspace = true }
+serde_json = { version = "1", features = ["preserve_order"] }
+ureq = "2"
+log = "0.4"

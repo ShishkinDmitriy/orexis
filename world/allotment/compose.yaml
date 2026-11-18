@@ -68,6 +68,7 @@ services:
       - ../../orexis-journal:/app/orexis-journal:ro
       - ../../orexis-journal-otlp:/app/orexis-journal-otlp:ro
       - ../../orexis-journal-oxigraph:/app/orexis-journal-oxigraph:ro
+      - ../../orexis-llm:/app/orexis-llm:ro
       - ../../orexis-metrics:/app/orexis-metrics:ro
       - ../../orexis-planning:/app/orexis-planning:ro
       - ../../orexis-prediction:/app/orexis-prediction:ro

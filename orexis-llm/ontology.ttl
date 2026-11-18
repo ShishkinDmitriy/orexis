@@ -1,0 +1,32 @@
+@prefix llm: <http://example.org/orexis/llm#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  OREXIS LLM: the words of a language model and of asking one, which every package asking a model shares and brings
+#  beside its own as it joins; no package of its own (knowledge/domain/llm/model.md). Which model a role asks and what
+#  it tells it are the role's, in its package's words: a translator names its model by `translation:translatedBy` and
+#  its prompts by `translation:conversePrompt` and `translation:sayPrompt`.
+
+llm:Model a owl:Class ; rdfs:label "Model" ;
+    rdfs:comment "A language model the world is connected to, answering at its `schema:url`, which the world's deployment graph (`orexis:DeploymentGraph`) states. A package asking one finds it there as it starts, by the role that names it; which model it is and its key are the agent's secret, never a graph." .
+
+#  HOW A ROLE ASKS ITS MODEL is the role's to say, on the role in the agent's self graph, and the shape's default
+#  below where the role says none.
+
+llm:calledWithinS a owl:DatatypeProperty ; rdfs:label "called within, in seconds" ;
+    rdfs:domain orexis:Role ;
+    rdfs:comment "How long one call of the model may take before it is given up, in real seconds, said of a role that asks a model. Sixty where the role says none." .
+
+llm:retries a owl:DatatypeProperty ; rdfs:label "retries" ;
+    rdfs:domain orexis:Role ;
+    rdfs:comment "How often a model that fails to answer is asked again before the call is given up, said of a role that asks a model. Three where the role says none." .
+
+[] a sh:NodeShape ;
+    sh:targetClass orexis:Role ;
+    sh:property [ sh:path llm:calledWithinS ; sh:defaultValue 60 ] ,
+                [ sh:path llm:retries ; sh:defaultValue 3 ] .

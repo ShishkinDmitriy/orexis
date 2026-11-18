@@ -27,7 +27,6 @@ pub mod chat;
 mod conversation;
 pub mod events;
 pub mod figures;
-pub mod model;
 pub mod past;
 pub mod readable;
 pub mod stated;
@@ -54,18 +53,22 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.plays(&[ROLE])? {
             return Ok(());
         }
-        handed.joins(&DOCUMENTS).await?;
+        //  THE MODEL'S WORDS, `llm:`, a family's that registers no package, brought beside translation's own.
+        handed.joins_with(&DOCUMENTS, &[&orexis_llm::DOCUMENTS]).await?;
         let mut translator = Translator::new(&handed.store)?;
         //  HANDED A MODEL, by a test that answers for it, it is that; deployed and handed none, the one its role
         //  names (`translation:translatedBy`), where the world's deployment says that answers, under the name and key
         //  the agent's environment holds; and otherwise none, so a check calls no model.
-        translator.model = handed.provided.take::<Arc<dyn crate::model::Model>>();
+        translator.model = handed.provided.take::<Arc<dyn orexis_llm::model::Model>>();
         if translator.model.is_none() && handed.provided.has::<orexis::task::Deployed>() {
             //  CALLED AS THE TRANSLATOR'S ROLE SAYS: where, how long a call may take, and how often it is asked again.
             translator.model = match &translator.translated_by {
-                Some(url) => crate::model::Anthropic::from_environ(url, &|name| std::env::var(name).ok()).map(|m| {
-                    Arc::new(m.paced(translator.called_within_s, translator.retries)) as Arc<dyn crate::model::Model>
-                }),
+                Some(url) => {
+                    orexis_llm::model::Anthropic::from_environ(url, &|name| std::env::var(name).ok()).map(|m| {
+                        Arc::new(m.paced(translator.called_within_s, translator.retries))
+                            as Arc<dyn orexis_llm::model::Model>
+                    })
+                }
                 None => {
                     log::warn!(
                         "no model: the translator's role names none the world says where to reach (translation:translatedBy)"

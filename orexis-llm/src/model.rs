@@ -1,13 +1,13 @@
-//! THE MODEL CLIENT, as `agent/translation/model.py` keeps it: the one place an agent asks a language model, from its
-//! translation part, off its pass, at a run-time edge.
+//! THE MODEL CLIENT, as `agent/translation/model.py` kept it: the one place an agent asks a language model, off its
+//! pass, at a run-time edge.
 //!
 //! **A CONVERSATION, AND ONE CALL.** `converse` sends a system prompt in blocks, all but the last cached, the messages so
 //! far with their last block marked for the cache, and the tools the model may call, none where it is the last turn;
 //! `ask` is one call of one message, read as text. **WHAT ONE POST DOES NOT DO** the Python copy took Anthropic's SDK for:
-//! an overloaded, rate-limited or unreachable API is asked again `RETRIES` times with backoff, and each failure is named
+//! an overloaded, rate-limited or unreachable API is asked again `llm:retries` times with backoff, and each failure is named
 //! by its class, which `why_not` says in the chat in a person's terms. **WHERE IT ANSWERS IS THE WORLD'S TO SAY, AND
-//! WHICH MODEL AND ITS KEY THE AGENT'S SECRET**: the url is the world's deployment graph's, of the model the
-//! translator's role names (`translation:translatedBy`), and `MODEL_API_KEY` and `MODEL_NAME` are environment.
+//! WHICH MODEL AND ITS KEY THE AGENT'S SECRET**: the url is the world's deployment graph's, of the `llm:Model` the
+//! asking role names, and `MODEL_API_KEY` and `MODEL_NAME` are environment.
 
 use std::collections::BTreeMap;
 use std::time::Duration;
@@ -75,7 +75,7 @@ pub struct Turn {
     pub tokens: BTreeMap<String, i64>,
 }
 
-/// A language model, as translation asks it: a conversation's turn, or one call. A test stands one in.
+/// A language model, as a package asks it: a conversation's turn, or one call. A test stands one in.
 pub trait Model: Send + Sync {
     /// Which model, for what is said of its use.
     fn name(&self) -> Option<String> {
@@ -93,16 +93,16 @@ pub struct Anthropic {
     key: String,
     pub url: String,
     pub max_tokens: u32,
-    /// How often a failing API is asked again (`translation:retries`).
+    /// How often a failing API is asked again (`llm:retries`).
     pub retries: u32,
     agent: ureq::Agent,
 }
 
-/// What translation's ontology states of a figure where no role is read: a model made by a test.
+/// What this family's ontology states of a figure where no role is read: a model made by a test.
 fn defaulted(term: &str) -> f64 {
-    crate::figures::DEFAULTS
+    crate::DEFAULTS
         .figure(term)
-        .expect("translation's ontology states a default for each of its figures")
+        .expect("the llm family's ontology states a default for each of its figures")
 }
 
 impl Anthropic {
@@ -115,16 +115,13 @@ impl Anthropic {
             retries: 0,
             agent: ureq::AgentBuilder::new().build(),
         }
-        .paced(
-            defaulted(crate::figures::CALLED_WITHIN_S),
-            defaulted(crate::figures::RETRIES) as u32,
-        )
+        .paced(defaulted(crate::CALLED_WITHIN_S), defaulted(crate::RETRIES) as u32)
     }
 
     /// The model answering at `url` that the environment names and holds the key of, or none where it names none —
     /// said once.
-    /// The model called within `within_s` real seconds a call (`translation:calledWithinS`) and asked again `retries`
-    /// times where it fails (`translation:retries`): the translator's role's figures.
+    /// The model called within `within_s` real seconds a call (`llm:calledWithinS`) and asked again `retries`
+    /// times where it fails (`llm:retries`): the asking role's figures.
     pub fn paced(mut self, within_s: f64, retries: u32) -> Self {
         self.agent = ureq::AgentBuilder::new()
             .timeout(Duration::from_secs_f64(within_s))
