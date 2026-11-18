@@ -9,7 +9,7 @@ use oxsdatatypes::DateTime;
 use orexis::events::{Event, Field, Mark, Number, Point, counted};
 
 use orexis::rdf::round6;
-use orexis::series::Sink;
+use orexis::series::{Pending, Sink};
 
 #[derive(Default)]
 struct Tally {
@@ -134,8 +134,8 @@ impl Window {
     }
 
     /// Write the window: every tally and every level as it last stood, a point per measurement and tag set, each at
-    /// the flush's instant, and open the next. The points written.
-    pub fn flush(&mut self) -> Vec<Point> {
+    /// the flush's instant, and open the next. The points, and their write to await.
+    pub fn flush(&mut self) -> (Vec<Point>, Pending<usize>) {
         let mut held: BTreeMap<Key, BTreeMap<String, Field>> = std::mem::take(&mut self.tallies)
             .into_iter()
             .map(|(k, t)| (k, t.fields()))
@@ -154,10 +154,8 @@ impl Window {
                 time: Some(at),
             })
             .collect();
-        if !points.is_empty() {
-            self.sink.write(&points);
-        }
-        points
+        let writing = self.sink.write(&points);
+        (points, writing)
     }
 }
 
@@ -220,7 +218,7 @@ mod tests {
             "m",
             Box::new(move |_, points| {
                 written.lock().unwrap().extend(points.iter().cloned());
-                Ok(())
+                orexis::series::ready(Ok(()))
             }),
         );
         let mut w = Window::new(sink, 60.0, Some("hanoi"), Some("mover"));
@@ -244,7 +242,12 @@ mod tests {
         );
         *real.lock().unwrap() = 1060.0;
         assert!(w.due());
-        let points: BTreeMap<String, Point> = w.flush().into_iter().map(|p| (p.tags["outcome"].clone(), p)).collect();
+        let points: BTreeMap<String, Point> = w
+            .flush()
+            .0
+            .into_iter()
+            .map(|p| (p.tags["outcome"].clone(), p))
+            .collect();
         let f = |x: f64| Field::Float(x);
         assert_eq!(
             points["Exhausted"].fields,
@@ -272,7 +275,7 @@ mod tests {
             );
         }
         assert_eq!(written.lock().unwrap().len(), 2);
-        assert!(!w.due() && w.flush().is_empty(), "the next window opened empty");
+        assert!(!w.due() && w.flush().0.is_empty(), "the next window opened empty");
     }
 
     #[test]
@@ -283,6 +286,7 @@ mod tests {
         w.tally(&Held("courier", Number::Float(2.5)));
         let points: BTreeMap<String, Field> = w
             .flush()
+            .0
             .into_iter()
             .map(|p| (p.tags["scope"].clone(), p.fields["worlds"].clone()))
             .collect();
@@ -290,6 +294,6 @@ mod tests {
             points,
             BTreeMap::from([("hanoi".into(), Field::Int(7)), ("courier".into(), Field::Float(2.5))])
         );
-        assert!(w.flush().is_empty());
+        assert!(w.flush().0.is_empty());
     }
 }

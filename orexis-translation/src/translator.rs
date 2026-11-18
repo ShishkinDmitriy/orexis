@@ -1,6 +1,6 @@
 //! THE TRANSLATOR, the package's core: the role the self plays, read off its self graph and the world's deployment, and
 //! what it does of a person's words and of what the agent says to a person - heard and answered, or phrased, through
-//! the model, off the mind's thread.
+//! the model, on a task of its own.
 
 use std::collections::{BTreeMap, VecDeque};
 use std::sync::Arc;
@@ -27,7 +27,7 @@ use crate::ROLE;
 use crate::briefing::briefing;
 use crate::chat::{Chat, chats_of, named};
 use crate::conversation::{
-    Asked, Back, Conversation, Direct, EVENT, UNADDRESSED, converse, instant_block, prefixes_of, sent_as, translated,
+    Asked, Back, Backs, Conversation, EVENT, UNADDRESSED, converse, instant_block, prefixes_of, sent_as, translated,
     written_as,
 };
 use crate::past::Past;
@@ -46,20 +46,18 @@ pub(crate) const PHRASE: usize = 3;
 const PHRASING: &str = "http://example.org/orexis/translation#Phrasing";
 pub(crate) const PHRASING_TRIGGER: &str = "http://example.org/orexis/translation#PhrasingTrigger";
 
-/// Provided by a test: the model is asked in the task's own turn and not on a thread of its own, so what it
-/// answers is handed back before the turn ends.
-pub struct Inline;
-
 /// THE TRANSLATOR THE SELF PLAYS, the package's core: a field for each thing `translation:Translator` may state, each
 /// what the role says in the agent's self graph and, where it says nothing, the default this package's ontology
 /// states; and what it holds across turns: the model, what is being thought in which chat, and what the model's
-/// threads handed back.
+/// conversations handed back.
 pub struct Translator {
     beliefs: Store,
     pub me: String,
     pub model: Option<Arc<dyn Model>>,
-    /// Whether a conversation runs on the mind's own thread, as a test runs it, or a thread of its own.
-    pub inline: bool,
+    /// What rings the package's task when the model's conversation hands something back, and the events that hold
+    /// the agent busy while one runs: set as the package starts.
+    pub wake: orexis::task::Wake,
+    pub events: Option<orexis::task::Events>,
     /// Each chat with an answer still being thought, and how many.
     pub writing: BTreeMap<String, (Chat, i64)>,
     pub journal: Option<Engine>,
@@ -70,7 +68,7 @@ pub struct Translator {
     pub metrics: Option<Reader>,
     pub watch: Watch,
     /// How many turns a conversation may take, how many rows a query hands the model, and how long the model's
-    /// thread waits for the mind's answer: the translator's role's figures (`translation:turns`, `rows`,
+    /// conversation waits for the translator's answer: the translator's role's figures (`translation:turns`, `rows`,
     /// `answeredWithinS`).
     pub turns: usize,
     pub rows: usize,
@@ -88,7 +86,7 @@ pub struct Translator {
     pub translated_by: Option<String>,
     tx: Sender<Back>,
     rx: Receiver<Back>,
-    /// What the model's threads handed back, for the turn to do.
+    /// What the model's conversations handed back, for the turn to do.
     pending: VecDeque<Back>,
 }
 
@@ -159,7 +157,8 @@ impl Translator {
             beliefs: beliefs.clone(),
             me: said("me"),
             model: None,
-            inline: false,
+            wake: orexis::task::Wake::default(),
+            events: None,
             writing: BTreeMap::new(),
             journal: None,
             journaled: orexis::task::Journaled::default(),
@@ -180,7 +179,7 @@ impl Translator {
         })
     }
 
-    /// A person's words on a chat's channel: answered, or made a statement, off the mind's thread.
+    /// A person's words on a chat's channel: answered, or made a statement, on a task of its own.
     pub fn heard(&mut self, prose: &Prose, now: DateTime) -> Result<Vec<String>, Error> {
         let store = &self.beliefs.clone();
         let Some(chat) = chats_of(store)?.into_iter().find(|c| c.channel == prose.channel) else {
@@ -286,26 +285,18 @@ impl Translator {
             turns: self.turns,
             messages_at_most: chat.style.messages_at_most,
         };
-        let within_s = self.answered_within_s;
-        if self.inline {
-            let mind = Direct {
-                store,
-                stating,
+        let (back, within_s) = (self.backs(), self.answered_within_s);
+        let working = self.events.as_ref().map(orexis::task::Events::working);
+        tokio::spawn(async move {
+            let _working = working;
+            let mind = Asked {
+                back: back.clone(),
                 at: now,
+                stating,
+                within_s,
             };
-            converse(conversation, model.as_ref(), &mind, &self.tx);
-        } else {
-            let back = self.tx.clone();
-            std::thread::spawn(move || {
-                let mind = Asked {
-                    back: back.clone(),
-                    at: now,
-                    stating,
-                    within_s,
-                };
-                converse(conversation, model.as_ref(), &mind, &back);
-            });
-        }
+            converse(conversation, model.as_ref(), &mind, &back).await;
+        });
         Ok(Vec::new())
     }
 
@@ -344,18 +335,20 @@ impl Translator {
             local_of(&self.me),
             rendered(store, doc, &prefixes_of(store, &self.me))?
         );
-        let (back, channel) = (self.tx.clone(), chat.channel.clone());
+        let (back, channel) = (self.backs(), chat.channel.clone());
         let (system, at_most) = match written_as(&chat.style) {
             Some(style) => (format!("{} {style}", self.say_prompt), chat.style.messages_at_most),
             None => (self.say_prompt.clone(), 1),
         };
-        let render = move || {
+        let working = self.events.as_ref().map(orexis::task::Events::working);
+        tokio::spawn(async move {
+            let _working = working;
             let began = Instant::now();
-            match model.ask(&system, &text) {
+            match model.ask(&system, &text).await {
                 Ok(answer) => {
                     let words = answer.text.trim().to_string();
                     let outcome = if words.is_empty() { "no words" } else { "said" };
-                    let _ = back.send(Back::Spent(translated(
+                    back.send(Back::Spent(translated(
                         "render",
                         outcome,
                         model.name(),
@@ -365,7 +358,7 @@ impl Translator {
                     )));
                     if !words.is_empty() {
                         for part in sent_as(&words, at_most) {
-                            let _ = back.send(Back::Said {
+                            back.send(Back::Said {
                                 channel: channel.clone(),
                                 words: part,
                                 reply: None,
@@ -375,12 +368,7 @@ impl Translator {
                 }
                 Err(e) => log::warn!("the model would not render what was said: {e}"),
             }
-        };
-        if self.inline {
-            render();
-        } else {
-            std::thread::spawn(render);
-        }
+        });
         Ok(())
     }
 
@@ -422,12 +410,20 @@ impl Translator {
         Ok(graph)
     }
 
-    /// Everything the model's threads handed back since the last ask, oldest first.
+    /// What the model's conversations hand back on, and what rings this task to take it.
+    fn backs(&self) -> Backs {
+        Backs {
+            tx: self.tx.clone(),
+            wake: self.wake.clone(),
+        }
+    }
+
+    /// Everything the model's conversations handed back since the last ask, oldest first.
     fn arrived(&self) -> Vec<Back> {
         self.rx.try_iter().collect()
     }
 
-    /// One thing handed back, done on the mind's thread: the graphs written.
+    /// One thing handed back, done on this package's task: the graphs written.
     fn done(&mut self, back: Back, at: DateTime) -> Result<Vec<String>, Error> {
         match back {
             Back::Keep(payload) => {

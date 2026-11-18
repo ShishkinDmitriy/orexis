@@ -2,9 +2,9 @@
 //! copied under their names for the model's queries, and the two tools that read it, `vocabulary` and `query`
 //! (the-model-queries-what-its-chat-may-read).
 //!
-//! **THE CHAT SAYS WHAT IT READS, AND THE MODEL NEVER CHOOSES A GRAPH.** The graphs of its kinds are COPIED on the mind's
-//! thread, each under its own name with the catalogue's rows about it, so a query runs over what the chat admits and
-//! nothing else, and a slow one stalls the model's thread and never a pass. **A QUERY STATES THE KINDS IT READS**: their
+//! **THE CHAT SAYS WHAT IT READS, AND THE MODEL NEVER CHOOSES A GRAPH.** The graphs of its kinds are COPIED on translation's
+//! task, each under its own name with the catalogue's rows about it, so a query runs over what the chat admits and
+//! nothing else, and a slow one holds the conversation's worker and never a pass. **A QUERY STATES THE KINDS IT READS**: their
 //! graphs are its default graph and its `GRAPH` range, and the catalogue is named beside them and never merged into
 //! them. **A QUERY IS READ, AND REFUSED BEFORE IT RUNS WHERE IT COULD DO ANYTHING BUT READ**: anything but a SELECT or
 //! an ASK, and a `SERVICE` or a `FROM` anywhere in it, is refused with the reason. Its rows are capped at `ROWS`.
@@ -105,7 +105,7 @@ pub fn named(ns: &str, taken: &BTreeSet<String>) -> String {
 }
 
 impl Readable {
-    /// What `kinds` let a chat of the agent `me` read of `store`, copied now, on the mind's thread.
+    /// What `kinds` let a chat of the agent `me` read of `store`, copied now, on translation's task.
     pub fn new(store: &Store, kinds: &[String], me: Option<&str>, rows: usize) -> Result<Self, Error> {
         let engine = Engine::new().map_err(failed)?;
         let mut prefixes = namespaces(store);

@@ -20,7 +20,7 @@ lru = "0.19"
 tokio.workspace = true
 inventory.workspace = true
 spargebra = "0.4"
-ureq = { version = "2", optional = true }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"], optional = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["test-util"] }
@@ -32,5 +32,5 @@ snapshots = ["dep:similar"]
 # A VOLUME: the store on disk, RocksDB as pyoxigraph keeps it, so an agent moving from the Python kernel keeps its
 # volume. The binary's alone: a package's tests run in memory.
 volume = ["oxigraph/rocksdb"]
-# THE SERIES' CLIENT, InfluxDB's write over HTTP: the binary's.
-series = ["dep:ureq"]
+# THE SERIES' CLIENT, InfluxDB's write and query over HTTP, awaited on the runtime: the binary's.
+series = ["dep:reqwest"]

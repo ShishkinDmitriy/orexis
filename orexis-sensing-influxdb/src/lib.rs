@@ -108,11 +108,8 @@ fn start(handed: Handed) -> orexis::task::Starting {
             if news.swap(false, Ordering::Relaxed) || over {
                 let due = due(&handed.store, &shipped)?;
                 let points: Vec<Point> = due.points.iter().map(|(_, p)| p.clone()).collect();
-                let sink = sink.clone();
                 let wanted = points.len();
-                let wrote = tokio::task::spawn_blocking(move || sink.write(&points))
-                    .await
-                    .unwrap_or(0);
+                let wrote = sink.write(&points).await;
                 if wrote == wanted {
                     let gone = took(&handed.store, due, &mut shipped)?;
                     log::debug!("{}: {wanted} reading(s) archived, {gone} past removed", handed.id);

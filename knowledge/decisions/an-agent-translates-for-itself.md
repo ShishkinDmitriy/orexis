@@ -50,8 +50,8 @@ sovereign read it and ruled on three things:
 statement through speech's own `heard` and what the agent says to a person reaches translation by
 speech's own `told`. Each translating agent holds the model's key, `infra/secrets/model.env`, mounted
 into its own container by `orexis-compose`, and its own carriers' secrets: its bot's token, its
-mailbox. The model is still called off the pass — the call runs on a thread of its own and what comes
-of it is submitted back as a job — so a pass never waits on one, and nothing the model writes is a
+mailbox. The model is still called off the pass — the call runs on a task of its own (a thread until
+every outbound call was awaited on the runtime) and what comes of it is submitted back as a job — so a pass never waits on one, and nothing the model writes is a
 belief: the account record's limits on it stand.
 
 **A transport carries bytes for every row, and what points at a channel says which row reads it.** A

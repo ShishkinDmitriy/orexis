@@ -272,7 +272,7 @@ async fn metered(interval_s: f64) -> Vec<Vec<orexis::events::Point>> {
         "hanoi-hanoi-metrics",
         Box::new(move |_, points| {
             kept.lock().unwrap().push(points.to_vec());
-            Ok(())
+            orexis::series::ready(Ok(()))
         }),
     );
     let window = orexis_metrics::Window::new(sink, interval_s, Some("hanoi"), Some("hanoi"));

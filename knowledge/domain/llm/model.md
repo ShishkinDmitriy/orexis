@@ -33,7 +33,8 @@ the package's own shape, since it would keep a person's words and say nothing ba
 
 # How it is asked
 
-How long one call may take and how often a failing one is asked again are the asking role's to say,
+A call is awaited on the agent's runtime, over `reqwest`, as a task of the asking package's; how long one may take and
+how often a failing one is asked again are the asking role's to say,
 `llm:calledWithinS` and `llm:retries`, sixty seconds and three where it says none, the defaults `llm:`'s ontology
 states for any role; each is held at onboarding to one value of its kind.
 

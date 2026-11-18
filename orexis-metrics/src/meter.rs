@@ -92,16 +92,18 @@ impl Meter {
             let mut window = heard.lock().unwrap();
             window.tally(event);
             if event.metric() == Some(PASS_METRIC) && window.due() {
-                window.flush();
+                //  WRITTEN OFF THE TURN THAT SAID THE EVENT, awaited on a task of its own.
+                tokio::spawn(window.flush().1);
             }
         });
         self.window = Some(window);
     }
 
     /// Write what the window holds, as the meter stops.
-    pub fn flush(&self) {
-        if let Some(window) = &self.window {
-            window.lock().unwrap().flush();
+    pub async fn flush(&self) {
+        let writing = self.window.as_ref().map(|window| window.lock().unwrap().flush().1);
+        if let Some(writing) = writing {
+            writing.await;
         }
     }
 }

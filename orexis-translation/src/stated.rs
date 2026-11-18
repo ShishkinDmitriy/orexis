@@ -178,7 +178,7 @@ These prefixes are declared for you: {names}."),
             "additionalProperties": false}})
 }
 
-/// What a chat lets a person state, handed to the model's thread with the conversation: the words, whether every word
+/// What a chat lets a person state, handed to the model's conversation: the words, whether every word
 /// is allowed, and the prefixes a statement is written with.
 #[derive(Clone, Debug)]
 pub struct Stating {

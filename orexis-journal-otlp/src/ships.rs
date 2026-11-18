@@ -15,7 +15,9 @@ use orexis_journal::journal::{ACTIVITY, Journal};
 pub const SHIPPED_TO: &str = "http://example.org/orexis#shippedTo";
 
 /// How a batch of spans reaches the tracer: the body of one POST, and whether it was accepted.
-pub type Send = Arc<dyn Fn(String) -> bool + std::marker::Send + Sync>;
+pub type Send = Arc<dyn Fn(String) -> Sending + std::marker::Send + Sync>;
+/// A body under way to the tracer: whether it was accepted.
+pub type Sending = std::pin::Pin<Box<dyn std::future::Future<Output = bool> + std::marker::Send>>;
 
 /// What is shipped and where: made by this package from the journal handed on and the tracer the world names, or
 /// provided by a test that ships to an endpoint of its own.
@@ -226,39 +228,55 @@ pub fn mark(journal: &Journal, activities: &[String], endpoint: &str) {
 }
 
 /// Ship what the journal holds unshipped, by `send`, and mark what was accepted; how many activities went.
-pub fn ship(journal: &Journal, agent: &str, endpoint: &str, send: &Send) -> usize {
+pub async fn ship(journal: &Journal, agent: &str, endpoint: &str, send: &Send) -> usize {
     let Some((body, activities)) = batch(journal, agent, endpoint) else {
         return 0;
     };
-    if !send(body) {
+    if !send(body).await {
         return 0;
     }
     mark(journal, &activities, endpoint);
     activities.len()
 }
 
-/// POST each body to `endpoint`'s traces, and say whether it was accepted.
+/// POST each body to `endpoint`'s traces, awaited on the runtime, and say whether it was accepted.
 pub fn post(endpoint: &str) -> Send {
     let url = format!("{endpoint}/v1/traces");
-    let agent = ureq::AgentBuilder::new().timeout(Duration::from_secs(2)).build();
-    let refused = std::sync::atomic::AtomicBool::new(false);
-    Arc::new(move |body| {
-        match agent
-            .post(&url)
-            .set("Content-Type", "application/json")
-            .send_string(&body)
-        {
-            Ok(_) => {
-                refused.store(false, std::sync::atomic::Ordering::Relaxed);
-                true
-            }
-            Err(e) => {
-                if !refused.swap(true, std::sync::atomic::Ordering::Relaxed) {
-                    log::warn!("the tracer at {url} refused the agent's spans, and they stay unshipped: {e}");
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(2))
+        .user_agent("orexis-agent")
+        .build()
+        .map_err(|e| e.to_string());
+    let refused = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    Arc::new(move |body: String| -> Sending {
+        let (url, refused) = (url.clone(), refused.clone());
+        let asked = client
+            .as_ref()
+            .map(|client| client.post(&url).header("Content-Type", "application/json").body(body))
+            .map_err(String::clone);
+        Box::pin(async move {
+            let sent = match asked {
+                Ok(asked) => asked
+                    .send()
+                    .await
+                    .and_then(reqwest::Response::error_for_status)
+                    .map(|_| ())
+                    .map_err(|e| e.to_string()),
+                Err(e) => Err(format!("no client: {e}")),
+            };
+            match sent {
+                Ok(()) => {
+                    refused.store(false, std::sync::atomic::Ordering::Relaxed);
+                    true
                 }
-                false
+                Err(e) => {
+                    if !refused.swap(true, std::sync::atomic::Ordering::Relaxed) {
+                        log::warn!("the tracer at {url} refused the agent's spans, and they stay unshipped: {e}");
+                    }
+                    false
+                }
             }
-        }
+        })
     })
 }
 
@@ -402,29 +420,33 @@ mod tests {
 
     /// An activity is marked shipped only where the tracer accepted it, and is not shipped twice; what a tracer
     /// refused stays in the journal for the next time.
-    #[test]
-    fn an_activity_is_shipped_once_and_stays_unshipped_where_the_tracer_refused() {
+    #[tokio::test]
+    async fn an_activity_is_shipped_once_and_stays_unshipped_where_the_tracer_refused() {
         let journal = journal();
         kept(&journal, PLANNING, &[], None);
         let sent: Arc<Mutex<Vec<String>>> = Arc::default();
-        let refusing: Send = Arc::new(|_| false);
-        assert_eq!(ship(&journal, "fern", TRACER, &refusing), 0);
+        let refusing: Send = Arc::new(|_| Box::pin(async { false }));
+        assert_eq!(ship(&journal, "fern", TRACER, &refusing).await, 0);
         let got = sent.clone();
         let accepting: Send = Arc::new(move |body| {
             got.lock().unwrap().push(body);
-            true
+            Box::pin(async { true })
         });
         assert_eq!(
-            ship(&journal, "fern", TRACER, &accepting),
+            ship(&journal, "fern", TRACER, &accepting).await,
             1,
             "refused before, shipped now"
         );
-        assert_eq!(ship(&journal, "fern", TRACER, &accepting), 0, "and not again");
+        assert_eq!(ship(&journal, "fern", TRACER, &accepting).await, 0, "and not again");
         assert_eq!(sent.lock().unwrap().len(), 1);
         kept(&journal, SEARCHING, &[], None);
-        assert_eq!(ship(&journal, "fern", TRACER, &accepting), 1, "only what came since");
         assert_eq!(
-            ship(&journal, "fern", "http://another:4318", &accepting),
+            ship(&journal, "fern", TRACER, &accepting).await,
+            1,
+            "only what came since"
+        );
+        assert_eq!(
+            ship(&journal, "fern", "http://another:4318", &accepting).await,
             2,
             "another cold store has its own"
         );

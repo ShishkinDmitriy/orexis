@@ -493,12 +493,12 @@ async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journa
     let got = sent.clone();
     let send: orexis_journal_otlp::Send = Arc::new(move |body| {
         got.lock().unwrap().push(body);
-        true
+        Box::pin(async { true })
     });
     let tracer = "http://tracer.test:4318";
-    let shipped = orexis_journal_otlp::ship(&journal, "grower", tracer, &send);
+    let shipped = orexis_journal_otlp::ship(&journal, "grower", tracer, &send).await;
     assert!(shipped > 0);
-    assert_eq!(orexis_journal_otlp::ship(&journal, "grower", tracer, &send), 0);
+    assert_eq!(orexis_journal_otlp::ship(&journal, "grower", tracer, &send).await, 0);
     let body: serde_json::Value = serde_json::from_str(&sent.lock().unwrap()[0]).unwrap();
     let spans = body["resourceSpans"][0]["scopeSpans"][0]["spans"]
         .as_array()
@@ -540,7 +540,7 @@ async fn each_reading_is_archived_once_where_there_is_a_store_and_the_past_ones_
             "greenhouse-grower",
             Box::new(move |_, points| {
                 kept.lock().unwrap().extend(points.iter().cloned());
-                Ok(())
+                orexis::series::ready(Ok(()))
             }),
         );
         let provided = Provided::default();
@@ -609,7 +609,7 @@ async fn history_holds_every_reading_and_the_journal_the_dose_published_taken_an
         "greenhouse-grower",
         Box::new(move |_, points| {
             kept.lock().unwrap().extend(points.iter().cloned());
-            Ok(())
+            orexis::series::ready(Ok(()))
         }),
     );
     let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(noon)).unwrap());
@@ -736,7 +736,7 @@ async fn unanswered() -> (Vec<Vec<orexis::events::Point>>, Broker) {
         "greenhouse-grower-metrics",
         Box::new(move |_, points| {
             kept.lock().unwrap().push(points.to_vec());
-            Ok(())
+            orexis::series::ready(Ok(()))
         }),
     );
     let provided = Provided::default().with(orexis_metrics::Window::new(

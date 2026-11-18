@@ -285,6 +285,13 @@ impl Events {
         &self.0.watch
     }
 
+    /// WORK A TASK SETS GOING OFF ITS OWN TURN, a call it awaits on a task of its own: the agent is busy until what
+    /// this answers is dropped, so nobody waiting for it to settle reads it idle while the work is under way.
+    pub fn working(&self) -> Working {
+        self.0.busy.up();
+        Working(self.0.busy.clone())
+    }
+
     /// What a task hears, empty until it says: it asks by `event` and `graph`, and awaits `next`.
     pub fn hears(&self) -> Hears {
         let (to, inbox) = unbounded_channel();
@@ -617,6 +624,15 @@ impl Wake {
         if let Some(halt) = &self.halt {
             halt.notify_one();
         }
+    }
+}
+
+/// Work under way off a task's turn: the agent busy while it is held (`Events::working`).
+pub struct Working(Busy);
+
+impl Drop for Working {
+    fn drop(&mut self) {
+        self.0.down();
     }
 }
 

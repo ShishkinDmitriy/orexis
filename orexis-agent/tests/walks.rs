@@ -168,7 +168,7 @@ async fn metered_courier(watched: bool) -> (usize, usize, String, std::collectio
             "m",
             Box::new(move |_, points| {
                 kept.lock().unwrap().extend(points.iter().cloned());
-                Ok(())
+                orexis::series::ready(Ok(()))
             }),
         );
         provided.provide(orexis_metrics::Window::new(sink, 0.0, Some("courier"), Some("courier")));
