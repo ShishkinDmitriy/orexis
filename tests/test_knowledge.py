@@ -596,6 +596,7 @@ FOLDERS = {
     "execution": (f"{_O}/execution#",),
     "speech": (f"{_O}/speech#",),
     "translation": (f"{_O}/translation#",),
+    "llm": (f"{_O}/llm#",),
     "market": (f"{_O}/market#",),
     "actuation": (f"{_O}/actuation#", f"{_O}/climate#"),
     "courier": (f"{_O}/courier#",),

@@ -21,7 +21,7 @@ use orexis::events::{Field, Point};
 use orexis::ontology::{BELIEF, FORECAST, SELF_GRAPH};
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::{Provided, Running, UNFINISHED};
-use orexis_translation::model::{Answer, Failure, Model, Turn};
+use orexis_llm::model::{Answer, Failure, Model, Turn};
 use orexis_transport_mqtt::driver::{Client, Mqtt};
 
 const T: &str = "http://example.org/orexis/world/terrace#";

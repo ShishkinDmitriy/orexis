@@ -1011,6 +1011,7 @@ dependencies = [
  "orexis-journal",
  "orexis-journal-otlp",
  "orexis-journal-oxigraph",
+ "orexis-llm",
  "orexis-metrics",
  "orexis-planning",
  "orexis-prediction",
@@ -1117,6 +1118,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "orexis-llm"
+version = "0.2.0"
+dependencies = [
+ "log",
+ "orexis",
+ "serde_json",
+ "ureq",
+]
+
+[[package]]
 name = "orexis-metrics"
 version = "0.2.0"
 dependencies = [
@@ -1207,6 +1218,7 @@ dependencies = [
  "log",
  "orexis",
  "orexis-journal",
+ "orexis-llm",
  "orexis-speech",
  "orexis-transport",
  "orexis-transport-email",

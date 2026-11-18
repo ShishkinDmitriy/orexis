@@ -1,0 +1,17 @@
+@prefix llm: <http://example.org/orexis/llm#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
+
+#  WHAT A WORLD MUST STATE OF HOW A ROLE ASKS ITS MODEL, held by onboarding alone (knowledge/domain/onboarding/requirement.md):
+#  each figure said once at most, of its kind.
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf llm:retries ;
+    sh:property [ sh:path llm:retries ; sh:maxCount 1 ; sh:datatype xsd:integer ; sh:minInclusive 0 ;
+                  sh:message "a role asks a failing model again one whole number of times, nought or more" ] .
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf llm:calledWithinS ;
+    sh:property [ sh:path llm:calledWithinS ; sh:maxCount 1 ; sh:minExclusive 0 ;
+                  sh:message "a role's call of its model takes one number of seconds above nought" ] .

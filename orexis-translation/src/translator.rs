@@ -30,10 +30,10 @@ use crate::conversation::{
     Asked, Back, Conversation, Direct, EVENT, UNADDRESSED, converse, instant_block, prefixes_of, sent_as, translated,
     written_as,
 };
-use crate::model::Model;
 use crate::past::Past;
 use crate::readable::{Readable, namespaces};
 use crate::stated::{PROPERTY, Stating, believe, listing, rendered, statement_of, words};
+use orexis_llm::model::Model;
 
 pub(crate) const BACK: usize = 0;
 pub(crate) const STILL: usize = 1;
@@ -75,8 +75,8 @@ pub struct Translator {
     pub turns: usize,
     pub rows: usize,
     pub answered_within_s: f64,
-    /// How long one call of the model may take and how often a failing one is asked again (`translation:calledWithinS`,
-    /// `retries`).
+    /// How long one call of the model may take and how often a failing one is asked again (`llm:calledWithinS`,
+    /// `llm:retries`), the role's as any role asking a model may say them.
     pub called_within_s: f64,
     pub retries: u32,
     /// What the model is told first when it answers a person, and when it phrases what the agent says to one
@@ -106,6 +106,7 @@ impl Translator {
         PREFIX schema: <https://schema.org/>
         PREFIX sh: <http://www.w3.org/ns/shacl#>
         PREFIX translation: <http://example.org/orexis/translation#>
+        PREFIX llm: <http://example.org/orexis/llm#>
         SELECT DISTINCT ?me ?kind ?model (COALESCE(?turnsSaid, ?turnsOwn) AS ?turns) \
         (COALESCE(?rowsSaid, ?rowsOwn) AS ?rows) (COALESCE(?answeredSaid, ?answeredOwn) AS ?answered) \
         (COALESCE(?calledSaid, ?calledOwn) AS ?called) (COALESCE(?retriesSaid, ?retriesOwn) AS ?retries) \
@@ -113,16 +114,16 @@ impl Translator {
         ?shape sh:targetClass translation:Translator ; \
           sh:property [ sh:path translation:turns ; sh:defaultValue ?turnsOwn ] , [ sh:path translation:rows ; sh:defaultValue ?rowsOwn ] , \
                       [ sh:path translation:answeredWithinS ; sh:defaultValue ?answeredOwn ] , \
-                      [ sh:path translation:calledWithinS ; sh:defaultValue ?calledOwn ] , \
-                      [ sh:path translation:retries ; sh:defaultValue ?retriesOwn ] , \
                       [ sh:path translation:conversePrompt ; sh:defaultValue ?converseOwn ] , \
                       [ sh:path translation:sayPrompt ; sh:defaultValue ?sayOwn ] . \
+        ?asking sh:targetClass orexis:Role ; \
+          sh:property [ sh:path llm:calledWithinS ; sh:defaultValue ?calledOwn ] , [ sh:path llm:retries ; sh:defaultValue ?retriesOwn ] . \
         OPTIONAL { ?me a orexis:Self } \
         OPTIONAL { ?me orexis:plays ?r1 . ?r1 translation:turns ?turnsSaid } \
         OPTIONAL { ?me orexis:plays ?r2 . ?r2 translation:rows ?rowsSaid } \
         OPTIONAL { ?me orexis:plays ?r3 . ?r3 translation:answeredWithinS ?answeredSaid } \
-        OPTIONAL { ?me orexis:plays ?r4 . ?r4 translation:calledWithinS ?calledSaid } \
-        OPTIONAL { ?me orexis:plays ?r5 . ?r5 translation:retries ?retriesSaid } \
+        OPTIONAL { ?me orexis:plays ?r4 . ?r4 llm:calledWithinS ?calledSaid } \
+        OPTIONAL { ?me orexis:plays ?r5 . ?r5 llm:retries ?retriesSaid } \
         OPTIONAL { ?me orexis:plays ?r6 . ?r6 translation:conversePrompt ?converseSaid } \
         OPTIONAL { ?me orexis:plays ?r7 . ?r7 translation:sayPrompt ?saySaid } \
         OPTIONAL { ?me orexis:plays ?named . ?named a ?kind ; translation:translatedBy ?by . ?by schema:url ?model } }";

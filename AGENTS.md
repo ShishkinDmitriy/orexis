@@ -57,7 +57,7 @@ If it is unavailable, the rules are short enough to follow by hand:
 
 **`knowledge/domain/` is the shared dictionary, filed by the package that owns each word** —
 `kernel/`, `journal/`, `metrics/`, `sensing/`, `transport/`, `belief/`, `prediction/`, `planning/`, `execution/`,
-`speech/`, `coordination/`, `market/`, `actuation/`, `courier/`, `draw/`, `onboarding/` — and `tests/test_knowledge.py` holds a page to
+`speech/`, `translation/`, `llm/`, `coordination/`, `market/`, `actuation/`, `courier/`, `draw/`, `onboarding/` — and `tests/test_knowledge.py` holds a page to
 live terms in its folder's namespace, so retiring a term fails until its page follows. A record
 stays in `knowledge/decisions/` while something current cites it; 0.1.0's are filed under
 `decisions/0.1.0/`. **And a term is defined before it is used.** The
@@ -1159,6 +1159,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   `Meter`, `Predictor`, `Coordinator`, `Observer`, and the cores that bear the role's name; three roles had no
   struct, four fields went by another word than their property (`every_s`, `endpoint`, `archive`, `tracer`), and
   half of what a translator's role says lay on its model's client (role).
+- **A model is a family of its own, `orexis-llm/`, as the transport is** — `llm:Model` and how a role asks one
+  (`llm:calledWithinS`, `llm:retries`) and the client are every asking package's, brought beside its own as it joins
+  (`Handed::joins_with`); which model a role asks and what it tells it stay the role's package's, a translator's
+  `translation:translatedBy`, prompts and styles (model).
 - **What only one family's members share is the family's crate, not the kernel's** — `Inbox`, the job loop, `wired` and
   the chat carrier's core were the kernel's while every transport used them and nothing else did, and email's core
   and telegram's were one file twice; `orexis-transport/` registers no package and imports no row above it, its chat

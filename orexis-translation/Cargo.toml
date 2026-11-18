@@ -16,6 +16,7 @@ inventory.workspace = true
 tokio.workspace = true
 orexis = { workspace = true }
 orexis-speech = { workspace = true }
+orexis-llm = { workspace = true }
 oxigraph.workspace = true
 oxsdatatypes = "0.2"
 spargebra = "0.4"

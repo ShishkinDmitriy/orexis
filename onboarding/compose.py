@@ -111,7 +111,9 @@ def image_of(world: str, agent_id: str, series: bool) -> Image:
 
 
 def _with_crates(named) -> list[str]:
-    """`named` with every package whose crate they depend on, by the crate each `Cargo.toml` names, and theirs."""
+    """`named` with every package whose crate they depend on, by the crate each `Cargo.toml` names, and theirs: a crate
+    that registers a package, never a family's, `orexis-transport/` or `orexis-llm/`, which registers none and is
+    built in by whichever crate depends on it, whatever words it brings."""
     seen, todo = set(), list(named)
     while todo:
         package = todo.pop()
@@ -119,8 +121,14 @@ def _with_crates(named) -> list[str]:
             continue
         seen.add(package)
         declared = tomllib.loads((directory_of(package) / "Cargo.toml").read_text())["dependencies"]
-        todo += [p for crate in declared if (p := package_of(crate)) and (TREE / crate / "ontology.ttl").is_file()]
+        todo += [p for crate in declared if (p := package_of(crate)) and _registers(crate)]
     return sorted(seen)
+
+
+def _registers(crate: str) -> bool:
+    """Whether `crate` registers a package: its `lib.rs` submits one, as every package's does."""
+    lib = TREE / crate / "src" / "lib.rs"
+    return lib.is_file() and "inventory::submit!" in lib.read_text()
 
 
 #  THE CLIENT THE SIMULATOR CONNECTS AS: whichever hosts the systems no one built.

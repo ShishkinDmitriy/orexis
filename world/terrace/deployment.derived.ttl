@@ -5,14 +5,14 @@
 
 @prefix : <http://example.org/orexis/world/terrace#> .
 @prefix journal: <http://example.org/orexis/journal#> .
+@prefix llm: <http://example.org/orexis/llm#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix schema: <https://schema.org/> .
-@prefix translation: <http://example.org/orexis/translation#> .
 
 <> a orexis:DeploymentGraph .    # this document is one graph, and this is what it is
 
 :broker schema:url "mqtts://localhost:8888" .
-:model a translation:Model ;
+:model a llm:Model ;
     schema:url "https://api.anthropic.com" .
 :series orexis:organisation "orexis" ;
     orexis:serves orexis:History , orexis:Metrics ;

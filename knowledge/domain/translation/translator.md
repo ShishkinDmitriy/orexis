@@ -64,7 +64,7 @@ channel's kind's: what the model is told of writing there, and as how many messa
 # What it needs
 
 A chat it is in, of which onboarding's [requirement](/domain/onboarding/requirement.md) holds a
-translator; a [model](/domain/translation/model.md) its role names (`translation:translatedBy`), its key
+translator; a [model](/domain/llm/model.md) its role names (`translation:translatedBy`), its key
 mounted into this agent's container alone; and each carrier's secret where a chat goes through it —
 `secrets/<agent>/telegram.env` for its bot, `secrets/<agent>/mail.env` for its mailbox.
 
@@ -93,12 +93,12 @@ it on the package's health dashboard, so what an agent's chats cost is watched b
 
 # What it may state
 
-Five figures, on the role, each with its default in the package's ontology: `translation:turns`, how many turns one
-conversation with the [model](/domain/translation/model.md) may take, eight, the last offering no tool so the model
+Five figures, on the role, each with its default in an ontology: `translation:turns`, how many turns one
+conversation with the [model](/domain/llm/model.md) may take, eight, the last offering no tool so the model
 answers in words; `translation:rows`, how many rows or points one read hands the model, fifty; `translation:answeredWithinS`,
 how long the model's call waits for the agent to hold a statement to what the chat allows, sixty seconds; and
-`translation:calledWithinS` and `translation:retries`, how long one call of the model may take and how often a
-failing one is asked again, sixty seconds and three.
+`llm:calledWithinS` and `llm:retries`, how long one call of the model may take and how often a failing one is
+asked again, sixty seconds and three, the [model](/domain/llm/model.md) family's words for any role asking one.
 
 And what the model is told first, on the role too, its default the package's ontology's whole text:
 `translation:conversePrompt`, when it answers a person, before the briefing, the chat's

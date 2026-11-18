@@ -93,7 +93,7 @@ store the world names and the agent's own credential, and the metrics' window is
 The brokers, the bots and the model are there too. The society says which broker an agent is connected to and
 which bot it speaks through, so no role link is added for either: the derived deployment states each broker's url,
 the one an agent reaches it at, and each bot's where the world asserts one, and the transports read them as they
-connect. A [model](/domain/translation/model.md) is named by the translator's role (`translation:translatedBy`).
+connect. A [model](/domain/llm/model.md) is named by the translator's role (`translation:translatedBy`).
 `MQTT_BROKERS`, `TELEGRAM_URL` and `MODEL_URL` are gone. What a requirement holds a world to leaves the derived
 deployment out, since a broker's one url there is no statement of every url the world asserts of it.
 

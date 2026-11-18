@@ -20,6 +20,7 @@ orexis-execution = { path = "orexis-execution" }
 orexis-journal = { path = "orexis-journal" }
 orexis-journal-otlp = { path = "orexis-journal-otlp" }
 orexis-journal-oxigraph = { path = "orexis-journal-oxigraph" }
+orexis-llm = { path = "orexis-llm" }
 orexis-metrics = { path = "orexis-metrics" }
 orexis-planning = { path = "orexis-planning" }
 orexis-prediction = { path = "orexis-prediction" }

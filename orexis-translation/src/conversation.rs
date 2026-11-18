@@ -13,10 +13,10 @@ use orexis::rdf::round6;
 use orexis::store::Store;
 
 use crate::events::{Conversed, Translated};
-use crate::model::{Model, TOKENS, why_not};
 use crate::past::Past;
 use crate::readable::{Prefixes, Readable, namespace_of, namespaces};
 use crate::stated::{STATE, Stating, statement_of, tool};
+use orexis_llm::model::{Model, TOKENS, why_not};
 
 /// WHERE THE CHAT HAS OTHER AGENTS AND NOBODY WAS NAMED: the agent answers only where what it holds speaks to it.
 pub const SILENT: &str = "NOTHING";
