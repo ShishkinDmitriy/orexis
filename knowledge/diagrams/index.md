@@ -27,6 +27,33 @@ The runbooks' pictures, one per runbook that embeds it:
 * [runbook-planner-loop](./runbook-planner-loop.puml) - From a desire read unmet to a command on a device, and the reading that shows it landed.
 * [runbook-market-round](./runbook-market-round.puml) - A bidder calls, tenders, wins a claim and presents it; the host doses its plot.
 
+# One class diagram per crate
+
+Each is generated from its crate's `src/` by `tools/class-diagrams.py` and held to it by `tests/test_knowledge.py`, so none is edited by hand:
+
+* [package-orexis](./package-orexis.puml) - The kernel: the store, the events, the clock and what a package is handed, by module.
+* [package-orexis-actuation](./package-orexis-actuation.puml) - Actuation: a step's command turned into the settings a device is sent.
+* [package-orexis-agent](./package-orexis-agent.puml) - The binary: one agent's process, booting the world and starting the packages its roles load.
+* [package-orexis-belief](./package-orexis-belief.puml) - Belief: the deliberator, its rules and transitions, and what a revision writes.
+* [package-orexis-coordination](./package-orexis-coordination.puml) - Coordination: the coordinator, the draw and what a conclusion holds.
+* [package-orexis-execution](./package-orexis-execution.puml) - Execution: the executor and the events its walk says.
+* [package-orexis-journal](./package-orexis-journal.puml) - The journal: what it keeps of every event and activity, and the recorder's role.
+* [package-orexis-journal-otlp](./package-orexis-journal-otlp.puml) - The journal's tracer: what ships its activities over OTLP.
+* [package-orexis-journal-oxigraph](./package-orexis-journal-oxigraph.puml) - The journal's archive: what takes its entries to disk.
+* [package-orexis-llm](./package-orexis-llm.puml) - The model family: a model, how a role asks it, and the client.
+* [package-orexis-metrics](./package-orexis-metrics.puml) - Metrics: the meter and the tallies it writes each window.
+* [package-orexis-planning](./package-orexis-planning.puml) - Planning: the planner, the memo, the grounds and the events a pass says.
+* [package-orexis-prediction](./package-orexis-prediction.puml) - Prediction: the predictor and the flows it integrates.
+* [package-orexis-sensing](./package-orexis-sensing.puml) - Sensing: the observer, its attentions and the events a reading says.
+* [package-orexis-sensing-influxdb](./package-orexis-sensing-influxdb.puml) - Sensing's housekeeper: what writes the readings to the series store.
+* [package-orexis-speech](./package-orexis-speech.puml) - Speech: what is heard and said, and the extraction that makes a belief.
+* [package-orexis-translation](./package-orexis-translation.puml) - Translation: the translator, its chats, styles and the model's tools.
+* [package-orexis-transport](./package-orexis-transport.puml) - The transport family's contract: members, the inbox and the chat carrier.
+* [package-orexis-transport-email](./package-orexis-transport-email.puml) - The email member: a mailbox over IMAP and SMTP.
+* [package-orexis-transport-http](./package-orexis-transport-http.puml) - The HTTP member: a service reached over the web.
+* [package-orexis-transport-mqtt](./package-orexis-transport-mqtt.puml) - The MQTT member: the agent's side of the bus.
+* [package-orexis-transport-telegram](./package-orexis-transport-telegram.puml) - The Telegram member: an agent's own bot over the Bot API.
+
 # A picture is an image, never a Mermaid block
 
 GitHub's web view draws a Mermaid block and its mobile app shows the source as text, so the
@@ -44,6 +71,7 @@ made; the gate reads `.puml` files, so it neither checks this one nor needs to.
 # Rendering
 
 ```bash
+./tools/class-diagrams.py         # every crate's class diagram, regenerated from its src/
 ./tools/render-diagrams.sh        # every source -> .svg, stamped with the source's hash
 ```
 
