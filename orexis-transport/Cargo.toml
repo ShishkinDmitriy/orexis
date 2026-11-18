@@ -11,9 +11,5 @@ path = "src/lib.rs"
 
 [dependencies]
 orexis = { workspace = true }
-orexis-speech = { workspace = true, optional = true }
 oxsdatatypes = "0.2"
-
-[features]
-# A CHAT CARRIER, a member that carries a person's prose: speech's words, so only the members that need it pull speech in.
-chat = ["dep:orexis-speech"]
+serde_json = { version = "1", features = ["preserve_order"] }

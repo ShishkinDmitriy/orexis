@@ -1,5 +1,7 @@
 //! THE SPEAKER, the package's core: the role the self plays, read off its self graph, and what it does of a statement
-//! written and of a step that says something - extract what it believes of each, and say each to whom it is said.
+//! written and of a step that says something - extract what it believes of each, and say each to whom it is said - and
+//! of what arrives on the channels it listens on through the transport: a peer's document on the agent's own, kept as
+//! what was said, and a person's words on a chat's, kept as prose; and the agent's own words carried back.
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
@@ -8,17 +10,22 @@ use orexis::events::Watch;
 use orexis::ontology::RECEIVED;
 use orexis::store::{Store, iri};
 use orexis::task::{Heard as HeardEvent, Turn};
+use orexis_transport::chat::Words;
+use orexis_transport::{Exchange, Inbox, Members};
 use oxigraph::model::NamedNode;
 
 use crate::events::{Heard, Said, Statement};
 use crate::extract::extract;
-use crate::ontology::{SPEAKING, STATEMENT, TO};
+use crate::heard::heard;
+use crate::ontology::{CARRYING, SPEAKING, STATEMENT, TO};
+use crate::prose::{CHANNEL, KEPT, Prose, ProseKept, kept, prose_of, received};
 use crate::said::said;
-use crate::statements::described;
+use crate::statements::{described, document_of};
 
 pub(crate) const STATED: usize = 0;
 const EXTRACTED: usize = 1;
 pub(crate) const SPEAK: usize = 2;
+pub(crate) const CARRY: usize = 3;
 
 /// THE SPEAKER THE SELF PLAYS, the package's core: who says, whoever watches it say, and the beliefs extracted as it
 /// started for the first turn to hand on. `speech:Speaker` states no figure.
@@ -28,6 +35,10 @@ pub struct Speaker {
     /// Whoever watches the agent, and the instant the pass stands at.
     pub watch: Watch,
     pending: Vec<String>,
+    /// The agent's members, read once every core is made.
+    members: Members,
+    /// Where what arrives on a channel speech listens on is left.
+    pub inbox: Inbox,
 }
 
 impl Speaker {
@@ -38,7 +49,115 @@ impl Speaker {
             me: orexis::boot::selves(store)?.into_iter().next().unwrap_or_default(),
             watch: Watch::default(),
             pending: Vec::new(),
+            members: Members::default(),
+            inbox: Inbox::default(),
         })
+    }
+
+    /// SPEECH LISTENS through the members of the agent's, once every core is made: on the agent's own channel, where a
+    /// peer's documents arrive, and on the channel of every chat the agent is in, each where a member reaches it as a
+    /// channel listened to; the channels.
+    pub(crate) fn listen(&mut self, members: &Members) -> Result<Vec<String>, Error> {
+        /// THE CHANNEL OF EVERY CHAT THE AGENT IS IN.
+        const CHANNELS_Q: &str = "PREFIX speech: <http://example.org/orexis/speech#>
+        SELECT DISTINCT ?channel WHERE { ?chat a speech:Chat ; speech:participant $me ; speech:channel ?channel }
+        ORDER BY ?channel";
+        self.members = members.clone();
+        let common = self
+            .beliefs
+            .graphs_of(&[orexis::ontology::BELIEF], &orexis::store::Within::common())?;
+        let common: Vec<&str> = common.iter().map(String::as_str).collect();
+        let mut channels = vec![self.me.clone()];
+        channels.extend(
+            self.beliefs
+                .rows(&bind(CHANNELS_Q, &[("me", Value::iri(self.me.as_str()))])?, &common)?
+                .iter()
+                .filter_map(|r| iri(r, "channel")),
+        );
+        let mut listened = Vec::new();
+        for channel in channels {
+            if let Some(member) = members.reaching(&channel, Exchange::Listened)? {
+                member.listen(&channel, self.inbox.clone())?;
+                listened.push(channel);
+            }
+        }
+        Ok(listened)
+    }
+
+    /// WHAT ARRIVED on the channels speech listens on, since the last take: a peer's document on the agent's own, kept
+    /// as what was said (`heard`); a person's words on a chat's, kept as prose and said `speech:ProseKept`, but the
+    /// agent's own the carrier hands back. The graphs written.
+    pub(crate) fn arrived(&mut self, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+        let mut written = Vec::new();
+        for message in self.inbox.take() {
+            if message.topic == self.me {
+                written.extend(heard(&self.beliefs, &self.me, &message.payload)?);
+                continue;
+            }
+            let Some(words) = Words::of(&message.payload) else {
+                continue;
+            };
+            if words.from.as_deref() == Some(self.me.as_str()) || words.text.trim().is_empty() {
+                continue;
+            }
+            let prose = Prose {
+                channel: message.topic.clone(),
+                sender: words.from,
+                text: words.text.trim().to_string(),
+                at: message.at.or(Some(pass.now)),
+                addressed: words.addressed,
+                message: words.message,
+                reply: None,
+            };
+            let graph = kept(&self.beliefs, &self.me, &prose)?;
+            pass.emit(&ProseKept { prose: graph.clone() });
+            written.push(graph);
+        }
+        Ok(written)
+    }
+
+    /// `payload` sent on `channel` through the member that reaches it as a channel sent on; whether one did.
+    fn send(&self, channel: &str, payload: &[u8]) -> Result<bool, Error> {
+        match self.members.reaching(channel, Exchange::Sent)? {
+            Some(member) => {
+                member.send(channel, payload, None)?;
+                Ok(true)
+            }
+            None => Ok(false),
+        }
+    }
+
+    /// The agent's own words a prose graph keeps, carried on their channel as a reply where they name one; and the
+    /// agent shown writing on a channel where it says it is. A person's words, speech's own keeping, are translation's.
+    fn carry(&mut self, event: &HeardEvent, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+        if let Some(graph) = event.named(KEPT) {
+            if received(&self.beliefs, graph.as_str())? {
+                return Ok(Vec::new());
+            }
+            let Some(prose) = prose_of(&self.beliefs, graph.as_str())? else {
+                return Ok(Vec::new());
+            };
+            let words = Words {
+                reply: prose.reply.clone(),
+                ..Words::said(&prose.text)
+            };
+            let activity = pass.begin(CARRYING, std::slice::from_ref(graph));
+            let sent = self.send(&prose.channel, &words.bytes());
+            pass.end(activity);
+            if !sent? {
+                log::warn!(
+                    "{}: no member of the agent's carries it, so its words are not said",
+                    orexis::ontology::local_of(&prose.channel)
+                );
+            }
+        } else if let Some(channel) = event.named(CHANNEL) {
+            let writing = Words {
+                writing: true,
+                ..Words::default()
+            };
+            self.send(channel.as_str(), &writing.bytes())?;
+        }
+        Ok(Vec::new())
     }
 
     /// What a restart finds unextracted: every statement nothing was extracted from, extracted now and handed on at
@@ -149,13 +268,17 @@ impl Speaker {
         Ok(written)
     }
 
-    /// What speech's policy does of a trigger: tell each statement it names, as it was said, to each agent it names.
+    /// What speech's policy does of a trigger: the agent's own words carried; or each statement it names told, as it
+    /// was said, to each agent it names, the document sent through the member that reaches each, a person passed over.
     pub(crate) fn heard_event(
         &mut self,
-        _job: usize,
+        job: usize,
         event: &HeardEvent,
         pass: &mut Turn<'_>,
     ) -> Result<Vec<String>, Error> {
+        if job == CARRY {
+            return self.carry(event, pass);
+        }
         let statements: Vec<NamedNode> = event.all(STATEMENT).into_iter().cloned().collect();
         let to: Vec<String> = event.all(TO).iter().map(|a| a.as_str().to_string()).collect();
         if statements.is_empty() || to.is_empty() {
@@ -163,7 +286,10 @@ impl Speaker {
         }
         let graphs: Vec<String> = statements.iter().map(|s| s.as_str().to_string()).collect();
         let activity = pass.begin(SPEAKING, &statements);
-        let told = self.tell_said(&graphs, &to);
+        let told = self.tell_said(&graphs, &to).and_then(|()| {
+            let document = document_of(&self.beliefs, &graphs)?.trig()?;
+            to.iter().try_for_each(|agent| self.send(agent, &document).map(|_| ()))
+        });
         pass.end(activity);
         told?;
         Ok(Vec::new())

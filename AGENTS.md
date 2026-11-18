@@ -1064,9 +1064,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   `beside` were built and refused as hardcoding what the vocabulary already bounds
   (a-person-states-what-the-chat-allows-in-the-worlds-words, translator).
 - **A channel is the transport's, and what points at it says which row reads it** — a sensor's is sensing's,
-  a listened topic speech's, a chat's translation's; a member keeps a person's words as a `speech:ProseGraph` and says
-  `speech:ProseKept` - speech's words, since a chat is, and every member is above speech - translation keeps its own words the same way, and each hears the event beneath its trigger and
-  acts on the words whose provenance is its to act on, so translation imports no member and no member translation, and Telegram and email are members beside MQTT and HTTP
+  a listened topic speech's, a chat's translation's; speech, above the transport, listens on its own channel and its
+  chats' through the member, keeps a person's words as a `speech:ProseGraph` and says `speech:ProseKept`, translation
+  keeps its own words the same way, and each acts on the words whose provenance is its to act on, speech carrying the
+  agent's back, so no member imports speech or translation, and Telegram and email are members beside MQTT and HTTP
   (an-agent-translates-for-itself, transport).
 - **A chat is who speaks with whom through what, and the channel's type is the carrier** — `speech:Chat` with
   its participants and one channel, a topic, a contact point with an email or a `telegram:Chat`, speech naming
@@ -1156,8 +1157,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   half of what a translator's role says lay on its model's client (role).
 - **What only one family's members share is the family's crate, not the kernel's** — `Inbox`, the job loop, `wired` and
   the chat carrier's core were the kernel's while every transport used them and nothing else did, and email's core
-  and telegram's were one file twice; `orexis-transport/` registers no package, and its chat carrier is a feature,
-  so a member that carries no prose pulls in no speech.
+  and telegram's were one file twice; `orexis-transport/` registers no package and imports no row above it, its chat
+  carrier handing speech a chat's words as `chat::Words`, so speech depends on the transport and no member on speech:
+  the carrier was a feature depending on speech, which made speech's listening through the contract a cycle.
 - **A package's start is in its crate's `lib.rs`, in every crate, and nothing else is** — the registration, the role
   it is loaded for and `start`, one function from the decision to the end of its task, below the crate's description
   and its modules; its core is the role's struct, in a file named for the role, and what it says happened is

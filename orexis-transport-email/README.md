@@ -12,11 +12,8 @@ The email member of the transport family: a person's mail in, the agent's own wo
 | Heard | Said by | Starts |
 |---|---|---|
 | the clock, as often as a role says (`email:polledEveryS`), every 30 s where none says | | the mailbox polled on a thread of its own |
-| a message polled (an arrival) | the mail server | the words kept as a `speech:ProseGraph`, `speech:ProseKept` said |
-| `email:CarryingTrigger`: `speech:ProseKept` | translation | `email:Carrying`, where the words are the agent's own |
+| a message polled (an arrival) | the mail server | left with speech, listening on the chat, as the chat's words (`orexis_transport::chat::Words`) |
 
 ## Activities
 
-| Activity | What happens |
-|---|---|
-| `email:Carrying` | the agent's own words are sent on the chat's channel, as a reply where the words name one |
+None: what it is handed and sent is a row's above, which listens and sends through it.

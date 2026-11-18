@@ -1,9 +1,8 @@
-//! WORDS ON A CHAT'S CHANNEL, speech's since a chat is (knowledge/domain/kernel/policy.md): a transport member that
-//! carries a `speech:Chat`'s channel keeps a person's words as a `speech:ProseGraph` (`kept`) and says
-//! `speech:ProseKept`, which translation's ontology puts beneath its trigger; translation keeps the agent's own words
-//! the same way (`written`) and says the same event, which each member's ontology puts beneath its own trigger, and the
-//! member that carries the channel sends them as a `Carrier` (`carry`). Which words are whose is the graph's
-//! provenance (`received`), so no member imports translation and translation imports no member.
+//! WORDS ON A CHAT'S CHANNEL, speech's since a chat is (knowledge/domain/kernel/policy.md): speech listens on a
+//! `speech:Chat`'s channel through the member that carries it, keeps a person's words as a `speech:ProseGraph` (`kept`)
+//! and says `speech:ProseKept`, which translation's ontology puts beneath its trigger; translation keeps the agent's own
+//! words the same way (`written`) and says the same event, and speech carries them back through the member. Which words
+//! are whose is the graph's provenance (`received`), so no member imports speech or translation.
 
 use oxigraph::model::{GraphName, Literal, NamedNode, Quad, Term};
 use oxsdatatypes::DateTime;
@@ -15,7 +14,6 @@ use orexis::events::Event;
 use orexis::ontology::{RECEIVED, RECORDED};
 use orexis::rdf::mint;
 use orexis::store::Store;
-use orexis::task::{Heard, Turn};
 
 const SPEECH: &str = "http://example.org/orexis/speech#";
 
@@ -165,32 +163,6 @@ impl Event for ProseKept {
     }
 }
 
-/// WHAT A MEMBER'S POLICY DOES OF ITS CARRYING TRIGGER, `trigger`'s activity `kind`: the agent's own words a prose graph
-/// keeps sent on their channel, where this member carries it, and a person's left for whoever translates; or the agent
-/// shown writing on a channel, where the member can show it there.
-pub fn carry(
-    store: &Store,
-    carrier: &mut dyn Carrier,
-    event: &Heard,
-    pass: &mut Turn<'_>,
-    kind: &'static str,
-) -> Result<(), Error> {
-    if let Some(graph) = event.named(KEPT) {
-        if received(store, graph.as_str())? {
-            return Ok(());
-        }
-        let Some(prose) = prose_of(store, graph.as_str())? else {
-            return Ok(());
-        };
-        let activity = pass.begin(kind, std::slice::from_ref(graph));
-        carrier.say_to(&prose.channel, &prose.text, prose.reply.as_deref());
-        pass.end(activity);
-    } else if let Some(channel) = event.named(CHANNEL) {
-        carrier.writing_in(channel.as_str());
-    }
-    Ok(())
-}
-
 /// The agent said it is writing on `channel`, for the transport that can show it there.
 #[derive(Clone, Debug, PartialEq)]
 pub struct WritingAnnounced {
@@ -218,13 +190,3 @@ pub const PROSE_GRAPH: &str = "http://example.org/orexis/speech#ProseGraph";
 /// The agent said writing on a channel, as the event it is said as, and what it names.
 pub const WRITING_ANNOUNCED: &str = "http://example.org/orexis/speech#WritingAnnounced";
 pub const CHANNEL: &str = "http://example.org/orexis/speech#channel";
-
-/// A member that carries a chat's channel: the agent's own words out on it, and the agent shown writing there.
-pub trait Carrier {
-    /// Prose out on `channel`, as a reply to the message `reply` names where the carrier threads one. Whether anything
-    /// was SENT: a member that does not carry the channel sends nothing.
-    fn say_to(&mut self, channel: &str, text: &str, reply: Option<&str>) -> bool;
-
-    /// Show on `channel` that the agent is writing, where the channel can show it. Whether it was SHOWN.
-    fn writing_in(&mut self, channel: &str) -> bool;
-}

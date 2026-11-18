@@ -12,8 +12,8 @@
 //! this agent; words tagging or replying to someone else and not the bot are addressed to them. Which account is the
 //! bot's own is asked of the API (`getMe`) before the first poll. In a chat with one person nothing is said.
 //!
-//! **IT SENDS.** `say_to` posts `sendMessage` to a chat the world names by its id, replying to the message it names;
-//! `writing_in` posts `sendChatAction` with `typing`.
+//! **IT SENDS.** `say` posts `sendMessage` to a chat the world names by its id, replying to the message the words
+//! answer, or `sendChatAction` with `typing` where the words say only that the agent is writing.
 
 use std::collections::BTreeSet;
 use std::sync::{Arc, Mutex};
@@ -27,8 +27,8 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::ontology::{BELIEF, local_of};
 use orexis::store::{Store, Within, iri, value};
-use orexis_speech::prose::{Carrier, Prose};
 use orexis_transport::Inbox;
+use orexis_transport::chat::Words;
 
 pub const TELEGRAM_URL: &str = "https://api.telegram.org";
 /// WHAT HOLDS WHERE NO ROLE SAYS HOW OFTEN: the defaults this transport's ontology states (`sh:defaultValue`).
@@ -407,9 +407,18 @@ impl Telegram {
         self.beliefs.graphs_of(&[BELIEF], &Within::common())
     }
 
-    /// A message on a chat the world names by its id: the prose it is, in the chat, by the person writing as the user;
-    /// none where the world names no chat by that id.
-    pub fn handle(&mut self, channel: &str, payload: &[u8], at: DateTime) -> Result<Option<Prose>, Error> {
+    /// Whether `channel` is a chat on Telegram, one this bot carries.
+    pub fn carries(&self, channel: &str) -> Result<bool, Error> {
+        const CARRIES_Q: &str = "PREFIX telegram: <http://example.org/orexis/telegram#> ASK { $chat a telegram:Chat }";
+        let common = self.common()?;
+        let common: Vec<&str> = common.iter().map(String::as_str).collect();
+        self.beliefs
+            .ask(&bind(CARRIES_Q, &[("chat", Value::iri(channel))])?, &common)
+    }
+
+    /// A message on a chat the world names by its id: the chat, and its words, by the person writing as the user; none
+    /// where the world names no chat by that id.
+    pub fn handle(&mut self, channel: &str, payload: &[u8], _at: DateTime) -> Result<Option<(String, Words)>, Error> {
         const CHAT_Q: &str = "PREFIX telegram: <http://example.org/orexis/telegram#>
             SELECT ?chat WHERE { ?chat a telegram:Chat ; telegram:chatId ?id FILTER (STR(?id) = $id) }";
         const USER_Q: &str = "PREFIX telegram: <http://example.org/orexis/telegram#>
@@ -438,15 +447,16 @@ impl Telegram {
                 .and_then(|r| iri(r, "person")),
             None => None,
         };
-        Ok(Some(Prose {
-            channel: chat,
-            sender,
-            text: said.get("text").and_then(Json::as_str).unwrap_or_default().to_string(),
-            at: Some(at),
-            addressed: said.get("addressed").and_then(Json::as_bool),
-            message: said.get("message").and_then(Json::as_str).map(str::to_string),
-            reply: None,
-        }))
+        Ok(Some((
+            chat,
+            Words {
+                text: said.get("text").and_then(Json::as_str).unwrap_or_default().to_string(),
+                from: sender,
+                addressed: said.get("addressed").and_then(Json::as_bool),
+                message: said.get("message").and_then(Json::as_str).map(str::to_string),
+                ..Words::default()
+            },
+        )))
     }
 
     /// `method` posted to the chat the world names `channel` by its id; false where it names none, or the API refuses
@@ -488,17 +498,18 @@ impl Telegram {
     }
 }
 
-impl Carrier for Telegram {
-    fn say_to(&mut self, channel: &str, text: &str, reply: Option<&str>) -> bool {
-        let mut body = json!({"text": text});
-        if let Some(reply) = reply.and_then(|r| r.parse::<i64>().ok()) {
+impl Telegram {
+    /// `words` said on the chat `channel`: sent as a message, a reply where they name the words they answer, or the
+    /// agent shown typing where they say only that it is writing. Whether the API took it.
+    pub fn say(&mut self, channel: &str, words: &Words) -> bool {
+        if words.writing {
+            return self.posted(channel, "sendChatAction", json!({"action": "typing"}));
+        }
+        let mut body = json!({"text": words.text});
+        if let Some(reply) = words.reply.as_deref().and_then(|r| r.parse::<i64>().ok()) {
             body["reply_parameters"] = json!({"message_id": reply, "allow_sending_without_reply": true});
         }
         self.posted(channel, "sendMessage", body)
-    }
-
-    fn writing_in(&mut self, channel: &str) -> bool {
-        self.posted(channel, "sendChatAction", json!({"action": "typing"}))
     }
 }
 
@@ -739,12 +750,12 @@ mod tests {
     }
 
     #[test]
-    fn a_message_is_prose_in_the_chat_the_world_names_by_its_id_by_the_person_writing_as_the_user() {
+    fn a_message_is_words_on_the_chat_the_world_names_by_its_id_by_the_person_writing_as_the_user() {
         let store = world();
         let (mut bot, _, _) = bot(&store);
         let before = store.len().unwrap();
         let payload = |s: Json| s.to_string().into_bytes();
-        let heard: Vec<Prose> = [
+        let heard: Vec<(String, Words)> = [
             bot.handle("4242", &payload(said("111", "hello", Json::Null, "5")), now())
                 .unwrap(),
             bot.handle("-100", &payload(said("999", "who am I", json!(true), "6")), now())
@@ -756,13 +767,13 @@ mod tests {
         type Said = (String, Option<String>, String, Option<bool>, Option<String>);
         let got: Vec<Said> = heard
             .iter()
-            .map(|p| {
+            .map(|(channel, w)| {
                 (
-                    p.channel.clone(),
-                    p.sender.clone(),
-                    p.text.clone(),
-                    p.addressed,
-                    p.message.clone(),
+                    channel.clone(),
+                    w.from.clone(),
+                    w.text.clone(),
+                    w.addressed,
+                    w.message.clone(),
                 )
             })
             .collect();
@@ -800,13 +811,22 @@ mod tests {
     fn what_the_agent_says_goes_to_send_message_with_the_chats_id_and_writing_to_a_chat_action() {
         let store = world();
         let (mut bot, _, calls) = bot(&store);
-        assert!(bot.say_to(&format!("{TEST}anna_telegram"), "the fern is dry", None));
-        assert!(bot.say_to(&format!("{TEST}household_telegram"), "it is", Some("42")));
+        assert!(bot.say(&format!("{TEST}anna_telegram"), &Words::said("the fern is dry")));
+        let reply = Words {
+            reply: Some("42".into()),
+            ..Words::said("it is")
+        };
+        assert!(bot.say(&format!("{TEST}household_telegram"), &reply));
         assert!(
-            !bot.say_to(&format!("{TEST}anna_mail"), "x", None),
+            !bot.say(&format!("{TEST}anna_mail"), &Words::said("x")),
             "no Telegram chat is not this member's"
         );
-        assert!(bot.writing_in(&format!("{TEST}anna_telegram")));
+        assert!(!bot.carries(&format!("{TEST}anna_mail")).unwrap());
+        let writing = Words {
+            writing: true,
+            ..Words::default()
+        };
+        assert!(bot.say(&format!("{TEST}anna_telegram"), &writing));
         assert_eq!(
             *calls.lock().unwrap(),
             [
@@ -841,7 +861,7 @@ mod tests {
             .unwrap();
         let (mut bot, _, _) = bot(&store);
         bot.api.call = Arc::new(|_, _| Err("unreachable".into()));
-        assert!(!bot.say_to(&format!("{TEST}anna_telegram"), "x", None));
+        assert!(!bot.say(&format!("{TEST}anna_telegram"), &Words::said("x")));
         assert!(Telegram::connect(&store, &format!("{TEST}keeper"), &|_| None).is_err());
         let env = |k: &str| match k {
             "TELEGRAM_BOT_TOKEN" => Some("t".to_string()),

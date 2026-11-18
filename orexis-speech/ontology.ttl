@@ -119,23 +119,33 @@ speech:Trigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Trigger"
     rdfs:comment "Speech's trigger, abstract: an event beneath it is beneath the one trigger below." .
 
 speech:Speaking a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Speaking" ;
-    rdfs:comment "Telling statements the agent already believes it said to the agents they are to: each read back from the store as it was said - its graph, the kinds it says it is and its period - and told through whoever reaches a peer." .
+    rdfs:comment "Telling statements the agent already believes it said to the agents they are to: each read back from the store as it was said - its graph, the kinds it says it is and its period - and the document sent to each agent through the transport member that reaches it as a channel it is sent on; a person, whom no member reaches so, is passed over, translation phrasing for them." .
 
 speech:SpeakingTrigger a owl:Class ; rdfs:subClassOf speech:Trigger ; rdfs:label "Speaking trigger" ;
     rdfs:comment "What starts a speaking: an event naming each statement to tell (`speech:statement`), which whoever says it has already written with speech's `said`, and each agent it is to (`speech:to`). The event names them; the statements are in the store." .
 
-#  WORDS ON A CHAT'S CHANNEL, KEPT: speech's, since a chat is, and what every member that carries a chat's channel -
-#  above speech, as the MQTT member hands speech what it hears - and translation meet at. A person's are kept as they arrived, before anything was made of them, and
-#  the agent's own before any member carries them; which they are is provenance, never the kind.
+#  WORDS ON A CHAT'S CHANNEL, KEPT: speech's, since a chat is, and what speech and translation meet at. Speech listens on
+#  each chat's channel through the transport member that carries it, and keeps a person's words as they arrived, before
+#  anything was made of them, and translation the agent's own before speech carries them; which they are is provenance,
+#  never the kind.
 
 speech:ProseGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Prose graph" ;
-    rdfs:comment "Words on a channel, of the agent's own: a person's, kept by the transport that carried them and arrived from outside (`orexis:Received`), or the agent's, kept by translation before any transport carries them (`orexis:Recorded`). The channel (`speech:channel`), the text (`speech:text`), who said them where the channel tells (`speech:sender`), whether they were for this agent where the carrier tells (`speech:addressed`), the carrier's id of them (`speech:message`), the carrier's id of the words they answer (`speech:repliesTo`) and when (`prov:atTime`). No belief and handed to no reader of the mind: what is believed of a person's is what translation makes of them." .
+    rdfs:comment "Words on a channel, of the agent's own: a person's, kept by speech as they arrived on a chat's channel (`orexis:Received`), or the agent's, kept by translation before speech carries them (`orexis:Recorded`). The channel (`speech:channel`), the text (`speech:text`), who said them where the channel tells (`speech:sender`), whether they were for this agent where the carrier tells (`speech:addressed`), the carrier's id of them (`speech:message`), the carrier's id of the words they answer (`speech:repliesTo`) and when (`prov:atTime`). No belief and handed to no reader of the mind: what is believed of a person's is what translation makes of them." .
 
 speech:ProseKept a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Prose kept" ;
-    rdfs:comment "Words on a channel were kept as a prose graph (`speech:kept`): a person's by a transport, for whoever above the transports puts this beneath its trigger, or the agent's own by translation, for each transport, which puts this beneath its own. Whoever hears it judges by the graph's provenance whether the words are its to act on." .
+    rdfs:comment "Words on a channel were kept as a prose graph (`speech:kept`): a person's by speech as they arrived, for whoever puts this beneath its trigger, translation; or the agent's own by translation, for speech to carry. Whoever hears it judges by the graph's provenance whether the words are its to act on." .
 
 speech:WritingAnnounced a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Writing announced" ;
-    rdfs:comment "The agent said, at this instant, that it is writing words on a channel (`speech:channel`) still to be kept: said by translation while an answer is thought, again every few seconds until it is said, for each transport that can show it on the channel, which puts this beneath its own trigger." .
+    rdfs:comment "The agent said, at this instant, that it is writing words on a channel (`speech:channel`) still to be kept: said by translation while an answer is thought, again every few seconds until it is said, for speech to show on the channel through the member that carries it, where it can be shown." .
+
+speech:Carrying a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Carrying" ;
+    rdfs:comment "Sending the agent's own words a prose graph keeps on their channel, through the transport member that reaches the channel as one it is sent on, as a reply where the words name the words they answer." .
+
+speech:CarryingTrigger a owl:Class ; rdfs:subClassOf speech:Trigger ; rdfs:label "Carrying trigger" ;
+    rdfs:comment "What starts a carrying: `speech:ProseKept`, naming the prose graph whose words it carries where they are the agent's own (`speech:kept`), and `speech:WritingAnnounced`, naming the channel the agent says it is writing on (`speech:channel`), shown there and kept nowhere. The policy judges by the graph's provenance: a person's words speech kept itself are translation's." .
+
+speech:ProseKept rdfs:subClassOf speech:CarryingTrigger .
+speech:WritingAnnounced rdfs:subClassOf speech:CarryingTrigger .
 
 speech:kept a owl:ObjectProperty ; rdfs:domain speech:ProseKept ; rdfs:range speech:ProseGraph ; rdfs:label "kept" ;
     rdfs:comment "The prose graph an event is about." .

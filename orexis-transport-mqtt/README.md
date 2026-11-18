@@ -10,15 +10,10 @@ The MQTT member of the transport family: readings and peers' documents in, comma
 
 | Heard | Said by | Starts |
 |---|---|---|
-| a message on a subscribed topic (an arrival) | the broker | left with each row listening on a sensor the topic is of, kept by speech (`heard`) for a peer's document, or kept as prose for a chat's topic |
-| `mqtt:TellingTrigger`: `speech:Said` | speech | `mqtt:Telling` |
-| `mqtt:CarryingTrigger`: `speech:ProseKept` | translation | `mqtt:Carrying`, where the words are the agent's own |
+| a message on a subscribed topic (an arrival) | the broker | left with each row listening on a channel the topic is of: sensing for a sensor's reading, speech for a peer's document on the agent's own topic or a chat's words on its topic |
 
 It holds the agent running, since what it senses goes on arriving whatever is wanted.
 
 ## Activities
 
-| Activity | What happens |
-|---|---|
-| `mqtt:Telling` | the document is published to each agent it is to that listens on a topic of the bus; a person is passed over |
-| `mqtt:Carrying` | the agent's own words are sent on the chat's channel, where this member carries it |
+None: what it is handed and sent is a row's above, which listens and sends through it.

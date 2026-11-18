@@ -25,13 +25,14 @@ are theirs alone. A member in a check is handed nothing and reaches nothing.
 bytes on a channel — a topic, a url, a Telegram chat, a mailbox — and none of it means anything to
 the member: a channel a sensor observes is sensing's, one an agent listens on is speech's, and the
 channel of a [chat](/domain/speech/chat.md) the agent is in is a person's prose, the
-[translator](/domain/translation/translator.md)'s. For that row a member keeps a person's words as
-a `speech:ProseGraph` - the channel, who wrote where the channel tells, and the words - and says
-`speech:ProseKept`, speech's words, since a chat is and every member is above speech; translation keeps the agent's answer the same way and says the same event, which
-each member hears beneath its own carrying trigger and sends by `say_to` where it carries the channel,
-the graph's provenance telling a person's words from the agent's
-([policy](/domain/kernel/policy.md)); so a member imports no translation and translation imports no member
-([an-agent-translates-for-itself](/decisions/an-agent-translates-for-itself.md)).
+[translator](/domain/translation/translator.md)'s. Speech, above the transport, listens on the agent's own channel
+and on each chat's through the member that reaches it, and a member hands it what arrives as it came: a peer's
+document, or the words of a chat as `orexis_transport::chat::Words` - the text, who wrote where the channel tells,
+whether it was for this agent, the carrier's id of it. Speech keeps a person's words as a `speech:ProseGraph` and
+says `speech:ProseKept`; translation keeps the agent's answer the same way, and speech sends it back through the
+member that reaches the channel, the graph's provenance telling a person's words from the agent's
+([policy](/domain/kernel/policy.md)). So a member imports no speech and no translation, and speech imports the
+transport's contract alone ([an-agent-translates-for-itself](/decisions/an-agent-translates-for-itself.md)).
 
 Whether a member is loaded at all is not asked of it, since asking would import it. A transport is
 no [role](/domain/kernel/role.md) and no author declares one: the runtime loads a member where a role
@@ -69,11 +70,11 @@ command or a document goes out on the first broker it shares with whoever it is 
 anything of its own accord: a board told to sense is told by the [operator](/domain/actuation/operator.md),
 when sensing says a reading is due, through the bus as a channel it is sent on.
 
-A peer's document travels the same way: the member hears speech's `speech:Said` beneath its
-`mqtt:TellingTrigger`, reads the document back from the store, and `tell` publishes it on the topic each recipient listens to,
-and one arriving is handed to [speech](/domain/speech/speech.md)'s `heard`; a document to a person is
-not the bus's, and is passed over in silence. A chat's topic carries prose both ways, each message
-`{"from": …, "text": …}`, and the member skips its own when the broker hands it back.
+A peer's document travels the same way: [speech](/domain/speech/speech.md) sends what the agent said to each agent it
+is to through the bus, which reaches a peer that listens on a topic as a channel sent on and publishes the document
+there as it is, and listens on the agent's own topic, the bus leaving each document arriving there with it; a person
+is reached by no topic, and passed over. A chat's topic carries words both ways, each message
+`{"from": …, "text": …}`, handed to speech as the chat's words, which skips its own when the broker hands it back.
 
 # The member that ships: HTTP
 

@@ -17,8 +17,8 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::ontology::{BELIEF, local_of};
 use orexis::store::{Store, Within, iri, value};
-use orexis_speech::prose::{Carrier, Prose};
 use orexis_transport::Inbox;
+use orexis_transport::chat::Words;
 
 /// WHAT HOLDS WHERE NO ROLE SAYS HOW OFTEN: the defaults this transport's ontology states (`sh:defaultValue`).
 pub static DEFAULTS: std::sync::LazyLock<orexis::shape::Defaults> =
@@ -222,9 +222,18 @@ impl Email {
         self.beliefs.graphs_of(&[BELIEF], &Within::common())
     }
 
-    /// A message from an address: the prose it is, in the chat whose contact point has that address — its one person
-    /// being who wrote, the channel names no sender; none where the world names the address in no chat.
-    pub fn handle(&mut self, channel: &str, payload: &[u8], at: DateTime) -> Result<Option<Prose>, Error> {
+    /// Whether `channel` is a mailbox this member writes to: a contact point with an address.
+    pub fn carries(&self, channel: &str) -> Result<bool, Error> {
+        const CARRIES_Q: &str = "PREFIX schema: <https://schema.org/> ASK { $contact schema:email ?address }";
+        let common = self.common()?;
+        let common: Vec<&str> = common.iter().map(String::as_str).collect();
+        self.beliefs
+            .ask(&bind(CARRIES_Q, &[("contact", Value::iri(channel))])?, &common)
+    }
+
+    /// A message from an address: the chat whose contact point has that address, and its words — its one person being
+    /// who wrote, the channel names no sender; none where the world names the address in no chat.
+    pub fn handle(&mut self, channel: &str, payload: &[u8], _at: DateTime) -> Result<Option<(String, Words)>, Error> {
         const CONTACT_Q: &str = "PREFIX schema: <https://schema.org/>
             SELECT ?contact WHERE { ?contact schema:email ?address FILTER (LCASE(STR(?address)) = LCASE($address)) }";
         let common = self.common()?;
@@ -240,20 +249,18 @@ impl Email {
             }
             return Ok(None);
         };
-        Ok(Some(Prose {
-            channel: contact,
-            sender: None,
-            text: String::from_utf8_lossy(payload).into_owned(),
-            at: Some(at),
-            addressed: None,
-            message: None,
-            reply: None,
-        }))
+        Ok(Some((contact, Words::said(&String::from_utf8_lossy(payload)))))
     }
 }
 
-impl Carrier for Email {
-    fn say_to(&mut self, channel: &str, text: &str, _reply: Option<&str>) -> bool {
+impl Email {
+    /// `words` sent to the address of the contact point `channel`; a mailbox shows no writing, so words saying only
+    /// that send nothing. Whether the mailbox took them.
+    pub fn say(&mut self, channel: &str, words: &Words) -> bool {
+        if words.writing {
+            return false;
+        }
+        let text = words.text.as_str();
         const ADDRESS_Q: &str =
             "PREFIX schema: <https://schema.org/> SELECT ?address WHERE { $contact schema:email ?address }";
         let Ok(common) = self.common() else { return false };
@@ -276,10 +283,6 @@ impl Carrier for Email {
                 false
             }
         }
-    }
-
-    fn writing_in(&mut self, _channel: &str) -> bool {
-        false
     }
 }
 
@@ -342,15 +345,16 @@ mod tests {
     }
 
     #[test]
-    fn a_message_is_prose_in_the_chat_whose_contact_point_has_the_address() {
+    fn a_message_is_words_on_the_chat_whose_contact_point_has_the_address() {
         let store = world();
         let (mut mail, _) = mail(&store);
-        let prose = mail
+        let (channel, words) = mail
             .handle("Anna@Example.org", "is the fern dry?".as_bytes(), now())
             .unwrap()
             .unwrap();
+        assert!(mail.carries(&channel).unwrap());
         assert_eq!(
-            (prose.channel.as_str(), prose.sender, prose.text.as_str()),
+            (channel.as_str(), words.from, words.text.as_str()),
             (format!("{TEST}anna_mail").as_str(), None, "is the fern dry?"),
             "the chat's one person is who wrote, so the channel names no sender"
         );
@@ -366,16 +370,23 @@ mod tests {
     fn what_the_agent_says_is_sent_to_the_contact_points_address() {
         let store = world();
         let (mut mail, box_) = mail(&store);
-        assert!(mail.say_to(&format!("{TEST}anna_mail"), "the fern is dry", None));
+        assert!(mail.say(&format!("{TEST}anna_mail"), &Words::said("the fern is dry")));
         assert_eq!(
             *box_.sent.lock().unwrap(),
             [("anna@example.org".to_string(), "the fern is dry".to_string())]
         );
         assert!(
-            !mail.say_to(&format!("{TEST}keeper_and_anna"), "x", None),
+            !mail.say(&format!("{TEST}keeper_and_anna"), &Words::said("x")),
             "a node with no address is not this member's"
         );
-        assert!(!mail.writing_in(&format!("{TEST}anna_mail")));
+        let writing = Words {
+            writing: true,
+            ..Words::default()
+        };
+        assert!(
+            !mail.say(&format!("{TEST}anna_mail"), &writing),
+            "a mailbox shows no writing"
+        );
     }
 
     #[test]

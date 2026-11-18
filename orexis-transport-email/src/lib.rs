@@ -2,16 +2,17 @@
 //! held to what its suite asks.
 //!
 //! - [`driver`]: polled for every unseen message, a chat's words said as prose, and told what the agent says;
-//! - `transport`: the member's part, the member and the messages it handed on;
+//! - `transport`: the member's part, a chat carrier the rows above listen and send on, and the messages it handed on;
 //! - the start, below the modules, and nothing else: the member made, and the task that polls it as often as a role
 //!   says (`email:polledEveryS`).
 
-use orexis::task::{Every, Handed, Package, Woke, sooner};
+use std::sync::Arc;
+
+use orexis::task::{Every, Handed, Package, sooner};
 
 use orexis_transport::Jobs;
-use orexis_transport::chat::{CARRY, POLL};
-
-use crate::transport::CARRYING_TRIGGER;
+use orexis_transport::Members;
+use orexis_transport::chat::POLL;
 
 pub mod driver;
 mod transport;
@@ -36,9 +37,8 @@ const WORDS: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
 
 /// ITS START, which every package this binary holds is given: it joins where a role the self plays needs what it
 /// carries and the world wires it, and declines otherwise; joined, its member is made; checked, it says it holds the
-/// agent and ends there as it boots; otherwise what follows is ITS TASK, which waits for an event
-/// beneath its trigger, an arrival or the instant it next polls, and once nothing more waits to be heard handles what
-/// the member handed on.
+/// agent and ends there as it boots; otherwise what follows is ITS TASK, which waits for an arrival or the instant it
+/// next polls and hands on what the member read to the row listening on its chat.
 fn start(handed: Handed) -> orexis::task::Starting {
     Box::pin(async move {
         if !orexis_transport::wired(&handed, WORDS, WIRED)? {
@@ -64,46 +64,39 @@ fn start(handed: Handed) -> orexis::task::Starting {
             checking.holds("transport/email");
         }
         let mut transport = Transport::new(member);
-        let mut hears = handed.events.hears();
+        //  A CHAT CARRIER IS ONE OF THE AGENT'S MEMBERS: speech listens on the chats it carries, and says there.
+        let carried = transport.carried();
+        handed
+            .provided
+            .alter(|members: &mut Members| members.add(Arc::new(carried)));
         let mut arrived = handed.arrived();
-        transport.member.inbox.wakes(arrived.wake());
-        let mut timers = vec![(Every::new(transport.member.polled_every_s), POLL)];
-        hears.event(CARRYING_TRIGGER, CARRY);
+        transport.carrier().member.inbox.wakes(arrived.wake());
+        let every = transport.carrier().member.polled_every_s;
+        let mut timers = vec![(Every::new(every), POLL)];
         if !handed.booted().await? {
             return Ok(());
         }
-        let mut heard = None;
-        let mut due = None;
+        let mut due;
         loop {
             let mut turn = handed.turn();
-            if let Some(Woke::Event(tag, event)) = heard.take() {
-                let wrote = transport.heard_event(tag, &event, &mut turn);
-                turn.done(wrote)?;
-            }
-            if hears.is_empty() {
-                let wrote = transport.queued(&mut turn);
-                turn.done(wrote)?;
-                for (every, tag) in &mut timers {
-                    if every.due(turn.now) {
-                        let wrote = transport.run(*tag, &mut turn);
-                        turn.done(wrote)?;
-                        let wrote = transport.queued(&mut turn);
-                        turn.done(wrote)?;
-                    }
+            let wrote = transport.queued(&mut turn);
+            turn.done(wrote)?;
+            for (every, tag) in &mut timers {
+                if every.due(turn.now) {
+                    let wrote = transport.run(*tag, &mut turn);
+                    turn.done(wrote)?;
+                    let wrote = transport.queued(&mut turn);
+                    turn.done(wrote)?;
                 }
-                due = timers
-                    .iter()
-                    .fold(turn.next(), |soonest, (every, _)| sooner(soonest, every.at()));
             }
-            heard = tokio::select! {
+            due = timers
+                .iter()
+                .fold(turn.next(), |soonest, (every, _)| sooner(soonest, every.at()));
+            tokio::select! {
                 biased;
                 _ = handed.stopped() => break,
-                woke = hears.next() => match woke {
-                    Some(woke) => Some(woke),
-                    None => break,
-                },
-                _ = arrived.wait() => None,
-                _ = handed.sleep_until(due) => None,
+                _ = arrived.wait() => {},
+                _ = handed.sleep_until(due) => {},
             };
         }
         Ok(())

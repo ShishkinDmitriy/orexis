@@ -48,14 +48,14 @@ their revisions are (`belief:revises`, `belief:into`), and `belief:Revised` is b
 `coordination:DrawWon` is beneath `planning:PlanningTrigger`, naming the walking wants to plan again
 (`planning:reopens`), and its `coordination:Told` beneath `speech:SpeakingTrigger`, naming statements
 it already believes it said (`speech:statement`) and the peer (`speech:to`): the event names them, and
-speech reads each back from the store as it was said. And speech's `speech:ProseKept`, said by a
-transport that kept a person's words as a `speech:ProseGraph`, is beneath `translation:TranslatingTrigger`;
-translation keeps its own answer the same way and says the same event, which each transport's ontology puts
-beneath its own carrying trigger (`telegram:CarryingTrigger`, with `speech:WritingAnnounced` for the agent shown writing),
-and each judges by the graph's provenance whose words they are: a person's are translation's, the agent's the
-carrier's. And speech's `speech:Said`, a document the agent said, naming its statements and each it is to, is
-beneath `mqtt:TellingTrigger`, which tells it to each agent on the bus, and `translation:PhrasingTrigger`, which
-phrases it for each person in a chat; each reads the statements back from the store as speech said them.
+speech reads each back from the store as it was said, and sends the document to each agent through the member that
+reaches it. And speech's `speech:ProseKept`, said by speech as it kept a person's words that arrived on a chat's
+channel as a `speech:ProseGraph`, is beneath `translation:TranslatingTrigger`; translation keeps its own answer the
+same way and says the same event, which speech's ontology puts beneath its own `speech:CarryingTrigger`, with
+`speech:WritingAnnounced` for the agent shown writing, and each judges by the graph's provenance whose words they
+are: a person's are translation's, the agent's speech's to carry. And speech's `speech:Said`, a document the agent
+said, naming its statements and each it is to, is beneath `translation:PhrasingTrigger`, which phrases it for each
+person in a chat, reading the statements back from the store as speech said them.
 Execution's step taken says `execution:Commanded`, naming the command graph it kept, beneath
 `actuation:ActuatingTrigger` by actuation's ontology, since actuation is above the executor whose steps it carries
 out on a device, as sensing's `sensing:ReadingLapsed`, naming the sensors whose readings lapsed, is beneath its

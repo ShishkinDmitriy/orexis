@@ -16,9 +16,9 @@ use orexis::clock::{Elapsing, instant};
 use orexis::events::as_of;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri, value};
-use orexis::task::{Heard, Package, Provided, Running, Turn as Handling, Wake, Woke};
+use orexis::task::{Package, Provided, Running, Turn as Handling, Wake, Woke};
 use orexis_speech::events::{Said, Statement};
-use orexis_speech::prose::{Carrier, PROSE_GRAPH, PROSE_KEPT, Prose, ProseKept, WRITING_ANNOUNCED, carry, kept};
+use orexis_speech::prose::{PROSE_GRAPH, Prose, ProseKept, kept};
 use orexis_translation::briefing::briefing;
 use orexis_translation::chat::chats_of;
 use orexis_translation::events::{Conversed, Translated};
@@ -26,6 +26,8 @@ use orexis_translation::model::{Answer, Failure, Model, Turn};
 use orexis_translation::readable::{QUERY, Readable, VOCABULARY};
 use orexis_translation::stated::{PROPERTY, Stating, believe, listing, rendered, statement_of, words};
 use orexis_translation::{CONVERSE_SYSTEM, Inline, SAY_SYSTEM, SILENT, UNADDRESSED};
+use orexis_transport::chat::Words;
+use orexis_transport::{Exchange, Inbox, Members};
 use orexis_transport_email as _;
 use orexis_transport_mqtt as _;
 use orexis_transport_telegram as _;
@@ -492,36 +494,49 @@ struct Bot {
     writing: Vec<String>,
 }
 
-impl Carrier for Bot {
-    fn say_to(&mut self, channel: &str, text: &str, reply: Option<&str>) -> bool {
-        self.said.push((channel.to_string(), text.to_string()));
-        self.replies.push(reply.map(str::to_string));
-        true
+/// The bot as a member of the agent's: every channel sent on, what speech sends there kept as words or writing.
+struct Carried(Arc<Mutex<Bot>>);
+
+impl orexis_transport::Member for Carried {
+    fn reaches(&self, _channel: &str, exchange: Exchange) -> Result<bool, orexis::Error> {
+        Ok(exchange == Exchange::Sent)
     }
 
-    fn writing_in(&mut self, channel: &str) -> bool {
-        self.writing.push(channel.to_string());
-        true
+    fn listen(&self, _channel: &str, _inbox: Inbox) -> Result<(), orexis::Error> {
+        Ok(())
+    }
+
+    fn send(&self, channel: &str, payload: &[u8], _reply: Option<Inbox>) -> Result<(), orexis::Error> {
+        let Some(words) = Words::of(payload) else {
+            return Ok(());
+        };
+        let mut bot = self.0.lock().unwrap();
+        if words.writing {
+            bot.writing.push(channel.to_string());
+        } else {
+            bot.said.push((channel.to_string(), words.text));
+            bot.replies.push(words.reply);
+        }
+        Ok(())
     }
 }
 
-/// The bot as a transport's part: a person's words kept and said kept at the next pass, and what the agent says
-/// carried, as a member hears it beneath its trigger.
+/// The bot as a transport's part: a person's words kept and said kept at the next pass, and documents said, as
+/// speech says them; what the agent says speech carries through the bot, one of the agent's members.
 struct Member {
-    store: Store,
     bot: Arc<Mutex<Bot>>,
     kept: Vec<String>,
     /// Documents said, to say said at the next pass, as speech says them.
     said: Vec<Said>,
 }
 
-//  THE MEMBER'S TASK, registered as a package registers itself: it takes the member the test provided, hears
-//  the agent's words kept and its writing announced, and is rung for what the test queued on it.
+//  THE MEMBER'S TASK, registered as a package registers itself: it takes the member the test provided, adds its bot
+//  to the agent's members, and is rung for what the test queued on it.
 inventory::submit! { Package { name: "test/member", start: |handed| orexis::task::named(handed, "test/member", |handed| {
     let member = handed.provided.take::<Arc<Mutex<Member>>>().expect("a member handed");
+    let bot = member.lock().unwrap().bot.clone();
+    handed.provided.alter(|members: &mut Members| members.add(Arc::new(Carried(bot))));
     let mut hears = handed.events.hears();
-    hears.event(PROSE_KEPT, 1);
-    hears.event(WRITING_ANNOUNCED, 1);
     let mut arrived = handed.arrived();
     handed.provided.provide(arrived.wake());
     let handed = handed.clone();
@@ -539,7 +554,7 @@ inventory::submit! { Package { name: "test/member", start: |handed| orexis::task
             let mut turn = handed.turn();
             let mut member = member.lock().unwrap();
             let wrote = match woke {
-                Some(Woke::Event(_, event)) => member.heard_event(&event, &mut turn),
+                Some(Woke::Event(..)) => Ok(Vec::new()),
                 _ => Ok(member.queued(&mut turn)),
             };
             turn.done(wrote)?;
@@ -549,11 +564,6 @@ inventory::submit! { Package { name: "test/member", start: |handed| orexis::task
 }) } }
 
 impl Member {
-    fn heard_event(&mut self, event: &Heard, pass: &mut Handling<'_>) -> Result<Vec<String>, orexis::Error> {
-        carry(&self.store, &mut *self.bot.lock().unwrap(), event, pass, CARRYING)?;
-        Ok(Vec::new())
-    }
-
     fn queued(&mut self, pass: &mut Handling<'_>) -> Vec<String> {
         let kept = std::mem::take(&mut self.kept);
         for prose in &kept {
@@ -565,8 +575,6 @@ impl Member {
         kept
     }
 }
-
-const CARRYING: &str = "http://example.org/orexis/telegram#Carrying";
 
 /// What the stand-in was asked: each turn's system blocks, its messages and the names of the tools offered.
 type Asked = Arc<Mutex<Vec<(Vec<String>, Vec<Json>, Vec<String>)>>>;
@@ -698,7 +706,6 @@ impl<'s> Seeker<'s> {
     fn new(store: &'s Store) -> Self {
         let bot = Arc::new(Mutex::new(Bot::default()));
         let member = Arc::new(Mutex::new(Member {
-            store: store.clone(),
             bot: bot.clone(),
             kept: Vec::new(),
             said: Vec::new(),
