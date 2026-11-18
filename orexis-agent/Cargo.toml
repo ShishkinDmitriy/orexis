@@ -15,7 +15,7 @@ path = "src/main.rs"
 path = "src/lib.rs"
 
 [features]
-default = ["journal", "metrics", "belief", "planning", "execution", "sensing", "prediction", "speech", "coordination", "translation", "mqtt", "http", "telegram", "email"]
+default = ["journal", "metrics", "belief", "planning", "execution", "actuation", "sensing", "prediction", "speech", "coordination", "translation", "mqtt", "http", "telegram", "email"]
 # THE JOURNAL, for an agent that plays a recorder: the crate that keeps it, the one that archives what lasts and the
 # one that ships its activities.
 journal = ["dep:orexis-journal", "dep:orexis-journal-oxigraph", "dep:orexis-journal-otlp"]
@@ -24,6 +24,8 @@ metrics = ["dep:orexis-metrics"]
 belief = ["dep:orexis-belief"]
 planning = ["dep:orexis-planning"]
 execution = ["dep:orexis-execution"]
+# THE OPERATOR, for an agent that operates devices: a step's commands sent through the transport.
+actuation = ["dep:orexis-actuation"]
 sensing = ["dep:orexis-sensing", "dep:orexis-sensing-influxdb"]
 prediction = ["dep:orexis-prediction"]
 mqtt = ["dep:orexis-transport-mqtt"]
@@ -42,6 +44,7 @@ orexis = { workspace = true, features = ["series"] }
 orexis-belief = { workspace = true, optional = true }
 orexis-planning = { workspace = true, optional = true }
 orexis-execution = { workspace = true, optional = true }
+orexis-actuation = { workspace = true, optional = true }
 orexis-sensing = { workspace = true, optional = true }
 orexis-sensing-influxdb = { workspace = true, optional = true }
 orexis-prediction = { workspace = true, optional = true }

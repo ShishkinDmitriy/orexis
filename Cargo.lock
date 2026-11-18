@@ -984,12 +984,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "orexis-actuation"
+version = "0.2.0"
+dependencies = [
+ "inventory",
+ "log",
+ "orexis",
+ "orexis-transport",
+ "oxigraph",
+ "tokio",
+]
+
+[[package]]
 name = "orexis-agent"
 version = "0.2.0"
 dependencies = [
  "inventory",
  "log",
  "orexis",
+ "orexis-actuation",
  "orexis-belief",
  "orexis-coordination",
  "orexis-execution",

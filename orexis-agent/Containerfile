@@ -21,6 +21,7 @@ COPY Cargo.toml Cargo.toml
 COPY Cargo.lock Cargo.lock
 # EVERY CRATE BY NAME, since a COPY of a glob lays their contents flat; tests/test_layout.py holds the list to the tree.
 COPY orexis/ orexis/
+COPY orexis-actuation/ orexis-actuation/
 COPY orexis-agent/ orexis-agent/
 COPY orexis-belief/ orexis-belief/
 COPY orexis-coordination/ orexis-coordination/

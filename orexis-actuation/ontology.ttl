@@ -1,0 +1,42 @@
+@prefix actuation: <http://example.org/orexis/actuation#> .
+@prefix execution: <http://example.org/orexis/execution#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sosa: <http://www.w3.org/ns/sosa/> .
+
+<> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
+
+#  OREXIS ACTUATION: the translation row's acting side, the mirror of sensing - a step's command turned into what a
+#  device is told and sent through the transport, in SOSA's words for acting (sosa:Actuator, sosa:Actuation,
+#  sosa:actsOnProperty), declaring only what SOSA lacks
+#  (knowledge/decisions/the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop.md). The words of a domain
+#  that doses or heats - a valve, how fast it pours - are that domain's, in domains/actuation/.
+
+#  THE ROLE THIS PACKAGE SERVES (knowledge/domain/actuation/operator.md).
+actuation:Operator a owl:Class ; rdfs:subClassOf orexis:Role ; rdfs:label "Operator" ;
+    orexis:dependsOn execution:Executor ;
+    rdfs:comment "An agent that operates devices: what a step it takes commands is sent to the device through the transport, by the actuation package this role loads. It works beside an executor, whose steps are what it carries out on a device." .
+
+#  WHAT AN AGENT OPERATES, and what a device changes.
+actuation:hasActuator a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range sosa:Actuator ;
+    rdfs:label "has actuator" ;
+    rdfs:comment "A device an agent may take a step through. The dose is available only on an actuator the agent holds." .
+actuation:actuates a owl:ObjectProperty ; rdfs:domain sosa:Actuator ; rdfs:label "actuates" ;
+    rdfs:comment "The subject the device changes: the bed a pump waters." .
+actuation:actuatesProperty a owl:ObjectProperty ; rdfs:domain sosa:Actuator ; rdfs:range sosa:ObservableProperty ;
+    rdfs:label "actuates property" ;
+    rdfs:comment "Which of the subject's properties the device moves: the soil's moisture for a pump. What the subject is believed of that property is what a dose changes, and a reading of it is what answers the dose." .
+
+#  WHAT THE OPERATOR DOES, and what starts it: a step's commands, execution's , beneath its trigger.
+actuation:Trigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Trigger" ;
+    rdfs:comment "An event that starts an activity of the operator's." .
+
+actuation:Actuating a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Actuating" ;
+    rdfs:comment "One order of a step's commands sent: each command of the command graph sent to its actuator through the transport member that reaches it, and one no member reaches passed over, said in the log." .
+
+actuation:ActuatingTrigger a owl:Class ; rdfs:subClassOf actuation:Trigger ; rdfs:label "Actuating trigger" ;
+    rdfs:comment "What starts an actuating: execution's `execution:Commanded`, beneath it here, naming the command graph a step's order kept (`execution:commands`)." .
+
+execution:Commanded rdfs:subClassOf actuation:ActuatingTrigger .

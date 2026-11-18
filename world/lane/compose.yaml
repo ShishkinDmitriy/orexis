@@ -61,6 +61,7 @@ services:
       - ./society.ttl:/app/world/lane/society.ttl:ro
       - ./world.ttl:/app/world/lane/world.ttl:ro
       - ../../orexis:/app/orexis:ro
+      - ../../orexis-actuation:/app/orexis-actuation:ro
       - ../../orexis-agent:/app/orexis-agent:ro
       - ../../orexis-belief:/app/orexis-belief:ro
       - ../../orexis-coordination:/app/orexis-coordination:ro
@@ -91,7 +92,7 @@ services:
       dockerfile: orexis-agent/Containerfile
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
-        FEATURES: "belief,coordination,execution,journal,mqtt,planning,sensing,speech"
+        FEATURES: "actuation,belief,coordination,execution,journal,mqtt,planning,sensing,speech"
     command: ["orexis-agent", "/app/world/lane", "courier_a", "--volume", "/app/state"]
     environment:
       # its certificate and the authority's, in its container; which brokers it is connected to and where each
@@ -140,7 +141,7 @@ services:
       dockerfile: orexis-agent/Containerfile
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
-        FEATURES: "belief,coordination,execution,journal,mqtt,planning,sensing,speech"
+        FEATURES: "actuation,belief,coordination,execution,journal,mqtt,planning,sensing,speech"
     command: ["orexis-agent", "/app/world/lane", "courier_b", "--volume", "/app/state"]
     environment:
       # its certificate and the authority's, in its container; which brokers it is connected to and where each

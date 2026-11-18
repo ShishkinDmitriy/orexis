@@ -5,6 +5,7 @@ WORKDIR /src
 # EVERY CRATE BY NAME, since a COPY of a glob lays their contents flat; tests/test_layout.py holds the list to the tree.
 COPY orexis/ tree/orexis/
 COPY orexis-agent/ tree/orexis-agent/
+COPY orexis-actuation/ tree/orexis-actuation/
 COPY orexis-belief/ tree/orexis-belief/
 COPY orexis-coordination/ tree/orexis-coordination/
 COPY orexis-execution/ tree/orexis-execution/

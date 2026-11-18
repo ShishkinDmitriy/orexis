@@ -744,8 +744,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   window (#626).
 - **A forecast is a series a sensor reads, and a public service's address is wiring** — one graph per
   stretch, sensing asks it over HTTP on its cadence, the location lives in the agent's own `secrets/<agent>/` (a-forecast-is-a-series-a-sensor-reads).
-- **Several transport members are one to the container** — a message goes back to the member that
-  queued it, a command to the member that `reaches` the device.
+- **Several transport members are one to the rows above** — each adds itself to the agent's `Members`, and a row sends
+  on a channel through the member that says it reaches it: a step's command, actuation's, to the member reaching the
+  actuator (the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop).
 - **The transport speaks MQTT4SSN, and a topic is named by the filters that match it, which no society
   states** — onboarding's one `sh:rule` names each for its publisher or its listener, a board's one
   readings topic `sensors/<client>/reading`, into `society.derived.ttl`, which every reader reads as the

@@ -1,0 +1,21 @@
+# ACTUATION: the translation row's acting side, the mirror of sensing — a step's command sent to its device through the
+# transport member that reaches it, in SOSA's words for acting.
+[package]
+name = "orexis-actuation"
+version = "0.2.0"
+edition.workspace = true
+license.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+inventory.workspace = true
+tokio.workspace = true
+orexis = { workspace = true }
+orexis-transport = { workspace = true }
+oxigraph.workspace = true
+log = "0.4"
+
+[dev-dependencies]
+orexis = { workspace = true, features = ["snapshots"] }

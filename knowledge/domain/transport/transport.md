@@ -5,8 +5,8 @@ description: >-
   How an agent reaches the devices, services, peers and people of its world - a family whose
   contract is a crate its members share (`orexis-transport/`), with four members that ship: MQTT,
   speaking MQTT4SSN, HTTP, speaking the WoT Thing Description, Telegram and email. It hands sensing
-  bytes, sends what a step commands, carries documents between agents and a person's prose to and
-  from the agent; sensing, speech and translation know nothing of it.
+  bytes, sends what actuation tells a device, carries documents between agents and a person's prose to and
+  from the agent; sensing, speech and translation know nothing of a member.
 ---
 
 # The contract

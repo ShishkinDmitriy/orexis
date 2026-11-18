@@ -7,7 +7,7 @@ description: >-
   source, a heater warming air. A domain of documents - the devices and what they move in
   `domains/actuation/`, the heater in `domains/climate/` - whose actions take the subject, predict
   its state in climate's words, and whose commands size the act from the present when a step is
-  taken.
+  taken. What an agent holds and what a device changes are the actuation package's words.
 ---
 
 # What a world states
@@ -19,7 +19,10 @@ description: >-
 ```
 
 An agent may take a step only through a device it `actuation:hasActuator`: a grower that wins
-water still cannot open the supplier's valve.
+water still cannot open the supplier's valve. `actuation:hasActuator`, `actuation:actuates` and
+`actuation:actuatesProperty` are declared by the package that sends what a step commands,
+`orexis-actuation/`, whose agent is an [operator](/domain/actuation/operator.md); the valve and how it pours
+are this domain's.
 
 # The dose, and the heating
 
