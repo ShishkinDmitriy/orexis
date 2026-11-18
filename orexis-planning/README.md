@@ -22,7 +22,7 @@ takes it.
 
 | Activity | What happens | Ends saying |
 |---|---|---|
-| `planning:Planning` | lay the grounds (the present, then each foreseen instant); derive the wants; search each want's scope within the budget of worlds; publish what was found; hold the agent or let it go | `planning:PlanPublished`, `planning:WantReached`, `planning:PlanSuperseded`, `planning:WantUnreachable` |
+| `planning:Planning` | lay the grounds (the present, then each foreseen instant); derive the wants; search each want's scope within the budget of worlds; publish what was found; hold the agent or let it go | `planning:PlanPublished`, `planning:WantReached`, `planning:PlanSuperseded`, `planning:WantFoundUnreachable` |
 
 ## What it says
 
@@ -32,4 +32,4 @@ takes it.
 | `planning:WantReached` | `execution:ResolvingTrigger` | execution ends the want's unbegun intentions |
 | `planning:PlanSuperseded` | `execution:SupersedingTrigger` | execution ends an intention after its step in flight |
 | `planning:HeadChecked` | `execution:WalkingTrigger` | the answer to `execution:HeadAsked` |
-| `planning:WantUnreachable` | `orexis:Incident` | the journal keeps the log before it |
+| `planning:WantFoundUnreachable` | `orexis:Incident` | the journal keeps the log before it |

@@ -5,7 +5,7 @@ term: http://example.org/orexis/actuation#Operator
 description: >-
   A role an agent plays that operates devices - the role whose part is actuation's, depending on no
   role. What a step commands is made into the device's document and sent through the transport member
-  that reaches it, and kept as `sosa:Actuation`s, and a board whose reading sensing says is due is told
+  that reaches it, and kept as `sosa:Actuation`s, and a board whose reading sensing says has lapsed is told
   to sense; an agent holding an actuator or observing through a board that takes commands plays one,
   and onboarding refuses one that does either and plays none.
 ---
@@ -17,7 +17,7 @@ turns on the heater; the allotment's supplier, the one agent holding the valves;
 layby, whose drive is told to the van it acts for; and the sensing world's fern agent, which takes no step and
 observes through a board that waits to be told to sense. Each says so in its self graph, `orexis:plays [ a
 actuation:Operator ]`. It depends on no role: what it acts on is what an [executor](/domain/execution/executor.md)
-commands where the agent plays one, and what an [observer](/domain/sensing/observer.md) says is due where it plays one.
+commands where the agent plays one, and what an [observer](/domain/sensing/observer.md) says has lapsed where it plays one.
 
 An agent that `actuation:hasActuator` a device and plays no operator is refused at
 [onboarding](/domain/onboarding/onboarding.md): its steps would be taken and no device told; and so is one whose
@@ -45,8 +45,8 @@ what no member reached is in none.
 
 # The nudge
 
-When a reading is due is [sensing](/domain/sensing/sensing.md)'s to say: as the agent starts, after each reading, and
-when one next falls due, it says `sensing:ReadingDue`, naming each sensor of the observer's whose reading has fallen
+Whether a reading has lapsed is [sensing](/domain/sensing/sensing.md)'s to say: as the agent starts, after each reading, and
+when one next falls due, it says `sensing:ReadingLapsed`, naming each sensor of the observer's whose reading has fallen
 due that a member is sent on and none answers when asked, and says it again `sensing:askedAgainAfterS` on while no
 reading comes, a figure of the observer's role, sixty seconds where it says none. The operator hears it beneath
 `actuation:NudgingTrigger` and, in `actuation:Nudging`, sends each sensor `actuation:SenseNow` set true, at its

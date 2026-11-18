@@ -485,7 +485,7 @@ GROUP BY ?step ?disk ?onto ORDER BY ?order";
 #[tokio::test(start_paused = true)]
 async fn the_history_part_marks_an_event_of_a_class_beneath_incident_and_no_other() {
     use orexis::events::Event;
-    use orexis_planning::events::{PlanPublished, WantUnreachable};
+    use orexis_planning::events::{PlanPublished, WantFoundUnreachable};
     let store = store();
     let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(now)).unwrap());
     let provided = Provided::default()
@@ -499,7 +499,7 @@ async fn the_history_part_marks_an_event_of_a_class_beneath_incident_and_no_othe
         .await
         .unwrap();
     let watch = running.handed.events.watch().clone();
-    let unreachable: &dyn Event = &WantUnreachable {
+    let unreachable: &dyn Event = &WantFoundUnreachable {
         want: "http://example.org/test#want".into(),
         desire: None,
         at: Some(now()),
@@ -527,7 +527,7 @@ async fn the_history_part_marks_an_event_of_a_class_beneath_incident_and_no_othe
     .unwrap();
     let body = String::from_utf8(body).unwrap();
     assert!(
-        body.contains("WantUnreachable") && !body.contains("PlanPublished"),
+        body.contains("WantFoundUnreachable") && !body.contains("PlanPublished"),
         "off the agent's own T-Box: {body}"
     );
 }

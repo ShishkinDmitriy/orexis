@@ -17,7 +17,7 @@ use orexis::task::{Every, Heard, Turn};
 use orexis_transport::{Exchange, Inbox, Member, Members};
 
 use crate::cadence::{cadence_of, lapsed, next_lapse};
-use crate::events::{Doubted, Perceived, ReadingDue, Silence, tag_of};
+use crate::events::{Doubted, Perceived, ReadingLapsed, Silence, tag_of};
 use crate::missed::missed;
 use crate::ontology::{OBSERVATION_GRAPH, OBSERVER, OBSERVING, REVISED_SOURCE, SILENCE_GRAPH, silence_graph};
 use crate::received::received;
@@ -367,7 +367,7 @@ impl Observer {
 
     /// SENSING'S POLICY FOR A READING DUE: at the start, after a reading and when one next falls due, the sensors of
     /// the observer's whose readings have fallen due (`cadence::lapsed`) that a member is sent on and none answers
-    /// when asked, said together as `sensing:ReadingDue` for the operator to tell their boards; and the turn woken
+    /// when asked, said together as `sensing:ReadingLapsed` for the operator to tell their boards; and the turn woken
     /// when the next falls due, or `asked_again_after_s` on where a board was told, since it may not have heard. A
     /// sensor asked on its cadence is asked by sensing itself (`request`), and none is said due.
     pub(crate) fn due(&mut self, pass: &mut Turn<'_>) -> Result<(), Error> {
@@ -386,7 +386,7 @@ impl Observer {
             self.next_due = if due.is_empty() {
                 next
             } else {
-                pass.emit(&ReadingDue { sensors: due });
+                pass.emit(&ReadingLapsed { sensors: due });
                 let again = pass
                     .now
                     .checked_add_day_time_duration(orexis::clock::seconds(self.asked_again_after_s))
@@ -531,7 +531,7 @@ mod tests {
         let said: Arc<Mutex<Vec<Vec<String>>>> = Arc::default();
         let into = said.clone();
         events.watch().connect(move |event, _| {
-            if let Some(due) = orexis::events::as_of::<ReadingDue>(event) {
+            if let Some(due) = orexis::events::as_of::<ReadingLapsed>(event) {
                 into.lock().unwrap().push(due.sensors.clone());
             }
         });

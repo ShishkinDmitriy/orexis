@@ -9,7 +9,7 @@
 
 #  OREXIS JOURNAL.
 #  THE JOURNAL PACKAGE'S OWN WORD: the role it is loaded for. What an entry of the journal is said in — an event
-#  beneath `orexis:Event`, an incident beneath `orexis:Incident`, a log record, an activity's seconds — stays the
+#  beneath `orexis:Event`, an incident beneath `orexis:Incident`, a line logged, an activity's seconds — stays the
 #  kernel's, since every package's events are declared beneath those and the journal's readers ask by them.
 
 #  THE ROLE THIS PACKAGE SERVES (knowledge/domain/journal/recorder.md): an agent declared a recorder keeps a journal,

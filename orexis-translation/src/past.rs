@@ -236,7 +236,7 @@ impl Past {
         if self.journal.is_some() {
             out.push(json!({"name": JOURNAL, "description": format!("What happened to the agent, as its journal kept it: a \
 SPARQL SELECT or ASK over its entries. Each is an event at its prov:atTime — `?e a ?class ; prov:atTime ?t`, its class \
-its package's and its fields in that package's words — or a line of its log, orexis:LogRecord with orexis:logger, \
+its package's and its fields in that package's words — or a line of its log, orexis:Logged with orexis:logger, \
 orexis:level and orexis:message, kept for the last minutes and for good before an incident, which says `a \
 orexis:Incident`. Ask the newest first, ORDER BY DESC(?t) with a LIMIT. The query tool's prefixes are declared. Write no \
 SERVICE or FROM. At most {} rows come back.", self.rows),

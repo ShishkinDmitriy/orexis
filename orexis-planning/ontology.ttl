@@ -434,14 +434,14 @@ planning:PlanSuperseded a owl:Class ; rdfs:subClassOf orexis:Event , execution:S
 planning:HeadChecked a owl:Class ; rdfs:subClassOf orexis:Event , execution:WalkingTrigger ; rdfs:label "Head checked" ;
     rdfs:comment "A head execution asked about (`execution:HeadAsked`), checked against the present as it is taken: said to execution as the head (`execution:head`) and whether it is blocked (`execution:blocked`), beneath its walking trigger, since planning is the higher package (#916)." .
 
-planning:WantUnreachable a owl:Class ; rdfs:subClassOf orexis:Incident ; rdfs:label "Want unreachable" ;
+planning:WantFoundUnreachable a owl:Class ; rdfs:subClassOf orexis:Incident ; rdfs:label "Want found unreachable" ;
     rdfs:comment "A want standing that nothing the agent holds reaches, no search cut short and nothing walking it." .
 
 planning:published a owl:ObjectProperty ; rdfs:domain planning:PlanPublished ; rdfs:range planning:Plan ;
     rdfs:label "published" ;
     rdfs:comment "The plan handed down." .
 
-planning:want a owl:ObjectProperty ; rdfs:domain planning:WantUnreachable ; rdfs:range planning:Want ;
+planning:want a owl:ObjectProperty ; rdfs:domain planning:WantFoundUnreachable ; rdfs:range planning:Want ;
     rdfs:label "want" ;
     rdfs:comment "The want nothing reaches." .
 

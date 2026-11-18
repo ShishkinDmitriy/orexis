@@ -23,7 +23,7 @@ const ACTUATING: &str = "http://example.org/orexis/actuation#Actuating";
 const NUDGING: &str = "http://example.org/orexis/actuation#Nudging";
 /// What a nudge sets, and the sensors a reading due names, in sensing's words.
 const SENSE_NOW: &str = "http://example.org/orexis/actuation#SenseNow";
-const DUE: &str = "http://example.org/orexis/sensing#due";
+const LAPSED: &str = "http://example.org/orexis/sensing#lapsed";
 /// The operator's jobs: a step's commands, and a reading due.
 pub(crate) const ACTUATE: usize = 0;
 pub(crate) const NUDGE: usize = 1;
@@ -96,7 +96,7 @@ impl Operator {
     /// Each sensor the event says is due told to sense, `actuation:SenseNow` set true, through the member that reaches
     /// it; kept nowhere, a nudge being no step's act.
     fn nudge(&mut self, event: &Heard, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
-        let due: Vec<NamedNode> = event.all(DUE).into_iter().cloned().collect();
+        let due: Vec<NamedNode> = event.all(LAPSED).into_iter().cloned().collect();
         if due.is_empty() {
             return Ok(Vec::new());
         }

@@ -82,7 +82,7 @@ written into its command's text. No `actuation:encodedBy` is declared beside it,
 here takes, until a second one is wanted.
 
 The nudge is a setting too, `actuation:SenseNow` at `/sense`, sent to the sensor whose board takes commands when
-sensing says `sensing:ReadingDue`, and sensing owns its timing, `sensing:askedAgainAfterS` where the MQTT member's
+sensing says `sensing:ReadingLapsed`, and sensing owns its timing, `sensing:askedAgainAfterS` where the MQTT member's
 `mqtt:askedAgainAfterS` was. So the operator depends on no role: it was first made to depend on the executor, and an
 agent that only observes through a board that waits to be told would have had to play an executor to be told nothing
 of it. The retained `{"sleep_s": n}` went with the MQTT member's code and is not yet the operator's: nothing in the

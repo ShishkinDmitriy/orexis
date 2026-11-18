@@ -8,13 +8,13 @@
 //! (`forget`). Where nothing archives, what lasts stays here.
 //!
 //! THREE KINDS OF ENTRY, each a named graph named by the node it is about: an EVENT a package says, beneath
-//! `orexis:Event`, at its `prov:atTime`, kept for good; a LOG RECORD, `orexis:LogRecord`, its logger, level and
+//! `orexis:Event`, at its `prov:atTime`, kept for good; a LINE LOGGED, `orexis:Logged`, its logger, level and
 //! message; and an ACTIVITY a package did, a `prov:Activity`, with what started it and what it generated
 //! (`orexis-journal/`). The last two are kept for the WINDOW (`journal:windowS`, ten minutes where the role says none) and
 //! swept after, unless an INCIDENT kept them: the minutes before one are kept for good beside it (`orexis:keptBy`).
 //!
 //! WHAT AN INCIDENT IS, IS THE VOCABULARY'S, AND WHICH ONES COUNT, THE DEPLOYMENT'S: an entry the history part hands
-//! as one, an entry of a class the deployment names (`JOURNAL_INCIDENTS`), and a log record from a level
+//! as one, an entry of a class the deployment names (`JOURNAL_INCIDENTS`), and a line logged from a level
 //! (`JOURNAL_INCIDENT_LEVEL`, WARNING where nothing says). An incident's entry says so, `a orexis:Incident`.
 //!
 //! SERVED READ-ONLY over the SPARQL protocol (`serve`), on a thread of its own that reads the stores it is handed
@@ -38,10 +38,10 @@ use orexis::rdf::{RDF_TYPE, instant, mint, node, text, typed};
 pub const OREXIS: &str = "http://example.org/orexis#";
 pub const EVENT: &str = "http://example.org/orexis#Event";
 pub const INCIDENT: &str = "http://example.org/orexis#Incident";
-pub const LOG_RECORD: &str = "http://example.org/orexis#LogRecord";
+pub const LOGGED: &str = "http://example.org/orexis#Logged";
 pub const AT: &str = "http://www.w3.org/ns/prov#atTime";
 pub const KEPT_BY: &str = "http://example.org/orexis#keptBy";
-/// An activity a package did, kept as one entry when it ended: PROV's class. Kept for the window, as a log record is.
+/// An activity a package did, kept as one entry when it ended: PROV's class. Kept for the window, as a line logged is.
 pub const ACTIVITY: &str = "http://www.w3.org/ns/prov#Activity";
 const LOGGER: &str = "http://example.org/orexis#logger";
 const LEVEL: &str = "http://example.org/orexis#level";
@@ -55,13 +55,13 @@ pub const PORT: u16 = 7878;
 /// The agent's clock, read where an entry says no instant of its own.
 pub type Now = Arc<dyn Fn() -> DateTime + Send + Sync>;
 
-/// An entry the journal keeps for good, as whoever archives it reads it: an event, or a log record or an activity an
+/// An entry the journal keeps for good, as whoever archives it reads it: an event, or a line logged or an activity an
 /// incident kept.
 pub struct Lasting {
     pub entry: NamedNode,
     /// What the entry says, in the graph it names.
     pub quads: Vec<Quad>,
-    /// Whether the journal still needs it: a log record or an activity inside the window, which a later incident
+    /// Whether the journal still needs it: a line logged or an activity inside the window, which a later incident
     /// keeps beside the ones before and which whoever ships the activities reads here.
     pub needed: bool,
 }
@@ -76,7 +76,7 @@ pub struct Journal {
     changed: AtomicBool,
     /// Told as an incident is kept, so what archives the journal need not wait for its timer.
     pub incident: tokio::sync::Notify,
-    /// From which level a log record is an incident.
+    /// From which level a line logged is an incident.
     pub incident_level: log::Level,
     /// The classes the recorder's role counts as incidents besides the vocabulary.
     pub incidents: BTreeSet<String>,
@@ -197,7 +197,7 @@ impl Journal {
             .map_err(engine)
     }
 
-    /// Keep a log record — at the incident level or above an incident, keeping the window before it.
+    /// Keep a line logged — at the incident level or above an incident, keeping the window before it.
     pub fn remark(
         &self,
         logger: &str,
@@ -207,7 +207,7 @@ impl Journal {
     ) -> Result<NamedNode, Error> {
         let entry = mint();
         let triples = vec![
-            typed(entry.clone(), LOG_RECORD),
+            typed(entry.clone(), LOGGED),
             typed(entry.clone(), EVENT),
             Triple::new(entry.clone(), node(LOGGER), text(logger)),
             Triple::new(entry.clone(), node(LEVEL), text(level_name(level))),
@@ -217,10 +217,10 @@ impl Journal {
         Ok(entry)
     }
 
-    /// Keep for good, beside `incident` at `at`, every log record and every activity of the window before it.
+    /// Keep for good, beside `incident` at `at`, every line logged and every activity of the window before it.
     pub fn keep(&self, incident: &NamedNode, at: DateTime) -> Result<(), Error> {
         let text = format!(
-            "INSERT {{ GRAPH ?r {{ ?r <{KEPT_BY}> <{}> }} }} WHERE {{ VALUES ?c {{ <{LOG_RECORD}> <{ACTIVITY}> }} GRAPH ?r {{ ?r a ?c ; <{AT}> ?t }} \
+            "INSERT {{ GRAPH ?r {{ ?r <{KEPT_BY}> <{}> }} }} WHERE {{ VALUES ?c {{ <{LOGGED}> <{ACTIVITY}> }} GRAPH ?r {{ ?r a ?c ; <{AT}> ?t }} \
              FILTER(?t >= {} && ?t <= {}) FILTER NOT EXISTS {{ GRAPH ?r {{ ?r <{KEPT_BY}> ?any }} }} }}",
             incident.as_str(),
             literal_of(less(at, self.window)),
@@ -234,11 +234,11 @@ impl Journal {
             .map_err(engine)
     }
 
-    /// Take out every log record and every activity the window has passed that no incident keeps; how many.
+    /// Take out every line logged and every activity the window has passed that no incident keeps; how many.
     pub fn sweep(&self, now: Option<DateTime>) -> Result<usize, Error> {
         let now = now.unwrap_or_else(|| (self.now)());
         let text = format!(
-            "SELECT DISTINCT ?r WHERE {{ VALUES ?c {{ <{LOG_RECORD}> <{ACTIVITY}> }} GRAPH ?r {{ ?r a ?c ; <{AT}> ?t }} FILTER(?t < {}) \
+            "SELECT DISTINCT ?r WHERE {{ VALUES ?c {{ <{LOGGED}> <{ACTIVITY}> }} GRAPH ?r {{ ?r a ?c ; <{AT}> ?t }} FILTER(?t < {}) \
              FILTER NOT EXISTS {{ GRAPH ?r {{ ?r <{KEPT_BY}> ?any }} }} }}",
             literal_of(less(now, self.window))
         );
@@ -273,12 +273,12 @@ impl Journal {
         self.changed.store(true, Ordering::Relaxed);
     }
 
-    /// EVERY ENTRY KEPT FOR GOOD, as whoever archives the journal reads it: each event, and each log record and
+    /// EVERY ENTRY KEPT FOR GOOD, as whoever archives the journal reads it: each event, and each line logged and
     /// activity an incident kept, with what it says and whether the journal still needs it.
     pub fn lasting(&self) -> Result<Vec<Lasting>, Error> {
         let text = format!(
             "SELECT DISTINCT ?r ?windowed ?t WHERE {{ GRAPH ?r {{ ?r <{AT}> ?t }} \
-             BIND(EXISTS {{ VALUES ?c {{ <{LOG_RECORD}> <{ACTIVITY}> }} GRAPH ?r {{ ?r a ?c }} }} AS ?windowed) \
+             BIND(EXISTS {{ VALUES ?c {{ <{LOGGED}> <{ACTIVITY}> }} GRAPH ?r {{ ?r a ?c }} }} AS ?windowed) \
              FILTER(!?windowed || EXISTS {{ GRAPH ?r {{ ?r <{KEPT_BY}> ?any }} }}) }} ORDER BY ?t ?r"
         );
         let from = less((self.now)(), self.window);
@@ -319,7 +319,7 @@ impl Journal {
     }
 }
 
-/// From which level a log record is an incident, as a recorder's role says it by a level's name: WARNING where it
+/// From which level a line logged is an incident, as a recorder's role says it by a level's name: WARNING where it
 /// says none, and where it says a word that is no level, said in the log.
 pub fn incident_level(said: Option<&str>) -> log::Level {
     match said.unwrap_or("WARNING").to_uppercase().as_str() {
@@ -574,7 +574,7 @@ mod tests {
         journal.sweep(Some(at("2026-01-01T13:00:00+00:00"))).unwrap();
         let mut left = rows(
             &journal,
-            "PREFIX orexis: <http://example.org/orexis#> SELECT ?m WHERE { ?r a orexis:LogRecord ; orexis:message ?m }",
+            "PREFIX orexis: <http://example.org/orexis#> SELECT ?m WHERE { ?r a orexis:Logged ; orexis:message ?m }",
         );
         left.sort();
         assert_eq!(

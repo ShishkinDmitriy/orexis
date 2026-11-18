@@ -868,6 +868,9 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   unreachable; a clock that does not tick is a test's mistake.
 - **A package starts itself, and the runtime is a lifecycle container** — each part says what it
   does by jobs it submits, kinds it hears and timers it asks for (a-package-starts-itself).
+- **An event is named in the past tense for what happened, and an activity for what is being done** — `belief:Revised`,
+  `execution:StepTaken`, `sensing:ReadingLapsed`; `sensing:Observing`, `orexis:AgentBooting`: `sensing:ReadingDue`
+  named a state and `orexis:LogRecord` a thing, and `tests/test_layout.py` refuses either.
 - **An event is an instant and triggers no event; each activity has a trigger class of its own, whose events a package's
   policy hears to start it, and an activity's start and end are events and it is a span** — who hears what is said by the
   higher ontology, the links between parts go, and "process" stays the OS's word (packages-meet-by-events-policies-and-activities, #1119).

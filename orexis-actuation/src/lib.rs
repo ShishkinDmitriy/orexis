@@ -26,7 +26,7 @@ const DOCUMENTS: orexis::task::Documents = orexis::documents!("ontology.ttl");
 const ROLE: &str = "http://example.org/orexis/actuation#Operator";
 /// What starts its actuating: execution's `execution:Commanded`, beneath it in this package's ontology.
 const ACTUATING_TRIGGER: &str = "http://example.org/orexis/actuation#ActuatingTrigger";
-/// What starts its nudging: sensing's `sensing:ReadingDue`, beneath it in this package's ontology.
+/// What starts its nudging: sensing's `sensing:ReadingLapsed`, beneath it in this package's ontology.
 const NUDGING_TRIGGER: &str = "http://example.org/orexis/actuation#NudgingTrigger";
 
 /// ACTUATION'S START, which every package this binary holds is given: it joins where the self plays an operator and

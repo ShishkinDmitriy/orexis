@@ -46,7 +46,7 @@ podman volume inspect orexis-lane-courier_a-journal --format '{{.Mountpoint}}'
 orexis-history lane --journal courier_a=<that mountpoint> --out lane.history.html
 ```
 
-What came before an incident is there whatever the window: the log records of the window before a step that did not
+What came before an incident is there whatever the window: the lines logged of the window before a step that did not
 land, an intention failed, a want nothing reaches, or a warning, are kept beside it
 ([journal](/domain/kernel/journal.md)). Ask for them directly at the endpoint:
 

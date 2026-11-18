@@ -16,7 +16,7 @@
 //! caused by it - `?b prov:wasStartedBy ?x . ?x prov:wasGeneratedBy ?a` - and a cycle through four packages is a path.
 //! Kept so, a storm of plannings at one instant was read off a test's own tracer for want of this.
 //!
-//! THE HOT RECORD, AND NOTHING ELSE: an activity is kept for the journal's window and swept after, as a log record
+//! THE HOT RECORD, AND NOTHING ELSE: an activity is kept for the journal's window and swept after, as a line logged
 //! is, unless an incident keeps the minutes before it. Sending them to a tracer as spans, and keeping them longer, is
 //! another crate's, `orexis-journal-otlp/`, which reads them here. It knows no package's words: a class is whatever the event said it is.
 //!
@@ -315,7 +315,7 @@ mod tests {
         );
     }
 
-    /// An activity is kept for the journal's window and swept after, as a log record is.
+    /// An activity is kept for the journal's window and swept after, as a line logged is.
     #[test]
     fn an_activity_the_window_has_passed_is_swept() {
         let (watch, journal) = (Watch::default(), journal());

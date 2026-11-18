@@ -46,9 +46,9 @@ actuation:Nudging a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Nudg
     rdfs:comment "The boards of sensors whose readings are due told to sense: each sensor sent `actuation:SenseNow` set true, at its pointer, through the transport member that reaches it, not kept, since a nudge is no step's act; one no member reaches passed over, said in the log." .
 
 actuation:NudgingTrigger a owl:Class ; rdfs:subClassOf actuation:Trigger ; rdfs:label "Nudging trigger" ;
-    rdfs:comment "What starts a nudging: sensing's `sensing:ReadingDue`, beneath it here, naming each sensor due (`sensing:due`)." .
+    rdfs:comment "What starts a nudging: sensing's `sensing:ReadingLapsed`, beneath it here, naming each sensor due (`sensing:lapsed`)." .
 
-sensing:ReadingDue rdfs:subClassOf actuation:NudgingTrigger .
+sensing:ReadingLapsed rdfs:subClassOf actuation:NudgingTrigger .
 
 actuation:SenseNow a owl:Class ; rdfs:subClassOf sosa:ActuatableProperty ; rdfs:label "Sense now" ;
     actuation:commandPointer "/sense" ;

@@ -377,15 +377,15 @@ sensing:ObservingTrigger a owl:Class ; rdfs:subClassOf sensing:Trigger ; rdfs:la
 
 belief:Revised rdfs:subClassOf sensing:ObservingTrigger .
 
-#  WHEN A READING IS DUE is sensing's to say, and telling the board to sense is acting on it, actuation's
+#  WHEN A READING HAS LAPSED is sensing's to say, and telling the board to sense is acting on it, actuation's
 #  (the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop): sensing says which sensors' readings have
 #  fallen due, and the operator, which puts this beneath its own trigger, tells each one's board.
 
-sensing:ReadingDue a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Reading due" ;
-    rdfs:comment "The readings of the sensors it names (`sensing:due`) have fallen due and none came: each a sensor of the observer's that no member answers when asked but one is sent on, its board told to sense by whoever hears this. Said as the agent starts, after each reading, when one next falls due, and again `sensing:askedAgainAfterS` on where the board was told and no reading came." .
+sensing:ReadingLapsed a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Reading lapsed" ;
+    rdfs:comment "Sensing found the readings of the sensors it names (`sensing:lapsed`) lapsed, fallen due with none come (`cadence::lapsed`): each a sensor of the observer's that no member answers when asked but one is sent on, its board told to sense by whoever hears this. Said as the agent starts, after each reading, when one next falls due, and again `sensing:askedAgainAfterS` on where the board was told and no reading came." .
 
-sensing:due a owl:ObjectProperty ; rdfs:domain sensing:ReadingDue ; rdfs:range sosa:Sensor ; rdfs:label "due" ;
-    rdfs:comment "A sensor whose reading a `sensing:ReadingDue` says has fallen due." .
+sensing:lapsed a owl:ObjectProperty ; rdfs:domain sensing:ReadingLapsed ; rdfs:range sosa:Sensor ; rdfs:label "lapsed" ;
+    rdfs:comment "A sensor whose reading a `sensing:ReadingLapsed` says has lapsed: fallen due, its grace run out, and none come." .
 
 #  WHERE AN OBSERVER'S READINGS ARE ARCHIVED (knowledge/domain/kernel/series.md): a link from the role to a series
 #  store, which decides whether what archives the readings (`orexis-sensing-influxdb/`) joins the agent.

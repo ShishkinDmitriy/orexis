@@ -50,10 +50,10 @@ kind it says it is beside it — a question, an answer, a commitment, in the wor
 journals what it held and concluded, and what it asked and answered is speech's to say; a commitment and a reveal are
 steps, which execution journals.
 
-**The log is the dash cam.** Every record the agent's process logs is an `orexis:LogRecord` in the journal, kept for
+**The log is the dash cam.** Every record the agent's process logs is an `orexis:Logged` in the journal, kept for
 the window (`journal:windowS` on the recorder's role, ten minutes where it says nothing) and swept after — unless an INCIDENT keeps it: an
 event of a class beneath `orexis:Incident` — `execution:StepFailed`, `execution:IntentionFailed`,
-`planning:WantUnreachable` — or a record at WARNING or above, which is how a present that violates a constraint, a
+`planning:WantFoundUnreachable` — or a record at WARNING or above, which is how a present that violates a constraint, a
 sensor gone silent and an exception escaping a pass are said. **What an incident is, is the vocabulary's, and which
 count, the recorder's role's**: a package puts the classes of its events that are incidents beneath `orexis:Incident`,
 `orexis-journal/` reads them off the agent's T-Box, and the role may add classes (`journal:incident`)

@@ -2,7 +2,7 @@
 
 The translation row's acting side, the mirror of sensing: what a step commands is made into the device's document,
 sent through the transport member that reaches it, and kept as `sosa:Actuation`s; and a board whose reading sensing
-says is due is told to sense.
+says has lapsed is told to sense.
 
 - **Loaded for:** `actuation:Operator`, which depends on no role.
 - **Words:** `ontology.ttl` (`actuation:`), speaking SOSA's words for acting; a domain's devices are in
@@ -14,7 +14,7 @@ says is due is told to sense.
 | Heard | Said by | Starts |
 |---|---|---|
 | `actuation:ActuatingTrigger`: `execution:Commanded` | execution | `actuation:Actuating` |
-| `actuation:NudgingTrigger`: `sensing:ReadingDue` | sensing | `actuation:Nudging` |
+| `actuation:NudgingTrigger`: `sensing:ReadingLapsed` | sensing | `actuation:Nudging` |
 
 ## Activities
 

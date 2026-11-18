@@ -4,7 +4,7 @@ What every package meets at, and nothing a package owns: the store and its catal
 makes one agent's store from its world's documents, and **the events**, the one thing packages share.
 
 - **Loaded for:** every agent. It is no package and has no task.
-- **Words:** `ontology.ttl` (`orexis:`): `orexis:Event`, `orexis:Incident`, `orexis:LogRecord`, `orexis:Role`,
+- **Words:** `ontology.ttl` (`orexis:`): `orexis:Event`, `orexis:Incident`, `orexis:Logged`, `orexis:Role`,
   `orexis:plays`, the graph kinds packages meet at.
 - **Dictionary:** `knowledge/domain/kernel/`, first `package.md`, `event.md`, `activity.md`, `policy.md`.
 

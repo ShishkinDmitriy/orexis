@@ -35,7 +35,7 @@ use orexis::store::{Store, Within, iri, value};
 
 use crate::admit::local_of;
 use crate::derive_wants::derive_wants;
-use crate::events::{Imagined, PlanPublished, Planned, Rerooted, SearchEnded, WantUnreachable};
+use crate::events::{Imagined, PlanPublished, Planned, Rerooted, SearchEnded, WantFoundUnreachable};
 use crate::find_scopes::{Scopes, find_scopes};
 use crate::find_wants::{Finding, find_wants};
 use crate::footprint::{actions_of, reads_of_shape, terms_of_shape, written};
@@ -1173,7 +1173,7 @@ impl Planner {
                     break;
                 }
             }
-            self.watch.emit(&WantUnreachable {
+            self.watch.emit(&WantFoundUnreachable {
                 want: want.clone(),
                 desire,
                 at: Some(at),
