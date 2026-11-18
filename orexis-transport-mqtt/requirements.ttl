@@ -30,7 +30,7 @@
 #  AN OBSERVER WHOSE SENSOR'S BOARD TAKES COMMANDS OPERATES IT: sensing says when the sensor's reading is due, and only
 #  the operator tells the board to sense, so an observer playing none would let a board that waits to be told go quiet.
 [] a sh:NodeShape ;
-    sh:targetClass sensing:Observer ;
+    sh:targetSubjectsOf sensing:attends ;
     sh:sparql [ a sh:SPARQLConstraint ;
         sh:message "an observer attends a sensor whose board listens for commands and the agent plays no actuation:Operator, so nothing would tell the board to sense" ;
         sh:select """SELECT $this WHERE { ?me orexis:plays $this . $this sensing:attends/sensing:sensor ?sensor .

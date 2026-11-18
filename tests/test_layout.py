@@ -546,6 +546,22 @@ def test_onboarding_refuses_a_declared_role_whose_needs_its_world_lacks(tmp_path
     assert f"me: {message}" in refused, refused
 
 
+def test_onboarding_refuses_an_observer_whose_board_takes_commands_where_the_agent_plays_no_operator(tmp_path):
+    """Sensing says when a sensor's reading has lapsed and only the operator tells its board to sense, so an observer
+    attending a sensor whose board listens for commands is refused where the agent plays no operator, and not where
+    it plays one."""
+    from onboarding import reading
+
+    operator = ("http://example.org/orexis/actuation#Operator", "")
+    board = (":probe a sosa:Sensor ; sosa:isHostedBy :pot .\n"
+             ":board <http://www.w3.org/ns/ssn/hasSubSystem> :probe ; mqtt4ssn:listensToTopic :commands .\n")
+    observing = (OBSERVER, _attending(["probe"]))
+    said = "an observer attends a sensor whose board listens for commands and the agent plays no actuation:Operator"
+    refused = lambda *played: [line for line in reading.refused(_declared(tmp_path, [*played, DELIBERATED], board)) if said in line]
+    assert len(refused(observing)) == 1
+    assert refused(observing, operator) == []
+
+
 def test_onboarding_holds_an_observer_to_one_role_and_its_attentions_to_their_sensors(tmp_path):
     """An agent plays one observer, which attends: a second observer is refused by the binary's boot, as the
     self is held to one, and an observer attending nothing, an attention naming a sensor that does not report
