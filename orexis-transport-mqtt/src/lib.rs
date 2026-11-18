@@ -12,8 +12,11 @@
 
 use orexis::task::{Every, Handed, Package, Woke, sooner};
 
-use crate::transport::{ACTUATE, ACTUATING_TRIGGER, CARRY, CARRYING_TRIGGER, NUDGE, TELL, TELLING_TRIGGER};
+use std::sync::Arc;
+
+use crate::transport::{Bus, CARRY, CARRYING_TRIGGER, NUDGE, TELL, TELLING_TRIGGER};
 use orexis_transport::Jobs;
+use orexis_transport::Members;
 
 pub mod driver;
 pub mod figures;
@@ -77,13 +80,16 @@ fn start(handed: Handed) -> orexis::task::Starting {
             checking.holds("transport/mqtt");
         }
         let mut transport = Transport::new(member);
+        let bus = Bus(transport.member.clone());
+        handed
+            .provided
+            .alter(|members: &mut Members| members.add(Arc::new(bus)));
         let mut hears = handed.events.hears();
         let mut arrived = handed.arrived();
         transport.listen(&arrived)?;
         let mut timers = vec![(Every::new(0.0), NUDGE)];
         hears.event(CARRYING_TRIGGER, CARRY);
         hears.event(TELLING_TRIGGER, TELL);
-        hears.event(ACTUATING_TRIGGER, ACTUATE);
         if !handed.booted().await? {
             return Ok(());
         }

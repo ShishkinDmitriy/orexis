@@ -87,7 +87,7 @@ execution:takenAt a owl:DatatypeProperty ; rdfs:domain execution:Act ; rdfs:rang
 
 execution:Command a owl:Class ; rdfs:subClassOf execution:Operation ;
     rdfs:label "Command" ;
-    rdfs:comment "An operation sending a device a command: an `sh:select` run over the present beliefs when the step is taken, with the step's parameters as `$tokens` and `$now` and the agent asked as `?me a orexis:Self`, answering `?actuator` and `?payload`, the JSON document the device is sent. How much to pour or how long to heat is sized here from the situation as it is, never by the search, and each answer is kept in an `execution:CommandGraph` and said `execution:Commanded`, for the transport that reaches the actuator." .
+    rdfs:comment "An operation sending a device a command: an `sh:select` run over the present beliefs when the step is taken, with the step's parameters as `$tokens` and `$now` and the agent asked as `?me a orexis:Self`, answering `?actuator` and `?payload`, the JSON document the device is sent. How much to pour or how long to heat is sized here from the situation as it is, never by the search, and each answer is kept in an `execution:CommandGraph` and said `execution:Commanded`, for the operator, actuation's, which sends it through the transport member that reaches the actuator." .
 
 execution:Saying a owl:Class ; rdfs:subClassOf execution:Operation ;
     rdfs:label "Saying" ;
@@ -271,7 +271,7 @@ execution:payload a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "p
     rdfs:comment "The JSON document a command sends its actuator, as the command's text sized it." .
 
 execution:Commanded a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Commanded" ;
-    rdfs:comment "A step's commands at one order were kept as a command graph (`execution:commands`), for whichever transport reaches each actuator, which puts this beneath its own trigger." .
+    rdfs:comment "A step's commands at one order were kept as a command graph (`execution:commands`), for actuation's operator, which puts this beneath its own trigger." .
 
 execution:commands a owl:ObjectProperty ; rdfs:domain execution:Commanded ; rdfs:range execution:CommandGraph ; rdfs:label "commands" ;
     rdfs:comment "The command graph an event is about." .

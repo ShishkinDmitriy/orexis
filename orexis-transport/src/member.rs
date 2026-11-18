@@ -17,6 +17,8 @@ pub enum Exchange {
     Listened,
     /// It answers what it is sent, once: its bytes are asked for.
     Requested,
+    /// It is told what it is sent, and answers nothing: a device's command.
+    Sent,
 }
 
 /// A MEMBER OF THE TRANSPORT FAMILY, as the rows above it see one.

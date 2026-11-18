@@ -21,16 +21,8 @@
 :Valve a owl:Class ; rdfs:subClassOf sosa:Actuator ; rdfs:label "Valve" ;
     rdfs:comment "What pours: a pump or a valve, dosing a subject from a source." .
 
-:hasActuator a owl:ObjectProperty ; rdfs:domain orexis:Agent ; rdfs:range sosa:Actuator ;
-    rdfs:label "has actuator" ;
-    rdfs:comment "A device an agent may take a step through. The dose is available only on an actuator the agent holds." .
 
-:actuates a owl:ObjectProperty ; rdfs:domain sosa:Actuator ; rdfs:label "actuates" ;
-    rdfs:comment "The subject the device changes: the bed a pump waters." .
 
-:actuatesProperty a owl:ObjectProperty ; rdfs:domain sosa:Actuator ; rdfs:range sosa:ObservableProperty ;
-    rdfs:label "actuates property" ;
-    rdfs:comment "Which of the subject's properties the device moves: the soil's moisture for a pump. What the subject is believed of that property is what a dose changes, and a reading of it is what answers the dose." .
 
 :drawsFrom a owl:ObjectProperty ; rdfs:domain sosa:Actuator ; rdfs:label "draws from" ;
     rdfs:comment "Where what the device pours comes from." .

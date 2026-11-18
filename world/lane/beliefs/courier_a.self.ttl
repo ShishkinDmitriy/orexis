@@ -1,3 +1,4 @@
+@prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix speech: <http://example.org/orexis/speech#> .
 @prefix execution: <http://example.org/orexis/execution#> .
 @prefix belief: <http://example.org/orexis/belief#> .
@@ -33,3 +34,7 @@
     [ a execution:Executor ] ,
     [ a speech:Speaker ] ,
     [ a belief:Deliberator ] .
+
+#  IT OPERATES DEVICES, so it is an operator (knowledge/domain/actuation/operator.md): what a step it takes commands is
+#  sent to the device through the transport. Without the role its steps would be taken and no device told.
+:courier_a orexis:plays [ a actuation:Operator ] .

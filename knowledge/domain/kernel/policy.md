@@ -56,8 +56,9 @@ and each judges by the graph's provenance whose words they are: a person's are t
 carrier's. And speech's `speech:Said`, a document the agent said, naming its statements and each it is to, is
 beneath `mqtt:TellingTrigger`, which tells it to each agent on the bus, and `translation:PhrasingTrigger`, which
 phrases it for each person in a chat; each reads the statements back from the store as speech said them.
-Execution's step taken says `execution:Commanded`, naming the command graph it kept, beneath `mqtt:ActuatingTrigger`
-by the transport's ontology, since a transport is above every package it carries bytes for; and `execution:Told`,
+Execution's step taken says `execution:Commanded`, naming the command graph it kept, beneath
+`actuation:ActuatingTrigger` by actuation's ontology, since actuation is above the executor whose steps it carries
+out on a device; and `execution:Told`,
 like coordination's, beneath `speech:SpeakingTrigger` by execution's.
 Planning's is built: belief's `belief:Revised` and execution's `execution:IntentionAdopted`,
 `execution:IntentionResolved` and `execution:StepTaken` are beneath `planning:PlanningTrigger` by planning's

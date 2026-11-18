@@ -13,6 +13,7 @@ license = "MIT"
 inventory = "0.3"
 tokio = { version = "1", features = ["rt-multi-thread", "time", "sync", "macros"] }
 orexis = { path = "orexis" }
+orexis-actuation = { path = "orexis-actuation" }
 orexis-belief = { path = "orexis-belief" }
 orexis-coordination = { path = "orexis-coordination" }
 orexis-execution = { path = "orexis-execution" }

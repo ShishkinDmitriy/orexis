@@ -33,6 +33,6 @@ the world came to show what the step predicted.
 |---|---|
 | `execution:IntentionAdopted`, `execution:StepTaken`, `execution:IntentionResolved` | planning, coordination |
 | `execution:HeadAsked` | planning |
-| `execution:Commanded` | the MQTT transport (`mqtt:ActuatingTrigger`) |
+| `execution:Commanded` | actuation (`actuation:ActuatingTrigger`) |
 | `execution:Told` | speech (`speech:SpeakingTrigger`) |
 | `execution:StepFailed`, `execution:IntentionFailed` | incidents: the journal keeps the log before each |

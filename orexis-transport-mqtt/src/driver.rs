@@ -396,12 +396,14 @@ impl Mqtt {
             .ask(&bind(REACHES_Q, &[("device", Value::iri(device))])?, &strs(&common))
     }
 
-    /// A step's command: sent where this member reaches the actuator.
-    pub fn command(&mut self, actuator: &str, payload: &Json) -> Result<(), Error> {
-        if self.reaches(actuator)? {
-            self.actuate(actuator, payload)?;
-        }
-        Ok(())
+    /// Whether `device` takes commands on a topic, its own or its board's: a channel the bus is sent on.
+    pub fn takes_commands(&self, device: &str) -> Result<bool, Error> {
+        const TAKES_Q: &str = "PREFIX mqtt4ssn: <https://www.w3id.org/MQTT4SSN-Ontology#>
+        PREFIX ssn: <http://www.w3.org/ns/ssn/>
+        ASK { { $device mqtt4ssn:listensToTopic ?topic } UNION { ?board ssn:hasSubSystem $device ; mqtt4ssn:listensToTopic ?topic } }";
+        let common = self.common()?;
+        self.beliefs
+            .ask(&bind(TAKES_Q, &[("device", Value::iri(device))])?, &strs(&common))
     }
 
     /// Standing policy, where the device accepts instruction: retained, so a board deep asleep finds it on waking.

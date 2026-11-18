@@ -16,6 +16,8 @@ use orexis::task::Provided;
 
 //  EACH PACKAGE THIS BINARY IS BUILT WITH, LINKED: a crate nothing references is left out, and a package registers
 //  itself only where its crate is in. Nothing else here names one.
+#[cfg(feature = "actuation")]
+use orexis_actuation as _;
 #[cfg(feature = "belief")]
 use orexis_belief as _;
 #[cfg(feature = "coordination")]

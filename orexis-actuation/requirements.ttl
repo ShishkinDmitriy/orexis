@@ -1,0 +1,14 @@
+@prefix actuation: <http://example.org/orexis/actuation#> .
+@prefix onboarding: <http://example.org/orexis/onboarding#> .
+@prefix orexis: <http://example.org/orexis#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+
+<> a onboarding:RequirementGraph .    # this document is one graph, and this is what it is
+
+#  AN AGENT HOLDING AN ACTUATOR OPERATES IT: what a step of its commands reaches the device only through the operator,
+#  so an agent with a device and no operator would take its steps and tell the device nothing.
+[] a sh:NodeShape ;
+    sh:targetSubjectsOf actuation:hasActuator ;
+    sh:sparql [ a sh:SPARQLConstraint ;
+        sh:message "an agent holding an actuator plays no actuation:Operator, so nothing would send a step's command to it" ;
+        sh:select """SELECT $this WHERE { $this a orexis:Self FILTER NOT EXISTS { $this orexis:plays ?role . ?role a actuation:Operator } }""" ] .

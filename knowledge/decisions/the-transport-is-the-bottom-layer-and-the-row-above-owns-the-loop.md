@@ -63,6 +63,17 @@ Telegram move to `reqwest` over rustls, sharing one client; email moves to `asyn
 `AsyncSmtpTransport`, keeping `mail-parser`. A test hands a member that answers at once, so Tokio's paused time
 advances only where the agent waits, never past a real socket.
 
+# Amended 2026-11-18: actuation's namespace, payload and nudge
+
+The sovereign ruled three things the record left open, as #1220 began. **The actuation package owns `actuation:`**:
+`orexis-actuation/` declares its role, `actuation:Operator`, which depends on the executor, and the words of what an
+agent holds and what a device changes (`actuation:hasActuator`, `actuation:actuates`, `actuation:actuatesProperty`),
+while the watering domain keeps its valve. **Actuation makes the payload**: the executor says what to actuate and how
+much, and actuation turns it into a device's bytes and keeps each act as a `sosa:Actuation`, as sensing turns bytes
+into an observation. **Actuation sends the nudge on sensing's word**: sensing says which sensor's reading is due, and
+actuation tells the board to sense or to sleep, since telling a device anything is acting on it. A role named
+`actuation:Actor` was passed over, the bundle's actor being whoever is asked what will hold.
+
 # What was refused
 
 - **A member calling up into the row its message is for.** It is what the code did: the bottom of the stack

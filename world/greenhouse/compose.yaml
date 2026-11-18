@@ -60,6 +60,7 @@ services:
       - ./society.ttl:/app/world/greenhouse/society.ttl:ro
       - ./world.ttl:/app/world/greenhouse/world.ttl:ro
       - ../../orexis:/app/orexis:ro
+      - ../../orexis-actuation:/app/orexis-actuation:ro
       - ../../orexis-agent:/app/orexis-agent:ro
       - ../../orexis-belief:/app/orexis-belief:ro
       - ../../orexis-coordination:/app/orexis-coordination:ro
@@ -90,7 +91,7 @@ services:
       dockerfile: orexis-agent/Containerfile
       args:
         # the packages it runs, each a feature of the binary, and nothing else's
-        FEATURES: "belief,execution,journal,metrics,mqtt,planning,prediction,sensing,speech"
+        FEATURES: "actuation,belief,execution,journal,metrics,mqtt,planning,prediction,sensing,speech"
     command: ["orexis-agent", "/app/world/greenhouse", "grower", "--volume", "/app/state"]
     environment:
       # its certificate and the authority's, in its container; which brokers it is connected to and where each
