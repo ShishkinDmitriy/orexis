@@ -27,8 +27,8 @@ use crate::ROLE;
 use crate::briefing::briefing;
 use crate::chat::{Chat, chats_of, named};
 use crate::conversation::{
-    Asked, Back, CONVERSE_SYSTEM, Conversation, Direct, EVENT, SAY_SYSTEM, UNADDRESSED, converse, instant_block,
-    prefixes_of, sent_as, translated, written_as,
+    Asked, Back, Conversation, Direct, EVENT, UNADDRESSED, converse, instant_block, prefixes_of, sent_as, translated,
+    written_as,
 };
 use crate::model::Model;
 use crate::past::Past;
@@ -79,6 +79,10 @@ pub struct Translator {
     /// `retries`).
     pub called_within_s: f64,
     pub retries: u32,
+    /// What the model is told first when it answers a person, and when it phrases what the agent says to one
+    /// (`translation:conversePrompt`, `sayPrompt`).
+    pub converse_prompt: String,
+    pub say_prompt: String,
     /// Where the model the role names answers (`translation:translatedBy`), as the world's deployment states it: none
     /// where the role names none or the world says nothing of the one named.
     pub translated_by: Option<String>,
@@ -104,18 +108,23 @@ impl Translator {
         PREFIX translation: <http://example.org/orexis/translation#>
         SELECT DISTINCT ?me ?kind ?model (COALESCE(?turnsSaid, ?turnsOwn) AS ?turns) \
         (COALESCE(?rowsSaid, ?rowsOwn) AS ?rows) (COALESCE(?answeredSaid, ?answeredOwn) AS ?answered) \
-        (COALESCE(?calledSaid, ?calledOwn) AS ?called) (COALESCE(?retriesSaid, ?retriesOwn) AS ?retries) WHERE { \
+        (COALESCE(?calledSaid, ?calledOwn) AS ?called) (COALESCE(?retriesSaid, ?retriesOwn) AS ?retries) \
+        (COALESCE(?converseSaid, ?converseOwn) AS ?converse) (COALESCE(?saySaid, ?sayOwn) AS ?say) WHERE { \
         ?shape sh:targetClass translation:Translator ; \
           sh:property [ sh:path translation:turns ; sh:defaultValue ?turnsOwn ] , [ sh:path translation:rows ; sh:defaultValue ?rowsOwn ] , \
                       [ sh:path translation:answeredWithinS ; sh:defaultValue ?answeredOwn ] , \
                       [ sh:path translation:calledWithinS ; sh:defaultValue ?calledOwn ] , \
-                      [ sh:path translation:retries ; sh:defaultValue ?retriesOwn ] . \
+                      [ sh:path translation:retries ; sh:defaultValue ?retriesOwn ] , \
+                      [ sh:path translation:conversePrompt ; sh:defaultValue ?converseOwn ] , \
+                      [ sh:path translation:sayPrompt ; sh:defaultValue ?sayOwn ] . \
         OPTIONAL { ?me a orexis:Self } \
         OPTIONAL { ?me orexis:plays ?r1 . ?r1 translation:turns ?turnsSaid } \
         OPTIONAL { ?me orexis:plays ?r2 . ?r2 translation:rows ?rowsSaid } \
         OPTIONAL { ?me orexis:plays ?r3 . ?r3 translation:answeredWithinS ?answeredSaid } \
         OPTIONAL { ?me orexis:plays ?r4 . ?r4 translation:calledWithinS ?calledSaid } \
         OPTIONAL { ?me orexis:plays ?r5 . ?r5 translation:retries ?retriesSaid } \
+        OPTIONAL { ?me orexis:plays ?r6 . ?r6 translation:conversePrompt ?converseSaid } \
+        OPTIONAL { ?me orexis:plays ?r7 . ?r7 translation:sayPrompt ?saySaid } \
         OPTIONAL { ?me orexis:plays ?named . ?named a ?kind ; translation:translatedBy ?by . ?by schema:url ?model } }";
         let mut known = beliefs.graphs_of(&[SELF_GRAPH], &Within::default())?;
         known.extend(beliefs.graphs_of(&[DEPLOYMENT], &Within::common())?);
@@ -161,6 +170,8 @@ impl Translator {
             answered_within_s: seconds("answered")?,
             called_within_s: seconds("called")?,
             retries: whole("retries")?,
+            converse_prompt: said("converse"),
+            say_prompt: said("say"),
             translated_by,
             tx,
             rx,
@@ -242,7 +253,7 @@ impl Translator {
             listing(store, &allowed, every, &prefixes, readable.is_none())?
         };
         let mut system = vec![
-            CONVERSE_SYSTEM.to_string() + if unaddressed { UNADDRESSED } else { "" },
+            self.converse_prompt.clone() + if unaddressed { UNADDRESSED } else { "" },
             briefing(
                 store,
                 &self.me,
@@ -334,8 +345,8 @@ impl Translator {
         );
         let (back, channel) = (self.tx.clone(), chat.channel.clone());
         let (system, at_most) = match written_as(&chat.style) {
-            Some(style) => (format!("{SAY_SYSTEM} {style}"), chat.style.messages_at_most),
-            None => (SAY_SYSTEM.to_string(), 1),
+            Some(style) => (format!("{} {style}", self.say_prompt), chat.style.messages_at_most),
+            None => (self.say_prompt.clone(), 1),
         };
         let render = move || {
             let began = Instant::now();

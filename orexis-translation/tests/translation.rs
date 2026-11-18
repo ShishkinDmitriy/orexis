@@ -25,7 +25,7 @@ use orexis_translation::events::{Conversed, Translated};
 use orexis_translation::model::{Answer, Failure, Model, Turn};
 use orexis_translation::readable::{QUERY, Readable, VOCABULARY};
 use orexis_translation::stated::{PROPERTY, Stating, believe, listing, rendered, statement_of, words};
-use orexis_translation::{CONVERSE_SYSTEM, Inline, SAY_SYSTEM, SILENT, UNADDRESSED};
+use orexis_translation::{Inline, SILENT, UNADDRESSED};
 use orexis_transport::chat::Words;
 use orexis_transport::{Exchange, Inbox, Members};
 use orexis_transport_email as _;
@@ -39,6 +39,14 @@ const STATEMENT: &str = "http://example.org/orexis/speech#StatementGraph";
 /// What translation's ontology states where no translator's role says: the turns of a conversation and the rows a
 /// query hands the model.
 const TURNS: usize = 8;
+
+/// What the model is told first, as translation's ontology states it where the role says nothing: `conversePrompt`
+/// or `sayPrompt`.
+fn prompt(term: &str) -> String {
+    orexis::shape::Defaults::of("translation", include_str!("../ontology.ttl"))
+        .word(&format!("http://example.org/orexis/translation#{term}"))
+        .unwrap()
+}
 const ROWS: usize = 50;
 
 fn world() -> PathBuf {
@@ -77,6 +85,35 @@ fn unbooted() -> Store {
 
 fn me() -> String {
     format!("{V}seeker")
+}
+
+#[test]
+fn what_the_model_is_told_first_is_the_roles_to_say_and_the_ontologys_where_it_says_none() {
+    let store = seeker();
+    let translator = orexis_translation::Translator::new(&store).unwrap();
+    assert_eq!(
+        (translator.converse_prompt, translator.say_prompt),
+        (prompt("conversePrompt"), prompt("sayPrompt")),
+        "the ontology's, where the role says none"
+    );
+    let selves = store
+        .graphs_of(&[orexis::ontology::SELF_GRAPH], &Within::default())
+        .unwrap();
+    store
+        .update(&format!(
+            "PREFIX orexis: <http://example.org/orexis#>
+             PREFIX translation: <http://example.org/orexis/translation#>
+             INSERT {{ GRAPH <{g}> {{ ?role translation:conversePrompt \"Speak as a ship's cook.\" }} }}
+             WHERE {{ GRAPH <{g}> {{ ?me a orexis:Self ; orexis:plays ?role . ?role a translation:Translator }} }}",
+            g = selves[0]
+        ))
+        .unwrap();
+    let translator = orexis_translation::Translator::new(&store).unwrap();
+    assert_eq!(
+        translator.converse_prompt, "Speak as a ship's cook.",
+        "the role's, where it says one"
+    );
+    assert_eq!(translator.say_prompt, prompt("sayPrompt"));
 }
 
 // --- the chats -----------------------------------------------------------------------------------------------------
@@ -881,7 +918,7 @@ fn a_persons_prose_becomes_a_statement_the_agent_hears_and_believes_as_the_world
     );
     let asked = asked.lock().unwrap().clone();
     let (system, messages, offered) = &asked[0];
-    assert_eq!(system[0], CONVERSE_SYSTEM);
+    assert_eq!(system[0], prompt("conversePrompt"));
     assert!(messages[0]["content"].as_str().unwrap().starts_with("From Clara:"));
     for t in ["state", "vocabulary", "query"] {
         assert!(
@@ -1023,7 +1060,7 @@ fn the_model_is_briefed_with_who_the_agent_is_what_the_chat_reads_and_what_a_per
     s.write("clara_telegram", "who are you?", None, None, None);
     let asked = asked.lock().unwrap().clone();
     let (system, _, offered) = &asked[0];
-    assert_eq!(system[0], CONVERSE_SYSTEM);
+    assert_eq!(system[0], prompt("conversePrompt"));
     assert!(system[1].starts_with("YOU SPEAK FOR seeker."));
     assert!(
         system[2].starts_with("How to write on this chat: "),
@@ -1258,7 +1295,7 @@ fn in_a_group_an_agent_answers_when_named_keeps_silent_when_another_is_and_says_
         None,
     );
     let (system, _, offered) = asked.lock().unwrap()[0].clone();
-    assert!(system[0] == CONVERSE_SYSTEM && offered == ["state"]);
+    assert!(system[0] == prompt("conversePrompt") && offered == ["state"]);
     assert_eq!(
         s.said(),
         [(
@@ -1278,7 +1315,7 @@ fn in_a_group_an_agent_answers_when_named_keeps_silent_when_another_is_and_says_
     );
     let (system, _, offered) = asked.lock().unwrap()[0].clone();
     assert!(
-        system[0] == format!("{CONVERSE_SYSTEM}{UNADDRESSED}") && offered.is_empty(),
+        system[0] == format!("{}{UNADDRESSED}", prompt("conversePrompt")) && offered.is_empty(),
         "unnamed in a group: nothing stated"
     );
     assert!(
@@ -1315,7 +1352,7 @@ fn in_a_group_words_that_tag_or_reply_to_the_agent_are_its_own_and_its_answer_re
         Some("42"),
     );
     let (system, _, offered) = asked.lock().unwrap()[0].clone();
-    assert!(system[0] == CONVERSE_SYSTEM && offered == ["state"]);
+    assert!(system[0] == prompt("conversePrompt") && offered == ["state"]);
     assert_eq!(s.bot.lock().unwrap().replies, [Some("42".to_string())]);
     s.write(
         "household_telegram",
@@ -1394,7 +1431,9 @@ fn what_the_agent_says_to_a_person_is_rendered_and_sent_through_their_chat() {
     let (system, text, _) = asked.lock().unwrap()[0].clone();
     let text = text[0].as_str().unwrap().to_string();
     assert!(
-        system.len() == 1 && system[0].starts_with(SAY_SYSTEM) && system[0].contains("How to write on this chat: "),
+        system.len() == 1
+            && system[0].starts_with(&prompt("sayPrompt"))
+            && system[0].contains("How to write on this chat: "),
         "rendered in her chat's style, Telegram's: {system:?}"
     );
     assert!(

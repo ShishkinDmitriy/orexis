@@ -1117,7 +1117,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   package what its roles say, with a `Default` per struct and an instance that might be none, was built first and
   refused (role).
 - **How a package paces and bounds its work is its role's to say where an author would choose it** — a translator's
-  turns, rows and the model's timeout and retries, how often sensing asks after its sensors, how long a predictor
+  turns, rows, the model's timeout and retries and what the model is told first, how often sensing asks after its sensors, how long a predictor
   holds a rate, a transport's timeouts and how soon sensing says a reading due again, each a word of its package with its default in
   the ontology; a page of a read, a queue's length and a guard against a loop stay code (role).
 - **How often a package takes its turn is its role's to say** — `sensing:archivedEveryS`, `journal:archivedEveryS`,
