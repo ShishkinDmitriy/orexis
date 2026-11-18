@@ -10,8 +10,9 @@ description: >-
 
 # The three kinds
 
-- **`execution:Command`** carries an `sh:select` answering `?actuator` and `?payload`, the JSON a
-  device is sent: how much to pour, how long to heat.
+- **`execution:Command`** carries an `sh:select` answering `?actuator`, `?property` and `?value`, a
+  row per property a device is set: how much to pour, how long to heat, which cell to drive to. What
+  the device is sent of them is the [operator](/domain/actuation/operator.md)'s to make.
 - **`execution:Saying`** carries an `sh:construct` whose result is documents, each to the agents
   it names, believed by the agent as said and told through the transport
   ([speech](/domain/speech/speech.md)).

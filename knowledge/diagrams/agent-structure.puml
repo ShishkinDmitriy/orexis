@@ -91,6 +91,11 @@ frame "execution" {
   folder "execution:CommandGraph\na step's commands, sized as it was taken" as cmd #FFFCF2
 }
 
+frame "actuation" {
+  component "Operator\na device's document, by its pointers" as OP
+  folder "actuation:ActuationGraph\nthe sosa:Actuations sent" as act
+}
+
 ' ───────────────────────── who writes what ─────────────────────────
 
 RT  --> cat
@@ -127,7 +132,9 @@ PL  --> diff
 EX  --> int
 EX  --> cs
 EX  --> cmd
-EX  --> TR : execution:Commanded
+EX  --> OP : execution:Commanded
+OP  --> TR : a device's document
+OP  --> act
 
 ' ───────────────────────── who reads what ─────────────────────────
 
@@ -138,6 +145,7 @@ st  ..> PL
 pr  ..> PL
 rec ..> PL
 plan ..> EX
+cmd ..> OP
 rules ..> DEL
 acts ..> PL
 acts ..> PRE : flows

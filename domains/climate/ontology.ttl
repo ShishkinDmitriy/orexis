@@ -1,4 +1,5 @@
 @prefix : <http://example.org/orexis/climate#> .
+@prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -80,6 +81,10 @@
 
 :Heater a owl:Class ; rdfs:subClassOf sosa:Actuator ; rdfs:label "Heater" ;
     rdfs:comment "What warms a subject's air." .
+
+:HeatingDuration a owl:Class ; rdfs:subClassOf sosa:ActuatableProperty ; rdfs:label "Heating duration" ;
+    actuation:commandPointer "/heat_s" ;
+    rdfs:comment "How long a heater runs for one command, in seconds: what a heating sets, sent to the device as `heat_s`." .
 
 :warms a owl:ObjectProperty ; rdfs:domain :Heater ; rdfs:label "warms" ;
     rdfs:comment "The subject the heater warms: the bed whose air it heats." .

@@ -49,8 +49,8 @@ intention before anything is handed over, so no act is recorded
 [implementation](/domain/execution/implementation.md):
 
 1. an operation that reaches the world is kept and said in an [event](/domain/kernel/event.md) of the
-   executor's: an `execution:Command`'s payloads as an `execution:CommandGraph`, said
-   `execution:Commanded`, which the transport reaching the device hears beneath its own trigger, and an
+   executor's: an `execution:Command`'s settings as an `execution:CommandGraph`, said
+   `execution:Commanded`, which the [operator](/domain/actuation/operator.md) hears beneath its own trigger, and an
    `execution:Saying`'s document kept by speech's `said` and said `execution:Told`, beneath speech's
    speaking trigger, for speech to tell — order by order ([policy](/domain/kernel/policy.md));
 2. a step marked `execution:keptBelow` is not taken fictively: it waits until planning has written

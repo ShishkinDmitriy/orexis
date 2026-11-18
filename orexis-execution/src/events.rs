@@ -274,7 +274,7 @@ impl Event for Walked {
     }
 }
 
-/// A step's commands at one order were kept: the command graph, for the transport that sends them.
+/// A step's commands at one order were kept: the command graph, for the operator that sends them.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Commanded {
     pub commands: String,

@@ -5,6 +5,7 @@
 @prefix prov: <http://www.w3.org/ns/prov#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sosa: <http://www.w3.org/ns/sosa/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <> a orexis:OntologyGraph .    # this document is one graph, and this is what it is
 
@@ -34,9 +35,18 @@ actuation:Trigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Trigg
     rdfs:comment "An event that starts an activity of the operator's." .
 
 actuation:Actuating a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Actuating" ;
-    rdfs:comment "One order of a step's commands sent: each command of the command graph sent to its actuator through the transport member that reaches it, and one no member reaches passed over, said in the log." .
+    rdfs:comment "One order of a step's commands sent: each actuator the command graph sets sent one document, every value written at its property's `actuation:commandPointer`, through the transport member that reaches it, and what was sent kept as an `actuation:ActuationGraph`; a setting with no pointer, and an actuator no member reaches, passed over, said in the log." .
 
 actuation:ActuatingTrigger a owl:Class ; rdfs:subClassOf actuation:Trigger ; rdfs:label "Actuating trigger" ;
     rdfs:comment "What starts an actuating: execution's `execution:Commanded`, beneath it here, naming the command graph a step's order kept (`execution:commands`)." .
 
 execution:Commanded rdfs:subClassOf actuation:ActuatingTrigger .
+
+#  WHAT A DEVICE IS SENT, the mirror of what sensing reads: a property says where in the document its value is written,
+#  as a sensor says where in the document its reading is (`sensing:readingPointer`).
+actuation:commandPointer a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "command pointer" ;
+    rdfs:comment "Where in the JSON document a device is sent a value of this `sosa:ActuatableProperty` is written: an RFC 6901 pointer, `/dose_ml` for a dose's volume, `/to/x` for a van's column. Stated by the domain that declares the property, as its command's text once wrote the key itself; every value one order sets on one actuator goes into one document." .
+
+#  WHAT THE OPERATOR KEEPS of what it sent.
+actuation:ActuationGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Actuation graph" ;
+    rdfs:comment "The acts one actuating made, kept as the agent's own (`orexis:Recorded`): a `sosa:Actuation` per setting sent, the actuator that made it (`sosa:madeByActuator`), the property it acted on (`sosa:actsOnProperty`), the value (`sosa:hasSimpleResult`) and the instant it was sent (`sosa:resultTime`). What a command graph asked and no member reached is in none. No belief, and handed to no reader of the mind." .

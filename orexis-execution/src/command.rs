@@ -1,19 +1,19 @@
 //! WHAT TAKING A STEP SENDS, sized from the present, as `agent/execution/command.py` sizes it.
 //!
 //! An action a device takes has an `execution:Command` among its operations, an `sh:select` over the beliefs as
-//! they stand when the step is taken, with the step's parameters as `$tokens` and `$now`, answering `?actuator` and
-//! `?payload`. The search never sizes an act, so how much to pour or how long to heat is decided here, from the
+//! they stand when the step is taken, with the step's parameters as `$tokens` and `$now`, answering `?actuator`,
+//! `?property` and `?value`, a row per property a device is set. The search never sizes an act, so how much to pour or how long to heat is decided here, from the
 //! reading in hand, by the text the domain declares — whose `GRAPH` clauses reach the kind sensing keeps a reading in,
-//! a word this package names none of. The answer is what the container hands the transport; execution names no
-//! transport, and a step whose action carries no command sends nothing.
+//! a word this package names none of. What a device is sent of its rows is actuation's to make; execution names no
+//! transport and no wire, and a step whose action carries no command sends nothing.
 
+use oxigraph::model::Term;
 use oxsdatatypes::DateTime;
-use serde_json::Value as Json;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::ontology::{ACTION, BELIEF, RECORD, local_of};
-use orexis::store::{Store, Within, iri, value};
+use orexis::store::{Store, Within, iri};
 
 use crate::Said;
 use crate::implementation::operations;
@@ -45,10 +45,18 @@ pub fn tokens(store: &Store, said: &Said, action: &str, now: DateTime) -> Result
     Ok(out)
 }
 
-/// Every `(actuator, payload)` the step `said` sends — its rows keyed by local part — asked over the beliefs holding
-/// at `now`: every command of the action's implementation, or those of one `order`. Empty where it has none or its
-/// texts answer nothing; a payload that is no JSON is refused in the log.
-pub fn command(store: &Store, said: &Said, order: Option<f64>, now: DateTime) -> Result<Vec<(String, Json)>, Error> {
+/// What one row of a command sets: the actuator, the property of it acted on, and the value it is set to.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Setting {
+    pub actuator: String,
+    pub property: String,
+    pub value: Term,
+}
+
+/// Every setting the step `said` sends — its rows keyed by local part — asked over the beliefs holding at `now`:
+/// every command of the action's implementation, or those of one `order`. Empty where it has none or its texts answer
+/// nothing; a row missing a column is refused in the log.
+pub fn command(store: &Store, said: &Said, order: Option<f64>, now: DateTime) -> Result<Vec<Setting>, Error> {
     let Some(action) = said.get("fills") else {
         return Ok(Vec::new());
     };
@@ -74,12 +82,16 @@ pub fn command(store: &Store, said: &Said, order: Option<f64>, now: DateTime) ->
     let mut out = Vec::new();
     for text in texts {
         for row in store.rows(&bind(&text, &tokens)?, &known)? {
-            let actuator = iri(&row, "actuator");
-            let payload = value(&row, "payload").map(|p| serde_json::from_str::<Json>(&p));
-            match (actuator, payload) {
-                (Some(actuator), Some(Ok(payload))) => out.push((actuator, payload)),
-                (_, Some(Err(e))) => log::error!("{}: its command answered no JSON payload: {e}", local_of(action)),
-                _ => log::error!("{}: its command answered no actuator and payload", local_of(action)),
+            match (iri(&row, "actuator"), iri(&row, "property"), row.get("value")) {
+                (Some(actuator), Some(property), Some(value @ Term::Literal(_))) => out.push(Setting {
+                    actuator,
+                    property,
+                    value: value.clone(),
+                }),
+                _ => log::error!(
+                    "{}: its command answered no actuator, property and literal value",
+                    local_of(action)
+                ),
             }
         }
     }
