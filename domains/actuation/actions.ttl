@@ -81,21 +81,22 @@ actuation:Dosing a orexis:Action ;
         PREFIX actuation: <http://example.org/orexis/actuation#>
         PREFIX climate: <http://example.org/orexis/climate#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
-        SELECT ?actuator ?payload WHERE {
+        SELECT ?actuator ?property ?value WHERE {
             GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?held a sensing:ObservationGraph ; dcterms:temporal ?p .
                          ?p orexis:start ?at . OPTIONAL { ?p orexis:end ?until }
                          FILTER(?at <= $now && (!BOUND(?until) || $now < ?until)) }
             GRAPH ?held { ?reading sosa:hasFeatureOfInterest ?feature ; sosa:observedProperty climate:SoilMoisture ;
-                                   sosa:hasSimpleResult ?value }
+                                   sosa:hasSimpleResult ?number }
             ?feature (sosa:isSampleOf)? $subject .
             $subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition .
             ?condition ssn:forProperty climate:SoilMoisture ; schema:minValue ?lo ; schema:maxValue ?hi .
             $subject climate:litresPerFraction ?litres .
             $valve actuation:maxDoseMl ?cap .
             BIND(((xsd:double(?lo) + xsd:double(?hi)) / 2.0) AS ?aim)
-            BIND((?aim - xsd:double(?value)) * xsd:double(?litres) * 1000.0 AS ?wanted)
+            BIND((?aim - xsd:double(?number)) * xsd:double(?litres) * 1000.0 AS ?wanted)
             BIND(IF(?wanted > xsd:double(?cap), xsd:double(?cap), IF(?wanted < 0.0, 0.0, ?wanted)) AS ?ml)
             BIND($valve AS ?actuator)
-            BIND(CONCAT('{"dose_ml": ', STR(xsd:integer(ROUND(?ml))), '}') AS ?payload)
+            BIND(actuation:DoseVolume AS ?property)
+            BIND(xsd:integer(ROUND(?ml)) AS ?value)
         }
         ORDER BY DESC(?at) LIMIT 1""" ] ] .

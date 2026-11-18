@@ -1,4 +1,5 @@
 @prefix : <http://example.org/orexis/courier#> .
+@prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -39,14 +40,17 @@
 
 #################  Instruments  #################
 
-:Column a owl:Class ; rdfs:subClassOf sosa:ObservableProperty ; rdfs:label "Column" ;
+:Column a owl:Class ; rdfs:subClassOf sosa:ObservableProperty , sosa:ActuatableProperty ; rdfs:label "Column" ;
+    actuation:commandPointer "/to/x" ;
     rdfs:comment """The column a van stands in, as an instrument observes it: a `sosa:Sensor` hosted by the van and
     observing this property is half its position fix, reporting the van's `courier:x`, and the courier's
     transitions (rules.ttl) conclude the coordinate and then the cell of it. An instrument gives numbers, so
-    a position is the two coordinates the cells are authored in, and a cell is found by them (#1002).""" .
+    a position is the two coordinates the cells are authored in, and a cell is found by them (#1002). It is
+    what a drive told to the van sets too, sent as `to.x`.""" .
 
-:Row a owl:Class ; rdfs:subClassOf sosa:ObservableProperty ; rdfs:label "Row" ;
-    rdfs:comment "The row a van stands in, as an instrument observes it: the other half of a position fix, reporting the van's `courier:y`." .
+:Row a owl:Class ; rdfs:subClassOf sosa:ObservableProperty , sosa:ActuatableProperty ; rdfs:label "Row" ;
+    actuation:commandPointer "/to/y" ;
+    rdfs:comment "The row a van stands in, as an instrument observes it: the other half of a position fix, reporting the van's `courier:y`, and what a drive told to the van sets beside the column, sent as `to.y`." .
 
 :RelativeColumn a owl:Class ; rdfs:subClassOf sosa:ObservableProperty ; rdfs:label "Relative column" ;
     rdfs:comment """The column of a CONTACT as seen from the van that carries it: a `sosa:Sample` hosted by the van, standing

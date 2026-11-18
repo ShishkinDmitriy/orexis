@@ -3,8 +3,7 @@
 
 use std::sync::Arc;
 
-use oxigraph::model::{GraphName, Literal, NamedNode, Quad};
-use serde_json::Value as Json;
+use oxigraph::model::{GraphName, NamedNode, Quad};
 
 use orexis::Error;
 use orexis::clock::Clock;
@@ -14,11 +13,11 @@ use orexis::ontology::RECORDED;
 use orexis::rdf::mint;
 use orexis::store::Store;
 
-use crate::command::command;
+use crate::command::{Setting, command};
 use crate::events::{Commanded, Told};
 use crate::executor::{Said, Take};
 use crate::implementation::operations;
-use crate::ontology::{ACTUATOR, COMMAND, COMMAND_GRAPH, PAYLOAD, SAYING};
+use crate::ontology::{ACTUATOR, COMMAND, COMMAND_GRAPH, PROPERTY, SAYING, VALUE};
 use crate::says::says;
 
 use orexis::rdf::RDF_TYPE;
@@ -76,8 +75,8 @@ pub fn taker(beliefs: Store, me: &str, clock: Arc<dyn Clock>, watch: Watch, comm
 }
 
 /// THE COMMANDS ONE ORDER OF A STEP SENDS, kept as the agent's own act before any transport sends them: an
-/// `execution:CommandGraph` of one node per command, its actuator and its payload; the graph's name.
-pub fn commanded(store: &Store, me: &str, sent: &[(String, Json)]) -> Result<String, Error> {
+/// `execution:CommandGraph` of one node per setting, its actuator, the property and the value; the graph's name.
+pub fn commanded(store: &Store, me: &str, sent: &[Setting]) -> Result<String, Error> {
     let tail = |n: &NamedNode| {
         n.as_str()
             .rsplit(['/', ':', '#'])
@@ -98,19 +97,25 @@ pub fn commanded(store: &Store, me: &str, sent: &[(String, Json)]) -> Result<Str
         NamedNode::new_unchecked(COMMAND_GRAPH),
         GraphName::DefaultGraph,
     )];
-    for (actuator, payload) in sent {
+    for setting in sent {
         let node = NamedNode::new_unchecked(format!("{}#{}", graph.as_str(), tail(&mint())));
-        let actuator = NamedNode::new(actuator.as_str()).map_err(|e| Error::Evaluation(e.to_string()))?;
+        let iri = |s: &str| NamedNode::new(s).map_err(|e| Error::Evaluation(e.to_string()));
         quads.push(Quad::new(
             node.clone(),
             NamedNode::new_unchecked(ACTUATOR),
-            actuator,
+            iri(&setting.actuator)?,
+            into.clone(),
+        ));
+        quads.push(Quad::new(
+            node.clone(),
+            NamedNode::new_unchecked(PROPERTY),
+            iri(&setting.property)?,
             into.clone(),
         ));
         quads.push(Quad::new(
             node,
-            NamedNode::new_unchecked(PAYLOAD),
-            Literal::new_simple_literal(payload.to_string()),
+            NamedNode::new_unchecked(VALUE),
+            setting.value.clone(),
             into.clone(),
         ));
     }

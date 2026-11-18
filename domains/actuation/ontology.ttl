@@ -1,4 +1,5 @@
 @prefix : <http://example.org/orexis/actuation#> .
+@prefix actuation: <http://example.org/orexis/actuation#> .
 @prefix orexis: <http://example.org/orexis#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -21,8 +22,9 @@
 :Valve a owl:Class ; rdfs:subClassOf sosa:Actuator ; rdfs:label "Valve" ;
     rdfs:comment "What pours: a pump or a valve, dosing a subject from a source." .
 
-
-
+:DoseVolume a owl:Class ; rdfs:subClassOf sosa:ActuatableProperty ; rdfs:label "Dose volume" ;
+    actuation:commandPointer "/dose_ml" ;
+    rdfs:comment "How much a valve pours for one command, in millilitres: what a dose sets, sent to the device as `dose_ml`." .
 
 :drawsFrom a owl:ObjectProperty ; rdfs:domain sosa:Actuator ; rdfs:label "draws from" ;
     rdfs:comment "Where what the device pours comes from." .

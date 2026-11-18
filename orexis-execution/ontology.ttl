@@ -87,7 +87,7 @@ execution:takenAt a owl:DatatypeProperty ; rdfs:domain execution:Act ; rdfs:rang
 
 execution:Command a owl:Class ; rdfs:subClassOf execution:Operation ;
     rdfs:label "Command" ;
-    rdfs:comment "An operation sending a device a command: an `sh:select` run over the present beliefs when the step is taken, with the step's parameters as `$tokens` and `$now` and the agent asked as `?me a orexis:Self`, answering `?actuator` and `?payload`, the JSON document the device is sent. How much to pour or how long to heat is sized here from the situation as it is, never by the search, and each answer is kept in an `execution:CommandGraph` and said `execution:Commanded`, for the operator, actuation's, which sends it through the transport member that reaches the actuator." .
+    rdfs:comment "An operation sending a device a command: an `sh:select` run over the present beliefs when the step is taken, with the step's parameters as `$tokens` and `$now` and the agent asked as `?me a orexis:Self`, answering `?actuator`, `?property` and `?value`: the device, a property it acts on and the value it is set to, a row each, one device answering several where it is set several. How much to pour or how long to heat is sized here from the situation as it is, never by the search, and each answer is kept in an `execution:CommandGraph` and said `execution:Commanded`, for the operator, actuation's, which makes of each device's rows what the device is sent and sends it through the transport member that reaches it." .
 
 execution:Saying a owl:Class ; rdfs:subClassOf execution:Operation ;
     rdfs:label "Saying" ;
@@ -262,13 +262,16 @@ execution:ResolvingTrigger a owl:Class ; rdfs:subClassOf execution:Trigger ; rdf
 #  and its documents, in speech's words, which execution - above speech - puts beneath speech's trigger.
 
 execution:CommandGraph a owl:Class ; rdfs:subClassOf orexis:Graph ; rdfs:label "Command graph" ;
-    rdfs:comment "The commands one order of a step sends, sized from the present as the step is taken (`execution:Command`) and kept as the agent's own act (`orexis:Recorded`) before any transport sends them: a node per command, the actuator it is for (`execution:actuator`) and the JSON document the device is sent (`execution:payload`). No belief, and handed to no reader of the mind." .
+    rdfs:comment "The commands one order of a step sends, sized from the present as the step is taken (`execution:Command`) and kept as the agent's own act (`orexis:Recorded`) before any transport sends them: a node per row a command answered, the actuator it is for (`execution:actuator`), the property it acts on (`execution:property`) and the value it is set to (`execution:value`). No belief, and handed to no reader of the mind." .
 
 execution:actuator a owl:ObjectProperty ; rdfs:label "actuator" ;
     rdfs:comment "The actuator a command is for." .
 
-execution:payload a owl:DatatypeProperty ; rdfs:range xsd:string ; rdfs:label "payload" ;
-    rdfs:comment "The JSON document a command sends its actuator, as the command's text sized it." .
+execution:property a owl:ObjectProperty ; rdfs:label "property" ;
+    rdfs:comment "The property of its actuator a command acts on, a `sosa:ActuatableProperty`: a dose's volume, a heating's length, a van's column." .
+
+execution:value a owl:DatatypeProperty ; rdfs:label "value" ;
+    rdfs:comment "The value a command sets its property to, the typed literal its text sized: what the operator puts in the document the device is sent." .
 
 execution:Commanded a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Commanded" ;
     rdfs:comment "A step's commands at one order were kept as a command graph (`execution:commands`), for actuation's operator, which puts this beneath its own trigger." .

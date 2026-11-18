@@ -747,6 +747,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **Several transport members are one to the rows above** — each adds itself to the agent's `Members`, and a row sends
   on a channel through the member that says it reaches it: a step's command, actuation's, to the member reaching the
   actuator (the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop).
+- **A command sets properties and the operator writes the bytes, each value at its property's pointer** — a command's
+  text answers an actuator, a `sosa:ActuatableProperty` and a value, and `actuation:commandPointer` is the domain's
+  word on the property, not the device's, since one drive sets a van's column and row; the text wrote the JSON itself
+  (the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop).
 - **The transport speaks MQTT4SSN, and a topic is named by the filters that match it, which no society
   states** — onboarding's one `sh:rule` names each for its publisher or its listener, a board's one
   readings topic `sensors/<client>/reading`, into `society.derived.ttl`, which every reader reads as the

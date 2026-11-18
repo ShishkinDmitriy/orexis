@@ -268,13 +268,14 @@ market:Serving a orexis:Action ;
         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
         PREFIX market: <http://example.org/orexis/market#>
         PREFIX actuation: <http://example.org/orexis/actuation#>
-        SELECT ?actuator ?payload WHERE {
+        SELECT ?actuator ?property ?value WHERE {
             $claim market:heldBy ?holder ; market:amountL ?litres .
             ?holder orexis:actsFor ?subject .
             ?me a orexis:Self ; actuation:hasActuator ?actuator . ?actuator actuation:actuates ?subject ; actuation:maxDoseMl ?cap .
             BIND(xsd:double(?litres) * 1000.0 AS ?wanted)
             BIND(IF(?wanted > xsd:double(?cap), xsd:double(?cap), ?wanted) AS ?ml)
-            BIND(CONCAT('{"dose_ml": ', STR(xsd:integer(ROUND(?ml))), '}') AS ?payload)
+            BIND(actuation:DoseVolume AS ?property)
+            BIND(xsd:integer(ROUND(?ml)) AS ?value)
         }""" ] ,
                          #  THE CLAIM, SAID AGAIN DISCHARGED, to its holder.
                          [ a execution:Saying ; sh:construct """PREFIX execution: <http://example.org/orexis/execution#>

@@ -992,6 +992,8 @@ dependencies = [
  "orexis",
  "orexis-transport",
  "oxigraph",
+ "oxsdatatypes",
+ "serde_json",
  "tokio",
 ]
 
@@ -1070,7 +1072,6 @@ dependencies = [
  "orexis-speech",
  "oxigraph",
  "oxsdatatypes",
- "serde_json",
  "tokio",
 ]
 

@@ -36,9 +36,10 @@ of its sensor, found through the world's description since no belief says when t
 revised.
 
 How much is not the search's. The action's `execution:Command` runs over the present when the step
-is taken and answers the device and the payload: for a dose, how far the subject's latest reading is
-below the middle of the range, by the subject's litres per fraction, at most the
-valve's cap. The runtime sends it through the [transport](/domain/transport/transport.md). The
+is taken and answers the device, the property it sets and the value: for a dose, `actuation:DoseVolume`
+at how far the subject's latest reading is below the middle of the range, by the subject's litres per
+fraction, at most the valve's cap. The [operator](/domain/actuation/operator.md) makes the device's
+document of it and sends it through the [transport](/domain/transport/transport.md). The
 executor answers the step when the next reading's transition says the soil moist. A dose the agent
 is committed to is a flow its subject's prediction accumulates (`domains/actuation/flows.ttl`), its
 rate read off the committed step's subject and that subject's observation — prediction is the other

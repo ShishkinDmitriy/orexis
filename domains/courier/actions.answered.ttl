@@ -12,8 +12,9 @@
 
 #  THE COURIER'S ACTIONS WHERE THE WORLD ANSWERS A DRIVE (#1002). A world imports this document or
 #  `actions.ttl`, never both: the two declare the same three actions, and differ in one implementation.
-#  Here a drive is a COMMAND to the van itself — `{"to": {"x": <column>, "y": <row>}}`, the coordinates
-#  to reach, on the topic the van listens to — and the world moves the van: the simulator over the drive's band, a real
+#  Here a drive is a COMMAND to the van itself — its column and row set to the coordinates to reach, which
+#  the operator sends by their pointers as `{"to": {"x": <column>, "y": <row>}}` on the topic the van
+#  listens to — and the world moves the van: the simulator over the drive's band, a real
 #  van as its own driving will (navigation-is-a-body-a-mover-and-a-move, §5). The step lands when the van's
 #  position fix shows the coordinates, as a dose lands when the probe shows the soil moist, and fails a patience
 #  past its latest landing when it does not; the executor says only what happened, and writes no outcome of
@@ -27,9 +28,11 @@ courier:Drive a orexis:Action ;
     rdfs:label "drive the van to a neighbouring cell, told to the van" ;
     orexis:takes courier:van , courier:toX , courier:toY ;
     execution:implementation [ a execution:Implementation ;
-        execution:operation [ a execution:Command ; sh:select """SELECT ?actuator ?payload WHERE {
-            BIND($van AS ?actuator)
-            BIND(CONCAT('{"to": {"x": ', STR($toX), ', "y": ', STR($toY), '}}') AS ?payload)
+        execution:operation [ a execution:Command ; sh:select """PREFIX courier: <http://example.org/orexis/courier#>
+        SELECT ?actuator ?property ?value WHERE {
+            { BIND($van AS ?actuator) BIND(courier:Column AS ?property) BIND($toX AS ?value) }
+            UNION
+            { BIND($van AS ?actuator) BIND(courier:Row AS ?property) BIND($toY AS ?value) }
         }""" ] ] ;
     #  A DRIVE GOES TO ANY NEIGHBOUR, BY ARITHMETIC (the-grid-is-infinite-and-a-position-is-two-coordinates):
     #  the grid is infinite and nothing authors it, so the four neighbours of where the van stands are

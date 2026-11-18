@@ -2,12 +2,15 @@
 //! is told, and sent through the transport member that reaches it, in SOSA's words for acting
 //! (the-transport-is-the-bottom-layer-and-the-row-above-owns-the-loop).
 //!
-//! - `operator`: the package's core, the operator the self plays, which sends each command of a step's order;
+//! - `operator`: the package's core, the operator the self plays, which sends each command of a step's order and
+//!   keeps the acts it made;
+//! - `encode`: what a device is sent, each setting's value written at its property's pointer;
 //! - the start, below the modules, and nothing else: the operator made, and the task that hears a step's commands.
 
 use orexis::task::{Handed, Package, Woke};
 use orexis_transport::Members;
 
+pub mod encode;
 mod operator;
 
 pub use operator::Operator;
@@ -37,7 +40,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.booted().await? {
             return Ok(());
         }
-        let mut operator = Operator::new(&handed.store, handed.provided.share::<Members>());
+        let mut operator = Operator::new(&handed.store, handed.provided.share::<Members>())?;
         loop {
             let woke = tokio::select! {
                 biased;

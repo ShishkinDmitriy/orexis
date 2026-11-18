@@ -74,6 +74,13 @@ into an observation. **Actuation sends the nudge on sensing's word**: sensing sa
 actuation tells the board to sense or to sleep, since telling a device anything is acting on it. A role named
 `actuation:Actor` was passed over, the bundle's actor being whoever is asked what will hold.
 
+Where a value goes in a device's document is said by its PROPERTY, `actuation:commandPointer` on a
+`sosa:ActuatableProperty` the domain declares, and not by the device as a sensor says its `sensing:readingPointer`:
+a van is set two properties by one drive, its column and its row, so a pointer on the van could not say which value
+is which, and a device per property made the van two actuators reached as one; and the key was already the domain's,
+written into its command's text. No `actuation:encodedBy` is declared beside it, JSON being the one encoding a device
+here takes, until a second one is wanted.
+
 # What was refused
 
 - **A member calling up into the row its message is for.** It is what the code did: the bottom of the stack
