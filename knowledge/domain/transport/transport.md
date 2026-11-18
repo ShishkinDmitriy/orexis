@@ -93,14 +93,15 @@ up after `http:fetchedWithinS`, the member's one word of its own, thirty seconds
 # The member that ships: Telegram
 
 The agent's own bot, the `telegram:Bot` it `telegram:hasBot`, its token `TELEGRAM_BOT_TOKEN` and where the API answers
-the world's derived deployment's word of the bot, over the standard library. Started, it asks `getUpdates` every few seconds from the
-offset past the last update seen, on a thread of its own; a text message's channel is its chat's id,
+the world's derived deployment's word of the bot, over `reqwest`. Started, it asks `getUpdates` every few seconds from the
+offset past the last update seen, awaited as a Tokio task, one poll at a time; a text message's channel is its chat's id,
 which the world states as a `telegram:Chat`'s `telegram:chatId`, and who wrote is the person the world
 states under that `telegram:userId`. A message in a chat the world names none of is dropped and said
 once. In a group it says whom the words were for, as Telegram tells it: words tagging the bot or
 replying to one of its messages are addressed to the agent, words tagging or replying to someone else
 and not it are not, and which account is the bot's own it asks the API (`getMe`) rather than any
-document. `say_to` posts `sendMessage` with the chat's id, as a reply to the message the agent answers.
+document. What it is sent it posts as `sendMessage` with the chat's id, as a reply to the message the agent answers,
+by one task in the order it was sent, so the messages of one answer arrive as they were said.
 Its words are its own ontology's (`orexis-transport-telegram/ontology.ttl`), among them how often the bot is
 polled and how long one call of the API may take, `telegram:polledEveryS` and `telegram:calledWithinS`, three and
 thirty seconds where no role states them.

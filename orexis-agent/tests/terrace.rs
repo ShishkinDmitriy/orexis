@@ -121,7 +121,7 @@ struct Api {
 impl Api {
     fn call(&self) -> orexis_transport_telegram::driver::Call {
         let (updates, sent) = (self.updates.clone(), self.sent.clone());
-        Arc::new(move |url, body| {
+        orexis_transport_telegram::driver::answering(move |url, body| {
             if url.ends_with("/getUpdates") {
                 return Ok(json!({"ok": true, "result": std::mem::take(&mut *updates.lock().unwrap())}));
             }
@@ -215,14 +215,13 @@ async fn terrace(
             web.map(<[u8]>::to_vec).ok_or_else(|| "no web here".to_string())
         }),
     );
-    let mut telegram = orexis_transport_telegram::driver::Telegram::new(
+    let telegram = orexis_transport_telegram::driver::Telegram::new(
         &t.store,
         &format!("{T}terrace_agent"),
         "token",
         "https://bots.example",
         api.call(),
     );
-    telegram.spawn = Box::new(|work| work());
     let provided = provided.with(member).with(http).with(telegram);
     if let Some(model) = model {
         provided.provide(model);

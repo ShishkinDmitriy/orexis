@@ -12,7 +12,7 @@ own bot.
 
 | Heard | Said by | Starts |
 |---|---|---|
-| the clock, as often as a role says (`telegram:polledEveryS`), every 3 s where none says | | the bot polled on a thread of its own |
+| the clock, as often as a role says (`telegram:polledEveryS`), every 3 s where none says | | the bot polled, awaited as a Tokio task |
 | a message polled (an arrival) | Telegram | left with speech, listening on the chat, as the chat's words (`orexis_transport::chat::Words`) |
 
 ## Activities
