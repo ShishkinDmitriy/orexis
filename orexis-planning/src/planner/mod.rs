@@ -8,7 +8,7 @@
 //! `search`, and `extract_plan`, and `_reconsider` against a walking intention's untaken steps; `publish_plan`. And
 //! outside the pass, `check`, of a head about to be taken.
 //!
-//! WHAT A PASS SAYS IT DID is on the fields a caller reads — `handed`, `reached`, `blocked`, `superseded`, `published`
+//! WHAT A PASS SAYS IT DID is on the fields a caller reads — `handed`, `reached`, `blocked`, `published`
 //! — for the executor it is linked to, and in the events said to whoever watches the agent (`events`), with the pass's
 //! laps, where somebody does.
 
@@ -37,7 +37,7 @@ use crate::admit::local_of;
 use crate::derive_wants::derive_wants;
 use crate::events::{Imagined, PlanPublished, Planned, Rerooted, SearchEnded, WantFoundUnreachable};
 use crate::find_scopes::{Scopes, find_scopes};
-use crate::find_wants::{Finding, find_wants};
+use crate::find_wants::{Criteria, find_wants};
 use crate::footprint::{actions_of, reads_of_shape, terms_of_shape, written};
 use crate::lay_ground::{Landed, Laying, lay_ground, lay_ground_foreseeing};
 use crate::memo::Memo;
@@ -46,6 +46,7 @@ use crate::prepare_ground::prepare_ground;
 use crate::publish_plan::publish_plan;
 use crate::refine::refine;
 use crate::reroot::reroot;
+use crate::scope::Scope;
 use crate::scope_actions::scope_actions;
 use crate::shapes::Shapes;
 use crate::unweighed::unweighed;
@@ -89,17 +90,11 @@ fn constraints_of(store: &Store, holder: &str) -> Result<Vec<String>, Error> {
 /// THE WORLD OF A STORE THAT SCOPED NOTHING.
 pub const UNSCOPED: &str = "unscoped";
 
-/// An intention a reconsideration replaced: its head, the want it walked, and the want whose plan replaces it.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Reconsidered {
-    pub head: String,
-    pub walked: String,
-    pub by: String,
-}
-
-/// Where one standing intention stands, by the want it pursues.
+/// Where one walking want's walk stands: the plan its standing intention adopted, that plan's head and the action it
+/// fills, whether the head is in flight, whether the intention ends after it, how late the walk runs and when its
+/// last step in flight lands. Read off the intentions execution writes, with every intention still pursuing the want.
 #[derive(Clone, Debug)]
-struct Flight {
+struct Walk {
     plan: String,
     head: String,
     action: String,
@@ -107,11 +102,20 @@ struct Flight {
     ending: bool,
     late: DayTimeDuration,
     landing: DateTime,
-    landings: Vec<(String, DateTime)>,
-    in_flight_steps: Vec<(String, DateTime, String, String)>,
+    steps_in_flight: Vec<StepInFlight>,
 }
 
-type Flights = BTreeMap<String, Flight>;
+/// A step taken and not yet answered, of any intention pursuing a walking want: the action it fills, when it lands,
+/// and the plan and step it is.
+#[derive(Clone, Debug)]
+struct StepInFlight {
+    action: String,
+    lands: DateTime,
+    plan: String,
+    step: String,
+}
+
+type Walks = BTreeMap<String, Walk>;
 
 /// What one step says: the action it fills and the values of the parameters that action takes.
 type Said = (String, Vec<(String, String)>);
@@ -142,8 +146,6 @@ pub struct Planner {
     pub rerooted: Vec<&'static str>,
     /// The heads `check` refused as they were about to be taken.
     pub blocked: Vec<String>,
-    /// The intentions a reconsideration replaced, to end after their steps in flight.
-    pub superseded: Vec<Reconsidered>,
     /// The step of each walking want after which a world of its plan was last foreseen impossible.
     pub doomed: BTreeMap<String, String>,
     /// The wants a role above planning asked to have reopened, until the next pass reopens them.
@@ -228,17 +230,6 @@ fn later(a: DateTime, b: DateTime) -> DateTime {
 
 fn zero() -> DayTimeDuration {
     DayTimeDuration::new(0)
-}
-
-/// What a search is scoped to: the scope's actions, the terms that are another scope's, what a world is hashed
-/// within, and the pass's instant.
-pub struct Searching<'s> {
-    /// The scope searched in, for what is said of the search.
-    pub scope: Option<&'s str>,
-    pub only: Option<&'s BTreeSet<String>>,
-    pub elsewhere: &'s BTreeSet<String>,
-    pub within: Option<&'s BTreeSet<String>>,
-    pub at: DateTime,
 }
 
 /// One way a world violates a constraint: (instance, constraint, about, offending).
@@ -526,16 +517,25 @@ fn predicted(beliefs: &Store, plan: &str) -> Result<BTreeMap<String, Predicted>,
         .collect())
 }
 
-/// What each step in flight of this scope changes where it lands, off the published plan.
-fn landed(beliefs: &Store, flights: &Flights, only: Option<&BTreeSet<String>>) -> Result<Vec<Landed>, Error> {
+/// What each step in walk of this scope changes where it lands, off the published plan.
+fn landed(beliefs: &Store, walks: &Walks, only: Option<&BTreeSet<String>>) -> Result<Vec<Landed>, Error> {
     let mut out = Vec::new();
-    for flight in flights.values() {
-        for (action, lands, plan, step) in &flight.in_flight_steps {
+    let mut plans: BTreeMap<&str, BTreeMap<String, Predicted>> = BTreeMap::new();
+    for walk in walks.values() {
+        for StepInFlight {
+            action,
+            lands,
+            plan,
+            step,
+        } in &walk.steps_in_flight
+        {
             if only.is_some_and(|o| !o.contains(action)) {
                 continue;
             }
-            let predicted = predicted(beliefs, plan)?;
-            let said = predicted.get(step.as_str());
+            if !plans.contains_key(plan.as_str()) {
+                plans.insert(plan, predicted(beliefs, plan)?);
+            }
+            let said = plans[plan.as_str()].get(step.as_str());
             let triples = |graph: Option<String>| -> Result<Vec<Triple>, Error> {
                 Ok(quads_of(beliefs, graph)?
                     .into_iter()
@@ -585,9 +585,9 @@ fn of_scope(
         for w in find_wants(
             store,
             instant,
-            &Finding {
+            &Criteria {
                 holder: Some(holder),
-                ..Finding::default()
+                ..Criteria::default()
             },
         )? {
             if !found.contains(&w) {
@@ -711,7 +711,6 @@ impl Planner {
             laps: None,
             searches: Mutex::new(BTreeMap::new()),
             blocked: Vec::new(),
-            superseded: Vec::new(),
             doomed: BTreeMap::new(),
             asked: BTreeSet::new(),
             foresee: None,
@@ -735,16 +734,15 @@ impl Planner {
         let walking = self.walking()?;
         self.withdraw_orphaned_refinements(&walking)?;
         let mut written = self.keep_below(at)?;
-        let flights = if self.holds_a_constraint()? {
-            self.flights(at)?
+        let walks = if self.holds_a_constraint()? {
+            self.walks(at)?
         } else {
-            Flights::new()
+            Walks::new()
         };
         self.handed.clear();
         self.reached.clear();
         self.rerooted.clear();
         self.blocked.clear();
-        self.superseded.clear();
         self.published.clear();
         //  HOW LONG EACH PART OF THE PASS TOOK, where anybody watches: real seconds, never the agent's.
         self.laps = self.watch.connected().then(Laps::default);
@@ -770,7 +768,7 @@ impl Planner {
                 &scope,
                 &scopes,
                 read.as_ref(),
-                &flights,
+                &walks,
                 &walking,
                 &mut searched,
                 at,
@@ -800,7 +798,7 @@ impl Planner {
         scope: &str,
         scopes: &Scopes,
         read: Option<&BTreeSet<String>>,
-        flights: &Flights,
+        walks: &Walks,
         walking: &BTreeSet<String>,
         searched: &mut BTreeSet<String>,
         at: DateTime,
@@ -827,7 +825,7 @@ impl Planner {
           GRAPH ?d { ?for a planning:Want }
           FILTER(!BOUND(?ws) || ?ws <= $now) }"#;
         let beliefs = &self.beliefs.clone();
-        let flights = flights.clone();
+        let walks = walks.clone();
         let scope = scope.to_string();
         let unscoped = scope == UNSCOPED;
         {
@@ -870,14 +868,14 @@ impl Planner {
                 w
             });
             let in_only = |action: &str| only.as_ref().is_none_or(|o| o.contains(action));
-            let landings: Vec<DateTime> = flights
+            let landings: Vec<DateTime> = walks
                 .values()
-                .flat_map(|f| f.landings.iter())
-                .filter(|(action, _)| in_only(action))
-                .map(|(_, lands)| *lands)
+                .flat_map(|w| w.steps_in_flight.iter())
+                .filter(|s| in_only(&s.action))
+                .map(|s| s.lands)
                 .collect();
-            let landed = landed(beliefs, &flights, only.as_ref())?;
-            let foreseen: BTreeSet<String> = if flights.is_empty() {
+            let landed = landed(beliefs, &walks, only.as_ref())?;
+            let foreseen: BTreeSet<String> = if walks.is_empty() {
                 BTreeSet::new()
             } else {
                 store
@@ -907,10 +905,13 @@ impl Planner {
                 store,
                 at,
                 &Laying {
-                    within: within.as_ref(),
+                    scope: Scope {
+                        actions: only.as_ref(),
+                        within: within.as_ref(),
+                        ..Scope::default()
+                    },
                     landings: &landings,
                     landed: &landed,
-                    actions: only.as_ref(),
                     as_stood,
                 },
                 foresight.as_mut().map(|f| f.as_mut() as &mut dyn Foresight),
@@ -919,7 +920,7 @@ impl Planner {
                 .first()
                 .cloned()
                 .ok_or_else(|| Error::Evaluation("no ground was laid".into()))?;
-            let arrived = !flights.is_empty() && {
+            let arrived = !walks.is_empty() && {
                 let c = cat(store, &mut memo)?;
                 store
                     .rows(&bind(GROUND_HASHES_Q, &[("cat", c)])?, &[])?
@@ -957,12 +958,12 @@ impl Planner {
                     weigh(store, &for_, &about, &mut memo)?;
                 }
             }
-            let mut reopen = if arrived && !flights.is_empty() && !constraints.is_empty() {
-                self.impossible_ahead(store, &flights, &constraints, only.as_ref(), &mut memo)?
+            let mut reopen = if arrived && !walks.is_empty() && !constraints.is_empty() {
+                self.impossible_ahead(store, &walks, &constraints, only.as_ref(), &mut memo)?
             } else {
                 BTreeSet::new()
             };
-            reopen.extend(self.asked_here(store, &flights, only.as_ref())?);
+            reopen.extend(self.asked_here(store, &walks, only.as_ref())?);
             self.lap("weigh");
             let met_now: BTreeSet<String> = store
                 .rows(
@@ -983,7 +984,7 @@ impl Planner {
             let reached: BTreeSet<String> = met_now.difference(walking).cloned().collect();
             let opens: BTreeMap<String, DateTime> = walking
                 .iter()
-                .map(|w| (w.clone(), flights.get(w).map_or(at, |f| f.landing)))
+                .map(|w| (w.clone(), walks.get(w).map_or(at, |f| f.landing)))
                 .collect();
             let none = BTreeSet::new();
             if !reopen.is_empty() {
@@ -1002,7 +1003,7 @@ impl Planner {
             let shapes = shapes(store, &mut memo)?;
             let mut kept: BTreeMap<String, Vec<String>> = BTreeMap::new();
             let mut here = BTreeSet::new();
-            let reopening: BTreeSet<String> = if flights.is_empty() {
+            let reopening: BTreeSet<String> = if walks.is_empty() {
                 BTreeSet::new()
             } else {
                 store
@@ -1035,14 +1036,13 @@ impl Planner {
                     here.insert(want.clone());
                     continue;
                 }
-                let scoped = Searching {
-                    scope: Some(scope.as_str()),
-                    only: only.as_ref(),
-                    elsewhere: &elsewhere,
+                let searched = Scope {
+                    name: Some(scope.as_str()),
+                    actions: only.as_ref(),
+                    elsewhere: Some(&elsewhere),
                     within: within.as_ref(),
-                    at,
                 };
-                self.search(store, &want, self.budget, &scoped, &mut memo)?;
+                self.search(store, &want, self.budget, &searched, at, &mut memo)?;
                 let exhausted = plan_of(store, &want)?.outcome.is_some_and(|o| o == EXHAUSTED);
                 if exhausted {
                     self.cut.insert(want.clone(), (at, grounds.clone()));
@@ -1050,7 +1050,7 @@ impl Planner {
                     self.cut.remove(&want);
                 }
                 here.insert(want.clone());
-                self.reconsider(store, &want, &flights, &mut kept)?;
+                self.reconsider(store, &want, &walks, &mut kept)?;
             }
             self.lap("search");
             let mut unwalked: BTreeSet<String> = walking.clone();
@@ -1277,7 +1277,7 @@ impl Planner {
     pub fn standing(&self, at: DateTime) -> Result<Vec<String>, Error> {
         let mut out = BTreeSet::new();
         for store in self.imaginaria.values() {
-            out.extend(find_wants(store, at, &Finding::default())?);
+            out.extend(find_wants(store, at, &Criteria::default())?);
         }
         Ok(out.into_iter().collect())
     }
@@ -1432,17 +1432,10 @@ mod tests {
                 .filter_map(|r| iri(r, "want"))
                 .collect();
             assert!(!wants.is_empty(), "{} has nothing to expand", case.display());
-            let none = BTreeSet::new();
-            let scoped = Searching {
-                scope: None,
-                only: None,
-                elsewhere: &none,
-                within: None,
-                at: snapshots::now(),
-            };
+            let (scope, at) = (Scope::default(), snapshots::now());
             for want in wants {
                 planner
-                    .expand(&store, &want, BUDGET, &scoped, &mut Memo::default())
+                    .expand(&store, &want, BUDGET, &scope, at, &mut Memo::default())
                     .unwrap();
             }
             snapshots::held_to_diff(&case, &store, "expand");
@@ -2089,7 +2082,7 @@ SELECT ?g ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
             .unwrap();
         }
         derive_wants(&store, snapshots::now(), &BTreeMap::new(), &BTreeSet::new()).unwrap();
-        let wants = find_wants(&store, snapshots::now(), &Finding::default()).unwrap();
+        let wants = find_wants(&store, snapshots::now(), &Criteria::default()).unwrap();
         assert_eq!(wants.len(), 1);
         let want = wants[0].clone();
         (store, want)
@@ -2128,15 +2121,10 @@ SELECT ?g ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
         let beliefs = snapshots::stand_in(&snapshots::cases_in(&cases())[0]);
         let (store, want) = derived_into(&beliefs);
         let planner = Planner::new(&beliefs, snapshots::AGENT, None).unwrap();
-        let none = BTreeSet::new();
-        let scoped = Searching {
-            scope: None,
-            only: None,
-            elsewhere: &none,
-            within: None,
-            at: snapshots::now(),
-        };
-        planner.search(&store, &want, 1, &scoped, &mut Memo::default()).unwrap();
+        let (scope, at) = (Scope::default(), snapshots::now());
+        planner
+            .search(&store, &want, 1, &scope, at, &mut Memo::default())
+            .unwrap();
         assert_eq!(plan_of(&store, &want), (EXHAUSTED.to_string(), 0));
         assert_eq!(
             made(&store, &want),
@@ -2144,7 +2132,7 @@ SELECT ?g ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
             "the ground weighed, and one world forked and weighed"
         );
         planner
-            .search(&store, &want, 32, &scoped, &mut Memo::default())
+            .search(&store, &want, 32, &scope, at, &mut Memo::default())
             .unwrap();
         assert_eq!(plan_of(&store, &want), (SATISFIED.to_string(), 2));
         assert_eq!(
@@ -2159,21 +2147,14 @@ SELECT ?g ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
         let beliefs = snapshots::stand_in(&snapshots::cases_in(&cases())[0]);
         let (store, want) = derived_into(&beliefs);
         let planner = Planner::new(&beliefs, snapshots::AGENT, None).unwrap();
-        let none = BTreeSet::new();
-        let scoped = Searching {
-            scope: None,
-            only: None,
-            elsewhere: &none,
-            within: None,
-            at: snapshots::now(),
-        };
+        let (scope, at) = (Scope::default(), snapshots::now());
         planner
-            .search(&store, &want, BUDGET, &scoped, &mut Memo::default())
+            .search(&store, &want, BUDGET, &scope, at, &mut Memo::default())
             .unwrap();
         let held = |s: &Store| -> BTreeSet<String> { s.engine().iter().map(|q| q.unwrap().to_string()).collect() };
         let before = held(&store);
         planner
-            .search(&store, &want, BUDGET, &scoped, &mut Memo::default())
+            .search(&store, &want, BUDGET, &scope, at, &mut Memo::default())
             .unwrap();
         assert_eq!(held(&store), before, "not one quad differs");
         assert_eq!(plan_of(&store, &want), (SATISFIED.to_string(), 2));

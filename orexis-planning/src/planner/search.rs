@@ -2,16 +2,17 @@
 //! `expand` is one iteration of it — the frontier's best candidate taken, its world weighed, and marked impossible
 //! where it violates a constraint the agent holds.
 
-use std::collections::HashSet;
+use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::store::{Store, iri};
 
-use super::{Planner, Searching, beaten, broken, cat, held_constraints, said, spent};
-use crate::admit::{Scope, admit, local_of};
+use super::{Planner, beaten, broken, cat, held_constraints, said, spent};
+use crate::admit::{admit, local_of};
 use crate::extract_plan::extract_plan;
 use crate::memo::Memo;
+use crate::scope::Scope;
 use crate::take::take;
 use crate::unweighed::unweighed;
 use crate::weigh::weigh;
@@ -24,7 +25,8 @@ impl Planner {
         store: &Store,
         want: &str,
         budget: usize,
-        scoped: &Searching<'_>,
+        scope: &Scope<'_>,
+        at: DateTime,
         memo: &mut Memo,
     ) -> Result<(), Error> {
         let started = std::time::Instant::now();
@@ -36,14 +38,14 @@ impl Planner {
             }
         }
         let ceiling = spent(store, want, memo)? + budget;
-        while let Some(spent) = self.expand(store, want, ceiling, scoped, memo)? {
+        while let Some(spent) = self.expand(store, want, ceiling, scope, at, memo)? {
             if spent >= ceiling {
                 break;
             }
         }
         extract_plan(store, want)?;
         let weighed = spent(store, want, memo)?.saturating_sub(ceiling - budget);
-        self.searched(store, want, started, budget, weighed, scoped.scope)?;
+        self.searched(store, want, started, budget, weighed, scope.name)?;
         Ok(())
     }
 
@@ -55,7 +57,8 @@ impl Planner {
         store: &Store,
         want: &str,
         budget: usize,
-        scoped: &Searching<'_>,
+        scope: &Scope<'_>,
+        at: DateTime,
         memo: &mut Memo,
     ) -> Result<Option<usize>, Error> {
         const FRONTIER_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
@@ -90,18 +93,8 @@ impl Planner {
             return Ok(None);
         }
         let world = iri(&top, "w").ok_or_else(|| Error::Evaluation("a frontier row naming no world".into()))?;
-        let constraints = held_constraints(store, &self.uri, scoped.only, scoped.at, memo)?;
-        let only: Option<HashSet<String>> = scoped.only.map(|o| o.iter().cloned().collect());
-        let elsewhere: HashSet<String> = scoped.elsewhere.iter().cloned().collect();
-        admit(
-            store,
-            &world,
-            &Scope {
-                only: only.as_ref(),
-                elsewhere: Some(&elsewhere),
-            },
-            memo,
-        )?;
+        let constraints = held_constraints(store, &self.uri, scope.actions, at, memo)?;
+        admit(store, &world, scope, memo)?;
         let mut used = spent(store, want, memo)?;
         for pair in unweighed(store, Some(want), Some(&world), memo)? {
             if used >= budget {
@@ -109,7 +102,7 @@ impl Planner {
             }
             let Some(about) = iri(&pair, "about") else { continue };
             if !pair.contains_key("child") {
-                take(store, &about, scoped.within, memo)?;
+                take(store, &about, scope.within, memo)?;
             }
             let weighing = weigh(store, want, &about, memo)?;
             if !constraints.is_empty() {

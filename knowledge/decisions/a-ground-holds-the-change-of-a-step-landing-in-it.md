@@ -55,7 +55,7 @@ is what the search planned on; a drive's is the position the van will hold. What
 is then the world in which the step has landed, as #905 said it was.
 
 **A plan adopted in place of an intention ending after its step in flight waits for that intention.**
-Planning says a reconsideration before it publishes the plan that made it (`Reconsidered` names the
+Planning says a reconsideration before it publishes the plan that made it (`PlanSuperseded` names the
 want the replacement is for); the executor marks the intention to end after its step in flight as
 before, and when it adopts the replacement writes `execution:waitsFor` from the new intention to the
 one ending. No head of an intention is taken while the one it waits for stands, and the heads already

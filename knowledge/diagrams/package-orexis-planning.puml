@@ -8,12 +8,6 @@ skinparam packageStyle rectangle
 hide empty members
 left to right direction
 
-package "admit" {
-  class "Scope" as orexis_planning__admit__Scope << (S,#A8D8EA) struct >> {
-    {field} +only : Option<&'a HashSet<String>>
-    {field} +elsewhere : Option<&'a HashSet<String>>
-  }
-}
 package "bridge" {
   class "Bridge" as orexis_planning__bridge__Bridge << (S,#A8D8EA) struct >> {
     {field} +declared : Vec<String>
@@ -110,7 +104,7 @@ package "find_scopes" {
   }
 }
 package "find_wants" {
-  class "Finding" as orexis_planning__find_wants__Finding << (S,#A8D8EA) struct >> {
+  class "Criteria" as orexis_planning__find_wants__Criteria << (S,#A8D8EA) struct >> {
     {field} +uri : Option<&'a str>
     {field} +desire : Option<&'a str>
     {field} +derived : bool
@@ -171,15 +165,14 @@ package "lay_ground" {
     {field} +adds : Vec<Triple>
   }
   class "Laying" as orexis_planning__lay_ground__Laying << (S,#A8D8EA) struct >> {
-    {field} +within : Option<&'a BTreeSet<String>>
+    {field} +scope : Scope<'a>
     {field} +landings : &'a [DateTime]
     {field} +landed : &'a [Landed]
-    {field} +actions : Option<&'a BTreeSet<String>>
     {field} +as_stood : bool
   }
 }
 package "memo" {
-  class "Binding" as orexis_planning__memo__Binding << (S,#A8D8EA) struct >> {
+  class "Candidate" as orexis_planning__memo__Candidate << (S,#A8D8EA) struct >> {
     {field} +from : String
     {field} +start : DateTime
     {field} +end : DateTime
@@ -209,7 +202,7 @@ package "memo" {
     {field} +minted : Option<u64>
     {field} +grounds : Option<Vec<(DateTime, String)>>
     {field} +next_ground : HashMap<String, Option<DateTime>>
-    {field} +bindings : HashMap<String, Binding>
+    {field} +candidates : HashMap<String, Candidate>
     {field} +carried : HashMap<String, Option<Carried>>
     {field} +acts_for : Option<Option<String>>
     {field} +ground_set : Option<HashSet<String>>
@@ -229,17 +222,6 @@ package "planner" {
   class "Budget" as orexis_planning__planner__Budget << (S,#A8D8EA) struct >> {
     {field} .0 : usize
   }
-  class "Flight" as orexis_planning__planner__Flight << (S,#A8D8EA) struct >> {
-    {field} -plan : String
-    {field} -head : String
-    {field} -action : String
-    {field} -in_flight : bool
-    {field} -ending : bool
-    {field} -late : DayTimeDuration
-    {field} -landing : DateTime
-    {field} -landings : Vec<(String, DateTime)>
-    {field} -in_flight_steps : Vec<(String, DateTime, String, String)>
-  }
   class "PlanOf" as orexis_planning__planner__PlanOf << (S,#A8D8EA) struct >> {
     {field} -outcome : Option<String>
     {field} -spent : Option<f64>
@@ -258,7 +240,6 @@ package "planner" {
     {field} +reached : BTreeSet<String>
     {field} +rerooted : Vec<&'static str>
     {field} +blocked : Vec<String>
-    {field} +superseded : Vec<Reconsidered>
     {field} +doomed : BTreeMap<String, String>
     {field} +asked : BTreeSet<String>
     {field} +foresee : Option<Foresees>
@@ -279,22 +260,26 @@ package "planner" {
     {field} -adds : Option<String>
     {field} -retracts : Option<String>
   }
-  class "Reconsidered" as orexis_planning__planner__Reconsidered << (S,#A8D8EA) struct >> {
-    {field} +head : String
-    {field} +walked : String
-    {field} +by : String
-  }
   class "Refined" as orexis_planning__planner__Refined << (S,#A8D8EA) struct >> {
     {field} -want : String
     {field} -graph : String
     {field} -step : String
   }
-  class "Searching" as orexis_planning__planner__Searching << (S,#A8D8EA) struct >> {
-    {field} +scope : Option<&'s str>
-    {field} +only : Option<&'s BTreeSet<String>>
-    {field} +elsewhere : &'s BTreeSet<String>
-    {field} +within : Option<&'s BTreeSet<String>>
-    {field} +at : DateTime
+  class "StepInFlight" as orexis_planning__planner__StepInFlight << (S,#A8D8EA) struct >> {
+    {field} -action : String
+    {field} -lands : DateTime
+    {field} -plan : String
+    {field} -step : String
+  }
+  class "Walk" as orexis_planning__planner__Walk << (S,#A8D8EA) struct >> {
+    {field} -plan : String
+    {field} -head : String
+    {field} -action : String
+    {field} -in_flight : bool
+    {field} -ending : bool
+    {field} -late : DayTimeDuration
+    {field} -landing : DateTime
+    {field} -steps_in_flight : Vec<StepInFlight>
   }
 }
 package "reroot" {
@@ -303,6 +288,14 @@ package "reroot" {
     {field} +present : &'static str
     {field} +kept : BTreeSet<String>
     {field} +dropped : Vec<String>
+  }
+}
+package "scope" {
+  class "Scope" as orexis_planning__scope__Scope << (S,#A8D8EA) struct >> {
+    {field} +name : Option<&'s str>
+    {field} +actions : Option<&'s BTreeSet<String>>
+    {field} +elsewhere : Option<&'s BTreeSet<String>>
+    {field} +within : Option<&'s BTreeSet<String>>
   }
 }
 package "shapes" {
@@ -319,16 +312,13 @@ package "take" {
 }
 package "violation" {
   enum "Compiled" as orexis_planning__violation__Compiled << (E,#F6D6A8) enum >> {
-    Unsupported (Unsupported)
+    Unsupported (String)
     Error (Error)
   }
   class "Compiler" as orexis_planning__violation__Compiler << (S,#A8D8EA) struct >> {
     {field} -g : Shapes
     {field} -vars : usize
     {field} -prefixes : BTreeMap<String, String>
-  }
-  class "Unsupported" as orexis_planning__violation__Unsupported << (S,#A8D8EA) struct >> {
-    {field} .0 : String
   }
 }
 package "world_at" {
@@ -351,22 +341,22 @@ package "orexis-belief" #EEEEEE {
 }
 
 orexis_planning__footprint__atoms__Effect *-- "*" orexis_belief__transition__Parts : updates
+orexis_planning__lay_ground__Laying *-- "1" orexis_planning__scope__Scope : scope
 orexis_planning__lay_ground__Laying o-- "*" orexis_planning__lay_ground__Landed : landed
 orexis_planning__lay_ground__Ground o-- "1" orexis__store__Store : store
 orexis_planning__lay_ground__Ground o-- "*" orexis_planning__lay_ground__Landed : landed
 orexis_planning__lay_ground__Ground *-- "*" orexis_belief__transition__Rule : rules
 orexis_planning__memo__Carried *-- "*" orexis_belief__transition__Rule : rules
 orexis_planning__memo__Memo *-- "*" orexis_planning__memo__Declared : actions
-orexis_planning__memo__Memo *-- "*" orexis_planning__memo__Binding : bindings
+orexis_planning__memo__Memo *-- "*" orexis_planning__memo__Candidate : candidates
 orexis_planning__memo__Memo *-- "*" orexis_planning__memo__Carried : carried
 orexis_planning__memo__Memo *-- "0..1" orexis_planning__shapes__Shapes : shapes
+orexis_planning__planner__Walk *-- "*" orexis_planning__planner__StepInFlight : steps_in_flight
 orexis_planning__planner__Planner *-- "1" orexis__store__Store : beliefs
 orexis_planning__planner__Planner *-- "*" orexis__store__Store : imaginaria
-orexis_planning__planner__Planner *-- "*" orexis_planning__planner__Reconsidered : superseded
 orexis_planning__planner__Planner *-- "*" orexis_planning__events__PlanPublished : published
 orexis_planning__planner__Planner *-- "1" orexis__events__Watch : watch
 orexis_planning__planner__Planner *-- "0..1" orexis__events__Laps : laps
-orexis_planning__violation__Compiled *-- "1" orexis_planning__violation__Unsupported : Unsupported
 orexis_planning__violation__Compiled *-- "1" orexis__error__Error : Error
 orexis_planning__violation__Compiler *-- "1" orexis_planning__shapes__Shapes : g
 orexis_planning__events__HeadChecked ..|> orexis__events__Event
