@@ -26,28 +26,30 @@ use crate::ontology::{
 
 const RULES_GRAPH: &str = "http://www.w3.org/ns/shacl#RulesGraph";
 
-/// One conflict as concluded.
+/// One conflict as the agent concluded it, a `coordination:Conflict`: with `peer` over `constraint`, the round its
+/// draw is in and since when, whether it stands, whether the peer is silent, and who won that draw, where anybody has.
+/// Kept by the IRI both agents name it by.
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct Concluded {
+pub struct Conflict {
     pub peer: String,
     pub constraint: String,
     pub round: i64,
     pub since: DateTime,
     pub standing: bool,
     pub silent: bool,
-    pub winner: Option<String>,
+    pub won_by: Option<String>,
 }
 
-impl Concluded {
+impl Conflict {
     fn fresh(peer: &str, constraint: &str, at: DateTime) -> Self {
-        Concluded {
+        Conflict {
             peer: peer.to_string(),
             constraint: constraint.to_string(),
             round: 0,
             since: at,
             standing: false,
             silent: false,
-            winner: None,
+            won_by: None,
         }
     }
 }
@@ -56,8 +58,8 @@ fn since(at: DateTime, before: DateTime) -> f64 {
     at.checked_sub(before).map_or(0.0, seconds_of)
 }
 
-/// What the agent concluded before, by conflict.
-pub(crate) fn prior(store: &Store, me: &str) -> Result<BTreeMap<String, Concluded>, Error> {
+/// Every conflict the agent concluded, by the IRI it is named by.
+pub fn conflicts(store: &Store, me: &str) -> Result<BTreeMap<String, Conflict>, Error> {
     /// WHAT THE AGENT CONCLUDED BEFORE.
     const PRIOR_Q: &str = "PREFIX coordination: <http://example.org/orexis/coordination#>
     SELECT ?c ?peer ?constraint ?round ?since ?standing ?silent ?winner WHERE { GRAPH $graph {
@@ -71,14 +73,14 @@ pub(crate) fn prior(store: &Store, me: &str) -> Result<BTreeMap<String, Conclude
         };
         out.insert(
             c,
-            Concluded {
+            Conflict {
                 peer,
                 constraint,
                 round: value(&r, "round").and_then(|n| n.parse().ok()).unwrap_or(0),
                 since: instant(&value(&r, "since").unwrap_or_default())?,
                 standing: value(&r, "standing").as_deref() == Some("true"),
                 silent: value(&r, "silent").as_deref() == Some("true"),
-                winner: iri(&r, "winner"),
+                won_by: iri(&r, "winner"),
             },
         );
     }
@@ -106,7 +108,7 @@ pub fn conclude(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Er
     let patience = patience(store)?;
     let bound = crate::Coordinator::new(store)?.rounds;
     let graph = conflicts_graph(me);
-    let prior = prior(store, me)?;
+    let prior = conflicts(store, me)?;
     let won = won(store)?;
     let mut met: BTreeMap<(String, String), bool> = BTreeMap::new();
     let answers = bind(
@@ -141,12 +143,12 @@ pub fn conclude(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Er
         let c = conflict_of(me, peer, constraint);
         let row = concluded
             .entry(c.clone())
-            .or_insert_with(|| Concluded::fresh(peer, constraint, at));
+            .or_insert_with(|| Conflict::fresh(peer, constraint, at));
         //  A PEER THAT SAID ITS HOLDINGS AND FELL SILENT IN THE DRAW draws no lot.
-        if row.winner.is_none() && !row.silent {
-            row.winner = won.get(&draw_of(&c, row.round)).cloned();
+        if row.won_by.is_none() && !row.silent {
+            row.won_by = won.get(&draw_of(&c, row.round)).cloned();
         }
-        let mut decided = row.winner.is_some();
+        let mut decided = row.won_by.is_some();
         let in_range = in_range(store, me, &key_of(store, constraint)?, at)?.contains(peer)
             || asking.contains(&question_graph(peer, me, constraint));
         if !in_range || !(*meets || row.standing) {
@@ -160,8 +162,8 @@ pub fn conclude(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Er
             row.standing = true;
             row.since = at;
             row.silent = false;
-            row.winner = won.get(&draw_of(&c, row.round)).cloned();
-            decided = row.winner.is_some();
+            row.won_by = won.get(&draw_of(&c, row.round)).cloned();
+            decided = row.won_by.is_some();
         }
         let heard = rows_of(store, HEARD_Q, &[("conflict", Value::iri(c.as_str()))], &beliefs)?;
         let later = heard
@@ -171,11 +173,11 @@ pub fn conclude(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Er
         if let Some(later) = later.filter(|n| *n > row.round) {
             row.round = later;
             row.since = at;
-            row.winner = won.get(&draw_of(&c, later)).cloned();
+            row.won_by = won.get(&draw_of(&c, later)).cloned();
         } else if !decided && !row.silent && since(at, row.since) >= patience {
             row.round += 1;
             row.since = at;
-            row.winner = None;
+            row.won_by = None;
         }
         if !decided && (row.round as f64) >= bound {
             row.silent = true;
@@ -186,13 +188,13 @@ pub fn conclude(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Er
     }
     for (c, row) in concluded.iter_mut() {
         if row.standing && row.silent && !met.contains_key(&(row.peer.clone(), row.constraint.clone())) {
-            if row.winner.is_none() {
-                row.winner = won.get(&draw_of(c, row.round)).cloned();
+            if row.won_by.is_none() {
+                row.won_by = won.get(&draw_of(c, row.round)).cloned();
             }
             if since(at, row.since) >= patience {
                 row.round += 1;
                 row.since = at;
-                row.winner = won.get(&draw_of(c, row.round)).cloned();
+                row.won_by = won.get(&draw_of(c, row.round)).cloned();
             }
         }
     }
@@ -210,9 +212,9 @@ fn unanswered(
     at: DateTime,
     patience: f64,
     met: &BTreeMap<(String, String), bool>,
-    concluded: &BTreeMap<String, Concluded>,
+    concluded: &BTreeMap<String, Conflict>,
     asking: &BTreeSet<String>,
-) -> Result<BTreeMap<String, Concluded>, Error> {
+) -> Result<BTreeMap<String, Conflict>, Error> {
     const ASKED_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
         SELECT ?start WHERE { GRAPH $cat { $graph orexis:arrivedBy $recorded ; dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1";
@@ -256,11 +258,11 @@ fn unanswered(
             let mut row = concluded
                 .get(&c)
                 .cloned()
-                .unwrap_or_else(|| Concluded::fresh(&peer, &constraint, at));
+                .unwrap_or_else(|| Conflict::fresh(&peer, &constraint, at));
             if !row.standing {
                 row.standing = true;
                 row.since = at;
-                row.winner = None;
+                row.won_by = None;
                 if concluded.contains_key(&c) {
                     row.round += 1;
                 }
@@ -279,7 +281,7 @@ fn unanswered(
         {
             out.insert(
                 c.clone(),
-                Concluded {
+                Conflict {
                     standing: false,
                     ..row.clone()
                 },
@@ -351,8 +353,8 @@ fn written(
     store: &Store,
     me: &str,
     graph: &str,
-    concluded: &BTreeMap<String, Concluded>,
-    prior: &BTreeMap<String, Concluded>,
+    concluded: &BTreeMap<String, Conflict>,
+    prior: &BTreeMap<String, Conflict>,
 ) -> Result<Vec<String>, Error> {
     if concluded == prior {
         return Ok(Vec::new());
@@ -382,7 +384,7 @@ fn written(
                 String::new()
             },
         ));
-        if let Some(winner) = &row.winner {
+        if let Some(winner) = &row.won_by {
             facts.push(format!("<{draw}> <{WON_BY}> <{winner}> ."));
         }
     }
@@ -393,22 +395,6 @@ fn written(
     ))?;
     hash_named_graph(store, graph, None)?;
     Ok(vec![graph.to_string()])
-}
-
-/// Every conflict the self `me` of `store` holds, as it last concluded them: what the history view is told.
-pub(crate) fn conflicts(store: &Store, me: &str) -> Result<Vec<crate::events::Conflict>, Error> {
-    Ok(prior(store, me)?
-        .into_iter()
-        .map(|(conflict, c)| crate::events::Conflict {
-            conflict,
-            peer: c.peer,
-            constraint: c.constraint,
-            standing: c.standing,
-            silent: c.silent,
-            round: c.round,
-            won_by: c.winner,
-        })
-        .collect())
 }
 
 #[cfg(test)]

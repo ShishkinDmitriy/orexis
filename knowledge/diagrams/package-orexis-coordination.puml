@@ -9,14 +9,14 @@ hide empty members
 left to right direction
 
 package "conclude" {
-  class "Concluded" as orexis_coordination__conclude__Concluded << (S,#A8D8EA) struct >> {
+  class "Conflict" as orexis_coordination__conclude__Conflict << (S,#A8D8EA) struct >> {
     {field} +peer : String
     {field} +constraint : String
     {field} +round : i64
     {field} +since : DateTime
     {field} +standing : bool
     {field} +silent : bool
-    {field} +winner : Option<String>
+    {field} +won_by : Option<String>
   }
 }
 package "coordinator" {
@@ -29,7 +29,7 @@ package "coordinator" {
     {field} -pending : Vec<String>
     {field} +watch : Watch
     {field} -told : BTreeMap<(String, String, String), Vec<crate::holdings::Holding>>
-    {field} -concluded : Option<Vec<crate::events::Conflict>>
+    {field} -concluded : Option<BTreeMap<String, Conflict>>
     {field} -triggers : Vec<oxigraph::model::NamedNode>
     {field} -started : bool
     {field} -asked : Option<DateTime>
@@ -39,16 +39,7 @@ package "coordinator" {
 package "events" {
   class "Concluded" as orexis_coordination__events__Concluded << (S,#A8D8EA) struct >> {
     {field} +at : DateTime
-    {field} +conflicts : Vec<Conflict>
-  }
-  class "Conflict" as orexis_coordination__events__Conflict << (S,#A8D8EA) struct >> {
-    {field} +conflict : String
-    {field} +peer : String
-    {field} +constraint : String
-    {field} +standing : bool
-    {field} +silent : bool
-    {field} +round : i64
-    {field} +won_by : Option<String>
+    {field} +conflicts : BTreeMap<String, Conflict>
   }
   class "DrawWon" as orexis_coordination__events__DrawWon << (S,#A8D8EA) struct >> {
     {field} +wants : Vec<String>
@@ -95,12 +86,12 @@ package "orexis" #EEEEEE {
   class "Store" as orexis__store__Store << (S,#A8D8EA) struct >>
 }
 
-orexis_coordination__events__Concluded *-- "*" orexis_coordination__events__Conflict : conflicts
 orexis_coordination__coordinator__Coordinator *-- "1" orexis__store__Store : beliefs
 orexis_coordination__coordinator__Coordinator *-- "1" orexis__events__Watch : watch
 orexis_coordination__coordinator__Coordinator *-- "*" orexis_coordination__holdings__Holding : told
-orexis_coordination__coordinator__Coordinator *-- "*" orexis_coordination__events__Conflict : concluded
+orexis_coordination__coordinator__Coordinator *-- "*" orexis_coordination__conclude__Conflict : concluded
 orexis_coordination__events__Held *-- "*" orexis_coordination__holdings__Holding : holdings
+orexis_coordination__events__Concluded *-- "*" orexis_coordination__conclude__Conflict : conflicts
 orexis_coordination__events__Concluded ..|> orexis__events__Event
 orexis_coordination__events__DrawWon ..|> orexis__events__Event
 orexis_coordination__events__Held ..|> orexis__events__Event

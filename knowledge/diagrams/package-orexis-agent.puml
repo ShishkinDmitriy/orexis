@@ -18,8 +18,7 @@ package "(crate)" {
   }
   class "Checked" as orexis_agent___crate___Checked << (S,#A8D8EA) struct >> {
     {field} +loaded : Vec<String>
-    {field} +held : Vec<String>
-    {field} +refused : Vec<String>
+    {field} +found : orexis::task::Found
   }
   class "Logger" as orexis_agent___crate___Logger << (S,#A8D8EA) struct >> {
     {field} -level : log::LevelFilter
@@ -37,7 +36,9 @@ package "paced" {
 
 package "orexis" #EEEEEE {
   interface "Clock" as orexis__clock__Clock << (T,#C9E4C5) trait >>
+  class "Found" as orexis__task__provided__Found << (S,#A8D8EA) struct >>
 }
 
+orexis_agent___crate___Checked *-- "1" orexis__task__provided__Found : found
 orexis_agent__paced__Paced ..|> orexis__clock__Clock
 @enduml

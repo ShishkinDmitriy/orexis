@@ -8,7 +8,6 @@ use std::sync::mpsc::{Receiver, Sender, channel};
 use std::time::Instant;
 
 use oxigraph::model::NamedNode;
-use oxigraph::store::Store as Engine;
 use oxsdatatypes::DateTime;
 
 use orexis::Error;
@@ -16,7 +15,7 @@ use orexis::document::Document;
 use orexis::events::Watch;
 use orexis::ontology::local_of;
 use orexis::ontology::{DEPLOYMENT, ONTOLOGY, SELF_GRAPH};
-use orexis::series::Reader;
+use orexis::series::Reads;
 use orexis::store::{Store, Within, value};
 use orexis::task::{Heard, Turn};
 use orexis_speech::document_of;
@@ -60,12 +59,9 @@ pub struct Translator {
     pub events: Option<orexis::task::Events>,
     /// Each chat with an answer still being thought, and how many.
     pub writing: BTreeMap<String, (Chat, i64)>,
-    pub journal: Option<Engine>,
-    /// Where the journal lies, as whoever keeps it says whenever it starts: asked as a chat reads, where `journal`
-    /// was set by nobody.
-    pub journaled: orexis::task::Journaled,
-    pub history: Option<Reader>,
-    pub metrics: Option<Reader>,
+    /// What a chat reads of what happened: where the journal lies, as whoever keeps it says whenever it starts, and
+    /// the two series, each asked as a chat reads.
+    pub reads: Reads,
     pub watch: Watch,
     /// How many turns a conversation may take, how many rows a query hands the model, and how long the model's
     /// conversation waits for the translator's answer: the translator's role's figures (`translation:turns`, `rows`,
@@ -160,10 +156,7 @@ impl Translator {
             wake: orexis::task::Wake::default(),
             events: None,
             writing: BTreeMap::new(),
-            journal: None,
-            journaled: orexis::task::Journaled::default(),
-            history: None,
-            metrics: None,
+            reads: Reads::default(),
             watch: Watch::default(),
             turns: whole("turns")? as usize,
             rows: whole("rows")? as usize,
@@ -227,9 +220,9 @@ impl Translator {
             .as_ref()
             .map_or_else(|| prefixes_of(store, &self.me), |r| r.prefixes.clone());
         let past = chat.reads.iter().any(|k| k == EVENT).then(|| Past {
-            journal: self.journal.clone().or_else(|| self.journaled.now()),
-            history: self.history.clone(),
-            metrics: self.metrics.clone(),
+            journal: self.reads.journal.now(),
+            history: self.reads.history.clone(),
+            metrics: self.reads.metrics.clone(),
             rows: self.rows,
             prefixes: readable
                 .as_ref()

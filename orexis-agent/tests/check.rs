@@ -93,10 +93,10 @@ fn every_agent_of_every_world_boots_and_makes_its_parts() {
                 Ok(checked) => {
                     assert!(!checked.loaded.is_empty(), "{agent} makes no part");
                     assert!(
-                        checked.refused.is_empty(),
+                        checked.found.refused.is_empty(),
                         "{}/{agent} is posed in a state its constraints say is impossible: {:?}",
                         world.display(),
-                        checked.refused
+                        checked.found.refused
                     );
                 }
                 Err(e) => refused.push(format!("{}/{agent}: {e}", world.display())),
@@ -125,7 +125,7 @@ fn the_boot_is_written_as_the_agent_believes_it_and_a_desire_is_told_from_wants_
     std::fs::create_dir_all(&dir).unwrap();
     let file = dir.join("hanoi.nq");
     let hanoi = check(&Path::new(TREE).join("world/hanoi"), "hanoi", now, Some(&file)).unwrap();
-    assert!(hanoi.held.is_empty(), "the mover holds wants alone, and finishes");
+    assert!(hanoi.found.held.is_empty(), "the mover holds wants alone, and finishes");
     let store = oxigraph::store::Store::new().unwrap();
     store
         .load_from_slice(
@@ -148,6 +148,7 @@ fn the_boot_is_written_as_the_agent_believes_it_and_a_desire_is_told_from_wants_
     assert!(
         agents(&world).iter().any(|a| check(&world, a, now, None)
             .unwrap()
+            .found
             .held
             .iter()
             .any(|p| p == "planning")),
@@ -165,6 +166,7 @@ fn an_agent_in_a_chat_by_email_boots_with_its_mailbox() {
     //  AND ITS MAILBOX HOLDS IT, said by the transport itself, which made a mailbox that reaches nothing.
     let held = check(&world, "seeker", instant("2026-11-07T12:00:00Z").unwrap(), None)
         .unwrap()
+        .found
         .held;
     assert!(held.iter().any(|p| p == "transport/email"), "{held:?}");
 }

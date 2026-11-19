@@ -105,9 +105,11 @@ fn start(handed: Handed) -> orexis::task::Starting {
         //  WHAT A CHAT READS OF WHAT HAPPENED, asked once every package has made its core: the journal where what keeps
         //  it said where it lies, and the two series where what writes each said so.
         let reads = handed.provided.share::<Reads>();
-        translator.journaled = reads.journal;
-        translator.history = reads.history.or(own.history);
-        translator.metrics = reads.metrics.or(own.metrics);
+        translator.reads = Reads {
+            journal: reads.journal,
+            history: reads.history.or(own.history),
+            metrics: reads.metrics.or(own.metrics),
+        };
         let mut heard = None;
         let mut due = None;
         loop {

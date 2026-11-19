@@ -27,6 +27,11 @@ package "events" {
   }
 }
 package "journal" {
+  class "Entry" as orexis_journal__journal__Entry << (S,#A8D8EA) struct >> {
+    {field} +node : NamedNode
+    {field} +quads : Vec<Quad>
+    {field} +needed : bool
+  }
   class "Journal" as orexis_journal__journal__Journal << (S,#A8D8EA) struct >> {
     {field} +store : Engine
     {field} -window : f64
@@ -37,11 +42,6 @@ package "journal" {
     {field} +incident_level : log::Level
     {field} +incidents : BTreeSet<String>
     {field} -archive : std::sync::OnceLock<Engine>
-  }
-  class "Lasting" as orexis_journal__journal__Lasting << (S,#A8D8EA) struct >> {
-    {field} +entry : NamedNode
-    {field} +quads : Vec<Quad>
-    {field} +needed : bool
   }
 }
 package "recorder" {

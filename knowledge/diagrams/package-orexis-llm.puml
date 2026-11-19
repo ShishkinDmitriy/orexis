@@ -9,11 +9,6 @@ hide empty members
 left to right direction
 
 package "model" {
-  class "Answer" as orexis_llm__model__Answer << (S,#A8D8EA) struct >> {
-    {field} +text : String
-    {field} +calls : Vec<(String, Json)>
-    {field} +tokens : BTreeMap<String, i64>
-  }
   class "Anthropic" as orexis_llm__model__Anthropic << (S,#A8D8EA) struct >> {
     {field} +name : String
     {field} -key : String

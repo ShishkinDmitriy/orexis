@@ -58,16 +58,8 @@ pub fn why_not(failure: &Failure) -> String {
     }
 }
 
-/// What one call answered: the text, each tool called with its input, and the tokens spent.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct Answer {
-    pub text: String,
-    pub calls: Vec<(String, Json)>,
-    pub tokens: BTreeMap<String, i64>,
-}
-
-/// One turn of a conversation: the text the model wrote, each tool it called as its id, name and input, the content to
-/// hand back as the assistant's message, why it stopped and what it spent.
+/// One turn of a conversation, or the one reply a question asked once is: the text the model wrote, each tool it called
+/// as its id, name and input, the content to hand back as the assistant's message, why it stopped and what it spent.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Turn {
     pub text: String,
@@ -96,7 +88,8 @@ pub trait Model: Send + Sync {
         last: bool,
     ) -> Pending<'a, Result<Turn, Failure>>;
 
-    fn ask<'a>(&'a self, system: &'a str, text: &'a str) -> Pending<'a, Result<Answer, Failure>>;
+    /// `text` asked once, with no tools offered: its reply as a turn.
+    fn ask<'a>(&'a self, system: &'a str, text: &'a str) -> Pending<'a, Result<Turn, Failure>>;
 }
 
 /// A language model reached over the Messages API: which, where, and with what key.
@@ -285,11 +278,11 @@ impl Model for Anthropic {
         })
     }
 
-    fn ask<'a>(&'a self, system: &'a str, text: &'a str) -> Pending<'a, Result<Answer, Failure>> {
+    fn ask<'a>(&'a self, system: &'a str, text: &'a str) -> Pending<'a, Result<Turn, Failure>> {
         Box::pin(async move {
             let body = json!({"model": self.name, "max_tokens": self.max_tokens, "system": system,
                               "messages": [{"role": "user", "content": text}]});
-            Ok(answer_of(&self.post(&body).await?))
+            Ok(turn_of(&self.post(&body).await?))
         })
     }
 }
@@ -336,30 +329,6 @@ fn turn_of(reply: &Json) -> Turn {
         }
     }
     turn
-}
-
-/// What one call's reply says: its text, each tool it called, and what it spent.
-fn answer_of(reply: &Json) -> Answer {
-    let mut answer = Answer {
-        tokens: tokens(reply),
-        ..Answer::default()
-    };
-    for block in reply
-        .get("content")
-        .and_then(Json::as_array)
-        .cloned()
-        .unwrap_or_default()
-    {
-        match block.get("type").and_then(Json::as_str) {
-            Some("text") => answer.text += block.get("text").and_then(Json::as_str).unwrap_or_default(),
-            Some("tool_use") => answer.calls.push((
-                block.get("name").and_then(Json::as_str).unwrap_or_default().to_string(),
-                block.get("input").cloned().unwrap_or(json!({})),
-            )),
-            _ => {}
-        }
-    }
-    answer
 }
 
 #[cfg(test)]

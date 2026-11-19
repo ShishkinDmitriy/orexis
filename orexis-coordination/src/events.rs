@@ -7,6 +7,8 @@
 //! the constraint's key under their own predicates, from, until, taken; and `coordination:Concluded`, with each
 //! conflict as the agent concluded it, under the conflict's own name. Every name is read off what was said.
 
+use std::collections::BTreeMap;
+
 use oxigraph::model::{NamedNode, Term, Triple};
 use oxsdatatypes::DateTime;
 
@@ -14,6 +16,7 @@ use orexis::events::Event;
 
 use orexis::rdf::{RDF_TYPE, boolean, instant, integer, mint, node, triple, typed};
 
+use crate::conclude::Conflict;
 use crate::holdings::Holding;
 use crate::ontology::{COORDINATION, DRAW_WON, REOPENS, STATEMENT, TO, TOLD};
 
@@ -77,31 +80,18 @@ impl Event for Held {
     }
 }
 
-/// One conflict as the agent concluded it: with `peer` over `constraint`, whether it stands, whether the peer is
-/// silent, the round its draw is in and who won that draw, where anybody has; named as both agents name it.
-#[derive(Clone, Debug, PartialEq)]
-pub struct Conflict {
-    pub conflict: String,
-    pub peer: String,
-    pub constraint: String,
-    pub standing: bool,
-    pub silent: bool,
-    pub round: i64,
-    pub won_by: Option<String>,
-}
-
 /// Every conflict the agent holds, as it concluded them at `at`: all of them, replacing those said before.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Concluded {
     pub at: DateTime,
-    pub conflicts: Vec<Conflict>,
+    pub conflicts: BTreeMap<String, Conflict>,
 }
 
 impl Event for Concluded {
     fn statements(&self, entry: &NamedNode) -> Option<Vec<Triple>> {
         let mut out = vec![typed(entry.clone(), &term("Concluded"))];
-        for c in &self.conflicts {
-            let conflict = node(&c.conflict);
+        for (conflict, c) in &self.conflicts {
+            let conflict = node(conflict);
             out.extend([
                 triple(entry.clone(), &term("conflict"), conflict.clone()),
                 typed(conflict.clone(), &term("Conflict")),
