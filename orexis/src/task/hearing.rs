@@ -2,7 +2,7 @@
 //! happened in, the arrivals that wake it, and how the run is released.
 
 use std::cell::RefCell;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeSet, HashMap};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, RwLock};
 
@@ -232,7 +232,7 @@ pub(super) struct Bus {
     pub(super) busy: Busy,
     /// Whether the watch is heard: connected when the first task asks to hear an event.
     pub(super) listening: AtomicBool,
-    pub(super) held: Mutex<BTreeMap<String, ()>>,
+    pub(super) held: Mutex<BTreeSet<String>>,
     pub(super) outcome: Mutex<Option<String>>,
     pub(super) laps: Mutex<Option<Laps>>,
     pub(super) error: Mutex<Option<Error>>,
@@ -261,7 +261,7 @@ impl Events {
             closed: Mutex::new(HashMap::new()),
             busy: Busy::new(),
             listening: AtomicBool::new(false),
-            held: Mutex::new(BTreeMap::new()),
+            held: Mutex::new(BTreeSet::new()),
             outcome: Mutex::new(None),
             laps: Mutex::new(None),
             error: Mutex::new(None),
@@ -783,7 +783,7 @@ impl Turn<'_> {
     /// `who` keeps the agent running.
     pub fn hold(&mut self, who: &str) {
         let mut held = self.events.0.held.lock().expect("holders nobody poisoned");
-        held.insert(who.to_string(), ());
+        held.insert(who.to_string());
     }
 
     /// `who` no longer keeps the agent running, and says how it ended.

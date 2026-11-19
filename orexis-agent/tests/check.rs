@@ -437,7 +437,7 @@ fn the_world_names_the_series_store_for_each_purpose_its_agents_write() {
         let env = |key: &str| told.iter().find(|(k, _)| *k == key).map(|(_, v)| v.to_string());
         orexis::series::Sink::deployed(&store, purpose, &env)
             .unwrap()
-            .map(|(sink, _)| sink.bucket)
+            .map(|(sink, _)| sink.reader().bucket)
     };
     let both = [
         ("INFLUX_HISTORY_BUCKET", "terrace-terrace"),

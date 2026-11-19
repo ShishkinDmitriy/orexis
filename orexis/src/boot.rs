@@ -214,8 +214,14 @@ fn close_vocabulary(store: &Store) -> Result<(), Error> {
     store.classify(CLOSURE_GRAPH, ONTOLOGY, DERIVED, None, None, None)
 }
 
-/// One graph a document holds, passed over or to be put: its document's path, the document, the graph, its kinds.
-type Held = (PathBuf, usize, String, BTreeSet<String>);
+/// One graph a document holds, passed over or to be put: its document's path, the document's place among every
+/// document read, the graph, and its kinds.
+struct Held {
+    path: PathBuf,
+    document: usize,
+    graph: String,
+    kinds: BTreeSet<String>,
+}
 
 /// Put the vocabulary `read` holds and close it, then every common graph whose kind the vocabulary declares — a
 /// graph from outside the world's directory, or one of the world's saying no owner. The world's graphs of an
@@ -244,24 +250,28 @@ fn put(
             continue;
         }
         for (graph, kinds) in doc.kinds() {
-            candidates.push((path.clone(), offset + i, graph, kinds));
+            candidates.push(Held {
+                path: path.clone(),
+                document: offset + i,
+                graph,
+                kinds,
+            });
         }
     }
     let (mut common, mut own, mut still) = (Vec::new(), Vec::new(), Vec::new());
     for held in candidates {
-        if !known(store, &held.3)? {
+        if !known(store, &held.kinds)? {
             still.push(held);
             continue;
         }
-        let doc = all[held.1];
-        if !held.0.starts_with(world) || doc.whose(&held.2).is_none() {
+        if !held.path.starts_with(world) || all[held.document].whose(&held.graph).is_none() {
             common.push(held);
         } else {
             own.push(held);
         }
     }
-    for (_, d, graph, _) in &common {
-        store.put_document(all[*d], None, Some(&[graph.as_str()]), None, false)?;
+    for held in &common {
+        store.put_document(all[held.document], None, Some(&[held.graph.as_str()]), None, false)?;
     }
     Ok((own, still))
 }
@@ -278,11 +288,11 @@ fn owned(store: &Store, own: Vec<Held>, all: &[&Document]) -> Result<Vec<(Held, 
         .collect();
     let mut out = Vec::new();
     for held in own {
-        let owner = all[held.1].whose(&held.2).unwrap_or_default();
+        let owner = all[held.document].whose(&held.graph).unwrap_or_default();
         if !agents.contains(&owner) {
             return Err(Error::Document(format!(
                 "{} says it is {owner}'s, and the world states no such agent",
-                held.2
+                held.graph
             )));
         }
         out.push((held, owner));
@@ -421,7 +431,7 @@ pub(crate) fn begin(store: &Store, booting: &Booting<'_>) -> Result<Begun, Error
     let mine: Vec<(&Document, &str)> = own
         .iter()
         .filter(|(_, o)| *o == me)
-        .map(|(h, _)| (docs[h.1], h.2.as_str()))
+        .map(|(h, _)| (docs[h.document], h.graph.as_str()))
         .collect();
     let self_graph = hold_the_self(store, booting.agent, &me, &mine)?;
     let agent = booting.agent.to_string();
@@ -467,11 +477,11 @@ impl Begun {
             return Ok(());
         }
         for (held, owner) in own {
-            if *owner == self.me && held.2 != self.self_graph {
+            if *owner == self.me && held.graph != self.self_graph {
                 store.put_document(
-                    &self.read[held.1].1,
+                    &self.read[held.document].1,
                     Some(&self.me),
-                    Some(&[held.2.as_str()]),
+                    Some(&[held.graph.as_str()]),
                     None,
                     false,
                 )?;
@@ -491,7 +501,7 @@ impl Begun {
             )));
         }
         log::debug!("{} holds the documents of {}", self.agent, brought.join(", "));
-        for (path, _, graph, kinds) in &self.passed {
+        for Held { path, graph, kinds, .. } in &self.passed {
             log::debug!(
                 "passed over {graph} of {}: {} is no kind this agent reads",
                 path.display(),
