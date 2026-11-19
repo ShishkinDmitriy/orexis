@@ -1020,6 +1020,28 @@ def test_a_committed_diagram_is_not_stale():
                        "`./tools/render-diagrams.sh`:\n  " + "\n  ".join(wrong))
 
 
+
+def test_a_package_diagram_draws_its_crate():
+    """`diagrams/package-<crate>.puml` is generated from the crate's `src/` by `tools/class-diagrams.py`, so it is
+    held to the code the way `agent-structure` is held to the ontologies: regenerated here, a committed diagram that
+    differs is stale, a crate with types and no diagram is missing one, and a diagram with no crate is an orphan."""
+    import importlib.util
+    import sys
+
+    spec = importlib.util.spec_from_file_location("class_diagrams", REPO_ROOT / "tools" / "class-diagrams.py")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["class_diagrams"] = module
+    spec.loader.exec_module(module)
+    want = module.diagrams()
+    assert "package-orexis-planning.puml" in want, "the generator stopped finding the crates"
+    here = REPO_ROOT / "knowledge" / "diagrams"
+    have = {p.name for p in here.glob("package-*.puml")}
+    stale = sorted(n for n in want if n in have and (here / n).read_text() != want[n])
+    assert not stale and set(want) == have, (
+        "the class diagrams are out of step with the code. Run `tools/class-diagrams.py`, then "
+        f"`tools/render-diagrams.sh`:\n  stale: {stale}\n  missing: {sorted(set(want) - have)}"
+        f"\n  orphan: {sorted(have - set(want))}")
+
 #  THE KINDS THE PICTURE GROUPS BY rather than draws: what a graph is beneath, never what a writer
 #  classifies one as.
 _MODALITIES = {"orexis:Graph", "orexis:BeliefGraph"}
