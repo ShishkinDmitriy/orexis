@@ -46,6 +46,9 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.plays(&[orexis_journal::ROLE])? {
             return Ok(());
         }
+        //  IT READS ITS ROLE ONCE EVERY PACKAGE HAS JOINED OR DECLINED, bringing nothing of its own: the role's figures
+        //  are journal's ontology's defaults, brought as that package joins, and read before it the role has none.
+        handed.joins(&orexis::documents!()).await?;
         let recorder = orexis_journal::Recorder::new(&handed.store)?;
         if recorder.traced_by.is_none() {
             return Ok(());
