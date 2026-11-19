@@ -12,7 +12,11 @@ use orexis::bind::{Value, bind};
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri};
 
-use super::{Planner, Said, StepInFlight, Walk, Walks, broken, graphs, later, predicted, quads_of, said, strs, zero};
+use super::search::Searcher;
+use super::{
+    Change, Planner, Said, StepInFlight, Walk, Walks, broken, chain, graphs, later, predicted, quads_of, said, strs,
+    zero,
+};
 use crate::admit::local_of;
 use crate::memo::Memo;
 use crate::ontology::{CONSTRAINT_GRAPH, GROUND_GRAPH, SATISFIED};
@@ -31,35 +35,6 @@ impl Planner {
     /// Ask that each of `wants` an intention walks be searched again in the next pass.
     pub fn reopen(&mut self, wants: impl IntoIterator<Item = String>) {
         self.asked.extend(wants);
-    }
-
-    /// The asked wants a walking plan of this scope pursues, derived here and not ending; each taken from the asked.
-    pub(super) fn asked_here(
-        &mut self,
-        store: &Store,
-        walks: &Walks,
-        only: Option<&BTreeSet<String>>,
-    ) -> Result<BTreeSet<String>, Error> {
-        if self.asked.is_empty() {
-            return Ok(BTreeSet::new());
-        }
-        let derived = derived(store)?;
-        let out: BTreeSet<String> = self
-            .asked
-            .iter()
-            .filter(|w| {
-                walks
-                    .get(*w)
-                    .is_some_and(|f| !f.ending && only.is_none_or(|o| o.contains(&f.action)))
-                    && derived.contains(*w)
-            })
-            .cloned()
-            .collect();
-        for want in &out {
-            log::info!("{}: {} is reopened, as asked", self.id, local_of(want));
-            self.asked.remove(want);
-        }
-        Ok(out)
     }
 
     /// Whether this agent holds any constraint — the one thing a walking want can be reopened by.
@@ -128,6 +103,8 @@ impl Planner {
                 late,
                 landing: later(landing, at),
                 steps_in_flight: Vec::new(),
+                steps: Vec::new(),
+                predicts: BTreeMap::new(),
             };
             held.entry(want).or_default().push(walk);
         }
@@ -147,7 +124,47 @@ impl Planner {
                 })
                 .collect();
             walk.landing = walks.iter().map(|w| w.landing).fold(at, later);
+            //  WHAT ITS PLAN SAYS AND PREDICTS, read here, so that a scope's search reads nothing of the beliefs.
+            walk.steps = chain(&self.beliefs, &walk.plan)?;
+            for (step, said) in predicted(&self.beliefs, walk.plan.as_str())? {
+                let change = Change {
+                    lands: said.lands,
+                    retracts: quads_of(&self.beliefs, said.retracts)?,
+                    adds: quads_of(&self.beliefs, said.adds)?,
+                };
+                walk.predicts.insert(step, change);
+            }
             out.insert(want, walk);
+        }
+        Ok(out)
+    }
+}
+
+impl Searcher {
+    /// The asked wants a walking plan of this scope pursues, derived here and not ending; each taken from the asked as the pass ends.
+    pub(super) fn asked_here(
+        &self,
+        store: &Store,
+        walks: &Walks,
+        only: Option<&BTreeSet<String>>,
+        asked: &BTreeSet<String>,
+    ) -> Result<BTreeSet<String>, Error> {
+        if asked.is_empty() {
+            return Ok(BTreeSet::new());
+        }
+        let derived = derived(store)?;
+        let out: BTreeSet<String> = asked
+            .iter()
+            .filter(|w| {
+                walks
+                    .get(*w)
+                    .is_some_and(|f| !f.ending && only.is_none_or(|o| o.contains(&f.action)))
+                    && derived.contains(*w)
+            })
+            .cloned()
+            .collect();
+        for want in &out {
+            log::info!("{}: {} is reopened, as asked", self.id, local_of(want));
         }
         Ok(out)
     }
@@ -155,11 +172,12 @@ impl Planner {
     /// The walking wants of this scope a world of whose plan is IMPOSSIBLE in the grounds as now laid (#921): the
     /// plan's untaken steps replayed on the new grounds, each world weighed for the constraints.
     pub(super) fn impossible_ahead(
-        &mut self,
+        &self,
         store: &Store,
         walks: &Walks,
         constraints: &[String],
         only: Option<&BTreeSet<String>>,
+        doomed: &mut Vec<(String, Option<String>)>,
         memo: &mut Memo,
     ) -> Result<BTreeSet<String>, Error> {
         const FORESEEN_U: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -178,23 +196,18 @@ impl Planner {
             if walk.ending || !derived.contains(want) || only.is_some_and(|o| !o.contains(&walk.action)) {
                 continue;
             }
-            let chain: Vec<String> = self
-                .chain(&self.beliefs, &walk.plan)?
-                .into_iter()
-                .map(|(s, _)| s)
-                .collect();
+            let chain: Vec<String> = walk.steps.iter().map(|(s, _)| s.clone()).collect();
             let from = chain.iter().position(|s| *s == walk.head).unwrap_or(chain.len());
             let untaken = &chain[from..];
             if untaken.is_empty() || (untaken.len() == 1 && walk.in_flight) {
                 continue;
             }
-            let predicts = predicted(&self.beliefs, walk.plan.as_str())?;
             let mut foreseen: Vec<String> = Vec::new();
             let found = (|| -> Result<Option<bool>, Error> {
                 let mut changes: Vec<(Vec<Quad>, Vec<Quad>)> = Vec::new();
                 let (mut before, mut world): (Option<String>, Option<String>) = (None, None);
                 for step in untaken {
-                    let row = predicts.get(step);
+                    let row = walk.predicts.get(step);
                     let lands = match row.and_then(|p| p.lands.as_ref()) {
                         Some(l) => lexical(l)?
                             .checked_add_day_time_duration(walk.late)
@@ -206,8 +219,8 @@ impl Planner {
                         return Ok(None);
                     };
                     let change = (
-                        quads_of(&self.beliefs, row.and_then(|p| p.retracts.clone()))?,
-                        quads_of(&self.beliefs, row.and_then(|p| p.adds.clone()))?,
+                        row.map(|p| p.retracts.clone()).unwrap_or_default(),
+                        row.map(|p| p.adds.clone()).unwrap_or_default(),
                     );
                     changes.push(change.clone());
                     let (base, applying) = match (&before, &world) {
@@ -252,7 +265,7 @@ impl Planner {
                                 local_of(c),
                                 said(&rows)
                             );
-                            self.doomed.insert(want.clone(), step.clone());
+                            doomed.push((want.clone(), Some(step.clone())));
                             return Ok(Some(true));
                         }
                     }
@@ -268,7 +281,7 @@ impl Planner {
                     out.insert(want.clone());
                 }
                 Some(false) => {
-                    self.doomed.remove(want);
+                    doomed.push((want.clone(), None));
                     log::debug!(
                         "{}: {} world(s) of {}'s untaken steps foreseen, none impossible",
                         self.id,
@@ -285,7 +298,7 @@ impl Planner {
     /// Hold the plan `want`'s search just wrote against the walking intentions it reopens: where it begins with their
     /// untaken steps they stand and those steps are kept out of what is published; anything else replaces them.
     pub(super) fn reconsider(
-        &mut self,
+        &self,
         store: &Store,
         want: &str,
         walks: &Walks,
@@ -306,7 +319,7 @@ impl Planner {
         let found = store.rows(&bind(PLAN_FOR_Q, &[("want", Value::iri(want))])?, &[])?;
         let joint = match found.first() {
             Some(r) if iri(r, "outcome").as_deref() == Some(SATISFIED) => {
-                self.chain(store, &iri(r, "plan").unwrap_or_default())?
+                chain(store, &iri(r, "plan").unwrap_or_default())?
             }
             _ => Vec::new(),
         };
@@ -316,7 +329,7 @@ impl Planner {
         let mut queues: BTreeMap<String, Vec<Said>> = BTreeMap::new();
         for walked in &reopened {
             let Some(walk) = walks.get(walked) else { continue };
-            let steps = self.chain(&self.beliefs, &walk.plan)?;
+            let steps = &walk.steps;
             let at = steps.iter().position(|(s, _)| *s == walk.head).unwrap_or(steps.len());
             let from = (at + usize::from(walk.in_flight)).min(steps.len());
             queues.insert(walked.clone(), steps[from..].iter().map(|(_, s)| s.clone()).collect());
@@ -364,7 +377,7 @@ impl Planner {
                 local_of(&walk.head)
             );
             if self.watch.connected() {
-                self.watch.emit(&crate::events::PlanSuperseded {
+                self.say(&crate::events::PlanSuperseded {
                     head: walk.head.clone(),
                     by: want.to_string(),
                     at: self.watch.at(),

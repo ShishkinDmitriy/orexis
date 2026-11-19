@@ -8,7 +8,9 @@ use orexis::store::{Store, Within, iri};
 use orexis::task::{Heard, MET, PLANNED, Turn, UNREACHABLE, long};
 use orexis_belief::ontology::{CHANGED, REVISED, REVISED_SOURCE};
 
-use super::Planner;
+use orexis::activity::Activity;
+
+use super::{Out, Planner, Searched};
 use crate::admit::local_of;
 use crate::events::HeadChecked;
 use crate::ontology::{PLANNING_ACTIVITY, REOPENS};
@@ -161,6 +163,12 @@ impl Planner {
     /// PLAN THAT FAILED IN THE PRESENT IT WAS FOUND IN IS NOT PLANNED AGAIN UNTIL NEWS IS HEARD (#1145): the search
     /// would find it again, and a step that fails as it is taken would be planned, taken and failed for ever.
     pub(crate) fn planning(&mut self, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+        //  A PLANNING WHOSE SEARCHES ARE OUT is finished as they come back (`found`), and what was heard meanwhile is
+        //  planned once it is.
+        if self.out.is_some() {
+            pass.lap("plan");
+            return Ok(Vec::new());
+        }
         let reached = self.next.is_some_and(|next| next <= pass.now);
         let reached = reached || self.continues.is_some_and(|at| at <= pass.now);
         let again = !self.triggers.is_empty() && !self.held;
@@ -177,8 +185,86 @@ impl Planner {
         self.due = false;
         let triggers = std::mem::take(&mut self.triggers);
         let activity = pass.begin(PLANNING_ACTIVITY, &triggers);
+        if self.threads.is_some() {
+            return self.send_out(activity, pass);
+        }
         //  A SEARCH IS SECONDS: the tasks beside it keep their workers.
         let written = long(|| self.plan(pass.now))?;
+        self.planned(activity, pass)?;
+        Ok(written)
+    }
+
+    /// EVERY SCOPE PREPARED AND ITS SEARCH SET GOING ON A THREAD OF ITS OWN, where the agent runs on several: the
+    /// task steps out of the planning, which goes on until the last search is back, and holds the agent meanwhile.
+    fn send_out(&mut self, activity: Activity, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+        let (planning, written) = self.begin_pass(pass.now)?;
+        let mut handed = Vec::new();
+        for scope in planning.scopes_all.clone() {
+            handed.push(self.prepare(&scope, &planning)?);
+        }
+        let threads = self.threads.as_ref().expect("threads to send a search out on");
+        let waiting = handed.len();
+        log::debug!("{}: {} scope(s) searched on threads of their own", self.id, waiting);
+        for mut searching in handed {
+            searching.searcher.within = Some(activity.node.clone());
+            let (back, working) = (threads.back.clone(), threads.events.working());
+            tokio::task::spawn_blocking(move || {
+                let _ = back.send((searching.search(), working));
+            });
+        }
+        pass.step_out(&activity);
+        pass.hold("planning");
+        pass.lap("plan");
+        self.out = Some(Out {
+            activity,
+            pass: planning,
+            waiting,
+        });
+        Ok(written)
+    }
+
+    /// WHAT A SCOPE'S SEARCH FOUND, BACK FROM ITS THREAD: applied within the planning it is part of, unless what
+    /// crossed into its imaginarium has moved in the beliefs while it was out — then it is dropped and planning is
+    /// due again; and the planning finished once the last is back.
+    pub(crate) fn found(&mut self, found: Result<Searched, Error>, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+        let found = found?;
+        let Some(mut out) = self.out.take() else {
+            return Ok(Vec::new());
+        };
+        pass.step_in(&out.activity);
+        let moved = match &found.crossed {
+            Some(crossed) => crossed.moved(&self.beliefs)?,
+            None => None,
+        };
+        let written = match moved {
+            None => {
+                log::debug!("{}: {}'s search is back", self.id, local_of(&found.scope));
+                self.apply(found, &mut out.pass.searched)?
+            }
+            Some(graph) => {
+                log::info!(
+                    "{}: {} moved while {}'s search was out, so what it found is dropped and it is planned again",
+                    self.id,
+                    graph,
+                    local_of(&found.scope)
+                );
+                self.due = true;
+                Vec::new()
+            }
+        };
+        out.waiting -= 1;
+        if out.waiting > 0 {
+            pass.step_out(&out.activity);
+            self.out = Some(out);
+            return Ok(written);
+        }
+        self.end_pass(&out.pass.searched);
+        self.planned(out.activity, pass)?;
+        Ok(written)
+    }
+
+    /// THE PLANNING IS DONE: the agent held or let go, the next ground it laid waited for, and its activity ended.
+    fn planned(&mut self, activity: Activity, pass: &mut Turn<'_>) -> Result<(), Error> {
         if !self.published.is_empty() {
             self.fresh = true;
         }
@@ -187,9 +273,12 @@ impl Planner {
         if let Some(next) = self.next {
             pass.wake_at(next);
         }
+        if self.due {
+            pass.again();
+        }
         pass.lap("plan");
         pass.end(activity);
-        Ok(written)
+        Ok(())
     }
 
     /// Hold the agent, or let it go and say how the wanting ended.

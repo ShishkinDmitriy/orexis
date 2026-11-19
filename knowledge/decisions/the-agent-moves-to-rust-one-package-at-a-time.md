@@ -200,8 +200,9 @@ store of its own, and no action of one scope writes a fact a want of another rea
 another did and a plan found in one is concatenated with the rest. Scopes meet in two places, both the mind's: a
 plan published into the beliefs, and a step refined, whose want is minted there and searched where it is placed.
 Waiting for every scope and taking their plans in scope order was the first plan here and was refused
-(2026-11-09): it held the mind for the slowest scope to keep an order independence makes meaningless. Until scopes
-run on threads of their own they run one after another, reading what is walking as the pass began. Laying grounds
+(2026-11-09): it held the mind for the slowest scope to keep an order independence makes meaningless. On a runtime of
+several threads each scope's search runs on one of its own, and on one thread they run one after another, reading
+what is walking as the pass began (the-agent-is-a-runtime-of-tasks, amended 2026-11-19). Laying grounds
 is per scope and about two-thirds of the greenhouse's planning. A reader of the store, a chat's query or the journal's server, reads
 a snapshot of it, beside a pass and without waiting for one.
 

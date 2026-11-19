@@ -118,10 +118,27 @@ fn start(handed: Handed) -> orexis::task::Starting {
         }
         //  PREDICTION'S FORESIGHT, where the agent plays a predictor: offered at its start, taken as the run begins.
         planner.foresee = handed.provided.take::<Foresees>();
+        //  ON THE RUNTIME A DEPLOYED AGENT RUNS, OF SEVERAL THREADS, each scope's search is set going on one of its
+        //  own and the task hears what it found; on one thread, as a world's test runs it, each is searched on the
+        //  task, in scope order, as before.
+        let (back, mut found) = tokio::sync::mpsc::unbounded_channel::<planner::Found>();
+        if tokio::runtime::Handle::current().runtime_flavor() == tokio::runtime::RuntimeFlavor::MultiThread {
+            planner.threads = Some(planner::Threads {
+                events: handed.events.clone(),
+                back,
+            });
+        }
         let mut heard = None;
+        let mut arrived: Option<planner::Found> = None;
         let mut due = None;
         loop {
             let mut turn = handed.turn();
+            //  WHAT A SEARCH FOUND keeps the agent busy until the task next waits, as anything it hears does.
+            if let Some((searched, working)) = arrived.take() {
+                working.back();
+                let wrote = planner.found(searched, &mut turn);
+                turn.done(wrote)?;
+            }
             if let Some(Woke::Event(tag, event)) = heard.take() {
                 let wrote = planner.heard_event(tag, &event, &mut turn);
                 turn.done(wrote)?;
@@ -137,6 +154,10 @@ fn start(handed: Handed) -> orexis::task::Starting {
                 woke = hears.next() => match woke {
                     Some(woke) => Some(woke),
                     None => break,
+                },
+                searched = found.recv() => {
+                    arrived = searched;
+                    None
                 },
                 _ = handed.sleep_until(due) => None,
             };

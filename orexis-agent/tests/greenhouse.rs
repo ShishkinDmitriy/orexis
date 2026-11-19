@@ -328,8 +328,22 @@ async fn a_cold_bed_is_heated_for_as_long_as_the_gap_takes() {
 
 #[tokio::test(start_paused = true)]
 async fn a_cold_dry_bed_is_two_wants_planned_apart() {
+    two_wants_planned_apart().await;
+}
+
+/// ON THE RUNTIME A DEPLOYED AGENT RUNS, of several threads, each scope's search is set going on one of its own and
+/// what it found comes back to planning's task: the same two wants, the same two commands, and no head blocked.
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_cold_dry_bed_is_two_wants_searched_on_two_threads() {
+    two_wants_planned_apart().await;
+}
+
+/// The bed both cold and dry: two wants in two scopes, each planned and walked, and no head blocked.
+async fn two_wants_planned_apart() {
     let store = store();
     let g = grower(&store).await;
+    //  ITS SENSING LISTENING before anything is delivered, which on threads of their own its tasks may not be yet.
+    common::settled(&g.running).await;
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     //  THE SCOPES A SEARCH IMAGINED IN, and the heads blocked as they were taken: what planning says of itself.
     let imagined: Arc<Mutex<Vec<String>>> = Arc::default();
