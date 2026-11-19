@@ -1555,7 +1555,26 @@ impl Executor {
             self.resolved_told = self.resolved;
             pass.again();
         }
+        self.forget_desires()?;
         Ok(self.handed())
+    }
+
+    /// Forget the desire of every want no intention still pursues. Asked once a job is done and never as an intention
+    /// resolves: a plan superseding another resolves the old before it adopts the new, and the want stands between.
+    pub fn forget_desires(&mut self) -> Result<(), Error> {
+        const PURSUED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+        SELECT DISTINCT ?want WHERE { GRAPH $intentions { ?i a execution:Intention ; execution:pursues ?want .
+          FILTER NOT EXISTS { ?i execution:resolvedAt ?at } } }";
+        if self.desires.is_empty() {
+            return Ok(());
+        }
+        let pursued: BTreeSet<String> = self
+            .rows_of(PURSUED_Q, &[("intentions", self.mine())])?
+            .iter()
+            .filter_map(|r| iri(r, "want"))
+            .collect();
+        self.desires.retain(|want, _| pursued.contains(want));
+        Ok(())
     }
 
     fn submitted(&mut self) -> Vec<usize> {
@@ -1904,6 +1923,26 @@ GRAPH <http://example.org/test#catalogue> {{
             [second]
         );
         assert_eq!(resolved(&x, &first), ["superseded"]);
+    }
+
+    #[test]
+    fn the_desire_of_a_want_is_forgotten_once_nothing_pursues_the_want() {
+        let (b, i, clock) = (held(), store(), Arc::new(Manual::at(now())));
+        let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
+        let first = x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().unwrap();
+        x.desires.insert(WANT.to_string(), "thirst".to_string());
+        clock.advance(patience_s() + 1.0);
+        let second = x.commit(Some(&a_plan(2, PLAN)), PLAN, WANT).unwrap().unwrap();
+        assert_eq!(resolved(&x, &first), ["superseded"]);
+        x.forget_desires().unwrap();
+        assert_eq!(
+            x.desires.get(WANT).map(String::as_str),
+            Some("thirst"),
+            "the replacement still pursues it"
+        );
+        x.resolve(&second, "done").unwrap();
+        x.forget_desires().unwrap();
+        assert!(x.desires.is_empty(), "{:?}", x.desires);
     }
 
     #[test]
