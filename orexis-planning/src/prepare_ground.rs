@@ -49,21 +49,30 @@ pub const CROSSING: &[&str] = &[
 pub struct Crossed {
     said: Vec<(String, Option<String>)>,
     behind: BTreeSet<String>,
+    scope: Option<String>,
+    scopes: Option<Scopes>,
 }
 
 impl Crossed {
     /// The first graph that moved in `beliefs` since it crossed: one that crossed and states another hash now, or is
-    /// gone, or one of a kind that crosses that arrived and neither crossed nor stayed behind. None where all stands.
+    /// gone, or one that arrived since and would cross now — a belief that is another scope's alone stays behind, as
+    /// it would have had it been there. None where all stands.
     pub fn moved(&self, beliefs: &Store) -> Result<Option<String>, Error> {
         let now = hashes(beliefs)?;
         if let Some((g, _)) = self.said.iter().find(|(g, h)| now.get(g) != h.as_ref()) {
             return Ok(Some(g.clone()));
         }
         let known: BTreeSet<&String> = self.said.iter().map(|(g, _)| g).chain(&self.behind).collect();
-        Ok(beliefs
+        let arrived: Vec<String> = beliefs
             .graphs_of(CROSSING, &Within::default())?
             .into_iter()
-            .find(|g| !known.contains(g)))
+            .filter(|g| !known.contains(g))
+            .collect();
+        if arrived.is_empty() {
+            return Ok(None);
+        }
+        let behind = of_another_scope(beliefs, self.scope.as_deref(), self.scopes.as_ref())?;
+        Ok(arrived.into_iter().find(|g| !behind.contains(g)))
     }
 }
 
@@ -147,6 +156,8 @@ pub fn prepare_ground(
     Ok(Crossed {
         said: wanted.iter().map(|g| (g.clone(), said.get(g).cloned())).collect(),
         behind,
+        scope: scope.map(str::to_string),
+        scopes: scopes.cloned(),
     })
 }
 
@@ -390,5 +401,36 @@ mod tests {
             "a bed of two scopes and a property of one meet in the one"
         );
         assert_eq!(filled(&beliefs, Some(soil), Some(&shared)), whole);
+    }
+
+    #[test]
+    fn a_belief_arrived_that_is_another_scopes_alone_has_moved_nothing() {
+        let beliefs = snapshots::stand_in(&cases().join("a_readings_revisions_cross_with_it.trig"));
+        let (soil, air) = ("urn:test:soil", "urn:test:air");
+        let parted = scopes(&[
+            ("http://example.org/test#SoilMoisture", &[soil]),
+            ("urn:test:AirTemperature", &[air]),
+        ]);
+        let into_air = prepare_ground(&beliefs, &empty(), Some(air), Some(&parted)).unwrap();
+        let into_soil = prepare_ground(&beliefs, &empty(), Some(soil), Some(&parted)).unwrap();
+        //  A BELIEF OF THE AGENT'S OWN ABOUT THE SOIL ALONE arrives, as a step committed for the pump would.
+        let catalogue = beliefs.catalogue().unwrap().unwrap();
+        beliefs
+            .update(&format!(
+                "PREFIX orexis: <http://example.org/orexis#>
+                 INSERT {{ GRAPH <urn:test:committed> {{ <urn:test:step> <urn:test:of> <http://example.org/test#SoilMoisture> }}
+                   GRAPH <{catalogue}> {{ <urn:test:committed> a orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy ?me }} }}
+                 WHERE {{ GRAPH <{catalogue}> {{ ?g orexis:ownedBy ?me }} }}"
+            ))
+            .unwrap();
+        assert_eq!(
+            into_air.moved(&beliefs).unwrap(),
+            None,
+            "the soil's belief would have stayed behind from the air's scope"
+        );
+        assert_eq!(
+            into_soil.moved(&beliefs).unwrap(),
+            Some("urn:test:committed".to_string())
+        );
     }
 }

@@ -162,8 +162,10 @@ reads its imaginarium alone; on the runtime a deployed agent runs, of several th
 pool, planning's task steps out of the planning (`Turn::step_out`) and goes on hearing - a head asked is answered while
 a search is out - and each finding comes back to the task, which steps back in (`Turn::step_in`), applies it to the
 beliefs and ends the planning with the last. A finding is DROPPED, and planning due again at once, where a graph that
-crossed into its imaginarium moved in the beliefs while it was out (`Crossed::moved`): found from a present the agent
-no longer believes, it would be adopted and walked. What a search found keeps the agent busy until the task next waits
+crossed into its imaginarium moved in the beliefs while it was out, or a belief arrived that would cross now
+(`Crossed::moved`): found from a present the agent no longer believes, it would be adopted and walked. A belief that
+arrives and is another scope's alone moves nothing, judged by the rule that leaves it behind as the imaginarium is
+filled; judged by its kind alone, every step the heater committed dropped the soil's search. What a search found keeps the agent busy until the task next waits
 (`Working::back`), as anything a task is sent does; dropped as the search ended, the agent read idle before its plans
 were told. On one thread, as every world's test runs, each scope is still prepared, searched and applied in scope
 order on the task, so the order the tests prove is unchanged; `a_cold_dry_bed_is_two_wants_searched_on_two_threads`
@@ -190,9 +192,9 @@ Refused, by the sovereign the same day:
 
 # Seams left open
 
-- **Another scope's plan adopted moves what crossed.** A step committed for the heater names the bed, which is in the
-  soil's scope too, so the soil's finding is dropped and searched again once per plan the air adopts while it is out;
-  a kept cone makes the second search cheap. Where it starves a scope, what counts as moved is narrowed, measured
+- **A scope's own plan adopted moves what crossed.** A step committed for the pump is a flow the soil's grounds read,
+  so a soil search out when it lands is dropped and searched again; a kept cone makes the second search cheap. Where
+  it starves a scope, planning waits for what it published to be adopted before it plans that scope again, measured
   first.
 
 - **Two sayers, no order.** A revision and a reading's arrival heard by planning in either order are both answered by

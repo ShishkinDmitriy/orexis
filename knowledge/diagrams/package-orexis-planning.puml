@@ -364,6 +364,8 @@ package "prepare_ground" {
   class "Crossed" as orexis_planning__prepare_ground__Crossed << (S,#A8D8EA) struct >> {
     {field} -said : Vec<(String, Option<String>)>
     {field} -behind : BTreeSet<String>
+    {field} -scope : Option<String>
+    {field} -scopes : Option<Scopes>
   }
 }
 package "reroot" {
@@ -464,6 +466,7 @@ orexis_planning__planner__searching__Searching *-- "0..1" orexis_planning__prepa
 orexis_planning__planner__searching__Searched *-- "1" orexis__store__Store : store
 orexis_planning__planner__searching__Searched *-- "0..1" orexis__events__Laps : laps
 orexis_planning__planner__searching__Searched *-- "0..1" orexis_planning__prepare_ground__Crossed : crossed
+orexis_planning__prepare_ground__Crossed *-- "0..1" orexis_planning__find_scopes__Scopes : scopes
 orexis_planning__violation__Compiled *-- "1" orexis__error__Error : Error
 orexis_planning__violation__Compiler *-- "1" orexis_planning__shapes__Shapes : g
 orexis_planning__events__HeadChecked ..|> orexis__events__Event
