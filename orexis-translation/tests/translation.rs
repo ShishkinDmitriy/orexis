@@ -17,7 +17,7 @@ use orexis::events::as_of;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::{Package, Provided, Running, Turn as Handling, Wake, Woke};
-use orexis_llm::model::{Answer, Failure, Model, Pending, Turn};
+use orexis_llm::model::{Failure, Model, Pending, Turn};
 use orexis_speech::events::{Said, Statement};
 use orexis_speech::prose::{PROSE_GRAPH, Prose, ProseKept, kept};
 use orexis_translation::briefing::briefing;
@@ -670,14 +670,14 @@ impl StandIn {
         })
     }
 
-    fn answer(&self, system: &str, text: &str) -> Result<Answer, Failure> {
+    fn answer(&self, system: &str, text: &str) -> Result<Turn, Failure> {
         self.asked
             .lock()
             .unwrap()
             .push((vec![system.to_string()], vec![json!(text)], Vec::new()));
-        Ok(Answer {
+        Ok(Turn {
             text: self.text.clone(),
-            ..Answer::default()
+            ..Turn::default()
         })
     }
 }
@@ -694,7 +694,7 @@ impl Model for StandIn {
         Box::pin(std::future::ready(self.turn(system, messages, tools, last)))
     }
 
-    fn ask<'a>(&'a self, system: &'a str, text: &'a str) -> Pending<'a, Result<Answer, Failure>> {
+    fn ask<'a>(&'a self, system: &'a str, text: &'a str) -> Pending<'a, Result<Turn, Failure>> {
         Box::pin(std::future::ready(self.answer(system, text)))
     }
 }
@@ -756,7 +756,7 @@ impl Model for Switch {
         Box::pin(async move { model.converse(system, messages, tools, last).await })
     }
 
-    fn ask<'a>(&'a self, system: &'a str, text: &'a str) -> Pending<'a, Result<Answer, Failure>> {
+    fn ask<'a>(&'a self, system: &'a str, text: &'a str) -> Pending<'a, Result<Turn, Failure>> {
         let model = self.now();
         Box::pin(async move { model.ask(system, text).await })
     }

@@ -124,10 +124,7 @@ package "translator" {
     {field} +wake : orexis::task::Wake
     {field} +events : Option<orexis::task::Events>
     {field} +writing : BTreeMap<String, (Chat, i64)>
-    {field} +journal : Option<Engine>
-    {field} +journaled : orexis::task::Journaled
-    {field} +history : Option<Reader>
-    {field} +metrics : Option<Reader>
+    {field} +reads : Reads
     {field} +watch : Watch
     {field} +turns : usize
     {field} +rows : usize
@@ -147,10 +144,10 @@ package "orexis" #EEEEEE {
   interface "Event" as orexis__events__Event << (T,#C9E4C5) trait >>
   class "Watch" as orexis__events__Watch << (S,#A8D8EA) struct >>
   class "Reader" as orexis__series__Reader << (S,#A8D8EA) struct >>
+  class "Reads" as orexis__series__Reads << (S,#A8D8EA) struct >>
   class "Store" as orexis__store__Store << (S,#A8D8EA) struct >>
   class "Events" as orexis__task__hearing__Events << (S,#A8D8EA) struct >>
   class "Wake" as orexis__task__hearing__Wake << (S,#A8D8EA) struct >>
-  class "Journaled" as orexis__task__provided__Journaled << (S,#A8D8EA) struct >>
 }
 package "orexis-llm" #EEEEEE {
   interface "Model" as orexis_llm__model__Model << (T,#C9E4C5) trait >>
@@ -174,9 +171,7 @@ orexis_translation__translator__Translator o-- "0..1" orexis_llm__model__Model :
 orexis_translation__translator__Translator *-- "1" orexis__task__hearing__Wake : wake
 orexis_translation__translator__Translator *-- "0..1" orexis__task__hearing__Events : events
 orexis_translation__translator__Translator *-- "*" orexis_translation__chat__Chat : writing
-orexis_translation__translator__Translator *-- "1" orexis__task__provided__Journaled : journaled
-orexis_translation__translator__Translator *-- "0..1" orexis__series__Reader : history
-orexis_translation__translator__Translator *-- "0..1" orexis__series__Reader : metrics
+orexis_translation__translator__Translator *-- "1" orexis__series__Reads : reads
 orexis_translation__translator__Translator *-- "1" orexis__events__Watch : watch
 orexis_translation__translator__Translator *-- "1" orexis_translation__conversation__Back : tx
 orexis_translation__translator__Translator *-- "1" orexis_translation__conversation__Back : rx

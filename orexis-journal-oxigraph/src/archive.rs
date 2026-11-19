@@ -81,20 +81,20 @@ impl Archive {
     pub fn take(&self, journal: &Journal) -> Result<usize, Error> {
         let mut taken = self.taken.lock().unwrap();
         let mut wrote = 0;
-        for lasting in journal.lasting()? {
-            let name = lasting.entry.as_str().to_string();
+        for entry in journal.lasting()? {
+            let name = entry.node.as_str().to_string();
             let before = taken.get(&name).copied();
-            if before != Some(lasting.quads.len()) {
+            if before != Some(entry.quads.len()) {
                 if before.is_some() {
-                    self.store.remove_named_graph(&lasting.entry).map_err(engine)?;
+                    self.store.remove_named_graph(&entry.node).map_err(engine)?;
                 }
-                let size = lasting.quads.len();
-                self.store.extend(lasting.quads).map_err(engine)?;
+                let size = entry.quads.len();
+                self.store.extend(entry.quads).map_err(engine)?;
                 taken.insert(name.clone(), size);
                 wrote += 1;
             }
-            if !lasting.needed {
-                journal.forget(&lasting.entry)?;
+            if !entry.needed {
+                journal.forget(&entry.node)?;
                 taken.remove(&name);
             }
         }

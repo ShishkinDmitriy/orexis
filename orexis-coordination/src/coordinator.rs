@@ -15,7 +15,7 @@ use oxsdatatypes::DateTime;
 
 use crate::answer::answer;
 use crate::ask::ask;
-use crate::conclude::{conclude, conflicts, wins};
+use crate::conclude::{Conflict, conclude, conflicts, wins};
 use crate::events::{ASKED, Concluded, DrawWon, FORESEEN, Held, SAID, Told};
 use crate::holdings::{heard, walking_over};
 use crate::lay::{laid, lay};
@@ -44,7 +44,7 @@ pub struct Coordinator {
     pub watch: Watch,
     /// What was last said of each set, so a set is said where it changed.
     told: BTreeMap<(String, String, String), Vec<crate::holdings::Holding>>,
-    concluded: Option<Vec<crate::events::Conflict>>,
+    concluded: Option<BTreeMap<String, Conflict>>,
     /// The events heard beneath its trigger since it last coordinated.
     triggers: Vec<oxigraph::model::NamedNode>,
     /// Whether it has coordinated yet, when it last asked anything, and the instant a patience running calls for it

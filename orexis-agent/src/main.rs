@@ -250,8 +250,8 @@ fn main() {
                     serde_json::json!({
                         "agent": args.agent,
                         "loaded": checked.loaded,
-                        "held": checked.held,
-                        "refused": checked.refused,
+                        "held": checked.found.held,
+                        "refused": checked.found.refused,
                     })
                 );
                 std::process::exit(0);

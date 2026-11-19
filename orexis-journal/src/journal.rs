@@ -57,8 +57,8 @@ pub type Now = Arc<dyn Fn() -> DateTime + Send + Sync>;
 
 /// An entry the journal keeps for good, as whoever archives it reads it: an event, or a line logged or an activity an
 /// incident kept.
-pub struct Lasting {
-    pub entry: NamedNode,
+pub struct Entry {
+    pub node: NamedNode,
     /// What the entry says, in the graph it names.
     pub quads: Vec<Quad>,
     /// Whether the journal still needs it: a line logged or an activity inside the window, which a later incident
@@ -275,7 +275,7 @@ impl Journal {
 
     /// EVERY ENTRY KEPT FOR GOOD, as whoever archives the journal reads it: each event, and each line logged and
     /// activity an incident kept, with what it says and whether the journal still needs it.
-    pub fn lasting(&self) -> Result<Vec<Lasting>, Error> {
+    pub fn lasting(&self) -> Result<Vec<Entry>, Error> {
         let text = format!(
             "SELECT DISTINCT ?r ?windowed ?t WHERE {{ GRAPH ?r {{ ?r <{AT}> ?t }} \
              BIND(EXISTS {{ VALUES ?c {{ <{LOGGED}> <{ACTIVITY}> }} GRAPH ?r {{ ?r a ?c }} }} AS ?windowed) \
@@ -303,8 +303,8 @@ impl Journal {
                     .quads_for_pattern(None, None, None, Some(entry.as_ref().into()))
                     .collect::<Result<Vec<_>, _>>()
                     .map_err(engine)?;
-                lasting.push(Lasting {
-                    entry: entry.clone(),
+                lasting.push(Entry {
+                    node: entry.clone(),
                     quads,
                     needed: windowed && inside,
                 });
@@ -648,7 +648,7 @@ mod tests {
             .unwrap();
         assert!(journal.news() && !journal.news(), "news is told once");
         let lasting = journal.lasting().unwrap();
-        let found: Vec<(NamedNode, bool)> = lasting.iter().map(|l| (l.entry.clone(), l.needed)).collect();
+        let found: Vec<(NamedNode, bool)> = lasting.iter().map(|l| (l.node.clone(), l.needed)).collect();
         assert_eq!(
             found,
             [

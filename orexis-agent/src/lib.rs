@@ -97,8 +97,7 @@ pub fn boot_without_starting(store: &Store, world: &Path, agent: &str) -> Result
 #[derive(Debug, Default)]
 pub struct Checked {
     pub loaded: Vec<String>,
-    pub held: Vec<String>,
-    pub refused: Vec<String>,
+    pub found: orexis::task::Found,
 }
 
 /// CHECK `agent` of `world` as its container would boot it, and run nothing: booted into a store in memory from the
@@ -149,13 +148,10 @@ pub fn check(world: &Path, agent: &str, now: oxsdatatypes::DateTime, boot: Optio
         Ok::<_, Error>(loaded)
     })?;
     //  WHAT EACH PACKAGE SAID AS IT MADE ITS CORE: the binary asks none of them by name.
-    let found = checking.found();
-    let checked = Checked {
+    Ok(Checked {
         loaded,
-        held: found.held,
-        refused: found.refused,
-    };
-    Ok(checked)
+        found: checking.found(),
+    })
 }
 
 /// Whether this binary holds `package`: its crate was built in, and registered itself.

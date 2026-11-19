@@ -21,7 +21,7 @@ use orexis::events::{Field, Point};
 use orexis::ontology::{BELIEF, FORECAST, SELF_GRAPH};
 use orexis::store::{Store, Within, iri, value};
 use orexis::task::{Provided, Running, UNFINISHED};
-use orexis_llm::model::{Answer, Failure, Model, Pending, Turn};
+use orexis_llm::model::{Failure, Model, Pending, Turn};
 use orexis_transport_mqtt::driver::{Client, Mqtt};
 
 const T: &str = "http://example.org/orexis/world/terrace#";
@@ -175,8 +175,8 @@ impl Model for Stating {
         Box::pin(std::future::ready(self.turn(messages)))
     }
 
-    fn ask<'a>(&'a self, _system: &'a str, _text: &'a str) -> Pending<'a, Result<Answer, Failure>> {
-        Box::pin(std::future::ready(Ok(Answer::default())))
+    fn ask<'a>(&'a self, _system: &'a str, _text: &'a str) -> Pending<'a, Result<Turn, Failure>> {
+        Box::pin(std::future::ready(Ok(Turn::default())))
     }
 }
 
