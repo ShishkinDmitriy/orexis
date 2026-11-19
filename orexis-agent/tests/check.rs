@@ -459,3 +459,29 @@ fn the_world_names_the_series_store_for_each_purpose_its_agents_write() {
     assert_eq!(sink("terrace", "terrace", orexis::series::HISTORY, &both[..1]), None);
     assert_eq!(sink("hanoi", "hanoi", orexis::series::METRICS, &both), None);
 }
+
+/// A HOUSEKEEPER STARTED BEFORE THE PACKAGE IT KEEPS HOUSE FOR still finds its role's figures: they are that package's
+/// ontology's defaults (`sh:defaultValue`), brought as it joins, so a housekeeper reads its role only once every package
+/// has joined or declined. Read before, as it decided, the terrace's container refused to boot whenever what archives
+/// the journal or sensing's readings started first: "the journal's ontology states no default for window".
+#[test]
+fn a_housekeeper_started_before_the_package_it_keeps_house_for_reads_its_roles_defaults() {
+    let world = Path::new(TREE).join("world/terrace");
+    for first in ["journal-oxigraph", "journal-otlp", "sensing-influxdb"] {
+        let store = orexis::store::Store::new().unwrap();
+        let tasks = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .unwrap();
+        tasks
+            .block_on(async {
+                let clock: std::sync::Arc<dyn orexis::clock::Clock> =
+                    std::sync::Arc::new(orexis::clock::Manual::at(instant("2026-11-19T12:00:00Z").unwrap()));
+                let booted = orexis_agent::boot(&store, &world, "terrace", clock, orexis::task::Provided::default())?
+                    .first(&[first.to_string()])?;
+                booted.without_starting().await?.stop().await;
+                Ok::<_, orexis::Error>(())
+            })
+            .unwrap_or_else(|e| panic!("{first} started first: {e}"));
+    }
+}

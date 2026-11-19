@@ -53,6 +53,9 @@ fn start(handed: Handed) -> orexis::task::Starting {
         if !handed.plays(&[OBSERVER])? {
             return Ok(());
         }
+        //  IT READS ITS ROLE ONCE EVERY PACKAGE HAS JOINED OR DECLINED, bringing nothing of its own: the role's figures
+        //  are sensing's ontology's defaults, brought as that package joins, and read before it the role has none.
+        handed.joins(&orexis::documents!()).await?;
         let observer = Observer::new(&handed.store)?;
         if observer.archived_in.is_none() {
             return Ok(());
