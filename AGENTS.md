@@ -432,6 +432,13 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   search would find it again, and with no pass between two decisions a dose that could not be sized was planned,
   taken and failed seventy times in eight seconds; news is a revision that changed a state or revised a belief that
   came to the agent, never its own record of what it did (#1145, the-agent-is-a-runtime-of-tasks).
+- **A scope's search is handed what it reads of the beliefs and reads its imaginarium alone, and on several threads it
+  runs on one of its own** — what it found is dropped, and planning due again, where a graph that crossed into it moved
+  in the beliefs while it was out; on one thread, as a world's test runs, the scopes go in order on the task
+  (the-agent-is-a-runtime-of-tasks, #1100).
+- **Work a task sets going off its turn is in hand when it comes back** — kept busy until the task next waits
+  (`Working::back`); dropped as the work ended, the agent read idle before what the task said of it was told, and a
+  test on two threads looked before the pump was told to dose.
 - **A walking want is neither searched nor handed down again until a want a constraint couples to it
   arrives, a belief arrives that makes a world its untaken steps reach impossible, or a role above
   planning asks (`Planner.reopen`), and then only its untaken steps are reopened** — commitment is hard

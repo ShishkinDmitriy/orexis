@@ -377,7 +377,7 @@ impl Searcher {
                 local_of(&walk.head)
             );
             if self.watch.connected() {
-                self.watch.emit(&crate::events::PlanSuperseded {
+                self.say(&crate::events::PlanSuperseded {
                     head: walk.head.clone(),
                     by: want.to_string(),
                     at: self.watch.at(),

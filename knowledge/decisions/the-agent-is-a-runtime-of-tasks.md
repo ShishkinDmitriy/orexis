@@ -132,7 +132,7 @@ half-written work.
 
 **A search runs in place** (`runtime::long`, Tokio's `block_in_place`): its worker hands its other tasks on, so the
 sessions and the other policies keep theirs. `spawn_blocking`, which this record named, needs the search to own what
-it searches; it waits for the scopes to run free, which #1100 tracks.
+it searches; it waited for the scopes to run free, which the amendment of 2026-11-19 below builds.
 
 Refused:
 
@@ -155,6 +155,29 @@ Refused:
 wait, the pass and the order the tests prove away, and lifts this record's refusal of registration found by the
 linker. Its tasks, its one writing package per graph and its search run in place stand.
 
+# Amended 2026-11-19: each scope searched on a thread of its own
+
+#1100 step 3. A scope's search is handed everything it reads of the beliefs as planning prepares it (`Searching`) and
+reads its imaginarium alone; on the runtime a deployed agent runs, of several threads, it is set going on the blocking
+pool, planning's task steps out of the planning (`Turn::step_out`) and goes on hearing - a head asked is answered while
+a search is out - and each finding comes back to the task, which steps back in (`Turn::step_in`), applies it to the
+beliefs and ends the planning with the last. A finding is DROPPED, and planning due again at once, where a graph that
+crossed into its imaginarium moved in the beliefs while it was out (`Crossed::moved`): found from a present the agent
+no longer believes, it would be adopted and walked. What a search found keeps the agent busy until the task next waits
+(`Working::back`), as anything a task is sent does; dropped as the search ended, the agent read idle before its plans
+were told. On one thread, as every world's test runs, each scope is still prepared, searched and applied in scope
+order on the task, so the order the tests prove is unchanged; `a_cold_dry_bed_is_two_wants_searched_on_two_threads`
+holds the threaded path.
+
+Refused, by the sovereign the same day:
+
+- **Applying a finding whatever moved**, the head check catching what went stale: a plan from an old present would be
+  adopted, walked to the step that fails, and not planned again until news.
+- **Threads under the tests too**: findings come back in the order they finish, and the replays and digests a world is
+  held to would have to tolerate any order of two scopes' commands.
+- **The planning left open between turns**: what the task heard while a search was out - a head checked, a trigger
+  noted - would be journaled as part of the planning.
+
 # What it amends
 
 - [packages-meet-by-events-policies-and-activities](/decisions/packages-meet-by-events-policies-and-activities.md), in
@@ -166,6 +189,11 @@ linker. Its tasks, its one writing package per graph and its search run in place
   in part: optimistic locking still has no work, now because a graph has one writing package, not one thread.
 
 # Seams left open
+
+- **Another scope's plan adopted moves what crossed.** A step committed for the heater names the bed, which is in the
+  soil's scope too, so the soil's finding is dropped and searched again once per plan the air adopts while it is out;
+  a kept cone makes the second search cheap. Where it starves a scope, what counts as moved is narrowed, measured
+  first.
 
 - **Two sayers, no order.** A revision and a reading's arrival heard by planning in either order are both answered by
   planning's next activity, since a trigger heard while it plans is held for the one after. Where an order between two

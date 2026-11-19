@@ -11,9 +11,10 @@ use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
-use orexis::events::Watch;
+use orexis::events::{Event, Watch};
 use orexis::rdf::round6;
 use orexis::store::{Store, iri};
+use oxigraph::model::NamedNode;
 
 use super::{beaten, broken, cat, desire_of, held_constraints, plan_of, said, spent};
 use crate::admit::{admit, local_of};
@@ -38,9 +39,24 @@ pub(crate) struct Searcher {
     pub(super) budget: usize,
     pub(super) watch: Watch,
     pub(super) searches: Tallies,
+    /// The planning a search on a thread of its own says its events within; none where it runs on planning's task,
+    /// which says them within the activity open there.
+    pub(super) within: Option<NamedNode>,
 }
 
 impl Searcher {
+    /// Say `event`, within the planning this search is part of.
+    pub(super) fn say(&self, event: &dyn Event) {
+        match &self.within {
+            Some(planning) => {
+                self.watch.emit_within(event, Some(planning.clone()));
+            }
+            None => {
+                self.watch.emit(event);
+            }
+        }
+    }
+
     /// Plan for `want` from the ground holding at its instant, spending at most `budget` candidates beyond what its
     /// search spent before, and write the plan, whatever the search concluded.
     pub fn search(
@@ -92,7 +108,7 @@ impl Searcher {
             return Ok(());
         }
         let outcome = plan_of(store, want)?.outcome.map(|o| local_of(&o));
-        self.watch.emit(&SearchEnded {
+        self.say(&SearchEnded {
             want: want.to_string(),
             desire: desire_of(store, want)?,
             scope: scope.map(local_of),

@@ -44,14 +44,38 @@ pub const CROSSING: &[&str] = &[
     CONSTRAINT_GRAPH,
 ];
 
-/// Fill `into` with what a search over `scope` needs from `beliefs`, or refresh what an earlier filling left there.
-/// `scopes` is the store's partition as `find_scopes` reads it; handed neither, everything crosses.
+/// WHAT CROSSED into an imaginarium, each graph with the hash its row stated, and what stayed behind as another
+/// scope's: what a search found there is found from beliefs that stand where these do.
+pub struct Crossed {
+    said: Vec<(String, Option<String>)>,
+    behind: BTreeSet<String>,
+}
+
+impl Crossed {
+    /// The first graph that moved in `beliefs` since it crossed: one that crossed and states another hash now, or is
+    /// gone, or one of a kind that crosses that arrived and neither crossed nor stayed behind. None where all stands.
+    pub fn moved(&self, beliefs: &Store) -> Result<Option<String>, Error> {
+        let now = hashes(beliefs)?;
+        if let Some((g, _)) = self.said.iter().find(|(g, h)| now.get(g) != h.as_ref()) {
+            return Ok(Some(g.clone()));
+        }
+        let known: BTreeSet<&String> = self.said.iter().map(|(g, _)| g).chain(&self.behind).collect();
+        Ok(beliefs
+            .graphs_of(CROSSING, &Within::default())?
+            .into_iter()
+            .find(|g| !known.contains(g)))
+    }
+}
+
+/// Fill `into` with what a search over `scope` needs from `beliefs`, or refresh what an earlier filling left there,
+/// and say what crossed. `scopes` is the store's partition as `find_scopes` reads it; handed neither, everything
+/// crosses.
 pub fn prepare_ground(
     beliefs: &Store,
     into: &Store,
     scope: Option<&str>,
     scopes: Option<&Scopes>,
-) -> Result<(), Error> {
+) -> Result<Crossed, Error> {
     const PIECES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
       PREFIX planning: <http://example.org/orexis/planning#>
       PREFIX prov: <http://www.w3.org/ns/prov#>
@@ -120,7 +144,10 @@ pub fn prepare_ground(
             .map_err(|e| Error::Evaluation(e.to_string()))?;
         into.add(quads)?;
     }
-    Ok(())
+    Ok(Crossed {
+        said: wanted.iter().map(|g| (g.clone(), said.get(g).cloned())).collect(),
+        behind,
+    })
 }
 
 /// Every graph `store`'s catalogue says the hash of, and the hash.
@@ -263,6 +290,38 @@ mod tests {
             !into.quads(minted).unwrap().is_empty(),
             "and so does the want it minted"
         );
+    }
+
+    #[test]
+    fn what_crossed_has_moved_where_a_graph_states_another_hash_or_one_arrives_that_crosses() {
+        let case = cases().join("a_forecast_holding_later_crosses_whole.trig");
+        let beliefs = snapshots::stand_in(&case);
+        let crossed = prepare_ground(&beliefs, &empty(), None, None).unwrap();
+        assert_eq!(crossed.moved(&beliefs).unwrap(), None, "nothing moved since it crossed");
+        //  A GRAPH THAT CROSSED, CHANGED IN PLACE, says so on its row.
+        let changed = beliefs.graphs_of(CROSSING, &Within::default()).unwrap().remove(0);
+        let catalogue = beliefs.catalogue().unwrap().unwrap();
+        beliefs
+            .update(&format!(
+                "PREFIX orexis: <http://example.org/orexis#>
+                 DELETE {{ GRAPH <{catalogue}> {{ <{changed}> orexis:hash ?h }} }}
+                 INSERT {{ GRAPH <{catalogue}> {{ <{changed}> orexis:hash \"moved on\" }} }}
+                 WHERE {{ OPTIONAL {{ GRAPH <{catalogue}> {{ <{changed}> orexis:hash ?h }} }} }}"
+            ))
+            .unwrap();
+        assert_eq!(crossed.moved(&beliefs).unwrap(), Some(changed));
+        //  AND A BELIEF THAT ARRIVED SINCE, of a kind that crosses.
+        let beliefs = snapshots::stand_in(&case);
+        let crossed = prepare_ground(&beliefs, &empty(), None, None).unwrap();
+        let catalogue = beliefs.catalogue().unwrap().unwrap();
+        beliefs
+            .update(&format!(
+                "PREFIX orexis: <http://example.org/orexis#>
+                 INSERT DATA {{ GRAPH <urn:test:arrived> {{ <urn:test:bed> <urn:test:is> <urn:test:dry> }}
+                 GRAPH <{catalogue}> {{ <urn:test:arrived> a orexis:BeliefGraph , orexis:Graph }} }}"
+            ))
+            .unwrap();
+        assert_eq!(crossed.moved(&beliefs).unwrap(), Some("urn:test:arrived".to_string()));
     }
 
     fn names(store: &Store) -> BTreeSet<String> {

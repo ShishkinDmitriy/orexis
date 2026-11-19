@@ -22,6 +22,7 @@ use crate::find_scopes::Scopes;
 use crate::lay_ground::{Landed, Laying, lay_ground_foreseeing};
 use crate::memo::Memo;
 use crate::ontology::EXHAUSTED;
+use crate::prepare_ground::Crossed;
 use crate::reroot::reroot;
 use crate::scope::Scope;
 use crate::unweighed::unweighed;
@@ -61,10 +62,12 @@ pub(super) struct Searching {
     pub(super) laps: Option<Laps>,
     pub(super) at: DateTime,
     pub(super) searcher: Searcher,
+    /// What crossed into the imaginarium, where the search is set going off planning's task.
+    pub(super) crossed: Option<Crossed>,
 }
 
 /// WHAT ONE SCOPE'S SEARCH FOUND, for the planner to apply.
-pub(super) struct Searched {
+pub(crate) struct Searched {
     pub(super) scope: String,
     pub(super) store: Store,
     /// Which of the four the scope's present was in.
@@ -87,6 +90,7 @@ pub(super) struct Searched {
     pub(super) beside: u64,
     pub(super) laps: Option<Laps>,
     pub(super) at: DateTime,
+    pub(super) crossed: Option<Crossed>,
 }
 
 impl Searching {
@@ -131,6 +135,7 @@ impl Searching {
             mut laps,
             at,
             searcher,
+            crossed,
         } = self;
         let mut lap = |part: &str| {
             if let Some(laps) = laps.as_mut() {
@@ -183,7 +188,7 @@ impl Searching {
         };
         let rerooting = reroot(store, &present)?;
         if searcher.watch.connected() {
-            searcher.watch.emit(&Rerooted {
+            searcher.say(&Rerooted {
                 scope: local_of(&scope),
                 present: rerooting.present.to_string(),
                 kept: Some(rerooting.kept.len() as f64),
@@ -232,7 +237,7 @@ impl Searching {
         let met: BTreeSet<String> = met_now.intersection(&walking).cloned().collect();
         for want in met.difference(&already) {
             if searcher.watch.connected() {
-                searcher.watch.emit(&WantReached { want: want.clone(), at });
+                searcher.say(&WantReached { want: want.clone(), at });
             }
         }
         let reached: BTreeSet<String> = met_now.difference(&walking).cloned().collect();
@@ -320,6 +325,7 @@ impl Searching {
             beside: stands,
             laps,
             at,
+            crossed,
         })
     }
 }

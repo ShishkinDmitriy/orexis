@@ -227,6 +227,20 @@ package "planner" {
     {field} -retracts : Vec<Quad>
     {field} -adds : Vec<Quad>
   }
+  class "Out" as orexis_planning__planner__Out << (S,#A8D8EA) struct >> {
+    {field} -activity : orexis::activity::Activity
+    {field} -pass : Pass
+    {field} -waiting : usize
+  }
+  class "Pass" as orexis_planning__planner__Pass << (S,#A8D8EA) struct >> {
+    {field} -at : DateTime
+    {field} -scopes : Scopes
+    {field} -scopes_all : Vec<String>
+    {field} -read : Option<BTreeSet<String>>
+    {field} -walks : Walks
+    {field} -walking : BTreeSet<String>
+    {field} -searched : BTreeSet<String>
+  }
   class "PlanOf" as orexis_planning__planner__PlanOf << (S,#A8D8EA) struct >> {
     {field} -outcome : Option<String>
     {field} -spent : Option<f64>
@@ -259,6 +273,8 @@ package "planner" {
     {field} -fresh : bool
     {field} -held : bool
     {field} -continues : Option<DateTime>
+    {field} ~threads : Option<Threads>
+    {field} -out : Option<Out>
   }
   class "Predicted" as orexis_planning__planner__Predicted << (S,#A8D8EA) struct >> {
     {field} -lands : Option<Term>
@@ -275,6 +291,10 @@ package "planner" {
     {field} -lands : DateTime
     {field} -plan : String
     {field} -step : String
+  }
+  class "Threads" as orexis_planning__planner__Threads << (S,#A8D8EA) struct >> {
+    {field} ~events : orexis::task::Events
+    {field} ~back : tokio::sync::mpsc::UnboundedSender<Found>
   }
   class "Walk" as orexis_planning__planner__Walk << (S,#A8D8EA) struct >> {
     {field} -plan : String
@@ -296,6 +316,7 @@ package "planner::search" {
     {field} ~budget : usize
     {field} ~watch : Watch
     {field} ~searches : Tallies
+    {field} ~within : Option<NamedNode>
   }
 }
 package "planner::searching" {
@@ -314,6 +335,7 @@ package "planner::searching" {
     {field} ~beside : u64
     {field} ~laps : Option<Laps>
     {field} ~at : DateTime
+    {field} ~crossed : Option<Crossed>
   }
   class "Searching" as orexis_planning__planner__searching__Searching << (S,#A8D8EA) struct >> {
     {field} ~scope : String
@@ -335,6 +357,13 @@ package "planner::searching" {
     {field} ~laps : Option<Laps>
     {field} ~at : DateTime
     {field} ~searcher : Searcher
+    {field} ~crossed : Option<Crossed>
+  }
+}
+package "prepare_ground" {
+  class "Crossed" as orexis_planning__prepare_ground__Crossed << (S,#A8D8EA) struct >> {
+    {field} -said : Vec<(String, Option<String>)>
+    {field} -behind : BTreeSet<String>
   }
 }
 package "reroot" {
@@ -384,11 +413,14 @@ package "world_at" {
 }
 
 package "orexis" #EEEEEE {
+  class "Activity" as orexis__activity__Activity << (S,#A8D8EA) struct >>
   enum "Error" as orexis__error__Error << (E,#F6D6A8) enum >>
   interface "Event" as orexis__events__Event << (T,#C9E4C5) trait >>
   class "Laps" as orexis__events__Laps << (S,#A8D8EA) struct >>
   class "Watch" as orexis__events__Watch << (S,#A8D8EA) struct >>
   class "Store" as orexis__store__Store << (S,#A8D8EA) struct >>
+  class "Events" as orexis__task__hearing__Events << (S,#A8D8EA) struct >>
+  class "Found" as orexis__task__provided__Found << (S,#A8D8EA) struct >>
   class "Said" as orexis__task__provided__Said << (S,#A8D8EA) struct >>
 }
 package "orexis-belief" #EEEEEE {
@@ -415,14 +447,23 @@ orexis_planning__planner__Planner *-- "*" orexis__store__Store : imaginaria
 orexis_planning__planner__Planner *-- "*" orexis_planning__events__PlanPublished : published
 orexis_planning__planner__Planner *-- "1" orexis__events__Watch : watch
 orexis_planning__planner__Planner *-- "0..1" orexis__events__Laps : laps
+orexis_planning__planner__Planner *-- "0..1" orexis_planning__planner__Threads : threads
+orexis_planning__planner__Planner *-- "0..1" orexis_planning__planner__Out : out
+orexis_planning__planner__Pass *-- "1" orexis_planning__find_scopes__Scopes : scopes
+orexis_planning__planner__Threads *-- "1" orexis__task__hearing__Events : events
+orexis_planning__planner__Threads *-- "1" orexis__task__provided__Found : back
+orexis_planning__planner__Out *-- "1" orexis__activity__Activity : activity
+orexis_planning__planner__Out *-- "1" orexis_planning__planner__Pass : pass
 orexis_planning__planner__search__Searcher *-- "1" orexis__events__Watch : watch
 orexis_planning__planner__searching__Searching *-- "1" orexis__store__Store : store
 orexis_planning__planner__searching__Searching *-- "1" orexis_planning__find_scopes__Scopes : scopes
 orexis_planning__planner__searching__Searching *-- "*" orexis_planning__lay_ground__Landed : landed
 orexis_planning__planner__searching__Searching *-- "0..1" orexis__events__Laps : laps
 orexis_planning__planner__searching__Searching *-- "1" orexis_planning__planner__search__Searcher : searcher
+orexis_planning__planner__searching__Searching *-- "0..1" orexis_planning__prepare_ground__Crossed : crossed
 orexis_planning__planner__searching__Searched *-- "1" orexis__store__Store : store
 orexis_planning__planner__searching__Searched *-- "0..1" orexis__events__Laps : laps
+orexis_planning__planner__searching__Searched *-- "0..1" orexis_planning__prepare_ground__Crossed : crossed
 orexis_planning__violation__Compiled *-- "1" orexis__error__Error : Error
 orexis_planning__violation__Compiler *-- "1" orexis_planning__shapes__Shapes : g
 orexis_planning__events__HeadChecked ..|> orexis__events__Event

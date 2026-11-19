@@ -630,6 +630,19 @@ impl Wake {
 /// Work under way off a task's turn: the agent busy while it is held (`Events::working`).
 pub struct Working(Busy);
 
+impl Working {
+    /// THE WORK IS BACK, in the task that hears what it came to: in hand until that task next waits, as anything it is
+    /// sent, so the agent stays busy while the task does what it came to and tells what it said doing it. Dropped
+    /// there instead, the agent read idle between the work's end and the telling.
+    pub fn back(self) {
+        let busy = self.0.clone();
+        std::mem::forget(self);
+        if TURN.try_with(|turn| turn.borrow_mut().in_hand += 1).is_err() {
+            busy.down();
+        }
+    }
+}
+
 impl Drop for Working {
     fn drop(&mut self) {
         self.0.down();
@@ -753,6 +766,17 @@ impl Turn<'_> {
         }
         opened(&activity.node);
         activity
+    }
+
+    /// The task STEPS OUT of `activity`, which goes on: what it says from here is said within none of it, until it
+    /// steps back in (`step_in`). For an activity whose work is out on a thread while the task hears other events.
+    pub fn step_out(&mut self, activity: &Activity) {
+        closed(&activity.node);
+    }
+
+    /// The task STEPS BACK INTO `activity`, begun in an earlier turn: what it says from here is said within it.
+    pub fn step_in(&mut self, activity: &Activity) {
+        opened(&activity.node);
     }
 
     /// Say `event` happened, to whoever watches the agent.

@@ -189,6 +189,41 @@ pub struct Planner {
     held: bool,
     /// When a search the budget cut short is given its next budget, where one waits for it.
     continues: Option<DateTime>,
+    /// Where a scope's search is set going off planning's task; none where each is searched on it.
+    pub(crate) threads: Option<Threads>,
+    /// The planning whose searches are out, where one is.
+    out: Option<Out>,
+}
+
+/// WHAT A PASS READ AS IT BEGAN, which every scope's search is prepared from, and the wants searched so far.
+pub(crate) struct Pass {
+    at: DateTime,
+    scopes: Scopes,
+    scopes_all: Vec<String>,
+    read: Option<BTreeSet<String>>,
+    walks: Walks,
+    walking: BTreeSet<String>,
+    searched: BTreeSet<String>,
+}
+
+/// What a scope's search set going on a thread sends back: what it found, and the agent kept busy until planning's
+/// task has done with it in the turn that hears it, since a search ended and its finding unheard is work still under
+/// way, and the planning it finishes may send the next out in that turn.
+pub(crate) type Found = (Result<Searched, Error>, orexis::task::Working);
+
+/// WHERE A SCOPE'S SEARCH IS SET GOING OFF PLANNING'S TASK, on the multi-thread runtime a deployed agent runs: the
+/// events, which keep the agent busy while a search is out, and the way what it found comes back to the task.
+pub(crate) struct Threads {
+    pub(crate) events: orexis::task::Events,
+    pub(crate) back: tokio::sync::mpsc::UnboundedSender<Found>,
+}
+
+/// A PLANNING WHOSE SEARCHES ARE OUT: its activity, which goes on until the last is back, its pass, and how many
+/// scopes are still out.
+pub(crate) struct Out {
+    activity: orexis::activity::Activity,
+    pass: Pass,
+    waiting: usize,
 }
 
 /// How many worlds planning's search may weigh a pass, where whoever runs the agent sizes it: none reads the
@@ -736,19 +771,35 @@ impl Planner {
             fresh: false,
             held: false,
             continues: None,
+            threads: None,
+            out: None,
         })
     }
 
     /// One pass: an imaginarium per scope, every desire weighed in every ground, the wants derived, each searched,
     /// and the plans published. The graphs written in the beliefs — the plans published and the wants that keep a
-    /// step below.
+    /// step below. Each scope is prepared, searched and applied before the next is prepared.
     pub fn plan(&mut self, at: DateTime) -> Result<Vec<String>, Error> {
+        let (mut pass, mut written) = self.begin_pass(at)?;
+        for scope in pass.scopes_all.clone() {
+            let handed = self.prepare(&scope, &pass)?;
+            let found = handed.search()?;
+            written.extend(self.apply(found, &mut pass.searched)?);
+        }
+        self.end_pass(&pass.searched);
+        Ok(written)
+    }
+
+    /// WHAT A PASS READS AS IT BEGINS, before any scope is prepared: the scopes, what the texts read, where every
+    /// walk stands and the wants walking — and what it wrote, the refinements nobody needs withdrawn and the wants
+    /// that keep a step below.
+    fn begin_pass(&mut self, at: DateTime) -> Result<(Pass, Vec<String>), Error> {
         let beliefs = &self.beliefs.clone();
         let scopes = find_scopes(beliefs)?
             .ok_or_else(|| Error::Evaluation("the store holds no scope graph — scope_actions has not run".into()))?;
         let walking = self.walking()?;
         self.withdraw_orphaned_refinements(&walking)?;
-        let mut written = self.keep_below(at)?;
+        let written = self.keep_below(at)?;
         let walks = if self.holds_a_constraint()? {
             self.walks(at)?
         } else {
@@ -761,7 +812,6 @@ impl Planner {
         self.published.clear();
         //  HOW LONG EACH PART OF THE PASS TOOK, where anybody watches: real seconds, never the agent's.
         self.laps = self.watch.connected().then(Laps::default);
-        let mut searched = BTreeSet::new();
         let texts: BTreeSet<String> = graphs(beliefs, &[ACTION, DESIRE, WANT, RECORD, SHAPES, CONSTRAINT_GRAPH])?
             .into_iter()
             .collect();
@@ -773,17 +823,23 @@ impl Planner {
         if all.is_empty() {
             all.push(UNSCOPED.to_string());
         }
-        for scope in all {
-            let store = match self.imaginaria.remove(&scope) {
-                Some(store) => store,
-                None => Store::new()?,
-            };
-            //  THE IMAGINARIUM IS KEPT whatever its search came to: the store is one, however many hold it.
-            self.imaginaria.insert(scope.clone(), store.clone());
-            let handed = self.prepare(store, &scope, &scopes, read.as_ref(), &walks, &walking, at)?;
-            let found = handed.search()?;
-            written.extend(self.apply(found, &mut searched)?);
-        }
+        Ok((
+            Pass {
+                at,
+                scopes,
+                scopes_all: all,
+                read,
+                walks,
+                walking,
+                searched: BTreeSet::new(),
+            },
+            written,
+        ))
+    }
+
+    /// THE PASS ENDS once every scope's search is applied: what a role above planning asked is answered, a want no
+    /// longer searched takes its tally with it, and the pass's laps are said.
+    fn end_pass(&mut self, searched: &BTreeSet<String>) {
         self.asked.clear();
         //  A WANT NO LONGER SEARCHED — reached, withdrawn, or walked — takes its tally with it.
         self.searches.lock().unwrap().retain(|w, _| searched.contains(w));
@@ -794,7 +850,6 @@ impl Planner {
                 laps: laps.spent,
             });
         }
-        Ok(written)
     }
 
     /// Who searches, as a scope's search carries it.
@@ -805,6 +860,7 @@ impl Planner {
             budget: self.budget,
             watch: self.watch.clone(),
             searches: self.searches.clone(),
+            within: None,
         }
     }
 
@@ -813,19 +869,25 @@ impl Planner {
     /// search reads its imaginarium and nothing else. NOTHING ANOTHER SCOPE DID THIS PASS IS READ BY IT: no action of
     /// one writes a fact a want of another reads, so what is walking is as the pass began.
     #[allow(clippy::too_many_arguments)]
-    fn prepare(
-        &mut self,
-        store: Store,
-        scope: &str,
-        scopes: &Scopes,
-        read: Option<&BTreeSet<String>>,
-        walks: &Walks,
-        walking: &BTreeSet<String>,
-        at: DateTime,
-    ) -> Result<Searching, Error> {
+    fn prepare(&mut self, scope: &str, pass: &Pass) -> Result<Searching, Error> {
         const IN_SCOPE_Q: &str =
             r#"PREFIX planning: <http://example.org/orexis/planning#> SELECT ?a WHERE { ?a planning:inScope $scope }"#;
         let begun = Instant::now();
+        let Pass {
+            at,
+            scopes,
+            read,
+            walks,
+            walking,
+            ..
+        } = pass;
+        let (at, read) = (*at, read.as_ref());
+        //  THE IMAGINARIUM IS KEPT whatever its search comes to: the store is one, however many hold it.
+        let store = match self.imaginaria.get(scope) {
+            Some(store) => store.clone(),
+            None => Store::new()?,
+        };
+        self.imaginaria.insert(scope.to_string(), store.clone());
         let beliefs = &self.beliefs.clone();
         let unscoped = scope == UNSCOPED;
         let only: Option<BTreeSet<String>> = if unscoped {
@@ -853,7 +915,7 @@ impl Planner {
                 .map(|(m, _)| m.clone())
                 .collect()
         };
-        prepare_ground(beliefs, &store, (!unscoped).then_some(scope), Some(scopes))?;
+        let crossed = prepare_ground(beliefs, &store, (!unscoped).then_some(scope), Some(scopes))?;
         let within: Option<BTreeSet<String>> = read.map(|r| {
             let mut w = r.clone();
             w.extend(
@@ -904,6 +966,7 @@ impl Planner {
             laps: self.laps.as_ref().map(|_| Laps::since(begun)),
             at,
             searcher: self.searcher(),
+            crossed: self.threads.is_some().then_some(crossed),
         })
     }
 
@@ -926,6 +989,7 @@ impl Planner {
             beside,
             laps,
             at,
+            ..
         } = found;
         self.rerooted.push(rerooted);
         self.reached.extend(met);
