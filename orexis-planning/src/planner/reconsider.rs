@@ -12,9 +12,7 @@ use orexis::bind::{Value, bind};
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, Within, iri};
 
-use super::{
-    Flight, Flights, Planner, Reconsidered, Said, broken, graphs, later, predicted, quads_of, said, strs, zero,
-};
+use super::{Planner, Said, StepInFlight, Walk, Walks, broken, graphs, later, predicted, quads_of, said, strs, zero};
 use crate::admit::local_of;
 use crate::memo::Memo;
 use crate::ontology::{CONSTRAINT_GRAPH, GROUND_GRAPH, SATISFIED};
@@ -39,7 +37,7 @@ impl Planner {
     pub(super) fn asked_here(
         &mut self,
         store: &Store,
-        flights: &Flights,
+        walks: &Walks,
         only: Option<&BTreeSet<String>>,
     ) -> Result<BTreeSet<String>, Error> {
         if self.asked.is_empty() {
@@ -50,7 +48,7 @@ impl Planner {
             .asked
             .iter()
             .filter(|w| {
-                flights
+                walks
                     .get(*w)
                     .is_some_and(|f| !f.ending && only.is_none_or(|o| o.contains(&f.action)))
                     && derived.contains(*w)
@@ -79,7 +77,7 @@ impl Planner {
     }
 
     /// Where every standing intention stands, by the want it pursues.
-    pub(super) fn flights(&self, at: DateTime) -> Result<Flights, Error> {
+    pub(super) fn walks(&self, at: DateTime) -> Result<Walks, Error> {
         const STANDS_AT_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX planning: <http://example.org/orexis/planning#>
         SELECT ?intention ?want ?plan ?step ?action ?due ?taken ?lands ?ending WHERE {
@@ -90,7 +88,7 @@ impl Planner {
           GRAPH ?plan { ?step planning:fills ?action .
                         OPTIONAL { ?step execution:notBefore ?due } OPTIONAL { ?step execution:landsAt ?lands } } }
         ORDER BY ?intention"#;
-        let mut held: BTreeMap<String, Vec<(Flight, String)>> = BTreeMap::new();
+        let mut held: BTreeMap<String, Vec<Walk>> = BTreeMap::new();
         for r in self.beliefs.rows(STANDS_AT_Q, &[])? {
             let (Some(want), Some(plan), Some(head), Some(action)) =
                 (iri(&r, "want"), iri(&r, "plan"), iri(&r, "step"), iri(&r, "action"))
@@ -121,7 +119,7 @@ impl Planner {
                 }
                 _ => {}
             }
-            let flight = Flight {
+            let walk = Walk {
                 plan,
                 head,
                 action,
@@ -129,28 +127,27 @@ impl Planner {
                 ending: r.contains_key("ending"),
                 late,
                 landing: later(landing, at),
-                landings: Vec::new(),
-                in_flight_steps: Vec::new(),
+                steps_in_flight: Vec::new(),
             };
-            held.entry(want)
-                .or_default()
-                .push((flight, iri(&r, "intention").unwrap_or_default()));
+            held.entry(want).or_default().push(walk);
         }
-        let mut out = Flights::new();
-        for (want, flights) in held {
-            let mut flight = flights.iter().find(|(f, _)| !f.ending).unwrap_or(&flights[0]).0.clone();
-            flight.landings = flights
+        let mut out = Walks::new();
+        //  ONE WALK PER WANT, though an intention ending after its step in flight and the one replacing it both pursue
+        //  it: the standing one's plan and head, every step in flight of either, and the latest landing.
+        for (want, walks) in held {
+            let mut walk = walks.iter().find(|w| !w.ending).unwrap_or(&walks[0]).clone();
+            walk.steps_in_flight = walks
                 .iter()
-                .filter(|(f, _)| f.in_flight)
-                .map(|(f, _)| (f.action.clone(), f.landing))
+                .filter(|w| w.in_flight)
+                .map(|w| StepInFlight {
+                    action: w.action.clone(),
+                    lands: w.landing,
+                    plan: w.plan.clone(),
+                    step: w.head.clone(),
+                })
                 .collect();
-            flight.in_flight_steps = flights
-                .iter()
-                .filter(|(f, _)| f.in_flight)
-                .map(|(f, _)| (f.action.clone(), f.landing, f.plan.clone(), f.head.clone()))
-                .collect();
-            flight.landing = flights.iter().map(|(f, _)| f.landing).fold(at, later);
-            out.insert(want, flight);
+            walk.landing = walks.iter().map(|w| w.landing).fold(at, later);
+            out.insert(want, walk);
         }
         Ok(out)
     }
@@ -160,7 +157,7 @@ impl Planner {
     pub(super) fn impossible_ahead(
         &mut self,
         store: &Store,
-        flights: &Flights,
+        walks: &Walks,
         constraints: &[String],
         only: Option<&BTreeSet<String>>,
         memo: &mut Memo,
@@ -177,21 +174,21 @@ impl Planner {
                               OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }"#;
         let derived = derived(store)?;
         let mut out = BTreeSet::new();
-        for (want, flight) in flights {
-            if flight.ending || !derived.contains(want) || only.is_some_and(|o| !o.contains(&flight.action)) {
+        for (want, walk) in walks {
+            if walk.ending || !derived.contains(want) || only.is_some_and(|o| !o.contains(&walk.action)) {
                 continue;
             }
             let chain: Vec<String> = self
-                .chain(&self.beliefs, &flight.plan)?
+                .chain(&self.beliefs, &walk.plan)?
                 .into_iter()
                 .map(|(s, _)| s)
                 .collect();
-            let from = chain.iter().position(|s| *s == flight.head).unwrap_or(chain.len());
+            let from = chain.iter().position(|s| *s == walk.head).unwrap_or(chain.len());
             let untaken = &chain[from..];
-            if untaken.is_empty() || (untaken.len() == 1 && flight.in_flight) {
+            if untaken.is_empty() || (untaken.len() == 1 && walk.in_flight) {
                 continue;
             }
-            let predicts = predicted(&self.beliefs, flight.plan.as_str())?;
+            let predicts = predicted(&self.beliefs, walk.plan.as_str())?;
             let mut foreseen: Vec<String> = Vec::new();
             let found = (|| -> Result<Option<bool>, Error> {
                 let mut changes: Vec<(Vec<Quad>, Vec<Quad>)> = Vec::new();
@@ -200,11 +197,11 @@ impl Planner {
                     let row = predicts.get(step);
                     let lands = match row.and_then(|p| p.lands.as_ref()) {
                         Some(l) => lexical(l)?
-                            .checked_add_day_time_duration(flight.late)
-                            .unwrap_or(flight.landing),
-                        None => flight.landing,
+                            .checked_add_day_time_duration(walk.late)
+                            .unwrap_or(walk.landing),
+                        None => walk.landing,
                     };
-                    let lands = later(lands, flight.landing);
+                    let lands = later(lands, walk.landing);
                     let Some(ground) = store.graphs_of(&[GROUND_GRAPH], &Within::at(lands))?.into_iter().next() else {
                         return Ok(None);
                     };
@@ -291,7 +288,7 @@ impl Planner {
         &mut self,
         store: &Store,
         want: &str,
-        flights: &Flights,
+        walks: &Walks,
         kept: &mut BTreeMap<String, Vec<String>>,
     ) -> Result<(), Error> {
         const REOPENS_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
@@ -318,10 +315,10 @@ impl Planner {
         }
         let mut queues: BTreeMap<String, Vec<Said>> = BTreeMap::new();
         for walked in &reopened {
-            let Some(flight) = flights.get(walked) else { continue };
-            let steps = self.chain(&self.beliefs, &flight.plan)?;
-            let at = steps.iter().position(|(s, _)| *s == flight.head).unwrap_or(steps.len());
-            let from = (at + usize::from(flight.in_flight)).min(steps.len());
+            let Some(walk) = walks.get(walked) else { continue };
+            let steps = self.chain(&self.beliefs, &walk.plan)?;
+            let at = steps.iter().position(|(s, _)| *s == walk.head).unwrap_or(steps.len());
+            let from = (at + usize::from(walk.in_flight)).min(steps.len());
             queues.insert(walked.clone(), steps[from..].iter().map(|(_, s)| s.clone()).collect());
         }
         let total: usize = queues.values().map(Vec::len).sum();
@@ -358,22 +355,17 @@ impl Planner {
             return Ok(());
         }
         for walked in queues.keys() {
-            let flight = &flights[walked];
+            let walk = &walks[walked];
             log::info!(
                 "{}: {} replaces the untaken steps of {} — it ends after {}",
                 self.id,
                 local_of(want),
                 local_of(walked),
-                local_of(&flight.head)
+                local_of(&walk.head)
             );
-            self.superseded.push(Reconsidered {
-                head: flight.head.clone(),
-                walked: walked.clone(),
-                by: want.to_string(),
-            });
             if self.watch.connected() {
                 self.watch.emit(&crate::events::PlanSuperseded {
-                    head: flight.head.clone(),
+                    head: walk.head.clone(),
                     by: want.to_string(),
                     at: self.watch.at(),
                 });

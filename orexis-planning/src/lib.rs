@@ -43,6 +43,7 @@ mod prepare_ground;
 mod publish_plan;
 mod refine;
 mod reroot;
+mod scope;
 mod scope_actions;
 mod shapes;
 mod take;

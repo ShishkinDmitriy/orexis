@@ -15,9 +15,10 @@ use orexis::ontology::{ACTION, GRAPH_PREFIX};
 use orexis::store::{Store, Within, iri, value};
 
 use crate::Memo;
-use crate::memo::{Declared, Filling};
+use crate::memo::Declared;
 use crate::next_ground::next_ground;
 use crate::ontology::{CANDIDATE, FILLS, FROM, MINTED, WAIT};
+use crate::scope::Scope;
 use crate::terms::RDF_TYPE;
 use crate::world_at::{Asking, catalogue, named, world_at};
 
@@ -26,12 +27,9 @@ pub fn possible() -> String {
     format!("{GRAPH_PREFIX}possible/")
 }
 
-/// Which actions a scope asks, and which values are another scope's.
-#[derive(Clone, Debug, Default)]
-pub struct Scope<'a> {
-    pub only: Option<&'a HashSet<String>>,
-    pub elsewhere: Option<&'a HashSet<String>>,
-}
+/// One filling of an action as admitted: each parameter, the value's text and the term itself, written as the
+/// candidate's edges and kept no longer.
+type Filling = Vec<(String, String, Term)>;
 
 /// Write every candidate `world` admits for the self.
 pub fn admit(store: &Store, world: &str, scope: &Scope<'_>, memo: &mut Memo) -> Result<(), Error> {
@@ -65,7 +63,7 @@ pub fn admit(store: &Store, world: &str, scope: &Scope<'_>, memo: &mut Memo) -> 
         .into_iter()
         .map(|((_, action), filling)| (action, filling))
         .collect();
-    let in_scope = |action: &str| scope.only.is_none_or(|only| only.contains(action));
+    let in_scope = |action: &str| scope.actions.is_none_or(|actions| actions.contains(action));
     let mut fillings: Vec<(String, Filling)> = Vec::new();
     for declared in actions(store, memo)? {
         if !in_scope(&declared.action) {
@@ -360,10 +358,10 @@ mod tests {
     #[test]
     fn a_scope_that_does_not_name_the_wait_admits_none() {
         let store = grounds("sha256:b");
-        let only: HashSet<String> = HashSet::from(["http://example.org/test#fill".to_string()]);
+        let actions: BTreeSet<String> = BTreeSet::from(["http://example.org/test#fill".to_string()]);
         let scope = Scope {
-            only: Some(&only),
-            elsewhere: None,
+            actions: Some(&actions),
+            ..Scope::default()
         };
         admit(&store, "http://example.org/test#now", &scope, &mut Memo::default()).unwrap();
         assert!(candidates(&store).is_empty());

@@ -7,7 +7,6 @@
 
 use std::collections::{HashMap, HashSet};
 
-use oxigraph::model::Term;
 use oxsdatatypes::DateTime;
 
 /// One action as the store declares it: its precondition and the parameters it takes, sorted.
@@ -18,13 +17,10 @@ pub struct Declared {
     pub takes: Vec<String>,
 }
 
-/// What a filling is: the parameter, the value's text, and the term itself.
-pub type Filling = Vec<(String, String, Term)>;
-
 /// What a candidate's row says: the world it is taken in and when that world is, what it fills, its mint number,
 /// what reaching the world spent, and every parameter it is filled with — the parameter and the value's text.
 #[derive(Clone, Debug)]
-pub struct Binding {
+pub struct Candidate {
     pub from: String,
     pub start: DateTime,
     pub end: DateTime,
@@ -54,7 +50,7 @@ pub struct Memo {
     pub minted: Option<u64>,
     pub grounds: Option<Vec<(DateTime, String)>>,
     pub next_ground: HashMap<String, Option<DateTime>>,
-    pub bindings: HashMap<String, Binding>,
+    pub candidates: HashMap<String, Candidate>,
     pub carried: HashMap<String, Option<Carried>>,
     pub acts_for: Option<Option<String>>,
     pub ground_set: Option<HashSet<String>>,

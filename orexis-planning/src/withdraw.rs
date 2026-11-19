@@ -142,7 +142,7 @@ mod tests {
     //! Withdrawing what the derivation no longer implies, held to what `test_withdraw.py` holds the Python act to.
 
     use crate::find_wants::tests::{at, derived, graph_of, owed, store};
-    use crate::find_wants::{Finding, find_wants};
+    use crate::find_wants::{Criteria, find_wants};
 
     use super::*;
 
@@ -151,7 +151,7 @@ mod tests {
     }
 
     fn found(store: &Store) -> Vec<String> {
-        find_wants(store, at(), &Finding::default()).unwrap()
+        find_wants(store, at(), &Criteria::default()).unwrap()
     }
 
     #[test]
@@ -203,9 +203,9 @@ mod tests {
             find_wants(
                 &store,
                 at(),
-                &Finding {
+                &Criteria {
                     uri: Some("urn:test:want"),
-                    ..Finding::default()
+                    ..Criteria::default()
                 }
             )
             .unwrap()

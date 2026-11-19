@@ -36,7 +36,7 @@ use orexis_belief::transition::{Rule, run};
 use crate::Memo;
 use crate::admit::{local_of, possible};
 use crate::fork::fork;
-use crate::memo::{Binding, Carried};
+use crate::memo::{Candidate, Carried};
 use crate::next_ground::next_ground;
 use crate::ontology::{ADDS_GRAPH, BY, FILLS, FROM, GROUND_GRAPH, MINTED, POSSIBLE_GRAPH, RETRACTS_GRAPH, SPENT, WAIT};
 use crate::terms::{RDF_TYPE, TEMPORAL};
@@ -59,24 +59,24 @@ pub fn take(
     within: Option<&std::collections::BTreeSet<String>>,
     memo: &mut Memo,
 ) -> Result<bool, Error> {
-    let binding = binding(store, cand, memo)?;
-    let child = format!("{}{}", possible(), binding.minted);
+    let candidate = candidate(store, cand, memo)?;
+    let child = format!("{}{}", possible(), candidate.minted);
     let cost = figure(store, cand, memo, Text::Costs, "cost")?.unwrap_or(0.0);
-    let waits = binding.action == WAIT;
+    let waits = candidate.action == WAIT;
     let (start, end) = if waits {
-        match next_ground(store, &binding.from, memo)? {
+        match next_ground(store, &candidate.from, memo)? {
             None => return Ok(false),
-            Some(at) => (at, if binding.end > at { binding.end } else { at }),
+            Some(at) => (at, if candidate.end > at { candidate.end } else { at }),
         }
     } else {
         let (least, most) = landing(store, cand, memo)?;
-        (shifted(binding.start, least)?, shifted(binding.end, most)?)
+        (shifted(candidate.start, least)?, shifted(candidate.end, most)?)
     };
     let lands_in = ground_at(store, start, memo)?;
-    let stands_in = if grounds(store, memo)?.contains(&binding.from) {
-        Some(binding.from.clone())
+    let stands_in = if grounds(store, memo)?.contains(&candidate.from) {
+        Some(candidate.from.clone())
     } else {
-        ground_at(store, binding.start, memo)?
+        ground_at(store, candidate.start, memo)?
     };
     let made = if waits {
         let ground = lands_in
@@ -112,7 +112,7 @@ pub fn take(
     for kind in &kinds {
         quads.push(row(RDF_TYPE, named(kind)?.into())?);
     }
-    let spent = repr(round6(binding.spent + cost));
+    let spent = repr(round6(candidate.spent + cost));
     let spent_type = if spent.contains('e') { xsd::DOUBLE } else { xsd::DECIMAL };
     let period = BlankNode::default();
     quads.extend([
@@ -124,7 +124,7 @@ pub fn take(
         row(SPENT, Literal::new_typed_literal(spent, spent_type).into())?,
         row(
             MINTED,
-            Literal::new_typed_literal(binding.minted.to_string(), xsd::INTEGER).into(),
+            Literal::new_typed_literal(candidate.minted.to_string(), xsd::INTEGER).into(),
         )?,
         row(BY, named(cand)?.into())?,
         row(TEMPORAL, period.clone().into())?,
@@ -147,17 +147,17 @@ fn apply(
     graphs: Option<Vec<String>>,
     memo: &mut Memo,
 ) -> Result<bool, Error> {
-    let binding = binding(store, cand, memo)?;
-    let Some(carried) = carried(store, &binding.action, memo)? else {
+    let candidate = candidate(store, cand, memo)?;
+    let Some(carried) = carried(store, &candidate.action, memo)? else {
         return Ok(false);
     };
     if carried.rules.is_empty() {
         return Ok(false);
     }
-    let source = base.unwrap_or(&binding.from).to_string();
+    let source = base.unwrap_or(&candidate.from).to_string();
     let leaves = match graphs {
         Some(graphs) => graphs,
-        None => world_at(store, Some(&binding.from), &Asking::default(), memo)?,
+        None => world_at(store, Some(&candidate.from), &Asking::default(), memo)?,
     };
     fork(store, &source, into, &[], &[])?;
     let reading: Vec<String> = leaves
@@ -165,7 +165,7 @@ fn apply(
         .map(|g| if g == source { into.to_string() } else { g })
         .collect();
     let reading: Vec<&str> = reading.iter().map(String::as_str).collect();
-    run(store, &carried.rules, into, &reading, &refs(&tokens(&binding)));
+    run(store, &carried.rules, into, &reading, &refs(&tokens(&candidate)));
     if same(store, &source, into)? {
         store.clear_graph(into)?;
         return Ok(false);
@@ -193,7 +193,7 @@ fn replayed(
     const PATH_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?c WHERE { GRAPH $cat { $world (planning:by/planning:from)* ?w . ?w planning:by ?c ; planning:minted ?m } }
     ORDER BY ?m";
-    let binding = binding(store, cand, memo)?;
+    let candidate = candidate(store, cand, memo)?;
     let base = into.map(String::from).unwrap_or_else(|| format!("{child}.base"));
     store.clear_graph(&base)?;
     fork(store, ground, &base, &[], &[])?;
@@ -205,11 +205,11 @@ fn replayed(
     let cat = catalogue(store, memo)?;
     let text = bind(
         PATH_Q,
-        &[("world", Value::iri(binding.from.clone())), ("cat", Value::iri(cat))],
+        &[("world", Value::iri(candidate.from.clone())), ("cat", Value::iri(cat))],
     )?;
     let path: Vec<String> = store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "c")).collect();
     for step in &path {
-        let taken = self::binding(store, step, memo)?;
+        let taken = self::candidate(store, step, memo)?;
         if let Some(carried) = carried(store, &taken.action, memo)? {
             run(store, &carried.rules, &base, &graphs, &refs(&tokens(&taken)));
         }
@@ -253,16 +253,16 @@ fn changed(store: &Store, world: &str, base: &str, memo: &mut Memo) -> Result<()
     store.add(rows)
 }
 
-/// The `$tokens` a rule text takes, off a candidate's binding: the world it is taken in, whom the self acts for,
+/// The `$tokens` a rule text takes, off a candidate's candidate: the world it is taken in, whom the self acts for,
 /// the world's start, and one per parameter under its local part — each value's text handed as the Python
 /// kernel's binder takes text: an IRI wrapped, anything else spliced as written.
-fn tokens(binding: &Binding) -> Vec<(String, Value)> {
+fn tokens(candidate: &Candidate) -> Vec<(String, Value)> {
     let mut out: Vec<(String, Value)> = vec![
-        ("state".into(), Value::raw(format!("<{}>", binding.from))),
-        ("subject".into(), as_text(&binding.subject)),
-        ("now".into(), Value::instant(binding.start)),
+        ("state".into(), Value::raw(format!("<{}>", candidate.from))),
+        ("subject".into(), as_text(&candidate.subject)),
+        ("now".into(), Value::instant(candidate.start)),
     ];
-    for (p, v) in &binding.filled {
+    for (p, v) in &candidate.filled {
         let local = local_of(p);
         out.retain(|(name, _)| *name != local);
         out.push((local, as_text(v)));
@@ -317,8 +317,8 @@ fn closed(store: &Store, class: &str, memo: &mut Memo) -> Result<Vec<String>, Er
 }
 
 /// What a candidate's row says, read once a pass off the catalogue's index.
-fn binding(store: &Store, cand: &str, memo: &mut Memo) -> Result<Binding, Error> {
-    if let Some(known) = memo.bindings.get(cand) {
+fn candidate(store: &Store, cand: &str, memo: &mut Memo) -> Result<Candidate, Error> {
+    if let Some(known) = memo.candidates.get(cand) {
         return Ok(known.clone());
     }
     let cat = catalogue(store, memo)?;
@@ -369,7 +369,7 @@ fn binding(store: &Store, cand: &str, memo: &mut Memo) -> Result<Binding, Error>
             filled.push((quad.predicate.as_str().to_string(), term_text(&quad.object)));
         }
     }
-    let binding = Binding {
+    let candidate = Candidate {
         from: from.into_string(),
         start,
         end: end.unwrap_or(start),
@@ -382,8 +382,8 @@ fn binding(store: &Store, cand: &str, memo: &mut Memo) -> Result<Binding, Error>
         filled,
         subject: acts_for(store, memo)?.unwrap_or_else(|| "urn:nobody".to_string()),
     };
-    memo.bindings.insert(cand.to_string(), binding.clone());
-    Ok(binding)
+    memo.candidates.insert(cand.to_string(), candidate.clone());
+    Ok(candidate)
 }
 
 /// Whom the self acts for, once a pass.
@@ -499,8 +499,8 @@ fn number(row: &orexis::store::Row, column: &str) -> Option<f64> {
 /// The first row of one of the action's selects, asked over the world the candidate is taken in; None where the
 /// action states no such text, it yields no row, or it will not run — said in the log.
 fn answer(store: &Store, cand: &str, memo: &mut Memo, text: Text) -> Result<Option<orexis::store::Row>, Error> {
-    let binding = binding(store, cand, memo)?;
-    let Some(carried) = carried(store, &binding.action, memo)? else {
+    let candidate = candidate(store, cand, memo)?;
+    let Some(carried) = carried(store, &candidate.action, memo)? else {
         return Ok(None);
     };
     let (name, Some(select)) = (match text {
@@ -509,9 +509,9 @@ fn answer(store: &Store, cand: &str, memo: &mut Memo, text: Text) -> Result<Opti
     }) else {
         return Ok(None);
     };
-    let graphs = world_at(store, Some(&binding.from), &Asking::default(), memo)?;
+    let graphs = world_at(store, Some(&candidate.from), &Asking::default(), memo)?;
     let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
-    let asked = bind(&select, &refs(&tokens(&binding))).and_then(|bound| store.rows(&bound, &graphs));
+    let asked = bind(&select, &refs(&tokens(&candidate))).and_then(|bound| store.rows(&bound, &graphs));
     match asked {
         Ok(rows) => Ok(rows.into_iter().next()),
         Err(e) => {
@@ -552,7 +552,8 @@ mod tests {
     use orexis::snapshots;
 
     use super::*;
-    use crate::admit::{Scope, admit};
+    use crate::admit::admit;
+    use crate::scope::Scope;
 
     const EDGES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
 PREFIX planning: <http://example.org/orexis/planning#>

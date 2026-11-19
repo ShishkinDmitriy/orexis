@@ -75,27 +75,12 @@ static PREFIX_LINE: LazyLock<Regex> =
 static THIS: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\?this\b").expect("a valid pattern"));
 static VALUE_PROJECTED: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[?$]value\b").expect("a valid pattern"));
 
-/// A SHACL feature this compiler does not cover, named — never a want silently read as met.
-#[derive(Debug)]
-pub struct Unsupported(pub String);
-
-impl std::fmt::Display for Unsupported {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.0)
-    }
-}
-
 /// What a compile can end in: a refusal of the shape, or an error that is no refusal — a token nobody bound.
 #[derive(Debug)]
 pub enum Compiled {
-    Unsupported(Unsupported),
+    /// A SHACL feature this compiler does not cover, named — never a want silently read as met.
+    Unsupported(String),
     Error(Error),
-}
-
-impl From<Unsupported> for Compiled {
-    fn from(u: Unsupported) -> Self {
-        Compiled::Unsupported(u)
-    }
 }
 
 impl From<Error> for Compiled {
@@ -110,7 +95,7 @@ type Result<T> = std::result::Result<T, Compiled>;
 type Alternative = (String, Option<String>, Option<Term>);
 
 fn unsupported<T>(message: impl Into<String>) -> Result<T> {
-    Err(Compiled::Unsupported(Unsupported(message.into())))
+    Err(Compiled::Unsupported(message.into()))
 }
 
 /// The select whose rows are `subject`'s violations, under whichever polarity it carries: `planning:metWhen` a
@@ -677,7 +662,7 @@ fn count(t: &Term) -> Result<i64> {
     lexical(t)
         .trim()
         .parse()
-        .map_err(|_| Compiled::Unsupported(Unsupported(format!("a count that is no integer: {t}"))))
+        .map_err(|_| Compiled::Unsupported(format!("a count that is no integer: {t}")))
 }
 
 fn is_true(t: &Term) -> bool {
@@ -752,7 +737,7 @@ mod tests {
 
     fn refusal(found: Result<Option<String>>) -> String {
         match found {
-            Err(Compiled::Unsupported(u)) => u.0,
+            Err(Compiled::Unsupported(u)) => u,
             other => panic!("refused nothing: {other:?}"),
         }
     }

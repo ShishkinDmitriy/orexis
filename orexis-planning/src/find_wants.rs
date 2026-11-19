@@ -19,7 +19,7 @@ pub const PAGE: usize = 100;
 /// What a read narrows by, each said at the call site: one want by name, those derived from one desire, only the
 /// family the derivation mints into, one holder's in a store holding a whole world — and the page.
 #[derive(Clone, Debug)]
-pub struct Finding<'a> {
+pub struct Criteria<'a> {
     pub uri: Option<&'a str>,
     pub desire: Option<&'a str>,
     pub derived: bool,
@@ -28,9 +28,9 @@ pub struct Finding<'a> {
     pub offset: usize,
 }
 
-impl Default for Finding<'_> {
+impl Default for Criteria<'_> {
     fn default() -> Self {
-        Finding {
+        Criteria {
             uri: None,
             desire: None,
             derived: false,
@@ -41,24 +41,24 @@ impl Default for Finding<'_> {
     }
 }
 
-/// The wants `store` holds that stand at `at`, narrowed by `finding`, ordered by name. **A FULL PAGE IS SAID OUT
+/// The wants `store` holds that stand at `at`, narrowed by `criteria`, ordered by name. **A FULL PAGE IS SAID OUT
 /// LOUD**: truncating in silence is the empty-result trap wearing a cap.
-pub fn find_wants(store: &Store, at: DateTime, finding: &Finding<'_>) -> Result<Vec<String>, Error> {
+pub fn find_wants(store: &Store, at: DateTime, criteria: &Criteria<'_>) -> Result<Vec<String>, Error> {
     let mut patterns = "?w a planning:Want".to_string();
-    if let Some(desire) = finding.desire {
+    if let Some(desire) = criteria.desire {
         patterns.push_str(&format!(" ; prov:wasDerivedFrom <{desire}>"));
     }
-    let r#where = match finding.uri {
+    let r#where = match criteria.uri {
         Some(uri) => format!("BIND(<{uri}> AS ?w) {patterns} ."),
         None => format!("{patterns} ."),
     };
     let now = isoformat(at);
-    let came = if finding.derived {
+    let came = if criteria.derived {
         format!("    ?g orexis:arrivedBy <{DERIVED}> .\n")
     } else {
         String::new()
     };
-    let mine = match finding.holder {
+    let mine = match criteria.holder {
         Some(holder) => {
             format!("    OPTIONAL {{ ?g orexis:ownedBy ?owner }}\n    FILTER(!BOUND(?owner) || ?owner = <{holder}>)")
         }
@@ -82,16 +82,16 @@ SELECT DISTINCT ?w WHERE {{
   FILTER(!BOUND(?start) || ?start <= \"{now}\"^^xsd:dateTime)
   FILTER(!BOUND(?end) || ?end > \"{now}\"^^xsd:dateTime)
 }} ORDER BY ?w LIMIT {} OFFSET {}",
-        finding.limit, finding.offset,
+        criteria.limit, criteria.offset,
         r#where = r#where,
     );
     let found: Vec<String> = store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "w")).collect();
     //  A PAGE OF ONE IS ALWAYS FULL, and one standing is the ordinary answer, not a leak.
-    if finding.limit > 1 && found.len() == finding.limit {
+    if criteria.limit > 1 && found.len() == criteria.limit {
         log::warn!(
             "wants: a full page of {} at offset {} — page or there is a leak",
-            finding.limit,
-            finding.offset
+            criteria.limit,
+            criteria.offset
         );
     }
     Ok(found)
@@ -195,19 +195,19 @@ WHERE {{ GRAPH <urn:test:catalogue> {{ }}
             .unwrap();
     }
 
-    fn find(store: &Store, finding: Finding<'_>) -> Vec<String> {
-        find_wants(store, at(), &finding).unwrap()
+    fn find(store: &Store, criteria: Criteria<'_>) -> Vec<String> {
+        find_wants(store, at(), &criteria).unwrap()
     }
 
     #[test]
     fn a_saved_want_is_found_and_a_forgotten_one_is_not() {
         let store = store();
-        assert!(find(&store, Finding::default()).is_empty(), "nothing has been derived");
+        assert!(find(&store, Criteria::default()).is_empty(), "nothing has been derived");
         derived(&store, "urn:test:want", at(), None);
-        assert_eq!(find(&store, Finding::default()), ["urn:test:want"]);
+        assert_eq!(find(&store, Criteria::default()), ["urn:test:want"]);
         store.forget_graph(&graph_of(at(), None), None).unwrap();
         assert!(
-            find(&store, Finding::default()).is_empty(),
+            find(&store, Criteria::default()).is_empty(),
             "and its graph went with it"
         );
     }
@@ -216,18 +216,18 @@ WHERE {{ GRAPH <urn:test:catalogue> {{ }}
     fn a_want_is_found_by_the_desire_it_was_derived_from() {
         let store = store();
         derived(&store, "urn:test:want", at(), None);
-        let by = |desire: &'static str, derived: bool| Finding {
+        let by = |desire: &'static str, derived: bool| Criteria {
             desire: Some(desire),
             derived,
-            ..Finding::default()
+            ..Criteria::default()
         };
         assert_eq!(find(&store, by(DESIRE, false)), ["urn:test:want"]);
         assert_eq!(find(&store, by(DESIRE, true)), ["urn:test:want"]);
         assert!(find(&store, by("urn:test:nobody", false)).is_empty());
         assert!(find(&store, by("urn:test:nobody", true)).is_empty());
-        let named = |uri: &'static str| Finding {
+        let named = |uri: &'static str| Criteria {
             uri: Some(uri),
-            ..Finding::default()
+            ..Criteria::default()
         };
         assert_eq!(find(&store, named("urn:test:want")), ["urn:test:want"]);
         assert!(find(&store, named("urn:test:missing")).is_empty());
@@ -243,16 +243,16 @@ WHERE {{ GRAPH <urn:test:catalogue> {{ }}
             Some("2020-01-01T00:10:00+00:00".parse().unwrap()),
         );
         assert!(
-            find(&store, Finding::default()).is_empty(),
+            find(&store, Criteria::default()).is_empty(),
             "its window closed years ago"
         );
         assert!(
             find(
                 &store,
-                Finding {
+                Criteria {
                     desire: Some(DESIRE),
                     derived: true,
-                    ..Finding::default()
+                    ..Criteria::default()
                 }
             )
             .is_empty()
@@ -264,14 +264,14 @@ WHERE {{ GRAPH <urn:test:catalogue> {{ }}
         let store = store();
         derived(&store, "urn:test:derived", at(), None);
         owed(&store, "urn:test:owed");
-        assert_eq!(find(&store, Finding::default()), ["urn:test:derived", "urn:test:owed"]);
+        assert_eq!(find(&store, Criteria::default()), ["urn:test:derived", "urn:test:owed"]);
         assert_eq!(
             find(
                 &store,
-                Finding {
+                Criteria {
                     desire: Some(DESIRE),
                     derived: true,
-                    ..Finding::default()
+                    ..Criteria::default()
                 }
             ),
             ["urn:test:derived"],
@@ -280,9 +280,9 @@ WHERE {{ GRAPH <urn:test:catalogue> {{ }}
         assert_eq!(
             find(
                 &store,
-                Finding {
+                Criteria {
                     desire: Some(DESIRE),
-                    ..Finding::default()
+                    ..Criteria::default()
                 }
             ),
             ["urn:test:derived", "urn:test:owed"],
@@ -296,10 +296,10 @@ WHERE {{ GRAPH <urn:test:catalogue> {{ }}
         for n in 0..5 {
             derived(&store, &format!("urn:test:want{n}"), at(), None);
         }
-        let page = |limit, offset| Finding {
+        let page = |limit, offset| Criteria {
             limit,
             offset,
-            ..Finding::default()
+            ..Criteria::default()
         };
         assert_eq!(find(&store, page(2, 0)).len(), 2, "capped");
         let (first, second) = (find(&store, page(3, 0)), find(&store, page(3, 3)));
@@ -317,9 +317,9 @@ WHERE {{ GRAPH <urn:test:catalogue> {{ }}
         let store = store();
         derived(&store, "urn:test:mine", at(), None);
         owed(&store, "urn:test:anyones");
-        let of = |holder: &'static str| Finding {
+        let of = |holder: &'static str| Criteria {
             holder: Some(holder),
-            ..Finding::default()
+            ..Criteria::default()
         };
         assert_eq!(find(&store, of(HOLDER)), ["urn:test:anyones", "urn:test:mine"]);
         assert_eq!(find(&store, of("urn:test:someone_else")), ["urn:test:anyones"]);

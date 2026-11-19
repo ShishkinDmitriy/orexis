@@ -32,6 +32,7 @@ use orexis_belief::transition::{Rule, run, transitions};
 
 use crate::footprint::{self, Pattern, read_by_transitions};
 use crate::ontology::{CHANGEABLE_GRAPH, GROUND_GRAPH, POSSIBLE_GRAPH};
+use crate::scope::Scope;
 use crate::world_at::named;
 
 const PROV_DERIVED: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
@@ -45,15 +46,13 @@ pub struct Landed {
     pub adds: Vec<Triple>,
 }
 
-/// What the grounds are laid with, each the Planner's to say: what a world is identified by (`within`, `None`
-/// hashing whole and laying every belief ahead), the instants steps in flight land at and what each changes there,
-/// and the scope's actions (`None` meaning every action the store holds).
+/// What the grounds are laid with, each the Planner's to say: the scope they are laid for (its actions and what a
+/// world in it is hashed within), and the instants steps in flight land at and what each changes there.
 #[derive(Clone, Debug, Default)]
 pub struct Laying<'a> {
-    pub within: Option<&'a BTreeSet<String>>,
+    pub scope: Scope<'a>,
     pub landings: &'a [DateTime],
     pub landed: &'a [Landed],
-    pub actions: Option<&'a BTreeSet<String>>,
     /// Whether everything a world reads beside its ground stands as it did when the grounds were last laid: the
     /// caller's to say, since a weighing reads the ground and what is beside it, and the ground's hash says only
     /// its own. False where nothing says, and then a ground laid again keeps nothing.
@@ -76,11 +75,11 @@ pub fn lay_ground_foreseeing(
     mut foresight: Option<&mut dyn Foresight>,
 ) -> Result<Vec<String>, Error> {
     //  WHAT A BELIEF AHEAD IS LAID FOR: some text of the pass reads it, or some transition does.
-    let gate = match laying.within {
+    let gate = match laying.scope.within {
         None => None,
         Some(within) => read_by_transitions(store)?.map(|read| within | &read),
     };
-    split(store, laying.actions, now, gate.as_ref())?;
+    split(store, laying.scope.actions, now, gate.as_ref())?;
     let ahead = foreseen(store, now)?;
     let boundaries = ahead.len();
     let (here, stood) = present(store, now)?;
@@ -101,12 +100,12 @@ pub fn lay_ground_foreseeing(
     } else {
         whole(store, store.graphs_of(&[BELIEF], &Within::common())?)?
     };
-    let marks = marked(store, &here, laying.within)?;
+    let marks = marked(store, &here, laying.scope.within)?;
     settled(store, &here, stood, laying.as_stood)?;
     let mut ground = Ground {
         store,
         as_stood: laying.as_stood,
-        within: laying.within,
+        within: laying.scope.within,
         landed: laying.landed,
         marks,
         made: vec![here.clone()],
@@ -949,7 +948,10 @@ mod tests {
             &store,
             snapshots::now(),
             &Laying {
-                within: Some(&level),
+                scope: Scope {
+                    within: Some(&level),
+                    ..Scope::default()
+                },
                 ..Laying::default()
             },
         )
@@ -966,7 +968,10 @@ mod tests {
             &store,
             snapshots::now(),
             &Laying {
-                within: Some(&both),
+                scope: Scope {
+                    within: Some(&both),
+                    ..Scope::default()
+                },
                 ..Laying::default()
             },
         )
@@ -985,7 +990,10 @@ mod tests {
             &store,
             snapshots::now(),
             &Laying {
-                within: Some(&level),
+                scope: Scope {
+                    within: Some(&level),
+                    ..Scope::default()
+                },
                 ..Laying::default()
             },
         )
