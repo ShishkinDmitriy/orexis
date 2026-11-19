@@ -15,7 +15,7 @@ use oxigraph::model::{Literal, NamedNode, Term};
 use tokio::sync::{Notify, watch};
 
 use crate::Error;
-use crate::activity::{Ended, Lasting, Started};
+use crate::activity::{Activity, Ended, Lasting, Started};
 use crate::bind::{Value, bind};
 use crate::boot::brought_uri;
 use crate::clock::Clock;
@@ -110,11 +110,8 @@ impl Run {
 /// (`activity::Lasting`). It is never what a turn's events are said within: a running is open for the agent's life,
 /// and what its task says outside a turn's activity is no part of it.
 pub(super) struct Span {
-    pub(super) node: NamedNode,
-    pub(super) kind: &'static str,
-    pub(super) part_of: Option<NamedNode>,
-    pub(super) about: Vec<(&'static str, Term)>,
-    pub(super) real: std::time::Instant,
+    pub(super) activity: Activity,
+    pub(super) lasting: Lasting,
 }
 
 impl Span {
@@ -126,38 +123,31 @@ impl Span {
         about: Vec<(&'static str, Term)>,
         at: DateTime,
     ) -> Span {
+        let lasting = Lasting { part_of, about };
         events.say(&Started {
             activity: node.clone(),
             kind,
             triggers: Vec::new(),
             at,
-            lasting: Some(Lasting {
-                part_of: part_of.clone(),
-                about: about.clone(),
-            }),
+            lasting: Some(lasting.clone()),
         });
         Span {
-            node,
-            kind,
-            part_of,
-            about,
-            real: std::time::Instant::now(),
+            activity: Activity::named(node, kind),
+            lasting,
         }
     }
 
     /// End it at `at`, saying `more` of it besides what it began saying.
     pub(super) fn end(self, events: &Events, at: DateTime, more: Vec<(&'static str, Term)>) {
-        let mut about = self.about;
-        about.extend(more);
+        let duration_s = self.activity.took();
+        let mut lasting = self.lasting;
+        lasting.about.extend(more);
         events.say(&Ended {
-            activity: self.node,
-            kind: self.kind,
+            activity: self.activity.node,
+            kind: self.activity.kind,
             at,
-            duration_s: round6(self.real.elapsed().as_secs_f64()),
-            lasting: Some(Lasting {
-                part_of: self.part_of,
-                about,
-            }),
+            duration_s,
+            lasting: Some(lasting),
         });
     }
 }
@@ -465,7 +455,7 @@ impl Handed {
         }
         let about = vec![(PACKAGE, Literal::new_simple_literal(&life.package).into())];
         let stopping = self.run.stopping.lock().expect("a stopping nobody poisoned");
-        let part_of = stopping.as_ref().map(|s| s.node.clone());
+        let part_of = stopping.as_ref().map(|s| s.activity.node.clone());
         drop(stopping);
         life.stopping = Some(Span::begin(
             &self.events,

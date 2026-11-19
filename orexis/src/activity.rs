@@ -34,8 +34,13 @@ pub struct Activity {
 impl Activity {
     /// An activity of `kind` beginning now, under a name of its own.
     pub fn begin(kind: &'static str) -> Self {
+        Self::named(mint(), kind)
+    }
+
+    /// An activity of `kind` beginning now, under the name `node` it was given before it began.
+    pub fn named(node: NamedNode, kind: &'static str) -> Self {
         Activity {
-            node: mint(),
+            node,
             kind,
             began: Instant::now(),
         }

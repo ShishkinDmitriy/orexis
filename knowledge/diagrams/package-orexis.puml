@@ -61,6 +61,12 @@ package "boot" {
     {field} +world : &'a Path
     {field} +agent : &'a str
   }
+  class "Held" as orexis__boot__Held << (S,#A8D8EA) struct >> {
+    {field} -path : PathBuf
+    {field} -document : usize
+    {field} -graph : String
+    {field} -kinds : BTreeSet<String>
+  }
 }
 package "clock" {
   interface "Clock" as orexis__clock__Clock << (T,#C9E4C5) trait >> {
@@ -173,10 +179,8 @@ package "series" {
     {field} +organisation : String
   }
   class "Sink" as orexis__series__Sink << (S,#A8D8EA) struct >> {
-    {field} +purpose : &'static str
-    {field} +bucket : String
+    {field} -reader : Reader
     {field} -write : Write
-    {field} -read : Option<Read>
   }
 }
 package "shape" {
@@ -226,7 +230,7 @@ package "task::hearing" {
     {field} ~closed : Mutex<HashMap<String, Vec<String>>>
     {field} ~busy : Busy
     {field} ~listening : AtomicBool
-    {field} ~held : Mutex<BTreeMap<String, ()>>
+    {field} ~held : Mutex<BTreeSet<String>>
     {field} ~outcome : Mutex<Option<String>>
     {field} ~laps : Mutex<Option<Laps>>
     {field} ~error : Mutex<Option<Error>>
@@ -363,11 +367,8 @@ package "task::life" {
     {field} ~served : BTreeSet<String>
   }
   class "Span" as orexis__task__life__Span << (S,#A8D8EA) struct >> {
-    {field} ~node : NamedNode
-    {field} ~kind : &'static str
-    {field} ~part_of : Option<NamedNode>
-    {field} ~about : Vec<(&'static str, Term)>
-    {field} ~real : std::time::Instant
+    {field} ~activity : Activity
+    {field} ~lasting : Lasting
   }
 }
 package "task::provided" {
@@ -396,11 +397,12 @@ package "task::provided" {
 orexis__activity__Started *-- "0..1" orexis__activity__Lasting : lasting
 orexis__activity__Ended *-- "0..1" orexis__activity__Lasting : lasting
 orexis__boot__Begun *-- "*" orexis__document__Document : read
-orexis__boot__Begun *-- "*" orexis__store__Held : passed
+orexis__boot__Begun *-- "*" orexis__boot__Held : passed
 orexis__events__Mark *-- "0..1" orexis__events__Number : Level
 orexis__events__Point *-- "*" orexis__events__Field : fields
 orexis__events__Watch o-- "*" orexis__task__hearing__Hearer : 0
 orexis__events__Kept *-- "*" orexis__events__Mark : marks
+orexis__series__Sink *-- "1" orexis__series__Reader : reader
 orexis__series__Reads *-- "1" orexis__task__provided__Journaled : journal
 orexis__series__Reads *-- "0..1" orexis__series__Reader : history
 orexis__series__Reads *-- "0..1" orexis__series__Reader : metrics
@@ -432,6 +434,8 @@ orexis__task__life__Handed o-- "0..1" orexis__task__life__Life : life
 orexis__task__life__Run o-- "1" orexis__task__life__Boot : boot
 orexis__task__life__Run o-- "0..1" orexis__task__life__Span : stopping
 orexis__task__life__Boot *-- "0..1" orexis__boot__Begun : begun
+orexis__task__life__Span *-- "1" orexis__activity__Activity : activity
+orexis__task__life__Span *-- "1" orexis__activity__Lasting : lasting
 orexis__task__life__Life *-- "1" orexis__task__hearing__Hears : hears
 orexis__task__life__Life *-- "0..1" orexis__task__life__Span : booting
 orexis__task__life__Life *-- "0..1" orexis__task__life__Span : running

@@ -115,22 +115,18 @@ impl Reader {
     }
 }
 
-/// One purpose's bucket, and how a point reaches it.
+/// One purpose's bucket as its reader reads it, and how a point reaches it.
 pub struct Sink {
-    pub purpose: &'static str,
-    pub bucket: String,
+    reader: Reader,
     write: Write,
-    read: Option<Read>,
 }
 
 impl Sink {
     /// A sink writing through `write`, reading nothing.
     pub fn new(purpose: &'static str, bucket: &str, write: Write) -> Self {
         Sink {
-            purpose,
-            bucket: bucket.to_string(),
+            reader: Reader::new(purpose, bucket, None),
             write,
-            read: None,
         }
     }
 
@@ -235,10 +231,9 @@ impl Sink {
                     .map_err(|e| e.to_string())
             })
         });
-        Sink {
-            read: Some(read),
-            ..Sink::new(purpose, bucket, write)
-        }
+        let mut sink = Sink::new(purpose, bucket, write);
+        sink.reader.read = Some(read);
+        sink
     }
 
     #[cfg(not(feature = "series"))]
@@ -260,7 +255,11 @@ impl Sink {
         if points.is_empty() {
             return ready(0);
         }
-        let (writing, purpose, n) = ((self.write)(&self.bucket, points), self.purpose, points.len());
+        let (writing, purpose, n) = (
+            (self.write)(&self.reader.bucket, points),
+            self.reader.purpose,
+            points.len(),
+        );
         Box::pin(async move {
             match writing.await {
                 Ok(()) => n,
@@ -274,12 +273,12 @@ impl Sink {
 
     /// The records a Flux query of this sink's bucket answers; why not, where the store refuses or reads nothing.
     pub fn read(&self, flux: &str) -> Pending<Result<Records, String>> {
-        self.reader().read(flux)
+        self.reader.read(flux)
     }
 
     /// The bucket as a chat reads it, from any task.
     pub fn reader(&self) -> Reader {
-        Reader::new(self.purpose, &self.bucket, self.read.clone())
+        self.reader.clone()
     }
 }
 
