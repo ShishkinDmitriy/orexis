@@ -222,6 +222,11 @@ package "planner" {
   class "Budget" as orexis_planning__planner__Budget << (S,#A8D8EA) struct >> {
     {field} .0 : usize
   }
+  class "Change" as orexis_planning__planner__Change << (S,#A8D8EA) struct >> {
+    {field} -lands : Option<Term>
+    {field} -retracts : Vec<Quad>
+    {field} -adds : Vec<Quad>
+  }
   class "PlanOf" as orexis_planning__planner__PlanOf << (S,#A8D8EA) struct >> {
     {field} -outcome : Option<String>
     {field} -spent : Option<f64>
@@ -246,7 +251,7 @@ package "planner" {
     {field} +published : Vec<PlanPublished>
     {field} +watch : Watch
     {field} -laps : Option<Laps>
-    {field} -searches : Mutex<BTreeMap<String, (Instant, usize)>>
+    {field} -searches : search::Tallies
     {field} +walked : bool
     {field} -triggers : Vec<NamedNode>
     {field} -due : bool
@@ -280,6 +285,56 @@ package "planner" {
     {field} -late : DayTimeDuration
     {field} -landing : DateTime
     {field} -steps_in_flight : Vec<StepInFlight>
+    {field} -steps : Vec<(String, Said)>
+    {field} -predicts : BTreeMap<String, Change>
+  }
+}
+package "planner::search" {
+  class "Searcher" as orexis_planning__planner__search__Searcher << (S,#A8D8EA) struct >> {
+    {field} ~id : String
+    {field} ~uri : String
+    {field} ~budget : usize
+    {field} ~watch : Watch
+    {field} ~searches : Tallies
+  }
+}
+package "planner::searching" {
+  class "Searched" as orexis_planning__planner__searching__Searched << (S,#A8D8EA) struct >> {
+    {field} ~scope : String
+    {field} ~store : Store
+    {field} ~rerooted : &'static str
+    {field} ~present : String
+    {field} ~met : BTreeSet<String>
+    {field} ~reached : BTreeSet<String>
+    {field} ~unwalked : BTreeSet<String>
+    {field} ~kept : BTreeMap<String, Vec<String>>
+    {field} ~here : BTreeSet<String>
+    {field} ~cut : BTreeMap<String, Option<Cut>>
+    {field} ~doomed : Vec<(String, Option<String>)>
+    {field} ~beside : u64
+    {field} ~laps : Option<Laps>
+    {field} ~at : DateTime
+  }
+  class "Searching" as orexis_planning__planner__searching__Searching << (S,#A8D8EA) struct >> {
+    {field} ~scope : String
+    {field} ~store : Store
+    {field} ~scopes : Scopes
+    {field} ~only : Option<BTreeSet<String>>
+    {field} ~elsewhere : BTreeSet<String>
+    {field} ~within : Option<BTreeSet<String>>
+    {field} ~landings : Vec<DateTime>
+    {field} ~landed : Vec<Landed>
+    {field} ~foresight : Option<Box<dyn Foresight>>
+    {field} ~walks : Walks
+    {field} ~walking : BTreeSet<String>
+    {field} ~asked : BTreeSet<String>
+    {field} ~already : BTreeSet<String>
+    {field} ~cut : BTreeMap<String, Cut>
+    {field} ~beside : Option<u64>
+    {field} ~budget_every_s : f64
+    {field} ~laps : Option<Laps>
+    {field} ~at : DateTime
+    {field} ~searcher : Searcher
   }
 }
 package "reroot" {
@@ -334,6 +389,7 @@ package "orexis" #EEEEEE {
   class "Laps" as orexis__events__Laps << (S,#A8D8EA) struct >>
   class "Watch" as orexis__events__Watch << (S,#A8D8EA) struct >>
   class "Store" as orexis__store__Store << (S,#A8D8EA) struct >>
+  class "Said" as orexis__task__provided__Said << (S,#A8D8EA) struct >>
 }
 package "orexis-belief" #EEEEEE {
   class "Parts" as orexis_belief__transition__Parts << (S,#A8D8EA) struct >>
@@ -352,11 +408,21 @@ orexis_planning__memo__Memo *-- "*" orexis_planning__memo__Candidate : candidate
 orexis_planning__memo__Memo *-- "*" orexis_planning__memo__Carried : carried
 orexis_planning__memo__Memo *-- "0..1" orexis_planning__shapes__Shapes : shapes
 orexis_planning__planner__Walk *-- "*" orexis_planning__planner__StepInFlight : steps_in_flight
+orexis_planning__planner__Walk *-- "*" orexis__task__provided__Said : steps
+orexis_planning__planner__Walk *-- "*" orexis_planning__planner__Change : predicts
 orexis_planning__planner__Planner *-- "1" orexis__store__Store : beliefs
 orexis_planning__planner__Planner *-- "*" orexis__store__Store : imaginaria
 orexis_planning__planner__Planner *-- "*" orexis_planning__events__PlanPublished : published
 orexis_planning__planner__Planner *-- "1" orexis__events__Watch : watch
 orexis_planning__planner__Planner *-- "0..1" orexis__events__Laps : laps
+orexis_planning__planner__search__Searcher *-- "1" orexis__events__Watch : watch
+orexis_planning__planner__searching__Searching *-- "1" orexis__store__Store : store
+orexis_planning__planner__searching__Searching *-- "1" orexis_planning__find_scopes__Scopes : scopes
+orexis_planning__planner__searching__Searching *-- "*" orexis_planning__lay_ground__Landed : landed
+orexis_planning__planner__searching__Searching *-- "0..1" orexis__events__Laps : laps
+orexis_planning__planner__searching__Searching *-- "1" orexis_planning__planner__search__Searcher : searcher
+orexis_planning__planner__searching__Searched *-- "1" orexis__store__Store : store
+orexis_planning__planner__searching__Searched *-- "0..1" orexis__events__Laps : laps
 orexis_planning__violation__Compiled *-- "1" orexis__error__Error : Error
 orexis_planning__violation__Compiler *-- "1" orexis_planning__shapes__Shapes : g
 orexis_planning__events__HeadChecked ..|> orexis__events__Event

@@ -1,15 +1,23 @@
 //! ONE WANT'S SEARCH: `search` takes and weighs worlds until the budget is spent or a world meets the want, and
 //! `expand` is one iteration of it — the frontier's best candidate taken, its world weighed, and marked impossible
-//! where it violates a constraint the agent holds.
+//! where it violates a constraint the agent holds. Each is a method of the [`Searcher`], what a search carries of the
+//! agent, so that a scope's search needs nothing of the planner.
+
+use std::collections::BTreeMap;
+use std::sync::{Arc, Mutex};
+use std::time::Instant;
 
 use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
+use orexis::events::Watch;
+use orexis::rdf::round6;
 use orexis::store::{Store, iri};
 
-use super::{Planner, beaten, broken, cat, held_constraints, said, spent};
+use super::{beaten, broken, cat, desire_of, held_constraints, plan_of, said, spent};
 use crate::admit::{admit, local_of};
+use crate::events::SearchEnded;
 use crate::extract_plan::extract_plan;
 use crate::memo::Memo;
 use crate::scope::Scope;
@@ -17,7 +25,22 @@ use crate::take::take;
 use crate::unweighed::unweighed;
 use crate::weigh::weigh;
 
-impl Planner {
+/// Each want searched and not yet published: when it was first searched, and in how many passes. Shared by every
+/// scope's search and the planner that publishes, which takes a want's tally with its plan.
+pub(super) type Tallies = Arc<Mutex<BTreeMap<String, (Instant, usize)>>>;
+
+/// WHO SEARCHES, carried into a scope's search: the agent's identifier and IRI, how much a search may spend, whoever
+/// watches, and the tally of each want's searches.
+#[derive(Clone)]
+pub(crate) struct Searcher {
+    pub(super) id: String,
+    pub(super) uri: String,
+    pub(super) budget: usize,
+    pub(super) watch: Watch,
+    pub(super) searches: Tallies,
+}
+
+impl Searcher {
     /// Plan for `want` from the ground holding at its instant, spending at most `budget` candidates beyond what its
     /// search spent before, and write the plan, whatever the search concluded.
     pub fn search(
@@ -46,6 +69,38 @@ impl Planner {
         extract_plan(store, want)?;
         let weighed = spent(store, want, memo)?.saturating_sub(ceiling - budget);
         self.searched(store, want, started, budget, weighed, scope.name)?;
+        Ok(())
+    }
+
+    /// Tally a search of `want` begun at `started`, and say how it ended, where anybody watches.
+    fn searched(
+        &self,
+        store: &Store,
+        want: &str,
+        started: Instant,
+        budget: usize,
+        weighed: usize,
+        scope: Option<&str>,
+    ) -> Result<(), Error> {
+        self.searches
+            .lock()
+            .unwrap()
+            .entry(want.to_string())
+            .or_insert((started, 0))
+            .1 += 1;
+        if !self.watch.connected() {
+            return Ok(());
+        }
+        let outcome = plan_of(store, want)?.outcome.map(|o| local_of(&o));
+        self.watch.emit(&SearchEnded {
+            want: want.to_string(),
+            desire: desire_of(store, want)?,
+            scope: scope.map(local_of),
+            outcome,
+            duration_s: Some(round6(started.elapsed().as_secs_f64())),
+            budget: Some(budget as f64),
+            weighed: Some(weighed as f64),
+        });
         Ok(())
     }
 

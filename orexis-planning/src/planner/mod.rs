@@ -1,12 +1,15 @@
 //! THE PLANNER: the one thing the rest of the tree uses, and the one place the acts are sequenced — as
-//! `agent/planning/planner.py` sequences them. **A STAR, NOT A CHAIN**: every act is a function over the store that
+//! `agent/planning/planner.py` sequenced them. **A STAR, NOT A CHAIN**: every act is a function over the store that
 //! calls no other act, and `plan` is the pass, `search` one want's search, `expand` one iteration of it.
 //!
-//! One pass: per scope, an imaginarium kept from pass to pass — `prepare_ground` copies or refreshes, `lay_ground`
-//! lays the grounds, `reroot` keeps the cone the present landed in; every desire weighed in every ground, a walking
-//! want a belief makes impossible ahead reopened (#921), `derive_wants` and `withdraw`; per want no intention walks,
-//! `search`, and `extract_plan`, and `_reconsider` against a walking intention's untaken steps; `publish_plan`. And
-//! outside the pass, `check`, of a head about to be taken.
+//! One pass, per scope, in three parts. PREPARED off the beliefs (`prepare`): the scope's actions, its imaginarium
+//! kept from pass to pass and filled or refreshed by `prepare_ground`, what lands while it searches and the foresight
+//! — everything the scope's search reads of the beliefs. SEARCHED in the imaginarium alone (`Searching::search`):
+//! `lay_ground` lays the grounds, `reroot` keeps the cone the present landed in; every desire weighed in every
+//! ground, a walking want a belief makes impossible ahead reopened (#921), `derive_wants` and `withdraw`; per want no
+//! intention walks, `search`, `extract_plan`, and `reconsider` against a walking intention's untaken steps. APPLIED to
+//! the beliefs (`apply`): the wants reached withdrawn, and `publish_plan`. And outside the pass, `check`, of a head
+//! about to be taken.
 //!
 //! WHAT A PASS SAYS IT DID is on the fields a caller reads — `handed`, `reached`, `blocked`, `published`
 //! — for the executor it is linked to, and in the events said to whoever watches the agent (`events`), with the pass's
@@ -17,9 +20,10 @@ mod kept;
 mod policy;
 mod reconsider;
 mod search;
+mod searching;
 
 use std::collections::{BTreeMap, BTreeSet};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use oxigraph::model::{NamedNode, Quad, Term, Triple};
@@ -28,33 +32,32 @@ use oxsdatatypes::{DateTime, DayTimeDuration};
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::events::{Laps, Watch};
-use orexis::foresight::{Foresees, Foresight};
+use orexis::foresight::Foresees;
 use orexis::ontology::{ACTION, BELIEF, ONTOLOGY, RECORD, SELF_GRAPH};
 use orexis::rdf::round6;
 use orexis::store::{Store, Within, iri, value};
 
 use crate::admit::local_of;
-use crate::derive_wants::derive_wants;
-use crate::events::{Imagined, PlanPublished, Planned, Rerooted, SearchEnded, WantFoundUnreachable};
+use crate::events::{Imagined, PlanPublished, Planned, WantFoundUnreachable};
 use crate::find_scopes::{Scopes, find_scopes};
 use crate::find_wants::{Criteria, find_wants};
 use crate::footprint::{actions_of, reads_of_shape, terms_of_shape, written};
-use crate::lay_ground::{Landed, Laying, lay_ground, lay_ground_foreseeing};
+use crate::lay_ground::{Landed, Laying, lay_ground};
 use crate::memo::Memo;
-use crate::ontology::{CONSTRAINT_GRAPH, DESIRE, EXHAUSTED, PLANNING, SCOPE_GRAPH, SHAPES, WANT};
+use crate::ontology::{CONSTRAINT_GRAPH, DESIRE, PLANNING, SCOPE_GRAPH, SHAPES, WANT};
 use crate::prepare_ground::prepare_ground;
 use crate::publish_plan::publish_plan;
 use crate::refine::refine;
-use crate::reroot::reroot;
-use crate::scope::Scope;
 use crate::scope_actions::scope_actions;
 use crate::shapes::Shapes;
-use crate::unweighed::unweighed;
 use crate::weigh::{shapes, weigh};
 use crate::withdraw::withdraw;
 use crate::world_at::{catalogue, lexical};
 
+use kept::chain;
 pub(crate) use policy::{CHECK, HEAD_ASKED, REOPEN};
+use search::Searcher;
+use searching::{Searched, Searching};
 
 /// What is said of a want's search and its plan: how the search ended, and what the plan spent.
 struct PlanOf {
@@ -103,6 +106,18 @@ struct Walk {
     late: DayTimeDuration,
     landing: DateTime,
     steps_in_flight: Vec<StepInFlight>,
+    /// The plan's steps in the order walked, each with what it says, and what each predicts: read off the beliefs as
+    /// the planning begins, so that a scope's search reads nothing of them.
+    steps: Vec<(String, Said)>,
+    predicts: BTreeMap<String, Change>,
+}
+
+/// What a step of a published plan predicts, read off the beliefs: where it lands, and its change.
+#[derive(Clone, Debug)]
+struct Change {
+    lands: Option<Term>,
+    retracts: Vec<Quad>,
+    adds: Vec<Quad>,
 }
 
 /// A step taken and not yet answered, of any intention pursuing a walking want: the action it fills, when it lands,
@@ -159,7 +174,7 @@ pub struct Planner {
     /// How long each part of the pass in progress took, where anybody watches.
     laps: Option<Laps>,
     /// Each want searched and not yet published: when it was first searched, and in how many passes.
-    searches: Mutex<BTreeMap<String, (Instant, usize)>>,
+    searches: search::Tallies,
     /// Whether any part walks what it publishes: the self plays a role beneath `execution:Executor`.
     pub walked: bool,
     /// The events heard beneath its trigger since it last planned, which the planning names as what triggered it.
@@ -709,7 +724,7 @@ impl Planner {
             published: Vec::new(),
             watch: Watch::default(),
             laps: None,
-            searches: Mutex::new(BTreeMap::new()),
+            searches: Arc::new(Mutex::new(BTreeMap::new())),
             blocked: Vec::new(),
             doomed: BTreeMap::new(),
             asked: BTreeSet::new(),
@@ -763,18 +778,11 @@ impl Planner {
                 Some(store) => store,
                 None => Store::new()?,
             };
-            let result = self.pass_in(
-                &store,
-                &scope,
-                &scopes,
-                read.as_ref(),
-                &walks,
-                &walking,
-                &mut searched,
-                at,
-            );
-            self.imaginaria.insert(scope.clone(), store);
-            written.extend(result?);
+            //  THE IMAGINARIUM IS KEPT whatever its search came to: the store is one, however many hold it.
+            self.imaginaria.insert(scope.clone(), store.clone());
+            let handed = self.prepare(store, &scope, &scopes, read.as_ref(), &walks, &walking, at)?;
+            let found = handed.search()?;
+            written.extend(self.apply(found, &mut searched)?);
         }
         self.asked.clear();
         //  A WANT NO LONGER SEARCHED — reached, withdrawn, or walked — takes its tally with it.
@@ -789,292 +797,184 @@ impl Planner {
         Ok(written)
     }
 
-    /// One scope's part of the pass, in its imaginarium; the plans published. NOTHING ANOTHER SCOPE DID THIS PASS IS
-    /// READ HERE: no action of one writes a fact a want of another reads, so what is walking is as the pass began.
+    /// Who searches, as a scope's search carries it.
+    pub(crate) fn searcher(&self) -> Searcher {
+        Searcher {
+            id: self.id.clone(),
+            uri: self.uri.clone(),
+            budget: self.budget,
+            watch: self.watch.clone(),
+            searches: self.searches.clone(),
+        }
+    }
+
+    /// WHAT ONE SCOPE'S SEARCH IS HANDED, read off the beliefs: its actions, the values that are another scope's, its
+    /// imaginarium filled or refreshed, what lands while it searches, and the foresight — so that, once handed, the
+    /// search reads its imaginarium and nothing else. NOTHING ANOTHER SCOPE DID THIS PASS IS READ BY IT: no action of
+    /// one writes a fact a want of another reads, so what is walking is as the pass began.
     #[allow(clippy::too_many_arguments)]
-    fn pass_in(
+    fn prepare(
         &mut self,
-        store: &Store,
+        store: Store,
         scope: &str,
         scopes: &Scopes,
         read: Option<&BTreeSet<String>>,
         walks: &Walks,
         walking: &BTreeSet<String>,
-        searched: &mut BTreeSet<String>,
         at: DateTime,
-    ) -> Result<Vec<String>, Error> {
-        const GROUND_HASHES_Q: &str = r#"PREFIX orexis: <http://example.org/orexis#>
-            PREFIX planning: <http://example.org/orexis/planning#>
-            SELECT ?h WHERE { GRAPH $cat { ?g a planning:GroundGraph ; orexis:hash ?h } }"#;
+    ) -> Result<Searching, Error> {
         const IN_SCOPE_Q: &str =
             r#"PREFIX planning: <http://example.org/orexis/planning#> SELECT ?a WHERE { ?a planning:inScope $scope }"#;
-        const REOPENING_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
-        SELECT ?w WHERE { GRAPH ?g { ?w planning:reopens ?w }
-          FILTER NOT EXISTS { GRAPH ?p { ?p a planning:Plan ; planning:for ?w ; planning:outcome planning:Satisfied } } }"#;
-        const HASHES_Q: &str = r#"PREFIX orexis: <http://example.org/orexis#>
-          PREFIX planning: <http://example.org/orexis/planning#>
-          SELECT DISTINCT ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w orexis:hash ?h .
-          { ?w a planning:GroundGraph } UNION { ?w a planning:PossibleGraph } } }"#;
-        const MET_NOW_Q: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
-        PREFIX orexis: <http://example.org/orexis#>
-        PREFIX planning: <http://example.org/orexis/planning#>
-        SELECT DISTINCT ?for WHERE {
-          GRAPH ?cat { ?x planning:weighs $ground ; planning:for ?for ; planning:met true .
-                       ?cat a orexis:CatalogueGraph .
-                       ?d a planning:WantGraph . OPTIONAL { ?d dcterms:temporal/orexis:start ?ws } }
-          GRAPH ?d { ?for a planning:Want }
-          FILTER(!BOUND(?ws) || ?ws <= $now) }"#;
+        let begun = Instant::now();
         let beliefs = &self.beliefs.clone();
-        let walks = walks.clone();
-        let scope = scope.to_string();
         let unscoped = scope == UNSCOPED;
-        {
-            let only: Option<BTreeSet<String>> = if unscoped {
-                None
-            } else {
-                let scope_graphs = graphs(beliefs, &[SCOPE_GRAPH])?;
-                Some(
-                    beliefs
-                        .rows(
-                            &bind(IN_SCOPE_Q, &[("scope", Value::iri(scope.as_str()))])?,
-                            &strs(&scope_graphs),
-                        )?
-                        .iter()
-                        .filter_map(|r| iri(r, "a"))
-                        .collect(),
-                )
-            };
-            let elsewhere: BTreeSet<String> = if unscoped {
-                BTreeSet::new()
-            } else {
+        let only: Option<BTreeSet<String>> = if unscoped {
+            None
+        } else {
+            let scope_graphs = graphs(beliefs, &[SCOPE_GRAPH])?;
+            Some(
+                beliefs
+                    .rows(
+                        &bind(IN_SCOPE_Q, &[("scope", Value::iri(scope))])?,
+                        &strs(&scope_graphs),
+                    )?
+                    .iter()
+                    .filter_map(|r| iri(r, "a"))
+                    .collect(),
+            )
+        };
+        let elsewhere: BTreeSet<String> = if unscoped {
+            BTreeSet::new()
+        } else {
+            scopes
+                .0
+                .iter()
+                .filter(|(_, ss)| !ss.contains(scope))
+                .map(|(m, _)| m.clone())
+                .collect()
+        };
+        prepare_ground(beliefs, &store, (!unscoped).then_some(scope), Some(scopes))?;
+        let within: Option<BTreeSet<String>> = read.map(|r| {
+            let mut w = r.clone();
+            w.extend(
                 scopes
                     .0
                     .iter()
-                    .filter(|(_, ss)| !ss.contains(&scope))
-                    .map(|(m, _)| m.clone())
-                    .collect()
+                    .filter(|(_, ss)| ss.contains(scope))
+                    .map(|(m, _)| m.clone()),
+            );
+            w
+        });
+        let in_only = |action: &str| only.as_ref().is_none_or(|o| o.contains(action));
+        let landings: Vec<DateTime> = walks
+            .values()
+            .flat_map(|w| w.steps_in_flight.iter())
+            .filter(|s| in_only(&s.action))
+            .map(|s| s.lands)
+            .collect();
+        let landed = landed(beliefs, walks, only.as_ref())?;
+        //  AND WHAT MOVES FROM EACH GROUND: the flows, integrated by the predictor's foresight as the grounds are
+        //  laid (#1000) — every key advanced, and a crossing laid here where the key is this scope's, as a reading
+        //  is placed: the scopes its feature and property meet in, or every scope where none.
+        let placed = |feature: &str, property: &str| {
+            let met = scopes.meet([feature, property]);
+            met.is_empty() || met.contains(scope)
+        };
+        let foresight = match &self.foresee {
+            Some(foresee) => foresee(beliefs, at, if unscoped { None } else { Some(&placed) })?,
+            None => None,
+        };
+        Ok(Searching {
+            scope: scope.to_string(),
+            store,
+            scopes: scopes.clone(),
+            only,
+            elsewhere,
+            within,
+            landings,
+            landed,
+            foresight,
+            walks: walks.clone(),
+            walking: walking.clone(),
+            asked: self.asked.clone(),
+            already: self.reached.clone(),
+            cut: self.cut.clone(),
+            beside: self.beside.get(scope).copied(),
+            budget_every_s: self.budget_every_s,
+            laps: self.laps.as_ref().map(|_| Laps::since(begun)),
+            at,
+            searcher: self.searcher(),
+        })
+    }
+
+    /// WHAT ONE SCOPE'S SEARCH FOUND, applied: what it says of the walking wants and of the searches the budget cut
+    /// short kept, the wants it reached withdrawn from the beliefs, and its plans published.
+    fn apply(&mut self, found: Searched, searched: &mut BTreeSet<String>) -> Result<Vec<String>, Error> {
+        let beliefs = &self.beliefs.clone();
+        let Searched {
+            scope,
+            store,
+            rerooted,
+            present,
+            met,
+            reached,
+            unwalked,
+            kept,
+            here,
+            cut,
+            doomed,
+            beside,
+            laps,
+            at,
+        } = found;
+        self.rerooted.push(rerooted);
+        self.reached.extend(met);
+        for (want, after) in doomed {
+            match after {
+                Some(step) => self.doomed.insert(want, step),
+                None => self.doomed.remove(&want),
             };
-            prepare_ground(beliefs, store, (!unscoped).then_some(scope.as_str()), Some(scopes))?;
-            let mut memo = Memo::default();
-            let within: Option<BTreeSet<String>> = read.map(|r| {
-                let mut w = r.clone();
-                w.extend(
-                    scopes
-                        .0
-                        .iter()
-                        .filter(|(_, ss)| ss.contains(&scope))
-                        .map(|(m, _)| m.clone()),
-                );
-                w
-            });
-            let in_only = |action: &str| only.as_ref().is_none_or(|o| o.contains(action));
-            let landings: Vec<DateTime> = walks
-                .values()
-                .flat_map(|w| w.steps_in_flight.iter())
-                .filter(|s| in_only(&s.action))
-                .map(|s| s.lands)
-                .collect();
-            let landed = landed(beliefs, &walks, only.as_ref())?;
-            let foreseen: BTreeSet<String> = if walks.is_empty() {
-                BTreeSet::new()
-            } else {
-                store
-                    .rows(HASHES_Q, &[])?
-                    .iter()
-                    .filter_map(|r| value(r, "h"))
-                    .collect()
-            };
-            //  AND WHAT MOVES FROM EACH GROUND: the flows, integrated by the predictor's foresight as the grounds are
-            //  laid (#1000) — every key advanced, and a crossing laid here where the key is this scope's, as a reading
-            //  is placed: the scopes its feature and property meet in, or every scope where none.
-            let placed = |feature: &str, property: &str| {
-                let met = scopes.meet([feature, property]);
-                met.is_empty() || met.contains(scope.as_str())
-            };
-            let mut foresight = match &self.foresee {
-                Some(foresee) => foresee(beliefs, at, if unscoped { None } else { Some(&placed) })?,
-                None => None,
-            };
-            //  WHETHER WHAT A WORLD READS BESIDE ITS GROUND STANDS AS IT DID WHEN THE LAST PLANNING BEGAN: asked here,
-            //  the imaginarium refreshed and nothing of this planning written yet, and of the same moment of the
-            //  planning before, since laying cuts the changeable out of these graphs and the derivation writes wants
-            //  into them. So the planning after one that minted a want begins its searches again, once (#1158).
-            let stands = beside(store)?;
-            let as_stood = self.beside.insert(scope.clone(), stands) == Some(stands);
-            let laid = lay_ground_foreseeing(
-                store,
-                at,
-                &Laying {
-                    scope: Scope {
-                        actions: only.as_ref(),
-                        within: within.as_ref(),
-                        ..Scope::default()
-                    },
-                    landings: &landings,
-                    landed: &landed,
-                    as_stood,
-                },
-                foresight.as_mut().map(|f| f.as_mut() as &mut dyn Foresight),
-            )?;
-            let present = laid
-                .first()
-                .cloned()
-                .ok_or_else(|| Error::Evaluation("no ground was laid".into()))?;
-            let arrived = !walks.is_empty() && {
-                let c = cat(store, &mut memo)?;
-                store
-                    .rows(&bind(GROUND_HASHES_Q, &[("cat", c)])?, &[])?
-                    .iter()
-                    .filter_map(|r| value(r, "h"))
-                    .any(|h| !foreseen.contains(&h))
-            };
-            let rerooting = reroot(store, &present)?;
-            self.rerooted.push(rerooting.present);
-            if self.watch.connected() {
-                self.watch.emit(&Rerooted {
-                    scope: local_of(&scope),
-                    present: rerooting.present.to_string(),
-                    kept: Some(rerooting.kept.len() as f64),
-                    dropped: Some(rerooting.dropped.len() as f64),
-                });
-            }
-            self.lap("ground");
-            let constraints = held_constraints(store, &self.uri, only.as_ref(), at, &mut memo)?;
-            for constraint in &constraints {
-                let broken = broken(store, constraint, &present, &mut memo)?;
-                if !broken.is_empty() {
-                    log::warn!(
-                        "{}: the present violates {}, a constraint of this world, and nothing repairs it: {}",
-                        self.id,
-                        local_of(constraint),
-                        said(&broken)
-                    );
-                }
-            }
-            for pair in unweighed(store, None, None, &mut memo)? {
-                if !pair.contains_key("from")
-                    && let (Some(for_), Some(about)) = (iri(&pair, "for"), iri(&pair, "about"))
-                {
-                    weigh(store, &for_, &about, &mut memo)?;
-                }
-            }
-            let mut reopen = if arrived && !walks.is_empty() && !constraints.is_empty() {
-                self.impossible_ahead(store, &walks, &constraints, only.as_ref(), &mut memo)?
-            } else {
-                BTreeSet::new()
-            };
-            reopen.extend(self.asked_here(store, &walks, only.as_ref())?);
-            self.lap("weigh");
-            let met_now: BTreeSet<String> = store
-                .rows(
-                    &bind(
-                        MET_NOW_Q,
-                        &[("ground", Value::iri(present.as_str())), ("now", Value::instant(at))],
-                    )?,
-                    &[],
-                )?
-                .iter()
-                .filter_map(|r| iri(r, "for"))
-                .collect();
-            for met in met_now.intersection(walking) {
-                if self.reached.insert(met.clone()) && self.watch.connected() {
-                    self.watch.emit(&crate::events::WantReached { want: met.clone(), at });
-                }
-            }
-            let reached: BTreeSet<String> = met_now.difference(walking).cloned().collect();
-            let opens: BTreeMap<String, DateTime> = walking
-                .iter()
-                .map(|w| (w.clone(), walks.get(w).map_or(at, |f| f.landing)))
-                .collect();
-            let none = BTreeSet::new();
-            if !reopen.is_empty() {
-                withdraw(store, None, &none, &reopen)?;
-            }
-            let mut wanted = derive_wants(store, at, &opens, &reopen)?;
-            wanted.extend(walking.iter().cloned());
-            withdraw(store, Some(&wanted), &reached, &none)?;
-            if !reached.is_empty() {
-                withdraw(beliefs, None, &reached, &none)?;
-            }
-            self.lap("derive");
-            //  THE SHAPES ARE FORGOTTEN AFTER THE DERIVATION, because the derivation WRITES them.
-            memo.shapes = None;
-            memo.selects.clear();
-            let shapes = shapes(store, &mut memo)?;
-            let mut kept: BTreeMap<String, Vec<String>> = BTreeMap::new();
-            let mut here = BTreeSet::new();
-            let reopening: BTreeSet<String> = if walks.is_empty() {
-                BTreeSet::new()
-            } else {
-                store
-                    .rows(REOPENING_Q, &[])?
-                    .iter()
-                    .filter_map(|r| iri(r, "w"))
-                    .filter(|w| walking.contains(w))
-                    .collect()
-            };
-            let grounds: BTreeSet<String> = {
-                let c = cat(store, &mut memo)?;
-                store
-                    .rows(&bind(GROUND_HASHES_Q, &[("cat", c)])?, &[])?
-                    .iter()
-                    .filter_map(|r| value(r, "h"))
-                    .collect()
-            };
-            for want in of_scope(store, &shapes, &self.uri, &scope, scopes, at)? {
-                if walking.contains(&want) && !reopening.contains(&want) {
-                    continue;
-                }
-                //  A BUDGET IS FOR A STRETCH OF THE AGENT'S TIME (`planning:budgetEveryS`): a search it cut short is given
-                //  another where its grounds differ from those it was cut short in, which is news, or that stretch has
-                //  passed, and not before. With no pass to pace it, every event heard handed the same search a fresh
-                //  budget, and the budget was no ceiling.
-                if let Some((when, seen)) = self.cut.get(&want)
-                    && *seen == grounds
-                    && orexis::clock::seconds_of(at.checked_sub(*when).unwrap_or_else(zero)) < self.budget_every_s
-                {
-                    here.insert(want.clone());
-                    continue;
-                }
-                let searched = Scope {
-                    name: Some(scope.as_str()),
-                    actions: only.as_ref(),
-                    elsewhere: Some(&elsewhere),
-                    within: within.as_ref(),
-                };
-                self.search(store, &want, self.budget, &searched, at, &mut memo)?;
-                let exhausted = plan_of(store, &want)?.outcome.is_some_and(|o| o == EXHAUSTED);
-                if exhausted {
-                    self.cut.insert(want.clone(), (at, grounds.clone()));
-                } else {
-                    self.cut.remove(&want);
-                }
-                here.insert(want.clone());
-                self.reconsider(store, &want, &walks, &mut kept)?;
-            }
-            self.lap("search");
-            let mut unwalked: BTreeSet<String> = walking.clone();
-            for w in reopening.intersection(&here) {
-                unwalked.remove(w);
-            }
-            searched.extend(here);
-            let handed = publish_plan(store, beliefs, &self.uri, &unwalked, &kept)?;
-            self.mark_kept(&handed)?;
-            let published = self.said_published(store, &handed, &present, &scope, &mut memo, at)?;
-            self.lap("publish");
-            for event in published {
-                self.handed.push((event.plan.clone(), event.want.clone()));
-                if self.watch.connected() {
-                    self.watch.emit(&event);
-                }
-                self.published.push(event);
-            }
-            if self.watch.connected() {
-                let imagined = imagined(store, &scope, &mut memo)?;
-                self.watch.emit(&imagined);
-            }
-            Ok(handed)
         }
+        for (want, short) in cut {
+            match short {
+                Some(when) => self.cut.insert(want, when),
+                None => self.cut.remove(&want),
+            };
+        }
+        self.beside.insert(scope.clone(), beside);
+        if let (Some(mine), Some(theirs)) = (self.laps.as_mut(), laps) {
+            //  THE SCOPE'S LAPS JOIN THE PASS'S, and the pass laps on from here.
+            let mut spent = std::mem::take(&mut mine.spent);
+            for (part, took) in theirs.spent {
+                match spent.iter_mut().find(|(p, _)| *p == part) {
+                    Some((_, s)) => *s = round6(*s + took),
+                    None => spent.push((part, took)),
+                }
+            }
+            *mine = Laps::since(Instant::now());
+            mine.spent = spent;
+        }
+        if !reached.is_empty() {
+            withdraw(beliefs, None, &reached, &BTreeSet::new())?;
+        }
+        searched.extend(here);
+        let mut memo = Memo::default();
+        let handed = publish_plan(&store, beliefs, &self.uri, &unwalked, &kept)?;
+        self.mark_kept(&handed)?;
+        let published = self.said_published(&store, &handed, &present, &scope, &mut memo, at)?;
+        self.lap("publish");
+        for event in published {
+            self.handed.push((event.plan.clone(), event.want.clone()));
+            if self.watch.connected() {
+                self.watch.emit(&event);
+            }
+            self.published.push(event);
+        }
+        if self.watch.connected() {
+            let imagined = imagined(&store, &scope, &mut memo)?;
+            self.watch.emit(&imagined);
+        }
+        Ok(handed)
     }
 
     /// Mark the end of a part of the pass, where anybody watches.
@@ -1179,38 +1079,6 @@ impl Planner {
                 at: Some(at),
             });
         }
-        Ok(())
-    }
-
-    /// Tally a search of `want` begun at `started`, and say how it ended where anybody watches.
-    pub(crate) fn searched(
-        &self,
-        store: &Store,
-        want: &str,
-        started: Instant,
-        budget: usize,
-        weighed: usize,
-        scope: Option<&str>,
-    ) -> Result<(), Error> {
-        self.searches
-            .lock()
-            .unwrap()
-            .entry(want.to_string())
-            .or_insert((started, 0))
-            .1 += 1;
-        if !self.watch.connected() {
-            return Ok(());
-        }
-        let outcome = plan_of(store, want)?.outcome.map(|o| local_of(&o));
-        self.watch.emit(&SearchEnded {
-            want: want.to_string(),
-            desire: desire_of(store, want)?,
-            scope: scope.map(local_of),
-            outcome,
-            duration_s: Some(round6(started.elapsed().as_secs_f64())),
-            budget: Some(budget as f64),
-            weighed: Some(weighed as f64),
-        });
         Ok(())
     }
 
@@ -1365,10 +1233,14 @@ mod tests {
     use orexis::snapshots;
 
     use super::*;
+    use crate::derive_wants::derive_wants;
+    use crate::events::SearchEnded;
     use crate::extract_plan::extract_plan;
     use crate::footprint::changeable;
     use crate::ontology::POSSIBLE_GRAPH;
     use crate::ontology::{EXHAUSTED, GROUND_GRAPH, PLAN_GRAPH, SATISFIED};
+    use crate::scope::Scope;
+    use crate::unweighed::unweighed;
     use crate::world_at::{Asking, world_at};
 
     /// The budget and its stretch planning's ontology states where no role says one (`sh:defaultValue`), as the
@@ -1435,6 +1307,7 @@ mod tests {
             let (scope, at) = (Scope::default(), snapshots::now());
             for want in wants {
                 planner
+                    .searcher()
                     .expand(&store, &want, BUDGET, &scope, at, &mut Memo::default())
                     .unwrap();
             }
@@ -2123,6 +1996,7 @@ SELECT ?g ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
         let planner = Planner::new(&beliefs, snapshots::AGENT, None).unwrap();
         let (scope, at) = (Scope::default(), snapshots::now());
         planner
+            .searcher()
             .search(&store, &want, 1, &scope, at, &mut Memo::default())
             .unwrap();
         assert_eq!(plan_of(&store, &want), (EXHAUSTED.to_string(), 0));
@@ -2132,6 +2006,7 @@ SELECT ?g ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
             "the ground weighed, and one world forked and weighed"
         );
         planner
+            .searcher()
             .search(&store, &want, 32, &scope, at, &mut Memo::default())
             .unwrap();
         assert_eq!(plan_of(&store, &want), (SATISFIED.to_string(), 2));
@@ -2149,11 +2024,13 @@ SELECT ?g ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
         let planner = Planner::new(&beliefs, snapshots::AGENT, None).unwrap();
         let (scope, at) = (Scope::default(), snapshots::now());
         planner
+            .searcher()
             .search(&store, &want, BUDGET, &scope, at, &mut Memo::default())
             .unwrap();
         let held = |s: &Store| -> BTreeSet<String> { s.engine().iter().map(|q| q.unwrap().to_string()).collect() };
         let before = held(&store);
         planner
+            .searcher()
             .search(&store, &want, BUDGET, &scope, at, &mut Memo::default())
             .unwrap();
         assert_eq!(held(&store), before, "not one quad differs");

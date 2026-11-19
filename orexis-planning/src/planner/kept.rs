@@ -14,65 +14,65 @@ use crate::bridge::keeps;
 use crate::ontology::{EXHAUSTED, PLAN_GRAPH};
 use crate::withdraw::withdraw;
 
-impl Planner {
-    /// The steps of `plan` in `store`, in the order walked, each with the action it fills and its filling.
-    pub(super) fn chain(&self, store: &Store, plan: &str) -> Result<Vec<(String, Said)>, Error> {
-        const CHAIN_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
+/// The steps of `plan` in `store`, in the order walked, each with the action it fills and its filling: the parameters
+/// each action takes, as the actions in `store` declare them.
+pub(super) fn chain(store: &Store, plan: &str) -> Result<Vec<(String, Said)>, Error> {
+    const CHAIN_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX planning: <http://example.org/orexis/planning#>
         SELECT ?step ?next ?action ?p ?v WHERE { GRAPH $plan { ?step a execution:Step ; planning:fills ?action ; ?p ?v .
           OPTIONAL { ?step execution:then ?next } } }"#;
-        const TAKES_Q: &str =
-            r#"PREFIX orexis: <http://example.org/orexis#> SELECT ?takes WHERE { $action orexis:takes ?takes }"#;
-        let actions = graphs(&self.beliefs, &[ACTION])?;
-        let mut said: BTreeMap<String, (String, BTreeMap<String, String>)> = BTreeMap::new();
-        let mut after: BTreeMap<String, String> = BTreeMap::new();
-        for r in store.rows(&bind(CHAIN_Q, &[("plan", Value::iri(plan))])?, &[])? {
-            let (Some(step), Some(action)) = (iri(&r, "step"), iri(&r, "action")) else {
-                continue;
-            };
-            let held = said.entry(step.clone()).or_insert_with(|| (action, BTreeMap::new()));
-            if let (Some(p), Some(v)) = (iri(&r, "p"), value(&r, "v")) {
-                held.1.insert(p, v);
-            }
-            if let Some(next) = iri(&r, "next") {
-                after.insert(step, next);
-            }
+    const TAKES_Q: &str =
+        r#"PREFIX orexis: <http://example.org/orexis#> SELECT ?takes WHERE { $action orexis:takes ?takes }"#;
+    let actions = graphs(store, &[ACTION])?;
+    let mut said: BTreeMap<String, (String, BTreeMap<String, String>)> = BTreeMap::new();
+    let mut after: BTreeMap<String, String> = BTreeMap::new();
+    for r in store.rows(&bind(CHAIN_Q, &[("plan", Value::iri(plan))])?, &[])? {
+        let (Some(step), Some(action)) = (iri(&r, "step"), iri(&r, "action")) else {
+            continue;
+        };
+        let held = said.entry(step.clone()).or_insert_with(|| (action, BTreeMap::new()));
+        if let (Some(p), Some(v)) = (iri(&r, "p"), value(&r, "v")) {
+            held.1.insert(p, v);
         }
-        let mut takes: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-        for (action, _) in said.values() {
-            if !takes.contains_key(action) {
-                let found: BTreeSet<String> = self
-                    .beliefs
-                    .rows(
-                        &bind(TAKES_Q, &[("action", Value::iri(action.as_str()))])?,
-                        &strs(&actions),
-                    )?
-                    .iter()
-                    .filter_map(|t| iri(t, "takes"))
-                    .collect();
-                takes.insert(action.clone(), found);
-            }
+        if let Some(next) = iri(&r, "next") {
+            after.insert(step, next);
         }
-        let followers: BTreeSet<&String> = after.values().collect();
-        let mut head = said.keys().find(|s| !followers.contains(s)).cloned();
-        let mut out = Vec::new();
-        let mut seen = BTreeSet::new();
-        while let Some(step) = head {
-            let Some((action, values)) = said.get(&step) else { break };
-            if !seen.insert(step.clone()) {
-                break;
-            }
-            let filling = values
-                .iter()
-                .filter(|(p, _)| takes[action].contains(*p))
-                .map(|(p, v)| (p.clone(), v.clone()))
-                .collect();
-            out.push((step.clone(), (action.clone(), filling)));
-            head = after.get(&step).cloned();
-        }
-        Ok(out)
     }
+    let mut takes: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    for (action, _) in said.values() {
+        if !takes.contains_key(action) {
+            let found: BTreeSet<String> = store
+                .rows(
+                    &bind(TAKES_Q, &[("action", Value::iri(action.as_str()))])?,
+                    &strs(&actions),
+                )?
+                .iter()
+                .filter_map(|t| iri(t, "takes"))
+                .collect();
+            takes.insert(action.clone(), found);
+        }
+    }
+    let followers: BTreeSet<&String> = after.values().collect();
+    let mut head = said.keys().find(|s| !followers.contains(s)).cloned();
+    let mut out = Vec::new();
+    let mut seen = BTreeSet::new();
+    while let Some(step) = head {
+        let Some((action, values)) = said.get(&step) else { break };
+        if !seen.insert(step.clone()) {
+            break;
+        }
+        let filling = values
+            .iter()
+            .filter(|(p, _)| takes[action].contains(*p))
+            .map(|(p, v)| (p.clone(), v.clone()))
+            .collect();
+        out.push((step.clone(), (action.clone(), filling)));
+        head = after.get(&step).cloned();
+    }
+    Ok(out)
+}
 
+impl Planner {
     /// Say of every step of a plan published that a bridge keeps below that it is `execution:keptBelow`.
     pub(super) fn mark_kept(&self, handed: &[String]) -> Result<(), Error> {
         const FICTIVE_STEPS_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
