@@ -69,7 +69,10 @@ foresight. A task hears an event by its class, heard beneath it by the vocabular
 thing, so a message of several readings is perceived once and revised once — in the order they were said; it waits also for
 an arrival any thread rings and for the clock; and in a turn it may `hold` and `release` the agent, say by
 `wake_at` when it is next due, ask to decide `again` at the next instant, and mark a `lap`. What it says while it
-handles what woke it is heard when it next waits, its graphs before its events. No order holds between two
+handles what woke it is heard when it next waits, its graphs before its events. A task that said it is
+due now waits for its timer busy: it has not come to rest, and whoever waits for the agent to settle is not told
+so between a head handed over and the tick that takes it. One deciding `again` at the next instant rests: a search
+the budget cut short asks again every instant until its stretch has passed. No order holds between two
 packages, the tasks run on the runtime's workers beside each other, and nothing polls
 ([a-package-is-a-task-that-awaits-its-events](/decisions/a-package-is-a-task-that-awaits-its-events.md)). The
 kernel knows no package and no package's words. What watches the agent — history, metrics, the tracer — starts

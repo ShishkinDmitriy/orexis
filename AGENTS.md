@@ -436,6 +436,16 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   runs on one of its own** — what it found is dropped, and planning due again, where a graph that crossed into it moved
   in the beliefs while it was out; on one thread, as a world's test runs, the scopes go in order on the task
   (the-agent-is-a-runtime-of-tasks, #1100).
+- **A task due now waits busy, and a booting waits for every package's booting ended as well as the agent's** —
+  at rest until its timer fired, a task due at this very instant left the agent idle between a head handed over and
+  the tick that takes it, while one deciding again at the next instant rests, since waited for busy the lane's
+  couriers never settled for the test to move their vans; and on several threads the agent's booting was heard ended before the last package's, which
+  then lay in an inbox nothing reads until the agent stops, busy for ever: the test on two threads never settled, or
+  looked before the pump was told to dose, one run in five where the machine was loaded and none where it was not
+  (`Handed::sleep_until`, `Handed::booted`).
+- **A hearer's inbox is closed and emptied while nothing is being sent** — a sender on another thread counts an
+  event sent before it is in the inbox, so `Events::send` and a hearer's drop share one lock; closed on reading
+  the code, seen in no run.
 - **Work a task sets going off its turn is in hand when it comes back** — kept busy until the task next waits
   (`Working::back`); dropped as the work ended, the agent read idle before what the task said of it was told, and a
   test on two threads looked before the pump was told to dose.

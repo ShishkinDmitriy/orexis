@@ -334,6 +334,7 @@ package "task::life" {
     {field} ~running : Option<Span>
     {field} ~stopping : Option<Span>
     {field} ~krate : Option<&'static str>
+    {field} ~heard : Settling
   }
   class "Named" as orexis__task__life__Named << (S,#A8D8EA) struct >> {
     {field} .0 : Vec<String>
@@ -440,6 +441,7 @@ orexis__task__life__Life *-- "1" orexis__task__hearing__Hears : hears
 orexis__task__life__Life *-- "0..1" orexis__task__life__Span : booting
 orexis__task__life__Life *-- "0..1" orexis__task__life__Span : running
 orexis__task__life__Life *-- "0..1" orexis__task__life__Span : stopping
+orexis__task__life__Life *-- "1" orexis__task__life__Settling : heard
 orexis__task__life__Running *-- "1" orexis__task__life__Handed : handed
 orexis__task__life__Booted *-- "1" orexis__task__life__Handed : handed
 orexis__task__provided__Checking o-- "1" orexis__task__provided__Found : 0
