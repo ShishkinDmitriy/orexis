@@ -19,7 +19,7 @@ use crate::admit::local_of;
 use crate::derive_wants::derive_wants;
 use crate::events::{Rerooted, WantReached};
 use crate::find_scopes::Scopes;
-use crate::lay_ground::{Landed, Laying, lay_ground_foreseeing};
+use crate::lay_ground::{Landed, Laying, cut_out, lay_ground_foreseeing, no_longer_ahead};
 use crate::memo::Memo;
 use crate::ontology::EXHAUSTED;
 use crate::prepare_ground::Crossed;
@@ -47,6 +47,8 @@ pub(super) struct Searching {
     /// When each step in flight of the scope lands, and what it changes there.
     pub(super) landings: Vec<DateTime>,
     pub(super) landed: Vec<Landed>,
+    /// The instants the last planning of this scope laid a ground at for a want kept below to begin in.
+    pub(super) begun: Vec<DateTime>,
     pub(super) foresight: Option<Box<dyn Foresight>>,
     pub(super) walks: Walks,
     pub(super) walking: BTreeSet<String>,
@@ -124,6 +126,7 @@ impl Searching {
             within,
             landings,
             landed,
+            begun,
             mut foresight,
             walks,
             walking,
@@ -154,23 +157,32 @@ impl Searching {
                 .collect()
         };
         //  WHETHER WHAT A WORLD READS BESIDE ITS GROUND STANDS AS IT DID WHEN THE LAST PLANNING BEGAN: asked here,
-        //  the imaginarium refreshed and nothing of this planning written yet, and of the same moment of the
-        //  planning before, since laying cuts the changeable out of these graphs and the derivation writes wants
-        //  into them. So the planning after one that minted a want begins its searches again, once (#1158).
+        //  the imaginarium refreshed, what the scope can change cut out of it and nothing else of this planning
+        //  written yet, and of the same moment of the planning before, since the derivation writes wants into these
+        //  graphs. So the planning after one that minted a want begins its searches again, once (#1158). ASKED BEFORE
+        //  THE CUT, what a step changes was beside every ground, and a ground ahead laid again while a plan was walked
+        //  towards it kept nothing: the search of a want beginning there began again at every step.
+        let laying_for = Scope {
+            actions: only.as_ref(),
+            within: within.as_ref(),
+            ..Scope::default()
+        };
+        //  WHERE A WANT KEPT BELOW BEGAN AT THE LAST PLANNING is no ground ahead until this one lays it again.
+        for was in begun {
+            no_longer_ahead(store, was)?;
+        }
+        cut_out(store, at, &laying_for)?;
         let stands = beside(store)?;
         let as_stood = as_was == Some(stands);
         let laid = lay_ground_foreseeing(
             store,
             at,
             &Laying {
-                scope: Scope {
-                    actions: only.as_ref(),
-                    within: within.as_ref(),
-                    ..Scope::default()
-                },
+                scope: laying_for,
                 landings: &landings,
                 landed: &landed,
                 as_stood,
+                cut: true,
             },
             foresight.as_mut().map(|f| f.as_mut() as &mut dyn Foresight),
         )?;

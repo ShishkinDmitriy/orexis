@@ -24,8 +24,12 @@ fn graphs(names: &[String]) -> Value {
 }
 
 /// The world the present is: of the worlds holding the ground's facts, the largest cone, then the earliest minted.
+/// A WORLD WEIGHED FOR A WANT THAT HAS NOT BEGUN IS NONE OF THEM, though it hold the present's facts: it follows a
+/// state not reached yet, and a want beginning where a plan ends searched back over the present in a yard of nine
+/// cells, so the present was taken for a world of its search and handed that search's worlds as its own.
 fn matched(store: &Store, ground: &str, hash: &str, cat: &Value) -> Result<Option<String>, Error> {
-    const MATCHES_Q: &str = r#"PREFIX orexis: <http://example.org/orexis#>
+    const MATCHES_Q: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     SELECT ?w ?minted WHERE {
@@ -35,6 +39,11 @@ fn matched(store: &Store, ground: &str, hash: &str, cat: &Value) -> Result<Optio
         FILTER NOT EXISTS { ?w prov:wasDerivedFrom+ $ground }
         FILTER NOT EXISTS { ?w (planning:by/planning:from)+ $ground }
         OPTIONAL { ?w planning:minted ?m } }
+      FILTER NOT EXISTS {
+        GRAPH $cat { ?x planning:weighs ?w ; planning:for ?later .
+                     ?wanted a planning:WantGraph ; dcterms:temporal/orexis:start ?begins .
+                     $ground dcterms:temporal/orexis:start ?now . FILTER(?begins > ?now) }
+        GRAPH ?wanted { ?later a planning:Want } }
       BIND(COALESCE(?m, 0) AS ?minted) }"#;
     const CONE_SIZE_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
     SELECT (COUNT(DISTINCT ?w) AS ?n) WHERE { GRAPH $cat { ?w (planning:by/planning:from)+ $match } }"#;
@@ -154,17 +163,20 @@ pub fn reroot(store: &Store, ground: &str) -> Result<Rerooting, Error> {
     //  name twice, so no other world holds the present's hash, and what was imagined from the ground the first time
     //  still hangs from it - `lay_ground` took back the candidates of a ground laid again as another, and a cone
     //  begins at a candidate. Called a surprise, a search the budget cut short lost everything it had weighed.
+    //  AND WHAT WAS IMAGINED FROM A GROUND AHEAD STAYS WITH IT, whatever the present is: a want that begins there is
+    //  searched from it over several plannings, while the present moves towards it.
     let mut own = false;
-    if found.is_none() {
-        for laid in kept.clone() {
-            let cone: Vec<String> = store
-                .rows(&bind(CONE_Q, &[("match", at(&laid)), ("cat", cat.clone())])?, &[])?
-                .iter()
-                .filter_map(|r| iri(r, "w"))
-                .collect();
-            own = own || !cone.is_empty();
-            kept.extend(cone);
+    for laid in kept.clone() {
+        if found.is_some() && laid == ground {
+            continue;
         }
+        let cone: Vec<String> = store
+            .rows(&bind(CONE_Q, &[("match", at(&laid)), ("cat", cat.clone())])?, &[])?
+            .iter()
+            .filter_map(|r| iri(r, "w"))
+            .collect();
+        own = own || (found.is_none() && !cone.is_empty());
+        kept.extend(cone);
     }
     let mut gone: Vec<String> = store
         .rows(&bind(MADE_Q, &[("cat", cat.clone())])?, &[])?
@@ -268,6 +280,42 @@ SELECT ?w ?at ?until ?spent WHERE {
     #[test]
     fn every_case_is_read_and_no_diff_is_orphaned() {
         snapshots::all_read(&cases(), 3);
+    }
+
+    #[test]
+    fn a_world_weighed_for_a_want_that_has_not_begun_is_not_the_present() {
+        let case = cases().join("a_step_taken_as_predicted_keeps_its_cone.trig");
+        let store = snapshots::stand_in(&case);
+        let matched = reroot(&store, &present(&store))
+            .unwrap()
+            .matched
+            .expect("the case's present is a world imagined");
+        //  THE SAME STORE, the world weighed for a want whose graph holds from an hour on.
+        let store = snapshots::stand_in(&case);
+        let catalogue = store.catalogue().unwrap().unwrap();
+        let begins = snapshots::now()
+            .checked_add_day_time_duration(DayTimeDuration::new(3600))
+            .unwrap();
+        store
+            .update(&format!(
+                "PREFIX dcterms: <http://purl.org/dc/terms/>
+                 PREFIX orexis: <http://example.org/orexis#>
+                 PREFIX planning: <http://example.org/orexis/planning#>
+                 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                 INSERT DATA {{
+                   GRAPH <{catalogue}> {{
+                     <urn:test:weighing> a planning:Weighing ; planning:weighs <{matched}> ; planning:for <urn:test:later> .
+                     <urn:test:wanted> a planning:WantGraph ;
+                       dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start \"{}\"^^xsd:dateTime ] }}
+                   GRAPH <urn:test:wanted> {{ <urn:test:later> a planning:Want }} }}",
+                orexis::clock::isoformat(begins)
+            ))
+            .unwrap();
+        assert_ne!(
+            reroot(&store, &present(&store)).unwrap().matched,
+            Some(matched),
+            "it follows a state not reached yet, whatever facts it holds"
+        );
     }
 
     #[test]

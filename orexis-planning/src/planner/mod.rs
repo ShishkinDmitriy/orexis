@@ -15,6 +15,7 @@
 //! — for the executor it is linked to, and in the events said to whoever watches the agent (`events`), with the pass's
 //! laps, where somebody does.
 
+mod ahead;
 mod check;
 mod kept;
 mod policy;
@@ -47,7 +48,6 @@ use crate::memo::Memo;
 use crate::ontology::{CONSTRAINT_GRAPH, DESIRE, PLANNING, SCOPE_GRAPH, SHAPES, WANT};
 use crate::prepare_ground::prepare_ground;
 use crate::publish_plan::publish_plan;
-use crate::refine::refine;
 use crate::scope_actions::scope_actions;
 use crate::shapes::Shapes;
 use crate::weigh::{shapes, weigh};
@@ -149,6 +149,8 @@ pub struct Planner {
     cut: BTreeMap<String, (DateTime, BTreeSet<String>)>,
     /// What each scope's worlds read beside their grounds, as the last planning left it: a digest, by scope.
     beside: BTreeMap<String, u64>,
+    /// The instants the last planning laid a ground at for a want kept below to begin in, by scope.
+    begun: BTreeMap<String, Vec<DateTime>>,
     /// THE PLANNER'S IMAGINARIA, one per scope, kept from pass to pass and refreshed at every `plan`.
     pub imaginaria: BTreeMap<String, Store>,
     /// What the texts a pass evaluates read, remembered while the graphs they live in stand.
@@ -203,6 +205,8 @@ pub(crate) struct Pass {
     read: Option<BTreeSet<String>>,
     walks: Walks,
     walking: BTreeSet<String>,
+    /// Where each want kept below and still to be planned begins, with what the plans below change before it.
+    ahead: Vec<ahead::Ahead>,
     searched: BTreeSet<String>,
 }
 
@@ -242,10 +246,12 @@ impl Planner {
 /// this, so a ground is laid again as it stood only where this stands too (#1158). In this process alone: it is
 /// compared with the digest the planning before left, never kept.
 fn beside(store: &Store) -> Result<u64, Error> {
-    const BESIDE_Q: &str = r#"PREFIX orexis: <http://example.org/orexis#>
+    const BESIDE_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
+      PREFIX orexis: <http://example.org/orexis#>
       PREFIX planning: <http://example.org/orexis/planning#>
       SELECT DISTINCT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
       VALUES ?kind { orexis:BeliefGraph planning:WantGraph planning:DesireGraph orexis:RecordGraph }
+      FILTER NOT EXISTS { ?g a execution:CommittedStepGraph }
       FILTER NOT EXISTS { ?g a planning:GroundGraph } FILTER NOT EXISTS { ?g a planning:PossibleGraph }
       FILTER NOT EXISTS { ?g a planning:ChangeableGraph } FILTER NOT EXISTS { ?g a orexis:OntologyGraph } } }"#;
     use std::hash::{Hash, Hasher};
@@ -751,6 +757,7 @@ impl Planner {
             budget_every_s,
             cut: BTreeMap::new(),
             beside: BTreeMap::new(),
+            begun: BTreeMap::new(),
             imaginaria: BTreeMap::new(),
             read: None,
             handed: Vec::new(),
@@ -798,8 +805,9 @@ impl Planner {
         let scopes = find_scopes(beliefs)?
             .ok_or_else(|| Error::Evaluation("the store holds no scope graph — scope_actions has not run".into()))?;
         let walking = self.walking()?;
-        self.withdraw_orphaned_refinements(&walking)?;
-        let written = self.keep_below(at)?;
+        let live = self.live()?;
+        self.withdraw_orphaned_refinements(&live, &walking)?;
+        let (written, ahead) = self.keep_below(&live, at)?;
         let walks = if self.holds_a_constraint()? {
             self.walks(at)?
         } else {
@@ -831,6 +839,7 @@ impl Planner {
                 read,
                 walks,
                 walking,
+                ahead,
                 searched: BTreeSet::new(),
             },
             written,
@@ -879,6 +888,7 @@ impl Planner {
             read,
             walks,
             walking,
+            ahead,
             ..
         } = pass;
         let (at, read) = (*at, read.as_ref());
@@ -934,7 +944,16 @@ impl Planner {
             .filter(|s| in_only(&s.action))
             .map(|s| s.lands)
             .collect();
-        let landed = landed(beliefs, walks, only.as_ref())?;
+        let mut landings = landings;
+        let mut landed = landed(beliefs, walks, only.as_ref())?;
+        //  AND WHERE A WANT KEPT BELOW BEGINS: the ground there holds what the plans below this scope's still change.
+        let mut begins = Vec::new();
+        for begun in ahead.iter().filter_map(|a| a.landed(in_only)) {
+            landings.push(begun.at);
+            begins.push(begun.at);
+            landed.push(begun);
+        }
+        let before = self.begun.insert(scope.to_string(), begins).unwrap_or_default();
         //  AND WHAT MOVES FROM EACH GROUND: the flows, integrated by the predictor's foresight as the grounds are
         //  laid (#1000) — every key advanced, and a crossing laid here where the key is this scope's, as a reading
         //  is placed: the scopes its feature and property meet in, or every scope where none.
@@ -955,6 +974,7 @@ impl Planner {
             within,
             landings,
             landed,
+            begun: before,
             foresight,
             walks: walks.clone(),
             walking: walking.clone(),
@@ -1027,6 +1047,14 @@ impl Planner {
         self.mark_kept(&handed)?;
         let published = self.said_published(&store, &handed, &present, &scope, &mut memo, at)?;
         self.lap("publish");
+        //  A PLAN BELOW PUBLISHED IS WHERE THE STEP AFTER ITS OWN BEGINS, so planning is due again at once: the next
+        //  step kept below is given its want and searched while this plan is walked.
+        if !published.is_empty() {
+            let keeping: BTreeSet<String> = refined(beliefs)?.into_iter().map(|r| r.want).collect();
+            if published.iter().any(|event| keeping.contains(&event.want)) {
+                self.due = true;
+            }
+        }
         for event in published {
             self.handed.push((event.plan.clone(), event.want.clone()));
             if self.watch.connected() {
@@ -1174,35 +1202,6 @@ impl Planner {
             .iter()
             .filter_map(|r| iri(r, "want"))
             .collect())
-    }
-
-    /// Give every step an intention stands at that is kept below and has fallen due the want that keeps it.
-    fn keep_below(&self, at: DateTime) -> Result<Vec<String>, Error> {
-        const KEPT_DUE_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
-        SELECT ?step WHERE {
-          GRAPH ?g { ?i a execution:Intention ; execution:by ?step ; execution:adopts ?plan .
-                     FILTER NOT EXISTS { ?i execution:resolvedAt ?done } }
-          GRAPH ?plan { ?step execution:keptBelow true .
-                        OPTIONAL { ?step execution:notBefore ?due } }
-          FILTER(!BOUND(?due) || ?due <= $now)
-          FILTER NOT EXISTS { GRAPH ?h { ?step execution:keptBy ?w } } }
-        ORDER BY ?step"#;
-        let mut minted = Vec::new();
-        for r in self
-            .beliefs
-            .rows(&bind(KEPT_DUE_Q, &[("now", Value::instant(at))])?, &[])?
-        {
-            let Some(step) = iri(&r, "step") else { continue };
-            if let Some(want) = refine(&self.beliefs, &self.uri, &step, at)? {
-                minted.extend(
-                    refined(&self.beliefs)?
-                        .into_iter()
-                        .filter(|r| r.want == want)
-                        .map(|r| r.graph),
-                );
-            }
-        }
-        Ok(minted)
     }
 
     /// Every want that stands after the last pass, across the imaginaria.

@@ -65,7 +65,7 @@ Desire: where a want comes from, what shape it has, and who is allowed to change
 What happens to a decision — committed as an intention, carried out by whoever the T-Box says takes it.
 
 * [an-intention-is-an-amortised-deliberation](/decisions/an-intention-is-an-amortised-deliberation.md) - BDI's third letter: a commitment to reduce a named gap by a named means, so a decision is made once.
-* [the-hierarchy-is-found-in-the-rules](/decisions/the-hierarchy-is-found-in-the-rules.md) - Combining two domains is enough: bridge rules, run backwards at a step, keep it below. Refused: per-action bridges, rules in the search.
+* [the-hierarchy-is-found-in-the-rules](/decisions/the-hierarchy-is-found-in-the-rules.md) - Combining two domains is enough: bridge rules, run backwards, keep a step below, refined ahead of its turn. Refused: per-action bridges, rules in the search.
 * [an-intention-is-a-plan-committed-to](/decisions/an-intention-is-a-plan-committed-to.md) - The plan's head is what the keeper writes, execution is one kernel path, and `orexis:takenBy` links a row to the code that takes it.
 * [an-action-takes-parameters](/decisions/an-action-takes-parameters.md) - An action declares what it is filled with; the kernel carries opaque pairs and names no column.
 * [the-action-is-the-kind](/decisions/the-action-is-the-kind.md) - `orexis:Means` read by nothing; the action node is what a row carries and an intention commits to, and the five means are gone.

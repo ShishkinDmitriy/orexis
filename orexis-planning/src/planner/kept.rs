@@ -1,18 +1,16 @@
-//! THE PLANS A PASS KEPT: the steps a published plan says, the plans marked kept, the refinements nobody's plan
-//! needs any more withdrawn, and whether a want's search has exhausted what it can reach.
+//! THE PLANS A PASS KEPT: the steps a published plan says, the plans marked kept, and whether a want's search has
+//! exhausted what it can reach.
 
 use std::collections::{BTreeMap, BTreeSet};
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
-use orexis::ontology::{ACTION, BELIEF};
+use orexis::ontology::ACTION;
 use orexis::store::{Store, Within, iri, value};
 
-use super::{Planner, Refined, Said, graphs, refined, strs};
-use crate::admit::local_of;
+use super::{Planner, Said, graphs, strs};
 use crate::bridge::keeps;
 use crate::ontology::{EXHAUSTED, PLAN_GRAPH};
-use crate::withdraw::withdraw;
 
 /// The steps of `plan` in `store`, in the order walked, each with the action it fills and its filling: the parameters
 /// each action takes, as the actions in `store` declare them.
@@ -95,35 +93,6 @@ impl Planner {
                     ))?;
                 }
             }
-        }
-        Ok(())
-    }
-
-    /// A want kept below for a step no intention stands at any more is nothing's: withdrawn, here and everywhere.
-    pub(super) fn withdraw_orphaned_refinements(&self, walking: &BTreeSet<String>) -> Result<(), Error> {
-        const STANDING_AT_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
-        SELECT DISTINCT ?step WHERE { GRAPH ?g { ?i a execution:Intention ; execution:by ?step .
-                                                 FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }"#;
-        let standing_at: BTreeSet<String> = self
-            .beliefs
-            .rows(STANDING_AT_Q, &[])?
-            .iter()
-            .filter_map(|r| iri(r, "step"))
-            .collect();
-        for Refined { want, graph: g, step } in refined(&self.beliefs)? {
-            if standing_at.contains(&step) || walking.contains(&want) {
-                continue;
-            }
-            self.beliefs.forget_graph(&g, Some(BELIEF))?;
-            let reached = BTreeSet::from([want.clone()]);
-            for store in self.imaginaria.values() {
-                withdraw(store, None, &reached, &BTreeSet::new())?;
-            }
-            log::info!(
-                "{}: withdrew {}, since nothing stands at the step it kept",
-                self.id,
-                local_of(&want)
-            );
         }
         Ok(())
     }

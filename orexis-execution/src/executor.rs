@@ -284,6 +284,62 @@ impl Executor {
         Ok(found.iter().filter_map(|r| iri(r, "step")).collect())
     }
 
+    /// The wants that keep `step` below, as planning said beside each (`execution:keptBy`).
+    fn keeping(&self, step: &str) -> Result<Vec<String>, Error> {
+        const KEEPING_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+            SELECT DISTINCT ?want WHERE { GRAPH ?g { $step execution:keptBy ?want } }";
+        let found = self
+            .beliefs
+            .rows(&bind(KEEPING_Q, &[("step", Value::iri(step))])?, &[])?;
+        Ok(found.iter().filter_map(|r| iri(r, "want")).collect())
+    }
+
+    /// Whether `intention` pursues a want that keeps a step below which is not taken yet: its plan waits for it.
+    fn awaits(&self, intention: &str) -> Result<bool, Error> {
+        const KEPT_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+            SELECT ?step WHERE { GRAPH ?g { ?step execution:keptBy $want } }";
+        const TAKEN_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+            SELECT ?act WHERE { GRAPH $intentions { ?act execution:of $step ; execution:refinedBy $want } } LIMIT 1";
+        let Some(want) = self.pursued(intention)? else {
+            return Ok(false);
+        };
+        for r in self
+            .beliefs
+            .rows(&bind(KEPT_Q, &[("want", Value::iri(want.as_str()))])?, &[])?
+        {
+            let Some(step) = iri(&r, "step") else { continue };
+            let taken = self.rows_of(
+                TAKEN_Q,
+                &[
+                    ("intentions", self.mine()),
+                    ("step", Value::iri(step)),
+                    ("want", Value::iri(want.as_str())),
+                ],
+            )?;
+            if taken.is_empty() {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    /// The standing intentions pursuing a want that keeps a step of `intention` below.
+    fn below(&self, intention: &str) -> Result<Vec<String>, Error> {
+        const PURSUING_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+            SELECT DISTINCT ?below WHERE { GRAPH $intentions { ?below a execution:Intention ; execution:pursues $want .
+              FILTER NOT EXISTS { ?below execution:resolvedAt ?at } } }";
+        let mut out = Vec::new();
+        for step in self.committed(intention)? {
+            for want in self.keeping(&step)? {
+                let found = self.rows_of(PURSUING_Q, &[("intentions", self.mine()), ("want", Value::iri(want))])?;
+                out.extend(found.iter().filter_map(|r| iri(r, "below")));
+            }
+        }
+        out.sort();
+        out.dedup();
+        Ok(out)
+    }
+
     fn catalogue(&self) -> Result<Option<String>, Error> {
         self.beliefs.catalogue()
     }
@@ -814,11 +870,6 @@ impl Executor {
 
     /// Say this commitment has ended, and how; it stays among the intentions, with its outcome.
     pub fn resolve(&mut self, intention: &str, outcome: &str) -> Result<(), Error> {
-        const BELOW_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
-        SELECT DISTINCT ?below WHERE { GRAPH $intentions {
-          $intention execution:step ?step . ?act execution:of ?step ; execution:refinedBy ?want .
-          ?below a execution:Intention ; execution:pursues ?want .
-          FILTER NOT EXISTS { ?below execution:resolvedAt ?at } } }";
         let now = self.clock.now();
         self.intentions.update(&format!(
             "PREFIX execution: <http://example.org/orexis/execution#>
@@ -845,14 +896,9 @@ impl Executor {
             });
         }
         if outcome != "done" && outcome != "reached" {
-            let below = self.rows_of(
-                BELOW_Q,
-                &[("intentions", self.mine()), ("intention", Value::iri(intention))],
-            )?;
-            for r in below {
-                if let Some(b) = iri(&r, "below") {
-                    self.resolve(&b, "abandoned")?;
-                }
+            //  WHATEVER KEEPS A STEP OF IT BELOW IS ABANDONED WITH IT, the step's turn come or not.
+            for below in self.below(intention)? {
+                self.resolve(&below, "abandoned")?;
             }
         }
         Ok(())
@@ -877,9 +923,9 @@ impl Executor {
           OPTIONAL { GRAPH ?plan { ?step execution:retracts ?retracts } } }
         ORDER BY ?due ?intention";
         const REFINED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
-        SELECT ?outcome WHERE { GRAPH $intentions { $act execution:refinedBy ?want .
+        SELECT ?outcome ?ended WHERE { GRAPH $intentions { $act execution:refinedBy ?want .
           ?below a execution:Intention ; execution:pursues ?want .
-          OPTIONAL { ?below execution:outcome ?outcome } } }";
+          OPTIONAL { ?below execution:outcome ?outcome } OPTIONAL { ?below execution:resolvedAt ?ended } } }";
         const WAITS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
           SELECT ?for WHERE { GRAPH $intentions { $intention execution:waitsFor ?for .
           FILTER NOT EXISTS { ?for execution:resolvedAt ?done } } } LIMIT 1";
@@ -916,6 +962,11 @@ impl Executor {
             {
                 continue;
             }
+            //  A PLAN THAT KEEPS A STEP BELOW IS WALKED ONCE THAT STEP IS TAKEN: planning finds it while the steps
+            //  before are still walked, from where they end, and nothing of it is taken before its turn.
+            if act.is_none() && self.awaits(&intention)? {
+                continue;
+            }
             let Some(act) = act else {
                 let when = at_of(&r, "due")?;
                 let ready = when.is_none_or(|w| w <= now);
@@ -936,11 +987,19 @@ impl Executor {
                 continue;
             }
             let (lands, latest) = landing(&r, now)?;
-            let below: Vec<Option<String>> = self
-                .rows_of(REFINED_Q, &[("intentions", self.mine()), ("act", Value::iri(act))])?
-                .iter()
-                .map(|b| value(b, "outcome"))
-                .collect();
+            let kept = self.rows_of(REFINED_Q, &[("intentions", self.mine()), ("act", Value::iri(act))])?;
+            let below: Vec<Option<String>> = kept.iter().map(|b| value(b, "outcome")).collect();
+            //  A STEP KEPT BELOW IS SHOWN ONCE THE PLAN BELOW IT HAS ENDED, so its patience runs from that end: run
+            //  from its own landing, a move two minutes of drives carried out had failed before the drop was
+            //  believed, and the plan above was found again after every step of it.
+            let mut latest = latest;
+            for b in &kept {
+                if let Some(ended) = at_of(b, "ended")?
+                    && ended > latest
+                {
+                    latest = ended;
+                }
+            }
             let given_up = plus(latest, self.patience_s)?;
             if now < lands {
                 wake_at(lands);
@@ -2729,5 +2788,87 @@ SELECT ?outcome WHERE { ?e a execution:IntentionResolved, execution:IntentionFai
             1,
             "the intention it failed is an IntentionFailed: {body}"
         );
+    }
+
+    const BELOW: &str = "http://example.org/test#below";
+    const PLAN_BELOW: &str = "http://example.org/test#plan_below";
+
+    /// `beliefs` saying, as planning does beside the want, that `want` keeps `step` below.
+    fn keeping(beliefs: &Store, step: &str, want: &str) {
+        beliefs
+            .update(&format!(
+                "PREFIX execution: <http://example.org/orexis/execution#>
+                INSERT DATA {{ GRAPH <http://example.org/test#refined> {{ <{step}> execution:keptBy <{want}> }} }}"
+            ))
+            .unwrap();
+    }
+
+    #[test]
+    fn a_plan_that_keeps_a_step_below_is_walked_once_that_step_is_taken() {
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
+        let above = format!("{PLAN}.0");
+        keeping(&b, &above, BELOW);
+        let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
+        x.commit(Some(&a_plan(1, PLAN_BELOW)), PLAN_BELOW, BELOW).unwrap();
+        assert!(
+            x.tick(now()).unwrap().is_empty(),
+            "found ahead of its turn, it waits for the step it keeps"
+        );
+        i.update(&format!(
+            "PREFIX execution: <http://example.org/orexis/execution#>
+            INSERT DATA {{ GRAPH <{}> {{ <{above}.act> execution:of <{above}> ; execution:refinedBy <{BELOW}> }} }}",
+            x.graph
+        ))
+        .unwrap();
+        assert_eq!(x.tick(now()).unwrap().len(), 1, "and is walked once that step is taken");
+    }
+
+    /// A move kept below, committed with the plan that keeps it; the executor, and the intention below.
+    fn kept_below(b: &Store, i: &Store, clock: Arc<Manual>) -> (Executor, String) {
+        let above = filled_move();
+        above
+            .update(&format!(
+                "PREFIX execution: <http://example.org/orexis/execution#>
+                INSERT DATA {{ GRAPH <{PLAN}> {{ <{PLAN}.0> execution:keptBelow true }} }}"
+            ))
+            .unwrap();
+        keeping(b, &format!("{PLAN}.0"), BELOW);
+        let mut x = Executor::new(b, AGENT, Some(i), None, clock).unwrap();
+        x.commit(Some(&above), PLAN, WANT).unwrap();
+        x.commit(Some(&a_plan(1, PLAN_BELOW)), PLAN_BELOW, BELOW).unwrap();
+        x.tick(now()).unwrap();
+        x.drain().unwrap();
+        let below = x.standing_for(BELOW).unwrap().expect("the plan below is adopted").uri;
+        (x, below)
+    }
+
+    #[test]
+    fn a_step_kept_below_is_given_its_patience_from_the_end_of_the_plan_below() {
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
+        let (mut x, below) = kept_below(&b, &i, clock.clone());
+        //  THE PLAN BELOW TAKES THREE PATIENCES, far past the landing the move was planned at, and ends done.
+        let ended = after(3.0 * patience_s());
+        clock.set(ended);
+        x.resolve(&below, "done").unwrap();
+        x.tick(ended).unwrap();
+        assert!(
+            x.standing_for(WANT).unwrap().is_some(),
+            "the world is given a patience from the end of the plan below to show the move"
+        );
+        x.tick(plus(ended, patience_s()).unwrap()).unwrap();
+        assert!(x.standing_for(WANT).unwrap().is_none(), "and no longer");
+    }
+
+    #[test]
+    fn a_plan_below_not_yet_begun_is_abandoned_with_the_intention_whose_step_it_keeps() {
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
+        let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
+        //  TWO MOVES, the second kept below by a plan found ahead of its turn.
+        keeping(&b, &format!("{PLAN}.1"), BELOW);
+        x.commit(Some(&predicting_move(2, PLAN)), PLAN, WANT).unwrap();
+        x.commit(Some(&a_plan(1, PLAN_BELOW)), PLAN_BELOW, BELOW).unwrap();
+        let above = x.standing_for(WANT).unwrap().expect("adopted").uri;
+        x.resolve(&above, "failed").unwrap();
+        assert!(x.standing_for(BELOW).unwrap().is_none(), "nothing is left to keep");
     }
 }

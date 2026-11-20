@@ -43,7 +43,22 @@ digest per scope of the beliefs, wants, desires and records its imaginarium hold
 ground's hash says only its own facts and a weighing reads both. Where either differs the ground loses the
 weighings of it and the candidates admitted in it as it is laid, and a cone begins at a candidate, so nothing
 hangs from it. The planning after one that minted a want therefore begins its searches again, once: the want is
-new beside the ground.
+new beside the ground. What stands beside a ground is asked once what the scope can change is cut out, and a
+[committed step](/domain/execution/committed-step.md) is none of it, being what the plan already says: asked before the cut, where the van stood was beside
+every ground, and no ground laid again while a plan was walked kept anything.
+
+A ground ahead keeps what was imagined from it the same way, whatever the present is. A want may begin at a
+ground ahead — one foreseen, or one kept below a step that begins where the plan before it ends
+([refinement](/domain/planning/refinement.md)) — and its search goes on over several plannings while the present
+moves towards that ground. Two things follow. A world weighed for a want that has not begun is never the
+present, though it hold the present's facts: it follows a state not reached yet, and in a yard of nine cells
+such a search came back over the present, which was taken for one of its worlds and handed that search's worlds
+as its own. And the ground a want kept below began at, laid by the planning before and not by this one, is no
+ground ahead of this present: the planner takes back what it was derived from before it lays again, so it is
+dropped with the rest unless it is the present's match. Left standing with no end, it held at every later instant,
+and a step landing later was forked from it. A ground laid ahead for a landing or a forecast and not laid again
+still stands that way, and the lane's walks end as they do with it standing: taken back for every ground, two
+couriers meeting head on no longer parted, which is a debt and not a rule.
 
 # What the hash reads
 
