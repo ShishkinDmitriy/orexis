@@ -50,7 +50,9 @@ still walked, and the executor takes a step once the plan below it exists, waiti
 ends, so it is weighed, as any want is, in the ground holding at its instant; and a ground is laid
 there holding what the plans below still change — each untaken step's change applied over the ones
 before, for the scope whose actions they fill. That ground is the state its search starts from:
-where the van will stand, not where it stood when the puzzle was solved. When a plan ends is
+where the van will stand, not where it stood when the puzzle was solved. And the instant is where
+the search starts, no instant to land by: no world of it is late for landing after it, so its
+frontier goes by cost, as a search from the present does. When a plan ends is
 computed at every planning off the plans and the intentions, never stored: a walk running late
 moves every plan after it.
 
@@ -60,7 +62,10 @@ takes nothing of it until that step is taken, so two plans below are never walke
 **The present moves towards the ground, and the search goes on.** What a search imagined from a
 ground ahead stays with that ground from one planning to the next while the ground and what is
 read beside it stand ([cone](/domain/planning/cone.md)). Where the plan before goes otherwise than
-it said, the ground is laid as another, and the want is searched again from it.
+it said, the ground is laid as another, and the want is searched again from it. It is searched
+again in two cases where the plan goes as it said, a debt (#1245): a step that lands at once
+changes what is read beside the ground, and the instant the plan before ends at moves by a second
+as its last step falls due.
 
 # Why the landing world and not the diff
 

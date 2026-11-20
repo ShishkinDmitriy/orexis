@@ -146,7 +146,9 @@ So, since 2026-10-03:
   instant is a deadline only where it is when the trouble BEGINS: a want in trouble now has none
   ahead, and a want that reopens a walking one is minted at the instant the step in flight lands,
   which is where its search starts — read as a deadline, every drive of the lane's reopened plans was
-  late, the search went soonest-first, and five lane walks failed or ran out of time. What that
+  late, the search went soonest-first, and five lane walks failed or ran out of time. A want kept
+  below is read the same way, beginning where the plan before it ends: read as a deadline, its search
+  ahead weighed twice the worlds for the same plan. What that
   leaves: a reopening want whose own trouble begins after the step in flight lands keeps that later
   instant and is read as no deadline either; the trigger is a world where such a plan is late.
 - **A plan is a chain, not a partial order.** `execution:then` orders every step after the one

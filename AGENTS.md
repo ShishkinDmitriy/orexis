@@ -359,6 +359,10 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A step kept below is given its patience from the end of the plan below it** — given it from its own landing, a
   move two minutes of drives carried out failed as they ended, and the plan above was found again after every move,
   which a test counting refinements did not see.
+- **Where a want kept below begins is where its search starts, no instant to land by** — read as one, every world of
+  a search ahead landed late and its frontier went by the soonest landing, not the cost: twice the worlds for the
+  plan a search from the present finds, a pick and a drop taking no time, and the tower's walk took three times
+  `main`'s (`weigh`, refinement).
 - **A world weighed for a want that has not begun is never the present, and the ground a want kept below began at
   is no ground ahead once it is not laid again** — a search from a ground ahead came back over the present in a yard
   of nine cells and the present was handed its worlds; and such a ground one planning laid and the next did not held

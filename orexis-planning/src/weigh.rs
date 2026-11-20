@@ -189,13 +189,15 @@ fn held(store: &Store, for_: &str, memo: &mut Memo) -> Result<Row, Error> {
 /// past the instant the want lifts by — must miss for a want of the agent's own, may miss for an obligation.
 fn when(store: &Store, for_: &str, world: &str, cat: &str, memo: &mut Memo) -> Result<(Option<DateTime>, bool), Error> {
     const PERIOD_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX execution: <http://example.org/orexis/execution#>
     PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
-    SELECT ?start ?end ?reopens ?owed WHERE {
+    SELECT ?start ?end ?reopens ?keeps ?owed WHERE {
       GRAPH $cat { ?d a planning:WantGraph ; dcterms:temporal ?p .
                    OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } }
-      GRAPH ?d { $for a planning:Want OPTIONAL { $for planning:reopens ?reopens } }
+      GRAPH ?d { $for a planning:Want OPTIONAL { $for planning:reopens ?reopens }
+                 OPTIONAL { ?keeps execution:keptBy $for } }
       OPTIONAL { { GRAPH $cat { ?d orexis:arrivedBy orexis:Received } }
                  UNION
                  { GRAPH ?d { $for prov:wasDerivedFrom ?desire } GRAPH ?dg { ?desire a planning:Desire }
@@ -226,8 +228,13 @@ fn when(store: &Store, for_: &str, world: &str, cat: &str, memo: &mut Memo) -> R
         .transpose()?
         .unwrap_or(earliest);
     let now = present(store, cat, memo)?;
-    let at = match (&start, value(&period, "reopens")) {
-        (Some(s), None) => Some(instant(s)?),
+    //  WHERE A WANT'S SEARCH STARTS IS NO INSTANT TO LAND BY: a reopened want's, and a want kept below's, which
+    //  begins where the plan before it ends. Read as one, every world of a search ahead landed late, and its
+    //  frontier went by the soonest landing, not the cost: twice the worlds for the plan a search from the present
+    //  finds, a pick and a drop taking no time.
+    let begins = value(&period, "reopens").is_some() || value(&period, "keeps").is_some();
+    let at = match (&start, begins) {
+        (Some(s), false) => Some(instant(s)?),
         _ => None,
     };
     let lifts = end.map(|e| instant(&e)).transpose()?;
@@ -430,6 +437,47 @@ mod tests {
             }
             snapshots::held_to_diff(&case, &store, "weigh");
         }
+    }
+
+    /// A want kept below begins where the plan before it ends, and that is where its search starts, no instant to
+    /// land by: a world landing after it is not late, where the same world is late for a want foreseen at that
+    /// instant.
+    #[test]
+    fn a_world_landing_after_a_want_kept_below_begins_is_not_late() {
+        const AHEAD_U: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
+        PREFIX orexis: <http://example.org/orexis#>
+        PREFIX planning: <http://example.org/orexis/planning#>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+        DELETE { GRAPH $cat { ?p orexis:start ?s . ?p orexis:end ?e } }
+        INSERT { GRAPH $cat { ?p orexis:start ?at } }
+        WHERE  { GRAPH $cat { { ?g a planning:WantGraph BIND("2026-01-01T12:05:00Z"^^xsd:dateTime AS ?at) }
+                              UNION { ?g a planning:PossibleGraph BIND("2026-01-01T12:10:00Z"^^xsd:dateTime AS ?at) }
+                              ?g dcterms:temporal ?p . ?p orexis:start ?s OPTIONAL { ?p orexis:end ?e } } }"#;
+        const KEPT_U: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
+        PREFIX planning: <http://example.org/orexis/planning#>
+        INSERT { GRAPH ?d { <http://example.org/test#step> execution:keptBy $want } }
+        WHERE  { GRAPH $cat { ?d a planning:WantGraph } GRAPH ?d { $want a planning:Want } }"#;
+        let store = snapshots::stand_in(&cases().join("a_candidate_reaching_a_new_world.trig"));
+        let cat = store.catalogue().unwrap().unwrap();
+        let pair = unweighed(&store, None, None, &mut Memo::default())
+            .unwrap()
+            .into_iter()
+            .find(|pair| pair.contains_key("child"))
+            .unwrap();
+        let (want, world) = (iri(&pair, "for").unwrap(), iri(&pair, "child").unwrap());
+        store
+            .update(&bind(AHEAD_U, &[("cat", Value::iri(cat.as_str()))]).unwrap())
+            .unwrap();
+        let (late, _) = when(&store, &want, &world, &cat, &mut Memo::default()).unwrap();
+        assert_eq!(
+            late.map(isoformat).as_deref(),
+            Some("2026-01-01T12:10:00+00:00"),
+            "a want foreseen at an instant ahead is landed late for after it"
+        );
+        let marks = [("cat", Value::iri(cat.as_str())), ("want", Value::iri(want.as_str()))];
+        store.update(&bind(KEPT_U, &marks).unwrap()).unwrap();
+        let (late, _) = when(&store, &want, &world, &cat, &mut Memo::default()).unwrap();
+        assert_eq!(late, None, "and a want kept below only begins there");
     }
 
     #[test]
