@@ -152,7 +152,7 @@ fn what_is_concluded_of_a_percept_is_a_percept_and_no_belief() {
         .rows(
             &bind(
                 "PREFIX orexis: <http://example.org/orexis#>
-                    SELECT ?k WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g a ?k } }",
+                    SELECT ?k WHERE { GRAPH $g { $g a ?k } }",
                 &[("g", Value::iri(revisions[0].as_str()))],
             )
             .unwrap(),

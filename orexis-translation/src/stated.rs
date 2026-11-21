@@ -428,7 +428,7 @@ pub fn believed_of(statement: &str) -> String {
 pub fn believe(store: &Store, statement: &str) -> Result<Vec<String>, Error> {
     const START_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?start WHERE { GRAPH $cat { $g dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1";
+        SELECT ?start WHERE { GRAPH $g { $g dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1";
     let target = believed_of(statement);
     store.forget_graph(&target, Some(BELIEF))?;
     let Some(cat) = store.catalogue()? else {
@@ -449,13 +449,7 @@ pub fn believe(store: &Store, statement: &str) -> Result<Vec<String>, Error> {
             .map(|q| Quad::new(q.subject, q.predicate, q.object, into.clone())),
     )?;
     let start = store
-        .rows(
-            &bind(
-                START_Q,
-                &[("cat", Value::iri(cat.as_str())), ("g", Value::iri(statement))],
-            )?,
-            &[],
-        )?
+        .rows(&bind(START_Q, &[("g", Value::iri(statement))])?, &[])?
         .first()
         .and_then(|r| value(r, "start"))
         .map(|s| instant(&s))

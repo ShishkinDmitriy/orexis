@@ -80,6 +80,7 @@ pub fn stand_in_with(case: &Path, more: &str) -> Store {
         "{} names no graph that describes itself as the catalogue",
         name(case)
     );
+    store.close_catalogue().expect("the rows closed");
     assert!(
         !store
             .graphs_of(&[ONTOLOGY], &Within::default())
@@ -88,8 +89,27 @@ pub fn stand_in_with(case: &Path, more: &str) -> Store {
         "{} types no graph as the vocabulary's",
         name(case)
     );
-    store.close_catalogue().expect("the rows closed");
     store
+}
+
+/// A TEST'S OWN FIXTURE SAYS EACH GRAPH'S METADATA ONCE, on its row, as a case does: every row of the catalogue
+/// that says a kind is said by its graph too. For a store a test wrote by hand, with no vocabulary to close a kind
+/// to `orexis:Graph` by; never for one whose catalogue holds things that are no graph.
+pub fn mirrored(store: &Store) {
+    let catalogue = store.catalogue().expect("one catalogue").expect("a catalogue");
+    let rows: BTreeSet<String> = store
+        .quads(&catalogue)
+        .expect("the catalogue's quads")
+        .into_iter()
+        .filter(|q| q.predicate.as_str() == RDF_TYPE)
+        .filter_map(|q| match q.subject {
+            NamedOrBlankNode::NamedNode(g) if g.as_str() != catalogue => Some(g.into_string()),
+            _ => None,
+        })
+        .collect();
+    for graph in rows {
+        store.carry_metadata_of(&graph).expect("a graph saying its metadata");
+    }
 }
 
 /// The lines that say something: a comment is never what a case is held to.

@@ -36,10 +36,10 @@ pub fn world_at(store: &Store, world: Option<&str>, asking: &Asking, memo: &mut 
     PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     SELECT ?g WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                   { ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start }
-                   UNION { ?g a planning:ChangeableGraph ; prov:wasDerivedFrom/dcterms:temporal/orexis:start ?start }
-                   FILTER(?start > $now) } }";
+      { GRAPH ?g { ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start } }
+      UNION { GRAPH ?g { ?g a planning:ChangeableGraph ; prov:wasDerivedFrom ?source }
+              GRAPH ?source { ?source dcterms:temporal/orexis:start ?start } }
+      FILTER(?start > $now) }";
     let (at, until) = match world {
         None => {
             let now = asking.now.ok_or_else(|| {

@@ -25,7 +25,7 @@ pub fn heard(store: &Store, me: &str, payload: &[u8]) -> Result<Vec<String>, Err
 
 fn refused(store: &Store, payload: &[u8]) -> Result<Document, Error> {
     const ARRIVED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?arrival WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph orexis:arrivedBy ?arrival } }";
+        SELECT ?arrival WHERE { GRAPH $graph { $graph orexis:arrivedBy ?arrival } }";
     let doc = Document::of(payload)?;
     for graph in doc.kinds().into_keys() {
         let arrived: Vec<String> = store
@@ -75,6 +75,7 @@ mod tests {
                            <{STATEMENT}> rdfs:subClassOf orexis:Graph . }} }}"
         ))
         .unwrap();
+        orexis::snapshots::mirrored(&st);
         st
     }
 
@@ -122,7 +123,7 @@ mod tests {
         assert!(!kinds(&store, BELIEF).contains(&round), "and no belief");
         let q = format!(
             "PREFIX orexis: <http://example.org/orexis#>
-                SELECT ?a ?o WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{round}> orexis:arrivedBy ?a ; orexis:ownedBy ?o }} }}"
+                SELECT ?a ?o WHERE {{ GRAPH <{round}> {{ <{round}> orexis:arrivedBy ?a ; orexis:ownedBy ?o }} }}"
         );
         let found = store.rows(&q, &[]).unwrap();
         assert_eq!(found.len(), 1);

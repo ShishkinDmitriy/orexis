@@ -380,13 +380,10 @@ impl Executor {
     pub fn commit_plans(&mut self) -> Result<Vec<String>, Error> {
         const PLANS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?plan ?want WHERE { GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?root execution:pursues ?want }
+        SELECT ?plan ?want WHERE { GRAPH ?plan { ?plan a orexis:PlanGraph . ?root execution:pursues ?want }
           FILTER NOT EXISTS { GRAPH ?g { ?i execution:adopts ?plan } } }
         ORDER BY ?plan";
-        let Some(cat) = self.catalogue()? else {
-            return Ok(Vec::new());
-        };
-        let plans = self.beliefs.rows(&bind(PLANS_Q, &[("cat", Value::iri(cat))])?, &[])?;
+        let plans = self.beliefs.rows(PLANS_Q, &[])?;
         let mut committed = false;
         for r in plans {
             if let (Some(plan), Some(want)) = (iri(&r, "plan"), iri(&r, "want")) {
@@ -562,7 +559,7 @@ impl Executor {
         const STEP_GRAPHS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
             SELECT ?g ?side WHERE { GRAPH $plan { ?step ?side ?g . VALUES ?side { execution:adds execution:retracts } } }";
         const CLASSIFIED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-            SELECT ?k WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph a ?k } } LIMIT 1";
+            SELECT ?k WHERE { GRAPH $graph { $graph a ?k } } LIMIT 1";
         let from = source.unwrap_or(&self.beliefs);
         let plan = Value::iri(graph);
         let mut steps: Vec<String> = from
@@ -737,7 +734,7 @@ impl Executor {
     fn close_window(&mut self, step: &str, now: DateTime) -> Result<(), Error> {
         const WINDOW_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
             PREFIX orexis: <http://example.org/orexis#>
-            SELECT ?end WHERE { GRAPH $cat { $g a $kind ; dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?end } } }";
+            SELECT ?end WHERE { GRAPH $g { $g a $kind ; dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?end } } }";
         /// A COMMITTED STEP'S WINDOW ENDS NOW: said where `$in` says its period, its row and the graph itself.
         const CLOSE_U: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
@@ -752,7 +749,6 @@ impl Executor {
             &bind(
                 WINDOW_Q,
                 &[
-                    ("cat", Value::iri(cat.clone())),
                     ("g", Value::iri(graph.clone())),
                     ("kind", Value::iri(COMMITTED_STEP_GRAPH)),
                 ],
@@ -783,18 +779,14 @@ impl Executor {
     fn sweep(&mut self, now: DateTime) -> Result<(), Error> {
         const ENDED_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g WHERE { GRAPH $cat { ?g a $kind $owned ; dcterms:temporal ?p . ?p orexis:end ?end . FILTER(?end <= $now) } }
+        SELECT ?g WHERE { GRAPH ?g { ?g a $kind $owned ; dcterms:temporal ?p . ?p orexis:end ?end . FILTER(?end <= $now) } }
         ORDER BY ?g";
-        let Some(cat) = self.catalogue()? else {
-            return Ok(());
-        };
         let owner = self.owner()?;
         let owned = owner.map(|o| format!("; orexis:ownedBy <{o}>")).unwrap_or_default();
         let ended = self.beliefs.rows(
             &bind(
                 ENDED_Q,
                 &[
-                    ("cat", Value::iri(cat)),
                     ("kind", Value::iri(COMMITTED_STEP_GRAPH)),
                     ("now", Value::instant(now)),
                     ("owned", Value::raw(owned)),
@@ -1719,6 +1711,7 @@ mod tests {
         let ontology =
             orexis::document::Document::read(&snapshots::tree().join("orexis-execution/ontology.ttl")).unwrap();
         st.put_document(&ontology, None, None, None, true).unwrap();
+        snapshots::mirrored(&st);
         st
     }
 
@@ -1731,6 +1724,7 @@ mod tests {
 GRAPH <http://example.org/test#catalogue> { <http://example.org/test#catalogue> a orexis:CatalogueGraph }",
         )
         .unwrap();
+        orexis::snapshots::mirrored(&st);
         with_ontology(st)
     }
 
@@ -1793,6 +1787,7 @@ GRAPH <http://example.org/test#catalogue> {{
             ),
         )
         .unwrap();
+        orexis::snapshots::mirrored(&st);
         with_ontology(st)
     }
 
@@ -1877,7 +1872,7 @@ GRAPH <http://example.org/test#catalogue> {{
                 &bind(
                     "PREFIX dcterms: <http://purl.org/dc/terms/>
   PREFIX orexis: <http://example.org/orexis#>
-  SELECT ?g ?start ?end WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a $kind ; dcterms:temporal ?p .
+  SELECT ?g ?start ?end WHERE { GRAPH ?g { ?g a $kind ; dcterms:temporal ?p .
   ?p orexis:start ?start ; orexis:end ?end } } ORDER BY ?g",
                     &[("kind", Value::iri(COMMITTED_STEP_GRAPH))],
                 )
@@ -2173,6 +2168,7 @@ GRAPH <http://example.org/test#catalogue> {{
         GRAPH :catalogue {{ <{revisions}> prov:wasDerivedFrom <{STATE}> ; a orexis:BeliefGraph }} }}"
         ))
         .unwrap();
+        orexis::snapshots::mirrored(&b);
         let source = predicting(
             a_plan(2, PLAN),
             &format!("{PLAN}.0"),
@@ -2244,6 +2240,7 @@ GRAPH <http://example.org/test#catalogue> {{
   GRAPH :catalogue {{ :actions a orexis:ActionGraph }} }}"
         ))
         .unwrap();
+        orexis::snapshots::mirrored(&b);
         let (i, clock) = (store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let source = predicting_move(1, PLAN);
@@ -2311,6 +2308,7 @@ GRAPH <http://example.org/test#catalogue> {{
   GRAPH :catalogue {{ <{me_self}> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy <{ME}> }} }}"
         ))
         .unwrap();
+        orexis::snapshots::mirrored(&b);
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         assert_eq!(x.patience_s, 5.0);
         let intention = x.commit(Some(&predicting_move(1, PLAN)), PLAN, WANT).unwrap().unwrap();

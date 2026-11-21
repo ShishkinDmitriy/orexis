@@ -32,8 +32,8 @@ and each is read by its own kind — `orexis:ActionGraph`, `orexis:FlowGraph`, `
 `planning:ConstraintGraph`, `planning:DerivationGraph`, `sh:RulesGraph` — beneath `orexis:Graph` alone
 ([the-state-is-what-a-scope-can-change-and-everything-known-is-belief](/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md)).
 
-The catalogue carries every kind a graph's class is beneath, so a reader asks `?g a
-planning:WantGraph` or hands `store.graphs_of(BELIEF, PREDICTION)` its kinds and walks no path —
+A graph says of itself every kind its class is beneath, so a reader asks `GRAPH ?g { ?g a
+planning:WantGraph }` or hands `store.graphs_of(BELIEF, PREDICTION)` its kinds and walks no path —
 and never names a graph instance.
 
 # The logics these belong to

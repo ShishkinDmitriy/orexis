@@ -96,17 +96,6 @@ impl Within {
     }
 }
 
-const OWNED: &str = "OPTIONAL { ?g orexis:ownedBy ?owner } FILTER(!BOUND(?owner) || ?owner = $holder)";
-
-const COMMON: &str = "FILTER NOT EXISTS { ?g orexis:ownedBy ?anyone }";
-
-/// HOLDING AT `$at` AND STILL AT `$until`: begun by the first and not ended by the second; a record at the present.
-const HOLDING: &str = "OPTIONAL { ?g dcterms:temporal ?period .
-               OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?end } }
-    BIND(IF(EXISTS { ?g a orexis:RecordGraph }, $now, $at) AS ?when)
-    BIND(IF(EXISTS { ?g a orexis:RecordGraph }, $now, $until) AS ?till)
-    FILTER(!BOUND(?start) || ?when >= ?start) FILTER(!BOUND(?end) || ?till < ?end)";
-
 const PROV_DERIVED: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
 const ARRIVED_BY: &str = "http://example.org/orexis#arrivedBy";
 const OWNED_BY: &str = "http://example.org/orexis#ownedBy";
@@ -360,59 +349,86 @@ impl Store {
         Ok(found.pop())
     }
 
-    /// Every graph the catalogue types under any of `kinds` — beneath them too, the rows closed when written — as
+    /// Every graph that says itself of any of `kinds` — beneath them too, its kinds closed when written — as
     /// `within` narrows them, in name order. THE ONE LOOKUP A READER TAKES, and it decides nothing else.
+    ///
+    /// ASKED OF THE INDEX, NOT BY A TEXT: a graph's metadata is in the graph, so the text would be a group under
+    /// `GRAPH ?g` with an `OPTIONAL` in it, which the engine evaluates per named graph — 58 ms over 6,000 graphs
+    /// for 24 rows, measured when the catalogue was found that way. What is of a kind is one scan of the type's
+    /// index, and what each then says of its owner and its period a lookup under its own name.
     pub fn graphs_of(&self, kinds: &[&str], within: &Within) -> Result<Vec<String>, Error> {
-        /// WHICH GRAPHS, in one text: those of any kind named — every row carries every kind its class is beneath, so
-        /// no path is walked — the holder's or the common ones where a holder is named, and holding at the instant
-        /// where one is given. THE CATALOGUE IS NAMED, asked for once and spliced: found by its row inside this
-        /// group, the group was evaluated per named graph, so the lookup grew with every graph the store held
-        /// whatever its kind — 6 ms over 600 graphs and 58 over 6,000 for the same 24 rows holding, where named it
-        /// is under one over either.
-        const GRAPHS_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
-        PREFIX orexis: <http://example.org/orexis#>
-        SELECT DISTINCT ?g WHERE {
-          GRAPH $cat {
-            ?g a ?kind . FILTER(isIRI(?g)) VALUES ?kind { $kinds }
-            $owned
-            $holding } }
-        ORDER BY ?g";
-        let Some(catalogue) = self.catalogue()? else {
-            return Ok(Vec::new());
-        };
-        let mut owned = match &within.holder {
-            Some(holder) => bind(OWNED, &[("holder", Value::iri(holder.clone()))])?,
-            None => String::new(),
-        };
-        if within.common {
-            owned.push_str(COMMON);
+        let mut found: BTreeSet<String> = BTreeSet::new();
+        for kind in kinds {
+            let kind = named(kind)?;
+            for quad in self
+                .engine
+                .quads_for_pattern(None, Some(rdf::TYPE), Some(kind.as_ref().into()), None)
+            {
+                let quad = quad.map_err(engine)?;
+                if let (NamedOrBlankNode::NamedNode(subject), GraphName::NamedNode(graph)) =
+                    (&quad.subject, &quad.graph_name)
+                    && subject == graph
+                {
+                    found.insert(graph.as_str().to_string());
+                }
+            }
         }
-        let holding = match within.at {
-            Some(at) => bind(
-                HOLDING,
-                &[
-                    ("at", Value::instant(at)),
-                    ("until", Value::instant(within.until.unwrap_or(at))),
-                    ("now", Value::instant(within.now.unwrap_or(at))),
-                ],
-            )?,
-            None => String::new(),
+        let mut out = Vec::with_capacity(found.len());
+        for graph in found {
+            if self.is_within(&graph, within)? {
+                out.push(graph);
+            }
+        }
+        Ok(out)
+    }
+
+    /// Whether `graph` is one `within` asks for, by what it says of itself: the holder's or nobody's where a
+    /// holder is named, nobody's where the common ones are asked, and HOLDING AT THE INSTANT where one is given —
+    /// begun by `at` and not ended by `until`, a record read at the present, a graph saying no period at any.
+    fn is_within(&self, graph: &str, within: &Within) -> Result<bool, Error> {
+        let me = Term::NamedNode(named(graph)?);
+        if within.holder.is_some() || within.common {
+            let owners = self.objects(&me, OWNED_BY, graph)?;
+            let mine = |owner: &Term| matches!((owner, &within.holder), (Term::NamedNode(o), Some(holder)) if o.as_str() == holder);
+            if !owners.is_empty() && (within.common || !owners.iter().any(mine)) {
+                return Ok(false);
+            }
+        }
+        let Some(at) = within.at else {
+            return Ok(true);
         };
-        let kinds = kinds.iter().map(|k| format!("<{k}>")).collect::<Vec<_>>().join(" ");
-        let text = bind(
-            GRAPHS_Q,
-            &[
-                ("cat", Value::iri(catalogue)),
-                ("kinds", Value::Raw(kinds)),
-                ("owned", Value::Raw(owned)),
-                ("holding", Value::Raw(holding)),
-            ],
-        )?;
-        Ok(self
-            .rows_named(&text)?
-            .into_iter()
-            .filter_map(|r| iri(&r, "g"))
-            .collect())
+        let (when, till) = if self.holds(graph, crate::rdf::RDF_TYPE, crate::ontology::RECORD, graph)? {
+            let now = within.now.unwrap_or(at);
+            (now, now)
+        } else {
+            (at, within.until.unwrap_or(at))
+        };
+        let instants = |period: &Term, bound: &str| -> Result<Vec<Option<DateTime>>, Error> {
+            Ok(self
+                .objects(period, bound, graph)?
+                .iter()
+                .map(|t| match t {
+                    Term::Literal(l) => l.value().parse::<DateTime>().ok(),
+                    _ => None,
+                })
+                .collect())
+        };
+        let periods = self.objects(&me, DCTERMS_TEMPORAL, graph)?;
+        if periods.is_empty() {
+            return Ok(true);
+        }
+        for period in &periods {
+            let (starts, ends) = (
+                instants(period, crate::ontology::START)?,
+                instants(period, crate::ontology::END)?,
+            );
+            let begun = starts.is_empty() || starts.iter().any(|s| s.is_some_and(|s| when >= s));
+            let holding = ends.is_empty() || ends.iter().any(|e| e.is_some_and(|e| till < e));
+            if begun && holding {
+                return Ok(true);
+            }
+        }
+        Ok(false)
     }
 
     /// `class` and every class the vocabulary puts it beneath, sorted; the class alone where no vocabulary is.
@@ -420,8 +436,8 @@ impl Store {
         const SUBCLASSES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
         SELECT DISTINCT ?super WHERE {
-          GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }
-          GRAPH ?vocabulary { $cls rdfs:subClassOf ?super . FILTER(isIRI(?super)) } }";
+          GRAPH ?vocabulary { ?vocabulary a orexis:OntologyGraph . $cls rdfs:subClassOf ?super .
+                              FILTER(isIRI(?super)) } }";
         let text = bind(SUBCLASSES_Q, &[("cls", Value::iri(class))])?;
         let mut out: Vec<String> = self
             .rows(&text, &[])?
@@ -619,28 +635,30 @@ impl Store {
         }))
     }
 
-    /// Every graph of `kind` the catalogue says was derived from one of `sources`, sorted: what the rules
-    /// concluded of them, their revisions.
+    /// Every graph of `kind` that says it was derived from one of `sources`, sorted: what the rules concluded of
+    /// them, their revisions.
     pub fn revisions_of(&self, sources: &[&str], kind: &str) -> Result<Vec<String>, Error> {
-        let Some(catalogue) = self.catalogue()? else {
-            return Ok(Vec::new());
-        };
-        let (cat, derived, kind) = (named(&catalogue)?, named(PROV_DERIVED)?, named(kind)?);
+        let (derived, kind) = (named(PROV_DERIVED)?, named(kind)?);
         let mut out = BTreeSet::new();
         for source in sources {
             let source = named(source)?;
-            for quad in self.engine.quads_for_pattern(
-                None,
-                Some(derived.as_ref()),
-                Some(source.as_ref().into()),
-                Some(GraphNameRef::NamedNode(cat.as_ref())),
-            ) {
+            for quad in self
+                .engine
+                .quads_for_pattern(None, Some(derived.as_ref()), Some(source.as_ref().into()), None)
+            {
                 let quad = quad.map_err(engine)?;
-                let typed = Quad::new(quad.subject.clone(), rdf::TYPE, kind.clone(), cat.clone());
-                if self.engine.contains(&typed).map_err(engine)?
-                    && let NamedOrBlankNode::NamedNode(r) = quad.subject
+                let (NamedOrBlankNode::NamedNode(subject), GraphName::NamedNode(graph)) =
+                    (&quad.subject, &quad.graph_name)
+                else {
+                    continue;
+                };
+                if subject == graph
+                    && self
+                        .engine
+                        .contains(&Quad::new(subject.clone(), rdf::TYPE, kind.clone(), graph.clone()))
+                        .map_err(engine)?
                 {
-                    out.insert(r.into_string());
+                    out.insert(graph.as_str().to_string());
                 }
             }
         }
@@ -743,6 +761,8 @@ impl Store {
         let Some(catalogue) = self.catalogue()? else {
             return Ok(());
         };
+        //  THE VOCABULARY SAYS ITSELF ONE FIRST: a class is closed by asking the graphs that say they are it.
+        self.carry_metadata()?;
         let mut held: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
         for row in self.rows_named(ROWS_Q)? {
             if let (Some(g), Some(class)) = (iri(&row, "g"), iri(&row, "class")) {
@@ -772,12 +792,7 @@ impl Store {
         let Some(catalogue) = self.catalogue()? else {
             return Ok(());
         };
-        let (cat, a_graph, arrived, temporal) = (
-            named(&catalogue)?,
-            named(GRAPH)?,
-            named(ARRIVED_BY)?,
-            named(DCTERMS_TEMPORAL)?,
-        );
+        let (cat, a_graph, arrived) = (named(&catalogue)?, named(GRAPH)?, named(ARRIVED_BY)?);
         let in_cat = GraphNameRef::NamedNode(cat.as_ref());
         let mut described = BTreeSet::new();
         for (predicate, object) in [(rdf::TYPE, Some(a_graph.as_ref().into())), (arrived.as_ref(), None)] {
@@ -792,9 +807,23 @@ impl Store {
                 }
             }
         }
-        let mut said = Vec::new();
         for graph in described {
-            let graph = named(&graph)?;
+            self.carry_metadata_of(&graph)?;
+        }
+        Ok(())
+    }
+
+    /// ONE GRAPH SAYS OF ITSELF WHAT ITS ROW SAYS, as `carry_metadata` says of every graph: for a writer that
+    /// wrote a row alone, a document put while the agent runs.
+    pub fn carry_metadata_of(&self, graph: &str) -> Result<(), Error> {
+        let Some(catalogue) = self.catalogue()? else {
+            return Ok(());
+        };
+        let (cat, a_graph, temporal) = (named(&catalogue)?, named(GRAPH)?, named(DCTERMS_TEMPORAL)?);
+        let in_cat = GraphNameRef::NamedNode(cat.as_ref());
+        let mut said = Vec::new();
+        {
+            let graph = named(graph)?;
             let own = GraphNameRef::NamedNode(graph.as_ref());
             said.push(Quad::new(graph.clone(), rdf::TYPE, a_graph.clone(), graph.clone()));
             for quad in self
@@ -819,6 +848,14 @@ impl Store {
                 }
                 let mine = BlankNode::default();
                 said.push(Quad::new(graph.clone(), temporal.clone(), mine.clone(), graph.clone()));
+                //  ITS PERIOD IS TYPED WHATEVER THE ROW'S WAS: a document may state one bare, and the type is what
+                //  a period is told from a fact by.
+                said.push(Quad::new(
+                    mine.clone(),
+                    rdf::TYPE,
+                    named(crate::ontology::PERIOD)?,
+                    graph.clone(),
+                ));
                 for of in self
                     .engine
                     .quads_for_pattern(Some(period.as_ref().into()), None, None, Some(in_cat))
@@ -889,13 +926,13 @@ mod tests {
 
 :catalogue {
   :catalogue a orexis:CatalogueGraph .
-  :vocabulary a orexis:OntologyGraph .
-  :world a orexis:BeliefGraph .
-  :mine a orexis:BeliefGraph ; orexis:ownedBy :me .
-  :theirs a orexis:BeliefGraph ; orexis:ownedBy :them .
-  :hour a orexis:BeliefGraph ; dcterms:temporal [ orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ;
+  :vocabulary a orexis:Graph , orexis:OntologyGraph .
+  :world a orexis:Graph , orexis:BeliefGraph .
+  :mine a orexis:Graph , orexis:BeliefGraph ; orexis:ownedBy :me .
+  :theirs a orexis:Graph , orexis:BeliefGraph ; orexis:ownedBy :them .
+  :hour a orexis:Graph , orexis:BeliefGraph ; dcterms:temporal [ orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ;
                                                     orexis:end "2026-01-01T13:00:00Z"^^xsd:dateTime ] .
-  :record a orexis:RecordGraph ; dcterms:temporal [ orexis:start "2026-01-01T10:00:00Z"^^xsd:dateTime ;
+  :record a orexis:Graph , orexis:RecordGraph ; dcterms:temporal [ orexis:start "2026-01-01T10:00:00Z"^^xsd:dateTime ;
                                                      orexis:end "2026-01-01T11:00:00Z"^^xsd:dateTime ] .
 }
 :vocabulary { :StateGraph rdfs:subClassOf orexis:BeliefGraph . }
@@ -907,6 +944,7 @@ mod tests {
         let _tree = Path::new(crate::boot::TREE);
         let store = Store::new().unwrap();
         store.load_trig(CATALOGUED).unwrap();
+        store.carry_metadata().unwrap();
         store
     }
 
@@ -1061,17 +1099,21 @@ mod tests {
     #[test]
     fn a_text_run_again_is_not_parsed_again() {
         let store = store();
-        for _ in 0..10 {
-            store.graphs_of(&[BELIEF], &Within::default()).unwrap();
-        }
-        //  TWO TEXTS A LOOKUP: which graph is the catalogue, and which graphs it says are of the kind.
         let (parsed, run) = store.statements();
-        assert_eq!((parsed, run), (2, 20));
+        for _ in 0..10 {
+            store.catalogue().unwrap();
+        }
+        assert_eq!(
+            store.statements(),
+            (parsed, run + 10),
+            "the text was parsed as the fixture was made"
+        );
     }
 
     #[test]
     fn what_is_kept_parsed_is_capped_and_the_text_still_asked_stays() {
         let store = store();
+        let before = store.statements();
         let asked = "ASK { ?s ?p ?o }";
         let once = KEPT.get() + 1;
         for i in 0..once {
@@ -1090,7 +1132,7 @@ mod tests {
         }
         let (parsed, run) = store.statements();
         assert_eq!(
-            (parsed, run),
+            (parsed - before.0, run - before.1),
             (once + 1, 2 * once),
             "the text still asked was parsed the once"
         );
@@ -1151,6 +1193,7 @@ mod tests {
       GRAPH <urn:other/rev> { <urn:s> <urn:side> <urn:inside> } }",
             )
             .unwrap();
+        store.carry_metadata().unwrap();
         assert_eq!(store.revisions_of(&["urn:g"], BELIEF).unwrap(), ["urn:g/rev"]);
         store.forget_graph("urn:g", Some(BELIEF)).unwrap();
         assert!(store.revisions_of(&["urn:g"], BELIEF).unwrap().is_empty());
@@ -1193,7 +1236,7 @@ mod tests {
         store
             .update(
                 "PREFIX : <http://example.org/test#>
-                    INSERT DATA { GRAPH :catalogue { :lately a :StateGraph } }",
+                    INSERT DATA { GRAPH :catalogue { :lately a <http://example.org/orexis#Graph> , :StateGraph } }",
             )
             .unwrap();
         assert!(!store.graphs_of(&[BELIEF], &state).unwrap().contains(&t("lately")));

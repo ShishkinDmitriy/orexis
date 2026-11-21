@@ -70,10 +70,10 @@ climate:Heating a orexis:Action ;
         PREFIX climate: <http://example.org/orexis/climate#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
         SELECT ?actuator ?property ?value WHERE {
-            GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?held a sensing:ObservationGraph ; dcterms:temporal ?p .
-                         ?p orexis:start ?at . OPTIONAL { ?p orexis:end ?until }
-                         FILTER(?at <= $now && (!BOUND(?until) || $now < ?until)) }
-            GRAPH ?held { ?reading sosa:hasFeatureOfInterest ?feature ; sosa:observedProperty climate:AirTemperature ;
+            GRAPH ?held { ?held a sensing:ObservationGraph ; dcterms:temporal/orexis:start ?at .
+                          OPTIONAL { ?held dcterms:temporal/orexis:end ?until }
+                          FILTER(?at <= $now && (!BOUND(?until) || $now < ?until))
+                          ?reading sosa:hasFeatureOfInterest ?feature ; sosa:observedProperty climate:AirTemperature ;
                                    sosa:hasSimpleResult ?number }
             ?feature (sosa:isSampleOf)? $subject .
             $subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition .

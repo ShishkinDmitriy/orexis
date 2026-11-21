@@ -223,9 +223,10 @@ mod tests {
         store
             .update(&format!(
                 "PREFIX orexis: <http://example.org/orexis#>
-                 INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph . \
-                 <urn:test:one> a orexis:BeliefGraph . <urn:test:other> a orexis:ActionGraph . \
-                 <urn:test:two> a orexis:BeliefGraph }} }}"
+                 INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph }} \
+                 GRAPH <urn:test:one> {{ <urn:test:one> a orexis:BeliefGraph }} \
+                 GRAPH <urn:test:other> {{ <urn:test:other> a orexis:ActionGraph }} \
+                 GRAPH <urn:test:two> {{ <urn:test:two> a orexis:BeliefGraph }} }}"
             ))
             .unwrap();
         let events = Events::new(&store);

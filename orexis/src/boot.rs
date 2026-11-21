@@ -366,9 +366,9 @@ fn hold_the_self(store: &Store, agent: &str, me: &str, mine: &[(&Document, &str)
 /// `fresh`, each whose row says no hash yet, as a package joining put it in.
 fn stamp(store: &Store, fresh: bool) -> Result<(), Error> {
     const STAMPED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:hash ?hash } }";
+        SELECT ?g WHERE { GRAPH ?g { ?g orexis:hash ?hash } }";
     const ASSERTED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:arrivedBy orexis:Asserted } }";
+        SELECT ?g WHERE { GRAPH ?g { ?g orexis:arrivedBy orexis:Asserted } }";
     let mut graphs: Vec<String> = store.graphs_of(&[BELIEF], &Within::default())?;
     for g in store.rows(ASSERTED_Q, &[])?.iter().filter_map(|r| iri(r, "g")) {
         if !graphs.contains(&g) {
@@ -401,9 +401,11 @@ pub(crate) struct Begun {
 pub(crate) fn begin(store: &Store, booting: &Booting<'_>) -> Result<Begun, Error> {
     /// WHAT A BOOT PUT IN AND NOBODY HOLDS: asserted from a document, with no owner, and the closure.
     const FILES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-    SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-      { ?g orexis:arrivedBy orexis:Asserted FILTER NOT EXISTS { ?g orexis:ownedBy ?who } }
-      UNION { VALUES ?g { $closure } ?g orexis:arrivedBy ?any } FILTER(?g != ?cat) } }";
+    SELECT ?g WHERE {
+      { GRAPH ?g { ?g orexis:arrivedBy orexis:Asserted }
+        FILTER NOT EXISTS { GRAPH ?g { ?g orexis:ownedBy ?who } } }
+      UNION { VALUES ?g { $closure } GRAPH ?g { ?g orexis:arrivedBy ?any } }
+      FILTER NOT EXISTS { GRAPH ?g { ?g a orexis:CatalogueGraph } } }";
     let world = fs::canonicalize(booting.world)?;
     let booting = Booting {
         world: &world,
@@ -411,6 +413,8 @@ pub(crate) fn begin(store: &Store, booting: &Booting<'_>) -> Result<Begun, Error
     };
     let lived_in = store.catalogue()?.is_some();
     if lived_in {
+        //  A VOLUME LIVED IN BEFORE A GRAPH SAID ITS METADATA ITSELF says it now, before anything is asked of it.
+        store.carry_metadata()?;
         let text = bind(FILES_Q, &[("closure", Value::iri(CLOSURE_GRAPH))])?;
         for g in store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "g")) {
             store.forget_graph(&g, Some(BELIEF))?;

@@ -73,16 +73,16 @@ PREFIX planning: <http://example.org/orexis/planning#>
 PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 SELECT DISTINCT ?w WHERE {{
-  GRAPH ?g {{ {where} }}
-  GRAPH ?catalogue {{
-    ?catalogue a orexis:CatalogueGraph .
+  GRAPH ?g {{ {where}
     ?g a ?kind . VALUES ?kind {{ <{WANT}> <{RECORD}> }}
 {came}{mine}
-    OPTIONAL {{ ?g dcterms:temporal ?period . OPTIONAL {{ ?period orexis:start ?start }} OPTIONAL {{ ?period orexis:end ?end }} }} }}
+    OPTIONAL {{ ?g dcterms:temporal/orexis:start ?start }}
+    OPTIONAL {{ ?g dcterms:temporal/orexis:end ?end }} }}
   FILTER(!BOUND(?start) || ?start <= \"{now}\"^^xsd:dateTime)
   FILTER(!BOUND(?end) || ?end > \"{now}\"^^xsd:dateTime)
 }} ORDER BY ?w LIMIT {} OFFSET {}",
-        criteria.limit, criteria.offset,
+        criteria.limit,
+        criteria.offset,
         r#where = r#where,
     );
     let found: Vec<String> = store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "w")).collect();
@@ -127,6 +127,7 @@ pub(crate) mod tests {
   GRAPH <urn:test:ontology> { <urn:test:ObligationsGraph> rdfs:subClassOf orexis:RecordGraph } }",
         )
         .unwrap();
+        orexis::snapshots::mirrored(&store);
         store
     }
 
@@ -161,6 +162,7 @@ pub(crate) mod tests {
     <{graph}> a planning:WantGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy <{HOLDER}> . }} }}"
         ))
             .unwrap();
+        orexis::snapshots::mirrored(store);
         store
             .update(&format!(
                 "PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -173,6 +175,7 @@ WHERE {{ GRAPH <urn:test:catalogue> {{ }}
          FILTER NOT EXISTS {{ GRAPH <urn:test:catalogue> {{ <{graph}> dcterms:temporal ?h }} }} }}"
             ))
             .unwrap();
+        orexis::snapshots::mirrored(store);
     }
 
     /// A debt, written the way a ledger writes one: its own graph, a record of the case's own family.
@@ -193,6 +196,7 @@ WHERE {{ GRAPH <urn:test:catalogue> {{ }}
   GRAPH <urn:test:catalogue> {{ <{graph}> a <urn:test:ObligationsGraph> , orexis:RecordGraph . }} }}"
             ))
             .unwrap();
+        orexis::snapshots::mirrored(store);
     }
 
     fn find(store: &Store, criteria: Criteria<'_>) -> Vec<String> {

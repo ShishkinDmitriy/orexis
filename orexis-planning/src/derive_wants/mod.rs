@@ -66,7 +66,7 @@ pub fn derive_wants(
     PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?g WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start } }
+      GRAPH ?g { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start } }
     ORDER BY ?start";
     let mut memo = Memo::default();
     let shapes = Shapes::of(
@@ -126,9 +126,8 @@ fn standing_under(store: &Store, desire: &str) -> Result<BTreeSet<String>, Error
     PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     SELECT ?w WHERE {
-      GRAPH ?g { ?w a planning:Want ; prov:wasDerivedFrom $desire }
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                   ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }
+      GRAPH ?g { ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived .
+                 ?w a planning:Want ; prov:wasDerivedFrom $desire } }
     ORDER BY ?w";
     Ok(store
         .rows(&bind(STANDING_Q, &[("desire", Value::iri(desire))])?, &[])?
@@ -238,8 +237,8 @@ fn unhome(store: &Store, want: &str) -> Result<(), Error> {
     const HOMES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?g (COUNT(DISTINCT ?w) AS ?wants) WHERE {
-      GRAPH ?g { $want a planning:Want . ?w a planning:Want }
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }
+      GRAPH ?g { ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived .
+                 $want a planning:Want . ?w a planning:Want } }
     GROUP BY ?g";
     for r in store.rows(&bind(HOMES_Q, &[("want", Value::iri(want))])?, &[])? {
         let (Some(g), Some(n)) = (iri(&r, "g"), value(&r, "wants")) else {
@@ -331,8 +330,7 @@ fn said(store: &Store, desire: &str) -> Result<Said, Error> {
     SELECT ?p ?o WHERE {
       GRAPH ?g { $desire ?p ?o
         FILTER(?p IN (planning:metWhen, planning:unmetWhen, planning:estimates, planning:about, rdfs:label)) }
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
-                   VALUES ?kind { planning:DesireGraph planning:WantGraph } } }";
+      GRAPH ?g { ?g a ?kind . VALUES ?kind { planning:DesireGraph planning:WantGraph } } }";
     let mut out: Said = store
         .rows(&bind(SAID_Q, &[("desire", Value::iri(desire))])?, &[])?
         .into_iter()
@@ -346,8 +344,7 @@ fn desires_in(store: &Store) -> Result<Vec<(String, String)>, Error> {
     const DESIRES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT DISTINCT ?holder ?desire WHERE {
-      GRAPH ?g { ?holder planning:holds ?desire . ?desire a planning:Desire }
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:DesireGraph } }
+      GRAPH ?g { ?g a planning:DesireGraph . ?holder planning:holds ?desire . ?desire a planning:Desire } }
     ORDER BY ?holder ?desire";
     Ok(store
         .rows(DESIRES_Q, &[])?
@@ -433,9 +430,8 @@ mod tests {
 PREFIX orexis: <http://example.org/orexis#>
 PREFIX planning: <http://example.org/orexis/planning#>
 SELECT ?w ?g ?start ?reopens WHERE {
-  GRAPH ?g { ?w a planning:Want . OPTIONAL { ?w planning:reopens ?reopens } }
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph .
-               OPTIONAL { ?g dcterms:temporal/orexis:start ?start } } }";
+  GRAPH ?g { ?g a planning:WantGraph . ?w a planning:Want . OPTIONAL { ?w planning:reopens ?reopens }
+             OPTIONAL { ?g dcterms:temporal/orexis:start ?start } } }";
 
     #[test]
     fn a_walking_want_a_belief_reopened_is_minted_again_where_its_step_in_flight_lands() {

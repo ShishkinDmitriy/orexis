@@ -14,7 +14,7 @@ use orexis::foresight::Foresight;
 use orexis::store::{Store, iri, value};
 
 use super::search::Searcher;
-use super::{Walks, beside, broken, cat, held_constraints, of_scope, plan_of, said, zero};
+use super::{Walks, beside, broken, held_constraints, of_scope, plan_of, said, zero};
 use crate::admit::local_of;
 use crate::derive_wants::derive_wants;
 use crate::events::{Rerooted, WantReached};
@@ -100,13 +100,13 @@ impl Searching {
     pub(super) fn search(self) -> Result<Searched, Error> {
         const GROUND_HASHES_Q: &str = r#"PREFIX orexis: <http://example.org/orexis#>
             PREFIX planning: <http://example.org/orexis/planning#>
-            SELECT ?h WHERE { GRAPH $cat { ?g a planning:GroundGraph ; orexis:hash ?h } }"#;
+            SELECT ?h WHERE { GRAPH ?g { ?g a planning:GroundGraph ; orexis:hash ?h } }"#;
         const REOPENING_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
         SELECT ?w WHERE { GRAPH ?g { ?w planning:reopens ?w }
           FILTER NOT EXISTS { GRAPH ?p { ?root a planning:Plan ; planning:for ?w ; planning:outcome planning:Satisfied } } }"#;
         const HASHES_Q: &str = r#"PREFIX orexis: <http://example.org/orexis#>
           PREFIX planning: <http://example.org/orexis/planning#>
-          SELECT DISTINCT ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w orexis:hash ?h .
+          SELECT DISTINCT ?h WHERE { GRAPH ?w { ?w orexis:hash ?h .
           { ?w a planning:GroundGraph } UNION { ?w a planning:PossibleGraph } } }"#;
         const MET_NOW_Q: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
@@ -191,9 +191,8 @@ impl Searching {
             .cloned()
             .ok_or_else(|| Error::Evaluation("no ground was laid".into()))?;
         let arrived = !walks.is_empty() && {
-            let c = cat(store, &mut memo)?;
             store
-                .rows(&bind(GROUND_HASHES_Q, &[("cat", c)])?, &[])?
+                .rows(GROUND_HASHES_Q, &[])?
                 .iter()
                 .filter_map(|r| value(r, "h"))
                 .any(|h| !foreseen.contains(&h))
@@ -282,9 +281,8 @@ impl Searching {
                 .collect()
         };
         let grounds: BTreeSet<String> = {
-            let c = cat(store, &mut memo)?;
             store
-                .rows(&bind(GROUND_HASHES_Q, &[("cat", c)])?, &[])?
+                .rows(GROUND_HASHES_Q, &[])?
                 .iter()
                 .filter_map(|r| value(r, "h"))
                 .collect()

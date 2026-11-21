@@ -451,24 +451,21 @@ impl Events {
         Ok(())
     }
 
-    /// Every kind the catalogue says `graph` is.
+    /// Every kind `graph` says it is.
     pub(super) fn kinds(&self, graph: &str) -> Result<Vec<String>, Error> {
-        let Some(cat) = self.0.beliefs.catalogue()? else {
-            return Ok(Vec::new());
-        };
-        let text = crate::bind::bind(
-            "SELECT ?k WHERE { GRAPH $cat { $g a ?k } }",
-            &[
-                ("cat", crate::bind::Value::iri(cat)),
-                ("g", crate::bind::Value::iri(graph)),
-            ],
-        )?;
+        let me = oxigraph::model::Term::NamedNode(
+            oxigraph::model::NamedNode::new(graph)
+                .map_err(|e| Error::Evaluation(format!("{graph} is no graph's name: {e}")))?,
+        );
         Ok(self
             .0
             .beliefs
-            .rows(&text, &[])?
-            .iter()
-            .filter_map(|r| crate::store::iri(r, "k"))
+            .objects(&me, crate::rdf::RDF_TYPE, graph)?
+            .into_iter()
+            .filter_map(|kind| match kind {
+                oxigraph::model::Term::NamedNode(kind) => Some(kind.into_string()),
+                _ => None,
+            })
             .collect())
     }
 

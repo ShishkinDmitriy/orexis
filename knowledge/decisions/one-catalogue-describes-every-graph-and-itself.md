@@ -17,9 +17,10 @@ description: >-
 ---
 
 > **Amended 2026-11-21: every graph carries its metadata, the same as its row.** Each writer says a graph's
-> metadata in the graph and on its row alike, and a volume lived in is brought up as it boots; every
-> reader still asks the catalogue, as this record has it. The readers move next and the catalogue goes
-> after them, when this record is superseded ([metadata](/domain/kernel/metadata.md)).
+> metadata in the graph and on its row alike, and a volume lived in is brought up as it boots; a
+> reader asks the graph, and the catalogue is read only for what a package says on a row in words of
+> its own. It goes when those have moved, and this record is superseded then
+> ([metadata](/domain/kernel/metadata.md)).
 
 # The objection
 

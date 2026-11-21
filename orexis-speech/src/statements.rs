@@ -46,15 +46,12 @@ const TEMPORAL: &str = "http://purl.org/dc/terms/temporal";
 const START: &str = "http://example.org/orexis#start";
 const END: &str = "http://example.org/orexis#end";
 /// The kinds the catalogue `cat` says `graph` is, but a statement's own and the bare graph, in name order.
-fn kinds_of(beliefs: &Store, cat: &str, graph: &str) -> Result<Vec<String>, Error> {
+fn kinds_of(beliefs: &Store, graph: &str) -> Result<Vec<String>, Error> {
     const KINDS_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX speech: <http://example.org/orexis/speech#>
-    SELECT ?k WHERE { GRAPH $cat { $graph a ?k FILTER(?k NOT IN (speech:StatementGraph, orexis:Graph)) } } ORDER BY ?k";
+    SELECT ?k WHERE { GRAPH $graph { $graph a ?k FILTER(?k NOT IN (speech:StatementGraph, orexis:Graph)) } } ORDER BY ?k";
     Ok(beliefs
-        .rows(
-            &bind(KINDS_Q, &[("cat", Value::iri(cat)), ("graph", Value::iri(graph))])?,
-            &[],
-        )?
+        .rows(&bind(KINDS_Q, &[("graph", Value::iri(graph))])?, &[])?
         .iter()
         .filter_map(|r| iri(r, "k"))
         .collect())
@@ -62,10 +59,7 @@ fn kinds_of(beliefs: &Store, cat: &str, graph: &str) -> Result<Vec<String>, Erro
 
 /// The kinds `graph` says it is, and what it says.
 pub(crate) fn described(beliefs: &Store, graph: &str) -> Result<(Vec<String>, Vec<Triple>), Error> {
-    let kinds = match beliefs.catalogue()? {
-        Some(cat) => kinds_of(beliefs, &cat, graph)?,
-        None => Vec::new(),
-    };
+    let kinds = kinds_of(beliefs, graph)?;
     let said = match NamedNode::new(graph) {
         Ok(g) => stated_quads(
             beliefs
@@ -89,11 +83,8 @@ pub fn document_of(beliefs: &Store, graphs: &[String]) -> Result<Document, Error
     /// A STATEMENT'S PERIOD, as it was said.
     const PERIOD_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>
-    SELECT ?start ?end WHERE { GRAPH $cat { $graph dcterms:temporal ?p OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } LIMIT 1";
+    SELECT ?start ?end WHERE { GRAPH $graph { $graph dcterms:temporal ?p OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } LIMIT 1";
     let mut quads = Vec::new();
-    let Some(cat) = beliefs.catalogue()? else {
-        return Ok(Document::of_quads(quads));
-    };
     let rdf_type = NamedNode::new_unchecked(RDF_TYPE);
     for graph in graphs {
         let g = NamedNode::new(graph.as_str()).map_err(|e| Error::Evaluation(e.to_string()))?;
@@ -105,7 +96,7 @@ pub fn document_of(beliefs: &Store, graphs: &[String]) -> Result<Document, Error
                 .flatten()
                 .collect(),
         ));
-        let kinds = kinds_of(beliefs, &cat, graph)?;
+        let kinds = kinds_of(beliefs, graph)?;
         let mut beneath = Vec::new();
         for kind in &kinds {
             beneath.push(beliefs.closed(kind)?);
@@ -124,13 +115,7 @@ pub fn document_of(beliefs: &Store, graphs: &[String]) -> Result<Document, Error
                 ));
             }
         }
-        let periods = beliefs.rows(
-            &bind(
-                PERIOD_Q,
-                &[("cat", Value::iri(cat.as_str())), ("graph", Value::iri(graph))],
-            )?,
-            &[],
-        )?;
+        let periods = beliefs.rows(&bind(PERIOD_Q, &[("graph", Value::iri(graph))])?, &[])?;
         if let Some(row) = periods.first() {
             let p = BlankNode::default();
             quads.push(Quad::new(

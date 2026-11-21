@@ -47,9 +47,6 @@ pub fn lay(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Error> 
          coordination:standing true . OPTIONAL { ?c coordination:silent ?silent } } }";
     const WON_Q: &str = "PREFIX coordination: <http://example.org/orexis/coordination#>
         SELECT ?w WHERE { $draw coordination:wonBy ?w } LIMIT 1";
-    let Some(cat) = store.catalogue()? else {
-        return Ok(Vec::new());
-    };
     let beliefs = of_kind(store, &[BELIEF])?;
     let mut wanted: BTreeMap<String, Holding> = BTreeMap::new();
     let mut foreseen: BTreeMap<String, f64> = BTreeMap::new();
@@ -101,7 +98,7 @@ pub fn lay(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Error> 
             }
         }
     }
-    let laid = laid_graphs(store, &cat, me)?;
+    let laid = laid_graphs(store, me)?;
     let mut written = Vec::new();
     for graph in laid.iter().filter(|g| !wanted.contains_key(*g)) {
         store.forget_graph(graph, Some(BELIEF))?;
@@ -294,19 +291,15 @@ pub(crate) fn timeline(held: &[Holding]) -> Vec<Holding> {
 fn holding_in(store: &Store, graph: &str) -> Result<Option<Holding>, Error> {
     const PERIOD_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>
-    SELECT ?start ?end WHERE { GRAPH $cat { $graph dcterms:temporal ?p . OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } LIMIT 1";
+    SELECT ?start ?end WHERE { GRAPH $graph { $graph dcterms:temporal ?p . OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } LIMIT 1";
     let quads = stated_quads(store.quads(graph)?);
     let Some(first) = quads.first() else { return Ok(None) };
     let thing = match &first.subject {
         NamedOrBlankNode::NamedNode(n) => n.as_str().to_string(),
         other => other.to_string(),
     };
-    let cat = store.catalogue()?.unwrap_or_default();
     let row = store
-        .rows(
-            &bind(PERIOD_Q, &[("cat", Value::iri(cat)), ("graph", Value::iri(graph))])?,
-            &[],
-        )?
+        .rows(&bind(PERIOD_Q, &[("graph", Value::iri(graph))])?, &[])?
         .into_iter()
         .next()
         .unwrap_or_default();
@@ -397,17 +390,11 @@ pub(crate) type Laid = ((String, String), (Vec<Holding>, Vec<Holding>));
 /// and those it foresaw of the peer — told apart by whether the peer acts for the thing. What a history view is told; a
 /// conflict laying nothing answers two empty lists.
 /// The graphs the agent `me` laid of its peers, off the catalogue `cat`.
-fn laid_graphs(store: &Store, cat: &str, me: &str) -> Result<BTreeSet<String>, Error> {
+fn laid_graphs(store: &Store, me: &str) -> Result<BTreeSet<String>, Error> {
     /// EVERY GRAPH THE AGENT LAID BEFORE: its own forecasts, named under its laid root.
     const LAID_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g WHERE { GRAPH $cat { ?g a orexis:ForecastGraph . FILTER(STRSTARTS(STR(?g), $root)) } }";
-    let text = bind(
-        LAID_Q,
-        &[
-            ("cat", Value::iri(cat)),
-            ("root", Value::raw(format!("\"{}\"", laid_root(me)))),
-        ],
-    )?;
+        SELECT ?g WHERE { GRAPH ?g { ?g a orexis:ForecastGraph . FILTER(STRSTARTS(STR(?g), $root)) } }";
+    let text = bind(LAID_Q, &[("root", Value::raw(format!("\"{}\"", laid_root(me))))])?;
     Ok(store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "g")).collect())
 }
 
@@ -428,10 +415,7 @@ pub(crate) fn laid(store: &Store, me: &str) -> Result<Vec<Laid>, Error> {
     const ALL_Q: &str = "PREFIX coordination: <http://example.org/orexis/coordination#>
                                                                        SELECT DISTINCT ?peer ?constraint WHERE { GRAPH $graph { ?c a coordination:Conflict ; coordination:with ?peer ;
                                                                        coordination:over ?constraint } } ORDER BY ?peer ?constraint";
-    let Some(cat) = store.catalogue()? else {
-        return Ok(Vec::new());
-    };
-    let present = laid_graphs(store, &cat, me)?;
+    let present = laid_graphs(store, me)?;
     let common = store.graphs_of(&[BELIEF], &orexis::store::Within::common())?;
     let common: Vec<&str> = common.iter().map(String::as_str).collect();
     let mut out = Vec::new();

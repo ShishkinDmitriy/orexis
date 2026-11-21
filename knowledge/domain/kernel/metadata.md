@@ -4,9 +4,9 @@ title: Metadata
 description: >-
   What is said OF a graph rather than by it - its kinds, how it arrived, whose it is, the period it
   holds over, its hash, what it was derived from. Everything else a graph holds is its content. Every
-  graph carries its metadata itself, and the catalogue says the same while it stands. Told apart by
-  type, never by the graph's name, by each reader of a whole graph where it reads: the store hands
-  over triples and knows nothing of the difference.
+  graph carries its metadata itself and is asked for it there; the catalogue says the same while it
+  stands. Told apart by type, never by the graph's name, by each reader of a whole graph where it
+  reads: the store hands over triples and knows nothing of the difference.
 ---
 
 # The two halves of a graph
@@ -25,11 +25,31 @@ period ended is ended in both under a period node of each's own, and a text that
 spells the graph's block beside it. The graph always says `a orexis:Graph` of itself, whatever its
 row's kinds close to, since that type is what its metadata is told by.
 
-The metadata is on its way out of the catalogue, so that forgetting a graph is clearing it and a
-text asks a graph what it is in the one `GRAPH` clause it reads it in. Every reader still asks the
-catalogue; they move next, and the catalogue goes after them. A volume lived in before graphs
-carried their metadata is brought up as it boots (`Store::carry_metadata`, which
-`close_catalogue` ends with).
+The metadata is on its way out of the catalogue, so that forgetting a graph is clearing it. A volume
+lived in before graphs carried their metadata is brought up as it boots (`Store::carry_metadata`,
+which the boot begins with and `close_catalogue` ends with).
+
+# Where it is asked
+
+**Of the graph, in the one `GRAPH` clause a text reads it in.** A text asks a graph what it is, how it
+arrived, whose it is and when it holds under the graph's own name, beside the facts it wants of it:
+
+```sparql
+GRAPH ?g { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:start ?from .
+           OPTIONAL { ?g dcterms:temporal/orexis:end ?until }
+           ?reading sosa:madeBySensor ?sensor }
+```
+
+An end that may be missing is asked from the graph by the path, never from the period node a
+pattern before it bound: an `OPTIONAL` joined through the period alone is evaluated on its own, every
+period of every graph, 12 ms over 6,000 graphs where the path costs a tenth of one, and an
+`OPTIONAL` with `OPTIONAL`s inside it 21. `Store::graphs_of` and `revisions_of` ask the engine's
+index, one scan of the kind and a lookup under each graph's name, and parse no text.
+
+**What still asks the row** is what reads a package's own word there, and each moves with its word:
+a revision's settling, the patterns a copy was cut by, and every text of the search that walks the
+cone or reads a weighing. The copy a chat's model queries is still handed the catalogue beside its
+graphs, and onboarding's Python reading of a world keeps its own. The catalogue goes after them.
 
 **What a package says of a graph in words of its own is not this.** Whether a revision's rules settled
 (`belief:settled`), which patterns a copy was cut by and everything the search knows of a possible

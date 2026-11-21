@@ -26,9 +26,7 @@ pub fn withdraw(
     const DERIVED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?w WHERE {
-      GRAPH ?g { ?w a planning:Want }
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                   ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }";
+      GRAPH ?g { ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived . ?w a planning:Want } }";
     let standing: BTreeSet<String> = match wanted {
         Some(_) => store.rows(DERIVED_Q, &[])?.iter().filter_map(|r| iri(r, "w")).collect(),
         None => BTreeSet::new(),
@@ -75,8 +73,7 @@ fn forget_search(store: &Store, uri: &str) -> Result<(), Error> {
     const PLAN_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?plan WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?plan a planning:PlanGraph }
-      GRAPH ?plan { ?root a planning:Plan ; planning:for $want } }";
+      GRAPH ?plan { ?plan a planning:PlanGraph . ?root a planning:Plan ; planning:for $want } }";
     const STEP_GRAPHS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         SELECT ?g WHERE { GRAPH $plan { ?step execution:adds|execution:retracts ?g } }";
     store.update(&bind(WEIGHINGS_U, &[("want", Value::iri(uri))])?)?;
@@ -98,9 +95,8 @@ pub fn forget_want(store: &Store, uri: &str) -> Result<(), Error> {
     const HOME_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?g ?kind (COUNT(DISTINCT ?w) AS ?wants) WHERE {
-      GRAPH ?g { $want a planning:Want . ?w a planning:Want }
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
-                   VALUES ?kind { planning:WantGraph orexis:RecordGraph } } }
+      GRAPH ?g { $want a planning:Want . ?w a planning:Want . ?g a ?kind .
+                 VALUES ?kind { planning:WantGraph orexis:RecordGraph } } }
     GROUP BY ?g ?kind";
     let mut home: Vec<(String, String, usize)> = store
         .rows(&bind(HOME_Q, &[("want", Value::iri(uri))])?, &[])?
@@ -184,10 +180,12 @@ mod tests {
         );
         assert!(found(&store).is_empty());
         assert_eq!(
-            store
-                .quads("http://example.org/orexis/market#obligations/gardener/owed")
-                .unwrap()
-                .len(),
+            orexis::metadata::stated_quads(
+                store
+                    .quads("http://example.org/orexis/market#obligations/gardener/owed")
+                    .unwrap()
+            )
+            .len(),
             1,
             "and the record keeps what else it holds"
         );
@@ -230,6 +228,7 @@ mod tests {
         derived(&store, "urn:test:a", at(), None);
         derived(&store, "urn:test:b", at(), None);
         forget_want(&store, "urn:test:a").unwrap();
+        orexis::snapshots::mirrored(&store);
         assert_eq!(
             found(&store),
             ["urn:test:b"],

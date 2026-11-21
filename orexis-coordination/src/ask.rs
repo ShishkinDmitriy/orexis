@@ -90,9 +90,8 @@ pub fn ask(store: &Store, me: &str, at: DateTime) -> Result<Vec<(String, Documen
 fn began(store: &Store, graph: &str) -> Result<Option<DateTime>, Error> {
     const BEGAN_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?start WHERE { GRAPH $cat { $graph dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1";
-    let Some(cat) = store.catalogue()? else { return Ok(None) };
-    let text = bind(BEGAN_Q, &[("cat", Value::iri(cat)), ("graph", Value::iri(graph))])?;
+        SELECT ?start WHERE { GRAPH $graph { $graph dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1";
+    let text = bind(BEGAN_Q, &[("graph", Value::iri(graph))])?;
     store
         .rows(&text, &[])?
         .first()

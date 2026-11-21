@@ -56,8 +56,8 @@ pub fn extract_plan(store: &Store, want: &str) -> Result<String, Error> {
              GRAPH $plan { $plan a planning:PlanGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived } }
     WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph } } ;
     INSERT { GRAPH ?cat { $plan a ?kind } GRAPH $plan { $plan a ?kind } }
-    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }
-             GRAPH ?vocabulary { planning:PlanGraph rdfs:subClassOf ?kind } } ;
+    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph }
+             GRAPH ?vocabulary { ?vocabulary a orexis:OntologyGraph . planning:PlanGraph rdfs:subClassOf ?kind } } ;
     INSERT { GRAPH ?adds { ?s ?p ?o } }
     WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                           $world (planning:by/planning:from)* ?w . ?w planning:by ?by . ?by planning:from ?in
@@ -91,9 +91,10 @@ pub fn extract_plan(store: &Store, want: &str) -> Result<String, Error> {
     WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph }
              GRAPH $plan { ?step execution:adds ?adds ; execution:retracts ?retracts } } ;
     INSERT { GRAPH ?cat { ?g a ?kind } GRAPH ?g { ?g a ?kind } }
-    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph . ?g a ?class }
+    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph }
              GRAPH $plan { ?step execution:adds|execution:retracts ?g }
-             GRAPH ?vocabulary { ?class rdfs:subClassOf ?kind } }"#;
+             GRAPH ?g { ?g a ?class }
+             GRAPH ?vocabulary { ?vocabulary a orexis:OntologyGraph . ?class rdfs:subClassOf ?kind } }"#;
     /// THE BEST WORLD WHERE THE WANT IS MET: on time and cheapest, or the soonest and then the cheapest.
     const BEST_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>

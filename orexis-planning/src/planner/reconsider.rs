@@ -26,8 +26,7 @@ use crate::world_at::lexical;
 fn derived(store: &Store) -> Result<BTreeSet<String>, Error> {
     const DERIVED_Q: &str = r#"PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
-    SELECT ?w WHERE { GRAPH ?g { ?w a planning:Want }
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }"#;
+    SELECT ?w WHERE { GRAPH ?g { ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived . ?w a planning:Want } }"#;
     Ok(store.rows(DERIVED_Q, &[])?.iter().filter_map(|r| iri(r, "w")).collect())
 }
 

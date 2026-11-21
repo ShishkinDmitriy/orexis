@@ -175,6 +175,7 @@ pub(crate) mod tests {
     "#;
         let store = Store::new().expect("an empty store");
         store.put_trig(&format!("{T}state"), CASE).unwrap();
+        orexis::snapshots::mirrored(&store);
         store.close_catalogue().unwrap();
         store
     }

@@ -204,8 +204,8 @@ INSERT {{ GRAPH ?cat {{ <{graph}> dcterms:temporal
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }}
          FILTER NOT EXISTS {{ GRAPH ?cat {{ <{graph}> dcterms:temporal ?held }} }} }} ;
 INSERT {{ GRAPH ?cat {{ <{graph}> a ?kind }} GRAPH <{graph}> {{ <{graph}> a ?kind }} }}
-WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }}
-        GRAPH ?vocabulary {{ planning:WantGraph rdfs:subClassOf ?kind }} }}",
+WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }}
+        GRAPH ?vocabulary {{ ?vocabulary a orexis:OntologyGraph . planning:WantGraph rdfs:subClassOf ?kind }} }}",
         label = quoted(label),
         points = said_points.join(" "),
         shape = shape.join("\n  "),

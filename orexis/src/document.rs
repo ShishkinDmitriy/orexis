@@ -467,6 +467,7 @@ impl Store {
                 }
             }
             self.add(said)?;
+            self.carry_metadata_of(name)?;
         }
         Ok(names)
     }
@@ -534,7 +535,7 @@ mod tests {
     use super::*;
     use crate::ontology::CATALOGUE;
 
-    use crate::store::{Within, iri, value};
+    use crate::store::{Within, value};
 
     const PREFIXES: &str = "@prefix orexis: <http://example.org/orexis#> .\n\
 @prefix planning: <http://example.org/orexis/planning#> .\n@prefix dcterms: <http://purl.org/dc/terms/> .\n";
@@ -634,9 +635,13 @@ mod tests {
             ]
             .into()
         );
-        let held = store.rows("SELECT ?s ?p ?o WHERE { ?s ?p ?o }", &[&name]).unwrap();
-        assert_eq!(held.len(), 1, "the graph holds its facts and not its kind");
-        assert_eq!(iri(&held[0], "o").as_deref(), Some("urn:peg"));
+        let held = crate::metadata::stated(store.triples(&name).unwrap());
+        assert_eq!(
+            held.len(),
+            1,
+            "the graph states its facts, and its kind is no fact it states"
+        );
+        assert_eq!(held[0].object.to_string(), "<urn:peg>");
     }
 
     #[test]
@@ -665,7 +670,7 @@ mod tests {
             )
             .unwrap();
         assert_eq!(value(&starts[0], "start").as_deref(), Some("2026-01-01T00:00:00Z"));
-        assert_eq!(store.rows("SELECT ?s WHERE { ?s ?p ?o }", &[&name]).unwrap().len(), 1);
+        assert_eq!(crate::metadata::stated(store.triples(&name).unwrap()).len(), 1);
     }
 
     #[test]
@@ -717,10 +722,10 @@ mod tests {
             ]
             .into()
         );
-        let held = store.rows("SELECT ?o WHERE { ?s ?p ?o }", &[&name]).unwrap();
+        let held = crate::metadata::stated(store.triples(&name).unwrap());
         assert_eq!(
-            held.iter().filter_map(|r| iri(r, "o")).collect::<Vec<_>>(),
-            ["urn:peg_c"]
+            held.iter().map(|t| t.object.to_string()).collect::<Vec<_>>(),
+            ["<urn:peg_c>"]
         );
     }
 

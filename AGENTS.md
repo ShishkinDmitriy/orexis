@@ -518,6 +518,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **A read that finds the catalogue by its row and then asks OPTIONALs inside that group is
   evaluated per named graph** — ask the catalogue's name once (`catalogue_of`) and splice it; and a
   read asked per iteration is sized by what the iteration opens.
+- **A graph is asked what it is under its own name, and an end that may be missing by the path from
+  the graph** — `GRAPH ?g { ?g a K ; dcterms:temporal/orexis:start ?s . OPTIONAL { ?g
+  dcterms:temporal/orexis:end ?e } }`; an `OPTIONAL` joined through the period node alone is evaluated
+  on its own over every graph's period, 12 ms over 6,000 graphs where the path costs a tenth of one,
+  and `graphs_of` asks the index and parses nothing ([metadata](knowledge/domain/kernel/metadata.md)).
 - **A `NOT EXISTS` is evaluated per row from its FIRST pattern, so the bound variable goes first**;
   an act that admits a world it already admits is idempotent by FILLING, not by name.
 - **A prologue goes at the head of a joined update, and the engine refuses one after `;`.**
@@ -830,11 +835,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   statements calls `metadata::stated` over them, a text asking for a thing by its class needs nothing, and a
   store door answering a graph's content was built and taken out, a method that knew what every caller wanted
   ([metadata](knowledge/domain/kernel/metadata.md)).
-- **Every graph carries its metadata itself, and its row says the same while the catalogue stands** — `entry`
-  answers both blocks, the hash and a period's end are written in both, and a text writing a row spells the
-  graph's block beside it; what a package says of a graph in its own words stays on the row, a case says a
-  graph's metadata once and the runner holds each graph to it, and only the rows of the graphs that cross go into an
-  imaginarium, where the whole catalogue went ([metadata](knowledge/domain/kernel/metadata.md)).
+- **Every graph carries its metadata itself and is asked for it there, and its row says the same while the
+  catalogue stands** — `entry` answers both blocks, the hash and a period's end are written in both, and a text
+  writing a row spells the graph's block beside it; what a package says of a graph in its own words stays on the
+  row and is read there, the search's cone and its weighings with it, a case says a graph's metadata once and the
+  runner holds each graph to it, and only the rows of the graphs that cross go into an imaginarium, where the
+  whole catalogue went ([metadata](knowledge/domain/kernel/metadata.md)).
 - **A thing and the graph it is written in are two names** — a plan's root, a question, an answer and every
   document a saying makes bore their graph's IRI, so a fact under it was about the thing or about its graph and
   nothing said which; the first three are their graph's name with a word after it (`plan_root`, `question_in`,
@@ -1497,8 +1503,8 @@ restart is a bug, not a convenience.
 ## Traps worth knowing, and one that is closed
 
 **Ask what a thing IS; do not walk a subclass path.** The boot derives the `rdfs:subClassOf`
-closure of every ontology graph into a graph of its own, and every catalogue row carries every
-kind its class is beneath, so a text asks `?g a planning:WantGraph` and walks nothing. A seventh
+closure of every ontology graph into a graph of its own, and every graph says of itself every
+kind its class is beneath, so a text asks `GRAPH ?g { ?g a planning:WantGraph }` and walks nothing. A seventh
 hand-rolled walk was once refused for exactly that reason. See
 [one-graph-both-engines-read](knowledge/decisions/one-graph-both-engines-read.md).
 
@@ -1527,8 +1533,8 @@ hand-rolled walk was once refused for exactly that reason. See
   the engine binds nothing, silently, though every graph it names is there. `store.query` and
   `store.construct` are HANDED their graphs — the reader states the kinds it means and the
   instant it stands at, `graphs_of` answers with the list, and the store adds nothing to it
-  (a-reader-states-the-kinds-it-reads); a text that reads one graph names its kinds in its
-  own `GRAPH` clauses by joining the catalogue, and is handed no default at all.
+  (a-reader-states-the-kinds-it-reads); a text that reads one graph asks its kind in the
+  `GRAPH` clause it reads it in, and is handed no default at all.
 - **A graph IRI is an instance, so rule 1 applies to it.** `orexis:WorldGraph` is the term code may
   name; `…/graph/world` is not, any more than a world's `:fern_agent` is. Ask `store.graphs_of(BELIEF, common=True)`.
   Two things are still named and both are writes or the bootstrap root, never a reader
@@ -1547,11 +1553,12 @@ hand-rolled walk was once refused for exactly that reason. See
   graph is, and every list of the agent's graphs is kept to that owner — a graph saying no
   owner is anyone's. A graph's NAME is for eyes: the helpers
   spell a readable convention for writers, and `tests/test_layout.py` refuses a reader that
-  imports one — a reader asks the class. Every one of those answers comes from ONE graph, the
-  catalogue, which describes itself and is asked for from the store (`store.catalogue`) by a
-  reader that must name it in a `GRAPH` clause — never spelled, since genesis alone creates it.
-  Every row carries every kind its class is beneath, so a text asks `?g a planning:WantGraph`
-  and walks no path.
+  imports one — a reader asks the class. Every one of those answers comes from the graph itself,
+  which says its kinds, its owner, its arrival and its period under its own name
+  ([metadata](knowledge/domain/kernel/metadata.md)); the catalogue says the same while it stands,
+  and is asked for from the store (`store.catalogue`), never spelled, by what still reads a
+  package's word on a row. Every graph carries every kind its class is beneath, so a text asks
+  `GRAPH ?g { ?g a planning:WantGraph }` and walks no path.
 - **SPARQL prefixes: every text the agent runs declares its own**, `PREFIX name: <iri>` at its head as SPARQL
   says it — a query in Rust, a rule in a package's documents, an action text, a rule and a desire select in
   `domains/` and `world/` alike. The binary's store parses with no prefix of its own: a table gathered by walking

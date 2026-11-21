@@ -260,10 +260,8 @@ fn own_state(store: &Store) -> Result<String, Error> {
     /// received: no revision, and nothing everyone reads; as `trigger` reads the agent's own state.
     const DERIVED_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
     PREFIX orexis: <http://example.org/orexis#>
-    SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                                   ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
-                                   FILTER NOT EXISTS { ?g a belief:RevisionGraph }
-                                   ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
+    SELECT ?g WHERE { GRAPH ?g { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy ?owner .
+                                 FILTER NOT EXISTS { ?g a belief:RevisionGraph } } } ORDER BY ?g";
     store.clear_graph(OWN)?;
     let derived: Vec<String> = store.rows(DERIVED_Q, &[])?.iter().filter_map(|r| iri(r, "g")).collect();
     for g in whole(store, derived)? {
@@ -389,9 +387,8 @@ fn foreseen(store: &Store, now: DateTime) -> Result<Vec<(DateTime, String, Strin
     PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     SELECT ?piece ?source ?start WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                   ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source .
-                   ?source dcterms:temporal/orexis:start ?start . FILTER(?start > $now) } }
+      GRAPH ?piece { ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source }
+      GRAPH ?source { ?source dcterms:temporal/orexis:start ?start . FILTER(?start > $now) } }
     ORDER BY ?start ?piece";
     let text = bind(PIECES_AHEAD_Q, &[("now", Value::instant(now))])?;
     let mut out = Vec::new();
@@ -418,9 +415,8 @@ fn ending(store: &Store, now: DateTime) -> Result<Vec<(DateTime, String)>, Error
     PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     SELECT ?piece ?end WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                   ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source .
-                   ?source a orexis:ForecastGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end > $now) } }
+      GRAPH ?piece { ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source }
+      GRAPH ?source { ?source a orexis:ForecastGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end > $now) } }
     ORDER BY ?end ?piece";
     let text = bind(PIECES_ENDING_Q, &[("now", Value::instant(now))])?;
     let mut out = Vec::new();
@@ -450,8 +446,8 @@ fn foreseen_alone(store: &Store) -> Result<HashSet<NamedOrBlankNode>, Error> {
     const FORECAST_PIECES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
-    SELECT ?piece WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                                       ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source . ?source a orexis:ForecastGraph } }";
+    SELECT ?piece WHERE { GRAPH ?piece { ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source }
+                          GRAPH ?source { ?source a orexis:ForecastGraph } }";
     let mut forecasts: BTreeSet<String> = store.graphs_of(&[FORECAST], &Within::default())?.into_iter().collect();
     forecasts.extend(
         store
@@ -679,8 +675,7 @@ fn predicted(store: &Store, now: DateTime, gate: Option<&BTreeSet<String>>) -> R
     const BELIEFS_AHEAD_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>
     SELECT ?g WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                   ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start . FILTER(?start > $now) } }
+      GRAPH ?g { ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start . FILTER(?start > $now) } }
     ORDER BY ?g";
     let text = bind(BELIEFS_AHEAD_Q, &[("now", Value::instant(now))])?;
     let ahead: Vec<String> = store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "g")).collect();
@@ -753,7 +748,7 @@ fn cut(store: &Store) -> Result<Vec<(String, Option<String>)>, Error> {
     const CUT_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
-    SELECT ?piece ?source WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+    SELECT ?piece ?source WHERE { GRAPH ?piece {
       ?piece a planning:ChangeableGraph . OPTIONAL { ?piece prov:wasDerivedFrom ?source } } }";
     Ok(store
         .rows(CUT_Q, &[])?
@@ -765,7 +760,7 @@ fn cut(store: &Store) -> Result<Vec<(String, Option<String>)>, Error> {
 /// The hash `ground`'s row says it holds, where a row stands.
 fn hash_of(store: &Store, ground: &str) -> Result<Option<String>, Error> {
     const STOOD_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $ground orexis:hash ?h } } LIMIT 1";
+        SELECT ?h WHERE { GRAPH $ground { $ground orexis:hash ?h } } LIMIT 1";
     Ok(store
         .rows(&bind(STOOD_Q, &[("ground", Value::iri(ground))])?, &[])?
         .first()
@@ -980,7 +975,7 @@ mod tests {
     fn hash_of(store: &Store, ground: &str) -> String {
         let text = format!(
             "PREFIX orexis: <http://example.org/orexis#>
-                SELECT ?h WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{ground}> orexis:hash ?h }} }}"
+                SELECT ?h WHERE {{ GRAPH <{ground}> {{ <{ground}> orexis:hash ?h }} }}"
         );
         orexis::store::value(&store.rows(&text, &[]).unwrap()[0], "h").unwrap()
     }
