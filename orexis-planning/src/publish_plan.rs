@@ -9,7 +9,7 @@ use oxigraph::model::{GraphName, NamedNode, NamedOrBlankNode, Quad, Term};
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
-use orexis::description::stated_quads;
+use orexis::metadata::stated_quads;
 use orexis::ontology::{BELIEF, GRAPH_PREFIX, RECORDED};
 use orexis::store::{Store, Within, iri};
 

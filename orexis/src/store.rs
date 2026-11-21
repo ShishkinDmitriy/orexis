@@ -110,9 +110,9 @@ const HOLDING: &str = "OPTIONAL { ?g dcterms:temporal ?period .
 const PROV_DERIVED: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
 const ARRIVED_BY: &str = "http://example.org/orexis#arrivedBy";
 const OWNED_BY: &str = "http://example.org/orexis#ownedBy";
-/// THE WORDS A GRAPH IS DESCRIBED IN, beside its period: what it is, how it arrived, whose it is, what it holds by
+/// THE WORDS A GRAPH'S METADATA IS SAID IN, beside its period: what it is, how it arrived, whose it is, what it holds by
 /// hash and what it was derived from. What a package says of a graph in words of its own is that package's.
-pub const DESCRIBES: [&str; 5] = [crate::rdf::RDF_TYPE, ARRIVED_BY, OWNED_BY, HASH, PROV_DERIVED];
+pub const METADATA: [&str; 5] = [crate::rdf::RDF_TYPE, ARRIVED_BY, OWNED_BY, HASH, PROV_DERIVED];
 const DCTERMS_TEMPORAL: &str = "http://purl.org/dc/terms/temporal";
 const ORE: &str = "http://example.org/orexis#";
 const XSD_DATETIME: &str = "http://www.w3.org/2001/XMLSchema#dateTime";
@@ -340,7 +340,7 @@ impl Store {
             .map_err(|e| Error::Evaluation(e.to_string()))
     }
 
-    /// THE ONE GRAPH THAT DESCRIBES EVERY GRAPH AND ITSELF, found by its own row: None for a store nobody has told
+    /// THE ONE GRAPH THAT METADATA EVERY GRAPH AND ITSELF, found by its own row: None for a store nobody has told
     /// anything, and two refused, since a store with two catalogues has two truths about what its graphs are.
     pub fn catalogue(&self) -> Result<Option<String>, Error> {
         const CATALOGUES_Q: &str =
@@ -434,10 +434,10 @@ impl Store {
         Ok(out)
     }
 
-    /// A GRAPH'S DESCRIPTION, as the `GRAPH … { … }` blocks a writer puts beside the graph's own in ONE update, so a
-    /// graph and its description land together or not at all: every kind it is, how it arrived, whose, and the
+    /// A GRAPH'S METADATA, as the `GRAPH … { … }` blocks a writer puts beside the graph's own in ONE update, so a
+    /// graph and its metadata land together or not at all: every kind it is, how it arrived, whose, and the
     /// period it holds over — said in the catalogue and, the same, in the graph itself, where it always says it is
-    /// a graph, the type its description is told from its content by. Written in whole IRIs, so it needs no prefix
+    /// a graph, the type its metadata is told from its content by. Written in whole IRIs, so it needs no prefix
     /// of the text it is put in.
     pub fn entry(
         &self,
@@ -760,15 +760,15 @@ impl Store {
             }
         }
         self.add(rows)?;
-        self.describe_in_themselves()
+        self.carry_metadata()
     }
 
-    /// EVERY GRAPH THE CATALOGUE DESCRIBES SAYS THE SAME OF ITSELF: its kinds, how it arrived, whose it is, its hash,
+    /// EVERY GRAPH THE CATALOGUE METADATA SAYS THE SAME OF ITSELF: its kinds, how it arrived, whose it is, its hash,
     /// what it was derived from, and its period where it says none, under a blank node of its own — and that it is
-    /// a graph, which is what its description is told from its content by. What `entry` writes for a new graph,
-    /// said of every graph there is: a volume lived in before graphs described themselves is brought up by it, and
-    /// a case is, whose text says each description once. Idempotent.
-    pub fn describe_in_themselves(&self) -> Result<(), Error> {
+    /// a graph, which is what its metadata is told from its content by. What `entry` writes for a new graph,
+    /// said of every graph there is: a volume lived in before graphs carried their metadata is brought up by it, and
+    /// a case is, whose text says each graph's metadata once. Idempotent.
+    pub fn carry_metadata(&self) -> Result<(), Error> {
         let Some(catalogue) = self.catalogue()? else {
             return Ok(());
         };
@@ -802,7 +802,7 @@ impl Store {
                 .quads_for_pattern(Some(graph.as_ref().into()), None, None, Some(in_cat))
             {
                 let quad = quad.map_err(engine)?;
-                if DESCRIBES.contains(&quad.predicate.as_str()) {
+                if METADATA.contains(&quad.predicate.as_str()) {
                     said.push(Quad::new(graph.clone(), quad.predicate, quad.object, graph.clone()));
                     continue;
                 }

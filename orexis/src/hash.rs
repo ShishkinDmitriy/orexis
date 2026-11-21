@@ -4,8 +4,8 @@
 //!
 //! **IT IS THE CONTENT AND NOTHING ELSE**: a blank node is its content, not its label; a number is its value
 //! rounded to six decimals; every other term is its kind and its text; and what a graph says of itself - its kinds,
-//! how it arrived, whose it is, its period - is its description and no content (`stated`), so a graph hashes alike
-//! whether it is described in the catalogue or in itself, and its own hash is no part of what is hashed. The hash
+//! how it arrived, whose it is, its period - is its metadata and no content (`stated`), so a graph hashes alike
+//! whether its metadata is said in the catalogue or in itself, and its own hash is no part of what is hashed. The hash
 //! knows this of what it hashes, as every text that reads a whole graph knows it of what it reads: the store hands
 //! over a graph's triples and decides nothing about them. **A WORLD IS HASHED WITHIN WHAT IS READ**:
 //! where a caller names the predicates and classes a world is identified by, only those facts count, a type fact
@@ -21,7 +21,7 @@ use oxigraph::model::{BlankNode, GraphNameRef, Literal, NamedNode, NamedOrBlankN
 use sha2::{Digest, Sha256};
 
 use crate::Error;
-use crate::description::stated;
+use crate::metadata::stated;
 use crate::ontology::{GRAPH, HASH};
 use crate::rdf::{RDF_TYPE, repr, round6};
 use crate::store::Store;
@@ -421,7 +421,7 @@ mod tests {
     }
 
     #[test]
-    fn a_graph_hashes_alike_described_in_itself_or_not_and_its_own_hash_is_no_part_of_it() {
+    fn a_graph_hashes_alike_with_its_metadata_in_itself_or_not_and_its_own_hash_is_no_part_of_it() {
         let store = store();
         store
             .update("INSERT DATA { GRAPH <urn:test:a> { <urn:s> <urn:p> 1 } GRAPH <urn:test:b> { <urn:s> <urn:p> 1 } }")

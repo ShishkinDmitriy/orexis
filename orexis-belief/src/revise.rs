@@ -74,7 +74,7 @@ pub fn revise(store: &Store, source: &str, read: &[String], budget: usize, kind:
         Some(cat) => unsettled(store, cat, &into)?,
         None => false,
     };
-    /// WHAT WAS CONCLUDED BEFORE, the revision graph's description of itself left out.
+    /// WHAT WAS CONCLUDED BEFORE, the revision graph's metadata left out.
     const HELD_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>
     CONSTRUCT { ?s ?p ?o }

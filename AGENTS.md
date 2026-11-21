@@ -824,17 +824,17 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   classified per kind it HOLDS**, and a graph holding two kinds is two graphs.
 - **One graph describes every graph and itself** — the catalogue, found by its own row, created by
   genesis alone.
-- **A graph's description is told from its content by type, by each reader of a whole graph where it reads,
+- **A graph's metadata is told from its content by type, by each reader of a whole graph where it reads,
   and the store does not know** — a triple whose subject its graph types `orexis:Graph` or `dcterms:PeriodOfTime`
   says what the graph is and is no fact it states; a text spells the two filters, code holding a graph's
-  statements calls `description::stated` over them, a text asking for a thing by its class needs nothing, and a
+  statements calls `metadata::stated` over them, a text asking for a thing by its class needs nothing, and a
   store door answering a graph's content was built and taken out, a method that knew what every caller wanted
-  ([description](knowledge/domain/kernel/description.md)).
-- **Every graph says its description itself, and its row the same while the catalogue stands** — `entry`
+  ([metadata](knowledge/domain/kernel/metadata.md)).
+- **Every graph carries its metadata itself, and its row says the same while the catalogue stands** — `entry`
   answers both blocks, the hash and a period's end are written in both, and a text writing a row spells the
   graph's block beside it; what a package says of a graph in its own words stays on the row, a case says a
-  description once and the runner holds each graph to it, and only the rows of the graphs that cross go into an
-  imaginarium, where the whole catalogue went ([description](knowledge/domain/kernel/description.md)).
+  graph's metadata once and the runner holds each graph to it, and only the rows of the graphs that cross go into an
+  imaginarium, where the whole catalogue went ([metadata](knowledge/domain/kernel/metadata.md)).
 - **A thing and the graph it is written in are two names** — a plan's root, a question, an answer and every
   document a saying makes bore their graph's IRI, so a fact under it was about the thing or about its graph and
   nothing said which; the first three are their graph's name with a word after it (`plan_root`, `question_in`,

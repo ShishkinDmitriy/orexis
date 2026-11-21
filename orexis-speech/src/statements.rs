@@ -7,8 +7,8 @@ use oxigraph::model::{BlankNode, GraphName, NamedNode, Quad, Term, Triple};
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
-use orexis::description::stated_quads;
 use orexis::document::Document;
+use orexis::metadata::stated_quads;
 use orexis::store::{Store, iri};
 
 use crate::ontology::STATEMENT_GRAPH;

@@ -23,8 +23,8 @@ use sha2::{Digest, Sha256};
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::{instant, isoformat};
-use orexis::description::{stated, stated_quads};
 use orexis::hash::{digest_of, hash_named_graph};
+use orexis::metadata::{stated, stated_quads};
 use orexis::ontology::{BELIEF, DERIVED, FORECAST, GRAPH, ONTOLOGY, PERIOD, RECORD};
 use orexis::store::{Store, Within, iri};
 
@@ -190,7 +190,7 @@ pub fn lay_ground_foreseeing(
         }
         let mut added = Vec::new();
         for (piece, _) in &group {
-            added.extend(orexis::description::stated(store.triples(piece)?));
+            added.extend(orexis::metadata::stated(store.triples(piece)?));
         }
         stands = at;
         if added.is_empty() && crossing.is_empty() && !ground.landing.contains(&at) && !ends.contains(&at) {
@@ -594,7 +594,7 @@ fn split(
                 ("by", by_literal.clone()),
             ],
         )?)?;
-        //  WHAT THE GRAPH SAYS OF ITSELF IS NEVER CUT: it describes the graph it is in, whatever a pattern matches.
+        //  WHAT THE GRAPH SAYS OF ITSELF IS NEVER CUT: it is the metadata of the graph it is in, whatever a pattern matches.
         //  Asked by type, two lookups, since reading the graph whole to find them cost more than the cut.
         let mut itself: HashSet<NamedOrBlankNode> = HashSet::new();
         for class in [GRAPH, PERIOD] {
@@ -1175,7 +1175,7 @@ mod tests {
         let mut out: BTreeMap<String, HashSet<Triple>> = BTreeMap::new();
         for graph in store.graph_names().unwrap() {
             if graph != cat {
-                let states = orexis::description::stated(store.triples(&graph).unwrap());
+                let states = orexis::metadata::stated(store.triples(&graph).unwrap());
                 out.insert(graph.clone(), states.into_iter().collect());
             }
         }

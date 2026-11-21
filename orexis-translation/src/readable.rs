@@ -20,7 +20,7 @@ use spargebra::Query;
 use spargebra::algebra::{Expression, GraphPattern};
 
 use orexis::Error;
-use orexis::description::stated_quads;
+use orexis::metadata::stated_quads;
 use orexis::ontology::{CLOSURE_GRAPH, ONTOLOGY, local_of};
 use orexis::store::{Store, Within};
 

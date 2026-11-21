@@ -8,7 +8,7 @@ use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
-use orexis::description::stated_quads;
+use orexis::metadata::stated_quads;
 use orexis::ontology::{ACTION, BELIEF};
 use orexis::store::{Store, Within, iri, value};
 

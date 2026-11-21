@@ -12,7 +12,7 @@ use regex::Regex;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
-use orexis::description::stated;
+use orexis::metadata::stated;
 use orexis::store::{Store, Within, iri, value};
 use orexis_belief::ontology::RULES_GRAPH;
 

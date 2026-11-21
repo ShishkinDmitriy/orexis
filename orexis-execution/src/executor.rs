@@ -32,9 +32,9 @@ use oxsdatatypes::DateTime;
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::{Clock, instant as parse_instant, isoformat, seconds, seconds_of};
-use orexis::description::stated_quads;
 use orexis::events::{Event, Watch};
 use orexis::hash::hash_named_graph;
+use orexis::metadata::stated_quads;
 use orexis::ontology::{BELIEF, DERIVED, ONTOLOGY, OREXIS, RECORDED, SELF_GRAPH, local_of};
 use orexis::store::{Row, Store, Within, iri, value};
 use orexis::task::{Heard, Turn};
@@ -57,7 +57,7 @@ const ENDS_AFTER: &str = "http://example.org/orexis/execution#endsAfter";
 const WAITS_FOR: &str = "http://example.org/orexis/execution#waitsFor";
 
 /// WHAT A STEP PREDICTED AND THE PRESENT DOES NOT SHOW, asked of what the two graphs it predicts in state: what
-/// either says of itself, about a graph or a period, is its description, which no present holds and no step is held
+/// either says of itself, about a graph or a period, is its metadata, which no present holds and no step is held
 /// to. Whole IRIs, each being a piece of a text that declares its own prefixes.
 const ADDS_MISSING: &str = "{ GRAPH $adds { ?s ?p ?o FILTER NOT EXISTS { ?s a <http://example.org/orexis#Graph> } FILTER NOT EXISTS { ?s a <http://purl.org/dc/terms/PeriodOfTime> } } \
      FILTER NOT EXISTS { ?s ?p ?x . FILTER(?x = ?o) } }";
@@ -2154,7 +2154,7 @@ GRAPH <http://example.org/test#catalogue> {{
         assert_eq!(
             x.standing().unwrap()[0].at.clone().unwrap(),
             format!("{PLAN}.1"),
-            "the world answered what the step predicted, and the graphs' descriptions were asked of nothing"
+            "the world answered what the step predicted, and the graphs' metadata was asked of nothing"
         );
     }
 

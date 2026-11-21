@@ -32,7 +32,7 @@ pub const END: &str = "http://example.org/orexis#end";
 pub const WORLD_GRAPH: &str = "http://example.org/orexis#WorldGraph";
 pub const SOCIETY_GRAPH: &str = "http://example.org/orexis#SocietyGraph";
 pub const GRAPH: &str = "http://example.org/orexis#Graph";
-/// The stretch a graph holds over, as its description says it.
+/// The stretch a graph holds over, as its metadata says it.
 pub const PERIOD: &str = "http://purl.org/dc/terms/PeriodOfTime";
 
 /// What the world is connected to, as its agents read it: no belief, asked by a package as it starts.

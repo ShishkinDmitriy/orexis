@@ -13,7 +13,7 @@ use oxsdatatypes::{DateTime, DayTimeDuration};
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::isoformat;
-use orexis::description::stated;
+use orexis::metadata::stated;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, iri};
 

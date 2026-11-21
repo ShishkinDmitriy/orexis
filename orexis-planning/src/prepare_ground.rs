@@ -20,7 +20,7 @@ use oxigraph::model::{GraphNameRef, NamedOrBlankNode, Quad, Term};
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
-use orexis::description::stated_quads;
+use orexis::metadata::stated_quads;
 use orexis::ontology::{ACTION, BELIEF, FLOW_GRAPH, RECORD};
 use orexis::store::{Store, Within, iri, value};
 use orexis_belief::ontology::{REVISION_GRAPH, RULES_GRAPH};
@@ -143,8 +143,8 @@ pub fn prepare_ground(
             )?)?;
             //  AND WHAT THE GRAPH SAYS OF ITSELF IS SAID AGAIN AS THE BELIEFS SAY IT NOW: a graph kept by its hash
             //  states what it did, and its period may have ended since.
-            into.remove_all(&described(into, graph)?)?;
-            into.add(described(beliefs, graph)?)?;
+            into.remove_all(&metadata_of(into, graph)?)?;
+            into.add(metadata_of(beliefs, graph)?)?;
         }
     }
     for graph in wanted.iter().filter(|g| !kept.contains(g)) {
@@ -156,8 +156,8 @@ pub fn prepare_ground(
             .map_err(|e| Error::Evaluation(e.to_string()))?;
         into.add(quads)?;
     }
-    //  AND THE ROW OF EACH GRAPH THAT CROSSES, with the catalogue's own: a graph that stays behind is described by
-    //  nothing here, since a row is what its graph says of itself and the graph is not here to say it.
+    //  AND THE ROW OF EACH GRAPH THAT CROSSES, with the catalogue's own: a graph that stays behind has no row
+    //  here, since a row is what its graph says of itself and the graph is not here to say it.
     if let Some(catalogue) = beliefs.catalogue()? {
         let cat = named(&catalogue)?;
         let in_cat = GraphNameRef::NamedNode(cat.as_ref());
@@ -192,7 +192,7 @@ pub fn prepare_ground(
 
 /// What `graph` says of itself in `store`: every statement under its own name, and under each period it names -
 /// asked by subject, never by reading the graph whole.
-fn described(store: &Store, graph: &str) -> Result<Vec<Quad>, Error> {
+fn metadata_of(store: &Store, graph: &str) -> Result<Vec<Quad>, Error> {
     let name = named(graph)?;
     let own = GraphNameRef::NamedNode(name.as_ref());
     let mut out = Vec::new();

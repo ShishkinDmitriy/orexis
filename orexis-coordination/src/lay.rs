@@ -17,8 +17,8 @@ use oxsdatatypes::DateTime;
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::{instant, seconds, seconds_of};
-use orexis::description::stated_quads;
 use orexis::hash::hash_named_graph;
+use orexis::metadata::stated_quads;
 use orexis::ontology::{BELIEF, FORECAST, RECEIVED};
 use orexis::store::{Store, iri, value};
 

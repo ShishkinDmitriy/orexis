@@ -13,7 +13,7 @@ use regex::Regex;
 
 use orexis::Error;
 use orexis::clock::isoformat;
-use orexis::description::stated;
+use orexis::metadata::stated;
 use orexis::ontology::{BELIEF, GRAPH_PREFIX, RECORDED};
 use orexis::store::{Store, Within};
 

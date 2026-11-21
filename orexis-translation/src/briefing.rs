@@ -73,11 +73,11 @@ pub fn briefing(
         })
 }
 
-/// What `graphs` state in Turtle, with `prefixes`: no graph's description of itself.
+/// What `graphs` state in Turtle, with `prefixes`: no graph's metadata.
 pub fn turtle(store: &Store, graphs: &[String], prefixes: &[(String, String)]) -> Result<String, Error> {
     let mut triples: Vec<Triple> = Vec::new();
     for g in graphs {
-        triples.extend(orexis::description::stated(store.triples(g)?));
+        triples.extend(orexis::metadata::stated(store.triples(g)?));
     }
     turtle_of(&triples, prefixes)
 }

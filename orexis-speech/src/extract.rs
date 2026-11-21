@@ -133,7 +133,7 @@ mod tests {
         st
     }
 
-    /// What a graph states, its description of itself left out.
+    /// What a graph states, its metadata left out.
     fn said(store: &Store, graph: &str) -> std::collections::BTreeSet<String> {
         store
             .rows(

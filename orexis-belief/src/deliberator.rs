@@ -278,7 +278,7 @@ impl Deliberator {
 
     /// The revisions the catalogue describes now, and how many are unsettled.
     pub fn held(&self) -> Result<RevisionsHeld, Error> {
-        /// THE REVISIONS THE CATALOGUE DESCRIBES, and how many are unsettled.
+        /// THE REVISIONS THE CATALOGUE METADATA, and how many are unsettled.
         const HELD_Q: &str = "
         SELECT (COUNT(?g) AS ?revisions) (SUM(IF(?settled, 0, 1)) AS ?unsettled)
         WHERE { GRAPH $cat { ?g a $revision ; $settled ?settled } }";

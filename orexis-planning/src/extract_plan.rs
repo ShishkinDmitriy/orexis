@@ -5,7 +5,7 @@
 //! each step predicts as two graphs it names, the diff a pattern the engine computes where the worlds are.
 //!
 //! WHAT A STEP PREDICTS IS A DIFF OF CONTENT: what a world says of itself - that it is a possible world, when it
-//! holds, what it hashes to - is its description, which differs between any two worlds and is no change a step
+//! holds, what it hashes to - is its metadata, which differs between any two worlds and is no change a step
 //! makes; so each text that reads a whole world asks, in its own words, for what is about no graph and no period.
 //!
 //! THE PLAN IS NOT ITS GRAPH: the root, the node that is the `planning:Plan`, has a name of its own (`plan_root`),

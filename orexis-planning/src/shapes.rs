@@ -10,7 +10,7 @@ use oxigraph::model::{NamedNode, NamedOrBlankNode, Term};
 
 use crate::terms::RDF_FIRST;
 use orexis::Error;
-use orexis::description::stated_quads;
+use orexis::metadata::stated_quads;
 use orexis::store::Store;
 
 const RDF_REST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest";

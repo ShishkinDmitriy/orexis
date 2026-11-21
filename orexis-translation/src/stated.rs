@@ -21,9 +21,9 @@ use serde_json::{Value as Json, json};
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::{instant, isoformat};
-use orexis::description::stated_quads;
 use orexis::document::Document;
 use orexis::hash::hash_named_graph;
+use orexis::metadata::stated_quads;
 use orexis::ontology::{BELIEF, DERIVED, local_of};
 use orexis::store::{Store, Within, iri, value};
 
