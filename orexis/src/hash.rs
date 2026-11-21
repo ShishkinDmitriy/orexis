@@ -3,7 +3,9 @@
 //! it was the retired Python kernel's, and changing it would make every stored world a surprise once.
 //!
 //! **IT IS THE CONTENT AND NOTHING ELSE**: a blank node is its content, not its label; a number is its value
-//! rounded to six decimals; every other term is its kind and its text. **A WORLD IS HASHED WITHIN WHAT IS READ**:
+//! rounded to six decimals; every other term is its kind and its text; and what a graph says of itself - its kinds,
+//! how it arrived, whose it is, its period - is its description and no content (`Store::content`), so a graph hashes
+//! alike whether it is described in the catalogue or in itself, and its own hash is no part of what is hashed. **A WORLD IS HASHED WITHIN WHAT IS READ**:
 //! where a caller names the predicates and classes a world is identified by, only those facts count, a type fact
 //! by its class.
 //!
@@ -77,7 +79,7 @@ pub fn hash_named_graph(store: &Store, graph: &str, within: Option<&BTreeSet<Str
 /// The canonical hash of what `graph` holds, answered and written nowhere — for a writer that puts it on the
 /// graph's row itself, in the update that writes the row.
 pub fn digest_of(store: &Store, graph: &str, within: Option<&BTreeSet<String>>) -> Result<String, Error> {
-    let triples = store.triples(graph)?;
+    let triples = store.content(graph)?;
     let kept: Vec<Triple> = match within {
         None => triples,
         Some(within) => triples.into_iter().filter(|t| counts(t, within)).collect(),
@@ -403,6 +405,45 @@ mod tests {
         assert_eq!(row(&store, "urn:test:a"), std::slice::from_ref(&first));
         assert_eq!(hash_named_graph(&store, "urn:test:a", None).unwrap(), first);
         assert_eq!(row(&store, "urn:test:a"), [first], "one row, not two");
+    }
+
+    #[test]
+    fn a_graph_hashes_alike_described_in_itself_or_not_and_its_own_hash_is_no_part_of_it() {
+        let store = store();
+        store
+            .update("INSERT DATA { GRAPH <urn:test:a> { <urn:s> <urn:p> 1 } GRAPH <urn:test:b> { <urn:s> <urn:p> 1 } }")
+            .unwrap();
+        let bare = hash_named_graph(&store, "urn:test:a", None).unwrap();
+        //  B SAYS WHAT IT IS, WHOSE, WHEN IT HOLDS AND WHAT IT HASHES TO, in itself; and mentions A, as a copy would.
+        store
+            .update(&format!(
+                "PREFIX dcterms: <http://purl.org/dc/terms/>
+                PREFIX orexis: <http://example.org/orexis#>
+                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                INSERT DATA {{ GRAPH <urn:test:b> {{
+                  <urn:test:b> a orexis:BeliefGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived ;
+                    orexis:ownedBy <urn:me> ; orexis:hash \"{bare}\" ;
+                    dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start \"2026-01-01T12:00:00Z\"^^xsd:dateTime ] .
+                  <urn:test:a> a orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy <urn:me> . }} }}"
+            ))
+            .unwrap();
+        assert_eq!(hash_named_graph(&store, "urn:test:b", None).unwrap(), bare);
+        assert_eq!(
+            store.content("urn:test:b").unwrap().len(),
+            1,
+            "its description, and a description copied into it, are no content"
+        );
+        //  THE SAME TEST AS A TEXT ASKS IT: the filter spliced into the group that reads the graph.
+        let asked = store
+            .rows(
+                &format!(
+                    "SELECT ?s ?p ?o WHERE {{ GRAPH <urn:test:b> {{ ?s ?p ?o {} }} }}",
+                    crate::ontology::CONTENT
+                ),
+                &[],
+            )
+            .unwrap();
+        assert_eq!(asked.len(), 1, "the filter and `Store::content` are one rule");
     }
 
     #[test]

@@ -32,6 +32,16 @@ pub const END: &str = "http://example.org/orexis#end";
 pub const WORLD_GRAPH: &str = "http://example.org/orexis#WorldGraph";
 pub const SOCIETY_GRAPH: &str = "http://example.org/orexis#SocietyGraph";
 pub const GRAPH: &str = "http://example.org/orexis#Graph";
+/// The stretch a graph holds over, as its description says it.
+pub const PERIOD: &str = "http://purl.org/dc/terms/PeriodOfTime";
+
+/// WHAT IS DESCRIPTION AND NOT CONTENT, as a text asks it of the triple `?s ?p ?o` inside the `GRAPH` group it reads:
+/// a triple whose subject that graph types as a graph or as a period says what a graph is, how it arrived, whose it
+/// is and when it holds, and is no fact the graph states. TOLD BY TYPE, never by the graph's name, so a description
+/// copied into another graph is no content there either. Two plain filters: one over a `VALUES` is evaluated per
+/// candidate. Whole IRIs, so it needs no prefix of the text it is put in.
+pub const CONTENT: &str = "FILTER NOT EXISTS { ?s a <http://example.org/orexis#Graph> } \
+     FILTER NOT EXISTS { ?s a <http://purl.org/dc/terms/PeriodOfTime> }";
 /// What the world is connected to, as its agents read it: no belief, asked by a package as it starts.
 pub const DEPLOYMENT: &str = "http://example.org/orexis#DeploymentGraph";
 pub const ROLE: &str = "http://example.org/orexis#Role";

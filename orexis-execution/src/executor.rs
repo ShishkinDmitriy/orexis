@@ -34,7 +34,7 @@ use orexis::bind::{Value, bind};
 use orexis::clock::{Clock, instant as parse_instant, isoformat, seconds, seconds_of};
 use orexis::events::{Event, Watch};
 use orexis::hash::hash_named_graph;
-use orexis::ontology::{BELIEF, DERIVED, ONTOLOGY, OREXIS, RECORDED, SELF_GRAPH, local_of};
+use orexis::ontology::{BELIEF, CONTENT, DERIVED, ONTOLOGY, OREXIS, RECORDED, SELF_GRAPH, local_of};
 use orexis::store::{Row, Store, Within, iri, value};
 use orexis::task::{Heard, Turn};
 
@@ -55,8 +55,10 @@ const ADOPTED_AT: &str = "http://example.org/orexis/execution#adoptedAt";
 const ENDS_AFTER: &str = "http://example.org/orexis/execution#endsAfter";
 const WAITS_FOR: &str = "http://example.org/orexis/execution#waitsFor";
 
-const ADDS_MISSING: &str = "{ GRAPH $adds { ?s ?p ?o } FILTER NOT EXISTS { ?s ?p ?x . FILTER(?x = ?o) } }";
-const RETRACTS_STANDING: &str = "{ GRAPH $retracts { ?s ?p ?o } ?s ?p ?x . FILTER(?x = ?o) }";
+/// WHAT A STEP PREDICTED AND THE PRESENT DOES NOT SHOW, asked of the content of the two graphs it predicts in: what
+/// either says of itself is its description (`CONTENT`), which no present holds and no step is held to.
+const ADDS_MISSING: &str = "{ GRAPH $adds { ?s ?p ?o $content } FILTER NOT EXISTS { ?s ?p ?x . FILTER(?x = ?o) } }";
+const RETRACTS_STANDING: &str = "{ GRAPH $retracts { ?s ?p ?o $content } ?s ?p ?x . FILTER(?x = ?o) }";
 
 /// What a step says of itself in words other than this layer's, keyed by the local part of each predicate, with
 /// the step's own IRI under `step` — what a taker is handed.
@@ -1047,10 +1049,16 @@ impl Executor {
         present.extend(self.beliefs.revisions_of(&strs(&beliefs), BELIEF)?);
         let mut failing = Vec::new();
         if let Some(adds) = adds {
-            failing.push(bind(ADDS_MISSING, &[("adds", Value::iri(adds))])?);
+            failing.push(bind(
+                ADDS_MISSING,
+                &[("adds", Value::iri(adds)), ("content", Value::raw(CONTENT))],
+            )?);
         }
         if let Some(retracts) = retracts {
-            failing.push(bind(RETRACTS_STANDING, &[("retracts", Value::iri(retracts))])?);
+            failing.push(bind(
+                RETRACTS_STANDING,
+                &[("retracts", Value::iri(retracts)), ("content", Value::raw(CONTENT))],
+            )?);
         }
         Ok(!self.beliefs.ask(
             &format!(
@@ -1404,13 +1412,13 @@ impl Executor {
     /// The taking of a fictive step: say it, then write what it predicted into the beliefs — each retraction taken
     /// out wherever the agent holds it, each addition put where that stood, or in a belief of its own.
     fn fictive(&mut self, said: &Said, intention: &str) -> Result<(), Error> {
-        const RETRACT_U: &str = "DELETE { GRAPH ?g { ?s ?p ?o } } WHERE { GRAPH $retracts { ?s ?p ?o } GRAPH ?g { ?s ?p ?o } VALUES ?g { $held } }";
-        const ADD_U: &str = "INSERT { GRAPH $into { ?s ?p ?o } } WHERE { GRAPH $adds { ?s ?p ?o } }";
+        const RETRACT_U: &str = "DELETE { GRAPH ?g { ?s ?p ?o } } WHERE { GRAPH $retracts { ?s ?p ?o $content } GRAPH ?g { ?s ?p ?o } VALUES ?g { $held } }";
+        const ADD_U: &str = "INSERT { GRAPH $into { ?s ?p ?o } } WHERE { GRAPH $adds { ?s ?p ?o $content } }";
         const HELD_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
         PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX orexis: <http://example.org/orexis#>
         SELECT DISTINCT ?g WHERE {
-          GRAPH $retracts { ?s ?p ?o }
+          GRAPH $retracts { ?s ?p ?o $content }
           GRAPH $cat { ?g a orexis:BeliefGraph .
                        ?g orexis:ownedBy ?owner .
                        FILTER NOT EXISTS { ?g a belief:RevisionGraph }
@@ -1427,7 +1435,14 @@ impl Executor {
             Some(r) => self
                 .beliefs
                 .rows(
-                    &bind(HELD_Q, &[("cat", Value::iri(cat)), ("retracts", Value::iri(r.clone()))])?,
+                    &bind(
+                        HELD_Q,
+                        &[
+                            ("cat", Value::iri(cat)),
+                            ("retracts", Value::iri(r.clone())),
+                            ("content", Value::raw(CONTENT)),
+                        ],
+                    )?,
                     &[],
                 )?
                 .iter()
@@ -1441,13 +1456,21 @@ impl Executor {
             let list = held.iter().map(|g| format!("<{g}>")).collect::<Vec<_>>().join(" ");
             writes.push(bind(
                 RETRACT_U,
-                &[("retracts", Value::iri(r.clone())), ("held", Value::raw(list))],
+                &[
+                    ("retracts", Value::iri(r.clone())),
+                    ("held", Value::raw(list)),
+                    ("content", Value::raw(CONTENT)),
+                ],
             )?);
         }
         if let Some(a) = &adds {
             writes.push(bind(
                 ADD_U,
-                &[("into", Value::iri(into.clone())), ("adds", Value::iri(a.clone()))],
+                &[
+                    ("into", Value::iri(into.clone())),
+                    ("adds", Value::iri(a.clone())),
+                    ("content", Value::raw(CONTENT)),
+                ],
             )?);
         }
         let beliefs = self.beliefs.graphs_of(&[BELIEF], &Within::default())?;
@@ -2115,6 +2138,37 @@ GRAPH <http://example.org/test#catalogue> {{
             "and the next head is due on the pass after"
         );
         assert!(resolved(&x, &intention).is_empty());
+    }
+
+    /// The two graphs a step predicts in say what they are, in themselves: the world answers the step all the same,
+    /// since what a graph says of itself is no fact the present is held to.
+    #[test]
+    fn a_step_is_held_to_what_it_predicts_and_never_to_what_its_graphs_say_of_themselves() {
+        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
+        let source = predicting_move(2, PLAN);
+        source
+            .update(&format!(
+                "PREFIX dcterms: <http://purl.org/dc/terms/>
+                    PREFIX execution: <http://example.org/orexis/execution#>
+                    PREFIX orexis: <http://example.org/orexis#>
+                    INSERT DATA {{
+                      GRAPH <{PLAN}.0.adds> {{ <{PLAN}.0.adds> a execution:AddsGraph , orexis:Graph ;
+                        orexis:arrivedBy orexis:Derived ; orexis:hash \"h\" ; dcterms:temporal [ a dcterms:PeriodOfTime ] }}
+                      GRAPH <{PLAN}.0.retracts> {{ <{PLAN}.0.retracts> a execution:RetractsGraph , orexis:Graph ;
+                        orexis:arrivedBy orexis:Derived }} }}"
+            ))
+            .unwrap();
+        let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
+        x.commit(Some(&source), PLAN, WANT).unwrap().unwrap();
+        x.tick(now()).unwrap();
+        assert_eq!(x.drain().unwrap(), 1);
+        moved(&b);
+        assert!(x.tick(now()).unwrap().is_empty());
+        assert_eq!(
+            x.standing().unwrap()[0].at.clone().unwrap(),
+            format!("{PLAN}.1"),
+            "the world answered what the step predicted, and the graphs' descriptions were asked of nothing"
+        );
     }
 
     #[test]
