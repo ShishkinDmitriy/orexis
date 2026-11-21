@@ -51,6 +51,7 @@ package "events" {
   }
   class "PlanPublished" as orexis_planning__events__PlanPublished << (S,#A8D8EA) struct >> {
     {field} +plan : String
+    {field} +root : String
     {field} +want : String
     {field} +desire : Option<String>
     {field} +derived_from : Option<String>

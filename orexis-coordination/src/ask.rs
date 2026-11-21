@@ -20,7 +20,7 @@ use orexis::store::{Store, Within, iri, value};
 use crate::holdings::{
     Holding, RDF_TYPE, common, constraints_and_self, heard, holdings, key_of, of_kind, present, rows_of, said,
 };
-use crate::ontology::{COORDINATION, QUESTION, QUESTION_GRAPH, question_graph};
+use crate::ontology::{COORDINATION, QUESTION, QUESTION_GRAPH, question_graph, question_in};
 
 /// The constraints the self of `store` holds.
 pub(crate) fn held(store: &Store) -> Result<Vec<String>, Error> {
@@ -72,7 +72,14 @@ pub fn ask(store: &Store, me: &str, at: DateTime) -> Result<Vec<(String, Documen
             let until = at.checked_add_day_time_duration(seconds(patience)).unwrap_or(at);
             out.push((
                 peer,
-                said(&graph, QUESTION_GRAPH, &graph, &about, &mine, Some((began, until))),
+                said(
+                    &graph,
+                    QUESTION_GRAPH,
+                    &question_in(&graph),
+                    &about,
+                    &mine,
+                    Some((began, until)),
+                ),
             ));
         }
     }

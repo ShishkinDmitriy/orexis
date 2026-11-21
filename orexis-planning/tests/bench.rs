@@ -74,8 +74,8 @@ fn plan(im: &Store, case: &Path) -> Found {
     const PLAN_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?outcome ?costs (COUNT(?step) AS ?steps) WHERE {
-      GRAPH $plan { $plan planning:outcome ?outcome . OPTIONAL { $plan planning:spent ?costs }
-                    OPTIONAL { ?step a execution:Step ; execution:partOf $plan } } }
+      GRAPH $plan { ?root a planning:Plan ; planning:outcome ?outcome . OPTIONAL { ?root planning:spent ?costs }
+                    OPTIONAL { ?step a execution:Step ; execution:partOf ?root } } }
     GROUP BY ?outcome ?costs";
     let graphs = im.graphs_of(&[PLAN_GRAPH], &Within::default()).expect("graphs by kind");
     let [graph] = graphs.as_slice() else {

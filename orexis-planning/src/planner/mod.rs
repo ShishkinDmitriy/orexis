@@ -1089,7 +1089,7 @@ impl Planner {
         at: DateTime,
     ) -> Result<Vec<PlanPublished>, Error> {
         const PURSUES_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
-            SELECT ?want WHERE { GRAPH ?g { $plan execution:pursues ?want } } LIMIT 1"#;
+            SELECT ?want ?root WHERE { GRAPH $plan { ?root execution:pursues ?want } } LIMIT 1"#;
         const ESTIMATE_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
         SELECT ?remaining WHERE { GRAPH $cat { ?x planning:weighs $ground ; planning:for $want ; planning:remaining ?remaining } } LIMIT 1"#;
         const PURSUERS_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
@@ -1098,7 +1098,7 @@ impl Planner {
         let mut out = Vec::new();
         for plan in handed {
             let found = beliefs.rows(&bind(PURSUES_Q, &[("plan", Value::iri(plan.as_str()))])?, &[])?;
-            let Some(want) = found.first().and_then(|r| iri(r, "want")) else {
+            let Some((want, root)) = found.first().and_then(|r| Some((iri(r, "want")?, iri(r, "root")?))) else {
                 continue;
             };
             let tally = self.searches.lock().unwrap().remove(&want);
@@ -1135,6 +1135,7 @@ impl Planner {
             };
             out.push(PlanPublished {
                 plan: plan.clone(),
+                root,
                 desire: desire_of(store, &want)?,
                 derived_from: derived_from(store, &want)?,
                 scope: Some(local_of(scope)),
@@ -1190,7 +1191,7 @@ impl Planner {
           { GRAPH ?g { ?i a execution:Intention ; execution:pursues ?want .
                        FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }
           UNION
-          { GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?plan execution:pursues ?want }
+          { GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?root execution:pursues ?want }
             FILTER NOT EXISTS { GRAPH ?h { ?i execution:adopts ?plan } } } }
         ORDER BY ?want"#;
         let Some(catalogue) = self.beliefs.catalogue()? else {
@@ -1483,13 +1484,13 @@ SELECT (COUNT(?x) AS ?n) WHERE {
     fn steps(planner: &Planner) -> usize {
         const STEPS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
             PREFIX planning: <http://example.org/orexis/planning#>
-            SELECT (COUNT(?s) AS ?n) WHERE { GRAPH ?p { ?p a planning:Plan . ?s a execution:Step ; execution:partOf ?p } }";
+            SELECT (COUNT(?s) AS ?n) WHERE { GRAPH ?g { ?p a planning:Plan . ?s a execution:Step ; execution:partOf ?p } }";
         count(imagined(planner), STEPS_Q)
     }
 
     fn outcome(planner: &Planner) -> String {
         const OUTCOME_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#>
-            SELECT ?o WHERE { GRAPH ?p { ?p a planning:Plan ; planning:outcome ?o } }";
+            SELECT ?o WHERE { GRAPH ?g { ?p a planning:Plan ; planning:outcome ?o } }";
         local_of(&iri(&imagined(planner).rows(OUTCOME_Q, &[]).unwrap()[0], "o").unwrap())
     }
 
@@ -2043,8 +2044,8 @@ SELECT ?g ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
         const PLAN_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?outcome (COUNT(?step) AS ?steps) WHERE {
-      GRAPH ?g { ?g a planning:Plan ; planning:for $want ; planning:outcome ?outcome .
-                 OPTIONAL { ?step a execution:Step ; execution:partOf ?g } } }
+      GRAPH ?g { ?p a planning:Plan ; planning:for $want ; planning:outcome ?outcome .
+                 OPTIONAL { ?step a execution:Step ; execution:partOf ?p } } }
     GROUP BY ?outcome";
         let r = &store
             .rows(&bind(PLAN_Q, &[("want", Value::iri(want))]).unwrap(), &[])
@@ -2182,7 +2183,7 @@ SELECT ?g ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
             .rows(
                 &format!(
                     "PREFIX planning: <http://example.org/orexis/planning#>
-                    SELECT ?w WHERE {{ GRAPH <{graph}> {{ <{graph}> planning:for ?w }} }}"
+                    SELECT ?w WHERE {{ GRAPH <{graph}> {{ ?p a planning:Plan ; planning:for ?w }} }}"
                 ),
                 &[],
             )
@@ -2193,7 +2194,7 @@ SELECT ?g ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
             .rows(
                 &format!(
                     "PREFIX planning: <http://example.org/orexis/planning#>
-                    SELECT ?o WHERE {{ GRAPH <{graph}> {{ <{graph}> planning:outcome ?o }} }}"
+                    SELECT ?o WHERE {{ GRAPH <{graph}> {{ ?p a planning:Plan ; planning:outcome ?o }} }}"
                 ),
                 &[],
             )
@@ -2215,7 +2216,7 @@ SELECT ?g ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
             .rows(
                 &format!(
                     "PREFIX execution: <http://example.org/orexis/execution#>
-                        SELECT ?w WHERE {{ GRAPH <{0}> {{ <{0}> execution:pursues ?w }} }}",
+                        SELECT ?w WHERE {{ GRAPH <{0}> {{ ?root execution:pursues ?w }} }}",
                     written[0]
                 ),
                 &[],

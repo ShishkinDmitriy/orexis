@@ -307,7 +307,7 @@ impl Searcher {
         const REOPENS_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
             SELECT ?w WHERE { GRAPH ?g { $want planning:reopens ?w } } ORDER BY ?w"#;
         const PLAN_FOR_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
-            SELECT ?plan ?outcome WHERE { GRAPH ?plan { ?plan a planning:Plan ; planning:for $want ; planning:outcome ?outcome } } LIMIT 1"#;
+            SELECT ?plan ?outcome WHERE { GRAPH ?plan { ?root a planning:Plan ; planning:for $want ; planning:outcome ?outcome } } LIMIT 1"#;
         let reopened: Vec<String> = store
             .rows(&bind(REOPENS_Q, &[("want", Value::iri(want))])?, &[])?
             .iter()

@@ -13,6 +13,7 @@ use orexis::ontology::{BELIEF, GRAPH_PREFIX, RECORDED};
 use orexis::store::{Store, Within, iri};
 
 use crate::admit::local_of;
+use crate::extract_plan::plan_root;
 use crate::ontology::{ADDS_GRAPH, PLAN, PLAN_GRAPH, RETRACTS_GRAPH, WANT};
 
 /// Eight hex characters of fresh randomness, as Python's `uuid.uuid4().hex[:8]`: a name is for eyes.
@@ -34,7 +35,7 @@ pub fn publish_plan(
     const STANDS_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#>
         SELECT ?w WHERE { $want a planning:Want . BIND($want AS ?w) } LIMIT 1";
     const FOR_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#>
-        SELECT ?want WHERE { GRAPH $plan { $plan planning:for ?want } }";
+        SELECT ?want WHERE { GRAPH $plan { ?root a planning:Plan ; planning:for ?want } }";
     const STEPS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         SELECT ?step WHERE { GRAPH $plan { ?step a execution:Step } }";
     const DERIVED_Q: &str =
@@ -135,11 +136,12 @@ pub fn publish_plan(
             "PREFIX execution: <http://example.org/orexis/execution#>
   PREFIX prov: <http://www.w3.org/ns/prov#>
   INSERT DATA {{
-  GRAPH <{published}> {{ <{published}> execution:pursues <{want}> . {} }}
+  GRAPH <{published}> {{ <{root}> execution:pursues <{want}> . {} }}
   {} {} }}",
             derived.join(" "),
             beliefs.entry(&published, &[PLAN], RECORDED, Some(me), None, None)?,
-            entries.join(" ")
+            entries.join(" "),
+            root = plan_root(&published),
         ))?;
         handed.push(published);
     }

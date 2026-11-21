@@ -26,4 +26,6 @@ constraint's key, values and periods crosses.
 
 An empty answer is said too: it is the whole cost of no [conflict](/domain/coordination/conflict.md), one
 document each way. It is said in a graph named for the answerer, the asker and the constraint,
-`coordination:AnswerGraph`, so it is replaced each time the question is said again.
+`coordination:AnswerGraph`, so it is replaced each time the question is said again; its own node takes
+`.answer` on the end of the graph's IRI, and `coordination:answers` points at the question's node, never
+at the graph that one was heard in.

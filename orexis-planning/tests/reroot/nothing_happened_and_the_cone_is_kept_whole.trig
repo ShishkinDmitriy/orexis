@@ -29,30 +29,30 @@ GRAPH ground:2026-01-01T120100p0000 {
 }
 
 GRAPH plan:keeper.every_disk_home.pursued {
-  plan:keeper.every_disk_home.pursued a planning:Plan .
-  plan:keeper.every_disk_home.pursued planning:for :keeper.every_disk_home.pursued .
-  plan:keeper.every_disk_home.pursued planning:outcome planning:Satisfied .
-  plan:keeper.every_disk_home.pursued planning:spent 3.0 .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB a execution:Step .
-  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB execution:partOf plan:keeper.every_disk_home.pursued .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB execution:partOf plan:keeper.every_disk_home.pursued.plan .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB execution:then plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB hanoi:disk :disk_1 .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB hanoi:onto hanoi:PegB .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB planning:fills hanoi:Move .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB planning:of possible:Move-disk_1-PegB.by .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC a execution:Step .
-  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC execution:partOf plan:keeper.every_disk_home.pursued .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC execution:partOf plan:keeper.every_disk_home.pursued.plan .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC execution:then plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC hanoi:disk :disk_2 .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC hanoi:onto hanoi:PegC .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC planning:fills hanoi:Move .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC planning:of possible:Move-disk_1-PegB.Move-disk_2-PegC.by .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC a execution:Step .
-  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC execution:partOf plan:keeper.every_disk_home.pursued .
+  plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC execution:partOf plan:keeper.every_disk_home.pursued.plan .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC hanoi:disk :disk_1 .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC hanoi:onto hanoi:PegC .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC planning:fills hanoi:Move .
   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC planning:of possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.by .
+  plan:keeper.every_disk_home.pursued.plan a planning:Plan .
+  plan:keeper.every_disk_home.pursued.plan planning:for :keeper.every_disk_home.pursued .
+  plan:keeper.every_disk_home.pursued.plan planning:outcome planning:Satisfied .
+  plan:keeper.every_disk_home.pursued.plan planning:spent 3.0 .
 }
 
 GRAPH possible:Move-disk_1-PegB {

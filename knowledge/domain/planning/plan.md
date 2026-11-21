@@ -20,6 +20,11 @@ when it may be taken (`execution:notBefore`, the start of the
 world it is taken in) and the earliest and the latest its change lands (`execution:landsAt`,
 `execution:notAfter`, the two ends of the world it reaches). `planning:spent` is what the path cost.
 
+**The plan is not its graph.** The `planning:Plan` is the root its steps are `execution:partOf`, and it
+goes by its graph's name with `.plan` after it (`plan_root`), where it once bore that name outright: a
+plan is for a want and ended some way, the graph arrived some way and is somebody's, and under one IRI
+nothing could say which of the two a fact was about.
+
 # An empty plan is an answer
 
 `planning:outcome` says which of three:

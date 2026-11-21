@@ -13,7 +13,7 @@ use orexis::ontology::RECEIVED;
 use orexis::store::{Store, iri};
 
 use crate::holdings::{RDF_TYPE, constraints_and_self, heard, holdings, rows_of, said, violates};
-use crate::ontology::{ANSWER, ANSWER_GRAPH, COORDINATION, answer_graph};
+use crate::ontology::{ANSWER, ANSWER_GRAPH, COORDINATION, answer_graph, answer_in};
 
 /// The answer the self `me` of `store` says to the question heard in the graph `question`, with the peer it is to — or
 /// None where the question is no peer's, or names a constraint the agent does not hold.
@@ -21,7 +21,7 @@ pub fn answer(store: &Store, me: &str, question: &str, at: DateTime) -> Result<O
     /// WHAT A QUESTION HEARD SAYS: who asks, and under which constraint; only one that arrived from a peer.
     const QUESTION_Q: &str = "PREFIX coordination: <http://example.org/orexis/coordination#>
     PREFIX orexis: <http://example.org/orexis#>
-    SELECT ?asker ?constraint WHERE { GRAPH $cat { $graph orexis:arrivedBy $received }
+    SELECT ?q ?asker ?constraint WHERE { GRAPH $cat { $graph orexis:arrivedBy $received }
       GRAPH $graph { ?q a coordination:Question ; coordination:asks ?asker ; coordination:over ?constraint } } LIMIT 1";
     const HOLDS_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
         PREFIX planning: <http://example.org/orexis/planning#>
@@ -37,7 +37,7 @@ pub fn answer(store: &Store, me: &str, question: &str, at: DateTime) -> Result<O
     )?;
     let found = store.rows(&text, &[])?;
     let Some(row) = found.first() else { return Ok(None) };
-    let (Some(asker), Some(constraint)) = (iri(row, "asker"), iri(row, "constraint")) else {
+    let (Some(of), Some(asker), Some(constraint)) = (iri(row, "q"), iri(row, "asker"), iri(row, "constraint")) else {
         return Ok(None);
     };
     if asker == me
@@ -68,10 +68,7 @@ pub fn answer(store: &Store, me: &str, question: &str, at: DateTime) -> Result<O
     let graph = answer_graph(me, &asker, &constraint);
     let about = vec![
         (RDF_TYPE.to_string(), NamedNode::new_unchecked(ANSWER).into()),
-        (
-            format!("{COORDINATION}answers"),
-            NamedNode::new_unchecked(question).into(),
-        ),
+        (format!("{COORDINATION}answers"), NamedNode::new_unchecked(of).into()),
         (format!("{COORDINATION}answeredBy"), NamedNode::new_unchecked(me).into()),
         (
             format!("{COORDINATION}over"),
@@ -80,6 +77,6 @@ pub fn answer(store: &Store, me: &str, question: &str, at: DateTime) -> Result<O
     ];
     Ok(Some((
         asker,
-        said(&graph, ANSWER_GRAPH, &graph, &about, &meeting, None),
+        said(&graph, ANSWER_GRAPH, &answer_in(&graph), &about, &meeting, None),
     )))
 }

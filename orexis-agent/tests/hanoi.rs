@@ -75,7 +75,7 @@ fn plan(store: &Store) -> (f64, Vec<(String, String)>) {
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?plan ?spent ?step ?next ?disk ?onto WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?plan a orexis:PlanGraph }
-      GRAPH ?plan { ?plan planning:spent ?spent . ?step a execution:Step ; hanoi:disk ?disk ; hanoi:onto ?onto .
+      GRAPH ?plan { ?root planning:spent ?spent . ?step a execution:Step ; hanoi:disk ?disk ; hanoi:onto ?onto .
                     OPTIONAL { ?step execution:then ?next } } }";
     let found = store.rows(STEPS_Q, &[]).unwrap();
     let plans: std::collections::BTreeSet<String> = found.iter().filter_map(|r| iri(r, "plan")).collect();
@@ -507,6 +507,7 @@ async fn the_history_part_marks_an_event_of_a_class_beneath_incident_and_no_othe
     watch.emit(unreachable);
     watch.emit(&PlanPublished {
         plan: "http://example.org/test#plan".into(),
+        root: "http://example.org/test#plan.plan".into(),
         want: "http://example.org/test#want".into(),
         desire: None,
         derived_from: None,

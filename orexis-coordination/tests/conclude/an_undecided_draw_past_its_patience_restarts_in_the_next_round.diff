@@ -1,8 +1,8 @@
 --- case
 +++ expected
 @@ -16,7 +16,7 @@
-   :answer coordination:holding :answer.holding .
-   :answer coordination:over :no_two_vans .
+   :answer.answer coordination:holding :answer.holding .
+   :answer.answer coordination:over :no_two_vans .
    :answer.holding a coordination:Holding .
 -  :answer.holding coordination:from "2026-01-01T12:01:00+00:00"^^xsd:dateTime .
 +  :answer.holding coordination:from "2026-01-01T12:01:00Z"^^xsd:dateTime .

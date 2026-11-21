@@ -42,6 +42,17 @@ pub fn answer_graph(answerer: &str, asker: &str, constraint: &str) -> String {
     )
 }
 
+/// The question said in `graph`: the node that is the question, named off its graph and never as it, since one IRI
+/// for the question and the graph it is said in is one name for two things.
+pub fn question_in(graph: &str) -> String {
+    format!("{graph}.question")
+}
+
+/// The answer said in `graph`, named as a question is.
+pub fn answer_in(graph: &str) -> String {
+    format!("{graph}.answer")
+}
+
 /// The conflict between two agents over one constraint, named alike by both.
 pub fn conflict_of(one: &str, other: &str, constraint: &str) -> String {
     let (low, high) = if one <= other { (one, other) } else { (other, one) };
