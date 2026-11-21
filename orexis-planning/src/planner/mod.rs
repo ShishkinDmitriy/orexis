@@ -2172,6 +2172,49 @@ SELECT ?g ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
         assert_eq!(ancestry, by_chain, "root first, and the same candidates");
     }
 
+    /// Every possible world says what it is, in itself, as a graph describing itself would; the plan extracted again
+    /// predicts what it predicted, since a step's change is a diff of what two worlds state and never of what each
+    /// says it is.
+    #[test]
+    fn what_a_step_predicts_is_no_part_of_what_its_worlds_say_of_themselves() {
+        const PREDICTED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+            SELECT ?g ?s ?p ?o WHERE { GRAPH ?plan { ?step execution:adds|execution:retracts ?g } GRAPH ?g { ?s ?p ?o } }
+            ORDER BY ?g ?s ?p ?o";
+        let beliefs = snapshots::stand_in(&cases().join("a_low_tank_is_filled.trig"));
+        let planner = walked(&beliefs);
+        let im = imagined(&planner);
+        let predicted = |im: &Store| -> Vec<String> {
+            im.rows(PREDICTED_Q, &[])
+                .unwrap()
+                .iter()
+                .map(|r| format!("{r:?}"))
+                .collect()
+        };
+        let before = predicted(im);
+        assert!(!before.is_empty(), "the plan predicts something");
+        im.update(
+            "PREFIX dcterms: <http://purl.org/dc/terms/>
+            PREFIX orexis: <http://example.org/orexis#>
+            PREFIX planning: <http://example.org/orexis/planning#>
+            INSERT { GRAPH ?w { ?w a planning:PossibleGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived ;
+                                 orexis:hash ?name ; dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start ?name ] } }
+            WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:PossibleGraph } BIND(STR(?w) AS ?name) }",
+        )
+        .unwrap();
+        let graph = im.graphs_of(&[PLAN_GRAPH], &Within::default()).unwrap()[0].clone();
+        let want = im
+            .rows(
+                &format!(
+                    "PREFIX planning: <http://example.org/orexis/planning#>
+                    SELECT ?w WHERE {{ GRAPH <{graph}> {{ ?p a planning:Plan ; planning:for ?w }} }}"
+                ),
+                &[],
+            )
+            .unwrap();
+        extract_plan(im, &iri(&want[0], "w").unwrap()).unwrap();
+        assert_eq!(predicted(im), before);
+    }
+
     #[test]
     fn extracting_again_leaves_the_same_plan() {
         let beliefs = snapshots::stand_in(&cases().join("a_low_tank_is_filled.trig"));

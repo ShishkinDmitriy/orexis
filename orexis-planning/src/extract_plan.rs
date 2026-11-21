@@ -4,6 +4,10 @@
 //! saying which silence it is. ONE UPDATE: the root, the steps, the chain off the ancestry, the plan's row, and what
 //! each step predicts as two graphs it names, the diff a pattern the engine computes where the worlds are.
 //!
+//! WHAT A STEP PREDICTS IS A DIFF OF CONTENT: what a world says of itself - that it is a possible world, when it
+//! holds, what it hashes to - is its description, which differs between any two worlds and is no change a step
+//! makes; so each text that reads a whole world asks, in its own words, for what is about no graph and no period.
+//!
 //! THE PLAN IS NOT ITS GRAPH: the root, the node that is the `planning:Plan`, has a name of its own (`plan_root`),
 //! where it bore its graph's, one IRI for two things — a plan, which is for a want and ended some way, and the graph
 //! it is written in, which arrived some way and is somebody's.
@@ -57,25 +61,27 @@ pub fn extract_plan(store: &Store, want: &str) -> Result<String, Error> {
     WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                           $world (planning:by/planning:from)* ?w . ?w planning:by ?by . ?by planning:from ?in
                           FILTER NOT EXISTS { ?own prov:wasDerivedFrom ?w ; a execution:AddsGraph } }
-             GRAPH ?w { ?s ?p ?o } FILTER NOT EXISTS { GRAPH ?in { ?s ?p ?o } }
+             GRAPH ?w { ?s ?p ?o FILTER NOT EXISTS { ?s a orexis:Graph } FILTER NOT EXISTS { ?s a dcterms:PeriodOfTime } }
+             FILTER NOT EXISTS { GRAPH ?in { ?s ?p ?o } }
              BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""), ".adds")) AS ?adds) } ;
     INSERT { GRAPH ?adds { ?s ?p ?o } }
     WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                           $world (planning:by/planning:from)* ?w . ?w planning:by ?by .
                           ?own prov:wasDerivedFrom ?w ; a execution:AddsGraph }
-             GRAPH ?own { ?s ?p ?o }
+             GRAPH ?own { ?s ?p ?o FILTER NOT EXISTS { ?s a orexis:Graph } FILTER NOT EXISTS { ?s a dcterms:PeriodOfTime } }
              BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""), ".adds")) AS ?adds) } ;
     INSERT { GRAPH ?retracts { ?s ?p ?o } }
     WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                           $world (planning:by/planning:from)* ?w . ?w planning:by ?by . ?by planning:from ?in
                           FILTER NOT EXISTS { ?own prov:wasDerivedFrom ?w ; a execution:RetractsGraph } }
-             GRAPH ?in { ?s ?p ?o } FILTER NOT EXISTS { GRAPH ?w { ?s ?p ?o } }
+             GRAPH ?in { ?s ?p ?o FILTER NOT EXISTS { ?s a orexis:Graph } FILTER NOT EXISTS { ?s a dcterms:PeriodOfTime } }
+             FILTER NOT EXISTS { GRAPH ?w { ?s ?p ?o } }
              BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""), ".retracts")) AS ?retracts) } ;
     INSERT { GRAPH ?retracts { ?s ?p ?o } }
     WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
                           $world (planning:by/planning:from)* ?w . ?w planning:by ?by .
                           ?own prov:wasDerivedFrom ?w ; a execution:RetractsGraph }
-             GRAPH ?own { ?s ?p ?o }
+             GRAPH ?own { ?s ?p ?o FILTER NOT EXISTS { ?s a orexis:Graph } FILTER NOT EXISTS { ?s a dcterms:PeriodOfTime } }
              BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""), ".retracts")) AS ?retracts) } ;
     INSERT { GRAPH ?cat { ?adds a execution:AddsGraph ; orexis:arrivedBy orexis:Derived .
                           ?retracts a execution:RetractsGraph ; orexis:arrivedBy orexis:Derived } }

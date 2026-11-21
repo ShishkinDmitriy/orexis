@@ -824,6 +824,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   classified per kind it HOLDS**, and a graph holding two kinds is two graphs.
 - **One graph describes every graph and itself** — the catalogue, found by its own row, created by
   genesis alone.
+- **A graph's description is told from its content by type, by each reader of a whole graph in its own text,
+  and the store does not know** — a triple whose subject its graph types `orexis:Graph` or `dcterms:PeriodOfTime`
+  says what the graph is and is no fact it states; the hash, a step's predicted diff and the executor's landing
+  check each say so themselves, a text asking for a thing by its class needs nothing, and a store door answering
+  a graph's content was built and taken out, a method that knew what every caller wanted
+  ([description](knowledge/domain/kernel/description.md)).
 - **A thing and the graph it is written in are two names** — a plan's root, a question, an answer and every
   document a saying makes bore their graph's IRI, so a fact under it was about the thing or about its graph and
   nothing said which; the first three are their graph's name with a word after it (`plan_root`, `question_in`,
