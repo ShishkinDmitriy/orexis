@@ -3,6 +3,10 @@
 //! to the ground, one `execution:Step` minted per candidate on the way — or, where nothing met it, the empty plan
 //! saying which silence it is. ONE UPDATE: the root, the steps, the chain off the ancestry, the plan's row, and what
 //! each step predicts as two graphs it names, the diff a pattern the engine computes where the worlds are.
+//!
+//! THE PLAN IS NOT ITS GRAPH: the root, the node that is the `planning:Plan`, has a name of its own (`plan_root`),
+//! where it bore its graph's, one IRI for two things — a plan, which is for a want and ended some way, and the graph
+//! it is written in, which arrived some way and is somebody's.
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
@@ -23,9 +27,9 @@ pub fn extract_plan(store: &Store, want: &str) -> Result<String, Error> {
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-    INSERT { GRAPH $plan { $plan a planning:Plan ; planning:for $want ; planning:outcome $outcome $costs } }
+    INSERT { GRAPH $plan { $root a planning:Plan ; planning:for $want ; planning:outcome $outcome $costs } }
     WHERE  {} ;
-    INSERT { GRAPH $plan { ?step a execution:Step ; execution:partOf $plan ;
+    INSERT { GRAPH $plan { ?step a execution:Step ; execution:partOf $root ;
                            planning:fills ?action ; planning:of ?by ;
                            execution:notBefore ?since ; execution:landsAt ?lands ; execution:notAfter ?after ;
                            execution:adds ?adds ; execution:retracts ?retracts . ?step ?p ?v } }
@@ -134,6 +138,7 @@ pub fn extract_plan(store: &Store, want: &str) -> Result<String, Error> {
         PLAN_U,
         &[
             ("plan", plan),
+            ("root", Value::iri(plan_root(&graph))),
             ("want", Value::iri(want)),
             ("outcome", Value::iri(outcome)),
             ("world", Value::iri(world.as_str())),
@@ -141,6 +146,11 @@ pub fn extract_plan(store: &Store, want: &str) -> Result<String, Error> {
         ],
     )?)?;
     Ok(graph)
+}
+
+/// The root of the plan written in `graph`: the node that is the plan, named off its graph and never as it.
+pub fn plan_root(graph: &str) -> String {
+    format!("{graph}.plan")
 }
 
 /// A decimal's lexical form as Python's `str(float(...))` spells it.

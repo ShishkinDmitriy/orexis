@@ -60,9 +60,9 @@ GRAPH :ontology {
   speech:StatementGraph rdfs:subClassOf orexis:Graph .
 }
 GRAPH asked:no_two_vans {
-  asked:no_two_vans a coordination:Question .
-  asked:no_two_vans coordination:asks :keeper .
-  asked:no_two_vans coordination:over :no_two_vans .
+  asked:no_two_vans.question a coordination:Question .
+  asked:no_two_vans.question coordination:asks :keeper .
+  asked:no_two_vans.question coordination:over :no_two_vans .
 }
 GRAPH :self {
   :keeper a orexis:Self .

@@ -14,7 +14,7 @@
    :disk_1 hanoi:on hanoi:PegC .
    :disk_2 hanoi:on :disk_1 .
 @@ -52,83 +49,41 @@
-   plan:keeper.every_disk_home.pursued.Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC planning:of possible:Move-disk_1-PegB.Move-disk_2-PegC.Move-disk_1-PegC.by .
+   plan:keeper.every_disk_home.pursued.plan planning:spent 3.0 .
  }
  
 -GRAPH possible:Move-disk_1-PegB {

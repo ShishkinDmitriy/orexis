@@ -374,7 +374,7 @@ impl Executor {
     pub fn commit_plans(&mut self) -> Result<Vec<String>, Error> {
         const PLANS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?plan ?want WHERE { GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?plan execution:pursues ?want }
+        SELECT ?plan ?want WHERE { GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?root execution:pursues ?want }
           FILTER NOT EXISTS { GRAPH ?g { ?i execution:adopts ?plan } } }
         ORDER BY ?plan";
         let Some(cat) = self.catalogue()? else {
@@ -549,10 +549,10 @@ impl Executor {
         const HEAD_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         SELECT ?step WHERE {
           GRAPH $plan {
-            ?step a execution:Step ; execution:partOf $root .
+            ?step a execution:Step ; execution:partOf ?root .
             FILTER NOT EXISTS { ?other execution:then ?step } } }";
         const STEPS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
-        SELECT ?step WHERE { GRAPH $plan { ?step a execution:Step ; execution:partOf $root } }";
+        SELECT ?step WHERE { GRAPH $plan { ?step a execution:Step ; execution:partOf ?root } }";
         const STEP_GRAPHS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
             SELECT ?g ?side WHERE { GRAPH $plan { ?step ?side ?g . VALUES ?side { execution:adds execution:retracts } } }";
         const CLASSIFIED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
@@ -560,7 +560,7 @@ impl Executor {
         let from = source.unwrap_or(&self.beliefs);
         let plan = Value::iri(graph);
         let mut steps: Vec<String> = from
-            .rows(&bind(STEPS_Q, &[("plan", plan.clone()), ("root", plan.clone())])?, &[])?
+            .rows(&bind(STEPS_Q, &[("plan", plan.clone())])?, &[])?
             .iter()
             .filter_map(|r| iri(r, "step"))
             .collect();
@@ -569,7 +569,7 @@ impl Executor {
             return Ok(None);
         }
         let head: Vec<String> = from
-            .rows(&bind(HEAD_Q, &[("plan", plan.clone()), ("root", plan.clone())])?, &[])?
+            .rows(&bind(HEAD_Q, &[("plan", plan.clone())])?, &[])?
             .iter()
             .filter_map(|r| iri(r, "step"))
             .collect();
@@ -1756,7 +1756,7 @@ GRAPH <http://example.org/test#catalogue> { <http://example.org/test#catalogue> 
                 } else {
                     String::new()
                 };
-                format!("<{plan}.{n}> a execution:Step ; execution:partOf <{plan}> {then}.")
+                format!("<{plan}.{n}> a execution:Step ; execution:partOf <{plan}.plan> {then}.")
             })
             .collect();
         st.update(&format!(

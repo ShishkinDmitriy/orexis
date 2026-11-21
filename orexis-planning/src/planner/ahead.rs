@@ -129,7 +129,7 @@ impl Planner {
         const LIVE_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX orexis: <http://example.org/orexis#>
         SELECT ?plan ?want ?head ?taken WHERE {
-          GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?plan execution:pursues ?want }
+          GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?root execution:pursues ?want }
           OPTIONAL { GRAPH ?g { ?i a execution:Intention ; execution:adopts ?plan ; execution:by ?head .
                                 FILTER NOT EXISTS { ?i execution:resolvedAt ?done }
                                 OPTIONAL { ?act execution:of ?head ; execution:taken true ; execution:takenAt ?taken } } }

@@ -91,10 +91,6 @@
 +}
 +
 +GRAPH plan:keeper.apart.pursued {
-+  plan:keeper.apart.pursued a planning:Plan .
-+  plan:keeper.apart.pursued planning:for :keeper.apart.pursued .
-+  plan:keeper.apart.pursued planning:outcome planning:Satisfied .
-+  plan:keeper.apart.pursued planning:spent 1.0 .
 +  plan:keeper.apart.pursued.1 :tank :tank1 .
 +  plan:keeper.apart.pursued.1 :to :stand_b .
 +  plan:keeper.apart.pursued.1 a execution:Step .
@@ -102,10 +98,14 @@
 +  plan:keeper.apart.pursued.1 execution:landsAt "2026-01-01T12:00:00Z"^^xsd:dateTime .
 +  plan:keeper.apart.pursued.1 execution:notAfter "2026-01-01T12:00:00Z"^^xsd:dateTime .
 +  plan:keeper.apart.pursued.1 execution:notBefore "2026-01-01T12:00:00Z"^^xsd:dateTime .
-+  plan:keeper.apart.pursued.1 execution:partOf plan:keeper.apart.pursued .
++  plan:keeper.apart.pursued.1 execution:partOf plan:keeper.apart.pursued.plan .
 +  plan:keeper.apart.pursued.1 execution:retracts plan:keeper.apart.pursued.1.retracts .
 +  plan:keeper.apart.pursued.1 planning:fills :move .
 +  plan:keeper.apart.pursued.1 planning:of possible:1.by .
++  plan:keeper.apart.pursued.plan a planning:Plan .
++  plan:keeper.apart.pursued.plan planning:for :keeper.apart.pursued .
++  plan:keeper.apart.pursued.plan planning:outcome planning:Satisfied .
++  plan:keeper.apart.pursued.plan planning:spent 1.0 .
 +}
 +
 +GRAPH plan:keeper.apart.pursued.1.adds {

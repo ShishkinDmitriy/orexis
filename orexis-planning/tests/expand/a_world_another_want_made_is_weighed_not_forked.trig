@@ -241,21 +241,21 @@ GRAPH ground:2026-01-01T120000p0000 {
 }
 
 GRAPH plan:keeper.in_range.pursued.tank1 {
-  plan:keeper.in_range.pursued.tank1 a planning:Plan .
-  plan:keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
-  plan:keeper.in_range.pursued.tank1 planning:outcome planning:Satisfied .
-  plan:keeper.in_range.pursued.tank1 planning:spent 2.0 .
   plan:keeper.in_range.pursued.tank1.fill-tank1 :tank :tank1 .
   plan:keeper.in_range.pursued.tank1.fill-tank1 a execution:Step .
-  plan:keeper.in_range.pursued.tank1.fill-tank1 execution:partOf plan:keeper.in_range.pursued.tank1 .
+  plan:keeper.in_range.pursued.tank1.fill-tank1 execution:partOf plan:keeper.in_range.pursued.tank1.plan .
   plan:keeper.in_range.pursued.tank1.fill-tank1 execution:then plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 .
   plan:keeper.in_range.pursued.tank1.fill-tank1 planning:fills :fill .
   plan:keeper.in_range.pursued.tank1.fill-tank1 planning:of possible:fill-tank1.by .
   plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 :tank :tank1 .
   plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 a execution:Step .
-  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 execution:partOf plan:keeper.in_range.pursued.tank1 .
+  plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 execution:partOf plan:keeper.in_range.pursued.tank1.plan .
   plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 planning:fills :fill .
   plan:keeper.in_range.pursued.tank1.fill-tank1.fill-tank1 planning:of possible:fill-tank1.fill-tank1.by .
+  plan:keeper.in_range.pursued.tank1.plan a planning:Plan .
+  plan:keeper.in_range.pursued.tank1.plan planning:for :keeper.in_range.pursued.tank1 .
+  plan:keeper.in_range.pursued.tank1.plan planning:outcome planning:Satisfied .
+  plan:keeper.in_range.pursued.tank1.plan planning:spent 2.0 .
 }
 
 GRAPH possible:fill-tank1 {

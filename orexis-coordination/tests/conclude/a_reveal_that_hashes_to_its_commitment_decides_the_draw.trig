@@ -19,11 +19,11 @@
 @prefix draw: <http://example.org/orexis/draw#> .
 @prefix conflict: <http://example.org/orexis/graph/coordination/conflict/> .
 GRAPH :answer {
-  :answer a coordination:Answer .
-  :answer coordination:answeredBy :peer .
-  :answer coordination:answers :question .
-  :answer coordination:holding :answer.holding .
-  :answer coordination:over :no_two_vans .
+  :answer.answer a coordination:Answer .
+  :answer.answer coordination:answeredBy :peer .
+  :answer.answer coordination:answers :question.question .
+  :answer.answer coordination:holding :answer.holding .
+  :answer.answer coordination:over :no_two_vans .
   :answer.holding a coordination:Holding .
   :answer.holding coordination:from "2026-01-01T12:01:00+00:00"^^xsd:dateTime .
   :answer.holding coordination:of :van_p .
@@ -103,9 +103,9 @@ GRAPH :ontology {
   speech:StatementGraph rdfs:subClassOf orexis:Graph .
 }
 GRAPH :question {
-  :question a coordination:Question .
-  :question coordination:asks :keeper .
-  :question coordination:over :no_two_vans .
+  :question.question a coordination:Question .
+  :question.question coordination:asks :keeper .
+  :question.question coordination:over :no_two_vans .
 }
 GRAPH :rules {
   :winner a coordination:Outcome .

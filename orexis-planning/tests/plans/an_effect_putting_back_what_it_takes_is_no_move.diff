@@ -94,9 +94,9 @@
 +}
 +
 +GRAPH plan:keeper.in_range.pursued.tank1 {
-+  plan:keeper.in_range.pursued.tank1 a planning:Plan .
-+  plan:keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
-+  plan:keeper.in_range.pursued.tank1 planning:outcome planning:Exhausted .
++  plan:keeper.in_range.pursued.tank1.plan a planning:Plan .
++  plan:keeper.in_range.pursued.tank1.plan planning:for :keeper.in_range.pursued.tank1 .
++  plan:keeper.in_range.pursued.tank1.plan planning:outcome planning:Exhausted .
 +}
 +
 +GRAPH pursued:2026-01-01T120000p0000--2026-01-01T120030p0000 {

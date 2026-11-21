@@ -103,7 +103,7 @@ impl Searching {
             SELECT ?h WHERE { GRAPH $cat { ?g a planning:GroundGraph ; orexis:hash ?h } }"#;
         const REOPENING_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
         SELECT ?w WHERE { GRAPH ?g { ?w planning:reopens ?w }
-          FILTER NOT EXISTS { GRAPH ?p { ?p a planning:Plan ; planning:for ?w ; planning:outcome planning:Satisfied } } }"#;
+          FILTER NOT EXISTS { GRAPH ?p { ?root a planning:Plan ; planning:for ?w ; planning:outcome planning:Satisfied } } }"#;
         const HASHES_Q: &str = r#"PREFIX orexis: <http://example.org/orexis#>
           PREFIX planning: <http://example.org/orexis/planning#>
           SELECT DISTINCT ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w orexis:hash ?h .

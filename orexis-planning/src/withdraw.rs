@@ -76,7 +76,7 @@ fn forget_search(store: &Store, uri: &str) -> Result<(), Error> {
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?plan WHERE {
       GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?plan a planning:PlanGraph }
-      GRAPH ?plan { ?plan planning:for $want } }";
+      GRAPH ?plan { ?root a planning:Plan ; planning:for $want } }";
     const STEP_GRAPHS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         SELECT ?g WHERE { GRAPH $plan { ?step execution:adds|execution:retracts ?g } }";
     store.update(&bind(WEIGHINGS_U, &[("want", Value::iri(uri))])?)?;

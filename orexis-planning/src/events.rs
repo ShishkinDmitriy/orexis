@@ -39,7 +39,10 @@ fn term(name: &str) -> String {
 /// graph's own triples.
 #[derive(Clone, Debug, PartialEq)]
 pub struct PlanPublished {
+    /// The graph the plan is written in, which an intention adopts.
     pub plan: String,
+    /// The plan itself, the root its steps are part of: no name of its graph's.
+    pub root: String,
     pub want: String,
     pub desire: Option<String>,
     /// The desire itself, the want derived from it.
@@ -76,7 +79,7 @@ impl Event for PlanPublished {
     fn statements(&self, entry: &NamedNode) -> Option<Vec<Triple>> {
         let mut out = vec![
             typed(entry.clone(), &term("PlanPublished")),
-            triple(entry.clone(), &term("published"), node(&self.plan)),
+            triple(entry.clone(), &term("published"), node(&self.root)),
         ];
         out.extend(self.said.iter().cloned());
         Some(out)

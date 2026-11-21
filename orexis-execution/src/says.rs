@@ -1,8 +1,11 @@
 //! WHAT TAKING A STEP SAYS, as `agent/execution/says.py` makes it: an action a step says something by has an
 //! `execution:Saying` among its operations, an `sh:construct` over the beliefs holding as the step is taken, with the
 //! step's parameters as `$tokens` and `$now`. What it constructs is read as documents — one per IRI said to be
-//! `execution:to` somebody, holding every fact about it and the blank nodes those reach, its kinds of graph and its
-//! period as the document's rows — and the container hands each to speech; execution names no speech.
+//! `execution:to` somebody, its kinds of graph and its period the document's rows, and holding every fact about each
+//! thing it `execution:states` and the blank nodes those reach — and the container hands each to speech; execution
+//! names no speech. THE DOCUMENT IS NOT WHAT IT STATES: a text names the two apart, and one that types its document
+//! as anything but a graph is refused, since a call and the graph a call is said in under one IRI is one name for two
+//! things.
 
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
@@ -70,9 +73,10 @@ fn blanks_of<'t>(triples: impl Iterator<Item = &'t Triple>) -> HashSet<NamedOrBl
         .collect()
 }
 
-/// The result read as documents: one per IRI said to be `execution:to` somebody.
+/// The result read as documents: one per IRI said to be `execution:to` somebody, holding what it `execution:states`.
 fn documents(store: &Store, triples: &[Triple], action: &str) -> Result<Vec<(Vec<String>, Document)>, Error> {
     let to_p = format!("{EXECUTION}to");
+    let states_p = format!("{EXECUTION}states");
     let mut to: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     for t in triples {
         if t.predicate.as_str() == to_p
@@ -86,12 +90,19 @@ fn documents(store: &Store, triples: &[Triple], action: &str) -> Result<Vec<(Vec
             to.entry(graph.as_str().to_string()).or_default().insert(agent);
         }
     }
-    let mut out = Vec::new();
+    let mut out: Vec<(String, Vec<String>, Document)> = Vec::new();
     let mut used: HashSet<&Triple> = HashSet::new();
     for (graph, agents) in &to {
         let node: NamedOrBlankNode = NamedNode::new_unchecked(graph).into();
         let mut mine: HashSet<&Triple> = HashSet::new();
+        //  THE DOCUMENT, AND EACH THING IT STATES: what is said of either, and of the blank nodes those reach.
         let mut frontier: HashSet<NamedOrBlankNode> = HashSet::from([node.clone()]);
+        frontier.extend(
+            triples
+                .iter()
+                .filter(|t| t.subject == node && t.predicate.as_str() == states_p)
+                .filter_map(|t| NamedOrBlankNode::try_from(t.object.clone()).ok()),
+        );
         while !frontier.is_empty() {
             let here: Vec<&Triple> = triples
                 .iter()
@@ -108,7 +119,15 @@ fn documents(store: &Store, triples: &[Triple], action: &str) -> Result<Vec<(Vec
                     Term::NamedNode(kind) => store.closed(kind.as_str())?.iter().any(|k| k == GRAPH),
                     _ => false,
                 };
-            if p == to_p || p == TEMPORAL || a_graph {
+            if p == RDF_TYPE && !a_graph {
+                return Err(Error::Evaluation(format!(
+                    "{} says a document, {graph}, that is a {}, which is no kind of graph: the thing a document \
+                     states is named apart from it (execution:states)",
+                    local_of(action),
+                    t.object
+                )));
+            }
+            if p == to_p || p == states_p || p == TEMPORAL || a_graph {
                 about.insert(t);
             }
         }
@@ -122,7 +141,7 @@ fn documents(store: &Store, triples: &[Triple], action: &str) -> Result<Vec<(Vec
         let named = GraphName::NamedNode(NamedNode::new_unchecked(graph));
         let mut quads: Vec<Quad> = mine
             .iter()
-            .filter(|t| t.predicate.as_str() != to_p)
+            .filter(|t| !(t.subject == node && (t.predicate.as_str() == to_p || t.predicate.as_str() == states_p)))
             .map(|t| {
                 let into = if rows.contains(*t) {
                     GraphName::DefaultGraph
@@ -134,8 +153,21 @@ fn documents(store: &Store, triples: &[Triple], action: &str) -> Result<Vec<(Vec
             .collect();
         quads.sort_by_key(|q| q.to_string());
         used.extend(mine);
-        out.push((agents.iter().cloned().collect(), Document::of_quads(quads)));
+        //  TOLD IN THE ORDER OF WHAT IS STATED, never of the graphs' names, which are for eyes: a round is told
+        //  before the claim named off it, whatever either is said in.
+        let stated = triples
+            .iter()
+            .filter(|t| t.subject == node && t.predicate.as_str() == states_p)
+            .map(|t| match &t.object {
+                Term::NamedNode(n) => n.as_str().to_string(),
+                other => other.to_string(),
+            })
+            .min()
+            .unwrap_or_else(|| graph.clone());
+        out.push((stated, agents.iter().cloned().collect(), Document::of_quads(quads)));
     }
+    out.sort_by(|a, b| a.0.cmp(&b.0));
+    let out: Vec<(Vec<String>, Document)> = out.into_iter().map(|(_, agents, doc)| (agents, doc)).collect();
     let stray: BTreeSet<String> = triples
         .iter()
         .filter(|t| !used.contains(t))
@@ -179,9 +211,10 @@ mod tests {
   GRAPH :vocabulary {{ :NoteGraph rdfs:subClassOf orexis:BeliefGraph , orexis:Graph . }}
   GRAPH :actions {{
     :Noting a orexis:Action ; orexis:takes :topic ;
-      execution:implementation [ execution:operation [ a execution:Saying ; sh:construct """PREFIX execution: <http://example.org/orexis/execution#> CONSTRUCT {{ ?note a <{T}Note> , <{T}NoteGraph> ; <{T}about> $topic ; <{T}at> $now ;
-                                              execution:to ?peer }}
-          WHERE {{ ?peer <{T}reads> $topic . BIND(IRI(CONCAT(STR($topic), "-note")) AS ?note) }}""" ] ] .
+      execution:implementation [ execution:operation [ a execution:Saying ; sh:construct """PREFIX execution: <http://example.org/orexis/execution#> CONSTRUCT {{ ?note a <{T}Note> ; <{T}about> $topic ; <{T}at> $now .
+                                              ?said a <{T}NoteGraph> ; execution:states ?note ; execution:to ?peer }}
+          WHERE {{ ?peer <{T}reads> $topic . BIND(IRI(CONCAT(STR($topic), "-note")) AS ?note)
+                   BIND(IRI(CONCAT(STR(?note), ".said")) AS ?said) }}""" ] ] .
     :Looking a orexis:Action ; orexis:takes :topic . }}
   GRAPH :world {{ :ann :reads :rain . :bob :reads :rain . }}
   GRAPH :catalogue {{
@@ -213,11 +246,18 @@ mod tests {
         assert_eq!(told.len(), 1);
         let (agents, doc) = &told[0];
         assert_eq!(*agents, [format!("{T}ann"), format!("{T}bob")]);
-        let note = format!("{T}rain-note");
+        let note = format!("{T}rain-note.said");
         assert_eq!(
             doc.kinds(),
             BTreeMap::from([(note.clone(), BTreeSet::from([format!("{T}NoteGraph")]))]),
-            "the kind is a row, the note its own graph"
+            "the kind is a row, the note said in a graph of its own, named apart from it"
+        );
+        assert!(
+            doc.quads()
+                .iter()
+                .filter(|q| q.graph_name.to_string() == format!("<{note}>"))
+                .all(|q| q.subject.to_string() == format!("<{T}rain-note>")),
+            "what the graph holds is about the note it states, never about itself"
         );
         let content: BTreeSet<String> = doc
             .quads()
@@ -232,6 +272,26 @@ mod tests {
                 .any(|q| q.predicate.as_str() == format!("{EXECUTION}to")),
             "whom it is to addresses the document and is no part of it"
         );
+    }
+
+    #[test]
+    fn a_document_typed_as_the_thing_it_states_is_refused() {
+        let store = store();
+        store
+            .update(&format!(
+                r#"PREFIX : <http://example.org/test#>
+  PREFIX execution: <http://example.org/orexis/execution#>
+  PREFIX orexis: <http://example.org/orexis#>
+  PREFIX sh: <http://www.w3.org/ns/shacl#>
+  INSERT DATA {{ GRAPH :actions {{
+    :Punning a orexis:Action ; orexis:takes :topic ;
+      execution:implementation [ execution:operation [ a execution:Saying ; sh:construct """PREFIX execution: <http://example.org/orexis/execution#> CONSTRUCT {{ ?note a <{T}Note> , <{T}NoteGraph> ; execution:to ?peer }}
+          WHERE {{ ?peer <{T}reads> $topic . BIND(IRI(CONCAT(STR($topic), "-note")) AS ?note) }}""" ] ] . }} }}"#
+            ))
+            .unwrap();
+        let now = instant("2026-01-01T12:00:00+00:00").unwrap();
+        let refused = says(&store, &step("Punning"), None, now).unwrap_err().to_string();
+        assert!(refused.contains("no kind of graph"), "{refused}");
     }
 
     #[test]

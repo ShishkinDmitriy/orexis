@@ -824,6 +824,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   classified per kind it HOLDS**, and a graph holding two kinds is two graphs.
 - **One graph describes every graph and itself** — the catalogue, found by its own row, created by
   genesis alone.
+- **A thing and the graph it is written in are two names** — a plan's root, a question, an answer and every
+  document a saying makes bore their graph's IRI, so a fact under it was about the thing or about its graph and
+  nothing said which; the first three are their graph's name with a word after it (`plan_root`, `question_in`,
+  `answer_in`), a saying names the thing its document `execution:states` and the document after it (`.said`),
+  and each is found inside its graph by its class.
 - **A reader states the kinds it reads, and the store decides nothing** — a query is handed its
   graphs, `graphs_of` answers by kind and instant, and the union of everything was refused as the
   default.

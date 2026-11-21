@@ -115,20 +115,20 @@
 +}
 +
 +GRAPH plan:keeper.in_range.pursued.tank1 {
-+  plan:keeper.in_range.pursued.tank1 a planning:Plan .
-+  plan:keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
-+  plan:keeper.in_range.pursued.tank1 planning:outcome planning:Satisfied .
-+  plan:keeper.in_range.pursued.tank1 planning:spent 1.0 .
 +  plan:keeper.in_range.pursued.tank1.1 :tank :tank1 .
 +  plan:keeper.in_range.pursued.tank1.1 a execution:Step .
 +  plan:keeper.in_range.pursued.tank1.1 execution:adds plan:keeper.in_range.pursued.tank1.1.adds .
 +  plan:keeper.in_range.pursued.tank1.1 execution:landsAt "2026-01-01T12:01:00Z"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.1 execution:notAfter "2026-01-01T12:03:00Z"^^xsd:dateTime .
 +  plan:keeper.in_range.pursued.tank1.1 execution:notBefore "2026-01-01T12:00:00Z"^^xsd:dateTime .
-+  plan:keeper.in_range.pursued.tank1.1 execution:partOf plan:keeper.in_range.pursued.tank1 .
++  plan:keeper.in_range.pursued.tank1.1 execution:partOf plan:keeper.in_range.pursued.tank1.plan .
 +  plan:keeper.in_range.pursued.tank1.1 execution:retracts plan:keeper.in_range.pursued.tank1.1.retracts .
 +  plan:keeper.in_range.pursued.tank1.1 planning:fills :fill .
 +  plan:keeper.in_range.pursued.tank1.1 planning:of possible:1.by .
++  plan:keeper.in_range.pursued.tank1.plan a planning:Plan .
++  plan:keeper.in_range.pursued.tank1.plan planning:for :keeper.in_range.pursued.tank1 .
++  plan:keeper.in_range.pursued.tank1.plan planning:outcome planning:Satisfied .
++  plan:keeper.in_range.pursued.tank1.plan planning:spent 1.0 .
 +}
 +
 +GRAPH plan:keeper.in_range.pursued.tank1.1.adds {
