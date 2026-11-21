@@ -40,15 +40,17 @@ draw:Committing a orexis:Action ;
         PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX orexis: <http://example.org/orexis#>
         PREFIX draw: <http://example.org/orexis/draw#>
-        CONSTRUCT { ?said a draw:Commitment , draw:CommitmentGraph ; draw:of ?draw ; draw:by ?me ; draw:about ?conflict ;
-                          draw:round ?round ; draw:hash ?hash ; execution:to $peer }
+        CONSTRUCT { ?commitment a draw:Commitment ; draw:of ?draw ; draw:by ?me ; draw:about ?conflict ;
+                                draw:round ?round ; draw:hash ?hash .
+                    ?said a draw:CommitmentGraph ; execution:states ?commitment ; execution:to $peer }
         WHERE { ?me a orexis:Self ; coordination:secret ?secret .
                 ?conflict coordination:with $peer ; coordination:standing true ; coordination:draw ?draw ; coordination:round ?round .
                 FILTER NOT EXISTS { ?conflict coordination:silent true }
                 FILTER NOT EXISTS { ?draw coordination:wonBy ?winner }
                 BIND(SHA256(CONCAT(?secret, "|", STR(?draw))) AS ?number)
                 BIND(SHA256(CONCAT(STR(?draw), "|", ?number)) AS ?hash)
-                BIND(IRI(CONCAT(STR(?draw), ".commitment.", REPLACE(STR(?me), "^.*[#/]", ""))) AS ?said) }""" ] ] .
+                BIND(IRI(CONCAT(STR(?draw), ".commitment.", REPLACE(STR(?me), "^.*[#/]", ""))) AS ?commitment)
+                BIND(IRI(CONCAT(STR(?commitment), ".said")) AS ?said) }""" ] ] .
 
 draw:Revealing a orexis:Action ;
     rdfs:label "reveal my number in a draw the peer has committed to" ;
@@ -76,11 +78,13 @@ draw:Revealing a orexis:Action ;
         PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX orexis: <http://example.org/orexis#>
         PREFIX draw: <http://example.org/orexis/draw#>
-        CONSTRUCT { ?said a draw:Reveal , draw:RevealGraph ; draw:of ?draw ; draw:by ?me ; draw:about ?conflict ;
-                          draw:round ?round ; draw:number ?number ; execution:to $peer }
+        CONSTRUCT { ?reveal a draw:Reveal ; draw:of ?draw ; draw:by ?me ; draw:about ?conflict ;
+                            draw:round ?round ; draw:number ?number .
+                    ?said a draw:RevealGraph ; execution:states ?reveal ; execution:to $peer }
         WHERE { ?me a orexis:Self ; coordination:secret ?secret .
                 ?conflict coordination:with $peer ; coordination:standing true ; coordination:draw ?draw ; coordination:round ?round .
                 FILTER NOT EXISTS { ?conflict coordination:silent true }
                 FILTER NOT EXISTS { ?draw coordination:wonBy ?winner }
                 BIND(SHA256(CONCAT(?secret, "|", STR(?draw))) AS ?number)
-                BIND(IRI(CONCAT(STR(?draw), ".reveal.", REPLACE(STR(?me), "^.*[#/]", ""))) AS ?said) }""" ] ] .
+                BIND(IRI(CONCAT(STR(?draw), ".reveal.", REPLACE(STR(?me), "^.*[#/]", ""))) AS ?reveal)
+                BIND(IRI(CONCAT(STR(?reveal), ".said")) AS ?said) }""" ] ] .

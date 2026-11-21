@@ -37,8 +37,10 @@ says what each one is. So there is no pipeline, only a door. It is loaded for an
 An [action](/domain/kernel/action.md) that tells somebody something has an `execution:Saying` among the
 operations of its [implementation](/domain/execution/implementation.md), a CONSTRUCT run over the present
 when a [step](/domain/execution/step.md) filling it is taken; an IRI its result says is
-`execution:to` an agent is a graph, what it says of that IRI is the graph's content, and its kind
-and period are the rows. Taking the step keeps the document as said, by speech's `said`, and says
+`execution:to` an agent is a graph, its kind and period are the rows, and the graph's content is what
+the result says of each thing that IRI `execution:states`. **A document is not the thing stated in
+it**: a call is `<bidder>-call-<instant>` and is told in the graph of that name with `.said` after
+it, and a result typing its document as a call is refused, where the two shared one IRI. Taking the step keeps the document as said, by speech's `said`, and says
 `execution:Told`, which speech hears beneath its speaking trigger; it extracts from the document, as from
 what it hears, and says `speech:Said`, which the [transport](/domain/transport/transport.md) reaching the
 peer hears and publishes on the topic the peer listens to.

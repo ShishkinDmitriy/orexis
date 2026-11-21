@@ -13,9 +13,9 @@ description: >-
 
 ```turtle
 # a round, as its host said it — a statement, read by nothing the mind reads
-<round-0042> a speech:StatementGraph , market:RoundGraph ; orexis:arrivedBy orexis:Received ;
+<round-0042.said> a speech:StatementGraph , market:RoundGraph ; orexis:arrivedBy orexis:Received ;
     dcterms:temporal [ orexis:start "…12:00" ; orexis:end "…12:05" ] .
-<round-0042> { <round-0042> a market:Round ; market:onVenue :water ; market:lotL 40 . }
+<round-0042.said> { <round-0042> a market:Round ; market:onVenue :water ; market:lotL 40 . }
 ```
 
 An **statement** is a graph of a document, as a peer or the agent said it. A document names its
