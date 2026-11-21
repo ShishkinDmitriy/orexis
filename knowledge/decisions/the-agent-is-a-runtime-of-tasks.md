@@ -180,6 +180,19 @@ Refused, by the sovereign the same day:
 - **The planning left open between turns**: what the task heard while a search was out - a head checked, a trigger
   noted - would be journaled as part of the planning.
 
+**Two races the test on two threads found once the machine was loaded** (2026-11-19, the same day): one run in
+five never settled or looked too early, and none did on an idle machine, so the pull request went in green. A
+package's booting waited for the agent's booting to end and no longer; told from another thread, the last package's
+own booting could be heard ended after it, and lay in an inbox nothing reads until the agent stops, counted busy
+for ever. And a task that said it is due now rested until its timer fired, so the agent read idle between a head
+handed over and the tick that takes it. A booting now waits for every package's ending as well as the agent's, and
+a task due now waits busy. A task deciding again at the next instant still rests: waited for busy as well, the
+lane's couriers, whose searches ask again every instant until a budget's stretch has passed, never settled for the
+test to move their vans. A third was closed on reading the code and seen in no run: a hearer's
+inbox emptied as it drops while a sender on another thread has counted an event sent and not yet put it in, so
+sending and a hearer's drop share one lock. Held by running the test under load, eighty runs of eighty; a gate
+that loads the machine is not built.
+
 # What it amends
 
 - [packages-meet-by-events-policies-and-activities](/decisions/packages-meet-by-events-policies-and-activities.md), in

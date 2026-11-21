@@ -380,7 +380,10 @@ impl Events {
         Ok(classes)
     }
 
+    /// Send `woke` to one task's inbox, counted busy from here; done with at once where the task has ended. Sent
+    /// while no inbox is closing, so what a task that ends was sent is in its inbox as it empties it.
     pub(super) fn send(&self, to: &UnboundedSender<Woke>, woke: Woke) {
+        let _open = self.0.hearers.read().expect("hearers nobody poisoned");
         self.0.busy.up();
         if to.send(woke).is_err() {
             self.0.busy.down();
@@ -586,8 +589,12 @@ impl Hears {
 }
 
 impl Drop for Hears {
-    /// A task that ended holds nothing busy: nothing it was sent and never took.
+    /// A task that ended holds nothing busy: nothing it was sent and never took. THE INBOX IS CLOSED AND EMPTIED
+    /// WHILE NOTHING IS BEING SENT (`Events::send`): on several threads a task telling an event counts it sent
+    /// before it is in the inbox, and an inbox emptied in between would leave the agent busy for ever with what
+    /// arrived after.
     fn drop(&mut self) {
+        let _sending = self.events.0.hearers.write().expect("hearers nobody poisoned");
         self.inbox.close();
         while self.inbox.try_recv().is_ok() {
             self.events.0.busy.down();

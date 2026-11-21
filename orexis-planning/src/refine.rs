@@ -1,6 +1,8 @@
 //! REFINING A STEP: the want that keeps a step one level down, as `agent/planning/refine.py` mints it. THE GOAL IS
 //! THE WORLD THE STEP LANDS IN, NOT ITS DIFF: every fact of a predicate a bridge concludes that the present holds,
-//! less what the step retracts, plus what it adds — each regressed through the bridges, all to hold at once.
+//! less what the step retracts, plus what it adds — each regressed through the bridges, all to hold at once. A STEP
+//! REFINED AHEAD OF ITS TURN lands in the world the steps before it leave, so what they predict is applied first, in
+//! the order walked; and its want begins where the plan below the step before it ends.
 
 use std::collections::{BTreeSet, HashSet};
 use std::sync::LazyLock;
@@ -20,9 +22,17 @@ use crate::ontology::WANT;
 
 static VARIABLE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\?(\w+)\b").expect("a valid pattern"));
 
-/// Mint the want that keeps `step` below in the agent `me`'s own want graph; the want. None where no rule the store
-/// holds concludes any fact the step adds.
-pub fn refine(store: &Store, me: &str, step: &str, now: DateTime) -> Result<Option<String>, Error> {
+/// Mint the want that keeps `step` below in the agent `me`'s own want graph; the want. `before` are the steps of its
+/// plan not yet answered that are walked before it, in order, and `begins` the instant its want holds from, where
+/// that is not the present. None where no rule the store holds concludes any fact the step adds.
+pub fn refine(
+    store: &Store,
+    me: &str,
+    step: &str,
+    before: &[String],
+    begins: Option<DateTime>,
+    now: DateTime,
+) -> Result<Option<String>, Error> {
     let bridges = heads(store)?;
     let concluded: BTreeSet<String> = bridges.iter().filter_map(|b| expand(&b.head.1, &b.names)).collect();
     let (adds, retracts) = predicted(store, step)?;
@@ -40,6 +50,14 @@ pub fn refine(store: &Store, me: &str, step: &str, now: DateTime) -> Result<Opti
                 present.insert(t);
             }
         }
+    }
+    //  WHAT THE STEPS BEFORE IT LEAVE, each applied as it would land.
+    for earlier in before {
+        let (added, retracted) = predicted(store, earlier)?;
+        for t in &retracted {
+            present.remove(t);
+        }
+        present.extend(added.into_iter().filter(|f| concluded.contains(f.predicate.as_str())));
     }
     for t in &retracts {
         present.remove(t);
@@ -111,7 +129,7 @@ pub fn refine(store: &Store, me: &str, step: &str, now: DateTime) -> Result<Opti
         isoformat(now),
         literal(&select)
     ))?;
-    store.classify(&graph, WANT, RECORDED, Some(me), None, None)?;
+    store.classify(&graph, WANT, RECORDED, Some(me), begins, None)?;
     log::info!(
         "refining {name} into {} — {} fact(s) of the world it lands in, held below",
         local_of(&want),
@@ -203,7 +221,7 @@ INSERT DATA {{
     fn a_step_whose_fact_a_rule_concludes_is_a_want_below() {
         let store = store();
         let step = predicting(&store, ":d :on :pegB", ":d :on :pegA");
-        let want = refine(&store, ME, &step, now()).unwrap();
+        let want = refine(&store, ME, &step, &[], None, now()).unwrap();
         assert_eq!(want, Some(format!("{STEP}.below")));
         let graphs = wants(&store);
         let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
@@ -219,10 +237,57 @@ INSERT DATA {{
     }
 
     #[test]
+    fn a_step_refined_ahead_lands_in_the_world_the_steps_before_it_leave_and_begins_where_told() {
+        let store = store();
+        let first = predicting(&store, ":d :on :pegB", ":d :on :pegA");
+        let second = format!("{STEP}.2");
+        store
+            .update(&format!(
+                "PREFIX : <{T}>
+PREFIX execution: <http://example.org/orexis/execution#>
+INSERT DATA {{
+  GRAPH :plan {{ <{second}> a execution:Step ; execution:adds <{second}.adds> ; execution:retracts <{second}.retracts> }}
+  GRAPH <{second}.adds> {{ :e :on :pegB }}
+  GRAPH <{second}.retracts> {{ :e :on :pegA }} }}"
+            ))
+            .unwrap();
+        let begins = now()
+            .checked_add_day_time_duration(oxsdatatypes::DayTimeDuration::new(120))
+            .unwrap();
+        refine(&store, ME, &second, &[first], Some(begins), now()).unwrap();
+        let put = |name: &str, body: &str| {
+            store
+                .put_trig(
+                    &format!("{T}{name}"),
+                    &format!("@prefix : <http://example.org/test#> . {body}"),
+                )
+                .unwrap();
+        };
+        put(
+            "alone",
+            ":pegA a :Peg ; :at :c1 . :pegB a :Peg ; :at :c2 . :d :at :c1 . :e :at :c2 .",
+        );
+        assert!(
+            !met(&store, &format!("{T}alone")),
+            "its own disk moved and the step before it undone is not where it lands"
+        );
+        put(
+            "both",
+            ":pegA a :Peg ; :at :c1 . :pegB a :Peg ; :at :c2 . :d :at :c2 . :e :at :c2 .",
+        );
+        assert!(met(&store, &format!("{T}both")));
+        assert!(
+            store.graphs_of(&[WANT], &Within::at(now())).unwrap().is_empty(),
+            "the want has not begun"
+        );
+        assert_eq!(store.graphs_of(&[WANT], &Within::at(begins)).unwrap().len(), 1);
+    }
+
+    #[test]
     fn the_want_below_is_the_world_the_step_lands_in_not_its_diff() {
         let store = store();
         let step = predicting(&store, ":d :on :pegB", ":d :on :pegA");
-        refine(&store, ME, &step, now()).unwrap();
+        refine(&store, ME, &step, &[], None, now()).unwrap();
         let put = |name: &str, body: &str| {
             store
                 .put_trig(
@@ -247,7 +312,7 @@ INSERT DATA {{
     fn a_step_no_rule_concludes_is_taken_as_it_would_be() {
         let store = store();
         let step = predicting(&store, ":d :painted :red", "");
-        assert_eq!(refine(&store, ME, &step, now()).unwrap(), None);
+        assert_eq!(refine(&store, ME, &step, &[], None, now()).unwrap(), None);
         assert!(wants(&store).is_empty(), "nothing minted");
     }
 
@@ -255,6 +320,6 @@ INSERT DATA {{
     fn a_rule_of_two_head_triples_is_not_run_backwards() {
         let store = store();
         let step = predicting(&store, ":d :near :pegB", "");
-        assert_eq!(refine(&store, ME, &step, now()).unwrap(), None);
+        assert_eq!(refine(&store, ME, &step, &[], None, now()).unwrap(), None);
     }
 }

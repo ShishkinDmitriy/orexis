@@ -55,7 +55,9 @@ reopens it (#905, #921).
 
 **A step kept below is marked, then answered.** Planning marks, when it publishes a plan, every step
 taken fictively whose predicted fact a bridge's head binds (`bridge.keeps`) as `execution:keptBelow`;
-the executor does not take it and waits. When it falls due, planning mints the want that keeps it and
+the executor does not take it and waits. Planning mints the want that keeps it — when it falls due, or
+ahead of its turn once the plan below the step before it is published (amended 2026-11-19,
+[refinement](/domain/planning/refinement.md)) — and
 writes `<step> execution:keptBy <want>`, which the executor records on the act and waits on.
 `planning:refines`, the inverse, is retired.
 

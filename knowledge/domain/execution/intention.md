@@ -32,7 +32,7 @@ the world holds what the step predicted, and the intention resolves `done` at th
 or planning said its next step is blocked in the present, `reached` when planning said its want is
 met before any step was taken, `superseded` when a reconsideration replaced its untaken steps — after
 its step in flight is answered, `execution:endsAfter` — and `abandoned` when the intention a step of
-it was kept below for ended undone. A plan that has begun is not ended because its want is met partway.
+which it was kept below for ended undone, whether it had begun or was waiting for that step's turn. A plan that has begun is not ended because its want is met partway.
 An intention adopted for the plan that replaced another's untaken steps takes no step while that one
 stands, `execution:waitsFor` ([commitment](/domain/execution/commitment.md)).
 

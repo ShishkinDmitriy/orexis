@@ -161,6 +161,8 @@ pub(super) struct Life {
     pub(super) running: Option<Span>,
     pub(super) stopping: Option<Span>,
     pub(super) krate: Option<&'static str>,
+    /// What it has heard of the others' joining and booting, from its joining until the agent has booted.
+    pub(super) heard: Settling,
 }
 
 impl Life {
@@ -279,14 +281,31 @@ impl Handed {
         }
     }
 
-    /// Wait until the clock reads `at`, at its pace; for ever where no instant is given.
+    /// Wait until the clock reads `at`, at its pace; for ever where no instant is given. A TASK DUE NOW WAITS BUSY:
+    /// it said it is due at this very instant, as an executor that moved an intention on is for the head it moved
+    /// to, so it has not come to rest - and at rest until its timer fired the agent read idle between a head handed
+    /// over and the tick that takes it, so a test on two threads looked before the pump was told to dose, one run in
+    /// twenty where the machine was loaded. A TASK DECIDING AGAIN AT THE NEXT INSTANT (`Turn::again`) RESTS, as
+    /// before: a search the budget cut short asks again every instant until its stretch has passed, and waited for
+    /// busy, the lane's couriers never settled for the test to move their vans.
     pub async fn sleep_until(&self, at: Option<DateTime>) {
-        self.events.rest();
         let Some(at) = at else {
+            self.events.rest();
             return std::future::pending().await;
         };
-        let ahead = at.checked_sub(self.clock.now()).map_or(0.0, crate::clock::seconds_of);
-        tokio::time::sleep(self.clock.real_delay(ahead.max(0.0))).await;
+        let ahead = at
+            .checked_sub(self.clock.now())
+            .map_or(0.0, crate::clock::seconds_of)
+            .max(0.0);
+        if ahead == 0.0 {
+            let due = self.events.working();
+            self.events.rest();
+            tokio::time::sleep(self.clock.real_delay(ahead)).await;
+            due.back();
+            return;
+        }
+        self.events.rest();
+        tokio::time::sleep(self.clock.real_delay(ahead)).await;
         self.events.woke();
     }
 
@@ -335,20 +354,20 @@ impl Handed {
             package: life.package.clone(),
             at: self.clock.now(),
         });
-        let mut heard = Settling::default();
-        heard.settled.insert(life.package.clone());
-        while heard.settled.len() < self.run.packages {
+        let own = life.package.clone();
+        life.heard.settled.insert(own);
+        while life.heard.settled.len() < self.run.packages {
             let Some(woke) = life.hears.next_busy().await else {
                 break;
             };
-            heard.hear(woke);
+            life.heard.hear(woke);
         }
         let needs = self.needs(documents.krate)?;
-        while !needs.iter().all(|n| heard.served.contains(n)) && heard.ended.len() + 1 < self.run.packages {
+        while !needs.iter().all(|n| life.heard.served.contains(n)) && life.heard.ended.len() + 1 < self.run.packages {
             let Some(woke) = life.hears.next_busy().await else {
                 break;
             };
-            heard.hear(woke);
+            life.heard.hear(woke);
         }
         Ok(())
     }
@@ -416,9 +435,19 @@ impl Handed {
             more.extend(serves.iter().map(|c| (SERVES, NamedNode::new_unchecked(c).into())));
             booting.end(&self.events, self.clock.now(), more);
         }
-        while let Some(woke) = life.hears.next_busy().await {
-            if matches!(woke, Woke::Event(AGENT_BOOTED, _)) {
+        //  UNTIL THE AGENT HAS BOOTED AND EVERY PACKAGE'S BOOTING IS HEARD ENDED, its own among them: on several
+        //  threads the agent's booting may be heard ended before the last package's, told from another thread, and
+        //  what arrived after this wait was heard by nothing until the agent stopped - busy for ever, so a test on
+        //  two threads never settled, one run in five where the machine was loaded.
+        let mut booted = false;
+        while !(booted && life.heard.ended.len() >= self.run.packages) {
+            let Some(woke) = life.hears.next_busy().await else {
                 break;
+            };
+            if matches!(woke, Woke::Event(AGENT_BOOTED, _)) {
+                booted = true;
+            } else {
+                life.heard.hear(woke);
             }
         }
         if let Some(why) = self.run.refused() {
@@ -749,6 +778,7 @@ pub(super) fn spawn(
                 running: None,
                 stopping: None,
                 krate: None,
+                heard: Settling::default(),
             }))
         })
         .collect();

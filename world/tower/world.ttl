@@ -10,9 +10,9 @@
 
 #  THE TOWER: hanoi's puzzle on the courier's grid. The mover wants every disk on peg C and holds
 #  hanoi's one move and the courier's three; the pegs stand on three cells of a 3x3 grid. It plans
-#  Moves and never sees a cell, and each Move, when it comes up, is planned as drives from wherever
-#  the van then stands — because the combination's rules say what a disk is on from where it
-#  stands, and nothing more.
+#  Moves and never sees a cell, and each Move is planned as drives from wherever the van will stand
+#  when its turn comes, while the Moves before it are still driven — because the combination's
+#  rules say what a disk is on from where it stands, and nothing more.
 
 :mover a orexis:Agent ;
     orexis:localId "mover" ;

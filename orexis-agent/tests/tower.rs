@@ -54,6 +54,28 @@ fn refined(store: &Store) -> usize {
         .unwrap()
 }
 
+/// Every intention in the order adopted: the want it pursued, how it ended, and when it was adopted and resolved.
+fn intentions(store: &Store) -> Vec<(String, String, DateTime, DateTime)> {
+    const INTENTIONS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
+        SELECT ?want ?outcome ?adopted ?resolved WHERE { GRAPH ?g {
+          ?i a execution:Intention ; execution:pursues ?want ; execution:outcome ?outcome ;
+             execution:adoptedAt ?adopted ; execution:resolvedAt ?resolved } }
+        ORDER BY ?adopted ?resolved";
+    store
+        .rows(INTENTIONS_Q, &[])
+        .unwrap()
+        .iter()
+        .map(|r| {
+            (
+                local(&iri(r, "want").unwrap()),
+                value(r, "outcome").unwrap(),
+                instant(&value(r, "adopted").unwrap()).unwrap(),
+                instant(&value(r, "resolved").unwrap()).unwrap(),
+            )
+        })
+        .collect()
+}
+
 fn tree() -> &'static Path {
     Path::new(TREE)
 }
@@ -159,6 +181,24 @@ async fn the_puzzle_is_planned_above_and_carried_out_by_the_van_below() {
         refined, 3,
         "each of the three moves was kept below, and none was taken as fictive"
     );
+    //  THE PLAN ABOVE IS FOUND ONCE AND WALKED TO ITS END: every intention ends done, one for the puzzle and one
+    //  below each move. Given its patience from its own landing, a move failed as the drives below it ended, and the
+    //  puzzle was planned again after each.
+    let intentions = intentions(&store);
+    let ended: Vec<&str> = intentions.iter().map(|(_, outcome, _, _)| outcome.as_str()).collect();
+    assert_eq!(ended, ["done"; 4], "{intentions:?}");
+    //  AND EACH PLAN BELOW IS FOUND WHILE THE ONE BEFORE IT IS WALKED, from where that one ends.
+    let below: Vec<_> = intentions
+        .iter()
+        .filter(|(want, _, _, _)| want.ends_with(".below"))
+        .collect();
+    assert_eq!(below.len(), 3, "{intentions:?}");
+    for pair in below.windows(2) {
+        assert!(
+            pair[1].2 < pair[0].3,
+            "the plan below a move is adopted before the one below the move before it ends: {pair:?}"
+        );
+    }
 }
 
 /// How the two-disk puzzle ends where the packages are started in `order`: how the run ended, the instant it ended

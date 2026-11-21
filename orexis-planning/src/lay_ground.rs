@@ -57,12 +57,41 @@ pub struct Laying<'a> {
     /// caller's to say, since a weighing reads the ground and what is beside it, and the ground's hash says only
     /// its own. False where nothing says, and then a ground laid again keeps nothing.
     pub as_stood: bool,
+    /// Whether the caller has already cut out what the scope can change (`cut_out`), as it does to ask what stands
+    /// beside the grounds before they are laid.
+    pub cut: bool,
 }
 
 /// Build one ground world per period the agent can see, classified with its stretch; the graphs made, earliest
 /// first. In place: it lays the grounds into whichever store it is handed. Handed no foresight.
 pub fn lay_ground(store: &Store, now: DateTime, laying: &Laying<'_>) -> Result<Vec<String>, Error> {
     lay_ground_foreseeing(store, now, laying, None)
+}
+
+/// THE GROUND LAID AT `at` BEFORE IS NO GROUND AHEAD until it is laid again: what it was derived from is taken back,
+/// so where this laying does not lay it, it is dropped with the rest unless it is the present's match. A planner
+/// says so of each ground it laid where a want kept below begins, before it lays again: two plannings at one instant
+/// name the present alike, and such a ground the first laid and the second did not went on holding from its instant
+/// for ever - a step landing later was forked from it, and a van picked a disk up three cells away.
+pub fn no_longer_ahead(store: &Store, at: DateTime) -> Result<(), Error> {
+    const UNDERIVE_U: &str = "PREFIX orexis: <http://example.org/orexis#>
+    PREFIX planning: <http://example.org/orexis/planning#>
+    PREFIX prov: <http://www.w3.org/ns/prov#>
+    DELETE { GRAPH ?cat { $ground prov:wasDerivedFrom ?from } }
+    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $ground a planning:GroundGraph ; prov:wasDerivedFrom ?from } }";
+    store.update(&bind(UNDERIVE_U, &[("ground", Value::iri(name(at)))])?)
+}
+
+/// Cut out of every graph a search over `scope` reads beside its worlds what the search can change: the first act of
+/// laying, and a caller's own where it asks what is left beside the grounds before they are laid.
+pub fn cut_out(store: &Store, now: DateTime, scope: &Scope<'_>) -> Result<(), Error> {
+    //  WHAT A BELIEF AHEAD IS LAID FOR: some text of the pass reads it, or some transition does.
+    let gate = match scope.within {
+        None => None,
+        Some(within) => read_by_transitions(store)?.map(|read| within | &read),
+    };
+    split(store, scope.actions, now, gate.as_ref())?;
+    Ok(())
 }
 
 /// `lay_ground`, with the predictor's integration of the flows made for this pass (#1000) — advanced here from each
@@ -74,12 +103,9 @@ pub fn lay_ground_foreseeing(
     laying: &Laying<'_>,
     mut foresight: Option<&mut dyn Foresight>,
 ) -> Result<Vec<String>, Error> {
-    //  WHAT A BELIEF AHEAD IS LAID FOR: some text of the pass reads it, or some transition does.
-    let gate = match laying.scope.within {
-        None => None,
-        Some(within) => read_by_transitions(store)?.map(|read| within | &read),
-    };
-    split(store, laying.scope.actions, now, gate.as_ref())?;
+    if !laying.cut {
+        cut_out(store, now, &laying.scope)?;
+    }
     let ahead = foreseen(store, now)?;
     let boundaries = ahead.len();
     let (here, stood) = present(store, now)?;
@@ -1014,6 +1040,49 @@ mod tests {
 
     fn integer(n: &str) -> Term {
         Literal::new_typed_literal(n, xsd::INTEGER).into()
+    }
+
+    #[test]
+    fn a_ground_said_no_longer_ahead_is_derived_from_the_present_only_where_laid_again() {
+        const DERIVED_Q: &str = "PREFIX prov: <http://www.w3.org/ns/prov#>
+            SELECT ?from WHERE { GRAPH ?cat { $ground prov:wasDerivedFrom ?from } }";
+        let store = snapshots::stand_in(&cases().join("two_stretches_in_one_scope_are_two_grounds.trig"));
+        let landing = snapshots::now()
+            .checked_add_day_time_duration(DayTimeDuration::new(900))
+            .unwrap();
+        let landed = [Landed {
+            at: landing,
+            retracts: Vec::new(),
+            adds: vec![Triple::new(node("tank1"), node("valve"), node("open"))],
+        }];
+        let derived = |store: &Store| -> usize {
+            let text = orexis::bind::bind(DERIVED_Q, &[("ground", orexis::bind::Value::iri(name(landing)))]).unwrap();
+            store.rows(&text, &[]).unwrap().len()
+        };
+        let laying = Laying {
+            landings: &[landing],
+            landed: &landed,
+            ..Laying::default()
+        };
+        lay_ground(&store, snapshots::now(), &laying).unwrap();
+        assert_eq!(
+            derived(&store),
+            1,
+            "laid where the step lands, from the ground before it"
+        );
+        //  THE SAME INSTANT, and nothing lands there any more: said no ground ahead, it is derived from nothing, and
+        //  the present laid under its name again does not make it one.
+        no_longer_ahead(&store, landing).unwrap();
+        lay_ground(&store, snapshots::now(), &Laying::default()).unwrap();
+        assert_eq!(
+            derived(&store),
+            0,
+            "what was laid there before is no ground ahead of this present"
+        );
+        //  LAID AGAIN, it is one again.
+        no_longer_ahead(&store, landing).unwrap();
+        lay_ground(&store, snapshots::now(), &laying).unwrap();
+        assert_eq!(derived(&store), 1);
     }
 
     #[test]

@@ -58,5 +58,6 @@ rows, any the present violates; it mints nothing from them.
 A star, not a chain: the Planner sequences the acts as its own methods, and no act calls another —
 what one needs of another's work it reads off the rows the other wrote. It calls the executor
 nowhere either: a plan goes down into the belief base, what is walked is read off the intentions
-there, and a step a bridge keeps below is marked when published and given its want when due
+there, and a step a bridge keeps below is marked when published and given its want when due, or
+ahead of its turn once the plan below the step before it is published
 ([refinement](/domain/planning/refinement.md)).

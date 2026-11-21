@@ -77,7 +77,9 @@ role the self plays that no package of the binary declares is refused, its packa
 kernel begins the agent's booting (`orexis:AgentBooting`) and, inside it, a booting for every package the binary holds
 (`orexis:PackageBooting`): the package decides, joins, makes its core and SAYS IT BOOTED (`handed.booted().await`),
 which ends its booting, naming the package (`orexis:package`), and WAITS UNTIL THE AGENT'S BOOTING HAS ENDED, every
-package booted or declined and the boot finished, so each is listening before any goes on to speak. Where the agent
+package booted or declined and the boot finished, so each is listening before any goes on to speak — and until it
+has heard every package's booting ended, since on several threads the agent's may be heard first, and what a
+package hears of the others' lifecycle after that wait nothing takes until the agent stops. Where the agent
 runs, its running (`orexis:AgentRunning`) holds each package's (`orexis:PackageRunning`), the package's task; where it
 is checked, the booting is all there is, and a package told so ends there, having said what the check asks
 (`handed.checking()`). Starting the agent ends as its booting does (`Booted::start`, awaited), refused where a package

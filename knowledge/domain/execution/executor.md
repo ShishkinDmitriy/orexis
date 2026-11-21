@@ -68,5 +68,8 @@ the two graphs named. Then `execution:by` moves; the last step resolves the inte
 Past its latest landing, `execution:notAfter`, by the patience — `execution:patienceS`, a
 figure of the executor's [role](/domain/kernel/role.md) — with no answer, the intention
 resolves `failed`, and the want is the search's again. A step kept below waits on the intention walking its want instead of the
-clock, fails when that one does, and what hangs below an intention that ended undone is abandoned
-with it.
+clock, fails when that one does, and is given the patience from that one's end, since the drives below
+a move take longer than the move was placed to land in. What keeps a step of an intention that ended
+undone is abandoned with it. And an intention whose want keeps a step is not walked until that step is
+taken: planning finds the plan below a step ahead of its turn
+([refinement](/domain/planning/refinement.md)).

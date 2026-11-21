@@ -169,6 +169,7 @@ package "lay_ground" {
     {field} +landings : &'a [DateTime]
     {field} +landed : &'a [Landed]
     {field} +as_stood : bool
+    {field} +cut : bool
   }
 }
 package "memo" {
@@ -239,6 +240,7 @@ package "planner" {
     {field} -read : Option<BTreeSet<String>>
     {field} -walks : Walks
     {field} -walking : BTreeSet<String>
+    {field} -ahead : Vec<ahead::Ahead>
     {field} -searched : BTreeSet<String>
   }
   class "PlanOf" as orexis_planning__planner__PlanOf << (S,#A8D8EA) struct >> {
@@ -253,6 +255,7 @@ package "planner" {
     {field} +budget_every_s : f64
     {field} -cut : BTreeMap<String, (DateTime, BTreeSet<String>)>
     {field} -beside : BTreeMap<String, u64>
+    {field} -begun : BTreeMap<String, Vec<DateTime>>
     {field} +imaginaria : BTreeMap<String, Store>
     {field} -read : Option<(BTreeSet<String>, Option<BTreeSet<String>>)>
     {field} +handed : Vec<(String, String)>
@@ -309,6 +312,28 @@ package "planner" {
     {field} -predicts : BTreeMap<String, Change>
   }
 }
+package "planner::ahead" {
+  class "Ahead" as orexis_planning__planner__ahead__Ahead << (S,#A8D8EA) struct >> {
+    {field} -at : DateTime
+    {field} -steps : Changes
+  }
+  class "Live" as orexis_planning__planner__ahead__Live << (S,#A8D8EA) struct >> {
+    {field} -plan : String
+    {field} -want : String
+    {field} -steps : Vec<String>
+    {field} -head : usize
+    {field} -adopted : bool
+    {field} -taken : Option<DateTime>
+  }
+  class "Step" as orexis_planning__planner__ahead__Step << (S,#A8D8EA) struct >> {
+    {field} -action : String
+    {field} -due : Option<DateTime>
+    {field} -lands : Option<DateTime>
+    {field} -kept : bool
+    {field} -adds : Vec<Triple>
+    {field} -retracts : Vec<Triple>
+  }
+}
 package "planner::search" {
   class "Searcher" as orexis_planning__planner__search__Searcher << (S,#A8D8EA) struct >> {
     {field} ~id : String
@@ -346,6 +371,7 @@ package "planner::searching" {
     {field} ~within : Option<BTreeSet<String>>
     {field} ~landings : Vec<DateTime>
     {field} ~landed : Vec<Landed>
+    {field} ~begun : Vec<DateTime>
     {field} ~foresight : Option<Box<dyn Foresight>>
     {field} ~walks : Walks
     {field} ~walking : BTreeSet<String>

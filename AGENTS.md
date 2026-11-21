@@ -350,6 +350,26 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   whose predicted fact a bridge concludes is refined, and nothing marks an action abstract
   (the-hierarchy-is-found-in-the-rules); **a step is refined only where it would be fictive**, and
   **a refined step's goal below is the world it lands in, not its diff**.
+- **A step kept below is refined ahead of its turn, and its want begins where the plan before it ends** — the
+  want's graph holds from that instant and a ground is laid there holding what the plans below still change, so it is
+  searched as any want is, from the ground at its instant, while the steps before it are walked; a step is taken once
+  the plan below it exists, and a plan found ahead is not walked until the step it keeps is taken; the whole plan
+  before the first step, a figure for how far ahead, and a want begun in a possible world were refused
+  (the-hierarchy-is-found-in-the-rules, refinement).
+- **A step kept below is given its patience from the end of the plan below it** — given it from its own landing, a
+  move two minutes of drives carried out failed as they ended, and the plan above was found again after every move,
+  which a test counting refinements did not see.
+- **Where a want kept below begins is where its search starts, no instant to land by** — read as one, every world of
+  a search ahead landed late and its frontier went by the soonest landing, not the cost: twice the worlds for the
+  plan a search from the present finds, a pick and a drop taking no time, and the tower's walk took three times
+  `main`'s (`weigh`, refinement).
+- **A world weighed for a want that has not begun is never the present, and the ground a want kept below began at
+  is no ground ahead once it is not laid again** — a search from a ground ahead came back over the present in a yard
+  of nine cells and the present was handed its worlds; and such a ground one planning laid and the next did not held
+  for ever, so a step was forked from it; taken back for every ground laid ahead, the lane's couriers no longer
+  parted, so the grounds a landing or a forecast laid still stand, a debt (cone).
+- **What stands beside a ground is asked once the changeable is cut out of it** — asked before, where the van stood
+  was beside every ground, and no ground laid again while a plan was walked kept what was imagined from it (cone).
 - **A method is walked, never searched**, and **a plan that worked is kept, and the world verifies
   it, not a search** — every step is checked when it is taken.
 - **A step is an action PICKED for execution** — a world merely ADMITS one per action per legal
@@ -436,6 +456,16 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   runs on one of its own** — what it found is dropped, and planning due again, where a graph that crossed into it moved
   in the beliefs while it was out; on one thread, as a world's test runs, the scopes go in order on the task
   (the-agent-is-a-runtime-of-tasks, #1100).
+- **A task due now waits busy, and a booting waits for every package's booting ended as well as the agent's** —
+  at rest until its timer fired, a task due at this very instant left the agent idle between a head handed over and
+  the tick that takes it, while one deciding again at the next instant rests, since waited for busy the lane's
+  couriers never settled for the test to move their vans; and on several threads the agent's booting was heard ended before the last package's, which
+  then lay in an inbox nothing reads until the agent stops, busy for ever: the test on two threads never settled, or
+  looked before the pump was told to dose, one run in five where the machine was loaded and none where it was not
+  (`Handed::sleep_until`, `Handed::booted`).
+- **A hearer's inbox is closed and emptied while nothing is being sent** — a sender on another thread counts an
+  event sent before it is in the inbox, so `Events::send` and a hearer's drop share one lock; closed on reading
+  the code, seen in no run.
 - **Work a task sets going off its turn is in hand when it comes back** — kept busy until the task next waits
   (`Working::back`); dropped as the work ended, the agent read idle before what the task said of it was told, and a
   test on two threads looked before the pump was told to dose.
