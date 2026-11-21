@@ -10,7 +10,6 @@ use oxigraph::model::{NamedNode, NamedOrBlankNode, Term};
 
 use crate::terms::RDF_FIRST;
 use orexis::Error;
-use orexis::metadata::stated_quads;
 use orexis::store::Store;
 
 const RDF_REST: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#rest";
@@ -31,7 +30,7 @@ impl Shapes {
     pub fn of(store: &Store, graphs: &[String]) -> Result<Self, Error> {
         let mut subjects: HashMap<Term, Described> = HashMap::new();
         for graph in graphs {
-            for quad in stated_quads(store.quads(graph)?) {
+            for quad in store.quads(graph)? {
                 let subject: Term = match quad.subject {
                     NamedOrBlankNode::NamedNode(n) => n.into(),
                     NamedOrBlankNode::BlankNode(b) => b.into(),

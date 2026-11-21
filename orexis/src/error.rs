@@ -1,5 +1,5 @@
-//! What the kernel refuses, by name, so a caller can tell a text that will not parse from a catalogue that
-//! says two things.
+//! What the kernel refuses, by name, so a caller can tell a text that will not parse from a document
+//! that will not load.
 
 use std::fmt;
 
@@ -13,8 +13,6 @@ pub enum Error {
     Syntax(String),
     /// A text the engine parsed and could not evaluate.
     Evaluation(String),
-    /// The catalogue is missing where a writer needs it, or two graphs say they are it.
-    Catalogue(String),
     /// A document that will not load.
     Document(String),
     Io(std::io::Error),
@@ -23,11 +21,7 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::Namespace(m)
-            | Error::Syntax(m)
-            | Error::Evaluation(m)
-            | Error::Catalogue(m)
-            | Error::Document(m) => f.write_str(m),
+            Error::Namespace(m) | Error::Syntax(m) | Error::Evaluation(m) | Error::Document(m) => f.write_str(m),
             Error::Unbound(names) => write!(
                 f,
                 "unbound in a rule text: {}",

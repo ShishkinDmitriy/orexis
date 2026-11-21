@@ -22,28 +22,6 @@
 @prefix conflict: <http://example.org/orexis/graph/coordination/conflict/> .
 @prefix answered: <http://example.org/orexis/graph/coordination/peer/answer/keeper/> .
 @prefix laid: <http://example.org/orexis/graph/coordination/keeper/laid/peer/no_tool_held_twice/> .
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :constraints a orexis:Graph .
-  :constraints a planning:ConstraintGraph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
-  :rules a orexis:Graph .
-  :rules a sh:RulesGraph .
-  :self a orexis:BeliefGraph .
-  :self a orexis:Graph .
-  :self a orexis:SelfGraph .
-  :state a orexis:BeliefGraph .
-  :state a orexis:Graph .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
-  coordinated:conflicts a orexis:BeliefGraph .
-  coordinated:conflicts a orexis:Graph .
-  coordinated:conflicts orexis:arrivedBy orexis:Derived .
-  coordinated:conflicts orexis:ownedBy :keeper .
-}
 GRAPH :constraints {
   :no_tool_held_twice a planning:Constraint .
   :no_tool_held_twice planning:unmetWhen :no_tool_held_twice.select .
@@ -51,6 +29,14 @@ GRAPH :constraints {
 SELECT $this ?value WHERE { $this a :Robot ; :holds ?tool .
                             ?value a :Robot ; :holds ?tool . FILTER(?value != $this) }""" .
 }
+
+GRAPH :constraints.metadata {
+  :constraints a orexis:Graph .
+  :constraints a planning:ConstraintGraph .
+  :constraints.metadata a orexis:MetadataGraph .
+  :constraints.metadata orexis:metadataOf :constraints .
+}
+
 GRAPH :ontology {
   :coordinator_shape sh:property [ sh:defaultValue 2 ; sh:path coordination:lookahead ] .
   :coordinator_shape sh:property [ sh:defaultValue 3 ; sh:path coordination:rounds ] .
@@ -65,6 +51,15 @@ GRAPH :ontology {
   planning:ConstraintGraph rdfs:subClassOf orexis:Graph .
   speech:StatementGraph rdfs:subClassOf orexis:Graph .
 }
+
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :rules {
   :a_tool_picked_up a coordination:Reach .
   :a_tool_picked_up sh:construct """PREFIX : <http://example.org/test#>
@@ -73,14 +68,39 @@ WHERE { $this a :Robot . FILTER NOT EXISTS { $this :holds ?any }
         ?tool a :Tool . FILTER NOT EXISTS { ?other :holds ?tool }
         BIND(IRI(CONCAT(STR($this), ".holding.", REPLACE(STR(?tool), "^.*#", ""))) AS ?at) }""" .
 }
+
+GRAPH :rules.metadata {
+  :rules a orexis:Graph .
+  :rules a sh:RulesGraph .
+  :rules.metadata a orexis:MetadataGraph .
+  :rules.metadata orexis:metadataOf :rules .
+}
+
 GRAPH :self {
   :keeper a orexis:Self .
   :keeper orexis:actsFor :robot_k .
   :keeper planning:holds :no_tool_held_twice .
 }
+
+GRAPH :self.metadata {
+  :self a orexis:BeliefGraph .
+  :self a orexis:Graph .
+  :self a orexis:SelfGraph .
+  :self.metadata a orexis:MetadataGraph .
+  :self.metadata orexis:metadataOf :self .
+}
+
 GRAPH :state {
   :robot_k :holds :brush .
 }
+
+GRAPH :state.metadata {
+  :state a orexis:BeliefGraph .
+  :state a orexis:Graph .
+  :state.metadata a orexis:MetadataGraph .
+  :state.metadata orexis:metadataOf :state .
+}
+
 GRAPH :world {
   :brush a :Tool .
   :keeper a orexis:Agent .
@@ -91,13 +111,33 @@ GRAPH :world {
   :robot_k a :Robot .
   :robot_p a :Robot .
 }
+
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
+}
+
 GRAPH coordinated:conflicts {
   conflict:b0236418f63ada64 a coordination:Conflict .
   conflict:b0236418f63ada64 coordination:draw conflict:b0236418f63ada64.round.0 .
   conflict:b0236418f63ada64 coordination:over :no_tool_held_twice .
   conflict:b0236418f63ada64 coordination:round 0 .
   conflict:b0236418f63ada64 coordination:silent true .
-  conflict:b0236418f63ada64 coordination:since "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  conflict:b0236418f63ada64 coordination:since "2026-01-01T12:00:00Z"^^xsd:dateTime .
   conflict:b0236418f63ada64 coordination:standing true .
   conflict:b0236418f63ada64 coordination:with :peer .
+}
+
+GRAPH coordinated:conflicts.metadata {
+  coordinated:conflicts a orexis:BeliefGraph .
+  coordinated:conflicts a orexis:Graph .
+  coordinated:conflicts orexis:arrivedBy orexis:Derived .
+  coordinated:conflicts orexis:ownedBy :keeper .
+  coordinated:conflicts.metadata a orexis:MetadataGraph .
+  coordinated:conflicts.metadata orexis:metadataOf coordinated:conflicts .
+}
+
+GRAPH :catalogue {
 }

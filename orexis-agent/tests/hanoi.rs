@@ -55,7 +55,7 @@ const TEXTBOOK: [(&str, &str); 7] = [
 fn home(store: &Store) -> usize {
     const HOME_Q: &str = "PREFIX hanoi: <http://example.org/orexis/hanoi#>
     PREFIX orexis: <http://example.org/orexis#>
-    SELECT (COUNT(DISTINCT ?d) AS ?n) WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph }
+    SELECT (COUNT(DISTINCT ?d) AS ?n) WHERE { GRAPH ?m_g { ?g a orexis:BeliefGraph }
       GRAPH ?g { ?d (hanoi:on)+ hanoi:PegC } }";
     value(&store.rows(HOME_Q, &[]).unwrap()[0], "n")
         .unwrap()
@@ -74,7 +74,7 @@ fn plan(store: &Store) -> (f64, Vec<(String, String)>) {
     PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?plan ?spent ?step ?next ?disk ?onto WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?plan a orexis:PlanGraph }
+      GRAPH ?m_plan { ?plan a orexis:PlanGraph }
       GRAPH ?plan { ?root planning:spent ?spent . ?step a execution:Step ; hanoi:disk ?disk ; hanoi:onto ?onto .
                     OPTIONAL { ?step execution:then ?next } } }";
     let found = store.rows(STEPS_Q, &[]).unwrap();

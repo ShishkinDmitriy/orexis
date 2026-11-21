@@ -24,9 +24,24 @@ GRAPH :ontology {
   orexis:ForecastGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :bed a sosa:FeatureOfInterest .
   :keeper a orexis:Agent .
+}
+
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
 }
 
 GRAPH :sensed {
@@ -36,8 +51,26 @@ GRAPH :sensed {
   :soil sosa:observedProperty :SoilMoisture .
 }
 
+GRAPH :sensed.metadata {
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed orexis:ownedBy :keeper .
+  :sensed.metadata a orexis:MetadataGraph .
+  :sensed.metadata orexis:metadataOf :sensed .
+}
+
 GRAPH :sensed_revisions {
   :soil :below :bed_operating .
+}
+
+GRAPH :sensed_revisions.metadata {
+  :sensed_revisions a orexis:BeliefGraph .
+  :sensed_revisions a orexis:Graph .
+  :sensed_revisions orexis:arrivedBy orexis:Derived .
+  :sensed_revisions orexis:ownedBy :keeper .
+  :sensed_revisions prov:wasDerivedFrom :sensed .
+  :sensed_revisions.metadata a orexis:MetadataGraph .
+  :sensed_revisions.metadata orexis:metadataOf :sensed_revisions .
 }
 
 GRAPH :drying_stops {
@@ -47,36 +80,31 @@ GRAPH :drying_stops {
   :soil sosa:observedProperty :SoilMoisture .
 }
 
+GRAPH :drying_stops.metadata {
+  :drying_stops a orexis:BeliefGraph .
+  :drying_stops a orexis:ForecastGraph .
+  :drying_stops a orexis:Graph .
+  :drying_stops dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00Z"^^xsd:dateTime ] .
+  :drying_stops orexis:arrivedBy orexis:Recorded .
+  :drying_stops orexis:ownedBy :keeper .
+  :drying_stops prov:hadPrimarySource :sensed .
+  :drying_stops.metadata a orexis:MetadataGraph .
+  :drying_stops.metadata orexis:metadataOf :drying_stops .
+}
+
 GRAPH :drying_stops_revisions {
   :soil :inside :bed_operating .
 }
 
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :drying_stops a orexis:Graph .
-  :drying_stops a orexis:BeliefGraph .
-  :drying_stops a orexis:ForecastGraph .
-  :drying_stops orexis:arrivedBy orexis:Recorded .
-  :drying_stops dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
-  :drying_stops orexis:ownedBy :keeper .
-  :drying_stops prov:hadPrimarySource :sensed .
+GRAPH :drying_stops_revisions.metadata {
   :drying_stops_revisions a orexis:BeliefGraph .
   :drying_stops_revisions a orexis:Graph .
   :drying_stops_revisions orexis:arrivedBy orexis:Derived .
   :drying_stops_revisions orexis:ownedBy :keeper .
   :drying_stops_revisions prov:wasDerivedFrom :drying_stops .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
-  :sensed a orexis:BeliefGraph .
-  :sensed a orexis:Graph .
-  :sensed orexis:ownedBy :keeper .
-  :sensed_revisions a orexis:BeliefGraph .
-  :sensed_revisions a orexis:Graph .
-  :sensed_revisions orexis:arrivedBy orexis:Derived .
-  :sensed_revisions orexis:ownedBy :keeper .
-  :sensed_revisions prov:wasDerivedFrom :sensed .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :drying_stops_revisions.metadata a orexis:MetadataGraph .
+  :drying_stops_revisions.metadata orexis:metadataOf :drying_stops_revisions .
+}
+
+GRAPH :catalogue {
 }

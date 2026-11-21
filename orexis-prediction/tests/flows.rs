@@ -99,7 +99,7 @@ fn reading(store: &Store, value: f64, minutes: f64) -> (String, Option<orexis_pr
     let mut deliberator = Deliberator::new(store).unwrap();
     deliberator.changed(&graph, Some(read), OBSERVATION_GRAPH);
     deliberator.deliberate(at).unwrap();
-    store.close_catalogue().unwrap();
+    store.close_kinds().unwrap();
     (
         graph,
         foresee(store, &Predictor::new(store).unwrap(), at, None).unwrap(),

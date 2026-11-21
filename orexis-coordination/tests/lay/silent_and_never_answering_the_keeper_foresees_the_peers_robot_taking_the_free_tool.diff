@@ -1,30 +1,25 @@
 --- case
 +++ expected
-@@ -32,6 +32,12 @@
-   coordinated:conflicts a orexis:Graph .
-   coordinated:conflicts orexis:arrivedBy orexis:Derived .
-   coordinated:conflicts orexis:ownedBy :keeper .
-+  laid:0 a orexis:BeliefGraph .
-+  laid:0 a orexis:ForecastGraph .
-+  laid:0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
-+  laid:0 orexis:arrivedBy orexis:Received .
-+  laid:0 orexis:hash "sha256:f858319cd822a953367d12a200329c20d2d8864db97600c3c8a66f80a355c66f" .
-+  laid:0 orexis:ownedBy :keeper .
+@@ -128,5 +128,21 @@
+   coordinated:conflicts.metadata orexis:metadataOf coordinated:conflicts .
  }
- GRAPH :constraints {
-   :no_tool_held_twice a planning:Constraint .
-@@ -86,7 +92,13 @@
-   conflict:b0236418f63ada64 coordination:over :no_tool_held_twice .
-   conflict:b0236418f63ada64 coordination:round 0 .
-   conflict:b0236418f63ada64 coordination:silent true .
--  conflict:b0236418f63ada64 coordination:since "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
-+  conflict:b0236418f63ada64 coordination:since "2026-01-01T12:00:00Z"^^xsd:dateTime .
-   conflict:b0236418f63ada64 coordination:standing true .
-   conflict:b0236418f63ada64 coordination:with :peer .
- }
+ 
+-GRAPH :catalogue {
++
 +
 +
 +GRAPH laid:0 {
 +  :robot_p.holding.mop :holds :mop .
 +  :robot_p.holding.mop a :Robot .
 +}
++
++GRAPH laid:0.metadata {
++  laid:0 a orexis:BeliefGraph .
++  laid:0 a orexis:ForecastGraph .
++  laid:0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
++  laid:0 orexis:arrivedBy orexis:Received .
++  laid:0 orexis:hash "sha256:f858319cd822a953367d12a200329c20d2d8864db97600c3c8a66f80a355c66f" .
++  laid:0 orexis:ownedBy :keeper .
++  laid:0.metadata a orexis:MetadataGraph .
++  laid:0.metadata orexis:metadataOf laid:0 .
+ }

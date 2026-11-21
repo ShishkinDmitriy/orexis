@@ -63,7 +63,7 @@ fn local(iri: &str) -> &str {
 fn stands(store: &Store) -> Vec<(String, i64, i64)> {
     const STANDS_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX courier: <http://example.org/orexis/courier#>
-    SELECT ?x ?cx ?cy WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph ; orexis:ownedBy ?o }
+    SELECT ?x ?cx ?cy WHERE { GRAPH ?m_g { ?g a orexis:BeliefGraph ; orexis:ownedBy ?o }
       GRAPH ?g { ?x courier:x ?cx ; courier:y ?cy } } ORDER BY ?x";
     store
         .rows(STANDS_Q, &[])
@@ -84,7 +84,7 @@ fn stands(store: &Store) -> Vec<(String, i64, i64)> {
 async fn the_parcel_is_delivered_in_eight_steps_and_the_runtime_stops() {
     const WANTS_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
         PREFIX planning: <http://example.org/orexis/planning#>
-        SELECT (COUNT(?g) AS ?n) WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph } }";
+        SELECT (COUNT(?g) AS ?n) WHERE { GRAPH ?m_g { ?g a planning:WantGraph } }";
     let store = store();
     assert_eq!(run(&store, &world("courier"), "courier", 3600, None).await, MET);
     assert_eq!(acts(&store), 8, "three drives, the pick, three drives, the drop");
@@ -111,7 +111,7 @@ async fn walked_the_drivers_one_plan_moves_both_parcels_and_leaves_the_driver_ab
         SELECT ?o WHERE { GRAPH ?g { ?i a execution:Intention ; execution:outcome ?o } }";
     const ABOARD_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX courier: <http://example.org/orexis/courier#>
-    SELECT ?van WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph }
+    SELECT ?van WHERE { GRAPH ?m_g { ?g a orexis:BeliefGraph }
       GRAPH ?g { ?d courier:aboard ?van } }";
     let store = store();
     assert_eq!(

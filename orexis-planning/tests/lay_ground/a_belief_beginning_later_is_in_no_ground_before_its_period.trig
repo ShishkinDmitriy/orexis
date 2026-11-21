@@ -35,9 +35,24 @@ GRAPH :ontology {
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :keeper a orexis:Agent .
   :tank1 a :Tank .
+}
+
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
 }
 
 GRAPH :actions {
@@ -50,8 +65,24 @@ GRAPH :actions {
       BIND($tank AS ?tank) BIND(?l + 5 AS ?next) }""" ] ] .
 }
 
+GRAPH :actions.metadata {
+  :actions a orexis:ActionGraph .
+  :actions a orexis:Graph .
+  :actions.metadata a orexis:MetadataGraph .
+  :actions.metadata orexis:metadataOf :actions .
+}
+
 GRAPH :believed {
   :tank1 :level 4 .
+}
+
+GRAPH :believed.metadata {
+  :believed a orexis:BeliefGraph .
+  :believed a orexis:Graph .
+  :believed orexis:arrivedBy orexis:Derived .
+  :believed orexis:ownedBy :keeper .
+  :believed.metadata a orexis:MetadataGraph .
+  :believed.metadata orexis:metadataOf :believed .
 }
 
 #  WHAT SOMEBODY SAID WILL HOLD from half past twelve to one — the level, which the fill writes, and who
@@ -61,23 +92,15 @@ GRAPH :refill_said {
   :tank1 :said_by :supplier .
 }
 
-GRAPH :catalogue {
-  :actions a orexis:ActionGraph .
-  :actions a orexis:Graph .
-  :believed a orexis:BeliefGraph .
-  :believed a orexis:Graph .
-  :believed orexis:arrivedBy orexis:Derived .
-  :believed orexis:ownedBy :keeper .
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
+GRAPH :refill_said.metadata {
   :refill_said a orexis:BeliefGraph .
   :refill_said a orexis:Graph .
-  :refill_said dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
+  :refill_said dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:30:00Z"^^xsd:dateTime ] .
   :refill_said orexis:arrivedBy orexis:Received .
   :refill_said orexis:ownedBy :keeper .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :refill_said.metadata a orexis:MetadataGraph .
+  :refill_said.metadata orexis:metadataOf :refill_said .
+}
+
+GRAPH :catalogue {
 }

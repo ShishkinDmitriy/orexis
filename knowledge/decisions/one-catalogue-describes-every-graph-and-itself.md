@@ -1,7 +1,8 @@
 ---
 type: Decision
 title: One catalogue describes every graph and itself
-status: accepted
+status: superseded
+superseded-by: a-graphs-metadata-is-a-graph-of-its-own-beside-it
 timestamp: 2026-09-19T12:00:00Z
 description: >-
   What a graph IS, whose it is, how it arrived, when it holds and what loaded it were said in
@@ -16,10 +17,10 @@ description: >-
   and keeping three graphs by kind of statement, which is what the objection was about.
 ---
 
-> **Amended 2026-11-21: every graph carries its metadata, the same as its row.** Each writer says a graph's
-> metadata in the graph and on its row alike, and a volume lived in is brought up as it boots; every
-> reader still asks the catalogue, as this record has it. The readers move next and the catalogue goes
-> after them, when this record is superseded ([metadata](/domain/kernel/metadata.md)).
+> **Superseded 2026-11-21.** Each graph's metadata is said in a metadata graph of its own beside it, and
+> there is no catalogue
+> ([a-graphs-metadata-is-a-graph-of-its-own-beside-it](/decisions/a-graphs-metadata-is-a-graph-of-its-own-beside-it.md)).
+> What stands of this record is that what a graph is, is said in one place a reader finds without naming it.
 
 # The objection
 

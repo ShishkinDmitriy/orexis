@@ -23,35 +23,21 @@ GRAPH :answer {
   :answer.answer coordination:holding :answer.holding .
   :answer.answer coordination:over :no_two_vans .
   :answer.holding a coordination:Holding .
-  :answer.holding coordination:from "2026-01-01T12:01:00+00:00"^^xsd:dateTime .
+  :answer.holding coordination:from "2026-01-01T12:01:00Z"^^xsd:dateTime .
   :answer.holding coordination:of :van_p .
   :answer.holding courier:x 3 .
   :answer.holding courier:y 1 .
 }
-GRAPH :catalogue {
+
+GRAPH :answer.metadata {
   :answer a coordination:AnswerGraph .
   :answer a orexis:Graph .
   :answer a speech:StatementGraph .
   :answer orexis:arrivedBy orexis:Received .
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :constraints a orexis:Graph .
-  :constraints a planning:ConstraintGraph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
-  :question a coordination:QuestionGraph .
-  :question a orexis:Graph .
-  :question a speech:StatementGraph .
-  :question orexis:arrivedBy orexis:Recorded .
-  :self a orexis:BeliefGraph .
-  :self a orexis:Graph .
-  :self a orexis:SelfGraph .
-  :state a orexis:BeliefGraph .
-  :state a orexis:Graph .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :answer.metadata a orexis:MetadataGraph .
+  :answer.metadata orexis:metadataOf :answer .
 }
+
 GRAPH :constraints {
   :no_two_vans a planning:Constraint .
   :no_two_vans planning:unmetWhen :no_two_vans.select .
@@ -59,6 +45,14 @@ GRAPH :constraints {
 SELECT $this ?value WHERE { $this a courier:Van ; courier:x ?x ; courier:y ?y .
                             ?value a courier:Van ; courier:x ?x ; courier:y ?y . FILTER(?value != $this) }""" .
 }
+
+GRAPH :constraints.metadata {
+  :constraints a orexis:Graph .
+  :constraints a planning:ConstraintGraph .
+  :constraints.metadata a orexis:MetadataGraph .
+  :constraints.metadata orexis:metadataOf :constraints .
+}
+
 GRAPH :ontology {
   :coordinator_shape sh:property [ sh:defaultValue 2 ; sh:path coordination:lookahead ] .
   :coordinator_shape sh:property [ sh:defaultValue 3 ; sh:path coordination:rounds ] .
@@ -73,20 +67,56 @@ GRAPH :ontology {
   planning:ConstraintGraph rdfs:subClassOf orexis:Graph .
   speech:StatementGraph rdfs:subClassOf orexis:Graph .
 }
+
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :question {
   :question.question a coordination:Question .
   :question.question coordination:asks :keeper .
   :question.question coordination:over :no_two_vans .
 }
+
+GRAPH :question.metadata {
+  :question a coordination:QuestionGraph .
+  :question a orexis:Graph .
+  :question a speech:StatementGraph .
+  :question orexis:arrivedBy orexis:Recorded .
+  :question.metadata a orexis:MetadataGraph .
+  :question.metadata orexis:metadataOf :question .
+}
+
 GRAPH :self {
   :keeper a orexis:Self .
   :keeper orexis:actsFor :van_k .
   :keeper planning:holds :no_two_vans .
 }
+
+GRAPH :self.metadata {
+  :self a orexis:BeliefGraph .
+  :self a orexis:Graph .
+  :self a orexis:SelfGraph .
+  :self.metadata a orexis:MetadataGraph .
+  :self.metadata orexis:metadataOf :self .
+}
+
 GRAPH :state {
   :van_k courier:x 2 .
   :van_k courier:y 1 .
 }
+
+GRAPH :state.metadata {
+  :state a orexis:BeliefGraph .
+  :state a orexis:Graph .
+  :state.metadata a orexis:MetadataGraph .
+  :state.metadata orexis:metadataOf :state .
+}
+
 GRAPH :world {
   :keeper a orexis:Agent .
   :keeper orexis:localId "keeper" .
@@ -94,4 +124,14 @@ GRAPH :world {
   :peer orexis:actsFor :van_p .
   :van_k a courier:Van .
   :van_p a courier:Van .
+}
+
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
+}
+
+GRAPH :catalogue {
 }

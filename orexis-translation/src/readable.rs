@@ -3,9 +3,9 @@
 //! (the-model-queries-what-its-chat-may-read).
 //!
 //! **THE CHAT SAYS WHAT IT READS, AND THE MODEL NEVER CHOOSES A GRAPH.** The graphs of its kinds are COPIED on translation's
-//! task, each under its own name with the catalogue's rows about it, so a query runs over what the chat admits and
+//! task, each under its own name with its metadata graph beside it, so a query runs over what the chat admits and
 //! nothing else, and a slow one holds the conversation's worker and never a pass. **A QUERY STATES THE KINDS IT READS**: their
-//! graphs are its default graph and its `GRAPH` range, and the catalogue is named beside them and never merged into
+//! graphs are its default graph and its `GRAPH` range, and their metadata graphs are named beside them and never merged into
 //! them. **A QUERY IS READ, AND REFUSED BEFORE IT RUNS WHERE IT COULD DO ANYTHING BUT READ**: anything but a SELECT or
 //! an ASK, and a `SERVICE` or a `FROM` anywhere in it, is refused with the reason. Its rows are capped at `ROWS`.
 
@@ -20,7 +20,6 @@ use spargebra::Query;
 use spargebra::algebra::{Expression, GraphPattern};
 
 use orexis::Error;
-use orexis::metadata::stated_quads;
 use orexis::ontology::{CLOSURE_GRAPH, ONTOLOGY, local_of};
 use orexis::store::{Store, Within};
 
@@ -60,7 +59,7 @@ pub fn namespaces(store: &Store) -> Prefixes {
     };
     for graph in ontologies.iter().filter(|g| *g != CLOSURE_GRAPH) {
         if let Ok(quads) = store.quads(graph)
-            && let Some((name, ns)) = prefix_of(&stated_quads(quads))
+            && let Some((name, ns)) = prefix_of(&quads)
             && !out.contains_key(&name)
             && !out.values().any(|v| *v == ns)
         {
@@ -76,7 +75,8 @@ pub struct Readable {
     pub prefixes: Prefixes,
     /// Each kind a copied graph is, and the graphs it is.
     pub kinds: BTreeMap<String, BTreeSet<String>>,
-    pub catalogues: BTreeSet<String>,
+    /// The metadata graph of each graph copied, named beside them in a query and never its default graph.
+    pub metadata: BTreeSet<String>,
     pub world: Option<String>,
     pub vocabularies: BTreeMap<String, String>,
     /// How many rows a query hands the model (`translation:rows`): past these it is told how many there were.
@@ -111,22 +111,21 @@ impl Readable {
         let engine = Engine::new().map_err(failed)?;
         let mut prefixes = namespaces(store);
         let mut by_kind: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-        let mut catalogues = BTreeSet::new();
+        let mut metadata = BTreeSet::new();
         let mut read: BTreeMap<String, Vec<Quad>> = BTreeMap::new();
         let ontologies: BTreeSet<String> = store
             .graphs_of(&[ONTOLOGY], &Within::default())?
             .into_iter()
             .filter(|g| g != CLOSURE_GRAPH)
             .collect();
-        let catalogue = store.catalogue()?;
         let kinds: Vec<&str> = kinds.iter().map(String::as_str).collect();
         for graph in store.graphs_of(&kinds, &Within::default())? {
-            let quads = stated_quads(store.quads(&graph)?);
+            let quads = store.quads(&graph)?;
             engine.extend(quads.iter().cloned()).map_err(failed)?;
-            if let Some(catalogue) = &catalogue {
-                let described = described(store, &graph, catalogue)?;
+            if let Some(said_in) = store.metadata_of(&graph)? {
+                let described = store.quads(&said_in)?;
                 engine.extend(described.iter().cloned()).map_err(failed)?;
-                catalogues.insert(catalogue.clone());
+                metadata.insert(said_in);
                 for q in &described {
                     if matches!(&q.subject, NamedOrBlankNode::NamedNode(s) if s.as_str() == graph)
                         && q.predicate.as_str() == RDF_TYPE
@@ -161,7 +160,7 @@ impl Readable {
             store: engine,
             prefixes,
             kinds: by_kind,
-            catalogues,
+            metadata,
             world,
             vocabularies: BTreeMap::new(),
             rows,
@@ -190,10 +189,10 @@ vocabulary states, is read with the query tool.", "input_schema": {"type": "obje
                 "type": "string", "description": "the vocabulary's name, as the briefing lists it"}}, "required": ["name"]}}),
             json!({"name": QUERY, "description": format!("A SPARQL SELECT or ASK over the graphs of the kinds you name, of those \
 the briefing lists: their union is the default graph, so name the kinds the question is about — observations, forecasts, \
-the world's documents — and not more. GRAPH ?g ranges over those graphs, each named for its document, and over the \
-catalogue, whose rows say of each graph its kinds (a), how it arrived (orexis:arrivedBy), whose it is (orexis:ownedBy) \
-and when it holds (dcterms:temporal): where a belief came from is `GRAPH ?g {{ …the belief… }} GRAPH ?c {{ ?g \
-orexis:arrivedBy ?how }}`. These prefixes are declared for you: {prefixes}{world}; declare any other with PREFIX. The \
+the world's documents — and not more. GRAPH ?g ranges over those graphs, each named for its document, and over each \
+one's metadata graph, which says of the graph its kinds (a), how it arrived (orexis:arrivedBy), whose it is \
+(orexis:ownedBy) and when it holds (dcterms:temporal): where a belief came from is `GRAPH ?g {{ …the belief… }} \
+GRAPH ?m {{ ?g orexis:arrivedBy ?how }}`. These prefixes are declared for you: {prefixes}{world}; declare any other with PREFIX. The \
 rows write a name with them, as the vocabularies do. Write no SERVICE or FROM. At most {} rows come back.", self.rows),
              "input_schema": {"type": "object", "properties": {
                  "kinds": {"type": "array", "items": {"type": "string"}, "minItems": 1,
@@ -250,7 +249,7 @@ rows write a name with them, as the vocabularies do. Write no SERVICE or FROM. A
         }
     }
 
-    /// The model's SELECT or ASK over the graphs of `kinds`, the catalogue named beside them, its rows as lines; the
+    /// The model's SELECT or ASK over the graphs of `kinds`, their metadata graphs named beside them, its rows as lines; the
     /// reason, where it is refused.
     pub fn query(&self, text: &str, kinds: &[String]) -> String {
         if let Some(why) = refusal(text, &self.prefixes) {
@@ -269,7 +268,7 @@ rows write a name with them, as the vocabularies do. Write no SERVICE or FROM. A
         if graphs.is_empty() {
             return "refused: name the kinds of graph the query reads".into();
         }
-        let named: BTreeSet<String> = graphs.union(&self.catalogues).cloned().collect();
+        let named: BTreeSet<String> = graphs.union(&self.metadata).cloned().collect();
         match run(
             &self.store,
             text,
@@ -397,31 +396,6 @@ pub fn written(term: &Term, prefixes: &Prefixes) -> String {
         #[allow(unreachable_patterns)]
         other => other.to_string(),
     }
-}
-
-/// What the catalogue says of one graph the chat reads — its kinds, how it arrived, whose it is, when it holds — and of
-/// each blank node it says that through, kept in the catalogue's name.
-fn described(store: &Store, graph: &str, catalogue: &str) -> Result<Vec<Quad>, Error> {
-    let cat = NamedNode::new_unchecked(catalogue);
-    let mut found = Vec::new();
-    let mut todo: Vec<NamedOrBlankNode> = vec![NamedNode::new_unchecked(graph).into()];
-    let mut seen: BTreeSet<String> = BTreeSet::new();
-    while let Some(node) = todo.pop() {
-        if !seen.insert(node.to_string()) {
-            continue;
-        }
-        for q in store
-            .engine()
-            .quads_for_pattern(Some(node.as_ref()), None, None, Some(cat.as_ref().into()))
-        {
-            let q = q.map_err(failed)?;
-            if let Term::BlankNode(b) = &q.object {
-                todo.push(b.clone().into());
-            }
-            found.push(q);
-        }
-    }
-    Ok(found)
 }
 
 /// Why a query may not run: not parsed, not a SELECT or an ASK, or holding what reads past the chat.

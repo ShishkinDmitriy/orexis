@@ -85,7 +85,7 @@ bed is believed Moist* itself. What a ground holds of a subject is a
 [transition](/domain/belief/transition.md)'s, run there when the ground is laid, and no revision.
 Execution then holds a step to the present, and the present reaches *Moist* when the next reading
 arrives and climate's transition makes it of the number; the wait is the bridge between the
-instrument's vocabulary and the mind's, and it is where the wait belongs. A graph with no catalogue row is invisible to every reader by kind, so a writer that
+instrument's vocabulary and the mind's, and it is where the wait belongs. A graph nothing says the kind of is invisible to every reader by kind, so a writer that
 means its graph never to be seen without its revisions writes the graph, revises it and
 classifies it last; that is the whole of the discipline, and it is a convention rather than a
 concept.

@@ -1,95 +1,89 @@
 ---
 type: Domain Concept
 title: Metadata
+term: http://example.org/orexis#MetadataGraph
 description: >-
   What is said OF a graph rather than by it - its kinds, how it arrived, whose it is, the period it
-  holds over, its hash, what it was derived from. Everything else a graph holds is its content. Every
-  graph carries its metadata itself, and the catalogue says the same while it stands. Told apart by
-  type, never by the graph's name, by each reader of a whole graph where it reads: the store hands
-  over triples and knows nothing of the difference.
+  holds over, its hash, what it was derived from, and what a package says of it. Said in a graph of
+  its own beside the graph, its metadata graph, one per graph, found by the link it states. A graph
+  therefore holds its facts and nothing else, and no reader tells the two apart.
 ---
 
-# The two halves of a graph
+# The two graphs
 
-A graph states facts, and something has to say what that graph is. The first half is its **content**:
-the reading, the plan's steps, the round. The second is its **metadata**: every kind it is, the
+A graph states facts, and something has to say what that graph is. The facts are the graph: the
+reading, the plan's steps, the round. What the graph IS is its **metadata**: every kind it is, the
 arrival (`orexis:arrivedBy`), the owner (`orexis:ownedBy`), the stretch (`dcterms:temporal`, one
-`dcterms:PeriodOfTime`), the hash of the content (`orexis:hash`) and the graph it was derived from
-(`prov:wasDerivedFrom`).
+`dcterms:PeriodOfTime`), the hash of what it holds (`orexis:hash`), the graph it was derived from
+(`prov:wasDerivedFrom`), and whatever a package says of the graph in words of its own - whether a
+revision's rules settled (`belief:settled`), which patterns a copy was cut by (`planning:cutBy`).
 
 # Where it is said
 
-**By the graph itself, and on its row of the catalogue, the same.** Every writer says both in the one
-update that writes the graph: `Store::entry` answers the two blocks, the hash is stamped in both, a
-period ended is ended in both under a period node of each's own, and a text that writes a row itself
-spells the graph's block beside it. The graph always says `a orexis:Graph` of itself, whatever its
-row's kinds close to, since that type is what its metadata is told by.
+**In the graph's metadata graph**, an `orexis:MetadataGraph`: one per graph, written by whoever
+creates the graph, and gone with it. It says of itself two things and no more, that it is one and
+which graph it is of:
 
-The metadata is on its way out of the catalogue, so that forgetting a graph is clearing it and a
-text asks a graph what it is in the one `GRAPH` clause it reads it in. Every reader still asks the
-catalogue; they move next, and the catalogue goes after them. A volume lived in before graphs
-carried their metadata is brought up as it boots (`Store::carry_metadata`, which
-`close_catalogue` ends with).
-
-**What a package says of a graph in words of its own is not this.** Whether a revision's rules settled
-(`belief:settled`), which patterns a copy was cut by and everything the search knows of a possible
-world - the candidate it was made by, what it cost, that it is impossible - stay on the row, each its
-package's to move.
-
-**A snapshot case says a graph's metadata once**, on its row: the runner loads the case with every graph
-saying the same of itself, holds what a function left to the case with its diff applied and the same
-said, and writes a diff with it left out (`orexis/src/snapshots.rs`). A writer that says a
-graph's metadata on its row and not in the graph, or the two unalike, leaves a store that differs.
-
-# How the halves are told apart
-
-**By type.** A triple is metadata where its subject is typed, in that same graph, `orexis:Graph` or
-`dcterms:PeriodOfTime`; a row carries every kind its class is beneath, so every graph that carries metadata is an
-`orexis:Graph`. Not by the graph's name: metadata copied into another graph is no content there
-either, and a named node may join the metadata by being typed.
-
-**The store does not know.** It hands over a graph's triples and decides nothing about them, as it
-decides no dataset for a reader; a door answering "the content of a graph" was built and taken out
-before it merged, a method that knew what every caller wanted. Each reader of a whole graph says the
-test itself, in the group it reads the graph in:
-
-```sparql
-GRAPH ?w { ?s ?p ?o FILTER NOT EXISTS { ?s a orexis:Graph } FILTER NOT EXISTS { ?s a dcterms:PeriodOfTime } }
+```turtle
+GRAPH :sensed.metadata {
+  :sensed.metadata a orexis:MetadataGraph ; orexis:metadataOf :sensed .
+  :sensed a orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy :keeper ; orexis:hash "sha256:…" .
+}
 ```
 
-Two plain filters, since one over a `VALUES` is evaluated per candidate.
+Nothing describes a metadata graph in turn, so there is no graph of graphs of graphs. A writer names
+a new one after its graph (`orexis::metadata::named`); a reader never relies on that name and finds
+it by `orexis:metadataOf` (`Store::metadata_of`).
 
-A reader that holds a graph's statements in hand, having asked the store for them, says the same by
-calling `orexis::metadata::stated` over them, or `stated_quads`: functions over statements, which
-ask the store nothing.
+`Store::entry` answers the block a text puts beside the graph's own in one update, `Store::classify`
+writes it, and `hash_named_graph` stamps the hash there. `Store::forget_graph` clears the graph and
+its metadata graph together, and whatever copies a graph into another store copies both.
 
-# Who asks for the content alone
+# Where it is asked
 
-Only what handles a whole graph as a set of facts, with no type to ask for:
+**In a block of its own, beside the block that reads the facts.** A text asks what a graph is, how
+it arrived, whose it is and when it holds of whichever graph says so, and the facts of the graph
+itself:
 
-- **the hash** (`orexis/src/hash.rs`) - so a graph hashes alike wherever its metadata is said, and its own
-  hash is no part of what is hashed;
-- **a fork, and the diff of two graphs** (`orexis-planning/src/fork.rs`, `take.rs`) - a possible world
-  is its parent's facts under another name, and what a step changed is what two worlds state, which
-  always differ in what each says it is; so with a step's predicted change (`extract_plan.rs`);
-- **the cut and the laying of a ground** (`orexis-planning/src/lay_ground.rs`) - what a graph says of
-  itself is never cut out of it, and a ground is laid of what the pieces state;
-- **a copy into another store** - a plan published and adopted (`publish_plan.rs`,
-  `orexis-execution/src/executor.rs`), since the store it lands in says what it is; a graph crossing into
-  an imaginarium crosses whole, with its row, being the same graph there;
-- **the executor's landing check and a fictive step's write** - the present is held to what a step
-  predicted, never to the kind of the graph it was predicted in;
-- **belief** - a state graph is emptied when it states nothing, and a revision continued from what
-  was concluded (`orexis-belief/src/transition.rs`, `revise.rs`);
-- **what is sent or shown** - a statement read back as the document it was said in
-  (`orexis-speech/src/statements.rs`), and the copy a chat's model queries, which is handed the
-  catalogue beside it (`orexis-translation/src/readable.rs`).
+```sparql
+GRAPH ?m { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:start ?from .
+           OPTIONAL { ?g dcterms:temporal/orexis:end ?until } }
+GRAPH ?g { ?reading sosa:madeBySensor ?sensor }
+```
 
-A text that asks for a thing by its class needs nothing: `?r a sosa:Observation` matches no
-metadata.
+An end that may be missing is asked from the graph by the path, never from the period node a
+pattern before it bound: an `OPTIONAL` joined through the period alone is evaluated on its own, every
+period of every graph, 12 ms over 6,000 graphs where the path costs a tenth of one. Measured over
+6,000 graphs, the two blocks cost what one catalogue cost and what metadata inside the graph cost,
+0.03 ms for a kind and 0.4 ms with a period and facts.
+
+Code asks the engine's index and parses no text: `Store::graphs_of` and `revisions_of` scan the
+kind and keep what a metadata graph says of the graph it is of, `kinds_of` and `said_of` answer one
+graph's.
+
+# What it replaced
+
+**One catalogue**, a graph that said what every graph is, itself included
+([one-catalogue-describes-every-graph-and-itself](/decisions/one-catalogue-describes-every-graph-and-itself.md)).
+Forgetting a graph meant finding its rows, a copy into an imaginarium picked rows out, and every
+text had to find the catalogue first. A volume lived in while it stood is brought over as it boots
+(`orexis/src/boot.rs`).
+
+**Metadata inside the graph**, told from its facts by type, was built next and taken out: every
+reader of a whole graph had to filter it, the hash read triples it then discarded, and a graph of
+six facts hashed in twice the time. With the metadata beside the graph, a graph is hashed, forked,
+diffed, cut and copied whole.
 
 # What follows from it
 
-**A fact whose subject is a graph is never content.** So a thing is never named as the graph it is
-written in: a [plan](/domain/planning/plan.md)'s root, a question, an answer and each document a
-saying makes go by names of their own.
+**A snapshot case says every graph it holds**, the metadata graph of each beside it, so a function
+that writes a graph and not what it is leaves a store that differs (`orexis/src/snapshots.rs`).
+
+**A thing is still never named as the graph it is written in.** A [plan](/domain/planning/plan.md)'s
+root, a question, an answer and each document a saying makes go by names of their own, so a fact
+under a graph's name is never about two things.
+
+**The rows of a search are not metadata.** The candidates, the weighings and the path between the
+possible worlds of an [imaginarium](/domain/planning/imaginarium.md) are asked across every world
+at once, so they are written in one graph, the search's [cone](/domain/planning/cone.md) graph; what
+each world is, its kind, its period and its hash, is in that world's metadata graph as of any graph.

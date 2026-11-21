@@ -17,31 +17,55 @@ GRAPH :ontology {
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :minted {
   :tank :reading [ :at :probe ; :says 5 ] .
 }
+
+GRAPH :minted.metadata {
+  :minted a orexis:Graph .
+  :minted.metadata a orexis:MetadataGraph .
+  :minted.metadata orexis:metadataOf :minted .
+}
+
 GRAPH :deeper {
   :tank :reading [ :at :probe ; :within [ :from 1 ; :to 9 ] ] .
 }
+
+GRAPH :deeper.metadata {
+  :deeper a orexis:Graph .
+  :deeper.metadata a orexis:MetadataGraph .
+  :deeper.metadata orexis:metadataOf :deeper .
+}
+
 GRAPH :cyclic {
   :tank :reading _:b1 .
   _:b1 :at :probe .
   _:b1 :beside _:b1 .
 }
 
-GRAPH :catalogue {
-  :again a orexis:Graph .
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
+GRAPH :cyclic.metadata {
   :cyclic a orexis:Graph .
-  :deeper a orexis:Graph .
-  :minted a orexis:Graph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
+  :cyclic.metadata a orexis:MetadataGraph .
+  :cyclic.metadata orexis:metadataOf :cyclic .
 }
-
 
 GRAPH :again {
   :tank :reading [ :at :probe ; :says 5 ] .
+}
+
+GRAPH :again.metadata {
+  :again a orexis:Graph .
+  :again.metadata a orexis:MetadataGraph .
+  :again.metadata orexis:metadataOf :again .
+}
+
+GRAPH :catalogue {
 }

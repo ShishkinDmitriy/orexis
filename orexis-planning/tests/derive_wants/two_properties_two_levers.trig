@@ -21,9 +21,24 @@ GRAPH :ontology {
   planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :tank1 a :Tank .
   :tank2 a :Tank .
+}
+
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
 }
 
 GRAPH :desires {
@@ -39,11 +54,26 @@ GRAPH :desires {
   :keeper.in_range rdfs:label "every tank in range" .
 }
 
+GRAPH :desires.metadata {
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :desires.metadata a orexis:MetadataGraph .
+  :desires.metadata orexis:metadataOf :desires .
+}
+
 GRAPH :sensed {
   :tank1 :level 5 .
   :tank1 :temperature 40 .
   :tank2 :level 20 .
   :tank2 :temperature 20 .
+}
+
+GRAPH :sensed.metadata {
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed orexis:ownedBy :keeper .
+  :sensed.metadata a orexis:MetadataGraph .
+  :sensed.metadata orexis:metadataOf :sensed .
 }
 
 GRAPH :scopes {
@@ -55,22 +85,14 @@ GRAPH :scopes {
   :temperature planning:inScope :keeper.scope.2 .
 }
 
-# What each graph IS, and when it holds — said once each, beside the data.
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :desires a orexis:Graph .
-  :desires a planning:DesireGraph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
+GRAPH :scopes.metadata {
   :scopes a orexis:Graph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
   :scopes orexis:ownedBy :keeper .
-  :sensed a orexis:BeliefGraph .
-  :sensed a orexis:Graph .
-  :sensed orexis:ownedBy :keeper .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :scopes.metadata a orexis:MetadataGraph .
+  :scopes.metadata orexis:metadataOf :scopes .
+}
+
+GRAPH :catalogue {
 }

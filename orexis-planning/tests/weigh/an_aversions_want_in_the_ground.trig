@@ -24,11 +24,26 @@ GRAPH :ontology {
   planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :stand_a a :Stand .
   :stand_b a :Stand .
   :tank1 a :Tank .
   :tank2 a :Tank .
+}
+
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
 }
 
 GRAPH :desires {
@@ -40,9 +55,24 @@ GRAPH :desires {
   :sharing_a_stand sh:select "PREFIX : <http://example.org/test#> SELECT $this ?value WHERE { $this a :Tank ; :on ?value . ?other a :Tank ; :on ?value . FILTER(?other != $this) }" .
 }
 
+GRAPH :desires.metadata {
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :desires.metadata a orexis:MetadataGraph .
+  :desires.metadata orexis:metadataOf :desires .
+}
+
 GRAPH :sensed {
   :tank1 :on :stand_a .
   :tank2 :on :stand_a .
+}
+
+GRAPH :sensed.metadata {
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed orexis:ownedBy :keeper .
+  :sensed.metadata a orexis:MetadataGraph .
+  :sensed.metadata orexis:metadataOf :sensed .
 }
 
 GRAPH :scopes {
@@ -51,32 +81,13 @@ GRAPH :scopes {
   :on planning:inScope :keeper.scope.1 .
 }
 
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :desires a orexis:Graph .
-  :desires a planning:DesireGraph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
+GRAPH :scopes.metadata {
   :scopes a orexis:Graph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
   :scopes orexis:ownedBy :keeper .
-  :sensed a orexis:BeliefGraph .
-  :sensed a orexis:Graph .
-  :sensed orexis:ownedBy :keeper .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
-  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
-  ground:2026-01-01T120000p0000 orexis:hash "sha256:0000000000000000000000000000000000000000000000000000000000000000" .
-  pursued:2026-01-01T120000p0000--open a orexis:Graph .
-  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
-  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
-  pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
+  :scopes.metadata a orexis:MetadataGraph .
+  :scopes.metadata orexis:metadataOf :scopes .
 }
 
 GRAPH ground:2026-01-01T120000p0000 {
@@ -84,15 +95,37 @@ GRAPH ground:2026-01-01T120000p0000 {
   :tank2 :on :stand_a .
 }
 
+GRAPH ground:2026-01-01T120000p0000.metadata {
+  ground:2026-01-01T120000p0000 a planning:GroundGraph .
+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
+  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
+  ground:2026-01-01T120000p0000 orexis:hash "sha256:0000000000000000000000000000000000000000000000000000000000000000" .
+  ground:2026-01-01T120000p0000.metadata a orexis:MetadataGraph .
+  ground:2026-01-01T120000p0000.metadata orexis:metadataOf ground:2026-01-01T120000p0000 .
+}
+
 GRAPH pursued:2026-01-01T120000p0000--open {
   :keeper planning:holds :keeper.apart.pursued.tank1 .
   :keeper.apart.pursued.tank1 a planning:Want .
   :keeper.apart.pursued.tank1 planning:state planning:Recognized .
   :keeper.apart.pursued.tank1 planning:unmetWhen :keeper.apart.pursued.tank1.avoided .
-  :keeper.apart.pursued.tank1 prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  :keeper.apart.pursued.tank1 prov:generatedAtTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
   :keeper.apart.pursued.tank1 prov:wasDerivedFrom :keeper.apart .
   :keeper.apart.pursued.tank1 rdfs:label "pursued: no stand holds two tanks" .
   :keeper.apart.pursued.tank1.avoided planning:about sh:this .
   :keeper.apart.pursued.tank1.avoided sh:select "PREFIX : <http://example.org/test#> SELECT $this ?value WHERE { $this a :Tank ; :on ?value . ?other a :Tank ; :on ?value . FILTER(?other != $this) }" .
   :keeper.apart.pursued.tank1.avoided sh:targetNode :tank1 .
+}
+
+GRAPH pursued:2026-01-01T120000p0000--open.metadata {
+  pursued:2026-01-01T120000p0000--open a orexis:Graph .
+  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
+  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
+  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
+  pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
+  pursued:2026-01-01T120000p0000--open.metadata a orexis:MetadataGraph .
+  pursued:2026-01-01T120000p0000--open.metadata orexis:metadataOf pursued:2026-01-01T120000p0000--open .
+}
+
+GRAPH :catalogue {
 }

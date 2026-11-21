@@ -1,31 +1,24 @@
 --- case
 +++ expected
-@@ -46,10 +46,8 @@
-   :counter :count 7 .
+@@ -100,18 +100,8 @@
+   :heard.metadata orexis:metadataOf :heard .
  }
  
 -GRAPH tick1:believed {
 -  :counter :count 7 .
 -}
  
-+
- GRAPH :catalogue {
-   :catalogue a orexis:CatalogueGraph .
-   :catalogue a orexis:Graph .
-@@ -65,15 +63,11 @@
-   :tick2 a :TickGraph .
-   :tick2 a orexis:BeliefGraph .
-   :tick2 a orexis:Graph .
--  :tick2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00+00:00"^^xsd:dateTime ] .
-+  :tick2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00Z"^^xsd:dateTime ] .
-   :tick2 orexis:arrivedBy orexis:Received .
-   :tick2 orexis:ownedBy :keeper .
-   :world a orexis:BeliefGraph .
-   :world a orexis:Graph .
+-GRAPH tick1:believed.metadata {
 -  tick1:believed a orexis:BeliefGraph .
 -  tick1:believed a orexis:Graph .
 -  tick1:believed orexis:arrivedBy orexis:Derived .
 -  tick1:believed orexis:ownedBy :keeper .
-   tick2:revisions a belief:RevisionGraph .
-   tick2:revisions a orexis:BeliefGraph .
-   tick2:revisions a orexis:Graph .
+-  tick1:believed.metadata a orexis:MetadataGraph .
+-  tick1:believed.metadata orexis:metadataOf tick1:believed .
+-}
+ 
+-GRAPH :catalogue {
+-}
++
++
++

@@ -418,7 +418,7 @@ impl Events {
         }
     }
 
-    /// Say that `graphs` were written, to every task hearing a kind the catalogue says any of them is: WHAT ONE
+    /// Say that `graphs` were written, to every task hearing a kind the metadata of any of them says it is: WHAT ONE
     /// TURN WROTE OF A KIND IS TOLD AS ONE THING, the graphs of it together in the order they were written. One
     /// message of several readings is several percepts, and told one by one each was said and revised apart, so
     /// whoever heard the first revision decided before the rest was believed.
@@ -451,25 +451,9 @@ impl Events {
         Ok(())
     }
 
-    /// Every kind the catalogue says `graph` is.
+    /// Every kind `graph` says it is.
     pub(super) fn kinds(&self, graph: &str) -> Result<Vec<String>, Error> {
-        let Some(cat) = self.0.beliefs.catalogue()? else {
-            return Ok(Vec::new());
-        };
-        let text = crate::bind::bind(
-            "SELECT ?k WHERE { GRAPH $cat { $g a ?k } }",
-            &[
-                ("cat", crate::bind::Value::iri(cat)),
-                ("g", crate::bind::Value::iri(graph)),
-            ],
-        )?;
-        Ok(self
-            .0
-            .beliefs
-            .rows(&text, &[])?
-            .iter()
-            .filter_map(|r| crate::store::iri(r, "k"))
-            .collect())
+        self.0.beliefs.kinds_of(graph)
     }
 
     /// A task failed: the run's error, the first one kept.

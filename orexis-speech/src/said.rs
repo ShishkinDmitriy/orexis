@@ -13,7 +13,7 @@ use crate::statements::statements;
 /// Keep `doc` as this agent said it; the names written, sorted.
 pub fn said(store: &Store, me: &str, doc: &Document) -> Result<Vec<String>, Error> {
     const ARRIVED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-    SELECT ?arrival ?owner WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph orexis:arrivedBy ?arrival .
+    SELECT ?arrival ?owner WHERE { GRAPH ?m_graph { $graph orexis:arrivedBy ?arrival .
                                                 OPTIONAL { $graph orexis:ownedBy ?owner } } }";
     doc.refuse_the_sovereigns(&format!("what {} said", local_of(me)))?;
     for graph in doc.kinds().into_keys() {
@@ -38,10 +38,11 @@ pub(crate) mod tests {
 
     use oxigraph::model::{GraphName, Literal, NamedNode, Quad};
 
-    use orexis::ontology::{BELIEF, CATALOGUE_GRAPH, OREXIS};
+    use orexis::ontology::{BELIEF, OREXIS};
     use orexis::store::value;
 
     use super::*;
+    use orexis::snapshots::SAID_TOGETHER;
 
     pub(crate) const T: &str = "http://example.org/test#";
     use orexis::rdf::RDF_TYPE;
@@ -55,11 +56,12 @@ pub(crate) mod tests {
         st.update(&format!(
             "PREFIX : <http://example.org/test#>
         PREFIX orexis: <http://example.org/orexis#>
-        INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph .
+        INSERT DATA {{ GRAPH <{SAID_TOGETHER}> {{ 
         :heard a orexis:BeliefGraph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy <{}> . }} }}",
             me()
         ))
         .unwrap();
+        orexis::snapshots::mirrored(&st, SAID_TOGETHER);
         st
     }
 
@@ -67,7 +69,7 @@ pub(crate) mod tests {
         let g = NamedNode::new_unchecked(graph);
         vec![
             Quad::new(
-                g.clone(),
+                NamedNode::new_unchecked(format!("{graph}.thing")),
                 NamedNode::new_unchecked(format!("{T}says")),
                 Literal::new_simple_literal(fact),
                 g.clone(),
@@ -91,7 +93,7 @@ pub(crate) mod tests {
         );
         let q = format!(
             "PREFIX orexis: <http://example.org/orexis#>
-                SELECT ?a ?o WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{round}> orexis:arrivedBy ?a ; orexis:ownedBy ?o }} }}"
+                SELECT ?a ?o WHERE {{ GRAPH ?m_round {{ <{round}> orexis:arrivedBy ?a ; orexis:ownedBy ?o }} }}"
         );
         let found = store.rows(&q, &[]).unwrap();
         assert_eq!(value(&found[0], "a").unwrap(), format!("{OREXIS}Recorded"));

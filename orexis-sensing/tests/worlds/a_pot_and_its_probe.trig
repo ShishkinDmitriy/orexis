@@ -25,8 +25,8 @@
 
 GRAPH :ontology {
   :observer_shape <http://www.w3.org/ns/shacl#property> [ <http://www.w3.org/ns/shacl#defaultValue> 10 ; <http://www.w3.org/ns/shacl#path> sensing:archivedEveryS ] .
-  :observer_shape <http://www.w3.org/ns/shacl#property> [ <http://www.w3.org/ns/shacl#defaultValue> 60 ; <http://www.w3.org/ns/shacl#path> sensing:askedEveryS ] .
   :observer_shape <http://www.w3.org/ns/shacl#property> [ <http://www.w3.org/ns/shacl#defaultValue> 60 ; <http://www.w3.org/ns/shacl#path> sensing:askedAgainAfterS ] .
+  :observer_shape <http://www.w3.org/ns/shacl#property> [ <http://www.w3.org/ns/shacl#defaultValue> 60 ; <http://www.w3.org/ns/shacl#path> sensing:askedEveryS ] .
   :observer_shape <http://www.w3.org/ns/shacl#targetClass> sensing:Observer .
   belief:RevisionGraph rdfs:subClassOf orexis:Graph .
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
@@ -35,6 +35,14 @@ GRAPH :ontology {
   orexis:SelfGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:SelfGraph rdfs:subClassOf orexis:Graph .
   sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
 }
 
 GRAPH :world {
@@ -58,21 +66,26 @@ GRAPH :world {
   :zamioculcas.survival ssn-system:inCondition [ schema:maxValue 0.45 ; schema:minValue 0.02 ; ssn:forProperty :moisture ] .
 }
 
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
+}
+
 GRAPH :self {
   :keeper a orexis:Self .
 }
 
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
+GRAPH :self.metadata {
   :self a orexis:BeliefGraph .
   :self a orexis:Graph .
   :self a orexis:SelfGraph .
   :self orexis:arrivedBy orexis:Asserted .
   :self orexis:ownedBy :keeper .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :self.metadata a orexis:MetadataGraph .
+  :self.metadata orexis:metadataOf :self .
+}
+
+GRAPH :catalogue {
 }

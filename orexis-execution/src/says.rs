@@ -217,13 +217,13 @@ mod tests {
                    BIND(IRI(CONCAT(STR(?note), ".said")) AS ?said) }}""" ] ] .
     :Looking a orexis:Action ; orexis:takes :topic . }}
   GRAPH :world {{ :ann :reads :rain . :bob :reads :rain . }}
-  GRAPH :catalogue {{
-    :catalogue a orexis:CatalogueGraph .
+  GRAPH :said {{
     :vocabulary a orexis:OntologyGraph , orexis:BeliefGraph .
     :actions a orexis:ActionGraph .
     :world a orexis:BeliefGraph . }} }}"#
         ))
         .unwrap();
+        orexis::snapshots::mirrored(&st, "http://example.org/test#said");
         st
     }
 

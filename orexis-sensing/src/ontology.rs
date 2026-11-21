@@ -2,7 +2,7 @@
 //! for eyes. Every other word of this layer is spoken by a query text, under its prefix.
 //!
 //! THE NAMES ARE FOR EYES: a percept's node and graph and a forecast's are spelled here for the writer, from the one
-//! identifier a process is handed, the sensor and the instant of the reading; every reader asks the catalogue by
+//! identifier a process is handed, the sensor and the instant of the reading; every reader asks by
 //! class and by pattern.
 
 use std::sync::LazyLock;

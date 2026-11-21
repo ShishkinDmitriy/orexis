@@ -31,8 +31,14 @@ GRAPH :ontology {
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
   orexis:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
   orexis:ForecastGraph rdfs:subClassOf orexis:Graph .
-  orexis:ForecastGraph rdfs:subClassOf orexis:BeliefGraph .
-  orexis:ForecastGraph rdfs:subClassOf orexis:Graph .
+}
+
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
 }
 
 GRAPH :world {
@@ -48,6 +54,13 @@ GRAPH :world {
   :zamioculcas schema:containedInPlace :balcony .
 }
 
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
+}
+
 GRAPH forecast:weather_20260101T090000Z {
   :weather.20260101T090000Z a sosa:Observation .
   :weather.20260101T090000Z sosa:hasFeatureOfInterest :balcony .
@@ -56,18 +69,16 @@ GRAPH forecast:weather_20260101T090000Z {
   :weather.20260101T090000Z sosa:observedProperty :precipitation .
 }
 
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+GRAPH forecast:weather_20260101T090000Z.metadata {
   forecast:weather_20260101T090000Z a orexis:BeliefGraph .
-  forecast:weather_20260101T090000Z a orexis:Graph .
   forecast:weather_20260101T090000Z a orexis:ForecastGraph .
-  forecast:weather_20260101T090000Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+  forecast:weather_20260101T090000Z a orexis:Graph .
+  forecast:weather_20260101T090000Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T13:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
   forecast:weather_20260101T090000Z orexis:arrivedBy orexis:Received .
   forecast:weather_20260101T090000Z orexis:ownedBy :keeper .
+  forecast:weather_20260101T090000Z.metadata a orexis:MetadataGraph .
+  forecast:weather_20260101T090000Z.metadata orexis:metadataOf forecast:weather_20260101T090000Z .
+}
+
+GRAPH :catalogue {
 }

@@ -1,41 +1,39 @@
 --- case
 +++ expected
-@@ -33,10 +33,8 @@
-   :t2 a :Tick .
+@@ -66,19 +66,24 @@
+   :tick2.metadata orexis:metadataOf :tick2 .
  }
  
 -GRAPH tick1:believed {
 -  :counter :count 1 .
 -}
  
-+
- GRAPH :catalogue {
-   :catalogue a orexis:CatalogueGraph .
-   :catalogue a orexis:Graph .
-@@ -48,14 +46,20 @@
-   :tick2 a :TickGraph .
-   :tick2 a orexis:BeliefGraph .
-   :tick2 a orexis:Graph .
--  :tick2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00+00:00"^^xsd:dateTime ] .
-+  :tick2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00Z"^^xsd:dateTime ] .
-   :tick2 orexis:arrivedBy orexis:Received .
-   :tick2 orexis:ownedBy :keeper .
-   :world a orexis:BeliefGraph .
-   :world a orexis:Graph .
+-GRAPH tick1:believed.metadata {
 -  tick1:believed a orexis:BeliefGraph .
 -  tick1:believed a orexis:Graph .
--  tick1:believed dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:20:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
+-  tick1:believed dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:20:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 -  tick1:believed orexis:arrivedBy orexis:Derived .
 -  tick1:believed orexis:ownedBy :keeper .
+-  tick1:believed.metadata a orexis:MetadataGraph .
+-  tick1:believed.metadata orexis:metadataOf tick1:believed .
++
++
++
++
++
++
++GRAPH tick2:believed {
++  :counter :count 2 .
+ }
+ 
+-GRAPH :catalogue {
++GRAPH tick2:believed.metadata {
 +  tick2:believed a orexis:BeliefGraph .
 +  tick2:believed a orexis:Graph .
 +  tick2:believed dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00Z"^^xsd:dateTime ] .
 +  tick2:believed orexis:arrivedBy orexis:Derived .
 +  tick2:believed orexis:hash "sha256:aa46966d4ffb360392125962f625b67e7ceb301fdc2e0bf6d4564975f6cfe5a4" .
 +  tick2:believed orexis:ownedBy :keeper .
-+}
-+
-+
-+GRAPH tick2:believed {
-+  :counter :count 2 .
++  tick2:believed.metadata a orexis:MetadataGraph .
++  tick2:believed.metadata orexis:metadataOf tick2:believed .
  }

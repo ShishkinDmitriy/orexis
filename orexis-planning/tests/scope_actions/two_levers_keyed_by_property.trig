@@ -23,6 +23,14 @@ GRAPH :ontology {
   planning:ScopeGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 # THE WORLD, common: one keeper with a pump and a heater on one bed, each moving one property.
 GRAPH :world {
   :heater :warms :bed .
@@ -33,6 +41,13 @@ GRAPH :world {
   :keeper orexis:actsFor :bed .
   :pump :actuates :bed .
   :pump :actuatesProperty :Moisture .
+}
+
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
 }
 
 GRAPH :actions {
@@ -58,14 +73,12 @@ GRAPH :actions {
             ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; :below ?range . }""" .
 }
 
-GRAPH :catalogue {
+GRAPH :actions.metadata {
   :actions a orexis:ActionGraph .
   :actions a orexis:Graph .
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :actions.metadata a orexis:MetadataGraph .
+  :actions.metadata orexis:metadataOf :actions .
+}
+
+GRAPH :catalogue {
 }

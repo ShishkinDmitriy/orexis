@@ -33,6 +33,14 @@ GRAPH :ontology {
   planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :door_parcel_a courier:x 0 .
   :door_parcel_a courier:y 3 .
@@ -45,6 +53,13 @@ GRAPH :world {
   :parcel_b courier:destination :door_parcel_b .
   :van_a a courier:Van .
   :van_b a courier:Van .
+}
+
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
 }
 
 # THE COURIER'S THREE ACTIONS, as `domains/courier/actions.ttl` states them: what the reach is
@@ -92,6 +107,13 @@ GRAPH :actions {
       }""" .
 }
 
+GRAPH :actions.metadata {
+  :actions a orexis:ActionGraph .
+  :actions a orexis:Graph .
+  :actions.metadata a orexis:MetadataGraph .
+  :actions.metadata orexis:metadataOf :actions .
+}
+
 GRAPH :desires {
   :delivered a sh:NodeShape .
   :delivered sh:sparql [ a sh:SPARQLConstraint ; planning:about sh:this ; sh:select """PREFIX courier: <http://example.org/orexis/courier#>
@@ -130,6 +152,13 @@ GRAPH :desires {
   :keeper.every_parcel_delivered rdfs:label "every parcel where it is owed" .
 }
 
+GRAPH :desires.metadata {
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :desires.metadata a orexis:MetadataGraph .
+  :desires.metadata orexis:metadataOf :desires .
+}
+
 # THE WORLD'S CONSTRAINT, a `planning:Constraint` and no desire: two vans cannot share a cell. What
 # coupled the two parcels into the standing want below, and never minted.
 GRAPH :constraints {
@@ -147,6 +176,13 @@ GRAPH :constraints {
       }""" .
 }
 
+GRAPH :constraints.metadata {
+  :constraints a orexis:Graph .
+  :constraints a planning:ConstraintGraph .
+  :constraints.metadata a orexis:MetadataGraph .
+  :constraints.metadata orexis:metadataOf :constraints .
+}
+
 GRAPH :sensed {
   :parcel_a courier:carriedBy :van_a .
   :parcel_b courier:x 1 .
@@ -157,6 +193,14 @@ GRAPH :sensed {
   :van_b courier:y 1 .
 }
 
+GRAPH :sensed.metadata {
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed orexis:ownedBy :keeper .
+  :sensed.metadata a orexis:MetadataGraph .
+  :sensed.metadata orexis:metadataOf :sensed .
+}
+
 # PARCEL A'S WANT, WALKING: minted alone an hour ago, its met-test targeting parcel A only.
 GRAPH pursued:keeper.every_parcel_delivered.pursued.parcel_a {
   :keeper planning:holds :keeper.every_parcel_delivered.pursued.parcel_a .
@@ -164,7 +208,7 @@ GRAPH pursued:keeper.every_parcel_delivered.pursued.parcel_a {
   :keeper.every_parcel_delivered.pursued.parcel_a planning:estimates :drivesOwed .
   :keeper.every_parcel_delivered.pursued.parcel_a planning:metWhen :keeper.every_parcel_delivered.pursued.parcel_a.met .
   :keeper.every_parcel_delivered.pursued.parcel_a planning:state planning:Recognized .
-  :keeper.every_parcel_delivered.pursued.parcel_a prov:generatedAtTime "2026-01-01T11:00:00+00:00"^^xsd:dateTime .
+  :keeper.every_parcel_delivered.pursued.parcel_a prov:generatedAtTime "2026-01-01T11:00:00Z"^^xsd:dateTime .
   :keeper.every_parcel_delivered.pursued.parcel_a prov:wasDerivedFrom :keeper.every_parcel_delivered .
   :keeper.every_parcel_delivered.pursued.parcel_a rdfs:label "pursued: every parcel where it is owed" .
   :keeper.every_parcel_delivered.pursued.parcel_a.met a sh:NodeShape .
@@ -177,10 +221,28 @@ GRAPH pursued:keeper.every_parcel_delivered.pursued.parcel_a {
   :keeper.every_parcel_delivered.pursued.parcel_a.met sh:targetNode :parcel_a .
 }
 
+GRAPH pursued:keeper.every_parcel_delivered.pursued.parcel_a.metadata {
+  pursued:keeper.every_parcel_delivered.pursued.parcel_a a orexis:Graph .
+  pursued:keeper.every_parcel_delivered.pursued.parcel_a a planning:WantGraph .
+  pursued:keeper.every_parcel_delivered.pursued.parcel_a dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00Z"^^xsd:dateTime ] .
+  pursued:keeper.every_parcel_delivered.pursued.parcel_a orexis:arrivedBy orexis:Derived .
+  pursued:keeper.every_parcel_delivered.pursued.parcel_a orexis:ownedBy :keeper .
+  pursued:keeper.every_parcel_delivered.pursued.parcel_a.metadata a orexis:MetadataGraph .
+  pursued:keeper.every_parcel_delivered.pursued.parcel_a.metadata orexis:metadataOf pursued:keeper.every_parcel_delivered.pursued.parcel_a .
+}
+
 # AND THE INTENTION WALKING IT, unresolved.
 GRAPH intentions:keeper {
   :intention.1 a execution:Intention .
   :intention.1 execution:pursues :keeper.every_parcel_delivered.pursued.parcel_a .
+}
+
+GRAPH intentions:keeper.metadata {
+  intentions:keeper a execution:IntentionGraph .
+  intentions:keeper a orexis:Graph .
+  intentions:keeper orexis:ownedBy :keeper .
+  intentions:keeper.metadata a orexis:MetadataGraph .
+  intentions:keeper.metadata orexis:metadataOf intentions:keeper .
 }
 
 GRAPH :scopes {
@@ -197,34 +259,14 @@ GRAPH :scopes {
   courier:y planning:inScope :keeper.scope.1 .
 }
 
-# What each graph IS, and when it holds — said once each, beside the data.
-GRAPH :catalogue {
-  :actions a orexis:ActionGraph .
-  :actions a orexis:Graph .
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :constraints a orexis:Graph .
-  :constraints a planning:ConstraintGraph .
-  :desires a orexis:Graph .
-  :desires a planning:DesireGraph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
+GRAPH :scopes.metadata {
   :scopes a orexis:Graph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
   :scopes orexis:ownedBy :keeper .
-  :sensed a orexis:BeliefGraph .
-  :sensed a orexis:Graph .
-  :sensed orexis:ownedBy :keeper .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
-  intentions:keeper a execution:IntentionGraph .
-  intentions:keeper a orexis:Graph .
-  intentions:keeper orexis:ownedBy :keeper .
-  pursued:keeper.every_parcel_delivered.pursued.parcel_a a orexis:Graph .
-  pursued:keeper.every_parcel_delivered.pursued.parcel_a a planning:WantGraph .
-  pursued:keeper.every_parcel_delivered.pursued.parcel_a dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
-  pursued:keeper.every_parcel_delivered.pursued.parcel_a orexis:arrivedBy orexis:Derived .
-  pursued:keeper.every_parcel_delivered.pursued.parcel_a orexis:ownedBy :keeper .
+  :scopes.metadata a orexis:MetadataGraph .
+  :scopes.metadata orexis:metadataOf :scopes .
+}
+
+GRAPH :catalogue {
 }

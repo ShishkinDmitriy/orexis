@@ -4,11 +4,11 @@
 //!
 //! **THE ONE FUNCTION OVER TWO STORES**: `beliefs` is read and `into` written, and everything that happens to a
 //! possible world afterwards happens to `into` the ordinary way. What crosses: every graph of the kinds a world is
-//! made of and a search reads to act ([`CROSSING`]), each with its row. **The agent's own beliefs are the scope's**:
+//! made of and a search reads to act ([`CROSSING`]), each with its metadata graph. **The agent's own beliefs are the scope's**:
 //! one whose quads, with its revisions, name members whose scopes meet without this scope stays behind.
 //!
 //! **A SECOND FILLING IS A REFRESH**: a copy whose source's row states the hash the copy's row was made with is kept,
-//! cut as it was, and its row read again; any other copy is taken back with what was cut out of it, and copied
+//! cut as it was, and its metadata copied again; any other copy is taken back with what was cut out of it, and copied
 //! again. What the store MADE for itself — its grounds, possible worlds, plans and derived wants — stays.
 //!
 //! QUADS AND NOT TEXT: a serialise-and-reparse relabels blank nodes, so an observation node would come out the far
@@ -16,18 +16,15 @@
 
 use std::collections::{BTreeSet, HashMap};
 
-use oxigraph::model::{GraphNameRef, NamedOrBlankNode, Quad, Term};
+use oxigraph::model::{NamedOrBlankNode, Quad, Term};
 
 use orexis::Error;
-use orexis::bind::{Value, bind};
-use orexis::metadata::stated_quads;
 use orexis::ontology::{ACTION, BELIEF, FLOW_GRAPH, RECORD};
 use orexis::store::{Store, Within, iri, value};
 use orexis_belief::ontology::{REVISION_GRAPH, RULES_GRAPH};
 
 use crate::find_scopes::Scopes;
-use crate::ontology::{CONSTRAINT_GRAPH, DERIVATION_GRAPH, DESIRE, SCOPE_GRAPH, SHAPES, WANT};
-use crate::world_at::named;
+use crate::ontology::{CONSTRAINT_GRAPH, CUT_BY, DERIVATION_GRAPH, DESIRE, SCOPE_GRAPH, SHAPES, WANT};
 
 /// THE KINDS THAT CROSS, spelled once for the filling and the refresh: the beliefs a world is made of, and what the
 /// search reads to act, each by its own kind, since none of it is a belief (#953).
@@ -45,7 +42,7 @@ pub const CROSSING: &[&str] = &[
     CONSTRAINT_GRAPH,
 ];
 
-/// WHAT CROSSED into an imaginarium, each graph with the hash its row stated, and what stayed behind as another
+/// WHAT CROSSED into an imaginarium, each graph with the hash its metadata stated, and what stayed behind as another
 /// scope's: what a search found there is found from beliefs that stand where these do.
 pub struct Crossed {
     said: Vec<(String, Option<String>)>,
@@ -89,19 +86,13 @@ pub fn prepare_ground(
     const PIECES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
       PREFIX planning: <http://example.org/orexis/planning#>
       PREFIX prov: <http://www.w3.org/ns/prov#>
-      SELECT ?piece ?source WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+      SELECT ?piece ?source WHERE { GRAPH ?m {
       ?piece a planning:ChangeableGraph . OPTIONAL { ?piece prov:wasDerivedFrom ?source } } }";
-    /// A ROW TAKEN BACK, its period with it, and the cut it says it carries left: the graph is the one cut.
-    const UNDESCRIBE_U: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
-    PREFIX planning: <http://example.org/orexis/planning#>
-    DELETE { GRAPH $cat { $g ?p ?o . ?o ?pp ?po } }
-    WHERE { GRAPH $cat { $g ?p ?o . FILTER(?p != planning:cutBy)
-                         OPTIONAL { ?o ?pp ?po . FILTER(?p = dcterms:temporal) } } }";
     /// WHAT THE STORE MADE FOR ITSELF, which a refresh keeps: planning's kinds, and the wants the derivation minted.
     const MADE_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?g WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+      GRAPH ?m {
         { ?g a ?kind . VALUES ?kind { planning:GroundGraph planning:PossibleGraph planning:PlanGraph } }
         UNION { ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } } }";
     let every = Within::default();
@@ -132,55 +123,33 @@ pub fn prepare_ground(
             into.forget_graph(piece, None)?;
         }
     }
-    if let Some(catalogue) = into.catalogue()? {
-        for graph in &kept {
-            into.update(&bind(
-                UNDESCRIBE_U,
-                &[
-                    ("cat", Value::Raw(format!("<{catalogue}>"))),
-                    ("g", Value::iri(graph.as_str())),
-                ],
-            )?)?;
-            //  AND WHAT THE GRAPH SAYS OF ITSELF IS SAID AGAIN AS THE BELIEFS SAY IT NOW: a graph kept by its hash
-            //  states what it did, and its period may have ended since.
-            into.remove_all(&metadata_of(into, graph)?)?;
-            into.add(metadata_of(beliefs, graph)?)?;
-        }
-    }
-    for graph in wanted.iter().filter(|g| !kept.contains(g)) {
-        let name = named(graph)?;
-        let quads: Vec<Quad> = beliefs
-            .engine()
-            .quads_for_pattern(None, None, None, Some(GraphNameRef::NamedNode(name.as_ref())))
-            .collect::<Result<_, _>>()
-            .map_err(|e| Error::Evaluation(e.to_string()))?;
-        into.add(quads)?;
-    }
-    //  AND THE ROW OF EACH GRAPH THAT CROSSES, with the catalogue's own: a graph that stays behind has no row
-    //  here, since a row is what its graph says of itself and the graph is not here to say it.
-    if let Some(catalogue) = beliefs.catalogue()? {
-        let cat = named(&catalogue)?;
-        let in_cat = GraphNameRef::NamedNode(cat.as_ref());
-        let mut rows: Vec<Quad> = Vec::new();
-        for graph in wanted.iter().chain([&catalogue]) {
-            let subject = named(graph)?;
-            for quad in beliefs
-                .engine()
-                .quads_for_pattern(Some(subject.as_ref().into()), None, None, Some(in_cat))
-            {
-                let quad = quad.map_err(|e| Error::Evaluation(e.to_string()))?;
-                if let Term::BlankNode(period) = &quad.object {
-                    for of in beliefs
-                        .engine()
-                        .quads_for_pattern(Some(period.as_ref().into()), None, None, Some(in_cat))
-                    {
-                        rows.push(of.map_err(|e| Error::Evaluation(e.to_string()))?);
-                    }
-                }
-                rows.push(quad);
+    for graph in &kept {
+        //  WHAT IS SAID OF THE GRAPH IS SAID AGAIN AS THE BELIEFS SAY IT NOW, the cut it carries left: a graph kept
+        //  by its hash holds what it did, and its period may have ended since.
+        let cut: Vec<Quad> = match into.metadata_of(graph)? {
+            Some(said_in) => {
+                let cut = into
+                    .quads(&said_in)?
+                    .into_iter()
+                    .filter(|q| q.predicate.as_str() == CUT_BY)
+                    .collect();
+                into.clear_graph(&said_in)?;
+                cut
             }
+            None => Vec::new(),
+        };
+        if let Some(said_in) = beliefs.metadata_of(graph)? {
+            into.add(beliefs.quads(&said_in)?)?;
         }
-        into.add(rows)?;
+        into.add(cut)?;
+    }
+    //  AND EACH GRAPH THAT CROSSES, WITH ITS METADATA GRAPH: a graph that stays behind is not said here to be
+    //  anything, since nothing of it is here.
+    for graph in wanted.iter().filter(|g| !kept.contains(g)) {
+        into.add(beliefs.quads(graph)?)?;
+        if let Some(said_in) = beliefs.metadata_of(graph)? {
+            into.add(beliefs.quads(&said_in)?)?;
+        }
     }
     Ok(Crossed {
         said: wanted.iter().map(|g| (g.clone(), said.get(g).cloned())).collect(),
@@ -190,35 +159,11 @@ pub fn prepare_ground(
     })
 }
 
-/// What `graph` says of itself in `store`: every statement under its own name, and under each period it names -
-/// asked by subject, never by reading the graph whole.
-fn metadata_of(store: &Store, graph: &str) -> Result<Vec<Quad>, Error> {
-    let name = named(graph)?;
-    let own = GraphNameRef::NamedNode(name.as_ref());
-    let mut out = Vec::new();
-    for quad in store
-        .engine()
-        .quads_for_pattern(Some(name.as_ref().into()), None, None, Some(own))
-    {
-        let quad = quad.map_err(|e| Error::Evaluation(e.to_string()))?;
-        if let Term::BlankNode(period) = &quad.object {
-            for of in store
-                .engine()
-                .quads_for_pattern(Some(period.as_ref().into()), None, None, Some(own))
-            {
-                out.push(of.map_err(|e| Error::Evaluation(e.to_string()))?);
-            }
-        }
-        out.push(quad);
-    }
-    Ok(out)
-}
-
-/// Every graph `store`'s catalogue says the hash of, and the hash.
+/// Every graph `store` says the hash of, and the hash.
 fn hashes(store: &Store) -> Result<HashMap<String, String>, Error> {
-    /// EVERY ROW'S HASH, and every changeable graph with the graph it was cut from.
+    /// EVERY GRAPH'S HASH, off its metadata.
     const HASHES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:hash ?h } }";
+        SELECT ?g ?h WHERE { GRAPH ?m { ?g orexis:hash ?h } }";
     Ok(store
         .rows(HASHES_Q, &[])?
         .iter()
@@ -248,7 +193,7 @@ fn of_another_scope(beliefs: &Store, scope: Option<&str>, scopes: Option<&Scopes
         group.extend(beliefs.revisions_of(&[&graph], BELIEF)?);
         let mut names: BTreeSet<String> = BTreeSet::new();
         for g in &group {
-            for quad in stated_quads(beliefs.quads(g)?) {
+            for quad in beliefs.quads(g)? {
                 names.insert(quad.predicate.into_string());
                 if let NamedOrBlankNode::NamedNode(s) = quad.subject {
                     names.insert(s.into_string());
@@ -281,6 +226,7 @@ mod tests {
     use super::*;
     use crate::lay_ground::{Laying, lay_ground};
     use crate::ontology::GROUND_GRAPH;
+    use orexis::snapshots::SAID_TOGETHER;
 
     fn cases() -> PathBuf {
         snapshots::tree().join("orexis-planning/tests/prepare_ground")
@@ -315,14 +261,15 @@ mod tests {
         //  A WANT THE DERIVATION MINTED is a kind that crosses too, told apart by how it arrived: no want crosses that
         //  way, since the derivation runs in here and nowhere else.
         let minted = "urn:test:minted";
-        let catalogue = into.catalogue().unwrap().unwrap();
+        let said = SAID_TOGETHER;
         into.update(&format!(
             "PREFIX orexis: <http://example.org/orexis#>
            PREFIX planning: <http://example.org/orexis/planning#>
            INSERT DATA {{ GRAPH <{minted}> {{ <urn:test:w> a planning:Want }}
-           GRAPH <{catalogue}> {{ <{minted}> a planning:WantGraph ; orexis:arrivedBy orexis:Derived }} }}"
+           GRAPH <{said}> {{ <{minted}> a planning:WantGraph ; orexis:arrivedBy orexis:Derived }} }}"
         ))
         .unwrap();
+        orexis::metadata::moved(&into, SAID_TOGETHER, minted).unwrap();
         let crossing = beliefs.graphs_of(CROSSING, &Within::default()).unwrap();
         let (replaced, swept) = (&crossing[0], &crossing[1]);
         let old = beliefs.quads(replaced).unwrap().remove(0);
@@ -339,7 +286,7 @@ mod tests {
         let held = into.quads(replaced).unwrap();
         assert!(
             held.contains(&new) && !held.contains(&old),
-            "the row replaced, not laid beside the old one"
+            "the metadata replaced, not laid beside the old"
         );
         assert!(
             !into.graph_names().unwrap().contains(swept),
@@ -362,34 +309,39 @@ mod tests {
         let beliefs = snapshots::stand_in(&case);
         let crossed = prepare_ground(&beliefs, &empty(), None, None).unwrap();
         assert_eq!(crossed.moved(&beliefs).unwrap(), None, "nothing moved since it crossed");
-        //  A GRAPH THAT CROSSED, CHANGED IN PLACE, says so on its row.
+        //  A GRAPH THAT CROSSED, CHANGED IN PLACE, says so in its metadata.
         let changed = beliefs.graphs_of(CROSSING, &Within::default()).unwrap().remove(0);
-        let catalogue = beliefs.catalogue().unwrap().unwrap();
+        let said = beliefs.metadata_of(&changed).unwrap().unwrap();
         beliefs
             .update(&format!(
                 "PREFIX orexis: <http://example.org/orexis#>
-                 DELETE {{ GRAPH <{catalogue}> {{ <{changed}> orexis:hash ?h }} }}
-                 INSERT {{ GRAPH <{catalogue}> {{ <{changed}> orexis:hash \"moved on\" }} }}
-                 WHERE {{ OPTIONAL {{ GRAPH <{catalogue}> {{ <{changed}> orexis:hash ?h }} }} }}"
+                 DELETE {{ GRAPH ?in {{ <{changed}> orexis:hash ?h }} }}
+                 INSERT {{ GRAPH ?in {{ <{changed}> orexis:hash \"moved on\" }} }}
+                 WHERE {{ VALUES ?in {{ <{said}> }}
+                          OPTIONAL {{ GRAPH ?in {{ <{changed}> orexis:hash ?h }} }} }}"
             ))
             .unwrap();
         assert_eq!(crossed.moved(&beliefs).unwrap(), Some(changed));
         //  AND A BELIEF THAT ARRIVED SINCE, of a kind that crosses.
         let beliefs = snapshots::stand_in(&case);
         let crossed = prepare_ground(&beliefs, &empty(), None, None).unwrap();
-        let catalogue = beliefs.catalogue().unwrap().unwrap();
+        let said = SAID_TOGETHER;
         beliefs
             .update(&format!(
                 "PREFIX orexis: <http://example.org/orexis#>
                  INSERT DATA {{ GRAPH <urn:test:arrived> {{ <urn:test:bed> <urn:test:is> <urn:test:dry> }}
-                 GRAPH <{catalogue}> {{ <urn:test:arrived> a orexis:BeliefGraph , orexis:Graph }} }}"
+                 GRAPH <{said}> {{ <urn:test:arrived> a orexis:BeliefGraph , orexis:Graph }} }}"
             ))
             .unwrap();
+        orexis::metadata::moved(&beliefs, SAID_TOGETHER, "urn:test:arrived").unwrap();
         assert_eq!(crossed.moved(&beliefs).unwrap(), Some("urn:test:arrived".to_string()));
     }
 
+    /// The graphs a store holds, by name, the metadata graphs left out: each goes with the graph it is of.
     fn names(store: &Store) -> BTreeSet<String> {
-        store.graph_names().unwrap().into_iter().collect()
+        let all = store.graph_names().unwrap();
+        let said_in: BTreeSet<String> = all.iter().filter_map(|g| store.metadata_of(g).unwrap()).collect();
+        all.into_iter().filter(|g| !said_in.contains(g)).collect()
     }
 
     fn filled(beliefs: &Store, scope: Option<&str>, scopes: Option<&Scopes>) -> BTreeSet<String> {
@@ -467,15 +419,16 @@ mod tests {
         let into_air = prepare_ground(&beliefs, &empty(), Some(air), Some(&parted)).unwrap();
         let into_soil = prepare_ground(&beliefs, &empty(), Some(soil), Some(&parted)).unwrap();
         //  A BELIEF OF THE AGENT'S OWN ABOUT THE SOIL ALONE arrives, as a step committed for the pump would.
-        let catalogue = beliefs.catalogue().unwrap().unwrap();
+        let said = SAID_TOGETHER;
         beliefs
             .update(&format!(
                 "PREFIX orexis: <http://example.org/orexis#>
                  INSERT {{ GRAPH <urn:test:committed> {{ <urn:test:step> <urn:test:of> <http://example.org/test#SoilMoisture> }}
-                   GRAPH <{catalogue}> {{ <urn:test:committed> a orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy ?me }} }}
-                 WHERE {{ GRAPH <{catalogue}> {{ ?g orexis:ownedBy ?me }} }}"
+                   GRAPH <{said}> {{ <urn:test:committed> a orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy ?me }} }}
+                 WHERE {{ GRAPH ?m {{ ?g orexis:ownedBy ?me }} }}"
             ))
             .unwrap();
+        orexis::metadata::moved(&beliefs, SAID_TOGETHER, "urn:test:committed").unwrap();
         assert_eq!(
             into_air.moved(&beliefs).unwrap(),
             None,

@@ -160,10 +160,10 @@
             {
                 SELECT ?sensor (COUNT(DISTINCT ?kept) AS ?readings) (COUNT(DISTINCT ?number) AS ?numbers)
                        (COUNT(DISTINCT ?stated) AS ?statements) (SAMPLE(?stated) AS ?figure) WHERE {
-                    GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?percept a sensing:ObservationGraph }
+                    GRAPH ?m_percept { ?percept a sensing:ObservationGraph }
                     GRAPH ?percept { ?kept sosa:madeBySensor ?sensor ; sensing:rawResult ?number }
                     OPTIONAL {
-                        GRAPH ?cat { ?self a orexis:SelfGraph }
+                        GRAPH ?m_self { ?self a orexis:SelfGraph }
                         GRAPH ?self { ?me a orexis:Self ; orexis:plays/sensing:attends ?attention .
                                       ?attention sensing:sensor ?sensor ; sensing:stuckAfter ?stated }
                     }
@@ -171,7 +171,7 @@
             }
             {
                 SELECT (SAMPLE(?given) AS ?default) WHERE {
-                    GRAPH ?catalogue { ?catalogue a orexis:CatalogueGraph . ?ontology a orexis:OntologyGraph }
+                    GRAPH ?m_ontology { ?ontology a orexis:OntologyGraph }
                     GRAPH ?ontology { ?shape sh:targetClass sensing:Attention ; sh:property ?property .
                                       ?property sh:path sensing:stuckAfter ; sh:defaultValue ?given }
                 }

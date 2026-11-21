@@ -12,8 +12,8 @@ description: >-
 After the ontology graphs are read and before anything else, the [runtime](/domain/kernel/runtime.md)
 forgets the closure graph and writes it again: one `rdfs:subClassOf` triple for every pair the
 vocabulary relates, however many steps apart, classified `orexis:OntologyGraph` and
-`orexis:Derived`. The catalogue then closes its rows, so every graph carries every kind its class is
-beneath (`store.closed`, `store.close_catalogue`).
+`orexis:Derived`. The kinds are then closed, so every graph's metadata carries every kind its class is
+beneath (`store.closed`, `store.close_kinds`).
 
 # Why it is materialised
 

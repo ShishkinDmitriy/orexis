@@ -329,8 +329,7 @@ async fn the_agent_listens_on_the_boards_one_topic_alone_and_one_message_is_five
                 .store
                 .rows(
                     "PREFIX orexis: <http://example.org/orexis#>
-                    SELECT ?s ?p ?o WHERE { ?s ?p ?o FILTER NOT EXISTS { ?s a orexis:Graph }
-                      FILTER NOT EXISTS { ?s a <http://purl.org/dc/terms/PeriodOfTime> } }",
+                    SELECT ?s ?p ?o WHERE { ?s ?p ?o }",
                     &held,
                 )
                 .unwrap()

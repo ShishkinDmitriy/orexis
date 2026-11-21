@@ -29,8 +29,23 @@ GRAPH :ontology {
   planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :tank1 a :Tank .
+}
+
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
 }
 
 GRAPH :desires {
@@ -44,13 +59,39 @@ GRAPH :desires {
   :keeper.in_range rdfs:label "every tank in range" .
 }
 
+GRAPH :desires.metadata {
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :desires.metadata a orexis:MetadataGraph .
+  :desires.metadata orexis:metadataOf :desires .
+}
+
 GRAPH :sensed {
   :tank1 :level 0 .
+}
+
+GRAPH :sensed.metadata {
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed orexis:ownedBy :keeper .
+  :sensed.metadata a orexis:MetadataGraph .
+  :sensed.metadata orexis:metadataOf :sensed .
 }
 
 #  REFILLED FROM ONE — and the prediction retracts the reading it supersedes, as a flow's does.
 GRAPH :refill {
   :tank1 :level 20 .
+}
+
+GRAPH :refill.metadata {
+  :refill a orexis:BeliefGraph .
+  :refill a orexis:ForecastGraph .
+  :refill a orexis:Graph .
+  :refill dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00Z"^^xsd:dateTime ] .
+  :refill orexis:arrivedBy orexis:Recorded .
+  :refill orexis:ownedBy :keeper .
+  :refill.metadata a orexis:MetadataGraph .
+  :refill.metadata orexis:metadataOf :refill .
 }
 
 GRAPH :scopes {
@@ -59,27 +100,14 @@ GRAPH :scopes {
   :level planning:inScope :keeper.scope.1 .
 }
 
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :desires a orexis:Graph .
-  :desires a planning:DesireGraph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
-  :refill a orexis:Graph .
-  :refill a orexis:BeliefGraph .
-  :refill a orexis:ForecastGraph .
-  :refill orexis:arrivedBy orexis:Recorded .
-  :refill orexis:ownedBy :keeper .
-  :refill dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
+GRAPH :scopes.metadata {
   :scopes a orexis:Graph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
   :scopes orexis:ownedBy :keeper .
-  :sensed a orexis:BeliefGraph .
-  :sensed a orexis:Graph .
-  :sensed orexis:ownedBy :keeper .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :scopes.metadata a orexis:MetadataGraph .
+  :scopes.metadata orexis:metadataOf :scopes .
+}
+
+GRAPH :catalogue {
 }

@@ -93,7 +93,6 @@ package "error" {
     Unbound (Vec<String>)
     Syntax (String)
     Evaluation (String)
-    Catalogue (String)
     Document (String)
     Io (std::io::Error)
   }

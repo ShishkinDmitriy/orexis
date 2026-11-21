@@ -195,7 +195,8 @@ package "memo" {
     {field} +takes : Vec<String>
   }
   class "Memo" as orexis_planning__memo__Memo << (S,#A8D8EA) struct >> {
-    {field} +catalogue : Option<String>
+    {field} +cone : Option<String>
+    {field} +cone_made : bool
     {field} +spoken_for : Option<HashSet<String>>
     {field} +knowable : HashMap<String, Vec<String>>
     {field} +when : HashMap<String, Option<(DateTime, Option<DateTime>)>>

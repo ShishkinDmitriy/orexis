@@ -39,10 +39,25 @@ GRAPH :ontology {
   planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :keeper a orexis:Agent .
   :keeper orexis:localId "keeper" .
   :tank1 a :Tank .
+}
+
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
 }
 
 # ONE LEVER: wait beside a tank below its floor — delete its level and put the same level back. It is
@@ -59,12 +74,18 @@ GRAPH :actions {
       INSERT { ?tank :level ?next } WHERE {
       $tank :level ?l .
       BIND($tank AS ?tank) BIND(?l AS ?next) }""" ] ] .
-  #  A WAIT LANDS WITHIN THREE MINUTES OF THE TURN, a minute at the least: the band a world reached by it holds over.
   :wait planning:landsAfter "SELECT ?least ?most WHERE { BIND(60 AS ?least) BIND(180 AS ?most) }" .
   :wait planning:precondition """PREFIX : <http://example.org/test#>
       SELECT ?tank WHERE {
       ?tank a :Tank ; :level ?l .
       FILTER(?l < 10) }""" .
+}
+
+GRAPH :actions.metadata {
+  :actions a orexis:ActionGraph .
+  :actions a orexis:Graph .
+  :actions.metadata a orexis:MetadataGraph .
+  :actions.metadata orexis:metadataOf :actions .
 }
 
 GRAPH :desires {
@@ -78,13 +99,39 @@ GRAPH :desires {
   :keeper.in_range rdfs:label "every tank in range" .
 }
 
+GRAPH :desires.metadata {
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :desires.metadata a orexis:MetadataGraph .
+  :desires.metadata orexis:metadataOf :desires .
+}
+
 GRAPH :sensed {
   :tank1 :level 6 .
+}
+
+GRAPH :sensed.metadata {
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed orexis:ownedBy :keeper .
+  :sensed.metadata a orexis:MetadataGraph .
+  :sensed.metadata orexis:metadataOf :sensed .
 }
 
 # WHAT THE TANK WILL READ from half past the minute: a refill no act of this agent makes.
 GRAPH :predicted-0 {
   :tank1 :level 12 .
+}
+
+GRAPH :predicted-0.metadata {
+  :predicted-0 a orexis:BeliefGraph .
+  :predicted-0 a orexis:ForecastGraph .
+  :predicted-0 a orexis:Graph .
+  :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:30Z"^^xsd:dateTime ] .
+  :predicted-0 orexis:arrivedBy orexis:Recorded .
+  :predicted-0 orexis:ownedBy :keeper .
+  :predicted-0.metadata a orexis:MetadataGraph .
+  :predicted-0.metadata orexis:metadataOf :predicted-0 .
 }
 
 GRAPH :scopes {
@@ -93,29 +140,14 @@ GRAPH :scopes {
   :wait planning:inScope :keeper.scope.1 .
 }
 
-GRAPH :catalogue {
-  :actions a orexis:ActionGraph .
-  :actions a orexis:Graph .
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :desires a orexis:Graph .
-  :desires a planning:DesireGraph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
-  :predicted-0 a orexis:Graph .
-  :predicted-0 a orexis:BeliefGraph .
-  :predicted-0 a orexis:ForecastGraph .
-  :predicted-0 orexis:arrivedBy orexis:Recorded .
-  :predicted-0 orexis:ownedBy :keeper .
-  :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:30+00:00"^^xsd:dateTime ] .
+GRAPH :scopes.metadata {
   :scopes a orexis:Graph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
   :scopes orexis:ownedBy :keeper .
-  :sensed a orexis:BeliefGraph .
-  :sensed a orexis:Graph .
-  :sensed orexis:ownedBy :keeper .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :scopes.metadata a orexis:MetadataGraph .
+  :scopes.metadata orexis:metadataOf :scopes .
+}
+
+GRAPH :catalogue {
 }

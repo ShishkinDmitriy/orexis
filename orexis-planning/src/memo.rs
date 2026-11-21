@@ -1,5 +1,5 @@
 //! WHAT ONLY A WRITE CAN CHANGE, computed once a pass, as `agent/store.py`'s `Memo` keeps it for the acts: the
-//! catalogue's name, the actions, the grounds by hash, the graphs per instant, the mint counter. Typed fields
+//! cone graph's name, the actions, the grounds by hash, the graphs per instant, the mint counter. Typed fields
 //! where the Python keeps a dictionary keyed by tuples, since each act names what it keeps.
 //!
 //! A FRESH MEMO IS NO MEMO: every act computes what it does not find, so a caller that keeps nothing across
@@ -41,7 +41,8 @@ pub struct Carried {
 
 #[derive(Default)]
 pub struct Memo {
-    pub catalogue: Option<String>,
+    pub cone: Option<String>,
+    pub cone_made: bool,
     pub spoken_for: Option<HashSet<String>>,
     pub knowable: HashMap<String, Vec<String>>,
     pub when: HashMap<String, Option<(DateTime, Option<DateTime>)>>,

@@ -24,6 +24,9 @@ pub const PRECONDITION: &str = "http://example.org/orexis/planning#precondition"
 
 pub const POSSIBLE_GRAPH: &str = "http://example.org/orexis/planning#PossibleGraph";
 pub const GROUND_GRAPH: &str = "http://example.org/orexis/planning#GroundGraph";
+pub const CONE_GRAPH: &str = "http://example.org/orexis/planning#ConeGraph";
+/// What a graph the imaginarium holds was cut by, said in its metadata there.
+pub const CUT_BY: &str = "http://example.org/orexis/planning#cutBy";
 pub const CHANGEABLE_GRAPH: &str = "http://example.org/orexis/planning#ChangeableGraph";
 pub const SPENT: &str = "http://example.org/orexis/planning#spent";
 pub const BY: &str = "http://example.org/orexis/planning#by";

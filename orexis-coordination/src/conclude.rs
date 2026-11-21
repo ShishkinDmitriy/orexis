@@ -94,7 +94,7 @@ pub fn conclude(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Er
     const ANSWERS_Q: &str = "PREFIX coordination: <http://example.org/orexis/coordination#>
     PREFIX orexis: <http://example.org/orexis#>
     SELECT ?g ?asker ?answerer ?constraint (COUNT(?h) AS ?held) WHERE {
-      GRAPH $cat { ?g a coordination:AnswerGraph ; orexis:arrivedBy ?arrival . VALUES ?arrival { $recorded $received } }
+      GRAPH ?m_g { ?g a coordination:AnswerGraph ; orexis:arrivedBy ?arrival . VALUES ?arrival { $recorded $received } }
       GRAPH ?g { ?a a coordination:Answer ; coordination:answeredBy ?answerer ; coordination:over ?constraint ; coordination:answers ?q .
                  OPTIONAL { ?a coordination:holding ?h } }
       GRAPH ?qg { ?q coordination:asks ?asker } }
@@ -102,9 +102,6 @@ pub fn conclude(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Er
     /// THE LATEST ROUND A PEER WAS HEARD DRAWING A CONFLICT IN.
     const HEARD_Q: &str = "PREFIX coordination: <http://example.org/orexis/coordination#>
         SELECT (MAX(?r) AS ?round) WHERE { $conflict coordination:drawnIn ?r }";
-    let Some(cat) = store.catalogue()? else {
-        return Ok(Vec::new());
-    };
     let patience = patience(store)?;
     let bound = crate::Coordinator::new(store)?.rounds;
     let graph = conflicts_graph(me);
@@ -113,11 +110,7 @@ pub fn conclude(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Er
     let mut met: BTreeMap<(String, String), bool> = BTreeMap::new();
     let answers = bind(
         ANSWERS_Q,
-        &[
-            ("cat", Value::iri(cat.as_str())),
-            ("recorded", Value::iri(RECORDED)),
-            ("received", Value::iri(RECEIVED)),
-        ],
+        &[("recorded", Value::iri(RECORDED)), ("received", Value::iri(RECEIVED))],
     )?;
     for r in store.rows(&answers, &[])? {
         let (Some(asker), Some(answerer), Some(constraint)) =
@@ -183,7 +176,7 @@ pub fn conclude(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Er
             row.silent = true;
         }
     }
-    for (c, row) in unanswered(store, me, &cat, at, patience, &met, &concluded, &asking)? {
+    for (c, row) in unanswered(store, me, at, patience, &met, &concluded, &asking)? {
         concluded.insert(c, row);
     }
     for (c, row) in concluded.iter_mut() {
@@ -208,7 +201,6 @@ pub fn conclude(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Er
 fn unanswered(
     store: &Store,
     me: &str,
-    cat: &str,
     at: DateTime,
     patience: f64,
     met: &BTreeMap<(String, String), bool>,
@@ -217,9 +209,9 @@ fn unanswered(
 ) -> Result<BTreeMap<String, Conflict>, Error> {
     const ASKED_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?start WHERE { GRAPH $cat { $graph orexis:arrivedBy $recorded ; dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1";
+        SELECT ?start WHERE { GRAPH ?m_graph { $graph orexis:arrivedBy $recorded ; dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1";
     const HEARD_ANSWER_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g WHERE { GRAPH $cat { $graph orexis:arrivedBy $received . BIND($graph AS ?g) } } LIMIT 1";
+        SELECT ?g WHERE { GRAPH ?m_graph { $graph orexis:arrivedBy $received . BIND($graph AS ?g) } } LIMIT 1";
     let mut out = BTreeMap::new();
     for constraint in held(store)? {
         for peer in in_range(store, me, &key_of(store, &constraint)?, at)? {
@@ -230,7 +222,6 @@ fn unanswered(
                 &bind(
                     ASKED_Q,
                     &[
-                        ("cat", Value::iri(cat)),
                         ("graph", Value::iri(question_graph(me, &peer, &constraint))),
                         ("recorded", Value::iri(RECORDED)),
                     ],
@@ -241,7 +232,6 @@ fn unanswered(
                 &bind(
                     HEARD_ANSWER_Q,
                     &[
-                        ("cat", Value::iri(cat)),
                         ("graph", Value::iri(answer_graph(&peer, me, &constraint))),
                         ("received", Value::iri(RECEIVED)),
                     ],

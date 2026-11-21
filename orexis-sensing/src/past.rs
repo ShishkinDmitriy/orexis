@@ -68,19 +68,17 @@ pub(crate) fn observed(store: &Store, graph: &str, kind: &str) -> Result<Option<
 
 /// File the percept `graph` past, and what was concluded of it: sensing has done reading it.
 pub(crate) fn shelve(store: &Store, graph: &str) -> Result<(), Error> {
-    /// A PERCEPT'S KIND CHANGED, on its row and where the graph says its kind itself.
+    /// A PERCEPT'S KIND CHANGED, where its metadata says it.
     const REFILE_U: &str = "
-    DELETE { GRAPH $cat { ?g a $from } GRAPH ?g { ?g a $from } }
-    INSERT { GRAPH $cat { ?g a $to } GRAPH ?g { ?g a $to } }
-    WHERE  { GRAPH $cat { VALUES ?g { $graphs } ?g a $from } }";
-    let Some(cat) = store.catalogue()? else { return Ok(()) };
+    DELETE { GRAPH ?m_g { ?g a $from } }
+    INSERT { GRAPH ?m_g { ?g a $to } }
+    WHERE  { VALUES ?g { $graphs } GRAPH ?m_g { ?g a $from } }";
     let mut graphs = vec![graph.to_string()];
     graphs.extend(store.revisions_of(&[graph], OBSERVATION_GRAPH)?);
     let graphs = graphs.iter().map(|g| format!("<{g}>")).collect::<Vec<_>>().join(" ");
     store.update(&bind(
         REFILE_U,
         &[
-            ("cat", Value::iri(cat)),
             ("from", Value::iri(OBSERVATION_GRAPH)),
             ("to", Value::iri(PAST_OBSERVATION_GRAPH)),
             ("graphs", Value::Raw(graphs)),
@@ -111,11 +109,10 @@ fn percepts(store: &Store, kind: &str) -> Result<Vec<String>, Error> {
 }
 
 fn is_revision(store: &Store, graph: &str) -> Result<bool, Error> {
-    let Some(cat) = store.catalogue()? else {
-        return Ok(false);
-    };
     store.ask(
-        &format!("PREFIX prov: <http://www.w3.org/ns/prov#> ASK {{ GRAPH <{cat}> {{ <{graph}> prov:wasDerivedFrom ?source }} }}"),
+        &format!(
+            "PREFIX prov: <http://www.w3.org/ns/prov#> ASK {{ GRAPH ?m {{ <{graph}> prov:wasDerivedFrom ?source }} }}"
+        ),
         &[],
     )
 }
@@ -131,10 +128,7 @@ pub fn point(store: &Store, graph: &str) -> Result<Option<Point>, Error> {
 }
 
 fn is_of(store: &Store, graph: &str, kind: &str) -> Result<bool, Error> {
-    let Some(cat) = store.catalogue()? else {
-        return Ok(false);
-    };
-    store.ask(&format!("ASK {{ GRAPH <{cat}> {{ <{graph}> a <{kind}> }} }}"), &[])
+    Ok(store.kinds_of(graph)?.iter().any(|k| k == kind))
 }
 
 /// Forget the past percept `graph`, and what was concluded of it.

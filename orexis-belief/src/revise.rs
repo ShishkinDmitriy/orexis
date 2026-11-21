@@ -1,7 +1,7 @@
 //! `revise`: what the rules the store holds conclude of one graph — its revisions — written beside it, within a
 //! budget, as `agent/belief/revise.py` concludes them.
 //!
-//! **THE RULES ARE SHACL 1.2 INFERENCE RULES', RUN AS THE DRAFT SAYS.** Every graph the catalogue types
+//! **THE RULES ARE SHACL 1.2 INFERENCE RULES', RUN AS THE DRAFT SAYS.** Every graph whose metadata types it
 //! `sh:RulesGraph` is a rules graph, and what is run is its DEFAULT RULE SET: every active `sh:SPARQLRule` with a
 //! `sh:construct`, global, and no `belief:Transition`, which changes a state and is `trigger`'s.
 //!
@@ -14,9 +14,9 @@
 //!
 //! **A CEILING ON COMPUTE IS STATED IN THE UNIT THE WORK SPENDS**: one construct run is one rule execution. A group
 //! is run whole or not at all; a budget spent before a layer settles leaves what was concluded standing, the
-//! revision graph's row saying `belief:settled false`, and the next call continues from what is held.
+//! revision graph's metadata saying `belief:settled false`, and the next call continues from what is held.
 //!
-//! **CONCLUDE, THEN CLASSIFY.** The revision graph's row says the kind the caller hands beside
+//! **CONCLUDE, THEN CLASSIFY.** The revision graph's metadata says the kind the caller hands beside
 //! `belief:RevisionGraph`, derived from the source, the source's owner's, over the source's period.
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -55,7 +55,7 @@ struct Inference {
 type Layers = Vec<(f64, Vec<(f64, Vec<Inference>)>)>;
 
 /// What one call of `revise` did: the rule executions it spent, and whether the rules settled — false only where the
-/// revision graph's row now says `belief:settled false`, which the next call continues.
+/// revision graph's metadata now says `belief:settled false`, which the next call continues.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Concluded {
     pub spent: usize,
@@ -64,23 +64,13 @@ pub struct Concluded {
 
 /// Conclude what the rules say follows from `source` beside `read` into its revision graph, classified `kind` beside
 /// `belief:RevisionGraph`, layer by layer towards a fixpoint, spending at most `budget` rule executions. A source
-/// whose row says its rules did not settle is CONTINUED from what is held; any other has what was concluded of it
-/// before forgotten first. Where nothing is concluded there is no graph and no row; where something is and there is
-/// no catalogue to describe it in, the call is refused.
+/// whose metadata says its rules did not settle is CONTINUED from what is held; any other has what was concluded of it
+/// before forgotten first. Where nothing is concluded there is no graph and nothing is said of one.
 pub fn revise(store: &Store, source: &str, read: &[String], budget: usize, kind: &str) -> Result<Concluded, Error> {
     let into = revision_graph(source);
-    let cat = store.catalogue()?;
-    let continuing = match &cat {
-        Some(cat) => unsettled(store, cat, &into)?,
-        None => false,
-    };
-    /// WHAT WAS CONCLUDED BEFORE, the revision graph's metadata left out.
-    const HELD_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
-    PREFIX orexis: <http://example.org/orexis#>
-    CONSTRUCT { ?s ?p ?o }
-    WHERE { GRAPH $into { ?s ?p ?o FILTER NOT EXISTS { ?s a orexis:Graph } FILTER NOT EXISTS { ?s a dcterms:PeriodOfTime } } }";
+    let continuing = unsettled(store, &into)?;
     let held = if continuing {
-        store.construct(&bind(HELD_Q, &[("into", Value::iri(into.clone()))])?, &[])?
+        store.triples(&into)?
     } else {
         store.forget_graph(&into, Some(BELIEF))?;
         Vec::new()
@@ -135,8 +125,7 @@ pub fn revise(store: &Store, source: &str, read: &[String], budget: usize, kind:
     if held.is_empty() {
         return Ok(Concluded { spent, settled: true });
     }
-    let cat = cat.ok_or_else(|| Error::Catalogue(format!("no catalogue to describe the revisions of {source} in")))?;
-    describe(store, &cat, source, &into, settled, continuing, kind)?;
+    describe(store, source, &into, settled, continuing, kind)?;
     hash_named_graph(store, &into, None)?;
     log::debug!(
         "{} revision(s) of {source} after {spent} execution(s){}",
@@ -189,18 +178,14 @@ impl Evaluation<'_> {
     }
 }
 
-/// Whether `graph`'s row says its rules did not settle; no row is settled.
-fn unsettled(store: &Store, cat: &str, graph: &str) -> Result<bool, Error> {
-    /// WHETHER A REVISION GRAPH'S RULES DID NOT SETTLE, off its row.
-    const UNSETTLED_Q: &str = "ASK { GRAPH $cat { $graph $settled false } }";
+/// Whether `graph`'s metadata says its rules did not settle; a graph nothing is said of is settled.
+fn unsettled(store: &Store, graph: &str) -> Result<bool, Error> {
+    /// WHETHER A REVISION GRAPH'S RULES DID NOT SETTLE, off its metadata.
+    const UNSETTLED_Q: &str = "ASK { GRAPH ?m { $graph $settled false } }";
     store.ask(
         &bind(
             UNSETTLED_Q,
-            &[
-                ("cat", Value::iri(cat)),
-                ("graph", Value::iri(graph)),
-                ("settled", Value::iri(SETTLED)),
-            ],
+            &[("graph", Value::iri(graph)), ("settled", Value::iri(SETTLED))],
         )?,
         &[],
     )
@@ -385,36 +370,23 @@ fn prefixed(text: &str, declared: &BTreeMap<String, String>) -> String {
     lines.join("\n")
 }
 
-/// The revision graph's row: a revision and of `kind`, derived, from `source`, the source's owner's, for the
-/// source's period, and whether its rules settled — the flag replaced where the row stands.
-fn describe(
-    store: &Store,
-    cat: &str,
-    source: &str,
-    into: &str,
-    settled: bool,
-    continuing: bool,
-    kind: &str,
-) -> Result<(), Error> {
-    /// THE REVISION GRAPH'S ROW beside its entry: derived from its source, which the graph says of itself too, and
-    /// whether its rules settled.
-    const DESCRIBED_Q: &str = "GRAPH $cat { $into $derived $source ; $settled $value . }
-    GRAPH $into { $into $derived $source . }";
-    /// WHOSE THE SOURCE IS AND WHEN IT HOLDS, off its row: the revisions are the same.
+/// The revision graph's metadata: a revision and of `kind`, derived, from `source`, the source's owner's, for the
+/// source's period, and whether its rules settled — the flag replaced where it is said already.
+fn describe(store: &Store, source: &str, into: &str, settled: bool, continuing: bool, kind: &str) -> Result<(), Error> {
+    /// WHAT IS SAID OF THE REVISION GRAPH beside its entry: derived from its source, and whether its rules settled.
+    const DESCRIBED_Q: &str = "GRAPH $metadata { $into $derived $source ; $settled $value . }";
+    /// WHOSE THE SOURCE IS AND WHEN IT HOLDS, off its metadata: the revisions are the same.
     const SOURCE_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>
     SELECT ?owner ?start ?end WHERE {
-      GRAPH $cat { OPTIONAL { $source orexis:ownedBy ?owner }
-                   OPTIONAL { $source dcterms:temporal ?p .
-                              OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
+      GRAPH ?m { ?m orexis:metadataOf $source . OPTIONAL { $source orexis:ownedBy ?owner }
+                      OPTIONAL { $source dcterms:temporal ?p .
+                                 OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
     LIMIT 1";
     if continuing {
-        return say_settled(store, cat, into, settled);
+        return say_settled(store, into, settled);
     }
-    let rows = store.rows(
-        &bind(SOURCE_Q, &[("cat", Value::iri(cat)), ("source", Value::iri(source))])?,
-        &[],
-    )?;
+    let rows = store.rows(&bind(SOURCE_Q, &[("source", Value::iri(source))])?, &[])?;
     let row = rows.first();
     let field = |k: &str| row.and_then(|r| value(r, k));
     let when = |k: &str| field(k).and_then(|t| instant(&t).ok());
@@ -429,7 +401,7 @@ fn describe(
     let described = bind(
         DESCRIBED_Q,
         &[
-            ("cat", node(cat)?.into()),
+            ("metadata", Value::iri(store.metadata_for(into)?)),
             ("into", node(into)?.into()),
             ("source", node(source)?.into()),
             ("derived", Value::iri(DERIVED_FROM)),
@@ -442,17 +414,16 @@ fn describe(
     ))
 }
 
-/// Say on `graph`'s row whether its rules — or its arrival — are done, replacing what it said.
-pub(crate) fn say_settled(store: &Store, cat: &str, graph: &str, settled: bool) -> Result<(), Error> {
-    /// WHETHER A REVISION GRAPH'S RULES SETTLED, said again on its row.
+/// Say of `graph` whether its rules — or its arrival — are done, replacing what its metadata said.
+pub(crate) fn say_settled(store: &Store, graph: &str, settled: bool) -> Result<(), Error> {
+    /// WHETHER A REVISION GRAPH'S RULES SETTLED, said again in its metadata.
     const SAY_SETTLED_U: &str = "
-    DELETE { GRAPH $cat { $graph $settled ?was } }
-    INSERT { GRAPH $cat { $graph $settled $value } }
-    WHERE  { GRAPH $cat { $graph $settled ?was } }";
+    DELETE { GRAPH ?m { $graph $settled ?was } }
+    INSERT { GRAPH ?m { $graph $settled $value } }
+    WHERE  { GRAPH ?m { $graph $settled ?was } }";
     store.update(&bind(
         SAY_SETTLED_U,
         &[
-            ("cat", node(cat)?.into()),
             ("graph", node(graph)?.into()),
             ("settled", Value::iri(SETTLED)),
             ("value", Value::Bool(settled)),
@@ -636,13 +607,9 @@ INSERT DATA { GRAPH :rules {
     #[test]
     fn a_name_that_would_break_out_of_its_text_is_refused_before_anything_is_written() {
         let store = Store::new().unwrap();
-        let cat = "urn:test:cat";
-        say_settled(&store, cat, "urn:test:g", true).unwrap();
+        say_settled(&store, "urn:test:g", true).unwrap();
         let smuggled = "urn:test:g> <urn:test:p> <urn:test:o";
-        assert!(matches!(
-            say_settled(&store, cat, smuggled, true),
-            Err(Error::Evaluation(_))
-        ));
+        assert!(matches!(say_settled(&store, smuggled, true), Err(Error::Evaluation(_))));
         assert!(
             store
                 .rows("SELECT * WHERE { GRAPH ?g { ?s ?p ?o } }", &[])

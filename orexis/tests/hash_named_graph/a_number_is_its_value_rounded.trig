@@ -13,29 +13,53 @@ GRAPH :ontology {
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
 }
 
-GRAPH :integer {
-  :tank :level 1 .
-}
-GRAPH :decimal {
-  :tank :level 1.0 .
-}
-GRAPH :catalogue {
-  :apart a orexis:Graph .
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :decimal a orexis:Graph .
-  :integer a orexis:Graph .
-  :near a orexis:Graph .
+GRAPH :ontology.metadata {
   :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
 }
 
+GRAPH :integer {
+  :tank :level 1 .
+}
+
+GRAPH :integer.metadata {
+  :integer a orexis:Graph .
+  :integer.metadata a orexis:MetadataGraph .
+  :integer.metadata orexis:metadataOf :integer .
+}
+
+GRAPH :decimal {
+  :tank :level 1.0 .
+}
+
+GRAPH :decimal.metadata {
+  :decimal a orexis:Graph .
+  :decimal.metadata a orexis:MetadataGraph .
+  :decimal.metadata orexis:metadataOf :decimal .
+}
 
 GRAPH :apart {
   :tank :level 1.1 .
 }
 
+GRAPH :apart.metadata {
+  :apart a orexis:Graph .
+  :apart.metadata a orexis:MetadataGraph .
+  :apart.metadata orexis:metadataOf :apart .
+}
+
 GRAPH :near {
   :tank :level 1.0000001 .
+}
+
+GRAPH :near.metadata {
+  :near a orexis:Graph .
+  :near.metadata a orexis:MetadataGraph .
+  :near.metadata orexis:metadataOf :near .
+}
+
+GRAPH :catalogue {
 }

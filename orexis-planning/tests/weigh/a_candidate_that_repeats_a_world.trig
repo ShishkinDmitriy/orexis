@@ -29,11 +29,26 @@ GRAPH :ontology {
   planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :keeper a orexis:Agent .
   :keeper orexis:localId "keeper" .
   :tank1 a :Tank .
   :tank2 a :Tank .
+}
+
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
 }
 
 GRAPH :actions {
@@ -53,6 +68,13 @@ GRAPH :actions {
   :tank a orexis:Parameter .
 }
 
+GRAPH :actions.metadata {
+  :actions a orexis:ActionGraph .
+  :actions a orexis:Graph .
+  :actions.metadata a orexis:MetadataGraph .
+  :actions.metadata orexis:metadataOf :actions .
+}
+
 GRAPH :desires {
   :in_range a sh:NodeShape .
   :in_range sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
@@ -64,7 +86,19 @@ GRAPH :desires {
   :keeper.in_range rdfs:label "every tank in range" .
 }
 
-GRAPH :sensed {
+GRAPH :desires.metadata {
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :desires.metadata a orexis:MetadataGraph .
+  :desires.metadata orexis:metadataOf :desires .
+}
+
+GRAPH :sensed.metadata {
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed orexis:ownedBy :keeper .
+  :sensed.metadata a orexis:MetadataGraph .
+  :sensed.metadata orexis:metadataOf :sensed .
 }
 
 GRAPH :scopes {
@@ -73,32 +107,16 @@ GRAPH :scopes {
   :level planning:inScope :keeper.scope.1 .
 }
 
-GRAPH :catalogue {
-  :actions a orexis:ActionGraph .
-  :actions a orexis:Graph .
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :desires a orexis:Graph .
-  :desires a planning:DesireGraph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
+GRAPH :scopes.metadata {
   :scopes a orexis:Graph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
   :scopes orexis:ownedBy :keeper .
-  :sensed a orexis:BeliefGraph .
-  :sensed a orexis:Graph .
-  :sensed orexis:ownedBy :keeper .
-  :sensed.changeable a planning:ChangeableGraph .
-  :sensed.changeable orexis:arrivedBy orexis:Derived .
-  :sensed.changeable prov:wasDerivedFrom :sensed .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
-  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
-  ground:2026-01-01T120000p0000 orexis:hash "sha256:3da550989c3e7a9c5a0a850a82b91a2ab3e8f2878f27eeb7631e00672b1b0665" .
+  :scopes.metadata a orexis:MetadataGraph .
+  :scopes.metadata orexis:metadataOf :scopes .
+}
+
+GRAPH <http://example.org/orexis/graph/cone> {
   ground:2026-01-01T120000p0000.for.keeper.in_range a planning:Weighing .
   ground:2026-01-01T120000p0000.for.keeper.in_range planning:for :keeper.in_range .
   ground:2026-01-01T120000p0000.for.keeper.in_range planning:met false .
@@ -111,10 +129,6 @@ GRAPH :catalogue {
   ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:met false .
   ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
   ground:2026-01-01T120000p0000.for.keeper.in_range.pursued.tank1 planning:weighs ground:2026-01-01T120000p0000 .
-  possible:fill-tank1 a planning:PossibleGraph .
-  possible:fill-tank1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-  possible:fill-tank1 orexis:arrivedBy orexis:Derived .
-  possible:fill-tank1 orexis:hash "sha256:c80ff1f6e0ffce1c8575ebd35a6183b376384efef6139df68098f31e3b94921e" .
   possible:fill-tank1 planning:by possible:fill-tank1.by .
   possible:fill-tank1 planning:minted 1 .
   possible:fill-tank1 planning:spent 1.0 .
@@ -123,10 +137,6 @@ GRAPH :catalogue {
   possible:fill-tank1.by planning:fills :fill .
   possible:fill-tank1.by planning:from ground:2026-01-01T120000p0000 .
   possible:fill-tank1.by planning:minted 1 .
-  possible:fill-tank1.fill-tank1 a planning:PossibleGraph .
-  possible:fill-tank1.fill-tank1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-  possible:fill-tank1.fill-tank1 orexis:arrivedBy orexis:Derived .
-  possible:fill-tank1.fill-tank1 orexis:hash "sha256:262245b8ab6803ce947b3d056e7289f4f5b6c0c8a36cd94f06c2cb130be5235f" .
   possible:fill-tank1.fill-tank1 planning:by possible:fill-tank1.fill-tank1.by .
   possible:fill-tank1.fill-tank1 planning:minted 3 .
   possible:fill-tank1.fill-tank1 planning:spent 2.0 .
@@ -139,10 +149,6 @@ GRAPH :catalogue {
   possible:fill-tank1.fill-tank1.for.keeper.in_range.pursued.tank1 planning:for :keeper.in_range.pursued.tank1 .
   possible:fill-tank1.fill-tank1.for.keeper.in_range.pursued.tank1 planning:met true .
   possible:fill-tank1.fill-tank1.for.keeper.in_range.pursued.tank1 planning:weighs possible:fill-tank1.fill-tank1 .
-  possible:fill-tank1.fill-tank2 a planning:PossibleGraph .
-  possible:fill-tank1.fill-tank2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-  possible:fill-tank1.fill-tank2 orexis:arrivedBy orexis:Derived .
-  possible:fill-tank1.fill-tank2 orexis:hash "sha256:886db30e45d2ce9df71bfa463e64da2ed0b025d20c419774efde962241fa9582" .
   possible:fill-tank1.fill-tank2 planning:by possible:fill-tank1.fill-tank2.by .
   possible:fill-tank1.fill-tank2 planning:minted 4 .
   possible:fill-tank1.fill-tank2 planning:spent 2.0 .
@@ -163,10 +169,6 @@ GRAPH :catalogue {
   possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:met false .
   possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
   possible:fill-tank1.for.keeper.in_range.pursued.tank1 planning:weighs possible:fill-tank1 .
-  possible:fill-tank2 a planning:PossibleGraph .
-  possible:fill-tank2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-  possible:fill-tank2 orexis:arrivedBy orexis:Derived .
-  possible:fill-tank2 orexis:hash "sha256:b925a49cc433542befaf03149f9d7f1e92e07473431966218677da6fae49dc78" .
   possible:fill-tank2 planning:by possible:fill-tank2.by .
   possible:fill-tank2 planning:minted 2 .
   possible:fill-tank2 planning:spent 1.0 .
@@ -175,10 +177,6 @@ GRAPH :catalogue {
   possible:fill-tank2.by planning:fills :fill .
   possible:fill-tank2.by planning:from ground:2026-01-01T120000p0000 .
   possible:fill-tank2.by planning:minted 2 .
-  possible:fill-tank2.fill-tank1 a planning:PossibleGraph .
-  possible:fill-tank2.fill-tank1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-  possible:fill-tank2.fill-tank1 orexis:arrivedBy orexis:Derived .
-  possible:fill-tank2.fill-tank1 orexis:hash "sha256:886db30e45d2ce9df71bfa463e64da2ed0b025d20c419774efde962241fa9582" .
   possible:fill-tank2.fill-tank1 planning:by possible:fill-tank2.fill-tank1.by .
   possible:fill-tank2.fill-tank1 planning:minted 5 .
   possible:fill-tank2.fill-tank1 planning:spent 2.0 .
@@ -187,10 +185,6 @@ GRAPH :catalogue {
   possible:fill-tank2.fill-tank1.by planning:fills :fill .
   possible:fill-tank2.fill-tank1.by planning:from possible:fill-tank2 .
   possible:fill-tank2.fill-tank1.by planning:minted 5 .
-  possible:fill-tank2.fill-tank2 a planning:PossibleGraph .
-  possible:fill-tank2.fill-tank2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-  possible:fill-tank2.fill-tank2 orexis:arrivedBy orexis:Derived .
-  possible:fill-tank2.fill-tank2 orexis:hash "sha256:71af2c683666133f094033222ad82f45676a17913532f4ca8f587ecc30cc9993" .
   possible:fill-tank2.fill-tank2 planning:by possible:fill-tank2.fill-tank2.by .
   possible:fill-tank2.fill-tank2 planning:minted 6 .
   possible:fill-tank2.fill-tank2 planning:spent 2.0 .
@@ -205,11 +199,13 @@ GRAPH :catalogue {
   possible:fill-tank2.for.keeper.in_range.pursued.tank1 planning:open true .
   possible:fill-tank2.for.keeper.in_range.pursued.tank1 planning:violation [ planning:about :level ; planning:constraint 0 ; planning:instance :tank1 ] .
   possible:fill-tank2.for.keeper.in_range.pursued.tank1 planning:weighs possible:fill-tank2 .
-  pursued:2026-01-01T120000p0000--open a orexis:Graph .
-  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
-  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
-  pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
+}
+
+GRAPH <http://example.org/orexis/graph/cone.metadata> {
+  <http://example.org/orexis/graph/cone.metadata> a orexis:MetadataGraph .
+  <http://example.org/orexis/graph/cone.metadata> orexis:metadataOf <http://example.org/orexis/graph/cone> .
+  <http://example.org/orexis/graph/cone> a planning:ConeGraph .
+  <http://example.org/orexis/graph/cone> orexis:arrivedBy orexis:Derived .
 }
 
 GRAPH ground:2026-01-01T120000p0000 {
@@ -217,9 +213,27 @@ GRAPH ground:2026-01-01T120000p0000 {
   :tank2 :level 0 .
 }
 
+GRAPH ground:2026-01-01T120000p0000.metadata {
+  ground:2026-01-01T120000p0000 a planning:GroundGraph .
+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
+  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
+  ground:2026-01-01T120000p0000 orexis:hash "sha256:3da550989c3e7a9c5a0a850a82b91a2ab3e8f2878f27eeb7631e00672b1b0665" .
+  ground:2026-01-01T120000p0000.metadata a orexis:MetadataGraph .
+  ground:2026-01-01T120000p0000.metadata orexis:metadataOf ground:2026-01-01T120000p0000 .
+}
+
 GRAPH possible:fill-tank1 {
   :tank1 :level 5 .
   :tank2 :level 0 .
+}
+
+GRAPH possible:fill-tank1.metadata {
+  possible:fill-tank1 a planning:PossibleGraph .
+  possible:fill-tank1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
+  possible:fill-tank1 orexis:arrivedBy orexis:Derived .
+  possible:fill-tank1 orexis:hash "sha256:c80ff1f6e0ffce1c8575ebd35a6183b376384efef6139df68098f31e3b94921e" .
+  possible:fill-tank1.metadata a orexis:MetadataGraph .
+  possible:fill-tank1.metadata orexis:metadataOf possible:fill-tank1 .
 }
 
 GRAPH possible:fill-tank1.fill-tank1 {
@@ -227,9 +241,27 @@ GRAPH possible:fill-tank1.fill-tank1 {
   :tank2 :level 0 .
 }
 
+GRAPH possible:fill-tank1.fill-tank1.metadata {
+  possible:fill-tank1.fill-tank1 a planning:PossibleGraph .
+  possible:fill-tank1.fill-tank1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
+  possible:fill-tank1.fill-tank1 orexis:arrivedBy orexis:Derived .
+  possible:fill-tank1.fill-tank1 orexis:hash "sha256:262245b8ab6803ce947b3d056e7289f4f5b6c0c8a36cd94f06c2cb130be5235f" .
+  possible:fill-tank1.fill-tank1.metadata a orexis:MetadataGraph .
+  possible:fill-tank1.fill-tank1.metadata orexis:metadataOf possible:fill-tank1.fill-tank1 .
+}
+
 GRAPH possible:fill-tank1.fill-tank2 {
   :tank1 :level 5 .
   :tank2 :level 5 .
+}
+
+GRAPH possible:fill-tank1.fill-tank2.metadata {
+  possible:fill-tank1.fill-tank2 a planning:PossibleGraph .
+  possible:fill-tank1.fill-tank2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
+  possible:fill-tank1.fill-tank2 orexis:arrivedBy orexis:Derived .
+  possible:fill-tank1.fill-tank2 orexis:hash "sha256:886db30e45d2ce9df71bfa463e64da2ed0b025d20c419774efde962241fa9582" .
+  possible:fill-tank1.fill-tank2.metadata a orexis:MetadataGraph .
+  possible:fill-tank1.fill-tank2.metadata orexis:metadataOf possible:fill-tank1.fill-tank2 .
 }
 
 GRAPH possible:fill-tank2 {
@@ -237,14 +269,41 @@ GRAPH possible:fill-tank2 {
   :tank2 :level 5 .
 }
 
+GRAPH possible:fill-tank2.metadata {
+  possible:fill-tank2 a planning:PossibleGraph .
+  possible:fill-tank2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
+  possible:fill-tank2 orexis:arrivedBy orexis:Derived .
+  possible:fill-tank2 orexis:hash "sha256:b925a49cc433542befaf03149f9d7f1e92e07473431966218677da6fae49dc78" .
+  possible:fill-tank2.metadata a orexis:MetadataGraph .
+  possible:fill-tank2.metadata orexis:metadataOf possible:fill-tank2 .
+}
+
 GRAPH possible:fill-tank2.fill-tank1 {
   :tank1 :level 5 .
   :tank2 :level 5 .
 }
 
+GRAPH possible:fill-tank2.fill-tank1.metadata {
+  possible:fill-tank2.fill-tank1 a planning:PossibleGraph .
+  possible:fill-tank2.fill-tank1 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
+  possible:fill-tank2.fill-tank1 orexis:arrivedBy orexis:Derived .
+  possible:fill-tank2.fill-tank1 orexis:hash "sha256:886db30e45d2ce9df71bfa463e64da2ed0b025d20c419774efde962241fa9582" .
+  possible:fill-tank2.fill-tank1.metadata a orexis:MetadataGraph .
+  possible:fill-tank2.fill-tank1.metadata orexis:metadataOf possible:fill-tank2.fill-tank1 .
+}
+
 GRAPH possible:fill-tank2.fill-tank2 {
   :tank1 :level 0 .
   :tank2 :level 10 .
+}
+
+GRAPH possible:fill-tank2.fill-tank2.metadata {
+  possible:fill-tank2.fill-tank2 a planning:PossibleGraph .
+  possible:fill-tank2.fill-tank2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
+  possible:fill-tank2.fill-tank2 orexis:arrivedBy orexis:Derived .
+  possible:fill-tank2.fill-tank2 orexis:hash "sha256:71af2c683666133f094033222ad82f45676a17913532f4ca8f587ecc30cc9993" .
+  possible:fill-tank2.fill-tank2.metadata a orexis:MetadataGraph .
+  possible:fill-tank2.fill-tank2.metadata orexis:metadataOf possible:fill-tank2.fill-tank2 .
 }
 
 GRAPH pursued:2026-01-01T120000p0000--open {
@@ -253,7 +312,7 @@ GRAPH pursued:2026-01-01T120000p0000--open {
   :keeper.in_range.pursued.tank1 a planning:Want .
   :keeper.in_range.pursued.tank1 planning:metWhen :keeper.in_range.pursued.tank1.met .
   :keeper.in_range.pursued.tank1 planning:state planning:Recognized .
-  :keeper.in_range.pursued.tank1 prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  :keeper.in_range.pursued.tank1 prov:generatedAtTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
   :keeper.in_range.pursued.tank1 prov:wasDerivedFrom :keeper.in_range .
   :keeper.in_range.pursued.tank1 rdfs:label "pursued: every tank in range" .
   :keeper.in_range.pursued.tank1.met a sh:NodeShape .
@@ -262,7 +321,7 @@ GRAPH pursued:2026-01-01T120000p0000--open {
   :keeper.in_range.pursued.tank2 a planning:Want .
   :keeper.in_range.pursued.tank2 planning:metWhen :keeper.in_range.pursued.tank2.met .
   :keeper.in_range.pursued.tank2 planning:state planning:Recognized .
-  :keeper.in_range.pursued.tank2 prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  :keeper.in_range.pursued.tank2 prov:generatedAtTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
   :keeper.in_range.pursued.tank2 prov:wasDerivedFrom :keeper.in_range .
   :keeper.in_range.pursued.tank2 rdfs:label "pursued: every tank in range" .
   :keeper.in_range.pursued.tank2.met a sh:NodeShape .
@@ -270,7 +329,28 @@ GRAPH pursued:2026-01-01T120000p0000--open {
   :keeper.in_range.pursued.tank2.met sh:targetNode :tank2 .
 }
 
+GRAPH pursued:2026-01-01T120000p0000--open.metadata {
+  pursued:2026-01-01T120000p0000--open a orexis:Graph .
+  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
+  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
+  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
+  pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
+  pursued:2026-01-01T120000p0000--open.metadata a orexis:MetadataGraph .
+  pursued:2026-01-01T120000p0000--open.metadata orexis:metadataOf pursued:2026-01-01T120000p0000--open .
+}
+
 GRAPH :sensed.changeable {
   :tank1 :level 0 .
   :tank2 :level 0 .
+}
+
+GRAPH :sensed.changeable.metadata {
+  :sensed.changeable a planning:ChangeableGraph .
+  :sensed.changeable orexis:arrivedBy orexis:Derived .
+  :sensed.changeable prov:wasDerivedFrom :sensed .
+  :sensed.changeable.metadata a orexis:MetadataGraph .
+  :sensed.changeable.metadata orexis:metadataOf :sensed.changeable .
+}
+
+GRAPH :catalogue {
 }

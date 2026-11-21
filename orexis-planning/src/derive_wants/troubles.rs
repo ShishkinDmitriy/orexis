@@ -31,9 +31,9 @@ pub(super) fn troubles(
     PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?start ?g ?met ?instance ?constraint ?about ?offending WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+      GRAPH ?m_g { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start }
+      GRAPH $cone {
         ?x a planning:Weighing ; planning:for $desire ; planning:weighs ?g .
-        ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start .
         OPTIONAL { ?x planning:met ?met }
         OPTIONAL { ?x planning:violation ?v . ?v planning:instance ?instance .
                    OPTIONAL { ?v planning:constraint ?constraint }
@@ -42,7 +42,14 @@ pub(super) fn troubles(
     ORDER BY ?start ?instance ?constraint ?offending";
     /// WHAT A NODE NAMES IN A GROUND, as the objects of its own facts.
     const NAMES_Q: &str = "SELECT DISTINCT ?o WHERE { $node ?p ?o FILTER(isIRI(?o)) }";
-    let found = store.rows(&bind(TROUBLES_Q, &[("desire", Value::iri(desire))])?, &[])?;
+    let cone = crate::world_at::cone_of(store)?;
+    let found = store.rows(
+        &bind(
+            TROUBLES_Q,
+            &[("desire", Value::iri(desire)), ("cone", Value::iri(cone))],
+        )?,
+        &[],
+    )?;
     if found.is_empty() || found.iter().any(|r| !r.contains_key("met")) {
         return Ok(None);
     }

@@ -7,7 +7,6 @@
 use oxigraph::model::{NamedNode, Quad, Triple};
 
 use orexis::Error;
-use orexis::metadata::stated_quads;
 use orexis::store::Store;
 
 /// `parent`'s facts under `name`, less what each retraction takes, plus `added` — THE ORDER IS THE WHOLE OF IT:
@@ -24,7 +23,8 @@ pub(crate) fn fork(
     retracts: &[String],
 ) -> Result<(), Error> {
     let into = NamedNode::new(name).map_err(|e| Error::Evaluation(e.to_string()))?;
-    let copied: Vec<Quad> = stated_quads(store.quads(parent)?)
+    let copied: Vec<Quad> = store
+        .quads(parent)?
         .into_iter()
         .map(|q| Quad::new(q.subject, q.predicate, q.object, into.clone()))
         .collect();

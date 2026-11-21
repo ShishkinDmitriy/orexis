@@ -26,19 +26,32 @@ GRAPH :world {
   :tank1 a :Tank .
 }
 
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
+}
+
 GRAPH :forecast {
   :outside :warmth 28 .
 }
 
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
+GRAPH :forecast.metadata {
   :forecast a orexis:BeliefGraph .
   :forecast a orexis:Graph .
-  :forecast dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T18:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T15:00:00+00:00"^^xsd:dateTime ] .
+  :forecast dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T18:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T15:00:00Z"^^xsd:dateTime ] .
+  :forecast.metadata a orexis:MetadataGraph .
+  :forecast.metadata orexis:metadataOf :forecast .
+}
+
+GRAPH :catalogue {
+}
+
+GRAPH :ontology.metadata {
   :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
 }

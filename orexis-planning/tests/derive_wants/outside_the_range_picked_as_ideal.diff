@@ -1,17 +1,30 @@
 --- case
 +++ expected
-@@ -111,6 +111,64 @@
+@@ -68,6 +68,7 @@
+ GRAPH :world.metadata {
+   :world a orexis:BeliefGraph .
+   :world a orexis:Graph .
++  :world planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
+   :world.metadata a orexis:MetadataGraph .
+   :world.metadata orexis:metadataOf :world .
+ }
+@@ -113,6 +114,7 @@
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:ownedBy :keeper .
 +  :sensed planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
-   :world a orexis:BeliefGraph .
-   :world a orexis:Graph .
-+  :world planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
-+  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
-+  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
-+  ground:2026-01-01T120000p0000 orexis:hash "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
+   :sensed.metadata a orexis:MetadataGraph .
+   :sensed.metadata orexis:metadataOf :sensed .
+ }
+@@ -135,5 +137,80 @@
+   :scopes.metadata orexis:metadataOf :scopes .
+ }
+ 
+-GRAPH :catalogue {
++
++
++
++GRAPH <http://example.org/orexis/graph/cone> {
 +  ground:2026-01-01T120000p0000.for.keeper.ideal a planning:Weighing .
 +  ground:2026-01-01T120000p0000.for.keeper.ideal planning:for :keeper.ideal .
 +  ground:2026-01-01T120000p0000.for.keeper.ideal planning:met false .
@@ -19,13 +32,23 @@
 +  ground:2026-01-01T120000p0000.for.keeper.ideal planning:violation [ planning:about :soil_moisture_of_fern ; planning:constraint 2 ; planning:instance :soil_moisture_of_fern ; planning:offending :soil_reading ] .
 +  ground:2026-01-01T120000p0000.for.keeper.ideal planning:violation [ planning:about :soil_warmth_of_fern ; planning:constraint 0 ; planning:instance :soil_warmth_of_fern ] .
 +  ground:2026-01-01T120000p0000.for.keeper.ideal planning:weighs ground:2026-01-01T120000p0000 .
-+  pursued:2026-01-01T120000p0000--open a orexis:Graph .
-+  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
-+  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
-+  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
-+  pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
 +}
 +
++GRAPH <http://example.org/orexis/graph/cone.metadata> {
++  <http://example.org/orexis/graph/cone.metadata> a orexis:MetadataGraph .
++  <http://example.org/orexis/graph/cone.metadata> orexis:metadataOf <http://example.org/orexis/graph/cone> .
++  <http://example.org/orexis/graph/cone> a planning:ConeGraph .
++  <http://example.org/orexis/graph/cone> orexis:arrivedBy orexis:Derived .
++}
++
++GRAPH ground:2026-01-01T120000p0000.metadata {
++  ground:2026-01-01T120000p0000 a planning:GroundGraph .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
++  ground:2026-01-01T120000p0000.metadata a orexis:MetadataGraph .
++  ground:2026-01-01T120000p0000.metadata orexis:metadataOf ground:2026-01-01T120000p0000 .
++}
 +
 +GRAPH pursued:2026-01-01T120000p0000--open {
 +  :keeper planning:holds :keeper.ideal.pursued.air_warmth_of_fern .
@@ -64,4 +87,14 @@
 +  :keeper.ideal.pursued.soil_warmth_of_fern.met sh:property [ planning:about sh:this ; sh:message "a watched property reads above the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ] ] .
 +  :keeper.ideal.pursued.soil_warmth_of_fern.met sh:property [ planning:about sh:this ; sh:message "a watched property reads below the range picked as ideal for it" ; sh:path [ sh:inversePath sosa:observedProperty ] ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ] ] .
 +  :keeper.ideal.pursued.soil_warmth_of_fern.met sh:targetNode :soil_warmth_of_fern .
++}
++
++GRAPH pursued:2026-01-01T120000p0000--open.metadata {
++  pursued:2026-01-01T120000p0000--open a orexis:Graph .
++  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
++  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
++  pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
++  pursued:2026-01-01T120000p0000--open.metadata a orexis:MetadataGraph .
++  pursued:2026-01-01T120000p0000--open.metadata orexis:metadataOf pursued:2026-01-01T120000p0000--open .
  }

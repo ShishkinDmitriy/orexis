@@ -3,7 +3,7 @@ type: Domain Concept
 title: Modality
 description: >-
   What a graph's content asserts — is, will be, would be if, is wanted, is owed, is being done —
-  where the subject and the property stay the same. Carried as the graph's KIND on its catalogue
+  where the subject and the property stay the same. Carried as the graph's KIND in its metadata
   row, so a reader names the kinds it means and never a graph; one store holds them all.
 ---
 
@@ -32,8 +32,8 @@ and each is read by its own kind — `orexis:ActionGraph`, `orexis:FlowGraph`, `
 `planning:ConstraintGraph`, `planning:DerivationGraph`, `sh:RulesGraph` — beneath `orexis:Graph` alone
 ([the-state-is-what-a-scope-can-change-and-everything-known-is-belief](/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md)).
 
-The catalogue carries every kind a graph's class is beneath, so a reader asks `?g a
-planning:WantGraph` or hands `store.graphs_of(BELIEF, PREDICTION)` its kinds and walks no path —
+A graph says of itself every kind its class is beneath, so a reader asks `GRAPH ?g { ?g a
+planning:WantGraph }` or hands `store.graphs_of(BELIEF, PREDICTION)` its kinds and walks no path —
 and never names a graph instance.
 
 # The logics these belong to
@@ -47,5 +47,5 @@ search reads it once, judging an owed plan late where it MAY miss its instant (#
 
 # Not its neighbour
 
-**Not arrival.** Asserted, derived, received and recorded say who put a fact there, on the same
-catalogue row; a want is a want however it arrived ([who-put-the-fact-there](/decisions/who-put-the-fact-there.md)).
+**Not arrival.** Asserted, derived, received and recorded say who put a fact there, in the same
+metadata; a want is a want however it arrived ([who-put-the-fact-there](/decisions/who-put-the-fact-there.md)).

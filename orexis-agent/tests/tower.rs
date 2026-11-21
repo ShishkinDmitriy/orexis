@@ -26,7 +26,7 @@ const COMMITTED: &str = "http://example.org/orexis/execution#CommittedStepGraph"
 fn positions(store: &Store) -> BTreeMap<String, (i64, i64)> {
     const AT_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
 PREFIX courier: <http://example.org/orexis/courier#>
-SELECT ?s ?x ?y WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?s courier:x ?x ; courier:y ?y } } ORDER BY ?s";
+SELECT ?s ?x ?y WHERE { GRAPH ?m_g { ?g a orexis:BeliefGraph } GRAPH ?g { ?s courier:x ?x ; courier:y ?y } } ORDER BY ?s";
     store
         .rows(AT_Q, &[])
         .unwrap()
@@ -99,7 +99,7 @@ fn local(iri: &str) -> String {
 fn on(store: &Store) -> BTreeSet<(String, String)> {
     const ON_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX hanoi: <http://example.org/orexis/hanoi#>
-    SELECT ?d ?below WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?d hanoi:on ?below } } ORDER BY ?d";
+    SELECT ?d ?below WHERE { GRAPH ?m_g { ?g a orexis:BeliefGraph } GRAPH ?g { ?d hanoi:on ?below } } ORDER BY ?d";
     store
         .rows(ON_Q, &[])
         .unwrap()

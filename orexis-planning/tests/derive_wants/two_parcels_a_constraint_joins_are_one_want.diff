@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -18,10 +18,6 @@
+@@ -26,10 +26,6 @@
  }
  
  GRAPH :world {
@@ -11,7 +11,15 @@
    :keeper a orexis:Agent .
    :parcel_a a courier:Parcel .
    :parcel_a courier:destination :door_parcel_a .
-@@ -128,14 +124,6 @@
+@@ -42,6 +38,7 @@
+ GRAPH :world.metadata {
+   :world a orexis:BeliefGraph .
+   :world a orexis:Graph .
++  :world planning:cutBy "sha256:fc5c047bf0831ce57b48595cb247a107207b950b375f05dd762415d62c2e9591" .
+   :world.metadata a orexis:MetadataGraph .
+   :world.metadata orexis:metadataOf :world .
+ }
+@@ -164,20 +161,13 @@
  }
  
  GRAPH :sensed {
@@ -25,38 +33,37 @@
 -  :van_b courier:y 1 .
  }
  
- GRAPH :scopes {
-@@ -171,6 +159,83 @@
+ GRAPH :sensed.metadata {
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:ownedBy :keeper .
 +  :sensed planning:cutBy "sha256:fc5c047bf0831ce57b48595cb247a107207b950b375f05dd762415d62c2e9591" .
-+  :sensed.changeable a planning:ChangeableGraph .
-+  :sensed.changeable orexis:arrivedBy orexis:Derived .
-+  :sensed.changeable prov:wasDerivedFrom :sensed .
-   :world a orexis:BeliefGraph .
-   :world a orexis:Graph .
-+  :world planning:cutBy "sha256:fc5c047bf0831ce57b48595cb247a107207b950b375f05dd762415d62c2e9591" .
-+  :world.changeable a planning:ChangeableGraph .
-+  :world.changeable orexis:arrivedBy orexis:Derived .
-+  :world.changeable prov:wasDerivedFrom :world .
-+  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
-+  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
-+  ground:2026-01-01T120000p0000 orexis:hash "sha256:a1fac0faba0082843b61fa92901f6b41f33b68b4829a3b00978c88a0b6c6ed80" .
+   :sensed.metadata a orexis:MetadataGraph .
+   :sensed.metadata orexis:metadataOf :sensed .
+ }
+@@ -205,5 +195,109 @@
+   :scopes.metadata orexis:metadataOf :scopes .
+ }
+ 
+-GRAPH :catalogue {
++
++
++
++GRAPH <http://example.org/orexis/graph/cone> {
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered a planning:Weighing .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:for :keeper.every_parcel_delivered .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:met false .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:violation [ planning:about :parcel_a ; planning:constraint 0 ; planning:instance :parcel_a ] .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:violation [ planning:about :parcel_b ; planning:constraint 0 ; planning:instance :parcel_b ] .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:weighs ground:2026-01-01T120000p0000 .
-+  pursued:2026-01-01T120000p0000--open a orexis:Graph .
-+  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
-+  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
-+  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
-+  pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
 +}
 +
++GRAPH <http://example.org/orexis/graph/cone.metadata> {
++  <http://example.org/orexis/graph/cone.metadata> a orexis:MetadataGraph .
++  <http://example.org/orexis/graph/cone.metadata> orexis:metadataOf <http://example.org/orexis/graph/cone> .
++  <http://example.org/orexis/graph/cone> a planning:ConeGraph .
++  <http://example.org/orexis/graph/cone> orexis:arrivedBy orexis:Derived .
++}
 +
 +GRAPH ground:2026-01-01T120000p0000 {
 +  :door_parcel_a courier:x 0 .
@@ -71,6 +78,15 @@
 +  :van_a courier:y 0 .
 +  :van_b courier:x 1 .
 +  :van_b courier:y 1 .
++}
++
++GRAPH ground:2026-01-01T120000p0000.metadata {
++  ground:2026-01-01T120000p0000 a planning:GroundGraph .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:a1fac0faba0082843b61fa92901f6b41f33b68b4829a3b00978c88a0b6c6ed80" .
++  ground:2026-01-01T120000p0000.metadata a orexis:MetadataGraph .
++  ground:2026-01-01T120000p0000.metadata orexis:metadataOf ground:2026-01-01T120000p0000 .
 +}
 +
 +GRAPH pursued:2026-01-01T120000p0000--open {
@@ -93,6 +109,16 @@
 +  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b.met sh:targetNode :parcel_b .
 +}
 +
++GRAPH pursued:2026-01-01T120000p0000--open.metadata {
++  pursued:2026-01-01T120000p0000--open a orexis:Graph .
++  pursued:2026-01-01T120000p0000--open a planning:WantGraph .
++  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
++  pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
++  pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
++  pursued:2026-01-01T120000p0000--open.metadata a orexis:MetadataGraph .
++  pursued:2026-01-01T120000p0000--open.metadata orexis:metadataOf pursued:2026-01-01T120000p0000--open .
++}
++
 +GRAPH :sensed.changeable {
 +  :parcel_a courier:x 0 .
 +  :parcel_a courier:y 1 .
@@ -104,9 +130,25 @@
 +  :van_b courier:y 1 .
 +}
 +
++GRAPH :sensed.changeable.metadata {
++  :sensed.changeable a planning:ChangeableGraph .
++  :sensed.changeable orexis:arrivedBy orexis:Derived .
++  :sensed.changeable prov:wasDerivedFrom :sensed .
++  :sensed.changeable.metadata a orexis:MetadataGraph .
++  :sensed.changeable.metadata orexis:metadataOf :sensed.changeable .
++}
++
 +GRAPH :world.changeable {
 +  :door_parcel_a courier:x 0 .
 +  :door_parcel_a courier:y 3 .
 +  :door_parcel_b courier:x 1 .
 +  :door_parcel_b courier:y 3 .
++}
++
++GRAPH :world.changeable.metadata {
++  :world.changeable a planning:ChangeableGraph .
++  :world.changeable orexis:arrivedBy orexis:Derived .
++  :world.changeable prov:wasDerivedFrom :world .
++  :world.changeable.metadata a orexis:MetadataGraph .
++  :world.changeable.metadata orexis:metadataOf :world.changeable .
  }

@@ -53,6 +53,14 @@ GRAPH :ontology {
   sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :bed :floor 0.3 .
   :bed :margin 0.0002 .
@@ -64,6 +72,13 @@ GRAPH :world {
   :probe a sosa:Sensor .
   :probe sosa:isHostedBy :bed .
   :probe sosa:observes :moisture .
+}
+
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
 }
 
 GRAPH :rules {
@@ -78,6 +93,13 @@ GRAPH :rules {
         OPTIONAL { ?subject :soil ?before }
         BIND(IF(?value < ?floor || (BOUND(?before) && sameTerm(?before, :Dry) && ?value < (?floor + ?margin)), :Dry, :Moist) AS ?state)
       }""" .
+}
+
+GRAPH :rules.metadata {
+  :rules a orexis:Graph .
+  :rules a sh:RulesGraph .
+  :rules.metadata a orexis:MetadataGraph .
+  :rules.metadata orexis:metadataOf :rules .
 }
 
 GRAPH :flows {
@@ -96,50 +118,61 @@ GRAPH :flows {
   :Seeping prediction:rate "SELECT ?rate ?until WHERE { BIND(0.0004 / 3600.0 AS ?rate) BIND(0.3001 AS ?until) }" .
 }
 
+GRAPH :flows.metadata {
+  :flows a orexis:FlowGraph .
+  :flows a orexis:Graph .
+  :flows.metadata a orexis:MetadataGraph .
+  :flows.metadata orexis:metadataOf :flows .
+}
+
 GRAPH :sensed {
   :soil a sosa:Observation .
   :soil sosa:hasFeatureOfInterest :bed .
   :soil sosa:hasSimpleResult 0.2999 .
   :soil sosa:madeBySensor :probe .
   :soil sosa:observedProperty :moisture .
-  :soil sosa:resultTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
+  :soil sosa:resultTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
+}
+
+GRAPH :sensed.metadata {
+  :sensed a orexis:Graph .
+  :sensed a sensing:ObservationGraph .
+  :sensed dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
+  :sensed orexis:arrivedBy orexis:Received .
+  :sensed orexis:ownedBy :keeper .
+  :sensed.metadata a orexis:MetadataGraph .
+  :sensed.metadata orexis:metadataOf :sensed .
 }
 
 GRAPH :believed {
   :bed :soil :Dry .
 }
 
-GRAPH :rain_hour {
-  :rain a sosa:Observation .
-  :rain sosa:observedProperty :precipitation .
-  :rain sosa:hasSimpleResult 10.0 .
-}
-
-GRAPH :catalogue {
+GRAPH :believed.metadata {
   :believed a orexis:BeliefGraph .
   :believed a orexis:Graph .
   :believed orexis:arrivedBy orexis:Derived .
   :believed orexis:ownedBy :keeper .
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :flows a orexis:FlowGraph .
-  :flows a orexis:Graph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
-  :rain_hour a orexis:Graph .
+  :believed.metadata a orexis:MetadataGraph .
+  :believed.metadata orexis:metadataOf :believed .
+}
+
+GRAPH :rain_hour {
+  :rain a sosa:Observation .
+  :rain sosa:hasSimpleResult 10.0 .
+  :rain sosa:observedProperty :precipitation .
+}
+
+GRAPH :rain_hour.metadata {
   :rain_hour a orexis:BeliefGraph .
   :rain_hour a orexis:ForecastGraph .
+  :rain_hour a orexis:Graph .
+  :rain_hour dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T15:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T14:00:00Z"^^xsd:dateTime ] .
   :rain_hour orexis:arrivedBy orexis:Received .
-  :rain_hour dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T15:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T14:00:00+00:00"^^xsd:dateTime ] .
   :rain_hour orexis:ownedBy :keeper .
-  :rules a orexis:Graph .
-  :rules a sh:RulesGraph .
-  :sensed a orexis:Graph .
-  :sensed a sensing:ObservationGraph .
-  :sensed dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-  :sensed orexis:arrivedBy orexis:Received .
-  :sensed orexis:ownedBy :keeper .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :rain_hour.metadata a orexis:MetadataGraph .
+  :rain_hour.metadata orexis:metadataOf :rain_hour .
+}
+
+GRAPH :catalogue {
 }

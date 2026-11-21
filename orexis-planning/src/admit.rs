@@ -20,7 +20,7 @@ use crate::next_ground::next_ground;
 use crate::ontology::{CANDIDATE, FILLS, FROM, MINTED, WAIT};
 use crate::scope::Scope;
 use crate::terms::RDF_TYPE;
-use crate::world_at::{Asking, catalogue, named, world_at};
+use crate::world_at::{Asking, cone, cone_made, named, world_at};
 
 /// Where a possible world's readings sit, under the same root as every other graph.
 pub fn possible() -> String {
@@ -37,18 +37,18 @@ pub fn admit(store: &Store, world: &str, scope: &Scope<'_>, memo: &mut Memo) -> 
     const ADMITTED_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     SELECT ?c ?action ?p ?v WHERE {
-      GRAPH $cat { ?c a planning:Candidate ; planning:from $world ; planning:fills ?action .
+      GRAPH $cone { ?c a planning:Candidate ; planning:from $world ; planning:fills ?action .
                    OPTIONAL { ?c ?p ?v . FILTER(?p NOT IN (planning:from, planning:fills, planning:minted, rdf:type)) } } }";
     /// THE HIGHEST MINT NUMBER IN THE STORE, candidate or world.
     const MINTED_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#>
-        SELECT (MAX(?m) AS ?n) WHERE { GRAPH $cat { ?w planning:minted ?m } }";
+        SELECT (MAX(?m) AS ?n) WHERE { GRAPH $cone { ?w planning:minted ?m } }";
     let graphs = world_at(store, Some(world), &Asking::default(), memo)?;
     let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
-    let cat = catalogue(store, memo)?;
+    let cat = cone(store, memo)?;
     let mut admitted: std::collections::BTreeMap<(String, String), BTreeSet<(String, String)>> = Default::default();
     let text = bind(
         ADMITTED_Q,
-        &[("cat", Value::iri(cat.clone())), ("world", Value::iri(world))],
+        &[("cone", Value::iri(cat.clone())), ("world", Value::iri(world))],
     )?;
     for r in store.rows(&text, &[])? {
         let (Some(c), Some(action)) = (iri(&r, "c"), iri(&r, "action")) else {
@@ -114,7 +114,7 @@ pub fn admit(store: &Store, world: &str, scope: &Scope<'_>, memo: &mut Memo) -> 
     let mut minted = match memo.minted {
         Some(n) => n,
         None => {
-            let text = bind(MINTED_Q, &[("cat", Value::iri(cat.clone()))])?;
+            let text = bind(MINTED_Q, &[("cone", Value::iri(cat.clone()))])?;
             store
                 .rows(&text, &[])?
                 .first()
@@ -124,7 +124,7 @@ pub fn admit(store: &Store, world: &str, scope: &Scope<'_>, memo: &mut Memo) -> 
         }
     };
     fillings.sort_by_key(key);
-    let (graph, from, world) = (named(&cat)?, named(FROM)?, named(world)?);
+    let (graph, from, world) = (named(&cone_made(store, memo)?)?, named(FROM)?, named(world)?);
     let mut edges = Vec::new();
     for (action, filling) in fillings {
         minted += 1;
@@ -238,7 +238,7 @@ mod tests {
         const PRESENT_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
-    SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start } }
+    SELECT ?g WHERE { GRAPH ?m_g { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start } }
     ORDER BY ?start LIMIT 1";
         iri(&store.rows(PRESENT_Q, &[]).unwrap()[0], "g").unwrap()
     }
@@ -260,7 +260,7 @@ mod tests {
     fn candidates(store: &Store) -> BTreeSet<String> {
         const CANDIDATES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
             PREFIX planning: <http://example.org/orexis/planning#>
-            SELECT ?c WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?c a planning:Candidate } }";
+            SELECT ?c WHERE { GRAPH ?cone { ?c a planning:Candidate } }";
         store
             .rows(CANDIDATES_Q, &[])
             .unwrap()
@@ -280,8 +280,8 @@ mod tests {
         store
             .update(&format!(
                 "PREFIX orexis: <http://example.org/orexis#>
-             DELETE {{ GRAPH ?cat {{ <{first}> ?p ?o }} }} INSERT {{ GRAPH ?cat {{ <urn:test:handed> ?p ?o }} }}
-             WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{first}> ?p ?o }} }}"
+             DELETE {{ GRAPH ?cone {{ <{first}> ?p ?o }} }} INSERT {{ GRAPH ?cone {{ <urn:test:handed> ?p ?o }} }}
+             WHERE {{ GRAPH ?cone {{ <{first}> ?p ?o }} }}"
             ))
             .unwrap();
         admit(&store, &ground, &Scope::default(), &mut Memo::default()).unwrap();
@@ -308,9 +308,8 @@ mod tests {
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix : <http://example.org/test#> .
-:catalogue {{
-  :catalogue a orexis:CatalogueGraph .
-  :actions a orexis:ActionGraph .
+:said {{
+    :actions a orexis:ActionGraph .
   :now a planning:GroundGraph , orexis:Graph ; orexis:hash "sha256:a" ;
       dcterms:temporal [ orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ; orexis:end "2026-01-01T13:00:00Z"^^xsd:dateTime ] .
   :later a planning:GroundGraph , orexis:Graph ; orexis:hash "{second}" ;
@@ -320,6 +319,7 @@ mod tests {
 "#
         ))
         .unwrap();
+        orexis::snapshots::mirrored(&store, "http://example.org/test#said");
         store
     }
 
@@ -335,7 +335,7 @@ mod tests {
             .rows(
                 "PREFIX orexis: <http://example.org/orexis#>
                     PREFIX planning: <http://example.org/orexis/planning#>
-                    SELECT ?c WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?c planning:fills planning:Wait } }",
+                    SELECT ?c WHERE { GRAPH ?cone { ?c planning:fills planning:Wait } }",
                 &[],
             )
             .unwrap()

@@ -575,9 +575,8 @@ GRAPH :rules {
   :dry a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
     DELETE { ?bed :soil ?was } INSERT { ?bed :soil :dry } WHERE { ?bed :soil ?was ; :moisture ?m . ?m a :Low }""" .
 }
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :actions a orexis:ActionGraph .
+GRAPH :said {
+    :actions a orexis:ActionGraph .
   :rules a sh:RulesGraph .
 }
 "#;
@@ -585,6 +584,7 @@ GRAPH :catalogue {
     fn store_of(trig: &str) -> Store {
         let store = Store::new().expect("an empty store");
         store.put_trig(snapshots::WORLD, trig).expect("the actions");
+        snapshots::mirrored(&store, "http://example.org/test#said");
         store
     }
 

@@ -18,6 +18,14 @@ GRAPH :ontology {
   planning:ScopeGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :actions {
   :fill a orexis:Action .
   :fill planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX : <http://example.org/test#>
@@ -30,12 +38,12 @@ GRAPH :actions {
         INSERT { ?t ?p ?x . } WHERE { ?t a :Tank ; ?p ?x }""" ] ] .
 }
 
-GRAPH :catalogue {
+GRAPH :actions.metadata {
   :actions a orexis:ActionGraph .
   :actions a orexis:Graph .
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
+  :actions.metadata a orexis:MetadataGraph .
+  :actions.metadata orexis:metadataOf :actions .
+}
+
+GRAPH :catalogue {
 }

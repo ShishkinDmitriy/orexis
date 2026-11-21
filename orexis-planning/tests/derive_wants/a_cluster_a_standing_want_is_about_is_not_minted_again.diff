@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -18,10 +18,6 @@
+@@ -26,10 +26,6 @@
  }
  
  GRAPH :world {
@@ -11,7 +11,15 @@
    :keeper a orexis:Agent .
    :parcel_a a courier:Parcel .
    :parcel_a courier:destination :door_parcel_a .
-@@ -128,14 +124,6 @@
+@@ -42,6 +38,7 @@
+ GRAPH :world.metadata {
+   :world a orexis:BeliefGraph .
+   :world a orexis:Graph .
++  :world planning:cutBy "sha256:fc5c047bf0831ce57b48595cb247a107207b950b375f05dd762415d62c2e9591" .
+   :world.metadata a orexis:MetadataGraph .
+   :world.metadata orexis:metadataOf :world .
+ }
+@@ -164,20 +161,13 @@
  }
  
  GRAPH :sensed {
@@ -25,34 +33,23 @@
 -  :van_b courier:y 1 .
  }
  
- GRAPH pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b {
-@@ -144,7 +132,7 @@
-   :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:estimates :drivesOwed .
-   :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:metWhen :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b.met .
-   :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:state planning:Recognized .
--  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b prov:generatedAtTime "2026-01-01T11:00:00+00:00"^^xsd:dateTime .
-+  :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b prov:generatedAtTime "2026-01-01T11:00:00Z"^^xsd:dateTime .
-   :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b prov:wasDerivedFrom :keeper.every_parcel_delivered .
-   :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b rdfs:label "pursued: every parcel where it is owed" .
-   :keeper.every_parcel_delivered.pursued.parcel_a.parcel_b.met a sh:NodeShape .
-@@ -191,11 +179,69 @@
+ GRAPH :sensed.metadata {
    :sensed a orexis:BeliefGraph .
    :sensed a orexis:Graph .
    :sensed orexis:ownedBy :keeper .
 +  :sensed planning:cutBy "sha256:fc5c047bf0831ce57b48595cb247a107207b950b375f05dd762415d62c2e9591" .
-+  :sensed.changeable a planning:ChangeableGraph .
-+  :sensed.changeable orexis:arrivedBy orexis:Derived .
-+  :sensed.changeable prov:wasDerivedFrom :sensed .
-   :world a orexis:BeliefGraph .
-   :world a orexis:Graph .
-+  :world planning:cutBy "sha256:fc5c047bf0831ce57b48595cb247a107207b950b375f05dd762415d62c2e9591" .
-+  :world.changeable a planning:ChangeableGraph .
-+  :world.changeable orexis:arrivedBy orexis:Derived .
-+  :world.changeable prov:wasDerivedFrom :world .
-+  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
-+  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
-+  ground:2026-01-01T120000p0000 orexis:hash "sha256:b7a3a4015dc513a7c519d910f42b80b35ddf765eb406dd6fa8d5b92973f57d1c" .
+   :sensed.metadata a orexis:MetadataGraph .
+   :sensed.metadata orexis:metadataOf :sensed .
+ }
+@@ -235,5 +225,85 @@
+   :scopes.metadata orexis:metadataOf :scopes .
+ }
+ 
+-GRAPH :catalogue {
++
++
++
++GRAPH <http://example.org/orexis/graph/cone> {
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered a planning:Weighing .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:for :keeper.every_parcel_delivered .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered planning:met false .
@@ -65,14 +62,14 @@
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:remaining 2 .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:violation [ planning:about :parcel_b ; planning:constraint 0 ; planning:instance :parcel_b ] .
 +  ground:2026-01-01T120000p0000.for.keeper.every_parcel_delivered.pursued.parcel_a.parcel_b planning:weighs ground:2026-01-01T120000p0000 .
-   pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b a orexis:Graph .
-   pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b a planning:WantGraph .
--  pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
-+  pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00Z"^^xsd:dateTime ] .
-   pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b orexis:arrivedBy orexis:Derived .
-   pursued:keeper.every_parcel_delivered.pursued.parcel_a.parcel_b orexis:ownedBy :keeper .
- }
++}
 +
++GRAPH <http://example.org/orexis/graph/cone.metadata> {
++  <http://example.org/orexis/graph/cone.metadata> a orexis:MetadataGraph .
++  <http://example.org/orexis/graph/cone.metadata> orexis:metadataOf <http://example.org/orexis/graph/cone> .
++  <http://example.org/orexis/graph/cone> a planning:ConeGraph .
++  <http://example.org/orexis/graph/cone> orexis:arrivedBy orexis:Derived .
++}
 +
 +GRAPH ground:2026-01-01T120000p0000 {
 +  :door_parcel_a courier:x 0 .
@@ -89,6 +86,15 @@
 +  :van_b courier:y 1 .
 +}
 +
++GRAPH ground:2026-01-01T120000p0000.metadata {
++  ground:2026-01-01T120000p0000 a planning:GroundGraph .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:b7a3a4015dc513a7c519d910f42b80b35ddf765eb406dd6fa8d5b92973f57d1c" .
++  ground:2026-01-01T120000p0000.metadata a orexis:MetadataGraph .
++  ground:2026-01-01T120000p0000.metadata orexis:metadataOf ground:2026-01-01T120000p0000 .
++}
++
 +GRAPH :sensed.changeable {
 +  :parcel_a courier:x 0 .
 +  :parcel_a courier:y 3 .
@@ -100,9 +106,25 @@
 +  :van_b courier:y 1 .
 +}
 +
++GRAPH :sensed.changeable.metadata {
++  :sensed.changeable a planning:ChangeableGraph .
++  :sensed.changeable orexis:arrivedBy orexis:Derived .
++  :sensed.changeable prov:wasDerivedFrom :sensed .
++  :sensed.changeable.metadata a orexis:MetadataGraph .
++  :sensed.changeable.metadata orexis:metadataOf :sensed.changeable .
++}
++
 +GRAPH :world.changeable {
 +  :door_parcel_a courier:x 0 .
 +  :door_parcel_a courier:y 3 .
 +  :door_parcel_b courier:x 1 .
 +  :door_parcel_b courier:y 3 .
 +}
++
++GRAPH :world.changeable.metadata {
++  :world.changeable a planning:ChangeableGraph .
++  :world.changeable orexis:arrivedBy orexis:Derived .
++  :world.changeable prov:wasDerivedFrom :world .
++  :world.changeable.metadata a orexis:MetadataGraph .
++  :world.changeable.metadata orexis:metadataOf :world.changeable .
+ }

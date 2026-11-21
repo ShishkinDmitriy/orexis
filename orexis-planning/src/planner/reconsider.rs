@@ -26,8 +26,7 @@ use crate::world_at::lexical;
 fn derived(store: &Store) -> Result<BTreeSet<String>, Error> {
     const DERIVED_Q: &str = r#"PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
-    SELECT ?w WHERE { GRAPH ?g { ?w a planning:Want }
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } }"#;
+    SELECT ?w WHERE { GRAPH ?m_g { ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } GRAPH ?g { ?w a planning:Want } }"#;
     Ok(store.rows(DERIVED_Q, &[])?.iter().filter_map(|r| iri(r, "w")).collect())
 }
 
@@ -180,17 +179,16 @@ impl Searcher {
         doomed: &mut Vec<(String, Option<String>)>,
         memo: &mut Memo,
     ) -> Result<BTreeSet<String>, Error> {
+        /// A WORLD FORESEEN FROM A GROUND AHEAD holds from that ground's instant, said in a metadata graph of its own.
         const FORESEEN_U: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
-        INSERT { GRAPH ?cat { $world dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start $start ] }
-                 GRAPH $world { $world a orexis:Graph ; dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start $start ] } }
-        WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph } }"#;
+        INSERT DATA { GRAPH $in { $in a orexis:MetadataGraph ; orexis:metadataOf $world .
+                                  $world dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start $start ] } }"#;
         const UNWEIGH_U: &str = r#"PREFIX orexis: <http://example.org/orexis#>
         PREFIX planning: <http://example.org/orexis/planning#>
-        DELETE { GRAPH ?cat { ?x ?p ?o . ?v ?vp ?vo } }
-        WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                              ?x planning:weighs $world ; ?p ?o .
-                              OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }"#;
+        DELETE { GRAPH $cone { ?x ?p ?o . ?v ?vp ?vo } }
+        WHERE  { GRAPH $cone { ?x planning:weighs $world ; ?p ?o .
+                               OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }"#;
         let derived = derived(store)?;
         let mut out = BTreeSet::new();
         for (want, walk) in walks {
@@ -251,7 +249,11 @@ impl Searcher {
                     }
                     store.update(&bind(
                         FORESEEN_U,
-                        &[("world", Value::iri(next.as_str())), ("start", Value::instant(lands))],
+                        &[
+                            ("world", Value::iri(next.as_str())),
+                            ("start", Value::instant(lands)),
+                            ("in", Value::iri(orexis::metadata::named(&next))),
+                        ],
                     )?)?;
                     before = Some(ground);
                     world = Some(next.clone());
@@ -274,8 +276,15 @@ impl Searcher {
                 Ok(Some(false))
             })();
             for world in &foreseen {
-                store.update(&bind(UNWEIGH_U, &[("world", Value::iri(world.as_str()))])?)?;
+                store.update(&bind(
+                    UNWEIGH_U,
+                    &[
+                        ("world", Value::iri(world.as_str())),
+                        ("cone", Value::iri(crate::world_at::cone(store, memo)?)),
+                    ],
+                )?)?;
                 store.forget_graph(world, Some(BELIEF))?;
+                crate::world_at::out_of_the_cone(store, world)?;
             }
             match found? {
                 Some(true) => {

@@ -27,22 +27,20 @@ from pathlib import Path
 
 import pyoxigraph as ox
 
-from documents.ontology import ASSERTED, CATALOGUE_GRAPH, DERIVED
-from documents.store import document, put_document, rows, update
+from documents.ontology import ASSERTED, DERIVED
+from documents.store import document, put_document, rows
 
 
 _TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
 
 _GRAPHS_Q = """
-SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a <$kind> ; orexis:arrivedBy <$arrival> } }
+SELECT ?g WHERE { GRAPH ?m { ?m orexis:metadataOf ?g . ?g a <$kind> ; orexis:arrivedBy <$arrival> } }
 ORDER BY ?g"""
 
 
 def store() -> ox.Store:
-    """An empty store holding a catalogue and nothing else, for documents to be put in."""
-    s = ox.Store()
-    update(s, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}")
-    return s
+    """An empty store, for documents to be put in."""
+    return ox.Store()
 
 
 def put(into: ox.Store, path: Path, arrival: str) -> list[str]:
@@ -52,7 +50,7 @@ def put(into: ox.Store, path: Path, arrival: str) -> list[str]:
 
 
 def graphs(of: ox.Store, kind: str, arrival: str) -> list[str]:
-    """Every graph in `of` the catalogue types `kind` and says arrived by `arrival`, sorted."""
+    """Every graph in `of` whose metadata types it `kind` and says it arrived by `arrival`, sorted."""
     return [r["g"] for r in rows(of, _GRAPHS_Q.replace("$kind", kind).replace("$arrival", arrival))]
 
 

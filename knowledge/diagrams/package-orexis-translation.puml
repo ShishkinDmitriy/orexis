@@ -96,7 +96,7 @@ package "readable" {
     {field} +store : Engine
     {field} +prefixes : Prefixes
     {field} +kinds : BTreeMap<String, BTreeSet<String>>
-    {field} +catalogues : BTreeSet<String>
+    {field} +metadata : BTreeSet<String>
     {field} +world : Option<String>
     {field} +vocabularies : BTreeMap<String, String>
     {field} +rows : usize

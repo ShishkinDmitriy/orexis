@@ -29,9 +29,24 @@ GRAPH :ontology {
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :counter a :Counter .
   :keeper a orexis:Agent .
+}
+
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
 }
 
 GRAPH :rules {
@@ -43,46 +58,33 @@ GRAPH :rules {
   :spoilRule rdfs:label "a transition that tries to delete testimony" .
 }
 
+GRAPH :rules.metadata {
+  :rules a orexis:Graph .
+  :rules a sh:RulesGraph .
+  :rules.metadata a orexis:MetadataGraph .
+  :rules.metadata orexis:metadataOf :rules .
+}
+
 GRAPH :tick2 {
   :t2 a :Tick .
+}
+
+GRAPH :tick2.metadata {
+  :tick2 a :TickGraph .
+  :tick2 a orexis:BeliefGraph .
+  :tick2 a orexis:Graph .
+  :tick2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00Z"^^xsd:dateTime ] .
+  :tick2 orexis:arrivedBy orexis:Received .
+  :tick2 orexis:ownedBy :keeper .
+  :tick2.metadata a orexis:MetadataGraph .
+  :tick2.metadata orexis:metadataOf :tick2 .
 }
 
 GRAPH tick2:revisions {
   :t2 :ticked true .
 }
 
-GRAPH :heard {
-  :counter :count 7 .
-}
-
-GRAPH tick1:believed {
-  :counter :count 7 .
-}
-
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :heard a orexis:BeliefGraph .
-  :heard a orexis:Graph .
-  :heard orexis:arrivedBy orexis:Received .
-  :heard orexis:ownedBy :keeper .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
-  :rules a orexis:Graph .
-  :rules a sh:RulesGraph .
-  :tick2 a :TickGraph .
-  :tick2 a orexis:BeliefGraph .
-  :tick2 a orexis:Graph .
-  :tick2 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:30:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T12:10:00+00:00"^^xsd:dateTime ] .
-  :tick2 orexis:arrivedBy orexis:Received .
-  :tick2 orexis:ownedBy :keeper .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
-  tick1:believed a orexis:BeliefGraph .
-  tick1:believed a orexis:Graph .
-  tick1:believed orexis:arrivedBy orexis:Derived .
-  tick1:believed orexis:ownedBy :keeper .
+GRAPH tick2:revisions.metadata {
   tick2:revisions a belief:RevisionGraph .
   tick2:revisions a orexis:BeliefGraph .
   tick2:revisions a orexis:Graph .
@@ -90,4 +92,35 @@ GRAPH :catalogue {
   tick2:revisions orexis:arrivedBy orexis:Derived .
   tick2:revisions orexis:ownedBy :keeper .
   tick2:revisions prov:wasDerivedFrom :tick2 .
+  tick2:revisions.metadata a orexis:MetadataGraph .
+  tick2:revisions.metadata orexis:metadataOf tick2:revisions .
+}
+
+GRAPH :heard {
+  :counter :count 7 .
+}
+
+GRAPH :heard.metadata {
+  :heard a orexis:BeliefGraph .
+  :heard a orexis:Graph .
+  :heard orexis:arrivedBy orexis:Received .
+  :heard orexis:ownedBy :keeper .
+  :heard.metadata a orexis:MetadataGraph .
+  :heard.metadata orexis:metadataOf :heard .
+}
+
+GRAPH tick1:believed {
+  :counter :count 7 .
+}
+
+GRAPH tick1:believed.metadata {
+  tick1:believed a orexis:BeliefGraph .
+  tick1:believed a orexis:Graph .
+  tick1:believed orexis:arrivedBy orexis:Derived .
+  tick1:believed orexis:ownedBy :keeper .
+  tick1:believed.metadata a orexis:MetadataGraph .
+  tick1:believed.metadata orexis:metadataOf tick1:believed .
+}
+
+GRAPH :catalogue {
 }

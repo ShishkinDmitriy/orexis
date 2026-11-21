@@ -23,7 +23,6 @@ use orexis::bind::{Value, bind};
 use orexis::clock::{instant, isoformat};
 use orexis::document::Document;
 use orexis::hash::hash_named_graph;
-use orexis::metadata::stated_quads;
 use orexis::ontology::{BELIEF, DERIVED, local_of};
 use orexis::store::{Store, Within, iri, value};
 
@@ -428,14 +427,12 @@ pub fn believed_of(statement: &str) -> String {
 pub fn believe(store: &Store, statement: &str) -> Result<Vec<String>, Error> {
     const START_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?start WHERE { GRAPH $cat { $g dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1";
+        SELECT ?start WHERE { GRAPH ?m_g { $g dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1";
     let target = believed_of(statement);
     store.forget_graph(&target, Some(BELIEF))?;
-    let Some(cat) = store.catalogue()? else {
-        return Ok(Vec::new());
-    };
     let node = NamedNode::new_unchecked(statement);
-    let found: Vec<Quad> = stated_quads(store.quads(statement)?)
+    let found: Vec<Quad> = store
+        .quads(statement)?
         .into_iter()
         .filter(|q| !matches!(&q.subject, NamedOrBlankNode::NamedNode(s) if *s == node))
         .collect();
@@ -449,22 +446,16 @@ pub fn believe(store: &Store, statement: &str) -> Result<Vec<String>, Error> {
             .map(|q| Quad::new(q.subject, q.predicate, q.object, into.clone())),
     )?;
     let start = store
-        .rows(
-            &bind(
-                START_Q,
-                &[("cat", Value::iri(cat.as_str())), ("g", Value::iri(statement))],
-            )?,
-            &[],
-        )?
+        .rows(&bind(START_Q, &[("g", Value::iri(statement))])?, &[])?
         .first()
         .and_then(|r| value(r, "start"))
         .map(|s| instant(&s))
         .transpose()?;
     let entry = store.entry(&target, &[BELIEF], DERIVED, None, start, None)?;
+    let metadata = store.metadata_for(&target)?;
     store.update(&format!(
         "PREFIX prov: <http://www.w3.org/ns/prov#>
-            INSERT DATA {{ {entry}\n  GRAPH <{cat}> {{ <{target}> prov:wasDerivedFrom <{statement}> }}
-                           GRAPH <{target}> {{ <{target}> prov:wasDerivedFrom <{statement}> }} }}"
+            INSERT DATA {{ {entry}\n  GRAPH <{metadata}> {{ <{target}> prov:wasDerivedFrom <{statement}> }} }}"
     ))?;
     hash_named_graph(store, &target, None)?;
     Ok(vec![target])

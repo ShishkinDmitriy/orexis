@@ -1,5 +1,5 @@
 //! READING THE WANTS A STORE HOLDS — one function, its criteria arguments, as `agent/planning/find_wants.py` reads
-//! them. A want IS its graph: whether it still holds and which family it is of are asked of the catalogue's row for
+//! them. A want IS its graph: whether it still holds and which family it is of are asked of the metadata of
 //! that graph, by the kinds the text names and the instant it stands at. It reads its own writes and writes
 //! nothing; writing a want is the derivation's.
 
@@ -74,15 +74,16 @@ PREFIX prov: <http://www.w3.org/ns/prov#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 SELECT DISTINCT ?w WHERE {{
   GRAPH ?g {{ {where} }}
-  GRAPH ?catalogue {{
-    ?catalogue a orexis:CatalogueGraph .
+  GRAPH ?m_g {{
     ?g a ?kind . VALUES ?kind {{ <{WANT}> <{RECORD}> }}
 {came}{mine}
-    OPTIONAL {{ ?g dcterms:temporal ?period . OPTIONAL {{ ?period orexis:start ?start }} OPTIONAL {{ ?period orexis:end ?end }} }} }}
+    OPTIONAL {{ ?g dcterms:temporal/orexis:start ?start }}
+    OPTIONAL {{ ?g dcterms:temporal/orexis:end ?end }} }}
   FILTER(!BOUND(?start) || ?start <= \"{now}\"^^xsd:dateTime)
   FILTER(!BOUND(?end) || ?end > \"{now}\"^^xsd:dateTime)
 }} ORDER BY ?w LIMIT {} OFFSET {}",
-        criteria.limit, criteria.offset,
+        criteria.limit,
+        criteria.offset,
         r#where = r#where,
     );
     let found: Vec<String> = store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "w")).collect();
@@ -119,14 +120,15 @@ pub(crate) mod tests {
     pub(crate) fn store() -> Store {
         let store = Store::new().expect("an empty store");
         store
-        .update(
-            "PREFIX orexis: <http://example.org/orexis#>
+            .update(
+                "PREFIX orexis: <http://example.org/orexis#>
   PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
   INSERT DATA {
-  GRAPH <urn:test:catalogue> { <urn:test:catalogue> a orexis:CatalogueGraph . <urn:test:ontology> a orexis:OntologyGraph }
+  GRAPH <urn:test:said> { <urn:test:ontology> a orexis:OntologyGraph }
   GRAPH <urn:test:ontology> { <urn:test:ObligationsGraph> rdfs:subClassOf orexis:RecordGraph } }",
-        )
-        .unwrap();
+            )
+            .unwrap();
+        orexis::snapshots::mirrored(&store, "urn:test:said");
         store
     }
 
@@ -142,36 +144,19 @@ pub(crate) mod tests {
     /// A want, written the way the derivation writes one: a graph of wants that arrived derived, its period the stretch.
     pub(crate) fn derived(store: &Store, uri: &str, from: DateTime, until: Option<DateTime>) {
         let graph = graph_of(from, until);
-        let mut period = format!(" ; orexis:start \"{}\"^^xsd:dateTime", isoformat(from));
-        if let Some(until) = until {
-            period.push_str(&format!(" ; orexis:end \"{}\"^^xsd:dateTime", isoformat(until)));
-        }
         store
             .update(&format!(
-            "PREFIX orexis: <http://example.org/orexis#>
-  PREFIX planning: <http://example.org/orexis/planning#>
+                "PREFIX planning: <http://example.org/orexis/planning#>
   PREFIX prov: <http://www.w3.org/ns/prov#>
   PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-  PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
   INSERT DATA {{
   GRAPH <{graph}> {{
     <{HOLDER}> planning:holds <{uri}> .
-    <{uri}> a planning:Want ; prov:wasDerivedFrom <{DESIRE}> ; rdfs:label \"a want under test\" . }}
-  GRAPH <urn:test:catalogue> {{
-    <{graph}> a planning:WantGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy <{HOLDER}> . }} }}"
-        ))
+    <{uri}> a planning:Want ; prov:wasDerivedFrom <{DESIRE}> ; rdfs:label \"a want under test\" . }} }}"
+            ))
             .unwrap();
         store
-            .update(&format!(
-                "PREFIX dcterms: <http://purl.org/dc/terms/>
-PREFIX orexis: <http://example.org/orexis#>
-PREFIX planning: <http://example.org/orexis/planning#>
-PREFIX prov: <http://www.w3.org/ns/prov#>
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-INSERT {{ GRAPH <urn:test:catalogue> {{ <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime{period} ] . }} }}
-WHERE {{ GRAPH <urn:test:catalogue> {{ }}
-         FILTER NOT EXISTS {{ GRAPH <urn:test:catalogue> {{ <{graph}> dcterms:temporal ?h }} }} }}"
-            ))
+            .classify(&graph, WANT, DERIVED, Some(HOLDER), Some(from), until)
             .unwrap();
     }
 
@@ -190,9 +175,10 @@ WHERE {{ GRAPH <urn:test:catalogue> {{ }}
   PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
   INSERT DATA {{
   GRAPH <{graph}> {{ <{uri}> a planning:Want ; prov:wasDerivedFrom <{DESIRE}> ; rdfs:label \"a debt under test\" . }}
-  GRAPH <urn:test:catalogue> {{ <{graph}> a <urn:test:ObligationsGraph> , orexis:RecordGraph . }} }}"
+  GRAPH <urn:test:said> {{ <{graph}> a <urn:test:ObligationsGraph> , orexis:RecordGraph . }} }}"
             ))
             .unwrap();
+        orexis::snapshots::mirrored(store, "urn:test:said");
     }
 
     fn find(store: &Store, criteria: Criteria<'_>) -> Vec<String> {

@@ -14,7 +14,7 @@ use orexis::store::{Store, Within};
 
 use crate::find_scopes::standing;
 use crate::footprint::{Atom, Filling, Side, atoms_of, spelled, stored_edges};
-use crate::ontology::{DERIVATION_GRAPH, WAIT};
+use crate::ontology::{DERIVATION_GRAPH, SCOPE_GRAPH, WAIT};
 
 /// Cluster every action the store holds into scopes and write them, replacing what stood. An action is in every
 /// scope a filling of it lies in, and a predicate or a term in every scope an atom of it falls in; an action
@@ -89,7 +89,7 @@ fn scope_name(n: usize) -> String {
 }
 
 /// Replace the store's scopes with these, classified even when empty: a store with no scope graph has never been
-/// scoped. One update: every standing scope graph dropped with its row, then the graph and its row together.
+/// scoped. Every standing scope graph is forgotten with what was said of it, then the graph is written and said to be one.
 fn save(store: &Store, scopes: &[(String, BTreeSet<String>)]) -> Result<(), Error> {
     let standing = standing(store)?;
     let blocks: Vec<String> = scopes
@@ -102,34 +102,18 @@ fn save(store: &Store, scopes: &[(String, BTreeSet<String>)]) -> Result<(), Erro
             format!("  <{scope}> a planning:Scope .\n  {}", members.join(" "))
         })
         .collect();
-    let dropped: String = standing
-        .iter()
-        .map(|g| {
-            format!(
-                "PREFIX orexis: <http://example.org/orexis#>
-                 PREFIX planning: <http://example.org/orexis/planning#>
-                 DROP SILENT GRAPH <{g}> ;\nDELETE {{ GRAPH ?cat {{ <{g}> ?p ?o }} }} WHERE {{ GRAPH ?cat {{ ?cat a \
-                 orexis:CatalogueGraph . <{g}> ?p ?o }} }} ;\n"
-            )
-        })
-        .collect();
+    for graph in &standing {
+        store.forget_graph(graph, None)?;
+    }
     store.update(&format!(
-        "PREFIX orexis: <http://example.org/orexis#>
-PREFIX planning: <http://example.org/orexis/planning#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-{dropped}
-INSERT {{
+        "PREFIX planning: <http://example.org/orexis/planning#>
+INSERT DATA {{
   GRAPH <{SCOPES_GRAPH}> {{
 {}
-  <{SCOPES_GRAPH}> a planning:ScopeGraph , orexis:Graph ; orexis:arrivedBy <{DERIVED}> .
-  }}
-  GRAPH ?cat {{ <{SCOPES_GRAPH}> a planning:ScopeGraph ; orexis:arrivedBy <{DERIVED}> . }} }}
-WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }} }} ;
-INSERT {{ GRAPH ?cat {{ <{SCOPES_GRAPH}> a ?kind }} GRAPH <{SCOPES_GRAPH}> {{ <{SCOPES_GRAPH}> a ?kind }} }}
-WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }}
-        GRAPH ?vocabulary {{ planning:ScopeGraph rdfs:subClassOf ?kind }} }}",
+  }} }}",
         blocks.join("\n")
-    ))
+    ))?;
+    store.classify(SCOPES_GRAPH, SCOPE_GRAPH, DERIVED, None, None, None)
 }
 
 /// The SCOPES of a vocabulary: atoms joined wherever one filling of one action reads or writes both, and separate

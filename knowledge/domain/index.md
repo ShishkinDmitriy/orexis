@@ -10,8 +10,8 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [agent](/domain/kernel/agent.md) - One process, one store, one world, told its local id; acts for a subject, holds its desires, and runs what its roles call for.
 * [role](/domain/kernel/role.md) - What an agent runs, declared in its self graph beside its self; a package is loaded only for one. No default.
 * [self](/domain/kernel/self.md) - The one agent a store is this agent's, authored in its self graph and checked at boot; a text asks `?me a orexis:Self`.
-* [common belief](/domain/kernel/common-belief.md) - A belief every agent of a world holds: a graph whose catalogue row names no owner, asked with `common=True`.
-* [metadata](/domain/kernel/metadata.md) - What is said of a graph, its kinds, arrival, owner, period and hash; the rest is content, told apart by type.
+* [common belief](/domain/kernel/common-belief.md) - A belief every agent of a world holds: a graph whose metadata names no owner, asked with `common=True`.
+* [metadata](/domain/kernel/metadata.md) - What is said of a graph, its kinds, arrival, owner, period and hash, in a metadata graph of its own beside it.
 * [world](/domain/kernel/world.md) - A directory of documents, each saying which graph it is; imports its domains, and its tests live beside it.
 * [domain](/domain/kernel/domain.md) - A vocabulary, its actions, shapes and rules as documents in `domains/<name>/`, imported by the worlds that speak it.
 * [action](/domain/kernel/action.md) - One way of acting as one node: what it takes, its precondition, its effect, its implementation, its cost.
@@ -22,7 +22,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 * [activity](/domain/kernel/activity.md) - What a package does over a stretch, started by a policy; its start and end are events, and a tracer draws it as a span.
 * [level](/domain/kernel/level.md) - A reported field that is the state now, read by its store's owner and written as it last stood in a window.
 * [forecast](/domain/kernel/forecast.md) - Anyone's word about a stretch ahead, one kind holding during it; a received hour and a committed step, told apart by provenance.
-* [modality](/domain/kernel/modality.md) - What a graph asserts — is, will be, would be, wanted, owed, doing — carried as its kind on the catalogue.
+* [modality](/domain/kernel/modality.md) - What a graph asserts — is, will be, would be, wanted, owed, doing — carried as its kind in its metadata.
 * [inference](/domain/kernel/inference.md) - The boot materialises the subclass closure, so a reader asks what a thing is and walks no path.
 * [package](/domain/kernel/package.md) - A crate, `orexis-<package>/`, owning a concern and its words, importing only what lies beneath it.
 * [sovereign](/domain/kernel/sovereign.md) - Whoever writes a world's documents: picks the ranges and values, never an act. Outside the society.
@@ -58,7 +58,7 @@ future is predicted, wants are derived and searched, and the plans are carried o
 
 # Belief — what follows from what was written
 
-* [belief-base](/domain/belief/belief-base.md) - One store per agent, and a catalogue describing every graph: its kind, owner, arrival and period.
+* [belief-base](/domain/belief/belief-base.md) - One store per agent, each graph with a metadata graph beside it: its kind, owner, arrival and period.
 * [revision](/domain/belief/revision.md) - What SHACL 1.2's rules, adopted as they stand, conclude of a graph, into one of the source's own and kind, on the present only.
 * [deliberator](/domain/belief/deliberator.md) - The pass over what arrived — revised, then transitioned on, in turn — within one budget of rule executions; and the role running it.
 * [transition](/domain/belief/transition.md) - A typed rule that changes a state, triggered once by every arrival of testimony, into a state graph the runner prepares: a subject belief.

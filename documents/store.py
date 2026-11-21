@@ -43,9 +43,9 @@ hands strings and prefix-less SPARQL and gets terms and a dictionary built for i
 the contract.
 
 What is NOT thin, and is what the module is actually for: `graphs_of` answers which graphs are
-of a kind AT an instant, by asking the catalogue — 28 callers and the most-used function here;
+of a kind AT an instant, by asking each graph's metadata — 28 callers and the most-used function here;
 `bind` fills `$tokens` and REFUSES a leftover; `classify` says what a graph is, guarding the
-period against a blank node minted twice; `close_catalogue` materialises every kind a row is
+period against a blank node minted twice; `close_kinds` materialises every kind a graph's class is
 beneath; `rdflib_view` crosses to the other engine. None of those is pyoxigraph's.
 """
 
@@ -63,24 +63,19 @@ from .ontology import ASSERTED, BELIEF, OREXIS
 
 # What the world states — ASKED, not listed. A graph IRI is an instance, and code that named
 # five of them was doing what rule 1 forbids everywhere else; the kind is a term and whose a graph
-# is a row on the catalogue, so `graphs_of(store, BELIEF, common=True)` answers with what every
+# is its metadata's to say, so `graphs_of(store, BELIEF, common=True)` answers with what every
 # agent of a world reads alike, and adding one is a document that touches no Python.
 #
-#  THE CATALOGUE — the one graph that says what every graph IS: its class, whose it is, how
-#  it arrived, when it holds, and the PROV account of the load that made it (one-catalogue-
-#  describes-every-graph-and-itself). It DESCRIBES ITSELF, which is what lets a store find it
-#  without knowing its name: the one graph that says of itself `a orexis:CatalogueGraph`.
-#  Nothing else about graphs is named anywhere a reader stands — the bootstrap root used to be
-#  two named graphs, the ontology's instances and the classification, with the periods in a
-#  third and the provenance in a fourth; a writer names the catalogue when it creates it, and
-#  a migration names what it migrates from.
+#  A GRAPH'S METADATA — what the graph IS: its class, whose it is, how it arrived, when it
+#  holds — is said in a metadata graph of its own beside it, which says of itself only which
+#  graph it is of (knowledge/domain/kernel/metadata.md). A reader finds it by that link and
+#  never by its name; a writer names a new one after its graph.
 #
 #  NO BELIEF, deliberately: a rule reads triples and never learns what a graph is, whose it
 #  is, or when it holds — the door decides all three, structurally, by handing the rule a
-#  dataset (a-graph-holds-during-a-stretch). Every door here reads the catalogue by the IRI
-#  it discovered, and nothing else does.
-CATALOGUE = OREXIS + "CatalogueGraph"
-_CATALOGUES = f"SELECT ?g WHERE {{ GRAPH ?g {{ ?g a <{CATALOGUE}> }} }}"
+#  dataset (a-graph-holds-during-a-stretch).
+METADATA_GRAPH = OREXIS + "MetadataGraph"
+METADATA_OF = OREXIS + "metadataOf"
 
 # Sent with every query. This is the ONLY set a query may use — some engines silently pre-bind
 # common prefixes and others do not, so relying on that works in one and fails in another.
@@ -315,26 +310,26 @@ def bind(text: str, **values) -> str:
 PLACES = 6
 
 
-#  --- reading the catalogue over the ENGINE ------------------------------------------------
+#  --- reading what the graphs are over the ENGINE ------------------------------------------------
 #
 #  What a function over the store asks, where there is no `Store` to ask. The derivation's three
 #  functions are handed `pyoxigraph.Store` itself (judge-desires-then-derive-wants), so the
 #  lookups the class above offers as methods are offered here as functions over the engine:
-#  the same questions, the same catalogue, no wrapper and no policy. A reader still states the
+#  the same questions, no wrapper and no policy. A reader still states the
 #  kinds it reads and the instant it stands at (a-reader-states-the-kinds-it-reads); these add
 #  nothing to that and hide nothing from it.
 
 _XSD_DATETIME = ox.NamedNode(_XSD + "dateTime")
 
-#  WHICH GRAPHS, asked of the catalogue in one text: those of any of the kinds named — every
+#  WHICH GRAPHS, asked of their metadata in one text: those of any of the kinds named — every
 #  row carries every kind its class is beneath, so no path is walked — the holder's or
 #  the common ones where a holder is named, and holding at the instant where one is given. A record
 #  is handed as it stands at the present whatever instant is asked about (#645), which is the
 #  one thing the kind means.
 _GRAPHS_Q = """
 SELECT DISTINCT ?g WHERE {
-  GRAPH ?cat {
-    ?cat a orexis:CatalogueGraph .
+  GRAPH ?m {
+    ?m orexis:metadataOf ?g .
     ?g a ?kind . FILTER(isIRI(?g)) VALUES ?kind { $kinds }
     $owned
     $holding } }
@@ -361,19 +356,20 @@ def instant(at: datetime) -> ox.Literal:
     return ox.Literal(at.isoformat(), datatype=_XSD_DATETIME)
 
 
-def catalogue_of(store) -> str | None:
-    """The graph that describes every graph and itself — `Store.catalogue` as a function over
-    the engine, and the same answer, asked rather than kept.
+def metadata_of(store, graph: str) -> str | None:
+    """The graph that says what `graph` is, found by what it says of itself — `orexis:metadataOf` —
+    and never by its name; None for a graph nobody has said anything of
+    (knowledge/domain/kernel/metadata.md)."""
+    for q in store.quads_for_pattern(None, ox.NamedNode(METADATA_OF), ox.NamedNode(graph), None):
+        if q.subject == q.graph_name:
+            return q.graph_name.value
+    return None
 
-    The class caches it because nothing moves it and it is asked on every read; a function
-    over the engine holds nothing, so a caller that asks in a loop should keep what it got.
-    None for a store nobody has told anything to. Two is refused, as it is there: a store with
-    two catalogues has two truths about what its graphs are.
-    """
-    found = sorted(str(row["g"].value) for row in store.query(_CATALOGUES, prefixes=NAMESPACES))
-    if len(found) > 1:
-        raise RuntimeError(f"two graphs describe themselves as the catalogue: {', '.join(found)}")
-    return found[0] if found else None
+
+def metadata_for(store, graph: str) -> str:
+    """The graph `graph`'s metadata is written in: the one that says it is, or the name a writer
+    gives a new one, the graph's with a word after it."""
+    return metadata_of(store, graph) or f"{graph}.metadata"
 
 
 def answer(store, sparql: str, graphs=(), **values) -> dict:
@@ -401,18 +397,18 @@ def bindings(results: dict) -> list[dict]:
 
 
 
-#  ── what the catalogue says ────────────────────────────────────────────────────────────────
+#  ── what a graph's metadata says ────────────────────────────────────────────────────────────────
 #
 #  Every one of these was a method on the class that held the engine, answered out of a Python
 #  index it had read once and dropped on every write. They are SPARQL now, asked each time.
 #  That is not a regression: the index existed because four separate texts each walked a
 #  subclass path and carried the NOT EXISTS traps this file's history records, and the fix for
-#  those was to write the closure onto every catalogue row (`entry` below). With the rows
+#  those was to write the closure into every graph's metadata (`entry` below). With the rows
 #  closed, a membership question is a `VALUES ?kind` join and there is nothing left to cache.
 
 _SUBCLASSES_Q = """
 SELECT DISTINCT ?super WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }
+  GRAPH ?m { ?vocabulary a orexis:OntologyGraph }
   GRAPH ?vocabulary { $cls rdfs:subClassOf ?super . FILTER(isIRI(?super)) } }"""
 
 
@@ -431,13 +427,11 @@ def closed(store, graph_class: str) -> list[str]:
 
 def entry(store, graph: str, graph_class: str | tuple, arrival: str, owner: str | None = None,
           start: datetime | str | None = None, end: datetime | str | None = None) -> str:
-    """What the catalogue says of a graph, as the `GRAPH … { … }` block a writer puts beside
-    the graph's own in ONE update — so a graph and its description land together or not at
-    all. The writer names nothing: the catalogue is found, never spelled. `graph_class` is one
-    class, or several where what the graph is is said by two (a revision and its source's kind)."""
-    catalogue = catalogue_of(store)
-    if catalogue is None:
-        raise RuntimeError("no graph describes itself as the catalogue — nothing has said what the graphs are")
+    """A graph's metadata, as the `GRAPH … { … }` block a writer puts beside the graph's own in ONE
+    update — so a graph and what it is land together or not at all: its metadata graph, saying
+    which graph it is of, and of that graph its kinds, arrival, owner and period. `graph_class` is
+    one class, or several where what the graph is is said by two (a revision and its source's kind)."""
+    metadata = metadata_for(store, graph)
     whose = f" ; orexis:ownedBy <{owner}>" if owner else ""
     stamp = lambda t: t if isinstance(t, str) else t.isoformat()
     when = ""
@@ -445,19 +439,19 @@ def entry(store, graph: str, graph_class: str | tuple, arrival: str, owner: str 
         bounds = "".join(f' ; orexis:{k} "{stamp(v)}"^^xsd:dateTime'
                          for k, v in (("start", start), ("end", end)) if v is not None)
         when = f" ; dcterms:temporal [ a dcterms:PeriodOfTime{bounds} ]"
-    #  EVERY KIND THE GRAPH IS, on the row, so a text that joins the catalogue asks
+    #  EVERY KIND THE GRAPH IS, in its metadata, so a text that joins it asks
     #  `?g a planning:WantGraph` and walks no path across two graphs. This is what lets every
     #  read above be one query instead of an index.
     classes = (graph_class,) if isinstance(graph_class, str) else graph_class
     kinds = " , ".join(f"<{c}>" for c in sorted({k for one in classes for k in closed(store, one)}))
-    return (f"GRAPH <{catalogue}> {{ <{graph}> a {kinds} ; orexis:arrivedBy <{arrival}>"
-            f"{whose}{when} . }}")
+    return (f"GRAPH <{metadata}> {{ <{metadata}> a orexis:MetadataGraph ; orexis:metadataOf <{graph}> . "
+            f"<{graph}> a {kinds} ; orexis:arrivedBy <{arrival}>{whose}{when} . }}")
 
 
 def classify(store, graph: str, graph_class: str, arrival: str, owner: str | None = None,
              start: datetime | str | None = None, end: datetime | str | None = None) -> None:
     """Say what a graph IS, how it arrived, WHOSE it is and WHEN it holds — by its owner, when
-    it creates the graph. A name is for eyes; every reader asks the catalogue.
+    it creates the graph. A name is for eyes; every reader asks the graph's metadata.
 
     IDEMPOTENT, INCLUDING THE PERIOD, which it was not. A period is a blank node
     (`dcterms:temporal [ a dcterms:PeriodOfTime … ]`) and a blank node in an `INSERT DATA` is a
@@ -474,11 +468,10 @@ def classify(store, graph: str, graph_class: str, arrival: str, owner: str | Non
     if start is None and end is None:
         update(store, f"INSERT DATA {{ {block} }}")
         return
-    catalogue = catalogue_of(store)
+    metadata = metadata_for(store, graph)
     update(store, f"""
 INSERT {{ {block} }}
-WHERE  {{ GRAPH <{catalogue}> {{ }}
-          FILTER NOT EXISTS {{ GRAPH <{catalogue}> {{ <{graph}> dcterms:temporal ?period }} }} }}""")
+WHERE  {{ FILTER NOT EXISTS {{ GRAPH <{metadata}> {{ <{graph}> dcterms:temporal ?period }} }} }}""")
 
 
 #  ── a document says what its graphs are ────────────────────────────────────────────────────
@@ -490,11 +483,11 @@ WHERE  {{ GRAPH <{catalogue}> {{ }}
 #  TriG file names its graphs in `GRAPH <…> { }` blocks and states the rows about them in its
 #  default graph, as a nanopublication's head does. Both are read into one shape, a dataset
 #  whose named graphs are the content and whose default graph is the rows, and the rows go to
-#  the catalogue when the document is put: a rule reading the graph would otherwise read
+#  each graph's metadata graph when the document is put: a rule reading the graph would otherwise read
 #  `<> a planning:DesireGraph` as a fact about the world.
 #
 #  WHAT NO DOCUMENT MAY SAY is how it arrived — the loader writes `orexis:arrivedBy` — or that it
-#  is the catalogue, which is created and never loaded. A graph stating no kind is refused rather
+#  is a metadata graph, which only the loader writes. A graph stating no kind is refused rather
 #  than guessed at, since a graph with no row is invisible to every reader.
 #
 #  WHOSE A GRAPH IS, AND WHO THE SELF IS, ONLY THE WORLD SAYS (knowledge/domain/kernel/self.md).
@@ -523,7 +516,7 @@ class DocumentRefused(ValueError):
 def document(path) -> ox.Store:
     """The document at `path` as a dataset: its graphs named, its rows about them in the default
     graph. Refused where a graph states no kind, where the rows speak of anything but the
-    document's graphs, or where they say the catalogue or an arrival — and where they say an
+    document's graphs, or where they say a metadata graph or an arrival — and where they say an
     owner or a self the world may not (`checked`): a file is a document the world authors."""
     path = Path(path)
     base = path.resolve().as_uri()
@@ -582,8 +575,8 @@ def checked(doc: ox.Store, name: str, *, authored: bool = False) -> ox.Store:
     for q in rows_:
         if q.predicate.value == _ARRIVED_BY:
             raise DocumentRefused(f"{name} says {q.predicate.value} of a graph, which only the loader says")
-        if q.predicate.value == _RDF_TYPE_IRI and q.object.value == CATALOGUE:
-            raise DocumentRefused(f"{name} says a graph is the catalogue, which is created and never loaded")
+        if q.predicate.value == METADATA_OF or (q.predicate.value == _RDF_TYPE_IRI and q.object.value == METADATA_GRAPH):
+            raise DocumentRefused(f"{name} says a graph is a metadata graph, which only the loader writes")
     return _one_home(doc, name) if authored else refuse_the_sovereigns(doc, name)
 
 
@@ -679,21 +672,20 @@ def imports_of(doc: ox.Store) -> list[str]:
 
 def put_document(store, doc: ox.Store, owner: str | None = None, graphs=None, *,
                  arrival: str = ASSERTED, close: bool = False) -> list[str]:
-    """Put a document's graphs in the store, each replacing any graph of its name, and its rows
-    in the catalogue with the arrival — asserted, for a file — and, where `owner` is given, whose
-    it is. `graphs`, where given, puts only those. The names put, sorted. The kinds each row says
-    are closed by `close_catalogue`, which a boot runs once when every document is in; a writer
-    putting one document while the agent runs says `close`, and the row carries every kind its
-    class is beneath at once."""
-    catalogue = catalogue_of(store)
-    if catalogue is None:
-        raise RuntimeError("no graph describes itself as the catalogue — nothing has said what the graphs are")
-    cat = ox.NamedNode(catalogue)
+    """Put a document's graphs in the store, each replacing any graph of its name, and what it
+    says of each in that graph's metadata graph with the arrival — asserted, for a file — and,
+    where `owner` is given, whose it is. `graphs`, where given, puts only those. The names put,
+    sorted. The kinds said are closed by `close_kinds`, which a boot runs once when every document
+    is in; a writer putting one document while the agent runs says `close`, and the graph's
+    metadata carries every kind its class is beneath at once."""
     names = sorted(g for g in kinds_in(doc) if graphs is None or g in graphs)
     rows_ = list(doc.quads_for_pattern(None, None, None, ox.DefaultGraph()))
     for name in names:
         node = ox.NamedNode(name)
         forget_graph(store, name)
+        cat = ox.NamedNode(f"{name}.metadata")
+        store.add(ox.Quad(cat, _RDF_TYPE, ox.NamedNode(METADATA_GRAPH), cat))
+        store.add(ox.Quad(cat, ox.NamedNode(METADATA_OF), node, cat))
         for q in doc.quads_for_pattern(None, None, None, node):
             store.add(q)
         reached, frontier = set(), {node}
@@ -714,17 +706,17 @@ def put_document(store, doc: ox.Store, owner: str | None = None, graphs=None, *,
 
 
 _ROWS_Q = """
-SELECT ?g ?class WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?class . FILTER(isIRI(?g)) } }"""
+SELECT ?m ?g ?class WHERE {
+  GRAPH ?m { ?m orexis:metadataOf ?g . ?g a ?class . FILTER(isIRI(?g)) } }"""
 
 
 _REVISIONS_Q = """
-SELECT DISTINCT ?r WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+SELECT DISTINCT ?r WHERE { GRAPH ?m { ?m orexis:metadataOf ?r .
   VALUES ?source { $sources } ?r prov:wasDerivedFrom ?source ; a $kind } }"""
 
 
 def revisions_of(store, *sources: str, kind: str = BELIEF) -> list[str]:
-    """Every graph of `kind` the catalogue says was derived from one of `sources`, sorted — what
+    """Every graph of `kind` whose metadata says it was derived from one of `sources`, sorted — what
     the belief package's rules concluded of a document heard, a state or a prediction, its
     revisions, which are beliefs, unless the reader says the kind they are. A reader that means a
     graph as the rules leave it means the graph and these: what a reading is of and its quantity
@@ -745,32 +737,27 @@ def revisions_of(store, *sources: str, kind: str = BELIEF) -> list[str]:
                                                    sources=Raw(" ".join(f"<{s}>" for s in sources)))))
 
 
-def close_catalogue(store) -> None:
-    """Say on every row each kind the vocabulary puts its class beneath — what `entry` writes
-    on a new row, said again of every row there is: a volume written when a row said one
-    class, a case written by hand. Idempotent, and a write like any other.
+def close_kinds(store) -> None:
+    """Say of every graph each kind the vocabulary puts its class beneath — what `entry` writes
+    for a new graph, said again of every graph there is. Idempotent, and a write like any other.
 
-    What it makes true is the thing every read above depends on: a text that joins the
-    catalogue asks `?g a planning:WantGraph` and walks no subclass path to get an answer.
+    What it makes true is the thing every read above depends on: a text asks
+    `GRAPH ?m { ?g a planning:WantGraph }` and walks no subclass path to get an answer.
     """
-    catalogue = catalogue_of(store)
-    if catalogue is None:
-        return
     held: dict = {}
     for row in rows(store, _ROWS_Q):
-        held.setdefault(row["g"], set()).add(row["class"])
-    lines = []
-    for graph, classes in sorted(held.items()):
+        held.setdefault((row["m"], row["g"]), set()).add(row["class"])
+    blocks = []
+    for (metadata, graph), classes in sorted(held.items()):
         kinds = sorted({k for c in classes for k in closed(store, c)})
-        lines.append(f"  <{graph}> a {' , '.join(f'<{k}>' for k in kinds)} .")
-    if lines:
-        rows_ = "\n".join(lines)
-        update(store, f"INSERT DATA {{ GRAPH <{catalogue}> {{\n{rows_} }} }}")
+        blocks.append(f"  GRAPH <{metadata}> {{ <{graph}> a {' , '.join(f'<{k}>' for k in kinds)} . }}")
+    if blocks:
+        update(store, "INSERT DATA {\n" + "\n".join(blocks) + " }")
 
 
 def graphs_of(store, *kinds: str, at: datetime | None = None, until: datetime | None = None,
               holder: str | None = None, now: datetime | None = None, common: bool = False) -> list[str]:
-    """Every graph the catalogue types under any of `kinds` — subclasses included, the rows
+    """Every graph whose metadata types it under any of `kinds` — subclasses included, the rows
     having been closed when they were written — holding at `at` where an instant is given, and
     still holding at `until` where a reader stands over a period rather than at an instant (#596):
     a round open for part of a step's landing window is not one the step may count on.
@@ -1022,7 +1009,7 @@ def _joined(*texts: str) -> list[str]:
 
 
 def forget_graph(store, graph_iri: str, *, revisions: str | None = BELIEF) -> None:
-    """Empty one graph AND take back everything the catalogue said of it — and its revisions, of the
+    """Empty one graph AND its metadata graph with it — and its revisions, of the
     kind `revisions` says they are (`revisions_of`): beliefs, unless the caller's graph is revised
     into a kind of its own, as sensing's observations are.
 
@@ -1046,12 +1033,8 @@ def forget_graph(store, graph_iri: str, *, revisions: str | None = BELIEF) -> No
     for revision in (revisions_of(store, graph_iri, kind=revisions) if revisions is not None else ()):
         forget_graph(store, revision)
     clear_graph(store, graph_iri)
-    catalogue = catalogue_of(store)
-    if catalogue is not None:
-        update(store, f"""
-DELETE {{ GRAPH <{catalogue}> {{ <{graph_iri}> ?p ?o . ?period ?pp ?po }} }}
-WHERE  {{ GRAPH <{catalogue}> {{ <{graph_iri}> ?p ?o .
-          OPTIONAL {{ <{graph_iri}> dcterms:temporal ?period . ?period ?pp ?po }} }} }}""")
+    while (metadata := metadata_of(store, graph_iri)) is not None:
+        clear_graph(store, metadata)
 
 
 _END_U = """
@@ -1072,12 +1055,10 @@ def end_graph(store, graph_iri: str, at: datetime, *, revisions: str = BELIEF) -
     until the next reading is due. The next arriving earlier than that ends it there, and the
     observation is kept, as what the sensor said then, and handed to no reader standing later (#944).
     What the rules concluded of it ends with it, as it goes with it in `forget_graph`."""
-    catalogue = catalogue_of(store)
-    if catalogue is None:
-        return
-    graphs = [graph_iri, *revisions_of(store, graph_iri, kind=revisions)]
-    update(store, bind(_END_U, cat=Raw(f"<{catalogue}>"), at=instant(at),
-                       graphs=Raw(" ".join(f"<{g}>" for g in graphs))))
+    for graph in [graph_iri, *revisions_of(store, graph_iri, kind=revisions)]:
+        metadata = metadata_of(store, graph)
+        if metadata is not None:
+            update(store, bind(_END_U, cat=Raw(f"<{metadata}>"), at=instant(at), graphs=Raw(f"<{graph}>")))
 
 
 def put_graph(store, graph_iri: str, ttl: str, dataset: bool = False) -> None:

@@ -86,20 +86,24 @@ A green run leaves nothing behind, and `.gitignore` refuses the file either way.
 one whose `.trig` changed after it was generated — is applied by line number with no fuzz and
 asserts rather than guessing; regenerate it.
 
-## A graph's metadata is said once
+## A case says every graph, and what each is
 
-A case's catalogue says what each graph is, and **a graph says nothing of itself in a case's text**.
-Every graph also carries its metadata in the store, the same as its row
-(`knowledge/domain/kernel/metadata.md`), so the runner adds that on both sides: a case is loaded
-with each graph saying what its row says, what a function left is held to the case with its diff
-applied and the same said, and a diff is written with it left out. A function that says a graph's metadata
-on its row and not in the graph, or the two unalike, fails its case with the graph's own statements
-listed as missing or unexpected; the fix is the writer, never the diff.
+A graph holds its facts, and what it is - its kinds, its owner, its arrival, its period, its hash -
+is said in a metadata graph beside it (`knowledge/domain/kernel/metadata.md`). A case's text writes
+both, `GRAPH :sensed { … }` and `GRAPH :sensed.metadata { … }`, and the runner holds what a function
+left to the case with its diff applied, quad for quad. A function that writes a graph and not what
+it is fails its case with the metadata graph's statements listed as missing; the fix is the writer,
+never the diff.
+
+A unit test that writes its fixture by hand may say its graphs' metadata together in one block and
+have it moved: `orexis::snapshots::mirrored(&store, block)` moves what the block says of every thing
+it types into that thing's metadata graph, and `orexis::metadata::moved(&store, block, graph)` moves
+one graph's where the block holds things that are no graph.
 
 ## Adding a case
 
 1. Write `<case>.trig`: the whole store the function is handed, in canonical form, with a
-   catalogue saying what each graph is, and a header comment saying what the case claims and
+   metadata graph beside each graph saying what it is, and a header comment saying what the case claims and
    where the clock stands. Comments are allowed — both sides strip them before diffing.
 2. Run the case's test. It fails, and writes `<case>.actual.trig`.
 3. Read the actual, and satisfy yourself it is what the function SHOULD leave.

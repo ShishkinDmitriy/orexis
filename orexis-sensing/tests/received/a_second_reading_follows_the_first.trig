@@ -33,6 +33,14 @@ GRAPH :ontology {
   sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :keeper a orexis:Agent .
   :keeper orexis:actsFor :zamioculcas .
@@ -51,25 +59,30 @@ GRAPH :world {
   :zamioculcas.survival ssn-system:inCondition [ schema:maxValue 0.45 ; schema:minValue 0.02 ; ssn:forProperty :moisture ] .
 }
 
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
+}
+
 GRAPH observed:probe_20260101T114500Z {
   :probe.20260101T114500Z a sosa:Observation .
   :probe.20260101T114500Z prov:wasGeneratedBy :keeper .
   :probe.20260101T114500Z sensing:rawResult 0.25 .
   :probe.20260101T114500Z sosa:madeBySensor :probe .
-  :probe.20260101T114500Z sosa:resultTime "2026-01-01T11:45:00+00:00"^^xsd:dateTime .
+  :probe.20260101T114500Z sosa:resultTime "2026-01-01T11:45:00Z"^^xsd:dateTime .
+}
+
+GRAPH observed:probe_20260101T114500Z.metadata {
+  observed:probe_20260101T114500Z a orexis:Graph .
+  observed:probe_20260101T114500Z a sensing:ObservationGraph .
+  observed:probe_20260101T114500Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T11:45:00Z"^^xsd:dateTime ] .
+  observed:probe_20260101T114500Z orexis:arrivedBy orexis:Received .
+  observed:probe_20260101T114500Z orexis:ownedBy :keeper .
+  observed:probe_20260101T114500Z.metadata a orexis:MetadataGraph .
+  observed:probe_20260101T114500Z.metadata orexis:metadataOf observed:probe_20260101T114500Z .
 }
 
 GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
-  observed:probe_20260101T114500Z a orexis:Graph .
-  observed:probe_20260101T114500Z a sensing:ObservationGraph .
-  observed:probe_20260101T114500Z dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:15:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:45:00+00:00"^^xsd:dateTime ] .
-  observed:probe_20260101T114500Z orexis:arrivedBy orexis:Received .
-  observed:probe_20260101T114500Z orexis:ownedBy :keeper .
 }

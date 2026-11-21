@@ -1,0 +1,13 @@
+--- case
++++ expected
+@@ -52,9 +52,8 @@
+   :sensed.metadata orexis:metadataOf :sensed .
+ }
+ 
+-GRAPH :catalogue {
+-}
+ 
++
+ GRAPH :rules.metadata {
+   :rules a orexis:Graph .
+   :rules a sh:RulesGraph .

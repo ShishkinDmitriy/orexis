@@ -23,9 +23,24 @@ GRAPH :ontology {
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :counter a :Counter .
   :keeper a orexis:Agent .
+}
+
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
 }
 
 GRAPH :rules {
@@ -51,14 +66,12 @@ GRAPH :rules {
       CONSTRUCT { ?t :ticked true } WHERE { ?t a :Tick ; :loud true }""" ] .
 }
 
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
+GRAPH :rules.metadata {
   :rules a orexis:Graph .
   :rules a sh:RulesGraph .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :rules.metadata a orexis:MetadataGraph .
+  :rules.metadata orexis:metadataOf :rules .
+}
+
+GRAPH :catalogue {
 }

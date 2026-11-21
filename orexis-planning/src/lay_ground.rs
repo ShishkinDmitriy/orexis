@@ -24,8 +24,7 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::{instant, isoformat};
 use orexis::hash::{digest_of, hash_named_graph};
-use orexis::metadata::{stated, stated_quads};
-use orexis::ontology::{BELIEF, DERIVED, FORECAST, GRAPH, ONTOLOGY, PERIOD, RECORD};
+use orexis::ontology::{BELIEF, DERIVED, FORECAST, HASH, ONTOLOGY, RECORD};
 use orexis::store::{Store, Within, iri};
 
 use orexis::foresight::Foresight;
@@ -78,9 +77,13 @@ pub fn no_longer_ahead(store: &Store, at: DateTime) -> Result<(), Error> {
     const UNDERIVE_U: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
-    DELETE { GRAPH ?cat { $ground prov:wasDerivedFrom ?from } GRAPH $ground { $ground prov:wasDerivedFrom ?from } }
-    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $ground a planning:GroundGraph ; prov:wasDerivedFrom ?from } }";
-    store.update(&bind(UNDERIVE_U, &[("ground", Value::iri(name(at)))])?)
+    DELETE { GRAPH $cone { $ground prov:wasDerivedFrom ?from } }
+    WHERE  { GRAPH $cone { $ground prov:wasDerivedFrom ?from } }";
+    let cone = crate::world_at::cone_of(store)?;
+    store.update(&bind(
+        UNDERIVE_U,
+        &[("ground", Value::iri(name(at))), ("cone", Value::iri(cone))],
+    )?)
 }
 
 /// Cut out of every graph a search over `scope` reads beside its worlds what the search can change: the first act of
@@ -190,7 +193,7 @@ pub fn lay_ground_foreseeing(
         }
         let mut added = Vec::new();
         for (piece, _) in &group {
-            added.extend(orexis::metadata::stated(store.triples(piece)?));
+            added.extend(store.triples(piece)?);
         }
         stands = at;
         if added.is_empty() && crossing.is_empty() && !ground.landing.contains(&at) && !ends.contains(&at) {
@@ -260,10 +263,8 @@ fn own_state(store: &Store) -> Result<String, Error> {
     /// received: no revision, and nothing everyone reads; as `trigger` reads the agent's own state.
     const DERIVED_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
     PREFIX orexis: <http://example.org/orexis#>
-    SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                                   ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
-                                   FILTER NOT EXISTS { ?g a belief:RevisionGraph }
-                                   ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
+    SELECT ?g WHERE { GRAPH ?m_g { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy ?owner .
+                                 FILTER NOT EXISTS { ?g a belief:RevisionGraph } } } ORDER BY ?g";
     store.clear_graph(OWN)?;
     let derived: Vec<String> = store.rows(DERIVED_Q, &[])?.iter().filter_map(|r| iri(r, "g")).collect();
     for g in whole(store, derived)? {
@@ -271,8 +272,7 @@ fn own_state(store: &Store) -> Result<String, Error> {
             "PREFIX dcterms: <http://purl.org/dc/terms/>
             PREFIX orexis: <http://example.org/orexis#>
             INSERT {{ GRAPH <{OWN}> {{ ?s ?p ?o }} }}
-            WHERE {{ GRAPH <{g}> {{ ?s ?p ?o FILTER NOT EXISTS {{ ?s a orexis:Graph }}
-                                           FILTER NOT EXISTS {{ ?s a dcterms:PeriodOfTime }} }} }}"
+            WHERE {{ GRAPH <{g}> {{ ?s ?p ?o }} }}"
         ))?;
     }
     Ok(OWN.to_string())
@@ -314,7 +314,8 @@ impl Ground<'_> {
         for (_, pieces) in self.ending.iter().filter(|(t, _)| *t == at) {
             for piece in pieces {
                 retracted.extend(
-                    stated(store.triples(piece)?)
+                    store
+                        .triples(piece)?
                         .into_iter()
                         .filter(|t| self.alone.contains(&t.subject)),
                 );
@@ -338,7 +339,8 @@ impl Ground<'_> {
         settled(store, &there, stood, self.as_stood)?;
         if mark == self.marks && !self.landing.contains(&at) {
             //  THE SAME GROUND UNDER ANOTHER NAME: this instant is not a period of its own.
-            return store.forget_graph(&there, Some(BELIEF));
+            store.forget_graph(&there, Some(BELIEF))?;
+            return crate::world_at::out_of_the_cone(store, &there);
         }
         //  THE ONE BEFORE IT ENDS HERE, classified when its successor arrives.
         store.classify(
@@ -389,9 +391,8 @@ fn foreseen(store: &Store, now: DateTime) -> Result<Vec<(DateTime, String, Strin
     PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     SELECT ?piece ?source ?start WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                   ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source .
-                   ?source dcterms:temporal/orexis:start ?start . FILTER(?start > $now) } }
+      GRAPH ?m_piece { ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source }
+      GRAPH ?m_source { ?source dcterms:temporal/orexis:start ?start . FILTER(?start > $now) } }
     ORDER BY ?start ?piece";
     let text = bind(PIECES_AHEAD_Q, &[("now", Value::instant(now))])?;
     let mut out = Vec::new();
@@ -418,9 +419,8 @@ fn ending(store: &Store, now: DateTime) -> Result<Vec<(DateTime, String)>, Error
     PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     SELECT ?piece ?end WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                   ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source .
-                   ?source a orexis:ForecastGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end > $now) } }
+      GRAPH ?m_piece { ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source }
+      GRAPH ?m_source { ?source a orexis:ForecastGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end > $now) } }
     ORDER BY ?end ?piece";
     let text = bind(PIECES_ENDING_Q, &[("now", Value::instant(now))])?;
     let mut out = Vec::new();
@@ -450,8 +450,8 @@ fn foreseen_alone(store: &Store) -> Result<HashSet<NamedOrBlankNode>, Error> {
     const FORECAST_PIECES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
-    SELECT ?piece WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                                       ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source . ?source a orexis:ForecastGraph } }";
+    SELECT ?piece WHERE { GRAPH ?m_piece { ?piece a planning:ChangeableGraph ; prov:wasDerivedFrom ?source }
+                          GRAPH ?m_source { ?source a orexis:ForecastGraph } }";
     let mut forecasts: BTreeSet<String> = store.graphs_of(&[FORECAST], &Within::default())?.into_iter().collect();
     forecasts.extend(
         store
@@ -461,10 +461,16 @@ fn foreseen_alone(store: &Store) -> Result<HashSet<NamedOrBlankNode>, Error> {
     );
     let mut aside = forecasts.clone();
     aside.extend(store.graphs_of(&[GROUND_GRAPH, POSSIBLE_GRAPH], &Within::default())?);
-    aside.extend(store.catalogue()?);
+    //  AND WHAT IS NO FACT OF THE WORLD: the search's own rows, and what each graph is.
+    aside.insert(crate::world_at::cone_of(store)?);
+    for graph in store.graph_names()? {
+        if let Some(said_in) = store.metadata_of(&graph)? {
+            aside.insert(said_in);
+        }
+    }
     let mut told = HashSet::new();
     for graph in &forecasts {
-        told.extend(stated_quads(store.quads(graph)?).into_iter().map(|q| q.subject));
+        told.extend(store.quads(graph)?.into_iter().map(|q| q.subject));
     }
     let mut out = HashSet::new();
     for subject in told {
@@ -524,7 +530,8 @@ fn present(store: &Store, now: DateTime) -> Result<(String, Option<String>), Err
             continue;
         }
         store.add(
-            stated_quads(store.quads(&source)?)
+            store
+                .quads(&source)?
                 .into_iter()
                 .map(|q| Quad::new(q.subject, q.predicate, q.object, into.clone())),
         )?;
@@ -542,13 +549,10 @@ fn split(
 ) -> Result<Vec<String>, Error> {
     /// EVERY GRAPH CUT BY THE PATTERNS ASKED NOW, and saying which a graph was cut by.
     const CUT_BY_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#>
-        SELECT ?g WHERE { GRAPH $cat { ?g planning:cutBy $by } }";
+        SELECT ?g WHERE { GRAPH ?m { ?g planning:cutBy $by } }";
     const CUT_U: &str = "PREFIX planning: <http://example.org/orexis/planning#>
-    DELETE { GRAPH $cat { $g planning:cutBy ?was } } INSERT { GRAPH $cat { $g planning:cutBy $by } }
-    WHERE { OPTIONAL { GRAPH $cat { $g planning:cutBy ?was } } }";
-    let cat = store
-        .catalogue()?
-        .ok_or_else(|| Error::Catalogue("no graph describes itself as the catalogue".into()))?;
+    DELETE { GRAPH $in { $g planning:cutBy ?was } } INSERT { GRAPH $in { $g planning:cutBy $by } }
+    WHERE { OPTIONAL { GRAPH $in { $g planning:cutBy ?was } } }";
     let patterns = match footprint::changeable(store, actions, at)? {
         Some(mut patterns) => {
             patterns.extend(predicted(store, at, gate)?);
@@ -566,12 +570,9 @@ fn split(
     }
     let defining: HashSet<String> = store.graphs_of(&[ONTOLOGY], &Within::default())?.into_iter().collect();
     let by_literal = Value::Term(oxigraph::model::Literal::new_simple_literal(&by).into());
-    let text = bind(
-        CUT_BY_Q,
-        &[("cat", Value::raw(format!("<{cat}>"))), ("by", by_literal.clone())],
-    )?;
+    let text = bind(CUT_BY_Q, &[("by", by_literal.clone())])?;
     let standing: HashSet<String> = store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "g")).collect();
-    let (catalogue, derived) = (named(&cat)?, named(PROV_DERIVED)?);
+    let derived = named(PROV_DERIVED)?;
     let mut made = Vec::new();
     for graph in store.graphs_of(&[BELIEF, RECORD], &Within::default())? {
         if defining.contains(&graph) || standing.contains(&graph) {
@@ -580,7 +581,8 @@ fn split(
         let g = named(&graph)?;
         for piece in pieces.get(&graph).into_iter().flatten() {
             store.add(
-                stated_quads(store.quads(piece)?)
+                store
+                    .quads(piece)?
                     .into_iter()
                     .map(|q| Quad::new(q.subject, q.predicate, q.object, g.clone())),
             )?;
@@ -589,27 +591,13 @@ fn split(
         store.update(&bind(
             CUT_U,
             &[
-                ("cat", Value::raw(format!("<{cat}>"))),
+                ("in", Value::iri(store.metadata_for(&graph)?)),
                 ("g", Value::iri(graph.clone())),
                 ("by", by_literal.clone()),
             ],
         )?)?;
-        //  WHAT THE GRAPH SAYS OF ITSELF IS NEVER CUT: it is the metadata of the graph it is in, whatever a pattern matches.
-        //  Asked by type, two lookups, since reading the graph whole to find them cost more than the cut.
-        let mut itself: HashSet<NamedOrBlankNode> = HashSet::new();
-        for class in [GRAPH, PERIOD] {
-            let class = named(class)?;
-            for quad in store.engine().quads_for_pattern(
-                None,
-                Some(rdf::TYPE),
-                Some(class.as_ref().into()),
-                Some(GraphNameRef::NamedNode(g.as_ref())),
-            ) {
-                itself.insert(quad.map_err(|e| Error::Evaluation(e.to_string()))?.subject);
-            }
-        }
         let cut: Vec<Quad> = match &patterns {
-            None => stated_quads(store.quads(&graph)?),
+            None => store.quads(&graph)?,
             Some(patterns) => {
                 let mut out: Vec<Quad> = Vec::new();
                 for pattern in patterns {
@@ -621,7 +609,7 @@ fn split(
                         Some(GraphNameRef::NamedNode(g.as_ref())),
                     ) {
                         let quad = quad.map_err(|e| Error::Evaluation(e.to_string()))?;
-                        if !itself.contains(&quad.subject) && !out.contains(&quad) {
+                        if !out.contains(&quad) {
                             out.push(quad);
                         }
                     }
@@ -640,10 +628,12 @@ fn split(
                 .map(|q| Quad::new(q.subject, q.predicate, q.object, into.clone())),
         )?;
         store.classify(&piece, CHANGEABLE_GRAPH, DERIVED, None, None, None)?;
-        store.add([
-            Quad::new(into.clone(), derived.clone(), g.clone(), catalogue.clone()),
-            Quad::new(into.clone(), derived.clone(), g.clone(), into.clone()),
-        ])?;
+        store.add([Quad::new(
+            into.clone(),
+            derived.clone(),
+            g.clone(),
+            named(&store.metadata_for(&piece)?)?,
+        )])?;
         made.push(piece);
     }
     log::debug!(
@@ -655,7 +645,7 @@ fn split(
     Ok(made)
 }
 
-/// The digest of a set of patterns, as the cut a source's row says it was made by.
+/// The digest of a set of patterns, as the cut a source's metadata says it was made by.
 fn signature(patterns: Option<&[Pattern]>) -> String {
     let text = match patterns {
         None => "every".to_string(),
@@ -679,8 +669,7 @@ fn predicted(store: &Store, now: DateTime, gate: Option<&BTreeSet<String>>) -> R
     const BELIEFS_AHEAD_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>
     SELECT ?g WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                   ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start . FILTER(?start > $now) } }
+      GRAPH ?m_g { ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start . FILTER(?start > $now) } }
     ORDER BY ?g";
     let text = bind(BELIEFS_AHEAD_Q, &[("now", Value::instant(now))])?;
     let ahead: Vec<String> = store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "g")).collect();
@@ -704,7 +693,7 @@ fn predicted(store: &Store, now: DateTime, gate: Option<&BTreeSet<String>>) -> R
         if !seen.insert(graph.clone()) {
             continue;
         }
-        for quad in stated_quads(store.quads(&graph)?) {
+        for quad in store.quads(&graph)? {
             let object = match &quad.object {
                 Term::NamedNode(class) if quad.predicate.as_ref() == rdf::TYPE => Some(Term::from(class.clone())),
                 _ => None,
@@ -721,7 +710,7 @@ fn predicted(store: &Store, now: DateTime, gate: Option<&BTreeSet<String>>) -> R
 /// Whether some text reads a triple of `graphs`: its predicate is in `within`, or it is a type fact whose class is.
 fn reads_any(store: &Store, graphs: &[String], within: &BTreeSet<String>) -> Result<bool, Error> {
     for graph in graphs {
-        for quad in stated_quads(store.quads(graph)?) {
+        for quad in store.quads(graph)? {
             if within.contains(quad.predicate.as_str()) {
                 return Ok(true);
             }
@@ -747,13 +736,13 @@ fn whole(store: &Store, mut graphs: Vec<String>) -> Result<Vec<String>, Error> {
     Ok(graphs)
 }
 
-/// Every changeable graph, and the graph it was cut from where its row says.
+/// Every changeable graph, and the graph it was cut from where its metadata says.
 fn cut(store: &Store) -> Result<Vec<(String, Option<String>)>, Error> {
     /// EVERY CHANGEABLE GRAPH AND THE GRAPH IT WAS CUT FROM.
     const CUT_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
-    SELECT ?piece ?source WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+    SELECT ?piece ?source WHERE { GRAPH ?m {
       ?piece a planning:ChangeableGraph . OPTIONAL { ?piece prov:wasDerivedFrom ?source } } }";
     Ok(store
         .rows(CUT_Q, &[])?
@@ -762,23 +751,20 @@ fn cut(store: &Store) -> Result<Vec<(String, Option<String>)>, Error> {
         .collect())
 }
 
-/// The hash `ground`'s row says it holds, where a row stands.
+/// The hash `ground`'s metadata says it holds, where anything is said of it.
 fn hash_of(store: &Store, ground: &str) -> Result<Option<String>, Error> {
-    const STOOD_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $ground orexis:hash ?h } } LIMIT 1";
-    Ok(store
-        .rows(&bind(STOOD_Q, &[("ground", Value::iri(ground))])?, &[])?
-        .first()
-        .and_then(|r| orexis::store::value(r, "h")))
+    Ok(store.said_of(ground, HASH)?.into_iter().find_map(|h| match h {
+        Term::Literal(h) => Some(h.value().to_string()),
+        _ => None,
+    }))
 }
 
-/// Whether the catalogue still says what `graph` is.
+/// Whether anything still says what `graph` is.
 fn classified(store: &Store, graph: &str) -> Result<bool, Error> {
-    let cat = store.catalogue()?.unwrap_or_default();
-    store.ask(&format!("ASK {{ GRAPH <{cat}> {{ <{graph}> a ?kind }} }}"), &[])
+    Ok(!store.kinds_of(graph)?.is_empty())
 }
 
-/// Write the ground's hash on its row, within what is read where that is said, and answer the digest of everything
+/// Write the ground's hash in its metadata, within what is read where that is said, and answer the digest of everything
 /// it holds — what a period is told from the one before it by.
 fn marked(store: &Store, ground: &str, within: Option<&BTreeSet<String>>) -> Result<String, Error> {
     match within {
@@ -791,7 +777,7 @@ fn marked(store: &Store, ground: &str, within: Option<&BTreeSet<String>>) -> Res
 }
 
 /// The ground one boundary past `parent`: its facts, less whatever stood under a key what is added there adds to,
-/// plus what is added — and which ground it came from, on its row.
+/// plus what is added — and which ground it came from, in the cone graph.
 fn fork(store: &Store, parent: &str, name: &str, added: &[Triple]) -> Result<(String, Option<String>), Error> {
     /// WHAT A BOUNDARY TAKES OUT OF THE GROUND IT MAKES: every triple under a key something there adds to.
     const SUPERSEDE_U: &str =
@@ -820,22 +806,23 @@ fn fork(store: &Store, parent: &str, name: &str, added: &[Triple]) -> Result<(St
         )?]
     };
     crate::fork::fork(store, parent, name, added, &supersede)?;
-    //  WHICH GROUND IT CAME FROM, on its row and said by the ground itself.
-    let cat = store.catalogue()?.unwrap_or_default();
+    //  WHICH GROUND IT CAME FROM, a row of the search: the grounds are walked along it, as the worlds along their path.
     let (ground, derived, parent) = (named(name)?, named(PROV_DERIVED)?, named(parent)?);
-    store.add([
-        Quad::new(ground.clone(), derived.clone(), parent.clone(), named(&cat)?),
-        Quad::new(ground.clone(), derived, parent, ground.clone()),
-        Quad::new(ground.clone(), rdf::TYPE, named(GRAPH)?, ground),
-    ])?;
+    store.add([Quad::new(
+        ground,
+        derived,
+        parent,
+        named(&crate::world_at::cone_made_of(store)?)?,
+    )])?;
     Ok((name.to_string(), stood))
 }
 
-/// Take back the facts and the row of a ground standing under the name this pass is about to lay under, the
+/// Take back the facts and the metadata of a ground standing under the name this pass is about to lay under, the
 /// imaginarium outliving the pass and a ground being named for its instant; the hash it stood at, where it stood.
 fn relaid(store: &Store, name: &str) -> Result<Option<String>, Error> {
     let stood = hash_of(store, name)?;
     store.forget_graph(name, Some(BELIEF))?;
+    crate::world_at::out_of_the_cone(store, name)?;
     Ok(stood)
 }
 
@@ -851,21 +838,21 @@ fn settled(store: &Store, name: &str, stood: Option<String>, beside: bool) -> Re
     /// THE VERDICTS ABOUT A GROUND, with the violation rows hanging off each.
     const UNWEIGH_U: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
-    DELETE { GRAPH ?cat { ?x ?p ?o . ?v ?vp ?vo } }
-    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                          ?x a planning:Weighing ; planning:weighs $world ; ?p ?o .
-                          OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }";
+    DELETE { GRAPH $cone { ?x ?p ?o . ?v ?vp ?vo } }
+    WHERE  { GRAPH $cone { ?x a planning:Weighing ; planning:weighs $world ; ?p ?o .
+                           OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }";
     const UNADMIT_U: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
-    DELETE { GRAPH ?cat { ?c ?p ?o } }
-    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                          ?c a planning:Candidate ; planning:from $world ; ?p ?o } }";
+    DELETE { GRAPH $cone { ?c ?p ?o } }
+    WHERE  { GRAPH $cone { ?c a planning:Candidate ; planning:from $world ; ?p ?o } }";
     let now = hash_of(store, name)?;
     if beside && stood.is_some() && now == stood {
         return Ok(());
     }
-    store.update(&bind(UNWEIGH_U, &[("world", Value::iri(name))])?)?;
-    store.update(&bind(UNADMIT_U, &[("world", Value::iri(name))])?)
+    let cone = crate::world_at::cone_of(store)?;
+    let marks = [("world", Value::iri(name)), ("cone", Value::iri(cone))];
+    store.update(&bind(UNWEIGH_U, &marks)?)?;
+    store.update(&bind(UNADMIT_U, &marks)?)
 }
 
 /// A ground's name, for eyes: the instant it opens at.
@@ -918,10 +905,10 @@ mod tests {
         let case = snapshots::cases_in(&cases()).into_iter().next().unwrap();
         let store = snapshots::stand_in(&case);
         let present = lay_ground(&store, snapshots::now(), &Laying::default()).unwrap()[0].clone();
-        let cat = store.catalogue().unwrap().unwrap();
+        let cat = crate::world_at::cone_made_of(&store).unwrap();
         let candidates = "PREFIX orexis: <http://example.org/orexis#>
             PREFIX planning: <http://example.org/orexis/planning#>
-            SELECT ?c WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?c a planning:Candidate } }";
+            SELECT ?c WHERE { GRAPH ?cone { ?c a planning:Candidate } }";
         store
             .update(&format!(
                 "PREFIX planning: <http://example.org/orexis/planning#>
@@ -980,7 +967,7 @@ mod tests {
     fn hash_of(store: &Store, ground: &str) -> String {
         let text = format!(
             "PREFIX orexis: <http://example.org/orexis#>
-                SELECT ?h WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{ground}> orexis:hash ?h }} }}"
+                SELECT ?h WHERE {{ GRAPH ?m_ground {{ <{ground}> orexis:hash ?h }} }}"
         );
         orexis::store::value(&store.rows(&text, &[]).unwrap()[0], "h").unwrap()
     }
@@ -1065,7 +1052,7 @@ mod tests {
     #[test]
     fn a_ground_said_no_longer_ahead_is_derived_from_the_present_only_where_laid_again() {
         const DERIVED_Q: &str = "PREFIX prov: <http://www.w3.org/ns/prov#>
-            SELECT ?from WHERE { GRAPH $ground { $ground prov:wasDerivedFrom ?from } }";
+            SELECT ?from WHERE { GRAPH ?cone { $ground prov:wasDerivedFrom ?from } }";
         let store = snapshots::stand_in(&cases().join("two_stretches_in_one_scope_are_two_grounds.trig"));
         let landing = snapshots::now()
             .checked_add_day_time_duration(DayTimeDuration::new(900))
@@ -1169,13 +1156,19 @@ mod tests {
         );
     }
 
-    /// What every graph but the catalogue states, by name.
+    /// What every graph states, by name: every graph but the search's own and the metadata graphs.
     fn held(store: &Store) -> BTreeMap<String, HashSet<Triple>> {
-        let cat = store.catalogue().unwrap().unwrap();
+        let cat = crate::world_at::cone_of(store).unwrap();
+        let said_in: HashSet<String> = store
+            .graph_names()
+            .unwrap()
+            .iter()
+            .filter_map(|g| store.metadata_of(g).unwrap())
+            .collect();
         let mut out: BTreeMap<String, HashSet<Triple>> = BTreeMap::new();
         for graph in store.graph_names().unwrap() {
-            if graph != cat {
-                let states = orexis::metadata::stated(store.triples(&graph).unwrap());
+            if graph != cat && !said_in.contains(&graph) {
+                let states = store.triples(&graph).unwrap();
                 out.insert(graph.clone(), states.into_iter().collect());
             }
         }

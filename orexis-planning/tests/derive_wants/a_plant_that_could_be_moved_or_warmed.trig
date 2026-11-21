@@ -36,6 +36,14 @@ GRAPH :ontology {
   planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :air_of_cold_room a sosa:Sample .
   :air_of_cold_room sosa:isSampleOf :cold_room .
@@ -49,6 +57,13 @@ GRAPH :world {
   :warm_room a :Room .
 }
 
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
+}
+
 GRAPH :desires {
   :keeper planning:holds :keeper.warm_enough .
   :keeper.warm_enough a planning:Desire .
@@ -59,6 +74,13 @@ GRAPH :desires {
   :warm_where_it_stands sh:property [ planning:about water:AirTemperature ; sh:message "the air where this plant stands reads above the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:AboveRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
   :warm_where_it_stands sh:property [ planning:about water:AirTemperature ; sh:message "the air where this plant stands reads below the range it wants" ; sh:path ( :standsIn :hasAir [ sh:inversePath sosa:hasFeatureOfInterest ] ) ; sh:qualifiedMaxCount 0 ; sh:qualifiedValueShape [ sh:class sensing:BelowRegion ; sh:property [ sh:hasValue water:AirTemperature ; sh:path sosa:observedProperty ] ] ] .
   :warm_where_it_stands sh:targetClass water:Plant .
+}
+
+GRAPH :desires.metadata {
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :desires.metadata a orexis:MetadataGraph .
+  :desires.metadata orexis:metadataOf :desires .
 }
 
 GRAPH :sensed {
@@ -74,6 +96,14 @@ GRAPH :sensed {
   :warm_reading sosa:observedProperty water:AirTemperature .
 }
 
+GRAPH :sensed.metadata {
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed orexis:ownedBy :keeper .
+  :sensed.metadata a orexis:MetadataGraph .
+  :sensed.metadata orexis:metadataOf :sensed .
+}
+
 #  WHAT `scope_actions` MADE OF THE TWO LEVERS (scope_actions/a_heater_and_a_trolley.trig): a
 #  heater writes what a reading is, a trolley writes where a plant stands, nothing touches both,
 #  so they are two scopes. The one witness here is about a property no scope holds, so the
@@ -87,22 +117,14 @@ GRAPH :scopes {
   sosa:hasSimpleResult planning:inScope scopes:2 .
 }
 
-# What each graph IS, and when it holds — said once each, beside the data.
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :desires a orexis:Graph .
-  :desires a planning:DesireGraph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
+GRAPH :scopes.metadata {
   :scopes a orexis:Graph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
   :scopes orexis:ownedBy :keeper .
-  :sensed a orexis:BeliefGraph .
-  :sensed a orexis:Graph .
-  :sensed orexis:ownedBy :keeper .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :scopes.metadata a orexis:MetadataGraph .
+  :scopes.metadata orexis:metadataOf :scopes .
+}
+
+GRAPH :catalogue {
 }

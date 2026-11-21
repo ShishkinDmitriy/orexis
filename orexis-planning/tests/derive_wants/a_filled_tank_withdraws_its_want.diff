@@ -1,7 +1,20 @@
 --- case
 +++ expected
-@@ -40,18 +40,8 @@
-   :tank2 :temperature 20 .
+@@ -31,6 +31,7 @@
+ GRAPH :world.metadata {
+   :world a orexis:BeliefGraph .
+   :world a orexis:Graph .
++  :world planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
+   :world.metadata a orexis:MetadataGraph .
+   :world.metadata orexis:metadataOf :world .
+ }
+@@ -66,31 +67,15 @@
+   :sensed a orexis:BeliefGraph .
+   :sensed a orexis:Graph .
+   :sensed orexis:ownedBy :keeper .
++  :sensed planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
+   :sensed.metadata a orexis:MetadataGraph .
+   :sensed.metadata orexis:metadataOf :sensed .
  }
  
 -GRAPH pursued:keeper.in_range.pursued.tank1.level {
@@ -16,28 +29,47 @@
 -  :keeper.in_range.pursued.tank1.level.met sh:targetNode :tank1 .
 -}
  
+-GRAPH pursued:keeper.in_range.pursued.tank1.level.metadata {
+-  pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
+-  pursued:keeper.in_range.pursued.tank1.level a planning:WantGraph .
+-  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00Z"^^xsd:dateTime ] .
+-  pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Derived .
+-  pursued:keeper.in_range.pursued.tank1.level.metadata a orexis:MetadataGraph .
+-  pursued:keeper.in_range.pursued.tank1.level.metadata orexis:metadataOf pursued:keeper.in_range.pursued.tank1.level .
+-}
+ 
++
 +
  GRAPH :scopes {
    :fill planning:inScope :keeper.scope.1 .
    :heat planning:inScope :keeper.scope.2 .
-@@ -76,10 +66,16 @@
-   :sensed a orexis:BeliefGraph .
-   :sensed a orexis:Graph .
-   :sensed orexis:ownedBy :keeper .
-+  :sensed planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
-   :world a orexis:BeliefGraph .
-   :world a orexis:Graph .
--  pursued:keeper.in_range.pursued.tank1.level a orexis:Graph .
--  pursued:keeper.in_range.pursued.tank1.level a planning:WantGraph .
--  pursued:keeper.in_range.pursued.tank1.level dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T11:00:00+00:00"^^xsd:dateTime ] .
--  pursued:keeper.in_range.pursued.tank1.level orexis:arrivedBy orexis:Derived .
-+  :world planning:cutBy "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
-+  ground:2026-01-01T120000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
-+  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
-+  ground:2026-01-01T120000p0000 orexis:hash "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
+@@ -109,5 +94,28 @@
+   :scopes.metadata orexis:metadataOf :scopes .
+ }
+ 
+-GRAPH :catalogue {
++
++
++
++GRAPH <http://example.org/orexis/graph/cone> {
 +  ground:2026-01-01T120000p0000.for.keeper.in_range a planning:Weighing .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range planning:for :keeper.in_range .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range planning:met true .
 +  ground:2026-01-01T120000p0000.for.keeper.in_range planning:weighs ground:2026-01-01T120000p0000 .
++}
++
++GRAPH <http://example.org/orexis/graph/cone.metadata> {
++  <http://example.org/orexis/graph/cone.metadata> a orexis:MetadataGraph .
++  <http://example.org/orexis/graph/cone.metadata> orexis:metadataOf <http://example.org/orexis/graph/cone> .
++  <http://example.org/orexis/graph/cone> a planning:ConeGraph .
++  <http://example.org/orexis/graph/cone> orexis:arrivedBy orexis:Derived .
++}
++
++GRAPH ground:2026-01-01T120000p0000.metadata {
++  ground:2026-01-01T120000p0000 a planning:GroundGraph .
++  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
++  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T120000p0000 orexis:hash "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
++  ground:2026-01-01T120000p0000.metadata a orexis:MetadataGraph .
++  ground:2026-01-01T120000p0000.metadata orexis:metadataOf ground:2026-01-01T120000p0000 .
  }

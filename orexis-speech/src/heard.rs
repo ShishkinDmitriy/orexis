@@ -25,7 +25,7 @@ pub fn heard(store: &Store, me: &str, payload: &[u8]) -> Result<Vec<String>, Err
 
 fn refused(store: &Store, payload: &[u8]) -> Result<Document, Error> {
     const ARRIVED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?arrival WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph orexis:arrivedBy ?arrival } }";
+        SELECT ?arrival WHERE { GRAPH ?m_graph { $graph orexis:arrivedBy ?arrival } }";
     let doc = Document::of(payload)?;
     for graph in doc.kinds().into_keys() {
         let arrived: Vec<String> = store
@@ -50,11 +50,12 @@ mod tests {
 
     use oxigraph::model::{GraphNameRef, NamedNodeRef};
 
-    use orexis::ontology::{ACTION, BELIEF, CATALOGUE_GRAPH, OREXIS};
+    use orexis::ontology::{ACTION, BELIEF, OREXIS};
     use orexis::store::{Within, value};
 
     use super::*;
     use crate::ontology::STATEMENT_GRAPH as STATEMENT;
+    use orexis::snapshots::SAID_TOGETHER;
 
     const T: &str = "http://example.org/test#";
 
@@ -69,12 +70,13 @@ mod tests {
   PREFIX orexis: <http://example.org/orexis#>
   PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
   INSERT DATA {{
-  GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph . :vocabulary a orexis:OntologyGraph .
+  GRAPH <{SAID_TOGETHER}> {{ :vocabulary a orexis:OntologyGraph .
                                :mine a orexis:BeliefGraph ; orexis:arrivedBy orexis:Recorded . }}
   GRAPH :vocabulary {{ :RoundGraph rdfs:subClassOf <{STATEMENT}> , orexis:Graph .
                            <{STATEMENT}> rdfs:subClassOf orexis:Graph . }} }}"
         ))
         .unwrap();
+        orexis::snapshots::mirrored(&st, SAID_TOGETHER);
         st
     }
 
@@ -113,7 +115,7 @@ mod tests {
         );
         assert!(
             kinds(&store, STATEMENT).contains(&round),
-            "a statement, its kinds closed on its row"
+            "a statement, its kinds closed in its metadata"
         );
         assert!(
             kinds(&store, &format!("{T}RoundGraph")).contains(&round),
@@ -122,7 +124,7 @@ mod tests {
         assert!(!kinds(&store, BELIEF).contains(&round), "and no belief");
         let q = format!(
             "PREFIX orexis: <http://example.org/orexis#>
-                SELECT ?a ?o WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{round}> orexis:arrivedBy ?a ; orexis:ownedBy ?o }} }}"
+                SELECT ?a ?o WHERE {{ GRAPH ?m_round {{ <{round}> orexis:arrivedBy ?a ; orexis:ownedBy ?o }} }}"
         );
         let found = store.rows(&q, &[]).unwrap();
         assert_eq!(found.len(), 1);
