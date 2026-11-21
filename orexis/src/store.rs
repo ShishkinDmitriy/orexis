@@ -360,16 +360,21 @@ impl Store {
     pub fn graphs_of(&self, kinds: &[&str], within: &Within) -> Result<Vec<String>, Error> {
         /// WHICH GRAPHS, in one text: those of any kind named — every row carries every kind its class is beneath, so
         /// no path is walked — the holder's or the common ones where a holder is named, and holding at the instant
-        /// where one is given.
+        /// where one is given. THE CATALOGUE IS NAMED, asked for once and spliced: found by its row inside this
+        /// group, the group was evaluated per named graph, so the lookup grew with every graph the store held
+        /// whatever its kind — 6 ms over 600 graphs and 58 over 6,000 for the same 24 rows holding, where named it
+        /// is under one over either.
         const GRAPHS_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
         SELECT DISTINCT ?g WHERE {
-          GRAPH ?cat {
-            ?cat a orexis:CatalogueGraph .
+          GRAPH $cat {
             ?g a ?kind . FILTER(isIRI(?g)) VALUES ?kind { $kinds }
             $owned
             $holding } }
         ORDER BY ?g";
+        let Some(catalogue) = self.catalogue()? else {
+            return Ok(Vec::new());
+        };
         let mut owned = match &within.holder {
             Some(holder) => bind(OWNED, &[("holder", Value::iri(holder.clone()))])?,
             None => String::new(),
@@ -392,6 +397,7 @@ impl Store {
         let text = bind(
             GRAPHS_Q,
             &[
+                ("cat", Value::iri(catalogue)),
                 ("kinds", Value::Raw(kinds)),
                 ("owned", Value::Raw(owned)),
                 ("holding", Value::Raw(holding)),
@@ -969,8 +975,9 @@ mod tests {
         for _ in 0..10 {
             store.graphs_of(&[BELIEF], &Within::default()).unwrap();
         }
+        //  TWO TEXTS A LOOKUP: which graph is the catalogue, and which graphs it says are of the kind.
         let (parsed, run) = store.statements();
-        assert_eq!((parsed, run), (1, 10));
+        assert_eq!((parsed, run), (2, 20));
     }
 
     #[test]
