@@ -4,8 +4,8 @@ title: Description
 description: >-
   What is said OF a graph rather than by it - its kinds, how it arrived, whose it is, the period it
   holds over, its hash. Everything else a graph holds is its content. Told apart by type, never by
-  the graph's name, so the two can lie in one graph and a hash, a diff and a copy still take the
-  content alone.
+  the graph's name, and by each reader of a whole graph in its own text: the store hands over
+  triples and knows nothing of the difference.
 ---
 
 # The two halves of a graph
@@ -27,18 +27,23 @@ either place, and nothing may depend on which.
 `orexis:Graph`. Not by the graph's name: a description copied into another graph is no content there
 either, and a named node may join the description by being typed.
 
-Two forms of one rule, held to each other by the kernel's tests:
+**The store does not know.** It hands over a graph's triples and decides nothing about them, as it
+decides no dataset for a reader; a door answering "the content of a graph" was built and taken out
+before it merged, a method that knew what every caller wanted. Each reader of a whole graph says the
+test itself, in the group it reads the graph in:
 
-- `Store::content(graph)` answers the content as triples, for code that hashes or copies;
-- `ontology::CONTENT` is the same test as a filter over `?s ?p ?o`, spliced inside the `GRAPH` group
-  a text reads, for a text that diffs or copies.
+```sparql
+GRAPH ?w { ?s ?p ?o FILTER NOT EXISTS { ?s a orexis:Graph } FILTER NOT EXISTS { ?s a dcterms:PeriodOfTime } }
+```
+
+Two plain filters, since one over a `VALUES` is evaluated per candidate.
 
 # Who asks for the content alone
 
 Only what handles a whole graph as a set of facts, with no type to ask for:
 
-- **the hash** (`orexis/src/hash.rs`) - so a graph hashes alike wherever it is described, and its own
-  hash is no part of what is hashed;
+- **the hash** (`orexis/src/hash.rs`), which says it in code, being no text - so a graph hashes alike
+  wherever it is described, and its own hash is no part of what is hashed;
 - **a step's predicted change** (`orexis-planning/src/extract_plan.rs`) - the diff of two possible
   worlds, which always differ in what each says it is;
 - **the executor's landing check and a fictive step's write** (`orexis-execution/src/executor.rs`) -

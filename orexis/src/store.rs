@@ -29,7 +29,7 @@ use oxsdatatypes::DateTime;
 
 use crate::Error;
 use crate::bind::{Value, bind};
-use crate::ontology::{BELIEF, GRAPH, PERIOD};
+use crate::ontology::BELIEF;
 
 /// One solution: each variable it binds, to the term it binds.
 pub type Row = BTreeMap<String, Term>;
@@ -513,25 +513,6 @@ impl Store {
     /// One graph's contents as triples.
     pub fn triples(&self, graph: &str) -> Result<Vec<Triple>, Error> {
         Ok(self.quads(graph)?.into_iter().map(Triple::from).collect())
-    }
-
-    /// WHAT ONE GRAPH STATES, its description left out: every triple but those whose subject the graph types as a
-    /// graph or as a period (`ontology::CONTENT`, as a text asks it). What is hashed, diffed and copied as the graph's
-    /// facts; a graph describing nothing is all content.
-    pub fn content(&self, graph: &str) -> Result<Vec<Triple>, Error> {
-        let triples = self.triples(graph)?;
-        let described: HashSet<NamedOrBlankNode> = triples
-            .iter()
-            .filter(|t| {
-                t.predicate == rdf::TYPE
-                    && matches!(&t.object, Term::NamedNode(class) if class.as_str() == GRAPH || class.as_str() == PERIOD)
-            })
-            .map(|t| t.subject.clone())
-            .collect();
-        Ok(triples
-            .into_iter()
-            .filter(|t| !described.contains(&t.subject))
-            .collect())
     }
 
     /// Every named graph present, by name, sorted.

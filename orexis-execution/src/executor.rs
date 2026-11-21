@@ -34,7 +34,7 @@ use orexis::bind::{Value, bind};
 use orexis::clock::{Clock, instant as parse_instant, isoformat, seconds, seconds_of};
 use orexis::events::{Event, Watch};
 use orexis::hash::hash_named_graph;
-use orexis::ontology::{BELIEF, CONTENT, DERIVED, ONTOLOGY, OREXIS, RECORDED, SELF_GRAPH, local_of};
+use orexis::ontology::{BELIEF, DERIVED, ONTOLOGY, OREXIS, RECORDED, SELF_GRAPH, local_of};
 use orexis::store::{Row, Store, Within, iri, value};
 use orexis::task::{Heard, Turn};
 
@@ -55,10 +55,13 @@ const ADOPTED_AT: &str = "http://example.org/orexis/execution#adoptedAt";
 const ENDS_AFTER: &str = "http://example.org/orexis/execution#endsAfter";
 const WAITS_FOR: &str = "http://example.org/orexis/execution#waitsFor";
 
-/// WHAT A STEP PREDICTED AND THE PRESENT DOES NOT SHOW, asked of the content of the two graphs it predicts in: what
-/// either says of itself is its description (`CONTENT`), which no present holds and no step is held to.
-const ADDS_MISSING: &str = "{ GRAPH $adds { ?s ?p ?o $content } FILTER NOT EXISTS { ?s ?p ?x . FILTER(?x = ?o) } }";
-const RETRACTS_STANDING: &str = "{ GRAPH $retracts { ?s ?p ?o $content } ?s ?p ?x . FILTER(?x = ?o) }";
+/// WHAT A STEP PREDICTED AND THE PRESENT DOES NOT SHOW, asked of what the two graphs it predicts in state: what
+/// either says of itself, about a graph or a period, is its description, which no present holds and no step is held
+/// to. Whole IRIs, each being a piece of a text that declares its own prefixes.
+const ADDS_MISSING: &str = "{ GRAPH $adds { ?s ?p ?o FILTER NOT EXISTS { ?s a <http://example.org/orexis#Graph> } FILTER NOT EXISTS { ?s a <http://purl.org/dc/terms/PeriodOfTime> } } \
+     FILTER NOT EXISTS { ?s ?p ?x . FILTER(?x = ?o) } }";
+const RETRACTS_STANDING: &str = "{ GRAPH $retracts { ?s ?p ?o FILTER NOT EXISTS { ?s a <http://example.org/orexis#Graph> } FILTER NOT EXISTS { ?s a <http://purl.org/dc/terms/PeriodOfTime> } } \
+     ?s ?p ?x . FILTER(?x = ?o) }";
 
 /// What a step says of itself in words other than this layer's, keyed by the local part of each predicate, with
 /// the step's own IRI under `step` — what a taker is handed.
@@ -1049,16 +1052,10 @@ impl Executor {
         present.extend(self.beliefs.revisions_of(&strs(&beliefs), BELIEF)?);
         let mut failing = Vec::new();
         if let Some(adds) = adds {
-            failing.push(bind(
-                ADDS_MISSING,
-                &[("adds", Value::iri(adds)), ("content", Value::raw(CONTENT))],
-            )?);
+            failing.push(bind(ADDS_MISSING, &[("adds", Value::iri(adds))])?);
         }
         if let Some(retracts) = retracts {
-            failing.push(bind(
-                RETRACTS_STANDING,
-                &[("retracts", Value::iri(retracts)), ("content", Value::raw(CONTENT))],
-            )?);
+            failing.push(bind(RETRACTS_STANDING, &[("retracts", Value::iri(retracts))])?);
         }
         Ok(!self.beliefs.ask(
             &format!(
@@ -1412,13 +1409,16 @@ impl Executor {
     /// The taking of a fictive step: say it, then write what it predicted into the beliefs — each retraction taken
     /// out wherever the agent holds it, each addition put where that stood, or in a belief of its own.
     fn fictive(&mut self, said: &Said, intention: &str) -> Result<(), Error> {
-        const RETRACT_U: &str = "DELETE { GRAPH ?g { ?s ?p ?o } } WHERE { GRAPH $retracts { ?s ?p ?o $content } GRAPH ?g { ?s ?p ?o } VALUES ?g { $held } }";
-        const ADD_U: &str = "INSERT { GRAPH $into { ?s ?p ?o } } WHERE { GRAPH $adds { ?s ?p ?o $content } }";
+        const RETRACT_U: &str = "DELETE { GRAPH ?g { ?s ?p ?o } } WHERE { GRAPH $retracts { ?s ?p ?o FILTER NOT EXISTS { ?s a <http://example.org/orexis#Graph> } FILTER NOT EXISTS { ?s a <http://purl.org/dc/terms/PeriodOfTime> } } \
+             GRAPH ?g { ?s ?p ?o } VALUES ?g { $held } }";
+        const ADD_U: &str = "INSERT { GRAPH $into { ?s ?p ?o } } WHERE { GRAPH $adds { ?s ?p ?o \
+             FILTER NOT EXISTS { ?s a <http://example.org/orexis#Graph> } FILTER NOT EXISTS { ?s a <http://purl.org/dc/terms/PeriodOfTime> } } }";
         const HELD_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
         PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX orexis: <http://example.org/orexis#>
         SELECT DISTINCT ?g WHERE {
-          GRAPH $retracts { ?s ?p ?o $content }
+          GRAPH $retracts { ?s ?p ?o FILTER NOT EXISTS { ?s a orexis:Graph }
+                            FILTER NOT EXISTS { ?s a <http://purl.org/dc/terms/PeriodOfTime> } }
           GRAPH $cat { ?g a orexis:BeliefGraph .
                        ?g orexis:ownedBy ?owner .
                        FILTER NOT EXISTS { ?g a belief:RevisionGraph }
@@ -1435,14 +1435,7 @@ impl Executor {
             Some(r) => self
                 .beliefs
                 .rows(
-                    &bind(
-                        HELD_Q,
-                        &[
-                            ("cat", Value::iri(cat)),
-                            ("retracts", Value::iri(r.clone())),
-                            ("content", Value::raw(CONTENT)),
-                        ],
-                    )?,
+                    &bind(HELD_Q, &[("cat", Value::iri(cat)), ("retracts", Value::iri(r.clone()))])?,
                     &[],
                 )?
                 .iter()
@@ -1456,21 +1449,13 @@ impl Executor {
             let list = held.iter().map(|g| format!("<{g}>")).collect::<Vec<_>>().join(" ");
             writes.push(bind(
                 RETRACT_U,
-                &[
-                    ("retracts", Value::iri(r.clone())),
-                    ("held", Value::raw(list)),
-                    ("content", Value::raw(CONTENT)),
-                ],
+                &[("retracts", Value::iri(r.clone())), ("held", Value::raw(list))],
             )?);
         }
         if let Some(a) = &adds {
             writes.push(bind(
                 ADD_U,
-                &[
-                    ("into", Value::iri(into.clone())),
-                    ("adds", Value::iri(a.clone())),
-                    ("content", Value::raw(CONTENT)),
-                ],
+                &[("into", Value::iri(into.clone())), ("adds", Value::iri(a.clone()))],
             )?);
         }
         let beliefs = self.beliefs.graphs_of(&[BELIEF], &Within::default())?;

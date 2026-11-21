@@ -4,8 +4,10 @@
 //!
 //! **IT IS THE CONTENT AND NOTHING ELSE**: a blank node is its content, not its label; a number is its value
 //! rounded to six decimals; every other term is its kind and its text; and what a graph says of itself - its kinds,
-//! how it arrived, whose it is, its period - is its description and no content (`Store::content`), so a graph hashes
-//! alike whether it is described in the catalogue or in itself, and its own hash is no part of what is hashed. **A WORLD IS HASHED WITHIN WHAT IS READ**:
+//! how it arrived, whose it is, its period - is its description and no content (`stated`), so a graph hashes alike
+//! whether it is described in the catalogue or in itself, and its own hash is no part of what is hashed. The hash
+//! knows this of what it hashes, as every text that reads a whole graph knows it of what it reads: the store hands
+//! over a graph's triples and decides nothing about them. **A WORLD IS HASHED WITHIN WHAT IS READ**:
 //! where a caller names the predicates and classes a world is identified by, only those facts count, a type fact
 //! by its class.
 //!
@@ -13,13 +15,13 @@
 //! is spelled as a Python tuple literal, as it always was: a string quoted as `repr` quotes it (`quoted`), a number
 //! by `rdf::repr`, a one-element tuple with its trailing comma.
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 use oxigraph::model::{BlankNode, GraphNameRef, Literal, NamedNode, NamedOrBlankNode, Quad, Term, Triple};
 use sha2::{Digest, Sha256};
 
 use crate::Error;
-use crate::ontology::HASH;
+use crate::ontology::{GRAPH, HASH, PERIOD};
 use crate::rdf::{RDF_TYPE, repr, round6};
 use crate::store::Store;
 
@@ -79,12 +81,29 @@ pub fn hash_named_graph(store: &Store, graph: &str, within: Option<&BTreeSet<Str
 /// The canonical hash of what `graph` holds, answered and written nowhere — for a writer that puts it on the
 /// graph's row itself, in the update that writes the row.
 pub fn digest_of(store: &Store, graph: &str, within: Option<&BTreeSet<String>>) -> Result<String, Error> {
-    let triples = store.content(graph)?;
+    let triples = stated(store.triples(graph)?);
     let kept: Vec<Triple> = match within {
         None => triples,
         Some(within) => triples.into_iter().filter(|t| counts(t, within)).collect(),
     };
     Ok(digest(&forms(&kept).into_iter().collect()))
+}
+
+/// What a graph's triples state, its description left out: every triple but those whose subject the graph types as a
+/// graph or as a period.
+fn stated(triples: Vec<Triple>) -> Vec<Triple> {
+    let described: HashSet<NamedOrBlankNode> = triples
+        .iter()
+        .filter(|t| {
+            t.predicate.as_str() == RDF_TYPE
+                && matches!(&t.object, Term::NamedNode(class) if class.as_str() == GRAPH || class.as_str() == PERIOD)
+        })
+        .map(|t| t.subject.clone())
+        .collect();
+    triples
+        .into_iter()
+        .filter(|t| !described.contains(&t.subject))
+        .collect()
 }
 
 /// Whether a triple is among what `within` names: by its predicate, and a type fact by its class.
@@ -428,22 +447,6 @@ mod tests {
             ))
             .unwrap();
         assert_eq!(hash_named_graph(&store, "urn:test:b", None).unwrap(), bare);
-        assert_eq!(
-            store.content("urn:test:b").unwrap().len(),
-            1,
-            "its description, and a description copied into it, are no content"
-        );
-        //  THE SAME TEST AS A TEXT ASKS IT: the filter spliced into the group that reads the graph.
-        let asked = store
-            .rows(
-                &format!(
-                    "SELECT ?s ?p ?o WHERE {{ GRAPH <urn:test:b> {{ ?s ?p ?o {} }} }}",
-                    crate::ontology::CONTENT
-                ),
-                &[],
-            )
-            .unwrap();
-        assert_eq!(asked.len(), 1, "the filter and `Store::content` are one rule");
     }
 
     #[test]
