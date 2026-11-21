@@ -1,11 +1,13 @@
 //! A FORK: one graph's facts under another name, less what each retraction takes, plus what is added — how a
-//! possible world is made of its parent and a ground of the one before it. A world is a value, so the parent is
+//! possible world is made of its parent and a ground of the one before it. What the parent says of itself is no
+//! fact of it, and is not copied: the fork is described by whoever names it. A world is a value, so the parent is
 //! never touched. The imaginarium is planning's, so the fork is too; the kernel keeps the store's primitives
 //! (`Store::quads`, `Store::add`, `Store::update`) it is made of.
 
 use oxigraph::model::{NamedNode, Quad, Triple};
 
 use orexis::Error;
+use orexis::description::stated_quads;
 use orexis::store::Store;
 
 /// `parent`'s facts under `name`, less what each retraction takes, plus `added` — THE ORDER IS THE WHOLE OF IT:
@@ -22,8 +24,7 @@ pub(crate) fn fork(
     retracts: &[String],
 ) -> Result<(), Error> {
     let into = NamedNode::new(name).map_err(|e| Error::Evaluation(e.to_string()))?;
-    let copied: Vec<Quad> = store
-        .quads(parent)?
+    let copied: Vec<Quad> = stated_quads(store.quads(parent)?)
         .into_iter()
         .map(|q| Quad::new(q.subject, q.predicate, q.object, into.clone()))
         .collect();

@@ -17,6 +17,7 @@ use oxsdatatypes::DateTime;
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::{instant, seconds, seconds_of};
+use orexis::description::stated_quads;
 use orexis::hash::hash_named_graph;
 use orexis::ontology::{BELIEF, FORECAST, RECEIVED};
 use orexis::store::{Store, iri, value};
@@ -173,7 +174,7 @@ fn reach(store: &Store, peer: &str, constraint: &str, ahead: i64, at: DateTime) 
         let mut rest = Vec::new();
         let mut now = Vec::new();
         for graph in &graphs {
-            for q in store.quads(graph)? {
+            for q in stated_quads(store.quads(graph)?) {
                 if q.subject == node && key.contains(q.predicate.as_str()) {
                     now.push((q.predicate.as_str().to_string(), q.object));
                 } else {
@@ -294,7 +295,7 @@ fn holding_in(store: &Store, graph: &str) -> Result<Option<Holding>, Error> {
     const PERIOD_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>
     SELECT ?start ?end WHERE { GRAPH $cat { $graph dcterms:temporal ?p . OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } LIMIT 1";
-    let quads = store.quads(graph)?;
+    let quads = stated_quads(store.quads(graph)?);
     let Some(first) = quads.first() else { return Ok(None) };
     let thing = match &first.subject {
         NamedOrBlankNode::NamedNode(n) => n.as_str().to_string(),
@@ -340,7 +341,7 @@ fn refused(store: &Store, held: &Holding, at: DateTime, landing: &[Holding]) -> 
     }
     let mut base = Vec::new();
     for graph in &graphs {
-        base.extend(store.quads(graph)?);
+        base.extend(stated_quads(store.quads(graph)?));
     }
     let thing = named(&held.thing);
     let mut texts = Vec::new();

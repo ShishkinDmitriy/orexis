@@ -22,14 +22,14 @@ use std::sync::{Arc, Mutex};
 use lru::LruCache;
 use oxigraph::io::RdfFormat;
 use oxigraph::model::vocab::rdf;
-use oxigraph::model::{GraphName, GraphNameRef, NamedNode, NamedOrBlankNode, Quad, Term, Triple};
+use oxigraph::model::{BlankNode, GraphName, GraphNameRef, NamedNode, NamedOrBlankNode, Quad, Term, Triple};
 use oxigraph::sparql::{PreparedSparqlQuery, PreparedSparqlUpdate, QueryResults, SparqlEvaluator};
 use oxigraph::store::Store as Engine;
 use oxsdatatypes::DateTime;
 
 use crate::Error;
 use crate::bind::{Value, bind};
-use crate::ontology::BELIEF;
+use crate::ontology::{BELIEF, GRAPH, HASH};
 
 /// One solution: each variable it binds, to the term it binds.
 pub type Row = BTreeMap<String, Term>;
@@ -108,6 +108,11 @@ const HOLDING: &str = "OPTIONAL { ?g dcterms:temporal ?period .
     FILTER(!BOUND(?start) || ?when >= ?start) FILTER(!BOUND(?end) || ?till < ?end)";
 
 const PROV_DERIVED: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
+const ARRIVED_BY: &str = "http://example.org/orexis#arrivedBy";
+const OWNED_BY: &str = "http://example.org/orexis#ownedBy";
+/// THE WORDS A GRAPH IS DESCRIBED IN, beside its period: what it is, how it arrived, whose it is, what it holds by
+/// hash and what it was derived from. What a package says of a graph in words of its own is that package's.
+pub const DESCRIBES: [&str; 5] = [crate::rdf::RDF_TYPE, ARRIVED_BY, OWNED_BY, HASH, PROV_DERIVED];
 const DCTERMS_TEMPORAL: &str = "http://purl.org/dc/terms/temporal";
 const ORE: &str = "http://example.org/orexis#";
 const XSD_DATETIME: &str = "http://www.w3.org/2001/XMLSchema#dateTime";
@@ -429,9 +434,11 @@ impl Store {
         Ok(out)
     }
 
-    /// What the catalogue says of a graph, as the `GRAPH … { … }` block a writer puts beside the graph's own in ONE
-    /// update, so a graph and its description land together or not at all: every kind it is, how it arrived,
-    /// whose, and the period it holds over. Written in whole IRIs, so it needs no prefix of the text it is put in.
+    /// A GRAPH'S DESCRIPTION, as the `GRAPH … { … }` blocks a writer puts beside the graph's own in ONE update, so a
+    /// graph and its description land together or not at all: every kind it is, how it arrived, whose, and the
+    /// period it holds over — said in the catalogue and, the same, in the graph itself, where it always says it is
+    /// a graph, the type its description is told from its content by. Written in whole IRIs, so it needs no prefix
+    /// of the text it is put in.
     pub fn entry(
         &self,
         graph: &str,
@@ -463,8 +470,9 @@ impl Store {
         kinds.sort();
         kinds.dedup();
         let kinds = kinds.iter().map(|k| format!("<{k}>")).collect::<Vec<_>>().join(" , ");
+        let row = format!("<{graph}> a {kinds} ; <{ORE}arrivedBy> <{arrival}>{whose}{when} .");
         Ok(format!(
-            "GRAPH <{catalogue}> {{ <{graph}> a {kinds} ; <{ORE}arrivedBy> <{arrival}>{whose}{when} . }}"
+            "GRAPH <{catalogue}> {{ {row} }}\n  GRAPH <{graph}> {{ {row} <{graph}> a <{GRAPH}> . }}"
         ))
     }
 
@@ -647,12 +655,12 @@ impl Store {
         /// A GRAPH ENDS WHERE IT HELD PAST: its period's end moved to `$at`, or to its start where it begins later.
         const END_U: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
-        DELETE { GRAPH $cat { ?period orexis:end ?was } }
-        INSERT { GRAPH $cat { ?period orexis:end ?end } }
-        WHERE  { GRAPH $cat { VALUES ?g { $graphs } ?g dcterms:temporal ?period .
-                              OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?was }
-                              BIND(IF(BOUND(?start) && ?start > $at, ?start, $at) AS ?end)
-                              FILTER(!BOUND(?was) || ?was > ?end) } }";
+        DELETE { GRAPH $in { ?period orexis:end ?was } }
+        INSERT { GRAPH $in { ?period orexis:end ?end } }
+        WHERE  { GRAPH $in { VALUES ?g { $graphs } ?g dcterms:temporal ?period .
+                             OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?was }
+                             BIND(IF(BOUND(?start) && ?start > $at, ?start, $at) AS ?end)
+                             FILTER(!BOUND(?was) || ?was > ?end) } }";
         let Some(catalogue) = self.catalogue()? else {
             return Ok(());
         };
@@ -662,11 +670,23 @@ impl Store {
         self.update(&bind(
             END_U,
             &[
-                ("cat", Value::iri(catalogue)),
+                ("in", Value::iri(catalogue)),
                 ("at", Value::instant(at)),
                 ("graphs", Value::raw(listed)),
             ],
-        )?)
+        )?)?;
+        //  AND WHERE EACH SAYS ITS PERIOD ITSELF: the same text, asked in the graph of the graph alone.
+        for graph in graphs {
+            self.update(&bind(
+                END_U,
+                &[
+                    ("in", Value::iri(graph.clone())),
+                    ("at", Value::instant(at)),
+                    ("graphs", Value::raw(format!("<{graph}>"))),
+                ],
+            )?)?;
+        }
+        Ok(())
     }
 
     /// Empty one graph AND take back everything the catalogue said of it, its period with its row — and its
@@ -714,7 +734,7 @@ impl Store {
     }
 
     /// Say on every row each kind the vocabulary puts its class beneath — what `entry` writes on a new row, said
-    /// again of every row there is. Idempotent.
+    /// again of every row there is, and then by every graph of itself. Idempotent.
     pub fn close_catalogue(&self) -> Result<(), Error> {
         /// A class and every class the vocabulary puts it beneath: the closure is materialised at genesis, so one step
         /// is every step.
@@ -739,7 +759,76 @@ impl Store {
                 }
             }
         }
-        self.add(rows)
+        self.add(rows)?;
+        self.describe_in_themselves()
+    }
+
+    /// EVERY GRAPH THE CATALOGUE DESCRIBES SAYS THE SAME OF ITSELF: its kinds, how it arrived, whose it is, its hash,
+    /// what it was derived from, and its period where it says none, under a blank node of its own — and that it is
+    /// a graph, which is what its description is told from its content by. What `entry` writes for a new graph,
+    /// said of every graph there is: a volume lived in before graphs described themselves is brought up by it, and
+    /// a case is, whose text says each description once. Idempotent.
+    pub fn describe_in_themselves(&self) -> Result<(), Error> {
+        let Some(catalogue) = self.catalogue()? else {
+            return Ok(());
+        };
+        let (cat, a_graph, arrived, temporal) = (
+            named(&catalogue)?,
+            named(GRAPH)?,
+            named(ARRIVED_BY)?,
+            named(DCTERMS_TEMPORAL)?,
+        );
+        let in_cat = GraphNameRef::NamedNode(cat.as_ref());
+        let mut described = BTreeSet::new();
+        for (predicate, object) in [(rdf::TYPE, Some(a_graph.as_ref().into())), (arrived.as_ref(), None)] {
+            for quad in self
+                .engine
+                .quads_for_pattern(None, Some(predicate), object, Some(in_cat))
+            {
+                if let NamedOrBlankNode::NamedNode(graph) = quad.map_err(engine)?.subject
+                    && graph != cat
+                {
+                    described.insert(graph.into_string());
+                }
+            }
+        }
+        let mut said = Vec::new();
+        for graph in described {
+            let graph = named(&graph)?;
+            let own = GraphNameRef::NamedNode(graph.as_ref());
+            said.push(Quad::new(graph.clone(), rdf::TYPE, a_graph.clone(), graph.clone()));
+            for quad in self
+                .engine
+                .quads_for_pattern(Some(graph.as_ref().into()), None, None, Some(in_cat))
+            {
+                let quad = quad.map_err(engine)?;
+                if DESCRIBES.contains(&quad.predicate.as_str()) {
+                    said.push(Quad::new(graph.clone(), quad.predicate, quad.object, graph.clone()));
+                    continue;
+                }
+                let Term::BlankNode(period) = &quad.object else {
+                    continue;
+                };
+                let says_one = self
+                    .engine
+                    .quads_for_pattern(Some(graph.as_ref().into()), Some(temporal.as_ref()), None, Some(own))
+                    .next()
+                    .is_some();
+                if quad.predicate != temporal || says_one {
+                    continue;
+                }
+                let mine = BlankNode::default();
+                said.push(Quad::new(graph.clone(), temporal.clone(), mine.clone(), graph.clone()));
+                for of in self
+                    .engine
+                    .quads_for_pattern(Some(period.as_ref().into()), None, None, Some(in_cat))
+                {
+                    let of = of.map_err(engine)?;
+                    said.push(Quad::new(mine.clone(), of.predicate, of.object, graph.clone()));
+                }
+            }
+        }
+        self.add(said)
     }
 
     /// How many quads the store holds.

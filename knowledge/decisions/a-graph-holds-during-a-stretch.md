@@ -169,6 +169,14 @@ it would have answered *three claims arrive* to a question about a single instan
 
 # Said OF the graph, not inside it
 
+> **Amended 2026-11-21: a graph says its description inside itself as well, and the catalogue is on
+> its way out.** The sovereign asked this again as the catalogue grew, and decided it the other way:
+> the description is told from the facts by type, a subject its graph types `orexis:Graph` or
+> `dcterms:PeriodOfTime`. The argument below stands for the reader it names, one asking `?s ?p ?o` of
+> a whole graph, and that reader now says the filter where it reads; a reader asking for a thing by
+> its class inherits nothing. What is built and what is left is on
+> [description](/domain/kernel/description.md).
+
 The sovereign asked the obvious next question: if the interval belongs to the graph, why not
 store it — and the provenance beside it — IN the graph, where it is coupled to the data and
 goes when the data goes. The answer is the record's own argument, applied one level down.

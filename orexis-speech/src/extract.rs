@@ -79,7 +79,8 @@ pub fn extract(store: &Store, statement: &str) -> Result<Vec<String>, Error> {
     let entry = store.entry(&target, &[BELIEF], DERIVED, owner.as_deref(), start, end)?;
     store.update(&format!(
         "PREFIX prov: <http://www.w3.org/ns/prov#>
-            INSERT DATA {{ {entry}\n  GRAPH <{cat}> {{ <{target}> prov:wasDerivedFrom <{statement}> }} }}"
+            INSERT DATA {{ {entry}\n  GRAPH <{cat}> {{ <{target}> prov:wasDerivedFrom <{statement}> }}
+                           GRAPH <{target}> {{ <{target}> prov:wasDerivedFrom <{statement}> }} }}"
     ))?;
     hash_named_graph(store, &target, None)?;
     Ok(vec![target])
@@ -132,12 +133,20 @@ mod tests {
         st
     }
 
+    /// What a graph states, its description of itself left out.
     fn said(store: &Store, graph: &str) -> std::collections::BTreeSet<String> {
         store
-            .triples(graph)
+            .rows(
+                &format!(
+                    "PREFIX orexis: <http://example.org/orexis#>
+                    SELECT ?s ?p ?o WHERE {{ GRAPH <{graph}> {{ ?s ?p ?o FILTER NOT EXISTS {{ ?s a orexis:Graph }}
+                      FILTER NOT EXISTS {{ ?s a <http://purl.org/dc/terms/PeriodOfTime> }} }} }}"
+                ),
+                &[],
+            )
             .unwrap()
             .iter()
-            .map(|t| format!("{} {} {}", t.subject, t.predicate, t.object))
+            .map(|r| format!("{} {} {}", r["s"], r["p"], r["o"]))
             .collect()
     }
 

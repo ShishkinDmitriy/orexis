@@ -16,6 +16,11 @@ description: >-
   and keeping three graphs by kind of statement, which is what the objection was about.
 ---
 
+> **Amended 2026-11-21: every graph says of itself what its row says.** Each writer says a graph's
+> description in the graph and on its row alike, and a volume lived in is brought up as it boots; every
+> reader still asks the catalogue, as this record has it. The readers move next and the catalogue goes
+> after them, when this record is superseded ([description](/domain/kernel/description.md)).
+
 # The objection
 
 "Still don't like that graph metadata is spread on different graphs." The store had three

@@ -327,7 +327,12 @@ async fn the_agent_listens_on_the_boards_one_topic_alone_and_one_message_is_five
             let held: Vec<&str> = held.iter().map(String::as_str).collect();
             let facts: Vec<(String, String, String)> = t
                 .store
-                .rows("SELECT ?s ?p ?o WHERE { ?s ?p ?o }", &held)
+                .rows(
+                    "PREFIX orexis: <http://example.org/orexis#>
+                    SELECT ?s ?p ?o WHERE { ?s ?p ?o FILTER NOT EXISTS { ?s a orexis:Graph }
+                      FILTER NOT EXISTS { ?s a <http://purl.org/dc/terms/PeriodOfTime> } }",
+                    &held,
+                )
                 .unwrap()
                 .iter()
                 .map(|r| {

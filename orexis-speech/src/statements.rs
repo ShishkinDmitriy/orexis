@@ -7,6 +7,7 @@ use oxigraph::model::{BlankNode, GraphName, NamedNode, Quad, Term, Triple};
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
+use orexis::description::stated_quads;
 use orexis::document::Document;
 use orexis::store::{Store, iri};
 
@@ -66,12 +67,16 @@ pub(crate) fn described(beliefs: &Store, graph: &str) -> Result<(Vec<String>, Ve
         None => Vec::new(),
     };
     let said = match NamedNode::new(graph) {
-        Ok(g) => beliefs
-            .engine()
-            .quads_for_pattern(None, None, None, Some(g.as_ref().into()))
-            .flatten()
-            .map(|q| Triple::new(q.subject, q.predicate, q.object))
-            .collect(),
+        Ok(g) => stated_quads(
+            beliefs
+                .engine()
+                .quads_for_pattern(None, None, None, Some(g.as_ref().into()))
+                .flatten()
+                .collect(),
+        )
+        .into_iter()
+        .map(|q| Triple::new(q.subject, q.predicate, q.object))
+        .collect(),
         Err(_) => Vec::new(),
     };
     Ok((kinds, said))
@@ -92,12 +97,14 @@ pub fn document_of(beliefs: &Store, graphs: &[String]) -> Result<Document, Error
     let rdf_type = NamedNode::new_unchecked(RDF_TYPE);
     for graph in graphs {
         let g = NamedNode::new(graph.as_str()).map_err(|e| Error::Evaluation(e.to_string()))?;
-        quads.extend(
+        //  WHAT THE GRAPH STATES: what it says of itself in the store is said in the document's own way, below.
+        quads.extend(stated_quads(
             beliefs
                 .engine()
                 .quads_for_pattern(None, None, None, Some(g.as_ref().into()))
-                .flatten(),
-        );
+                .flatten()
+                .collect(),
+        ));
         let kinds = kinds_of(beliefs, &cat, graph)?;
         let mut beneath = Vec::new();
         for kind in &kinds {

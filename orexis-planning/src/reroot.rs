@@ -105,6 +105,18 @@ pub fn reroot(store: &Store, ground: &str) -> Result<Rerooting, Error> {
       ?w (planning:by/planning:from)+ $match ; planning:spent ?s ; dcterms:temporal ?period .
       ?period orexis:start ?a ; orexis:end ?b }
       BIND(?a - (?m - ?g0) AS ?a2) BIND(?b - (?m - ?g0) AS ?b2) BIND(?s - COALESCE(?ms, 0.0) AS ?s2) }"#;
+    /// THE SAME SHIFT WHERE EACH WORLD OF THE CONE SAYS ITS PERIOD ITSELF, asked before the rows are restamped.
+    const RESTAMP_OWN_U: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX orexis: <http://example.org/orexis#>
+    PREFIX planning: <http://example.org/orexis/planning#>
+    DELETE { GRAPH ?w { ?own orexis:start ?a ; orexis:end ?b } }
+    INSERT { GRAPH ?w { ?own orexis:start ?a2 ; orexis:end ?b2 } }
+    WHERE  { GRAPH $cat {
+      $ground dcterms:temporal/orexis:start ?g0 .
+      $match dcterms:temporal/orexis:start ?m .
+      ?w (planning:by/planning:from)+ $match }
+      GRAPH ?w { ?w dcterms:temporal ?own . ?own orexis:start ?a ; orexis:end ?b }
+      BIND(?a - (?m - ?g0) AS ?a2) BIND(?b - (?m - ?g0) AS ?b2) }"#;
     const REPARENT_U: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
     DELETE { GRAPH $cat { ?c planning:from $match } }
     INSERT { GRAPH $cat { ?c planning:from $ground } }
@@ -156,6 +168,7 @@ pub fn reroot(store: &Store, ground: &str) -> Result<Rerooting, Error> {
                 .filter_map(|r| iri(r, "w")),
         );
         let marks = [("ground", at(ground)), ("match", at(m)), ("cat", cat.clone())];
+        store.update(&bind(RESTAMP_OWN_U, &marks)?)?;
         store.update(&bind(RESTAMP_U, &marks)?)?;
         store.update(&bind(REPARENT_U, &marks)?)?;
     }

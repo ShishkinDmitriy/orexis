@@ -121,10 +121,11 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 INSERT {{
   GRAPH <{SCOPES_GRAPH}> {{
 {}
+  <{SCOPES_GRAPH}> a planning:ScopeGraph , orexis:Graph ; orexis:arrivedBy <{DERIVED}> .
   }}
   GRAPH ?cat {{ <{SCOPES_GRAPH}> a planning:ScopeGraph ; orexis:arrivedBy <{DERIVED}> . }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }} }} ;
-INSERT {{ GRAPH ?cat {{ <{SCOPES_GRAPH}> a ?kind }} }}
+INSERT {{ GRAPH ?cat {{ <{SCOPES_GRAPH}> a ?kind }} GRAPH <{SCOPES_GRAPH}> {{ <{SCOPES_GRAPH}> a ?kind }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }}
         GRAPH ?vocabulary {{ planning:ScopeGraph rdfs:subClassOf ?kind }} }}",
         blocks.join("\n")

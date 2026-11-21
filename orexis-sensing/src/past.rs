@@ -68,8 +68,10 @@ pub(crate) fn observed(store: &Store, graph: &str, kind: &str) -> Result<Option<
 
 /// File the percept `graph` past, and what was concluded of it: sensing has done reading it.
 pub(crate) fn shelve(store: &Store, graph: &str) -> Result<(), Error> {
+    /// A PERCEPT'S KIND CHANGED, on its row and where the graph says its kind itself.
     const REFILE_U: &str = "
-    DELETE { GRAPH $cat { ?g a $from } } INSERT { GRAPH $cat { ?g a $to } }
+    DELETE { GRAPH $cat { ?g a $from } GRAPH ?g { ?g a $from } }
+    INSERT { GRAPH $cat { ?g a $to } GRAPH ?g { ?g a $to } }
     WHERE  { GRAPH $cat { VALUES ?g { $graphs } ?g a $from } }";
     let Some(cat) = store.catalogue()? else { return Ok(()) };
     let mut graphs = vec![graph.to_string()];

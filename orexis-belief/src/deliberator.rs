@@ -440,7 +440,7 @@ mod tests {
             .rows(
                 &format!(
                     "PREFIX orexis: <http://example.org/orexis#>
-                    SELECT ?p WHERE {{ GRAPH <{SENSED}/revisions> {{ ?s ?p ?o }} }}"
+                    SELECT ?p WHERE {{ GRAPH <{SENSED}/revisions> {{ ?s ?p ?o FILTER NOT EXISTS {{ ?s a orexis:Graph }} }} }}"
                 ),
                 &[],
             )

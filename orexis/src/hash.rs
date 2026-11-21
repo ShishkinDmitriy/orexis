@@ -15,13 +15,14 @@
 //! is spelled as a Python tuple literal, as it always was: a string quoted as `repr` quotes it (`quoted`), a number
 //! by `rdf::repr`, a one-element tuple with its trailing comma.
 
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap};
 
 use oxigraph::model::{BlankNode, GraphNameRef, Literal, NamedNode, NamedOrBlankNode, Quad, Term, Triple};
 use sha2::{Digest, Sha256};
 
 use crate::Error;
-use crate::ontology::{GRAPH, HASH, PERIOD};
+use crate::description::stated;
+use crate::ontology::{GRAPH, HASH};
 use crate::rdf::{RDF_TYPE, repr, round6};
 use crate::store::Store;
 
@@ -50,8 +51,8 @@ const NUMERIC: &[&str] = &[
     "unsignedByte",
 ];
 
-/// The canonical hash of what `graph` holds, written onto its catalogue row in place of any before it, and
-/// answered. `within` is what a world is identified by, predicates and classes; None hashes every fact. A graph
+/// The canonical hash of what `graph` holds, written onto its catalogue row and in the graph itself, where it says
+/// it is a graph, in place of any before it, and answered. `within` is what a world is identified by, predicates and classes; None hashes every fact. A graph
 /// the store has never heard of hashes like an empty one.
 pub fn hash_named_graph(store: &Store, graph: &str, within: Option<&BTreeSet<String>>) -> Result<String, Error> {
     let digest = digest_of(store, graph, within)?;
@@ -60,20 +61,30 @@ pub fn hash_named_graph(store: &Store, graph: &str, within: Option<&BTreeSet<Str
         .ok_or_else(|| Error::Catalogue(format!("no catalogue to write the hash of {graph} on")))?;
     let (subject, hash, row) = (named(graph)?, named(HASH)?, named(&catalogue)?);
     let engine = store.engine();
-    let old: Vec<Quad> = engine
-        .quads_for_pattern(
-            Some(subject.as_ref().into()),
-            Some(hash.as_ref()),
-            None,
-            Some(GraphNameRef::NamedNode(row.as_ref())),
-        )
-        .collect::<Result<_, _>>()
-        .map_err(|e| Error::Evaluation(e.to_string()))?;
-    for quad in &old {
-        engine.remove(quad).map_err(|e| Error::Evaluation(e.to_string()))?;
+    for said_in in [&row, &subject] {
+        let old: Vec<Quad> = engine
+            .quads_for_pattern(
+                Some(subject.as_ref().into()),
+                Some(hash.as_ref()),
+                None,
+                Some(GraphNameRef::NamedNode(said_in.as_ref())),
+            )
+            .collect::<Result<_, _>>()
+            .map_err(|e| Error::Evaluation(e.to_string()))?;
+        for quad in &old {
+            engine.remove(quad).map_err(|e| Error::Evaluation(e.to_string()))?;
+        }
+        engine
+            .insert(&Quad::new(
+                subject.clone(),
+                hash.clone(),
+                Literal::new_simple_literal(&digest),
+                said_in.clone(),
+            ))
+            .map_err(|e| Error::Evaluation(e.to_string()))?;
     }
     engine
-        .insert(&Quad::new(subject, hash, Literal::new_simple_literal(&digest), row))
+        .insert(&Quad::new(subject.clone(), named(RDF_TYPE)?, named(GRAPH)?, subject))
         .map_err(|e| Error::Evaluation(e.to_string()))?;
     Ok(digest)
 }
@@ -87,23 +98,6 @@ pub fn digest_of(store: &Store, graph: &str, within: Option<&BTreeSet<String>>) 
         Some(within) => triples.into_iter().filter(|t| counts(t, within)).collect(),
     };
     Ok(digest(&forms(&kept).into_iter().collect()))
-}
-
-/// What a graph's triples state, its description left out: every triple but those whose subject the graph types as a
-/// graph or as a period.
-fn stated(triples: Vec<Triple>) -> Vec<Triple> {
-    let described: HashSet<NamedOrBlankNode> = triples
-        .iter()
-        .filter(|t| {
-            t.predicate.as_str() == RDF_TYPE
-                && matches!(&t.object, Term::NamedNode(class) if class.as_str() == GRAPH || class.as_str() == PERIOD)
-        })
-        .map(|t| t.subject.clone())
-        .collect();
-    triples
-        .into_iter()
-        .filter(|t| !described.contains(&t.subject))
-        .collect()
 }
 
 /// Whether a triple is among what `within` names: by its predicate, and a type fact by its class.

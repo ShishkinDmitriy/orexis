@@ -4,6 +4,7 @@
 //! - [`bind`]: a rule text's `$tokens` bound to the terms they are, refusing a token nobody bound;
 //! - [`store`]: the engine, the texts it keeps parsed, and the catalogue that says what each graph is;
 //! - [`clock`]: the one timeline, which may run fast;
+//! - [`description`]: what a graph states, told by type from what it says of itself;
 //! - [`hash`]: what a graph holds, as the digest the Python kernel writes, a world hashed within what is read;
 //! - [`boot`]: one agent's store from its world's documents, its self checked, its roles' packages read;
 //! - [`document`]: a file or a peer's bytes as a document that says what its graphs are, refused otherwise;
@@ -18,6 +19,7 @@ pub mod activity;
 pub mod bind;
 pub mod boot;
 pub mod clock;
+pub mod description;
 pub mod document;
 pub mod error;
 pub mod events;
