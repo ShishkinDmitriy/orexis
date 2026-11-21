@@ -5,7 +5,7 @@
 //! each step predicts as two graphs it names, the diff a pattern the engine computes where the worlds are.
 //!
 //! WHAT A STEP PREDICTS IS A DIFF OF CONTENT: what a world says of itself - that it is a possible world, when it
-//! holds, what it hashes to - is its description, which differs between any two worlds and is no change a step
+//! holds, what it hashes to - is its metadata, which differs between any two worlds and is no change a step
 //! makes; so each text that reads a whole world asks, in its own words, for what is about no graph and no period.
 //!
 //! THE PLAN IS NOT ITS GRAPH: the root, the node that is the `planning:Plan`, has a name of its own (`plan_root`),
@@ -52,9 +52,10 @@ pub fn extract_plan(store: &Store, want: &str) -> Result<String, Error> {
                           ?w planning:by/planning:from ?parent . ?parent planning:by ?was }
              BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""))) AS ?step)
              BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?parent), "^.*/", ""))) AS ?prev) } ;
-    INSERT { GRAPH ?cat { $plan a planning:PlanGraph ; orexis:arrivedBy orexis:Derived } }
+    INSERT { GRAPH ?cat { $plan a planning:PlanGraph ; orexis:arrivedBy orexis:Derived }
+             GRAPH $plan { $plan a planning:PlanGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived } }
     WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph } } ;
-    INSERT { GRAPH ?cat { $plan a ?kind } }
+    INSERT { GRAPH ?cat { $plan a ?kind } GRAPH $plan { $plan a ?kind } }
     WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }
              GRAPH ?vocabulary { planning:PlanGraph rdfs:subClassOf ?kind } } ;
     INSERT { GRAPH ?adds { ?s ?p ?o } }
@@ -84,10 +85,12 @@ pub fn extract_plan(store: &Store, want: &str) -> Result<String, Error> {
              GRAPH ?own { ?s ?p ?o FILTER NOT EXISTS { ?s a orexis:Graph } FILTER NOT EXISTS { ?s a dcterms:PeriodOfTime } }
              BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""), ".retracts")) AS ?retracts) } ;
     INSERT { GRAPH ?cat { ?adds a execution:AddsGraph ; orexis:arrivedBy orexis:Derived .
-                          ?retracts a execution:RetractsGraph ; orexis:arrivedBy orexis:Derived } }
+                          ?retracts a execution:RetractsGraph ; orexis:arrivedBy orexis:Derived }
+             GRAPH ?adds { ?adds a execution:AddsGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived }
+             GRAPH ?retracts { ?retracts a execution:RetractsGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived } }
     WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph }
              GRAPH $plan { ?step execution:adds ?adds ; execution:retracts ?retracts } } ;
-    INSERT { GRAPH ?cat { ?g a ?kind } }
+    INSERT { GRAPH ?cat { ?g a ?kind } GRAPH ?g { ?g a ?kind } }
     WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph . ?g a ?class }
              GRAPH $plan { ?step execution:adds|execution:retracts ?g }
              GRAPH ?vocabulary { ?class rdfs:subClassOf ?kind } }"#;

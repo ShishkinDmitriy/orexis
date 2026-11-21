@@ -20,6 +20,7 @@ use spargebra::Query;
 use spargebra::algebra::{Expression, GraphPattern};
 
 use orexis::Error;
+use orexis::metadata::stated_quads;
 use orexis::ontology::{CLOSURE_GRAPH, ONTOLOGY, local_of};
 use orexis::store::{Store, Within};
 
@@ -59,7 +60,7 @@ pub fn namespaces(store: &Store) -> Prefixes {
     };
     for graph in ontologies.iter().filter(|g| *g != CLOSURE_GRAPH) {
         if let Ok(quads) = store.quads(graph)
-            && let Some((name, ns)) = prefix_of(&quads)
+            && let Some((name, ns)) = prefix_of(&stated_quads(quads))
             && !out.contains_key(&name)
             && !out.values().any(|v| *v == ns)
         {
@@ -120,7 +121,7 @@ impl Readable {
         let catalogue = store.catalogue()?;
         let kinds: Vec<&str> = kinds.iter().map(String::as_str).collect();
         for graph in store.graphs_of(&kinds, &Within::default())? {
-            let quads = store.quads(&graph)?;
+            let quads = stated_quads(store.quads(&graph)?);
             engine.extend(quads.iter().cloned()).map_err(failed)?;
             if let Some(catalogue) = &catalogue {
                 let described = described(store, &graph, catalogue)?;

@@ -13,6 +13,7 @@ use regex::Regex;
 
 use orexis::Error;
 use orexis::clock::isoformat;
+use orexis::metadata::stated;
 use orexis::ontology::{BELIEF, GRAPH_PREFIX, RECORDED};
 use orexis::store::{Store, Within};
 
@@ -45,7 +46,7 @@ pub fn refine(
     graphs.extend(store.revisions_of(&sources, BELIEF)?);
     let mut present: HashSet<Triple> = HashSet::new();
     for g in &graphs {
-        for t in store.triples(g)? {
+        for t in stated(store.triples(g)?) {
             if concluded.contains(t.predicate.as_str()) {
                 present.insert(t);
             }

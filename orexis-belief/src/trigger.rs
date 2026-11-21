@@ -211,14 +211,17 @@ fn derived(store: &Store, cat: &str) -> Result<Vec<String>, Error> {
 /// The arrival's state graph's row, said of the arrival it now holds the state of, any row of an earlier arrival
 /// taken back first.
 fn describe(store: &Store, cat: &str, into: &str, row: &Row) -> Result<(), Error> {
-    /// A ROW, AND ITS PERIOD, TAKEN BACK — for an arrival's state graph said again of a later arrival.
+    /// A DESCRIPTION, AND ITS PERIOD, TAKEN BACK — for an arrival's state graph said again of a later arrival: off
+    /// its row, and out of the graph itself.
     const UNDESCRIBE_U: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
-    DELETE { GRAPH $cat { $graph ?p ?o . ?period ?pp ?po } }
-    WHERE  { GRAPH $cat { $graph ?p ?o . OPTIONAL { $graph dcterms:temporal ?period . ?period ?pp ?po } } }";
-    store.update(&bind(
-        UNDESCRIBE_U,
-        &[("cat", Value::iri(cat)), ("graph", Value::iri(into))],
-    )?)?;
+    DELETE { GRAPH $in { $graph ?p ?o . ?period ?pp ?po } }
+    WHERE  { GRAPH $in { $graph ?p ?o . OPTIONAL { $graph dcterms:temporal ?period . ?period ?pp ?po } } }";
+    for said_in in [cat, into] {
+        store.update(&bind(
+            UNDESCRIBE_U,
+            &[("in", Value::iri(said_in)), ("graph", Value::iri(into))],
+        )?)?;
+    }
     let when = |k: &str| value(row, k).and_then(|t| instant(&t).ok());
     let entry = store.entry(
         into,
@@ -422,10 +425,8 @@ WHERE {{ GRAPH ?c {{ <{TICK}> dcterms:temporal ?p . ?p orexis:start ?s ; orexis:
                 )
             })
             .collect();
-        assert_eq!(
-            said,
-            [("2026-01-01T12:20:00".to_string(), "2026-01-01T12:40:00".to_string())]
-        );
+        let later = ("2026-01-01T12:20:00".to_string(), "2026-01-01T12:40:00".to_string());
+        assert_eq!(said, [later.clone(), later], "on its row and by the graph itself");
         assert_eq!(held(&store), map(&[("count", "3")]));
     }
 }

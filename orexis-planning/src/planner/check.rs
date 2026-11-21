@@ -8,6 +8,7 @@ use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
+use orexis::metadata::stated_quads;
 use orexis::ontology::{ACTION, BELIEF};
 use orexis::store::{Store, Within, iri, value};
 
@@ -160,8 +161,7 @@ impl Planner {
         let scratch = GraphName::NamedNode(NamedNode::new_unchecked(SCRATCH));
         for g in present.iter().chain(&ahead) {
             world.add(
-                beliefs
-                    .quads(g)?
+                stated_quads(beliefs.quads(g)?)
                     .into_iter()
                     .map(|q| Quad::new(q.subject, q.predicate, q.object, scratch.clone())),
             )?;

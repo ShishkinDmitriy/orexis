@@ -13,6 +13,7 @@ use oxsdatatypes::{DateTime, DayTimeDuration};
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::isoformat;
+use orexis::metadata::stated;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, iri};
 
@@ -104,7 +105,7 @@ fn steps_of(beliefs: &Store, plan: &str) -> Result<BTreeMap<String, Step>, Error
         };
         let triples = |graph: Option<String>| -> Result<Vec<Triple>, Error> {
             match graph {
-                Some(g) => beliefs.triples(&g),
+                Some(g) => Ok(stated(beliefs.triples(&g)?)),
                 None => Ok(Vec::new()),
             }
         };
@@ -301,14 +302,15 @@ impl Planner {
     }
 
     /// Say that the want graph `graph` holds from `begins`, or from the first where it begins in the present: its
-    /// period in the catalogue, written again where it says another instant.
+    /// period, on its row and in the graph itself, written again where it says another instant.
     fn begin(&self, graph: &str, begins: Option<DateTime>) -> Result<(), Error> {
         const BEGINS_Q: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
         SELECT ?start WHERE { GRAPH $cat { $graph dcterms:temporal/orexis:start ?start } }"#;
+        /// THE PERIOD TAKEN BACK where `$in` says it: on the graph's row, and in the graph itself.
         const UNBEGIN_U: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
-        DELETE { GRAPH $cat { $graph dcterms:temporal ?period . ?period ?p ?o } }
-        WHERE  { GRAPH $cat { $graph dcterms:temporal ?period . ?period ?p ?o } }"#;
+        DELETE { GRAPH $in { $graph dcterms:temporal ?period . ?period ?p ?o } }
+        WHERE  { GRAPH $in { $graph dcterms:temporal ?period . ?period ?p ?o } }"#;
         let Some(catalogue) = self.beliefs.catalogue()? else {
             return Ok(());
         };
@@ -326,15 +328,22 @@ impl Planner {
         if said == begins {
             return Ok(());
         }
-        self.beliefs.update(&bind(UNBEGIN_U, &marks)?)?;
+        for said_in in [catalogue.as_str(), graph] {
+            self.beliefs.update(&bind(
+                UNBEGIN_U,
+                &[("in", Value::iri(said_in)), ("graph", Value::iri(graph))],
+            )?)?;
+        }
         if let Some(begins) = begins {
+            let begins = isoformat(begins);
             self.beliefs.update(&format!(
                 "PREFIX dcterms: <http://purl.org/dc/terms/>
                  PREFIX orexis: <http://example.org/orexis#>
                  PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
                  INSERT DATA {{ GRAPH <{catalogue}> {{ <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ; \
-                 orexis:start \"{}\"^^xsd:dateTime ] }} }}",
-                isoformat(begins)
+                 orexis:start \"{begins}\"^^xsd:dateTime ] }}
+                 GRAPH <{graph}> {{ <{graph}> a orexis:Graph ; dcterms:temporal [ a dcterms:PeriodOfTime ; \
+                 orexis:start \"{begins}\"^^xsd:dateTime ] }} }}"
             ))?;
         }
         Ok(())

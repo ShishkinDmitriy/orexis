@@ -28,7 +28,8 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::microseconds;
 use orexis::hash::digest_of;
-use orexis::ontology::{ACTION, BELIEF, DERIVED, END, HASH, SELF_GRAPH, START};
+use orexis::metadata::stated;
+use orexis::ontology::{ACTION, BELIEF, DERIVED, END, GRAPH, HASH, SELF_GRAPH, START};
 use orexis::rdf::{repr, round6};
 use orexis::store::{Store, Within, iri, value};
 use orexis_belief::transition::{Rule, run};
@@ -107,30 +108,39 @@ pub fn take(
     let kinds = closed(store, POSSIBLE_GRAPH, memo)?;
     let cat = named(&catalogue(store, memo)?)?;
     let world = named(&child)?;
-    let row = |p: &str, o: Term| -> Result<Quad, Error> { Ok(Quad::new(world.clone(), named(p)?, o, cat.clone())) };
+    let digest = digest_of(store, &child, within)?;
     let mut quads = Vec::new();
-    for kind in &kinds {
-        quads.push(row(RDF_TYPE, named(kind)?.into())?);
+    //  WHAT THE WORLD IS, HOW IT ARRIVED, WHAT IT HOLDS BY HASH AND WHEN: said on its row and by the world itself,
+    //  each under a period of its own.
+    for said_in in [&cat, &world] {
+        let says = |s: &oxigraph::model::NamedOrBlankNode, p: &str, o: Term| -> Result<Quad, Error> {
+            Ok(Quad::new(s.clone(), named(p)?, o, said_in.clone()))
+        };
+        let (itself, period) = (world.clone().into(), BlankNode::default());
+        for kind in &kinds {
+            quads.push(says(&itself, RDF_TYPE, named(kind)?.into())?);
+        }
+        quads.extend([
+            says(&itself, ARRIVED_BY, named(DERIVED)?.into())?,
+            says(&itself, HASH, Literal::new_simple_literal(&digest).into())?,
+            says(&itself, TEMPORAL, period.clone().into())?,
+            says(&period.clone().into(), RDF_TYPE, named(PERIOD_OF_TIME)?.into())?,
+            says(&period.clone().into(), START, isoliteral(start))?,
+            says(&period.into(), END, isoliteral(end))?,
+        ]);
     }
+    quads.push(Quad::new(world.clone(), named(RDF_TYPE)?, named(GRAPH)?, world.clone()));
+    //  WHAT THE SEARCH KNOWS OF IT, in planning's words: on its row alone.
+    let row = |p: &str, o: Term| -> Result<Quad, Error> { Ok(Quad::new(world.clone(), named(p)?, o, cat.clone())) };
     let spent = repr(round6(candidate.spent + cost));
     let spent_type = if spent.contains('e') { xsd::DOUBLE } else { xsd::DECIMAL };
-    let period = BlankNode::default();
     quads.extend([
-        row(ARRIVED_BY, named(DERIVED)?.into())?,
-        row(
-            HASH,
-            Literal::new_simple_literal(digest_of(store, &child, within)?).into(),
-        )?,
         row(SPENT, Literal::new_typed_literal(spent, spent_type).into())?,
         row(
             MINTED,
             Literal::new_typed_literal(candidate.minted.to_string(), xsd::INTEGER).into(),
         )?,
         row(BY, named(cand)?.into())?,
-        row(TEMPORAL, period.clone().into())?,
-        Quad::new(period.clone(), named(RDF_TYPE)?, named(PERIOD_OF_TIME)?, cat.clone()),
-        Quad::new(period.clone(), named(START)?, isoliteral(start), cat.clone()),
-        Quad::new(period, named(END)?, isoliteral(end), cat.clone()),
     ]);
     store.add(quads)?;
     Ok(true)
@@ -173,9 +183,9 @@ fn apply(
     Ok(true)
 }
 
-/// Whether two graphs hold the same triples.
+/// Whether two graphs state the same, whatever each says of itself.
 fn same(store: &Store, one: &str, other: &str) -> Result<bool, Error> {
-    let triples = |g: &str| -> Result<HashSet<Triple>, Error> { Ok(store.triples(g)?.into_iter().collect()) };
+    let triples = |g: &str| -> Result<HashSet<Triple>, Error> { Ok(stated(store.triples(g)?).into_iter().collect()) };
     Ok(triples(one)? == triples(other)?)
 }
 
@@ -226,29 +236,33 @@ fn replayed(
 /// named even when empty.
 fn changed(store: &Store, world: &str, base: &str, memo: &mut Memo) -> Result<(), Error> {
     let (adds, retracts) = (format!("{world}.adds"), format!("{world}.retracts"));
-    let here: HashSet<Triple> = store.triples(world)?.into_iter().collect();
-    let there: HashSet<Triple> = store.triples(base)?.into_iter().collect();
+    let here: HashSet<Triple> = stated(store.triples(world)?).into_iter().collect();
+    let there: HashSet<Triple> = stated(store.triples(base)?).into_iter().collect();
     let (to_adds, to_retracts) = (named(&adds)?, named(&retracts)?);
     store.add(here.difference(&there).map(|t| t.clone().in_graph(to_adds.clone())))?;
     store.add(there.difference(&here).map(|t| t.clone().in_graph(to_retracts.clone())))?;
     let cat = named(&catalogue(store, memo)?)?;
     let mut rows = Vec::new();
     for (graph, kind) in [(&to_adds, ADDS_GRAPH), (&to_retracts, RETRACTS_GRAPH)] {
-        for k in closed(store, kind, memo)? {
-            rows.push(Quad::new(graph.clone(), named(RDF_TYPE)?, named(&k)?, cat.clone()));
+        //  ON ITS ROW AND BY THE GRAPH ITSELF, which is then named though it holds no change.
+        for said_in in [&cat, graph] {
+            for k in closed(store, kind, memo)? {
+                rows.push(Quad::new(graph.clone(), named(RDF_TYPE)?, named(&k)?, said_in.clone()));
+            }
+            rows.push(Quad::new(
+                graph.clone(),
+                named(ARRIVED_BY)?,
+                named(DERIVED)?,
+                said_in.clone(),
+            ));
+            rows.push(Quad::new(
+                graph.clone(),
+                named(WAS_DERIVED_FROM)?,
+                named(world)?,
+                said_in.clone(),
+            ));
         }
-        rows.push(Quad::new(
-            graph.clone(),
-            named(ARRIVED_BY)?,
-            named(DERIVED)?,
-            cat.clone(),
-        ));
-        rows.push(Quad::new(
-            graph.clone(),
-            named(WAS_DERIVED_FROM)?,
-            named(world)?,
-            cat.clone(),
-        ));
+        rows.push(Quad::new(graph.clone(), named(RDF_TYPE)?, named(GRAPH)?, graph.clone()));
     }
     store.add(rows)
 }

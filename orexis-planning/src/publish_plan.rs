@@ -9,6 +9,7 @@ use oxigraph::model::{GraphName, NamedNode, NamedOrBlankNode, Quad, Term};
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
+use orexis::metadata::stated_quads;
 use orexis::ontology::{BELIEF, GRAPH_PREFIX, RECORDED};
 use orexis::store::{Store, Within, iri};
 
@@ -88,7 +89,7 @@ pub fn publish_plan(
         };
         let name = GraphName::NamedNode(NamedNode::new_unchecked(published.clone()));
         let mut quads = Vec::new();
-        for q in imaginarium.quads(&graph)? {
+        for q in stated_quads(imaginarium.quads(&graph)?) {
             let subject: Term = q.subject.clone().into();
             if let Term::NamedNode(s) = &subject
                 && skipped.contains(&s.as_str().to_string())
@@ -114,8 +115,7 @@ pub fn publish_plan(
             };
             let target = GraphName::NamedNode(into.clone());
             beliefs.add(
-                imaginarium
-                    .quads(&g)?
+                stated_quads(imaginarium.quads(&g)?)
                     .into_iter()
                     .map(|q| Quad::new(q.subject, q.predicate, q.object, target.clone())),
             )?;

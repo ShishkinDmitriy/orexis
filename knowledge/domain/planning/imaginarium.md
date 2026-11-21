@@ -27,7 +27,8 @@ refreshes it:
   the last filling brought across — one that went, holds what it did not, or whose row states no hash —
   and copies again every
   common belief — all of them, since a pattern reaching a graph nobody copied returns an empty result
-  rather than an error — the catalogue, what the search reads to act by its own kinds (the actions,
+  rather than an error — each with its row of the catalogue, and no row of a graph that stays behind
+  ([metadata](/domain/kernel/metadata.md)) — what the search reads to act by its own kinds (the actions,
   flows, derivations, shapes, constraints and rules graphs), the agent's desires, wants and records, and
   of its readings, predictions and subject beliefs those that are the scope's: one whose named members'
   scopes meet elsewhere, with its revisions, stays behind, so the grounds laid here are the scope's

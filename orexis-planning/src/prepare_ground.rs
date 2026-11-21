@@ -4,7 +4,7 @@
 //!
 //! **THE ONE FUNCTION OVER TWO STORES**: `beliefs` is read and `into` written, and everything that happens to a
 //! possible world afterwards happens to `into` the ordinary way. What crosses: every graph of the kinds a world is
-//! made of and a search reads to act ([`CROSSING`]), and the catalogue. **The agent's own beliefs are the scope's**:
+//! made of and a search reads to act ([`CROSSING`]), each with its row. **The agent's own beliefs are the scope's**:
 //! one whose quads, with its revisions, name members whose scopes meet without this scope stays behind.
 //!
 //! **A SECOND FILLING IS A REFRESH**: a copy whose source's row states the hash the copy's row was made with is kept,
@@ -20,6 +20,7 @@ use oxigraph::model::{GraphNameRef, NamedOrBlankNode, Quad, Term};
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
+use orexis::metadata::stated_quads;
 use orexis::ontology::{ACTION, BELIEF, FLOW_GRAPH, RECORD};
 use orexis::store::{Store, Within, iri, value};
 use orexis_belief::ontology::{REVISION_GRAPH, RULES_GRAPH};
@@ -140,12 +141,14 @@ pub fn prepare_ground(
                     ("g", Value::iri(graph.as_str())),
                 ],
             )?)?;
+            //  AND WHAT THE GRAPH SAYS OF ITSELF IS SAID AGAIN AS THE BELIEFS SAY IT NOW: a graph kept by its hash
+            //  states what it did, and its period may have ended since.
+            into.remove_all(&metadata_of(into, graph)?)?;
+            into.add(metadata_of(beliefs, graph)?)?;
         }
     }
-    let mut crossing: Vec<String> = wanted.iter().filter(|g| !kept.contains(g)).cloned().collect();
-    crossing.extend(beliefs.catalogue()?);
-    for graph in crossing {
-        let name = named(&graph)?;
+    for graph in wanted.iter().filter(|g| !kept.contains(g)) {
+        let name = named(graph)?;
         let quads: Vec<Quad> = beliefs
             .engine()
             .quads_for_pattern(None, None, None, Some(GraphNameRef::NamedNode(name.as_ref())))
@@ -153,12 +156,62 @@ pub fn prepare_ground(
             .map_err(|e| Error::Evaluation(e.to_string()))?;
         into.add(quads)?;
     }
+    //  AND THE ROW OF EACH GRAPH THAT CROSSES, with the catalogue's own: a graph that stays behind has no row
+    //  here, since a row is what its graph says of itself and the graph is not here to say it.
+    if let Some(catalogue) = beliefs.catalogue()? {
+        let cat = named(&catalogue)?;
+        let in_cat = GraphNameRef::NamedNode(cat.as_ref());
+        let mut rows: Vec<Quad> = Vec::new();
+        for graph in wanted.iter().chain([&catalogue]) {
+            let subject = named(graph)?;
+            for quad in beliefs
+                .engine()
+                .quads_for_pattern(Some(subject.as_ref().into()), None, None, Some(in_cat))
+            {
+                let quad = quad.map_err(|e| Error::Evaluation(e.to_string()))?;
+                if let Term::BlankNode(period) = &quad.object {
+                    for of in beliefs
+                        .engine()
+                        .quads_for_pattern(Some(period.as_ref().into()), None, None, Some(in_cat))
+                    {
+                        rows.push(of.map_err(|e| Error::Evaluation(e.to_string()))?);
+                    }
+                }
+                rows.push(quad);
+            }
+        }
+        into.add(rows)?;
+    }
     Ok(Crossed {
         said: wanted.iter().map(|g| (g.clone(), said.get(g).cloned())).collect(),
         behind,
         scope: scope.map(str::to_string),
         scopes: scopes.cloned(),
     })
+}
+
+/// What `graph` says of itself in `store`: every statement under its own name, and under each period it names -
+/// asked by subject, never by reading the graph whole.
+fn metadata_of(store: &Store, graph: &str) -> Result<Vec<Quad>, Error> {
+    let name = named(graph)?;
+    let own = GraphNameRef::NamedNode(name.as_ref());
+    let mut out = Vec::new();
+    for quad in store
+        .engine()
+        .quads_for_pattern(Some(name.as_ref().into()), None, None, Some(own))
+    {
+        let quad = quad.map_err(|e| Error::Evaluation(e.to_string()))?;
+        if let Term::BlankNode(period) = &quad.object {
+            for of in store
+                .engine()
+                .quads_for_pattern(Some(period.as_ref().into()), None, None, Some(own))
+            {
+                out.push(of.map_err(|e| Error::Evaluation(e.to_string()))?);
+            }
+        }
+        out.push(quad);
+    }
+    Ok(out)
 }
 
 /// Every graph `store`'s catalogue says the hash of, and the hash.
@@ -195,7 +248,7 @@ fn of_another_scope(beliefs: &Store, scope: Option<&str>, scopes: Option<&Scopes
         group.extend(beliefs.revisions_of(&[&graph], BELIEF)?);
         let mut names: BTreeSet<String> = BTreeSet::new();
         for g in &group {
-            for quad in beliefs.quads(g)? {
+            for quad in stated_quads(beliefs.quads(g)?) {
                 names.insert(quad.predicate.into_string());
                 if let NamedOrBlankNode::NamedNode(s) = quad.subject {
                     names.insert(s.into_string());

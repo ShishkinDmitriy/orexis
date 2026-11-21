@@ -74,8 +74,13 @@ pub fn revise(store: &Store, source: &str, read: &[String], budget: usize, kind:
         Some(cat) => unsettled(store, cat, &into)?,
         None => false,
     };
+    /// WHAT WAS CONCLUDED BEFORE, the revision graph's metadata left out.
+    const HELD_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
+    PREFIX orexis: <http://example.org/orexis#>
+    CONSTRUCT { ?s ?p ?o }
+    WHERE { GRAPH $into { ?s ?p ?o FILTER NOT EXISTS { ?s a orexis:Graph } FILTER NOT EXISTS { ?s a dcterms:PeriodOfTime } } }";
     let held = if continuing {
-        store.triples(&into)?
+        store.construct(&bind(HELD_Q, &[("into", Value::iri(into.clone()))])?, &[])?
     } else {
         store.forget_graph(&into, Some(BELIEF))?;
         Vec::new()
@@ -391,8 +396,10 @@ fn describe(
     continuing: bool,
     kind: &str,
 ) -> Result<(), Error> {
-    /// THE REVISION GRAPH'S ROW beside its entry: derived from its source, and whether its rules settled.
-    const DESCRIBED_Q: &str = "GRAPH $cat { $into $derived $source ; $settled $value . }";
+    /// THE REVISION GRAPH'S ROW beside its entry: derived from its source, which the graph says of itself too, and
+    /// whether its rules settled.
+    const DESCRIBED_Q: &str = "GRAPH $cat { $into $derived $source ; $settled $value . }
+    GRAPH $into { $into $derived $source . }";
     /// WHOSE THE SOURCE IS AND WHEN IT HOLDS, off its row: the revisions are the same.
     const SOURCE_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>

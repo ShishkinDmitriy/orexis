@@ -182,7 +182,8 @@ impl Searcher {
     ) -> Result<BTreeSet<String>, Error> {
         const FORESEEN_U: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
-        INSERT { GRAPH ?cat { $world dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start $start ] } }
+        INSERT { GRAPH ?cat { $world dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start $start ] }
+                 GRAPH $world { $world a orexis:Graph ; dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start $start ] } }
         WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph } }"#;
         const UNWEIGH_U: &str = r#"PREFIX orexis: <http://example.org/orexis#>
         PREFIX planning: <http://example.org/orexis/planning#>

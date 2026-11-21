@@ -34,6 +34,7 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::events::{Laps, Watch};
 use orexis::foresight::Foresees;
+use orexis::metadata::stated_quads;
 use orexis::ontology::{ACTION, BELIEF, ONTOLOGY, RECORD, SELF_GRAPH};
 use orexis::rdf::round6;
 use orexis::store::{Store, Within, iri, value};
@@ -260,7 +261,10 @@ fn beside(store: &Store) -> Result<u64, Error> {
     names.dedup();
     let mut digest = std::collections::hash_map::DefaultHasher::new();
     for name in names {
-        let mut quads: Vec<String> = store.quads(&name)?.iter().map(|q| q.to_string()).collect();
+        let mut quads: Vec<String> = stated_quads(store.quads(&name)?)
+            .iter()
+            .map(|q| q.to_string())
+            .collect();
         quads.sort();
         name.hash(&mut digest);
         quads.hash(&mut digest);
@@ -291,10 +295,10 @@ fn zero() -> DayTimeDuration {
 /// One way a world violates a constraint: (instance, constraint, about, offending).
 pub type Violation = (String, Option<String>, Option<String>, Option<String>);
 
-/// Every quad of `graph` — none where no graph is named.
+/// Every quad `graph` states — none where no graph is named.
 fn quads_of(store: &Store, graph: Option<String>) -> Result<Vec<Quad>, Error> {
     match graph {
-        Some(g) => store.quads(&g),
+        Some(g) => Ok(stated_quads(store.quads(&g)?)),
         None => Ok(Vec::new()),
     }
 }
@@ -1125,12 +1129,16 @@ impl Planner {
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(0);
             let said: Vec<Triple> = match NamedNode::new(plan.as_str()) {
-                Ok(graph) => beliefs
-                    .engine()
-                    .quads_for_pattern(None, None, None, Some(graph.as_ref().into()))
-                    .flatten()
-                    .map(|q| Triple::new(q.subject, q.predicate, q.object))
-                    .collect(),
+                Ok(graph) => stated_quads(
+                    beliefs
+                        .engine()
+                        .quads_for_pattern(None, None, None, Some(graph.as_ref().into()))
+                        .flatten()
+                        .collect(),
+                )
+                .into_iter()
+                .map(|q| Triple::new(q.subject, q.predicate, q.object))
+                .collect(),
                 Err(_) => Vec::new(),
             };
             out.push(PlanPublished {
@@ -1409,7 +1417,7 @@ mod tests {
         let mut graphs = predictions.clone();
         graphs.extend(store.revisions_of(&strs(&predictions), BELIEF).unwrap());
         for g in graphs {
-            for t in store.triples(&g).unwrap() {
+            for t in orexis::metadata::stated(store.triples(&g).unwrap()) {
                 anything.insert(t.predicate.as_str().to_string());
             }
         }
@@ -1437,7 +1445,7 @@ mod tests {
                 let worlds = worlds_of(im);
                 assert!(!worlds.is_empty(), "{}", case.display());
                 for world in &worlds {
-                    for t in im.triples(world).unwrap() {
+                    for t in orexis::metadata::stated(im.triples(world).unwrap()) {
                         assert!(
                             written_by(&t, &anything, &fixed),
                             "{}: {world} holds {t}",
@@ -1448,7 +1456,7 @@ mod tests {
                         if graph == *world {
                             continue;
                         }
-                        for t in im.triples(&graph).unwrap() {
+                        for t in orexis::metadata::stated(im.triples(&graph).unwrap()) {
                             assert!(
                                 !written_by(&t, &anything, &fixed),
                                 "{}: {graph} beside {world} holds {t}",
@@ -1889,7 +1897,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         const PREDICTED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
     SELECT DISTINCT ?side ?s ?o WHERE {
       GRAPH ?p { ?step a execution:Step ; ?side ?g . VALUES ?side { execution:adds execution:retracts } }
-      GRAPH ?g { ?s ?pred ?o } }";
+      GRAPH ?g { ?s ?pred ?o FILTER NOT EXISTS { ?s a <http://example.org/orexis#Graph> } } }";
         let store = snapshots::stand_in(&cases().join("a_step_lands_across_a_prediction_it_does_not_touch.trig"));
         let mut planner = Planner::new(&store, snapshots::AGENT, None).unwrap();
         planner.plan(snapshots::now()).unwrap();
@@ -2172,7 +2180,7 @@ SELECT ?g ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
         assert_eq!(ancestry, by_chain, "root first, and the same candidates");
     }
 
-    /// Every possible world says what it is, in itself, as a graph describing itself would; the plan extracted again
+    /// Every possible world says what it is, in itself, as a graph carrying its metadata would; the plan extracted again
     /// predicts what it predicted, since a step's change is a diff of what two worlds state and never of what each
     /// says it is.
     #[test]

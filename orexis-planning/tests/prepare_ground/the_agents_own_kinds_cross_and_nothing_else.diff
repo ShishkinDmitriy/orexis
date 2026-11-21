@@ -1,6 +1,6 @@
 --- case
 +++ expected
-@@ -16,10 +16,8 @@
+@@ -16,18 +16,14 @@
    :tank1 :level 5 .
  }
  
@@ -12,3 +12,11 @@
  GRAPH :catalogue {
    :catalogue a orexis:CatalogueGraph .
    :catalogue a orexis:Graph .
+   :ontology a orexis:BeliefGraph .
+   :ontology a orexis:Graph .
+   :ontology a orexis:OntologyGraph .
+-  :scratch a orexis:Graph .
+-  :scratch orexis:ownedBy :keeper .
+   :sensed a orexis:BeliefGraph .
+   :sensed a orexis:Graph .
+   :sensed orexis:ownedBy :keeper .

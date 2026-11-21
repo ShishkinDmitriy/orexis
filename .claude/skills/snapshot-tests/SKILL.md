@@ -86,6 +86,16 @@ A green run leaves nothing behind, and `.gitignore` refuses the file either way.
 one whose `.trig` changed after it was generated — is applied by line number with no fuzz and
 asserts rather than guessing; regenerate it.
 
+## A graph's metadata is said once
+
+A case's catalogue says what each graph is, and **a graph says nothing of itself in a case's text**.
+Every graph also carries its metadata in the store, the same as its row
+(`knowledge/domain/kernel/metadata.md`), so the runner adds that on both sides: a case is loaded
+with each graph saying what its row says, what a function left is held to the case with its diff
+applied and the same said, and a diff is written with it left out. A function that says a graph's metadata
+on its row and not in the graph, or the two unalike, fails its case with the graph's own statements
+listed as missing or unexpected; the fix is the writer, never the diff.
+
 ## Adding a case
 
 1. Write `<case>.trig`: the whole store the function is handed, in canonical form, with a

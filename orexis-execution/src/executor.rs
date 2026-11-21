@@ -34,6 +34,7 @@ use orexis::bind::{Value, bind};
 use orexis::clock::{Clock, instant as parse_instant, isoformat, seconds, seconds_of};
 use orexis::events::{Event, Watch};
 use orexis::hash::hash_named_graph;
+use orexis::metadata::stated_quads;
 use orexis::ontology::{BELIEF, DERIVED, ONTOLOGY, OREXIS, RECORDED, SELF_GRAPH, local_of};
 use orexis::store::{Row, Store, Within, iri, value};
 use orexis::task::{Heard, Turn};
@@ -56,7 +57,7 @@ const ENDS_AFTER: &str = "http://example.org/orexis/execution#endsAfter";
 const WAITS_FOR: &str = "http://example.org/orexis/execution#waitsFor";
 
 /// WHAT A STEP PREDICTED AND THE PRESENT DOES NOT SHOW, asked of what the two graphs it predicts in state: what
-/// either says of itself, about a graph or a period, is its description, which no present holds and no step is held
+/// either says of itself, about a graph or a period, is its metadata, which no present holds and no step is held
 /// to. Whole IRIs, each being a piece of a text that declares its own prefixes.
 const ADDS_MISSING: &str = "{ GRAPH $adds { ?s ?p ?o FILTER NOT EXISTS { ?s a <http://example.org/orexis#Graph> } FILTER NOT EXISTS { ?s a <http://purl.org/dc/terms/PeriodOfTime> } } \
      FILTER NOT EXISTS { ?s ?p ?x . FILTER(?x = ?o) } }";
@@ -586,8 +587,7 @@ impl Executor {
         }
         if !std::ptr::eq(from, &self.intentions) {
             let name = GraphName::NamedNode(named(graph)?);
-            let quads: Vec<Quad> = from
-                .quads(graph)?
+            let quads: Vec<Quad> = stated_quads(from.quads(graph)?)
                 .into_iter()
                 .map(|q| Quad::new(q.subject, q.predicate, q.object, name.clone()))
                 .collect();
@@ -601,8 +601,7 @@ impl Executor {
                     continue;
                 };
                 let into = GraphName::NamedNode(named(&side_graph)?);
-                let quads: Vec<Quad> = from
-                    .quads(&side_graph)?
+                let quads: Vec<Quad> = stated_quads(from.quads(&side_graph)?)
                     .into_iter()
                     .map(|q| Quad::new(q.subject, q.predicate, q.object, into.clone()))
                     .collect();
@@ -739,11 +738,12 @@ impl Executor {
         const WINDOW_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
             PREFIX orexis: <http://example.org/orexis#>
             SELECT ?end WHERE { GRAPH $cat { $g a $kind ; dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?end } } }";
+        /// A COMMITTED STEP'S WINDOW ENDS NOW: said where `$in` says its period, its row and the graph itself.
         const CLOSE_U: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
-        DELETE { GRAPH $cat { ?p orexis:end ?old } }
-        INSERT { GRAPH $cat { ?p orexis:end $now } }
-        WHERE  { GRAPH $cat { $g dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?old } } }";
+        DELETE { GRAPH $in { ?p orexis:end ?old } }
+        INSERT { GRAPH $in { ?p orexis:end $now } }
+        WHERE  { GRAPH $in { $g dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?old } } }";
         let Some(cat) = self.catalogue()? else {
             return Ok(());
         };
@@ -767,14 +767,16 @@ impl Executor {
         {
             return Ok(());
         }
-        self.beliefs.update(&bind(
-            CLOSE_U,
-            &[
-                ("cat", Value::iri(cat)),
-                ("g", Value::iri(graph.clone())),
-                ("now", Value::instant(now)),
-            ],
-        )?)?;
+        for said_in in [&cat, &graph] {
+            self.beliefs.update(&bind(
+                CLOSE_U,
+                &[
+                    ("in", Value::iri(said_in.clone())),
+                    ("g", Value::iri(graph.clone())),
+                    ("now", Value::instant(now)),
+                ],
+            )?)?;
+        }
         self.wrote(graph)
     }
 
@@ -2152,7 +2154,7 @@ GRAPH <http://example.org/test#catalogue> {{
         assert_eq!(
             x.standing().unwrap()[0].at.clone().unwrap(),
             format!("{PLAN}.1"),
-            "the world answered what the step predicted, and the graphs' descriptions were asked of nothing"
+            "the world answered what the step predicted, and the graphs' metadata was asked of nothing"
         );
     }
 

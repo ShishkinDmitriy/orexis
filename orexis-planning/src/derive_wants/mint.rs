@@ -151,7 +151,8 @@ fn quoted(text: &str) -> String {
     out
 }
 
-/// Write one derived want: taken out of its stretch's graph and put back, the graph's row and its period once.
+/// Write one derived want: taken out of its stretch's graph and put back, the graph's row and its period once, and
+/// the same said by the graph of itself.
 #[allow(clippy::too_many_arguments)]
 fn write(
     store: &Store,
@@ -190,15 +191,19 @@ INSERT {{
       prov:wasDerivedFrom <{desire}> ;
       rdfs:label {label} .
   {points}
-  {shape} }}
+  {shape}
+  <{graph}> a planning:WantGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived ;
+      orexis:ownedBy <{holder}> . }}
   GRAPH ?cat {{ <{graph}> a planning:WantGraph ; orexis:arrivedBy orexis:Derived ;
       orexis:ownedBy <{holder}> . }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }} }} ;
 INSERT {{ GRAPH ?cat {{ <{graph}> dcterms:temporal
+      [ a dcterms:PeriodOfTime{period} ] . }}
+  GRAPH <{graph}> {{ <{graph}> dcterms:temporal
       [ a dcterms:PeriodOfTime{period} ] . }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }}
          FILTER NOT EXISTS {{ GRAPH ?cat {{ <{graph}> dcterms:temporal ?held }} }} }} ;
-INSERT {{ GRAPH ?cat {{ <{graph}> a ?kind }} }}
+INSERT {{ GRAPH ?cat {{ <{graph}> a ?kind }} GRAPH <{graph}> {{ <{graph}> a ?kind }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }}
         GRAPH ?vocabulary {{ planning:WantGraph rdfs:subClassOf ?kind }} }}",
         label = quoted(label),
