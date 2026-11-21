@@ -1,6 +1,6 @@
 # orexis: the kernel
 
-What every package meets at, and nothing a package owns: the store and its catalogue, the clock, the boot that
+What every package meets at, and nothing a package owns: the store and what each graph's metadata says it is, the clock, the boot that
 makes one agent's store from its world's documents, and **the events**, the one thing packages share.
 
 - **Loaded for:** every agent. It is no package and has no task.

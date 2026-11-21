@@ -67,14 +67,15 @@ pub fn received_by(
     const KEPT_Q: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
     PREFIX sosa: <http://www.w3.org/ns/sosa/>
     SELECT ?g ?o ?t (BOUND(?later) AS ?followed) WHERE {
-      GRAPH ?g { ?g a sensing:ObservationGraph . ?o sosa:madeBySensor $sensor OPTIONAL { ?o sosa:resultTime ?t } }
-      OPTIONAL { GRAPH ?h { ?later sensing:previous ?o . ?h a sensing:ObservationGraph } } }
+      GRAPH ?m_g { ?g a sensing:ObservationGraph }
+      GRAPH ?g { ?o sosa:madeBySensor $sensor OPTIONAL { ?o sosa:resultTime ?t } }
+      OPTIONAL { GRAPH ?h { ?later sensing:previous ?o } GRAPH ?m_h { ?h a sensing:ObservationGraph } } }
     ORDER BY DESC(?t) DESC(?g)";
     /// THE SILENCE A READING ENDS: each kept of this sensor whose end is not yet said, found by its content.
     const SILENT_Q: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
     SELECT ?g ?since WHERE {
-      GRAPH ?g { ?g a sensing:SilenceGraph . $sensor sensing:silentSince ?since
-                 FILTER NOT EXISTS { $sensor sensing:silentUntil ?until } } }";
+      GRAPH ?m_g { ?g a sensing:SilenceGraph }
+      GRAPH ?g { $sensor sensing:silentSince ?since FILTER NOT EXISTS { $sensor sensing:silentUntil ?until } } }";
     if reads_series(store, sensor)? {
         let common = store.graphs_of(&[BELIEF], &Within::common())?;
         let common: Vec<&str> = common.iter().map(String::as_str).collect();
@@ -193,7 +194,7 @@ fn py_g(n: f64) -> String {
 /// first, so a sensor read twice in one instant keeps both.
 fn named(store: &Store, me: &str, sensor: &str, when: DateTime) -> Result<(String, String), Error> {
     /// WHETHER A GRAPH OF THIS NAME IS ALREADY SAID — a second reading of one sensor at one instant.
-    const SAID_Q: &str = "SELECT ?p WHERE { GRAPH $g { $g ?p ?o } } LIMIT 1";
+    const SAID_Q: &str = "SELECT ?p WHERE { GRAPH ?m { $g ?p ?o } } LIMIT 1";
     let agent = local_of(me);
     let mut n = 1;
     while !store
@@ -277,7 +278,7 @@ fn forecast(
     /// THE FORECAST THIS SENSOR GAVE BEFORE: every graph of it, found by its content.
     const FORECAST_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
         PREFIX sosa: <http://www.w3.org/ns/sosa/>
-        SELECT ?g WHERE { GRAPH ?g { ?g a orexis:ForecastGraph . ?o sosa:madeBySensor $sensor } }";
+        SELECT ?g WHERE { GRAPH ?m_g { ?g a orexis:ForecastGraph } GRAPH ?g { ?o sosa:madeBySensor $sensor } }";
     let Some(stretches) = decode_series(store, sensor, payload)? else {
         return Ok(Vec::new());
     };
@@ -472,7 +473,8 @@ pub(crate) mod tests {
     PREFIX sensing: <http://example.org/orexis/sensing#>
     PREFIX sosa: <http://www.w3.org/ns/sosa/>
     SELECT ?o ?n ?t ?previous WHERE {
-      GRAPH ?g { ?g a sensing:ObservationGraph . ?o sosa:madeBySensor $sensor ; sensing:rawResult ?n ; sosa:resultTime ?t
+      GRAPH ?m_g { ?g a sensing:ObservationGraph }
+      GRAPH ?g { ?o sosa:madeBySensor $sensor ; sensing:rawResult ?n ; sosa:resultTime ?t
                  OPTIONAL { ?o sensing:previous ?previous } } }
     ORDER BY ?t";
         store
@@ -492,7 +494,7 @@ pub(crate) mod tests {
     fn period(store: &Store, graph: &str) -> (DateTime, Option<DateTime>) {
         const PERIOD_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
                    PREFIX orexis: <http://example.org/orexis#>
-                   SELECT ?start ?end WHERE { GRAPH $g { $g dcterms:temporal ?p .
+                   SELECT ?start ?end WHERE { GRAPH ?m_g { $g dcterms:temporal ?p .
                    ?p orexis:start ?start . OPTIONAL { ?p orexis:end ?end } } }";
         let found = store
             .rows(&bind(PERIOD_Q, &[("g", Value::iri(graph))]).unwrap(), &[])

@@ -94,7 +94,7 @@ pub fn conclude(store: &Store, me: &str, at: DateTime) -> Result<Vec<String>, Er
     const ANSWERS_Q: &str = "PREFIX coordination: <http://example.org/orexis/coordination#>
     PREFIX orexis: <http://example.org/orexis#>
     SELECT ?g ?asker ?answerer ?constraint (COUNT(?h) AS ?held) WHERE {
-      GRAPH ?g { ?g a coordination:AnswerGraph ; orexis:arrivedBy ?arrival . VALUES ?arrival { $recorded $received } }
+      GRAPH ?m_g { ?g a coordination:AnswerGraph ; orexis:arrivedBy ?arrival . VALUES ?arrival { $recorded $received } }
       GRAPH ?g { ?a a coordination:Answer ; coordination:answeredBy ?answerer ; coordination:over ?constraint ; coordination:answers ?q .
                  OPTIONAL { ?a coordination:holding ?h } }
       GRAPH ?qg { ?q coordination:asks ?asker } }
@@ -209,9 +209,9 @@ fn unanswered(
 ) -> Result<BTreeMap<String, Conflict>, Error> {
     const ASKED_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?start WHERE { GRAPH $graph { $graph orexis:arrivedBy $recorded ; dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1";
+        SELECT ?start WHERE { GRAPH ?m_graph { $graph orexis:arrivedBy $recorded ; dcterms:temporal ?p . ?p orexis:start ?start } } LIMIT 1";
     const HEARD_ANSWER_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g WHERE { GRAPH $graph { $graph orexis:arrivedBy $received . BIND($graph AS ?g) } } LIMIT 1";
+        SELECT ?g WHERE { GRAPH ?m_graph { $graph orexis:arrivedBy $received . BIND($graph AS ?g) } } LIMIT 1";
     let mut out = BTreeMap::new();
     for constraint in held(store)? {
         for peer in in_range(store, me, &key_of(store, &constraint)?, at)? {

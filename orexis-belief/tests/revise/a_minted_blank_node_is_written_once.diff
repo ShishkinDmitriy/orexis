@@ -1,9 +1,18 @@
 --- case
 +++ expected
-@@ -50,4 +50,17 @@
-   :sensed orexis:ownedBy :keeper .
-   :world a orexis:BeliefGraph .
-   :world a orexis:Graph .
+@@ -67,5 +67,22 @@
+   :sensed.metadata orexis:metadataOf :sensed .
+ }
+ 
+-GRAPH :catalogue {
++
++
++
++GRAPH sensed:revisions {
++  :zz :placement [ :against :operating ; :side :Below ] .
++}
++
++GRAPH sensed:revisions.metadata {
 +  sensed:revisions a belief:RevisionGraph .
 +  sensed:revisions a orexis:BeliefGraph .
 +  sensed:revisions a orexis:Graph .
@@ -12,9 +21,6 @@
 +  sensed:revisions orexis:hash "sha256:8f547c1fa11eba705ac1609ff02f533eee7f83d77594f149658217a4c286d951" .
 +  sensed:revisions orexis:ownedBy :keeper .
 +  sensed:revisions prov:wasDerivedFrom :sensed .
-+}
-+
-+
-+GRAPH sensed:revisions {
-+  :zz :placement [ :against :operating ; :side :Below ] .
++  sensed:revisions.metadata a orexis:MetadataGraph .
++  sensed:revisions.metadata orexis:metadataOf sensed:revisions .
  }

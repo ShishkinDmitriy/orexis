@@ -7,7 +7,10 @@ use std::collections::BTreeSet;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
+use orexis::ontology::HASH;
 use orexis::store::{Store, iri, value};
+
+use crate::ontology::POSSIBLE_GRAPH;
 
 /// What a re-root found: the world matched, or None; which of the four the present was — `first`, `ground`,
 /// `child` or `surprise` — and the worlds kept and dropped.
@@ -33,26 +36,26 @@ fn matched(store: &Store, ground: &str, hash: &str, cat: &Value) -> Result<Optio
     PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     SELECT ?w ?minted WHERE {
-      GRAPH $cat {
+      GRAPH ?m_w {
         ?w orexis:hash $hash . FILTER(?w != $ground)
-        { ?w a planning:PossibleGraph } UNION { ?w a planning:GroundGraph }
-        FILTER NOT EXISTS { ?w prov:wasDerivedFrom+ $ground }
-        FILTER NOT EXISTS { ?w (planning:by/planning:from)+ $ground }
-        OPTIONAL { ?w planning:minted ?m } }
+        { ?w a planning:PossibleGraph } UNION { ?w a planning:GroundGraph } }
+      FILTER NOT EXISTS { GRAPH $cone { ?w prov:wasDerivedFrom+ $ground } }
+      FILTER NOT EXISTS { GRAPH $cone { ?w (planning:by/planning:from)+ $ground } }
+      OPTIONAL { GRAPH $cone { ?w planning:minted ?mint } }
       FILTER NOT EXISTS {
-        GRAPH $cat { ?x planning:weighs ?w ; planning:for ?later .
-                     ?wanted a planning:WantGraph ; dcterms:temporal/orexis:start ?begins .
-                     $ground dcterms:temporal/orexis:start ?now . FILTER(?begins > ?now) }
-        GRAPH ?wanted { ?later a planning:Want } }
-      BIND(COALESCE(?m, 0) AS ?minted) }"#;
+        GRAPH $cone { ?x planning:weighs ?w ; planning:for ?later }
+        GRAPH ?wanted { ?later a planning:Want }
+        GRAPH ?m_wanted { ?wanted a planning:WantGraph ; dcterms:temporal/orexis:start ?begins }
+        GRAPH ?m_ground { $ground dcterms:temporal/orexis:start ?now } FILTER(?begins > ?now) }
+      BIND(COALESCE(?mint, 0) AS ?minted) }"#;
     const CONE_SIZE_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
-    SELECT (COUNT(DISTINCT ?w) AS ?n) WHERE { GRAPH $cat { ?w (planning:by/planning:from)+ $match } }"#;
+    SELECT (COUNT(DISTINCT ?w) AS ?n) WHERE { GRAPH $cone { ?w (planning:by/planning:from)+ $match } }"#;
     let tied = store.rows(
         &bind(
             MATCHES_Q,
             &[
                 ("ground", Value::iri(ground)),
-                ("cat", cat.clone()),
+                ("cone", cat.clone()),
                 ("hash", Value::Raw(format!("\"{hash}\""))),
             ],
         )?,
@@ -66,7 +69,7 @@ fn matched(store: &Store, ground: &str, hash: &str, cat: &Value) -> Result<Optio
         let Some(w) = iri(r, "w") else { continue };
         let cone: i64 = store
             .rows(
-                &bind(CONE_SIZE_Q, &[("match", Value::iri(w.as_str())), ("cat", cat.clone())])?,
+                &bind(CONE_SIZE_Q, &[("match", Value::iri(w.as_str())), ("cone", cat.clone())])?,
                 &[],
             )?
             .first()
@@ -84,92 +87,83 @@ fn matched(store: &Store, ground: &str, hash: &str, cat: &Value) -> Result<Optio
 /// else the last pass made. Refused where the ground has no hash.
 pub fn reroot(store: &Store, ground: &str) -> Result<Rerooting, Error> {
     const CONE_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
-    SELECT DISTINCT ?w WHERE { GRAPH $cat { ?w (planning:by/planning:from)+ $match } }"#;
-    const HASH_Q: &str =
-        r#"PREFIX orexis: <http://example.org/orexis#> SELECT ?h WHERE { GRAPH $cat { $ground orexis:hash ?h } }"#;
+    SELECT DISTINCT ?w WHERE { GRAPH $cone { ?w (planning:by/planning:from)+ $match } }"#;
     const LAID_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
-    SELECT ?g WHERE { GRAPH $cat { ?g prov:wasDerivedFrom* $ground . ?g a planning:GroundGraph } }"#;
+    SELECT ?g WHERE { GRAPH $cone { ?g prov:wasDerivedFrom+ $ground } GRAPH ?m_g { ?g a planning:GroundGraph } }"#;
     const MADE_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
-    SELECT ?w WHERE { GRAPH $cat { ?w a ?kind . VALUES ?kind { planning:PossibleGraph planning:GroundGraph }
+    SELECT ?w WHERE { GRAPH ?m_w { ?w a ?kind . VALUES ?kind { planning:PossibleGraph planning:GroundGraph }
                                   FILTER(isIRI(?w)) } }"#;
+    /// THE CONE UNDER THE MATCH IS THE GROUND'S NOW: each world of it holds as long before as the match held after
+    /// the ground, said in the world's metadata.
     const RESTAMP_U: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
-    DELETE { GRAPH $cat { ?period orexis:start ?a ; orexis:end ?b . ?w planning:spent ?s } }
-    INSERT { GRAPH $cat { ?period orexis:start ?a2 ; orexis:end ?b2 . ?w planning:spent ?s2 } }
-    WHERE  { GRAPH $cat {
-      $ground dcterms:temporal/orexis:start ?g0 .
-      $match dcterms:temporal/orexis:start ?m .
+    DELETE { GRAPH ?m_w { ?period orexis:start ?a ; orexis:end ?b } }
+    INSERT { GRAPH ?m_w { ?period orexis:start ?a2 ; orexis:end ?b2 } }
+    WHERE  {
+      GRAPH ?m_ground { $ground dcterms:temporal/orexis:start ?g0 }
+      GRAPH ?m_match { $match dcterms:temporal/orexis:start ?m0 }
+      GRAPH $cone { ?w (planning:by/planning:from)+ $match }
+      GRAPH ?m_w { ?w dcterms:temporal ?period . ?period orexis:start ?a ; orexis:end ?b }
+      BIND(?a - (?m0 - ?g0) AS ?a2) BIND(?b - (?m0 - ?g0) AS ?b2) }"#;
+    /// AND WHAT THE PATH TO EACH SPENT IS COUNTED FROM THE MATCH, in the cone graph.
+    const RESPEND_U: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
+    DELETE { GRAPH $cone { ?w planning:spent ?s } }
+    INSERT { GRAPH $cone { ?w planning:spent ?s2 } }
+    WHERE  { GRAPH $cone {
       OPTIONAL { $match planning:spent ?ms }
-      ?w (planning:by/planning:from)+ $match ; planning:spent ?s ; dcterms:temporal ?period .
-      ?period orexis:start ?a ; orexis:end ?b }
-      BIND(?a - (?m - ?g0) AS ?a2) BIND(?b - (?m - ?g0) AS ?b2) BIND(?s - COALESCE(?ms, 0.0) AS ?s2) }"#;
-    /// THE SAME SHIFT WHERE EACH WORLD OF THE CONE SAYS ITS PERIOD ITSELF, asked before the rows are restamped.
-    const RESTAMP_OWN_U: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
-    PREFIX orexis: <http://example.org/orexis#>
-    PREFIX planning: <http://example.org/orexis/planning#>
-    DELETE { GRAPH ?w { ?own orexis:start ?a ; orexis:end ?b } }
-    INSERT { GRAPH ?w { ?own orexis:start ?a2 ; orexis:end ?b2 } }
-    WHERE  { GRAPH $cat {
-      $ground dcterms:temporal/orexis:start ?g0 .
-      $match dcterms:temporal/orexis:start ?m .
-      ?w (planning:by/planning:from)+ $match }
-      GRAPH ?w { ?w dcterms:temporal ?own . ?own orexis:start ?a ; orexis:end ?b }
-      BIND(?a - (?m - ?g0) AS ?a2) BIND(?b - (?m - ?g0) AS ?b2) }"#;
+      ?w (planning:by/planning:from)+ $match ; planning:spent ?s }
+      BIND(?s - COALESCE(?ms, 0.0) AS ?s2) }"#;
     const REPARENT_U: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
-    DELETE { GRAPH $cat { ?c planning:from $match } }
-    INSERT { GRAPH $cat { ?c planning:from $ground } }
-    WHERE  { GRAPH $cat { ?c planning:from $match } }"#;
+    DELETE { GRAPH $cone { ?c planning:from $match } }
+    INSERT { GRAPH $cone { ?c planning:from $ground } }
+    WHERE  { GRAPH $cone { ?c planning:from $match } }"#;
     const CHANGES_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
-    SELECT ?g WHERE { GRAPH $cat { VALUES ?w { $worlds } ?g prov:wasDerivedFrom ?w ; a ?kind .
+    SELECT ?g WHERE { GRAPH ?m_g { VALUES ?w { $worlds } ?g prov:wasDerivedFrom ?w ; a ?kind .
                                    VALUES ?kind { execution:AddsGraph execution:RetractsGraph } } }"#;
-    const DROP_GRAPHS_U: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
-    DELETE { GRAPH $cat { ?g ?p ?o . ?period ?pp ?po } }
-    WHERE  { GRAPH $cat { VALUES ?g { $graphs } ?g ?p ?o .
-                          OPTIONAL { ?g dcterms:temporal ?period . ?period ?pp ?po } } }"#;
+    /// EVERY WEIGHING AND EVERY CANDIDATE WHOSE WORLD IS GONE, nothing saying any more what that world is.
     const DROP_ROWS_U: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
-    DELETE { GRAPH $cat { ?x ?p ?o . ?v ?vp ?vo } }
-    WHERE  { GRAPH $cat {
+    DELETE { GRAPH $cone { ?x ?p ?o . ?v ?vp ?vo } }
+    WHERE  { GRAPH $cone {
       { ?x a planning:Weighing ; planning:weighs ?w . OPTIONAL { ?w planning:from ?f } }
       UNION { ?x a planning:Candidate ; planning:from ?f }
-      BIND(COALESCE(?f, ?w) AS ?home) FILTER NOT EXISTS { ?home a ?kind }
+      BIND(COALESCE(?f, ?w) AS ?home) FILTER NOT EXISTS { GRAPH ?m_home { ?home a ?kind } }
       ?x ?p ?o . OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }"#;
-    const POSSIBLE_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
-        SELECT ?m WHERE { GRAPH $cat { $match a planning:PossibleGraph } BIND($match AS ?m) }"#;
-    let catalogue = store
-        .catalogue()?
-        .ok_or_else(|| Error::Evaluation("a store with no catalogue".into()))?;
-    let cat = Value::Raw(format!("<{catalogue}>"));
+    let cat = Value::iri(crate::world_at::cone_of(store)?);
     let at = |m: &str| -> Value { Value::iri(m) };
     let hash = store
-        .rows(&bind(HASH_Q, &[("ground", at(ground)), ("cat", cat.clone())])?, &[])?
-        .first()
-        .and_then(|r| value(r, "h"))
+        .said_of(ground, HASH)?
+        .into_iter()
+        .find_map(|h| match h {
+            oxigraph::model::Term::Literal(h) => Some(h.value().to_string()),
+            _ => None,
+        })
         .ok_or_else(|| Error::Evaluation(format!("{ground} has no hash — is it a ground lay_ground laid?")))?;
     let found = matched(store, ground, &hash, &cat)?;
+    //  THE GROUND AND EVERY GROUND LAID FROM IT: the ground is named here, since a path of no step is answered only
+    //  for a node the cone graph holds, and a ground nothing was imagined from is in no row of it.
     let mut kept: BTreeSet<String> = store
-        .rows(&bind(LAID_Q, &[("ground", at(ground)), ("cat", cat.clone())])?, &[])?
+        .rows(&bind(LAID_Q, &[("ground", at(ground)), ("cone", cat.clone())])?, &[])?
         .iter()
         .filter_map(|r| iri(r, "g"))
         .collect();
+    kept.insert(ground.to_string());
     let landed = match &found {
-        Some(m) => !store
-            .rows(&bind(POSSIBLE_Q, &[("match", at(m)), ("cat", cat.clone())])?, &[])?
-            .is_empty(),
+        Some(m) => store.kinds_of(m)?.iter().any(|k| k == POSSIBLE_GRAPH),
         None => false,
     };
     if let Some(m) = &found {
         kept.extend(
             store
-                .rows(&bind(CONE_Q, &[("match", at(m)), ("cat", cat.clone())])?, &[])?
+                .rows(&bind(CONE_Q, &[("match", at(m)), ("cone", cat.clone())])?, &[])?
                 .iter()
                 .filter_map(|r| iri(r, "w")),
         );
-        let marks = [("ground", at(ground)), ("match", at(m)), ("cat", cat.clone())];
-        store.update(&bind(RESTAMP_OWN_U, &marks)?)?;
+        let marks = [("ground", at(ground)), ("match", at(m)), ("cone", cat.clone())];
         store.update(&bind(RESTAMP_U, &marks)?)?;
+        store.update(&bind(RESPEND_U, &marks)?)?;
         store.update(&bind(REPARENT_U, &marks)?)?;
     }
     //  A GROUND LAID AGAIN UNDER ITS NAME AS IT STOOD IS ITS OWN MATCH (#1158): two plannings at one instant lay one
@@ -184,7 +178,7 @@ pub fn reroot(store: &Store, ground: &str) -> Result<Rerooting, Error> {
             continue;
         }
         let cone: Vec<String> = store
-            .rows(&bind(CONE_Q, &[("match", at(&laid)), ("cat", cat.clone())])?, &[])?
+            .rows(&bind(CONE_Q, &[("match", at(&laid)), ("cone", cat.clone())])?, &[])?
             .iter()
             .filter_map(|r| iri(r, "w"))
             .collect();
@@ -192,7 +186,7 @@ pub fn reroot(store: &Store, ground: &str) -> Result<Rerooting, Error> {
         kept.extend(cone);
     }
     let mut gone: Vec<String> = store
-        .rows(&bind(MADE_Q, &[("cat", cat.clone())])?, &[])?
+        .rows(&bind(MADE_Q, &[("cone", cat.clone())])?, &[])?
         .iter()
         .filter_map(|r| iri(r, "w"))
         .filter(|w| !kept.contains(w))
@@ -203,7 +197,7 @@ pub fn reroot(store: &Store, ground: &str) -> Result<Rerooting, Error> {
     } else {
         store
             .rows(
-                &bind(CHANGES_Q, &[("cat", cat.clone()), ("worlds", graphs(&gone))])?,
+                &bind(CHANGES_Q, &[("cone", cat.clone()), ("worlds", graphs(&gone))])?,
                 &[],
             )?
             .iter()
@@ -211,13 +205,13 @@ pub fn reroot(store: &Store, ground: &str) -> Result<Rerooting, Error> {
             .collect()
     };
     changes.sort();
+    //  EACH GOES WITH WHAT IS SAID OF IT, its metadata graph and its rows in the cone.
     for graph in gone.iter().chain(&changes) {
-        store.clear_graph(graph)?;
+        store.forget_graph(graph, None)?;
+        crate::world_at::out_of_the_cone(store, graph)?;
     }
     if !gone.is_empty() {
-        let all: Vec<String> = gone.iter().chain(&changes).cloned().collect();
-        store.update(&bind(DROP_GRAPHS_U, &[("cat", cat.clone()), ("graphs", graphs(&all))])?)?;
-        store.update(&bind(DROP_ROWS_U, &[("cat", cat.clone())])?)?;
+        store.update(&bind(DROP_ROWS_U, &[("cone", cat.clone())])?)?;
     }
     let present = match (&found, gone.is_empty()) {
         (None, _) if own => "ground",
@@ -255,6 +249,7 @@ mod tests {
 
     use super::*;
     use crate::world_at::lexical;
+    use orexis::snapshots::SAID_TOGETHER;
 
     fn cases() -> PathBuf {
         snapshots::tree().join("orexis-planning/tests/reroot")
@@ -264,9 +259,9 @@ mod tests {
 PREFIX orexis: <http://example.org/orexis#>
 PREFIX planning: <http://example.org/orexis/planning#>
 SELECT ?w ?at ?until ?spent WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:PossibleGraph .
-               OPTIONAL { ?w dcterms:temporal ?p . ?p orexis:start ?at . OPTIONAL { ?p orexis:end ?until } }
-               OPTIONAL { ?w planning:spent ?spent } } }";
+  GRAPH ?m_w { ?w a planning:PossibleGraph .
+               OPTIONAL { ?w dcterms:temporal ?p . ?p orexis:start ?at . OPTIONAL { ?p orexis:end ?until } } }
+  OPTIONAL { GRAPH ?c { ?w planning:spent ?spent } } }";
 
     fn present(store: &Store) -> String {
         /// THE PRESENT: the newest ground laid from nothing.
@@ -275,8 +270,8 @@ SELECT ?w ?at ?until ?spent WHERE {
     PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     SELECT ?g WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start .
-                   FILTER NOT EXISTS { ?g prov:wasDerivedFrom ?parent } } }
+      GRAPH ?m_g { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start }
+      FILTER NOT EXISTS { GRAPH ?c { ?g prov:wasDerivedFrom ?parent } } }
     ORDER BY DESC(?start) LIMIT 1";
         iri(&store.rows(PRESENT_Q, &[]).unwrap()[0], "g").unwrap()
     }
@@ -305,7 +300,7 @@ SELECT ?w ?at ?until ?spent WHERE {
             .expect("the case's present is a world imagined");
         //  THE SAME STORE, the world weighed for a want whose graph holds from an hour on.
         let store = snapshots::stand_in(&case);
-        let catalogue = store.catalogue().unwrap().unwrap();
+        let (said, cone) = (SAID_TOGETHER, crate::world_at::cone_of(&store).unwrap());
         let begins = snapshots::now()
             .checked_add_day_time_duration(DayTimeDuration::new(3600))
             .unwrap();
@@ -316,8 +311,9 @@ SELECT ?w ?at ?until ?spent WHERE {
                  PREFIX planning: <http://example.org/orexis/planning#>
                  PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
                  INSERT DATA {{
-                   GRAPH <{catalogue}> {{
-                     <urn:test:weighing> a planning:Weighing ; planning:weighs <{matched}> ; planning:for <urn:test:later> .
+                   GRAPH <{cone}> {{
+                     <urn:test:weighing> a planning:Weighing ; planning:weighs <{matched}> ; planning:for <urn:test:later> }}
+                   GRAPH <{said}> {{
                      <urn:test:wanted> a planning:WantGraph ;
                        dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start \"{}\"^^xsd:dateTime ] }}
                    GRAPH <urn:test:wanted> {{ <urn:test:later> a planning:Want }} }}",
@@ -365,7 +361,7 @@ SELECT ?w ?at ?until ?spent WHERE {
     fn two_grounds_holding_the_presents_facts_are_told_by_their_cones_and_never_by_name() {
         for holder_is_old in [true, false] {
             let store = snapshots::stand_in(&cases().join("nothing_happened_and_the_cone_is_kept_whole.trig"));
-            let cat = store.catalogue().unwrap().unwrap();
+            let (cat, cone) = (SAID_TOGETHER, crate::world_at::cone_of(&store).unwrap());
             let (old, landing) = (
                 format!("{GROUND}2026-01-01T120000p0000"),
                 format!("{GROUND}2026-01-01T120030p0000"),
@@ -378,12 +374,12 @@ SELECT ?w ?at ?until ?spent WHERE {
     PREFIX prov: <http://www.w3.org/ns/prov#>
     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
     INSERT {{ GRAPH <{cat}> {{ <{landing}> a planning:GroundGraph ; orexis:arrivedBy orexis:Derived ; orexis:hash ?h ;
-    prov:wasDerivedFrom <{old}> ;
-    dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start \"2026-01-01T12:00:30+00:00\"^^xsd:dateTime ] }} }}
-WHERE {{ GRAPH <{cat}> {{ <{old}> orexis:hash ?h }} }}"
+    dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start \"2026-01-01T12:00:30+00:00\"^^xsd:dateTime ] }}
+    GRAPH <{cone}> {{ <{landing}> prov:wasDerivedFrom <{old}> }} }}
+WHERE {{ GRAPH ?m {{ <{old}> orexis:hash ?h }} }}"
                 ))
                 .unwrap();
-            store.carry_metadata_of(&landing).unwrap();
+            orexis::metadata::moved(&store, SAID_TOGETHER, &landing).unwrap();
             let (held, bare) = if holder_is_old {
                 (&old, &landing)
             } else {
@@ -393,8 +389,8 @@ WHERE {{ GRAPH <{cat}> {{ <{old}> orexis:hash ?h }} }}"
                 store
                     .update(&format!(
                         "PREFIX planning: <http://example.org/orexis/planning#>
-DELETE {{ GRAPH <{cat}> {{ ?c planning:from <{old}> }} }} INSERT {{ GRAPH <{cat}> {{ ?c planning:from <{landing}> }} }}
-WHERE {{ GRAPH <{cat}> {{ ?c planning:from <{old}> }} }}"
+DELETE {{ GRAPH <{cone}> {{ ?c planning:from <{old}> }} }} INSERT {{ GRAPH <{cone}> {{ ?c planning:from <{landing}> }} }}
+WHERE {{ GRAPH <{cone}> {{ ?c planning:from <{old}> }} }}"
                     ))
                     .unwrap();
             }

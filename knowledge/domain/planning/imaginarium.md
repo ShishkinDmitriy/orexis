@@ -21,13 +21,13 @@ are never touched. The word is the sovereign's, and says the thing that matters.
 The [planner](/domain/planning/planner.md) keeps one per [scope](/domain/planning/scope.md), and each pass
 refreshes it:
 
-- `prepare_ground` keeps every copy whose source's row states the hash the copy's row was made with
+- `prepare_ground` keeps every copy whose source states the hash the copy was made with
   ([a-graph-changes-in-place-and-its-row-says-what-it-holds](/decisions/a-graph-changes-in-place-and-its-row-says-what-it-holds.md)),
-  cut as it was, and reads its row again; it takes back, with what was cut out of it, every other graph
-  the last filling brought across — one that went, holds what it did not, or whose row states no hash —
+  cut as it was, and copies its metadata graph again; it takes back, with what was cut out of it, every other graph
+  the last filling brought across — one that went, holds what it did not, or states no hash —
   and copies again every
   common belief — all of them, since a pattern reaching a graph nobody copied returns an empty result
-  rather than an error — each with its row of the catalogue, and no row of a graph that stays behind
+  rather than an error — each with its metadata graph, and none of a graph that stays behind
   ([metadata](/domain/kernel/metadata.md)) — what the search reads to act by its own kinds (the actions,
   flows, derivations, shapes, constraints and rules graphs), the agent's desires, wants and records, and
   of its readings, predictions and subject beliefs those that are the scope's: one whose named members'
@@ -49,7 +49,8 @@ What it makes for itself: a `planning:PossibleGraph` per world a candidate reach
 its parent — or from the ground its step lands in, the path replayed there — and never mutated,
 since the search holds siblings open at once; for a world forked from a ground, the two graphs
 derived from it that say what its step's effect changed there, which go when it goes; the
-weighings and candidates on the catalogue; and a `planning:PlanGraph` per want.
+weighings, the candidates and the path between the worlds in its one `planning:ConeGraph`
+([cone](/domain/planning/cone.md)); and a `planning:PlanGraph` per want.
 
 A candidate and the world it makes are named by one mint number — `possible/17.by` makes
 `possible/17` — drawn from the store's own counter, the highest `planning:minted` anything in it

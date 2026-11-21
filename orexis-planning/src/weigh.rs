@@ -18,7 +18,7 @@ use oxsdatatypes::DateTime;
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::{instant, isoformat};
-use orexis::ontology::RECORD;
+use orexis::ontology::{HASH, RECORD};
 use orexis::store::{Row, Store, Within, iri, value};
 
 use crate::Memo;
@@ -27,7 +27,7 @@ use crate::ontology::{CONSTRAINT_GRAPH, DESIRE, PLANNING, SHAPES, WANT};
 use crate::shapes::Shapes;
 use crate::terms::RDF_TYPE;
 use crate::violation::{Compiled, select_of};
-use crate::world_at::{Asking, catalogue, named, world_at};
+use crate::world_at::{Asking, cone, cone_made, named, period_of, world_at};
 
 const SH_SELECT: &str = "http://www.w3.org/ns/shacl#select";
 const DERIVED_FROM: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
@@ -37,23 +37,23 @@ const DERIVED_FROM: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
 pub fn weigh(store: &Store, for_: &str, about: &str, memo: &mut Memo) -> Result<String, Error> {
     const ABOUT_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
-    SELECT ?from ?child ?hash ?impossible WHERE {
-      GRAPH $cat { OPTIONAL { $about planning:from ?from }
-        OPTIONAL { ?child planning:by $about ; orexis:hash ?hash .
-                   OPTIONAL { ?child planning:impossible ?impossible } } } }";
+    SELECT ?from ?child ?impossible WHERE {
+      GRAPH $cone { OPTIONAL { $about planning:from ?from }
+        OPTIONAL { ?child planning:by $about . OPTIONAL { ?child planning:impossible ?impossible } } } }";
     /// THE WORLDS ALREADY WEIGHED FOR THE WANT THAT HOLD THE CHILD'S HASH, asked apart from the child: inside its
     /// OPTIONAL, the group was evaluated on its own before the join, every weighing of the cone against every hash, and
     /// it was half of a five-disk pass.
     const SEEN_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
-    SELECT ?seen WHERE { GRAPH $cat { ?seen orexis:hash $hash . ?x a planning:Weighing ; planning:for $for ; planning:weighs ?seen } }
+    SELECT ?seen WHERE { GRAPH ?m { ?seen orexis:hash $hash }
+                         GRAPH $cone { ?x a planning:Weighing ; planning:for $for ; planning:weighs ?seen } }
     ORDER BY ?seen";
-    let cat = catalogue(store, memo)?;
+    let cat = cone(store, memo)?;
     let text = bind(
         ABOUT_Q,
         &[
             ("about", Value::iri(about)),
-            ("cat", Value::iri(cat.clone())),
+            ("cone", Value::iri(cat.clone())),
             ("for", Value::iri(for_)),
         ],
     )?;
@@ -68,16 +68,22 @@ pub fn weigh(store: &Store, for_: &str, about: &str, memo: &mut Memo) -> Result<
         if let Some(w) = &world
             && wants
         {
-            (late, past) = when(store, for_, w, &cat, memo)?;
+            (late, past) = when(store, for_, w, memo)?;
         }
-        let mut seen: Vec<String> = match (&world, found.get("hash")) {
+        //  WHAT THE CHILD HOLDS BY HASH, off its metadata: a lookup, where an OPTIONAL over every graph's hash was
+        //  evaluated on its own before the join.
+        let hash = match &world {
+            Some(w) => store.said_of(w, HASH)?.into_iter().next(),
+            None => None,
+        };
+        let mut seen: Vec<String> = match (&world, hash) {
             (Some(_), Some(hash)) => {
                 let text = bind(
                     SEEN_Q,
                     &[
-                        ("cat", Value::iri(cat.clone())),
+                        ("cone", Value::iri(cat.clone())),
                         ("for", Value::iri(for_)),
-                        ("hash", Value::Term(hash.clone())),
+                        ("hash", Value::Term(hash)),
                     ],
                 )?;
                 store.rows(&text, &[])?.iter().filter_map(|a| iri(a, "seen")).collect()
@@ -88,7 +94,7 @@ pub fn weigh(store: &Store, for_: &str, about: &str, memo: &mut Memo) -> Result<
             let ours = rank(late, past);
             let mut kept = Vec::new();
             for s in seen {
-                let (l, p) = when(store, for_, &s, &cat, memo)?;
+                let (l, p) = when(store, for_, &s, memo)?;
                 if rank(l, p) <= ours {
                     kept.push(s);
                 }
@@ -134,7 +140,7 @@ pub fn weigh(store: &Store, for_: &str, about: &str, memo: &mut Memo) -> Result<
             }
         }
     }
-    let graph = named(&cat)?;
+    let graph = named(&cone_made(store, memo)?)?;
     let subject = named(&node)?;
     let p = |local: &str| named(&format!("{PLANNING}{local}"));
     let mut quads = vec![
@@ -187,28 +193,24 @@ fn held(store: &Store, for_: &str, memo: &mut Memo) -> Result<Row, Error> {
 
 /// The instant `world` lands late at for the want `for_`, or None where it is on time, and whether it lands
 /// past the instant the want lifts by — must miss for a want of the agent's own, may miss for an obligation.
-fn when(store: &Store, for_: &str, world: &str, cat: &str, memo: &mut Memo) -> Result<(Option<DateTime>, bool), Error> {
+fn when(store: &Store, for_: &str, world: &str, memo: &mut Memo) -> Result<(Option<DateTime>, bool), Error> {
     const PERIOD_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX execution: <http://example.org/orexis/execution#>
     PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     SELECT ?start ?end ?reopens ?keeps ?owed WHERE {
-      GRAPH $cat { ?d a planning:WantGraph ; dcterms:temporal ?p .
-                   OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } }
       GRAPH ?d { $for a planning:Want OPTIONAL { $for planning:reopens ?reopens }
                  OPTIONAL { ?keeps execution:keptBy $for } }
-      OPTIONAL { { GRAPH $cat { ?d orexis:arrivedBy orexis:Received } }
+      GRAPH ?m_d { ?d a planning:WantGraph ; dcterms:temporal ?p .
+                   OPTIONAL { ?d dcterms:temporal/orexis:start ?start } OPTIONAL { ?d dcterms:temporal/orexis:end ?end } }
+      OPTIONAL { { GRAPH ?m_r { ?d orexis:arrivedBy orexis:Received } }
                  UNION
                  { GRAPH ?d { $for prov:wasDerivedFrom ?desire } GRAPH ?dg { ?desire a planning:Desire }
-                   GRAPH $cat { ?dg orexis:arrivedBy orexis:Received } }
+                   GRAPH ?m_dg { ?dg orexis:arrivedBy orexis:Received } }
                  BIND(true AS ?owed) } } LIMIT 1";
-    const LANDS_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
-    PREFIX orexis: <http://example.org/orexis#>
-    SELECT ?start ?end WHERE { GRAPH $cat { $world dcterms:temporal ?p . ?p orexis:start ?start OPTIONAL { ?p orexis:end ?end } } }
-    LIMIT 1";
     if !memo.periods.contains_key(for_) {
-        let text = bind(PERIOD_Q, &[("cat", Value::iri(cat)), ("for", Value::iri(for_))])?;
+        let text = bind(PERIOD_Q, &[("for", Value::iri(for_))])?;
         let found = store.rows(&text, &[])?.into_iter().next().unwrap_or_default();
         memo.periods.insert(for_.to_string(), found);
     }
@@ -217,17 +219,11 @@ fn when(store: &Store, for_: &str, world: &str, cat: &str, memo: &mut Memo) -> R
     if start.is_none() && end.is_none() {
         return Ok((None, false));
     }
-    let text = bind(LANDS_Q, &[("world", Value::iri(world)), ("cat", Value::iri(cat))])?;
-    let lands = store.rows(&text, &[])?.into_iter().next().unwrap_or_default();
-    let Some(earliest) = value(&lands, "start") else {
+    let Some((earliest, until)) = period_of(store, world)? else {
         return Ok((None, false));
     };
-    let earliest = instant(&earliest)?;
-    let latest = value(&lands, "end")
-        .map(|e| instant(&e))
-        .transpose()?
-        .unwrap_or(earliest);
-    let now = present(store, cat, memo)?;
+    let latest = until.unwrap_or(earliest);
+    let now = present(store, memo)?;
     //  WHERE A WANT'S SEARCH STARTS IS NO INSTANT TO LAND BY: a reopened want's, and a want kept below's, which
     //  begins where the plan before it ends. Read as one, every world of a search ahead landed late, and its
     //  frontier went by the soonest landing, not the cost: twice the worlds for the plan a search from the present
@@ -262,17 +258,16 @@ fn rank(late: Option<DateTime>, past: bool) -> (u8, Option<DateTime>) {
 }
 
 /// Where the timeline begins, the earliest ground — once a pass.
-fn present(store: &Store, cat: &str, memo: &mut Memo) -> Result<Option<DateTime>, Error> {
+fn present(store: &Store, memo: &mut Memo) -> Result<Option<DateTime>, Error> {
     const PRESENT_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT (MIN(?start) AS ?now) WHERE {
-      GRAPH $cat { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start } }";
+      GRAPH ?m { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start } }";
     if let Some(known) = memo.present {
         return Ok(known);
     }
-    let text = bind(PRESENT_Q, &[("cat", Value::iri(cat))])?;
-    let found = store.rows(&text, &[])?.first().and_then(|r| value(r, "now"));
+    let found = store.rows(PRESENT_Q, &[])?.first().and_then(|r| value(r, "now"));
     let now = found.map(|n| instant(&n)).transpose()?;
     memo.present = Some(now);
     Ok(now)
@@ -306,8 +301,7 @@ fn report(store: &Store, for_: &str, world: &str, held: &Row, memo: &mut Memo) -
 
 /// What a text about `world` is answered over: the world at its own instant, the holder's records at the present.
 fn graphs(store: &Store, world: &str, held: &Row, memo: &mut Memo) -> Result<Vec<String>, Error> {
-    let cat = catalogue(store, memo)?;
-    let now = present(store, &cat, memo)?;
+    let now = present(store, memo)?;
     let asking = Asking {
         holder: iri(held, "holder"),
         now,
@@ -448,35 +442,32 @@ mod tests {
         PREFIX orexis: <http://example.org/orexis#>
         PREFIX planning: <http://example.org/orexis/planning#>
         PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-        DELETE { GRAPH $cat { ?p orexis:start ?s . ?p orexis:end ?e } }
-        INSERT { GRAPH $cat { ?p orexis:start ?at } }
-        WHERE  { GRAPH $cat { { ?g a planning:WantGraph BIND("2026-01-01T12:05:00Z"^^xsd:dateTime AS ?at) }
+        DELETE { GRAPH ?m { ?p orexis:start ?s . ?p orexis:end ?e } }
+        INSERT { GRAPH ?m { ?p orexis:start ?at } }
+        WHERE  { GRAPH ?m { { ?g a planning:WantGraph BIND("2026-01-01T12:05:00Z"^^xsd:dateTime AS ?at) }
                               UNION { ?g a planning:PossibleGraph BIND("2026-01-01T12:10:00Z"^^xsd:dateTime AS ?at) }
                               ?g dcterms:temporal ?p . ?p orexis:start ?s OPTIONAL { ?p orexis:end ?e } } }"#;
         const KEPT_U: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX planning: <http://example.org/orexis/planning#>
         INSERT { GRAPH ?d { <http://example.org/test#step> execution:keptBy $want } }
-        WHERE  { GRAPH $cat { ?d a planning:WantGraph } GRAPH ?d { $want a planning:Want } }"#;
+        WHERE  { GRAPH ?m { ?d a planning:WantGraph } GRAPH ?d { $want a planning:Want } }"#;
         let store = snapshots::stand_in(&cases().join("a_candidate_reaching_a_new_world.trig"));
-        let cat = store.catalogue().unwrap().unwrap();
         let pair = unweighed(&store, None, None, &mut Memo::default())
             .unwrap()
             .into_iter()
             .find(|pair| pair.contains_key("child"))
             .unwrap();
         let (want, world) = (iri(&pair, "for").unwrap(), iri(&pair, "child").unwrap());
-        store
-            .update(&bind(AHEAD_U, &[("cat", Value::iri(cat.as_str()))]).unwrap())
-            .unwrap();
-        let (late, _) = when(&store, &want, &world, &cat, &mut Memo::default()).unwrap();
+        store.update(AHEAD_U).unwrap();
+        let (late, _) = when(&store, &want, &world, &mut Memo::default()).unwrap();
         assert_eq!(
             late.map(isoformat).as_deref(),
             Some("2026-01-01T12:10:00+00:00"),
             "a want foreseen at an instant ahead is landed late for after it"
         );
-        let marks = [("cat", Value::iri(cat.as_str())), ("want", Value::iri(want.as_str()))];
+        let marks = [("want", Value::iri(want.as_str()))];
         store.update(&bind(KEPT_U, &marks).unwrap()).unwrap();
-        let (late, _) = when(&store, &want, &world, &cat, &mut Memo::default()).unwrap();
+        let (late, _) = when(&store, &want, &world, &mut Memo::default()).unwrap();
         assert_eq!(late, None, "and a want kept below only begins there");
     }
 

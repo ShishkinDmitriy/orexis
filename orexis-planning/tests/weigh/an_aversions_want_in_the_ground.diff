@@ -1,13 +1,14 @@
 --- case
 +++ expected
-@@ -59,12 +59,24 @@
-   :world a orexis:BeliefGraph .
-   :world a orexis:Graph .
-   ground:2026-01-01T120000p0000 a planning:GroundGraph .
--  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-+  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
-   ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
-   ground:2026-01-01T120000p0000 orexis:hash "sha256:0000000000000000000000000000000000000000000000000000000000000000" .
+@@ -117,5 +117,27 @@
+   pursued:2026-01-01T120000p0000--open.metadata orexis:metadataOf pursued:2026-01-01T120000p0000--open .
+ }
+ 
+-GRAPH :catalogue {
++
++
++
++GRAPH <http://example.org/orexis/graph/cone> {
 +  ground:2026-01-01T120000p0000.for.keeper.apart a planning:Weighing .
 +  ground:2026-01-01T120000p0000.for.keeper.apart planning:for :keeper.apart .
 +  ground:2026-01-01T120000p0000.for.keeper.apart planning:met false .
@@ -20,19 +21,11 @@
 +  ground:2026-01-01T120000p0000.for.keeper.apart.pursued.tank1 planning:open true .
 +  ground:2026-01-01T120000p0000.for.keeper.apart.pursued.tank1 planning:violation [ planning:about :tank1 ; planning:constraint 0 ; planning:instance :tank1 ; planning:offending :stand_a ] .
 +  ground:2026-01-01T120000p0000.for.keeper.apart.pursued.tank1 planning:weighs ground:2026-01-01T120000p0000 .
-   pursued:2026-01-01T120000p0000--open a orexis:Graph .
-   pursued:2026-01-01T120000p0000--open a planning:WantGraph .
--  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00+00:00"^^xsd:dateTime ] .
-+  pursued:2026-01-01T120000p0000--open dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
-   pursued:2026-01-01T120000p0000--open orexis:arrivedBy orexis:Derived .
-   pursued:2026-01-01T120000p0000--open orexis:ownedBy :keeper .
++}
++
++GRAPH <http://example.org/orexis/graph/cone.metadata> {
++  <http://example.org/orexis/graph/cone.metadata> a orexis:MetadataGraph .
++  <http://example.org/orexis/graph/cone.metadata> orexis:metadataOf <http://example.org/orexis/graph/cone> .
++  <http://example.org/orexis/graph/cone> a planning:ConeGraph .
++  <http://example.org/orexis/graph/cone> orexis:arrivedBy orexis:Derived .
  }
-@@ -79,7 +91,7 @@
-   :keeper.apart.pursued.tank1 a planning:Want .
-   :keeper.apart.pursued.tank1 planning:state planning:Recognized .
-   :keeper.apart.pursued.tank1 planning:unmetWhen :keeper.apart.pursued.tank1.avoided .
--  :keeper.apart.pursued.tank1 prov:generatedAtTime "2026-01-01T12:00:00+00:00"^^xsd:dateTime .
-+  :keeper.apart.pursued.tank1 prov:generatedAtTime "2026-01-01T12:00:00Z"^^xsd:dateTime .
-   :keeper.apart.pursued.tank1 prov:wasDerivedFrom :keeper.apart .
-   :keeper.apart.pursued.tank1 rdfs:label "pursued: no stand holds two tanks" .
-   :keeper.apart.pursued.tank1.avoided planning:about sh:this .

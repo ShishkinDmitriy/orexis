@@ -1,5 +1,5 @@
 //! TAKING ONE CANDIDATE: the world it reaches, forked from the world it leaves with the action's effect applied,
-//! and that world's own row, as `agent/planning/take.py` takes it — and the argument for every clause is that
+//! and what that world is, as `agent/planning/take.py` takes it — and the argument for every clause is that
 //! module's docstring, which this follows.
 //!
 //! - **The child is forked from the ground holding at its landing** (#596): where that ground is not the one its
@@ -13,7 +13,7 @@
 //!   no move.
 //! - **The child is named by the candidate's mint number**, read off the candidate's row (#486).
 //!
-//! **THE ROWS ARE READ OFF THE CATALOGUE'S INDEX**, a candidate's and a world's, and the world's row is written
+//! **THE ROWS ARE READ OFF THE INDEX**, a candidate's in the cone graph and a world's in its metadata, and both are written
 //! as quads: the Python kernel binds each into a text per candidate, which here would be a parse per candidate.
 
 use std::collections::HashSet;
@@ -28,8 +28,7 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::microseconds;
 use orexis::hash::digest_of;
-use orexis::metadata::stated;
-use orexis::ontology::{ACTION, BELIEF, DERIVED, END, GRAPH, HASH, SELF_GRAPH, START};
+use orexis::ontology::{ACTION, BELIEF, DERIVED, END, HASH, SELF_GRAPH, START};
 use orexis::rdf::{repr, round6};
 use orexis::store::{Store, Within, iri, value};
 use orexis_belief::transition::{Rule, run};
@@ -41,7 +40,7 @@ use crate::memo::{Candidate, Carried};
 use crate::next_ground::next_ground;
 use crate::ontology::{ADDS_GRAPH, BY, FILLS, FROM, GROUND_GRAPH, MINTED, POSSIBLE_GRAPH, RETRACTS_GRAPH, SPENT, WAIT};
 use crate::terms::{RDF_TYPE, TEMPORAL};
-use crate::world_at::{Asking, catalogue, lexical, named, world_at};
+use crate::world_at::{Asking, cone, cone_made, named, when, world_at};
 
 const PERIOD_OF_TIME: &str = "http://purl.org/dc/terms/PeriodOfTime";
 const ARRIVED_BY: &str = "http://example.org/orexis#arrivedBy";
@@ -51,7 +50,7 @@ const WAS_DERIVED_FROM: &str = "http://www.w3.org/ns/prov#wasDerivedFrom";
 static IRI: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^(https?://|urn:|mailto:|file:)\S*$").expect("a valid pattern"));
 
-/// Fork the world `cand` reaches and write its row. False, and nothing made, where the candidate's effect changes
+/// Fork the world `cand` reaches and say what it is. False, and nothing made, where the candidate's effect changes
 /// nothing in the world it leaves, or where it is a wait and nothing laid after its ground holds anything else.
 /// `within` is what a world of this imaginarium is identified by.
 pub fn take(
@@ -106,13 +105,13 @@ pub fn take(
         return Ok(false);
     }
     let kinds = closed(store, POSSIBLE_GRAPH, memo)?;
-    let cat = named(&catalogue(store, memo)?)?;
+    let cat = named(&cone_made(store, memo)?)?;
     let world = named(&child)?;
     let digest = digest_of(store, &child, within)?;
-    let mut quads = Vec::new();
-    //  WHAT THE WORLD IS, HOW IT ARRIVED, WHAT IT HOLDS BY HASH AND WHEN: said on its row and by the world itself,
-    //  each under a period of its own.
-    for said_in in [&cat, &world] {
+    //  WHAT THE WORLD IS, HOW IT ARRIVED, WHAT IT HOLDS BY HASH AND WHEN: said in its metadata graph.
+    let (said_in, itself_says) = orexis::metadata::header(&child)?;
+    let mut quads = Vec::from(itself_says);
+    {
         let says = |s: &oxigraph::model::NamedOrBlankNode, p: &str, o: Term| -> Result<Quad, Error> {
             Ok(Quad::new(s.clone(), named(p)?, o, said_in.clone()))
         };
@@ -129,8 +128,7 @@ pub fn take(
             says(&period.into(), END, isoliteral(end))?,
         ]);
     }
-    quads.push(Quad::new(world.clone(), named(RDF_TYPE)?, named(GRAPH)?, world.clone()));
-    //  WHAT THE SEARCH KNOWS OF IT, in planning's words: on its row alone.
+    //  WHAT THE SEARCH KNOWS OF IT, in planning's words: in the cone graph.
     let row = |p: &str, o: Term| -> Result<Quad, Error> { Ok(Quad::new(world.clone(), named(p)?, o, cat.clone())) };
     let spent = repr(round6(candidate.spent + cost));
     let spent_type = if spent.contains('e') { xsd::DOUBLE } else { xsd::DECIMAL };
@@ -185,7 +183,7 @@ fn apply(
 
 /// Whether two graphs state the same, whatever each says of itself.
 fn same(store: &Store, one: &str, other: &str) -> Result<bool, Error> {
-    let triples = |g: &str| -> Result<HashSet<Triple>, Error> { Ok(stated(store.triples(g)?).into_iter().collect()) };
+    let triples = |g: &str| -> Result<HashSet<Triple>, Error> { Ok(store.triples(g)?.into_iter().collect()) };
     Ok(triples(one)? == triples(other)?)
 }
 
@@ -201,7 +199,7 @@ fn replayed(
 ) -> Result<String, Error> {
     /// THE PATH TO A WORLD: every candidate taken from the ground down to the world itself, in mint order.
     const PATH_Q: &str = "PREFIX planning: <http://example.org/orexis/planning#>
-    SELECT ?c WHERE { GRAPH $cat { $world (planning:by/planning:from)* ?w . ?w planning:by ?c ; planning:minted ?m } }
+    SELECT ?c WHERE { GRAPH $cone { $world (planning:by/planning:from)* ?w . ?w planning:by ?c ; planning:minted ?m } }
     ORDER BY ?m";
     let candidate = candidate(store, cand, memo)?;
     let base = into.map(String::from).unwrap_or_else(|| format!("{child}.base"));
@@ -212,10 +210,10 @@ fn replayed(
         .map(|g| if g == ground { base.clone() } else { g })
         .collect();
     let graphs: Vec<&str> = graphs.iter().map(String::as_str).collect();
-    let cat = catalogue(store, memo)?;
+    let cat = cone(store, memo)?;
     let text = bind(
         PATH_Q,
-        &[("world", Value::iri(candidate.from.clone())), ("cat", Value::iri(cat))],
+        &[("world", Value::iri(candidate.from.clone())), ("cone", Value::iri(cat))],
     )?;
     let path: Vec<String> = store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "c")).collect();
     for step in &path {
@@ -236,16 +234,17 @@ fn replayed(
 /// named even when empty.
 fn changed(store: &Store, world: &str, base: &str, memo: &mut Memo) -> Result<(), Error> {
     let (adds, retracts) = (format!("{world}.adds"), format!("{world}.retracts"));
-    let here: HashSet<Triple> = stated(store.triples(world)?).into_iter().collect();
-    let there: HashSet<Triple> = stated(store.triples(base)?).into_iter().collect();
+    let here: HashSet<Triple> = store.triples(world)?.into_iter().collect();
+    let there: HashSet<Triple> = store.triples(base)?.into_iter().collect();
     let (to_adds, to_retracts) = (named(&adds)?, named(&retracts)?);
     store.add(here.difference(&there).map(|t| t.clone().in_graph(to_adds.clone())))?;
     store.add(there.difference(&here).map(|t| t.clone().in_graph(to_retracts.clone())))?;
-    let cat = named(&catalogue(store, memo)?)?;
     let mut rows = Vec::new();
     for (graph, kind) in [(&to_adds, ADDS_GRAPH), (&to_retracts, RETRACTS_GRAPH)] {
-        //  ON ITS ROW AND BY THE GRAPH ITSELF, which is then named though it holds no change.
-        for said_in in [&cat, graph] {
+        //  IN ITS METADATA GRAPH, so the graph is said to be one though it holds no change.
+        let (said_in, itself_says) = orexis::metadata::header(graph.as_str())?;
+        rows.extend(itself_says);
+        {
             for k in closed(store, kind, memo)? {
                 rows.push(Quad::new(graph.clone(), named(RDF_TYPE)?, named(&k)?, said_in.clone()));
             }
@@ -262,7 +261,6 @@ fn changed(store: &Store, world: &str, base: &str, memo: &mut Memo) -> Result<()
                 said_in.clone(),
             ));
         }
-        rows.push(Quad::new(graph.clone(), named(RDF_TYPE)?, named(GRAPH)?, graph.clone()));
     }
     store.add(rows)
 }
@@ -330,12 +328,12 @@ fn closed(store: &Store, class: &str, memo: &mut Memo) -> Result<Vec<String>, Er
     Ok(memo.closed[class].clone())
 }
 
-/// What a candidate's row says, read once a pass off the catalogue's index.
+/// What a candidate's rows say, read once a pass off the cone graph's index.
 fn candidate(store: &Store, cand: &str, memo: &mut Memo) -> Result<Candidate, Error> {
     if let Some(known) = memo.candidates.get(cand) {
         return Ok(known.clone());
     }
-    let cat = catalogue(store, memo)?;
+    let cat = cone(store, memo)?;
     let node = named(cand)?;
     let subject = Term::NamedNode(node.clone());
     let one = |p: &str| -> Result<Option<Term>, Error> { Ok(store.objects(&subject, p, &cat)?.into_iter().next()) };
@@ -346,20 +344,7 @@ fn candidate(store: &Store, cand: &str, memo: &mut Memo) -> Result<Candidate, Er
         return Err(missing());
     };
     let from_node = Term::NamedNode(from.clone());
-    let possible = store.holds(from.as_str(), RDF_TYPE, POSSIBLE_GRAPH, &cat)?;
-    let mut period = None;
-    for p in store.objects(&from_node, TEMPORAL, &cat)? {
-        if let Some(start) = store.objects(&p, START, &cat)?.into_iter().next() {
-            let end = if possible {
-                store.objects(&p, END, &cat)?.into_iter().next()
-            } else {
-                None
-            };
-            period = Some((lexical(&start)?, end.as_ref().map(lexical).transpose()?));
-            break;
-        }
-    }
-    let (start, end) = period.ok_or_else(missing)?;
+    let (start, end) = when(store, from.as_str(), memo)?.ok_or_else(missing)?;
     let spent = store
         .objects(&from_node, SPENT, &cat)?
         .into_iter()
@@ -370,7 +355,7 @@ fn candidate(store: &Store, cand: &str, memo: &mut Memo) -> Result<Candidate, Er
         })
         .unwrap_or(0.0);
     let read: HashSet<&str> = [FROM, FILLS, MINTED, RDF_TYPE].into();
-    //  THE CANDIDATE'S OWN ROWS, by its subject in the catalogue's index, never the catalogue scanned: it grows
+    //  THE CANDIDATE'S OWN ROWS, by its subject in the cone graph's index, never the graph scanned: it grows
     //  with the cone, and scanned per candidate it was three quarters of a five-disk pass.
     let mut filled = Vec::new();
     let graph = named(&cat)?;
@@ -572,7 +557,7 @@ mod tests {
     const EDGES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
 PREFIX planning: <http://example.org/orexis/planning#>
 SELECT ?cand ?m ?w ?wm WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?cand a planning:Candidate ; planning:minted ?m .
+  GRAPH ?cone { ?cand a planning:Candidate ; planning:minted ?m .
                OPTIONAL { ?w planning:by ?cand ; planning:minted ?wm } } }
 ORDER BY ?m";
 
@@ -584,7 +569,7 @@ ORDER BY ?m";
         const UNTAKEN_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?cand WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?cand a planning:Candidate ; planning:minted ?m .
+      GRAPH ?cone { ?cand a planning:Candidate ; planning:minted ?m .
                    FILTER NOT EXISTS { ?w planning:by ?cand } } }
     ORDER BY ?m";
         store
@@ -617,7 +602,7 @@ ORDER BY ?m";
     fn admitted(memo: &mut Memo) -> Store {
         const PRESENT_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
             PREFIX planning: <http://example.org/orexis/planning#>
-            SELECT ?g WHERE { GRAPH ?g { ?g a planning:GroundGraph } } LIMIT 1";
+            SELECT ?g WHERE { GRAPH ?m_g { ?g a planning:GroundGraph } } LIMIT 1";
         let store =
             snapshots::stand_in(&snapshots::tree().join("orexis-planning/tests/admit/one_lever_two_tanks.trig"));
         let present = iri(&store.rows(PRESENT_Q, &[]).unwrap()[0], "g").unwrap();

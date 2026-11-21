@@ -1,5 +1,5 @@
 //! WHAT BELIEF SAYS HAPPENED: a pass that revised, which whoever is above belief hears and the journal keeps, and
-//! the revisions the catalogue holds, which only the metrics hear. Said by the deliberator as a pass ends.
+//! the revisions the belief base holds, which only the metrics hear. Said by the deliberator as a pass ends.
 
 use oxigraph::model::{NamedNode, Term};
 
@@ -53,7 +53,7 @@ impl Event for Revised {
     }
 }
 
-/// The revisions the belief base's catalogue describes, and how many a budget cut short — settled false, which the
+/// The revisions the belief base holds, and how many a budget cut short — settled false, which the
 /// next pass continues. A revision unsettled window after window is a rule set that never settles.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct RevisionsHeld {

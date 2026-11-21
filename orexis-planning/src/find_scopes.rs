@@ -40,13 +40,13 @@ impl Scopes {
     }
 }
 
-/// Every standing scope graph, asked of the catalogue by class, in name order.
+/// Every standing scope graph, asked by class, in name order.
 pub(crate) fn standing(store: &Store) -> Result<Vec<String>, Error> {
     /// EVERY STANDING SCOPE GRAPH.
     const STANDING_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?g WHERE {
-      GRAPH ?g { ?g a planning:ScopeGraph } }
+      GRAPH ?m_g { ?g a planning:ScopeGraph } }
     ORDER BY ?g";
     Ok(store
         .rows(STANDING_Q, &[])?
@@ -84,10 +84,10 @@ mod tests {
         store
             .update(
                 "PREFIX orexis: <http://example.org/orexis#>
-                INSERT DATA { GRAPH <urn:test:catalogue> { <urn:test:catalogue> a orexis:CatalogueGraph } }",
+                INSERT DATA { GRAPH <urn:test:said> {  } }",
             )
             .unwrap();
-        orexis::snapshots::mirrored(&store);
+        orexis::snapshots::mirrored(&store, "urn:test:said");
         store
     }
 
@@ -102,10 +102,10 @@ mod tests {
         store
             .update(
                 "PREFIX planning: <http://example.org/orexis/planning#>
-                INSERT DATA { GRAPH <urn:test:catalogue> { <urn:test:scopes> a planning:ScopeGraph } }",
+                INSERT DATA { GRAPH <urn:test:said> { <urn:test:scopes> a planning:ScopeGraph } }",
             )
             .unwrap();
-        orexis::snapshots::mirrored(&store);
+        orexis::snapshots::mirrored(&store, "urn:test:said");
         assert_eq!(
             find_scopes(&store).unwrap(),
             Some(Scopes::default()),
@@ -125,10 +125,10 @@ mod tests {
                             <urn:test:fill> planning:inScope <urn:test:s1> .
                             <urn:test:bed> planning:inScope <urn:test:s1> , <urn:test:s2> .
                             <urn:test:heat> planning:inScope <urn:test:s2> }
-  GRAPH <urn:test:catalogue> { <urn:test:scopes> a planning:ScopeGraph } }",
+  GRAPH <urn:test:said> { <urn:test:scopes> a planning:ScopeGraph } }",
             )
             .unwrap();
-        orexis::snapshots::mirrored(&store);
+        orexis::snapshots::mirrored(&store, "urn:test:said");
         let scopes = find_scopes(&store).unwrap().unwrap();
         let expected: BTreeMap<String, BTreeSet<String>> = [
             ("urn:test:level", set(&["urn:test:s1"])),
@@ -153,10 +153,10 @@ mod tests {
   GRAPH <urn:test:scopes> { <urn:test:level> planning:inScope <urn:test:s1> .
                             <urn:test:bed> planning:inScope <urn:test:s1> , <urn:test:s2> .
                             <urn:test:temperature> planning:inScope <urn:test:s2> }
-  GRAPH <urn:test:catalogue> { <urn:test:scopes> a planning:ScopeGraph } }",
+  GRAPH <urn:test:said> { <urn:test:scopes> a planning:ScopeGraph } }",
             )
             .unwrap();
-        orexis::snapshots::mirrored(&store);
+        orexis::snapshots::mirrored(&store, "urn:test:said");
         let scopes = find_scopes(&store).unwrap().unwrap();
         assert_eq!(
             scopes.meet(["urn:test:bed", "urn:test:level", "urn:test:probe"]),

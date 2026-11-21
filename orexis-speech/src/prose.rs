@@ -48,7 +48,7 @@ pub fn written(store: &Store, me: &str, prose: &Prose) -> Result<String, Error> 
 /// Whether the words a prose graph keeps arrived from outside, a person's, rather than the agent's own.
 pub fn received(store: &Store, graph: &str) -> Result<bool, Error> {
     let text = bind(
-        "PREFIX orexis: <http://example.org/orexis#> ASK { GRAPH $graph { $graph orexis:arrivedBy $received } }",
+        "PREFIX orexis: <http://example.org/orexis#> ASK { GRAPH ?m_graph { $graph orexis:arrivedBy $received } }",
         &[("graph", Value::iri(graph)), ("received", Value::iri(RECEIVED))],
     )?;
     store.ask(&text, &[])

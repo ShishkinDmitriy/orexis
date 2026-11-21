@@ -13,11 +13,11 @@ use oxsdatatypes::DateTime;
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::instant;
-use orexis::ontology::{BELIEF, END, START};
+use orexis::ontology::{BELIEF, DERIVED, END, GRAPH_PREFIX, START};
 use orexis::store::{Store, Within, iri};
 
 use crate::Memo;
-use crate::ontology::{CHANGEABLE_GRAPH, GROUND_GRAPH, KNOWN, POSSIBLE_GRAPH};
+use crate::ontology::{CHANGEABLE_GRAPH, CONE_GRAPH, GROUND_GRAPH, KNOWN, POSSIBLE_GRAPH};
 use crate::terms::{RDF_TYPE, TEMPORAL};
 
 /// Who is asking and when the present is, for a reader that is not standing in a world.
@@ -36,9 +36,9 @@ pub fn world_at(store: &Store, world: Option<&str>, asking: &Asking, memo: &mut 
     PREFIX planning: <http://example.org/orexis/planning#>
     PREFIX prov: <http://www.w3.org/ns/prov#>
     SELECT ?g WHERE {
-      { GRAPH ?g { ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start } }
-      UNION { GRAPH ?g { ?g a planning:ChangeableGraph ; prov:wasDerivedFrom ?source }
-              GRAPH ?source { ?source dcterms:temporal/orexis:start ?start } }
+      { GRAPH ?m_g { ?g a orexis:BeliefGraph ; dcterms:temporal/orexis:start ?start } }
+      UNION { GRAPH ?m_g { ?g a planning:ChangeableGraph ; prov:wasDerivedFrom ?source }
+              GRAPH ?m_source { ?source dcterms:temporal/orexis:start ?start } }
       FILTER(?start > $now) }";
     let (at, until) = match world {
         None => {
@@ -107,20 +107,23 @@ pub fn world_at(store: &Store, world: Option<&str>, asking: &Asking, memo: &mut 
     }
 }
 
-/// A world's period off its row: its start, and its end where it is a possible world. Asked once per world.
+/// A world's period off its metadata: its start, and its end where it is a possible world. Asked once per world.
 pub fn when(store: &Store, world: &str, memo: &mut Memo) -> Result<Option<(DateTime, Option<DateTime>)>, Error> {
     if let Some(known) = memo.when.get(world) {
         return Ok(*known);
     }
-    let catalogue = catalogue(store, memo)?;
+    let Some(metadata) = store.metadata_of(world)? else {
+        memo.when.insert(world.to_string(), None);
+        return Ok(None);
+    };
     let subject = Term::NamedNode(named(world)?);
-    let possible = store.holds(world, RDF_TYPE, POSSIBLE_GRAPH, &catalogue)?;
+    let possible = store.holds(world, RDF_TYPE, POSSIBLE_GRAPH, &metadata)?;
     let mut found = None;
-    for period in store.objects(&subject, TEMPORAL, &catalogue)? {
-        if let Some(start) = store.objects(&period, START, &catalogue)?.first() {
+    for period in store.objects(&subject, TEMPORAL, &metadata)? {
+        if let Some(start) = store.objects(&period, START, &metadata)?.first() {
             let until = if possible {
                 store
-                    .objects(&period, END, &catalogue)?
+                    .objects(&period, END, &metadata)?
                     .first()
                     .map(lexical)
                     .transpose()?
@@ -135,15 +138,76 @@ pub fn when(store: &Store, world: &str, memo: &mut Memo) -> Result<Option<(DateT
     Ok(found)
 }
 
-/// The catalogue's name, once a pass.
-pub fn catalogue(store: &Store, memo: &mut Memo) -> Result<String, Error> {
-    if let Some(name) = &memo.catalogue {
+/// The period `graph`'s metadata says it holds over, its start and its end where it says one: None where it says
+/// no start. Asked of the index, a lookup in the graph's metadata graph.
+pub fn period_of(store: &Store, graph: &str) -> Result<Option<(DateTime, Option<DateTime>)>, Error> {
+    let Some(metadata) = store.metadata_of(graph)? else {
+        return Ok(None);
+    };
+    for period in store.objects(&Term::NamedNode(named(graph)?), TEMPORAL, &metadata)? {
+        if let Some(start) = store.objects(&period, START, &metadata)?.first() {
+            let end = store
+                .objects(&period, END, &metadata)?
+                .first()
+                .map(lexical)
+                .transpose()?;
+            return Ok(Some((lexical(start)?, end)));
+        }
+    }
+    Ok(None)
+}
+
+/// THE GRAPH A SEARCH'S OWN ROWS ARE WRITTEN IN, once a pass: the store's cone graph, its candidates, its weighings
+/// and the path between its worlds, or the name a writer gives one where the store has none yet. A read asks it
+/// and writes nothing; whoever writes a row of the search says it is one first (`cone_made`).
+pub fn cone(store: &Store, memo: &mut Memo) -> Result<String, Error> {
+    if let Some(name) = &memo.cone {
         return Ok(name.clone());
     }
     let name = store
-        .catalogue()?
-        .ok_or_else(|| Error::Catalogue("no graph describes itself as the catalogue".into()))?;
-    memo.catalogue = Some(name.clone());
+        .graphs_of(&[CONE_GRAPH], &Within::default())?
+        .into_iter()
+        .next()
+        .unwrap_or_else(|| format!("{GRAPH_PREFIX}cone"));
+    memo.cone = Some(name.clone());
+    Ok(name)
+}
+
+/// The store's cone graph, or the name a writer gives one, asked with no memo.
+pub fn cone_of(store: &Store) -> Result<String, Error> {
+    cone(store, &mut Memo::default())
+}
+
+/// The cone graph, said to be one where nothing says so yet, asked with no memo.
+pub fn cone_made_of(store: &Store) -> Result<String, Error> {
+    cone_made(store, &mut Memo::default())
+}
+
+/// Every row of the search about `graph` taken back: for a world or a ground that goes.
+pub fn out_of_the_cone(store: &Store, graph: &str) -> Result<(), Error> {
+    let (cone, subject) = (named(&cone_of(store)?)?, named(graph)?);
+    let rows: Vec<oxigraph::model::Quad> = store
+        .engine()
+        .quads_for_pattern(
+            Some(subject.as_ref().into()),
+            None,
+            None,
+            Some(oxigraph::model::GraphNameRef::NamedNode(cone.as_ref())),
+        )
+        .collect::<Result<_, _>>()
+        .map_err(|e| Error::Evaluation(e.to_string()))?;
+    store.remove_all(&rows)
+}
+
+/// The cone graph, said to be one where nothing says so yet: for whoever writes a row of the search.
+pub fn cone_made(store: &Store, memo: &mut Memo) -> Result<String, Error> {
+    let name = cone(store, memo)?;
+    if !memo.cone_made {
+        if store.metadata_of(&name)?.is_none() {
+            store.classify(&name, CONE_GRAPH, DERIVED, None, None, None)?;
+        }
+        memo.cone_made = true;
+    }
     Ok(name)
 }
 

@@ -36,6 +36,14 @@ GRAPH :ontology {
   planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :door courier:x 3 .
   :door courier:y 3 .
@@ -48,19 +56,26 @@ GRAPH :world {
   :van rdfs:label "the van" .
 }
 
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
+}
+
 # THREE LEVERS, as `packages/orexis-tool-courier/actions.ttl` states them. Neighbouring is worked
 # out, not declared: |dx| + |dy| = 1 over the cells' own coordinates.
 GRAPH :actions {
   courier:Drive a orexis:Action .
   courier:Drive orexis:takes courier:toX .
-  courier:Drive planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
-  courier:Drive planning:landsAfter "SELECT ?least ?most WHERE { BIND(30 AS ?least) BIND(60 AS ?most) }" .
   courier:Drive orexis:takes courier:toY .
   courier:Drive orexis:takes courier:van .
+  courier:Drive planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
   courier:Drive planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX courier: <http://example.org/orexis/courier#>
       DELETE { $van courier:x ?x ; courier:y ?y }
       INSERT { $van courier:x $toX ; courier:y $toY }
       WHERE  { $van courier:x ?x ; courier:y ?y }""" ] ] .
+  courier:Drive planning:landsAfter "SELECT ?least ?most WHERE { BIND(30 AS ?least) BIND(60 AS ?most) }" .
   courier:Drive planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
       SELECT ?van ?toX ?toY WHERE {
           ?van courier:x ?x ; courier:y ?y .
@@ -72,11 +87,11 @@ GRAPH :actions {
   courier:Drop a orexis:Action .
   courier:Drop orexis:takes courier:parcel .
   courier:Drop planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
-  courier:Drop planning:landsAfter "SELECT ?least ?most WHERE { BIND(0 AS ?least) BIND(0 AS ?most) }" .
   courier:Drop planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX courier: <http://example.org/orexis/courier#>
       DELETE { $parcel courier:carriedBy ?van }
       INSERT { $parcel courier:x ?x ; courier:y ?y }
       WHERE  { $parcel courier:carriedBy ?van . ?van courier:x ?x ; courier:y ?y }""" ] ] .
+  courier:Drop planning:landsAfter "SELECT ?least ?most WHERE { BIND(0 AS ?least) BIND(0 AS ?most) }" .
   courier:Drop planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
       SELECT ?parcel WHERE {
           ?parcel courier:carriedBy ?van .
@@ -84,19 +99,26 @@ GRAPH :actions {
       }""" .
   courier:Pick a orexis:Action .
   courier:Pick orexis:takes courier:parcel .
-  courier:Pick planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
-  courier:Pick planning:landsAfter "SELECT ?least ?most WHERE { BIND(0 AS ?least) BIND(0 AS ?most) }" .
   courier:Pick orexis:takes courier:van .
+  courier:Pick planning:costs "SELECT ?cost WHERE { BIND(1.0 AS ?cost) }" .
   courier:Pick planning:effect [ a planning:Effect ; sh:rule [ a belief:Transition ; belief:update """PREFIX courier: <http://example.org/orexis/courier#>
       DELETE { $parcel courier:x ?x ; courier:y ?y }
       INSERT { $parcel courier:carriedBy $van }
       WHERE  { $parcel courier:x ?x ; courier:y ?y }""" ] ] .
+  courier:Pick planning:landsAfter "SELECT ?least ?most WHERE { BIND(0 AS ?least) BIND(0 AS ?most) }" .
   courier:Pick planning:precondition """PREFIX courier: <http://example.org/orexis/courier#>
       SELECT ?parcel ?van WHERE {
           ?van courier:x ?x ; courier:y ?y . ?parcel courier:x ?x ; courier:y ?y .
           ?parcel a courier:Parcel .
           ?van a courier:Van .
       }""" .
+}
+
+GRAPH :actions.metadata {
+  :actions a orexis:ActionGraph .
+  :actions a orexis:Graph .
+  :actions.metadata a orexis:MetadataGraph .
+  :actions.metadata orexis:metadataOf :actions .
 }
 
 # THE DESIRE, AND THE PACKAGE'S MEASURE OF IT: every parcel where it is owed, and how far
@@ -142,11 +164,26 @@ GRAPH :desires {
       }""" .
 }
 
+GRAPH :desires.metadata {
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :desires.metadata a orexis:MetadataGraph .
+  :desires.metadata orexis:metadataOf :desires .
+}
+
 GRAPH :sensed {
   :parcel courier:x 1 .
   :parcel courier:y 2 .
   :van courier:x 0 .
   :van courier:y 0 .
+}
+
+GRAPH :sensed.metadata {
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed orexis:ownedBy :keeper .
+  :sensed.metadata a orexis:MetadataGraph .
+  :sensed.metadata orexis:metadataOf :sensed .
 }
 
 GRAPH :scopes {
@@ -159,23 +196,14 @@ GRAPH :scopes {
   courier:y planning:inScope :keeper.scope.1 .
 }
 
-GRAPH :catalogue {
-  :actions a orexis:ActionGraph .
-  :actions a orexis:Graph .
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :desires a orexis:Graph .
-  :desires a planning:DesireGraph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
+GRAPH :scopes.metadata {
   :scopes a orexis:Graph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
   :scopes orexis:ownedBy :keeper .
-  :sensed a orexis:BeliefGraph .
-  :sensed a orexis:Graph .
-  :sensed orexis:ownedBy :keeper .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :scopes.metadata a orexis:MetadataGraph .
+  :scopes.metadata orexis:metadataOf :scopes .
+}
+
+GRAPH :catalogue {
 }

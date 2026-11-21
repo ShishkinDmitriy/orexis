@@ -12,7 +12,6 @@ use regex::Regex;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
-use orexis::metadata::stated;
 use orexis::store::{Store, Within, iri, value};
 use orexis_belief::ontology::RULES_GRAPH;
 
@@ -85,7 +84,7 @@ pub fn predicted(store: &Store, step: &str) -> Result<(Vec<Triple>, Vec<Triple>)
     let row = found.first();
     let facts = |side: &str| -> Result<Vec<Triple>, Error> {
         match row.and_then(|r| iri(r, side)) {
-            Some(g) => Ok(sorted(stated(store.triples(&g)?))),
+            Some(g) => Ok(sorted(store.triples(&g)?)),
             None => Ok(Vec::new()),
         }
     };

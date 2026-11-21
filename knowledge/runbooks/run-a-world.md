@@ -243,8 +243,8 @@ podman compose up -d --force-recreate
 ```
 
 Neither reaches what a lived-in volume already holds. A volume keeps its own graphs and their
-catalogue rows, and the closure only adds kinds, so a change to what KIND an agent's own graph is
-leaves the old row standing beside the new. A volume born before #944's fourth slice (#950) keeps its
+metadata, and the closure only adds kinds, so a change to what KIND an agent's own graph is
+leaves the old kind standing beside the new. A volume born before #944's fourth slice (#950) keeps its
 one observation graph per sensor classified as a belief, which the mind would still read, and one born
 before #953 keeps rows of `orexis:StateGraph`. And a volume born before roles were instances keeps
 the self graph it was born with, its roles stated as types of the agent (`a orexis:Self ,
@@ -391,7 +391,7 @@ real one.
 
 | symptom | cause |
 |---|---|
-| agent refuses to start, `DocumentRefused` | a document states no kind, claims to be the catalogue or states an arrival; states a self anywhere but once in a self graph; or a graph of an agent's own names nobody, or no agent of the world. The message names the file |
+| agent refuses to start, `DocumentRefused` | a document states no kind, claims to be a metadata graph or states an arrival; states a self anywhere but once in a self graph; or a graph of an agent's own names nobody, or no agent of the world. The message names the file |
 | agent refuses to start, `self graph` | its own documents hold no self graph, or two — the world authors exactly one per agent, under `beliefs/` — or its volume's self is another agent |
 | agent starts, logs `plays no role`, and exits at once | its self graph says it plays no role, so it loads no package — or its volume was born before the world declared one, or before roles were instances (`orexis:plays`), and keeps the self graph it had: a role reaches only a fresh volume. `orexis-onboard` refuses the first; the second needs the volume removed (`tear-down`) |
 | `orexis-onboard` refuses, `declares its agents' roles in a way it does not bear out` | a role whose need the world lacks, a sensor an observer role reads that is mounted on nothing the agent acts for, a sensor reporting to an agent that no observer role of its reads, a topic listened to by no speaker, or a graph of a kind none of the agent's packages declares — each line names the agent and the reason |

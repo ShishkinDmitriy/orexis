@@ -13,7 +13,7 @@
 //!
 //! A PACKAGE HEARS AN EVENT BY ITS CLASS (`Hears::event`), the class and every class the vocabulary puts beneath it,
 //! and A KIND OF GRAPH WRITTEN (`Hears::graph`): every graph a package says it wrote (`Turn::done`) is sent to each
-//! task hearing a kind the catalogue says it is. A task hears everything in the order it was said, each under the tag
+//! task hearing a kind the graph's metadata says it is. A task hears everything in the order it was said, each under the tag
 //! it asked with. WHAT A TASK SAYS WHILE IT HANDLES WHAT WOKE IT IS HEARD WHEN IT NEXT WAITS, its graphs before its
 //! events, so a hearer never starts on a sayer's half-written work.
 //!
@@ -218,17 +218,16 @@ mod tests {
     /// together, once, in the order they were written, and nothing of the third.
     #[test]
     fn what_one_turn_wrote_of_a_kind_is_told_as_one_thing() {
-        use crate::ontology::{BELIEF, CATALOGUE_GRAPH};
+        use crate::ontology::BELIEF;
         let store = Store::new().unwrap();
         store
-            .update(&format!(
+            .update(
                 "PREFIX orexis: <http://example.org/orexis#>
-                 INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph }} \
-                 GRAPH <urn:test:one> {{ <urn:test:one> a orexis:BeliefGraph }} \
-                 GRAPH <urn:test:other> {{ <urn:test:other> a orexis:ActionGraph }} \
-                 GRAPH <urn:test:two> {{ <urn:test:two> a orexis:BeliefGraph }} }}"
-            ))
+                 INSERT DATA { GRAPH <urn:test:said> { <urn:test:one> a orexis:BeliefGraph .
+                 <urn:test:other> a orexis:ActionGraph . <urn:test:two> a orexis:BeliefGraph } }",
+            )
             .unwrap();
+        crate::snapshots::mirrored(&store, "urn:test:said");
         let events = Events::new(&store);
         let mut hears = events.hears();
         hears.graph(BELIEF, 3);

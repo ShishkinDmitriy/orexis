@@ -27,14 +27,11 @@ pub fn extract(store: &Store, statement: &str) -> Result<Vec<String>, Error> {
                                FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule";
     const ROW_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>
-    SELECT ?owner ?start ?end WHERE { GRAPH $g { OPTIONAL { $g orexis:ownedBy ?owner }
+    SELECT ?owner ?start ?end WHERE { GRAPH ?m { ?m orexis:metadataOf $g . OPTIONAL { $g orexis:ownedBy ?owner }
       OPTIONAL { $g dcterms:temporal ?p . OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
     LIMIT 1";
     let target = believed_graph(statement);
     store.forget_graph(&target, Some(BELIEF))?;
-    let Some(cat) = store.catalogue()? else {
-        return Ok(Vec::new());
-    };
     let mut reads = vec![statement.to_string()];
     reads.extend(store.graphs_of(&[BELIEF], &Within::common())?);
     let reads: Vec<&str> = reads.iter().map(String::as_str).collect();
@@ -71,10 +68,10 @@ pub fn extract(store: &Store, statement: &str) -> Result<Vec<String>, Error> {
     let start = value(&row, "start").map(|s| instant(&s)).transpose()?;
     let end = value(&row, "end").map(|s| instant(&s)).transpose()?;
     let entry = store.entry(&target, &[BELIEF], DERIVED, owner.as_deref(), start, end)?;
+    let metadata = store.metadata_for(&target)?;
     store.update(&format!(
         "PREFIX prov: <http://www.w3.org/ns/prov#>
-            INSERT DATA {{ {entry}\n  GRAPH <{cat}> {{ <{target}> prov:wasDerivedFrom <{statement}> }}
-                           GRAPH <{target}> {{ <{target}> prov:wasDerivedFrom <{statement}> }} }}"
+            INSERT DATA {{ {entry}\n  GRAPH <{metadata}> {{ <{target}> prov:wasDerivedFrom <{statement}> }} }}"
     ))?;
     hash_named_graph(store, &target, None)?;
     Ok(vec![target])
@@ -85,9 +82,10 @@ mod tests {
     //! `extract`, held as `agent/speech/tests/test_extract.py` holds it: what the agent believes of one statement is
     //! what its extractions conclude of it alone — one belief derived from it, its own, over its period.
 
-    use orexis::ontology::{CATALOGUE_GRAPH, OREXIS};
+    use orexis::ontology::OREXIS;
 
     use super::*;
+    use orexis::snapshots::SAID_TOGETHER;
 
     const T: &str = "http://example.org/test#";
 
@@ -111,7 +109,7 @@ mod tests {
   PREFIX speech: <http://example.org/orexis/speech#>
   PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
   INSERT DATA {{
-  GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph .
+  GRAPH <{SAID_TOGETHER}> {{ 
       :rules a sh:RulesGraph . :world a orexis:BeliefGraph .
       <{round}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy <{me}> ;
                 dcterms:temporal [ orexis:start \"2026-01-01T12:00:00+00:00\"^^xsd:dateTime ] .
@@ -124,7 +122,7 @@ mod tests {
   GRAPH :held {{ :theRound a :Round ; :lot 40 . }} }}"
         ))
         .unwrap();
-        orexis::snapshots::mirrored(&st);
+        orexis::snapshots::mirrored(&st, SAID_TOGETHER);
         st
     }
 
@@ -134,8 +132,7 @@ mod tests {
             .rows(
                 &format!(
                     "PREFIX orexis: <http://example.org/orexis#>
-                    SELECT ?s ?p ?o WHERE {{ GRAPH <{graph}> {{ ?s ?p ?o FILTER NOT EXISTS {{ ?s a orexis:Graph }}
-                      FILTER NOT EXISTS {{ ?s a <http://purl.org/dc/terms/PeriodOfTime> }} }} }}"
+                    SELECT ?s ?p ?o WHERE {{ GRAPH <{graph}> {{ ?s ?p ?o }} }}"
                 ),
                 &[],
             )
@@ -160,7 +157,7 @@ mod tests {
             "PREFIX dcterms: <http://purl.org/dc/terms/>
   PREFIX orexis: <http://example.org/orexis#>
   PREFIX prov: <http://www.w3.org/ns/prov#>
-  SELECT ?a ?o ?from ?start WHERE {{ GRAPH <{g}> {{ <{g}> orexis:arrivedBy ?a ; orexis:ownedBy ?o ; prov:wasDerivedFrom ?from ; dcterms:temporal ?p . ?p orexis:start ?start }} }}",
+  SELECT ?a ?o ?from ?start WHERE {{ GRAPH ?m_g {{ <{g}> orexis:arrivedBy ?a ; orexis:ownedBy ?o ; prov:wasDerivedFrom ?from ; dcterms:temporal ?p . ?p orexis:start ?start }} }}",
             g = believed_graph(&round())
         );
         let row = &store.rows(&q, &[]).unwrap()[0];
@@ -230,7 +227,7 @@ mod tests {
   PREFIX orexis: <http://example.org/orexis#>
   PREFIX speech: <http://example.org/orexis/speech#>
   INSERT DATA {{
-  GRAPH <{CATALOGUE_GRAPH}> {{ <{rumour}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy :me . }}
+  GRAPH <{SAID_TOGETHER}> {{ <{rumour}> a speech:StatementGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:ownedBy :me . }}
   GRAPH <{rumour}> {{ :bed <http://example.org/orexis/climate#soil> <http://example.org/orexis/climate#Dry> . }} }}"
             ))
             .unwrap();

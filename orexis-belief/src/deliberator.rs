@@ -4,16 +4,16 @@
 //! `deliberate()` is the pass, which takes every source in the queue in turn, spending at most a budget of rule
 //! executions across them, and answers what it spent. An arrival is concluded on before it is transitioned on: it is
 //! revised until its rules settle, then the transitions it triggers are applied, once, in their orders. One done
-//! with both leaves the queue; one the budget cut short stays, its revision graph's row saying `belief:settled
+//! with both leaves the queue; one the budget cut short stays, its revision graph's metadata saying `belief:settled
 //! false`, and the next pass continues it.
 //!
 //! **ARRIVALS ARE TRANSITIONED ON IN TURN.** A later arrival may be revised while an earlier one is cut short, but
 //! its transitions wait until every arrival queued before it has had its own — unless the earlier triggers none.
 //!
-//! **A CUT SURVIVES A RESTART.** As the package starts every revision graph whose row says it did not settle is
-//! queued again, read off the catalogue (`resume`).
+//! **A CUT SURVIVES A RESTART.** As the package starts every revision graph whose metadata says it did not settle is
+//! queued again, read off the revisions' metadata (`resume`).
 //!
-//! **WHAT A PASS REVISED IS SAID** to whoever watches the agent, and with it the revisions the catalogue holds and how
+//! **WHAT A PASS REVISED IS SAID** to whoever watches the agent, and with it the revisions the belief base holds and how
 //! many are unsettled, which only the metrics hear (`events.rs`).
 
 use std::time::Instant;
@@ -42,7 +42,7 @@ enum Stage {
 }
 
 /// A source queued: what stands beside it — None for the beliefs holding at the pass's instant — where it stands,
-/// whether its row was said unsettled for its transitions, and the kind its revisions are.
+/// whether it was said unsettled for its transitions, and the kind its revisions are.
 #[derive(Clone, Debug)]
 struct Arrival {
     read: Option<Vec<String>>,
@@ -140,7 +140,7 @@ impl Deliberator {
     }
 
     /// WHAT A BUDGET CUT SHORT BEFORE THIS DELIBERATOR WAS MADE is taken up again: every revision graph whose row
-    /// says it did not settle is queued, read off the catalogue, so a cut survives a restart.
+    /// says it did not settle is queued, read off its metadata, so a cut survives a restart.
     pub(crate) fn resume(&mut self) -> Result<(), Error> {
         for source in self.unsettled()? {
             if !self.queue.iter().any(|(queued, _)| *queued == source) {
@@ -276,20 +276,16 @@ impl Deliberator {
         Ok(true)
     }
 
-    /// The revisions the catalogue describes now, and how many are unsettled.
+    /// The revisions the belief base holds now, and how many are unsettled.
     pub fn held(&self) -> Result<RevisionsHeld, Error> {
-        /// THE REVISIONS THE CATALOGUE METADATA, and how many are unsettled.
+        /// EVERY REVISION GRAPH, and how many are unsettled, off their metadata.
         const HELD_Q: &str = "
         SELECT (COUNT(?g) AS ?revisions) (SUM(IF(?settled, 0, 1)) AS ?unsettled)
-        WHERE { GRAPH $cat { ?g a $revision ; $settled ?settled } }";
-        let Some(cat) = self.beliefs.catalogue()? else {
-            return Ok(RevisionsHeld::default());
-        };
+        WHERE { GRAPH ?m { ?g a $revision ; $settled ?settled } }";
         let found = self.beliefs.rows(
             &bind(
                 HELD_Q,
                 &[
-                    ("cat", Value::iri(cat)),
                     ("revision", Value::iri(REVISION_GRAPH)),
                     ("settled", Value::iri(SETTLED)),
                 ],
@@ -309,16 +305,14 @@ impl Deliberator {
         })
     }
 
-    /// Say on the source's revision row whether its arrival is done, where that is not what the row says, so a
-    /// restart continues an arrival whose transitions waited or were cut — where a row stands.
+    /// Say of the source's revision graph whether its arrival is done, where that is not what its metadata says, so a
+    /// restart continues an arrival whose transitions waited or were cut — where anything is said of it.
     fn say(&self, source: &str, arrival: &mut Arrival, settled: bool) -> Result<(), Error> {
         let unsettled = !settled;
         if arrival.said_unsettled == unsettled {
             return Ok(());
         }
-        if let Some(cat) = self.beliefs.catalogue()? {
-            say_settled(&self.beliefs, &cat, &revision_graph(source), settled)?;
-        }
+        say_settled(&self.beliefs, &revision_graph(source), settled)?;
         arrival.said_unsettled = unsettled;
         Ok(())
     }
@@ -326,19 +320,10 @@ impl Deliberator {
     fn unsettled(&self) -> Result<Vec<String>, Error> {
         /// EVERY SOURCE WHOSE RULES DID NOT SETTLE, off the revision graphs' rows.
         const UNSETTLED_Q: &str = "PREFIX prov: <http://www.w3.org/ns/prov#>
-        SELECT ?source WHERE { GRAPH $cat { ?g $settled false ; prov:wasDerivedFrom ?source } } ORDER BY ?source";
-        let Some(cat) = self.beliefs.catalogue()? else {
-            return Ok(Vec::new());
-        };
+        SELECT ?source WHERE { GRAPH ?m { ?g $settled false ; prov:wasDerivedFrom ?source } } ORDER BY ?source";
         Ok(self
             .beliefs
-            .rows(
-                &bind(
-                    UNSETTLED_Q,
-                    &[("cat", Value::iri(cat)), ("settled", Value::iri(SETTLED))],
-                )?,
-                &[],
-            )?
+            .rows(&bind(UNSETTLED_Q, &[("settled", Value::iri(SETTLED))])?, &[])?
             .iter()
             .filter_map(|r| iri(r, "source"))
             .collect())
@@ -397,7 +382,8 @@ mod tests {
 
     use super::*;
     use crate::trigger::trigger as triggered;
-    use orexis::ontology::CATALOGUE_GRAPH;
+    /// Where a fixture says its graphs' metadata together, before it is moved to each graph's own.
+    const SAID: &str = orexis::snapshots::SAID_TOGETHER;
 
     const SENSED: &str = "http://example.org/test#sensed";
     const T: &str = "http://example.org/test#";
@@ -440,7 +426,7 @@ mod tests {
             .rows(
                 &format!(
                     "PREFIX orexis: <http://example.org/orexis#>
-                    SELECT ?p WHERE {{ GRAPH <{SENSED}/revisions> {{ ?s ?p ?o FILTER NOT EXISTS {{ ?s a orexis:Graph }} }} }}"
+                    SELECT ?p WHERE {{ GRAPH <{SENSED}/revisions> {{ ?s ?p ?o }} }}"
                 ),
                 &[],
             )
@@ -490,7 +476,7 @@ mod tests {
     fn own_state(store: &Store) -> Vec<String> {
         const OWN_STATE_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
         PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g WHERE { GRAPH ?g { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy ?owner .
+        SELECT ?g WHERE { GRAPH ?m_g { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy ?owner .
         FILTER NOT EXISTS { ?g a belief:RevisionGraph } } } ORDER BY ?g";
         store
             .rows(OWN_STATE_Q, &[])
@@ -615,7 +601,7 @@ mod tests {
         first.deliberate(snapshots::now()).unwrap();
         let mut second = Deliberator::new(&store).unwrap();
         second.resume().unwrap();
-        assert_eq!(second.pending(), [SENSED], "the row said the rules did not settle");
+        assert_eq!(second.pending(), [SENSED], "its metadata said the rules did not settle");
         second.deliberate(snapshots::now()).unwrap();
         assert!(second.pending().is_empty());
         assert_eq!(row_settled(&store, SENSED).as_deref(), Some("true"));
@@ -770,7 +756,7 @@ mod tests {
         assert_eq!(
             second.pending(),
             std::slice::from_ref(&first_tick),
-            "the row said the arrival was not done"
+            "its metadata said the arrival was not done"
         );
         second.deliberate(snapshots::now()).unwrap();
         assert!(second.pending().is_empty());
@@ -798,14 +784,7 @@ mod tests {
     }
 
     fn bare() -> Store {
-        let store = Store::new().unwrap();
-        store
-            .update(&format!(
-                "PREFIX orexis: <http://example.org/orexis#>
-                    INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph }} }}"
-            ))
-            .unwrap();
-        with_ontology(store)
+        with_ontology(Store::new().unwrap())
     }
 
     #[test]
@@ -823,9 +802,10 @@ mod tests {
         store
             .update(&format!(
                 "PREFIX orexis: <http://example.org/orexis#>
-                    INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <urn:test:nothing> a orexis:BeliefGraph }} }}"
+                    INSERT DATA {{ GRAPH <{SAID}> {{ <urn:test:nothing> a orexis:BeliefGraph }} }}"
             ))
             .unwrap();
+        snapshots::mirrored(&store, SAID);
         part.revise(&["urn:test:nothing".to_string()], BELIEF, snapshots::now())
             .unwrap();
         assert_eq!(
@@ -859,10 +839,10 @@ mod tests {
         let rows: String = said.iter().map(|(g, s)| format!("<{g}> a {s} . ")).collect();
         store
             .update(&format!(
-                "PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ {rows} }} }}"
+                "PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{SAID}> {{ {rows} }} }}"
             ))
             .unwrap();
-        store.carry_metadata().unwrap();
+        snapshots::mirrored(&store, SAID);
         let mut part = Deliberator::new(&store).unwrap();
         part.revise(&["urn:test:reading".to_string()], BELIEF, snapshots::now())
             .unwrap();

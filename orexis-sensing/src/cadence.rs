@@ -80,9 +80,9 @@ pub fn lapsed(store: &Store, now: DateTime) -> Result<Vec<(String, DateTime)>, E
     PREFIX sensing: <http://example.org/orexis/sensing#>
     PREFIX sosa: <http://www.w3.org/ns/sosa/>
     SELECT ?sensor ?end WHERE {
-      GRAPH ?g { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end <= $now)
-                 ?obs sosa:madeBySensor ?sensor }
-      FILTER NOT EXISTS { GRAPH ?h { ?later sensing:previous ?obs . ?h a sensing:ObservationGraph } } }
+      GRAPH ?m_g { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end <= $now) }
+      GRAPH ?g { ?obs sosa:madeBySensor ?sensor }
+      FILTER NOT EXISTS { GRAPH ?h { ?later sensing:previous ?obs } GRAPH ?m_h { ?h a sensing:ObservationGraph } } }
     ORDER BY ?end ?sensor";
     let text = bind(LAPSED_Q, &[("now", Value::instant(now))])?;
     let mut out = Vec::new();
@@ -103,9 +103,9 @@ pub fn next_lapse(store: &Store, now: DateTime) -> Result<Option<DateTime>, Erro
     PREFIX sensing: <http://example.org/orexis/sensing#>
     PREFIX sosa: <http://www.w3.org/ns/sosa/>
     SELECT (MIN(?end) AS ?next) WHERE {
-      GRAPH ?g { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end > $now)
-                 ?obs sosa:madeBySensor ?sensor }
-      FILTER NOT EXISTS { GRAPH ?h { ?later sensing:previous ?obs . ?h a sensing:ObservationGraph } } }";
+      GRAPH ?m_g { ?g a sensing:ObservationGraph ; dcterms:temporal/orexis:end ?end . FILTER(?end > $now) }
+      GRAPH ?g { ?obs sosa:madeBySensor ?sensor }
+      FILTER NOT EXISTS { GRAPH ?h { ?later sensing:previous ?obs } GRAPH ?m_h { ?h a sensing:ObservationGraph } } }";
     let text = bind(NEXT_LAPSE_Q, &[("now", Value::instant(now))])?;
     match store.rows(&text, &[])?.first().and_then(|r| value(r, "next")) {
         Some(next) => Ok(Some(parse_instant(&next)?)),

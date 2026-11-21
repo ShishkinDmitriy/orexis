@@ -3,7 +3,7 @@ type: Domain Concept
 title: Common belief
 description: >-
   A belief every agent of a world holds, because the world put it in each of their stores alike -
-  a graph whose catalogue row names no owner. Asked for as `graphs_of(store, BELIEF, common=True)`;
+  a graph whose metadata names no owner. Asked for as `graphs_of(store, BELIEF, common=True)`;
   the opposite is a belief of the agent's own, whose row names it.
 ---
 
@@ -21,7 +21,7 @@ The person speaks for the world in those words, so the agent they said it to bel
 world's, naming no owner, though no other agent heard it
 ([a-person-states-what-the-chat-allows-in-the-worlds-words](/decisions/a-person-states-what-the-chat-allows-in-the-worlds-words.md)).
 
-The catalogue says which by `orexis:ownedBy`. A graph of an agent's own names its owner there;
+A graph's metadata says which by `orexis:ownedBy`. A graph of an agent's own names its owner there;
 a common belief names none:
 
 ```turtle

@@ -75,7 +75,7 @@ impl Planner {
     fn news(&self, event: &Heard) -> Result<bool, Error> {
         /// The graphs of `$revised` that are not the agent's own record of what it did: a belief that came to it.
         const NEWS_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g WHERE { VALUES ?g { $revised } GRAPH ?g { ?g a orexis:Graph .
+        SELECT ?g WHERE { VALUES ?g { $revised } GRAPH ?m_g { ?g a orexis:Graph .
                                        FILTER NOT EXISTS { ?g orexis:arrivedBy orexis:Recorded } } } LIMIT 1";
         if event.kind != REVISED {
             return Ok(false);
@@ -84,7 +84,7 @@ impl Planner {
             return Ok(true);
         }
         let revised = event.all(REVISED_SOURCE);
-        if self.beliefs.catalogue()?.is_none() {
+        if !self.beliefs.described()? {
             return Ok(!revised.is_empty());
         }
         if revised.is_empty() {
@@ -115,7 +115,7 @@ impl Planner {
         /// forecast the agent recorded of its own act, the executor's committed step. What a step wrote of the world as
         /// the agent took it is recorded too, and is the present.
         const BELIEVED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g WHERE { VALUES ?g { $revised } GRAPH ?g { ?g a orexis:BeliefGraph .
+        SELECT ?g WHERE { VALUES ?g { $revised } GRAPH ?m_g { ?g a orexis:BeliefGraph .
                                        FILTER NOT EXISTS { ?g a orexis:ForecastGraph ; orexis:arrivedBy orexis:Recorded } } } LIMIT 1";
         if event.kind != REVISED || !event.all(CHANGED).is_empty() || self.foresee.is_some() {
             return Ok(true);
@@ -140,7 +140,8 @@ impl Planner {
         /// failed after a step was taken - a landing waited out - is planned again, since time has passed.
         const OUTCOME_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?o WHERE { GRAPH ?g { ?g a execution:IntentionGraph . $intention execution:outcome ?o .
+        SELECT ?o WHERE { GRAPH ?m_g { ?g a execution:IntentionGraph }
+                          GRAPH ?g { $intention execution:outcome ?o .
                                      FILTER NOT EXISTS { $intention execution:step ?step .
                                                          ?act execution:of ?step ; execution:taken true } } }";
         let Some(intention) = event.named(INTENTION) else {

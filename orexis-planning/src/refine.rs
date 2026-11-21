@@ -13,7 +13,6 @@ use regex::Regex;
 
 use orexis::Error;
 use orexis::clock::isoformat;
-use orexis::metadata::stated;
 use orexis::ontology::{BELIEF, GRAPH_PREFIX, RECORDED};
 use orexis::store::{Store, Within};
 
@@ -46,7 +45,7 @@ pub fn refine(
     graphs.extend(store.revisions_of(&sources, BELIEF)?);
     let mut present: HashSet<Triple> = HashSet::new();
     for g in &graphs {
-        for t in stated(store.triples(g)?) {
+        for t in store.triples(g)? {
             if concluded.contains(t.predicate.as_str()) {
                 present.insert(t);
             }
@@ -157,9 +156,8 @@ pub(crate) mod tests {
     @prefix orexis: <http://example.org/orexis#> .
     @prefix sh: <http://www.w3.org/ns/shacl#> .
 
-    GRAPH :catalogue {
-      :catalogue a orexis:CatalogueGraph , orexis:Graph .
-      :rules a sh:RulesGraph , orexis:Graph .
+    GRAPH :said {
+            :rules a sh:RulesGraph , orexis:Graph .
       :state a orexis:BeliefGraph , orexis:Graph .
     }
     GRAPH :rules {
@@ -175,8 +173,8 @@ pub(crate) mod tests {
     "#;
         let store = Store::new().expect("an empty store");
         store.put_trig(&format!("{T}state"), CASE).unwrap();
-        orexis::snapshots::mirrored(&store);
-        store.close_catalogue().unwrap();
+        orexis::snapshots::mirrored(&store, "http://example.org/test#said");
+        store.close_kinds().unwrap();
         store
     }
 

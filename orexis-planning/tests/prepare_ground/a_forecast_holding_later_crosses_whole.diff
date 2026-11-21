@@ -1,11 +1,13 @@
 --- case
 +++ expected
-@@ -21,7 +21,7 @@
-   :catalogue a orexis:Graph .
-   :forecast a orexis:BeliefGraph .
-   :forecast a orexis:Graph .
--  :forecast dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T18:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T15:00:00+00:00"^^xsd:dateTime ] .
-+  :forecast dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T18:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T15:00:00Z"^^xsd:dateTime ] .
+@@ -31,9 +31,8 @@
+   :forecast.metadata orexis:metadataOf :forecast .
+ }
+ 
+-GRAPH :catalogue {
+-}
+ 
++
+ GRAPH :ontology.metadata {
    :ontology a orexis:BeliefGraph .
    :ontology a orexis:Graph .
-   :ontology a orexis:OntologyGraph .

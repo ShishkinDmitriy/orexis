@@ -27,12 +27,27 @@ GRAPH :ontology {
   planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :bed1 a sosa:FeatureOfInterest .
   :bed2 a sosa:FeatureOfInterest .
   :keeper a orexis:Agent .
   :keeper orexis:actsFor :bed1 .
   :keeper orexis:actsFor :bed2 .
+}
+
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
 }
 
 GRAPH :desires {
@@ -43,6 +58,13 @@ GRAPH :desires {
   :keeper.comfortable a planning:Desire .
   :keeper.comfortable planning:metWhen :comfortable .
   :keeper.comfortable rdfs:label "every bed's soil inside its range" .
+}
+
+GRAPH :desires.metadata {
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :desires.metadata a orexis:MetadataGraph .
+  :desires.metadata orexis:metadataOf :desires .
 }
 
 GRAPH :sensed {
@@ -56,6 +78,14 @@ GRAPH :sensed {
   :soil2 prov:wasGeneratedBy :keeper .
   :soil2 sosa:hasFeatureOfInterest :bed2 .
   :soil2 sosa:observedProperty :Moisture .
+}
+
+GRAPH :sensed.metadata {
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed orexis:ownedBy :keeper .
+  :sensed.metadata a orexis:MetadataGraph .
+  :sensed.metadata orexis:metadataOf :sensed .
 }
 
 # The partition as `scope_actions` writes it: the dose is both scopes', filled by each pump on its
@@ -78,22 +108,14 @@ GRAPH :scopes {
   :pump2 planning:inScope :keeper.scope.2 .
 }
 
-# What each graph IS, and when it holds — said once each, beside the data.
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :desires a orexis:Graph .
-  :desires a planning:DesireGraph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
+GRAPH :scopes.metadata {
   :scopes a orexis:Graph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
   :scopes orexis:ownedBy :keeper .
-  :sensed a orexis:BeliefGraph .
-  :sensed a orexis:Graph .
-  :sensed orexis:ownedBy :keeper .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :scopes.metadata a orexis:MetadataGraph .
+  :scopes.metadata orexis:metadataOf :scopes .
+}
+
+GRAPH :catalogue {
 }

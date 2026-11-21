@@ -10,7 +10,7 @@
 //! world — and one that joins brings its documents, compiled in beside its code and named by it in the order it wants
 //! (`task::Documents`): they are put in, the vocabulary closed again, and the world's graphs passed over until now
 //! offered again. The kernel names no package and no role, and knows no package's reason to join
-//! (`task::Handed::joins`). Every graph is put in, the agent's own among them, and its row stamped, as soon as the
+//! (`task::Handed::joins`). Every graph is put in, the agent's own among them, and its hash stamped, as soon as the
 //! vocabulary declares its kind.
 //!
 //! FINISHED (`Begun::finish`), once every package's booting has ended: a role the self plays that no package of this
@@ -28,9 +28,7 @@ use crate::Error;
 use crate::bind::{Value, bind};
 use crate::document::Document;
 use crate::hash::hash_named_graph;
-use crate::ontology::{
-    BELIEF, CATALOGUE_GRAPH, CLOSURE_GRAPH, DERIVED, GRAPH, ONTOLOGY, ROLE, SELF_GRAPH, SOCIETY_GRAPH, WORLD_GRAPH,
-};
+use crate::ontology::{BELIEF, CLOSURE_GRAPH, DERIVED, GRAPH, ONTOLOGY, ROLE, SELF_GRAPH, SOCIETY_GRAPH, WORLD_GRAPH};
 use crate::store::{Store, Within, iri};
 
 /// The tree this kernel was built from: the repo's root, where a test finds the worlds and the cases. The boot reads
@@ -362,13 +360,13 @@ fn hold_the_self(store: &Store, agent: &str, me: &str, mine: &[(&Document, &str)
     Ok(graph.to_string())
 }
 
-/// Every belief and every graph a document put, its row stamped with the hash of what it holds: each, or where
-/// `fresh`, each whose row says no hash yet, as a package joining put it in.
+/// Every belief and every graph a document put, its hash stamped with the hash of what it holds: each, or where
+/// `fresh`, each whose metadata says no hash yet, as a package joining put it in.
 fn stamp(store: &Store, fresh: bool) -> Result<(), Error> {
     const STAMPED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g WHERE { GRAPH ?g { ?g orexis:hash ?hash } }";
+        SELECT ?g WHERE { GRAPH ?m_g { ?g orexis:hash ?hash } }";
     const ASSERTED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g WHERE { GRAPH ?g { ?g orexis:arrivedBy orexis:Asserted } }";
+        SELECT ?g WHERE { GRAPH ?m_g { ?g orexis:arrivedBy orexis:Asserted } }";
     let mut graphs: Vec<String> = store.graphs_of(&[BELIEF], &Within::default())?;
     for g in store.rows(ASSERTED_Q, &[])?.iter().filter_map(|r| iri(r, "g")) {
         if !graphs.contains(&g) {
@@ -397,40 +395,62 @@ pub(crate) struct Begun {
     self_graph: String,
 }
 
+/// A VOLUME LIVED IN WHILE ONE CATALOGUE SAID WHAT EVERY GRAPH IS: what the catalogue says of each graph is moved
+/// into that graph's metadata graph, what the graph said of itself beside its facts is taken out of it, and the
+/// catalogue goes. Nothing where no graph says it is a catalogue, which is every volume once brought over.
+fn brought_over(store: &Store) -> Result<(), Error> {
+    const CATALOGUES_Q: &str = "SELECT ?g WHERE { GRAPH ?g { ?g a <http://example.org/orexis#CatalogueGraph> } }";
+    const ITSELF_U: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
+    DELETE { GRAPH $g { $g ?p ?o . ?period ?q ?v } }
+    WHERE  { GRAPH $g { $g a <http://example.org/orexis#Graph> ; ?p ?o .
+                        OPTIONAL { $g dcterms:temporal ?period . ?period ?q ?v } } }";
+    for catalogue in store.rows(CATALOGUES_Q, &[])?.iter().filter_map(|r| iri(r, "g")) {
+        let graphs = crate::metadata::subjects(store, &catalogue, |_, of| {
+            of.iter().any(|q| {
+                q.predicate.as_str() == "http://example.org/orexis#arrivedBy"
+                    || (q.predicate.as_str() == crate::rdf::RDF_TYPE && q.object.to_string() == format!("<{GRAPH}>"))
+            })
+        })?;
+        for graph in &graphs {
+            store.update(&bind(ITSELF_U, &[("g", Value::iri(graph.as_str()))])?)?;
+            crate::metadata::moved(store, &catalogue, graph)?;
+        }
+        log::info!(
+            "the catalogue of this volume is brought over: what {} graphs are is said in a metadata graph of each",
+            graphs.len()
+        );
+        store.clear_graph(&catalogue)?;
+    }
+    Ok(())
+}
+
 /// BEGIN THE BOOT of `booting.agent` into `store`: the kernel's vocabulary and the world's documents, and the self.
 pub(crate) fn begin(store: &Store, booting: &Booting<'_>) -> Result<Begun, Error> {
     /// WHAT A BOOT PUT IN AND NOBODY HOLDS: asserted from a document, with no owner, and the closure.
     const FILES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     SELECT ?g WHERE {
-      { GRAPH ?g { ?g orexis:arrivedBy orexis:Asserted }
-        FILTER NOT EXISTS { GRAPH ?g { ?g orexis:ownedBy ?who } } }
-      UNION { VALUES ?g { $closure } GRAPH ?g { ?g orexis:arrivedBy ?any } }
-      FILTER NOT EXISTS { GRAPH ?g { ?g a orexis:CatalogueGraph } } }";
+      { GRAPH ?m { ?g orexis:arrivedBy orexis:Asserted  FILTER NOT EXISTS { ?g orexis:ownedBy ?who } } }
+      UNION { VALUES ?g { $closure } GRAPH ?m { ?g orexis:arrivedBy ?any } } }";
     let world = fs::canonicalize(booting.world)?;
     let booting = Booting {
         world: &world,
         agent: booting.agent,
     };
-    let lived_in = store.catalogue()?.is_some();
+    //  A VOLUME LIVED IN WHILE A CATALOGUE STOOD is brought over before anything is asked of it.
+    brought_over(store)?;
+    let lived_in = store.described()?;
     if lived_in {
-        //  A VOLUME LIVED IN BEFORE A GRAPH SAID ITS METADATA ITSELF says it now, before anything is asked of it.
-        store.carry_metadata()?;
         let text = bind(FILES_Q, &[("closure", Value::iri(CLOSURE_GRAPH))])?;
         for g in store.rows(&text, &[])?.iter().filter_map(|r| iri(r, "g")) {
             store.forget_graph(&g, Some(BELIEF))?;
         }
-    } else {
-        store.update(&format!(
-            "PREFIX orexis: <http://example.org/orexis#>
-                INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}"
-        ))?;
     }
     let mut read = vec![brought(KERNEL, VOCABULARY, KERNEL_VOCABULARY)?];
     read.extend(read_with_imports(&documents(&booting))?);
     let docs: Vec<&Document> = read.iter().map(|(_, d)| d).collect();
     let (own, passed) = put(store, &world, &read, Vec::new(), 0, &docs)?;
     let own = owned(store, own, &docs)?;
-    store.close_catalogue()?;
+    store.close_kinds()?;
     let me = identity(store, booting.agent)?;
     let mine: Vec<(&Document, &str)> = own
         .iter()
@@ -470,7 +490,7 @@ impl Begun {
         let also = owned(store, also, &all)?;
         self.passed = still;
         self.hold(store, &also)?;
-        store.close_catalogue()?;
+        store.close_kinds()?;
         stamp(store, true)
     }
 
@@ -523,5 +543,65 @@ impl Begun {
             }
         );
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_volume_that_kept_a_catalogue_is_brought_over_to_a_metadata_graph_of_each_graph() {
+        let store = Store::new().unwrap();
+        store
+            .update(
+                "PREFIX belief: <http://example.org/orexis/belief#>
+                PREFIX dcterms: <http://purl.org/dc/terms/>
+                PREFIX orexis: <http://example.org/orexis#>
+                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                INSERT DATA {
+                  GRAPH <urn:cat> { <urn:cat> a orexis:CatalogueGraph , orexis:Graph .
+                    <urn:a> a orexis:BeliefGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ;
+                      orexis:ownedBy <urn:me> ; orexis:hash \"h\" ; belief:settled false ;
+                      dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start \"2026-01-01T12:00:00Z\"^^xsd:dateTime ] }
+                  GRAPH <urn:a> { <urn:x> <urn:p> 1 .
+                    <urn:a> a orexis:BeliefGraph , orexis:Graph ; orexis:arrivedBy orexis:Received ; orexis:hash \"h\" ;
+                      dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start \"2026-01-01T12:00:00Z\"^^xsd:dateTime ] } }",
+            )
+            .unwrap();
+        brought_over(&store).unwrap();
+        assert_eq!(
+            store.graph_names().unwrap(),
+            ["urn:a", "urn:a.metadata"],
+            "the catalogue went"
+        );
+        assert_eq!(
+            store.quads("urn:a").unwrap().len(),
+            1,
+            "the graph holds its facts alone"
+        );
+        assert_eq!(store.metadata_of("urn:a").unwrap().as_deref(), Some("urn:a.metadata"));
+        assert_eq!(
+            store
+                .said_of("urn:a", "http://example.org/orexis/belief#settled")
+                .unwrap()
+                .len(),
+            1,
+            "what a package said of the graph came with the kernel's words"
+        );
+        let at = |text: &str| Within::at(crate::clock::instant(text).unwrap());
+        assert!(
+            store
+                .graphs_of(&[BELIEF], &at("2026-01-01T11:00:00Z"))
+                .unwrap()
+                .is_empty()
+        );
+        assert_eq!(
+            store.graphs_of(&[BELIEF], &at("2026-01-01T13:00:00Z")).unwrap(),
+            ["urn:a"]
+        );
+        let held = store.len().unwrap();
+        brought_over(&store).unwrap();
+        assert_eq!(store.len().unwrap(), held, "a volume brought over is left as it is");
     }
 }

@@ -32,6 +32,14 @@ GRAPH :ontology {
   sensing:ObservationGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :board a mqtt4ssn:Client .
   :board a sosa:Actuator .
@@ -91,24 +99,29 @@ GRAPH :world {
   :zamioculcas a :Pot .
 }
 
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
+}
+
 # THE SELF, its world's self graph as the boot puts it in: this is the keeper's store, its observer role
 # reads the pot's three sensors, and the neighbour's lamp is not its.
 GRAPH :self {
   :keeper a orexis:Self .
-  :keeper orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor :hygro , :probe , :thermo ] ] .
+  :keeper orexis:plays [ a sensing:Observer ; sensing:attends [ sensing:sensor :hygro ; sensing:sensor :probe ; sensing:sensor :thermo ] ] .
 }
 
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
+GRAPH :self.metadata {
   :self a orexis:BeliefGraph .
   :self a orexis:Graph .
   :self a orexis:SelfGraph .
   :self orexis:arrivedBy orexis:Asserted .
   :self orexis:ownedBy :keeper .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :self.metadata a orexis:MetadataGraph .
+  :self.metadata orexis:metadataOf :self .
+}
+
+GRAPH :catalogue {
 }

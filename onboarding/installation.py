@@ -63,7 +63,7 @@ import rdflib
 
 from documents.ontology import local_of as local
 from .series import HISTORY, METRICS
-from documents.store import DocumentRefused, Raw, answer, catalogue_of, graphs_of, rdflib_view, rows
+from documents.store import DocumentRefused, Raw, answer, graphs_of, rdflib_view, rows
 
 from . import derived, reading
 from .reading import DEPLOYMENT, ONBOARDING

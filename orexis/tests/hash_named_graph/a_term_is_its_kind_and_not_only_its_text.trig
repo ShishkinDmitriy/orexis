@@ -18,40 +18,73 @@ GRAPH :ontology {
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
 }
 
-GRAPH :number {
-  :s :p 1 .
-}
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :de a orexis:Graph .
-  :en a orexis:Graph .
-  :iri a orexis:Graph .
-  :number a orexis:Graph .
-  :one a orexis:Graph .
+GRAPH :ontology.metadata {
   :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :text a orexis:Graph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
 }
 
+GRAPH :number {
+  :s :p 1 .
+}
+
+GRAPH :number.metadata {
+  :number a orexis:Graph .
+  :number.metadata a orexis:MetadataGraph .
+  :number.metadata orexis:metadataOf :number .
+}
 
 GRAPH :de {
   :s :p "hi"@de .
+}
+
+GRAPH :de.metadata {
+  :de a orexis:Graph .
+  :de.metadata a orexis:MetadataGraph .
+  :de.metadata orexis:metadataOf :de .
 }
 
 GRAPH :en {
   :s :p "hi"@en .
 }
 
+GRAPH :en.metadata {
+  :en a orexis:Graph .
+  :en.metadata a orexis:MetadataGraph .
+  :en.metadata orexis:metadataOf :en .
+}
+
 GRAPH :iri {
   :s :p <urn:x> .
+}
+
+GRAPH :iri.metadata {
+  :iri a orexis:Graph .
+  :iri.metadata a orexis:MetadataGraph .
+  :iri.metadata orexis:metadataOf :iri .
 }
 
 GRAPH :one {
   :s :p "1" .
 }
 
+GRAPH :one.metadata {
+  :one a orexis:Graph .
+  :one.metadata a orexis:MetadataGraph .
+  :one.metadata orexis:metadataOf :one .
+}
+
 GRAPH :text {
   :s :p "urn:x" .
+}
+
+GRAPH :text.metadata {
+  :text a orexis:Graph .
+  :text.metadata a orexis:MetadataGraph .
+  :text.metadata orexis:metadataOf :text .
+}
+
+GRAPH :catalogue {
 }

@@ -3,7 +3,7 @@ type: Repository
 title: Belief base
 description: >-
   One agent's store - a pyoxigraph store in a volume of its own, holding every graph the agent
-  knows, each described by one catalogue graph that says what it is, whose, how it arrived and
+  knows, each with a metadata graph beside it that says what it is, whose, how it arrived and
   when it holds. Built at the first boot from its world's documents and kept; nothing else can
   open it.
 ---
@@ -16,10 +16,10 @@ desires and wants, the records. **There is no shared store.** Each agent's is a
 file in its own volume, built from the ratified documents of `world/<world>/`, so isolation is
 structural: nothing needs enforcing because nothing else can open it.
 
-# The catalogue
+# What each graph is
 
-One graph describes every graph, itself included, and is found by its own row, `a
-orexis:CatalogueGraph`. Per graph it says:
+Every graph has a [metadata](/domain/kernel/metadata.md) graph beside it, found by the graph it says
+it is of. Of its graph it says:
 
 - **what it is** — its kind, and every kind that kind is beneath ([modality](/domain/kernel/modality.md));
 - **whose it is** — `orexis:ownedBy`, the owner that created it, or that the world's document
@@ -30,7 +30,7 @@ orexis:CatalogueGraph`. Per graph it says:
 
 A reader states the kinds it reads and the instant it stands at, `store.graphs_of` answers with the
 graphs, and the query is handed exactly those as its default graph. The store decides nothing for
-a caller, and a graph's NAME is for eyes: code relies on its row alone.
+a caller, and a graph's NAME is for eyes: code relies on its metadata alone.
 
 # What lives beside it
 
@@ -45,7 +45,7 @@ its metrics bucket. The series is watched, never believed: nothing reads it back
 
 # What a graph says of itself
 
-A belief or a prediction changes in place, under its name, and its catalogue row says what it holds:
+A belief or a prediction changes in place, under its name, and its metadata says what it holds:
 every writer stamps the hash of the content it leaves, `orexis:hash`, as the boot does of every
 document it put, so a copy made of a graph knows by the row whether it is still right, and a row that
 lies fails the world's tests ([a-graph-changes-in-place-and-its-row-says-what-it-holds](/decisions/a-graph-changes-in-place-and-its-row-says-what-it-holds.md)).

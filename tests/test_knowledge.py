@@ -875,11 +875,10 @@ def _graphs() -> tuple[set[str], set[str]]:
     #  narrating 0.1.0 name its graphs and its helpers are gone with it.
     prefixes |= {"picks/", "roots/", "promises/", "obligations/", "intentions/", "pursued/",
                  "remembered/", "evidence/", "revisions/", "summaries/"}
-    #  THE CATALOGUE IS THE ONE FIXED NAME NO ONTOLOGY DECLARES: it describes itself, and the
-    #  only spelling is the boot's, which creates it (one-catalogue-describes-every-graph-and-itself).
-    from documents.ontology import CATALOGUE_GRAPH
-    assert CATALOGUE_GRAPH.startswith(_GRAPH_BASE)
-    fixed.add(CATALOGUE_GRAPH[len(_GRAPH_BASE):])
+    #  THE CATALOGUE WAS THE ONE FIXED NAME NO ONTOLOGY DECLARED: it described itself, and the records that
+    #  narrate it name it still (one-catalogue-describes-every-graph-and-itself). So with the search's cone
+    #  graph, which the planning package names for its one writer.
+    fixed |= {"catalogue", "cone"}
     return {f for f in fixed if f}, prefixes
 
 

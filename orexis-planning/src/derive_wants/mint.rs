@@ -11,13 +11,14 @@ use regex::Regex;
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::isoformat;
+use orexis::ontology::DERIVED;
 use orexis::store::Store;
 
 use super::clusters::clusters;
 use super::{MET_WHEN, SH, Said, UNMET_WHEN, Witness, covering, keys_of, node, spelled};
 use crate::couplings::Couplings;
 use crate::find_scopes::Scopes;
-use crate::ontology::ABOUT;
+use crate::ontology::{ABOUT, WANT};
 use crate::shapes::Shapes;
 
 pub const RECOGNIZED: &str = "http://example.org/orexis/planning#Recognized";
@@ -151,8 +152,8 @@ fn quoted(text: &str) -> String {
     out
 }
 
-/// Write one derived want: taken out of its stretch's graph and put back, the graph's row and its period once, and
-/// the same said by the graph of itself.
+/// Write one derived want: taken out of its stretch's graph and put back, and its graph's metadata said, the period
+/// once.
 #[allow(clippy::too_many_arguments)]
 fn write(
     store: &Store,
@@ -170,10 +171,6 @@ fn write(
     let graph = graph_of(agent, at, until);
     let said_points: Vec<String> = points.iter().map(|(p, o)| format!("<{uri}> <{p}> <{o}> .")).collect();
     let found_at = format!(" ; prov:generatedAtTime \"{}\"^^xsd:dateTime", isoformat(now));
-    let mut period = format!(" ; orexis:start \"{}\"^^xsd:dateTime", isoformat(at));
-    if let Some(until) = until {
-        period.push_str(&format!(" ; orexis:end \"{}\"^^xsd:dateTime", isoformat(until)));
-    }
     let forget = crate::withdraw::forgetting(&graph, uri)?;
     store.update(&format!(
         "PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -192,24 +189,14 @@ INSERT {{
       rdfs:label {label} .
   {points}
   {shape}
-  <{graph}> a planning:WantGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived ;
-      orexis:ownedBy <{holder}> . }}
-  GRAPH ?cat {{ <{graph}> a planning:WantGraph ; orexis:arrivedBy orexis:Derived ;
-      orexis:ownedBy <{holder}> . }} }}
-WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }} }} ;
-INSERT {{ GRAPH ?cat {{ <{graph}> dcterms:temporal
-      [ a dcterms:PeriodOfTime{period} ] . }}
-  GRAPH <{graph}> {{ <{graph}> dcterms:temporal
-      [ a dcterms:PeriodOfTime{period} ] . }} }}
-WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }}
-         FILTER NOT EXISTS {{ GRAPH ?cat {{ <{graph}> dcterms:temporal ?held }} }} }} ;
-INSERT {{ GRAPH ?cat {{ <{graph}> a ?kind }} GRAPH <{graph}> {{ <{graph}> a ?kind }} }}
-WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }}
-        GRAPH ?vocabulary {{ ?vocabulary a orexis:OntologyGraph . planning:WantGraph rdfs:subClassOf ?kind }} }}",
+  }} }}
+WHERE {{}}",
         label = quoted(label),
         points = said_points.join(" "),
         shape = shape.join("\n  "),
-    ))
+    ))?;
+    //  WHAT ITS GRAPH IS, WHOSE AND OVER WHICH STRETCH: said once, the period fixed when the graph is first written.
+    store.classify(&graph, WANT, DERIVED, Some(holder), Some(at), until)
 }
 
 /// Derive the want pursued under `desire` and write it — None, and the desire stays the goal, where the desire

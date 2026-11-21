@@ -515,14 +515,18 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   world it made; `forget_graph` forgets `revisions_of` first.
 - **What a plan changed is read off the signature, never off node identity** — a key is changed
   when its canonical facts are (#643); **a retraction is canonicalised like an addition** (#619).
-- **A read that finds the catalogue by its row and then asks OPTIONALs inside that group is
-  evaluated per named graph** — ask the catalogue's name once (`catalogue_of`) and splice it; and a
+- **A read that asks OPTIONALs inside a group under a graph variable is evaluated per named graph** — the
+  search's rows are in one graph whose name is asked once (`world_at::cone`) and spliced; and a
   read asked per iteration is sized by what the iteration opens.
-- **A graph is asked what it is under its own name, and an end that may be missing by the path from
-  the graph** — `GRAPH ?g { ?g a K ; dcterms:temporal/orexis:start ?s . OPTIONAL { ?g
-  dcterms:temporal/orexis:end ?e } }`; an `OPTIONAL` joined through the period node alone is evaluated
-  on its own over every graph's period, 12 ms over 6,000 graphs where the path costs a tenth of one,
+- **A graph is asked what it is in a block beside the one that reads its facts, and an end that may be
+  missing by the path from the graph** — `GRAPH ?m { ?g a K ; dcterms:temporal/orexis:start ?s . OPTIONAL { ?g
+  dcterms:temporal/orexis:end ?e } } GRAPH ?g { … }`; an `OPTIONAL` joined through the period node alone is
+  evaluated on its own over every graph's period, 12 ms over 6,000 graphs where the path costs a tenth of one,
   and `graphs_of` asks the index and parses nothing ([metadata](knowledge/domain/kernel/metadata.md)).
+- **A path is walked inside one graph, so what is walked is written in one** — the path between possible
+  worlds and each ground's derivation from the ground before are rows of the search's cone graph, and a path of
+  no step is answered only for a node that graph holds, so `reroot` names the ground itself
+  ([cone](knowledge/domain/planning/cone.md)).
 - **A `NOT EXISTS` is evaluated per row from its FIRST pattern, so the bound variable goes first**;
   an act that admits a world it already admits is idempotent by FILLING, not by name.
 - **A prologue goes at the head of a joined update, and the engine refuses one after `;`.**
@@ -809,7 +813,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   a-peers-word-is-testimony-and-a-rule-makes-it-a-belief); **the market is files** —
   six actions whose `execution:Saying` operations make the documents at take time (`domains/market/`).
 - **A chat says what its model may read, and the model loads vocabularies and queries a copy of those graphs** —
-  SELECT and ASK alone over the kinds the query names, the catalogue beside them and never merged in, so where a
+  SELECT and ASK alone over the kinds the query names, each graph's metadata graph beside them and never merged in, so where a
   belief came from is a GRAPH away, no SERVICE or FROM, the rows capped; a chat reading `orexis:Event` reads the
   journal where it lies and its series and metrics by fields the tool turns into Flux, the past apart from the present; an askable per question and a briefing of
   every belief were both built and refused (the-model-queries-what-its-chat-may-read).
@@ -827,20 +831,18 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 
 - **A graph's name is for eyes, and code relies on its classification alone**; **a graph is
   classified per kind it HOLDS**, and a graph holding two kinds is two graphs.
-- **One graph describes every graph and itself** — the catalogue, found by its own row, created by
-  genesis alone.
-- **A graph's metadata is told from its content by type, by each reader of a whole graph where it reads,
-  and the store does not know** — a triple whose subject its graph types `orexis:Graph` or `dcterms:PeriodOfTime`
-  says what the graph is and is no fact it states; a text spells the two filters, code holding a graph's
-  statements calls `metadata::stated` over them, a text asking for a thing by its class needs nothing, and a
-  store door answering a graph's content was built and taken out, a method that knew what every caller wanted
-  ([metadata](knowledge/domain/kernel/metadata.md)).
-- **Every graph carries its metadata itself and is asked for it there, and its row says the same while the
-  catalogue stands** — `entry` answers both blocks, the hash and a period's end are written in both, and a text
-  writing a row spells the graph's block beside it; what a package says of a graph in its own words stays on the
-  row and is read there, the search's cone and its weighings with it, a case says a graph's metadata once and the
-  runner holds each graph to it, and only the rows of the graphs that cross go into an imaginarium, where the
-  whole catalogue went ([metadata](knowledge/domain/kernel/metadata.md)).
+- **A graph's metadata is a graph of its own beside it, one per graph, and a graph holds its facts alone** —
+  an `orexis:MetadataGraph` saying of itself only which graph it is of (`orexis:metadataOf`), and of that graph
+  its kinds, arrival, owner, period, hash, derivation and what a package says of it; a reader finds it by the
+  link and never by its name, `forget_graph` and every copy take both, and nothing tells metadata from facts.
+  One catalogue describing every graph, and metadata inside the graph told from its facts by type, were both
+  built and taken out: the first made forgetting and copying a graph a search for its rows, the second made
+  every reader of a whole graph filter and the hash read what it discarded
+  ([metadata](knowledge/domain/kernel/metadata.md), a-graphs-metadata-is-a-graph-of-its-own-beside-it).
+- **The rows of a search are no graph's metadata and are written in one graph, its cone graph** — the
+  candidates, the weighings and the path between worlds are asked across every world at once; what a world is,
+  is in its own metadata graph, and a world that goes takes its rows out of the cone
+  ([cone](knowledge/domain/planning/cone.md)).
 - **A thing and the graph it is written in are two names** — a plan's root, a question, an answer and every
   document a saying makes bore their graph's IRI, so a fact under it was about the thing or about its graph and
   nothing said which; the first three are their graph's name with a word after it (`plan_root`, `question_in`,
@@ -857,7 +859,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   agent's own names its owner, since one naming none is read as the world's; read over every belief
   instead, a footprint lost the heater's scope again (#913) and revision would read one peer's
   extracted word beside another's (#953).
-- **A belief changes in place, and its row says what it holds by hash** — every writer of a belief
+- **A belief changes in place, and its metadata says what it holds by hash** — every writer of a belief
   or a prediction stamps `orexis:hash` as it finishes, `world/conftest.py` holds every world's tests to
   it, and a renaming per change and a counter were refused, the test being the guarantee either way
   (a-graph-changes-in-place-and-its-row-says-what-it-holds); **so the imaginarium keeps a copy whose
@@ -1504,7 +1506,7 @@ restart is a bug, not a convenience.
 
 **Ask what a thing IS; do not walk a subclass path.** The boot derives the `rdfs:subClassOf`
 closure of every ontology graph into a graph of its own, and every graph says of itself every
-kind its class is beneath, so a text asks `GRAPH ?g { ?g a planning:WantGraph }` and walks nothing. A seventh
+kind its class is beneath, so a text asks `GRAPH ?m { ?g a planning:WantGraph }` and walks nothing. A seventh
 hand-rolled walk was once refused for exactly that reason. See
 [one-graph-both-engines-read](knowledge/decisions/one-graph-both-engines-read.md).
 
@@ -1520,7 +1522,7 @@ hand-rolled walk was once refused for exactly that reason. See
 - **Never wrap `GRAPH <…>` around a SELECT.** What the world states is SEVERAL graphs — asserted,
   derived and entailed, for the vocabulary and for the world, plus whichever a package owns —
   and a reader hands `store.query` the list `store.graphs_of(BELIEF, common=True)` answers, merged as the default graph, so an ordinary pattern reads all of them.
-  Never count them: the kind is a class, whose a graph is a row, and `graphs_of` asks. A basic graph
+  Never count them: the kind is a class, whose a graph is its metadata's to say, and `graphs_of` asks. A basic graph
   pattern inside one `GRAPH` clause must match entirely *within* that graph, so narrowing it
   returns **nothing** the moment a fact you wanted lives elsewhere, silently, because an empty
   result is not an error. Updates are the exception and must name their target; a `rules.ru`
@@ -1553,12 +1555,10 @@ hand-rolled walk was once refused for exactly that reason. See
   graph is, and every list of the agent's graphs is kept to that owner — a graph saying no
   owner is anyone's. A graph's NAME is for eyes: the helpers
   spell a readable convention for writers, and `tests/test_layout.py` refuses a reader that
-  imports one — a reader asks the class. Every one of those answers comes from the graph itself,
-  which says its kinds, its owner, its arrival and its period under its own name
-  ([metadata](knowledge/domain/kernel/metadata.md)); the catalogue says the same while it stands,
-  and is asked for from the store (`store.catalogue`), never spelled, by what still reads a
-  package's word on a row. Every graph carries every kind its class is beneath, so a text asks
-  `GRAPH ?g { ?g a planning:WantGraph }` and walks no path.
+  imports one — a reader asks the class. Every one of those answers comes from the graph's
+  metadata graph, which says its kinds, its owner, its arrival and its period
+  ([metadata](knowledge/domain/kernel/metadata.md)). A graph's metadata carries every kind its class is
+  beneath, so a text asks `GRAPH ?m { ?g a planning:WantGraph }` and walks no path.
 - **SPARQL prefixes: every text the agent runs declares its own**, `PREFIX name: <iri>` at its head as SPARQL
   says it — a query in Rust, a rule in a package's documents, an action text, a rule and a desire select in
   `domains/` and `world/` alike. The binary's store parses with no prefix of its own: a table gathered by walking

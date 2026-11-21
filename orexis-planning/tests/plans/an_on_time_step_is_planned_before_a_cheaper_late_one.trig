@@ -35,15 +35,29 @@ GRAPH :ontology {
   planning:WantGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :keeper a orexis:Agent .
   :keeper orexis:localId "keeper" .
   :tank1 a :Tank .
 }
 
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
+}
+
 # THE LEVERS, each raising the level by ten: what differs is what each costs and when it shows.
 GRAPH :actions {
-  #  AN ORDER SHOWS TEN TO FIFTEEN MINUTES AFTER THE TURN, and costs one.
   :order a orexis:Action .
   :order orexis:takes :tank .
   :order planning:costs """PREFIX : <http://example.org/test#>
@@ -58,7 +72,6 @@ GRAPH :actions {
       SELECT ?tank WHERE {
       ?tank a :Tank ; :level ?l .
       FILTER(?l < 10) }""" .
-  #  A POUR SHOWS AT ONCE, within a minute at the most, and costs two.
   :pour a orexis:Action .
   :pour orexis:takes :tank .
   :pour planning:costs """PREFIX : <http://example.org/test#>
@@ -76,6 +89,13 @@ GRAPH :actions {
   :tank a orexis:Parameter .
 }
 
+GRAPH :actions.metadata {
+  :actions a orexis:ActionGraph .
+  :actions a orexis:Graph .
+  :actions.metadata a orexis:MetadataGraph .
+  :actions.metadata orexis:metadataOf :actions .
+}
+
 GRAPH :desires {
   :in_range a sh:NodeShape .
   :in_range sh:property [ planning:about :level ; sh:minInclusive 10 ; sh:path :level ] .
@@ -87,13 +107,39 @@ GRAPH :desires {
   :keeper.in_range rdfs:label "every tank in range" .
 }
 
+GRAPH :desires.metadata {
+  :desires a orexis:Graph .
+  :desires a planning:DesireGraph .
+  :desires.metadata a orexis:MetadataGraph .
+  :desires.metadata orexis:metadataOf :desires .
+}
+
 GRAPH :sensed {
   :tank1 :level 12 .
+}
+
+GRAPH :sensed.metadata {
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed orexis:ownedBy :keeper .
+  :sensed.metadata a orexis:MetadataGraph .
+  :sensed.metadata orexis:metadataOf :sensed .
 }
 
 # WHAT THE TANK WILL READ from half past: the drain the prediction foresees.
 GRAPH :predicted-0 {
   :tank1 :level 4 .
+}
+
+GRAPH :predicted-0.metadata {
+  :predicted-0 a orexis:BeliefGraph .
+  :predicted-0 a orexis:ForecastGraph .
+  :predicted-0 a orexis:Graph .
+  :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00Z"^^xsd:dateTime ] .
+  :predicted-0 orexis:arrivedBy orexis:Recorded .
+  :predicted-0 orexis:ownedBy :keeper .
+  :predicted-0.metadata a orexis:MetadataGraph .
+  :predicted-0.metadata orexis:metadataOf :predicted-0 .
 }
 
 GRAPH :scopes {
@@ -103,29 +149,14 @@ GRAPH :scopes {
   :pour planning:inScope :keeper.scope.1 .
 }
 
-GRAPH :catalogue {
-  :actions a orexis:ActionGraph .
-  :actions a orexis:Graph .
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :desires a orexis:Graph .
-  :desires a planning:DesireGraph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
-  :predicted-0 a orexis:BeliefGraph .
-  :predicted-0 a orexis:ForecastGraph .
-  :predicted-0 a orexis:Graph .
-  :predicted-0 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T12:30:00+00:00"^^xsd:dateTime ] .
-  :predicted-0 orexis:arrivedBy orexis:Recorded .
-  :predicted-0 orexis:ownedBy :keeper .
+GRAPH :scopes.metadata {
   :scopes a orexis:Graph .
   :scopes a planning:ScopeGraph .
   :scopes orexis:arrivedBy orexis:Derived .
   :scopes orexis:ownedBy :keeper .
-  :sensed a orexis:BeliefGraph .
-  :sensed a orexis:Graph .
-  :sensed orexis:ownedBy :keeper .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :scopes.metadata a orexis:MetadataGraph .
+  :scopes.metadata orexis:metadataOf :scopes .
+}
+
+GRAPH :catalogue {
 }

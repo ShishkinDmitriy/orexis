@@ -2,7 +2,7 @@
 //! order, within a budget, as `agent/belief/trigger.py` applies them
 //! (a-transition-changes-the-state-and-an-inference-only-concludes).
 //!
-//! **WHAT TRIGGERS**: a graph whose catalogue row says it arrived `orexis:Received`. Nothing that arrived another way
+//! **WHAT TRIGGERS**: a graph whose metadata says it arrived `orexis:Received`. Nothing that arrived another way
 //! triggers one, so a transition's output can never trigger it again. **WHAT IT READS**: the arrival with its
 //! revisions, the common beliefs, and the agent's own derived state graphs, whatever their period — never another
 //! testimony. **WHERE IT WRITES**: what an order inserts goes into a state graph of the arrival's own, over the
@@ -47,22 +47,19 @@ impl Triggered {
     }
 }
 
-/// The catalogue and `arrival`'s row, where the arrival is testimony: None where it is not, or there is no catalogue.
-fn testimony(store: &Store, arrival: &str) -> Result<Option<(String, Row)>, Error> {
+/// What is said of `arrival`, where the arrival is testimony: None where it is not.
+fn testimony(store: &Store, arrival: &str) -> Result<Option<Row>, Error> {
     /// WHETHER THE ARRIVAL IS TESTIMONY, WHOSE IT IS AND WHEN IT HOLDS, as it says itself.
     const ARRIVAL_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>
     SELECT ?owner ?start ?end WHERE {
-      GRAPH $arrival { $arrival orexis:arrivedBy orexis:Received .
+      GRAPH ?m_arrival { $arrival orexis:arrivedBy orexis:Received .
                        OPTIONAL { $arrival orexis:ownedBy ?owner }
                        OPTIONAL { $arrival dcterms:temporal ?p .
                                   OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
     LIMIT 1";
-    let Some(cat) = store.catalogue()? else {
-        return Ok(None);
-    };
     let found = store.rows(&bind(ARRIVAL_Q, &[("arrival", Value::iri(arrival))])?, &[])?;
-    Ok(found.into_iter().next().map(|row| (cat, row)))
+    Ok(found.into_iter().next())
 }
 
 /// Whether `arrival` triggers any transition from its `done`th order on: it is testimony, and an order is left.
@@ -73,7 +70,7 @@ pub fn triggers_any(store: &Store, arrival: &str, done: usize) -> Result<bool, E
 /// Apply the transitions `arrival` triggers to the agent's own state, from its `done`th order on, spending at most
 /// `budget` rule executions. An arrival that is no testimony triggers nothing, spends nothing, and is done.
 pub fn trigger(store: &Store, arrival: &str, budget: usize, done: usize) -> Result<Triggered, Error> {
-    let Some((cat, row)) = testimony(store, arrival)? else {
+    let Some(row) = testimony(store, arrival)? else {
         return Ok(Triggered::finished(done));
     };
     let orders = transitions(store)?;
@@ -134,7 +131,7 @@ pub fn trigger(store: &Store, arrival: &str, budget: usize, done: usize) -> Resu
             }
         }
         if !change.added.is_empty() {
-            describe(store, &cat, &into, &row)?;
+            describe(store, &into, &row)?;
             push_unique(&mut changed, into.clone());
         }
         if !change.added.is_empty() || !change.deleted.is_empty() {
@@ -160,7 +157,7 @@ pub fn trigger(store: &Store, arrival: &str, budget: usize, done: usize) -> Resu
 /// `changed`, each graph still standing stamped with the hash of what it now holds.
 fn stamped(store: &Store, changed: Vec<String>) -> Result<Vec<String>, Error> {
     /// WHETHER A GRAPH STILL SAYS WHAT IT IS: one an order emptied was forgotten, its metadata and all.
-    const ROW_Q: &str = "SELECT ?k WHERE { GRAPH $graph { $graph a ?k } } LIMIT 1";
+    const ROW_Q: &str = "SELECT ?k WHERE { GRAPH ?m_graph { $graph a ?k } } LIMIT 1";
     for graph in &changed {
         let row = store.rows(&bind(ROW_Q, &[("graph", Value::iri(graph))])?, &[])?;
         if !row.is_empty() {
@@ -189,24 +186,17 @@ fn derived(store: &Store) -> Result<Vec<String>, Error> {
     /// EVERY BELIEF THE AGENT DERIVED, of any period, that is no revision: its own state.
     const DERIVED_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
     PREFIX orexis: <http://example.org/orexis#>
-    SELECT ?g WHERE { GRAPH ?g { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy ?owner .
+    SELECT ?g WHERE { GRAPH ?m_g { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy ?owner .
                                  FILTER NOT EXISTS { ?g a belief:RevisionGraph } } } ORDER BY ?g";
     Ok(store.rows(DERIVED_Q, &[])?.iter().filter_map(|r| iri(r, "g")).collect())
 }
 
-/// The arrival's state graph's row, said of the arrival it now holds the state of, any row of an earlier arrival
+/// The arrival's state graph's metadata, said of the arrival it now holds the state of, what was said of an earlier arrival
 /// taken back first.
-fn describe(store: &Store, cat: &str, into: &str, row: &Row) -> Result<(), Error> {
-    /// A DESCRIPTION, AND ITS PERIOD, TAKEN BACK — for an arrival's state graph said again of a later arrival: off
-    /// its row, and out of the graph itself.
-    const UNDESCRIBE_U: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
-    DELETE { GRAPH $in { $graph ?p ?o . ?period ?pp ?po } }
-    WHERE  { GRAPH $in { $graph ?p ?o . OPTIONAL { $graph dcterms:temporal ?period . ?period ?pp ?po } } }";
-    for said_in in [cat, into] {
-        store.update(&bind(
-            UNDESCRIBE_U,
-            &[("in", Value::iri(said_in)), ("graph", Value::iri(into))],
-        )?)?;
+fn describe(store: &Store, into: &str, row: &Row) -> Result<(), Error> {
+    //  WHAT WAS SAID OF IT IS TAKEN BACK, its period with it — an arrival's state graph said again of a later arrival.
+    if let Some(metadata) = store.metadata_of(into)? {
+        store.clear_graph(&metadata)?;
     }
     let when = |k: &str| value(row, k).and_then(|t| instant(&t).ok());
     let entry = store.entry(
@@ -251,7 +241,7 @@ mod tests {
     fn held(store: &Store) -> BTreeMap<String, String> {
         const OWN_STATE_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
         PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g WHERE { GRAPH ?g { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy ?owner .
+        SELECT ?g WHERE { GRAPH ?m_g { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy ?owner .
         FILTER NOT EXISTS { ?g a belief:RevisionGraph } } } ORDER BY ?g";
         const HELD_Q: &str = "PREFIX : <http://example.org/test#>
             PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -411,7 +401,7 @@ WHERE {{ GRAPH ?c {{ <{TICK}> dcterms:temporal ?p . ?p orexis:start ?s ; orexis:
             })
             .collect();
         let later = ("2026-01-01T12:20:00".to_string(), "2026-01-01T12:40:00".to_string());
-        assert_eq!(said, [later.clone(), later], "on its row and by the graph itself");
+        assert_eq!(said, [later], "the one period its metadata says");
         assert_eq!(held(&store), map(&[("count", "3")]));
     }
 }

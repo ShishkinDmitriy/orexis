@@ -407,7 +407,7 @@ fn scopes(store: &Store) -> Vec<BTreeSet<String>> {
     let mut held: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     let text = "PREFIX orexis: <http://example.org/orexis#>
                 PREFIX planning: <http://example.org/orexis/planning#>
-                SELECT ?m ?s WHERE { GRAPH ?g { ?g a planning:ScopeGraph } \
+                SELECT ?m ?s WHERE { GRAPH ?m_g { ?g a planning:ScopeGraph } \
                 GRAPH ?g { ?m planning:inScope ?s } }";
     for r in store.rows(text, &[]).unwrap() {
         let member = value(&r, "m").unwrap();

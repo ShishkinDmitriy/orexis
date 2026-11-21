@@ -5,7 +5,7 @@
 //! - `world_at`: the graphs a rule is answered over in one world, or in the present;
 //! - `next_ground`: the instant the next ground the search can tell apart begins, where a wait lands;
 //! - `admit`: every candidate a world admits, one per action per legal filling, written as the edges leaving it;
-//! - `take`: one candidate taken, the world it reaches forked with the action's effect applied, and its row;
+//! - `take`: one candidate taken, the world it reaches forked with the action's effect applied, and what it is;
 //! - `prepare_ground`: what crosses from the belief base into the store a search over one scope stands in;
 //! - `lay_ground`: one ground world per period the agent can see, cut to what the search can change;
 //! - `scope_actions`: the actions clustered into the scopes their effects join, written as the store's partition;

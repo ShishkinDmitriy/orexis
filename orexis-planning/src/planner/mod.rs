@@ -34,7 +34,6 @@ use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::events::{Laps, Watch};
 use orexis::foresight::Foresees;
-use orexis::metadata::stated_quads;
 use orexis::ontology::{ACTION, BELIEF, ONTOLOGY, RECORD, SELF_GRAPH};
 use orexis::rdf::round6;
 use orexis::store::{Store, Within, iri, value};
@@ -53,7 +52,7 @@ use crate::scope_actions::scope_actions;
 use crate::shapes::Shapes;
 use crate::weigh::{shapes, weigh};
 use crate::withdraw::withdraw;
-use crate::world_at::{catalogue, lexical};
+use crate::world_at::{cone, lexical};
 
 use kept::chain;
 pub(crate) use policy::{CHECK, HEAD_ASKED, REOPEN};
@@ -250,7 +249,7 @@ fn beside(store: &Store) -> Result<u64, Error> {
     const BESIDE_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
       PREFIX orexis: <http://example.org/orexis#>
       PREFIX planning: <http://example.org/orexis/planning#>
-      SELECT DISTINCT ?g WHERE { GRAPH ?g { ?g a ?kind .
+      SELECT DISTINCT ?g WHERE { GRAPH ?m_g { ?g a ?kind .
       VALUES ?kind { orexis:BeliefGraph planning:WantGraph planning:DesireGraph orexis:RecordGraph }
       FILTER NOT EXISTS { ?g a execution:CommittedStepGraph }
       FILTER NOT EXISTS { ?g a planning:GroundGraph } FILTER NOT EXISTS { ?g a planning:PossibleGraph }
@@ -261,10 +260,7 @@ fn beside(store: &Store) -> Result<u64, Error> {
     names.dedup();
     let mut digest = std::collections::hash_map::DefaultHasher::new();
     for name in names {
-        let mut quads: Vec<String> = stated_quads(store.quads(&name)?)
-            .iter()
-            .map(|q| q.to_string())
-            .collect();
+        let mut quads: Vec<String> = store.quads(&name)?.iter().map(|q| q.to_string()).collect();
         quads.sort();
         name.hash(&mut digest);
         quads.hash(&mut digest);
@@ -281,7 +277,7 @@ fn graphs(beliefs: &Store, kinds: &[&str]) -> Result<Vec<String>, Error> {
 }
 
 fn cat(store: &Store, memo: &mut Memo) -> Result<Value, Error> {
-    Ok(Value::Raw(format!("<{}>", catalogue(store, memo)?)))
+    Ok(Value::Raw(format!("<{}>", cone(store, memo)?)))
 }
 
 fn later(a: DateTime, b: DateTime) -> DateTime {
@@ -298,7 +294,7 @@ pub type Violation = (String, Option<String>, Option<String>, Option<String>);
 /// Every quad `graph` states — none where no graph is named.
 fn quads_of(store: &Store, graph: Option<String>) -> Result<Vec<Quad>, Error> {
     match graph {
-        Some(g) => Ok(stated_quads(store.quads(&g)?)),
+        Some(g) => Ok(store.quads(&g)?),
         None => Ok(Vec::new()),
     }
 }
@@ -358,12 +354,12 @@ fn derived_from(store: &Store, want: &str) -> Result<Option<String>, Error> {
 fn imagined(store: &Store, scope: &str, memo: &mut Memo) -> Result<Imagined, Error> {
     /// WHAT AN IMAGINARIUM HOLDS: its possible worlds and the weighings of them, of those how many are on a frontier
     /// and how many met their want; and its plans, by why each search ended — counted by OPTIONAL rows inside the
-    /// catalogue, as the Python Planner counts them.
+    /// cone graph, as the Python Planner counts them.
     const IMAGINED_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?worlds ?weighings ?open ?met WHERE {
-      { SELECT (COUNT(?w) AS ?worlds) WHERE { GRAPH ?w { ?w a planning:PossibleGraph } } }
+      { SELECT (COUNT(?w) AS ?worlds) WHERE { GRAPH ?m_w { ?w a planning:PossibleGraph } } }
       { SELECT (COUNT(?x) AS ?weighings) (COUNT(?o) AS ?open) (COUNT(?m) AS ?met) WHERE {
-          GRAPH $cat { ?x a planning:Weighing .
+          GRAPH $cone { ?x a planning:Weighing .
                        OPTIONAL { ?x planning:open true BIND(?x AS ?o) }
                        OPTIONAL { ?x planning:met true BIND(?x AS ?m) } } } } }"#;
     const PLANS_HELD_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
@@ -371,7 +367,7 @@ fn imagined(store: &Store, scope: &str, memo: &mut Memo) -> Result<Imagined, Err
            (SUM(IF(?outcome = planning:Exhausted, 1, 0)) AS ?exhausted)
            (SUM(IF(?outcome = planning:NoCandidate, 1, 0)) AS ?noCandidate)
     WHERE { GRAPH ?plan { ?p a planning:Plan ; planning:outcome ?outcome } }"#;
-    let cone = store.rows(&bind(IMAGINED_Q, &[("cat", cat(store, memo)?)])?, &[])?;
+    let cone = store.rows(&bind(IMAGINED_Q, &[("cone", cat(store, memo)?)])?, &[])?;
     let held = store.rows(PLANS_HELD_Q, &[])?;
     let number = |rows: &[orexis::store::Row], key: &str| -> i64 {
         rows.first()
@@ -394,11 +390,11 @@ fn imagined(store: &Store, scope: &str, memo: &mut Memo) -> Result<Imagined, Err
 fn spent(store: &Store, want: &str, memo: &mut Memo) -> Result<usize, Error> {
     const SPENT_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
     SELECT (COUNT(?x) AS ?used) WHERE {
-      GRAPH $cat { ?x a planning:Weighing ; planning:for $want ; planning:weighs ?u .
-                   FILTER NOT EXISTS { ?u a planning:GroundGraph } } }"#;
+      GRAPH $cone { ?x a planning:Weighing ; planning:for $want ; planning:weighs ?u .
+                    FILTER NOT EXISTS { GRAPH ?m_u { ?u a planning:GroundGraph } } } }"#;
     let c = cat(store, memo)?;
     Ok(store
-        .rows(&bind(SPENT_Q, &[("want", Value::iri(want)), ("cat", c)])?, &[])?
+        .rows(&bind(SPENT_Q, &[("want", Value::iri(want)), ("cone", c)])?, &[])?
         .first()
         .and_then(|r| value(r, "used"))
         .and_then(|n| n.parse().ok())
@@ -488,10 +484,10 @@ fn held_constraints(
 /// The ways `world` violates `constraint`, off its weighing there — weighing it first where no pass has.
 fn broken(store: &Store, constraint: &str, world: &str, memo: &mut Memo) -> Result<BTreeSet<Violation>, Error> {
     const WEIGHED_IN_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
-        SELECT ?x WHERE { GRAPH $cat { ?x planning:weighs $world ; planning:for $for } } LIMIT 1"#;
+        SELECT ?x WHERE { GRAPH $cone { ?x planning:weighs $world ; planning:for $for } } LIMIT 1"#;
     const ROWS_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?i ?c ?a ?o WHERE {
-      GRAPH $cat { $x planning:violation ?v . ?v planning:instance ?i .
+      GRAPH $cone { $x planning:violation ?v . ?v planning:instance ?i .
                    OPTIONAL { ?v planning:constraint ?c } OPTIONAL { ?v planning:about ?a } OPTIONAL { ?v planning:offending ?o } } }
     ORDER BY ?i ?c ?o"#;
     let key = (constraint.to_string(), world.to_string());
@@ -504,7 +500,7 @@ fn broken(store: &Store, constraint: &str, world: &str, memo: &mut Memo) -> Resu
             WEIGHED_IN_Q,
             &[
                 ("world", Value::iri(world)),
-                ("cat", c.clone()),
+                ("cone", c.clone()),
                 ("for", Value::iri(constraint)),
             ],
         )?,
@@ -515,7 +511,7 @@ fn broken(store: &Store, constraint: &str, world: &str, memo: &mut Memo) -> Resu
         None => weigh(store, constraint, world, memo)?,
     };
     let rows: BTreeSet<Violation> = store
-        .rows(&bind(ROWS_Q, &[("x", Value::iri(node.as_str())), ("cat", c)])?, &[])?
+        .rows(&bind(ROWS_Q, &[("x", Value::iri(node.as_str())), ("cone", c)])?, &[])?
         .iter()
         .filter_map(|r| Some((value(r, "i")?, value(r, "c"), value(r, "a"), value(r, "o"))))
         .collect();
@@ -535,7 +531,7 @@ fn refined(beliefs: &Store) -> Result<Vec<Refined>, Error> {
     const REFINED_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
     PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
-    SELECT ?want ?g ?step WHERE { GRAPH ?g { ?g a planning:WantGraph . ?step execution:keptBy ?want } }"#;
+    SELECT ?want ?g ?step WHERE { GRAPH ?m_g { ?g a planning:WantGraph } GRAPH ?g { ?step execution:keptBy ?want } }"#;
     Ok(beliefs
         .rows(REFINED_Q, &[])?
         .iter()
@@ -628,7 +624,7 @@ fn of_scope(
     const GROUND_STARTS_Q: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
-    SELECT ?s WHERE { GRAPH ?g { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?s } }
+    SELECT ?s WHERE { GRAPH ?m_g { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?s } }
     ORDER BY ?s"#;
     let all: Vec<String> = scopes.all().into_iter().collect();
     let first = all.first().cloned().unwrap_or_else(|| UNSCOPED.to_string());
@@ -1094,7 +1090,7 @@ impl Planner {
         const PURSUES_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
             SELECT ?want ?root WHERE { GRAPH $plan { ?root execution:pursues ?want } } LIMIT 1"#;
         const ESTIMATE_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
-        SELECT ?remaining WHERE { GRAPH $cat { ?x planning:weighs $ground ; planning:for $want ; planning:remaining ?remaining } } LIMIT 1"#;
+        SELECT ?remaining WHERE { GRAPH $cone { ?x planning:weighs $ground ; planning:for $want ; planning:remaining ?remaining } } LIMIT 1"#;
         const PURSUERS_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
             SELECT (COUNT(DISTINCT ?i) AS ?n) WHERE { GRAPH ?g { ?i a execution:Intention ; execution:pursues $want } }"#;
         let beliefs = &self.beliefs;
@@ -1113,7 +1109,7 @@ impl Planner {
                         &[
                             ("want", Value::iri(want.as_str())),
                             ("ground", Value::iri(present)),
-                            ("cat", cat(store, memo)?),
+                            ("cone", cat(store, memo)?),
                         ],
                     )?,
                     &[],
@@ -1128,16 +1124,14 @@ impl Planner {
                 .and_then(|v| v.parse().ok())
                 .unwrap_or(0);
             let said: Vec<Triple> = match NamedNode::new(plan.as_str()) {
-                Ok(graph) => stated_quads(
-                    beliefs
-                        .engine()
-                        .quads_for_pattern(None, None, None, Some(graph.as_ref().into()))
-                        .flatten()
-                        .collect(),
-                )
-                .into_iter()
-                .map(|q| Triple::new(q.subject, q.predicate, q.object))
-                .collect(),
+                Ok(graph) => beliefs
+                    .engine()
+                    .quads_for_pattern(None, None, None, Some(graph.as_ref().into()))
+                    .flatten()
+                    .collect::<Vec<Quad>>()
+                    .into_iter()
+                    .map(|q| Triple::new(q.subject, q.predicate, q.object))
+                    .collect(),
                 Err(_) => Vec::new(),
             };
             out.push(PlanPublished {
@@ -1198,7 +1192,7 @@ impl Planner {
           { GRAPH ?g { ?i a execution:Intention ; execution:pursues ?want .
                        FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }
           UNION
-          { GRAPH ?plan { ?plan a orexis:PlanGraph . ?root execution:pursues ?want }
+          { GRAPH ?m_plan { ?plan a orexis:PlanGraph } GRAPH ?plan { ?root execution:pursues ?want }
             FILTER NOT EXISTS { GRAPH ?h { ?i execution:adopts ?plan } } } }
         ORDER BY ?want"#;
         Ok(self
@@ -1221,11 +1215,11 @@ impl Planner {
     /// The earliest instant after `at` a ground the last pass laid begins, in any imaginarium: where the present
     /// reaches it, the world the derivation stands in has moved though nothing arrived.
     pub fn next_ground(&self, at: DateTime) -> Result<Option<DateTime>, Error> {
-        /// THE EARLIEST GROUND BEGINNING AFTER `$at`, off an imaginarium's catalogue.
+        /// THE EARLIEST GROUND BEGINNING AFTER `$at`, off the grounds' metadata.
         const NEXT_GROUND_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
           PREFIX orexis: <http://example.org/orexis#>
           PREFIX planning: <http://example.org/orexis/planning#>
-          SELECT (MIN(?start) AS ?start) WHERE { GRAPH ?g {
+          SELECT (MIN(?start) AS ?start) WHERE { GRAPH ?m_g {
           ?g a planning:GroundGraph ; dcterms:temporal ?period . ?period orexis:start ?start . FILTER (?start > $at) } }";
         let mut next: Option<DateTime> = None;
         for store in self.imaginaria.values() {
@@ -1358,8 +1352,7 @@ mod tests {
         const OPEN_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT DISTINCT ?want WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-        ?x a planning:Weighing ; planning:for ?want ; planning:open true } }
+      GRAPH ?c { ?x a planning:Weighing ; planning:for ?want ; planning:open true } }
     ORDER BY ?want";
         for case in snapshots::cases_in(&snapshots::tree().join("orexis-planning/tests/expand")) {
             let store = snapshots::stand_in(&case);
@@ -1412,7 +1405,7 @@ mod tests {
         let mut graphs = predictions.clone();
         graphs.extend(store.revisions_of(&strs(&predictions), BELIEF).unwrap());
         for g in graphs {
-            for t in orexis::metadata::stated(store.triples(&g).unwrap()) {
+            for t in store.triples(&g).unwrap() {
                 anything.insert(t.predicate.as_str().to_string());
             }
         }
@@ -1440,7 +1433,7 @@ mod tests {
                 let worlds = worlds_of(im);
                 assert!(!worlds.is_empty(), "{}", case.display());
                 for world in &worlds {
-                    for t in orexis::metadata::stated(im.triples(world).unwrap()) {
+                    for t in im.triples(world).unwrap() {
                         assert!(
                             written_by(&t, &anything, &fixed),
                             "{}: {world} holds {t}",
@@ -1451,7 +1444,7 @@ mod tests {
                         if graph == *world {
                             continue;
                         }
-                        for t in orexis::metadata::stated(im.triples(&graph).unwrap()) {
+                        for t in im.triples(&graph).unwrap() {
                             assert!(
                                 !written_by(&t, &anything, &fixed),
                                 "{}: {graph} beside {world} holds {t}",
@@ -1469,8 +1462,8 @@ mod tests {
     const WEIGHED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
 PREFIX planning: <http://example.org/orexis/planning#>
 SELECT (COUNT(?x) AS ?n) WHERE {
-  GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?x a planning:Weighing ; planning:weighs ?w .
-               FILTER NOT EXISTS { ?w a planning:GroundGraph } } }";
+  GRAPH ?c { ?x a planning:Weighing ; planning:weighs ?w .
+             FILTER NOT EXISTS { GRAPH ?m_w { ?w a planning:GroundGraph } } } }";
 
     fn count(store: &Store, text: &str) -> usize {
         value(&store.rows(text, &[]).unwrap()[0], "n").unwrap().parse().unwrap()
@@ -1503,7 +1496,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
             .rows(
                 &format!(
                     "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?d ?p ?o ?g WHERE {{ GRAPH ?g {{ ?g a orexis:BeliefGraph . ?d ?p ?o }} FILTER(STRENDS(STR(?d), \"{disk}\") && STRENDS(STR(?p), \"#on\")) }}"
+        SELECT ?d ?p ?o ?g WHERE {{ GRAPH ?m_g {{ ?g a orexis:BeliefGraph }} GRAPH ?g {{ ?d ?p ?o }} FILTER(STRENDS(STR(?d), \"{disk}\") && STRENDS(STR(?p), \"#on\")) }}"
                 ),
                 &[],
             )
@@ -1561,7 +1554,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
             .rows(
                 &format!(
                     "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?d ?g WHERE {{ GRAPH ?g {{ ?g a orexis:BeliefGraph . ?d ?p ?o }} FILTER(STRENDS(STR(?d), \"{disk}\") && STRENDS(STR(?p), \"#on\")) }}"
+        SELECT ?d ?g WHERE {{ GRAPH ?m_g {{ ?g a orexis:BeliefGraph }} GRAPH ?g {{ ?d ?p ?o }} FILTER(STRENDS(STR(?d), \"{disk}\") && STRENDS(STR(?p), \"#on\")) }}"
                 ),
                 &[],
             )
@@ -1594,8 +1587,8 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         const ROOTS_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT DISTINCT ?root WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:PossibleGraph ; (planning:by/planning:from)+ ?root .
-                   ?root a planning:GroundGraph } }";
+      GRAPH ?c { ?w (planning:by/planning:from)+ ?root }
+      GRAPH ?m_w { ?w a planning:PossibleGraph } GRAPH ?m_root { ?root a planning:GroundGraph } }";
         let store = snapshots::stand_in(&bench("two_disk_hanoi"));
         let mut planner = Planner::new(&store, snapshots::AGENT, None).unwrap();
         planner.plan(snapshots::now()).unwrap();
@@ -1609,7 +1602,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         let found = store
             .rows(
                 "PREFIX orexis: <http://example.org/orexis#>
-             SELECT ?d WHERE { GRAPH ?g { ?g a orexis:BeliefGraph . ?d ?p ?o } \
+             SELECT ?d WHERE { GRAPH ?m_g { ?g a orexis:BeliefGraph } GRAPH ?g { ?d ?p ?o } \
              FILTER(STRENDS(STR(?d), \"disk_1\") && STRENDS(STR(?p), \"#on\")) }",
                 &[],
             )
@@ -1799,7 +1792,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
     fn the_budget_is_the_planners_roles_where_one_states_it() {
         let store = snapshots::stand_in(&bench("three_disk_hanoi"));
         assert_eq!(Planner::new(&store, snapshots::AGENT, None).unwrap().budget, BUDGET);
-        let cat = store.catalogue().unwrap().unwrap();
+        let cat = snapshots::SAID_TOGETHER;
         let (me, own) = (snapshots::ME, "http://example.org/test#self");
         let budget = crate::ontology::BUDGET_TERM;
         store
@@ -1809,7 +1802,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
   GRAPH <{cat}> {{ <{own}> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy <{me}> }} }}"
             ))
             .unwrap();
-        store.carry_metadata_of(own).unwrap();
+        snapshots::mirrored(&store, cat);
         assert_eq!(Planner::new(&store, snapshots::AGENT, Some(64)).unwrap().budget, 64);
         let mut planner = Planner::new(&store, snapshots::AGENT, None).unwrap();
         assert_eq!(planner.budget, 20);
@@ -1874,7 +1867,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         let found = store
             .rows(
                 "PREFIX orexis: <http://example.org/orexis#>
-             SELECT ?d WHERE { GRAPH ?g { ?g a orexis:BeliefGraph . ?d ?p ?o } \
+             SELECT ?d WHERE { GRAPH ?m_g { ?g a orexis:BeliefGraph } GRAPH ?g { ?d ?p ?o } \
              FILTER(STRENDS(STR(?d), \"disk_2\") && STRENDS(STR(?p), \"#on\")) }",
                 &[],
             )
@@ -1891,7 +1884,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         const PREDICTED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
     SELECT DISTINCT ?side ?s ?o WHERE {
       GRAPH ?p { ?step a execution:Step ; ?side ?g . VALUES ?side { execution:adds execution:retracts } }
-      GRAPH ?g { ?s ?pred ?o FILTER NOT EXISTS { ?s a <http://example.org/orexis#Graph> } } }";
+      GRAPH ?g { ?s ?pred ?o } }";
         let store = snapshots::stand_in(&cases().join("a_step_lands_across_a_prediction_it_does_not_touch.trig"));
         let mut planner = Planner::new(&store, snapshots::AGENT, None).unwrap();
         planner.plan(snapshots::now()).unwrap();
@@ -1920,7 +1913,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
     const CHANGES_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
 PREFIX orexis: <http://example.org/orexis#>
 PREFIX prov: <http://www.w3.org/ns/prov#>
-SELECT ?g ?w WHERE { GRAPH ?g {
+SELECT ?g ?w WHERE { GRAPH ?m_g {
   ?g prov:wasDerivedFrom ?w ; a ?side . VALUES ?side { execution:AddsGraph execution:RetractsGraph } } }";
 
     #[test]
@@ -2031,8 +2024,7 @@ SELECT ?g ?w WHERE { GRAPH ?g {
         const MADE_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT (COUNT(DISTINCT ?w) AS ?worlds) (COUNT(DISTINCT ?x) AS ?weighings) WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-        { ?w a planning:PossibleGraph } UNION { ?x a planning:Weighing ; planning:for $want } } }";
+      { GRAPH ?m_w { ?w a planning:PossibleGraph } } UNION { GRAPH ?c { ?x a planning:Weighing ; planning:for $want } } }";
         let r = &store
             .rows(&bind(MADE_Q, &[("want", Value::iri(want))]).unwrap(), &[])
             .unwrap()[0];
@@ -2131,14 +2123,13 @@ SELECT ?g ?w WHERE { GRAPH ?g {
         let graphs = im.graphs_of(&[PLAN_GRAPH], &Within::default()).unwrap();
         let steps = plan_steps(im, &graphs[0]);
         assert_eq!(steps.len(), 2);
-        let cat = im.catalogue().unwrap().unwrap();
         for step in &steps {
             let of = iri(step, "of").unwrap();
             let found = im
                 .rows(
                     &format!(
                         "PREFIX planning: <http://example.org/orexis/planning#>
-                            SELECT ?a WHERE {{ GRAPH <{cat}> {{ <{of}> a planning:Candidate ; planning:fills ?a }} }}"
+                            SELECT ?a WHERE {{ GRAPH ?c {{ <{of}> a planning:Candidate ; planning:fills ?a }} }}"
                     ),
                     &[],
                 )
@@ -2151,70 +2142,31 @@ SELECT ?g ?w WHERE { GRAPH ?g {
         }
         let by_chain: Vec<String> = steps.iter().filter_map(|s| iri(s, "of")).collect();
         let deepest = im
-        .rows(
-            &format!(
+            .rows(
                 "PREFIX planning: <http://example.org/orexis/planning#>
-                 SELECT ?w (COUNT(?above) AS ?depth) WHERE {{ GRAPH <{cat}> {{ ?w a planning:PossibleGraph ; (planning:by/planning:from)+ ?above }} }}
-                 GROUP BY ?w ORDER BY DESC(?depth) LIMIT 1"
-            ),
-            &[],
-        )
-        .unwrap();
+                 SELECT ?w (COUNT(?above) AS ?depth) WHERE {
+                   GRAPH ?c { ?w (planning:by/planning:from)+ ?above } GRAPH ?m_w { ?w a planning:PossibleGraph } }
+                 GROUP BY ?w ORDER BY DESC(?depth) LIMIT 1",
+                &[],
+            )
+            .unwrap();
         let (mut ancestry, mut world) = (Vec::new(), iri(&deepest[0], "w").unwrap());
         loop {
             let found = im
-            .rows(&format!("PREFIX planning: <http://example.org/orexis/planning#>
-                SELECT ?parent ?by WHERE {{ GRAPH <{cat}> {{ <{world}> planning:by ?by . ?by planning:from ?parent }} }}"), &[])
-            .unwrap();
+                .rows(
+                    &format!(
+                        "PREFIX planning: <http://example.org/orexis/planning#>
+                SELECT ?parent ?by WHERE {{ GRAPH ?c {{ <{world}> planning:by ?by . ?by planning:from ?parent }} }}"
+                    ),
+                    &[],
+                )
+                .unwrap();
             let Some(r) = found.first() else { break };
             ancestry.push(iri(r, "by").unwrap());
             world = iri(r, "parent").unwrap();
         }
         ancestry.reverse();
         assert_eq!(ancestry, by_chain, "root first, and the same candidates");
-    }
-
-    /// Every possible world says what it is, in itself, as a graph carrying its metadata would; the plan extracted again
-    /// predicts what it predicted, since a step's change is a diff of what two worlds state and never of what each
-    /// says it is.
-    #[test]
-    fn what_a_step_predicts_is_no_part_of_what_its_worlds_say_of_themselves() {
-        const PREDICTED_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
-            SELECT ?g ?s ?p ?o WHERE { GRAPH ?plan { ?step execution:adds|execution:retracts ?g } GRAPH ?g { ?s ?p ?o } }
-            ORDER BY ?g ?s ?p ?o";
-        let beliefs = snapshots::stand_in(&cases().join("a_low_tank_is_filled.trig"));
-        let planner = walked(&beliefs);
-        let im = imagined(&planner);
-        let predicted = |im: &Store| -> Vec<String> {
-            im.rows(PREDICTED_Q, &[])
-                .unwrap()
-                .iter()
-                .map(|r| format!("{r:?}"))
-                .collect()
-        };
-        let before = predicted(im);
-        assert!(!before.is_empty(), "the plan predicts something");
-        im.update(
-            "PREFIX dcterms: <http://purl.org/dc/terms/>
-            PREFIX orexis: <http://example.org/orexis#>
-            PREFIX planning: <http://example.org/orexis/planning#>
-            INSERT { GRAPH ?w { ?w a planning:PossibleGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived ;
-                                 orexis:hash ?name ; dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start ?name ] } }
-            WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph } GRAPH ?w { ?w a planning:PossibleGraph } BIND(STR(?w) AS ?name) }",
-        )
-        .unwrap();
-        let graph = im.graphs_of(&[PLAN_GRAPH], &Within::default()).unwrap()[0].clone();
-        let want = im
-            .rows(
-                &format!(
-                    "PREFIX planning: <http://example.org/orexis/planning#>
-                    SELECT ?w WHERE {{ GRAPH <{graph}> {{ ?p a planning:Plan ; planning:for ?w }} }}"
-                ),
-                &[],
-            )
-            .unwrap();
-        extract_plan(im, &iri(&want[0], "w").unwrap()).unwrap();
-        assert_eq!(predicted(im), before);
     }
 
     #[test]

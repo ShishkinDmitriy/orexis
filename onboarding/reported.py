@@ -38,7 +38,7 @@ REPORTED: dict[str, tuple[Reported, ...]] = {
                  'spent on both, how many it left cut short for the next pass, and its real seconds.',
                  values=('sources', 'executions', 'cut', 'duration_s')),
         Reported('revisions',
-                 "The revisions the belief base's catalogue describes, and how many a budget cut short — settled "
+                 "The revisions the belief base holds, and how many a budget cut short — settled "
                  'false, which the next pass continues. A revision unsettled window after window is a rule set that '
                  'never settles.',
                  levels=('revisions', 'unsettled'), counted=False),

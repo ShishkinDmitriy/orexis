@@ -14,11 +14,11 @@
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
-use orexis::ontology::GRAPH_PREFIX;
+use orexis::ontology::{DERIVED, GRAPH_PREFIX};
 use orexis::store::{Store, iri, value};
 
 use crate::admit::local_of;
-use crate::ontology::{EXHAUSTED, NO_CANDIDATE, SATISFIED};
+use crate::ontology::{ADDS_GRAPH, EXHAUSTED, NO_CANDIDATE, PLAN_GRAPH, RETRACTS_GRAPH, SATISFIED};
 
 /// Mint `want`'s plan from what its search left, into its own graph, replaced whole with its steps' graphs. The
 /// graph's name. Refused where nothing was weighed for the want.
@@ -37,69 +37,46 @@ pub fn extract_plan(store: &Store, want: &str) -> Result<String, Error> {
                            planning:fills ?action ; planning:of ?by ;
                            execution:notBefore ?since ; execution:landsAt ?lands ; execution:notAfter ?after ;
                            execution:adds ?adds ; execution:retracts ?retracts . ?step ?p ?v } }
-    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                          $world (planning:by/planning:from)* ?w . ?w planning:by ?by .
-                          ?by planning:fills ?action ; planning:from ?in .
-                          ?in dcterms:temporal/orexis:start ?since .
-                          ?w dcterms:temporal ?period . ?period orexis:start ?lands . OPTIONAL { ?period orexis:end ?after }
-                          OPTIONAL { ?by ?p ?v . FILTER(?p NOT IN (planning:fills, planning:from, planning:minted, rdf:type)) } }
+    WHERE  { GRAPH $cone { $world (planning:by/planning:from)* ?w . ?w planning:by ?by .
+                           ?by planning:fills ?action ; planning:from ?in .
+                           OPTIONAL { ?by ?p ?v . FILTER(?p NOT IN (planning:fills, planning:from, planning:minted, rdf:type)) } }
+             GRAPH ?m_in { ?in dcterms:temporal/orexis:start ?since }
+             GRAPH ?m_w { ?w dcterms:temporal/orexis:start ?lands . OPTIONAL { ?w dcterms:temporal/orexis:end ?after } }
              BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""))) AS ?step)
              BIND(IRI(CONCAT(STR(?step), ".adds")) AS ?adds)
              BIND(IRI(CONCAT(STR(?step), ".retracts")) AS ?retracts) } ;
     INSERT { GRAPH $plan { ?prev execution:then ?step } }
-    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                          $world (planning:by/planning:from)* ?w . ?w planning:by ?by .
-                          ?w planning:by/planning:from ?parent . ?parent planning:by ?was }
+    WHERE  { GRAPH $cone { $world (planning:by/planning:from)* ?w . ?w planning:by ?by .
+                           ?w planning:by/planning:from ?parent . ?parent planning:by ?was }
              BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""))) AS ?step)
              BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?parent), "^.*/", ""))) AS ?prev) } ;
-    INSERT { GRAPH ?cat { $plan a planning:PlanGraph ; orexis:arrivedBy orexis:Derived }
-             GRAPH $plan { $plan a planning:PlanGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived } }
-    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph } } ;
-    INSERT { GRAPH ?cat { $plan a ?kind } GRAPH $plan { $plan a ?kind } }
-    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph }
-             GRAPH ?vocabulary { ?vocabulary a orexis:OntologyGraph . planning:PlanGraph rdfs:subClassOf ?kind } } ;
     INSERT { GRAPH ?adds { ?s ?p ?o } }
-    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                          $world (planning:by/planning:from)* ?w . ?w planning:by ?by . ?by planning:from ?in
-                          FILTER NOT EXISTS { ?own prov:wasDerivedFrom ?w ; a execution:AddsGraph } }
-             GRAPH ?w { ?s ?p ?o FILTER NOT EXISTS { ?s a orexis:Graph } FILTER NOT EXISTS { ?s a dcterms:PeriodOfTime } }
+    WHERE  { GRAPH $cone { $world (planning:by/planning:from)* ?w . ?w planning:by ?by . ?by planning:from ?in }
+             FILTER NOT EXISTS { GRAPH ?m_own { ?own prov:wasDerivedFrom ?w ; a execution:AddsGraph } }
+             GRAPH ?w { ?s ?p ?o }
              FILTER NOT EXISTS { GRAPH ?in { ?s ?p ?o } }
              BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""), ".adds")) AS ?adds) } ;
     INSERT { GRAPH ?adds { ?s ?p ?o } }
-    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                          $world (planning:by/planning:from)* ?w . ?w planning:by ?by .
-                          ?own prov:wasDerivedFrom ?w ; a execution:AddsGraph }
-             GRAPH ?own { ?s ?p ?o FILTER NOT EXISTS { ?s a orexis:Graph } FILTER NOT EXISTS { ?s a dcterms:PeriodOfTime } }
+    WHERE  { GRAPH $cone { $world (planning:by/planning:from)* ?w . ?w planning:by ?by }
+             GRAPH ?m_own { ?own prov:wasDerivedFrom ?w ; a execution:AddsGraph }
+             GRAPH ?own { ?s ?p ?o }
              BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""), ".adds")) AS ?adds) } ;
     INSERT { GRAPH ?retracts { ?s ?p ?o } }
-    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                          $world (planning:by/planning:from)* ?w . ?w planning:by ?by . ?by planning:from ?in
-                          FILTER NOT EXISTS { ?own prov:wasDerivedFrom ?w ; a execution:RetractsGraph } }
-             GRAPH ?in { ?s ?p ?o FILTER NOT EXISTS { ?s a orexis:Graph } FILTER NOT EXISTS { ?s a dcterms:PeriodOfTime } }
+    WHERE  { GRAPH $cone { $world (planning:by/planning:from)* ?w . ?w planning:by ?by . ?by planning:from ?in }
+             FILTER NOT EXISTS { GRAPH ?m_own { ?own prov:wasDerivedFrom ?w ; a execution:RetractsGraph } }
+             GRAPH ?in { ?s ?p ?o }
              FILTER NOT EXISTS { GRAPH ?w { ?s ?p ?o } }
              BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""), ".retracts")) AS ?retracts) } ;
     INSERT { GRAPH ?retracts { ?s ?p ?o } }
-    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                          $world (planning:by/planning:from)* ?w . ?w planning:by ?by .
-                          ?own prov:wasDerivedFrom ?w ; a execution:RetractsGraph }
-             GRAPH ?own { ?s ?p ?o FILTER NOT EXISTS { ?s a orexis:Graph } FILTER NOT EXISTS { ?s a dcterms:PeriodOfTime } }
-             BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""), ".retracts")) AS ?retracts) } ;
-    INSERT { GRAPH ?cat { ?adds a execution:AddsGraph ; orexis:arrivedBy orexis:Derived .
-                          ?retracts a execution:RetractsGraph ; orexis:arrivedBy orexis:Derived }
-             GRAPH ?adds { ?adds a execution:AddsGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived }
-             GRAPH ?retracts { ?retracts a execution:RetractsGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived } }
-    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph }
-             GRAPH $plan { ?step execution:adds ?adds ; execution:retracts ?retracts } } ;
-    INSERT { GRAPH ?cat { ?g a ?kind } GRAPH ?g { ?g a ?kind } }
-    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph }
-             GRAPH $plan { ?step execution:adds|execution:retracts ?g }
-             GRAPH ?g { ?g a ?class }
-             GRAPH ?vocabulary { ?vocabulary a orexis:OntologyGraph . ?class rdfs:subClassOf ?kind } }"#;
+    WHERE  { GRAPH $cone { $world (planning:by/planning:from)* ?w . ?w planning:by ?by }
+             GRAPH ?m_own { ?own prov:wasDerivedFrom ?w ; a execution:RetractsGraph }
+             GRAPH ?own { ?s ?p ?o }
+             BIND(IRI(CONCAT(STR($plan), ".", REPLACE(STR(?w), "^.*/", ""), ".retracts")) AS ?retracts) }"#;
     /// THE BEST WORLD WHERE THE WANT IS MET: on time and cheapest, or the soonest and then the cheapest.
     const BEST_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?w ?spent WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+      GRAPH $cone {
         ?x a planning:Weighing ; planning:for $want ; planning:met true ; planning:weighs ?w .
         OPTIONAL { ?w planning:spent ?s } OPTIONAL { ?w planning:minted ?m }
         OPTIONAL { ?x planning:late ?lands } }
@@ -109,19 +86,27 @@ pub fn extract_plan(store: &Store, want: &str) -> Result<String, Error> {
     const ROOT_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?g (COUNT(?y) AS ?spent) WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-        ?x a planning:Weighing ; planning:for $want ; planning:weighs ?g . ?g a planning:GroundGraph .
+      GRAPH $cone {
+        ?x a planning:Weighing ; planning:for $want ; planning:weighs ?g .
         OPTIONAL { ?y a planning:Weighing ; planning:for $want ; planning:weighs ?w .
-                   FILTER NOT EXISTS { ?w a planning:GroundGraph } } } }
+                   FILTER NOT EXISTS { GRAPH ?m_w { ?w a planning:GroundGraph } } } }
+      GRAPH ?m_g { ?g a planning:GroundGraph } }
     GROUP BY ?g";
     /// THE GRAPHS A PLAN'S STEPS NAME — what goes when the plan is replaced.
     const STEP_GRAPHS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
-        SELECT ?g WHERE { GRAPH $plan { ?step execution:adds|execution:retracts ?g } }";
-    let found = store.rows(&bind(BEST_Q, &[("want", Value::iri(want))])?, &[])?;
+        SELECT ?g ?side WHERE { GRAPH $plan { ?step ?side ?g . VALUES ?side { execution:adds execution:retracts } } }";
+    let cone = Value::iri(crate::world_at::cone_of(store)?);
+    let found = store.rows(
+        &bind(BEST_Q, &[("want", Value::iri(want)), ("cone", cone.clone())])?,
+        &[],
+    )?;
     let (world, outcome, cost) = match found.first().and_then(|b| Some((iri(b, "w")?, value(b, "spent")?))) {
         Some((world, spent)) => (world, SATISFIED, Some(spent)),
         None => {
-            let roots = store.rows(&bind(ROOT_Q, &[("want", Value::iri(want))])?, &[])?;
+            let roots = store.rows(
+                &bind(ROOT_Q, &[("want", Value::iri(want)), ("cone", cone.clone())])?,
+                &[],
+            )?;
             let Some(root) = roots.first() else {
                 return Err(Error::Evaluation(format!(
                     "nothing was weighed for {want} — has its search begun?"
@@ -147,7 +132,8 @@ pub fn extract_plan(store: &Store, want: &str) -> Result<String, Error> {
     store.update(&bind(
         PLAN_U,
         &[
-            ("plan", plan),
+            ("cone", cone),
+            ("plan", plan.clone()),
             ("root", Value::iri(plan_root(&graph))),
             ("want", Value::iri(want)),
             ("outcome", Value::iri(outcome)),
@@ -155,6 +141,18 @@ pub fn extract_plan(store: &Store, want: &str) -> Result<String, Error> {
             ("costs", Value::Raw(costs)),
         ],
     )?)?;
+    //  WHAT THE PLAN'S GRAPH IS, AND EACH GRAPH ITS STEPS PREDICT IN: said in the metadata graph of each.
+    store.classify(&graph, PLAN_GRAPH, DERIVED, None, None, None)?;
+    for r in store.rows(&bind(STEP_GRAPHS_Q, &[("plan", plan)])?, &[])? {
+        if let (Some(g), Some(side)) = (iri(&r, "g"), iri(&r, "side")) {
+            let kind = if side.ends_with("adds") {
+                ADDS_GRAPH
+            } else {
+                RETRACTS_GRAPH
+            };
+            store.classify(&g, kind, DERIVED, None, None, None)?;
+        }
+    }
     Ok(graph)
 }
 

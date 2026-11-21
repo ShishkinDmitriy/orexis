@@ -63,7 +63,7 @@ def local_of(iri: str) -> str:
 # Which is why they are different graphs rather than one "computed" one: amending the two has
 # utterly different blast radius. See knowledge/decisions/who-put-the-fact-there.md.
 
-#  HOW A GRAPH ARRIVED: the `orexis:Arrival` its catalogue row says by `orexis:arrivedBy`. Every
+#  HOW A GRAPH ARRIVED: the `orexis:Arrival` its metadata says by `orexis:arrivedBy`. Every
 #  package that writes a graph says one, and each spelled its own until they were stated here.
 ASSERTED = OREXIS + "Asserted"           # the sovereign said so
 DERIVED = OREXIS + "Derived"             # a rule concluded it
@@ -74,7 +74,7 @@ _GRAPH = "http://example.org/orexis/graph/"
 #  Where every graph lives in the IRI space. Exported because a package that owns graphs of its
 #  own builds their names from here — where a graph SITS is the kernel's, what it HOLDS is not.
 
-#  WHAT A GRAPH HOLDS, as a hash — written on the graph's own catalogue row beside its class
+#  WHAT A GRAPH HOLDS, as a hash — written in the graph's metadata beside its class
 #  and its period, because it is a fact OF the graph and not one IN it. `hash_named_graph`
 #  computes it; two graphs carrying one value hold the same facts, which is what tells a
 #  search that a world has been seen before.
@@ -96,13 +96,8 @@ GRAPH_PREFIX = _GRAPH
 #  kind; this is the one no file holds.
 CLOSURE_GRAPH = _GRAPH + "ontology/closure"
 
-#  THE CATALOGUE: the one graph that says what every graph IS — class, owner, arrival, period —
-#  and describes itself, so no reader knows this name: `store.catalogue_of` finds the graph
-#  that says of itself `a orexis:CatalogueGraph`. Named here for the one writer that CREATES
-#  it, genesis, and for nothing else (one-catalogue-describes-every-graph-and-itself).
-CATALOGUE_GRAPH = _GRAPH + "catalogue"
 
-#  THE KINDS A READER ASKS FOR. A graph is read by what the catalogue says it IS, never by its
+#  THE KINDS A READER ASKS FOR. A graph is read by what its metadata says it IS, never by its
 #  name (a-reader-states-the-kinds-it-reads): a reader lists the kinds it means and the instant
 #  it stands at, `store.graphs_of` answers with the graphs, and nothing decides on anyone's
 #  behalf. Each kind is a kernel term a package may put its own graph under, which is how a

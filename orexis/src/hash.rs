@@ -1,13 +1,11 @@
-//! WHAT ONE NAMED GRAPH HOLDS, as a hash — and the hash written onto the graph's own row. A case's diff records
-//! the digest and a volume lived in keeps it on every row, so the spelling below is held fixed digit for digit:
+//! WHAT ONE NAMED GRAPH HOLDS, as a hash — and the hash written in the graph's metadata graph. A case's diff records
+//! the digest and a volume lived in keeps it of every graph, so the spelling below is held fixed digit for digit:
 //! it was the retired Python kernel's, and changing it would make every stored world a surprise once.
 //!
 //! **IT IS THE CONTENT AND NOTHING ELSE**: a blank node is its content, not its label; a number is its value
-//! rounded to six decimals; every other term is its kind and its text; and what a graph says of itself - its kinds,
-//! how it arrived, whose it is, its period - is its metadata and no content (`stated`), so a graph hashes alike
-//! whether its metadata is said in the catalogue or in itself, and its own hash is no part of what is hashed. The hash
-//! knows this of what it hashes, as every text that reads a whole graph knows it of what it reads: the store hands
-//! over a graph's triples and decides nothing about them. **A WORLD IS HASHED WITHIN WHAT IS READ**:
+//! rounded to six decimals; every other term is its kind and its text. What a graph is - its kinds, how it arrived,
+//! whose it is, its period, its hash - is said in its metadata graph and is no part of it, so every triple a graph
+//! holds is hashed. **A WORLD IS HASHED WITHIN WHAT IS READ**:
 //! where a caller names the predicates and classes a world is identified by, only those facts count, a type fact
 //! by its class.
 //!
@@ -21,8 +19,7 @@ use oxigraph::model::{BlankNode, GraphNameRef, Literal, NamedNode, NamedOrBlankN
 use sha2::{Digest, Sha256};
 
 use crate::Error;
-use crate::metadata::stated;
-use crate::ontology::{GRAPH, HASH};
+use crate::ontology::{HASH, METADATA_GRAPH, METADATA_OF};
 use crate::rdf::{RDF_TYPE, repr, round6};
 use crate::store::Store;
 
@@ -51,48 +48,42 @@ const NUMERIC: &[&str] = &[
     "unsignedByte",
 ];
 
-/// The canonical hash of what `graph` holds, written onto its catalogue row and in the graph itself, where it says
-/// it is a graph, in place of any before it, and answered. `within` is what a world is identified by, predicates and classes; None hashes every fact. A graph
-/// the store has never heard of hashes like an empty one.
+/// The canonical hash of what `graph` holds, written in its metadata graph in place of any before it, and answered.
+/// `within` is what a world is identified by, predicates and classes; None hashes every fact. A graph the store has
+/// never heard of hashes like an empty one.
 pub fn hash_named_graph(store: &Store, graph: &str, within: Option<&BTreeSet<String>>) -> Result<String, Error> {
     let digest = digest_of(store, graph, within)?;
-    let catalogue = store
-        .catalogue()?
-        .ok_or_else(|| Error::Catalogue(format!("no catalogue to write the hash of {graph} on")))?;
-    let (subject, hash, row) = (named(graph)?, named(HASH)?, named(&catalogue)?);
+    let metadata = named(&store.metadata_for(graph)?)?;
+    let (subject, hash) = (named(graph)?, named(HASH)?);
     let engine = store.engine();
-    for said_in in [&row, &subject] {
-        let old: Vec<Quad> = engine
-            .quads_for_pattern(
-                Some(subject.as_ref().into()),
-                Some(hash.as_ref()),
-                None,
-                Some(GraphNameRef::NamedNode(said_in.as_ref())),
-            )
-            .collect::<Result<_, _>>()
-            .map_err(|e| Error::Evaluation(e.to_string()))?;
-        for quad in &old {
-            engine.remove(quad).map_err(|e| Error::Evaluation(e.to_string()))?;
-        }
+    let old: Vec<Quad> = engine
+        .quads_for_pattern(
+            Some(subject.as_ref().into()),
+            Some(hash.as_ref()),
+            None,
+            Some(GraphNameRef::NamedNode(metadata.as_ref())),
+        )
+        .collect::<Result<_, _>>()
+        .map_err(|e| Error::Evaluation(e.to_string()))?;
+    for quad in &old {
+        engine.remove(quad).map_err(|e| Error::Evaluation(e.to_string()))?;
+    }
+    for (s, p, o) in [
+        (&metadata, named(RDF_TYPE)?, Term::NamedNode(named(METADATA_GRAPH)?)),
+        (&metadata, named(METADATA_OF)?, Term::NamedNode(subject.clone())),
+        (&subject, hash, Term::Literal(Literal::new_simple_literal(&digest))),
+    ] {
         engine
-            .insert(&Quad::new(
-                subject.clone(),
-                hash.clone(),
-                Literal::new_simple_literal(&digest),
-                said_in.clone(),
-            ))
+            .insert(&Quad::new(s.clone(), p, o, metadata.clone()))
             .map_err(|e| Error::Evaluation(e.to_string()))?;
     }
-    engine
-        .insert(&Quad::new(subject.clone(), named(RDF_TYPE)?, named(GRAPH)?, subject))
-        .map_err(|e| Error::Evaluation(e.to_string()))?;
     Ok(digest)
 }
 
 /// The canonical hash of what `graph` holds, answered and written nowhere — for a writer that puts it on the
-/// graph's row itself, in the update that writes the row.
+/// graph's metadata itself, in the update that writes it.
 pub fn digest_of(store: &Store, graph: &str, within: Option<&BTreeSet<String>>) -> Result<String, Error> {
-    let triples = stated(store.triples(graph)?);
+    let triples = store.triples(graph)?;
     let kept: Vec<Triple> = match within {
         None => triples,
         Some(within) => triples.into_iter().filter(|t| counts(t, within)).collect(),
@@ -325,14 +316,13 @@ mod tests {
         groups.iter().map(|g| g.iter().copied().collect()).collect()
     }
 
-    /// Every graph of a store hashed, bar the catalogue, by the local part of its name.
+    /// Every graph of a store hashed, bar the metadata graphs, by the local part of its name.
     fn hashed(store: &Store) -> BTreeMap<String, String> {
-        let catalogue = store.catalogue().unwrap();
         store
             .graph_names()
             .unwrap()
             .into_iter()
-            .filter(|g| Some(g) != catalogue.as_ref())
+            .filter(|g| !g.ends_with(".metadata"))
             .map(|g| {
                 let digest = hash_named_graph(store, &g, None).unwrap();
                 (g.rsplit('#').next().unwrap().to_string(), digest)
@@ -341,7 +331,7 @@ mod tests {
     }
 
     #[test]
-    fn hashing_leaves_the_catalogue_the_diff_says() {
+    fn hashing_leaves_the_store_the_diff_says() {
         for case in cases() {
             let store = snapshots::stand_in(&case);
             hashed(&store);
@@ -385,19 +375,12 @@ mod tests {
     // --- what a case cannot reach ----------------------------------------------------------------------------------
 
     fn store() -> Store {
-        let store = Store::new().unwrap();
-        store
-            .update(
-                "PREFIX orexis: <http://example.org/orexis#>
-                INSERT DATA { GRAPH <urn:test:catalogue> { <urn:test:catalogue> a orexis:CatalogueGraph } }",
-            )
-            .unwrap();
-        store
+        Store::new().unwrap()
     }
 
     fn row(store: &Store, graph: &str) -> Vec<String> {
         store
-            .quads("urn:test:catalogue")
+            .quads(&crate::metadata::named(graph))
             .unwrap()
             .into_iter()
             .filter(|q| q.subject.to_string() == format!("<{graph}>") && q.predicate.as_str() == HASH)
@@ -418,29 +401,6 @@ mod tests {
         assert_eq!(row(&store, "urn:test:a"), std::slice::from_ref(&first));
         assert_eq!(hash_named_graph(&store, "urn:test:a", None).unwrap(), first);
         assert_eq!(row(&store, "urn:test:a"), [first], "one row, not two");
-    }
-
-    #[test]
-    fn a_graph_hashes_alike_with_its_metadata_in_itself_or_not_and_its_own_hash_is_no_part_of_it() {
-        let store = store();
-        store
-            .update("INSERT DATA { GRAPH <urn:test:a> { <urn:s> <urn:p> 1 } GRAPH <urn:test:b> { <urn:s> <urn:p> 1 } }")
-            .unwrap();
-        let bare = hash_named_graph(&store, "urn:test:a", None).unwrap();
-        //  B SAYS WHAT IT IS, WHOSE, WHEN IT HOLDS AND WHAT IT HASHES TO, in itself; and mentions A, as a copy would.
-        store
-            .update(&format!(
-                "PREFIX dcterms: <http://purl.org/dc/terms/>
-                PREFIX orexis: <http://example.org/orexis#>
-                PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                INSERT DATA {{ GRAPH <urn:test:b> {{
-                  <urn:test:b> a orexis:BeliefGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived ;
-                    orexis:ownedBy <urn:me> ; orexis:hash \"{bare}\" ;
-                    dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start \"2026-01-01T12:00:00Z\"^^xsd:dateTime ] .
-                  <urn:test:a> a orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy <urn:me> . }} }}"
-            ))
-            .unwrap();
-        assert_eq!(hash_named_graph(&store, "urn:test:b", None).unwrap(), bare);
     }
 
     #[test]

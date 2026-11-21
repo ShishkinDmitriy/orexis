@@ -1,21 +1,7 @@
 --- case
 +++ expected
-@@ -29,11 +29,12 @@
-   asked:no_two_vans a coordination:QuestionGraph .
-   asked:no_two_vans a orexis:Graph .
-   asked:no_two_vans a speech:StatementGraph .
--  asked:no_two_vans dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:30+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:58:00+00:00"^^xsd:dateTime ] .
-+  asked:no_two_vans dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:30Z"^^xsd:dateTime ; orexis:start "2026-01-01T11:58:00Z"^^xsd:dateTime ] .
-   asked:no_two_vans orexis:arrivedBy orexis:Recorded .
-   coordinated:conflicts a orexis:BeliefGraph .
-   coordinated:conflicts a orexis:Graph .
-   coordinated:conflicts orexis:arrivedBy orexis:Derived .
-+  coordinated:conflicts orexis:hash "sha256:0de70c1e43a0d7a856afa2fdb6d732be5964afbb4046d7a96b21b91cd078cd1f" .
-   coordinated:conflicts orexis:ownedBy :keeper .
- }
- GRAPH :constraints {
-@@ -83,11 +84,11 @@
- }
+@@ -111,11 +111,11 @@
+ 
  GRAPH coordinated:conflicts {
    conflict:2216b9a9c788124d a coordination:Conflict .
 -  conflict:2216b9a9c788124d coordination:draw conflict:2216b9a9c788124d.round.0 .
@@ -24,8 +10,21 @@
 -  conflict:2216b9a9c788124d coordination:round 0 .
 +  conflict:2216b9a9c788124d coordination:round 1 .
    conflict:2216b9a9c788124d coordination:silent true .
--  conflict:2216b9a9c788124d coordination:since "2026-01-01T11:58:59+00:00"^^xsd:dateTime .
+-  conflict:2216b9a9c788124d coordination:since "2026-01-01T11:58:59Z"^^xsd:dateTime .
 +  conflict:2216b9a9c788124d coordination:since "2026-01-01T12:00:00Z"^^xsd:dateTime .
    conflict:2216b9a9c788124d coordination:standing true .
    conflict:2216b9a9c788124d coordination:with :peer .
  }
+@@ -124,10 +124,10 @@
+   coordinated:conflicts a orexis:BeliefGraph .
+   coordinated:conflicts a orexis:Graph .
+   coordinated:conflicts orexis:arrivedBy orexis:Derived .
++  coordinated:conflicts orexis:hash "sha256:0de70c1e43a0d7a856afa2fdb6d732be5964afbb4046d7a96b21b91cd078cd1f" .
+   coordinated:conflicts orexis:ownedBy :keeper .
+   coordinated:conflicts.metadata a orexis:MetadataGraph .
+   coordinated:conflicts.metadata orexis:metadataOf coordinated:conflicts .
+ }
+ 
+-GRAPH :catalogue {
+-}
++

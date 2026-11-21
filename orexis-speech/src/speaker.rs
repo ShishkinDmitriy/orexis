@@ -166,8 +166,8 @@ impl Speaker {
         /// EVERY STATEMENT NOTHING WAS EXTRACTED FROM YET: one no graph says it was derived from.
         const UNEXTRACTED_Q: &str = "PREFIX prov: <http://www.w3.org/ns/prov#>
         PREFIX speech: <http://example.org/orexis/speech#>
-        SELECT ?g WHERE { GRAPH ?g { ?g a speech:StatementGraph }
-                          FILTER NOT EXISTS { GRAPH ?b { ?b prov:wasDerivedFrom ?g } } } ORDER BY ?g";
+        SELECT ?g WHERE { GRAPH ?m_g { ?g a speech:StatementGraph }
+                          FILTER NOT EXISTS { GRAPH ?m_b { ?b prov:wasDerivedFrom ?g } } } ORDER BY ?g";
         let unextracted: Vec<String> = self
             .beliefs
             .rows(UNEXTRACTED_Q, &[])?
@@ -213,7 +213,7 @@ impl Speaker {
     fn arrival(&self, graph: &str) -> Result<Option<String>, Error> {
         /// HOW A STATEMENT ARRIVED, and THE KINDS IT SAYS IT IS: what is said of it.
         const ARRIVAL_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-            SELECT ?arrival WHERE { GRAPH $graph { $graph orexis:arrivedBy ?arrival } }";
+            SELECT ?arrival WHERE { GRAPH ?m_graph { $graph orexis:arrivedBy ?arrival } }";
         Ok(self
             .beliefs
             .rows(&bind(ARRIVAL_Q, &[("graph", Value::iri(graph))])?, &[])?

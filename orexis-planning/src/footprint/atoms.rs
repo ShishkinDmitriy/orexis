@@ -557,17 +557,17 @@ mod tests {
     fn stored_edges_read_the_derivations_genesis_wrote() {
         let store = empty();
         store
-        .update(
-            "PREFIX orexis: <http://example.org/orexis#>
+            .update(
+                "PREFIX orexis: <http://example.org/orexis#>
   PREFIX planning: <http://example.org/orexis/planning#>
   INSERT DATA {
   GRAPH <urn:test:derivations> {
     <urn:test:d1> a planning:Derivation ; planning:reads <urn:test:p> ; planning:writes <urn:test:q> .
     <urn:test:d2> a planning:Derivation ; planning:reads planning:Anything }
-  GRAPH <urn:test:catalogue> { <urn:test:catalogue> a orexis:CatalogueGraph . <urn:test:derivations> a planning:DerivationGraph } }",
-        )
-        .unwrap();
-        orexis::snapshots::mirrored(&store);
+  GRAPH <urn:test:said> { <urn:test:derivations> a planning:DerivationGraph } }",
+            )
+            .unwrap();
+        orexis::snapshots::mirrored(&store, "urn:test:said");
         let one = |i: &str| Some(BTreeSet::from([i.to_string()]));
         assert_eq!(
             stored_edges(&store, &["urn:test:derivations"]).unwrap(),

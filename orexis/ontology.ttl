@@ -48,11 +48,18 @@ orexis:BeliefGraph
     rdfs:label "Belief graph" ;
     rdfs:comment "What IS, and so what a possible world is made of: the world as ratified, the vocabulary and what the closure makes of it, the self, what the agent's transitions conclude of what arrives, what is extracted of what was said, a forecast and a committed step. Planning cuts every belief into what some writer of a scope can change and the rest, and reads every world against both. What the agent reads to ACT is no belief: its actions, flows, shapes, constraints, desires, wants and rules are its program, each read by its own kind (#953). There is no kind beneath it for the part that can change: what a plan forks and an effect rewrites is extracted per scope from the writers, the effects, transitions and predictions, as a search's grounds are laid (knowledge/decisions/the-state-is-what-a-scope-can-change-and-everything-known-is-belief.md); and what the kind `orexis:BeliefGraph` said besides is said by provenance, how a graph arrived and whose it is. A graph of this kind the agent DERIVED, and that is no revision, is the agent's own state: what a transition reads beside the arrival that triggers it, and the one place a transition deletes from. An instrument's reading is none: it is sensing's observation, a kind beneath `orexis:Graph` alone, and what the mind reads of it is the subject belief a transition makes (#944)." .
 
-orexis:CatalogueGraph
+orexis:MetadataGraph
     a owl:Class ;
     rdfs:subClassOf orexis:Graph ;
-    rdfs:label "Catalogue graph" ;
-    rdfs:comment "THE ONE GRAPH THAT SAYS WHAT EVERY GRAPH IS, ITSELF INCLUDED (one-catalogue-describes-every-graph-and-itself): its class, whose it is (`orexis:ownedBy`), how it arrived (`orexis:arrivedBy`), when it holds (`dcterms:temporal`, a `dcterms:PeriodOfTime` either end open) and, for a world's document, the PROV-O account of the load that made it. Written by whoever creates a graph, in the same update as the graph; the vocabulary's own instances below are transcribed into it on every start. It describes ITSELF, which is what lets a store find it without knowing its name — `Store.catalogue` asks every graph for the one that says of itself it is this — so no reader names it, and the three graphs it replaced (the classification, the periods, the provenance) were the bootstrap root's names. NO BELIEF, and the reason is use versus mention: these are statements ABOUT graphs, so merged into the default graph they would answer open patterns that mean something else — `?device a ?class` would return graphs — and a period is a fact that moves, which in every possible world would move the invariant signature and kill a kept cone. The door reads it and hands a rule a dataset; the rule learns nothing of it." .
+    rdfs:label "Metadata graph" ;
+    rdfs:comment "WHAT ONE GRAPH IS, SAID IN A GRAPH OF ITS OWN BESIDE IT (knowledge/domain/kernel/metadata.md): the kinds the graph is, whose it is (`orexis:ownedBy`), how it arrived (`orexis:arrivedBy`), what it holds by hash (`orexis:hash`), what it was derived from, when it holds (`dcterms:temporal`, a `dcterms:PeriodOfTime` either end open) and what a package says of the graph in its own words. One per graph, written by whoever creates the graph, in the same update, and gone with it. It says of itself only that it is one and which graph it is of (`orexis:metadataOf`), so nothing describes a metadata graph in turn. NO BELIEF: these are statements ABOUT a graph, so the graph holds its facts alone and a reader of it is handed nothing else." .
+
+orexis:metadataOf
+    a owl:ObjectProperty ;
+    rdfs:domain orexis:MetadataGraph ;
+    rdfs:range orexis:Graph ;
+    rdfs:label "metadata of" ;
+    rdfs:comment "The graph a metadata graph says the metadata of, stated in the metadata graph under its own name: one graph, and a graph has one metadata graph." .
 
 orexis:Graph
     a owl:Class ;
@@ -288,7 +295,7 @@ orexis:hash
     rdfs:domain orexis:Graph ;
     rdfs:range xsd:string ;
     rdfs:label "hash" ;
-    rdfs:comment "The canonical digest of what a graph holds, on its catalogue row beside what it is — written by whoever lays or forks the graph (a ground, a possible world), and by every writer of a belief or a prediction as it finishes, the boot of every document it put included, and replaced when the graph is re-hashed, since a graph has one content. A belief changes in place under its name, so its row's hash is how a copy made of it knows it is still right, and a test after every world's tests holds every belief and prediction to hash as its row says (a-graph-changes-in-place-and-its-row-says-what-it-holds). Two graphs with one hash hold the same facts whatever their names, which is how a search knows a fork repeated a world it had seen, and how the pass after identifies the present among the worlds the last one imagined: the ground just laid is the world whose hash it repeats, never the one it is named like (the-future-is-a-cone-and-the-present-is-identified-in-it)." .
+    rdfs:comment "The canonical digest of what a graph holds, in its metadata beside what it is — written by whoever lays or forks the graph (a ground, a possible world), and by every writer of a belief or a prediction as it finishes, the boot of every document it put included, and replaced when the graph is re-hashed, since a graph has one content. A belief changes in place under its name, so its row's hash is how a copy made of it knows it is still right, and a test after every world's tests holds every belief and prediction to hash as its row says (a-graph-changes-in-place-and-its-row-says-what-it-holds). Two graphs with one hash hold the same facts whatever their names, which is how a search knows a fork repeated a world it had seen, and how the pass after identifies the present among the worlds the last one imagined: the ground just laid is the world whose hash it repeats, never the one it is named like (the-future-is-a-cone-and-the-present-is-identified-in-it)." .
 
 orexis:localId
     a owl:DatatypeProperty ;

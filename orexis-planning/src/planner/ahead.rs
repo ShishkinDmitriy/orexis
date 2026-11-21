@@ -13,7 +13,6 @@ use oxsdatatypes::{DateTime, DayTimeDuration};
 use orexis::Error;
 use orexis::bind::{Value, bind};
 use orexis::clock::isoformat;
-use orexis::metadata::stated;
 use orexis::ontology::BELIEF;
 use orexis::store::{Store, iri};
 
@@ -105,7 +104,7 @@ fn steps_of(beliefs: &Store, plan: &str) -> Result<BTreeMap<String, Step>, Error
         };
         let triples = |graph: Option<String>| -> Result<Vec<Triple>, Error> {
             match graph {
-                Some(g) => Ok(stated(beliefs.triples(&g)?)),
+                Some(g) => Ok(beliefs.triples(&g)?),
                 None => Ok(Vec::new()),
             }
         };
@@ -130,7 +129,7 @@ impl Planner {
         const LIVE_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX orexis: <http://example.org/orexis#>
         SELECT ?plan ?want ?head ?taken WHERE {
-          GRAPH ?plan { ?plan a orexis:PlanGraph . ?root execution:pursues ?want }
+          GRAPH ?m_plan { ?plan a orexis:PlanGraph } GRAPH ?plan { ?root execution:pursues ?want }
           OPTIONAL { GRAPH ?g { ?i a execution:Intention ; execution:adopts ?plan ; execution:by ?head .
                                 FILTER NOT EXISTS { ?i execution:resolvedAt ?done }
                                 OPTIONAL { ?act execution:of ?head ; execution:taken true ; execution:takenAt ?taken } } }
@@ -296,44 +295,30 @@ impl Planner {
     }
 
     /// Say that the want graph `graph` holds from `begins`, or from the first where it begins in the present: its
-    /// period, on its row and in the graph itself, written again where it says another instant.
+    /// period, in its metadata, written again where it says another instant.
     fn begin(&self, graph: &str, begins: Option<DateTime>) -> Result<(), Error> {
-        const BEGINS_Q: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
-        PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?start WHERE { GRAPH $graph { $graph dcterms:temporal/orexis:start ?start } }"#;
-        /// THE PERIOD TAKEN BACK where `$in` says it: on the graph's row, and in the graph itself.
+        /// THE PERIOD TAKEN BACK where the graph's metadata says it.
         const UNBEGIN_U: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
         DELETE { GRAPH $in { $graph dcterms:temporal ?period . ?period ?p ?o } }
         WHERE  { GRAPH $in { $graph dcterms:temporal ?period . ?period ?p ?o } }"#;
-        let Some(catalogue) = self.beliefs.catalogue()? else {
+        let Some(metadata) = self.beliefs.metadata_of(graph)? else {
             return Ok(());
         };
-        let marks = [("graph", Value::iri(graph))];
-        let said = self
-            .beliefs
-            .rows(&bind(BEGINS_Q, &marks)?, &[])?
-            .first()
-            .and_then(|r| r.get("start"))
-            .map(lexical)
-            .transpose()?;
+        let said = crate::world_at::period_of(&self.beliefs, graph)?.map(|(start, _)| start);
         if said == begins {
             return Ok(());
         }
-        for said_in in [catalogue.as_str(), graph] {
-            self.beliefs.update(&bind(
-                UNBEGIN_U,
-                &[("in", Value::iri(said_in)), ("graph", Value::iri(graph))],
-            )?)?;
-        }
+        self.beliefs.update(&bind(
+            UNBEGIN_U,
+            &[("in", Value::iri(metadata.as_str())), ("graph", Value::iri(graph))],
+        )?)?;
         if let Some(begins) = begins {
             let begins = isoformat(begins);
             self.beliefs.update(&format!(
                 "PREFIX dcterms: <http://purl.org/dc/terms/>
                  PREFIX orexis: <http://example.org/orexis#>
                  PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                 INSERT DATA {{ GRAPH <{catalogue}> {{ <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ; \
-                 orexis:start \"{begins}\"^^xsd:dateTime ] }}
-                 GRAPH <{graph}> {{ <{graph}> a orexis:Graph ; dcterms:temporal [ a dcterms:PeriodOfTime ; \
+                 INSERT DATA {{ GRAPH <{metadata}> {{ <{graph}> dcterms:temporal [ a dcterms:PeriodOfTime ; \
                  orexis:start \"{begins}\"^^xsd:dateTime ] }} }}"
             ))?;
         }

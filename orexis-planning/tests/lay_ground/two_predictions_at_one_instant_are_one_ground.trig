@@ -43,9 +43,24 @@ GRAPH :ontology {
   orexis:ForecastGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :keeper a orexis:Agent .
   :tank1 a :Tank .
+}
+
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
 }
 
 GRAPH :sensed {
@@ -53,9 +68,28 @@ GRAPH :sensed {
   :tank1 :temperature 20 .
 }
 
+GRAPH :sensed.metadata {
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed orexis:ownedBy :keeper .
+  :sensed.metadata a orexis:MetadataGraph .
+  :sensed.metadata orexis:metadataOf :sensed .
+}
+
 #  THE LEVEL DROPS — and takes the standing reading with it.
 GRAPH :dip {
   :tank1 :level 5 .
+}
+
+GRAPH :dip.metadata {
+  :dip a orexis:BeliefGraph .
+  :dip a orexis:ForecastGraph .
+  :dip a orexis:Graph .
+  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00Z"^^xsd:dateTime ] .
+  :dip orexis:arrivedBy orexis:Recorded .
+  :dip orexis:ownedBy :keeper .
+  :dip.metadata a orexis:MetadataGraph .
+  :dip.metadata orexis:metadataOf :dip .
 }
 
 #  THE TEMPERATURE RISES AT THE SAME INSTANT. It says nothing about the level, and its
@@ -64,27 +98,16 @@ GRAPH :heat {
   :tank1 :temperature 40 .
 }
 
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :dip a orexis:Graph .
-  :dip a orexis:BeliefGraph .
-  :dip a orexis:ForecastGraph .
-  :dip orexis:arrivedBy orexis:Recorded .
-  :dip dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
-  :dip orexis:ownedBy :keeper .
-  :heat a orexis:Graph .
+GRAPH :heat.metadata {
   :heat a orexis:BeliefGraph .
   :heat a orexis:ForecastGraph .
+  :heat a orexis:Graph .
+  :heat dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00Z"^^xsd:dateTime ] .
   :heat orexis:arrivedBy orexis:Recorded .
-  :heat dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T13:00:00+00:00"^^xsd:dateTime ] .
   :heat orexis:ownedBy :keeper .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
-  :sensed a orexis:BeliefGraph .
-  :sensed a orexis:Graph .
-  :sensed orexis:ownedBy :keeper .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :heat.metadata a orexis:MetadataGraph .
+  :heat.metadata orexis:metadataOf :heat .
+}
+
+GRAPH :catalogue {
 }

@@ -26,7 +26,7 @@ pub fn withdraw(
     const DERIVED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?w WHERE {
-      GRAPH ?g { ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived . ?w a planning:Want } }";
+      GRAPH ?m_g { ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } GRAPH ?g { ?w a planning:Want } }";
     let standing: BTreeSet<String> = match wanted {
         Some(_) => store.rows(DERIVED_Q, &[])?.iter().filter_map(|r| iri(r, "w")).collect(),
         None => BTreeSet::new(),
@@ -66,17 +66,20 @@ pub fn withdraw(
 fn forget_search(store: &Store, uri: &str) -> Result<(), Error> {
     const WEIGHINGS_U: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
-    DELETE { GRAPH ?cat { ?x ?p ?o . ?v ?vp ?vo } }
-    WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
-                          ?x a planning:Weighing ; planning:for $want ; ?p ?o .
-                          OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }";
+    DELETE { GRAPH $cone { ?x ?p ?o . ?v ?vp ?vo } }
+    WHERE  { GRAPH $cone { ?x a planning:Weighing ; planning:for $want ; ?p ?o .
+                           OPTIONAL { ?x planning:violation ?v . ?v ?vp ?vo } } }";
     const PLAN_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?plan WHERE {
-      GRAPH ?plan { ?plan a planning:PlanGraph . ?root a planning:Plan ; planning:for $want } }";
+      GRAPH ?m_plan { ?plan a planning:PlanGraph } GRAPH ?plan { ?root a planning:Plan ; planning:for $want } }";
     const STEP_GRAPHS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         SELECT ?g WHERE { GRAPH $plan { ?step execution:adds|execution:retracts ?g } }";
-    store.update(&bind(WEIGHINGS_U, &[("want", Value::iri(uri))])?)?;
+    let cone = crate::world_at::cone_of(store)?;
+    store.update(&bind(
+        WEIGHINGS_U,
+        &[("want", Value::iri(uri)), ("cone", Value::iri(cone))],
+    )?)?;
     for row in store.rows(&bind(PLAN_Q, &[("want", Value::iri(uri))])?, &[])? {
         let Some(plan) = iri(&row, "plan") else { continue };
         for g in store.rows(&bind(STEP_GRAPHS_Q, &[("plan", Value::iri(plan.as_str()))])?, &[])? {
@@ -95,8 +98,8 @@ pub fn forget_want(store: &Store, uri: &str) -> Result<(), Error> {
     const HOME_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?g ?kind (COUNT(DISTINCT ?w) AS ?wants) WHERE {
-      GRAPH ?g { $want a planning:Want . ?w a planning:Want . ?g a ?kind .
-                 VALUES ?kind { planning:WantGraph orexis:RecordGraph } } }
+      GRAPH ?g { $want a planning:Want . ?w a planning:Want }
+      GRAPH ?m_g { ?g a ?kind . VALUES ?kind { planning:WantGraph orexis:RecordGraph } } }
     GROUP BY ?g ?kind";
     let mut home: Vec<(String, String, usize)> = store
         .rows(&bind(HOME_Q, &[("want", Value::iri(uri))])?, &[])?
@@ -141,6 +144,7 @@ mod tests {
     use crate::find_wants::{Criteria, find_wants};
 
     use super::*;
+    use orexis::snapshots::SAID_TOGETHER;
 
     fn set(uris: &[&str]) -> BTreeSet<String> {
         uris.iter().map(|u| u.to_string()).collect()
@@ -180,12 +184,10 @@ mod tests {
         );
         assert!(found(&store).is_empty());
         assert_eq!(
-            orexis::metadata::stated_quads(
-                store
-                    .quads("http://example.org/orexis/market#obligations/gardener/owed")
-                    .unwrap()
-            )
-            .len(),
+            store
+                .quads("http://example.org/orexis/market#obligations/gardener/owed")
+                .unwrap()
+                .len(),
             1,
             "and the record keeps what else it holds"
         );
@@ -213,12 +215,12 @@ mod tests {
         assert!(
             store
                 .rows(
-                    &format!("SELECT ?p WHERE {{ GRAPH <urn:test:catalogue> {{ <{graph}> ?p ?o }} }}"),
+                    &format!("SELECT ?p WHERE {{ GRAPH <urn:test:said> {{ <{graph}> ?p ?o }} }}"),
                     &[]
                 )
                 .unwrap()
                 .is_empty(),
-            "and the catalogue says nothing of its graph"
+            "and nothing is said of its graph"
         );
     }
 
@@ -228,7 +230,7 @@ mod tests {
         derived(&store, "urn:test:a", at(), None);
         derived(&store, "urn:test:b", at(), None);
         forget_want(&store, "urn:test:a").unwrap();
-        orexis::snapshots::mirrored(&store);
+        orexis::snapshots::mirrored(&store, SAID_TOGETHER);
         assert_eq!(
             found(&store),
             ["urn:test:b"],

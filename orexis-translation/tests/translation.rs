@@ -347,12 +347,12 @@ fn a_query_that_could_do_anything_but_read_the_chats_graphs_is_refused_with_why(
 }
 
 #[test]
-fn a_query_reads_the_kinds_it_names_and_the_catalogue_is_never_merged_into_them() {
+fn a_query_reads_the_kinds_it_names_and_their_metadata_is_never_merged_into_them() {
     let r = readable();
     let found = r.query(
         "PREFIX orexis: <http://example.org/orexis#>
             PREFIX speech: <http://example.org/orexis/speech#>
-            SELECT DISTINCT ?g ?how WHERE { GRAPH ?g { ?c a speech:Chat } GRAPH ?cat { ?g orexis:arrivedBy ?how } }",
+            SELECT DISTINCT ?g ?how WHERE { GRAPH ?g { ?c a speech:Chat } GRAPH ?m { ?g orexis:arrivedBy ?how } }",
         &beliefs(),
     );
     assert!(
@@ -886,7 +886,7 @@ impl<'s> Seeker<'s> {
                 "PREFIX orexis: <http://example.org/orexis#>
                  PREFIX : <http://example.org/orexis/world/viewing#>
                  \nSELECT ?flat ?at ?owner WHERE { GRAPH ?g { ?flat :viewingAt ?at } \
-                 GRAPH ?c { ?c a orexis:CatalogueGraph . ?g a orexis:BeliefGraph OPTIONAL { ?g orexis:ownedBy ?owner } } }",
+                 GRAPH ?m { ?g a orexis:BeliefGraph OPTIONAL { ?g orexis:ownedBy ?owner } } }",
                 &[],
             )
             .unwrap();
@@ -956,7 +956,7 @@ fn a_persons_prose_becomes_a_statement_the_agent_hears_and_believes_as_the_world
         .rows(
             &format!(
                 "PREFIX speech: <http://example.org/orexis/speech#>
-                    SELECT ?by WHERE {{ GRAPH <{0}> {{ <{0}> speech:saidBy ?by }} }}",
+                    SELECT ?by WHERE {{ GRAPH ?m_0 {{ <{0}> speech:saidBy ?by }} }}",
                 statements[0]
             ),
             &[],
@@ -1217,7 +1217,13 @@ fn a_question_is_answered_by_as_many_queries_as_it_needs_and_writes_nothing() {
         .unwrap()
         .into_iter()
         .collect();
-    let new: std::collections::BTreeSet<String> = graphs(&store).difference(&before).cloned().collect();
+    let said_of: std::collections::BTreeSet<String> =
+        prose.iter().filter_map(|g| store.metadata_of(g).unwrap()).collect();
+    let new: std::collections::BTreeSet<String> = graphs(&store)
+        .difference(&before)
+        .filter(|g| !said_of.contains(*g))
+        .cloned()
+        .collect();
     assert_eq!(
         (new.len(), new.is_subset(&prose)),
         (2, true),

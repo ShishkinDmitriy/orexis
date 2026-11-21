@@ -24,7 +24,7 @@ the agent acting for it may share a local id, and only one of them is an agent.
 
 # What is its own
 
-Its store, held in a volume nothing else mounts, and in it the graphs the catalogue says are its
+Its store, held in a volume nothing else mounts, and in it the graphs whose metadata says they are its
 (`orexis:ownedBy`): the one saying it is the [self](/domain/kernel/self.md), the documents of its
 world that say they are its, the state it senses and revises, the wants derived for it, the
 intentions it walks. A world of several agents states each

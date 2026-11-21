@@ -133,8 +133,8 @@ fn the_boot_is_written_as_the_agent_believes_it_and_a_desire_is_told_from_wants_
             &std::fs::read(&file).unwrap(),
         )
         .unwrap();
-    let QueryResults::Boolean(catalogued) = SparqlEvaluator::new()
-        .parse_query("PREFIX orexis: <http://example.org/orexis#> ASK { GRAPH ?c { ?c a orexis:CatalogueGraph } }")
+    let QueryResults::Boolean(described) = SparqlEvaluator::new()
+        .parse_query("PREFIX orexis: <http://example.org/orexis#> ASK { GRAPH ?m { ?m orexis:metadataOf ?g . ?g a orexis:OntologyGraph } }")
         .unwrap()
         .on_store(&store)
         .execute()
@@ -142,7 +142,7 @@ fn the_boot_is_written_as_the_agent_believes_it_and_a_desire_is_told_from_wants_
     else {
         unreachable!()
     };
-    assert!(catalogued, "the boot written holds no catalogue");
+    assert!(described, "the boot written says what none of its graphs is");
     std::fs::remove_dir_all(&dir).unwrap();
     let world = Path::new(TREE).join("world/greenhouse");
     assert!(

@@ -279,9 +279,9 @@ impl Observer {
         PREFIX prov: <http://www.w3.org/ns/prov#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
         SELECT ?g WHERE {
-          GRAPH ?g { ?g a sensing:ObservationGraph ; orexis:arrivedBy orexis:Received
+          GRAPH ?m_g { ?g a sensing:ObservationGraph ; orexis:arrivedBy orexis:Received
                      OPTIONAL { ?g dcterms:temporal/orexis:start ?start } }
-          FILTER NOT EXISTS { GRAPH ?r { ?r prov:wasDerivedFrom ?g ; a sensing:ObservationGraph } } }
+          FILTER NOT EXISTS { GRAPH ?m_r { ?r prov:wasDerivedFrom ?g ; a sensing:ObservationGraph } } }
         ORDER BY ?start ?g";
         self.due = self
             .beliefs

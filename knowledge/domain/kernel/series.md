@@ -96,8 +96,8 @@ loaded, no metrics part hears anything, and an event only it would hear is never
 | sensing | `received`, an observation written: `interval_s`, `cadence_s`; `sensor`; `silence`, each ask: level `silent`; `doubted`, each ask, per sensor said silent or stuck: levels `silent`, `stuck`, and nought on both once for one doubted no longer; `sensor` |
 | belief | `revise`, a revision pass: `sources`, `executions`, `cut`, `duration_s`; `revisions`, after one: levels `revisions`, `unsettled` |
 
-**A level is read where its owner looks.** The imaginaria copy the belief base's readings and its
-catalogue, so a read run over every store would count one silent probe once per scope; a level is
+**A level is read where its owner looks.** The imaginaria copy the belief base's readings and their
+metadata, so a read run over every store would count one silent probe once per scope; a level is
 read by the one object that holds its store — the Planner its imaginaria, the executor and the
 deliberator the belief base — when it says the event.
 

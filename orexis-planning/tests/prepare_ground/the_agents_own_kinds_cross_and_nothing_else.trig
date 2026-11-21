@@ -29,25 +29,43 @@ GRAPH :world {
   :tank1 a :Tank .
 }
 
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
+}
+
 GRAPH :sensed {
   :tank1 :level 5 .
+}
+
+GRAPH :sensed.metadata {
+  :sensed a orexis:BeliefGraph .
+  :sensed a orexis:Graph .
+  :sensed orexis:ownedBy :keeper .
+  :sensed.metadata a orexis:MetadataGraph .
+  :sensed.metadata orexis:metadataOf :sensed .
 }
 
 GRAPH :scratch {
   :note :says "a working graph of no kind the search asks for" .
 }
 
+GRAPH :scratch.metadata {
+  :scratch a orexis:Graph .
+  :scratch orexis:ownedBy :keeper .
+  :scratch.metadata a orexis:MetadataGraph .
+  :scratch.metadata orexis:metadataOf :scratch .
+}
+
 GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
+}
+
+GRAPH :ontology.metadata {
   :ontology a orexis:BeliefGraph .
   :ontology a orexis:Graph .
   :ontology a orexis:OntologyGraph .
-  :scratch a orexis:Graph .
-  :scratch orexis:ownedBy :keeper .
-  :sensed a orexis:BeliefGraph .
-  :sensed a orexis:Graph .
-  :sensed orexis:ownedBy :keeper .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
 }

@@ -14,14 +14,34 @@ GRAPH :ontology {
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :here {
   :tank :holds :water .
   :tank :level 5 .
 }
 
+GRAPH :here.metadata {
+  :here a orexis:Graph .
+  :here.metadata a orexis:MetadataGraph .
+  :here.metadata orexis:metadataOf :here .
+}
+
 GRAPH :there {
   :tank :holds :water .
   :tank :level 5 .
+}
+
+GRAPH :there.metadata {
+  :there a orexis:Graph .
+  :there.metadata a orexis:MetadataGraph .
+  :there.metadata orexis:metadataOf :there .
 }
 
 GRAPH :elsewhere {
@@ -30,13 +50,11 @@ GRAPH :elsewhere {
   :tank :level 5 .
 }
 
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
+GRAPH :elsewhere.metadata {
   :elsewhere a orexis:Graph .
-  :here a orexis:Graph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
-  :there a orexis:Graph .
+  :elsewhere.metadata a orexis:MetadataGraph .
+  :elsewhere.metadata orexis:metadataOf :elsewhere .
+}
+
+GRAPH :catalogue {
 }

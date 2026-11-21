@@ -12,8 +12,8 @@ from urllib.parse import unquote, urlparse
 
 import pyoxigraph as ox
 
-from .ontology import BELIEF, CATALOGUE_GRAPH, CLOSURE_GRAPH, DERIVED, OREXIS, ROLE, SELF_GRAPH
-from .store import (answer, classify, close_catalogue, closed, document, forget_graph, graphs_of, imports_of, kinds_in,
+from .ontology import BELIEF, CLOSURE_GRAPH, DERIVED, OREXIS, ROLE, SELF_GRAPH
+from .store import (answer, classify, close_kinds, closed, document, forget_graph, graphs_of, imports_of, kinds_in,
                     put_document, rows, update, whose, DocumentRefused)
 
 log = logging.getLogger("documents")
@@ -251,7 +251,7 @@ def known(store: ox.Store, kinds) -> bool:
 def read_with_imports(paths: list[Path]) -> list[tuple[Path, ox.Store]]:
     """Every document `paths` names and every one they import, each read once, in the order
     met: a world imports the domains it speaks, and a domain its own documents. An import that
-    is no `file:` IRI names nothing a boot can read, and stays a row in the catalogue."""
+    is no `file:` IRI names nothing a boot can read, and stays a statement of its document."""
     read, seen, queue = [], set(), [p.resolve() for p in paths]
     while queue:
         path = queue.pop(0)
@@ -339,9 +339,8 @@ def world_of(world: Path, others=frozenset()) -> ox.Store:
     so every package's documents are read: this is every reader's world, not one agent's.
     A graph of a kind in `others`, which the caller reads itself, is passed over at DEBUG."""
     store = ox.Store()
-    update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}")
     _put_documents(store, Path(world).resolve(), others=frozenset(others))
-    close_catalogue(store)
+    close_kinds(store)
     return store
 
 def read_by_packages(world: Path, packages) -> ox.Store:
@@ -349,9 +348,8 @@ def read_by_packages(world: Path, packages) -> ox.Store:
     an agent runs declare, with the world's, which is what a graph is read by: what an agent's boot holds, each package
     it runs bringing its documents as it joins."""
     store = ox.Store()
-    update(store, f"INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ <{CATALOGUE_GRAPH}> a orexis:CatalogueGraph , orexis:Graph }} }}")
     _put(store, Path(world).resolve(), read_with_imports(documents(Path(world).resolve(), packages)), [])
-    close_catalogue(store)
+    close_kinds(store)
     return store
 
 def selves(store: ox.Store) -> list[str]:

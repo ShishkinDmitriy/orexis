@@ -11,7 +11,6 @@ pub const RECEIVED: &str = "http://example.org/orexis#Received";
 pub const RECORDED: &str = "http://example.org/orexis#Recorded";
 
 /// The graph kinds the kernel declares.
-pub const CATALOGUE: &str = "http://example.org/orexis#CatalogueGraph";
 pub const ONTOLOGY: &str = "http://example.org/orexis#OntologyGraph";
 pub const BELIEF: &str = "http://example.org/orexis#BeliefGraph";
 pub const FORECAST: &str = "http://example.org/orexis#ForecastGraph";
@@ -39,8 +38,11 @@ pub const PERIOD: &str = "http://purl.org/dc/terms/PeriodOfTime";
 pub const DEPLOYMENT: &str = "http://example.org/orexis#DeploymentGraph";
 pub const ROLE: &str = "http://example.org/orexis#Role";
 
-/// The two graphs a writer names: the catalogue, created by genesis alone, and the vocabulary's closure.
-pub const CATALOGUE_GRAPH: &str = "http://example.org/orexis/graph/catalogue";
+/// What says what a graph is, and the graph it says it of.
+pub const METADATA_GRAPH: &str = "http://example.org/orexis#MetadataGraph";
+pub const METADATA_OF: &str = "http://example.org/orexis#metadataOf";
+
+/// The one graph a writer names: the vocabulary's closure.
 pub const CLOSURE_GRAPH: &str = "http://example.org/orexis/graph/ontology/closure";
 
 /// An IRI's local part, the name a parameter answers to as a variable, a token and a column.

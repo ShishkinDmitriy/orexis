@@ -19,11 +19,26 @@ GRAPH :ontology {
   orexis:BeliefGraph rdfs:subClassOf orexis:Graph .
 }
 
+GRAPH :ontology.metadata {
+  :ontology a orexis:BeliefGraph .
+  :ontology a orexis:Graph .
+  :ontology a orexis:OntologyGraph .
+  :ontology.metadata a orexis:MetadataGraph .
+  :ontology.metadata orexis:metadataOf :ontology .
+}
+
 GRAPH :world {
   :keeper a orexis:Agent .
   :zz :high 0.3 .
   :zz :low 0.1 .
   :zz a :Pot .
+}
+
+GRAPH :world.metadata {
+  :world a orexis:BeliefGraph .
+  :world a orexis:Graph .
+  :world.metadata a orexis:MetadataGraph .
+  :world.metadata orexis:metadataOf :world .
 }
 
 GRAPH :rules {
@@ -38,24 +53,27 @@ GRAPH :rules {
       CONSTRUCT { ?obs :side :Wrong } WHERE { ?obs a :Observation }""" ; sh:deactivated true ] .
 }
 
+GRAPH :rules.metadata {
+  :rules a orexis:Graph .
+  :rules a sh:RulesGraph .
+  :rules.metadata a orexis:MetadataGraph .
+  :rules.metadata orexis:metadataOf :rules .
+}
+
 GRAPH :sensed {
   :obs1 :of :zz .
   :obs1 :reads 0.05 .
   :obs1 a :Observation .
 }
 
-GRAPH :catalogue {
-  :catalogue a orexis:CatalogueGraph .
-  :catalogue a orexis:Graph .
-  :ontology a orexis:BeliefGraph .
-  :ontology a orexis:Graph .
-  :ontology a orexis:OntologyGraph .
-  :rules a orexis:Graph .
-  :rules a sh:RulesGraph .
+GRAPH :sensed.metadata {
   :sensed a orexis:BeliefGraph .
   :sensed a orexis:Graph .
   :sensed orexis:arrivedBy orexis:Received .
   :sensed orexis:ownedBy :keeper .
-  :world a orexis:BeliefGraph .
-  :world a orexis:Graph .
+  :sensed.metadata a orexis:MetadataGraph .
+  :sensed.metadata orexis:metadataOf :sensed .
+}
+
+GRAPH :catalogue {
 }

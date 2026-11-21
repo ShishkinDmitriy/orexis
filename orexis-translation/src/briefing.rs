@@ -77,7 +77,7 @@ pub fn briefing(
 pub fn turtle(store: &Store, graphs: &[String], prefixes: &[(String, String)]) -> Result<String, Error> {
     let mut triples: Vec<Triple> = Vec::new();
     for g in graphs {
-        triples.extend(orexis::metadata::stated(store.triples(g)?));
+        triples.extend(store.triples(g)?);
     }
     turtle_of(&triples, prefixes)
 }

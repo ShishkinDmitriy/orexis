@@ -3,7 +3,7 @@ type: Service
 title: Runtime
 description: >-
   The process of Agent 0.2.0: one agent, one world, booted from the world's files into a store
-  whose catalogue says what every graph is, then run as its packages' tasks, each woken
+  where each graph's metadata says what it is, then run as its packages' tasks, each woken
   by what triggers it, and stopped when no desire is held, no want stands and
   no intention walks, or, for a planner that is no executor, when every want standing has a plan
   published; an agent holding a desire runs for good. `orexis/src/task.rs`.
@@ -19,11 +19,10 @@ process told one identifier and given one world. It has two acts.
 in the world's directory, whatever it is called, are read the same way. A Turtle file is one graph
 named by its own IRI, and `<> a planning:DesireGraph` in it says what that graph is — the Linked
 Data reading, where a document describes itself. A TriG file names its graphs and states their
-kinds in its default graph, as a nanopublication's head does. The rows about a graph go into the
-graph, where a reader asks them and they are told from the facts it states by type, and the same to
-the catalogue while it stands ([metadata](/domain/kernel/metadata.md)). A document says what its graphs are and nothing about how they arrived or whose
+kinds in its default graph, as a nanopublication's head does. What a document says of a graph goes into that
+graph's metadata graph, where a reader asks it ([metadata](/domain/kernel/metadata.md)). A document says what its graphs are and nothing about how they arrived or whose
 they are: the loader writes `orexis:Asserted`, and the owner where a graph is the agent's. A
-graph stating no kind, one claiming to be the catalogue and one stating an arrival are refused
+graph stating no kind, one claiming to be a metadata graph and one stating an arrival are refused
 (`store.document`), and so is one stating the [self](/domain/kernel/self.md) anywhere but once in a
 self graph. Whose a graph of an agent's own is, its document says — `<> orexis:ownedBy` beside its
 kind, or the self a self graph states — and never its file's name.
@@ -48,8 +47,8 @@ world graph passed over for a kind only such a package declares looked at a seco
 mover, a planner alone, loads planning and nothing else. Then the world's other
 graphs that say they are this agent's — the desires with their met-tests and estimates, the first
 state — owned by it; another agent's are passed over, and one naming nobody, or no agent of the
-world, is refused. The catalogue is closed and, for a planner, `scope_actions` writes the scopes. A
-store that already holds a catalogue is a volume the agent
+world, is refused. The kinds are closed and, for a planner, `scope_actions` writes the scopes. A
+store that already says what a graph is, is a volume the agent
 has lived in: every common graph a document put in is forgotten and read again, with the
 closure, which is how an updated ontology or rule set reaches an agent that has lived; the graphs
 the agent owns are left as they are, since they are its beliefs now — the self graph among them, so

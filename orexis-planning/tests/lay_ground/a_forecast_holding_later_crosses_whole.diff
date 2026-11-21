@@ -1,45 +1,81 @@
 --- case
 +++ expected
-@@ -13,7 +13,6 @@
+@@ -15,25 +15,25 @@
+ GRAPH :world.metadata {
+   :world a orexis:BeliefGraph .
+   :world a orexis:Graph .
++  :world planning:cutBy "sha256:9ffbf0f1957b4d4ed3ad2786b222f8d35f71c950ff928ca71d2509cf13a7af88" .
+   :world.metadata a orexis:MetadataGraph .
+   :world.metadata orexis:metadataOf :world .
  }
  
  GRAPH :forecast {
 -  :outside :warmth 28 .
  }
  
- GRAPH :catalogue {
-@@ -21,10 +20,33 @@
-   :catalogue a orexis:Graph .
+ GRAPH :forecast.metadata {
    :forecast a orexis:BeliefGraph .
    :forecast a orexis:Graph .
--  :forecast dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T18:00:00+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T15:00:00+00:00"^^xsd:dateTime ] .
-+  :forecast dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T18:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T15:00:00Z"^^xsd:dateTime ] .
+   :forecast dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T18:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T15:00:00Z"^^xsd:dateTime ] .
 +  :forecast planning:cutBy "sha256:9ffbf0f1957b4d4ed3ad2786b222f8d35f71c950ff928ca71d2509cf13a7af88" .
-+  :forecast.changeable a planning:ChangeableGraph .
-+  :forecast.changeable orexis:arrivedBy orexis:Derived .
-+  :forecast.changeable prov:wasDerivedFrom :forecast .
+   :forecast.metadata a orexis:MetadataGraph .
+   :forecast.metadata orexis:metadataOf :forecast .
+ }
+ 
+-GRAPH :catalogue {
+-}
+ 
++
+ GRAPH :ontology.metadata {
    :ontology a orexis:BeliefGraph .
    :ontology a orexis:Graph .
-   :ontology a orexis:OntologyGraph .
-   :world a orexis:BeliefGraph .
-   :world a orexis:Graph .
-+  :world planning:cutBy "sha256:9ffbf0f1957b4d4ed3ad2786b222f8d35f71c950ff928ca71d2509cf13a7af88" .
+@@ -41,3 +41,49 @@
+   :ontology.metadata a orexis:MetadataGraph .
+   :ontology.metadata orexis:metadataOf :ontology .
+ }
++
++
++GRAPH <http://example.org/orexis/graph/cone> {
++  ground:2026-01-01T150000p0000 prov:wasDerivedFrom ground:2026-01-01T120000p0000 .
++}
++
++GRAPH <http://example.org/orexis/graph/cone.metadata> {
++  <http://example.org/orexis/graph/cone.metadata> a orexis:MetadataGraph .
++  <http://example.org/orexis/graph/cone.metadata> orexis:metadataOf <http://example.org/orexis/graph/cone> .
++  <http://example.org/orexis/graph/cone> a planning:ConeGraph .
++  <http://example.org/orexis/graph/cone> orexis:arrivedBy orexis:Derived .
++}
++
++GRAPH ground:2026-01-01T120000p0000.metadata {
 +  ground:2026-01-01T120000p0000 a planning:GroundGraph .
 +  ground:2026-01-01T120000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T15:00:00Z"^^xsd:dateTime ; orexis:start "2026-01-01T12:00:00Z"^^xsd:dateTime ] .
 +  ground:2026-01-01T120000p0000 orexis:arrivedBy orexis:Derived .
 +  ground:2026-01-01T120000p0000 orexis:hash "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" .
-+  ground:2026-01-01T150000p0000 a planning:GroundGraph .
-+  ground:2026-01-01T150000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T15:00:00Z"^^xsd:dateTime ] .
-+  ground:2026-01-01T150000p0000 orexis:arrivedBy orexis:Derived .
-+  ground:2026-01-01T150000p0000 orexis:hash "sha256:eddad6a55f0cacd05aa4e7c595637c1f88f63469a9246248f063efa1677597db" .
-+  ground:2026-01-01T150000p0000 prov:wasDerivedFrom ground:2026-01-01T120000p0000 .
++  ground:2026-01-01T120000p0000.metadata a orexis:MetadataGraph .
++  ground:2026-01-01T120000p0000.metadata orexis:metadataOf ground:2026-01-01T120000p0000 .
 +}
-+
 +
 +GRAPH ground:2026-01-01T150000p0000 {
 +  :outside :warmth 28 .
 +}
 +
++GRAPH ground:2026-01-01T150000p0000.metadata {
++  ground:2026-01-01T150000p0000 a planning:GroundGraph .
++  ground:2026-01-01T150000p0000 dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start "2026-01-01T15:00:00Z"^^xsd:dateTime ] .
++  ground:2026-01-01T150000p0000 orexis:arrivedBy orexis:Derived .
++  ground:2026-01-01T150000p0000 orexis:hash "sha256:eddad6a55f0cacd05aa4e7c595637c1f88f63469a9246248f063efa1677597db" .
++  ground:2026-01-01T150000p0000.metadata a orexis:MetadataGraph .
++  ground:2026-01-01T150000p0000.metadata orexis:metadataOf ground:2026-01-01T150000p0000 .
++}
++
 +GRAPH :forecast.changeable {
 +  :outside :warmth 28 .
- }
++}
++
++GRAPH :forecast.changeable.metadata {
++  :forecast.changeable a planning:ChangeableGraph .
++  :forecast.changeable orexis:arrivedBy orexis:Derived .
++  :forecast.changeable prov:wasDerivedFrom :forecast .
++  :forecast.changeable.metadata a orexis:MetadataGraph .
++  :forecast.changeable.metadata orexis:metadataOf :forecast.changeable .
++}

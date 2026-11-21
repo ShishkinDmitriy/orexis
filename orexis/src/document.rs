@@ -14,7 +14,7 @@ use oxigraph::io::{RdfFormat, RdfParser};
 use oxigraph::model::{GraphName, GraphNameRef, NamedNode, NamedOrBlankNode, Quad, Term};
 
 use crate::Error;
-use crate::ontology::{ASSERTED, BELIEF, CATALOGUE, OREXIS, SELF, SELF_GRAPH};
+use crate::ontology::{ASSERTED, BELIEF, METADATA_GRAPH, METADATA_OF, OREXIS, SELF, SELF_GRAPH};
 use crate::store::Store;
 
 use crate::rdf::RDF_TYPE;
@@ -251,9 +251,11 @@ impl Document {
                     "{name} says {arrival} of a graph, which only the loader says"
                 )));
             }
-            if q.predicate.as_str() == RDF_TYPE && term_value(&q.object) == CATALOGUE {
+            if q.predicate.as_str() == METADATA_OF
+                || (q.predicate.as_str() == RDF_TYPE && term_value(&q.object) == METADATA_GRAPH)
+            {
                 return Err(refused(format!(
-                    "{name} says a graph is the catalogue, which is created and never loaded"
+                    "{name} says a graph is a metadata graph, which only the loader writes"
                 )));
             }
         }
@@ -400,10 +402,10 @@ impl Document {
 }
 
 impl Store {
-    /// A document's graphs into the store, each REPLACING any graph of its name, and its rows into the catalogue
-    /// with the arrival — asserted, for a file — and, where `owner` is given, whose it is. `graphs`, where given,
-    /// puts only those. The names put, sorted. `close` says each row's every kind at once, for a writer putting
-    /// one document while the agent runs; a boot closes the catalogue once when every document is in.
+    /// A document's graphs into the store, each REPLACING any graph of its name, and what it says of each into
+    /// that graph's metadata graph with the arrival — asserted, for a file — and, where `owner` is given, whose it is. `graphs`, where given,
+    /// puts only those. The names put, sorted. `close` says each graph's every kind at once, for a writer putting
+    /// one document while the agent runs; a boot closes the kinds once when every document is in.
     pub fn put_document(
         &self,
         doc: &Document,
@@ -412,10 +414,6 @@ impl Store {
         arrival: Option<&str>,
         close: bool,
     ) -> Result<Vec<String>, Error> {
-        let catalogue = self.catalogue()?.ok_or_else(|| {
-            Error::Catalogue("no graph describes itself as the catalogue — nothing has said what the graphs are".into())
-        })?;
-        let cat = node(&catalogue)?;
         let arrival = node(arrival.unwrap_or(ASSERTED))?;
         let names: Vec<String> = doc
             .kinds()
@@ -426,6 +424,11 @@ impl Store {
         for name in &names {
             let graph = node(name)?;
             self.forget_graph(name, Some(BELIEF))?;
+            let cat = node(&crate::metadata::named(name))?;
+            self.add([
+                Quad::new(cat.clone(), node(RDF_TYPE)?, node(METADATA_GRAPH)?, cat.clone()),
+                Quad::new(cat.clone(), node(METADATA_OF)?, graph.clone(), cat.clone()),
+            ])?;
             self.add(
                 doc.quads
                     .iter()
@@ -467,7 +470,6 @@ impl Store {
                 }
             }
             self.add(said)?;
-            self.carry_metadata_of(name)?;
         }
         Ok(names)
     }
@@ -533,8 +535,6 @@ mod tests {
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     use super::*;
-    use crate::ontology::CATALOGUE;
-
     use crate::store::{Within, value};
 
     const PREFIXES: &str = "@prefix orexis: <http://example.org/orexis#> .\n\
@@ -571,29 +571,20 @@ mod tests {
     }
 
     fn store() -> Store {
-        let store = Store::new().unwrap();
-        store
-            .update(&format!(
-                "PREFIX dcterms: <http://purl.org/dc/terms/>
-                    PREFIX orexis: <http://example.org/orexis#>
-                    PREFIX planning: <http://example.org/orexis/planning#>
-                    INSERT DATA {{ GRAPH <{CATALOGUE}> {{ <{CATALOGUE}> a orexis:CatalogueGraph }} }}"
-            ))
-            .unwrap();
-        store
+        Store::new().unwrap()
     }
 
     fn uri(path: &Path) -> String {
         file_uri(path).unwrap()
     }
 
-    /// What the catalogue says of `graph`, each predicate and object by its local part.
+    /// What its metadata graph says of `graph`, each predicate and object by its local part.
     fn said(store: &Store, graph: &str) -> BTreeSet<(String, String)> {
         let text = format!(
             "PREFIX dcterms: <http://purl.org/dc/terms/>
                 PREFIX orexis: <http://example.org/orexis#>
                 PREFIX planning: <http://example.org/orexis/planning#>
-                SELECT ?p ?o WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{graph}> ?p ?o }} }}"
+                SELECT ?p ?o WHERE {{ GRAPH ?m {{ ?m orexis:metadataOf <{graph}> . <{graph}> ?p ?o }} }}"
         );
         let local = |s: String| s.rsplit('#').next().unwrap().to_string();
         store
@@ -612,7 +603,7 @@ mod tests {
     }
 
     #[test]
-    fn a_turtle_file_is_one_graph_named_by_the_file_and_its_rows_go_to_the_catalogue() {
+    fn a_turtle_file_is_one_graph_named_by_the_file_and_what_it_is_goes_to_its_metadata_graph() {
         let dir = Dir::new();
         let path = dir.write(
             "anything.ttl",
@@ -635,17 +626,17 @@ mod tests {
             ]
             .into()
         );
-        let held = crate::metadata::stated(store.triples(&name).unwrap());
+        let held = store.triples(&name).unwrap();
         assert_eq!(
             held.len(),
             1,
-            "the graph states its facts, and its kind is no fact it states"
+            "the graph holds its facts, and what it is is said beside it"
         );
         assert_eq!(held[0].object.to_string(), "<urn:peg>");
     }
 
     #[test]
-    fn a_period_stated_of_the_document_goes_with_its_row() {
+    fn a_period_stated_of_the_document_goes_with_its_metadata() {
         let dir = Dir::new();
         let path = dir.write(
             "prediction.ttl",
@@ -663,14 +654,14 @@ mod tests {
                     "PREFIX dcterms: <http://purl.org/dc/terms/>
                  PREFIX orexis: <http://example.org/orexis#>
                  PREFIX planning: <http://example.org/orexis/planning#>
-                 SELECT ?start WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{name}> dcterms:temporal ?p . \
+                 SELECT ?start WHERE {{ GRAPH ?m {{ ?m orexis:metadataOf <{name}> . <{name}> dcterms:temporal ?p . \
                  ?p orexis:start ?start }} }}"
                 ),
                 &[],
             )
             .unwrap();
         assert_eq!(value(&starts[0], "start").as_deref(), Some("2026-01-01T00:00:00Z"));
-        assert_eq!(crate::metadata::stated(store.triples(&name).unwrap()).len(), 1);
+        assert_eq!(store.triples(&name).unwrap().len(), 1);
     }
 
     #[test]
@@ -722,7 +713,7 @@ mod tests {
             ]
             .into()
         );
-        let held = crate::metadata::stated(store.triples(&name).unwrap());
+        let held = store.triples(&name).unwrap();
         assert_eq!(
             held.iter().map(|t| t.object.to_string()).collect::<Vec<_>>(),
             ["<urn:peg_c>"]
@@ -733,7 +724,7 @@ mod tests {
     fn a_file_is_refused_where_it_says_too_little_or_what_only_the_loader_says_or_the_self_twice() {
         for (text, expected) in [
             ("<urn:a> <urn:b> <urn:c> .\n", "no kind"),
-            ("<> a orexis:CatalogueGraph .\n", "catalogue"),
+            ("<> a orexis:MetadataGraph .\n", "only the loader writes"),
             (
                 "<> a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .\n",
                 "only the loader",

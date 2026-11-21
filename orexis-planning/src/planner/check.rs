@@ -8,7 +8,6 @@ use oxsdatatypes::DateTime;
 
 use orexis::Error;
 use orexis::bind::{Value, bind};
-use orexis::metadata::stated_quads;
 use orexis::ontology::{ACTION, BELIEF};
 use orexis::store::{Store, Within, iri, value};
 
@@ -120,7 +119,7 @@ impl Planner {
         const AHEAD_Q: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g ?start ?end WHERE { GRAPH ?g { ?g a orexis:ForecastGraph . FILTER NOT EXISTS { ?g a execution:CommittedStepGraph }
+        SELECT ?g ?start ?end WHERE { GRAPH ?m_g { ?g a orexis:ForecastGraph . FILTER NOT EXISTS { ?g a execution:CommittedStepGraph }
           OPTIONAL { ?g dcterms:temporal/orexis:start ?start } OPTIONAL { ?g dcterms:temporal/orexis:end ?end } } }"#;
         const CONSTRAINT_TEXTS_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
         PREFIX sh: <http://www.w3.org/ns/shacl#>
@@ -160,7 +159,8 @@ impl Planner {
         let scratch = GraphName::NamedNode(NamedNode::new_unchecked(SCRATCH));
         for g in present.iter().chain(&ahead) {
             world.add(
-                stated_quads(beliefs.quads(g)?)
+                beliefs
+                    .quads(g)?
                     .into_iter()
                     .map(|q| Quad::new(q.subject, q.predicate, q.object, scratch.clone())),
             )?;

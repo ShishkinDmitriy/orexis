@@ -93,10 +93,10 @@ market:Tendering a orexis:Action ;
             ?round a market:Round ; market:onVenue $venue . FILTER NOT EXISTS { ?round market:clearedAt ?at }
             ?me a orexis:Self ; orexis:actsFor ?subject ; market:valuePerL ?price .
             $venue market:aboutProperty ?property .
-            GRAPH ?held { ?held a sensing:ObservationGraph ; dcterms:temporal/orexis:start ?from .
+            GRAPH ?m_held { ?held a sensing:ObservationGraph ; dcterms:temporal/orexis:start ?from .
                           OPTIONAL { ?held dcterms:temporal/orexis:end ?until }
-                          FILTER(?from <= $now && (!BOUND(?until) || $now < ?until))
-                          ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value }
+                          FILTER(?from <= $now && (!BOUND(?until) || $now < ?until)) }
+            GRAPH ?held { ?reading sosa:hasFeatureOfInterest ?subject ; sosa:observedProperty ?property ; sosa:hasSimpleResult ?value }
             ?subject ssn-system:hasOperatingRange/ssn-system:inCondition ?condition ; climate:litresPerFraction ?perFraction .
             ?condition ssn:forProperty ?property ; schema:minValue ?lo ; schema:maxValue ?hi .
             BIND((((xsd:double(?lo) + xsd:double(?hi)) / 2.0) - xsd:double(?value)) * xsd:double(?perFraction) AS ?wanted)

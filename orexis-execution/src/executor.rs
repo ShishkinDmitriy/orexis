@@ -34,7 +34,6 @@ use orexis::bind::{Value, bind};
 use orexis::clock::{Clock, instant as parse_instant, isoformat, seconds, seconds_of};
 use orexis::events::{Event, Watch};
 use orexis::hash::hash_named_graph;
-use orexis::metadata::stated_quads;
 use orexis::ontology::{BELIEF, DERIVED, ONTOLOGY, OREXIS, RECORDED, SELF_GRAPH, local_of};
 use orexis::store::{Row, Store, Within, iri, value};
 use orexis::task::{Heard, Turn};
@@ -59,9 +58,9 @@ const WAITS_FOR: &str = "http://example.org/orexis/execution#waitsFor";
 /// WHAT A STEP PREDICTED AND THE PRESENT DOES NOT SHOW, asked of what the two graphs it predicts in state: what
 /// either says of itself, about a graph or a period, is its metadata, which no present holds and no step is held
 /// to. Whole IRIs, each being a piece of a text that declares its own prefixes.
-const ADDS_MISSING: &str = "{ GRAPH $adds { ?s ?p ?o FILTER NOT EXISTS { ?s a <http://example.org/orexis#Graph> } FILTER NOT EXISTS { ?s a <http://purl.org/dc/terms/PeriodOfTime> } } \
+const ADDS_MISSING: &str = "{ GRAPH $adds { ?s ?p ?o } \
      FILTER NOT EXISTS { ?s ?p ?x . FILTER(?x = ?o) } }";
-const RETRACTS_STANDING: &str = "{ GRAPH $retracts { ?s ?p ?o FILTER NOT EXISTS { ?s a <http://example.org/orexis#Graph> } FILTER NOT EXISTS { ?s a <http://purl.org/dc/terms/PeriodOfTime> } } \
+const RETRACTS_STANDING: &str = "{ GRAPH $retracts { ?s ?p ?o } \
      ?s ?p ?x . FILTER(?x = ?o) }";
 
 /// What a step says of itself in words other than this layer's, keyed by the local part of each predicate, with
@@ -346,10 +345,6 @@ impl Executor {
         Ok(out)
     }
 
-    fn catalogue(&self) -> Result<Option<String>, Error> {
-        self.beliefs.catalogue()
-    }
-
     /// The agent the belief base holds with the id the executor was told, off what the world states.
     fn me(&self) -> Result<Option<String>, Error> {
         const ME_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
@@ -380,7 +375,7 @@ impl Executor {
     pub fn commit_plans(&mut self) -> Result<Vec<String>, Error> {
         const PLANS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?plan ?want WHERE { GRAPH ?plan { ?plan a orexis:PlanGraph . ?root execution:pursues ?want }
+        SELECT ?plan ?want WHERE { GRAPH ?m_plan { ?plan a orexis:PlanGraph } GRAPH ?plan { ?root execution:pursues ?want }
           FILTER NOT EXISTS { GRAPH ?g { ?i execution:adopts ?plan } } }
         ORDER BY ?plan";
         let plans = self.beliefs.rows(PLANS_Q, &[])?;
@@ -559,7 +554,7 @@ impl Executor {
         const STEP_GRAPHS_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
             SELECT ?g ?side WHERE { GRAPH $plan { ?step ?side ?g . VALUES ?side { execution:adds execution:retracts } } }";
         const CLASSIFIED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-            SELECT ?k WHERE { GRAPH $graph { $graph a ?k } } LIMIT 1";
+            SELECT ?k WHERE { GRAPH ?m_graph { $graph a ?k } } LIMIT 1";
         let from = source.unwrap_or(&self.beliefs);
         let plan = Value::iri(graph);
         let mut steps: Vec<String> = from
@@ -584,21 +579,23 @@ impl Executor {
         }
         if !std::ptr::eq(from, &self.intentions) {
             let name = GraphName::NamedNode(named(graph)?);
-            let quads: Vec<Quad> = stated_quads(from.quads(graph)?)
+            let quads: Vec<Quad> = from
+                .quads(graph)?
                 .into_iter()
                 .map(|q| Quad::new(q.subject, q.predicate, q.object, name.clone()))
                 .collect();
             self.intentions.add(quads)?;
         }
         if !std::ptr::eq(from, &self.beliefs) {
-            let described = self.catalogue()?.is_some();
+            let described = self.beliefs.described()?;
             let owner = if described { self.owner()? } else { None };
             for g in from.rows(&bind(STEP_GRAPHS_Q, &[("plan", plan.clone())])?, &[])? {
                 let (Some(side_graph), Some(side)) = (iri(&g, "g"), iri(&g, "side")) else {
                     continue;
                 };
                 let into = GraphName::NamedNode(named(&side_graph)?);
-                let quads: Vec<Quad> = stated_quads(from.quads(&side_graph)?)
+                let quads: Vec<Quad> = from
+                    .quads(&side_graph)?
                     .into_iter()
                     .map(|q| Quad::new(q.subject, q.predicate, q.object, into.clone()))
                     .collect();
@@ -616,7 +613,7 @@ impl Executor {
                 }
             }
         }
-        if self.intentions.catalogue()?.is_some()
+        if self.intentions.described()?
             && self
                 .intentions
                 .rows(&bind(CLASSIFIED_Q, &[("graph", self.mine())])?, &[])?
@@ -669,7 +666,7 @@ impl Executor {
         SELECT ?opens ?lands ?after WHERE { GRAPH $plan {
           OPTIONAL { $step execution:notBefore ?opens } OPTIONAL { $step execution:landsAt ?lands }
           OPTIONAL { $step execution:notAfter ?after } } }";
-        if self.catalogue()?.is_none() {
+        if !self.beliefs.described()? {
             return Ok(());
         }
         let owner = self.owner()?;
@@ -734,17 +731,17 @@ impl Executor {
     fn close_window(&mut self, step: &str, now: DateTime) -> Result<(), Error> {
         const WINDOW_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
             PREFIX orexis: <http://example.org/orexis#>
-            SELECT ?end WHERE { GRAPH $g { $g a $kind ; dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?end } } }";
-        /// A COMMITTED STEP'S WINDOW ENDS NOW: said where `$in` says its period, its row and the graph itself.
+            SELECT ?end WHERE { GRAPH ?m_g { $g a $kind ; dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?end } } }";
+        /// A COMMITTED STEP'S WINDOW ENDS NOW, said where its metadata says its period.
         const CLOSE_U: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
         DELETE { GRAPH $in { ?p orexis:end ?old } }
         INSERT { GRAPH $in { ?p orexis:end $now } }
         WHERE  { GRAPH $in { $g dcterms:temporal ?p . OPTIONAL { ?p orexis:end ?old } } }";
-        let Some(cat) = self.catalogue()? else {
+        let graph = committed_graph(&self.id, step);
+        let Some(metadata) = self.beliefs.metadata_of(&graph)? else {
             return Ok(());
         };
-        let graph = committed_graph(&self.id, step);
         let found = self.beliefs.rows(
             &bind(
                 WINDOW_Q,
@@ -763,23 +760,21 @@ impl Executor {
         {
             return Ok(());
         }
-        for said_in in [&cat, &graph] {
-            self.beliefs.update(&bind(
-                CLOSE_U,
-                &[
-                    ("in", Value::iri(said_in.clone())),
-                    ("g", Value::iri(graph.clone())),
-                    ("now", Value::instant(now)),
-                ],
-            )?)?;
-        }
+        self.beliefs.update(&bind(
+            CLOSE_U,
+            &[
+                ("in", Value::iri(metadata)),
+                ("g", Value::iri(graph.clone())),
+                ("now", Value::instant(now)),
+            ],
+        )?)?;
         self.wrote(graph)
     }
 
     fn sweep(&mut self, now: DateTime) -> Result<(), Error> {
         const ENDED_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g WHERE { GRAPH ?g { ?g a $kind $owned ; dcterms:temporal ?p . ?p orexis:end ?end . FILTER(?end <= $now) } }
+        SELECT ?g WHERE { GRAPH ?m_g { ?g a $kind $owned ; dcterms:temporal ?p . ?p orexis:end ?end . FILTER(?end <= $now) } }
         ORDER BY ?g";
         let owner = self.owner()?;
         let owned = owner.map(|o| format!("; orexis:ownedBy <{o}>")).unwrap_or_default();
@@ -1403,18 +1398,16 @@ impl Executor {
     /// The taking of a fictive step: say it, then write what it predicted into the beliefs — each retraction taken
     /// out wherever the agent holds it, each addition put where that stood, or in a belief of its own.
     fn fictive(&mut self, said: &Said, intention: &str) -> Result<(), Error> {
-        const RETRACT_U: &str = "DELETE { GRAPH ?g { ?s ?p ?o } } WHERE { GRAPH $retracts { ?s ?p ?o FILTER NOT EXISTS { ?s a <http://example.org/orexis#Graph> } FILTER NOT EXISTS { ?s a <http://purl.org/dc/terms/PeriodOfTime> } } \
+        const RETRACT_U: &str = "DELETE { GRAPH ?g { ?s ?p ?o } } WHERE { GRAPH $retracts { ?s ?p ?o } \
              GRAPH ?g { ?s ?p ?o } VALUES ?g { $held } }";
-        const ADD_U: &str = "INSERT { GRAPH $into { ?s ?p ?o } } WHERE { GRAPH $adds { ?s ?p ?o \
-             FILTER NOT EXISTS { ?s a <http://example.org/orexis#Graph> } FILTER NOT EXISTS { ?s a <http://purl.org/dc/terms/PeriodOfTime> } } }";
+        const ADD_U: &str = "INSERT { GRAPH $into { ?s ?p ?o } } WHERE { GRAPH $adds { ?s ?p ?o } }";
         const HELD_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
         PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX orexis: <http://example.org/orexis#>
         SELECT DISTINCT ?g WHERE {
-          GRAPH $retracts { ?s ?p ?o FILTER NOT EXISTS { ?s a orexis:Graph }
-                            FILTER NOT EXISTS { ?s a <http://purl.org/dc/terms/PeriodOfTime> } }
-          GRAPH $cat { ?g a orexis:BeliefGraph .
-                       ?g orexis:ownedBy ?owner .
+          GRAPH $retracts { ?s ?p ?o }
+          GRAPH ?m { ?g a orexis:BeliefGraph .
+                     ?g orexis:ownedBy ?owner .
                        FILTER NOT EXISTS { ?g a belief:RevisionGraph }
                        FILTER NOT EXISTS { ?g a execution:CommittedStepGraph } }
           GRAPH ?g { ?s ?p ?o } } ORDER BY ?g";
@@ -1424,14 +1417,10 @@ impl Executor {
         if adds.is_none() && retracts.is_none() {
             return Ok(());
         }
-        let cat = self.catalogue()?.unwrap_or_default();
         let held: Vec<String> = match &retracts {
             Some(r) => self
                 .beliefs
-                .rows(
-                    &bind(HELD_Q, &[("cat", Value::iri(cat)), ("retracts", Value::iri(r.clone()))])?,
-                    &[],
-                )?
+                .rows(&bind(HELD_Q, &[("retracts", Value::iri(r.clone()))])?, &[])?
                 .iter()
                 .filter_map(|row| iri(row, "g"))
                 .collect(),
@@ -1651,23 +1640,20 @@ impl Executor {
 /// state, or a source it revised is a belief of the agent's — no world's document, and no committed step the
 /// executor wrote itself, since a walk on those would read the clock for nothing.
 fn present(beliefs: &Store, revised: &[String], changed: &[String]) -> Result<bool, Error> {
-    /// WHETHER ANY OF SOME GRAPHS IS THE PRESENT: a belief of the agent's, by the catalogue.
+    /// WHETHER ANY OF SOME GRAPHS IS THE PRESENT: a belief of the agent's, by its metadata.
     const PRESENT_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
     PREFIX orexis: <http://example.org/orexis#>
-    SELECT ?g WHERE { GRAPH $cat { VALUES ?g { $revised } ?g a orexis:BeliefGraph .
+    SELECT ?g WHERE { VALUES ?g { $revised } GRAPH ?m { ?g a orexis:BeliefGraph .
                                    FILTER NOT EXISTS { ?g a execution:CommittedStepGraph }
                                    ?g orexis:ownedBy ?owner . } } LIMIT 1";
     if !changed.is_empty() {
         return Ok(true);
     }
-    let Some(cat) = beliefs.catalogue()? else {
-        return Ok(false);
-    };
     if revised.is_empty() {
         return Ok(false);
     }
     let graphs = revised.iter().map(|g| format!("<{g}>")).collect::<Vec<_>>().join(" ");
-    let text = bind(PRESENT_Q, &[("cat", Value::iri(cat)), ("revised", Value::Raw(graphs))])?;
+    let text = bind(PRESENT_Q, &[("revised", Value::Raw(graphs))])?;
     Ok(!beliefs.rows(&text, &[])?.is_empty())
 }
 
@@ -1711,20 +1697,20 @@ mod tests {
         let ontology =
             orexis::document::Document::read(&snapshots::tree().join("orexis-execution/ontology.ttl")).unwrap();
         st.put_document(&ontology, None, None, None, true).unwrap();
-        snapshots::mirrored(&st);
+        snapshots::mirrored(&st, "http://example.org/test#said");
         st
     }
 
-    /// A belief base holding nothing but its catalogue and execution's ontology.
+    /// A belief base holding nothing but execution's ontology.
     fn held() -> Store {
         let st = store();
         st.put_trig(
             "http://example.org/test#world",
             "@prefix orexis: <http://example.org/orexis#> .
-GRAPH <http://example.org/test#catalogue> { <http://example.org/test#catalogue> a orexis:CatalogueGraph }",
+GRAPH <http://example.org/test#said> {  }",
         )
         .unwrap();
-        orexis::snapshots::mirrored(&st);
+        orexis::snapshots::mirrored(&st, "http://example.org/test#said");
         with_ontology(st)
     }
 
@@ -1773,7 +1759,7 @@ GRAPH <http://example.org/test#catalogue> { <http://example.org/test#catalogue> 
         st
     }
 
-    /// A belief base whose one reading says where the disk is, with the catalogue saying the graph is a belief.
+    /// A belief base whose one reading says where the disk is, its metadata saying the graph is a belief.
     fn beliefs(on: &str) -> Store {
         let st = store();
         st.put_trig(
@@ -1781,13 +1767,13 @@ GRAPH <http://example.org/test#catalogue> { <http://example.org/test#catalogue> 
             &format!(
                 "@prefix orexis: <http://example.org/orexis#> .
 GRAPH <{STATE}> {{ <{DISK}> <{ON}> <{on}> }}
-GRAPH <http://example.org/test#catalogue> {{
-  <http://example.org/test#catalogue> a orexis:CatalogueGraph .
+GRAPH <http://example.org/test#said> {{
+  
   <{STATE}> a orexis:BeliefGraph ; orexis:ownedBy <{ME}> }}"
             ),
         )
         .unwrap();
-        orexis::snapshots::mirrored(&st);
+        orexis::snapshots::mirrored(&st, "http://example.org/test#said");
         with_ontology(st)
     }
 
@@ -1872,7 +1858,7 @@ GRAPH <http://example.org/test#catalogue> {{
                 &bind(
                     "PREFIX dcterms: <http://purl.org/dc/terms/>
   PREFIX orexis: <http://example.org/orexis#>
-  SELECT ?g ?start ?end WHERE { GRAPH ?g { ?g a $kind ; dcterms:temporal ?p .
+  SELECT ?g ?start ?end WHERE { GRAPH ?m_g { ?g a $kind ; dcterms:temporal ?p .
   ?p orexis:start ?start ; orexis:end ?end } } ORDER BY ?g",
                     &[("kind", Value::iri(COMMITTED_STEP_GRAPH))],
                 )
@@ -2122,37 +2108,6 @@ GRAPH <http://example.org/test#catalogue> {{
         assert!(resolved(&x, &intention).is_empty());
     }
 
-    /// The two graphs a step predicts in say what they are, in themselves: the world answers the step all the same,
-    /// since what a graph says of itself is no fact the present is held to.
-    #[test]
-    fn a_step_is_held_to_what_it_predicts_and_never_to_what_its_graphs_say_of_themselves() {
-        let (b, i, clock) = (beliefs(PEG_A), store(), Arc::new(Manual::at(now())));
-        let source = predicting_move(2, PLAN);
-        source
-            .update(&format!(
-                "PREFIX dcterms: <http://purl.org/dc/terms/>
-                    PREFIX execution: <http://example.org/orexis/execution#>
-                    PREFIX orexis: <http://example.org/orexis#>
-                    INSERT DATA {{
-                      GRAPH <{PLAN}.0.adds> {{ <{PLAN}.0.adds> a execution:AddsGraph , orexis:Graph ;
-                        orexis:arrivedBy orexis:Derived ; orexis:hash \"h\" ; dcterms:temporal [ a dcterms:PeriodOfTime ] }}
-                      GRAPH <{PLAN}.0.retracts> {{ <{PLAN}.0.retracts> a execution:RetractsGraph , orexis:Graph ;
-                        orexis:arrivedBy orexis:Derived }} }}"
-            ))
-            .unwrap();
-        let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
-        x.commit(Some(&source), PLAN, WANT).unwrap().unwrap();
-        x.tick(now()).unwrap();
-        assert_eq!(x.drain().unwrap(), 1);
-        moved(&b);
-        assert!(x.tick(now()).unwrap().is_empty());
-        assert_eq!(
-            x.standing().unwrap()[0].at.clone().unwrap(),
-            format!("{PLAN}.1"),
-            "the world answered what the step predicted, and the graphs' metadata was asked of nothing"
-        );
-    }
-
     #[test]
     fn a_step_predicting_a_conclusion_is_answered_by_the_states_revision() {
         let (soil, range) = ("http://example.org/test#soil", "http://example.org/test#bed_operating");
@@ -2165,10 +2120,10 @@ GRAPH <http://example.org/test#catalogue> {{
         PREFIX orexis: <http://example.org/orexis#>
         PREFIX prov: <http://www.w3.org/ns/prov#>
         INSERT DATA {{ GRAPH <{revisions}> {{ <{soil}> <{below}> <{range}> }}
-        GRAPH :catalogue {{ <{revisions}> prov:wasDerivedFrom <{STATE}> ; a orexis:BeliefGraph }} }}"
+        GRAPH :said {{ <{revisions}> prov:wasDerivedFrom <{STATE}> ; a orexis:BeliefGraph }} }}"
         ))
         .unwrap();
-        orexis::snapshots::mirrored(&b);
+        orexis::snapshots::mirrored(&b, "http://example.org/test#said");
         let source = predicting(
             a_plan(2, PLAN),
             &format!("{PLAN}.0"),
@@ -2237,10 +2192,10 @@ GRAPH <http://example.org/test#catalogue> {{
   INSERT DATA {{
   GRAPH :actions {{ <{mv}> a orexis:Action ;
       execution:implementation [ execution:operation [ a execution:Fictive ] ] }}
-  GRAPH :catalogue {{ :actions a orexis:ActionGraph }} }}"
+  GRAPH :said {{ :actions a orexis:ActionGraph }} }}"
         ))
         .unwrap();
-        orexis::snapshots::mirrored(&b);
+        orexis::snapshots::mirrored(&b, "http://example.org/test#said");
         let (i, clock) = (store(), Arc::new(Manual::at(now())));
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         let source = predicting_move(1, PLAN);
@@ -2305,10 +2260,10 @@ GRAPH <http://example.org/test#catalogue> {{
   PREFIX orexis: <http://example.org/orexis#>
   INSERT DATA {{
   GRAPH <{me_self}> {{ <{ME}> a orexis:Self ; orexis:plays [ <{PATIENCE_S}> 5 ] }}
-  GRAPH :catalogue {{ <{me_self}> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy <{ME}> }} }}"
+  GRAPH :said {{ <{me_self}> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy <{ME}> }} }}"
         ))
         .unwrap();
-        orexis::snapshots::mirrored(&b);
+        orexis::snapshots::mirrored(&b, "http://example.org/test#said");
         let mut x = Executor::new(&b, AGENT, Some(&i), None, clock.clone()).unwrap();
         assert_eq!(x.patience_s, 5.0);
         let intention = x.commit(Some(&predicting_move(1, PLAN)), PLAN, WANT).unwrap().unwrap();

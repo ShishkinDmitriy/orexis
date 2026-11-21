@@ -418,7 +418,7 @@ impl Events {
         }
     }
 
-    /// Say that `graphs` were written, to every task hearing a kind the catalogue says any of them is: WHAT ONE
+    /// Say that `graphs` were written, to every task hearing a kind the metadata of any of them says it is: WHAT ONE
     /// TURN WROTE OF A KIND IS TOLD AS ONE THING, the graphs of it together in the order they were written. One
     /// message of several readings is several percepts, and told one by one each was said and revised apart, so
     /// whoever heard the first revision decided before the rest was believed.
@@ -453,20 +453,7 @@ impl Events {
 
     /// Every kind `graph` says it is.
     pub(super) fn kinds(&self, graph: &str) -> Result<Vec<String>, Error> {
-        let me = oxigraph::model::Term::NamedNode(
-            oxigraph::model::NamedNode::new(graph)
-                .map_err(|e| Error::Evaluation(format!("{graph} is no graph's name: {e}")))?,
-        );
-        Ok(self
-            .0
-            .beliefs
-            .objects(&me, crate::rdf::RDF_TYPE, graph)?
-            .into_iter()
-            .filter_map(|kind| match kind {
-                oxigraph::model::Term::NamedNode(kind) => Some(kind.into_string()),
-                _ => None,
-            })
-            .collect())
+        self.0.beliefs.kinds_of(graph)
     }
 
     /// A task failed: the run's error, the first one kept.

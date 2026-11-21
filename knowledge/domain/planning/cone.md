@@ -1,9 +1,10 @@
 ---
 type: Domain Concept
 title: Cone
+term: http://example.org/orexis/planning#ConeGraph
 description: >-
   The possible worlds a search leaves under the present, with its weighings - kept in the
-  imaginarium from pass to pass. The next pass finds the present among them by hash, taken
+  imaginarium from pass to pass, its rows written in one graph. The next pass finds the present among them by hash, taken
   within what is read, re-roots the cone there and drops the rest; where the present matches
   nothing, the whole cone goes.
 ---
@@ -14,6 +15,16 @@ A search forks a possible world per candidate it takes, and a world's weighing f
 whether it met it, whether it is still open and what it cost. Together they are a tree under the
 ground the search stood in — worlds widen away from the present, hence the name
 ([the-future-is-a-cone-and-the-present-is-identified-in-it](/decisions/the-future-is-a-cone-and-the-present-is-identified-in-it.md)).
+
+# Where it is written
+
+The rows of a search are in one graph of its imaginarium, a `planning:ConeGraph`: each candidate a
+world admits, each weighing, which candidate reached a world (`planning:by`), what the path to it
+spent and its mint number, that a world is impossible, and which ground a ground was laid from. One
+graph, because the frontier, the path to a world and the re-rooting each ask across every world at
+once, and a path is walked inside one graph. What a world IS - a possible world, holding over a
+period, with a hash - is said in that world's own [metadata](/domain/kernel/metadata.md) graph, as
+of any graph. A world or a ground that goes takes its rows out of the cone graph with it.
 
 # Why it is kept
 

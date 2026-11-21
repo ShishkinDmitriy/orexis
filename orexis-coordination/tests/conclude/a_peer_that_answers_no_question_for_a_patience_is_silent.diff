@@ -1,24 +1,11 @@
 --- case
 +++ expected
-@@ -29,8 +29,13 @@
-   asked:no_two_vans a coordination:QuestionGraph .
-   asked:no_two_vans a orexis:Graph .
-   asked:no_two_vans a speech:StatementGraph .
--  asked:no_two_vans dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:30+00:00"^^xsd:dateTime ; orexis:start "2026-01-01T11:59:00+00:00"^^xsd:dateTime ] .
-+  asked:no_two_vans dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:end "2026-01-01T12:00:30Z"^^xsd:dateTime ; orexis:start "2026-01-01T11:59:00Z"^^xsd:dateTime ] .
-   asked:no_two_vans orexis:arrivedBy orexis:Recorded .
-+  coordinated:conflicts a orexis:BeliefGraph .
-+  coordinated:conflicts a orexis:Graph .
-+  coordinated:conflicts orexis:arrivedBy orexis:Derived .
-+  coordinated:conflicts orexis:hash "sha256:9d90ee3001034d4c33027ffbf3e4e6f3c91a45524b5d7e6285aaa21c63f045c0" .
-+  coordinated:conflicts orexis:ownedBy :keeper .
+@@ -109,5 +109,26 @@
+   :world.metadata orexis:metadataOf :world .
  }
- GRAPH :constraints {
-   :no_two_vans a planning:Constraint .
-@@ -77,3 +82,15 @@
-   :van_k a courier:Van .
-   :van_p a courier:Van .
- }
+ 
+-GRAPH :catalogue {
++
 +
 +
 +GRAPH coordinated:conflicts {
@@ -31,3 +18,13 @@
 +  conflict:2216b9a9c788124d coordination:standing true .
 +  conflict:2216b9a9c788124d coordination:with :peer .
 +}
++
++GRAPH coordinated:conflicts.metadata {
++  coordinated:conflicts a orexis:BeliefGraph .
++  coordinated:conflicts a orexis:Graph .
++  coordinated:conflicts orexis:arrivedBy orexis:Derived .
++  coordinated:conflicts orexis:hash "sha256:9d90ee3001034d4c33027ffbf3e4e6f3c91a45524b5d7e6285aaa21c63f045c0" .
++  coordinated:conflicts orexis:ownedBy :keeper .
++  coordinated:conflicts.metadata a orexis:MetadataGraph .
++  coordinated:conflicts.metadata orexis:metadataOf coordinated:conflicts .
+ }

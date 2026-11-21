@@ -74,7 +74,7 @@ import rdflib
 from documents.ontology import local_of
 from documents.world import (in_a_crate, ONTOLOGY, SPEAKER, documents, known, packages_of, read_by_packages,
                            read_with_imports, roles_of, selves, world_of)
-from documents.store import (NAMESPACES, DocumentRefused, answer, catalogue_of, close_catalogue, closed, document, graphs_of, kinds_in, put_document,
+from documents.store import (NAMESPACES, DocumentRefused, answer, close_kinds, closed, document, graphs_of, kinds_in, put_document,
                          rdflib_view, rows, whose)
 
 from .worlds import DOCUMENTS, REPO_ROOT
@@ -133,7 +133,7 @@ def world(here: Path) -> ox.Store:
         graphs = {g for g, kinds in kinds_in(doc).items() if any(ours() & set(closed(store, k)) for k in kinds)}
         if graphs:
             put_document(store, doc, graphs=graphs)
-    close_catalogue(store)
+    close_kinds(store)
     return store
 
 
@@ -327,13 +327,12 @@ def _judged(here: Path) -> tuple[dict[tuple, str], dict[str, list[str]]]:
     each = {}
     for agent_id in agents(here):
         beliefs = boot(here, agent_id)
-        cat = catalogue_of(beliefs)
         #  WHAT ONBOARDING DERIVED OF WHERE THE WORLD'S SERVICES ANSWER is in the boot, since the agent reads it, and
         #  is no statement of the world's to hold: a broker's one url there is the one an agent reaches it at, not
         #  every url the world asserts of it.
         derived = set(graphs_of(beliefs, "http://example.org/orexis#DeploymentGraph"))
         each[agent_id] = _held_to(shapes, beliefs,
-                                  [g for g in graphs_of(beliefs, GRAPH) if g != cat and g not in derived], deployed)
+                                  [g for g in graphs_of(beliefs, GRAPH) if g not in derived], deployed)
     of_world = {key: why for key, why in common.items() if all(key in found for found in each.values())}
     return of_world, {agent_id: sorted(why for key, why in found.items() if key not in of_world)
                       for agent_id, found in each.items()}

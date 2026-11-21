@@ -1,17 +1,23 @@
 --- case
 +++ expected
-@@ -28,4 +28,14 @@
-   :ontology a orexis:BeliefGraph .
-   :ontology a orexis:Graph .
-   :ontology a orexis:OntologyGraph .
-+  graph:scopes a orexis:Graph .
-+  graph:scopes a planning:ScopeGraph .
-+  graph:scopes orexis:arrivedBy orexis:Derived .
-+}
+@@ -35,5 +35,19 @@
+   :actions.metadata orexis:metadataOf :actions .
+ }
+ 
+-GRAPH :catalogue {
++
 +
 +
 +GRAPH graph:scopes {
 +  :fill planning:inScope scopes:1 .
 +  :level planning:inScope scopes:1 .
 +  scopes:1 a planning:Scope .
++}
++
++GRAPH graph:scopes.metadata {
++  graph:scopes a orexis:Graph .
++  graph:scopes a planning:ScopeGraph .
++  graph:scopes orexis:arrivedBy orexis:Derived .
++  graph:scopes.metadata a orexis:MetadataGraph .
++  graph:scopes.metadata orexis:metadataOf graph:scopes .
  }

@@ -16,7 +16,7 @@
 #  nothing refuses one and nothing stands between a writer and the store. A validation and a
 #  proposal state to serve it were built here and struck: belief revision keeps the new
 #  information, dropping testimony over a shape is a gate wearing revision's name, and a graph
-#  with no catalogue row is already invisible to every reader, so a writer that means its graph
+#  nothing says the kind of is already invisible to every reader, so a writer that means its graph
 #  never to be seen without its revisions writes the graph, revises it and classifies it last.
 #  The rules are SHACL 1.2 Inference Rules (W3C FPWD, 2026-09-17), adopted as they stand and
 #  nothing added: a graph in the role of a rules graph is typed sh:RulesGraph, a package's rules
@@ -27,7 +27,7 @@
 #  other's inferences within an iteration, and keeps the inferences in an inference graph apart
 #  from the base graph, never deleting. The draft names that graph as a role and not a class, so
 #  the one word here is the class of it. The engine is the store's own, not SHACL's. Classes only:
-#  which graph is an agent's is genesis's to create and the catalogue's to say.
+#  which graph is an agent's is genesis's to create and its metadata's to say.
 #
 #  AND A TRANSITION, WHICH IS NOT AN INFERENCE (knowledge/domain/belief/transition.md,
 #  a-transition-changes-the-state-and-an-inference-only-concludes). A rule that deletes as well as
@@ -55,7 +55,7 @@ sh:RulesGraph rdfs:subClassOf orexis:Graph .
     rdfs:label "Revision graph" ;
     rdfs:comment """The revisions of ONE source graph — what the rules conclude of it, and nothing
     the source itself says; SHACL 1.2's inference graph, for one source. OF THE KIND ITS RUNNER
-    HANDS, said beside this one on its row: an `orexis:BeliefGraph` where the source is one, and
+    HANDS, said beside this one in its metadata: an `orexis:BeliefGraph` where the source is one, and
     where a package above has its own graphs revised, the kind it says — sensing's observations'
     are sensing's, since what the rules conclude of what a sensor said is still what it said and no
     reader of the mind is handed it (#944). prov:wasDerivedFrom
@@ -73,9 +73,9 @@ sh:RulesGraph rdfs:subClassOf orexis:Graph .
     rdfs:label "settled" ;
     rdfs:comment """Whether the rules reached a fixpoint over this graph's source, and the transitions
     its arrival triggers have run. `revise` spends a BUDGET of rule executions per call, the unit
-    revision spends, and a source the budget cuts short keeps what was concluded with this false on
-    its row; the deliberator says it false too while the source's transitions wait or were cut, and
-    continues it on the next pass, and at boot re-queues every row that says false, so a cut
+    revision spends, and a source the budget cuts short keeps what was concluded with this false in
+    its metadata; the deliberator says it false too while the source's transitions wait or were cut, and
+    continues it on the next pass, and at boot re-queues every revision that says false, so a cut
     survives a restart and a rule set that never settles is reported every pass rather than looped
     on.""" .
 

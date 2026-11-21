@@ -59,7 +59,7 @@ frame "belief" {
 
 frame "kernel" {
   component "runtime\nboot · genesis · a pass" as RT
-  folder "orexis:CatalogueGraph\nwhat every graph IS, itself included" as cat
+  folder "orexis:MetadataGraph\nwhat one graph IS, one beside each graph" as cat
   folder "orexis:OntologyGraph · orexis:WorldGraph\norexis:SocietyGraph · common beliefs,\nthe world's documents" as pub
   folder "orexis:ActionGraph · orexis:FlowGraph\nwhat the agent reads to act, no belief" as acts
   folder "orexis:DeploymentGraph\nwhat the world is connected to,\nasked by a package as it starts" as dep
@@ -79,7 +79,7 @@ frame "planning" {
   folder "planning:DesireGraph · planning:ShapesGraph\nplanning:ConstraintGraph · planning:DerivationGraph\nauthored · no belief" as des
   folder "planning:WantGraph\none-shot · what a desire read unmet" as want
   folder "planning:ScopeGraph\nthe scopes, written at boot" as scope
-  folder "planning:GroundGraph · planning:PossibleGraph\nplanning:PlanGraph · the imaginarium's" as img
+  folder "planning:GroundGraph · planning:PossibleGraph\nplanning:PlanGraph · planning:ConeGraph\nthe imaginarium's" as img
   folder "planning:ChangeableGraph\nwhat a search can change, cut out of a belief graph" as cut
 }
 

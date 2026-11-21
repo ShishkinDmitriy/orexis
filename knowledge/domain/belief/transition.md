@@ -69,7 +69,7 @@ nothing, the whole of it, and is said in the log by the rule's name.
 # What triggers it
 
 As a database trigger runs once on each row inserted into its table, and may delete and insert,
-**an arrival of testimony triggers every transition once.** Testimony is a graph whose catalogue row
+**an arrival of testimony triggers every transition once.** Testimony is a graph whose metadata
 says it arrived `orexis:Received` — an instrument's observation, a forecast, a peer's document heard.
 Nothing else triggers one: the agent's own graphs, derived or recorded — a committed
 step, the very state a transition writes — and what the sovereign asserted trigger none, so a

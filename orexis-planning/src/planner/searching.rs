@@ -100,22 +100,21 @@ impl Searching {
     pub(super) fn search(self) -> Result<Searched, Error> {
         const GROUND_HASHES_Q: &str = r#"PREFIX orexis: <http://example.org/orexis#>
             PREFIX planning: <http://example.org/orexis/planning#>
-            SELECT ?h WHERE { GRAPH ?g { ?g a planning:GroundGraph ; orexis:hash ?h } }"#;
+            SELECT ?h WHERE { GRAPH ?m_g { ?g a planning:GroundGraph ; orexis:hash ?h } }"#;
         const REOPENING_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
         SELECT ?w WHERE { GRAPH ?g { ?w planning:reopens ?w }
           FILTER NOT EXISTS { GRAPH ?p { ?root a planning:Plan ; planning:for ?w ; planning:outcome planning:Satisfied } } }"#;
         const HASHES_Q: &str = r#"PREFIX orexis: <http://example.org/orexis#>
           PREFIX planning: <http://example.org/orexis/planning#>
-          SELECT DISTINCT ?h WHERE { GRAPH ?w { ?w orexis:hash ?h .
+          SELECT DISTINCT ?h WHERE { GRAPH ?m_w { ?w orexis:hash ?h .
           { ?w a planning:GroundGraph } UNION { ?w a planning:PossibleGraph } } }"#;
         const MET_NOW_Q: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
         PREFIX planning: <http://example.org/orexis/planning#>
         SELECT DISTINCT ?for WHERE {
-          GRAPH ?cat { ?x planning:weighs $ground ; planning:for ?for ; planning:met true .
-                       ?cat a orexis:CatalogueGraph .
-                       ?d a planning:WantGraph . OPTIONAL { ?d dcterms:temporal/orexis:start ?ws } }
+          GRAPH $cone { ?x planning:weighs $ground ; planning:for ?for ; planning:met true }
           GRAPH ?d { ?for a planning:Want }
+          GRAPH ?m_d { ?d a planning:WantGraph . OPTIONAL { ?d dcterms:temporal/orexis:start ?ws } }
           FILTER(!BOUND(?ws) || ?ws <= $now) }"#;
         let Searching {
             scope,
@@ -238,7 +237,11 @@ impl Searching {
             .rows(
                 &bind(
                     MET_NOW_Q,
-                    &[("ground", Value::iri(present.as_str())), ("now", Value::instant(at))],
+                    &[
+                        ("ground", Value::iri(present.as_str())),
+                        ("now", Value::instant(at)),
+                        ("cone", Value::iri(crate::world_at::cone(store, &mut memo)?)),
+                    ],
                 )?,
                 &[],
             )?

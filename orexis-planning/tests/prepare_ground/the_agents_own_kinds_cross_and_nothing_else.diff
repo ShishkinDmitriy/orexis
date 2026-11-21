@@ -1,22 +1,26 @@
 --- case
 +++ expected
-@@ -16,18 +16,14 @@
-   :tank1 :level 5 .
+@@ -31,20 +31,12 @@
+   :sensed.metadata orexis:metadataOf :sensed .
  }
  
 -GRAPH :scratch {
 -  :note :says "a working graph of no kind the search asks for" .
 -}
  
-+
- GRAPH :catalogue {
-   :catalogue a orexis:CatalogueGraph .
-   :catalogue a orexis:Graph .
-   :ontology a orexis:BeliefGraph .
-   :ontology a orexis:Graph .
-   :ontology a orexis:OntologyGraph .
+-GRAPH :scratch.metadata {
 -  :scratch a orexis:Graph .
 -  :scratch orexis:ownedBy :keeper .
-   :sensed a orexis:BeliefGraph .
-   :sensed a orexis:Graph .
-   :sensed orexis:ownedBy :keeper .
+-  :scratch.metadata a orexis:MetadataGraph .
+-  :scratch.metadata orexis:metadataOf :scratch .
+-}
+ 
+-GRAPH :catalogue {
+-}
+ 
++
++
++
+ GRAPH :ontology.metadata {
+   :ontology a orexis:BeliefGraph .
+   :ontology a orexis:Graph .

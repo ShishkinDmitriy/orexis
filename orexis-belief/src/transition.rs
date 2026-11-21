@@ -197,7 +197,7 @@ pub fn applied(store: &Store, change: &Change, into: &str, targets: &[&str]) -> 
     /// WHETHER A GRAPH STILL STATES ANYTHING, its metadata being no fact it states.
     const STATES_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>
-    ASK { GRAPH $graph { ?s ?p ?o FILTER NOT EXISTS { ?s a orexis:Graph } FILTER NOT EXISTS { ?s a dcterms:PeriodOfTime } } }";
+    ASK { GRAPH $graph { ?s ?p ?o } }";
     let mut emptied = Vec::new();
     for graph in &seen {
         if touched.contains(graph) && !store.ask(&bind(STATES_Q, &[("graph", Value::iri(*graph))])?, &[])? {

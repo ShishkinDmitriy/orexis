@@ -1,22 +1,46 @@
 --- case
 +++ expected
-@@ -16,14 +16,19 @@
- }
- GRAPH :catalogue {
-   :apart a orexis:Graph .
-+  :apart orexis:hash "sha256:7992b3965bcf8b16bff191597ce106a41fed095d8202f1fd554183d6ccbc3c41" .
-   :catalogue a orexis:CatalogueGraph .
-   :catalogue a orexis:Graph .
-   :decimal a orexis:Graph .
-+  :decimal orexis:hash "sha256:30e84ba0cc1649371f1659b3bf96f4b371beca53c387d58f86cb459fd1b356af" .
-   :integer a orexis:Graph .
-+  :integer orexis:hash "sha256:30e84ba0cc1649371f1659b3bf96f4b371beca53c387d58f86cb459fd1b356af" .
-   :near a orexis:Graph .
-+  :near orexis:hash "sha256:30e84ba0cc1649371f1659b3bf96f4b371beca53c387d58f86cb459fd1b356af" .
+@@ -12,6 +12,7 @@
    :ontology a orexis:BeliefGraph .
    :ontology a orexis:Graph .
    :ontology a orexis:OntologyGraph .
 +  :ontology orexis:hash "sha256:cf6f9aa06c1311a83e21602e2c323feb46ae3b7e6e7549a62fd90b970624edc5" .
+   :ontology.metadata a orexis:MetadataGraph .
+   :ontology.metadata orexis:metadataOf :ontology .
+ }
+@@ -22,6 +23,7 @@
+ 
+ GRAPH :integer.metadata {
+   :integer a orexis:Graph .
++  :integer orexis:hash "sha256:30e84ba0cc1649371f1659b3bf96f4b371beca53c387d58f86cb459fd1b356af" .
+   :integer.metadata a orexis:MetadataGraph .
+   :integer.metadata orexis:metadataOf :integer .
+ }
+@@ -32,6 +34,7 @@
+ 
+ GRAPH :decimal.metadata {
+   :decimal a orexis:Graph .
++  :decimal orexis:hash "sha256:30e84ba0cc1649371f1659b3bf96f4b371beca53c387d58f86cb459fd1b356af" .
+   :decimal.metadata a orexis:MetadataGraph .
+   :decimal.metadata orexis:metadataOf :decimal .
+ }
+@@ -42,6 +45,7 @@
+ 
+ GRAPH :apart.metadata {
+   :apart a orexis:Graph .
++  :apart orexis:hash "sha256:7992b3965bcf8b16bff191597ce106a41fed095d8202f1fd554183d6ccbc3c41" .
+   :apart.metadata a orexis:MetadataGraph .
+   :apart.metadata orexis:metadataOf :apart .
+ }
+@@ -52,9 +56,9 @@
+ 
+ GRAPH :near.metadata {
+   :near a orexis:Graph .
++  :near orexis:hash "sha256:30e84ba0cc1649371f1659b3bf96f4b371beca53c387d58f86cb459fd1b356af" .
+   :near.metadata a orexis:MetadataGraph .
+   :near.metadata orexis:metadataOf :near .
  }
  
- 
+-GRAPH :catalogue {
+-}
++

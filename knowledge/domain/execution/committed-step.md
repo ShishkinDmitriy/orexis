@@ -19,7 +19,7 @@ GRAPH <…/committed/grower/plan_s1> {
 }
 ```
 
-The catalogue says the graph is an `execution:CommittedStepGraph`, a [forecast](/domain/kernel/forecast.md)
+Its metadata says the graph is an `execution:CommittedStepGraph`, a [forecast](/domain/kernel/forecast.md)
 of the agent's own act and so a belief (#992), holding from the step's
 `execution:notBefore` to its `execution:notAfter`, the latest landing, plus the patience. Inside is
 the step's filling, copied from the [plan](/domain/planning/plan.md) as terms the executor never
