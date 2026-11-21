@@ -49,25 +49,19 @@ impl Triggered {
 
 /// The catalogue and `arrival`'s row, where the arrival is testimony: None where it is not, or there is no catalogue.
 fn testimony(store: &Store, arrival: &str) -> Result<Option<(String, Row)>, Error> {
-    /// WHETHER THE ARRIVAL IS TESTIMONY, WHOSE IT IS AND WHEN IT HOLDS, off its row.
+    /// WHETHER THE ARRIVAL IS TESTIMONY, WHOSE IT IS AND WHEN IT HOLDS, as it says itself.
     const ARRIVAL_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>
     SELECT ?owner ?start ?end WHERE {
-      GRAPH $cat { $arrival orexis:arrivedBy orexis:Received .
-                   OPTIONAL { $arrival orexis:ownedBy ?owner }
-                   OPTIONAL { $arrival dcterms:temporal ?p .
-                              OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
+      GRAPH $arrival { $arrival orexis:arrivedBy orexis:Received .
+                       OPTIONAL { $arrival orexis:ownedBy ?owner }
+                       OPTIONAL { $arrival dcterms:temporal ?p .
+                                  OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
     LIMIT 1";
     let Some(cat) = store.catalogue()? else {
         return Ok(None);
     };
-    let found = store.rows(
-        &bind(
-            ARRIVAL_Q,
-            &[("cat", Value::iri(&cat)), ("arrival", Value::iri(arrival))],
-        )?,
-        &[],
-    )?;
+    let found = store.rows(&bind(ARRIVAL_Q, &[("arrival", Value::iri(arrival))])?, &[])?;
     Ok(found.into_iter().next().map(|row| (cat, row)))
 }
 
@@ -104,10 +98,10 @@ pub fn trigger(store: &Store, arrival: &str, budget: usize, done: usize) -> Resu
                 spent,
                 done: n,
                 finished: false,
-                changed: stamped(store, &cat, changed)?,
+                changed: stamped(store, changed)?,
             });
         }
-        let state = derived(store, &cat)?;
+        let state = derived(store)?;
         let mut reads: Vec<String> = Vec::new();
         let revisions = store.revisions_of(&[arrival], REVISION_GRAPH)?;
         for g in std::iter::once(arrival.to_string())
@@ -154,7 +148,7 @@ pub fn trigger(store: &Store, arrival: &str, budget: usize, done: usize) -> Resu
     //  A STATE PUT BACK AS IT STOOD IS NO CHANGE: the graphs are stamped, since they were written, and none is said
     //  changed, since whoever hears a state changed begins on it — a van's fix repeating its cell began a planning
     //  every ten seconds.
-    let changed = stamped(store, &cat, changed)?;
+    let changed = stamped(store, changed)?;
     Ok(Triggered {
         spent,
         done: orders.len(),
@@ -164,14 +158,11 @@ pub fn trigger(store: &Store, arrival: &str, budget: usize, done: usize) -> Resu
 }
 
 /// `changed`, each graph still standing stamped with the hash of what it now holds.
-fn stamped(store: &Store, cat: &str, changed: Vec<String>) -> Result<Vec<String>, Error> {
-    /// WHETHER A GRAPH STILL HAS A ROW: one an order emptied was forgotten, row and all.
-    const ROW_Q: &str = "SELECT ?k WHERE { GRAPH $cat { $graph a ?k } } LIMIT 1";
+fn stamped(store: &Store, changed: Vec<String>) -> Result<Vec<String>, Error> {
+    /// WHETHER A GRAPH STILL SAYS WHAT IT IS: one an order emptied was forgotten, its metadata and all.
+    const ROW_Q: &str = "SELECT ?k WHERE { GRAPH $graph { $graph a ?k } } LIMIT 1";
     for graph in &changed {
-        let row = store.rows(
-            &bind(ROW_Q, &[("cat", Value::iri(cat)), ("graph", Value::iri(graph))])?,
-            &[],
-        )?;
+        let row = store.rows(&bind(ROW_Q, &[("graph", Value::iri(graph))])?, &[])?;
         if !row.is_empty() {
             hash_named_graph(store, graph, None)?;
         }
@@ -194,18 +185,13 @@ fn deleted_from(store: &Store, change: &Change, targets: &[&str]) -> Result<Vec<
 }
 
 /// Every state graph the agent derived, whatever its period.
-fn derived(store: &Store, cat: &str) -> Result<Vec<String>, Error> {
+fn derived(store: &Store) -> Result<Vec<String>, Error> {
     /// EVERY BELIEF THE AGENT DERIVED, of any period, that is no revision: its own state.
     const DERIVED_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
     PREFIX orexis: <http://example.org/orexis#>
-    SELECT ?g WHERE { GRAPH $cat { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
-                                   FILTER NOT EXISTS { ?g a belief:RevisionGraph }
-                                   ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
-    Ok(store
-        .rows(&bind(DERIVED_Q, &[("cat", Value::iri(cat))])?, &[])?
-        .iter()
-        .filter_map(|r| iri(r, "g"))
-        .collect())
+    SELECT ?g WHERE { GRAPH ?g { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy ?owner .
+                                 FILTER NOT EXISTS { ?g a belief:RevisionGraph } } } ORDER BY ?g";
+    Ok(store.rows(DERIVED_Q, &[])?.iter().filter_map(|r| iri(r, "g")).collect())
 }
 
 /// The arrival's state graph's row, said of the arrival it now holds the state of, any row of an earlier arrival
@@ -265,9 +251,8 @@ mod tests {
     fn held(store: &Store) -> BTreeMap<String, String> {
         const OWN_STATE_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
         PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g WHERE { GRAPH ?c { ?c a orexis:CatalogueGraph .
-        ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
-        FILTER NOT EXISTS { ?g a belief:RevisionGraph } ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
+        SELECT ?g WHERE { GRAPH ?g { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy ?owner .
+        FILTER NOT EXISTS { ?g a belief:RevisionGraph } } } ORDER BY ?g";
         const HELD_Q: &str = "PREFIX : <http://example.org/test#>
             PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             SELECT ?p ?o WHERE { :counter ?p ?o FILTER(?p != rdf:type) }";

@@ -126,8 +126,8 @@ INSERT {{
   GRAPH ?cat {{ <{SCOPES_GRAPH}> a planning:ScopeGraph ; orexis:arrivedBy <{DERIVED}> . }} }}
 WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }} }} ;
 INSERT {{ GRAPH ?cat {{ <{SCOPES_GRAPH}> a ?kind }} GRAPH <{SCOPES_GRAPH}> {{ <{SCOPES_GRAPH}> a ?kind }} }}
-WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?vocabulary a orexis:OntologyGraph }}
-        GRAPH ?vocabulary {{ planning:ScopeGraph rdfs:subClassOf ?kind }} }}",
+WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph }}
+        GRAPH ?vocabulary {{ ?vocabulary a orexis:OntologyGraph . planning:ScopeGraph rdfs:subClassOf ?kind }} }}",
         blocks.join("\n")
     ))
 }

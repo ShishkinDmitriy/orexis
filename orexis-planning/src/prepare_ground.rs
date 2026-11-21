@@ -89,7 +89,7 @@ pub fn prepare_ground(
     const PIECES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
       PREFIX planning: <http://example.org/orexis/planning#>
       PREFIX prov: <http://www.w3.org/ns/prov#>
-      SELECT ?piece ?source WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+      SELECT ?piece ?source WHERE { GRAPH ?piece {
       ?piece a planning:ChangeableGraph . OPTIONAL { ?piece prov:wasDerivedFrom ?source } } }";
     /// A ROW TAKEN BACK, its period with it, and the cut it says it carries left: the graph is the one cut.
     const UNDESCRIBE_U: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -101,7 +101,7 @@ pub fn prepare_ground(
     const MADE_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?g WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+      GRAPH ?g {
         { ?g a ?kind . VALUES ?kind { planning:GroundGraph planning:PossibleGraph planning:PlanGraph } }
         UNION { ?g a planning:WantGraph ; orexis:arrivedBy orexis:Derived } } }";
     let every = Within::default();
@@ -218,7 +218,7 @@ fn metadata_of(store: &Store, graph: &str) -> Result<Vec<Quad>, Error> {
 fn hashes(store: &Store) -> Result<HashMap<String, String>, Error> {
     /// EVERY ROW'S HASH, and every changeable graph with the graph it was cut from.
     const HASHES_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g ?h WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g orexis:hash ?h } }";
+        SELECT ?g ?h WHERE { GRAPH ?g { ?g orexis:hash ?h } }";
     Ok(store
         .rows(HASHES_Q, &[])?
         .iter()
@@ -368,9 +368,10 @@ mod tests {
         beliefs
             .update(&format!(
                 "PREFIX orexis: <http://example.org/orexis#>
-                 DELETE {{ GRAPH <{catalogue}> {{ <{changed}> orexis:hash ?h }} }}
-                 INSERT {{ GRAPH <{catalogue}> {{ <{changed}> orexis:hash \"moved on\" }} }}
-                 WHERE {{ OPTIONAL {{ GRAPH <{catalogue}> {{ <{changed}> orexis:hash ?h }} }} }}"
+                 DELETE {{ GRAPH ?in {{ <{changed}> orexis:hash ?h }} }}
+                 INSERT {{ GRAPH ?in {{ <{changed}> orexis:hash \"moved on\" }} }}
+                 WHERE {{ VALUES ?in {{ <{catalogue}> <{changed}> }}
+                          OPTIONAL {{ GRAPH ?in {{ <{changed}> orexis:hash ?h }} }} }}"
             ))
             .unwrap();
         assert_eq!(crossed.moved(&beliefs).unwrap(), Some(changed));
@@ -385,6 +386,7 @@ mod tests {
                  GRAPH <{catalogue}> {{ <urn:test:arrived> a orexis:BeliefGraph , orexis:Graph }} }}"
             ))
             .unwrap();
+        beliefs.carry_metadata_of("urn:test:arrived").unwrap();
         assert_eq!(crossed.moved(&beliefs).unwrap(), Some("urn:test:arrived".to_string()));
     }
 
@@ -476,6 +478,7 @@ mod tests {
                  WHERE {{ GRAPH <{catalogue}> {{ ?g orexis:ownedBy ?me }} }}"
             ))
             .unwrap();
+        beliefs.carry_metadata_of("urn:test:committed").unwrap();
         assert_eq!(
             into_air.moved(&beliefs).unwrap(),
             None,

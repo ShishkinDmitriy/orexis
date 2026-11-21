@@ -407,7 +407,7 @@ fn scopes(store: &Store) -> Vec<BTreeSet<String>> {
     let mut held: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     let text = "PREFIX orexis: <http://example.org/orexis#>
                 PREFIX planning: <http://example.org/orexis/planning#>
-                SELECT ?m ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:ScopeGraph } \
+                SELECT ?m ?s WHERE { GRAPH ?g { ?g a planning:ScopeGraph } \
                 GRAPH ?g { ?m planning:inScope ?s } }";
     for r in store.rows(text, &[]).unwrap() {
         let member = value(&r, "m").unwrap();
@@ -513,7 +513,7 @@ async fn the_present_reading_and_its_foreseen_prediction_are_one_way_of_failing(
         let text = "PREFIX dcterms: <http://purl.org/dc/terms/>
                     PREFIX orexis: <http://example.org/orexis#>
                     PREFIX planning: <http://example.org/orexis/planning#>
-                    SELECT ?g ?s ?e WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . \
+                    SELECT ?g ?s ?e WHERE { GRAPH ?g { \
                     ?g a planning:WantGraph ; dcterms:temporal ?p . ?p orexis:start ?s OPTIONAL { ?p orexis:end ?e } } }";
         let planning = m.planning("rose_grower");
         let planner = &planning.planner;
@@ -542,7 +542,7 @@ async fn the_present_reading_and_its_foreseen_prediction_are_one_way_of_failing(
                 "PREFIX dcterms: <http://purl.org/dc/terms/>
                  PREFIX execution: <http://example.org/orexis/execution#>
                  PREFIX orexis: <http://example.org/orexis#>
-                 SELECT ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . \
+                 SELECT ?s WHERE { GRAPH ?g { \
                  ?g a execution:CommittedStepGraph ; dcterms:temporal/orexis:start ?s } }",
                 &[],
             )

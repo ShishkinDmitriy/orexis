@@ -236,7 +236,7 @@ fn foreseen(store: &Store, now: DateTime) -> Vec<(DateTime, String)> {
     PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?start ?state WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start }
+      GRAPH ?g { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?start }
       GRAPH ?g { <http://example.org/orexis/world/greenhouse#bed> <http://example.org/orexis/climate#soil> ?state } }
     ORDER BY ?start";
     orexis_planning::Planner::scope(store, now).unwrap();
@@ -274,9 +274,9 @@ async fn a_committed_dose_is_a_flow_the_beds_prediction_accumulates() {
             &format!(
                 "PREFIX dcterms: <http://purl.org/dc/terms/>
                  PREFIX orexis: <http://example.org/orexis#>
-                 SELECT ?s ?e WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{}> dcterms:temporal ?p . \
+                 SELECT ?s ?e WHERE {{ GRAPH <{g}> {{ <{g}> dcterms:temporal ?p . \
                  ?p orexis:start ?s ; orexis:end ?e }} }}",
-                windows[0]
+                g = windows[0]
             ),
             &[],
         )

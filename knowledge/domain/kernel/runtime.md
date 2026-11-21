@@ -19,9 +19,9 @@ process told one identifier and given one world. It has two acts.
 in the world's directory, whatever it is called, are read the same way. A Turtle file is one graph
 named by its own IRI, and `<> a planning:DesireGraph` in it says what that graph is — the Linked
 Data reading, where a document describes itself. A TriG file names its graphs and states their
-kinds in its default graph, as a nanopublication's head does. The rows about a graph go to the
-catalogue, where every reader asks, and the same into the graph, where they are told from the facts
-it states by type ([metadata](/domain/kernel/metadata.md)). A document says what its graphs are and nothing about how they arrived or whose
+kinds in its default graph, as a nanopublication's head does. The rows about a graph go into the
+graph, where a reader asks them and they are told from the facts it states by type, and the same to
+the catalogue while it stands ([metadata](/domain/kernel/metadata.md)). A document says what its graphs are and nothing about how they arrived or whose
 they are: the loader writes `orexis:Asserted`, and the owner where a graph is the agent's. A
 graph stating no kind, one claiming to be the catalogue and one stating an arrival are refused
 (`store.document`), and so is one stating the [self](/domain/kernel/self.md) anywhere but once in a

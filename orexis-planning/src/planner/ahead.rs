@@ -130,20 +130,14 @@ impl Planner {
         const LIVE_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX orexis: <http://example.org/orexis#>
         SELECT ?plan ?want ?head ?taken WHERE {
-          GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?root execution:pursues ?want }
+          GRAPH ?plan { ?plan a orexis:PlanGraph . ?root execution:pursues ?want }
           OPTIONAL { GRAPH ?g { ?i a execution:Intention ; execution:adopts ?plan ; execution:by ?head .
                                 FILTER NOT EXISTS { ?i execution:resolvedAt ?done }
                                 OPTIONAL { ?act execution:of ?head ; execution:taken true ; execution:takenAt ?taken } } }
           FILTER(BOUND(?head) || NOT EXISTS { GRAPH ?h { ?x execution:adopts ?plan } }) }
         ORDER BY ?plan"#;
-        let Some(catalogue) = self.beliefs.catalogue()? else {
-            return Ok(Vec::new());
-        };
         let mut out: Vec<Live> = Vec::new();
-        for r in self
-            .beliefs
-            .rows(&bind(LIVE_Q, &[("cat", Value::Raw(format!("<{catalogue}>")))])?, &[])?
-        {
+        for r in self.beliefs.rows(LIVE_Q, &[])? {
             let (Some(plan), Some(want)) = (iri(&r, "plan"), iri(&r, "want")) else {
                 continue;
             };
@@ -306,7 +300,7 @@ impl Planner {
     fn begin(&self, graph: &str, begins: Option<DateTime>) -> Result<(), Error> {
         const BEGINS_Q: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?start WHERE { GRAPH $cat { $graph dcterms:temporal/orexis:start ?start } }"#;
+        SELECT ?start WHERE { GRAPH $graph { $graph dcterms:temporal/orexis:start ?start } }"#;
         /// THE PERIOD TAKEN BACK where `$in` says it: on the graph's row, and in the graph itself.
         const UNBEGIN_U: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
         DELETE { GRAPH $in { $graph dcterms:temporal ?period . ?period ?p ?o } }
@@ -314,10 +308,7 @@ impl Planner {
         let Some(catalogue) = self.beliefs.catalogue()? else {
             return Ok(());
         };
-        let marks = [
-            ("cat", Value::Raw(format!("<{catalogue}>"))),
-            ("graph", Value::iri(graph)),
-        ];
+        let marks = [("graph", Value::iri(graph))];
         let said = self
             .beliefs
             .rows(&bind(BEGINS_Q, &marks)?, &[])?

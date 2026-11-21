@@ -617,7 +617,7 @@ ORDER BY ?m";
     fn admitted(memo: &mut Memo) -> Store {
         const PRESENT_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
             PREFIX planning: <http://example.org/orexis/planning#>
-            SELECT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph } } LIMIT 1";
+            SELECT ?g WHERE { GRAPH ?g { ?g a planning:GroundGraph } } LIMIT 1";
         let store =
             snapshots::stand_in(&snapshots::tree().join("orexis-planning/tests/admit/one_lever_two_tanks.trig"));
         let present = iri(&store.rows(PRESENT_Q, &[]).unwrap()[0], "g").unwrap();

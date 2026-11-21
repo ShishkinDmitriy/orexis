@@ -96,6 +96,11 @@ applied and the same said, and a diff is written with it left out. A function th
 on its row and not in the graph, or the two unalike, fails its case with the graph's own statements
 listed as missing or unexpected; the fix is the writer, never the diff.
 
+A unit test that writes its fixture by hand does the same: it says each graph's metadata on its row
+and calls `orexis::snapshots::mirrored(&store)`, since every reader asks the graph. Where the
+catalogue holds candidates or weighings, which are no graphs, it names the one graph instead,
+`store.carry_metadata_of(graph)`. A fact in a fixture is never about the graph it is written in.
+
 ## Adding a case
 
 1. Write `<case>.trig`: the whole store the function is handed, in canonical form, with a

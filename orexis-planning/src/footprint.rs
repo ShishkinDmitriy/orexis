@@ -585,6 +585,7 @@ GRAPH :catalogue {
     fn store_of(trig: &str) -> Store {
         let store = Store::new().expect("an empty store");
         store.put_trig(snapshots::WORLD, trig).expect("the actions");
+        snapshots::mirrored(&store);
         store
     }
 

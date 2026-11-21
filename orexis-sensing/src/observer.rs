@@ -279,18 +279,16 @@ impl Observer {
         PREFIX prov: <http://www.w3.org/ns/prov#>
         PREFIX sensing: <http://example.org/orexis/sensing#>
         SELECT ?g WHERE {
-          GRAPH $cat { ?g a sensing:ObservationGraph ; orexis:arrivedBy orexis:Received
-                       OPTIONAL { ?g dcterms:temporal/orexis:start ?start }
-                       FILTER NOT EXISTS { ?r prov:wasDerivedFrom ?g ; a sensing:ObservationGraph } } }
+          GRAPH ?g { ?g a sensing:ObservationGraph ; orexis:arrivedBy orexis:Received
+                     OPTIONAL { ?g dcterms:temporal/orexis:start ?start } }
+          FILTER NOT EXISTS { GRAPH ?r { ?r prov:wasDerivedFrom ?g ; a sensing:ObservationGraph } } }
         ORDER BY ?start ?g";
-        if let Some(cat) = self.beliefs.catalogue()? {
-            self.due = self
-                .beliefs
-                .rows(&bind(UNREVISED_Q, &[("cat", Value::iri(cat))])?, &[])?
-                .iter()
-                .filter_map(|r| iri(r, "g"))
-                .collect();
-        }
+        self.due = self
+            .beliefs
+            .rows(UNREVISED_Q, &[])?
+            .iter()
+            .filter_map(|r| iri(r, "g"))
+            .collect();
         Ok(())
     }
 

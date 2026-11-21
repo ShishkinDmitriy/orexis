@@ -46,7 +46,7 @@ pub(crate) fn standing(store: &Store) -> Result<Vec<String>, Error> {
     const STANDING_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?g WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:ScopeGraph } }
+      GRAPH ?g { ?g a planning:ScopeGraph } }
     ORDER BY ?g";
     Ok(store
         .rows(STANDING_Q, &[])?
@@ -87,6 +87,7 @@ mod tests {
                 INSERT DATA { GRAPH <urn:test:catalogue> { <urn:test:catalogue> a orexis:CatalogueGraph } }",
             )
             .unwrap();
+        orexis::snapshots::mirrored(&store);
         store
     }
 
@@ -104,6 +105,7 @@ mod tests {
                 INSERT DATA { GRAPH <urn:test:catalogue> { <urn:test:scopes> a planning:ScopeGraph } }",
             )
             .unwrap();
+        orexis::snapshots::mirrored(&store);
         assert_eq!(
             find_scopes(&store).unwrap(),
             Some(Scopes::default()),
@@ -126,6 +128,7 @@ mod tests {
   GRAPH <urn:test:catalogue> { <urn:test:scopes> a planning:ScopeGraph } }",
             )
             .unwrap();
+        orexis::snapshots::mirrored(&store);
         let scopes = find_scopes(&store).unwrap().unwrap();
         let expected: BTreeMap<String, BTreeSet<String>> = [
             ("urn:test:level", set(&["urn:test:s1"])),
@@ -153,6 +156,7 @@ mod tests {
   GRAPH <urn:test:catalogue> { <urn:test:scopes> a planning:ScopeGraph } }",
             )
             .unwrap();
+        orexis::snapshots::mirrored(&store);
         let scopes = find_scopes(&store).unwrap().unwrap();
         assert_eq!(
             scopes.meet(["urn:test:bed", "urn:test:level", "urn:test:probe"]),

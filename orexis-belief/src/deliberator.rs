@@ -490,9 +490,8 @@ mod tests {
     fn own_state(store: &Store) -> Vec<String> {
         const OWN_STATE_Q: &str = "PREFIX belief: <http://example.org/orexis/belief#>
         PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g WHERE { GRAPH ?c { ?c a orexis:CatalogueGraph .
-        ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived .
-        FILTER NOT EXISTS { ?g a belief:RevisionGraph } ?g orexis:ownedBy ?owner . } } ORDER BY ?g";
+        SELECT ?g WHERE { GRAPH ?g { ?g a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy ?owner .
+        FILTER NOT EXISTS { ?g a belief:RevisionGraph } } } ORDER BY ?g";
         store
             .rows(OWN_STATE_Q, &[])
             .unwrap()
@@ -863,6 +862,7 @@ mod tests {
                 "PREFIX orexis: <http://example.org/orexis#> INSERT DATA {{ GRAPH <{CATALOGUE_GRAPH}> {{ {rows} }} }}"
             ))
             .unwrap();
+        store.carry_metadata().unwrap();
         let mut part = Deliberator::new(&store).unwrap();
         part.revise(&["urn:test:reading".to_string()], BELIEF, snapshots::now())
             .unwrap();

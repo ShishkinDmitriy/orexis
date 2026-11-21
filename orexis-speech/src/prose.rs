@@ -47,16 +47,9 @@ pub fn written(store: &Store, me: &str, prose: &Prose) -> Result<String, Error> 
 
 /// Whether the words a prose graph keeps arrived from outside, a person's, rather than the agent's own.
 pub fn received(store: &Store, graph: &str) -> Result<bool, Error> {
-    let Some(cat) = store.catalogue()? else {
-        return Ok(false);
-    };
     let text = bind(
-        "PREFIX orexis: <http://example.org/orexis#> ASK { GRAPH $cat { $graph orexis:arrivedBy $received } }",
-        &[
-            ("cat", Value::iri(cat.as_str())),
-            ("graph", Value::iri(graph)),
-            ("received", Value::iri(RECEIVED)),
-        ],
+        "PREFIX orexis: <http://example.org/orexis#> ASK { GRAPH $graph { $graph orexis:arrivedBy $received } }",
+        &[("graph", Value::iri(graph)), ("received", Value::iri(RECEIVED))],
     )?;
     store.ask(&text, &[])
 }

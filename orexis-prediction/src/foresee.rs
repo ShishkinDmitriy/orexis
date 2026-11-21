@@ -281,14 +281,13 @@ impl Foresight {
         const HAPPENINGS_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
         SELECT DISTINCT ?t WHERE {
-          GRAPH $cat { ?g a orexis:BeliefGraph ; dcterms:temporal ?p . { ?p orexis:start ?t } UNION { ?p orexis:end ?t } }
+          GRAPH ?g { ?g a orexis:BeliefGraph ; dcterms:temporal ?p . { ?p orexis:start ?t } UNION { ?p orexis:end ?t } }
           FILTER(?t > $from && ?t < $to) }";
         let mut out: Vec<f64> = vec![t1];
-        if let Some(cat) = store.catalogue()? {
+        {
             let text = bind(
                 HAPPENINGS_Q,
                 &[
-                    ("cat", Value::iri(cat)),
                     ("from", Value::instant(self.instant(t0))),
                     ("to", Value::instant(self.instant(t1))),
                 ],
@@ -445,8 +444,7 @@ pub fn foresee(
     const SENSORS_Q: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
     PREFIX sosa: <http://www.w3.org/ns/sosa/>
     SELECT DISTINCT ?sensor WHERE {
-      GRAPH $cat { ?g a sensing:ObservationGraph }
-      GRAPH ?g { ?o sosa:madeBySensor ?sensor } }
+      GRAPH ?g { ?g a sensing:ObservationGraph . ?o sosa:madeBySensor ?sensor } }
     ORDER BY ?sensor";
     /// THE OBSERVATION IN HAND: the percept begun last, and of two begun at once the one still holding.
     const OBSERVATION_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -454,9 +452,10 @@ pub fn foresee(
     PREFIX sensing: <http://example.org/orexis/sensing#>
     PREFIX sosa: <http://www.w3.org/ns/sosa/>
     SELECT ?graph ?node ?taken ?from WHERE {
-      GRAPH $cat { ?graph a sensing:ObservationGraph ; dcterms:temporal ?p . ?p orexis:start ?from .
-                   OPTIONAL { ?p orexis:end ?until } }
-      GRAPH ?graph { ?node sosa:madeBySensor $sensor . OPTIONAL { ?node sosa:resultTime ?taken } } }
+      GRAPH ?graph { ?graph a sensing:ObservationGraph ; dcterms:temporal/orexis:start ?from .
+                     ?node sosa:madeBySensor $sensor .
+                     OPTIONAL { ?graph dcterms:temporal/orexis:end ?until }
+                     OPTIONAL { ?node sosa:resultTime ?taken } } }
     ORDER BY DESC(?from) ASC(BOUND(?until)) DESC(?until) LIMIT 1";
     const KEY_Q: &str = "PREFIX sosa: <http://www.w3.org/ns/sosa/>
     SELECT ?feature ?property ?value WHERE {
@@ -464,26 +463,17 @@ pub fn foresee(
     /// EVERY FLOW MOVING THE PROPERTY, off the graphs of flows alone.
     const FLOWS_Q: &str =
         "SELECT ?flow ?rate WHERE { ?flow a $flow ; $moves $property ; $rate_of ?rate } ORDER BY ?flow";
-    let Some(cat) = beliefs.catalogue()? else {
-        return Ok(None);
-    };
     let (horizon, held_s) = (predictor.horizon_s, predictor.rate_held_s);
     let flow_graphs = beliefs.graphs_of(&[FLOW_GRAPH], &Within::default())?;
     let flow_graphs: Vec<&str> = flow_graphs.iter().map(String::as_str).collect();
     let sensors: Vec<String> = beliefs
-        .rows(&bind(SENSORS_Q, &[("cat", Value::iri(cat.as_str()))])?, &[])?
+        .rows(SENSORS_Q, &[])?
         .iter()
         .filter_map(|r| iri(r, "sensor"))
         .collect();
     let mut keys = Vec::new();
     for sensor in sensors {
-        let text = bind(
-            OBSERVATION_Q,
-            &[
-                ("cat", Value::iri(cat.as_str())),
-                ("sensor", Value::iri(sensor.as_str())),
-            ],
-        )?;
+        let text = bind(OBSERVATION_Q, &[("sensor", Value::iri(sensor.as_str()))])?;
         let Some(found) = beliefs.rows(&text, &[])?.into_iter().next() else {
             continue;
         };
@@ -996,6 +986,7 @@ mod tests {
                                 orexis:ownedBy <{ME}> }} }}"
             ))
             .unwrap();
+        store.carry_metadata().unwrap();
         let mut foresight = foresee(&store, &crate::Predictor::new(&store).unwrap(), now(), None)
             .unwrap()
             .unwrap();

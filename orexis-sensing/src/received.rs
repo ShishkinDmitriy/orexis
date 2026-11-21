@@ -67,14 +67,14 @@ pub fn received_by(
     const KEPT_Q: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
     PREFIX sosa: <http://www.w3.org/ns/sosa/>
     SELECT ?g ?o ?t (BOUND(?later) AS ?followed) WHERE {
-      GRAPH $cat { ?g a sensing:ObservationGraph }
-      GRAPH ?g { ?o sosa:madeBySensor $sensor OPTIONAL { ?o sosa:resultTime ?t } }
-      OPTIONAL { GRAPH ?h { ?later sensing:previous ?o } GRAPH $cat { ?h a sensing:ObservationGraph } } }
+      GRAPH ?g { ?g a sensing:ObservationGraph . ?o sosa:madeBySensor $sensor OPTIONAL { ?o sosa:resultTime ?t } }
+      OPTIONAL { GRAPH ?h { ?later sensing:previous ?o . ?h a sensing:ObservationGraph } } }
     ORDER BY DESC(?t) DESC(?g)";
     /// THE SILENCE A READING ENDS: each kept of this sensor whose end is not yet said, found by its content.
     const SILENT_Q: &str = "PREFIX sensing: <http://example.org/orexis/sensing#>
-    SELECT ?g ?since WHERE { GRAPH $cat { ?g a sensing:SilenceGraph }
-      GRAPH ?g { $sensor sensing:silentSince ?since FILTER NOT EXISTS { $sensor sensing:silentUntil ?until } } }";
+    SELECT ?g ?since WHERE {
+      GRAPH ?g { ?g a sensing:SilenceGraph . $sensor sensing:silentSince ?since
+                 FILTER NOT EXISTS { $sensor sensing:silentUntil ?until } } }";
     if reads_series(store, sensor)? {
         let common = store.graphs_of(&[BELIEF], &Within::common())?;
         let common: Vec<&str> = common.iter().map(String::as_str).collect();
@@ -96,16 +96,7 @@ pub fn received_by(
     let Some(readings) = decode(store, sensor, payload)? else {
         return Ok(Vec::new());
     };
-    let Some(cat) = store.catalogue()? else {
-        return Err(Error::Catalogue("no graph describes itself as the catalogue".into()));
-    };
-    let kept = store.rows(
-        &bind(
-            KEPT_Q,
-            &[("cat", Value::iri(cat.as_str())), ("sensor", Value::iri(sensor))],
-        )?,
-        &[],
-    )?;
+    let kept = store.rows(&bind(KEPT_Q, &[("sensor", Value::iri(sensor))])?, &[])?;
     let latest = kept.iter().find(|r| value(r, "followed").as_deref() != Some("true"));
     //  EVERY READING THE MESSAGE CARRIES, oldest first, each placed that long before it arrived.
     let instants: Vec<DateTime> = readings
@@ -119,13 +110,7 @@ pub fn received_by(
     if let Some(g) = latest.and_then(|r| iri(r, "g")) {
         store.end_graph(&g, instants[0], OBSERVATION_GRAPH)?;
     }
-    let silences = store.rows(
-        &bind(
-            SILENT_Q,
-            &[("cat", Value::iri(cat.as_str())), ("sensor", Value::iri(sensor))],
-        )?,
-        &[],
-    )?;
+    let silences = store.rows(&bind(SILENT_Q, &[("sensor", Value::iri(sensor))])?, &[])?;
     for silence in silences {
         let Some(g) = iri(&silence, "g") else { continue };
         store.update(&format!(
@@ -153,7 +138,7 @@ pub fn received_by(
         } else {
             Some(instants[n + 1])
         };
-        let (node, graph) = named(store, &cat, me, sensor, *when)?;
+        let (node, graph) = named(store, me, sensor, *when)?;
         write(
             store,
             &Percept {
@@ -206,20 +191,14 @@ fn py_g(n: f64) -> String {
 
 /// The node and the graph of the reading `sensor` made at `when` — the second of that instant named apart from the
 /// first, so a sensor read twice in one instant keeps both.
-fn named(store: &Store, cat: &str, me: &str, sensor: &str, when: DateTime) -> Result<(String, String), Error> {
+fn named(store: &Store, me: &str, sensor: &str, when: DateTime) -> Result<(String, String), Error> {
     /// WHETHER A GRAPH OF THIS NAME IS ALREADY SAID — a second reading of one sensor at one instant.
-    const SAID_Q: &str = "SELECT ?p WHERE { GRAPH $cat { $g ?p ?o } } LIMIT 1";
+    const SAID_Q: &str = "SELECT ?p WHERE { GRAPH $g { $g ?p ?o } } LIMIT 1";
     let agent = local_of(me);
     let mut n = 1;
     while !store
         .rows(
-            &bind(
-                SAID_Q,
-                &[
-                    ("cat", Value::iri(cat)),
-                    ("g", Value::iri(percept_graph(&agent, sensor, when, n))),
-                ],
-            )?,
+            &bind(SAID_Q, &[("g", Value::iri(percept_graph(&agent, sensor, when, n)))])?,
             &[],
         )?
         .is_empty()
@@ -298,20 +277,11 @@ fn forecast(
     /// THE FORECAST THIS SENSOR GAVE BEFORE: every graph of it, found by its content.
     const FORECAST_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
         PREFIX sosa: <http://www.w3.org/ns/sosa/>
-        SELECT ?g WHERE { GRAPH $cat { ?g a orexis:ForecastGraph } GRAPH ?g { ?o sosa:madeBySensor $sensor } }";
+        SELECT ?g WHERE { GRAPH ?g { ?g a orexis:ForecastGraph . ?o sosa:madeBySensor $sensor } }";
     let Some(stretches) = decode_series(store, sensor, payload)? else {
         return Ok(Vec::new());
     };
-    let Some(cat) = store.catalogue()? else {
-        return Err(Error::Catalogue("no graph describes itself as the catalogue".into()));
-    };
-    let old = store.rows(
-        &bind(
-            FORECAST_Q,
-            &[("cat", Value::iri(cat.as_str())), ("sensor", Value::iri(sensor))],
-        )?,
-        &[],
-    )?;
+    let old = store.rows(&bind(FORECAST_Q, &[("sensor", Value::iri(sensor))])?, &[])?;
     for g in old.iter().filter_map(|r| iri(r, "g")) {
         store.forget_graph(&g, Some(BELIEF))?;
     }
@@ -502,8 +472,7 @@ pub(crate) mod tests {
     PREFIX sensing: <http://example.org/orexis/sensing#>
     PREFIX sosa: <http://www.w3.org/ns/sosa/>
     SELECT ?o ?n ?t ?previous WHERE {
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a sensing:ObservationGraph }
-      GRAPH ?g { ?o sosa:madeBySensor $sensor ; sensing:rawResult ?n ; sosa:resultTime ?t
+      GRAPH ?g { ?g a sensing:ObservationGraph . ?o sosa:madeBySensor $sensor ; sensing:rawResult ?n ; sosa:resultTime ?t
                  OPTIONAL { ?o sensing:previous ?previous } } }
     ORDER BY ?t";
         store
@@ -523,7 +492,7 @@ pub(crate) mod tests {
     fn period(store: &Store, graph: &str) -> (DateTime, Option<DateTime>) {
         const PERIOD_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
                    PREFIX orexis: <http://example.org/orexis#>
-                   SELECT ?start ?end WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $g dcterms:temporal ?p .
+                   SELECT ?start ?end WHERE { GRAPH $g { $g dcterms:temporal ?p .
                    ?p orexis:start ?start . OPTIONAL { ?p orexis:end ?end } } }";
         let found = store
             .rows(&bind(PERIOD_Q, &[("g", Value::iri(graph))]).unwrap(), &[])

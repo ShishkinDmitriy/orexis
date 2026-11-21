@@ -383,6 +383,7 @@ SELECT ?w ?at ?until ?spent WHERE {
 WHERE {{ GRAPH <{cat}> {{ <{old}> orexis:hash ?h }} }}"
                 ))
                 .unwrap();
+            store.carry_metadata_of(&landing).unwrap();
             let (held, bare) = if holder_is_old {
                 (&old, &landing)
             } else {

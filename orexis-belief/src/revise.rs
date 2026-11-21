@@ -404,17 +404,14 @@ fn describe(
     const SOURCE_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>
     SELECT ?owner ?start ?end WHERE {
-      GRAPH $cat { OPTIONAL { $source orexis:ownedBy ?owner }
-                   OPTIONAL { $source dcterms:temporal ?p .
-                              OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
+      GRAPH $source { OPTIONAL { $source orexis:ownedBy ?owner }
+                      OPTIONAL { $source dcterms:temporal ?p .
+                                 OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
     LIMIT 1";
     if continuing {
         return say_settled(store, cat, into, settled);
     }
-    let rows = store.rows(
-        &bind(SOURCE_Q, &[("cat", Value::iri(cat)), ("source", Value::iri(source))])?,
-        &[],
-    )?;
+    let rows = store.rows(&bind(SOURCE_Q, &[("source", Value::iri(source))])?, &[])?;
     let row = rows.first();
     let field = |k: &str| row.and_then(|r| value(r, k));
     let when = |k: &str| field(k).and_then(|t| instant(&t).ok());

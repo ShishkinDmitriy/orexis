@@ -21,19 +21,14 @@ pub fn answer(store: &Store, me: &str, question: &str, at: DateTime) -> Result<O
     /// WHAT A QUESTION HEARD SAYS: who asks, and under which constraint; only one that arrived from a peer.
     const QUESTION_Q: &str = "PREFIX coordination: <http://example.org/orexis/coordination#>
     PREFIX orexis: <http://example.org/orexis#>
-    SELECT ?q ?asker ?constraint WHERE { GRAPH $cat { $graph orexis:arrivedBy $received }
+    SELECT ?q ?asker ?constraint WHERE { GRAPH $graph { $graph orexis:arrivedBy $received }
       GRAPH $graph { ?q a coordination:Question ; coordination:asks ?asker ; coordination:over ?constraint } } LIMIT 1";
     const HOLDS_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
         PREFIX planning: <http://example.org/orexis/planning#>
         SELECT ?c WHERE { ?me a orexis:Self ; planning:holds $constraint . BIND($constraint AS ?c) } LIMIT 1";
-    let Some(cat) = store.catalogue()? else { return Ok(None) };
     let text = bind(
         QUESTION_Q,
-        &[
-            ("cat", Value::iri(cat)),
-            ("graph", Value::iri(question)),
-            ("received", Value::iri(RECEIVED)),
-        ],
+        &[("graph", Value::iri(question)), ("received", Value::iri(RECEIVED))],
     )?;
     let found = store.rows(&text, &[])?;
     let Some(row) = found.first() else { return Ok(None) };

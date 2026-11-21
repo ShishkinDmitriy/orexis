@@ -8,7 +8,7 @@ use orexis::Error;
 use orexis::store::{Store, value};
 
 use crate::Memo;
-use crate::world_at::{catalogue, when};
+use crate::world_at::when;
 
 /// The instant the first ground after the one `world` stands in that holds something else, as the search reads
 /// it, begins — or None where nothing laid after it does.
@@ -17,16 +17,14 @@ pub fn next_ground(store: &Store, world: &str, memo: &mut Memo) -> Result<Option
     const GROUNDS_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
-    SELECT ?at ?hash WHERE { GRAPH $cat { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?at ; orexis:hash ?hash } }
+    SELECT ?at ?hash WHERE { GRAPH ?g { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?at ; orexis:hash ?hash } }
     ORDER BY ?at";
     if let Some(known) = memo.next_ground.get(world) {
         return Ok(*known);
     }
     if memo.grounds.is_none() {
-        let cat = catalogue(store, memo)?;
-        let text = orexis::bind::bind(GROUNDS_Q, &[("cat", orexis::bind::Value::iri(cat))])?;
         let mut grounds = Vec::new();
-        for row in store.rows(&text, &[])? {
+        for row in store.rows(GROUNDS_Q, &[])? {
             if let (Some(at), Some(hash)) = (value(&row, "at"), value(&row, "hash")) {
                 grounds.push((orexis::clock::instant(&at)?, hash));
             }

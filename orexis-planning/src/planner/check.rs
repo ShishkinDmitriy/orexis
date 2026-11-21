@@ -120,8 +120,8 @@ impl Planner {
         const AHEAD_Q: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX execution: <http://example.org/orexis/execution#>
         PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?g ?start ?end WHERE { GRAPH $cat { ?g a orexis:ForecastGraph . FILTER NOT EXISTS { ?g a execution:CommittedStepGraph }
-          OPTIONAL { ?g dcterms:temporal ?p . OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }"#;
+        SELECT ?g ?start ?end WHERE { GRAPH ?g { ?g a orexis:ForecastGraph . FILTER NOT EXISTS { ?g a execution:CommittedStepGraph }
+          OPTIONAL { ?g dcterms:temporal/orexis:start ?start } OPTIONAL { ?g dcterms:temporal/orexis:end ?end } } }"#;
         const CONSTRAINT_TEXTS_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
         PREFIX sh: <http://www.w3.org/ns/shacl#>
         SELECT ?c ?text WHERE { $holder planning:holds ?c . ?c a planning:Constraint .
@@ -147,9 +147,8 @@ impl Planner {
             }
             _ => at,
         };
-        let catalogue = beliefs.catalogue()?.unwrap_or_default();
         let mut ahead = Vec::new();
-        for r in beliefs.rows(&bind(AHEAD_Q, &[("cat", Value::Raw(format!("<{catalogue}>")))])?, &[])? {
+        for r in beliefs.rows(AHEAD_Q, &[])? {
             let Some(g) = iri(&r, "g") else { continue };
             let starts_by = r.get("start").map(lexical).transpose()?.is_none_or(|s| s <= latest);
             let ends_after = r.get("end").map(lexical).transpose()?.is_none_or(|e| e > at);

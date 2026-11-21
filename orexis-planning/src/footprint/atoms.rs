@@ -567,6 +567,7 @@ mod tests {
   GRAPH <urn:test:catalogue> { <urn:test:catalogue> a orexis:CatalogueGraph . <urn:test:derivations> a planning:DerivationGraph } }",
         )
         .unwrap();
+        orexis::snapshots::mirrored(&store);
         let one = |i: &str| Some(BTreeSet::from([i.to_string()]));
         assert_eq!(
             stored_edges(&store, &["urn:test:derivations"]).unwrap(),

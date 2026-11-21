@@ -27,7 +27,7 @@ pub fn extract(store: &Store, statement: &str) -> Result<Vec<String>, Error> {
                                FILTER NOT EXISTS { ?rule sh:deactivated true } } ORDER BY ?rule";
     const ROW_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>
-    SELECT ?owner ?start ?end WHERE { GRAPH $cat { OPTIONAL { $g orexis:ownedBy ?owner }
+    SELECT ?owner ?start ?end WHERE { GRAPH $g { OPTIONAL { $g orexis:ownedBy ?owner }
       OPTIONAL { $g dcterms:temporal ?p . OPTIONAL { ?p orexis:start ?start } OPTIONAL { ?p orexis:end ?end } } } }
     LIMIT 1";
     let target = believed_graph(statement);
@@ -57,13 +57,7 @@ pub fn extract(store: &Store, statement: &str) -> Result<Vec<String>, Error> {
         return Ok(Vec::new());
     }
     let row = store
-        .rows(
-            &bind(
-                ROW_Q,
-                &[("cat", Value::iri(cat.as_str())), ("g", Value::iri(statement))],
-            )?,
-            &[],
-        )?
+        .rows(&bind(ROW_Q, &[("g", Value::iri(statement))])?, &[])?
         .into_iter()
         .next()
         .unwrap_or_default();
@@ -125,11 +119,12 @@ mod tests {
       :held a orexis:BeliefGraph ; orexis:arrivedBy orexis:Derived ; orexis:ownedBy <{me}> . }}
   GRAPH :rules {{ :believed a speech:Extraction ; sh:construct \"{believed}\" . }}
   GRAPH :world {{ :water a :Venue . }}
-  GRAPH <{round}> {{ <{round}> a :Round ; :lot 40 ; :onVenue :water . }}
-  GRAPH <{claim}> {{ <{claim}> a :Claim ; :inRound <{round}> . }}
-  GRAPH :held {{ <{round}> a :Round ; :lot 40 . }} }}"
+  GRAPH <{round}> {{ :theRound a :Round ; :lot 40 ; :onVenue :water . }}
+  GRAPH <{claim}> {{ :theClaim a :Claim ; :inRound :theRound . }}
+  GRAPH :held {{ :theRound a :Round ; :lot 40 . }} }}"
         ))
         .unwrap();
+        orexis::snapshots::mirrored(&st);
         st
     }
 
@@ -165,9 +160,8 @@ mod tests {
             "PREFIX dcterms: <http://purl.org/dc/terms/>
   PREFIX orexis: <http://example.org/orexis#>
   PREFIX prov: <http://www.w3.org/ns/prov#>
-  SELECT ?a ?o ?from ?start WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph .
-  <{}> orexis:arrivedBy ?a ; orexis:ownedBy ?o ; prov:wasDerivedFrom ?from ; dcterms:temporal ?p . ?p orexis:start ?start }} }}",
-            believed_graph(&round())
+  SELECT ?a ?o ?from ?start WHERE {{ GRAPH <{g}> {{ <{g}> orexis:arrivedBy ?a ; orexis:ownedBy ?o ; prov:wasDerivedFrom ?from ; dcterms:temporal ?p . ?p orexis:start ?start }} }}",
+            g = believed_graph(&round())
         );
         let row = &store.rows(&q, &[]).unwrap()[0];
         assert_eq!(iri(row, "a").unwrap(), format!("{OREXIS}Derived"));
@@ -189,7 +183,7 @@ mod tests {
         extract(&store, &round).unwrap();
         store
             .update(&format!(
-                "PREFIX : <http://example.org/test#> DELETE DATA {{ GRAPH <{round}> {{ <{round}> :lot 40 }} }} ; INSERT DATA {{ GRAPH <{round}> {{ <{round}> :lot 20 }} }}"
+                "PREFIX : <http://example.org/test#> DELETE DATA {{ GRAPH <{round}> {{ :theRound :lot 40 }} }} ; INSERT DATA {{ GRAPH <{round}> {{ :theRound :lot 20 }} }}"
             ))
             .unwrap();
         extract(&store, &round).unwrap();

@@ -224,6 +224,7 @@ mod tests {
     :world a orexis:BeliefGraph . }} }}"#
         ))
         .unwrap();
+        orexis::snapshots::mirrored(&st);
         st
     }
 

@@ -250,7 +250,7 @@ fn beside(store: &Store) -> Result<u64, Error> {
     const BESIDE_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
       PREFIX orexis: <http://example.org/orexis#>
       PREFIX planning: <http://example.org/orexis/planning#>
-      SELECT DISTINCT ?g WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a ?kind .
+      SELECT DISTINCT ?g WHERE { GRAPH ?g { ?g a ?kind .
       VALUES ?kind { orexis:BeliefGraph planning:WantGraph planning:DesireGraph orexis:RecordGraph }
       FILTER NOT EXISTS { ?g a execution:CommittedStepGraph }
       FILTER NOT EXISTS { ?g a planning:GroundGraph } FILTER NOT EXISTS { ?g a planning:PossibleGraph }
@@ -361,7 +361,7 @@ fn imagined(store: &Store, scope: &str, memo: &mut Memo) -> Result<Imagined, Err
     /// catalogue, as the Python Planner counts them.
     const IMAGINED_Q: &str = r#"PREFIX planning: <http://example.org/orexis/planning#>
     SELECT ?worlds ?weighings ?open ?met WHERE {
-      { SELECT (COUNT(?w) AS ?worlds) WHERE { GRAPH $cat { ?w a planning:PossibleGraph } } }
+      { SELECT (COUNT(?w) AS ?worlds) WHERE { GRAPH ?w { ?w a planning:PossibleGraph } } }
       { SELECT (COUNT(?x) AS ?weighings) (COUNT(?o) AS ?open) (COUNT(?m) AS ?met) WHERE {
           GRAPH $cat { ?x a planning:Weighing .
                        OPTIONAL { ?x planning:open true BIND(?x AS ?o) }
@@ -535,8 +535,7 @@ fn refined(beliefs: &Store) -> Result<Vec<Refined>, Error> {
     const REFINED_Q: &str = r#"PREFIX execution: <http://example.org/orexis/execution#>
     PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
-    SELECT ?want ?g ?step WHERE { GRAPH ?g { ?step execution:keptBy ?want }
-      GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:WantGraph } }"#;
+    SELECT ?want ?g ?step WHERE { GRAPH ?g { ?g a planning:WantGraph . ?step execution:keptBy ?want } }"#;
     Ok(beliefs
         .rows(REFINED_Q, &[])?
         .iter()
@@ -629,7 +628,7 @@ fn of_scope(
     const GROUND_STARTS_Q: &str = r#"PREFIX dcterms: <http://purl.org/dc/terms/>
     PREFIX orexis: <http://example.org/orexis#>
     PREFIX planning: <http://example.org/orexis/planning#>
-    SELECT ?s WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?s } }
+    SELECT ?s WHERE { GRAPH ?g { ?g a planning:GroundGraph ; dcterms:temporal/orexis:start ?s } }
     ORDER BY ?s"#;
     let all: Vec<String> = scopes.all().into_iter().collect();
     let first = all.first().cloned().unwrap_or_else(|| UNSCOPED.to_string());
@@ -1199,15 +1198,12 @@ impl Planner {
           { GRAPH ?g { ?i a execution:Intention ; execution:pursues ?want .
                        FILTER NOT EXISTS { ?i execution:resolvedAt ?done } } }
           UNION
-          { GRAPH $cat { ?plan a orexis:PlanGraph } GRAPH ?plan { ?root execution:pursues ?want }
+          { GRAPH ?plan { ?plan a orexis:PlanGraph . ?root execution:pursues ?want }
             FILTER NOT EXISTS { GRAPH ?h { ?i execution:adopts ?plan } } } }
         ORDER BY ?want"#;
-        let Some(catalogue) = self.beliefs.catalogue()? else {
-            return Ok(BTreeSet::new());
-        };
         Ok(self
             .beliefs
-            .rows(&bind(WALKING_Q, &[("cat", Value::Raw(format!("<{catalogue}>")))])?, &[])?
+            .rows(WALKING_Q, &[])?
             .iter()
             .filter_map(|r| iri(r, "want"))
             .collect())
@@ -1229,12 +1225,11 @@ impl Planner {
         const NEXT_GROUND_Q: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
           PREFIX orexis: <http://example.org/orexis#>
           PREFIX planning: <http://example.org/orexis/planning#>
-          SELECT (MIN(?start) AS ?start) WHERE { GRAPH $cat {
+          SELECT (MIN(?start) AS ?start) WHERE { GRAPH ?g {
           ?g a planning:GroundGraph ; dcterms:temporal ?period . ?period orexis:start ?start . FILTER (?start > $at) } }";
         let mut next: Option<DateTime> = None;
         for store in self.imaginaria.values() {
-            let Some(cat) = store.catalogue()? else { continue };
-            let text = bind(NEXT_GROUND_Q, &[("cat", Value::iri(cat)), ("at", Value::instant(at))])?;
+            let text = bind(NEXT_GROUND_Q, &[("at", Value::instant(at))])?;
             for row in store.rows(&text, &[])? {
                 if let Some(start) = value(&row, "start").and_then(|s| s.parse::<DateTime>().ok())
                     && next.is_none_or(|n| start < n)
@@ -1508,8 +1503,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
             .rows(
                 &format!(
                     "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?d ?p ?o ?g WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph }}
-        GRAPH ?g {{ ?d ?p ?o }} FILTER(STRENDS(STR(?d), \"{disk}\") && STRENDS(STR(?p), \"#on\")) }}"
+        SELECT ?d ?p ?o ?g WHERE {{ GRAPH ?g {{ ?g a orexis:BeliefGraph . ?d ?p ?o }} FILTER(STRENDS(STR(?d), \"{disk}\") && STRENDS(STR(?p), \"#on\")) }}"
                 ),
                 &[],
             )
@@ -1567,8 +1561,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
             .rows(
                 &format!(
                     "PREFIX orexis: <http://example.org/orexis#>
-        SELECT ?d ?g WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph }}
-        GRAPH ?g {{ ?d ?p ?o }} FILTER(STRENDS(STR(?d), \"{disk}\") && STRENDS(STR(?p), \"#on\")) }}"
+        SELECT ?d ?g WHERE {{ GRAPH ?g {{ ?g a orexis:BeliefGraph . ?d ?p ?o }} FILTER(STRENDS(STR(?d), \"{disk}\") && STRENDS(STR(?p), \"#on\")) }}"
                 ),
                 &[],
             )
@@ -1614,13 +1607,13 @@ SELECT (COUNT(?x) AS ?n) WHERE {
             .collect();
         assert!(!old.is_empty() && !possible(&planner).is_empty());
         let found = store
-        .rows(
-            "PREFIX orexis: <http://example.org/orexis#>
-             SELECT ?d WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?d ?p ?o } \
+            .rows(
+                "PREFIX orexis: <http://example.org/orexis#>
+             SELECT ?d WHERE { GRAPH ?g { ?g a orexis:BeliefGraph . ?d ?p ?o } \
              FILTER(STRENDS(STR(?d), \"disk_1\") && STRENDS(STR(?p), \"#on\")) }",
-            &[],
-        )
-        .unwrap();
+                &[],
+            )
+            .unwrap();
         let disk_1 = iri(&found[0], "d").unwrap();
         move_disk(&store, "disk_1", "http://example.org/orexis/hanoi#PegB");
         move_disk(&store, "disk_2", &disk_1);
@@ -1816,6 +1809,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
   GRAPH <{cat}> {{ <{own}> a orexis:SelfGraph , orexis:BeliefGraph , orexis:Graph ; orexis:ownedBy <{me}> }} }}"
             ))
             .unwrap();
+        store.carry_metadata_of(own).unwrap();
         assert_eq!(Planner::new(&store, snapshots::AGENT, Some(64)).unwrap().budget, 64);
         let mut planner = Planner::new(&store, snapshots::AGENT, None).unwrap();
         assert_eq!(planner.budget, 20);
@@ -1878,13 +1872,13 @@ SELECT (COUNT(?x) AS ?n) WHERE {
         planner.plan(snapshots::now()).unwrap();
         let walked = planner.walking().unwrap();
         let found = store
-        .rows(
-            "PREFIX orexis: <http://example.org/orexis#>
-             SELECT ?d WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?g a orexis:BeliefGraph } GRAPH ?g { ?d ?p ?o } \
+            .rows(
+                "PREFIX orexis: <http://example.org/orexis#>
+             SELECT ?d WHERE { GRAPH ?g { ?g a orexis:BeliefGraph . ?d ?p ?o } \
              FILTER(STRENDS(STR(?d), \"disk_2\") && STRENDS(STR(?p), \"#on\")) }",
-            &[],
-        )
-        .unwrap();
+                &[],
+            )
+            .unwrap();
         let disk_2 = iri(&found[0], "d").unwrap();
         move_disk(&store, "disk_2", "http://example.org/orexis/hanoi#PegC");
         move_disk(&store, "disk_1", &disk_2);
@@ -1926,7 +1920,7 @@ SELECT (COUNT(?x) AS ?n) WHERE {
     const CHANGES_Q: &str = "PREFIX execution: <http://example.org/orexis/execution#>
 PREFIX orexis: <http://example.org/orexis#>
 PREFIX prov: <http://www.w3.org/ns/prov#>
-SELECT ?g ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
+SELECT ?g ?w WHERE { GRAPH ?g {
   ?g prov:wasDerivedFrom ?w ; a ?side . VALUES ?side { execution:AddsGraph execution:RetractsGraph } } }";
 
     #[test]
@@ -2206,7 +2200,7 @@ SELECT ?g ?w WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph .
             PREFIX planning: <http://example.org/orexis/planning#>
             INSERT { GRAPH ?w { ?w a planning:PossibleGraph , orexis:Graph ; orexis:arrivedBy orexis:Derived ;
                                  orexis:hash ?name ; dcterms:temporal [ a dcterms:PeriodOfTime ; orexis:start ?name ] } }
-            WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph . ?w a planning:PossibleGraph } BIND(STR(?w) AS ?name) }",
+            WHERE  { GRAPH ?cat { ?cat a orexis:CatalogueGraph } GRAPH ?w { ?w a planning:PossibleGraph } BIND(STR(?w) AS ?name) }",
         )
         .unwrap();
         let graph = im.graphs_of(&[PLAN_GRAPH], &Within::default()).unwrap()[0].clone();

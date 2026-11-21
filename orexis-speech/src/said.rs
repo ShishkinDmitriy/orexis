@@ -13,7 +13,7 @@ use crate::statements::statements;
 /// Keep `doc` as this agent said it; the names written, sorted.
 pub fn said(store: &Store, me: &str, doc: &Document) -> Result<Vec<String>, Error> {
     const ARRIVED_Q: &str = "PREFIX orexis: <http://example.org/orexis#>
-    SELECT ?arrival ?owner WHERE { GRAPH ?cat { ?cat a orexis:CatalogueGraph . $graph orexis:arrivedBy ?arrival .
+    SELECT ?arrival ?owner WHERE { GRAPH $graph { $graph orexis:arrivedBy ?arrival .
                                                 OPTIONAL { $graph orexis:ownedBy ?owner } } }";
     doc.refuse_the_sovereigns(&format!("what {} said", local_of(me)))?;
     for graph in doc.kinds().into_keys() {
@@ -60,6 +60,7 @@ pub(crate) mod tests {
             me()
         ))
         .unwrap();
+        orexis::snapshots::mirrored(&st);
         st
     }
 
@@ -67,7 +68,7 @@ pub(crate) mod tests {
         let g = NamedNode::new_unchecked(graph);
         vec![
             Quad::new(
-                g.clone(),
+                NamedNode::new_unchecked(format!("{graph}.thing")),
                 NamedNode::new_unchecked(format!("{T}says")),
                 Literal::new_simple_literal(fact),
                 g.clone(),
@@ -91,12 +92,12 @@ pub(crate) mod tests {
         );
         let q = format!(
             "PREFIX orexis: <http://example.org/orexis#>
-                SELECT ?a ?o WHERE {{ GRAPH ?cat {{ ?cat a orexis:CatalogueGraph . <{round}> orexis:arrivedBy ?a ; orexis:ownedBy ?o }} }}"
+                SELECT ?a ?o WHERE {{ GRAPH <{round}> {{ <{round}> orexis:arrivedBy ?a ; orexis:ownedBy ?o }} }}"
         );
         let found = store.rows(&q, &[]).unwrap();
         assert_eq!(value(&found[0], "a").unwrap(), format!("{OREXIS}Recorded"));
         said(&store, &me(), &Document::of_quads(quads(&round, "cleared"))).unwrap();
-        assert_eq!(store.triples(&round).unwrap().len(), 1);
+        assert_eq!(orexis::metadata::stated(store.triples(&round).unwrap()).len(), 1);
     }
 
     #[test]
