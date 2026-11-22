@@ -53,6 +53,16 @@ it. A silence is computed at each ask, and the first ask that finds one keeps it
 [silence](/domain/sensing/silence.md), which a reading ends. Sensing says it in the log and the series. Both limits are the [observer](/domain/sensing/observer.md)
 role's that reads the sensor, and the observer shape's default holds where it states none.
 
+# What it does for as long as it runs
+
+Of each sensor it attends, one [activity](/domain/kernel/activity.md) inside its running: a
+**listening** (`sensing:Listening`) where the sensor's readings arrive of their own accord, an
+**asking** (`sensing:Asking`) where a member answers when asked and sensing asks on the sensor's
+cadence. Each names its sensor (`prov:used`). Taking in one message is a **perceiving**
+(`sensing:Perceiving`), part of the listening or the asking of the sensor the message is of, and the
+percepts written are what it generated, so the revision that follows is traced through it to the
+sensor and from there to the agent's start.
+
 # What it leaves to others
 
 What the rules conclude is a [revision](/domain/belief/revision.md), a percept as its source is, run by

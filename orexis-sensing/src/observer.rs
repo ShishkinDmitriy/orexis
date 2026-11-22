@@ -19,7 +19,9 @@ use orexis_transport::{Exchange, Inbox, Member, Members};
 use crate::cadence::{cadence_of, lapsed, next_lapse};
 use crate::events::{Doubted, Perceived, ReadingLapsed, Silence, tag_of};
 use crate::missed::missed;
-use crate::ontology::{OBSERVATION_GRAPH, OBSERVER, OBSERVING, REVISED_SOURCE, SILENCE_GRAPH, silence_graph};
+use crate::ontology::{
+    ASKING, LISTENING, OBSERVATION_GRAPH, OBSERVER, OBSERVING, PERCEIVING, REVISED_SOURCE, SILENCE_GRAPH, silence_graph,
+};
 use crate::received::received_by;
 
 pub(crate) const ASK: usize = 0;
@@ -59,6 +61,11 @@ pub struct Observer {
     doubts: BTreeSet<String>,
     /// Each sensor read by asking, with the member asked, its job the index after `REQUEST`.
     requested: Vec<(String, Arc<dyn Member>)>,
+    /// Each sensor listened to, its readings arriving of their own accord.
+    listened: Vec<String>,
+    /// What sensing does of each sensor for as long as it runs, its listening or its asking (`attend`): what a
+    /// perceiving of that sensor's message is part of.
+    attending: std::collections::HashMap<String, orexis::activity::Activity>,
     /// Where each asked sensor's answer is left.
     pub replies: Inbox,
     /// The agent's members, read once every core is made.
@@ -136,6 +143,8 @@ impl Observer {
             perceiving: Default::default(),
             doubts: BTreeSet::new(),
             requested: Vec::new(),
+            listened: Vec::new(),
+            attending: std::collections::HashMap::new(),
             replies: Inbox::default(),
             members: Members::default(),
             told: true,
@@ -307,6 +316,7 @@ impl Observer {
         for sensor in &self.sensors {
             if let Some(member) = members.reaching(sensor, Exchange::Listened)? {
                 member.listen(sensor, self.replies.clone())?;
+                self.listened.push(sensor.clone());
                 continue;
             }
             let Some(member) = members.reaching(sensor, Exchange::Requested)? else {
@@ -342,7 +352,14 @@ impl Observer {
         let perceiving = orexis::rdf::mint();
         for message in self.replies.take() {
             let at = message.at.unwrap_or(pass.now);
-            written.extend(received_by(
+            //  PERCEIVING ONE MESSAGE IS AN ACTIVITY, part of the listening or the asking of the sensor it is of: the
+            //  percepts it wrote are said of it, so what revises them is traced to it.
+            let attending = self.attending.get(&message.topic);
+            if let Some(attending) = attending {
+                pass.step_in(attending);
+            }
+            let activity = pass.begin(PERCEIVING, &[]);
+            let wrote = received_by(
                 &self.beliefs,
                 &self.me,
                 &message.topic,
@@ -351,12 +368,38 @@ impl Observer {
                 None,
                 None,
                 Some((perceiving.as_str(), pass.now)),
-            )?);
+            );
+            pass.wrote_by(activity, wrote.as_deref().unwrap_or_default());
+            if let Some(attending) = attending {
+                pass.step_out(attending);
+            }
+            written.extend(wrote?);
         }
         if !written.is_empty() {
             self.perceiving.push_back(perceiving);
         }
         Ok(written)
+    }
+
+    /// WHAT SENSING DOES OF EACH SENSOR FOR AS LONG AS IT RUNS: a listening of each sensor whose readings arrive of
+    /// their own accord and an asking of each it asks, each an activity inside sensing's running that names its
+    /// sensor (`prov:used`).
+    pub(crate) async fn attend(&mut self, handed: &orexis::task::Handed) -> Result<(), Error> {
+        let asked = self.requested.iter().map(|(sensor, _)| (sensor.clone(), ASKING));
+        let attended: Vec<(String, &'static str)> = self
+            .listened
+            .iter()
+            .map(|sensor| (sensor.clone(), LISTENING))
+            .chain(asked)
+            .collect();
+        for (sensor, kind) in attended {
+            let Ok(node) = oxigraph::model::NamedNode::new(sensor.as_str()) else {
+                continue;
+            };
+            let activity = handed.lasting(kind, vec![(crate::ontology::USED, node.into())]).await?;
+            self.attending.insert(sensor, activity);
+        }
+        Ok(())
     }
 
     pub(crate) fn run(&mut self, job: usize, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {

@@ -48,6 +48,8 @@ package "observer" {
     {field} -perceiving : std::collections::VecDeque<oxigraph::model::NamedNode>
     {field} -doubts : BTreeSet<String>
     {field} -requested : Vec<(String, Arc<dyn Member>)>
+    {field} -listened : Vec<String>
+    {field} -attending : std::collections::HashMap<String, orexis::activity::Activity>
     {field} +replies : Inbox
     {field} -members : Members
     {field} -told : bool
@@ -92,6 +94,7 @@ package "received" {
 }
 
 package "orexis" #EEEEEE {
+  class "Activity" as orexis__activity__Activity << (S,#A8D8EA) struct >>
   interface "Event" as orexis__events__Event << (T,#C9E4C5) trait >>
   class "Watch" as orexis__events__Watch << (S,#A8D8EA) struct >>
   enum "Bound" as orexis__store__Bound << (E,#F6D6A8) enum >>
@@ -106,6 +109,7 @@ package "orexis-transport" #EEEEEE {
 orexis_sensing__observer__Observer *-- "1" orexis__store__Store : beliefs
 orexis_sensing__observer__Observer *-- "1" orexis__events__Watch : watch
 orexis_sensing__observer__Observer o-- "*" orexis_transport__member__Member : requested
+orexis_sensing__observer__Observer *-- "*" orexis__activity__Activity : attending
 orexis_sensing__observer__Observer *-- "1" orexis_transport__inbox__Inbox : replies
 orexis_sensing__observer__Observer *-- "1" orexis_transport__member__Members : members
 orexis_sensing__pipeline__Codecs *-- "*" orexis_sensing__pipeline__Codec : 0

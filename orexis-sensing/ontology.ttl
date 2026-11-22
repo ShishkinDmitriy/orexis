@@ -372,6 +372,18 @@ sensing:Trigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Trigger
 sensing:Observing a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Observing" ;
     rdfs:comment "Saying each percept a revision pass concluded of as the observation it is, with how long after the percept before it it came." .
 
+#  WHAT SENSING DOES OF ONE SENSOR FOR AS LONG AS IT RUNS, inside its running: listening to it, where its readings
+#  arrive of their own accord, or asking it on its cadence; and perceiving one message of it, part of that.
+
+sensing:Listening a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Listening" ;
+    rdfs:comment "Listening to one sensor whose readings arrive of their own accord, for as long as sensing runs: the sensor is what it is done with (`prov:used`), and each message of it perceived is part of it." .
+
+sensing:Asking a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Asking" ;
+    rdfs:comment "Asking one sensor a member answers when asked, on its cadence, for as long as sensing runs: the sensor is what it is done with (`prov:used`), and each answer perceived is part of it." .
+
+sensing:Perceiving a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Perceiving" ;
+    rdfs:comment "Taking in one message of a sensor: a percept written per reading it carries, part of the listening or the asking of that sensor. The percepts are what it generated, so what revises them is traced to it." .
+
 sensing:ObservingTrigger a owl:Class ; rdfs:subClassOf sensing:Trigger ; rdfs:label "Observing trigger" ;
     rdfs:comment "What starts an observing: belief's revision pass, beneath it here, naming the percepts it revised (`belief:revised`)." .
 

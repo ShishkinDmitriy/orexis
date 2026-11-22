@@ -101,3 +101,94 @@ pub fn metered(store: &orexis::store::Store) {
         ))
         .unwrap();
 }
+
+/// THE TRACE FROM THE PROCESS'S START, read off a journal: which activities it keeps are not reached from the one
+/// event nothing in the agent caused, and which classes of event were said within a package's running for want of
+/// an activity of their own. An activity is reached where something that started it is - an event or a graph a
+/// reached activity generated, or the end of one - and, WHERE IT NAMES NOTHING THAT STARTED IT, where the activity it
+/// is part of is: begun by the clock or with its package, it is its part and no more. One that names what started it
+/// and is reached through none of it has a cause the journal does not know.
+#[allow(dead_code)]
+pub fn traced(journal: &oxigraph::store::Store) -> (Vec<String>, Vec<String>) {
+    use std::collections::{BTreeMap, BTreeSet};
+    const TYPE: &str = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+    const ACTIVITY: &str = "http://www.w3.org/ns/prov#Activity";
+    const STARTED_BY: &str = "http://www.w3.org/ns/prov#wasStartedBy";
+    const GENERATED_BY: &str = "http://www.w3.org/ns/prov#wasGeneratedBy";
+    const QUALIFIED_END: &str = "http://www.w3.org/ns/prov#qualifiedEnd";
+    const PART_OF: &str = "http://purl.org/dc/terms/isPartOf";
+    const STARTED: &str = "http://example.org/orexis#ProcessStarted";
+    const RUNNING: &str = "http://example.org/orexis#PackageRunning";
+    let mut kinds: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
+    let mut from: Vec<(String, String)> = Vec::new();
+    let mut generated: Vec<(String, String)> = Vec::new();
+    let mut parts: Vec<(String, String)> = Vec::new();
+    let mut triggered: BTreeSet<String> = BTreeSet::new();
+    for quad in journal.quads_for_pattern(None, None, None, None) {
+        let quad = quad.unwrap();
+        let (oxigraph::model::NamedOrBlankNode::NamedNode(s), oxigraph::model::Term::NamedNode(o)) =
+            (&quad.subject, &quad.object)
+        else {
+            continue;
+        };
+        let (s, o) = (s.as_str().to_string(), o.as_str().to_string());
+        match quad.predicate.as_str() {
+            TYPE => {
+                kinds.entry(s).or_default().insert(o);
+            }
+            //  WHAT REACHES WHAT: the second is reached where the first is.
+            STARTED_BY => {
+                triggered.insert(s.clone());
+                from.push((o, s));
+            }
+            PART_OF => parts.push((o, s)),
+            GENERATED_BY => {
+                generated.push((s.clone(), o.clone()));
+                from.push((o, s));
+            }
+            QUALIFIED_END => from.push((s, o)),
+            _ => {}
+        }
+    }
+    from.extend(parts.into_iter().filter(|(_, part)| !triggered.contains(part)));
+    let is = |node: &str, kind: &str| kinds.get(node).is_some_and(|k| k.contains(kind));
+    let mut reached: BTreeSet<String> = kinds.keys().filter(|n| is(n, STARTED)).cloned().collect();
+    loop {
+        let more: Vec<String> = from
+            .iter()
+            .filter(|(a, b)| reached.contains(a) && !reached.contains(b))
+            .map(|(_, b)| b.clone())
+            .collect();
+        if more.is_empty() {
+            break;
+        }
+        reached.extend(more);
+    }
+    let named = |node: &str| {
+        let kind = kinds[node].iter().find(|k| k.as_str() != ACTIVITY).cloned();
+        kind.unwrap_or_else(|| node.to_string())
+    };
+    //  AN ACTIVITY UNREACHED IS SAID WITH WHAT IT NAMES AS HAVING STARTED IT, each by its class where it has one.
+    let unreached: BTreeSet<String> = kinds
+        .keys()
+        .filter(|n| is(n, ACTIVITY) && !reached.contains(*n))
+        .map(|n| {
+            let by: BTreeSet<String> = from
+                .iter()
+                .filter(|(_, b)| b == n)
+                .map(|(a, _)| if kinds.contains_key(a) { named(a) } else { a.clone() })
+                .collect();
+            format!(
+                "{} started by {}",
+                named(n),
+                by.into_iter().collect::<Vec<_>>().join(", ")
+            )
+        })
+        .collect();
+    let fell_back: BTreeSet<String> = generated
+        .iter()
+        .filter(|(said, by)| is(by, RUNNING) && kinds.contains_key(said))
+        .map(|(said, _)| named(said))
+        .collect();
+    (unreached.into_iter().collect(), fell_back.into_iter().collect())
+}

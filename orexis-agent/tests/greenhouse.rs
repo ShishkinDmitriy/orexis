@@ -468,6 +468,26 @@ async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journa
     reading(&g.inbox, r#"{"moisture": 0.2}"#, noon());
     common::settled(&g.running).await;
     assert_eq!(g.broker.topics(), ["actuators/pump/command"]);
+    //  EVERY ACTIVITY IS TRACED TO THE PROCESS'S START: through what started it, an event or a graph an activity
+    //  traced there generated or the end of one, or, begun by the clock, through the activity it is part of.
+    let (unreached, _) = common::traced(&journal.store);
+    assert!(
+        unreached.is_empty(),
+        "activities whose cause the journal does not know: {unreached:#?}"
+    );
+    //  AND WHAT SENSING DOES OF ITS PROBE FOR AS LONG AS IT RUNS IS A LISTENING, each message perceived a part of it.
+    let listened = "PREFIX prov: <http://www.w3.org/ns/prov#> PREFIX dcterms: <http://purl.org/dc/terms/>
+        PREFIX sensing: <http://example.org/orexis/sensing#> PREFIX orexis: <http://example.org/orexis#>
+        ASK { ?perceiving a sensing:Perceiving ; dcterms:isPartOf ?listening .
+              ?listening a sensing:Listening ; prov:used ?sensor ; dcterms:isPartOf ?running .
+              ?running a orexis:PackageRunning ; prov:wasStartedBy ?booted . ?booting prov:qualifiedEnd ?booted .
+              ?booting a orexis:AgentBooting ; prov:wasStartedBy ?started . ?started a orexis:ProcessStarted }";
+    let (_, asked) = orexis_journal::journal::answer(&journal.store, listened).unwrap();
+    assert!(
+        String::from_utf8(asked).unwrap().contains("true"),
+        "a perceiving, part of a listening of its sensor, part of sensing's running, begun as the booting the \
+         process's start began ended"
+    );
     let body = String::from_utf8(
         orexis_journal::journal::answer(
             &journal.store,
@@ -486,16 +506,19 @@ async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journa
         .map(|v| v.split('"').next().unwrap().rsplit('#').next().unwrap().to_string())
         .collect();
     let caused: BTreeSet<(String, String)> = values.chunks(2).map(|p| (p[0].clone(), p[1].clone())).collect();
-    //  BELIEF REVISED THE READING AND PLANNING BEGAN ON IT; planning published a plan and execution adopted it; the
-    //  adoption and the step taken in the walk each began a planning again; and the walk wrote the committed step
-    //  belief revised. What sensing takes in and what a command starts are begun by nothing an activity generated
-    //  yet, so the path has no link there.
+    //  SENSING PERCEIVED THE READING, belief revised it and planning began on that; sensing said what was concluded of
+    //  it; planning published a plan and execution adopted it; the adoption and the step taken in the walk each began
+    //  a planning again; the walk wrote the committed step belief revised, and commanded the pump.
     let expected: BTreeSet<(String, String)> = [
+        ("Perceiving", "Revising"),
+        ("Perceiving", "Observing"),
+        ("Revising", "Observing"),
         ("Revising", "Planning"),
         ("Planning", "Adopting"),
         ("Adopting", "Planning"),
         ("Walking", "Planning"),
         ("Walking", "Revising"),
+        ("Walking", "Actuating"),
     ]
     .iter()
     .map(|(a, b)| (a.to_string(), b.to_string()))

@@ -1,7 +1,8 @@
 //! AN ACTIVITY: what a package does over a stretch of time, begun by its policy, and said as two events that are PROV's
 //! own, its `prov:Start` and its `prov:End` (packages-meet-by-events-policies-and-activities). A start's TRIGGERS are
-//! what PROV says they are, entities - the graph that changed, the step that fell due - and never the event heard, so
-//! an event triggers no event. Where it runs is not its question; what it is, is a class its package declares beneath
+//! what started it: the entities the event heard was about - the graph that changed, the step that fell due - and
+//! that event, so every activity is traced to the process's start (`ProcessStarted`); an event triggers no event.
+//! Where it runs is not its question; what it is, is a class its package declares beneath
 //! `prov:Activity`.
 //!
 //! Neither event states journal triples: a planning begins and a walk every second, and kept for good they would be
@@ -114,6 +115,31 @@ impl Event for Ended {
 
     fn about(&self) -> Vec<(&'static str, Term)> {
         self.lasting.as_ref().map(|l| l.about.clone()).unwrap_or_default()
+    }
+}
+
+/// THE PROCESS STARTED: the one event nothing in the agent caused, said by the kernel before anything else, and what
+/// the agent's booting is started by - so every activity the agent ever does is reached from it, through what each
+/// was started by and what each is part of.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ProcessStarted {
+    pub at: DateTime,
+}
+
+/// The process's start, an event of the kernel's.
+pub const PROCESS_STARTED: &str = "http://example.org/orexis#ProcessStarted";
+
+impl Event for ProcessStarted {
+    fn statements(&self, node: &NamedNode) -> Option<Vec<oxigraph::model::Triple>> {
+        Some(vec![crate::rdf::typed(node.clone(), PROCESS_STARTED)])
+    }
+
+    fn at(&self) -> Option<DateTime> {
+        Some(self.at)
+    }
+
+    fn kind(&self) -> Option<&'static str> {
+        Some(PROCESS_STARTED)
     }
 }
 
