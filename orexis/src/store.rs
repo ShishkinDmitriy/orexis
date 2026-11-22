@@ -28,7 +28,7 @@ use oxsdatatypes::DateTime;
 
 use crate::Error;
 use crate::bind::{Value, bind};
-use crate::ontology::{BELIEF, EXPECTED_END, HASH, METADATA_GRAPH, METADATA_OF};
+use crate::ontology::{BELIEF, EXPECTED_INVALIDATION, HASH, METADATA_GRAPH, METADATA_OF};
 
 /// ONE END OF A PERIOD, as its writer says it: an instant alone, which is an expectation until something makes it,
 /// or the event that made it with the instant it happened at. A reader compares the instant either way.
@@ -771,7 +771,7 @@ impl Store {
             };
             let made = match event {
                 Some(event) => format!(
-                    "<{graph}> <{PROV_INVALIDATION}> <{event}> . ?period <{EXPECTED_END}> ?was . \
+                    "<{graph}> <{PROV_INVALIDATION}> <{event}> . <{graph}> <{EXPECTED_INVALIDATION}> ?was . \
                      <{event}> prov:atTime ?end"
                 ),
                 None => String::new(),
@@ -1061,7 +1061,7 @@ mod tests {
 
     /// What `graph`'s period says by `word`, or its metadata of the graph by a word of PROV's, each value's text.
     fn period_says(store: &Store, graph: &str, word: &str) -> Vec<String> {
-        let asked = match word.strip_prefix("prov:") {
+        let asked = match word.split_once(':') {
             Some(_) => format!("<{graph}> {word} ?v"),
             None => format!("<{graph}> dcterms:temporal ?p . ?p orexis:{word} ?v"),
         };
@@ -1116,7 +1116,7 @@ mod tests {
             "the instant a reader compares is the event's"
         );
         assert_eq!(
-            period_says(&store, &t("reading"), "expectedEnd"),
+            period_says(&store, &t("reading"), "orexis:expectedInvalidation"),
             ["2026-01-01T12:15:00Z"],
             "and what was expected is kept"
         );

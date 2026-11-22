@@ -71,20 +71,21 @@ words and with the event's instant beside it in the same metadata graph:
 
 ```turtle
 :reading dcterms:temporal [ a dcterms:PeriodOfTime ;
-        orexis:start "…12:00:00Z" ; orexis:end "…12:14:50Z" ; orexis:expectedEnd "…12:15:00Z" ] ;
-    prov:qualifiedGeneration   <perceived-17> ;
-    prov:qualifiedInvalidation <perceived-18> .
+        orexis:start "…12:00:00Z" ; orexis:end "…12:14:50Z" ] ;
+    prov:qualifiedGeneration     <perceived-17> ;
+    prov:qualifiedInvalidation   <perceived-18> ;
+    orexis:expectedInvalidation  "…12:15:00Z" .
 <perceived-17> prov:atTime "…12:00:00Z" .
 <perceived-18> prov:atTime "…12:14:50Z" .
 ```
 
 PROV says when a thing came to be and ceased, and by what, which is what an event-made end is; it
 has no word for a stretch that lies ahead or for an end that was only expected, so the period and
-`orexis:expectedEnd` stay ours. One event may begin one graph and end another.
+`orexis:expectedInvalidation`, named beside PROV's word, stay ours. One event may begin one graph and end another.
 
 `orexis:start` and `orexis:end` are always the instant to compare: the event's where there is one,
 the expectation otherwise, so no reader chooses between two. The end that was expected is kept as
-`orexis:expectedEnd` once an event ended the period at another instant, so a reading that came ten
+`orexis:expectedInvalidation` once an event ended the period at another instant, so a reading that came ten
 seconds early can be read as that. Most ends stay expectations for good, since the clock makes no
 event: a forecast for tomorrow noon begins at noon and nothing happens then.
 

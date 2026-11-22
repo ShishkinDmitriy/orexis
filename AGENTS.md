@@ -842,7 +842,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **An end of a period that something made names the event that made it, and a reader still compares one
   instant** — PROV's `prov:qualifiedGeneration` and `prov:qualifiedInvalidation` on the graph, the event's instant copied beside it; `orexis:start` and
   `orexis:end` are the event's instant where there is one and the expectation otherwise, and an expectation an
-  event overtook is kept as `orexis:expectedEnd`; the clock makes no event, so most ends stay expectations; a
+  event overtook is kept as `orexis:expectedInvalidation`; the clock makes no event, so most ends stay expectations; a
   percept holds from when it was perceived, the reading's own instant being a fact it states; a reader choosing
   between an expected and an actual property was refused, two optionals in every text that asks what holds, and so
   were words of our own for the event, PROV having them

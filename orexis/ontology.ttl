@@ -290,12 +290,12 @@ orexis:end
     rdfs:label "end" ;
     rdfs:comment "When the period closes, exclusive: an instant equal to this is outside. Absent means the period does not close on its own." .
 
-orexis:expectedEnd
+orexis:expectedInvalidation
     a owl:DatatypeProperty ;
-    rdfs:domain dcterms:PeriodOfTime ;
+    rdfs:domain orexis:Graph ;
     rdfs:range xsd:dateTime ;
-    rdfs:label "expected end" ;
-    rdfs:comment "When the period was expected to close, kept once an event ended it at another instant: a reading due at a quarter past that came ten seconds early. A period no event has ended says its expectation as `orexis:end` itself, an end nothing has made being an expectation. The event that began a graph and the one that ended it are said of the graph in PROV's words, `prov:qualifiedGeneration` and `prov:qualifiedInvalidation`, the event's instant its `prov:atTime` (knowledge/domain/kernel/metadata.md)." .
+    rdfs:label "expected invalidation" ;
+    rdfs:comment "When the graph was expected to stop holding, kept once an event ended it at another instant: a reading due at a quarter past that came ten seconds early. Named beside PROV's `prov:qualifiedInvalidation`, which names the event that did end it, and said of the graph as that is; PROV has no word for an expectation. A graph no event has ended says its expectation as its period's `orexis:end` itself (knowledge/domain/kernel/metadata.md)." .
 
 orexis:hash
     a owl:DatatypeProperty ;

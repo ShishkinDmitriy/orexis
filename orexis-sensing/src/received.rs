@@ -654,7 +654,7 @@ pub(crate) mod tests {
             let text = format!(
                 "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#>
                  PREFIX prov: <http://www.w3.org/ns/prov#>
-                 SELECT ?v WHERE {{ GRAPH ?m {{ <{graph}> dcterms:temporal ?p . {{ ?p orexis:{word} ?v }} UNION {{ <{graph}> prov:{word} ?v }} }} }}"
+                 SELECT ?v WHERE {{ GRAPH ?m {{ <{graph}> dcterms:temporal ?p . {{ ?p orexis:{word} ?v }} UNION {{ <{graph}> prov:{word} ?v }} UNION {{ <{graph}> orexis:{word} ?v }} }} }}"
             );
             store
                 .rows(&text, &[])
@@ -692,7 +692,7 @@ pub(crate) mod tests {
         );
         assert_eq!(period(&store, &first[0]), (now(), Some(late)));
         assert_eq!(
-            says(&store, &first[0], "expectedEnd").len(),
+            says(&store, &first[0], "expectedInvalidation").len(),
             1,
             "the end the first was expected to have is kept"
         );
