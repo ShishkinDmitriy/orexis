@@ -27,6 +27,9 @@ pub const SELF: &str = "http://example.org/orexis#Self";
 pub const START: &str = "http://example.org/orexis#start";
 pub const END: &str = "http://example.org/orexis#end";
 
+/// When a graph was expected to end, kept once an event ended it at another instant.
+pub const EXPECTED_INVALIDATION: &str = "http://example.org/orexis#expectedInvalidation";
+
 /// What the boot reads the world by.
 pub const WORLD_GRAPH: &str = "http://example.org/orexis#WorldGraph";
 pub const SOCIETY_GRAPH: &str = "http://example.org/orexis#SocietyGraph";

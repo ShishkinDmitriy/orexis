@@ -839,6 +839,14 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   built and taken out: the first made forgetting and copying a graph a search for its rows, the second made
   every reader of a whole graph filter and the hash read what it discarded
   ([metadata](knowledge/domain/kernel/metadata.md), a-graphs-metadata-is-a-graph-of-its-own-beside-it).
+- **An end of a period that something made names the event that made it, and a reader still compares one
+  instant** — PROV's `prov:qualifiedGeneration` and `prov:qualifiedInvalidation` on the graph, the event's instant copied beside it; `orexis:start` and
+  `orexis:end` are the event's instant where there is one and the expectation otherwise, and an expectation an
+  event overtook is kept as `orexis:expectedInvalidation`; the clock makes no event, so most ends stay expectations; a
+  percept holds from when it was perceived, the reading's own instant being a fact it states; a reader choosing
+  between an expected and an actual property was refused, two optionals in every text that asks what holds, and so
+  were words of our own for the event, PROV having them
+  (#1082, [metadata](knowledge/domain/kernel/metadata.md)).
 - **The rows of a search are no graph's metadata and are written in one graph, its cone graph** — the
   candidates, the weighings and the path between worlds are asked across every world at once; what a world is,
   is in its own metadata graph, and a world that goes takes its rows out of the cone

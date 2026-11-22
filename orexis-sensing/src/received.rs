@@ -19,7 +19,7 @@ use orexis::clock::{isoformat, microseconds};
 use orexis::hash::hash_named_graph;
 use orexis::ontology::{BELIEF, FORECAST, RECEIVED, local_of};
 use orexis::rdf::{repr, round6};
-use orexis::store::{Store, Within, iri, value};
+use orexis::store::{Bound, Store, Within, iri, value};
 
 use crate::cadence::{cadence_of, limit_of};
 use crate::ontology::{
@@ -46,11 +46,17 @@ fn literal(at: DateTime) -> String {
 /// sensor reading a series, one forecast per stretch still ahead. The graphs written and kept, none where the
 /// payload holds nothing it reads. `me` is who holds it, written as the percept's author and the graph's owner.
 pub fn received(store: &Store, me: &str, sensor: &str, payload: &[u8], at: DateTime) -> Result<Vec<String>, Error> {
-    received_by(store, me, sensor, payload, at, None, None)
+    received_by(store, me, sensor, payload, at, None, None, None)
 }
 
 /// `received`, with the instrument's word about how it read (`procedure`) and the instant a device that speaks for
 /// itself says the result applies to (`phenomenon_at`, #101), where `at` is the arrival.
+///
+/// `perceived` IS THE PERCEIVING THAT WRITES THEM, its name and its instant: each percept then holds from that
+/// event, since the agent holds a reading from when it perceived it and the reading's own instant is a fact the
+/// percept states; the one that stood before ends by it, as each older reading of the message does at once. Handed
+/// none, a percept's period is said in the readings' instants and names no event.
+#[allow(clippy::too_many_arguments)]
 pub fn received_by(
     store: &Store,
     me: &str,
@@ -59,6 +65,7 @@ pub fn received_by(
     at: DateTime,
     procedure: Option<&str>,
     phenomenon_at: Option<DateTime>,
+    perceived: Option<(&str, DateTime)>,
 ) -> Result<Vec<String>, Error> {
     /// THE KEY: what the sensor observes, of what it is mounted in — read for a series alone.
     const KEY_Q: &str = "PREFIX sosa: <http://www.w3.org/ns/sosa/>
@@ -108,8 +115,12 @@ pub fn received_by(
         })
         .collect::<Result<_, _>>()?;
     let cadence = cadence_of(store, sensor)?;
+    let end = |graph: &str, kind: &str| match perceived {
+        Some((event, now)) => store.end_graph_by(graph, event, now, kind),
+        None => store.end_graph(graph, instants[0], kind),
+    };
     if let Some(g) = latest.and_then(|r| iri(r, "g")) {
-        store.end_graph(&g, instants[0], OBSERVATION_GRAPH)?;
+        end(&g, OBSERVATION_GRAPH)?;
     }
     let silences = store.rows(&bind(SILENT_Q, &[("sensor", Value::iri(sensor))])?, &[])?;
     for silence in silences {
@@ -122,7 +133,7 @@ pub fn received_by(
                 INSERT DATA {{ GRAPH <{g}> {{ <{sensor}> sensing:silentUntil {} }} }}",
             literal(instants[0])
         ))?;
-        store.end_graph(&g, instants[0], SILENCE_GRAPH)?;
+        end(&g, SILENCE_GRAPH)?;
         log::info!(
             "{}: {} reads again, silent since {}",
             local_of(me),
@@ -134,10 +145,15 @@ pub fn received_by(
     let mut written = Vec::new();
     for (n, ((number, _), when)) in readings.iter().zip(&instants).enumerate() {
         let last = n == readings.len() - 1;
-        let until = if last {
-            cadence.map(|c| later(*when, (1.0 + GRACE) * c)).transpose()?
-        } else {
-            Some(instants[n + 1])
+        let due = cadence.map(|c| later(*when, (1.0 + GRACE) * c)).transpose()?;
+        let (from, until) = match (perceived, last) {
+            (Some((event, now)), true) => (Bound::By(event.to_string(), now), due.map(Bound::At)),
+            (Some((event, now)), false) => {
+                let by = Bound::By(event.to_string(), now);
+                (by.clone(), Some(by))
+            }
+            (None, true) => (Bound::At(*when), due.map(Bound::At)),
+            (None, false) => (Bound::At(*when), Some(Bound::At(instants[n + 1]))),
         };
         let (node, graph) = named(store, me, sensor, *when)?;
         write(
@@ -149,6 +165,7 @@ pub fn received_by(
                 node: &node,
                 number: *number,
                 at: *when,
+                from,
                 until,
                 before: before.as_deref(),
                 procedure,
@@ -217,7 +234,8 @@ struct Percept<'p> {
     node: &'p str,
     number: f64,
     at: DateTime,
-    until: Option<DateTime>,
+    from: Bound,
+    until: Option<Bound>,
     before: Option<&'p str>,
     procedure: Option<&'p str>,
     phenomenon_at: Option<DateTime>,
@@ -241,7 +259,14 @@ fn write(store: &Store, p: &Percept<'_>) -> Result<(), Error> {
     if let Some(procedure) = p.procedure.filter(|s| !s.is_empty()) {
         said.push(format!("<{node}> sosa:usedProcedure <{procedure}>"));
     }
-    let entry = store.entry(p.graph, &[OBSERVATION_GRAPH], RECEIVED, Some(p.me), Some(p.at), p.until)?;
+    let entry = store.entry_bounded(
+        p.graph,
+        &[OBSERVATION_GRAPH],
+        RECEIVED,
+        Some(p.me),
+        Some(p.from.clone()),
+        p.until.clone(),
+    )?;
     store.update(&format!(
         "PREFIX prov: <http://www.w3.org/ns/prov#>
             PREFIX sensing: <http://example.org/orexis/sensing#>
@@ -619,6 +644,64 @@ pub(crate) mod tests {
                 .any(|g| beliefs.contains(g)),
             "a percept is no belief"
         );
+    }
+
+    /// A reading delivered late is held from when it was perceived, by the perceiving that wrote it, and the one
+    /// before it ends by that same event, keeping the end it was expected to have.
+    #[test]
+    fn a_percept_holds_from_the_perceiving_that_wrote_it_and_the_one_before_ends_by_it() {
+        let says = |store: &Store, graph: &str, word: &str| -> Vec<String> {
+            let text = format!(
+                "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#>
+                 PREFIX prov: <http://www.w3.org/ns/prov#>
+                 SELECT ?v WHERE {{ GRAPH ?m {{ <{graph}> dcterms:temporal ?p . {{ ?p orexis:{word} ?v }} UNION {{ <{graph}> prov:{word} ?v }} UNION {{ <{graph}> orexis:{word} ?v }} }} }}"
+            );
+            store
+                .rows(&text, &[])
+                .unwrap()
+                .iter()
+                .filter_map(|r| value(r, "v"))
+                .collect()
+        };
+        let store = world("a_pot_and_its_probe.trig");
+        let perceive = |payload: &[u8], read: DateTime, event: &str, perceived: DateTime| {
+            received_by(
+                &store,
+                ME,
+                &probe(),
+                payload,
+                read,
+                None,
+                None,
+                Some((event, perceived)),
+            )
+            .unwrap()
+        };
+        let first = perceive(br#"{"value": 0.2}"#, now(), "urn:test:perceived-1", now());
+        //  THE NEXT READING WAS TAKEN A CADENCE ON AND PERCEIVED SEVEN MINUTES AFTER THAT.
+        let (read, late) = (plus(now(), CADENCE), plus(now(), CADENCE + 420.0));
+        let second = perceive(br#"{"value": 0.3}"#, read, "urn:test:perceived-2", late);
+        assert_eq!(
+            says(&store, &second[0], "qualifiedGeneration"),
+            ["urn:test:perceived-2"]
+        );
+        assert_eq!(period(&store, &second[0]).0, late, "held from when it was perceived");
+        assert_eq!(
+            says(&store, &first[0], "qualifiedInvalidation"),
+            ["urn:test:perceived-2"]
+        );
+        assert_eq!(period(&store, &first[0]), (now(), Some(late)));
+        assert_eq!(
+            says(&store, &first[0], "expectedInvalidation").len(),
+            1,
+            "the end the first was expected to have is kept"
+        );
+        assert_eq!(
+            holding(&store, plus(read, 60.0)),
+            first,
+            "until it was perceived, the first stood"
+        );
+        assert_eq!(holding(&store, late), second);
     }
 
     #[test]
