@@ -653,7 +653,8 @@ pub(crate) mod tests {
         let says = |store: &Store, graph: &str, word: &str| -> Vec<String> {
             let text = format!(
                 "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#>
-                 SELECT ?v WHERE {{ GRAPH ?m {{ <{graph}> dcterms:temporal ?p . ?p orexis:{word} ?v }} }}"
+                 PREFIX prov: <http://www.w3.org/ns/prov#>
+                 SELECT ?v WHERE {{ GRAPH ?m {{ <{graph}> dcterms:temporal ?p . {{ ?p orexis:{word} ?v }} UNION {{ <{graph}> prov:{word} ?v }} }} }}"
             );
             store
                 .rows(&text, &[])
@@ -680,9 +681,15 @@ pub(crate) mod tests {
         //  THE NEXT READING WAS TAKEN A CADENCE ON AND PERCEIVED SEVEN MINUTES AFTER THAT.
         let (read, late) = (plus(now(), CADENCE), plus(now(), CADENCE + 420.0));
         let second = perceive(br#"{"value": 0.3}"#, read, "urn:test:perceived-2", late);
-        assert_eq!(says(&store, &second[0], "actualStart"), ["urn:test:perceived-2"]);
+        assert_eq!(
+            says(&store, &second[0], "qualifiedGeneration"),
+            ["urn:test:perceived-2"]
+        );
         assert_eq!(period(&store, &second[0]).0, late, "held from when it was perceived");
-        assert_eq!(says(&store, &first[0], "actualEnd"), ["urn:test:perceived-2"]);
+        assert_eq!(
+            says(&store, &first[0], "qualifiedInvalidation"),
+            ["urn:test:perceived-2"]
+        );
         assert_eq!(period(&store, &first[0]), (now(), Some(late)));
         assert_eq!(
             says(&store, &first[0], "expectedEnd").len(),

@@ -32,7 +32,7 @@ An event costing a read is made only where it is heard: the emitter asks `connec
 # What it bounds
 
 An event is also what begins or ends the period of a graph: a perceiving begins the percept it wrote
-and ends the one that stood before. The period names the event, in the graph's
+and ends the one that stood before. The graph names the event, in its
 [metadata](/domain/kernel/metadata.md), so the event's name is minted before it is said
 (`Watch::emit_as`) and exists whether or not anybody hears. Two things at one instant are told apart
 by which event made them, which an instant alone cannot say.

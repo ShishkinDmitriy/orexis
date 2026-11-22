@@ -65,18 +65,22 @@ graph's.
 # When it holds, and what made it so
 
 A period has two ends, and each is an instant a reader compares: `orexis:start`, `orexis:end`. An
-end nothing has made yet is an expectation - a reading holds until the next is due. An end
-something made names the [event](/domain/kernel/event.md) that made it, with the event's instant
-beside it in the same metadata graph:
+end nothing has made yet is an expectation - a reading holds until the next is due. Where
+something made an end, the graph names the [event](/domain/kernel/event.md) that made it, in PROV's
+words and with the event's instant beside it in the same metadata graph:
 
 ```turtle
 :reading dcterms:temporal [ a dcterms:PeriodOfTime ;
-    orexis:start "…12:00:00Z" ;  orexis:actualStart <perceived-17> ;
-    orexis:end   "…12:14:50Z" ;  orexis:actualEnd   <perceived-18> ;
-    orexis:expectedEnd "…12:15:00Z" ] .
+        orexis:start "…12:00:00Z" ; orexis:end "…12:14:50Z" ; orexis:expectedEnd "…12:15:00Z" ] ;
+    prov:qualifiedGeneration   <perceived-17> ;
+    prov:qualifiedInvalidation <perceived-18> .
 <perceived-17> prov:atTime "…12:00:00Z" .
 <perceived-18> prov:atTime "…12:14:50Z" .
 ```
+
+PROV says when a thing came to be and ceased, and by what, which is what an event-made end is; it
+has no word for a stretch that lies ahead or for an end that was only expected, so the period and
+`orexis:expectedEnd` stay ours. One event may begin one graph and end another.
 
 `orexis:start` and `orexis:end` are always the instant to compare: the event's where there is one,
 the expectation otherwise, so no reader chooses between two. The end that was expected is kept as
