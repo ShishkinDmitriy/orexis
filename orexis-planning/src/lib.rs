@@ -22,7 +22,7 @@ use orexis::task::{Handed, Package, Woke};
 
 use crate::admit::local_of;
 use crate::ontology::PLANNING_TRIGGER;
-use crate::planner::{CHECK, HEAD_ASKED, REOPEN};
+use crate::planner::{CHECK, CHECKING_TRIGGER, REOPEN};
 
 mod admit;
 mod bridge;
@@ -112,7 +112,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         planner.watch = handed.events.watch().clone();
         let mut hears = handed.events.hears();
         hears.event(PLANNING_TRIGGER, REOPEN);
-        hears.event(HEAD_ASKED, CHECK);
+        hears.event(CHECKING_TRIGGER, CHECK);
         if !handed.booted().await? {
             return Ok(());
         }

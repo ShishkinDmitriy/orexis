@@ -198,6 +198,12 @@ impl Watch {
         self.said(event, crate::task::within(), Some(named))
     }
 
+    /// `emit_as`, said within the activity `within`: what an activity that has ended says of what it did, once its
+    /// sayer has heard that what it wrote is told.
+    pub fn emit_as_within(&self, event: &dyn Event, named: NamedNode, within: NamedNode) -> Option<NamedNode> {
+        self.said(event, Some(within), Some(named))
+    }
+
     fn said(&self, event: &dyn Event, within: Option<NamedNode>, named: Option<NamedNode>) -> Option<NamedNode> {
         let mut remembered = self.2.lock().expect("a memory nobody poisoned");
         let hearers: Vec<Hearer> = self.0.lock().expect("hearers nobody poisoned").clone();

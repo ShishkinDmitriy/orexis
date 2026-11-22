@@ -5,6 +5,7 @@ use orexis::ontology::{BELIEF, RECORD};
 pub const PLANNING: &str = "http://example.org/orexis/planning#";
 /// A pass of the Planner, as the activity it is.
 pub const PLANNING_ACTIVITY: &str = "http://example.org/orexis/planning#Planning";
+pub const CHECKING_ACTIVITY: &str = "http://example.org/orexis/planning#Checking";
 /// What starts a planning, and the wants it names to search again.
 pub const PLANNING_TRIGGER: &str = "http://example.org/orexis/planning#PlanningTrigger";
 pub const REOPENS: &str = "http://example.org/orexis/planning#reopens";

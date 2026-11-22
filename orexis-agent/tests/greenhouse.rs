@@ -470,10 +470,15 @@ async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journa
     assert_eq!(g.broker.topics(), ["actuators/pump/command"]);
     //  EVERY ACTIVITY IS TRACED TO THE PROCESS'S START: through what started it, an event or a graph an activity
     //  traced there generated or the end of one, or, begun by the clock, through the activity it is part of.
-    let (unreached, _) = common::traced(&journal.store);
+    let (unreached, fell_back) = common::traced(&journal.store);
     assert!(
         unreached.is_empty(),
         "activities whose cause the journal does not know: {unreached:#?}"
+    );
+    //  AND NOTHING IS SAID WITHIN A PACKAGE'S RUNNING FOR WANT OF AN ACTIVITY OF ITS OWN.
+    assert!(
+        fell_back.is_empty(),
+        "events said within no activity of their package's: {fell_back:#?}"
     );
     //  AND WHAT SENSING DOES OF ITS PROBE FOR AS LONG AS IT RUNS IS A LISTENING, each message perceived a part of it.
     let listened = "PREFIX prov: <http://www.w3.org/ns/prov#> PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -508,7 +513,8 @@ async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journa
     let caused: BTreeSet<(String, String)> = values.chunks(2).map(|p| (p[0].clone(), p[1].clone())).collect();
     //  SENSING PERCEIVED THE READING, belief revised it and planning began on that; sensing said what was concluded of
     //  it; planning published a plan and execution adopted it; the adoption and the step taken in the walk each began
-    //  a planning again; the walk wrote the committed step belief revised, and commanded the pump.
+    //  a planning again; the walk asked about its head, planning checked it and the walk went on of the answer; the
+    //  walk wrote the committed step belief revised, and commanded the pump.
     let expected: BTreeSet<(String, String)> = [
         ("Perceiving", "Revising"),
         ("Perceiving", "Observing"),
@@ -517,6 +523,8 @@ async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journa
         ("Planning", "Adopting"),
         ("Adopting", "Planning"),
         ("Walking", "Planning"),
+        ("Walking", "Checking"),
+        ("Checking", "Walking"),
         ("Walking", "Revising"),
         ("Walking", "Actuating"),
     ]

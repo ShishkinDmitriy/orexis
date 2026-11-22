@@ -14,7 +14,7 @@ takes it.
 | `planning:PlanningTrigger`: `belief:Revised` | belief | `planning:Planning`, where the policy judges a state changed or a belief that came to the agent was revised |
 | `planning:PlanningTrigger`: `execution:IntentionAdopted`, `execution:StepTaken`, `execution:IntentionResolved` | execution | `planning:Planning` |
 | `planning:PlanningTrigger`: `coordination:DrawWon` | coordination | `planning:Planning`, reopening the wants it names (`planning:reopens`) |
-| `execution:HeadAsked` | execution | the head checked against the present; no activity |
+| `planning:CheckingTrigger`: `execution:HeadAsked` | execution | `planning:Checking` |
 | the clock: the present reaches the next ground the last planning laid | | `planning:Planning` |
 | the clock: a search the budget cut short, `planning:budgetEveryS` later (10 s) | | `planning:Planning` |
 
@@ -23,6 +23,7 @@ takes it.
 | Activity | What happens | Ends saying |
 |---|---|---|
 | `planning:Planning` | lay the grounds (the present, then each foreseen instant); derive the wants; search each want's scope within the budget of worlds; publish what was found; hold the agent or let it go | `planning:PlanPublished`, `planning:WantReached`, `planning:PlanSuperseded`, `planning:WantFoundUnreachable` |
+| `planning:Checking` | one head execution asks about is checked against the present as it is taken; no planning | `planning:HeadChecked` |
 
 ## What it says
 
