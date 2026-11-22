@@ -20,7 +20,7 @@ use crate::cadence::{cadence_of, lapsed, next_lapse};
 use crate::events::{Doubted, Perceived, ReadingLapsed, Silence, tag_of};
 use crate::missed::missed;
 use crate::ontology::{OBSERVATION_GRAPH, OBSERVER, OBSERVING, REVISED_SOURCE, SILENCE_GRAPH, silence_graph};
-use crate::received::received;
+use crate::received::received_by;
 
 pub(crate) const ASK: usize = 0;
 pub(crate) const HEARD: usize = 1;
@@ -53,6 +53,8 @@ pub struct Observer {
     due: Vec<String>,
     /// Whoever watches the agent.
     pub watch: Watch,
+    /// The name of each perceiving whose percepts are written and not yet said, oldest first.
+    perceiving: std::collections::VecDeque<oxigraph::model::NamedNode>,
     /// The sensors doubted at the last ask.
     doubts: BTreeSet<String>,
     /// Each sensor read by asking, with the member asked, its job the index after `REQUEST`.
@@ -131,6 +133,7 @@ impl Observer {
             me,
             due: Vec::new(),
             watch: Watch::default(),
+            perceiving: Default::default(),
             doubts: BTreeSet::new(),
             requested: Vec::new(),
             replies: Inbox::default(),
@@ -334,9 +337,24 @@ impl Observer {
     /// arrived: the percepts written, of one message together.
     pub(crate) fn answered(&mut self, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         let mut written = Vec::new();
+        //  THE PERCEIVING IS NAMED BEFORE IT IS SAID: each percept it writes begins by it, and the one before ends by
+        //  it, so the name comes first and the event is said under it once the turn's graphs are heard.
+        let perceiving = orexis::rdf::mint();
         for message in self.replies.take() {
             let at = message.at.unwrap_or(pass.now);
-            written.extend(received(&self.beliefs, &self.me, &message.topic, &message.payload, at)?);
+            written.extend(received_by(
+                &self.beliefs,
+                &self.me,
+                &message.topic,
+                &message.payload,
+                at,
+                None,
+                None,
+                Some((perceiving.as_str(), pass.now)),
+            )?);
+        }
+        if !written.is_empty() {
+            self.perceiving.push_back(perceiving);
         }
         Ok(written)
     }
@@ -364,7 +382,17 @@ impl Observer {
     /// The percepts one message wrote, said together: belief revises them as one, and says so once; and what is due
     /// is said again at the next turn, a reading having moved when the next falls due.
     pub(crate) fn heard(&mut self, _job: usize, graphs: &[String], _pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
-        self.perceived(graphs.to_vec());
+        match self.perceiving.pop_front() {
+            Some(named) if !graphs.is_empty() => {
+                self.watch.emit_as(
+                    &Perceived {
+                        graphs: graphs.to_vec(),
+                    },
+                    named,
+                );
+            }
+            _ => self.perceived(graphs.to_vec()),
+        }
         self.told = true;
         Ok(Vec::new())
     }

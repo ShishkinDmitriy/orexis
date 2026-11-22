@@ -27,6 +27,11 @@ pub const SELF: &str = "http://example.org/orexis#Self";
 pub const START: &str = "http://example.org/orexis#start";
 pub const END: &str = "http://example.org/orexis#end";
 
+/// The event that began or ended a period, and the end it was expected to have before one did.
+pub const ACTUAL_START: &str = "http://example.org/orexis#actualStart";
+pub const ACTUAL_END: &str = "http://example.org/orexis#actualEnd";
+pub const EXPECTED_END: &str = "http://example.org/orexis#expectedEnd";
+
 /// What the boot reads the world by.
 pub const WORLD_GRAPH: &str = "http://example.org/orexis#WorldGraph";
 pub const SOCIETY_GRAPH: &str = "http://example.org/orexis#SocietyGraph";

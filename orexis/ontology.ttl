@@ -290,6 +290,27 @@ orexis:end
     rdfs:label "end" ;
     rdfs:comment "When the period closes, exclusive: an instant equal to this is outside. Absent means the period does not close on its own." .
 
+orexis:actualStart
+    a owl:ObjectProperty ;
+    rdfs:domain dcterms:PeriodOfTime ;
+    rdfs:range orexis:Event ;
+    rdfs:label "actual start" ;
+    rdfs:comment "The event that began the period: what happened, where the start is no expectation. The event's instant is said beside it in the same metadata graph (`prov:atTime`), and `orexis:start` is that instant, so a reader compares one instant whether the period was begun or is only expected to begin (knowledge/domain/kernel/metadata.md)." .
+
+orexis:actualEnd
+    a owl:ObjectProperty ;
+    rdfs:domain dcterms:PeriodOfTime ;
+    rdfs:range orexis:Event ;
+    rdfs:label "actual end" ;
+    rdfs:comment "The event that ended the period: what happened, where the end is no expectation. `orexis:end` is then the event's instant, said beside it (`prov:atTime`), and the end that was expected before it, where one was, is kept as `orexis:expectedEnd`." .
+
+orexis:expectedEnd
+    a owl:DatatypeProperty ;
+    rdfs:domain dcterms:PeriodOfTime ;
+    rdfs:range xsd:dateTime ;
+    rdfs:label "expected end" ;
+    rdfs:comment "When the period was expected to close, kept once an event ended it at another instant: a reading due at a quarter past that came ten seconds early. A period no event has ended says its expectation as `orexis:end` itself, an end nothing has made being an expectation." .
+
 orexis:hash
     a owl:DatatypeProperty ;
     rdfs:domain orexis:Graph ;

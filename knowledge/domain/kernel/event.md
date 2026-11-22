@@ -29,6 +29,14 @@ content, which the policy reads from the store, written there before the event w
 
 An event costing a read is made only where it is heard: the emitter asks `connected` first.
 
+# What it bounds
+
+An event is also what begins or ends the period of a graph: a perceiving begins the percept it wrote
+and ends the one that stood before. The period names the event, in the graph's
+[metadata](/domain/kernel/metadata.md), so the event's name is minted before it is said
+(`Watch::emit_as`) and exists whether or not anybody hears. Two things at one instant are told apart
+by which event made them, which an instant alone cannot say.
+
 # What its class may say
 
 - **That it is reported**, by naming its `metric` and marking fields with the metrics' metamodel —

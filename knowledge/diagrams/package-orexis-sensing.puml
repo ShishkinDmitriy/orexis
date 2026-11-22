@@ -45,6 +45,7 @@ package "observer" {
     {field} -me : String
     {field} -due : Vec<String>
     {field} +watch : Watch
+    {field} -perceiving : std::collections::VecDeque<oxigraph::model::NamedNode>
     {field} -doubts : BTreeSet<String>
     {field} -requested : Vec<(String, Arc<dyn Member>)>
     {field} +replies : Inbox
@@ -82,7 +83,8 @@ package "received" {
     {field} -node : &'p str
     {field} -number : f64
     {field} -at : DateTime
-    {field} -until : Option<DateTime>
+    {field} -from : Bound
+    {field} -until : Option<Bound>
     {field} -before : Option<&'p str>
     {field} -procedure : Option<&'p str>
     {field} -phenomenon_at : Option<DateTime>
@@ -92,6 +94,7 @@ package "received" {
 package "orexis" #EEEEEE {
   interface "Event" as orexis__events__Event << (T,#C9E4C5) trait >>
   class "Watch" as orexis__events__Watch << (S,#A8D8EA) struct >>
+  enum "Bound" as orexis__store__Bound << (E,#F6D6A8) enum >>
   class "Store" as orexis__store__Store << (S,#A8D8EA) struct >>
 }
 package "orexis-transport" #EEEEEE {
@@ -106,6 +109,8 @@ orexis_sensing__observer__Observer o-- "*" orexis_transport__member__Member : re
 orexis_sensing__observer__Observer *-- "1" orexis_transport__inbox__Inbox : replies
 orexis_sensing__observer__Observer *-- "1" orexis_transport__member__Members : members
 orexis_sensing__pipeline__Codecs *-- "*" orexis_sensing__pipeline__Codec : 0
+orexis_sensing__received__Percept *-- "1" orexis__store__Bound : from
+orexis_sensing__received__Percept *-- "0..1" orexis__store__Bound : until
 orexis_sensing__events__Doubted ..|> orexis__events__Event
 orexis_sensing__pipeline__JsonCodec ..|> orexis_sensing__pipeline__Codec
 orexis_sensing__events__Observed ..|> orexis__events__Event

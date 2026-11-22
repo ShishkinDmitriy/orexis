@@ -28,7 +28,24 @@ use oxsdatatypes::DateTime;
 
 use crate::Error;
 use crate::bind::{Value, bind};
-use crate::ontology::{BELIEF, HASH, METADATA_GRAPH, METADATA_OF};
+use crate::ontology::{ACTUAL_END, ACTUAL_START, BELIEF, EXPECTED_END, HASH, METADATA_GRAPH, METADATA_OF};
+
+/// ONE END OF A PERIOD, as its writer says it: an instant alone, which is an expectation until something makes it,
+/// or the event that made it with the instant it happened at. A reader compares the instant either way.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Bound {
+    At(DateTime),
+    By(String, DateTime),
+}
+
+impl Bound {
+    /// The instant a reader compares.
+    pub fn at(&self) -> DateTime {
+        match self {
+            Bound::At(at) | Bound::By(_, at) => *at,
+        }
+    }
+}
 
 /// One solution: each variable it binds, to the term it binds.
 pub type Row = BTreeMap<String, Term>;
@@ -101,6 +118,7 @@ const OWNED_BY: &str = "http://example.org/orexis#ownedBy";
 /// THE WORDS A GRAPH'S METADATA IS SAID IN, beside its period: what it is, how it arrived, whose it is, what it holds by
 /// hash and what it was derived from. What a package says of a graph in words of its own is that package's.
 pub const METADATA: [&str; 5] = [crate::rdf::RDF_TYPE, ARRIVED_BY, OWNED_BY, HASH, PROV_DERIVED];
+const PROV_AT: &str = "http://www.w3.org/ns/prov#atTime";
 const DCTERMS_TEMPORAL: &str = "http://purl.org/dc/terms/temporal";
 const ORE: &str = "http://example.org/orexis#";
 const XSD_DATETIME: &str = "http://www.w3.org/2001/XMLSchema#dateTime";
@@ -505,14 +523,33 @@ impl Store {
         start: Option<DateTime>,
         end: Option<DateTime>,
     ) -> Result<String, Error> {
+        self.entry_bounded(graph, classes, arrival, owner, start.map(Bound::At), end.map(Bound::At))
+    }
+
+    /// `entry`, where an end of the period may name the event that made it: the instant a reader compares is said
+    /// either way, and beside it the event with the instant it happened at.
+    pub fn entry_bounded(
+        &self,
+        graph: &str,
+        classes: &[&str],
+        arrival: &str,
+        owner: Option<&str>,
+        start: Option<Bound>,
+        end: Option<Bound>,
+    ) -> Result<String, Error> {
         let metadata = self.metadata_for(graph)?;
         let whose = owner.map(|o| format!(" ; <{ORE}ownedBy> <{o}>")).unwrap_or_default();
-        let bounds: String = [("start", start), ("end", end)]
-            .iter()
-            .filter_map(|(k, v)| {
-                v.map(|v| format!(" ; <{ORE}{k}> \"{}\"^^<{XSD_DATETIME}>", crate::clock::isoformat(v)))
-            })
-            .collect();
+        let instant = |at: DateTime| format!("\"{}\"^^<{XSD_DATETIME}>", crate::clock::isoformat(at));
+        let mut events = String::new();
+        let mut bounds = String::new();
+        for (word, made, bound) in [("start", ACTUAL_START, &start), ("end", ACTUAL_END, &end)] {
+            let Some(bound) = bound else { continue };
+            bounds.push_str(&format!(" ; <{ORE}{word}> {}", instant(bound.at())));
+            if let Bound::By(event, at) = bound {
+                bounds.push_str(&format!(" ; <{made}> <{event}>"));
+                events.push_str(&format!(" <{event}> <{PROV_AT}> {} .", instant(*at)));
+            }
+        }
         let when = if bounds.is_empty() {
             String::new()
         } else {
@@ -527,7 +564,7 @@ impl Store {
         let kinds = kinds.iter().map(|k| format!("<{k}>")).collect::<Vec<_>>().join(" , ");
         Ok(format!(
             "GRAPH <{metadata}> {{ <{metadata}> a <{METADATA_GRAPH}> ; <{METADATA_OF}> <{graph}> . \
-             <{graph}> a {kinds} ; <{ORE}arrivedBy> <{arrival}>{whose}{when} . }}"
+             <{graph}> a {kinds} ; <{ORE}arrivedBy> <{arrival}>{whose}{when} .{events} }}"
         ))
     }
 
@@ -701,15 +738,33 @@ impl Store {
     /// begins, holding at no instant. An observation's period is said when it arrives, until the next reading is
     /// due, and the next arriving earlier ends it there.
     pub fn end_graph(&self, graph: &str, at: DateTime, revisions: &str) -> Result<(), Error> {
-        /// A GRAPH ENDS WHERE IT HELD PAST: its period's end moved to `$at`, or to its start where it begins later.
+        self.ended(graph, at, None, revisions)
+    }
+
+    /// `end_graph`, by the event that ended it: the period names the event, with its instant beside it, and keeps the
+    /// end it was expected to have where it had one.
+    pub fn end_graph_by(&self, graph: &str, event: &str, at: DateTime, revisions: &str) -> Result<(), Error> {
+        self.ended(graph, at, Some(event), revisions)
+    }
+
+    fn ended(&self, graph: &str, at: DateTime, event: Option<&str>, revisions: &str) -> Result<(), Error> {
+        /// A GRAPH ENDS WHERE IT HELD PAST: its period's end moved to `$at`, or to its start where it begins later,
+        /// and what `$made` says of the event that ended it and of the end expected before.
         const END_U: &str = "PREFIX dcterms: <http://purl.org/dc/terms/>
         PREFIX orexis: <http://example.org/orexis#>
+        PREFIX prov: <http://www.w3.org/ns/prov#>
         DELETE { GRAPH $in { ?period orexis:end ?was } }
-        INSERT { GRAPH $in { ?period orexis:end ?end } }
+        INSERT { GRAPH $in { ?period orexis:end ?end . $made } }
         WHERE  { GRAPH $in { $graph dcterms:temporal ?period .
                              OPTIONAL { ?period orexis:start ?start } OPTIONAL { ?period orexis:end ?was }
                              BIND(IF(BOUND(?start) && ?start > $at, ?start, $at) AS ?end)
                              FILTER(!BOUND(?was) || ?was > ?end) } }";
+        let made = match event {
+            Some(event) => {
+                format!("?period <{ACTUAL_END}> <{event}> ; <{EXPECTED_END}> ?was . <{event}> prov:atTime ?end")
+            }
+            None => String::new(),
+        };
         let mut graphs = vec![graph.to_string()];
         graphs.extend(self.revisions_of(&[graph], revisions)?);
         for graph in graphs {
@@ -722,6 +777,7 @@ impl Store {
                     ("in", Value::iri(metadata)),
                     ("at", Value::instant(at)),
                     ("graph", Value::iri(graph)),
+                    ("made", Value::raw(made.clone())),
                 ],
             )?)?;
         }
@@ -995,6 +1051,73 @@ mod tests {
         assert!(
             !store.graphs_of(&[BELIEF], &early).unwrap().contains(&t("state")),
             "not before it starts"
+        );
+    }
+
+    /// What `graph`'s period says by `word`, each value's text.
+    fn period_says(store: &Store, graph: &str, word: &str) -> Vec<String> {
+        let text = format!(
+            "PREFIX dcterms: <http://purl.org/dc/terms/> PREFIX orexis: <http://example.org/orexis#>
+             SELECT ?v WHERE {{ GRAPH ?m {{ <{graph}> dcterms:temporal ?p . ?p orexis:{word} ?v }} }} ORDER BY ?v"
+        );
+        store
+            .rows(&text, &[])
+            .unwrap()
+            .iter()
+            .filter_map(|r| value(r, "v"))
+            .collect()
+    }
+
+    #[test]
+    fn a_bound_names_the_event_that_made_it_and_keeps_the_end_that_was_expected() {
+        let store = store();
+        let (began, due) = (at("2026-01-01T12:00:00Z").unwrap(), at("2026-01-01T12:15:00Z").unwrap());
+        let entry = store
+            .entry_bounded(
+                &t("reading"),
+                &[BELIEF],
+                DERIVED,
+                None,
+                Some(Bound::By(t("perceived-1"), began)),
+                Some(Bound::At(due)),
+            )
+            .unwrap();
+        store.update(&format!("INSERT DATA {{ {entry} }}")).unwrap();
+        assert_eq!(period_says(&store, &t("reading"), "actualStart"), [t("perceived-1")]);
+        assert!(
+            period_says(&store, &t("reading"), "actualEnd").is_empty(),
+            "nothing has ended it yet"
+        );
+        assert_eq!(period_says(&store, &t("reading"), "end"), ["2026-01-01T12:15:00Z"]);
+        let early = at("2026-01-01T12:14:50Z").unwrap();
+        store
+            .end_graph_by(&t("reading"), &t("perceived-2"), early, BELIEF)
+            .unwrap();
+        assert_eq!(period_says(&store, &t("reading"), "actualEnd"), [t("perceived-2")]);
+        assert_eq!(
+            period_says(&store, &t("reading"), "end"),
+            ["2026-01-01T12:14:50Z"],
+            "the instant a reader compares is the event's"
+        );
+        assert_eq!(
+            period_says(&store, &t("reading"), "expectedEnd"),
+            ["2026-01-01T12:15:00Z"],
+            "and what was expected is kept"
+        );
+        let holding = |text: &str| {
+            store
+                .graphs_of(&[BELIEF], &Within::at(at(text).unwrap()))
+                .unwrap()
+                .contains(&t("reading"))
+        };
+        assert!(holding("2026-01-01T12:10:00Z") && !holding("2026-01-01T12:14:55Z"));
+        store
+            .end_graph_by(&t("reading"), &t("perceived-3"), due, BELIEF)
+            .unwrap();
+        assert_eq!(
+            period_says(&store, &t("reading"), "actualEnd"),
+            [t("perceived-2")],
+            "a graph that has ended is left as it stands"
         );
     }
 

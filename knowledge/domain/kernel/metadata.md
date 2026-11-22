@@ -4,7 +4,8 @@ title: Metadata
 term: http://example.org/orexis#MetadataGraph
 description: >-
   What is said OF a graph rather than by it - its kinds, how it arrived, whose it is, the period it
-  holds over, its hash, what it was derived from, and what a package says of it. Said in a graph of
+  holds over and the events that began and ended it, its hash, what it was derived from, and what
+  a package says of it. Said in a graph of
   its own beside the graph, its metadata graph, one per graph, found by the link it states. A graph
   therefore holds its facts and nothing else, and no reader tells the two apart.
 ---
@@ -60,6 +61,37 @@ period of every graph, 12 ms over 6,000 graphs where the path costs a tenth of o
 Code asks the engine's index and parses no text: `Store::graphs_of` and `revisions_of` scan the
 kind and keep what a metadata graph says of the graph it is of, `kinds_of` and `said_of` answer one
 graph's.
+
+# When it holds, and what made it so
+
+A period has two ends, and each is an instant a reader compares: `orexis:start`, `orexis:end`. An
+end nothing has made yet is an expectation - a reading holds until the next is due. An end
+something made names the [event](/domain/kernel/event.md) that made it, with the event's instant
+beside it in the same metadata graph:
+
+```turtle
+:reading dcterms:temporal [ a dcterms:PeriodOfTime ;
+    orexis:start "…12:00:00Z" ;  orexis:actualStart <perceived-17> ;
+    orexis:end   "…12:14:50Z" ;  orexis:actualEnd   <perceived-18> ;
+    orexis:expectedEnd "…12:15:00Z" ] .
+<perceived-17> prov:atTime "…12:00:00Z" .
+<perceived-18> prov:atTime "…12:14:50Z" .
+```
+
+`orexis:start` and `orexis:end` are always the instant to compare: the event's where there is one,
+the expectation otherwise, so no reader chooses between two. The end that was expected is kept as
+`orexis:expectedEnd` once an event ended the period at another instant, so a reading that came ten
+seconds early can be read as that. Most ends stay expectations for good, since the clock makes no
+event: a forecast for tomorrow noon begins at noon and nothing happens then.
+
+The metadata graph holds the event's name and its instant, and nothing else of it. What the event
+was, who said it and what it set going are the [journal](/domain/kernel/journal.md)'s, on the same
+name, so an agent that keeps no journal names events nobody kept and still reads its periods.
+
+A writer says an end with `Store::entry_bounded` (`Bound::At` an instant, `Bound::By` an event) and
+ends a graph by an event with `Store::end_graph_by`. Sensing does: a percept holds from the
+perceiving that wrote it, which is when the agent came to hold it, the reading's own instant being a
+fact the percept states; and the percept that stood before ends by that same event.
 
 # What it replaced
 

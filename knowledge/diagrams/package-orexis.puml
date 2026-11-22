@@ -197,6 +197,10 @@ package "snapshots" {
   }
 }
 package "store" {
+  enum "Bound" as orexis__store__Bound << (E,#F6D6A8) enum >> {
+    At (DateTime)
+    By (String, DateTime)
+  }
   class "Held" as orexis__store__Held << (S,#A8D8EA) struct >> {
     {field} -engine : Engine
     {field} -queries : Parsed<PreparedSparqlQuery>

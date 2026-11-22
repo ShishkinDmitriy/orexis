@@ -189,12 +189,22 @@ impl Watch {
     /// Say `event` as said within the activity `within`, where it names one: what `emit` does with the activity open
     /// in the task saying it, and a case with the activity it means.
     pub fn emit_within(&self, event: &dyn Event, within: Option<NamedNode>) -> Option<NamedNode> {
+        self.said(event, within, None)
+    }
+
+    /// Say `event` under `named`, a name its sayer minted before it happened to write it where the event bounds
+    /// something: the period of a graph it began or ended names the event, so the name comes first.
+    pub fn emit_as(&self, event: &dyn Event, named: NamedNode) -> Option<NamedNode> {
+        self.said(event, crate::task::within(), Some(named))
+    }
+
+    fn said(&self, event: &dyn Event, within: Option<NamedNode>, named: Option<NamedNode>) -> Option<NamedNode> {
         let mut remembered = self.2.lock().expect("a memory nobody poisoned");
         let hearers: Vec<Hearer> = self.0.lock().expect("hearers nobody poisoned").clone();
         if hearers.is_empty() && remembered.is_none() {
             return None;
         }
-        let named = mint();
+        let named = named.unwrap_or_else(mint);
         if let Some(said) = remembered.as_mut() {
             said.push((Kept::of(event, &named), named.clone(), within.clone()));
         }
