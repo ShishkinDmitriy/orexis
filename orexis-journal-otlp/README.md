@@ -21,6 +21,7 @@ It hears no event and starts no activity.
 |---|---|
 | an activity, by its class | a span, named for the class |
 | an activity begun inside another (`dcterms:isPartOf`) | a child span |
+| a turn's activity inside one that lasts, a listening or a running | the root of a trace of its own, with a link to it carrying `orexis.partOf` |
 | an event said inside it | a span event, carrying `prov.entity` |
 | what started it | the attribute `orexis.trigger`, and a link to the span that generated it |
 | `orexis:tookS` | the span's length |

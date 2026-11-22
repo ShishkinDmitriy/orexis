@@ -42,6 +42,9 @@ event is a panel of how many and of each flag, summed per window, and one per va
 mean, its max and its sum; its levels are a panel per unit, their last per window — each field of a
 point the agent writes drawn by exactly one panel, which the terrace's test holds.
 
+**AND ONE OF TRACES** (`traces.json`), for a world a recorder of which names a tracer (`journal:tracedBy`): what
+its agents did as the tracer holds it, searched by activity and by what started it, the trace picked drawn beneath.
+
 See knowledge/domain/onboarding/onboarding.md.
 """
 
@@ -380,6 +383,97 @@ def render_health(world: str) -> list[tuple[str, dict]]:
     return out
 
 
+TRACES = "traces.json"
+#  The link a recorder's role names its tracer by, the journal's word (`orexis-journal/ontology.ttl`).
+TRACED_BY = "http://example.org/orexis/journal#tracedBy"
+TRACE_VARIABLE = "trace"
+
+
+def _tempo(query: str, table: str, limit: int = 50) -> dict:
+    """One TraceQL search of the tracer, answered as a table of traces or of spans."""
+    return {"refId": "A", "datasource": {"type": "tempo", "uid": "tempo"}, "queryType": "traceql",
+            "query": query, "tableType": table, "limit": limit, "spss": 10, "filters": []}
+
+
+def _trace_table(title: str, desc: str, query: str, table: str, uid: str, y: int, h: int, panel_id: int) -> dict:
+    """A table of what a search found; its trace id opens that trace in the panel beneath, by the dashboard's
+    own `trace` variable, so a cause is followed without leaving the page."""
+    drawn = (f"/d/{uid}?var-{AGENT_VARIABLE}=${{{AGENT_VARIABLE}}}&var-activity=${{activity}}&var-trigger=${{trigger}}"
+             f"&var-{TRACE_VARIABLE}=${{__value.raw}}&${{__url_time_range}}")
+    link = [{"id": "links", "value": [{"title": "draw this trace below", "url": drawn}]}]
+    return {
+        "id": panel_id, "type": "table", "title": title, "description": desc,
+        "datasource": {"type": "tempo", "uid": "tempo"},
+        "gridPos": {"h": h, "w": 24, "x": 0, "y": y},
+        "targets": [_tempo(query, table)],
+        "fieldConfig": {"defaults": {}, "overrides": [
+            {"matcher": {"id": "byName", "options": name}, "properties": link}
+            for name in ("traceID", "traceIdHidden")]},
+        "options": {"showHeader": True, "cellHeight": "sm"},
+    }
+
+
+def render_traces(world: str) -> dict:
+    """What the world's traced agents did, as the tracer holds it (`orexis-journal-otlp/`): each activity of a turn
+    a trace with what it did inside it, linked to the activity that generated what started it and to the listening
+    or the running it is part of. The agent is the span's `service.name`; an activity's class its name; what
+    started it the attribute `orexis.trigger`. Searches above, and the trace picked from one drawn beneath."""
+    from .compose import roster
+
+    agents = roster(world)
+    first = agents[0] if agents else ""
+    uid = f"orexis-{world}-traces"[:40]
+    text = lambda name, label, value: {"name": name, "label": label, "type": "textbox", "query": value,
+                                       "current": {"text": value, "value": value},
+                                       "options": [{"text": value, "value": value, "selected": True}], "hide": 0}
+    variables = [
+        {"name": AGENT_VARIABLE, "label": "agent", "type": "custom", "query": ",".join(agents),
+         "current": {"text": first, "value": first},
+         "options": [{"text": a, "value": a, "selected": a == first} for a in agents],
+         "multi": False, "includeAll": False, "hide": 0},
+        text("activity", "activity (regex)", ".*"),
+        text("trigger", "started by (regex)", ".*"),
+        text(TRACE_VARIABLE, "trace id", ""),
+    ]
+    of_agent = f'resource.service.name = "${{{AGENT_VARIABLE}}}"'
+    panels = [
+        _trace_table("Activities, latest first",
+                     "Each trace is one activity of a turn with what it did inside it. Click a trace id to draw it "
+                     "beneath. Narrow by the activity's class above: Planning, Perceiving, Revising|Planning.",
+                     f'{{ {of_agent} && name =~ "${{activity}}" }}', "traces", uid, y=0, h=9, panel_id=1),
+        _trace_table("Activities by what started them",
+                     "Spans whose `orexis.trigger`, the class of the event or the graph that started them, matches "
+                     "the regex above: Revised, PlanPublished, ReadingLapsed.",
+                     f'{{ {of_agent} && name =~ "${{activity}}" && span.orexis.trigger =~ "${{trigger}}" }}'
+                     " | select(span.orexis.trigger)", "spans", uid, y=9, h=9, panel_id=2),
+        _trace_table("The slowest",
+                     "Spans of a second or more: where a turn's time went.",
+                     f'{{ {of_agent} && name =~ "${{activity}}" && duration > 1s }}', "spans", uid, y=18, h=7, panel_id=3),
+        {"id": 4, "type": "traces", "title": "The trace picked",
+         "description": "The trace whose id is in the variable above: its activities nested, the events each said "
+                        "as marks on its span, and under References the links - the activity that generated what "
+                        "started it (`orexis.trigger`, `prov.entity`) and what it is part of (`orexis.partOf`). "
+                        "A link opens the trace it leads to.",
+         "datasource": {"type": "tempo", "uid": "tempo"},
+         "gridPos": {"h": 16, "w": 24, "x": 0, "y": 25},
+         "targets": [{"refId": "A", "datasource": {"type": "tempo", "uid": "tempo"}, "queryType": "traceql",
+                      "query": "${" + TRACE_VARIABLE + "}", "limit": 20, "tableType": "traces", "filters": []}]},
+    ]
+    return {
+        "uid": uid,
+        "title": f"Orexis — {world} — traces",
+        "tags": ["orexis", world, "traces"],
+        "timezone": "browser",
+        "schemaVersion": 39,
+        "refresh": "1m",
+        "time": {"from": "now-1h", "to": "now"},
+        "links": [{"type": "dashboards", "title": "packages", "tags": ["orexis", world, "health"],
+                   "asDropdown": True, "includeVars": True, "keepTime": True}],
+        "templating": {"list": variables},
+        "panels": panels,
+    }
+
+
 def generate(world: str) -> None:
     out_dir = DASHBOARD_ROOT / world
     # What the plants are doing where anything observes them, and how the agents are doing where the
@@ -397,8 +491,12 @@ def generate(world: str) -> None:
         log.info("  %s is not monitored — no health dashboards", world)
     #  A HEALTH DASHBOARD NOT WRITTEN NOW IS STALE — a package no longer loaded, a world no longer
     #  monitored, or the one `health.json` a world had before a dashboard was a package's — and goes.
+    if reading.linked(world_dir(world), TRACED_BY):
+        docs.append((TRACES, render_traces(world)))
+    else:
+        log.info("  no recorder of %s names a tracer - no traces dashboard", world)
     written = {name for name, _ in docs}
-    for name in ["health.json", *(health_file(p) for p in ("runtime", *every_package()))]:
+    for name in ["health.json", TRACES, *(health_file(p) for p in ("runtime", *every_package()))]:
         if name not in written and (stale := out_dir / name).exists():
             stale.unlink()
             log.info("  removed %s, which nothing reports any more", stale.relative_to(REPO_ROOT))
