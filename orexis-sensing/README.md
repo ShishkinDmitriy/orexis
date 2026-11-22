@@ -25,7 +25,7 @@ no reader of the mind is handed one.
 |---|---|---|
 | `sensing:Listening` | for as long as sensing runs, one for each sensor whose readings arrive of their own accord | nothing: each message of the sensor perceived is part of it |
 | `sensing:Asking` | for as long as sensing runs, one for each sensor asked on its cadence | nothing: each answer perceived is part of it |
-| `sensing:Perceiving` | one message of a sensor is taken in, a percept written per reading | the percepts, said together as `sensing:Perceived` once the turn's graphs are heard |
+| `sensing:Perceiving` | one message of a sensor is taken in, a percept written per reading | the percepts; what one turn took in is said once as `sensing:Perceived`, within the last message's, once the turn's graphs are heard |
 | `sensing:Observing` | each percept the revision concluded of is said as the observation it is, with how long after the percept before it it came | the observation, for the series and the journal |
 
 No activity, on the timer: each sensor whose latest percept ended a limit of cadences ago is kept as a

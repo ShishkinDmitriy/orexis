@@ -552,7 +552,7 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
   them for anything new (policy).
 - **One happening is said once: what one turn wrote of a kind is told as one thing** — a message of three readings
   was three percepts each perceived and revised apart, and whoever heard the first revision decided before the
-  rest was believed; told together, sensing says one `Perceived` and belief one `Revised` naming all three, and
+  rest was believed; told together, sensing says one `Perceived`, within a perceiving, and belief one `Revised` naming all three, and
   seven committed steps adopted are one revision (a-package-is-a-task-that-awaits-its-events).
 - **A claim presented lands at the subject's next reading, as a dose does** — the presentation's effect is the
   soil moist, which only the probe's next reading shows; declared no landing, it failed a patience after it was
@@ -952,8 +952,8 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **Every activity is traced to the process's start, and what a package does for as long as it runs is an activity
   of its own class** — `orexis:ProcessStarted` starts the agent's booting, each lifecycle activity is started by the
   end of the one it waited for, an activity names the event it was begun of, and what a task says inside none of its
-  own is said within its package's running; sensing listens to one sensor and asks another, a message perceived part
-  of that; an activity that lasts holds none of what is said within it, a listening of a season being one entry of
+  own is said within its package's running, which the greenhouse's walk is held to nothing doing; sensing listens to
+  one sensor and asks another, a message perceived part of that, and planning checks a head in a `planning:Checking`; an activity that lasts holds none of what is said within it, a listening of a season being one entry of
   every reading otherwise (#1254, [activity](knowledge/domain/kernel/activity.md)).
 - **A process is the AGENT with the id it was told, never whatever carries that id.**
 - **The store says once which agent it is, and a text asks rather than being told** — the world

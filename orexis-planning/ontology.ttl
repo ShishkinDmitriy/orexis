@@ -424,6 +424,14 @@ execution:IntentionAdopted rdfs:subClassOf planning:PlanningTrigger .
 execution:IntentionResolved rdfs:subClassOf planning:PlanningTrigger .
 execution:StepTaken rdfs:subClassOf planning:PlanningTrigger .
 
+planning:Checking a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Checking" ;
+    rdfs:comment "Checking one head execution asks about as it is taken, against the present at that instant: begun of the asking and ended saying `planning:HeadChecked`, with no planning and no trigger of one." .
+
+planning:CheckingTrigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Checking trigger" ;
+    rdfs:comment "What starts a checking: execution's head asked, beneath it here since planning is above execution." .
+
+execution:HeadAsked rdfs:subClassOf planning:CheckingTrigger .
+
 planning:reopens a owl:ObjectProperty ; rdfs:domain planning:PlanningTrigger ; rdfs:range planning:Want ; rdfs:label "reopens" ;
     rdfs:comment "A walking want a planning is to search again from the ground its step in flight lands in, its untaken steps reopened (knowledge/domain/execution/commitment.md)." .
 

@@ -13,13 +13,13 @@ use orexis::activity::Activity;
 use super::{Out, Planner, Searched};
 use crate::admit::local_of;
 use crate::events::HeadChecked;
-use crate::ontology::{PLANNING_ACTIVITY, REOPENS};
+use crate::ontology::{CHECKING_ACTIVITY, PLANNING_ACTIVITY, REOPENS};
 
 pub(crate) const REOPEN: usize = 1;
 pub(crate) const CHECK: usize = 2;
 
-/// A head execution asks about as it is taken, and what that says: the head and the instant.
-pub(crate) const HEAD_ASKED: &str = "http://example.org/orexis/execution#HeadAsked";
+/// What starts a checking, execution's head asked beneath it, and what that says: the head and the instant.
+pub(crate) const CHECKING_TRIGGER: &str = "http://example.org/orexis/planning#CheckingTrigger";
 const HEAD: &str = "http://example.org/orexis/execution#head";
 const INTENTION: &str = "http://example.org/orexis/execution#intention";
 const AT_TIME: &str = "http://www.w3.org/ns/prov#atTime";
@@ -45,12 +45,18 @@ impl Planner {
                     _ => None,
                 })
                 .unwrap_or(pass.now);
-            let blocked = self.check(head.as_str(), at)?;
-            pass.emit(&HeadChecked {
-                head: head.as_str().to_string(),
-                blocked,
-                at,
-            });
+            //  CHECKING ONE HEAD IS AN ACTIVITY, begun of the asking: what it answers is said within it.
+            let activity = pass.begin(CHECKING_ACTIVITY, &[]);
+            let blocked = self.check(head.as_str(), at);
+            if let Ok(blocked) = &blocked {
+                pass.emit(&HeadChecked {
+                    head: head.as_str().to_string(),
+                    blocked: *blocked,
+                    at,
+                });
+            }
+            pass.end(activity);
+            blocked?;
             return Ok(Vec::new());
         }
         let wants: Vec<String> = event.all(REOPENS).iter().map(|w| w.as_str().to_string()).collect();

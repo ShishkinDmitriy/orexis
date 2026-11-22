@@ -45,7 +45,7 @@ package "observer" {
     {field} -me : String
     {field} -due : Vec<String>
     {field} +watch : Watch
-    {field} -perceiving : std::collections::VecDeque<oxigraph::model::NamedNode>
+    {field} -perceiving : std::collections::VecDeque<(oxigraph::model::NamedNode, oxigraph::model::NamedNode)>
     {field} -doubts : BTreeSet<String>
     {field} -requested : Vec<(String, Arc<dyn Member>)>
     {field} -listened : Vec<String>

@@ -55,7 +55,7 @@ use crate::withdraw::withdraw;
 use crate::world_at::{cone, lexical};
 
 use kept::chain;
-pub(crate) use policy::{CHECK, HEAD_ASKED, REOPEN};
+pub(crate) use policy::{CHECK, CHECKING_TRIGGER, REOPEN};
 use search::Searcher;
 use searching::{Searched, Searching};
 
