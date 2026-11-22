@@ -106,9 +106,10 @@ impl Run {
     }
 }
 
-/// AN ACTIVITY OF THE LIFECYCLE, OPEN: said as it begins and as it ends, naming the activity it is part of
-/// (`activity::Lasting`). It is never what a turn's events are said within: a running is open for the agent's life,
-/// and what its task says outside a turn's activity is no part of it.
+/// AN ACTIVITY THAT LASTS, OPEN: one of the lifecycle, or what a package does for as long as it runs, said as it
+/// begins and as it ends, naming the activity it is part of and what started it (`activity::Lasting`). A package's
+/// running is open beneath everything its task does, so what the task says inside no activity of its own is said
+/// within its running.
 pub(super) struct Span {
     pub(super) activity: Activity,
     pub(super) lasting: Lasting,
@@ -120,6 +121,7 @@ impl Span {
         kind: &'static str,
         node: NamedNode,
         part_of: Option<NamedNode>,
+        triggers: Vec<NamedNode>,
         about: Vec<(&'static str, Term)>,
         at: DateTime,
     ) -> Span {
@@ -127,7 +129,7 @@ impl Span {
         events.say(&Started {
             activity: node.clone(),
             kind,
-            triggers: Vec::new(),
+            triggers,
             at,
             lasting: Some(lasting.clone()),
         });
@@ -137,18 +139,24 @@ impl Span {
         }
     }
 
-    /// End it at `at`, saying `more` of it besides what it began saying.
-    pub(super) fn end(self, events: &Events, at: DateTime, more: Vec<(&'static str, Term)>) {
+    /// End it at `at`, saying `more` of it besides what it began saying: the name its end is said under, which the
+    /// activity begun because it ended is started by.
+    pub(super) fn end(self, events: &Events, at: DateTime, more: Vec<(&'static str, Term)>) -> NamedNode {
         let duration_s = self.activity.took();
         let mut lasting = self.lasting;
         lasting.about.extend(more);
-        events.say(&Ended {
-            activity: self.activity.node,
-            kind: self.activity.kind,
-            at,
-            duration_s,
-            lasting: Some(lasting),
-        });
+        let ended = crate::rdf::mint();
+        events.say_as(
+            &Ended {
+                activity: self.activity.node,
+                kind: self.activity.kind,
+                at,
+                duration_s,
+                lasting: Some(lasting),
+            },
+            Some(ended.clone()),
+        );
+        ended
     }
 }
 
@@ -160,15 +168,26 @@ pub(super) struct Life {
     pub(super) booting: Option<Span>,
     pub(super) running: Option<Span>,
     pub(super) stopping: Option<Span>,
+    /// What the package does for as long as it runs, each an activity of a class of its own inside its running
+    /// (`Handed::lasting`): ended as its running is.
+    pub(super) lasting: Vec<Span>,
     pub(super) krate: Option<&'static str>,
     /// What it has heard of the others' joining and booting, from its joining until the agent has booted.
     pub(super) heard: Settling,
 }
 
 impl Life {
+    /// End what the package does for as long as it runs, before its running ends.
+    pub(super) fn ended(&mut self, events: &Events, at: DateTime) {
+        for span in std::mem::take(&mut self.lasting) {
+            span.end(events, at, Vec::new());
+        }
+    }
+
     /// End whichever of its activities is open, as its start ends: a booting that never said it booted ends having
     /// made no core.
     pub(super) fn end(&mut self, events: &Events, at: DateTime) {
+        self.ended(events, at);
         if let Some(booting) = self.booting.take() {
             booting.end(events, at, vec![(RUNS, Literal::from(false).into())]);
         }
@@ -439,13 +458,13 @@ impl Handed {
         //  threads the agent's booting may be heard ended before the last package's, told from another thread, and
         //  what arrived after this wait was heard by nothing until the agent stopped - busy for ever, so a test on
         //  two threads never settled, one run in five where the machine was loaded.
-        let mut booted = false;
-        while !(booted && life.heard.ended.len() >= self.run.packages) {
+        let mut booted = None;
+        while !(booted.is_some() && life.heard.ended.len() >= self.run.packages) {
             let Some(woke) = life.hears.next_busy().await else {
                 break;
             };
-            if matches!(woke, Woke::Event(AGENT_BOOTED, _)) {
-                booted = true;
+            if let Woke::Event(AGENT_BOOTED, ended) = woke {
+                booted = Some(ended.node);
             } else {
                 life.heard.hear(woke);
             }
@@ -457,15 +476,43 @@ impl Handed {
             return Ok(false);
         }
         let about = vec![(PACKAGE, Literal::new_simple_literal(&life.package).into())];
-        life.running = Some(Span::begin(
+        //  ITS RUNNING IS STARTED BY THE END OF THE AGENT'S BOOTING, which it waited to hear, AND IS OPEN BENEATH
+        //  EVERYTHING ITS TASK DOES: what the task says inside no activity of its own is said within its running.
+        let running = Span::begin(
             &self.events,
             PACKAGE_RUNNING,
             crate::rdf::mint(),
             Some(self.run.running.clone()),
+            booted.into_iter().collect(),
             about,
             self.clock.now(),
-        ));
+        );
+        super::hearing::opened(&running.activity.node);
+        life.running = Some(running);
         Ok(true)
+    }
+
+    /// BEGIN WHAT THE PACKAGE DOES FOR AS LONG AS IT RUNS - listening to one sensor, asking another - as an activity of
+    /// `kind`, a class of the package's own, inside its running and about what `about` says: one for each thing it is
+    /// done for. It goes on across the task's turns and ends as the package's running does; a turn steps into it
+    /// (`Turn::step_in`) for what it does of it, so what it says there is said within it, and what a task says within
+    /// none of its own is said within its running.
+    pub async fn lasting(&self, kind: &'static str, about: Vec<(&'static str, Term)>) -> Result<Activity, Error> {
+        let life = self.life()?;
+        let mut life = life.lock().await;
+        let part_of = life.running.as_ref().map(|r| r.activity.node.clone());
+        let span = Span::begin(
+            &self.events,
+            kind,
+            crate::rdf::mint(),
+            part_of,
+            Vec::new(),
+            about,
+            self.clock.now(),
+        );
+        let activity = Activity::named(span.activity.node.clone(), kind);
+        life.lasting.push(span);
+        Ok(activity)
     }
 
     /// THE PACKAGE STOPS: its running ends, and it WAITS UNTIL THE AGENT'S RUNNING HAS ENDED - every running package's
@@ -474,11 +521,15 @@ impl Handed {
     pub async fn stopping(&self) -> Result<(), Error> {
         let life = self.life()?;
         let mut life = life.lock().await;
+        life.ended(&self.events, self.clock.now());
         if let Some(running) = life.running.take() {
+            super::hearing::closed(&running.activity.node);
             running.end(&self.events, self.clock.now(), Vec::new());
         }
+        let mut ran = None;
         while let Some(woke) = life.hears.next_busy().await {
-            if matches!(woke, Woke::Event(AGENT_RAN, _)) {
+            if let Woke::Event(AGENT_RAN, ended) = woke {
+                ran = Some(ended.node);
                 break;
             }
         }
@@ -491,6 +542,7 @@ impl Handed {
             PACKAGE_STOPPING,
             crate::rdf::mint(),
             part_of,
+            ran.into_iter().collect(),
             about,
             self.clock.now(),
         ));
@@ -711,7 +763,7 @@ pub(super) async fn agent(handed: Handed, mut hears: Hears, booting: Span, said:
             }
         }
     }
-    booting.end(&handed.events, handed.clock.now(), Vec::new());
+    let booted = booting.end(&handed.events, handed.clock.now(), Vec::new());
     handed.events.0.watch.forget();
     let runs = run.runs && run.refused().is_none();
     let agent_running = runs.then(|| {
@@ -720,6 +772,7 @@ pub(super) async fn agent(handed: Handed, mut hears: Hears, booting: Span, said:
             AGENT_RUNNING,
             run.running.clone(),
             None,
+            vec![booted],
             Vec::new(),
             handed.clock.now(),
         )
@@ -738,12 +791,13 @@ pub(super) async fn agent(handed: Handed, mut hears: Hears, booting: Span, said:
             None => break,
         }
     }
-    agent_running.end(&handed.events, handed.clock.now(), Vec::new());
+    let ran = agent_running.end(&handed.events, handed.clock.now(), Vec::new());
     *run.stopping.lock().expect("a stopping nobody poisoned") = Some(Span::begin(
         &handed.events,
         AGENT_STOPPING,
         crate::rdf::mint(),
         None,
+        vec![ran],
         Vec::new(),
         handed.clock.now(),
     ));
@@ -777,6 +831,7 @@ pub(super) fn spawn(
                 booting: None,
                 running: None,
                 stopping: None,
+                lasting: Vec::new(),
                 krate: None,
                 heard: Settling::default(),
             }))
@@ -784,11 +839,18 @@ pub(super) fn spawn(
         .collect();
     //  WHAT IS SAID AS THE AGENT BOOTS IS REMEMBERED, for whoever connects to the watch inside the booting.
     events.0.watch.remember();
+    //  THE ROOT: the process started, which nothing in the agent caused, and the agent's booting is started by it.
+    let started = crate::rdf::mint();
+    events.say_as(
+        &crate::activity::ProcessStarted { at: handed.clock.now() },
+        Some(started.clone()),
+    );
     let booting = Span::begin(
         &events,
         AGENT_BOOTING,
         handed.run.booting.clone(),
         None,
+        vec![started],
         Vec::new(),
         handed.clock.now(),
     );
@@ -832,6 +894,7 @@ pub(super) fn spawn(
                     PACKAGE_BOOTING,
                     crate::rdf::mint(),
                     Some(part_of),
+                    Vec::new(),
                     about,
                     clock.now(),
                 ));

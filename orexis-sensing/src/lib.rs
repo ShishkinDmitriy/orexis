@@ -61,6 +61,7 @@ fn start(handed: Handed) -> orexis::task::Starting {
         //  THE SENSORS IT READS BY ASKING, once every member has added itself: each asked on its cadence.
         let (asked, mut once) = observer.request(&handed.provided.share::<Members>())?;
         timers.extend(asked);
+        observer.attend(&handed).await?;
         let mut heard = None;
         let mut due = None;
         loop {

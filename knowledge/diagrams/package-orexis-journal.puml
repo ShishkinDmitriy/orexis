@@ -12,6 +12,8 @@ package "activities" {
   class "Keeper" as orexis_journal__activities__Keeper << (S,#A8D8EA) struct >> {
     {field} -journal : Arc<Journal>
     {field} -open : HashMap<NamedNode, Open>
+    {field} -recent : HashMap<NamedNode, (NamedNode, Option<&'static str>, DateTime)>
+    {field} -order : std::collections::VecDeque<NamedNode>
   }
   class "Open" as orexis_journal__activities__Open << (S,#A8D8EA) struct >> {
     {field} -activity : NamedNode
@@ -20,6 +22,7 @@ package "activities" {
     {field} -began : DateTime
     {field} -parent : Option<NamedNode>
     {field} -generated : Vec<(NamedNode, Option<&'static str>, DateTime)>
+    {field} -lasting : bool
   }
 }
 package "events" {

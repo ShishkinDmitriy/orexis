@@ -25,6 +25,9 @@ package "activity" {
     {field} +part_of : Option<NamedNode>
     {field} +about : Vec<(&'static str, Term)>
   }
+  class "ProcessStarted" as orexis__activity__ProcessStarted << (S,#A8D8EA) struct >> {
+    {field} +at : DateTime
+  }
   class "Started" as orexis__activity__Started << (S,#A8D8EA) struct >> {
     {field} +activity : NamedNode
     {field} +kind : &'static str
@@ -270,6 +273,7 @@ package "task::hearing" {
     {field} ~said : Vec<Heard>
     {field} ~in_hand : usize
     {field} ~open : Vec<NamedNode>
+    {field} ~woken : Option<NamedNode>
   }
   class "Passed" as orexis__task__hearing__Passed << (S,#A8D8EA) struct >> {
     {field} +duration_s : f64
@@ -336,6 +340,7 @@ package "task::life" {
     {field} ~booting : Option<Span>
     {field} ~running : Option<Span>
     {field} ~stopping : Option<Span>
+    {field} ~lasting : Vec<Span>
     {field} ~krate : Option<&'static str>
     {field} ~heard : Settling
   }
@@ -444,6 +449,7 @@ orexis__task__life__Life *-- "1" orexis__task__hearing__Hears : hears
 orexis__task__life__Life *-- "0..1" orexis__task__life__Span : booting
 orexis__task__life__Life *-- "0..1" orexis__task__life__Span : running
 orexis__task__life__Life *-- "0..1" orexis__task__life__Span : stopping
+orexis__task__life__Life *-- "*" orexis__task__life__Span : lasting
 orexis__task__life__Life *-- "1" orexis__task__life__Settling : heard
 orexis__task__life__Running *-- "1" orexis__task__life__Handed : handed
 orexis__task__life__Booted *-- "1" orexis__task__life__Handed : handed
@@ -454,6 +460,7 @@ orexis__task__life__Joined ..|> orexis__events__Event
 orexis__events__Kept ..|> orexis__events__Event
 orexis__clock__Manual ..|> orexis__clock__Clock
 orexis__task__hearing__Passed ..|> orexis__events__Event
+orexis__activity__ProcessStarted ..|> orexis__events__Event
 orexis__activity__Started ..|> orexis__events__Event
 orexis__activity__Wrote ..|> orexis__events__Event
 @enduml

@@ -234,12 +234,14 @@ impl Journal {
             .map_err(engine)
     }
 
-    /// Take out every line logged and every activity the window has passed that no incident keeps; how many.
+    /// Take out every line logged and every activity the window has passed that no incident keeps; how many. An activity
+    /// still going on is left, however long ago it began.
     pub fn sweep(&self, now: Option<DateTime>) -> Result<usize, Error> {
         let now = now.unwrap_or_else(|| (self.now)());
         let text = format!(
             "SELECT DISTINCT ?r WHERE {{ VALUES ?c {{ <{LOGGED}> <{ACTIVITY}> }} GRAPH ?r {{ ?r a ?c ; <{AT}> ?t }} FILTER(?t < {}) \
-             FILTER NOT EXISTS {{ GRAPH ?r {{ ?r <{KEPT_BY}> ?any }} }} }}",
+             FILTER NOT EXISTS {{ GRAPH ?r {{ ?r <{KEPT_BY}> ?any }} }} \
+             FILTER(?c != <{ACTIVITY}> || EXISTS {{ GRAPH ?r {{ ?r <http://www.w3.org/ns/prov#endedAtTime> ?e }} }}) }}",
             literal_of(less(now, self.window))
         );
         let mut gone = Vec::new();

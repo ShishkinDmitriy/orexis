@@ -151,6 +151,12 @@ orexis:Event
     rdfs:label "Event" ;
     rdfs:comment "Something a part of an agent says happened, at its `prov:atTime`: an entry of the agent's journal, a named graph holding the event and what the agent held of what it is about, in the words of the package that says it — a plan published, a step taken, a conflict concluded — or a line of its log. Watched and never believed: the journal is a store of its own, and nothing an agent reads is handed it. Packages meet at this word, so the kernel keeps it; each package's events are classes beneath it in its own ontology." .
 
+orexis:ProcessStarted
+    a owl:Class ;
+    rdfs:subClassOf orexis:Event ;
+    rdfs:label "Process started" ;
+    rdfs:comment "The agent's process started: the one event nothing in the agent caused, said by the kernel before anything else, and what the agent's booting is started by. Every activity the agent does is reached from it, through what each was started by and what each is part of (knowledge/domain/kernel/activity.md)." .
+
 orexis:Incident
     a owl:Class ;
     rdfs:subClassOf orexis:Event ;

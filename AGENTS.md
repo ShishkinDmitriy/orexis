@@ -949,6 +949,12 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **An event is an instant and triggers no event; each activity has a trigger class of its own, whose events a package's
   policy hears to start it, and an activity's start and end are events and it is a span** — who hears what is said by the
   higher ontology, the links between parts go, and "process" stays the OS's word (packages-meet-by-events-policies-and-activities, #1119).
+- **Every activity is traced to the process's start, and what a package does for as long as it runs is an activity
+  of its own class** — `orexis:ProcessStarted` starts the agent's booting, each lifecycle activity is started by the
+  end of the one it waited for, an activity names the event it was begun of, and what a task says inside none of its
+  own is said within its package's running; sensing listens to one sensor and asks another, a message perceived part
+  of that; an activity that lasts holds none of what is said within it, a listening of a season being one entry of
+  every reading otherwise (#1254, [activity](knowledge/domain/kernel/activity.md)).
 - **A process is the AGENT with the id it was told, never whatever carries that id.**
 - **The store says once which agent it is, and a text asks rather than being told** — the world
   authors `<agent> a orexis:Self` in the agent's self graph, the boot checks it against the told id

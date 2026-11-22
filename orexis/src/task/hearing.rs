@@ -135,6 +135,8 @@ pub(super) struct Local {
     pub(super) in_hand: usize,
     /// The activities open in this task, innermost last: what an event it says is said within.
     pub(super) open: Vec<NamedNode>,
+    /// The event that woke the task, until it has done what it does of it: what an activity begun of it is started by.
+    pub(super) woken: Option<NamedNode>,
 }
 
 /// THE ACTIVITY OPEN IN THE TASK SAYING SOMETHING NOW, innermost: what the watch says an event was said within, so a
@@ -348,7 +350,15 @@ impl Events {
     /// the lifecycle, which every package hears, so the watch is still told no where nothing else watches it. Where the
     /// tasks already hear the watch, it tells them; otherwise it is told them here, held until the sayer next waits.
     pub(super) fn say(&self, event: &dyn Event) {
-        let named = self.0.watch.emit(event);
+        self.say_as(event, None);
+    }
+
+    /// `say`, under `named` where its sayer minted the name first: an end that the activity after it is started by.
+    pub(super) fn say_as(&self, event: &dyn Event, named: Option<NamedNode>) {
+        let named = match named {
+            Some(named) => self.0.watch.emit_as(event, named.clone()).or(Some(named)),
+            None => self.0.watch.emit(event),
+        };
         if self.0.listening.load(Ordering::SeqCst) {
             return;
         }
@@ -468,6 +478,7 @@ impl Events {
     pub(super) fn rest(&self) {
         let rested = TURN.try_with(|turn| {
             let mut turn = turn.borrow_mut();
+            turn.woken = None;
             (std::mem::take(&mut turn.said), std::mem::take(&mut turn.in_hand))
         });
         if let Ok((said, in_hand)) = rested {
@@ -558,6 +569,12 @@ impl Hears {
         self.events.rest();
         let woke = self.inbox.recv().await?;
         self.events.took();
+        //  THE EVENT HEARD IS WHAT STARTS WHATEVER THE TASK BEGINS OF IT, until it has done that (`Turn::done`).
+        let by = match &woke {
+            Woke::Event(_, heard) => Some(heard.node.clone()),
+            Woke::Graphs(..) => None,
+        };
+        let _ = TURN.try_with(|turn| turn.borrow_mut().woken = by);
         Some(woke)
     }
 
@@ -688,14 +705,16 @@ impl Turn<'_> {
     /// WHAT THE TASK DID OF WHAT WOKE IT: the graphs it wrote, told to whoever hears their kinds, before the events
     /// it said are.
     pub fn done(&mut self, wrote: Result<Vec<String>, Error>) -> Result<(), Error> {
+        let _ = TURN.try_with(|turn| turn.borrow_mut().woken = None);
         let wrote = wrote?;
         self.wrote(&wrote);
         self.events.wrote(wrote)
     }
 
-    /// Say whose `graphs` are, where anybody watches and an activity of this turn wrote them.
+    /// Say whose `graphs` are, where anybody watches: the activity of this turn that wrote them, or the one the task
+    /// has open beneath its turns where none did.
     pub(super) fn wrote(&self, graphs: &[String]) {
-        if let Some(by) = &self.last
+        if let Some(by) = &self.last.clone().or_else(within)
             && !graphs.is_empty()
             && self.events.0.watch.connected()
         {
@@ -742,15 +761,21 @@ impl Turn<'_> {
         self.wake_at(next.unwrap_or(self.now));
     }
 
-    /// Begin an activity of `kind`, triggered by the entities `triggers` names - what the events heard were about -
-    /// and say that it started.
+    /// Begin an activity of `kind`, started by the entities `triggers` names - what the events heard were about -
+    /// and by the event that woke the task, where it is doing what it does of one; and say that it started.
     pub fn begin(&mut self, kind: &'static str, triggers: &[NamedNode]) -> Activity {
         let activity = Activity::begin(kind);
         if self.events.0.watch.connected() {
+            let mut triggers = triggers.to_vec();
+            if let Some(woken) = TURN.try_with(|turn| turn.borrow().woken.clone()).ok().flatten()
+                && !triggers.contains(&woken)
+            {
+                triggers.push(woken);
+            }
             self.events.0.watch.emit(&Started {
                 activity: activity.node.clone(),
                 kind,
-                triggers: triggers.to_vec(),
+                triggers,
                 at: self.now,
                 lasting: None,
             });
@@ -773,6 +798,14 @@ impl Turn<'_> {
     /// Say `event` happened, to whoever watches the agent.
     pub fn emit(&self, event: &dyn Event) {
         self.events.0.watch.emit(event);
+    }
+
+    /// End `activity` and say that `graphs` are what it wrote, where a turn does several activities and each wrote its
+    /// own: said of this one here, they are said of none again as the turn is done.
+    pub fn wrote_by(&mut self, activity: Activity, graphs: &[String]) {
+        self.end(activity);
+        self.wrote(graphs);
+        self.last = None;
     }
 
     /// End `activity`, and say that it ended.
