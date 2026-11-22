@@ -127,7 +127,12 @@ fn own(store: &Store) -> Vec<String> {
 /// time. A store booted before is a volume lived in, booted again.
 async fn ran(store: &Store, budget: usize, within: u64) -> String {
     let loaded = ["planning".to_string()];
-    let provided = Provided::default().with(orexis_planning::Budget(budget));
+    let journal = common::journal(now);
+    let provided = Provided::default()
+        .with(orexis_planning::Budget(budget))
+        .with(orexis_journal::Keeps {
+            journal: Some(journal.clone()),
+        });
     let running = orexis_agent::boot(store, &world(), "hanoi", common::clock(now()), provided)
         .unwrap()
         .first(&loaded)
@@ -142,6 +147,7 @@ async fn ran(store: &Store, budget: usize, within: u64) -> String {
     );
     let outcome = common::outcome(&running, within).await;
     running.stop().await;
+    common::traced_whole(&journal, "hanoi");
     outcome
 }
 

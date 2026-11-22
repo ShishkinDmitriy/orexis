@@ -284,6 +284,7 @@ impl Handed {
             events: &self.events,
             next: None,
             last: None,
+            claimed: Vec::new(),
         }
     }
 
@@ -452,6 +453,7 @@ impl Handed {
         if let Some(booting) = life.booting.take() {
             let mut more: Vec<(&'static str, Term)> = vec![(RUNS, Literal::from(true).into())];
             more.extend(serves.iter().map(|c| (SERVES, NamedNode::new_unchecked(c).into())));
+            super::hearing::closed(&booting.activity.node);
             booting.end(&self.events, self.clock.now(), more);
         }
         //  UNTIL THE AGENT HAS BOOTED AND EVERY PACKAGE'S BOOTING IS HEARD ENDED, its own among them: on several
@@ -889,7 +891,7 @@ pub(super) fn spawn(
             }),
             async move {
                 let about = vec![(PACKAGE, Literal::new_simple_literal(&named).into())];
-                life.lock().await.booting = Some(Span::begin(
+                let booting = Span::begin(
                     &events,
                     PACKAGE_BOOTING,
                     crate::rdf::mint(),
@@ -897,7 +899,12 @@ pub(super) fn spawn(
                     Vec::new(),
                     about,
                     clock.now(),
-                ));
+                );
+                //  ITS BOOTING IS OPEN BENEATH WHAT ITS START SAYS, as its running is beneath its task: said within
+                //  nothing, what belief revised as it started was kept by no entry, and a planning begun of it was
+                //  traced to nothing.
+                super::hearing::opened(&booting.activity.node);
+                life.lock().await.booting = Some(booting);
                 let ended = start.await;
                 life.lock().await.end(&events, clock.now());
                 if let Err(e) = ended {

@@ -26,6 +26,7 @@ pub const REVISES: &str = "http://example.org/orexis/belief#revises";
 pub const INTO: &str = "http://example.org/orexis/belief#into";
 /// What sensing does once a percept is revised, and what starts it: belief's revision pass, in belief's words.
 pub const OBSERVING: &str = "http://example.org/orexis/sensing#Observing";
+pub const ATTENDING: &str = "http://example.org/orexis/sensing#Attending";
 /// What sensing does of one sensor for as long as it runs, and of one message of it.
 pub const LISTENING: &str = "http://example.org/orexis/sensing#Listening";
 pub const ASKING: &str = "http://example.org/orexis/sensing#Asking";

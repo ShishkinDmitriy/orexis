@@ -279,6 +279,7 @@ impl Events {
             events: self,
             next: None,
             last: None,
+            claimed: Vec::new(),
         }
     }
 
@@ -699,6 +700,8 @@ pub struct Turn<'a> {
     pub(super) next: Option<DateTime>,
     /// The activity this turn ended last: what the graphs it wrote are said of.
     pub(super) last: Option<NamedNode>,
+    /// The graphs this turn already said an activity of its own wrote (`wrote_by`): said of none again.
+    pub(super) claimed: Vec<String>,
 }
 
 impl Turn<'_> {
@@ -714,14 +717,14 @@ impl Turn<'_> {
     /// Say whose `graphs` are, where anybody watches: the activity of this turn that wrote them, or the one the task
     /// has open beneath its turns where none did.
     pub(super) fn wrote(&self, graphs: &[String]) {
+        //  WHAT AN ACTIVITY OF THIS TURN WAS SAID TO HAVE WRITTEN is said of nothing else: told again as the turn is
+        //  done, a statement a hearing kept was said written by speech's running as well.
+        let graphs: Vec<String> = graphs.iter().filter(|g| !self.claimed.contains(g)).cloned().collect();
         if let Some(by) = &self.last.clone().or_else(within)
             && !graphs.is_empty()
             && self.events.0.watch.connected()
         {
-            self.events.0.watch.emit(&Wrote {
-                by: by.clone(),
-                graphs: graphs.to_vec(),
-            });
+            self.events.0.watch.emit(&Wrote { by: by.clone(), graphs });
         }
     }
 
@@ -790,8 +793,10 @@ impl Turn<'_> {
         closed(&activity.node);
     }
 
-    /// The task STEPS BACK INTO `activity`, begun in an earlier turn: what it says from here is said within it.
+    /// The task STEPS BACK INTO `activity`, begun in an earlier turn: what it says from here is said within it, and
+    /// what it writes is its own, whatever activity the turn ended before.
     pub fn step_in(&mut self, activity: &Activity) {
+        self.last = None;
         opened(&activity.node);
     }
 
@@ -805,6 +810,7 @@ impl Turn<'_> {
     pub fn wrote_by(&mut self, activity: Activity, graphs: &[String]) {
         self.end(activity);
         self.wrote(graphs);
+        self.claimed.extend(graphs.iter().cloned());
         self.last = None;
     }
 

@@ -80,10 +80,26 @@ pub struct Translator {
     /// Where the model the role names answers (`translation:translatedBy`), as the world's deployment states it: none
     /// where the role names none or the world says nothing of the one named.
     pub translated_by: Option<String>,
-    tx: Sender<Back>,
-    rx: Receiver<Back>,
-    /// What the model's conversations handed back, for the turn to do.
-    pending: VecDeque<Back>,
+    tx: Sender<(usize, Back)>,
+    rx: Receiver<(usize, Back)>,
+    /// What the model's conversations handed back, for the turn to do, each with the number of the activity it is of.
+    pending: VecDeque<(usize, Back)>,
+    /// THE TRANSLATINGS AND PHRASINGS WHOSE MODEL IS STILL AT WORK, by number: each lasts until the last of the work
+    /// it set going is over, the task stepping into it for whatever that hands back.
+    out: BTreeMap<usize, Out>,
+    /// The number of the activity being done now, how much work it has set going, and the chat it shows itself
+    /// writing in.
+    of: usize,
+    set_going: usize,
+    shown: Option<String>,
+}
+
+/// A translating or a phrasing whose model is still at work: the activity, how much of the work is not over yet, and
+/// the chat the agent is shown writing in for it.
+struct Out {
+    activity: orexis::activity::Activity,
+    left: usize,
+    chat: Option<String>,
 }
 
 impl Translator {
@@ -169,6 +185,10 @@ impl Translator {
             tx,
             rx,
             pending: VecDeque::new(),
+            out: BTreeMap::new(),
+            of: 0,
+            set_going: 0,
+            shown: None,
         })
     }
 
@@ -289,6 +309,7 @@ impl Translator {
                 within_s,
             };
             converse(conversation, model.as_ref(), &mind, &back).await;
+            back.send(Back::Done);
         });
         Ok(Vec::new())
     }
@@ -361,6 +382,7 @@ impl Translator {
                 }
                 Err(e) => log::warn!("the model would not render what was said: {e}"),
             }
+            back.send(Back::Done);
         });
         Ok(())
     }
@@ -371,6 +393,7 @@ impl Translator {
             .entry(chat.iri.clone())
             .or_insert_with(|| (chat.clone(), 0))
             .1 += 1;
+        self.shown = Some(chat.iri.clone());
         self.show(&chat.channel);
     }
 
@@ -384,7 +407,18 @@ impl Translator {
     /// Every chat with an answer still being thought, shown again.
     pub fn still_writing(&self) {
         for (chat, _) in self.writing.values() {
-            self.show(&chat.channel);
+            //  SAID WITHIN A TRANSLATING STILL OUT IN THAT CHAT, the answer being thought being its own.
+            let within = self
+                .out
+                .values()
+                .find(|out| out.chat.as_deref() == Some(chat.iri.as_str()))
+                .map(|out| out.activity.node.clone());
+            self.watch.emit_within(
+                &WritingAnnounced {
+                    channel: chat.channel.clone(),
+                },
+                within,
+            );
         }
     }
 
@@ -404,15 +438,55 @@ impl Translator {
     }
 
     /// What the model's conversations hand back on, and what rings this task to take it.
-    fn backs(&self) -> Backs {
+    fn backs(&mut self) -> Backs {
+        self.set_going += 1;
         Backs {
             tx: self.tx.clone(),
             wake: self.wake.clone(),
+            of: self.of,
         }
     }
 
+    /// AN ACTIVITY THAT SET THE MODEL TO WORK LASTS UNTIL THE WORK IS OVER: the task steps out of it, and back in
+    /// for each thing the work hands back; one that set nothing going ends here.
+    fn lasts(&mut self, activity: orexis::activity::Activity, pass: &mut Turn<'_>) {
+        let (left, chat) = (std::mem::take(&mut self.set_going), self.shown.take());
+        if left == 0 {
+            pass.end(activity);
+        } else {
+            pass.step_out(&activity);
+            self.out.insert(self.of, Out { activity, left, chat });
+        }
+        self.of += 1;
+    }
+
+    /// One thing the model's work handed back, done WITHIN THE ACTIVITY IT IS OF: what it wrote is told and what it
+    /// said is said there, and the activity ends once the last of its work is over.
+    fn back(&mut self, of: usize, back: Back, pass: &mut Turn<'_>) -> Result<(), Error> {
+        let over = matches!(back, Back::Done);
+        let mut out = self.out.remove(&of);
+        if let Some(out) = &out {
+            pass.step_in(&out.activity);
+        }
+        let told = self.done(back, pass.now).and_then(|wrote| pass.told(wrote));
+        if let Some(out) = &mut out
+            && over
+        {
+            out.left = out.left.saturating_sub(1);
+        }
+        match out {
+            Some(out) if out.left == 0 => pass.wrote_by(out.activity, &[]),
+            Some(out) => {
+                pass.step_out(&out.activity);
+                self.out.insert(of, out);
+            }
+            None => {}
+        }
+        told
+    }
+
     /// Everything the model's conversations handed back since the last ask, oldest first.
-    fn arrived(&self) -> Vec<Back> {
+    fn arrived(&self) -> Vec<(usize, Back)> {
         self.rx.try_iter().collect()
     }
 
@@ -446,6 +520,7 @@ impl Translator {
                 self.watch.emit(&event);
                 Ok(Vec::new())
             }
+            Back::Done => Ok(Vec::new()),
             Back::Ask {
                 stating,
                 inputs,
@@ -475,7 +550,7 @@ impl Translator {
         let statements: Vec<NamedNode> = event.all(STATEMENT).into_iter().cloned().collect();
         let activity = pass.begin(PHRASING, &statements);
         let phrased = to.iter().try_for_each(|person| self.told(person, &doc));
-        pass.end(activity);
+        self.lasts(activity, pass);
         phrased?;
         Ok(Vec::new())
     }
@@ -488,6 +563,12 @@ impl Translator {
                 return Ok(Vec::new());
             }
             for job in jobs {
+                if job == BACK {
+                    if let Some((of, back)) = self.pending.pop_front() {
+                        self.back(of, back, pass)?;
+                    }
+                    continue;
+                }
                 let wrote = self.run(job, pass)?;
                 pass.told(wrote)?;
             }
@@ -513,7 +594,7 @@ impl Translator {
         let at = prose.at.unwrap_or(pass.now);
         let activity = pass.begin(TRANSLATING, std::slice::from_ref(&graph));
         let written = self.heard(&prose, at);
-        pass.end(activity);
+        self.lasts(activity, pass);
         written
     }
 
@@ -524,7 +605,7 @@ impl Translator {
                 Ok(Vec::new())
             }
             _ => match self.pending.pop_front() {
-                Some(back) => self.done(back, pass.now),
+                Some((_, back)) => self.done(back, pass.now),
                 None => Ok(Vec::new()),
             },
         }

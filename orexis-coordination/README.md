@@ -13,8 +13,8 @@ what its constraints read, answers them, concludes each conflict itself and lays
 |---|---|---|
 | `coordination:CoordinatingTrigger`: `belief:Revised` | belief | `coordination:Coordinating` (a peer comes in range by what the agent senses) |
 | `coordination:CoordinatingTrigger`: `execution:IntentionAdopted`, `execution:StepTaken`, `execution:IntentionResolved` | execution | `coordination:Coordinating` (the holdings are read off the intentions) |
-| a graph of kind `coordination:QuestionGraph` written | speech's extraction | the question answered, the conflicts concluded |
-| a graph of kind `coordination:AnswerGraph` written | speech's extraction | the conflicts concluded, what it yields to laid |
+| a graph of kind `coordination:QuestionGraph` written | speech's extraction | `coordination:Coordinating`: the question answered, the conflicts concluded |
+| a graph of kind `coordination:AnswerGraph` written | speech's extraction | `coordination:Coordinating`: the conflicts concluded, what it yields to laid |
 | the clock: a patience, while it is asking or in conflict | | `coordination:Coordinating` |
 
 At start it mints the agent's secret for the draws where it holds none.

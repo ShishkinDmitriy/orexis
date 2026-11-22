@@ -293,6 +293,7 @@ package "task::hearing" {
     {field} ~events : &'a Events
     {field} ~next : Option<DateTime>
     {field} ~last : Option<NamedNode>
+    {field} ~claimed : Vec<String>
   }
   class "Wake" as orexis__task__hearing__Wake << (S,#A8D8EA) struct >> {
     {field} ~ring : Option<Arc<Ring>>

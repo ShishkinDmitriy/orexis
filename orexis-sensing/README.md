@@ -28,9 +28,10 @@ no reader of the mind is handed one.
 | `sensing:Perceiving` | one message of a sensor is taken in, a percept written per reading | the percepts; what one turn took in is said once as `sensing:Perceived`, within the last message's, once the turn's graphs are heard |
 | `sensing:Observing` | each percept the revision concluded of is said as the observation it is, with how long after the percept before it it came | the observation, for the series and the journal |
 
-No activity, on the timer: each sensor whose latest percept ended a limit of cadences ago is kept as a
-`sensing:SilenceGraph` and said in the log; a sensor giving one number for its last `sensing:stuckAfter` readings
-is said stuck by sensing's rule.
+| `sensing:Attending` | on the clock, the sensors the observer attends are asked after: each whose latest percept ended a limit of cadences ago is kept as a `sensing:SilenceGraph`, and each whose reading has lapsed with none come is found | `sensing:ReadingLapsed`, how many sensors are silent and each sensor doubted or no longer doubted |
+
+A sensor giving one number for its last `sensing:stuckAfter` readings is said stuck by sensing's rule, in no
+activity.
 
 ## What it says
 

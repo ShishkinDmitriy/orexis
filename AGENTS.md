@@ -952,9 +952,11 @@ lives. The file was 18,000 words once, and every coding session paid for all of 
 - **Every activity is traced to the process's start, and what a package does for as long as it runs is an activity
   of its own class** — `orexis:ProcessStarted` starts the agent's booting, each lifecycle activity is started by the
   end of the one it waited for, an activity names the event it was begun of, and what a task says inside none of its
-  own is said within its package's running, which the walks of the greenhouse, the allotment and the layby are held to nothing doing; sensing listens to
-  one sensor and asks another, a message perceived part of that, speech listens on each channel, an arrival heard part
-  of that, and planning checks a head in a `planning:Checking`; an activity that lasts holds none of what is said within it, a listening of a season being one entry of
+  own is said within its package's running, which every world's walk is held to nothing doing; sensing listens to
+  one sensor and asks another, a message perceived part of that, and asks after them all in an attending, speech listens
+  on each channel, an arrival heard part of that, and makes beliefs of statements in an extracting, planning checks a head
+  in a `planning:Checking`, a translating lasts until the model it set to work is done, and a package's booting is open
+  beneath what its start says; a graph one activity of a turn is said to have written is said of none again; an activity that lasts holds none of what is said within it, a listening of a season being one entry of
   every reading otherwise (#1254, [activity](knowledge/domain/kernel/activity.md)).
 - **A process is the AGENT with the id it was told, never whatever carries that id.**
 - **The store says once which agent it is, and a text asks rather than being told** — the world

@@ -21,8 +21,8 @@ the model answers from what the chat may read; what the agent says to a person i
 
 | Activity | What happens | Ends saying |
 |---|---|---|
-| `translation:Translating` | find the chat and who spoke; judge whether the words were for this agent; brief the model and offer it the chat's tools, off the mind's thread | `speech:WritingAnnounced`; later `translation:Conversed` and `speech:ProseKept` for the answer |
-| `translation:Phrasing` | the model is asked to write the message for the person, off the mind's thread | `speech:ProseKept` for the words, which speech carries on the chat's channel |
+| `translation:Translating` | find the chat and who spoke; judge whether the words were for this agent; brief the model and offer it the chat's tools, off the mind's thread; it lasts until the model's conversation is over, the task stepping back into it for whatever that hands back | `speech:WritingAnnounced`, a person's statement kept, `translation:Conversed` and `speech:ProseKept` for the answer |
+| `translation:Phrasing` | the model is asked to write the message for the person, off the mind's thread; it lasts until the model has answered for each person | `speech:ProseKept` for the words, which speech carries on the chat's channel |
 
 ## What it says
 

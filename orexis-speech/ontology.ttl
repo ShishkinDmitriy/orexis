@@ -156,6 +156,9 @@ speech:Listening a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Liste
 speech:Hearing a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Hearing" ;
     rdfs:comment "Taking in one arrival on a channel, part of the listening of that channel: a peer's document kept as the statements it says, said `speech:Heard` once they are told written, or a person's words kept as prose, said `speech:ProseKept`. What it kept is what it generated, so what is extracted from it and what translation makes of it are traced to it." .
 
+speech:Extracting a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Extracting" ;
+    rdfs:comment "Making of the statements written together the beliefs a domain's `speech:Extraction` makes of each, started by the statements: the beliefs are what it generated, so what is done of them is traced through the statements to whatever kept them. A statement received that no arrival of speech's kept, a person's a translator kept, is said `speech:Heard` within it." .
+
 speech:kept a owl:ObjectProperty ; rdfs:domain speech:ProseKept ; rdfs:range speech:ProseGraph ; rdfs:label "kept" ;
     rdfs:comment "The prose graph an event is about." .
 

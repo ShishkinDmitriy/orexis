@@ -11,6 +11,7 @@ pub const CARRYING: &str = "http://example.org/orexis/speech#Carrying";
 /// What speech does of a channel for as long as it runs, what it does of one arrival on it, and what it is done with.
 pub const LISTENING: &str = "http://example.org/orexis/speech#Listening";
 pub const HEARING: &str = "http://example.org/orexis/speech#Hearing";
+pub const EXTRACTING: &str = "http://example.org/orexis/speech#Extracting";
 pub const USED: &str = "http://www.w3.org/ns/prov#used";
 pub const CARRYING_TRIGGER: &str = "http://example.org/orexis/speech#CarryingTrigger";
 pub const STATEMENT: &str = "http://example.org/orexis/speech#statement";

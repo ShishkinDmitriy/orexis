@@ -11,6 +11,7 @@ use orexis::ontology::local_of;
 use orexis::ontology::{ONTOLOGY, SELF_GRAPH};
 use orexis::store::{Store, Within, value};
 use orexis::task::{Heard, Turn};
+use oxigraph::model::NamedNode;
 use oxsdatatypes::DateTime;
 
 use crate::answer::answer;
@@ -302,6 +303,15 @@ impl Coordinator {
     /// The questions or answers written together: each question answered, and what they make of the draws
     /// concluded once.
     pub(crate) fn heard(&mut self, job: usize, graphs: &[String], pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+        //  A COORDINATING STARTED BY WHAT A PEER SAID: the questions or the answers heard.
+        let said: Vec<NamedNode> = graphs.iter().filter_map(|g| NamedNode::new(g.as_str()).ok()).collect();
+        let activity = pass.begin(COORDINATING, &said);
+        let written = self.answered(job, graphs, pass);
+        pass.end(activity);
+        written
+    }
+
+    fn answered(&mut self, job: usize, graphs: &[String], pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         let mut written = Vec::new();
         if job == QUESTIONED {
             for graph in graphs {

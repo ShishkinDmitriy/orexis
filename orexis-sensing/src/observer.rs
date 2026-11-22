@@ -20,7 +20,8 @@ use crate::cadence::{cadence_of, lapsed, next_lapse};
 use crate::events::{Doubted, Perceived, ReadingLapsed, Silence, tag_of};
 use crate::missed::missed;
 use crate::ontology::{
-    ASKING, LISTENING, OBSERVATION_GRAPH, OBSERVER, OBSERVING, PERCEIVING, REVISED_SOURCE, SILENCE_GRAPH, silence_graph,
+    ASKING, ATTENDING, LISTENING, OBSERVATION_GRAPH, OBSERVER, OBSERVING, PERCEIVING, REVISED_SOURCE, SILENCE_GRAPH,
+    silence_graph,
 };
 use crate::received::received_by;
 
@@ -415,7 +416,12 @@ impl Observer {
                     self.perceived(due);
                     pass.end(activity);
                 }
-                self.ask(pass.now)
+                //  THE ASK AFTER ITS SENSORS IS AN ACTIVITY, begun by the clock inside sensing's running: the silences
+                //  it keeps and what it says of the silent and the doubted are its own.
+                let activity = pass.begin(ATTENDING, &[]);
+                let wrote = self.ask(pass.now);
+                pass.wrote_by(activity, wrote.as_deref().unwrap_or_default());
+                wrote
             }
             job if job >= REQUEST => {
                 //  A SENSOR ASKED ON A CADENCE KEEPS THE AGENT RUNNING: what it reads goes on arriving.
@@ -471,7 +477,9 @@ impl Observer {
             self.next_due = if due.is_empty() {
                 next
             } else {
+                let activity = pass.begin(ATTENDING, &[]);
                 pass.emit(&ReadingLapsed { sensors: due });
+                pass.end(activity);
                 let again = pass
                     .now
                     .checked_add_day_time_duration(orexis::clock::seconds(self.asked_again_after_s))

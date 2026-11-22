@@ -480,6 +480,9 @@ async fn two_couriers_meeting_head_on_draw_lots_and_the_loser_gives_way() {
         walk.commands
     );
     the_meeting_is_journaled_and_both_agree_who_won(&walk.journals);
+    for (journal, who) in walk.journals.iter().zip(["courier_a", "courier_b"]) {
+        common::traced_whole(journal, who);
+    }
 }
 
 /// The two cross at one cell, A along the lane and B down the eastern road: whoever the secrets make the winner
