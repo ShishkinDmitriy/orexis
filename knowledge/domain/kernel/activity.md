@@ -51,7 +51,9 @@ its turn wrote, which the kernel says of the activity the turn ended last. Which
 watch says of it, the activity open in the turn that said it (`Watch::connect_within`), so an activity is made of its
 events alone, wherever and whenever they are heard; and what is said as the agent boots the watch remembers until the
 booting ends (`Watch::remember`), so the journal, made inside the booting, is told it first and keeps the agent's
-booting from its beginning, each package's booting part of it with its package and whether it runs.
+booting from its beginning, each package's booting part of it with its package and whether it runs. A package's
+booting is open beneath what its start says, as its running is beneath its task, so what belief revised as it
+started is the booting's own.
 
 So what caused what is a query over the journal and no package is asked: an activity started by something another
 generated was caused by it, `?b prov:wasStartedBy ?x . ?x prov:wasGeneratedBy ?a`, and a cycle through four
@@ -76,9 +78,10 @@ it was said within in its own entry, and one that states none, or a graph writte
 entry of the activity it starts. What a task says inside no activity of its own is said within its package's
 running, so nothing is said within nothing; the trace of a world's walk lists which events fell back to it
 (`orexis-agent/tests/common/mod.rs`), each a place where a package has an activity yet to name, and the walks of
-the greenhouse, the allotment's three agents and the layby are held to none: percepts are said perceived within a
-perceiving, a head asked about is checked in a `planning:Checking`, and a peer's statement is said heard within the
-hearing that kept it.
+every world are held to none: percepts are said perceived within a perceiving, a head asked about is checked in a
+`planning:Checking`, a peer's statement is said heard within the hearing that kept it and made beliefs in an
+extracting, sensing asks after its sensors in an attending, and a translating lasts until the model it set to work
+is done, the task stepping back into it for whatever the model hands back.
 
 What ships them is the other half of the pair, `orexis-journal-otlp/`: a task that wakes on a timer,
 reads the activities the journal holds that it has not sent, and POSTs them to a tracer as spans - an activity a

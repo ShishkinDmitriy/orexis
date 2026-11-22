@@ -192,3 +192,24 @@ pub fn traced(journal: &oxigraph::store::Store) -> (Vec<String>, Vec<String>) {
         .collect();
     (unreached.into_iter().collect(), fell_back.into_iter().collect())
 }
+
+/// A journal for a walk held to its trace: nothing is swept from it while the walk lasts.
+#[allow(dead_code)]
+pub fn journal(now: impl Fn() -> DateTime + Send + Sync + 'static) -> Arc<orexis_journal::journal::Journal> {
+    Arc::new(orexis_journal::journal::Journal::new(1.0e9, Arc::new(now)).unwrap())
+}
+
+/// EVERY ACTIVITY THE JOURNAL KEEPS IS TRACED TO THE PROCESS'S START, and nothing was said within a package's running
+/// for want of an activity of its own: what a walk of `who` is held to.
+#[allow(dead_code)]
+pub fn traced_whole(journal: &orexis_journal::journal::Journal, who: &str) {
+    let (unreached, fell_back) = traced(&journal.store);
+    assert!(
+        unreached.is_empty(),
+        "{who}: activities whose cause the journal does not know: {unreached:#?}"
+    );
+    assert!(
+        fell_back.is_empty(),
+        "{who}: said within a package's running, for want of an activity of its own: {fell_back:#?}"
+    );
+}

@@ -34,13 +34,15 @@ package "conversation" {
     Keep (Vec<u8>)
     Said ( channel: String, words: String, reply: Option<String>, )
     Ended (String)
+    Done
     Spent (Translated)
     Conversed (Conversed)
     Ask ( stating: Stating, inputs: Json, person: String, prose: String, at: DateTime, answer: tokio::sync::oneshot::Sender<Answered>, )
   }
   class "Backs" as orexis_translation__conversation__Backs << (S,#A8D8EA) struct >> {
-    {field} ~tx : Sender<Back>
+    {field} ~tx : Sender<(usize, Back)>
     {field} ~wake : Wake
+    {field} ~of : usize
   }
   class "Conversation" as orexis_translation__conversation__Conversation << (S,#A8D8EA) struct >> {
     {field} ~chat : String
@@ -117,6 +119,11 @@ package "stated" {
   }
 }
 package "translator" {
+  class "Out" as orexis_translation__translator__Out << (S,#A8D8EA) struct >> {
+    {field} -activity : orexis::activity::Activity
+    {field} -left : usize
+    {field} -chat : Option<String>
+  }
   class "Translator" as orexis_translation__translator__Translator << (S,#A8D8EA) struct >> {
     {field} -beliefs : Store
     {field} +me : String
@@ -134,13 +141,18 @@ package "translator" {
     {field} +converse_prompt : String
     {field} +say_prompt : String
     {field} +translated_by : Option<String>
-    {field} -tx : Sender<Back>
-    {field} -rx : Receiver<Back>
-    {field} -pending : VecDeque<Back>
+    {field} -tx : Sender<(usize, Back)>
+    {field} -rx : Receiver<(usize, Back)>
+    {field} -pending : VecDeque<(usize, Back)>
+    {field} -out : BTreeMap<usize, Out>
+    {field} -of : usize
+    {field} -set_going : usize
+    {field} -shown : Option<String>
   }
 }
 
 package "orexis" #EEEEEE {
+  class "Activity" as orexis__activity__Activity << (S,#A8D8EA) struct >>
   interface "Event" as orexis__events__Event << (T,#C9E4C5) trait >>
   class "Watch" as orexis__events__Watch << (S,#A8D8EA) struct >>
   class "Reader" as orexis__series__Reader << (S,#A8D8EA) struct >>
@@ -176,6 +188,8 @@ orexis_translation__translator__Translator *-- "1" orexis__events__Watch : watch
 orexis_translation__translator__Translator *-- "1" orexis_translation__conversation__Back : tx
 orexis_translation__translator__Translator *-- "1" orexis_translation__conversation__Back : rx
 orexis_translation__translator__Translator *-- "*" orexis_translation__conversation__Back : pending
+orexis_translation__translator__Translator *-- "*" orexis_translation__translator__Out : out
+orexis_translation__translator__Out *-- "1" orexis__activity__Activity : activity
 orexis_translation__events__Conversed ..|> orexis__events__Event
 orexis_translation__events__Translated ..|> orexis__events__Event
 @enduml

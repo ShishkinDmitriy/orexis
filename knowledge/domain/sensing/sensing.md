@@ -62,7 +62,9 @@ cadence. Each names its sensor (`prov:used`). Taking in one message is a **perce
 (`sensing:Perceiving`), part of the listening or the asking of the sensor the message is of, and the
 percepts written are what it generated; `sensing:Perceived` is said once for the messages one turn
 took in, within the last one's perceiving, so the revision that follows is traced through it to the sensor and from there to the
-agent's start.
+agent's start. And on the clock sensing asks after the sensors it attends, an **attending**
+(`sensing:Attending`) begun by nothing said and so part of its running alone: the silences it keeps, the
+silent and the doubted it counts, and `sensing:ReadingLapsed` for the readings lapsed with none come are its own.
 
 # What it leaves to others
 

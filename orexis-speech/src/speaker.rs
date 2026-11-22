@@ -13,11 +13,12 @@ use orexis::task::{Heard as HeardEvent, Turn};
 use orexis_transport::chat::Words;
 use orexis_transport::{Exchange, Inbox, Members};
 use oxigraph::model::NamedNode;
+use oxsdatatypes::DateTime;
 
 use crate::events::{Heard, Said, Statement};
 use crate::extract::extract;
 use crate::heard::heard;
-use crate::ontology::{CARRYING, HEARING, LISTENING, SPEAKING, STATEMENT, TO, USED};
+use crate::ontology::{CARRYING, EXTRACTING, HEARING, LISTENING, SPEAKING, STATEMENT, TO, USED};
 use crate::prose::{CHANNEL, KEPT, Prose, ProseKept, kept, prose_of, received};
 use crate::said::said;
 use crate::statements::{described, document_of};
@@ -284,21 +285,33 @@ impl Speaker {
         }
     }
 
-    /// The statements written together, each said heard where it was received, and each extracted.
+    /// The statements written together, each said heard where it was received, and each extracted: AN EXTRACTING,
+    /// started by the statements, so the beliefs it makes are traced to whatever kept them.
     pub(crate) fn heard(&mut self, _job: usize, graphs: &[String], pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+        let statements: Vec<NamedNode> = graphs.iter().filter_map(|g| NamedNode::new(g.as_str()).ok()).collect();
+        let activity = pass.begin(EXTRACTING, &statements);
+        let written = self.extracted(graphs, pass.now);
+        pass.end(activity);
+        written
+    }
+
+    /// Each of `graphs` said heard where it was received, within the hearing that kept it where an arrival of
+    /// speech's did, which has ended; and each extracted: the beliefs written.
+    fn extracted(&mut self, graphs: &[String], now: DateTime) -> Result<Vec<String>, Error> {
         let watch = self.watch.clone();
         let mut written = Vec::new();
         for graph in graphs {
-            //  SAID WITHIN THE HEARING THAT KEPT IT, which has ended: once the statement is told written.
             let hearing = self.hearing.remove(graph);
             if watch.connected() && self.arrival(graph)?.as_deref() == Some(RECEIVED) {
                 let (kinds, said) = described(&self.beliefs, graph)?;
                 let heard = Heard {
                     statement: graph.to_string(),
-                    at: Some(pass.now),
+                    at: Some(now),
                     kinds,
                     said,
                 };
+                //  A STATEMENT NO ARRIVAL OF SPEECH'S KEPT, a person's a translator kept, is said heard within the
+                //  extracting.
                 match hearing {
                     Some(hearing) => watch.emit_within(&heard, Some(hearing)),
                     None => watch.emit(&heard),

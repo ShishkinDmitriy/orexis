@@ -87,12 +87,15 @@ async fn one_message_is_three_observations_the_agent_watches_and_the_board_is_to
         vec![(None, Box::new(broker.clone()))],
     );
     let inbox = member.inbox.clone();
+    let journal = common::journal(move || now);
     let booted = orexis_agent::boot(
         &store,
         &world(),
         "fern",
         common::clock(now),
-        Provided::default().with(member),
+        Provided::default().with(member).with(orexis_journal::Keeps {
+            journal: Some(journal.clone()),
+        }),
     )
     .unwrap();
     let running = booted.start().await.unwrap();
@@ -121,6 +124,7 @@ async fn one_message_is_three_observations_the_agent_watches_and_the_board_is_to
     //  on its own command topic, not retained.
     common::pass(&running, 30.0).await;
     running.stop().await;
+    common::traced_whole(&journal, "fern_agent");
     let published = broker.0.lock().unwrap().1.clone();
     assert!(!published.is_empty(), "the board was told");
     assert!(

@@ -235,7 +235,14 @@ async fn terrace(
         "https://bots.example",
         api.call(),
     );
-    let provided = provided.with(member).with(http).with(telegram);
+    let journal = common::journal(noon);
+    let provided = provided
+        .with(member)
+        .with(http)
+        .with(telegram)
+        .with(orexis_journal::Keeps {
+            journal: Some(journal.clone()),
+        });
     if let Some(model) = model {
         provided.provide(model);
     }
@@ -257,6 +264,7 @@ async fn terrace(
     }
     walk(&t, &running, &clock, &inbox).await;
     running.stop().await;
+    common::traced_whole(&journal, "terrace_agent");
 }
 
 /// The agent's own beliefs of the present: no world's document, no self graph, no revision, no committed step and no

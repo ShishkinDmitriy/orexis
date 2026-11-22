@@ -110,14 +110,16 @@ pub(crate) fn prefixes_of(store: &Store, me: &str) -> Prefixes {
 /// What the model's conversation hands back to the translator, and what rings the translator's task to take it.
 #[derive(Clone)]
 pub(crate) struct Backs {
-    pub(crate) tx: Sender<Back>,
+    pub(crate) tx: Sender<(usize, Back)>,
     pub(crate) wake: Wake,
+    /// Which translating or phrasing the work is of, as the translator numbered it.
+    pub(crate) of: usize,
 }
 
 impl Backs {
-    /// `back` handed to the translator, and its task rung.
+    /// `back` handed to the translator, said of the activity the work is of, and its task rung.
     pub(crate) fn send(&self, back: Back) {
-        let _ = self.tx.send(back);
+        let _ = self.tx.send((self.of, back));
         self.wake.ring();
     }
 }
@@ -134,6 +136,8 @@ pub(crate) enum Back {
     },
     /// An answer thought in a chat is done with.
     Ended(String),
+    /// The model's work set going is over: nothing more comes back of it.
+    Done,
     Spent(Translated),
     Conversed(Conversed),
     /// A statement to hold to its words' bounds on the translator's task, the answer awaited.

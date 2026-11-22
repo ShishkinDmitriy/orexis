@@ -94,7 +94,7 @@ translation:Trigger a owl:Class ; rdfs:subClassOf orexis:Event ; rdfs:label "Tri
     rdfs:comment "Translation's trigger, abstract: an event beneath it is beneath the one trigger below." .
 
 translation:Translating a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Translating" ;
-    rdfs:comment "Hearing a person's words a transport kept: which chat they are in and who said them, whether they were for this agent, and the model asked what they say, off the mind; its answer comes back as a job of its own." .
+    rdfs:comment "Hearing a person's words a transport kept: which chat they are in and who said them, whether they were for this agent, and the model asked what they say, off the mind. It lasts until the model's conversation is over: the task steps out of it and back in for whatever the conversation hands back, so a statement kept, the words said and what the conversation spent are its own." .
 
 translation:TranslatingTrigger a owl:Class ; rdfs:subClassOf translation:Trigger ; rdfs:label "Translating trigger" ;
     rdfs:comment "What starts a translating: speech's `speech:ProseKept`, beneath it here, naming the prose graph a transport kept (`speech:kept`)." .
@@ -102,7 +102,7 @@ translation:TranslatingTrigger a owl:Class ; rdfs:subClassOf translation:Trigger
 speech:ProseKept rdfs:subClassOf translation:TranslatingTrigger .
 
 translation:Phrasing a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Phrasing" ;
-    rdfs:comment "Phrasing a document the agent said for a person it was said to, in a chat of theirs: the model asked to write the message, off the mind; the words come back as a job of their own, and are kept for the transport that carries the chat's channel." .
+    rdfs:comment "Phrasing a document the agent said for a person it was said to, in a chat of theirs: the model asked to write the message, off the mind. It lasts until the model has answered for each person: the words come back within it, and are kept for the transport that carries the chat's channel." .
 
 translation:PhrasingTrigger a owl:Class ; rdfs:subClassOf translation:Trigger ; rdfs:label "Phrasing trigger" ;
     rdfs:comment "What starts a phrasing: speech's `speech:Said`, beneath it here, naming each statement of the document (`speech:statement`) and each it is to (`speech:to`). The policy phrases it for each that is a person in a chat of the agent's, and passes over an agent." .

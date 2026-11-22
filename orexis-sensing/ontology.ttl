@@ -384,6 +384,9 @@ sensing:Asking a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Asking"
 sensing:Perceiving a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Perceiving" ;
     rdfs:comment "Taking in one message of a sensor: a percept written per reading it carries, part of the listening or the asking of that sensor. The percepts are what it generated, so what revises them is traced to it." .
 
+sensing:Attending a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Attending" ;
+    rdfs:comment "Asking after the sensors the observer attends, begun by the clock inside sensing's running: which reading has lapsed with none come, said as `sensing:ReadingLapsed`, and which sensor is silent or doubted, each silence found kept." .
+
 sensing:ObservingTrigger a owl:Class ; rdfs:subClassOf sensing:Trigger ; rdfs:label "Observing trigger" ;
     rdfs:comment "What starts an observing: belief's revision pass, beneath it here, naming the percepts it revised (`belief:revised`)." .
 

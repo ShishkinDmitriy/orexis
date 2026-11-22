@@ -29,7 +29,10 @@ fn now() -> DateTime {
 
 /// Boot `agent` of `world` and run it until nothing holds it or `within` seconds of its time are spent: the outcome.
 async fn run(store: &Store, world: &Path, agent: &str, within: u64, budget: Option<usize>) -> String {
-    let provided = Provided::default();
+    let journal = common::journal(now);
+    let provided = Provided::default().with(orexis_journal::Keeps {
+        journal: Some(journal.clone()),
+    });
     if let Some(budget) = budget {
         provided.provide(orexis_planning::Budget(budget));
     }
@@ -37,6 +40,7 @@ async fn run(store: &Store, world: &Path, agent: &str, within: u64, budget: Opti
     let running = booted.start().await.unwrap();
     let outcome = common::outcome(&running, within).await;
     running.stop().await;
+    common::traced_whole(&journal, agent);
     outcome
 }
 

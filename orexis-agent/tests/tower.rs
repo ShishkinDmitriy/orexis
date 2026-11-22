@@ -215,7 +215,11 @@ async fn walked(order: &[&str]) -> Walked {
     use orexis::clock::Clock;
     let store = store();
     let clock = common::clock(now());
-    let booted = orexis_agent::boot(&store, &world(), "mover", clock.clone(), Provided::default()).unwrap();
+    let journal = common::journal(now);
+    let provided = Provided::default().with(orexis_journal::Keeps {
+        journal: Some(journal.clone()),
+    });
+    let booted = orexis_agent::boot(&store, &world(), "mover", clock.clone(), provided).unwrap();
     //  THE RECORDER'S PACKAGE, WHAT KEEPS HOUSE FOR IT AND THE METRICS begin on no event and are handed nothing
     //  here, so no order is asked of them.
     let watching = ["journal", "journal-oxigraph", "journal-otlp", "metrics"];
@@ -237,6 +241,7 @@ async fn walked(order: &[&str]) -> Walked {
     let outcome = common::outcome(&running, 3600).await;
     let ended = clock.now().to_string();
     running.stop().await;
+    common::traced_whole(&journal, "mover");
     let at = positions(&store);
     let refined = refined(&store);
     (outcome, ended, at, on(&store), refined)
