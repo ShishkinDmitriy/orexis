@@ -123,6 +123,7 @@ async fn allotment(walk: impl AsyncFnOnce(&mut Market<'_>)) {
     let carried = Arc::new(Mutex::new(Carried::default()));
     let world = world();
     let mut runnings: Vec<Running> = Vec::new();
+    let mut journals = Vec::new();
     for (store, name) in stores.iter().zip(NAMES) {
         let bus = Bus {
             name,
@@ -135,12 +136,20 @@ async fn allotment(walk: impl AsyncFnOnce(&mut Market<'_>)) {
             .unwrap()
             .inboxes
             .insert(name.to_string(), member.inbox.clone());
-        let booted = orexis_agent::boot(store, &world, name, clock.clone(), Provided::default().with(member)).unwrap();
+        //  EACH KEEPS A JOURNAL, as the recorder it plays: what a walk asks of what its agents did.
+        let now = clock.clone();
+        let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(move || now.now())).unwrap());
+        let provided = Provided::default().with(member).with(orexis_journal::Keeps {
+            journal: Some(journal.clone()),
+        });
+        journals.push(journal);
+        let booted = orexis_agent::boot(store, &world, name, clock.clone(), provided).unwrap();
         runnings.push(booted.start().await.unwrap());
     }
     let mut market = Market {
         stores: &stores,
         runnings,
+        journals,
         clock: clock.clone(),
         carried,
     };
@@ -153,6 +162,7 @@ async fn allotment(walk: impl AsyncFnOnce(&mut Market<'_>)) {
 struct Market<'a> {
     stores: &'a [Store],
     runnings: Vec<Running>,
+    journals: Vec<Arc<orexis_journal::journal::Journal>>,
     clock: Arc<Elapsing>,
     carried: Arc<Mutex<Carried>>,
 }
@@ -291,6 +301,19 @@ async fn a_dry_plot_is_watered_by_a_claim_bought_on_the_supplier_s_venue() {
             1,
             "one dose, and nothing more once the plot is watered"
         );
+        //  AND EVERY ACTIVITY OF EACH OF THE THREE IS TRACED TO ITS PROCESS'S START, a peer's document heard within a
+        //  hearing on the agent's own channel, and nothing said within a package's running for want of an activity.
+        for (name, journal) in NAMES.iter().zip(&m.journals) {
+            let (unreached, fell_back) = common::traced(&journal.store);
+            assert!(
+                unreached.is_empty(),
+                "{name}: activities whose cause its journal does not know: {unreached:#?}"
+            );
+            assert!(
+                fell_back.is_empty(),
+                "{name}: events said within no activity of their package's: {fell_back:#?}"
+            );
+        }
     })
     .await;
 }

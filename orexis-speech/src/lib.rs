@@ -61,7 +61,8 @@ fn start(handed: Handed) -> orexis::task::Starting {
             return Ok(());
         }
         //  THE CHANNELS IT LISTENS ON, once every member has added itself: the agent's own and its chats'.
-        speaker.listen(&handed.provided.share::<Members>())?;
+        let channels = speaker.listen(&handed.provided.share::<Members>())?;
+        speaker.attend(&handed, &channels).await?;
         let mut heard = None;
         let mut due = None;
         loop {

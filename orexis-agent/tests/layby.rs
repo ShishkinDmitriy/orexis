@@ -120,14 +120,13 @@ async fn walk(world: &Path, fixture: &str) -> (Drives, BTreeMap<String, (i64, i6
     };
     let member = Mqtt::new(&store, &format!("{L}courier_a"), vec![(None, Box::new(bus))]);
     let inbox = member.inbox.clone();
-    let booted = orexis_agent::boot(
-        &store,
-        world,
-        "courier_a",
-        clock.clone(),
-        Provided::default().with(member),
-    )
-    .unwrap();
+    //  IT KEEPS A JOURNAL, as the recorder it plays: what the walk asks of what the courier did.
+    let now = clock.clone();
+    let journal = Arc::new(orexis_journal::journal::Journal::new(600.0, Arc::new(move || now.now())).unwrap());
+    let provided = Provided::default().with(member).with(orexis_journal::Keeps {
+        journal: Some(journal.clone()),
+    });
+    let booted = orexis_agent::boot(&store, world, "courier_a", clock.clone(), provided).unwrap();
     let running = booted.start().await.unwrap();
     //  THE WANTS THE COURIER IS WALKING, read off its intentions by an executor of the test's own.
     let reader = orexis_execution::Executor::new(&store, "courier_a", None, None, clock.clone()).unwrap();
@@ -144,6 +143,17 @@ async fn walk(world: &Path, fixture: &str) -> (Drives, BTreeMap<String, (i64, i6
     }
     let walking = reader.walking().unwrap();
     assert!(walking.is_empty(), "the plan was walked to its end: {walking:?}");
+    //  EVERY ACTIVITY THE JOURNAL KEEPS IS TRACED TO THE PROCESS'S START, and nothing was said within a package's
+    //  running for want of an activity of its own.
+    let (unreached, fell_back) = common::traced(&journal.store);
+    assert!(
+        unreached.is_empty(),
+        "activities whose cause the journal does not know: {unreached:#?}"
+    );
+    assert!(
+        fell_back.is_empty(),
+        "events said within no activity of their package's: {fell_back:#?}"
+    );
     running.stop().await;
     let believed = at(&store);
     let sent = drives.lock().unwrap().clone();

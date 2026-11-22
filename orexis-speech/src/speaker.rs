@@ -17,7 +17,7 @@ use oxigraph::model::NamedNode;
 use crate::events::{Heard, Said, Statement};
 use crate::extract::extract;
 use crate::heard::heard;
-use crate::ontology::{CARRYING, SPEAKING, STATEMENT, TO};
+use crate::ontology::{CARRYING, HEARING, LISTENING, SPEAKING, STATEMENT, TO, USED};
 use crate::prose::{CHANNEL, KEPT, Prose, ProseKept, kept, prose_of, received};
 use crate::said::said;
 use crate::statements::{described, document_of};
@@ -39,6 +39,11 @@ pub struct Speaker {
     members: Members,
     /// Where what arrives on a channel speech listens on is left.
     pub inbox: Inbox,
+    /// What speech does of each channel for as long as it runs, its listening (`attend`): what a hearing of what
+    /// arrived on that channel is part of.
+    listening: std::collections::HashMap<String, orexis::activity::Activity>,
+    /// The hearing that kept each statement received and not yet said heard.
+    hearing: std::collections::HashMap<String, NamedNode>,
 }
 
 impl Speaker {
@@ -51,6 +56,8 @@ impl Speaker {
             pending: Vec::new(),
             members: Members::default(),
             inbox: Inbox::default(),
+            listening: Default::default(),
+            hearing: Default::default(),
         })
     }
 
@@ -84,36 +91,71 @@ impl Speaker {
         Ok(listened)
     }
 
+    /// WHAT SPEECH DOES OF EACH CHANNEL FOR AS LONG AS IT RUNS: a listening of each of `channels`, an activity inside
+    /// speech's running that names its channel (`prov:used`).
+    pub(crate) async fn attend(&mut self, handed: &orexis::task::Handed, channels: &[String]) -> Result<(), Error> {
+        for channel in channels {
+            let Ok(node) = NamedNode::new(channel.as_str()) else {
+                continue;
+            };
+            let activity = handed.lasting(LISTENING, vec![(USED, node.into())]).await?;
+            self.listening.insert(channel.clone(), activity);
+        }
+        Ok(())
+    }
+
     /// WHAT ARRIVED on the channels speech listens on, since the last take: a peer's document on the agent's own, kept
     /// as what was said (`heard`); a person's words on a chat's, kept as prose and said `speech:ProseKept`, but the
     /// agent's own the carrier hands back. The graphs written.
     pub(crate) fn arrived(&mut self, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
         let mut written = Vec::new();
         for message in self.inbox.take() {
-            if message.topic == self.me {
-                written.extend(heard(&self.beliefs, &self.me, &message.payload)?);
-                continue;
+            //  HEARING ONE ARRIVAL IS AN ACTIVITY, part of the listening of the channel it came on: what it kept is
+            //  said of it, and what it says is said within it.
+            let listening = self.listening.get(&message.topic);
+            if let Some(listening) = listening {
+                pass.step_in(listening);
             }
-            let Some(words) = Words::of(&message.payload) else {
-                continue;
-            };
-            if words.from.as_deref() == Some(self.me.as_str()) || words.text.trim().is_empty() {
-                continue;
+            let activity = pass.begin(HEARING, &[]);
+            let hearing = activity.node.clone();
+            let kept = self.keep(&message, pass);
+            pass.wrote_by(activity, kept.as_deref().unwrap_or_default());
+            if let Some(listening) = listening {
+                pass.step_out(listening);
             }
-            let prose = Prose {
-                channel: message.topic.clone(),
-                sender: words.from,
-                text: words.text.trim().to_string(),
-                at: message.at.or(Some(pass.now)),
-                addressed: words.addressed,
-                message: words.message,
-                reply: None,
-            };
-            let graph = kept(&self.beliefs, &self.me, &prose)?;
-            pass.emit(&ProseKept { prose: graph.clone() });
-            written.push(graph);
+            let kept = kept?;
+            for graph in &kept {
+                self.hearing.insert(graph.clone(), hearing.clone());
+            }
+            written.extend(kept);
         }
         Ok(written)
+    }
+
+    /// What one arrival is kept as: a peer's document as the statements it says, a person's words as prose, said kept;
+    /// nothing of the agent's own words the carrier hands back.
+    fn keep(&self, message: &orexis_transport::Message, pass: &mut Turn<'_>) -> Result<Vec<String>, Error> {
+        if message.topic == self.me {
+            return heard(&self.beliefs, &self.me, &message.payload);
+        }
+        let Some(words) = Words::of(&message.payload) else {
+            return Ok(Vec::new());
+        };
+        if words.from.as_deref() == Some(self.me.as_str()) || words.text.trim().is_empty() {
+            return Ok(Vec::new());
+        }
+        let prose = Prose {
+            channel: message.topic.clone(),
+            sender: words.from,
+            text: words.text.trim().to_string(),
+            at: message.at.or(Some(pass.now)),
+            addressed: words.addressed,
+            message: words.message,
+            reply: None,
+        };
+        let graph = kept(&self.beliefs, &self.me, &prose)?;
+        pass.emit(&ProseKept { prose: graph.clone() });
+        Ok(vec![graph])
     }
 
     /// `payload` sent on `channel` through the member that reaches it as a channel sent on; whether one did.
@@ -247,14 +289,20 @@ impl Speaker {
         let watch = self.watch.clone();
         let mut written = Vec::new();
         for graph in graphs {
+            //  SAID WITHIN THE HEARING THAT KEPT IT, which has ended: once the statement is told written.
+            let hearing = self.hearing.remove(graph);
             if watch.connected() && self.arrival(graph)?.as_deref() == Some(RECEIVED) {
                 let (kinds, said) = described(&self.beliefs, graph)?;
-                watch.emit(&Heard {
+                let heard = Heard {
                     statement: graph.to_string(),
                     at: Some(pass.now),
                     kinds,
                     said,
-                });
+                };
+                match hearing {
+                    Some(hearing) => watch.emit_within(&heard, Some(hearing)),
+                    None => watch.emit(&heard),
+                };
             }
             written.extend(extract(&self.beliefs, graph)?);
         }

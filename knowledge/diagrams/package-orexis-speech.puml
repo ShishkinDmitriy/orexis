@@ -51,10 +51,13 @@ package "speaker" {
     {field} -pending : Vec<String>
     {field} -members : Members
     {field} +inbox : Inbox
+    {field} -listening : std::collections::HashMap<String, orexis::activity::Activity>
+    {field} -hearing : std::collections::HashMap<String, NamedNode>
   }
 }
 
 package "orexis" #EEEEEE {
+  class "Activity" as orexis__activity__Activity << (S,#A8D8EA) struct >>
   interface "Event" as orexis__events__Event << (T,#C9E4C5) trait >>
   class "Watch" as orexis__events__Watch << (S,#A8D8EA) struct >>
   class "Store" as orexis__store__Store << (S,#A8D8EA) struct >>
@@ -69,6 +72,7 @@ orexis_speech__speaker__Speaker *-- "1" orexis__store__Store : beliefs
 orexis_speech__speaker__Speaker *-- "1" orexis__events__Watch : watch
 orexis_speech__speaker__Speaker *-- "1" orexis_transport__member__Members : members
 orexis_speech__speaker__Speaker *-- "1" orexis_transport__inbox__Inbox : inbox
+orexis_speech__speaker__Speaker *-- "*" orexis__activity__Activity : listening
 orexis_speech__events__Heard ..|> orexis__events__Event
 orexis_speech__prose__ProseKept ..|> orexis__events__Event
 orexis_speech__events__Said ..|> orexis__events__Event

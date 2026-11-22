@@ -147,6 +147,15 @@ speech:CarryingTrigger a owl:Class ; rdfs:subClassOf speech:Trigger ; rdfs:label
 speech:ProseKept rdfs:subClassOf speech:CarryingTrigger .
 speech:WritingAnnounced rdfs:subClassOf speech:CarryingTrigger .
 
+#  WHAT SPEECH DOES FOR AS LONG AS IT RUNS, one for each channel it listens on, and what it does of one arrival there:
+#  begun of no event the agent said, since what arrives comes from outside it.
+
+speech:Listening a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Listening" ;
+    rdfs:comment "Listening on one channel, the agent's own or a chat's, for as long as speech runs: the channel is what it is done with (`prov:used`), and each arrival heard on it is part of it." .
+
+speech:Hearing a owl:Class ; rdfs:subClassOf prov:Activity ; rdfs:label "Hearing" ;
+    rdfs:comment "Taking in one arrival on a channel, part of the listening of that channel: a peer's document kept as the statements it says, said `speech:Heard` once they are told written, or a person's words kept as prose, said `speech:ProseKept`. What it kept is what it generated, so what is extracted from it and what translation makes of it are traced to it." .
+
 speech:kept a owl:ObjectProperty ; rdfs:domain speech:ProseKept ; rdfs:range speech:ProseGraph ; rdfs:label "kept" ;
     rdfs:comment "The prose graph an event is about." .
 

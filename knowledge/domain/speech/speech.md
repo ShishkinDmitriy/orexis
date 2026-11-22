@@ -47,7 +47,9 @@ peer hears and publishes on the topic the peer listens to.
 
 What the agent says and hears are [events](/domain/kernel/event.md) of speech's: `speech:Said`, a document said,
 naming each of its statements and every agent it was told to, and `speech:Heard` for each statement heard, carrying
-the statement whole. `speech:Said` is how a document leaves: speech tells no transport, and the MQTT member and
+the statement whole. For as long as it runs speech does a **listening** (`speech:Listening`) on each channel, an
+[activity](/domain/kernel/activity.md) naming the channel (`prov:used`), and taking in one arrival there is a
+**hearing** (`speech:Hearing`), part of it, which what was kept and what is said of it are traced to. `speech:Said` is how a document leaves: speech tells no transport, and the MQTT member and
 translation each put it beneath a trigger of their own and read the statements back from the store
 ([policy](/domain/kernel/policy.md)). The agent's
 [journal](/domain/kernel/journal.md) keeps: the exchange between two agents is read there, in the words they spoke it
