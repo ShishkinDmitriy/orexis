@@ -564,7 +564,7 @@ async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journa
     .map(|(a, b)| (a.to_string(), b.to_string()))
     .collect();
     assert_eq!(caused, expected);
-    //  AND WHAT IS KEPT IS WHAT IS SHIPPED: the same activities as spans, a planning's linked to the revising that
+    //  AND WHAT IS KEPT IS WHAT IS SHIPPED: the same activities as spans, a planning's the child of the revising that
     //  generated what started it, and none sent twice.
     let sent: Arc<Mutex<Vec<String>>> = Arc::default();
     let got = sent.clone();
@@ -591,14 +591,11 @@ async fn a_dry_reading_is_followed_to_the_walk_through_the_activities_the_journa
     };
     let revisings = ids("Revising");
     assert!(
-        spans.iter().filter(|s| s["name"] == "Planning").any(|s| {
-            s["links"]
-                .as_array()
-                .unwrap()
-                .iter()
-                .any(|l| revisings.contains(l["spanId"].as_str().unwrap()))
-        }),
-        "a planning's span links to the revising that caused it"
+        spans
+            .iter()
+            .filter(|s| s["name"] == "Planning")
+            .any(|s| revisings.contains(s["parentSpanId"].as_str().unwrap())),
+        "a planning's span is the child of the revising that caused it"
     );
 }
 

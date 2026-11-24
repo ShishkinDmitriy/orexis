@@ -137,6 +137,7 @@ pub fn batch(journal: &Journal, agent: &str, endpoint: &str) -> Option<(String, 
     let mut generated: BTreeMap<String, String> = BTreeMap::new();
     let mut kinds: BTreeMap<String, String> = BTreeMap::new();
     let mut said: BTreeMap<String, Vec<(String, String, Option<String>)>> = BTreeMap::new();
+    let mut said_at: BTreeMap<String, u128> = BTreeMap::new();
     for r in rows(
         journal,
         "PREFIX prov: <http://www.w3.org/ns/prov#>
@@ -145,6 +146,9 @@ pub fn batch(journal: &Journal, agent: &str, endpoint: &str) -> Option<(String, 
     ) {
         if let (Some(x), Some(c)) = (r.get("x"), r.get("c")) {
             generated.insert(x.clone(), c.clone());
+            if let Some(t) = r.get("t") {
+                said_at.insert(x.clone(), nanos(t));
+            }
             if let Some(kind) = r.get("k") {
                 kinds.insert(x.clone(), kind.clone());
                 said.entry(c.clone())
@@ -159,17 +163,21 @@ pub fn batch(journal: &Journal, agent: &str, endpoint: &str) -> Option<(String, 
         .map(|(a, p)| (a.clone(), p.clone()))
         .collect();
     //  WHAT CAUSED A TURN'S ACTIVITY IS ITS PARENT where it is inside no other of its turn: the activity that
-    //  generated the first of its triggers one generated, so a reading perceived, the revision of it, the planning
+    //  generated the last said of its triggers one generated, so a reading perceived, the revision of it, the planning
     //  and the walk it began are one trace, read down as what caused what. What lasts is caused into no trace, and
     //  causes none: a running begun by a booting's end stays in the lifecycle's.
     for (a, started_by) in &triggers {
         if lasting.contains(a) || parents.contains_key(a) {
             continue;
         }
+        //  OF SEVERAL, THE ONE WHOSE EVENT WAS SAID LAST, which is what the activity was waiting for; by the event's
+        //  name where two were said at one instant, so the same journal ships the same trace.
         let cause = started_by
             .iter()
-            .filter_map(|x| generated.get(x))
-            .find(|cause| *cause != a && !lasting.contains(*cause));
+            .filter_map(|x| Some((x, generated.get(x)?)))
+            .filter(|(_, cause)| *cause != a && !lasting.contains(*cause))
+            .max_by_key(|(x, _)| (said_at.get(*x).copied().unwrap_or(0), (*x).clone()))
+            .map(|(_, cause)| cause);
         if let Some(cause) = cause {
             parents.insert(a.clone(), cause.clone());
         }
@@ -379,6 +387,10 @@ mod tests {
     }
 
     fn generated(journal: &Journal, by: &NamedNode, kind: &str) -> NamedNode {
+        generated_at(journal, by, kind, "2026-11-10T12:00:00.25Z")
+    }
+
+    fn generated_at(journal: &Journal, by: &NamedNode, kind: &str, when: &str) -> NamedNode {
         let x = mint();
         journal
             .add(
@@ -389,7 +401,7 @@ mod tests {
                     triple(
                         x.clone(),
                         "http://www.w3.org/ns/prov#generatedAtTime",
-                        instant(at("2026-11-10T12:00:00.25Z")),
+                        instant(at(when)),
                     ),
                 ],
             )
@@ -508,18 +520,16 @@ mod tests {
         );
     }
 
-    /// An activity two others caused is the child of the first and links to the second, saying which event of it;
+    /// An activity two others caused is the child of the one whose event was said last and links to the other;
     /// and what an activity that lasts caused is no child of it.
     #[test]
-    fn of_two_causes_one_is_the_parent_and_the_other_a_link_and_what_lasts_is_neither() {
+    fn of_two_causes_the_last_said_is_the_parent_and_the_other_a_link_and_what_lasts_is_neither() {
         const RUNNING: &str = "http://example.org/orexis#PackageRunning";
         let journal = journal();
         let revising = kept(&journal, REVISING, &[], None);
         let searching = kept(&journal, SEARCHING, &[], None);
-        let (one, two) = (
-            generated(&journal, &revising, REVISED),
-            generated(&journal, &searching, REVISED),
-        );
+        let one = generated_at(&journal, &revising, REVISED, "2026-11-10T12:00:00.4Z");
+        let two = generated_at(&journal, &searching, REVISED, "2026-11-10T12:00:00.3Z");
         let planning = kept(&journal, PLANNING, &[&one, &two], None);
         let running = kept(&journal, RUNNING, &[], None);
         journal
@@ -538,17 +548,11 @@ mod tests {
         let spans = spans(&body);
         let id = |a: &NamedNode| json!(hex(a.as_str(), 16));
         let p = spans.iter().find(|s| s["spanId"] == id(&planning)).unwrap();
-        let parent = p["parentSpanId"].clone();
-        let (cause, other) = if parent == id(&revising) {
-            (&revising, &searching)
-        } else {
-            (&searching, &revising)
-        };
-        assert_eq!(parent, id(cause), "one of the two is its parent");
-        assert_eq!(p["traceId"], json!(hex(cause.as_str(), 32)));
+        assert_eq!(p["parentSpanId"], id(&revising), "the one whose event was said last");
+        assert_eq!(p["traceId"], json!(hex(revising.as_str(), 32)));
         assert_eq!(p["links"].as_array().unwrap().len(), 1, "and the other a link");
-        assert_eq!(p["links"][0]["spanId"], id(other));
-        assert_eq!(p["links"][0]["traceId"], json!(hex(other.as_str(), 32)));
+        assert_eq!(p["links"][0]["spanId"], id(&searching));
+        assert_eq!(p["links"][0]["traceId"], json!(hex(searching.as_str(), 32)));
         let a = spans.iter().find(|s| s["spanId"] == id(&alone)).unwrap();
         assert_eq!(a["parentSpanId"], "", "what lasts is no span parent of what it caused");
         assert_eq!(a["links"][0]["spanId"], id(&running), "and is linked to");
