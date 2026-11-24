@@ -88,10 +88,29 @@ struct Grower {
     clock: Arc<Elapsing>,
     inbox: Inbox,
     broker: Broker,
+    /// The journal it keeps, where the test handed it none of its own: what its day is traced by.
+    journal: Option<Arc<orexis_journal::journal::Journal>>,
+}
+
+impl Grower {
+    /// EVERY ACTIVITY OF THE DAY IS TRACED TO THE PROCESS'S START, and none of it was said within a package's running.
+    fn traced(&self) {
+        common::traced_whole(
+            self.journal.as_ref().expect("a journal of the test's own"),
+            "the grower",
+        );
+    }
 }
 
 async fn grower(store: &Store) -> Grower {
-    grower_watched(store, Provided::default()).await
+    let journal = common::journal(noon);
+    let provided = Provided::default().with(orexis_journal::Keeps {
+        journal: Some(journal.clone()),
+    });
+    Grower {
+        journal: Some(journal),
+        ..grower_watched(store, provided).await
+    }
 }
 
 async fn grower_watched(store: &Store, provided: Provided) -> Grower {
@@ -106,6 +125,7 @@ async fn grower_watched(store: &Store, provided: Provided) -> Grower {
         clock,
         inbox,
         broker,
+        journal: None,
     }
 }
 
@@ -200,6 +220,7 @@ async fn a_reading_is_written_and_the_bed_believed_dry() {
         2,
         "the percept and what the rules concluded of it, both of sensing's kind"
     );
+    g.traced();
 }
 
 #[tokio::test(start_paused = true)]
@@ -226,6 +247,7 @@ async fn a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_rea
         1,
         "one dose, and nothing more once the bed is comfortable"
     );
+    g.traced();
 }
 
 /// The grounds a planner lays over the grower's beliefs at `now`: one of the test's own, with prediction's
@@ -310,6 +332,7 @@ async fn a_committed_dose_is_a_flow_the_beds_prediction_accumulates() {
         store.graphs_of(&[COMMITTED], &Within::default()).unwrap().is_empty(),
         "answered: closed, then swept"
     );
+    g.traced();
 }
 
 #[tokio::test(start_paused = true)]
@@ -324,6 +347,7 @@ async fn a_cold_bed_is_heated_for_as_long_as_the_gap_takes() {
         broker.published(),
         [("actuators/heater/command".to_string(), json!({ "heat_s": 3600 }), false)]
     );
+    g.traced();
 }
 
 #[tokio::test(start_paused = true)]
@@ -385,6 +409,7 @@ async fn two_wants_planned_apart() {
     common::settled(&g.running).await;
     assert_eq!(*blocked.lock().unwrap(), 0, "no head was blocked");
     assert_eq!(walking(&store).len(), 2);
+    g.traced();
 }
 
 #[tokio::test(start_paused = true)]
@@ -410,6 +435,7 @@ async fn a_foreseen_crossing_is_planned_ahead_and_dosed_when_it_arrives() {
         ["actuators/pump/command"],
         "the foreseen crossing came, and the dose with it"
     );
+    g.traced();
 }
 
 /// WHAT LASTS IS TAKEN TO THE ARCHIVE, where the deployment keeps one: a stretch of the archiver's after a dry
