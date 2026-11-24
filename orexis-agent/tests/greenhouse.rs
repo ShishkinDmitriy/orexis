@@ -103,6 +103,12 @@ impl Grower {
 }
 
 async fn grower(store: &Store) -> Grower {
+    grower_watched(store, Provided::default()).await
+}
+
+/// The grower keeping a journal that sweeps nothing, for a test that ends by asking it for the trace: kept by no
+/// test that runs a day, whose every activity it would hold.
+async fn grower_journaled(store: &Store) -> Grower {
     let journal = common::journal(noon);
     let provided = Provided::default().with(orexis_journal::Keeps {
         journal: Some(journal.clone()),
@@ -206,7 +212,7 @@ async fn the_grower_listens_to_the_instruments_of_the_bed_it_acts_for() {
 #[tokio::test(start_paused = true)]
 async fn a_reading_is_written_and_the_bed_believed_dry() {
     let store = store();
-    let g = grower(&store).await;
+    let g = grower_journaled(&store).await;
     let inbox = g.inbox.clone();
     reading(&inbox, r#"{"moisture": 0.2}"#, noon());
     common::settled(&g.running).await;
@@ -226,7 +232,7 @@ async fn a_reading_is_written_and_the_bed_believed_dry() {
 #[tokio::test(start_paused = true)]
 async fn a_dry_bed_is_dosed_by_a_command_sized_from_the_reading_and_the_next_reading_answers_it() {
     let store = store();
-    let g = grower(&store).await;
+    let g = grower_journaled(&store).await;
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     reading(&inbox, r#"{"temperature": 21.0}"#, noon());
     reading(&inbox, r#"{"moisture": 0.2}"#, noon());
@@ -283,7 +289,7 @@ fn foreseen(store: &Store, now: DateTime) -> Vec<(DateTime, String)> {
 #[tokio::test(start_paused = true)]
 async fn a_committed_dose_is_a_flow_the_beds_prediction_accumulates() {
     let store = store();
-    let g = grower(&store).await;
+    let g = grower_journaled(&store).await;
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     reading(&inbox, r#"{"temperature": 21.0}"#, noon());
     reading(&inbox, r#"{"moisture": 0.2}"#, noon());
@@ -338,7 +344,7 @@ async fn a_committed_dose_is_a_flow_the_beds_prediction_accumulates() {
 #[tokio::test(start_paused = true)]
 async fn a_cold_bed_is_heated_for_as_long_as_the_gap_takes() {
     let store = store();
-    let g = grower(&store).await;
+    let g = grower_journaled(&store).await;
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     reading(&inbox, r#"{"moisture": 0.45}"#, noon());
     reading(&inbox, r#"{"temperature": 16.0}"#, noon());
@@ -365,7 +371,7 @@ async fn a_cold_dry_bed_is_two_wants_searched_on_two_threads() {
 /// The bed both cold and dry: two wants in two scopes, each planned and walked, and no head blocked.
 async fn two_wants_planned_apart() {
     let store = store();
-    let g = grower(&store).await;
+    let g = grower_journaled(&store).await;
     //  ITS SENSING LISTENING before anything is delivered, which on threads of their own its tasks may not be yet.
     common::settled(&g.running).await;
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
@@ -415,7 +421,7 @@ async fn two_wants_planned_apart() {
 #[tokio::test(start_paused = true)]
 async fn a_foreseen_crossing_is_planned_ahead_and_dosed_when_it_arrives() {
     let store = store();
-    let g = grower(&store).await;
+    let g = grower_journaled(&store).await;
     let (inbox, broker) = (g.inbox.clone(), g.broker.clone());
     reading(&inbox, r#"{"temperature": 21.0}"#, noon());
     reading(&inbox, r#"{"moisture": 0.31}"#, noon());
