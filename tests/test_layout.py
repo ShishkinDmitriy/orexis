@@ -2325,3 +2325,24 @@ def test_every_committed_derived_deployment_is_a_fresh_derivation():
         else:
             assert not connections.derivation(w).exists(), f"world/{w}'s agents are linked to nothing onboarding derives"
     assert held >= 2, "no world's agents are linked to anything — the guard checks one side"
+
+
+def test_the_traces_dashboard_searches_by_the_names_the_shipper_writes():
+    """A world a recorder of which names a tracer gets a dashboard of its traces, and it asks the tracer by the
+    names `orexis-journal-otlp/` writes on a span: the agent as `service.name`, what started an activity as
+    `orexis.trigger`; the trace picked from a table is drawn by the dashboard's own variable."""
+    from onboarding import dashboards, reading
+    from onboarding.worlds import world_dir
+
+    ships = (REPO_ROOT / "orexis-journal-otlp" / "src" / "ships.rs").read_text()
+    assert 'text("service.name", agent)' in ships and 'TRIGGER: &str = "orexis.trigger"' in ships
+    traced = [w for w in _worlds() if reading.linked(world_dir(w), dashboards.TRACED_BY)]
+    assert traced, "no world is traced - nothing below would be checked"
+    for world in traced:
+        doc = dashboards.render_traces(world)
+        queries = [p["targets"][0]["query"] for p in doc["panels"]]
+        assert all("resource.service.name" in q for q in queries[:-1]), queries
+        assert any("span.orexis.trigger" in q for q in queries), queries
+        assert queries[-1] == "${trace}" and doc["panels"][-1]["type"] == "traces"
+        picked = [o["properties"][0]["value"][0]["url"] for p in doc["panels"][:-1] for o in p["fieldConfig"]["overrides"]]
+        assert picked and all(f"/d/{doc['uid']}?" in url and "var-trace=${__value.raw}" in url for url in picked)

@@ -85,10 +85,14 @@ is done, the task stepping back into it for whatever the model hands back.
 
 What ships them is the other half of the pair, `orexis-journal-otlp/`: a task that wakes on a timer,
 reads the activities the journal holds that it has not sent, and POSTs them to a tracer as spans - an activity a
-span, one begun inside another its child and a trace the outermost with everything inside it, an event said in it
-an event on the span at its own instant, and what caused it a LINK to the span of the activity that generated what
-started it. A link says which event that was, by its class and its name, and the mark on the causing span carries
-the same name, so which event of one activity began another is read in the tracer. An
+span, one begun inside another its child and a trace the outermost with everything inside it, but an activity
+that lasts no parent of what a turn did within it, which links to it instead, or a run
+would be one trace that never ends; an event said in it
+an event on the span at its own instant, and what caused a turn's activity its PARENT: the span of the activity
+that generated what started it, where it is inside no other of its turn. So a reading perceived, the revision of
+it, the planning and the walk it began are one trace, read down as what caused what; the child says which event
+began it, by its class, and the mark on the parent carries the event's name. Of several causes the first is the
+parent and each other a link, and what lasts causes no child and is caused into no trace, linked to instead. An
 activity is marked `orexis:shippedTo` the tracer only once it accepted the POST, so one that is away is told later
 what it missed, for as long as the journal's window holds it. It hears nothing and no package imports it
 ([packages-meet-by-events-policies-and-activities](/decisions/packages-meet-by-events-policies-and-activities.md)).

@@ -21,8 +21,10 @@ It hears no event and starts no activity.
 |---|---|
 | an activity, by its class | a span, named for the class |
 | an activity begun inside another (`dcterms:isPartOf`) | a child span |
+| a turn's activity inside one that lasts, a listening or a running | no child of it: a link to it carrying `orexis.partOf` |
 | an event said inside it | a span event, carrying `prov.entity` |
-| what started it | the attribute `orexis.trigger`, and a link to the span that generated it |
+| what started it | the attribute `orexis.trigger` |
+| the turn's activity that generated what started it, where it is inside no other of its turn | its parent span, so what caused what is one trace; a second cause, or one that lasts, is a link |
 | `orexis:tookS` | the span's length |
 
 A tracer that refuses is said in the log once; what it was not told stays in the journal until the window sweeps it.

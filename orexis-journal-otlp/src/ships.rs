@@ -68,6 +68,8 @@ fn local(iri: &str) -> &str {
 pub const TRIGGER: &str = "orexis.trigger";
 /// The name of an event, on its mark and on the link of what it caused.
 pub const ENTITY: &str = "prov.entity";
+/// The link from a turn's activity to the activity that lasts it is part of.
+pub const PART_OF: &str = "orexis.partOf";
 
 fn text(key: &str, value: &str) -> Value {
     json!({"key": key, "value": {"stringValue": value}})
@@ -98,24 +100,30 @@ pub fn batch(journal: &Journal, agent: &str, endpoint: &str) -> Option<(String, 
     if unshipped.is_empty() {
         return None;
     }
-    //  WHAT EACH ACTIVITY WAS BEGUN INSIDE, over everything the journal holds: a trace is named for the outermost.
-    let parents: BTreeMap<String, String> = rows(
+    //  WHAT EACH ACTIVITY WAS BEGUN INSIDE, over everything the journal holds: a trace is named for its root.
+    //  AN ACTIVITY THAT LASTS IS NO PARENT OF WHAT A TURN DID WITHIN IT: a perceiving is part of a listening of a
+    //  season and a planning of its package's running, and drawn as their children every activity of a run was one
+    //  trace that never ended. What lasts is told by its end having a name (`prov:qualifiedEnd`), or by not having
+    //  ended; a turn's activity inside one begins a trace of its own and LINKS to it, and what lasts nests in what
+    //  lasts, the lifecycle one trace.
+    let lasting: BTreeSet<String> = rows(
+        journal,
+        &format!(
+            "PREFIX orexis: <http://example.org/orexis#>
+             PREFIX prov: <http://www.w3.org/ns/prov#>
+             SELECT ?a WHERE {{ GRAPH ?a {{ ?a a <{ACTIVITY}> .              FILTER(EXISTS {{ ?a prov:qualifiedEnd ?e }} || NOT EXISTS {{ ?a orexis:tookS ?t }}) }} }}"
+        ),
+    )
+    .into_iter()
+    .filter_map(|r| r.get("a").cloned())
+    .collect();
+    let part_of: BTreeMap<String, String> = rows(
         journal,
         "PREFIX dcterms: <http://purl.org/dc/terms/> SELECT ?a ?p WHERE { GRAPH ?a { ?a dcterms:isPartOf ?p } }",
     )
     .into_iter()
     .filter_map(|r| Some((r.get("a")?.clone(), r.get("p")?.clone())))
     .collect();
-    let root = |a: &str| -> String {
-        let (mut at, mut seen) = (a.to_string(), BTreeSet::new());
-        while let Some(parent) = parents.get(&at) {
-            if !seen.insert(at.clone()) {
-                break;
-            }
-            at = parent.clone();
-        }
-        at
-    };
     let mut triggers: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for r in rows(
         journal,
@@ -145,6 +153,37 @@ pub fn batch(journal: &Journal, agent: &str, endpoint: &str) -> Option<(String, 
             }
         }
     }
+    let mut parents: BTreeMap<String, String> = part_of
+        .iter()
+        .filter(|(a, p)| lasting.contains(*a) || !lasting.contains(*p))
+        .map(|(a, p)| (a.clone(), p.clone()))
+        .collect();
+    //  WHAT CAUSED A TURN'S ACTIVITY IS ITS PARENT where it is inside no other of its turn: the activity that
+    //  generated the first of its triggers one generated, so a reading perceived, the revision of it, the planning
+    //  and the walk it began are one trace, read down as what caused what. What lasts is caused into no trace, and
+    //  causes none: a running begun by a booting's end stays in the lifecycle's.
+    for (a, started_by) in &triggers {
+        if lasting.contains(a) || parents.contains_key(a) {
+            continue;
+        }
+        let cause = started_by
+            .iter()
+            .filter_map(|x| generated.get(x))
+            .find(|cause| *cause != a && !lasting.contains(*cause));
+        if let Some(cause) = cause {
+            parents.insert(a.clone(), cause.clone());
+        }
+    }
+    let root = |a: &str| -> String {
+        let (mut at, mut seen) = (a.to_string(), BTreeSet::new());
+        while let Some(parent) = parents.get(&at) {
+            if !seen.insert(at.clone()) {
+                break;
+            }
+            at = parent.clone();
+        }
+        at
+    };
     //  WHAT A TRIGGER IS CALLED: the class it said it is, or its own name where it said none, as a graph says none.
     let called = |x: &str| {
         kinds
@@ -167,12 +206,12 @@ pub fn batch(journal: &Journal, agent: &str, endpoint: &str) -> Option<(String, 
             let named: Vec<String> = started_by.iter().map(|x| called(x)).collect();
             attributes.push(text(TRIGGER, &named.join(" ")));
         }
-        //  A LINK PER TRIGGER ANOTHER ACTIVITY GENERATED, saying which: its class and its name, the name the mark on
-        //  the causing span carries.
-        let links: Vec<Value> = started_by
+        //  A LINK PER TRIGGER AN ACTIVITY THAT IS NOT ITS PARENT GENERATED, saying which: its class and its name, the
+        //  name the mark on the causing span carries.
+        let mut links: Vec<Value> = started_by
             .iter()
             .filter_map(|x| Some((x, generated.get(x)?)))
-            .filter(|(_, cause)| *cause != a)
+            .filter(|(_, cause)| *cause != a && parents.get(a) != Some(*cause))
             .map(|(x, cause)| {
                 json!({
                     "traceId": hex(&root(cause), 32),
@@ -181,6 +220,14 @@ pub fn batch(journal: &Journal, agent: &str, endpoint: &str) -> Option<(String, 
                 })
             })
             .collect();
+        //  WHAT LASTS THAT IT IS PART OF, a link and no parent: the listening a perceiving was of.
+        if let Some(whole) = part_of.get(a).filter(|whole| parents.get(a) != Some(*whole)) {
+            links.push(json!({
+                "traceId": hex(&root(whole), 32),
+                "spanId": hex(whole, 16),
+                "attributes": [text(PART_OF, whole)],
+            }));
+        }
         let events: Vec<Value> = said
             .get(a)
             .map(|events| {
@@ -359,8 +406,8 @@ mod tests {
     }
 
     /// What the journal keeps is what is shipped: an activity a span, one begun inside another its child in one
-    /// trace, an event said in it an event on the span at its own instant, and what caused it a link to the span
-    /// that generated what started it, in a trace of its own, saying which event that was.
+    /// trace, an event said in it an event on the span at its own instant, and what caused it its parent: the
+    /// activity that generated what started it, so what caused what is one trace.
     #[test]
     fn what_the_journal_keeps_is_shipped_as_spans_with_their_children_and_their_causes() {
         let journal = journal();
@@ -375,17 +422,12 @@ mod tests {
         let (r, p, s) = (by("Revising"), by("Planning"), by("Searching"));
         assert_eq!(p["spanId"], json!(hex(planning.as_str(), 16)));
         assert_eq!(s["parentSpanId"], p["spanId"], "begun inside the planning");
-        assert_eq!(s["traceId"], p["traceId"], "and in its trace");
-        assert_ne!(r["traceId"], p["traceId"], "what caused it is another trace");
-        assert_eq!(
-            p["links"],
-            json!([{
-                "traceId": r["traceId"],
-                "spanId": r["spanId"],
-                "attributes": [text(TRIGGER, "Revised"), text(ENTITY, revised.as_str())],
-            }]),
-            "the link says which event of the revising began the planning"
-        );
+        assert_eq!(p["parentSpanId"], r["spanId"], "which the revising caused");
+        assert_eq!(r["parentSpanId"], "", "and nothing the journal knows caused that");
+        assert_eq!(r["traceId"], json!(hex(revising.as_str(), 32)), "so the trace is its");
+        assert_eq!(p["traceId"], r["traceId"]);
+        assert_eq!(s["traceId"], r["traceId"]);
+        assert_eq!(p["links"], json!([]), "a parent is not linked to as well");
         let mark = &r["events"][0];
         assert_eq!(mark["name"], "Revised");
         assert_eq!(
@@ -416,6 +458,100 @@ mod tests {
             "one attribute, the trigger's class"
         );
         let _ = searching;
+    }
+
+    /// What a turn did inside an activity that lasts is a trace of its own, linked to it: a perceiving is no child of
+    /// the listening it is part of, which has not ended, nor a planning of its package's running; and what lasts
+    /// nests in what lasts, one trace.
+    #[test]
+    fn what_a_turn_did_within_an_activity_that_lasts_is_a_trace_of_its_own_linked_to_it() {
+        const RUNNING: &str = "http://example.org/orexis#PackageRunning";
+        const LISTENING: &str = "http://example.org/orexis/sensing#Listening";
+        const PERCEIVING: &str = "http://example.org/orexis/sensing#Perceiving";
+        let journal = journal();
+        let ended = mint();
+        let running = kept(&journal, RUNNING, &[], None);
+        journal
+            .add(
+                &running,
+                vec![triple(running.clone(), "http://www.w3.org/ns/prov#qualifiedEnd", ended)],
+            )
+            .unwrap();
+        let listening = kept(&journal, LISTENING, &[], Some(&running));
+        journal
+            .add(
+                &listening,
+                vec![triple(
+                    listening.clone(),
+                    "http://www.w3.org/ns/prov#qualifiedEnd",
+                    mint(),
+                )],
+            )
+            .unwrap();
+        let perceiving = kept(&journal, PERCEIVING, &[], Some(&listening));
+        let (body, _) = batch(&journal, "fern", TRACER).unwrap();
+        let spans = spans(&body);
+        let by = |name: &str| spans.iter().find(|s| s["name"] == name).unwrap().clone();
+        let (r, l, p) = (by("PackageRunning"), by("Listening"), by("Perceiving"));
+        assert_eq!(l["parentSpanId"], r["spanId"], "what lasts nests in what lasts");
+        assert_eq!(l["traceId"], r["traceId"]);
+        assert_eq!(p["parentSpanId"], "", "a turn's activity is the root of its trace");
+        assert_eq!(p["traceId"], json!(hex(perceiving.as_str(), 32)));
+        assert_eq!(
+            p["links"],
+            json!([{
+                "traceId": r["traceId"],
+                "spanId": l["spanId"],
+                "attributes": [text(PART_OF, listening.as_str())],
+            }]),
+            "and links to the listening it is part of"
+        );
+    }
+
+    /// An activity two others caused is the child of the first and links to the second, saying which event of it;
+    /// and what an activity that lasts caused is no child of it.
+    #[test]
+    fn of_two_causes_one_is_the_parent_and_the_other_a_link_and_what_lasts_is_neither() {
+        const RUNNING: &str = "http://example.org/orexis#PackageRunning";
+        let journal = journal();
+        let revising = kept(&journal, REVISING, &[], None);
+        let searching = kept(&journal, SEARCHING, &[], None);
+        let (one, two) = (
+            generated(&journal, &revising, REVISED),
+            generated(&journal, &searching, REVISED),
+        );
+        let planning = kept(&journal, PLANNING, &[&one, &two], None);
+        let running = kept(&journal, RUNNING, &[], None);
+        journal
+            .add(
+                &running,
+                vec![triple(
+                    running.clone(),
+                    "http://www.w3.org/ns/prov#qualifiedEnd",
+                    mint(),
+                )],
+            )
+            .unwrap();
+        let said = generated(&journal, &running, REVISED);
+        let alone = kept(&journal, "http://example.org/test#Alone", &[&said], None);
+        let (body, _) = batch(&journal, "fern", TRACER).unwrap();
+        let spans = spans(&body);
+        let id = |a: &NamedNode| json!(hex(a.as_str(), 16));
+        let p = spans.iter().find(|s| s["spanId"] == id(&planning)).unwrap();
+        let parent = p["parentSpanId"].clone();
+        let (cause, other) = if parent == id(&revising) {
+            (&revising, &searching)
+        } else {
+            (&searching, &revising)
+        };
+        assert_eq!(parent, id(cause), "one of the two is its parent");
+        assert_eq!(p["traceId"], json!(hex(cause.as_str(), 32)));
+        assert_eq!(p["links"].as_array().unwrap().len(), 1, "and the other a link");
+        assert_eq!(p["links"][0]["spanId"], id(other));
+        assert_eq!(p["links"][0]["traceId"], json!(hex(other.as_str(), 32)));
+        let a = spans.iter().find(|s| s["spanId"] == id(&alone)).unwrap();
+        assert_eq!(a["parentSpanId"], "", "what lasts is no span parent of what it caused");
+        assert_eq!(a["links"][0]["spanId"], id(&running), "and is linked to");
     }
 
     /// An activity is marked shipped only where the tracer accepted it, and is not shipped twice; what a tracer
