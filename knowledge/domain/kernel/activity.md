@@ -91,7 +91,7 @@ would be one trace that never ends; an event said in it
 an event on the span at its own instant, and what caused a turn's activity its PARENT: the span of the activity
 that generated what started it, where it is inside no other of its turn. So a reading perceived, the revision of
 it, the planning and the walk it began are one trace, read down as what caused what; the child says which event
-began it, by its class, and the mark on the parent carries the event's name. Of several causes the first is the
+began it, by its class, and the mark on the parent carries the event's name. Of several causes the one whose event was said last is the
 parent and each other a link, and what lasts causes no child and is caused into no trace, linked to instead. An
 activity is marked `orexis:shippedTo` the tracer only once it accepted the POST, so one that is away is told later
 what it missed, for as long as the journal's window holds it. It hears nothing and no package imports it
